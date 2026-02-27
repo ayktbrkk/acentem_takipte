@@ -1,0 +1,84 @@
+{
+ "actions": [],
+ "autoname": "field:template_key",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "template_key",
+  "event_key",
+  "channel",
+  "language",
+  "subject",
+  "body_template",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "template_key",
+   "fieldtype": "Data",
+   "label": "Template Key",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "event_key",
+   "fieldtype": "Data",
+   "label": "Event Key",
+   "reqd": 1
+  },
+  {
+   "default": "Both",
+   "fieldname": "channel",
+   "fieldtype": "Select",
+   "label": "Channel",
+   "options": "SMS\nEmail\nBoth",
+   "reqd": 1
+  },
+  {
+   "default": "tr",
+   "fieldname": "language",
+   "fieldtype": "Select",
+   "label": "Language",
+   "options": "tr\nen",
+   "reqd": 1
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "label": "Subject"
+  },
+  {
+   "fieldname": "body_template",
+   "fieldtype": "Long Text",
+   "label": "Body Template",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Notification Template",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

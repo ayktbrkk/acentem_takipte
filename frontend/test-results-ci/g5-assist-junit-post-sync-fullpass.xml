@@ -1,0 +1,42 @@
+<testsuites id="" name="" tests="5" failures="1" skipped="0" errors="0" time="119.29922">
+<testsuite name="g5-desk-free-qa-assist.spec.js" timestamp="2026-02-26T08:53:12.904Z" hostname="" tests="5" failures="1" skipped="0" time="53.586" errors="0">
+<testcase name="G5 desk-free QA assist (admin) › desktop route sanity + desk fallback hidden by default" classname="g5-desk-free-qa-assist.spec.js" time="23.692">
+</testcase>
+<testcase name="G5 desk-free QA assist (admin) › mobile viewport route sanity (representative workbench/detail pages)" classname="g5-desk-free-qa-assist.spec.js" time="14.802">
+<failure message="g5-desk-free-qa-assist.spec.js:136:3 mobile viewport route sanity (representative workbench/detail pages)" type="FAILURE">
+<![CDATA[  g5-desk-free-qa-assist.spec.js:136:3 › G5 desk-free QA assist (admin) › mobile viewport route sanity (representative workbench/detail pages) 
+
+    Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, open 'C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\test-results\.playwright-artifacts-0\traces\51032f0d00e5b52a6f71-505b46f691f24e871a78-recording2.network'
+
+      154 |       await expect(page.locator(".surface-card, [class*='summary']").first()).toBeVisible();
+      155 |     } finally {
+    > 156 |       await context.close();
+          |                     ^
+      157 |     }
+      158 |   });
+      159 | });
+        at C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\tests\e2e\g5-desk-free-qa-assist.spec.js:156:21
+
+    Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, open 'C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\test-results\.playwright-artifacts-0\traces\51032f0d00e5b52a6f71-505b46f691f24e871a78-recording1.network'
+
+    Error: ENOENT: no such file or directory, open 'C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\test-results\.playwright-artifacts-0\7fe3e177f6f73b2e0ddaa452ed05207a.zip'
+
+    Test timeout of 60000ms exceeded.
+
+    Error Context: ..\..\test-results\g5-desk-free-qa-assist-G5--d5bbc-ive-workbench-detail-pages-\error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\g5-desk-free-qa-assist-G5--d5bbc-ive-workbench-detail-pages-\error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="G5 desk-free QA assist (restricted role) › Agent runtime capability payload disables finance/communication write actions" classname="g5-desk-free-qa-assist.spec.js" time="2.506">
+</testcase>
+<testcase name="G5 desk-free QA assist (restricted role) › Agent UI hides communication/finance quick actions" classname="g5-desk-free-qa-assist.spec.js" time="9.704">
+</testcase>
+<testcase name="G5 desk-free QA assist (restricted role) › Agent backend write endpoints are permission denied" classname="g5-desk-free-qa-assist.spec.js" time="2.882">
+</testcase>
+</testsuite>
+</testsuites>

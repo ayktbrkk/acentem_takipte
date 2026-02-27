@@ -1,0 +1,14 @@
+<testsuites id="" name="" tests="5" failures="0" skipped="0" errors="0" time="37.350753">
+<testsuite name="f4-desk-free-flows.spec.js" timestamp="2026-02-26T07:08:16.837Z" hostname="" tests="5" failures="0" skipped="0" time="34.55" errors="0">
+<testcase name="F4 desk-free core flows › Lead -&gt; Offer flow" classname="f4-desk-free-flows.spec.js" time="8.506">
+</testcase>
+<testcase name="F4 desk-free core flows › Offer -&gt; Policy flow" classname="f4-desk-free-flows.spec.js" time="7.88">
+</testcase>
+<testcase name="F4 desk-free core flows › Customer -&gt; Offer quick create flow" classname="f4-desk-free-flows.spec.js" time="4.295">
+</testcase>
+<testcase name="F4 desk-free core flows › Customer -&gt; Communication flow" classname="f4-desk-free-flows.spec.js" time="6.72">
+</testcase>
+<testcase name="F4 desk-free core flows › Task / Draft / Outbox frontend detail routes open" classname="f4-desk-free-flows.spec.js" time="7.149">
+</testcase>
+</testsuite>
+</testsuites>

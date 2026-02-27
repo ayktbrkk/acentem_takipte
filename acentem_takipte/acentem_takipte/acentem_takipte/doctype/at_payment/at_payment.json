@@ -1,0 +1,158 @@
+{
+ "actions": [],
+ "autoname": "Prompt",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "payment_no",
+  "policy",
+  "claim",
+  "customer",
+  "sales_entity",
+  "payment_direction",
+  "payment_purpose",
+  "status",
+  "payment_date",
+  "due_date",
+  "currency",
+  "fx_rate",
+  "fx_date",
+  "amount",
+  "amount_try",
+  "reference_no",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "payment_no",
+   "fieldtype": "Data",
+   "label": "Payment No",
+   "unique": 1
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy"
+  },
+  {
+   "fieldname": "claim",
+   "fieldtype": "Link",
+   "label": "Claim",
+   "options": "AT Claim"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sales_entity",
+   "fieldtype": "Link",
+   "label": "Sales Entity",
+   "options": "AT Sales Entity"
+  },
+  {
+   "default": "Inbound",
+   "fieldname": "payment_direction",
+   "fieldtype": "Select",
+   "label": "Payment Direction",
+   "options": "Inbound\nOutbound",
+   "reqd": 1
+  },
+  {
+   "default": "Premium Collection",
+   "fieldname": "payment_purpose",
+   "fieldtype": "Select",
+   "label": "Payment Purpose",
+   "options": "Premium Collection\nCommission Payout\nClaim Payout\nOther",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nPaid\nCancelled",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "payment_date",
+   "fieldtype": "Date",
+   "label": "Payment Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date"
+  },
+  {
+   "default": "TRY",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "fx_rate",
+   "fieldtype": "Float",
+   "label": "FX Rate",
+   "precision": "6"
+  },
+  {
+   "fieldname": "fx_date",
+   "fieldtype": "Date",
+   "label": "FX Date"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount_try",
+   "fieldtype": "Currency",
+   "label": "Amount TRY",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_no",
+   "fieldtype": "Data",
+   "label": "Reference No"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Payment",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "autoname": "AT-REC-.YYYY.-.#####.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "unique_key",
+  "accounting_entry",
+  "source_doctype",
+  "source_name",
+  "status",
+  "mismatch_type",
+  "local_amount_try",
+  "external_amount_try",
+  "difference_try",
+  "resolution_action",
+  "resolved_by",
+  "resolved_on",
+  "details_json",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "unique_key",
+   "fieldtype": "Data",
+   "label": "Unique Key",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "accounting_entry",
+   "fieldtype": "Link",
+   "label": "Accounting Entry",
+   "options": "AT Accounting Entry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_doctype",
+   "fieldtype": "Link",
+   "label": "Source DocType",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "source_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Source Name",
+   "options": "source_doctype"
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nResolved\nIgnored",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mismatch_type",
+   "fieldtype": "Select",
+   "label": "Mismatch Type",
+   "options": "Amount\nCurrency\nMissing External\nMissing Local\nStatus\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "local_amount_try",
+   "fieldtype": "Currency",
+   "label": "Local Amount TRY"
+  },
+  {
+   "fieldname": "external_amount_try",
+   "fieldtype": "Currency",
+   "label": "External Amount TRY"
+  },
+  {
+   "fieldname": "difference_try",
+   "fieldtype": "Currency",
+   "label": "Difference TRY",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolution_action",
+   "fieldtype": "Select",
+   "label": "Resolution Action",
+   "options": "Matched\nAdjusted\nManual Override\nIgnored"
+  },
+  {
+   "fieldname": "resolved_by",
+   "fieldtype": "Link",
+   "label": "Resolved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Resolved On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "details_json",
+   "fieldtype": "Long Text",
+   "label": "Details JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Reconciliation Item",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

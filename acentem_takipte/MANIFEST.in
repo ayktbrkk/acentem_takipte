@@ -1,0 +1,12 @@
+include requirements.txt
+recursive-include acentem_takipte *.css
+recursive-include acentem_takipte *.csv
+recursive-include acentem_takipte *.html
+recursive-include acentem_takipte *.ico
+recursive-include acentem_takipte *.js
+recursive-include acentem_takipte *.json
+recursive-include acentem_takipte *.md
+recursive-include acentem_takipte *.png
+recursive-include acentem_takipte *.py
+recursive-include acentem_takipte *.svg
+recursive-include acentem_takipte *.txt

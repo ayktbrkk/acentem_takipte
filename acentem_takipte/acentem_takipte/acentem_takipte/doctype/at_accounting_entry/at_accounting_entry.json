@@ -1,0 +1,176 @@
+{
+ "actions": [],
+ "autoname": "AT-ACC-.YYYY.-.#####.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "source_doctype",
+  "source_name",
+  "entry_type",
+  "status",
+  "policy",
+  "customer",
+  "insurance_company",
+  "currency",
+  "local_amount",
+  "local_amount_try",
+  "external_amount",
+  "external_amount_try",
+  "difference_try",
+  "needs_reconciliation",
+  "external_ref",
+  "sync_attempt_count",
+  "last_synced_on",
+  "error_message",
+  "integration_hash",
+  "payload_json"
+ ],
+ "fields": [
+  {
+   "fieldname": "source_doctype",
+   "fieldtype": "Link",
+   "label": "Source DocType",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Source Name",
+   "options": "source_doctype",
+   "reqd": 1
+  },
+  {
+   "fieldname": "entry_type",
+   "fieldtype": "Select",
+   "label": "Entry Type",
+   "options": "Policy\nPayment\nClaim",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSynced\nFailed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer"
+  },
+  {
+   "fieldname": "insurance_company",
+   "fieldtype": "Link",
+   "label": "Insurance Company",
+   "options": "AT Insurance Company"
+  },
+  {
+   "default": "TRY",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "local_amount",
+   "fieldtype": "Currency",
+   "label": "Local Amount"
+  },
+  {
+   "fieldname": "local_amount_try",
+   "fieldtype": "Currency",
+   "label": "Local Amount TRY"
+  },
+  {
+   "fieldname": "external_amount",
+   "fieldtype": "Currency",
+   "label": "External Amount"
+  },
+  {
+   "fieldname": "external_amount_try",
+   "fieldtype": "Currency",
+   "label": "External Amount TRY"
+  },
+  {
+   "fieldname": "difference_try",
+   "fieldtype": "Currency",
+   "label": "Difference TRY",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "needs_reconciliation",
+   "fieldtype": "Check",
+   "label": "Needs Reconciliation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "external_ref",
+   "fieldtype": "Data",
+   "label": "External Ref"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_attempt_count",
+   "fieldtype": "Int",
+   "label": "Sync Attempt Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_synced_on",
+   "fieldtype": "Datetime",
+   "label": "Last Synced On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Small Text",
+   "label": "Error Message",
+   "read_only": 1
+  },
+  {
+   "fieldname": "integration_hash",
+   "fieldtype": "Data",
+   "label": "Integration Hash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payload_json",
+   "fieldtype": "Long Text",
+   "label": "Payload JSON",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Accounting Entry",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

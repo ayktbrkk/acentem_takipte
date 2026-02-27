@@ -1,0 +1,305 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\playwright.config.js",
+    "rootDir": "C:/Users/Aykut/Documents/GitHub/acentem_takipte/frontend/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Aykut/Documents/GitHub/acentem_takipte/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Aykut/Documents/GitHub/acentem_takipte/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ],
+      [
+        "junit"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "g5-desk-free-qa-assist.spec.js",
+      "file": "g5-desk-free-qa-assist.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "G5 desk-free QA assist (admin)",
+          "file": "g5-desk-free-qa-assist.spec.js",
+          "line": 111,
+          "column": 15,
+          "specs": [
+            {
+              "title": "desktop route sanity + desk fallback hidden by default",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 23692,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:53:14.968Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "51032f0d00e5b52a6f71-0bc710fcc890648e50aa",
+              "file": "g5-desk-free-qa-assist.spec.js",
+              "line": 116,
+              "column": 3
+            },
+            {
+              "title": "mobile viewport route sanity (representative workbench/detail pages)",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 14802,
+                      "error": {
+                        "message": "Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, open 'C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\test-results\\.playwright-artifacts-0\\traces\\51032f0d00e5b52a6f71-505b46f691f24e871a78-recording2.network'",
+                        "stack": "Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, open 'C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\test-results\\.playwright-artifacts-0\\traces\\51032f0d00e5b52a6f71-505b46f691f24e871a78-recording2.network'\n    at C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\g5-desk-free-qa-assist.spec.js:156:21",
+                        "location": {
+                          "file": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\g5-desk-free-qa-assist.spec.js",
+                          "column": 21,
+                          "line": 156
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 154 |\u001b[39m       \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m\".surface-card, [class*='summary']\"\u001b[39m)\u001b[33m.\u001b[39mfirst())\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 155 |\u001b[39m     } \u001b[36mfinally\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 156 |\u001b[39m       \u001b[36mawait\u001b[39m context\u001b[33m.\u001b[39mclose()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 157 |\u001b[39m     }\n \u001b[90m 158 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 159 |\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\g5-desk-free-qa-assist.spec.js",
+                            "column": 21,
+                            "line": 156
+                          },
+                          "message": "Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, open 'C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\test-results\\.playwright-artifacts-0\\traces\\51032f0d00e5b52a6f71-505b46f691f24e871a78-recording2.network'\n\n  154 |       await expect(page.locator(\".surface-card, [class*='summary']\").first()).toBeVisible();\n  155 |     } finally {\n> 156 |       await context.close();\n      |                     ^\n  157 |     }\n  158 |   });\n  159 | });\n    at C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\g5-desk-free-qa-assist.spec.js:156:21"
+                        },
+                        {
+                          "message": "Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, open 'C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\test-results\\.playwright-artifacts-0\\traces\\51032f0d00e5b52a6f71-505b46f691f24e871a78-recording1.network'"
+                        },
+                        {
+                          "message": "Error: ENOENT: no such file or directory, open 'C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\test-results\\.playwright-artifacts-0\\7fe3e177f6f73b2e0ddaa452ed05207a.zip'"
+                        },
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:53:38.949Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\test-results\\g5-desk-free-qa-assist-G5--d5bbc-ive-workbench-detail-pages-\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\g5-desk-free-qa-assist.spec.js",
+                        "column": 21,
+                        "line": 156
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "51032f0d00e5b52a6f71-505b46f691f24e871a78",
+              "file": "g5-desk-free-qa-assist.spec.js",
+              "line": 136,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "G5 desk-free QA assist (restricted role)",
+          "file": "g5-desk-free-qa-assist.spec.js",
+          "line": 161,
+          "column": 15,
+          "specs": [
+            {
+              "title": "Agent runtime capability payload disables finance/communication write actions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2506,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:54:56.481Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "51032f0d00e5b52a6f71-ccb1053bb8f33b59d20e",
+              "file": "g5-desk-free-qa-assist.spec.js",
+              "line": 169,
+              "column": 3
+            },
+            {
+              "title": "Agent UI hides communication/finance quick actions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9704,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:54:59.211Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "51032f0d00e5b52a6f71-ece33627a17be4e62679",
+              "file": "g5-desk-free-qa-assist.spec.js",
+              "line": 203,
+              "column": 3
+            },
+            {
+              "title": "Agent backend write endpoints are permission denied",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2882,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:55:08.944Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "51032f0d00e5b52a6f71-307e45a9d17e99d89eb8",
+              "file": "g5-desk-free-qa-assist.spec.js",
+              "line": 233,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-02-26T08:53:12.765Z",
+    "duration": 119299.22,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

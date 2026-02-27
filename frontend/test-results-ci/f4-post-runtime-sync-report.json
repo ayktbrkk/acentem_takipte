@@ -1,0 +1,313 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\playwright.config.js",
+    "rootDir": "C:/Users/Aykut/Documents/GitHub/acentem_takipte/frontend/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Aykut/Documents/GitHub/acentem_takipte/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Aykut/Documents/GitHub/acentem_takipte/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ],
+      [
+        "junit"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "runAgents": "none",
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.58.2",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "f4-desk-free-flows.spec.js",
+      "file": "f4-desk-free-flows.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "F4 desk-free core flows",
+          "file": "f4-desk-free-flows.spec.js",
+          "line": 35,
+          "column": 15,
+          "specs": [
+            {
+              "title": "Lead -> Offer flow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "No convertible lead found.",
+                      "location": {
+                        "file": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\f4-desk-free-flows.spec.js",
+                        "line": 75,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 14669,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:53:14.969Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "No convertible lead found.",
+                          "location": {
+                            "file": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\f4-desk-free-flows.spec.js",
+                            "line": 75,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4b0a0ca3d29f31f97060-5f4b5a4caabcbe9837d9",
+              "file": "f4-desk-free-flows.spec.js",
+              "line": 40,
+              "column": 3
+            },
+            {
+              "title": "Offer -> Policy flow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 12362,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:53:29.895Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "4b0a0ca3d29f31f97060-bcdc387055dac3b9ba86",
+              "file": "f4-desk-free-flows.spec.js",
+              "line": 78,
+              "column": 3
+            },
+            {
+              "title": "Customer -> Offer quick create flow",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5557,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /Yeni Teklif|New Offer/i })\nExpected: visible\nError: strict mode violation: getByRole('button', { name: /Yeni Teklif|New Offer/i }) resolved to 2 elements:\n    1) <button type=\"button\" class=\"rounded-lg disabled:cursor-not-allowed disabled:opacity-60 bg-slate-900 text-white hover:bg-slate-800 px-3 py-1.5 text-sm\">…</button> aka getByRole('button', { name: 'New Offer' }).first()\n    2) <button type=\"button\" class=\"rounded-lg disabled:cursor-not-allowed disabled:opacity-60 bg-slate-900 text-white hover:bg-slate-800 px-3 py-1.5 text-sm\">…</button> aka getByRole('button', { name: 'New Offer' }).nth(1)\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /Yeni Teklif|New Offer/i })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /Yeni Teklif|New Offer/i })\nExpected: visible\nError: strict mode violation: getByRole('button', { name: /Yeni Teklif|New Offer/i }) resolved to 2 elements:\n    1) <button type=\"button\" class=\"rounded-lg disabled:cursor-not-allowed disabled:opacity-60 bg-slate-900 text-white hover:bg-slate-800 px-3 py-1.5 text-sm\">…</button> aka getByRole('button', { name: 'New Offer' }).first()\n    2) <button type=\"button\" class=\"rounded-lg disabled:cursor-not-allowed disabled:opacity-60 bg-slate-900 text-white hover:bg-slate-800 px-3 py-1.5 text-sm\">…</button> aka getByRole('button', { name: 'New Offer' }).nth(1)\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /Yeni Teklif|New Offer/i })\u001b[22m\n\n    at C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\f4-desk-free-flows.spec.js:126:31",
+                        "location": {
+                          "file": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\f4-desk-free-flows.spec.js",
+                          "column": 31,
+                          "line": 126
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 124 |\u001b[39m\n \u001b[90m 125 |\u001b[39m     \u001b[36mconst\u001b[39m newOfferBtn \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"button\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Yeni Teklif|New Offer/i\u001b[39m })\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 126 |\u001b[39m     \u001b[36mawait\u001b[39m expect(newOfferBtn)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 127 |\u001b[39m     \u001b[36mawait\u001b[39m newOfferBtn\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 128 |\u001b[39m\n \u001b[90m 129 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[35m/\\/at\\/offers/\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\f4-desk-free-flows.spec.js",
+                            "column": 31,
+                            "line": 126
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('button', { name: /Yeni Teklif|New Offer/i })\nExpected: visible\nError: strict mode violation: getByRole('button', { name: /Yeni Teklif|New Offer/i }) resolved to 2 elements:\n    1) <button type=\"button\" class=\"rounded-lg disabled:cursor-not-allowed disabled:opacity-60 bg-slate-900 text-white hover:bg-slate-800 px-3 py-1.5 text-sm\">…</button> aka getByRole('button', { name: 'New Offer' }).first()\n    2) <button type=\"button\" class=\"rounded-lg disabled:cursor-not-allowed disabled:opacity-60 bg-slate-900 text-white hover:bg-slate-800 px-3 py-1.5 text-sm\">…</button> aka getByRole('button', { name: 'New Offer' }).nth(1)\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: /Yeni Teklif|New Offer/i })\u001b[22m\n\n\n  124 |\n  125 |     const newOfferBtn = page.getByRole(\"button\", { name: /Yeni Teklif|New Offer/i });\n> 126 |     await expect(newOfferBtn).toBeVisible();\n      |                               ^\n  127 |     await newOfferBtn.click();\n  128 |\n  129 |     await expect(page).toHaveURL(/\\/at\\/offers/);\n    at C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\f4-desk-free-flows.spec.js:126:31"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:53:42.292Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\test-results\\f4-desk-free-flows-F4-desk-a9610-r---Offer-quick-create-flow\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\test-results\\f4-desk-free-flows-F4-desk-a9610-r---Offer-quick-create-flow\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Aykut\\Documents\\GitHub\\acentem_takipte\\frontend\\tests\\e2e\\f4-desk-free-flows.spec.js",
+                        "column": 31,
+                        "line": 126
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "4b0a0ca3d29f31f97060-3043151f68426b5476d1",
+              "file": "f4-desk-free-flows.spec.js",
+              "line": 122,
+              "column": 3
+            },
+            {
+              "title": "Customer -> Communication flow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:53:48.418Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4b0a0ca3d29f31f97060-f351f862bd145db1ff25",
+              "file": "f4-desk-free-flows.spec.js",
+              "line": 133,
+              "column": 3
+            },
+            {
+              "title": "Task / Draft / Outbox frontend detail routes open",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-02-26T08:53:48.418Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4b0a0ca3d29f31f97060-839c45eb4cd06a83544e",
+              "file": "f4-desk-free-flows.spec.js",
+              "line": 145,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-02-26T08:53:12.781Z",
+    "duration": 35942.052,
+    "expected": 1,
+    "skipped": 3,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

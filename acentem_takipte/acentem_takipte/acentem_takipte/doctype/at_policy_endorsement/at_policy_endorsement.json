@@ -1,0 +1,125 @@
+{
+ "actions": [],
+ "autoname": "AT-END-.YYYY.-.#####.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy",
+  "endorsement_type",
+  "endorsement_date",
+  "status",
+  "change_payload",
+  "snapshot_version",
+  "snapshot_record",
+  "before_snapshot",
+  "after_snapshot",
+  "applied_on",
+  "applied_by",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy",
+   "reqd": 1
+  },
+  {
+   "default": "Premium Update",
+   "fieldname": "endorsement_type",
+   "fieldtype": "Select",
+   "label": "Endorsement Type",
+   "options": "Premium Update\nCoverage Update\nDate Update\nCancellation\nOther",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "endorsement_date",
+   "fieldtype": "Date",
+   "label": "Endorsement Date",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nApplied\nCancelled",
+   "reqd": 1
+  },
+  {
+   "description": "JSON payload with only allowed policy fields.",
+   "fieldname": "change_payload",
+   "fieldtype": "Long Text",
+   "label": "Change Payload",
+   "reqd": 1
+  },
+  {
+   "fieldname": "snapshot_version",
+   "fieldtype": "Int",
+   "label": "Snapshot Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "snapshot_record",
+   "fieldtype": "Link",
+   "label": "Snapshot Record",
+   "options": "AT Policy Snapshot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "before_snapshot",
+   "fieldtype": "Long Text",
+   "label": "Before Snapshot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "after_snapshot",
+   "fieldtype": "Long Text",
+   "label": "After Snapshot",
+   "read_only": 1
+  },
+  {
+   "fieldname": "applied_on",
+   "fieldtype": "Datetime",
+   "label": "Applied On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "applied_by",
+   "fieldtype": "Link",
+   "label": "Applied By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Policy Endorsement",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

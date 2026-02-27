@@ -1,0 +1,26 @@
+<testsuites id="" name="" tests="5" failures="0" skipped="2" errors="0" time="47.387751">
+<testsuite name="f4-desk-free-flows.spec.js" timestamp="2026-02-26T08:55:57.045Z" hostname="" tests="5" failures="0" skipped="2" time="43.99" errors="0">
+<testcase name="F4 desk-free core flows › Lead -&gt; Offer flow" classname="f4-desk-free-flows.spec.js" time="15.695">
+<properties>
+<property name="skip" value="No convertible lead found.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="F4 desk-free core flows › Offer -&gt; Policy flow" classname="f4-desk-free-flows.spec.js" time="11.003">
+</testcase>
+<testcase name="F4 desk-free core flows › Customer -&gt; Offer quick create flow" classname="f4-desk-free-flows.spec.js" time="5.43">
+</testcase>
+<testcase name="F4 desk-free core flows › Customer -&gt; Communication flow" classname="f4-desk-free-flows.spec.js" time="5.346">
+</testcase>
+<testcase name="F4 desk-free core flows › Task / Draft / Outbox frontend detail routes open" classname="f4-desk-free-flows.spec.js" time="6.516">
+<properties>
+<property name="skip" value="No rows available on /at/notification-drafts.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

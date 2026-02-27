@@ -1,0 +1,129 @@
+{
+ "actions": [],
+ "autoname": "field:tax_id",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tax_id",
+  "masked_tax_id",
+  "full_name",
+  "birth_date",
+  "gender",
+  "marital_status",
+  "occupation",
+  "phone",
+  "masked_phone",
+  "email",
+  "address",
+  "assigned_agent",
+  "consent_status",
+  "customer_folder"
+ ],
+ "fields": [
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID",
+   "permlevel": 1,
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "masked_tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID (Masked)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "birth_date",
+   "fieldtype": "Date",
+   "label": "Birth Date"
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "label": "Gender",
+   "options": "Unknown\nMale\nFemale\nOther"
+  },
+  {
+   "fieldname": "marital_status",
+   "fieldtype": "Select",
+   "label": "Marital Status",
+   "options": "Unknown\nSingle\nMarried\nDivorced\nWidowed"
+  },
+  {
+   "fieldname": "occupation",
+   "fieldtype": "Data",
+   "label": "Occupation"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "masked_phone",
+   "fieldtype": "Data",
+   "label": "Phone (Masked)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "assigned_agent",
+   "fieldtype": "Link",
+   "label": "Assigned Agent",
+   "options": "User"
+  },
+  {
+   "default": "Unknown",
+   "fieldname": "consent_status",
+   "fieldtype": "Select",
+   "label": "Consent Status",
+   "options": "Unknown\nGranted\nRevoked"
+  },
+  {
+   "fieldname": "customer_folder",
+   "fieldtype": "Data",
+   "label": "Customer Folder",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Customer",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

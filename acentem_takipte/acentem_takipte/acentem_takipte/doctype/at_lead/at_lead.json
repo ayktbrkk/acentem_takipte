@@ -1,0 +1,128 @@
+{
+ "actions": [],
+ "autoname": "AT-LEAD-.#####.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "first_name",
+  "last_name",
+  "phone",
+  "tax_id",
+  "email",
+  "status",
+  "customer",
+  "sales_entity",
+  "insurance_company",
+  "branch",
+  "estimated_gross_premium",
+  "notes",
+  "converted_offer",
+  "converted_policy"
+ ],
+ "fields": [
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nOpen\nReplied\nClosed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer"
+  },
+  {
+   "fieldname": "sales_entity",
+   "fieldtype": "Link",
+   "label": "Sales Entity",
+   "options": "AT Sales Entity"
+  },
+  {
+   "fieldname": "insurance_company",
+   "fieldtype": "Link",
+   "label": "Insurance Company",
+   "options": "AT Insurance Company"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "AT Branch"
+  },
+  {
+   "fieldname": "estimated_gross_premium",
+   "fieldtype": "Currency",
+   "label": "Estimated Gross Premium"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "converted_offer",
+   "fieldtype": "Link",
+   "label": "Converted Offer",
+   "options": "AT Offer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "converted_policy",
+   "fieldtype": "Link",
+   "label": "Converted Policy",
+   "options": "AT Policy",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Lead",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

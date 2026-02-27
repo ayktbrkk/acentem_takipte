@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "autoname": "AT-PSNP-.YYYY.-.#####.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy",
+  "snapshot_version",
+  "snapshot_type",
+  "source_doctype",
+  "source_name",
+  "snapshot_json",
+  "captured_on",
+  "captured_by",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy",
+   "reqd": 1
+  },
+  {
+   "fieldname": "snapshot_version",
+   "fieldtype": "Int",
+   "label": "Snapshot Version",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "default": "Baseline",
+   "fieldname": "snapshot_type",
+   "fieldtype": "Select",
+   "label": "Snapshot Type",
+   "options": "Baseline\nEndorsement",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_doctype",
+   "fieldtype": "Link",
+   "label": "Source DocType",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "source_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Source Name",
+   "options": "source_doctype"
+  },
+  {
+   "fieldname": "snapshot_json",
+   "fieldtype": "Long Text",
+   "label": "Snapshot JSON",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "captured_on",
+   "fieldtype": "Datetime",
+   "label": "Captured On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "captured_by",
+   "fieldtype": "Link",
+   "label": "Captured By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Policy Snapshot",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

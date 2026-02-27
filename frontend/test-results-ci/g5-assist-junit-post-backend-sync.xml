@@ -1,0 +1,60 @@
+<testsuites id="" name="" tests="5" failures="1" skipped="1" errors="0" time="60.335930999999995">
+<testsuite name="g5-desk-free-qa-assist.spec.js" timestamp="2026-02-26T08:48:48.261Z" hostname="" tests="5" failures="1" skipped="1" time="56.156" errors="0">
+<testcase name="G5 desk-free QA assist (admin) › desktop route sanity + desk fallback hidden by default" classname="g5-desk-free-qa-assist.spec.js" time="23.72">
+</testcase>
+<testcase name="G5 desk-free QA assist (admin) › mobile viewport route sanity (representative workbench/detail pages)" classname="g5-desk-free-qa-assist.spec.js" time="15.352">
+</testcase>
+<testcase name="G5 desk-free QA assist (restricted role) › Agent runtime capability payload disables finance/communication write actions" classname="g5-desk-free-qa-assist.spec.js" time="2.175">
+</testcase>
+<testcase name="G5 desk-free QA assist (restricted role) › Agent UI hides communication/finance quick actions" classname="g5-desk-free-qa-assist.spec.js" time="14.909">
+<failure message="g5-desk-free-qa-assist.spec.js:203:3 Agent UI hides communication/finance quick actions" type="FAILURE">
+<![CDATA[  g5-desk-free-qa-assist.spec.js:203:3 › G5 desk-free QA assist (restricted role) › Agent UI hides communication/finance quick actions 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('button', { name: /Hizli Iletisim|Quick Message/i })
+    Expected: 0
+    Received: 1
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveCount" with timeout 10000ms
+      - waiting for getByRole('button', { name: /Hizli Iletisim|Quick Message/i })
+        13 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      209 |
+      210 |     await gotoRoute(page, "/at/communication");
+    > 211 |     await expect(page.getByRole("button", { name: /Hizli Iletisim|Quick Message/i })).toHaveCount(0);
+          |                                                                                       ^
+      212 |     await expect(page.getByRole("button", { name: /Dagitimi Calistir|Run Dispatch/i })).toHaveCount(0);
+      213 |     await expect(page.locator(".at-table")).toBeVisible();
+      214 |
+        at C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\tests\e2e\g5-desk-free-qa-assist.spec.js:211:87
+
+    Error Context: ..\..\test-results\g5-desk-free-qa-assist-G5--88795-ation-finance-quick-actions\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\..\test-results\g5-desk-free-qa-assist-G5--88795-ation-finance-quick-actions\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\..\test-results\g5-desk-free-qa-assist-G5--88795-ation-finance-quick-actions\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-results\g5-desk-free-qa-assist-G5--88795-ation-finance-quick-actions\error-context.md]]
+
+[[ATTACHMENT|..\test-results\g5-desk-free-qa-assist-G5--88795-ation-finance-quick-actions\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="G5 desk-free QA assist (restricted role) › Agent backend write endpoints are permission denied" classname="g5-desk-free-qa-assist.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

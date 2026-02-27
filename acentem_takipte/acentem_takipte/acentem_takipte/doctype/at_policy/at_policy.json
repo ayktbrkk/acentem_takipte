@@ -1,0 +1,194 @@
+{
+ "actions": [],
+ "autoname": "Prompt",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "sales_entity",
+  "insurance_company",
+  "branch",
+  "policy_no",
+  "source_offer",
+  "current_version",
+  "status",
+  "issue_date",
+  "start_date",
+  "end_date",
+  "currency",
+  "fx_rate",
+  "fx_date",
+  "net_premium",
+  "tax_amount",
+  "commission_amount",
+  "gross_premium",
+  "commission",
+  "commission_rate",
+  "gwp_try",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sales_entity",
+   "fieldtype": "Link",
+   "label": "Sales Entity",
+   "options": "AT Sales Entity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "insurance_company",
+   "fieldtype": "Link",
+   "label": "Insurance Company",
+   "options": "AT Insurance Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "AT Branch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy_no",
+   "fieldtype": "Data",
+   "label": "Policy Number",
+   "unique": 1
+  },
+  {
+   "fieldname": "source_offer",
+   "fieldtype": "Link",
+   "label": "Source Offer",
+   "options": "AT Offer"
+  },
+  {
+   "default": "1",
+   "fieldname": "current_version",
+   "fieldtype": "Int",
+   "label": "Current Version",
+   "read_only": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "IPT\nKYT\nActive",
+   "reqd": 1
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date",
+   "reqd": 1
+  },
+  {
+   "default": "TRY",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "fx_rate",
+   "fieldtype": "Float",
+   "label": "FX Rate",
+   "precision": "6"
+  },
+  {
+   "fieldname": "fx_date",
+   "fieldtype": "Date",
+   "label": "FX Date"
+  },
+  {
+   "fieldname": "net_premium",
+   "fieldtype": "Currency",
+   "label": "Net Premium"
+  },
+  {
+   "default": "0",
+   "fieldname": "tax_amount",
+   "fieldtype": "Currency",
+   "label": "Tax Amount"
+  },
+  {
+   "default": "0",
+   "fieldname": "commission_amount",
+   "fieldtype": "Currency",
+   "label": "Commission Amount"
+  },
+  {
+   "fieldname": "gross_premium",
+   "fieldtype": "Currency",
+   "label": "Gross Premium",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "commission",
+   "fieldtype": "Currency",
+   "hidden": 1,
+   "label": "Commission (Legacy)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "commission_rate",
+   "fieldtype": "Percent",
+   "label": "Commission Rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gwp_try",
+   "fieldtype": "Currency",
+   "label": "GWP TRY",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Policy",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

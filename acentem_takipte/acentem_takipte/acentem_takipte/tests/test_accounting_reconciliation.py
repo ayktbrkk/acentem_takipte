@@ -1,0 +1,139 @@
+from __future__ import annotations
+
+from unittest.mock import patch
+
+import frappe
+from frappe.tests import IntegrationTestCase
+from frappe.utils import add_days, nowdate
+
+from acentem_takipte.api import accounting as accounting_api
+from acentem_takipte.accounting import (
+    resolve_reconciliation_item,
+    run_reconciliation,
+    sync_accounting_entry,
+)
+
+
+class TestAccountingReconciliation(IntegrationTestCase):
+    def tearDown(self) -> None:
+        frappe.db.rollback()
+
+    def test_accounting_api_mutations_require_accounting_roles(self):
+        previous_user = getattr(frappe.session, "user", None)
+        frappe.session.user = "restricted.user@example.com"
+        try:
+            with patch.object(accounting_api.frappe, "get_roles", return_value=["Agent"]):
+                with self.assertRaises(Exception) as run_sync_error:
+                    accounting_api.run_sync(limit=1)
+                self.assertIn("permission", str(run_sync_error.exception).lower())
+
+                with self.assertRaises(Exception) as resolve_error:
+                    accounting_api.resolve_item(item_name="", resolution_action="Matched")
+                self.assertIn("permission", str(resolve_error.exception).lower())
+        finally:
+            frappe.session.user = previous_user
+
+    def test_policy_sync_and_reconciliation_resolution(self):
+        deps = _create_dependencies()
+        policy = frappe.get_doc(
+            {
+                "doctype": "AT Policy",
+                "customer": deps["customer"],
+                "sales_entity": deps["sales_entity"],
+                "insurance_company": deps["insurance_company"],
+                "branch": deps["branch"],
+                "status": "Active",
+                "issue_date": nowdate(),
+                "start_date": nowdate(),
+                "end_date": add_days(nowdate(), 365),
+                "currency": "TRY",
+                "net_premium": 1000,
+                "commission_amount": 150,
+                "tax_amount": 120,
+            }
+        ).insert(ignore_permissions=True)
+
+        sync_result = sync_accounting_entry("AT Policy", policy.name, force=True)
+        self.assertEqual(sync_result.get("status"), "Synced")
+
+        entry_name = frappe.db.get_value(
+            "AT Accounting Entry",
+            {"source_doctype": "AT Policy", "source_name": policy.name},
+            "name",
+        )
+        self.assertTrue(entry_name)
+
+        entry = frappe.get_doc("AT Accounting Entry", entry_name)
+        entry.external_amount_try = (entry.local_amount_try or 0) + 250
+        entry.save(ignore_permissions=True)
+
+        reconciliation_summary = run_reconciliation(limit=100)
+        self.assertGreaterEqual(reconciliation_summary.get("open", 0), 1)
+
+        rec_name = frappe.db.get_value(
+            "AT Reconciliation Item",
+            {"accounting_entry": entry_name, "status": "Open"},
+            "name",
+        )
+        self.assertTrue(rec_name)
+
+        resolved = resolve_reconciliation_item(rec_name, resolution_action="Matched")
+        self.assertEqual(resolved.get("status"), "Resolved")
+
+        rec_doc = frappe.get_doc("AT Reconciliation Item", rec_name)
+        self.assertEqual(rec_doc.status, "Resolved")
+
+
+def _create_dependencies() -> dict[str, str]:
+    suffix = frappe.generate_hash(length=8)
+
+    insurance_company = frappe.get_doc(
+        {
+            "doctype": "AT Insurance Company",
+            "company_name": f"Recon Insurance {suffix}",
+            "company_code": f"RIC{suffix[:4]}",
+        }
+    ).insert(ignore_permissions=True)
+
+    branch = frappe.get_doc(
+        {
+            "doctype": "AT Branch",
+            "branch_name": f"Recon Branch {suffix}",
+            "branch_code": f"RB{suffix[:4]}",
+            "insurance_company": insurance_company.name,
+        }
+    ).insert(ignore_permissions=True)
+
+    sales_entity = frappe.get_doc(
+        {
+            "doctype": "AT Sales Entity",
+            "entity_type": "Agency",
+            "full_name": f"Recon Agency {suffix}",
+        }
+    ).insert(ignore_permissions=True)
+
+    customer = frappe.get_doc(
+        {
+            "doctype": "AT Customer",
+            "tax_id": _random_tax_id(),
+            "full_name": f"Recon Customer {suffix}",
+            "phone": "05559876543",
+            "email": f"recon.{suffix}@example.com",
+            "assigned_agent": "Administrator",
+        }
+    ).insert(ignore_permissions=True)
+
+    return {
+        "insurance_company": insurance_company.name,
+        "branch": branch.name,
+        "sales_entity": sales_entity.name,
+        "customer": customer.name,
+    }
+
+
+def _random_tax_id() -> str:
+    seed = frappe.generate_hash(length=11)
+    digits = "".join(char for char in seed if char.isdigit())
+    if len(digits) >= 11:
+        return digits[:11]
+    return (digits + "12345678901")[:11]

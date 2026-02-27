@@ -1,0 +1,1 @@
+# Keep app requirements empty; Frappe is provided by bench environment.

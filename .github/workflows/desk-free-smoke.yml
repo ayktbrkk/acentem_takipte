@@ -1,0 +1,242 @@
+name: Desk-Free Smoke
+
+permissions:
+  contents: read
+  issues: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Optional base URL override (defaults to repository variable E2E_BASE_URL)"
+        required: false
+        type: string
+      profile:
+        description: "Test profile to run"
+        required: false
+        default: "f4-smoke"
+        type: choice
+        options:
+          - f4-smoke
+          - all-e2e
+      grep:
+        description: "Playwright grep pattern"
+        required: false
+        default: "F4 desk-free core flows"
+        type: string
+      workers:
+        description: "Playwright worker count"
+        required: false
+        default: "1"
+        type: string
+      trace_mode:
+        description: "Playwright trace mode"
+        required: false
+        default: "retain-on-failure"
+        type: choice
+        options:
+          - retain-on-failure
+          - on
+          - off
+      target_label:
+        description: "Environment label shown in job summary"
+        required: false
+        default: "manual"
+        type: string
+  schedule:
+    - cron: "0 3 * * *"
+
+concurrency:
+  group: desk-free-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  playwright-smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.E2E_BASE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      E2E_BASE_URL: ${{ inputs.base_url || vars.E2E_BASE_URL }}
+      E2E_USER: ${{ secrets.E2E_USER }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_TRACE_MODE: ${{ inputs.trace_mode || 'retain-on-failure' }}
+      E2E_WORKERS: ${{ inputs.workers || '1' }}
+      E2E_TARGET_LABEL: ${{ inputs.target_label || 'nightly' }}
+      E2E_PROFILE: ${{ inputs.profile || 'f4-smoke' }}
+      PLAYWRIGHT_JSON_OUTPUT_DIR: test-results
+      PLAYWRIGHT_JSON_OUTPUT_NAME: smoke-report.json
+      PLAYWRIGHT_JUNIT_OUTPUT_DIR: test-results
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: smoke-junit.xml
+      CI: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright (Chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate smoke test configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${E2E_BASE_URL:-}" ]; then
+            echo "E2E_BASE_URL is required (repository variable or workflow input)." >&2
+            exit 1
+          fi
+          if [ -z "${E2E_USER:-}" ] || [ -z "${E2E_PASSWORD:-}" ]; then
+            echo "E2E_USER and E2E_PASSWORD secrets are required for authenticated smoke tests." >&2
+            exit 1
+          fi
+          if ! [[ "${E2E_WORKERS}" =~ ^[0-9]+$ ]]; then
+            echo "workers input must be numeric." >&2
+            exit 1
+          fi
+
+      - name: Run desk-free smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${E2E_PROFILE}" = "all-e2e" ]; then
+            npm run e2e:ci -- --workers "${E2E_WORKERS}"
+          else
+            npm run e2e:f4:ci -- --grep "${{ inputs.grep || 'F4 desk-free core flows' }}" --workers "${E2E_WORKERS}"
+          fi
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          if-no-files-found: ignore
+
+      - name: Append Playwright parsed summary
+        if: always()
+        shell: bash
+        run: |
+          node scripts/e2e/print-playwright-summary.mjs test-results/smoke-report.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Optional webhook notification (Slack-compatible)
+        if: always() && secrets.SMOKE_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          SMOKE_WEBHOOK_URL: ${{ secrets.SMOKE_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          STATUS="${{ job.status }}"
+          MSG="Desk-Free ${E2E_PROFILE} smoke run: ${STATUS}\nTarget: ${E2E_TARGET_LABEL}\nBase URL: ${E2E_BASE_URL}\nRun: ${RUN_URL}"
+          jq -n --arg text "$MSG" '{text:$text}' > /tmp/smoke-webhook.json
+          curl -fsS -X POST -H "Content-Type: application/json" --data @/tmp/smoke-webhook.json "$SMOKE_WEBHOOK_URL"
+
+      - name: Job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Desk-Free Smoke Run"
+            echo ""
+            echo "- Target: \`${E2E_TARGET_LABEL}\`"
+            echo "- Profile: \`${E2E_PROFILE}\`"
+            echo "- Base URL: \`${E2E_BASE_URL}\`"
+            echo "- Grep: \`${{ inputs.grep || 'F4 desk-free core flows' }}\`"
+            echo "- Workers: \`${E2E_WORKERS}\`"
+            echo "- Trace mode: \`${E2E_TRACE_MODE}\`"
+            echo "- Trigger: \`${{ github.event_name }}\`"
+            echo "- JUnit: \`test-results/smoke-junit.xml\`"
+            echo "- JSON: \`test-results/smoke-report.json\`"
+            echo "- Webhook: \`${{ secrets.SMOKE_WEBHOOK_URL != '' && 'enabled' || 'disabled' }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or comment failure issue (dedupe)
+        if: failure()
+        uses: actions/github-script@v7
+        env:
+          SMOKE_PROFILE: ${{ env.E2E_PROFILE }}
+          SMOKE_TARGET: ${{ env.E2E_TARGET_LABEL }}
+          SMOKE_BASE_URL: ${{ env.E2E_BASE_URL }}
+          SMOKE_GREP: ${{ inputs.grep || 'F4 desk-free core flows' }}
+          SMOKE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SMOKE_WORKFLOW: ${{ github.workflow }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const profile = process.env.SMOKE_PROFILE || "f4-smoke";
+            const target = process.env.SMOKE_TARGET || "nightly";
+            const baseUrl = process.env.SMOKE_BASE_URL || "";
+            const grep = process.env.SMOKE_GREP || "";
+            const runUrl = process.env.SMOKE_RUN_URL;
+            const workflowName = process.env.SMOKE_WORKFLOW || "Desk-Free Smoke";
+            const title = `[Desk-Free Smoke][${target}][${profile}] Failure`;
+            const marker = `<!-- desk-free-smoke:${target}:${profile} -->`;
+
+            const listResp = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: "open",
+              per_page: 100,
+            });
+
+            const existing = listResp.data.find(
+              (issue) =>
+                !issue.pull_request &&
+                issue.title === title
+            );
+
+            const bodyLines = [
+              marker,
+              `Workflow failure detected for \`${workflowName}\`.`,
+              "",
+              `- Target: \`${target}\``,
+              `- Profile: \`${profile}\``,
+              `- Base URL: \`${baseUrl}\``,
+              `- Grep: \`${grep}\``,
+              `- Branch/Ref: \`${context.ref}\``,
+              `- Commit: \`${context.sha}\``,
+              `- Run: ${runUrl}`,
+            ];
+
+            const commentBody = [
+              "New failure detected.",
+              "",
+              `- Time: ${new Date().toISOString()}`,
+              `- Run: ${runUrl}`,
+              `- Commit: \`${context.sha}\``,
+            ].join("\n");
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: existing.number,
+                body: commentBody,
+              });
+              core.info(`Commented on existing issue #${existing.number}`);
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title,
+              body: bodyLines.join("\n"),
+              labels: ["bug"],
+            });
+            core.info(`Created failure issue: ${title}`);
