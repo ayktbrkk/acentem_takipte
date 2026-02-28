@@ -211,7 +211,7 @@ export async function hydrateSessionState() {
       resolvedUser = loggedUser;
     }
 
-    const data = await getJson("/api/method/acentem_takipte.api.session.get_session_context");
+    const data = await getJson("/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context");
     applySessionContext(data, resolvedUser);
   } catch (error) {
     // If request fails, keep bootstrap defaults.

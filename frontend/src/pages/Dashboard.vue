@@ -859,7 +859,7 @@ const newLead = reactive({
 });
 
 const kpiResource = createResource({
-  url: "acentem_takipte.api.dashboard.get_dashboard_kpis",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
   params: buildKpiParams(),
   auto: false,
 });
@@ -954,7 +954,7 @@ const paymentPreviewResource = createResource({
 });
 
 const reconciliationPreviewResource = createResource({
-  url: "acentem_takipte.api.accounting.get_reconciliation_workbench",
+  url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
   params: {
     status: "Open",
     mismatch_type: null,
@@ -964,7 +964,7 @@ const reconciliationPreviewResource = createResource({
 });
 
 const dashboardTabPayloadResource = createResource({
-  url: "acentem_takipte.api.dashboard.get_dashboard_tab_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
   params: buildTabPayloadParams("daily"),
   auto: true,
 });

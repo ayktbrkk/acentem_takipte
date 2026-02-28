@@ -41,13 +41,13 @@ function isReadOnlyMethod(url) {
     methodName === "frappe.client.get_value" ||
     methodName === "frappe.client.count" ||
     methodName === "frappe.client.get_count" ||
-    methodName === "acentem_takipte.api.filter_presets.get_filter_preset_state" ||
-    methodName === "acentem_takipte.api.dashboard.get_customer_portfolio_summary_map" ||
-    methodName === "acentem_takipte.api.dashboard.get_customer_workbench_rows" ||
-    methodName === "acentem_takipte.api.dashboard.get_lead_workbench_rows" ||
-    methodName === "acentem_takipte.api.dashboard.get_lead_detail_payload" ||
-    methodName === "acentem_takipte.api.dashboard.get_offer_detail_payload" ||
-    methodName === "acentem_takipte.api.communication.get_queue_snapshot"
+    methodName === "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state" ||
+    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_customer_portfolio_summary_map" ||
+    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows" ||
+    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows" ||
+    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_lead_detail_payload" ||
+    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_offer_detail_payload" ||
+    methodName === "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot"
   );
 }
 

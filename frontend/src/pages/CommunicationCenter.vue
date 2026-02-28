@@ -506,21 +506,21 @@ const showQuickMessageDialog = ref(false);
 const operationError = ref("");
 
 const snapshotResource = createResource({
-  url: "acentem_takipte.api.communication.get_queue_snapshot",
+  url: "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot",
   params: buildParams(),
   auto: true,
 });
 
 const runCycleResource = createResource({
-  url: "acentem_takipte.api.communication.run_dispatch_cycle",
+  url: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
 });
 
 const sendDraftResource = createResource({
-  url: "acentem_takipte.api.communication.send_draft_now",
+  url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
 });
 
 const retryOutboxResource = createResource({
-  url: "acentem_takipte.api.communication.retry_outbox_item",
+  url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
 });
 const communicationQuickTemplateResource = createResource({
   url: "frappe.client.get_list",

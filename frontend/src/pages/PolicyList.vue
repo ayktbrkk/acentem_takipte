@@ -471,11 +471,11 @@ const policyCountResource = createResource({
   auto: false,
 });
 const policyPresetServerReadResource = createResource({
-  url: "acentem_takipte.api.filter_presets.get_filter_preset_state",
+  url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
   auto: false,
 });
 const policyPresetServerWriteResource = createResource({
-  url: "acentem_takipte.api.filter_presets.set_filter_preset_state",
+  url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
   auto: false,
 });
 

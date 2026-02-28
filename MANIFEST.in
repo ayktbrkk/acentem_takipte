@@ -1,4 +1,9 @@
+include MANIFEST.in
 include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
 recursive-include acentem_takipte *.css
 recursive-include acentem_takipte *.csv
 recursive-include acentem_takipte *.html
@@ -10,3 +15,7 @@ recursive-include acentem_takipte *.png
 recursive-include acentem_takipte *.py
 recursive-include acentem_takipte *.svg
 recursive-include acentem_takipte *.txt
+recursive-exclude acentem_takipte *.pyc
+recursive-exclude acentem_takipte __pycache__
+recursive-include acentem_takipte/public *
+recursive-include acentem_takipte/templates *

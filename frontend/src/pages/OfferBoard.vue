@@ -753,11 +753,11 @@ const offerListCountResource = createResource({
   auto: false,
 });
 const offerPresetServerReadResource = createResource({
-  url: "acentem_takipte.api.filter_presets.get_filter_preset_state",
+  url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
   auto: false,
 });
 const offerPresetServerWriteResource = createResource({
-  url: "acentem_takipte.api.filter_presets.set_filter_preset_state",
+  url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
   auto: false,
 });
 

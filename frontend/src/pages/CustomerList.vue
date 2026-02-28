@@ -495,14 +495,14 @@ const quickCustomerForm = reactive(buildQuickCreateDraft(quickCustomerConfig));
 const quickCustomerReturnTo = ref("");
 const quickCustomerOpenedFromIntent = ref(false);
 
-const customerListResource = createResource({ url: "acentem_takipte.api.dashboard.get_customer_workbench_rows", auto: false });
+const customerListResource = createResource({ url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows", auto: false });
 const quickCustomerCreateResource = createResource({ url: quickCustomerConfig.submitUrl, auto: false });
 const presetServerReadResource = createResource({
-  url: "acentem_takipte.api.filter_presets.get_filter_preset_state",
+  url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
   auto: false,
 });
 const presetServerWriteResource = createResource({
-  url: "acentem_takipte.api.filter_presets.set_filter_preset_state",
+  url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
   auto: false,
 });
 

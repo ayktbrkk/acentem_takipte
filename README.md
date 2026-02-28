@@ -1,109 +1,69 @@
-# 🛡️ Acentem Takipte
+# Acentem Takipte
 
-[![Framework: Frappe](https://img.shields.io/badge/Framework-Frappe-blue.svg)](https://frappeframework.com/)
-[![Frontend: Vue 3](https://img.shields.io/badge/Frontend-Vue%203-42b883.svg)](https://vuejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+Acentem Takipte is a comprehensive Insurance CRM (Customer Relationship Management) application built on the powerful Frappe Framework and Vue 3. It is designed specifically for insurance agencies to efficiently manage policies, customers, renewals, claims, and offers.
 
-**Acentem Takipte** is a modern, comprehensive Insurance Agency CRM and Policy Management system built on the powerful **Frappe Framework** with a sleek, high-performance **Vue 3** single-page application (SPA) frontend.
+## 🌟 Key Features
 
-Designed specifically for insurance agencies to streamline their operations, track policies, manage leads, and handle complex financial reconciliations in one unified platform.
+*   **Customer Management**: Store and organize detailed customer records with integrated communication history across channels (Email, SMS).
+*   **Policy lifecycle**: Track policies from creation through active coverage to renewal. Complete visibility of policy data and attached documents.
+*   **Automated Renewals**: Intelligent background tasks built into Frappe to track expiring policies, dispatch notifications to customers, and create renewal tasks for agents.
+*   **Offer & Claim Tracking**: Dedicated workspaces and views for handling insurance offers and managing claim records against active policies.
+*   **Communication Center**: Built-in centralized dispatch hub. Monitor queue status, retry failed messages, and engage customers seamlessly without leaving the dashboard.
+*   **Modern Frontend**: A fully bespoke, highly responsive SPA (Single Page Application) built with Vue 3 and Tailwind CSS running seamlessly alongside Frappe's traditional desk.
+*   **Financial Reconciliation**: Base integration for tracking payments and basic accounting records against policies.
 
----
+## 🛠️ Technology Stack
 
-## ✨ Key Features
+*   **Backend**: Python, MariaDB, Redis, [Frappe Framework 15](https://frappeframework.com/)
+*   **Frontend**: Vue 3, Vite, Tailwind CSS, Frappe UI, Lucide Icons
 
-### 👥 Customer & Lead Management
-- **Centralized CRM**: Detailed profiles for individual and corporate clients.
-- **Lead Pipeline**: Track potential sales from initial contact to policy issuance.
-- **Access Logging**: Secure tracking of data access for compliance.
+## 🚀 Installation
 
-### 📜 Policy Lifecycle
-- **Policy Management**: Full lifecycle tracking including endorsements and renewals.
-- **Snapshots**: Historical versioning of policy data for accurate record-keeping.
-- **Offer Management**: Generate and track multiple quotes/offers for prospects.
+Ensure you have a working Bench environment set up with Frappe V15.
 
-### 💰 Financials & Claims
-- **Payment Tracking**: Integrated payment recording and status monitoring.
-- **Reconciliation Workbench**: Advanced tools for matching agency records with insurance company statements.
-- **Claims Board**: Simplified tracking of insurance claims from filing to settlement.
+### Standard Installation
 
-### 📧 Communication & Automation
-- **Communication Center**: Manage client interactions in one place.
-- **Notification Templates**: Automated reminders for renewals and important dates via customizable templates.
+1.  **Get the App**
+    Get the app from this repository into your bench environment.
+    ```bash
+    bench get-app https://github.com/ayktbrkk/acentem_takipte.git
+    ```
 
----
+2.  **Install on Site**
+    Install the app on your desired site.
+    ```bash
+    bench --site [your-site-name] install-app acentem_takipte
+    ```
 
-## 🛠️ Tech Stack
+3.  **Build Frontend Assets**
+    Because this app contains a custom Vue frontend, you must compile the bundle.
+    ```bash
+    bench --site [your-site-name] build --app acentem_takipte
+    # If the standard build doesn't hook properly, you can compile it manually:
+    cd apps/acentem_takipte/frontend
+    npm install
+    npm run build
+    ```
 
-- **Backend**: [Frappe Framework](https://frappeframework.com/) (Python, MariaDB/PostgreSQL)
-- **Frontend**: [Vue 3](https://vuejs.org/) SPA + [Vite](https://vitejs.dev/) + [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components**: [Frappe UI](https://frappeui.com/)
-- **State Management**: [Pinia](https://pinia.vuejs.org/) / Composition API
+4.  **Migrate & Restart**
+    ```bash
+    bench --site [your-site-name] migrate
+    bench restart
+    ```
 
----
+## 📁 Repository Structure
 
-## 📂 Project Structure
+The framework operates on the traditional structural model of Frappe Applications:
+*   `acentem_takipte/`: The backend Python package containing modules, APIs, DocTypes, and business logic.
+*   `acentem_takipte/public/frontend/`: Compiled Vue 3 production files.
+*   `frontend/`: Source codes for the Vue 3 SPA (Single Page Application).
+*   `patches/`: Frappe Database migration scripts.
 
-- `acentem_takipte/`: Frappe application source code (DocTypes, Python logic).
-- `frontend/`: Vue 3 + Vite SPA frontend projects.
-- `docs/`: Technical documentation and guides.
-- `scripts/`: Utility scripts for development and deployment.
+## 🌐 Accessing the Hub
 
----
+After a successful installation and login, you can access the modern agent dashboard directly via your browser at:
+`http://[your-site-name]/at`
 
-## 🚀 Getting Started
+## 📄 License
 
-### Prerequisites
-- Frappe Bench environment installed.
-- Node.js (v16+) and npm/yarn.
-
-### Installation
-
-1. **Install the App**:
-   ```bash
-   bench get-app https://github.com/[your-username]/acentem_takipte.git
-   bench --site [your-site] install-app acentem_takipte
-   ```
-
-2. **Setup Frontend**:
-   ```bash
-   cd apps/acentem_takipte/frontend
-   npm install
-   ```
-
-### Development
-
-#### Run Frontend Dev Server
-```bash
-cd frontend
-npm run dev
-```
-The app will be accessible at `your-site-url/at`.
-
-#### Build for Production
-```bash
-cd frontend
-npm run build
-```
-
----
-
-## 🐳 Docker Note
-
-If you are running in a Docker environment and encounter 404 errors for assets after a restart, use the recovery script:
-
-```powershell
-.\scripts\ensure_docker_asset_links.ps1 -ClearCache
-```
-
-This ensures the symbolic links between the backend and frontend containers are correctly established.
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-*Built with ❤️ for the insurance industry.*
-
+This project is open-sourced under the MIT License.
