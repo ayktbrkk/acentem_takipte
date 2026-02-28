@@ -1,11 +1,564 @@
 {
-  "../../acentem_takipte/frontend/src/main.js": {
-    "file": "assets/main-WQP-QPUL.js",
-    "name": "main",
-    "src": "../../acentem_takipte/frontend/src/main.js",
-    "isEntry": true,
+  "_DataTableCell-CSkcRmjd.js": {
+    "file": "assets/DataTableCell-CSkcRmjd.js",
+    "name": "DataTableCell",
+    "imports": [
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_DocHeaderCard-Br2HSL7M.js": {
+    "file": "assets/DocHeaderCard-Br2HSL7M.js",
+    "name": "DocHeaderCard",
+    "imports": [
+      "_frappe_ui-BkoWgaBo.js",
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_DocSummaryGrid-DshrgMRv.js": {
+    "file": "assets/DocSummaryGrid-DshrgMRv.js",
+    "name": "DocSummaryGrid",
+    "imports": [
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_EntityPreviewCard-DaJBZ_Ik.js": {
+    "file": "assets/EntityPreviewCard-DaJBZ_Ik.js",
+    "name": "EntityPreviewCard",
+    "imports": [
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_FormattedCurrencyValue-DmEr7Vvp.js": {
+    "file": "assets/FormattedCurrencyValue-DmEr7Vvp.js",
+    "name": "FormattedCurrencyValue",
+    "imports": [
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_InlineActionRow-B6sQblt0.js": {
+    "file": "assets/InlineActionRow-B6sQblt0.js",
+    "name": "InlineActionRow",
+    "imports": [
+      "_frappe_ui-BkoWgaBo.js",
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_MiniFactList-CL_K0vaF.js": {
+    "file": "assets/MiniFactList-CL_K0vaF.js",
+    "name": "MiniFactList",
+    "imports": [
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_QuickCreateDialogShell-KkVq0QfF.js": {
+    "file": "assets/QuickCreateDialogShell-KkVq0QfF.js",
+    "name": "QuickCreateDialogShell",
+    "imports": [
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_QuickCreateLauncher-Cakzpcoh.js": {
+    "file": "assets/QuickCreateLauncher-Cakzpcoh.js",
+    "name": "QuickCreateLauncher",
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_quickRouteIntent-iVhVdz1i.js"
+    ]
+  },
+  "_QuickCreateManagedDialog-7o7itovf.js": {
+    "file": "assets/QuickCreateManagedDialog-7o7itovf.js",
+    "name": "QuickCreateManagedDialog",
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ]
+  },
+  "_SectionCardHeader-BU0Ov0ix.js": {
+    "file": "assets/SectionCardHeader-BU0Ov0ix.js",
+    "name": "SectionCardHeader",
+    "imports": [
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_StatusBadge-CZYX6Tm4.js": {
+    "file": "assets/StatusBadge-CZYX6Tm4.js",
+    "name": "StatusBadge",
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js"
+    ]
+  },
+  "_TableFactsCell-BvM0mMnK.js": {
+    "file": "assets/TableFactsCell-BvM0mMnK.js",
+    "name": "TableFactsCell",
+    "imports": [
+      "_MiniFactList-CL_K0vaF.js",
+      "_vue-z5oJQQqu.js",
+      "_DataTableCell-CSkcRmjd.js"
+    ]
+  },
+  "_TablePagerFooter-CW7pmC5F.js": {
+    "file": "assets/TablePagerFooter-CW7pmC5F.js",
+    "name": "TablePagerFooter",
+    "imports": [
+      "_StatusBadge-CZYX6Tm4.js",
+      "_vue-z5oJQQqu.js"
+    ]
+  },
+  "_factItems-DpGtnkx9.js": {
+    "file": "assets/factItems-DpGtnkx9.js",
+    "name": "factItems"
+  },
+  "_filterPresetState-CzDWMXcE.js": {
+    "file": "assets/filterPresetState-CzDWMXcE.js",
+    "name": "filterPresetState",
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_StatusBadge-CZYX6Tm4.js"
+    ]
+  },
+  "_frappe_ui-!~{003}~.js": {
+    "file": "assets/frappe_ui-BySO23ih.css",
+    "src": "_frappe_ui-!~{003}~.js"
+  },
+  "_frappe_ui-BkoWgaBo.js": {
+    "file": "assets/frappe_ui-BkoWgaBo.js",
+    "name": "frappe_ui",
+    "imports": [
+      "_vue-z5oJQQqu.js"
+    ],
     "css": [
-      "assets/main-D8eS3o8N.css"
+      "assets/frappe_ui-BySO23ih.css"
+    ]
+  },
+  "_quickCreateSuccess-!~{00s}~.js": {
+    "file": "assets/quickCreateSuccess-9Z8FcWnL.css",
+    "src": "_quickCreateSuccess-!~{00s}~.js"
+  },
+  "_quickCreateSuccess-Em1x59Kj.js": {
+    "file": "assets/quickCreateSuccess-Em1x59Kj.js",
+    "name": "quickCreateSuccess",
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ],
+    "css": [
+      "assets/quickCreateSuccess-9Z8FcWnL.css"
+    ]
+  },
+  "_quickRouteIntent-iVhVdz1i.js": {
+    "file": "assets/quickRouteIntent-iVhVdz1i.js",
+    "name": "quickRouteIntent"
+  },
+  "_sourcePanel-BYpE39ea.js": {
+    "file": "assets/sourcePanel-BYpE39ea.js",
+    "name": "sourcePanel"
+  },
+  "_useCustomFilterPresets-DLzKaQQB.js": {
+    "file": "assets/useCustomFilterPresets-DLzKaQQB.js",
+    "name": "useCustomFilterPresets",
+    "imports": [
+      "_filterPresetState-CzDWMXcE.js",
+      "_vue-z5oJQQqu.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ]
+  },
+  "_vue-z5oJQQqu.js": {
+    "file": "assets/vue-z5oJQQqu.js",
+    "name": "vue"
+  },
+  "src/main.js": {
+    "file": "assets/main-BwIir7Oq.js",
+    "name": "main",
+    "src": "src/main.js",
+    "isEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ],
+    "dynamicImports": [
+      "src/pages/Dashboard.vue",
+      "src/pages/OfferBoard.vue",
+      "src/pages/PolicyList.vue",
+      "src/pages/PolicyDetail.vue",
+      "src/pages/LeadList.vue",
+      "src/pages/LeadDetail.vue",
+      "src/pages/CustomerList.vue",
+      "src/pages/CustomerDetail.vue",
+      "src/pages/OfferDetail.vue",
+      "src/pages/ClaimsBoard.vue",
+      "src/pages/PaymentsBoard.vue",
+      "src/pages/RenewalsBoard.vue",
+      "src/pages/CommunicationCenter.vue",
+      "src/pages/ReconciliationWorkbench.vue",
+      "src/pages/AuxWorkbench.vue",
+      "src/pages/AuxRecordDetail.vue"
+    ],
+    "css": [
+      "assets/main-BJBcmH1M.css"
+    ]
+  },
+  "src/pages/AuxRecordDetail.vue": {
+    "file": "assets/AuxRecordDetail-DWsVnV7J.js",
+    "name": "AuxRecordDetail",
+    "src": "src/pages/AuxRecordDetail.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_sourcePanel-BYpE39ea.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_DocHeaderCard-Br2HSL7M.js",
+      "_DocSummaryGrid-DshrgMRv.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_SectionCardHeader-BU0Ov0ix.js",
+      "_QuickCreateManagedDialog-7o7itovf.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ]
+  },
+  "src/pages/AuxWorkbench.vue": {
+    "file": "assets/AuxWorkbench-BbI_K1Tw.js",
+    "name": "AuxWorkbench",
+    "src": "src/pages/AuxWorkbench.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_sourcePanel-BYpE39ea.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_DataTableCell-CSkcRmjd.js",
+      "_TableFactsCell-BvM0mMnK.js",
+      "_TablePagerFooter-CW7pmC5F.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_QuickCreateManagedDialog-7o7itovf.js",
+      "_frappe_ui-BkoWgaBo.js",
+      "_MiniFactList-CL_K0vaF.js",
+      "_quickRouteIntent-iVhVdz1i.js"
+    ]
+  },
+  "src/pages/ClaimsBoard.vue": {
+    "file": "assets/ClaimsBoard-BzFctgox.js",
+    "name": "ClaimsBoard",
+    "src": "src/pages/ClaimsBoard.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_FormattedCurrencyValue-DmEr7Vvp.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_DataTableCell-CSkcRmjd.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_QuickCreateManagedDialog-7o7itovf.js",
+      "_TableFactsCell-BvM0mMnK.js",
+      "_useCustomFilterPresets-DLzKaQQB.js",
+      "_factItems-DpGtnkx9.js",
+      "_frappe_ui-BkoWgaBo.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_MiniFactList-CL_K0vaF.js"
+    ],
+    "css": [
+      "assets/ClaimsBoard-D2YEdIYY.css"
+    ]
+  },
+  "src/pages/CommunicationCenter.vue": {
+    "file": "assets/CommunicationCenter-B3gJT0aU.js",
+    "name": "CommunicationCenter",
+    "src": "src/pages/CommunicationCenter.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DataTableCell-CSkcRmjd.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_QuickCreateManagedDialog-7o7itovf.js",
+      "_useCustomFilterPresets-DLzKaQQB.js",
+      "_sourcePanel-BYpE39ea.js",
+      "_frappe_ui-BkoWgaBo.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_quickCreateSuccess-Em1x59Kj.js"
+    ],
+    "css": [
+      "assets/CommunicationCenter-XWY43YH3.css"
+    ]
+  },
+  "src/pages/CustomerDetail.vue": {
+    "file": "assets/CustomerDetail-DCqc2bDA.js",
+    "name": "CustomerDetail",
+    "src": "src/pages/CustomerDetail.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_DocHeaderCard-Br2HSL7M.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DocSummaryGrid-DshrgMRv.js",
+      "_EntityPreviewCard-DaJBZ_Ik.js",
+      "_SectionCardHeader-BU0Ov0ix.js",
+      "_MiniFactList-CL_K0vaF.js",
+      "src/main.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ]
+  },
+  "src/pages/CustomerList.vue": {
+    "file": "assets/CustomerList-BaGSaQ5W.js",
+    "name": "CustomerList",
+    "src": "src/pages/CustomerList.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DataTableCell-CSkcRmjd.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_MiniFactList-CL_K0vaF.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_TableFactsCell-BvM0mMnK.js",
+      "_TablePagerFooter-CW7pmC5F.js",
+      "_factItems-DpGtnkx9.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ],
+    "css": [
+      "assets/CustomerList-CUHl_1h3.css"
+    ]
+  },
+  "src/pages/Dashboard.vue": {
+    "file": "assets/Dashboard-CeXaHG3Z.js",
+    "name": "Dashboard",
+    "src": "src/pages/Dashboard.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_frappe_ui-BkoWgaBo.js",
+      "_EntityPreviewCard-DaJBZ_Ik.js",
+      "_SectionCardHeader-BU0Ov0ix.js",
+      "_MiniFactList-CL_K0vaF.js"
+    ]
+  },
+  "src/pages/LeadDetail.vue": {
+    "file": "assets/LeadDetail-Dbgnt7sp.js",
+    "name": "LeadDetail",
+    "src": "src/pages/LeadDetail.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_DocHeaderCard-Br2HSL7M.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DocSummaryGrid-DshrgMRv.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_SectionCardHeader-BU0Ov0ix.js",
+      "_MiniFactList-CL_K0vaF.js",
+      "src/main.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ]
+  },
+  "src/pages/LeadList.vue": {
+    "file": "assets/LeadList-Dl2alGyu.js",
+    "name": "LeadList",
+    "src": "src/pages/LeadList.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DataTableCell-CSkcRmjd.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_MiniFactList-CL_K0vaF.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_TableFactsCell-BvM0mMnK.js",
+      "_TablePagerFooter-CW7pmC5F.js",
+      "_factItems-DpGtnkx9.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ],
+    "css": [
+      "assets/LeadList-vxMvtbNM.css"
+    ]
+  },
+  "src/pages/OfferBoard.vue": {
+    "file": "assets/OfferBoard-h6kXE9Xm.js",
+    "name": "OfferBoard",
+    "src": "src/pages/OfferBoard.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DataTableCell-CSkcRmjd.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_MiniFactList-CL_K0vaF.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_TableFactsCell-BvM0mMnK.js",
+      "_TablePagerFooter-CW7pmC5F.js",
+      "_factItems-DpGtnkx9.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ],
+    "css": [
+      "assets/OfferBoard-__xqW_RG.css"
+    ]
+  },
+  "src/pages/OfferDetail.vue": {
+    "file": "assets/OfferDetail-DhbyDYDo.js",
+    "name": "OfferDetail",
+    "src": "src/pages/OfferDetail.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_DocHeaderCard-Br2HSL7M.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DocSummaryGrid-DshrgMRv.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_SectionCardHeader-BU0Ov0ix.js",
+      "_MiniFactList-CL_K0vaF.js",
+      "src/main.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ]
+  },
+  "src/pages/PaymentsBoard.vue": {
+    "file": "assets/PaymentsBoard-CHii-8pr.js",
+    "name": "PaymentsBoard",
+    "src": "src/pages/PaymentsBoard.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_DataTableCell-CSkcRmjd.js",
+      "_DocSummaryGrid-DshrgMRv.js",
+      "_FormattedCurrencyValue-DmEr7Vvp.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_QuickCreateManagedDialog-7o7itovf.js",
+      "_TableFactsCell-BvM0mMnK.js",
+      "_useCustomFilterPresets-DLzKaQQB.js",
+      "_factItems-DpGtnkx9.js",
+      "_frappe_ui-BkoWgaBo.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_MiniFactList-CL_K0vaF.js"
+    ],
+    "css": [
+      "assets/PaymentsBoard-CcNX5O9g.css"
+    ]
+  },
+  "src/pages/PolicyDetail.vue": {
+    "file": "assets/PolicyDetail-F5eeLcbr.js",
+    "name": "PolicyDetail",
+    "src": "src/pages/PolicyDetail.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_DocHeaderCard-Br2HSL7M.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DocSummaryGrid-DshrgMRv.js",
+      "_SectionCardHeader-BU0Ov0ix.js",
+      "_frappe_ui-BkoWgaBo.js"
+    ]
+  },
+  "src/pages/PolicyList.vue": {
+    "file": "assets/PolicyList-BK28WX51.js",
+    "name": "PolicyList",
+    "src": "src/pages/PolicyList.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_DataTableCell-CSkcRmjd.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_quickCreateSuccess-Em1x59Kj.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_TableFactsCell-BvM0mMnK.js",
+      "_TablePagerFooter-CW7pmC5F.js",
+      "_factItems-DpGtnkx9.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_frappe_ui-BkoWgaBo.js",
+      "_MiniFactList-CL_K0vaF.js"
+    ],
+    "css": [
+      "assets/PolicyList-CvmnTe31.css"
+    ]
+  },
+  "src/pages/ReconciliationWorkbench.vue": {
+    "file": "assets/ReconciliationWorkbench-IOo6AceR.js",
+    "name": "ReconciliationWorkbench",
+    "src": "src/pages/ReconciliationWorkbench.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "src/main.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_FormattedCurrencyValue-DmEr7Vvp.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_TableFactsCell-BvM0mMnK.js",
+      "_useCustomFilterPresets-DLzKaQQB.js",
+      "_factItems-DpGtnkx9.js",
+      "_sourcePanel-BYpE39ea.js",
+      "_frappe_ui-BkoWgaBo.js",
+      "_MiniFactList-CL_K0vaF.js",
+      "_DataTableCell-CSkcRmjd.js"
+    ],
+    "css": [
+      "assets/ReconciliationWorkbench-CillrDKt.css"
+    ]
+  },
+  "src/pages/RenewalsBoard.vue": {
+    "file": "assets/RenewalsBoard-DjtVw9m9.js",
+    "name": "RenewalsBoard",
+    "src": "src/pages/RenewalsBoard.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vue-z5oJQQqu.js",
+      "_StatusBadge-CZYX6Tm4.js",
+      "_QuickCreateDialogShell-KkVq0QfF.js",
+      "_DocSummaryGrid-DshrgMRv.js",
+      "_InlineActionRow-B6sQblt0.js",
+      "_filterPresetState-CzDWMXcE.js",
+      "_QuickCreateLauncher-Cakzpcoh.js",
+      "_QuickCreateManagedDialog-7o7itovf.js",
+      "_useCustomFilterPresets-DLzKaQQB.js",
+      "src/main.js",
+      "_frappe_ui-BkoWgaBo.js",
+      "_quickRouteIntent-iVhVdz1i.js",
+      "_quickCreateSuccess-Em1x59Kj.js"
+    ],
+    "css": [
+      "assets/RenewalsBoard-DZBm1AKn.css"
     ]
   }
 }

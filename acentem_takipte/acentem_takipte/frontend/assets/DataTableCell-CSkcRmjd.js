@@ -1,0 +1,1 @@
+import{o as l,c as s,K as t,_ as r}from"./vue-z5oJQQqu.js";const n={__name:"DataTableCell",props:{cellClass:{type:[String,Array,Object],default:""}},setup(e){return(a,c)=>(l(),s("td",{class:r(["at-table-cell",e.cellClass])},[t(a.$slots,"default")],2))}};export{n as _};

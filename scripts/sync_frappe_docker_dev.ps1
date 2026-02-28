@@ -105,12 +105,15 @@ function Invoke-WatchSignal {
         try {
             if ($Level -eq "error") {
                 [System.Media.SystemSounds]::Hand.Play()
-            } elseif ($Level -eq "success") {
+            }
+            elseif ($Level -eq "success") {
                 [System.Media.SystemSounds]::Asterisk.Play()
-            } else {
+            }
+            else {
                 [System.Media.SystemSounds]::Beep.Play()
             }
-        } catch {
+        }
+        catch {
             # best effort
         }
     }
@@ -118,8 +121,8 @@ function Invoke-WatchSignal {
     if ($WatchNotify) {
         $title = switch ($Level) {
             "success" { "AT Dev Sync Basarili" }
-            "error"   { "AT Dev Sync Hata" }
-            default   { "AT Dev Sync" }
+            "error" { "AT Dev Sync Hata" }
+            default { "AT Dev Sync" }
         }
         $shown = Show-WatchToast -Title $title -Message $Message
         if (-not $shown) {
@@ -142,8 +145,8 @@ function Get-MainAssetInfo {
     }
     return @{
         ManifestPath = $manifestPath
-        MainJs = $mainJs
-        MainCss = $mainCss
+        MainJs       = $mainJs
+        MainCss      = $mainCss
     }
 }
 
@@ -169,7 +172,7 @@ function Get-WatchScopeEntries {
         )
     }
 
-    $backendRoot = Join-Path $script:RepoRoot "acentem_takipte\acentem_takipte"
+    $backendRoot = Join-Path $script:RepoRoot "acentem_takipte"
     if (-not (Test-Path $backendRoot)) { return @() }
     return @(
         Get-ChildItem $backendRoot -Recurse -File | Where-Object {
@@ -210,11 +213,11 @@ function New-WatchSnapshot {
     return @{
         frontend = @{
             count = $frontendLines.Count
-            hash = (Get-LinesHash -Lines $frontendLines)
+            hash  = (Get-LinesHash -Lines $frontendLines)
         }
-        backend = @{
+        backend  = @{
             count = $backendLines.Count
-            hash = (Get-LinesHash -Lines $backendLines)
+            hash  = (Get-LinesHash -Lines $backendLines)
         }
     }
 }
@@ -331,7 +334,8 @@ function Invoke-BackendOnlySync {
     if (-not $SkipHttpCheck) {
         Write-Host "HTTP check /at (auth may redirect)..."
         & curl.exe -I "http://localhost:8080/at" | Select-Object -First 8 | Out-Host
-    } else {
+    }
+    else {
         Write-Host "Skipping HTTP asset checks."
     }
     Write-Host ""
@@ -418,7 +422,8 @@ Push-Location $ComposeDir
 try {
     if ($Watch) {
         Start-WatchLoop
-    } else {
+    }
+    else {
         Invoke-FullDevSync -Reason "manual"
     }
 }

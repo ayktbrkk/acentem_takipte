@@ -480,7 +480,7 @@ const leadDetailPayloadResource = createResource({
 const leadRelatedOffersResource = createResource({ url: "frappe.client.get_list", auto: false });
 const leadRelatedPoliciesResource = createResource({ url: "frappe.client.get_list", auto: false });
 const leadConvertResource = createResource({
-  url: "acentem_takipte.acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
+  url: "acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
   auto: false,
 });
 const lead = computed(() => leadResource.data || {});

@@ -37,6 +37,7 @@
   .app-shell {
     width: 100%;
     min-height: 100dvh;
+    overflow-x: hidden;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(241, 245, 249, 0.72));
   }
 
@@ -45,11 +46,11 @@
   }
 
   .at-shell-topbar {
-    width: 100%;
+    /* width: 100%; removed to prevent overflow with padding */
   }
 
   .at-shell-main {
-    width: 100%;
+    /* width: 100%; removed to prevent overflow with padding */
   }
 
   .surface-card {

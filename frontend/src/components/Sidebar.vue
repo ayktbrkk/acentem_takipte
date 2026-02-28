@@ -47,22 +47,6 @@
           </button>
         </div>
 
-        <div v-if="!isCollapsed" class="mt-4">
-          <p class="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            {{ t("quickCreate") }}
-          </p>
-          <div class="grid grid-cols-2 gap-2">
-            <a
-              v-for="action in quickActions"
-              :key="action.href"
-              :href="action.href"
-              class="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-center text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
-              @click="$emit('navigate')"
-            >
-              {{ action.label }}
-            </a>
-          </div>
-        </div>
       </div>
 
       <nav class="flex-1 overflow-y-auto px-3 pb-4">
@@ -268,12 +252,6 @@ function linkClass(item) {
   return "px-3";
 }
 
-const quickActions = computed(() => [
-  { label: t("quickOffer"), href: "/at/offers?quick_create=1" },
-  { label: t("quickLead"), href: "/at/leads?quick_create=1" },
-  { label: t("quickCustomer"), href: "/at/customers?quick_create=1" },
-  { label: t("quickClaim"), href: "/at/claims" },
-]);
 
 const navSections = computed(() => [
   {

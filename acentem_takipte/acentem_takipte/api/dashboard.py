@@ -14,7 +14,7 @@ from acentem_takipte.api.dashboard_v2 import queries_leads as dashboard_lead_que
 from acentem_takipte.api.dashboard_v2 import security as dashboard_security
 from acentem_takipte.api.dashboard_v2 import serializers as dashboard_serializers
 from acentem_takipte.api.dashboard_v2 import tab_payload as dashboard_tab_sections
-from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import has_sensitive_access
+from acentem_takipte.doctype.at_customer.at_customer import has_sensitive_access
 
 CUSTOMER_PROFILE_EDIT_FIELDS = {
     "full_name",

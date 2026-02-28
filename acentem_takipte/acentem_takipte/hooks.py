@@ -30,8 +30,8 @@ doctype_list_js = {
     "AT Renewal Task": "public/js/at_listviews.js",
 }
 
-after_install = "acentem_takipte.setup.after_install"
-after_migrate = "acentem_takipte.setup.after_migrate"
+after_install = "acentem_takipte.setup_utils.after_install"
+after_migrate = "acentem_takipte.setup_utils.after_migrate"
 
 website_route_rules = [
     {"from_route": "/at", "to_route": "at"},
@@ -39,11 +39,11 @@ website_route_rules = [
 ]
 
 permission_query_conditions = {
-    "AT Customer": "acentem_takipte.acentem_takipte.doctype.at_customer.at_customer.get_permission_query_conditions",
+    "AT Customer": "acentem_takipte.doctype.at_customer.at_customer.get_permission_query_conditions",
 }
 
 has_permission = {
-    "AT Customer": "acentem_takipte.acentem_takipte.doctype.at_customer.at_customer.has_permission",
+    "AT Customer": "acentem_takipte.doctype.at_customer.at_customer.has_permission",
 }
 
 doc_events = {

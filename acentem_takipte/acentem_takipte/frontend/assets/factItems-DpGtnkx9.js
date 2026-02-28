@@ -1,0 +1,1 @@
+function r(t,e,u,n=""){return{key:t,label:e,value:u??"-",...n?{valueClass:n}:{}}}function a(t,e,u,n,o,c=""){return e&&t.push(s(u,n,o,c)),t}function s(t,e,u,n=""){const o=["text-xs text-slate-600",n].filter(Boolean).join(" ");return r(t,e,u,o)}function f(t,e,u,n=""){const o=["text-xs text-slate-500",n].filter(Boolean).join(" ");return r(t,e,u,o)}export{s as m,a as p,f as s};

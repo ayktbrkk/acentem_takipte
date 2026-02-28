@@ -479,7 +479,7 @@ const quickLeadOpenedFromIntent = ref(false);
 const leadListResource = createResource({ url: "acentem_takipte.api.dashboard.get_lead_workbench_rows", auto: false });
 const quickLeadCreateResource = createResource({ url: quickLeadConfig.submitUrl, auto: false });
 const leadConvertResource = createResource({
-  url: "acentem_takipte.acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
+  url: "acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
   auto: false,
 });
 const leadQuickBranchResource = createResource({

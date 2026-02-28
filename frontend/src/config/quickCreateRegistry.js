@@ -11,7 +11,7 @@ export const quickCreateRegistry = {
     key: "offer",
     title: i18nLabel("Detayli Hizli Teklif", "Detailed Quick Offer"),
     subtitle: i18nLabel("Musteri, urun ve finans alanlariyla taslak teklif olustur", "Create a draft offer with customer, product and financial fields"),
-    submitUrl: "acentem_takipte.acentem_takipte.doctype.at_offer.at_offer.create_quick_offer",
+    submitUrl: "acentem_takipte.doctype.at_offer.at_offer.create_quick_offer",
     resultKey: "offer",
     openRouteName: "offer-detail",
     successRefreshTargets: ["offer_list", "offer_board"],

@@ -11,9 +11,9 @@ from acentem_takipte.api.security import (
     assert_roles,
     audit_admin_action,
 )
-from acentem_takipte.acentem_takipte.doctype.at_lead.at_lead import convert_to_offer
-from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import convert_to_policy
-from acentem_takipte.acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement import (
+from acentem_takipte.doctype.at_lead.at_lead import convert_to_offer
+from acentem_takipte.doctype.at_offer.at_offer import convert_to_policy
+from acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement import (
     apply_endorsement,
 )
 from acentem_takipte.api.dashboard import get_dashboard_kpis
