@@ -1,5 +1,8 @@
 # Acentem Takipte
 
+> [!WARNING]
+> **Work in Progress:** This project is currently in active development. Features and functionalities are subject to change without notice.
+
 Acentem Takipte is a comprehensive Insurance CRM (Customer Relationship Management) application built on the powerful Frappe Framework and Vue 3. It is designed specifically for insurance agencies to efficiently manage policies, customers, renewals, claims, and offers.
 
 ## 🌟 Key Features

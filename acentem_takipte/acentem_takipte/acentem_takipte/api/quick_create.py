@@ -585,7 +585,7 @@ def _parse_update_payload(data) -> dict:
 
         try:
             parsed = json.loads(data)
-        except Exception:
+        except json.JSONDecodeError:
             frappe.throw(_("Invalid update payload"))
         if not isinstance(parsed, dict):
             frappe.throw(_("Invalid update payload"))

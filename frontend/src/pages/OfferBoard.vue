@@ -691,6 +691,12 @@ const offersResource = createResource({
     limit_page_length: 100,
   },
   auto: true,
+  transform(data) {
+    if (Array.isArray(data)) {
+      return Object.freeze(data.map(item => Object.freeze({...item})));
+    }
+    return data;
+  },
 });
 
 const convertResource = createResource({
@@ -747,6 +753,12 @@ const offerLookupResource = createResource({
 const offerListResource = createResource({
   url: "frappe.client.get_list",
   auto: false,
+  transform(data) {
+    if (Array.isArray(data)) {
+      return Object.freeze(data.map(item => Object.freeze({...item})));
+    }
+    return data;
+  },
 });
 const offerListCountResource = createResource({
   url: "frappe.client.count",

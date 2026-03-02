@@ -464,6 +464,12 @@ const quickPolicyCreateResource = createResource({
 const policyResource = createResource({
   url: "frappe.client.get_list",
   auto: false,
+  transform(data) {
+    if (Array.isArray(data)) {
+      return Object.freeze(data.map(item => Object.freeze({...item})));
+    }
+    return data;
+  },
 });
 
 const policyCountResource = createResource({

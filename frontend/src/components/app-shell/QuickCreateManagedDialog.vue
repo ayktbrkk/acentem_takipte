@@ -147,6 +147,21 @@ async function submit(openAfter = false) {
   if (loading.value || !config.value) return;
   const baseValid = validateRequiredFields();
   if (!baseValid) return;
+
+  if (props.configKey === "policy" || props.configKey === "offer") {
+    const net = Number(form.net_premium) || 0;
+    const comm = Number(form.commission_amount) || 0;
+    const tax = Number(form.tax_amount) || 0;
+    const gross = Number(form.gross_premium) || 0;
+    const calcGross = Number((net + comm + tax).toFixed(2));
+    if (gross > 0 && Math.abs(gross - calcGross) > 0.01) {
+      errorText.value = props.locale === "tr" 
+        ? "Brüt Prim, Net Prim + Komisyon + Vergi toplamına eşit olmalıdır." 
+        : "Gross Premium must equal Net Premium + Commission + Tax.";
+      return;
+    }
+  }
+
   if (typeof props.validate === "function") {
     const result = await props.validate({ form, fieldErrors, setError: (text) => (errorText.value = text) });
     if (result === false) return;
@@ -212,5 +227,20 @@ watch(
     errorText.value = "";
   },
   { immediate: true }
+);
+
+watch(
+  () => [form.net_premium, form.commission_amount, form.tax_amount],
+  ([net, comm, tax], [oldNet, oldComm, oldTax]) => {
+    if (props.configKey !== "policy" && props.configKey !== "offer") return;
+    if (net === oldNet && comm === oldComm && tax === oldTax) return;
+
+    const n = Number(net) || 0;
+    const c = Number(comm) || 0;
+    const t = Number(tax) || 0;
+    if (n > 0 || c > 0 || t > 0) {
+      form.gross_premium = Number((n + c + t).toFixed(2));
+    }
+  }
 );
 </script>

@@ -15,7 +15,14 @@ def build_renewal_key(policy_name: str, due_date) -> str:
     return f"{policy_name}::{getdate(due_date).isoformat()}"
 
 
-def create_renewal_tasks() -> dict[str, int]:
+def create_renewal_tasks() -> None:
+    frappe.enqueue(
+        "acentem_takipte.acentem_takipte.tasks._create_renewal_tasks_logic",
+        queue="long",
+        timeout=1500,
+    )
+
+def _create_renewal_tasks_logic() -> dict[str, int]:
     today = getdate(nowdate())
     target_end_date = add_days(today, RENEWAL_LOOKAHEAD_DAYS)
     policies = frappe.get_all(
@@ -91,18 +98,37 @@ def run_renewal_task_job() -> dict[str, int]:
     return create_renewal_tasks()
 
 
-def run_notification_queue_job(limit: int = 120) -> dict[str, dict[str, int]]:
+def run_notification_queue_job(limit: int = 120) -> None:
+    frappe.enqueue(
+        "acentem_takipte.acentem_takipte.tasks._run_notification_queue_logic",
+        limit=limit,
+        queue="default",
+        timeout=600,
+    )
+
+
+def _run_notification_queue_logic(limit: int = 120) -> dict[str, dict[str, int]]:
     queued = queue_notification_drafts(limit=limit, include_failed=True)
     dispatched = process_notification_queue(limit=limit)
     return {"queued": queued, "dispatched": dispatched}
 
 
-def run_accounting_sync_job(limit: int = 250) -> dict[str, int]:
-    return sync_accounting_entries(limit=limit)
+def run_accounting_sync_job(limit: int = 250) -> None:
+    frappe.enqueue(
+        "acentem_takipte.acentem_takipte.accounting.sync_accounting_entries",
+        limit=limit,
+        queue="long",
+        timeout=1500,
+    )
 
 
-def run_accounting_reconciliation_job(limit: int = 400) -> dict[str, int]:
-    return run_reconciliation(limit=limit)
+def run_accounting_reconciliation_job(limit: int = 400) -> None:
+    frappe.enqueue(
+        "acentem_takipte.acentem_takipte.accounting.run_reconciliation",
+        limit=limit,
+        queue="long",
+        timeout=1500,
+    )
 
 
 def _build_renewal_key(policy_name: str, due_date) -> str:

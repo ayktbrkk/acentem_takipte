@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import urllib.error
-import urllib.request
+import requests
 import xml.etree.ElementTree as ET
 
 import frappe
@@ -173,14 +172,20 @@ def fetch_tcmb_rate(currency: str, reference_date):
 
 
 def _fetch_tcmb_rate_for_day(currency: str, lookup_date):
+    cache_key = f"tcmb_rate:{currency}:{lookup_date.strftime('%Y-%m-%d')}"
+    cached_rate = frappe.cache().get_value(cache_key)
+    if cached_rate:
+        return flt(cached_rate)
+
     monthly_folder = lookup_date.strftime("%Y%m")
     daily_file = lookup_date.strftime("%d%m%Y")
     url = f"https://www.tcmb.gov.tr/kurlar/{monthly_folder}/{daily_file}.xml"
 
     try:
-        with urllib.request.urlopen(url, timeout=4) as response:
-            xml_payload = response.read()
-    except (urllib.error.URLError, TimeoutError, OSError):
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        xml_payload = response.content
+    except requests.exceptions.RequestException:
         return None
 
     try:
@@ -198,7 +203,10 @@ def _fetch_tcmb_rate_for_day(currency: str, lookup_date):
             or currency_row.findtext("ForexBuying")
             or currency_row.findtext("BanknoteBuying")
         )
-        return _parse_tcmb_rate(raw_rate)
+        rate_found = _parse_tcmb_rate(raw_rate)
+        if rate_found:
+            frappe.cache().set_value(cache_key, rate_found, expires_in_sec=86400 * 7)
+        return rate_found
 
     return None
 

@@ -610,7 +610,7 @@ def _is_number(value) -> bool:
     try:
         flt(value)
         return True
-    except Exception:
+    except (ValueError, TypeError):
         return False
 
 
@@ -780,7 +780,8 @@ def _access_log_events(reference_doctype: str, reference_name: str) -> list[dict
             order_by="viewed_on desc",
             limit_page_length=8,
         )
-    except Exception:
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "Access log fetch error")
         return []
     return [
         {
