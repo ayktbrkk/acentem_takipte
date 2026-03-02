@@ -1,0 +1,20 @@
+[project]
+name = "acentem_takipte"
+version = "0.0.1"
+description = "Insurance agency CRM and policy tracking app"
+authors = [
+    { name = "ABK", email = "aykutburakk@gmail.com"}
+]
+readme = "README.md"
+require-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/ayktbrkk/acentem_takipte"
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
