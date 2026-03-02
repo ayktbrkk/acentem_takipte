@@ -206,12 +206,12 @@
     </div>
 
     <div v-if="isDailyTab" class="grid gap-4 xl:grid-cols-3">
-      <article class="surface-card rounded-2xl p-5">
+      <article class="surface-card rounded-2xl p-5 xl:col-span-2">
         <SectionCardHeader :title="t('actionOfferQueueTitle')" :count="formatNumber(dailyActionOffers.length)" />
         <p class="mb-3 text-xs text-slate-500">{{ t("actionOfferQueueHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <div v-else-if="dailyActionOffers.length === 0" class="at-empty-block">{{ t("noActionOfferQueue") }}</div>
-        <ul v-else class="space-y-3">
+        <div v-else class="grid gap-3 md:grid-cols-2">
           <EntityPreviewCard
             v-for="offer in dailyActionOffers"
             :key="offer.name"
@@ -223,36 +223,41 @@
             <MiniFactList :items="recentOfferFacts(offer)" />
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
           </EntityPreviewCard>
-        </ul>
-      </article>
-
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" />
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
-        <ul v-else class="space-y-3">
-          <MetaListCard
-            v-for="task in displayRenewalTasks"
-            :key="task.name"
-            :title="task.policy || '-'"
-          >
-            <MiniFactList :items="renewalTaskFacts(task)" />
-          </MetaListCard>
-        </ul>
-      </article>
-
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('quickActions')" :show-count="false" />
-        <div class="space-y-2">
-          <ActionPreviewCard
-            v-for="action in visibleQuickActions"
-            :key="action.key"
-            :title="action.label"
-            :description="action.description"
-            @click="openPage(action.to)"
-          />
         </div>
       </article>
+
+      <div class="space-y-4">
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" />
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
+          <ul v-else class="space-y-3">
+            <MetaListCard
+              v-for="task in displayRenewalTasks"
+              :key="task.name"
+              :title="task.policy || '-'"
+            >
+              <template #trailing>
+                <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
+              </template>
+              <MiniFactList :items="renewalTaskFacts(task)" />
+            </MetaListCard>
+          </ul>
+        </article>
+
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('quickActions')" :show-count="false" />
+          <div class="space-y-2">
+            <ActionPreviewCard
+              v-for="action in visibleQuickActions"
+              :key="action.key"
+              :title="action.label"
+              :description="action.description"
+              @click="openPage(action.to)"
+            />
+          </div>
+        </article>
+      </div>
     </div>
 
     <div v-if="isCollectionsTab" class="grid gap-4 xl:grid-cols-3">
@@ -581,15 +586,15 @@ const copy = {
     heroTag: "Sigorta Kontrol Merkezi",
     heroTitle: "Sigorta Operasyon Panosu",
     heroSubtitle: "Frappe CRM yapisina benzer panelde lead, police, hasar ve odeme akislarini canli takip edin.",
-    heroTitleDaily: "Gunluk Operasyon Panosu",
-    heroSubtitleDaily: "Gunluk oncelikleri, bekleyen isler ve kritik kuyruklar icin sade operasyon gorunumu.",
+    heroTitleDaily: "Operasyon Panosu",
+    heroSubtitleDaily: "Operasyon oncelikleri, bekleyen isler ve kritik kuyruklar icin canli operasyon gorunumu.",
     heroTitleSales: "Satis Panosu",
     heroSubtitleSales: "Lead, teklif ve police uretimini satis odaginda izleyin.",
     heroTitleCollections: "Tahsilat Panosu",
     heroSubtitleCollections: "Tahsilat, odeme ve mutabakat akislarini tek ekranda yonetin.",
     heroTitleRenewals: "Yenileme Panosu",
     heroSubtitleRenewals: "Yaklasan bitisler ve yenileme gorevlerini onceliklendirin.",
-    tabDaily: "Gunluk",
+    tabDaily: "Operasyon",
     tabSales: "Satis",
     tabCollections: "Tahsilat",
     tabRenewals: "Yenileme",
@@ -708,15 +713,15 @@ const copy = {
     heroTag: "Insurance Control Center",
     heroTitle: "Insurance Operations Dashboard",
     heroSubtitle: "Track lead, policy, claim and payment flows in a Frappe CRM style control panel.",
-    heroTitleDaily: "Daily Operations Dashboard",
-    heroSubtitleDaily: "A simplified operations view focused on daily priorities and action queues.",
+    heroTitleDaily: "Operations Dashboard",
+    heroSubtitleDaily: "An operations view focused on daily priorities and action queues.",
     heroTitleSales: "Sales Dashboard",
     heroSubtitleSales: "Monitor lead, offer and policy production with a sales focus.",
     heroTitleCollections: "Collections Dashboard",
     heroSubtitleCollections: "Manage collections, payouts and reconciliation flows in one place.",
     heroTitleRenewals: "Renewals Dashboard",
     heroSubtitleRenewals: "Prioritize upcoming expiries and renewal tasks.",
-    tabDaily: "Daily",
+    tabDaily: "Operations",
     tabSales: "Sales",
     tabCollections: "Collections",
     tabRenewals: "Renewals",
@@ -845,7 +850,7 @@ function normalizeDashboardTab(value) {
   return DASHBOARD_TABS.includes(candidate) ? candidate : "daily";
 }
 
-const rangeOptions = [7, 30, 90];
+const rangeOptions = [1, 7, 30, 90];
 const selectedRange = ref(30);
 const showLeadDialog = ref(false);
 const isSubmitting = ref(false);
