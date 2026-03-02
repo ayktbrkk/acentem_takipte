@@ -76,43 +76,7 @@
       {{ dashboardAccessMessage }}
     </div>
 
-    <div v-if="showRenewalAlertsTopRow" class="grid gap-4 xl:grid-cols-[1.1fr_2fr]">
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length" />
-        <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
-          <MetaListCard
-            v-for="task in displayRenewalAlertItems"
-            :key="task.name"
-            :title="task.policy || '-'"
-            :description="formatDaysToDue(task.due_date)"
-            description-class="mt-2 text-xs font-semibold text-amber-700"
-          >
-            <template #trailing>
-              <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
-            </template>
-            <MiniFactList :items="renewalAlertFacts(task)" />
-          </MetaListCard>
-        </ul>
-        <div v-else class="at-empty-block text-sm">{{ t("noRenewalAlert") }}</div>
-      </article>
-
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <DashboardStatCard
-          v-for="card in visibleQuickStatCards"
-          :key="card.key"
-          :title="card.title"
-          :value="card.value"
-          :trend-text="card.trendText"
-          :trend-class="card.trendClass"
-          :trend-hint="card.trendHint"
-          :icon="card.icon"
-        />
-      </div>
-    </div>
-
-    <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <DashboardStatCard
         v-for="card in visibleQuickStatCards"
         :key="card.key"
@@ -125,13 +89,17 @@
       />
     </div>
 
-    <div v-if="visibleKpiCards.length > 0" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <KpiMetricCard
-        v-for="card in visibleKpiCards"
+
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <DashboardStatCard
+        v-for="card in visibleQuickStatCards"
         :key="card.key"
-        :label="card.label"
+        :title="card.title"
         :value="card.value"
-        :hint="card.hint"
+        :trend-text="card.trendText"
+        :trend-class="card.trendClass"
+        :trend-hint="card.trendHint"
+        :icon="card.icon"
       />
     </div>
 
@@ -206,41 +174,92 @@
     </div>
 
     <div v-if="isDailyTab" class="grid gap-4 xl:grid-cols-3">
-      <article class="surface-card rounded-2xl p-5 xl:col-span-2">
-        <SectionCardHeader :title="t('actionOfferQueueTitle')" :count="formatNumber(dailyActionOffers.length)" />
-        <p class="mb-3 text-xs text-slate-500">{{ t("actionOfferQueueHint") }}</p>
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="dailyActionOffers.length === 0" class="at-empty-block">{{ t("noActionOfferQueue") }}</div>
-        <div v-else class="grid gap-3 md:grid-cols-2">
-          <EntityPreviewCard
-            v-for="offer in dailyActionOffers"
-            :key="offer.name"
-            :title="offer.name"
-          >
-            <template #trailing>
-              <StatusBadge type="offer" :status="offer.status" />
-            </template>
-            <MiniFactList :items="recentOfferFacts(offer)" />
-            <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
-          </EntityPreviewCard>
-        </div>
-      </article>
-
-      <div class="space-y-4">
+      <div class="space-y-4 xl:col-span-2">
         <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" />
+          <SectionCardHeader :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length" />
+          <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
-          <ul v-else class="space-y-3">
+          <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
             <MetaListCard
-              v-for="task in displayRenewalTasks"
+              v-for="task in displayRenewalAlertItems"
               :key="task.name"
               :title="task.policy || '-'"
+              :description="formatDaysToDue(task.due_date)"
+              description-class="mt-2 text-xs font-semibold text-amber-700"
             >
               <template #trailing>
                 <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
               </template>
-              <MiniFactList :items="renewalTaskFacts(task)" />
+              <MiniFactList :items="renewalAlertFacts(task)" />
+            </MetaListCard>
+          </ul>
+          <div v-else class="at-empty-block text-sm">{{ t("noRenewalAlert") }}</div>
+        </article>
+
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('actionOfferQueueTitle')" :count="formatNumber(dailyActionOffers.length)" />
+          <p class="mb-3 text-xs text-slate-500">{{ t("actionOfferQueueHint") }}</p>
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="dailyActionOffers.length === 0" class="at-empty-block">{{ t("noActionOfferQueue") }}</div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="offer in dailyActionOffers"
+              :key="offer.name"
+              :title="offer.name"
+            >
+              <template #trailing>
+                <StatusBadge type="offer" :status="offer.status" />
+              </template>
+              <MiniFactList :items="recentOfferFacts(offer)" />
+              <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
+            </EntityPreviewCard>
+          </ul>
+        </article>
+      </div>
+
+      <div class="space-y-4">
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)" />
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">
+            {{ t("loading") }}
+          </div>
+          <div v-else-if="displayRecentPolicies.length === 0" class="at-empty-block">
+            {{ t("noPolicy") }}
+          </div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="policy in displayRecentPolicies"
+              :key="policy.name"
+              :title="policy.policy_no || policy.name"
+            >
+              <template #trailing>
+                <StatusBadge type="policy" :status="policy.status" />
+              </template>
+              <MiniFactList :items="recentPolicyFacts(policy)" />
+              <p class="mt-1 text-xs text-slate-600">
+                {{ formatCurrencyBy(policy.gross_premium, policy.currency || "TRY") }}
+                /
+                {{ formatCurrencyBy(policy.commission_amount || policy.commission, policy.currency || "TRY") }}
+              </p>
+            </EntityPreviewCard>
+          </ul>
+        </article>
+
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('topCompanies')" :count="formatNumber(displayTopCompanies.length)" />
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">
+            {{ t("loading") }}
+          </div>
+          <div v-else-if="displayTopCompanies.length === 0" class="at-empty-block">
+            {{ t("noTopCompanies") }}
+          </div>
+          <ul v-else class="space-y-3">
+            <MetaListCard
+              v-for="company in displayTopCompanies"
+              :key="company.insurance_company"
+              :title="company.company_name || '-'"
+            >
+              <MiniFactList :items="topCompanyFacts(company)" />
             </MetaListCard>
           </ul>
         </article>
@@ -310,40 +329,30 @@
             </ul>
           </div>
         </article>
-
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('quickActions')" :show-count="false" />
-          <div class="space-y-2">
-            <ActionPreviewCard
-              v-for="action in visibleQuickActions"
-              :key="action.key"
-              :title="action.label"
-              :description="action.description"
-              @click="openPage(action.to)"
-            />
-          </div>
-        </article>
       </div>
     </div>
 
     <div v-if="isRenewalsTab" class="grid gap-4 xl:grid-cols-3">
-      <article class="surface-card rounded-2xl p-5 xl:col-span-2">
-        <SectionCardHeader :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" />
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
-        <ul v-else class="space-y-3">
-          <MetaListCard
-            v-for="task in displayRenewalTasks"
-            :key="task.name"
-            :title="task.policy || '-'"
-          >
-            <template #trailing>
-              <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
-            </template>
-            <MiniFactList :items="renewalTaskFactsDetailed(task)" />
-          </MetaListCard>
-        </ul>
-      </article>
+      <div class="space-y-4 xl:col-span-2">
+
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" />
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
+          <ul v-else class="space-y-3">
+            <MetaListCard
+              v-for="task in displayRenewalTasks"
+              :key="task.name"
+              :title="task.policy || '-'"
+            >
+              <template #trailing>
+                <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
+              </template>
+              <MiniFactList :items="renewalTaskFactsDetailed(task)" />
+            </MetaListCard>
+          </ul>
+        </article>
+      </div>
 
       <div class="space-y-4">
         <article class="surface-card rounded-2xl p-5">
@@ -361,147 +370,74 @@
             />
           </div>
         </article>
-
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('quickActions')" :show-count="false" />
-          <div class="space-y-2">
-            <ActionPreviewCard
-              v-for="action in visibleQuickActions"
-              :key="action.key"
-              :title="action.label"
-              :description="action.description"
-              @click="openPage(action.to)"
-            />
-          </div>
-        </article>
       </div>
     </div>
 
     <div v-if="isSalesTab" class="grid gap-4 xl:grid-cols-3">
-      <article class="surface-card rounded-2xl p-5 xl:col-span-2">
-        <SectionCardHeader :title="t('recentLeads')" :show-count="false">
-          <template #trailing>
-            <span class="text-xs text-slate-500">{{ t("cardView") }}</span>
-          </template>
-        </SectionCardHeader>
-
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div
-          v-else-if="displayRecentLeads.length === 0"
-          class="at-empty-block text-center"
-        >
-          {{ t("noLead") }}
-        </div>
-        <div v-else class="grid gap-3 md:grid-cols-2">
-          <EntityPreviewCard
-            v-for="lead in displayRecentLeads"
-            :key="lead.name"
-            :title="[lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.name"
-          >
-            <template #trailing>
-              <StatusBadge type="lead" :status="lead.status" />
-            </template>
-            <MiniFactList :items="recentLeadFacts(lead)" />
-            <p class="mt-2 max-h-10 overflow-hidden text-sm text-slate-700">{{ lead.notes || t("noNote") }}</p>
-          </EntityPreviewCard>
-        </div>
-      </article>
-
-      <div class="space-y-4">
+      <div class="space-y-4 xl:col-span-2">
         <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('topCompanies')" :count="formatNumber(displayTopCompanies.length)" />
+          <SectionCardHeader :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)">
+          </SectionCardHeader>
+
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
             {{ t("loading") }}
           </div>
-          <div v-else-if="displayTopCompanies.length === 0" class="at-empty-block">
-            {{ t("noTopCompanies") }}
+          <div
+            v-else-if="displayRecentLeads.length === 0"
+            class="at-empty-block text-center"
+          >
+            {{ t("noLead") }}
           </div>
           <ul v-else class="space-y-3">
-            <MetaListCard
-              v-for="company in displayTopCompanies"
-              :key="company.insurance_company"
-              :title="company.company_name || '-'"
+            <EntityPreviewCard
+              v-for="lead in displayRecentLeads"
+              :key="lead.name"
+              :title="[lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.name"
             >
-              <MiniFactList :items="topCompanyFacts(company)" />
-            </MetaListCard>
+              <template #trailing>
+                <StatusBadge type="lead" :status="lead.status" />
+              </template>
+              <MiniFactList :items="recentLeadFacts(lead)" />
+              <p class="mt-2 max-h-10 overflow-hidden text-sm text-slate-700">{{ lead.notes || t("noNote") }}</p>
+            </EntityPreviewCard>
           </ul>
         </article>
+      </div>
 
+      <div class="space-y-4">
         <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('quickActions')" :show-count="false" />
-          <div class="space-y-2">
-            <ActionPreviewCard
-              v-for="action in visibleQuickActions"
-              :key="action.key"
-              :title="action.label"
-              :description="action.description"
-              @click="openPage(action.to)"
-            />
+          <SectionCardHeader :title="t('offerPipeline')" :show-count="false">
+            <template #trailing>
+              <span class="text-xs text-slate-500">{{ t("readyOffers") }}: {{ formatNumber(displayReadyOfferCount) }}</span>
+            </template>
+          </SectionCardHeader>
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">
+            {{ t("loading") }}
           </div>
+          <div v-else-if="displayRecentOffers.length === 0" class="at-empty-block">
+            {{ t("noOffer") }}
+          </div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="offer in displayRecentOffers"
+              :key="offer.name"
+              :title="offer.name"
+            >
+              <template #trailing>
+                <StatusBadge type="offer" :status="offer.status" />
+              </template>
+              <MiniFactList :items="recentOfferFacts(offer)" />
+              <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
+              <p v-if="offer.converted_policy" class="mt-1 text-xs font-semibold text-emerald-600">
+                {{ t("converted") }}: {{ offer.converted_policy }}
+              </p>
+            </EntityPreviewCard>
+          </ul>
         </article>
       </div>
     </div>
 
-    <div v-if="showPoliciesOffersRow" class="grid gap-4 xl:grid-cols-2">
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)" />
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div v-else-if="displayRecentPolicies.length === 0" class="at-empty-block">
-          {{ t("noPolicy") }}
-        </div>
-        <ul v-else class="space-y-3">
-          <EntityPreviewCard
-            v-for="policy in displayRecentPolicies"
-            :key="policy.name"
-            :title="policy.policy_no || policy.name"
-          >
-            <template #trailing>
-              <StatusBadge type="policy" :status="policy.status" />
-            </template>
-            <MiniFactList :items="recentPolicyFacts(policy)" />
-            <p class="mt-1 text-xs text-slate-600">
-              {{ formatCurrencyBy(policy.gross_premium, policy.currency || "TRY") }}
-              /
-              {{ formatCurrencyBy(policy.commission_amount || policy.commission, policy.currency || "TRY") }}
-            </p>
-          </EntityPreviewCard>
-        </ul>
-      </article>
 
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('offerPipeline')" :show-count="false">
-          <template #trailing>
-            <span class="text-xs text-slate-500">{{ t("readyOffers") }}: {{ formatNumber(displayReadyOfferCount) }}</span>
-          </template>
-        </SectionCardHeader>
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div v-else-if="displayRecentOffers.length === 0" class="at-empty-block">
-          {{ t("noOffer") }}
-        </div>
-        <ul v-else class="space-y-3">
-          <EntityPreviewCard
-            v-for="offer in displayRecentOffers"
-            :key="offer.name"
-            :title="offer.name"
-          >
-            <template #trailing>
-              <StatusBadge type="offer" :status="offer.status" />
-            </template>
-            <MiniFactList :items="recentOfferFacts(offer)" />
-            <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
-            <p v-if="offer.converted_policy" class="mt-1 text-xs font-semibold text-emerald-600">
-              {{ t("converted") }}: {{ offer.converted_policy }}
-            </p>
-          </EntityPreviewCard>
-        </ul>
-      </article>
-    </div>
 
     <Dialog v-model="showLeadDialog" :options="{ title: t('newLead'), size: 'xl' }">
       <template #body-content>
@@ -574,7 +510,6 @@ import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
-import KpiMetricCard from "../components/app-shell/KpiMetricCard.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import StatusBadge from "../components/StatusBadge.vue";
 
@@ -585,11 +520,11 @@ const copy = {
   tr: {
     heroTag: "Sigorta Kontrol Merkezi",
     heroTitle: "Sigorta Operasyon Panosu",
-    heroSubtitle: "Frappe CRM yapisina benzer panelde lead, police, hasar ve odeme akislarini canli takip edin.",
+    heroSubtitle: "Frappe CRM yapisina benzer panelde fırsat, police, hasar ve odeme akislarini canli takip edin.",
     heroTitleDaily: "Operasyon Panosu",
     heroSubtitleDaily: "Operasyon oncelikleri, bekleyen isler ve kritik kuyruklar icin canli operasyon gorunumu.",
     heroTitleSales: "Satis Panosu",
-    heroSubtitleSales: "Lead, teklif ve police uretimini satis odaginda izleyin.",
+    heroSubtitleSales: "Fırsat, teklif ve police uretimini satis odaginda izleyin.",
     heroTitleCollections: "Tahsilat Panosu",
     heroSubtitleCollections: "Tahsilat, odeme ve mutabakat akislarini tek ekranda yonetin.",
     heroTitleRenewals: "Yenileme Panosu",
@@ -600,8 +535,8 @@ const copy = {
     tabRenewals: "Yenileme",
     rangeLabel: "Tarih araligi",
     refresh: "Yenile",
-    newLead: "Yeni Lead Ekle",
-    leadPipeline: "Lead Sureci",
+    newLead: "Yeni Fırsat Ekle",
+    leadPipeline: "Fırsat Sureci",
     offerStatusOverviewTitle: "Teklif Durum Dagilimi",
     liveData: "Canli veri",
     loading: "Yukleniyor...",
@@ -609,9 +544,9 @@ const copy = {
     lastMonths: "Son aylar",
     noTrendData: "Trend verisi bulunamadi.",
     noOfferStatus: "Teklif durum verisi bulunamadi.",
-    recentLeads: "Guncel Lead Kartlari",
+    recentLeads: "Guncel Fırsat Kartlari",
     cardView: "Kart Gorunumu",
-    noLead: "Lead kaydi bulunamadi.",
+    noLead: "Fırsat kaydi bulunamadi.",
     estPremium: "Tahmini Brut Prim",
     noNote: "Not yok.",
     renewalQueue: "Yenileme Kuyrugu",
@@ -648,9 +583,7 @@ const copy = {
     kpiClaim: "Acik Hasar",
     kpiReadyOffers: "Hazir Teklif",
     kpiReconciliationOpen: "Acik Mutabakat",
-    kpiRenewalOverdue: "Gecikmis Yenileme",
-    kpiRenewalDue7: "7 Gun Icinde",
-    kpiRenewalDue30: "8-30 Gun",
+    kpiReconciliationOpen: "Acik Mutabakat",
     kpiAvgRate: "Ort. Komisyon Orani",
     todaySnapshot: "Bugunluk gorunum",
     monthlySnapshot: "Secili aralik",
@@ -775,9 +708,7 @@ const copy = {
     kpiClaim: "Open Claims",
     kpiReadyOffers: "Ready Offers",
     kpiReconciliationOpen: "Open Reconciliation",
-    kpiRenewalOverdue: "Overdue Renewals",
-    kpiRenewalDue7: "Due in 7 Days",
-    kpiRenewalDue30: "Due in 8-30 Days",
+    kpiReconciliationOpen: "Open Reconciliation",
     kpiAvgRate: "Avg Commission Rate",
     todaySnapshot: "Current snapshot",
     monthlySnapshot: "Selected range",
@@ -1081,20 +1012,12 @@ const renewalAlertItems = computed(() =>
     .sort((a, b) => new Date(a.due_date || a.renewal_date || 0).getTime() - new Date(b.due_date || b.renewal_date || 0).getTime())
     .slice(0, 5)
 );
-const displayRenewalAlertItems = computed(() => {
-  if (isDailyTab.value) return renewalAlertItems.value.slice(0, 5);
-  if (isRenewalsTab.value) return activeRenewalTasks.value.slice(0, 8);
-  return renewalAlertItems.value;
-});
-const displayRenewalTasks = computed(() => {
-  if (isDailyTab.value) return activeRenewalTasks.value.slice(0, 4);
-  if (isRenewalsTab.value) return activeRenewalTasks.value.slice(0, 8);
-  return activeRenewalTasks.value;
-});
-const displayRecentLeads = computed(() => (isSalesTab.value ? leads.value : leads.value.slice(0, 6)));
-const displayTopCompanies = computed(() => (isDailyTab.value ? topCompanies.value.slice(0, 4) : topCompanies.value));
-const displayRecentPolicies = computed(() => (isDailyTab.value ? recentPolicies.value.slice(0, 4) : recentPolicies.value));
-const displayRecentOffers = computed(() => (isDailyTab.value ? recentOffers.value.slice(0, 4) : recentOffers.value));
+const displayRenewalAlertItems = computed(() => renewalAlertItems.value.slice(0, 5));
+const displayRenewalTasks = computed(() => activeRenewalTasks.value.slice(0, 8));
+const displayRecentLeads = computed(() => leads.value);
+const displayTopCompanies = computed(() => topCompanies.value.slice(0, 4));
+const displayRecentPolicies = computed(() => recentPolicies.value.slice(0, 4));
+const displayRecentOffers = computed(() => recentOffers.value);
 const displayReadyOfferCount = computed(
   () => displayRecentOffers.value.filter((offer) => ["Sent", "Accepted"].includes(offer.status) && !offer.converted_policy).length
 );
@@ -1134,63 +1057,6 @@ const visibleRange = computed(() => {
   const range = getDateRange(selectedRange.value);
   return `${formatDate(range.from)} - ${formatDate(range.to)}`;
 });
-
-const kpiCards = computed(() => [
-  {
-    key: "gwp",
-    label: t("kpiGwp"),
-    value: formatCurrency(dashboardCards.value.total_gwp_try),
-    hint: t("monthlySnapshot"),
-  },
-  {
-    key: "commission",
-    label: t("kpiCommission"),
-    value: formatCurrency(dashboardCards.value.total_commission),
-    hint: t("monthlySnapshot"),
-  },
-  {
-    key: "avg-commission-rate",
-    label: t("kpiAvgRate"),
-    value: formatPercent(dashboardCards.value.avg_commission_rate),
-    hint: t("ratioSnapshot"),
-  },
-  {
-    key: "policy",
-    label: t("kpiPolicy"),
-    value: formatNumber(dashboardCards.value.total_policies),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "renewal",
-    label: t("kpiRenewal"),
-    value: formatNumber(dashboardCards.value.pending_renewals),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "collect",
-    label: t("kpiCollect"),
-    value: formatCurrency(dashboardCards.value.collected_try),
-    hint: t("monthlySnapshot"),
-  },
-  {
-    key: "payout",
-    label: t("kpiPayout"),
-    value: formatCurrency(dashboardCards.value.payout_try),
-    hint: t("monthlySnapshot"),
-  },
-  {
-    key: "claim",
-    label: t("kpiClaim"),
-    value: formatNumber(dashboardCards.value.open_claims),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "net-flow",
-    label: t("openDifference"),
-    value: formatCurrency((dashboardCards.value.collected_try || 0) - (dashboardCards.value.payout_try || 0)),
-    hint: t("monthlySnapshot"),
-  },
-]);
 
 const quickStatCards = computed(() => [
   buildQuickStatCard({
@@ -1302,97 +1168,6 @@ const visibleQuickStatCards = computed(() => {
   if (isDailyTab.value) return quickStatCards.value;
   if (isSalesTab.value) return quickStatCards.value.slice(0, 3);
   return quickStatCards.value;
-});
-
-const dailyKpiCards = computed(() => [
-  {
-    key: "daily-renewal",
-    label: t("kpiRenewal"),
-    value: formatNumber(dashboardCards.value.pending_renewals),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "daily-ready-offers",
-    label: t("kpiReadyOffers"),
-    value: formatNumber(readyOfferCount.value),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "daily-claim",
-    label: t("kpiClaim"),
-    value: formatNumber(dashboardCards.value.open_claims),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "daily-net-flow",
-    label: t("openDifference"),
-    value: formatCurrency((dashboardCards.value.collected_try || 0) - (dashboardCards.value.payout_try || 0)),
-    hint: t("monthlySnapshot"),
-  },
-]);
-
-const collectionsKpiCards = computed(() => [
-  {
-    key: "collect",
-    label: t("kpiCollect"),
-    value: formatCurrency(dashboardCards.value.collected_try),
-    hint: t("monthlySnapshot"),
-  },
-  {
-    key: "payout",
-    label: t("kpiPayout"),
-    value: formatCurrency(dashboardCards.value.payout_try),
-    hint: t("monthlySnapshot"),
-  },
-  {
-    key: "net-flow",
-    label: t("openDifference"),
-    value: formatCurrency((dashboardCards.value.collected_try || 0) - (dashboardCards.value.payout_try || 0)),
-    hint: t("monthlySnapshot"),
-  },
-  {
-    key: "reconciliation-open",
-    label: t("kpiReconciliationOpen"),
-    value: formatNumber(reconciliationPreviewMetrics.value.open || 0),
-    hint: t("todaySnapshot"),
-  },
-]);
-
-const renewalsKpiCards = computed(() => [
-  {
-    key: "renewal-open",
-    label: t("kpiRenewal"),
-    value: formatNumber(dashboardCards.value.pending_renewals),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "renewal-overdue",
-    label: t("kpiRenewalOverdue"),
-    value: formatNumber(renewalBucketCounts.value.overdue),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "renewal-due7",
-    label: t("kpiRenewalDue7"),
-    value: formatNumber(renewalBucketCounts.value.due7),
-    hint: t("todaySnapshot"),
-  },
-  {
-    key: "renewal-due30",
-    label: t("kpiRenewalDue30"),
-    value: formatNumber(renewalBucketCounts.value.due30),
-    hint: t("todaySnapshot"),
-  },
-]);
-
-const visibleKpiCards = computed(() => {
-  const byKey = new Map(kpiCards.value.map((card) => [card.key, card]));
-  const pick = (keys) => keys.map((key) => byKey.get(key)).filter(Boolean);
-  if (isDailyTab.value) return dailyKpiCards.value;
-  if (isSalesTab.value) return pick(["policy", "gwp", "commission", "avg-commission-rate"]);
-  if (isCollectionsTab.value) return collectionsKpiCards.value;
-  if (isRenewalsTab.value) return renewalsKpiCards.value;
-  return dailyKpiCards.value;
 });
 
 const leadStatusSummary = computed(() => {
