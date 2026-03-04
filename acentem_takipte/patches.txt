@@ -1,0 +1,5 @@
+[pre_model_sync]
+[post_model_sync]
+acentem_takipte.acentem_takipte.patches.v2026_02_26_renewal_status_completed_to_done
+acentem_takipte.acentem_takipte.patches.v2026_02_26_backfill_claim_paid_amount_totals
+acentem_takipte.acentem_takipte.patches.v2026_02_26_add_dashboard_candidate_indexes
