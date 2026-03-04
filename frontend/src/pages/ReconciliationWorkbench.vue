@@ -407,21 +407,21 @@ const reconciling = ref(false);
 const operationError = ref("");
 
 const workbenchResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
+  url: "acentem_takipte.api.accounting.get_reconciliation_workbench",
   params: buildParams(),
   auto: true,
 });
 
 const syncResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.accounting.run_sync",
+  url: "acentem_takipte.api.accounting.run_sync",
 });
 
 const runReconciliationResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.accounting.run_reconciliation_job",
+  url: "acentem_takipte.api.accounting.run_reconciliation_job",
 });
 
 const resolveResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.accounting.resolve_item",
+  url: "acentem_takipte.api.accounting.resolve_item",
 });
 const setValueResource = createResource({
   url: "frappe.client.set_value",

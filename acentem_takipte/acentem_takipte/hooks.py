@@ -30,8 +30,8 @@ doctype_list_js = {
     "AT Renewal Task": "public/js/at_listviews.js",
 }
 
-after_install = "acentem_takipte.acentem_takipte.acentem_takipte.setup_utils.after_install"
-after_migrate = "acentem_takipte.acentem_takipte.acentem_takipte.setup_utils.after_migrate"
+after_install = "acentem_takipte.setup_utils.after_install"
+after_migrate = "acentem_takipte.setup_utils.after_migrate"
 
 website_route_rules = [
     {"from_route": "/at", "to_route": "at"},
@@ -39,39 +39,39 @@ website_route_rules = [
 ]
 
 permission_query_conditions = {
-    "AT Customer": "acentem_takipte.acentem_takipte.acentem_takipte.doctype.at_customer.at_customer.get_permission_query_conditions",
+    "AT Customer": "acentem_takipte.doctype.at_customer.at_customer.get_permission_query_conditions",
 }
 
 has_permission = {
-    "AT Customer": "acentem_takipte.acentem_takipte.acentem_takipte.doctype.at_customer.at_customer.has_permission",
+    "AT Customer": "acentem_takipte.doctype.at_customer.at_customer.has_permission",
 }
 
 doc_events = {
     "AT Policy": {
-        "after_insert": "acentem_takipte.acentem_takipte.acentem_takipte.accounting.sync_doc_event",
-        "on_update": "acentem_takipte.acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+        "after_insert": "acentem_takipte.accounting.sync_doc_event",
+        "on_update": "acentem_takipte.accounting.sync_doc_event",
     },
     "AT Payment": {
-        "after_insert": "acentem_takipte.acentem_takipte.acentem_takipte.accounting.sync_doc_event",
-        "on_update": "acentem_takipte.acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+        "after_insert": "acentem_takipte.accounting.sync_doc_event",
+        "on_update": "acentem_takipte.accounting.sync_doc_event",
     },
     "AT Claim": {
-        "after_insert": "acentem_takipte.acentem_takipte.acentem_takipte.accounting.sync_doc_event",
-        "on_update": "acentem_takipte.acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+        "after_insert": "acentem_takipte.accounting.sync_doc_event",
+        "on_update": "acentem_takipte.accounting.sync_doc_event",
     },
 }
 
 scheduler_events = {
     "cron": {
         "*/10 * * * *": [
-            "acentem_takipte.acentem_takipte.acentem_takipte.tasks.run_notification_queue_job",
+            "acentem_takipte.tasks.run_notification_queue_job",
         ],
         "0 * * * *": [
-            "acentem_takipte.acentem_takipte.acentem_takipte.tasks.run_accounting_sync_job",
+            "acentem_takipte.tasks.run_accounting_sync_job",
         ],
     },
     "daily": [
-        "acentem_takipte.acentem_takipte.acentem_takipte.tasks.create_renewal_tasks",
-        "acentem_takipte.acentem_takipte.acentem_takipte.tasks.run_accounting_reconciliation_job",
+        "acentem_takipte.tasks.create_renewal_tasks",
+        "acentem_takipte.tasks.run_accounting_reconciliation_job",
     ]
 }

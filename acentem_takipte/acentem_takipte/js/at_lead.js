@@ -39,7 +39,7 @@ frappe.ui.form.on("AT Lead", {
     if (!frm.doc.converted_offer) {
       frm.add_custom_button(__("Convert to Offer"), () => {
         frappe.call({
-          method: "acentem_takipte.acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
+          method: "acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
           args: {
             lead_name: frm.doc.name,
           },

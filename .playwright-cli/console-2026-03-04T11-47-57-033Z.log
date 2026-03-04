@@ -1,0 +1,13 @@
+Total messages: 7 (Errors: 7, Warnings: 0)
+
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://77.42.72.44/assets/frappe/dist/css/website.bundle.4KTCI7OA.css:0
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://77.42.72.44/assets/frappe/dist/css/login.bundle.KOG24GC5.css:0
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://77.42.72.44/assets/frappe/dist/js/frappe-web.bundle.YNX7AT6C.js:0
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://77.42.72.44/assets/frappe/dist/js/frappe-web.bundle.YNX7AT6C.js:0
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://77.42.72.44/assets/frappe/images/frappe-framework-logo.svg:0
+[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://77.42.72.44/assets/frappe/images/frappe-favicon.svg:0
+ReferenceError: $ is not defined
+    at login.reset_sections (http://77.42.72.44/:3187:3)
+    at login.login (http://77.42.72.44/:3200:8)
+    at login.route (http://77.42.72.44/:3182:14)
+    at http://77.42.72.44/:3470:7

@@ -348,23 +348,23 @@ const rowActionBusyName = ref("");
 const listResource = createResource({ url: "frappe.client.get_list", auto: false });
 const countResource = createResource({ url: "frappe.client.count", auto: false });
 const presetServerReadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
+  url: "acentem_takipte.api.filter_presets.get_filter_preset_state",
   auto: false,
 });
 const presetServerWriteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
+  url: "acentem_takipte.api.filter_presets.set_filter_preset_state",
   auto: false,
 });
 const sendDraftNowRowResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
+  url: "acentem_takipte.api.communication.send_draft_now",
   auto: false,
 });
 const retryOutboxRowResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
+  url: "acentem_takipte.api.communication.retry_outbox_item",
   auto: false,
 });
 const requeueOutboxRowResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
+  url: "acentem_takipte.api.communication.requeue_outbox_item",
   auto: false,
 });
 const auxQuickCustomerResource = createResource({

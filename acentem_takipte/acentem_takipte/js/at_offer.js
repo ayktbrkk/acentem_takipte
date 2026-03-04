@@ -94,7 +94,7 @@ frappe.ui.form.on("AT Offer", {
           ],
           (values) => {
             frappe.call({
-              method: "acentem_takipte.acentem_takipte.doctype.at_offer.at_offer.convert_to_policy",
+              method: "acentem_takipte.doctype.at_offer.at_offer.convert_to_policy",
               args: {
                 offer_name: frm.doc.name,
                 start_date: values.start_date,

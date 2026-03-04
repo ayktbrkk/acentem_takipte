@@ -474,7 +474,7 @@ function t(key) {
 
 const offerResource = createResource({ url: "frappe.client.get", auto: false });
 const offerDetailPayloadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_offer_detail_payload",
+  url: "acentem_takipte.api.dashboard.get_offer_detail_payload",
   auto: false,
 });
 const relatedOffersResource = createResource({ url: "frappe.client.get_list", auto: false });
