@@ -133,8 +133,6 @@ PERMISSION_KEYS = (
     "share",
     "print",
     "email",
-    "select",
-    "mask",
 )
 
 FULL_ACCESS = {
