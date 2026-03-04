@@ -561,7 +561,7 @@ const customerResource = createResource({
   auto: false,
 });
 const customerProfileUpdateResource = createResource({
-  url: "acentem_takipte.api.dashboard.update_customer_profile",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.update_customer_profile",
   auto: false,
 });
 

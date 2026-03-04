@@ -228,7 +228,7 @@ def purge_module_data(*, only_if_name_like=None, force=False):
 def ensure_templates():
     if frappe.db.count("AT Notification Template"):
         return
-    from acentem_takipte.setup import ensure_default_notification_templates
+    from acentem_takipte.acentem_takipte.setup import ensure_default_notification_templates
 
     ensure_default_notification_templates()
 

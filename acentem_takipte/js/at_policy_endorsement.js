@@ -6,7 +6,7 @@ frappe.ui.form.on("AT Policy Endorsement", {
       frm.add_custom_button(__("Apply Endorsement"), () => {
         frappe.call({
           method:
-            "acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement.apply_endorsement",
+            "acentem_takipte.acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement.apply_endorsement",
           args: {
             endorsement_name: frm.doc.name,
           },

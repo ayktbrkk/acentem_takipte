@@ -107,7 +107,7 @@ def build_scenarios(args: argparse.Namespace) -> list[Scenario]:
     scenarios: list[Scenario] = [
         Scenario(
             name="dashboard_kpis",
-            method_path="acentem_takipte.api.dashboard.get_dashboard_kpis",
+            method_path="acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
             query_params={"filters": filters_payload} if filters_payload is not None else {},
         )
     ]
@@ -115,7 +115,7 @@ def build_scenarios(args: argparse.Namespace) -> list[Scenario]:
         scenarios.append(
             Scenario(
                 name=f"dashboard_tab_{tab}",
-                method_path="acentem_takipte.api.dashboard.get_dashboard_tab_payload",
+                method_path="acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
                 query_params={"tab": tab, "filters": filters_payload} if filters_payload is not None else {"tab": tab},
             )
         )
@@ -124,7 +124,7 @@ def build_scenarios(args: argparse.Namespace) -> list[Scenario]:
         [
             Scenario(
                 name="customer_workbench",
-                method_path="acentem_takipte.api.dashboard.get_customer_workbench_rows",
+                method_path="acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows",
                 query_params={
                     "filters": workbench_filters or {},
                     "page": args.page,
@@ -133,7 +133,7 @@ def build_scenarios(args: argparse.Namespace) -> list[Scenario]:
             ),
             Scenario(
                 name="lead_workbench",
-                method_path="acentem_takipte.api.dashboard.get_lead_workbench_rows",
+                method_path="acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows",
                 query_params={
                     "filters": workbench_filters or {},
                     "page": args.page,
@@ -239,7 +239,7 @@ def print_table(results: list[dict[str, Any]]) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="ERPNext/Frappe dashboard endpoint benchmark (p50/p95/p99) for acentem_takipte."
+        description="ERPNext/Frappe dashboard endpoint benchmark (p50/p95/p99) for acentem_takipte.acentem_takipte."
     )
     parser.add_argument("--base-url", required=True, help="Frappe site URL (e.g. http://localhost:8000)")
     parser.add_argument("--auth-token", help="API token in '<api_key>:<api_secret>' format")
