@@ -13,7 +13,7 @@ export default defineConfig({
   base: "/assets/acentem_takipte/frontend/",
   build: {
     manifest: true,
-    outDir: resolve(__dirname, "../acentem_takipte/acentem_takipte/public/frontend"),
+    outDir: resolve(__dirname, "../acentem_takipte/public/frontend"),
     emptyOutDir: true,
     rollupOptions: {
       input: resolve(__dirname, "src/main.js"),
