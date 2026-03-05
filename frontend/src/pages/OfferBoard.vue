@@ -761,7 +761,7 @@ const offerListResource = createResource({
   },
 });
 const offerListCountResource = createResource({
-  url: "frappe.client.count",
+  url: "frappe.client.get_count",
   auto: false,
 });
 const offerPresetServerReadResource = createResource({

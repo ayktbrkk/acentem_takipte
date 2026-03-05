@@ -473,7 +473,7 @@ const policyResource = createResource({
 });
 
 const policyCountResource = createResource({
-  url: "frappe.client.count",
+  url: "frappe.client.get_count",
   auto: false,
 });
 const policyPresetServerReadResource = createResource({

@@ -346,7 +346,7 @@ const showAuxQuickCreateDialog = ref(false);
 const rowActionBusyName = ref("");
 
 const listResource = createResource({ url: "frappe.client.get_list", auto: false });
-const countResource = createResource({ url: "frappe.client.count", auto: false });
+const countResource = createResource({ url: "frappe.client.get_count", auto: false });
 const presetServerReadResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
   auto: false,
