@@ -1,0 +1,4 @@
+Total messages: 2 (Errors: 1, Warnings: 0)
+
+[ERROR] Failed to load resource: the server responded with a status of 404 (NOT FOUND) @ http://77.42.72.44/at:0
+[LOG] Deprecated as of 10.6.0. initHighlighting() is deprecated.  Use highlightAll() instead. @ http://77.42.72.44/assets/frappe/dist/js/frappe-web.bundle.YNX7AT6C.js:7
