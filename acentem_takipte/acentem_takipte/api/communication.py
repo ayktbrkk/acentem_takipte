@@ -5,9 +5,38 @@ from frappe.utils import cint
 
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
+    assert_doc_permission,
+    assert_doctype_permission,
+    assert_post_request,
     assert_roles,
+    audit_admin_action,
 )
 from acentem_takipte.acentem_takipte import communication as communication_logic
+
+
+COMMUNICATION_ADMIN_ROLES = ("System Manager", "Manager", "Accountant")
+
+
+def _assert_dispatch_mutation_access(action: str, *, details: dict | None = None) -> None:
+    user = assert_authenticated()
+    assert_post_request("Only POST requests are allowed for communication mutations.")
+    assert_roles(
+        *COMMUNICATION_ADMIN_ROLES,
+        user=user,
+        message="You do not have permission to run communication actions.",
+    )
+    assert_doctype_permission(
+        "AT Notification Outbox",
+        "write",
+        "You do not have permission to modify notification outbox records.",
+    )
+    assert_doctype_permission(
+        "AT Notification Draft",
+        "write",
+        "You do not have permission to modify notification drafts.",
+    )
+    audit_admin_action(action, details or {})
+
 
 @frappe.whitelist()
 def get_queue_snapshot(
@@ -65,15 +94,28 @@ def get_queue_snapshot(
 @frappe.whitelist()
 def run_dispatch_cycle(limit: int = 50, **kwargs) -> dict:
     # Accept kwargs to be resilient to frontend sending extra params like include_failed
-    assert_roles("System Manager", "Manager")
-    return communication_logic.process_notification_queue(limit=cint(limit))
+    safe_limit = max(cint(limit), 1)
+    _assert_dispatch_mutation_access("api.communication.run_dispatch_cycle", details={"limit": safe_limit})
+    return communication_logic.process_notification_queue(limit=safe_limit)
 
 @frappe.whitelist()
 def send_draft_now(draft_name: str) -> dict:
-    assert_authenticated()
+    draft_name = str(draft_name or "").strip()
+    _assert_dispatch_mutation_access("api.communication.send_draft_now", details={"draft": draft_name})
+    assert_doc_permission("AT Notification Draft", draft_name, "write")
     return communication_logic.send_notification_draft_now(draft_name)
 
 @frappe.whitelist()
 def retry_outbox_item(outbox_name: str) -> dict:
-    assert_authenticated()
+    outbox_name = str(outbox_name or "").strip()
+    _assert_dispatch_mutation_access("api.communication.retry_outbox_item", details={"outbox": outbox_name})
+    assert_doc_permission("AT Notification Outbox", outbox_name, "write")
     return communication_logic.retry_notification_outbox(outbox_name)
+
+
+@frappe.whitelist()
+def requeue_outbox_item(outbox_name: str) -> dict:
+    outbox_name = str(outbox_name or "").strip()
+    _assert_dispatch_mutation_access("api.communication.requeue_outbox_item", details={"outbox": outbox_name})
+    assert_doc_permission("AT Notification Outbox", outbox_name, "write")
+    return communication_logic.requeue_notification_outbox(outbox_name)

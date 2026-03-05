@@ -30,7 +30,6 @@ class ATLead(Document):
             frappe.throw(_("Please enter a valid email address."))
 
     def before_insert(self):
-        print("Yeni Lead Kaydedildi")
         frappe.logger("acentem_takipte").info("Yeni Lead Kaydedildi")
 
 

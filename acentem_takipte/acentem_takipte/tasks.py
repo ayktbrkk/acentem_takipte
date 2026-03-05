@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
+
 import frappe
-from frappe.utils import add_days, getdate, nowdate
+from frappe.utils import add_days, cint, getdate, nowdate
 from frappe.exceptions import DuplicateEntryError
 
-from acentem_takipte.acentem_takipte.accounting import run_reconciliation, sync_accounting_entries
 from acentem_takipte.acentem_takipte.communication import process_notification_queue, queue_notification_drafts
 
 RENEWAL_LOOKAHEAD_DAYS = 30
@@ -15,11 +16,34 @@ def build_renewal_key(policy_name: str, due_date) -> str:
     return f"{policy_name}::{getdate(due_date).isoformat()}"
 
 
-def create_renewal_tasks() -> None:
-    frappe.enqueue(
+def _extract_job_id(job: Any) -> str | None:
+    if not job:
+        return None
+    return str(getattr(job, "id", None) or getattr(job, "job_id", None) or "").strip() or None
+
+
+def _queued_response(*, job: Any, queue: str, method: str, limit: int | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "queued": True,
+        "job": _extract_job_id(job),
+        "queue": queue,
+        "method": method,
+    }
+    if limit is not None:
+        payload["limit"] = int(limit)
+    return payload
+
+
+def create_renewal_tasks() -> dict[str, Any]:
+    job = frappe.enqueue(
         "acentem_takipte.acentem_takipte.tasks._create_renewal_tasks_logic",
         queue="long",
         timeout=1500,
+    )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.acentem_takipte.tasks._create_renewal_tasks_logic",
     )
 
 def _create_renewal_tasks_logic() -> dict[str, int]:
@@ -94,16 +118,23 @@ def _create_renewal_tasks_logic() -> dict[str, int]:
     return summary
 
 
-def run_renewal_task_job() -> dict[str, int]:
+def run_renewal_task_job() -> dict[str, Any]:
     return create_renewal_tasks()
 
 
-def run_notification_queue_job(limit: int = 120) -> None:
-    frappe.enqueue(
+def run_notification_queue_job(limit: int = 120) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    job = frappe.enqueue(
         "acentem_takipte.acentem_takipte.tasks._run_notification_queue_logic",
-        limit=limit,
+        limit=safe_limit,
         queue="default",
         timeout=600,
+    )
+    return _queued_response(
+        job=job,
+        queue="default",
+        method="acentem_takipte.acentem_takipte.tasks._run_notification_queue_logic",
+        limit=safe_limit,
     )
 
 
@@ -113,21 +144,35 @@ def _run_notification_queue_logic(limit: int = 120) -> dict[str, dict[str, int]]
     return {"queued": queued, "dispatched": dispatched}
 
 
-def run_accounting_sync_job(limit: int = 250) -> None:
-    frappe.enqueue(
+def run_accounting_sync_job(limit: int = 250) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    job = frappe.enqueue(
         "acentem_takipte.acentem_takipte.accounting.sync_accounting_entries",
-        limit=limit,
+        limit=safe_limit,
         queue="long",
         timeout=1500,
     )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.acentem_takipte.accounting.sync_accounting_entries",
+        limit=safe_limit,
+    )
 
 
-def run_accounting_reconciliation_job(limit: int = 400) -> None:
-    frappe.enqueue(
+def run_accounting_reconciliation_job(limit: int = 400) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    job = frappe.enqueue(
         "acentem_takipte.acentem_takipte.accounting.run_reconciliation",
-        limit=limit,
+        limit=safe_limit,
         queue="long",
         timeout=1500,
+    )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.acentem_takipte.accounting.run_reconciliation",
+        limit=safe_limit,
     )
 
 

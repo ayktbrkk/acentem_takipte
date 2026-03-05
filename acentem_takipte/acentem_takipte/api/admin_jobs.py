@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 import frappe
 from frappe import _
@@ -70,27 +71,27 @@ def _assert_admin_job_access(action: str, details: dict | None = None) -> None:
 
 
 @frappe.whitelist()
-def run_renewal_task_job() -> dict[str, int]:
+def run_renewal_task_job() -> dict[str, Any]:
     _assert_admin_job_access("api.admin_jobs.run_renewal_task_job")
     return task_jobs.run_renewal_task_job()
 
 
 @frappe.whitelist()
-def run_notification_queue_job(limit: int = 120) -> dict[str, dict[str, int]]:
+def run_notification_queue_job(limit: int = 120) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     _assert_admin_job_access("api.admin_jobs.run_notification_queue_job", {"limit": safe_limit})
     return task_jobs.run_notification_queue_job(limit=safe_limit)
 
 
 @frappe.whitelist()
-def run_accounting_sync_job(limit: int = 250) -> dict[str, int]:
+def run_accounting_sync_job(limit: int = 250) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     _assert_admin_job_access("api.admin_jobs.run_accounting_sync_job", {"limit": safe_limit})
     return task_jobs.run_accounting_sync_job(limit=safe_limit)
 
 
 @frappe.whitelist()
-def run_accounting_reconciliation_job(limit: int = 400) -> dict[str, int]:
+def run_accounting_reconciliation_job(limit: int = 400) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     _assert_admin_job_access("api.admin_jobs.run_accounting_reconciliation_job", {"limit": safe_limit})
     return task_jobs.run_accounting_reconciliation_job(limit=safe_limit)

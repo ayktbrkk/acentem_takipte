@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import frappe
 
+from acentem_takipte.acentem_takipte.api.security import assert_post_request
+
 SESSION_CAPABILITY_QUICK_CREATE: dict[str, str] = {
     "renewal_task": "AT Renewal Task",
     "notification_draft": "AT Notification Draft",
@@ -106,6 +108,7 @@ def _normalize_locale(locale: str | None) -> str:
 
 @frappe.whitelist()
 def set_session_locale(locale: str | None = None) -> dict:
+    assert_post_request("Only POST requests are allowed when updating session locale.")
     user = resolve_current_user()
     if user == "Guest":
         frappe.throw("Authentication required")

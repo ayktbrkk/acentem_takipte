@@ -8,13 +8,10 @@ from typing import Any, Iterable
 APP_NAME = "acentem_takipte"
 ASSETS_BASE_URL = "/assets/acentem_takipte/frontend/"
 MANIFEST_CANDIDATES = (
-    "acentem_takipte/public/frontend/.vite/manifest.json",
-    "acentem_takipte/public/frontend/manifest.json",
     "public/frontend/.vite/manifest.json",
     "public/frontend/manifest.json",
 )
 PUBLIC_DIR_CANDIDATES = (
-    "acentem_takipte/public",
     "public",
 )
 

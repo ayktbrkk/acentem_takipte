@@ -7,6 +7,12 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate, now_datetime
 
+from acentem_takipte.acentem_takipte.api.security import (
+    assert_authenticated,
+    assert_doc_permission,
+    assert_post_request,
+    audit_admin_action,
+)
 from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import (
     create_policy_snapshot,
     serialize_policy_snapshot,
@@ -43,7 +49,10 @@ class ATPolicyEndorsement(Document):
 
 @frappe.whitelist()
 def apply_endorsement(endorsement_name: str) -> dict[str, str]:
-    endorsement = frappe.get_doc("AT Policy Endorsement", endorsement_name)
+    user = assert_authenticated()
+    assert_post_request("Only POST requests are allowed for endorsement application.")
+    endorsement_name = str(endorsement_name or "").strip()
+    endorsement = assert_doc_permission("AT Policy Endorsement", endorsement_name, "write")
     if endorsement.status == "Applied":
         return {
             "policy": endorsement.policy,
@@ -55,7 +64,7 @@ def apply_endorsement(endorsement_name: str) -> dict[str, str]:
     if not payload:
         frappe.throw(_("Change Payload cannot be empty when applying endorsement."))
 
-    policy = frappe.get_doc("AT Policy", endorsement.policy)
+    policy = assert_doc_permission("AT Policy", endorsement.policy, "write")
     before_snapshot = serialize_policy_snapshot(policy)
     next_version = _next_snapshot_version(policy.name)
 
@@ -85,6 +94,14 @@ def apply_endorsement(endorsement_name: str) -> dict[str, str]:
     endorsement.db_set("applied_by", frappe.session.user, update_modified=False)
 
     policy.db_set("current_version", next_version, update_modified=False)
+    audit_admin_action(
+        "doctype.at_policy_endorsement.apply_endorsement",
+        {
+            "endorsement": endorsement.name,
+            "policy": policy.name,
+            "applied_by": user,
+        },
+    )
     frappe.db.commit()
 
     return {

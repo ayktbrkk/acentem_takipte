@@ -237,6 +237,10 @@ def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> di
 
 
 def retry_notification_outbox(outbox_name: str) -> dict[str, str]:
+    outbox_name = str(outbox_name or "").strip()
+    if not outbox_name:
+        return {"status": "Skipped", "reason": "missing_outbox"}
+
     outbox = frappe.get_doc("AT Notification Outbox", outbox_name)
     if outbox.status == "Sent":
         return {"status": "Skipped", "reason": "already_sent"}
@@ -251,6 +255,10 @@ def retry_notification_outbox(outbox_name: str) -> dict[str, str]:
     if not frappe.flags.in_test:
         frappe.db.commit()
     return {"status": "Queued", "outbox": outbox.name}
+
+
+def requeue_notification_outbox(outbox_name: str) -> dict[str, str]:
+    return retry_notification_outbox(outbox_name)
 
 
 def send_notification_draft_now(draft_name: str) -> dict[str, str]:

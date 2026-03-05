@@ -86,6 +86,8 @@ def create_quick_offer(
     tax_amount: float | None = None,
     commission_amount: float | None = None,
 ) -> dict[str, str | int]:
+    assert_authenticated()
+    assert_post_request("Only POST requests are allowed for quick offer creation.")
     if not frappe.has_permission("AT Offer", "create"):
         frappe.throw(_("You do not have permission to create offers."))
 

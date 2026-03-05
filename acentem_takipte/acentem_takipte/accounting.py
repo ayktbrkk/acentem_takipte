@@ -28,7 +28,6 @@ def sync_doc_event(doc, method=None) -> None:
         )
 
 
-@frappe.whitelist()
 def sync_accounting_entries_now(limit: int = 200) -> dict[str, int]:
     return sync_accounting_entries(limit=limit)
 
@@ -111,7 +110,6 @@ def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool 
         return {"status": "Failed", "entry": entry.name or "", "reason": "sync_exception"}
 
 
-@frappe.whitelist()
 def run_reconciliation_now(limit: int = 400) -> dict[str, int]:
     return run_reconciliation(limit=limit)
 

@@ -77,6 +77,45 @@ class TestNotificationDispatcher(IntegrationTestCase):
         self.assertEqual(outbox.status, "Sent")
         self.assertTrue(outbox.provider)
 
+    def test_requeue_outbox_item_api_resets_processing_item_to_queue(self):
+        deps = _create_dependencies()
+        template_key = f"test_requeue_{frappe.generate_hash(length=8)}"
+        template = frappe.get_doc(
+            {
+                "doctype": "AT Notification Template",
+                "template_key": template_key,
+                "event_key": "test_notification_requeue",
+                "channel": "SMS",
+                "language": "tr",
+                "subject": "Test Subject {{ customer.full_name }}",
+                "body_template": "Merhaba {{ customer.full_name }}",
+                "is_active": 1,
+            }
+        ).insert(ignore_permissions=True)
+
+        created = create_notification_drafts(
+            event_key=template.event_key,
+            reference_doctype="AT Customer",
+            reference_name=deps["customer"],
+            customer=deps["customer"],
+            context={"phone": "05550001122"},
+            enqueue=True,
+        )
+        self.assertGreaterEqual(len(created), 1)
+
+        draft = frappe.get_doc("AT Notification Draft", created[0])
+        self.assertTrue(draft.outbox_record)
+        outbox = frappe.get_doc("AT Notification Outbox", draft.outbox_record)
+        outbox.status = "Processing"
+        outbox.save(ignore_permissions=True)
+
+        result = communication_api.requeue_outbox_item(outbox.name)
+        self.assertEqual(result.get("status"), "Queued")
+        self.assertEqual(result.get("outbox"), outbox.name)
+
+        outbox.reload()
+        self.assertEqual(outbox.status, "Queued")
+
 
 def _create_dependencies() -> dict[str, str]:
     suffix = frappe.generate_hash(length=8)
