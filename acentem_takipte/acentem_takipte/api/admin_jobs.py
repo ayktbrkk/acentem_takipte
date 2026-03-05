@@ -12,7 +12,7 @@ from acentem_takipte.acentem_takipte.api.security import (
     assert_roles,
     audit_admin_action,
 )
-from acentem_takipte.acentem_takipte.acentem_takipte import tasks as task_jobs
+from acentem_takipte.acentem_takipte import tasks as task_jobs
 
 ADMIN_JOB_ROLES = ("System Manager", "Manager", "Accountant")
 ADMIN_JOB_RATE_LIMIT_WINDOW_SECONDS = 60

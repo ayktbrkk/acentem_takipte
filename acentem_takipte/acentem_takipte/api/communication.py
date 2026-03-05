@@ -7,7 +7,7 @@ from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
     assert_roles,
 )
-from acentem_takipte.acentem_takipte.acentem_takipte import communication as communication_logic
+from acentem_takipte.acentem_takipte import communication as communication_logic
 
 @frappe.whitelist()
 def get_queue_snapshot(
