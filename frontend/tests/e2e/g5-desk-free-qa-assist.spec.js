@@ -35,7 +35,7 @@ async function expectNoDeskFallbackButtons(page) {
 }
 
 async function readSessionContext(page) {
-  const boot = await page.evaluate(() => window.__AT_SESSION__ || null);
+  const boot = await page.evaluate(() => window.AT_SESSION_BOOT || window.__AT_SESSION__ || null);
   if (boot && typeof boot === "object" && boot.user) {
     return boot;
   }

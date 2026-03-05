@@ -51,7 +51,7 @@ function readBootSession() {
     return {};
   }
 
-  const serverBoot = window.__AT_SESSION__ || {};
+  const serverBoot = window.AT_SESSION_BOOT || window.__AT_SESSION__ || {};
   const frappeBoot = window.frappe?.boot || {};
   const frappeSession = window.frappe?.session || {};
 

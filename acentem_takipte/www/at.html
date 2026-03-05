@@ -24,7 +24,8 @@
 </div>
 
 <script>
-  window.__AT_SESSION__ = {{ at_session | tojson }};
+  window.AT_SESSION_BOOT = {{ at_session | tojson }};
+  window["__AT_SESSION__"] = window.AT_SESSION_BOOT;
 </script>
 
 {% for css_path in at_css_includes %}
