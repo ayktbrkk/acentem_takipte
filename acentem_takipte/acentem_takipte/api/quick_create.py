@@ -2,7 +2,18 @@ from __future__ import annotations
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, flt, getdate, nowdate
+from frappe.utils import add_days, cint, flt, getdate, nowdate
+
+from acentem_takipte.acentem_takipte.api.security import (
+    assert_authenticated,
+    assert_doctype_permission,
+    assert_post_request,
+)
+
+
+def _assert_quick_mutation_request() -> None:
+    assert_authenticated()
+    assert_post_request("Only POST requests are allowed for quick create/update operations.")
 
 
 @frappe.whitelist()
@@ -19,6 +30,7 @@ def create_quick_customer(
     consent_status: str | None = None,
     assigned_agent: str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Customer", _("You do not have permission to create customers."))
 
     payload = {
@@ -61,6 +73,7 @@ def create_quick_lead(
     estimated_gross_premium: float | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Lead", _("You do not have permission to create leads."))
 
     payload = {
@@ -104,6 +117,7 @@ def create_quick_policy(
     source_offer: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Policy", _("You do not have permission to create policies."))
 
     issue = getdate(issue_date) if issue_date else getdate(nowdate())
@@ -150,6 +164,7 @@ def create_quick_claim(
     approved_amount: float | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Claim", _("You do not have permission to create claims."))
 
     today = getdate(nowdate())
@@ -201,6 +216,7 @@ def create_quick_payment(
     reference_no: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Payment", _("You do not have permission to create payments."))
 
     payload = {
@@ -241,6 +257,7 @@ def create_quick_renewal_task(
     notes: str | None = None,
     auto_created: int | None = 0,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Renewal Task", _("You do not have permission to create renewal tasks."))
 
     today = getdate(nowdate())
@@ -271,6 +288,7 @@ def create_quick_insurance_company(
     company_code: str | None = None,
     is_active: int | str | bool | None = 1,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Insurance Company", _("You do not have permission to create insurance companies."))
 
     payload = {
@@ -292,6 +310,7 @@ def create_quick_branch(
     insurance_company: str | None = None,
     is_active: int | str | bool | None = 1,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Branch", _("You do not have permission to create branches."))
 
     payload = {
@@ -313,6 +332,7 @@ def create_quick_sales_entity(
     full_name: str | None = None,
     parent_entity: str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Sales Entity", _("You do not have permission to create sales entities."))
 
     payload = {
@@ -337,6 +357,7 @@ def create_quick_notification_template(
     body_template: str | None = None,
     is_active: int | str | bool | None = 1,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Notification Template", _("You do not have permission to create notification templates."))
 
     payload = {
@@ -371,6 +392,7 @@ def create_quick_accounting_entry(
     external_amount_try: float | None = None,
     external_ref: str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Accounting Entry", _("You do not have permission to create accounting entries."))
 
     source_dt = (source_doctype or "").strip()
@@ -416,6 +438,7 @@ def create_quick_reconciliation_item(
     resolution_action: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     _assert_create_permission("AT Reconciliation Item", _("You do not have permission to create reconciliation items."))
 
     payload = {
@@ -446,6 +469,7 @@ def update_quick_aux_record(
     name: str,
     data: dict | str | None = None,
 ) -> dict[str, str]:
+    _assert_quick_mutation_request()
     normalized_doctype = _normalize_aux_edit_doctype(doctype)
     _assert_write_permission(normalized_doctype, _("You do not have permission to update this record."))
 
@@ -460,6 +484,191 @@ def update_quick_aux_record(
     doc.save(ignore_permissions=True)
     frappe.db.commit()
     return {"record": doc.name}
+
+
+MAX_QUICK_OPTION_SEARCH_LIMIT = 50
+
+QUICK_OPTION_SEARCH_SOURCES: dict[str, dict] = {
+    "customers": {
+        "doctype": "AT Customer",
+        "display_fields": ["full_name", "tax_id"],
+        "search_fields": ["name", "full_name", "tax_id", "email", "phone"],
+        "order_by": "modified desc",
+    },
+    "salesEntities": {
+        "doctype": "AT Sales Entity",
+        "display_fields": ["full_name", "entity_type"],
+        "search_fields": ["name", "full_name", "entity_type"],
+        "order_by": "full_name asc",
+    },
+    "insuranceCompanies": {
+        "doctype": "AT Insurance Company",
+        "display_fields": ["company_name", "company_code"],
+        "search_fields": ["name", "company_name", "company_code"],
+        "filters": {"is_active": 1},
+        "order_by": "company_name asc",
+    },
+    "branches": {
+        "doctype": "AT Branch",
+        "display_fields": ["branch_name", "branch_code", "insurance_company"],
+        "search_fields": ["name", "branch_name", "branch_code", "insurance_company"],
+        "filters": {"is_active": 1},
+        "order_by": "branch_name asc",
+    },
+    "offers": {
+        "doctype": "AT Offer",
+        "display_fields": ["customer", "offer_date", "status"],
+        "search_fields": ["name", "customer", "status"],
+        "order_by": "modified desc",
+    },
+    "policies": {
+        "doctype": "AT Policy",
+        "display_fields": ["policy_no", "customer", "status"],
+        "search_fields": ["name", "policy_no", "customer", "status"],
+        "order_by": "modified desc",
+    },
+    "claims": {
+        "doctype": "AT Claim",
+        "display_fields": ["claim_no", "policy", "claim_status"],
+        "search_fields": ["name", "claim_no", "policy", "customer", "claim_status"],
+        "order_by": "modified desc",
+    },
+    "notificationTemplates": {
+        "doctype": "AT Notification Template",
+        "display_fields": ["template_key", "channel", "language"],
+        "search_fields": ["name", "template_key", "event_key", "channel", "language"],
+        "filters": {"is_active": 1},
+        "order_by": "modified desc",
+    },
+    "accountingEntries": {
+        "doctype": "AT Accounting Entry",
+        "display_fields": ["source_doctype", "source_name", "status", "external_ref"],
+        "search_fields": ["name", "source_doctype", "source_name", "status", "external_ref"],
+        "order_by": "modified desc",
+    },
+}
+
+
+@frappe.whitelist()
+def search_quick_options(
+    options_source: str,
+    query: str | None = None,
+    limit: int | str | None = 20,
+) -> dict[str, list[dict[str, str]]]:
+    assert_authenticated()
+    source_key = _normalize_quick_option_source(options_source)
+    source_config = QUICK_OPTION_SEARCH_SOURCES[source_key]
+    doctype = str(source_config.get("doctype") or "").strip()
+
+    assert_doctype_permission(
+        doctype,
+        "read",
+        _("You do not have permission to search {0}.").format(frappe.bold(doctype)),
+    )
+
+    query_text = (query or "").strip()
+    page_limit = min(max(cint(limit or 20), 1), MAX_QUICK_OPTION_SEARCH_LIMIT)
+
+    rows = frappe.get_list(
+        doctype,
+        fields=_build_quick_option_fields(source_config),
+        filters=dict(source_config.get("filters") or {}) or None,
+        or_filters=_build_quick_option_or_filters(doctype, source_config, query_text) or None,
+        order_by=str(source_config.get("order_by") or "modified desc"),
+        limit_page_length=page_limit,
+    )
+    options = [_format_quick_option_row(source_key, row or {}) for row in rows or []]
+    return {"options": options}
+
+
+def _normalize_quick_option_source(value: str | None) -> str:
+    source_key = (value or "").strip()
+    if source_key in QUICK_OPTION_SEARCH_SOURCES:
+        return source_key
+    frappe.throw(_("Unsupported option source: {0}").format(source_key or "-"))
+    return ""
+
+
+def _build_quick_option_fields(source_config: dict) -> list[str]:
+    ordered_fields: list[str] = []
+    for field_name in ["name", *(source_config.get("display_fields") or [])]:
+        normalized = str(field_name or "").strip()
+        if not normalized or normalized in ordered_fields:
+            continue
+        ordered_fields.append(normalized)
+    return ordered_fields
+
+
+def _build_quick_option_or_filters(doctype: str, source_config: dict, query_text: str) -> list[list[str]]:
+    if not query_text:
+        return []
+    like_pattern = f"%{query_text}%"
+    out: list[list[str]] = []
+    for field_name in source_config.get("search_fields") or ["name"]:
+        normalized = str(field_name or "").strip()
+        if not normalized:
+            continue
+        out.append([doctype, normalized, "like", like_pattern])
+    return out
+
+
+def _format_quick_option_row(source_key: str, row: dict) -> dict[str, str]:
+    name = str(row.get("name") or "")
+    label = name
+    description = ""
+
+    if source_key == "customers":
+        label = _value_or_fallback(row, "full_name", name)
+        description = _value_or_fallback(row, "tax_id")
+    elif source_key == "salesEntities":
+        label = _value_or_fallback(row, "full_name", name)
+        description = _value_or_fallback(row, "entity_type")
+    elif source_key == "insuranceCompanies":
+        company_name = _value_or_fallback(row, "company_name", name)
+        company_code = _value_or_fallback(row, "company_code")
+        label = f"{company_name} ({company_code})" if company_code else company_name
+    elif source_key == "branches":
+        branch_name = _value_or_fallback(row, "branch_name", name)
+        branch_code = _value_or_fallback(row, "branch_code")
+        label = f"{branch_name} ({branch_code})" if branch_code else branch_name
+        description = _value_or_fallback(row, "insurance_company")
+    elif source_key == "offers":
+        customer = _value_or_fallback(row, "customer")
+        label = f"{name} - {customer}" if customer else name
+        description = _join_non_empty([_value_or_fallback(row, "status"), _value_or_fallback(row, "offer_date")])
+    elif source_key == "policies":
+        policy_no = _value_or_fallback(row, "policy_no", name)
+        customer = _value_or_fallback(row, "customer")
+        label = f"{policy_no} - {customer}" if customer else policy_no
+        description = _value_or_fallback(row, "status")
+    elif source_key == "claims":
+        claim_no = _value_or_fallback(row, "claim_no", name)
+        policy = _value_or_fallback(row, "policy")
+        label = f"{claim_no} - {policy}" if policy else claim_no
+        description = _value_or_fallback(row, "claim_status")
+    elif source_key == "notificationTemplates":
+        template_key = _value_or_fallback(row, "template_key", name)
+        label = template_key
+        description = _join_non_empty([_value_or_fallback(row, "channel"), _value_or_fallback(row, "language")])
+    elif source_key == "accountingEntries":
+        source = _join_non_empty([_value_or_fallback(row, "source_doctype"), _value_or_fallback(row, "source_name")])
+        label = f"{name} - {source}" if source else name
+        description = _join_non_empty([_value_or_fallback(row, "status"), _value_or_fallback(row, "external_ref")])
+
+    out = {"value": name, "label": label or name}
+    if description:
+        out["description"] = description
+    return out
+
+
+def _value_or_fallback(row: dict, field_name: str, fallback: str = "") -> str:
+    value = str(row.get(field_name) or "").strip()
+    return value or str(fallback or "").strip()
+
+
+def _join_non_empty(parts: list[str]) -> str:
+    cleaned = [str(part or "").strip() for part in parts if str(part or "").strip()]
+    return " | ".join(cleaned)
 
 
 def _assert_create_permission(doctype: str, message: str) -> None:

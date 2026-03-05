@@ -668,6 +668,7 @@ const copy = {
 function t(key) {
   return copy[sessionState.locale]?.[key] || copy.en[key] || key;
 }
+const QUICK_OPTION_LIMIT = 2000;
 
 const offersResource = createResource({
   url: "frappe.client.get_list",
@@ -715,7 +716,7 @@ const branchResource = createResource({
       is_active: 1,
     },
     order_by: "branch_name asc",
-    limit_page_length: 200,
+    limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
 const insuranceCompanyResource = createResource({
@@ -726,7 +727,7 @@ const insuranceCompanyResource = createResource({
     fields: ["name", "company_name"],
     filters: { is_active: 1 },
     order_by: "company_name asc",
-    limit_page_length: 500,
+    limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
 const salesEntityResource = createResource({
@@ -736,7 +737,7 @@ const salesEntityResource = createResource({
     doctype: "AT Sales Entity",
     fields: ["name", "full_name"],
     order_by: "full_name asc",
-    limit_page_length: 500,
+    limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
 const customerSearchResource = createResource({

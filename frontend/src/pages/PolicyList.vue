@@ -404,6 +404,7 @@ const quickPolicyFieldErrors = reactive({});
 const quickPolicyForm = reactive(buildQuickCreateDraft(quickPolicyConfig));
 const quickPolicyReturnTo = ref("");
 const quickPolicyOpenedFromIntent = ref(false);
+const QUICK_OPTION_LIMIT = 2000;
 
 const companyResource = createResource({
   url: "frappe.client.get_list",
@@ -412,7 +413,7 @@ const companyResource = createResource({
     doctype: "AT Insurance Company",
     fields: ["name", "company_name"],
     order_by: "company_name asc",
-    limit_page_length: 500,
+    limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
 const policyQuickBranchResource = createResource({
@@ -423,7 +424,7 @@ const policyQuickBranchResource = createResource({
     fields: ["name", "branch_name"],
     filters: { is_active: 1 },
     order_by: "branch_name asc",
-    limit_page_length: 500,
+    limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
 const policyQuickSalesEntityResource = createResource({
@@ -433,7 +434,7 @@ const policyQuickSalesEntityResource = createResource({
     doctype: "AT Sales Entity",
     fields: ["name", "full_name"],
     order_by: "full_name asc",
-    limit_page_length: 500,
+    limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
 const policyQuickCustomerResource = createResource({
@@ -443,7 +444,7 @@ const policyQuickCustomerResource = createResource({
     doctype: "AT Customer",
     fields: ["name", "full_name"],
     order_by: "modified desc",
-    limit_page_length: 200,
+    limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
 const policyQuickOfferResource = createResource({
@@ -453,7 +454,7 @@ const policyQuickOfferResource = createResource({
     doctype: "AT Offer",
     fields: ["name", "customer", "offer_date", "status"],
     order_by: "modified desc",
-    limit_page_length: 200,
+    limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
 const quickPolicyCreateResource = createResource({

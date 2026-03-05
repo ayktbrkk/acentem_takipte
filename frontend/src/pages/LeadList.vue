@@ -475,6 +475,7 @@ const quickLeadFieldErrors = reactive({});
 const quickLeadForm = reactive(buildQuickCreateDraft(quickLeadConfig));
 const quickLeadReturnTo = ref("");
 const quickLeadOpenedFromIntent = ref(false);
+const QUICK_OPTION_LIMIT = 2000;
 
 const leadListResource = createResource({ url: "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows", auto: false });
 const quickLeadCreateResource = createResource({ url: quickLeadConfig.submitUrl, auto: false });
@@ -485,22 +486,22 @@ const leadConvertResource = createResource({
 const leadQuickBranchResource = createResource({
   url: "frappe.client.get_list",
   auto: true,
-  params: { doctype: "AT Branch", fields: ["name", "branch_name"], filters: { is_active: 1 }, order_by: "branch_name asc", limit_page_length: 500 },
+  params: { doctype: "AT Branch", fields: ["name", "branch_name"], filters: { is_active: 1 }, order_by: "branch_name asc", limit_page_length: QUICK_OPTION_LIMIT },
 });
 const leadQuickCompanyResource = createResource({
   url: "frappe.client.get_list",
   auto: true,
-  params: { doctype: "AT Insurance Company", fields: ["name", "company_name"], filters: { is_active: 1 }, order_by: "company_name asc", limit_page_length: 500 },
+  params: { doctype: "AT Insurance Company", fields: ["name", "company_name"], filters: { is_active: 1 }, order_by: "company_name asc", limit_page_length: QUICK_OPTION_LIMIT },
 });
 const leadQuickSalesEntityResource = createResource({
   url: "frappe.client.get_list",
   auto: true,
-  params: { doctype: "AT Sales Entity", fields: ["name", "full_name"], order_by: "full_name asc", limit_page_length: 500 },
+  params: { doctype: "AT Sales Entity", fields: ["name", "full_name"], order_by: "full_name asc", limit_page_length: QUICK_OPTION_LIMIT },
 });
 const leadQuickCustomerResource = createResource({
   url: "frappe.client.get_list",
   auto: true,
-  params: { doctype: "AT Customer", fields: ["name", "full_name"], order_by: "modified desc", limit_page_length: 200 },
+  params: { doctype: "AT Customer", fields: ["name", "full_name"], order_by: "modified desc", limit_page_length: QUICK_OPTION_LIMIT },
 });
 const presetServerReadResource = createResource({ url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state", auto: false });
 const presetServerWriteResource = createResource({ url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state", auto: false });
