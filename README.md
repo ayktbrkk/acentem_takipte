@@ -3,70 +3,84 @@
 > [!WARNING]
 > **Work in Progress:** This project is currently in active development. Features and functionalities are subject to change without notice.
 
-Acentem Takipte is a comprehensive Insurance CRM (Customer Relationship Management) application built on the powerful Frappe Framework and Vue 3. It is designed specifically for insurance agencies to efficiently manage policies, customers, renewals, claims, and offers.
+Acentem Takipte is an insurance CRM application built on Frappe Framework and Vue 3. It helps agencies manage customers, policies, renewals, claims, offers, communications, and reconciliation workflows.
 
-## 🌟 Key Features
+## Key Features
 
-*   **Customer Management**: Store and organize detailed customer records with integrated communication history across channels (Email, SMS).
-*   **Policy lifecycle**: Track policies from creation through active coverage to renewal. Complete visibility of policy data and attached documents.
-*   **Automated Renewals**: Intelligent background tasks built into Frappe to track expiring policies, dispatch notifications to customers, and create renewal tasks for agents.
-*   **Offer & Claim Tracking**: Dedicated workspaces and views for handling insurance offers and managing claim records against active policies.
-*   **Communication Center**: Built-in centralized dispatch hub. Monitor queue status, retry failed messages, and engage customers seamlessly without leaving the dashboard.
-*   **Modern Frontend**: A fully bespoke, highly responsive SPA (Single Page Application) built with Vue 3 and Tailwind CSS running seamlessly alongside Frappe's traditional desk.
-*   **Financial Reconciliation**: Base integration for tracking payments and basic accounting records against policies.
+- Customer management with communication context
+- Policy lifecycle tracking (issue, active, renewal)
+- Automated renewal task generation and notification queueing
+- Offer and claim workflows
+- Communication center for draft/outbox operations
+- Desk + SPA hybrid experience (`/at`)
+- Accounting sync and reconciliation workbench
 
-## 🛠️ Technology Stack
+## Technology Stack
 
-*   **Backend**: Python, MariaDB, Redis, [Frappe Framework 15](https://frappeframework.com/)
-*   **Frontend**: Vue 3, Vite, Tailwind CSS, Frappe UI, Lucide Icons
+- Backend: Python, MariaDB, Redis, Frappe Framework v15
+- Frontend: Vue 3, Vite, Tailwind CSS, Frappe UI
 
-## 🚀 Installation
+## Installation and Deployment (Frappe v15)
 
-Ensure you have a working Bench environment set up with Frappe V15.
+### Prerequisites
 
-### Standard Installation
+- Ubuntu 22.04+ (or equivalent Linux server)
+- Python 3.10+, Node.js 20+, MariaDB, Redis
+- Bench CLI with Frappe v15
 
-1.  **Get the App**
-    Get the app from this repository into your bench environment.
-    ```bash
-    bench get-app https://github.com/ayktbrkk/acentem_takipte.git
-    ```
+### 1) Get the app
 
-2.  **Install on Site**
-    Install the app on your desired site.
-    ```bash
-    bench --site [your-site-name] install-app acentem_takipte
-    ```
+```bash
+cd /opt/frappe-bench
+bench get-app https://github.com/ayktbrkk/acentem_takipte.git
+```
 
-3.  **Build Frontend Assets**
-    Because this app contains a custom Vue frontend, you must compile the bundle.
-    ```bash
-    bench --site [your-site-name] build --app acentem_takipte
-    # If the standard build doesn't hook properly, you can compile it manually:
-    cd apps/acentem_takipte/frontend
-    npm install
-    npm run build
-    ```
+### 2) Install on your site
 
-4.  **Migrate & Restart**
-    ```bash
-    bench --site [your-site-name] migrate
-    bench restart
-    ```
+```bash
+bench --site your-site.local install-app acentem_takipte
+bench --site your-site.local migrate
+```
 
-## 📁 Repository Structure
+### 3) Build frontend assets
 
-The framework operates on the traditional structural model of Frappe Applications:
-*   `acentem_takipte/`: The backend Python package containing modules, APIs, DocTypes, and business logic.
-*   `acentem_takipte/public/frontend/`: Compiled Vue 3 production files.
-*   `frontend/`: Source codes for the Vue 3 SPA (Single Page Application).
-*   `patches/`: Frappe Database migration scripts.
+```bash
+cd /opt/frappe-bench/apps/acentem_takipte/frontend
+npm ci
+npm run build
+cd /opt/frappe-bench
+bench --site your-site.local clear-cache
+```
 
-## 🌐 Accessing the Hub
+### 4) Restart services
 
-After a successful installation and login, you can access the modern agent dashboard directly via your browser at:
+```bash
+bench restart
+```
+
+### 5) Production process setup (optional)
+
+```bash
+sudo bench setup production frappe
+```
+
+### 6) Verify
+
+- Open `https://your-domain/at`
+- Confirm dashboard renders and authenticated actions are available
+
+## Repository Structure
+
+- `acentem_takipte/`: Frappe app package (DocTypes, APIs, hooks, patches, public assets)
+- `acentem_takipte/public/frontend/`: Canonical compiled SPA output consumed by `/at`
+- `frontend/`: SPA source code and frontend tests
+
+## Accessing the Hub
+
+After installation and login, open:
+
 `http://[your-site-name]/at`
 
-## 📄 License
+## License
 
-This project is open-sourced under the MIT License.
+MIT
