@@ -88,7 +88,14 @@ class TestApiHardeningContracts(IntegrationTestCase):
 
             permission_mock.assert_called_once_with("AT Customer", "read", ANY)
             get_list_mock.assert_called_once()
-            self.assertEqual(result, {"options": [{"value": "AT-CUST-0001", "label": "Ayse Yilmaz", "description": "12345678901"}]})
+            self.assertEqual(
+                result,
+                {
+                    "options": [{"value": "AT-CUST-0001", "label": "Ayse Yilmaz", "description": "12345678901"}],
+                    "has_more": False,
+                    "next_start": None,
+                },
+            )
         finally:
             frappe.session.user = previous_user
 

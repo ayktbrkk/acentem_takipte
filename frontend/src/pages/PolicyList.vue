@@ -200,6 +200,7 @@
             :locale="sessionState.locale"
             :options-map="policyQuickOptionsMap"
             @submit="submitQuickPolicy(false)"
+            @request-related-create="onPolicyRelatedCreateRequested"
           />
         </QuickCreateDialogShell>
       </template>
@@ -229,7 +230,8 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
-import { readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
+import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
+import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import {
   extractCustomFilterPresetId,
   isCustomFilterPresetValue,
@@ -935,10 +937,45 @@ async function submitQuickPolicy(openAfter = false) {
   }
 }
 
+function applyQuickPolicyPrefills(prefills = {}) {
+  if (!prefills || typeof prefills !== "object") return;
+  for (const field of policyQuickFields.value) {
+    const fieldName = String(field?.name || "").trim();
+    if (!fieldName || !(fieldName in prefills)) continue;
+    quickPolicyForm[fieldName] = String(prefills[fieldName] ?? "").trim();
+  }
+}
+
+function buildPolicyQuickReturnTo() {
+  const prefills = {};
+  for (const field of policyQuickFields.value) {
+    const fieldName = String(field?.name || "").trim();
+    if (!fieldName) continue;
+    const value = String(quickPolicyForm[fieldName] ?? "").trim();
+    if (!value) continue;
+    prefills[fieldName] = value;
+  }
+  return router.resolve({
+    name: "policy-list",
+    query: buildQuickCreateIntentQuery({ prefills }),
+  }).fullPath;
+}
+
+function onPolicyRelatedCreateRequested(request = {}) {
+  const navigation = buildRelatedQuickCreateNavigation({
+    optionsSource: request?.optionsSource,
+    query: request?.query,
+    returnTo: buildPolicyQuickReturnTo(),
+  });
+  if (!navigation) return;
+  router.push(navigation).catch(() => {});
+}
+
 function consumeQuickPolicyRouteIntent() {
   const intent = readQuickCreateIntent(route.query);
   if (!intent.quick) return;
   openQuickPolicyDialog({ fromIntent: true, returnTo: intent.returnTo });
+  applyQuickPolicyPrefills(intent.prefills || {});
   const nextQuery = stripQuickCreateIntentQuery(route.query);
   router.replace({ name: "policy-list", query: nextQuery }).catch(() => {});
 }

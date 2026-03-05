@@ -370,6 +370,7 @@
             :locale="sessionState.locale"
             :options-map="offerQuickOptionsMap"
             @submit="createQuickOffer(false)"
+            @request-related-create="onOfferRelatedCreateRequested"
           />
         </QuickCreateDialogShell>
       </template>
@@ -456,7 +457,8 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
-import { readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
+import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
+import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import {
   extractCustomFilterPresetId,
   isCustomFilterPresetValue,
@@ -1443,6 +1445,45 @@ function openQuickOfferDialogForCustomer(prefill, options = {}) {
   quickOffer.queryText = customerLabel || customerName;
 }
 
+function applyQuickOfferPrefills(prefills = {}) {
+  if (!prefills || typeof prefills !== "object") return;
+  for (const field of offerQuickFields.value) {
+    const fieldName = String(field?.name || "").trim();
+    if (!fieldName || !(fieldName in prefills)) continue;
+    quickOffer[fieldName] = String(prefills[fieldName] ?? "").trim();
+  }
+}
+
+function buildQuickOfferReturnTo() {
+  const prefills = {};
+  for (const field of offerQuickFields.value) {
+    const fieldName = String(field?.name || "").trim();
+    if (!fieldName) continue;
+    const value = String(quickOffer[fieldName] ?? "").trim();
+    if (!value) continue;
+    prefills[fieldName] = value;
+  }
+  const customerName = String(quickOffer?.customerOption?.value || "").trim();
+  const customerLabel = String(quickOffer.queryText || quickOffer?.customerOption?.label || "").trim();
+  if (customerName) prefills.customer = customerName;
+  if (customerLabel) prefills.customer_label = customerLabel;
+
+  return router.resolve({
+    name: "offer-board",
+    query: buildQuickCreateIntentQuery({ prefills }),
+  }).fullPath;
+}
+
+function onOfferRelatedCreateRequested(request = {}) {
+  const navigation = buildRelatedQuickCreateNavigation({
+    optionsSource: request?.optionsSource,
+    query: request?.query,
+    returnTo: buildQuickOfferReturnTo(),
+  });
+  if (!navigation) return;
+  router.push(navigation).catch(() => {});
+}
+
 function cancelQuickOfferDialog() {
   showQuickOfferDialog.value = false;
   if (quickOfferOpenedFromIntent.value && quickOfferReturnTo.value) {
@@ -1582,6 +1623,7 @@ function consumeQuickOfferRouteIntent() {
   } else {
     openQuickOfferDialog({ fromIntent: true, returnTo: intent.returnTo });
   }
+  applyQuickOfferPrefills(intent.prefills || {});
   const nextQuery = stripQuickCreateIntentQuery(route.query, ["customer", "customer_label"]);
   router.replace({ name: "offer-board", query: nextQuery }).catch(() => {});
 }

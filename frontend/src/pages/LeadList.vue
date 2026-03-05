@@ -209,6 +209,7 @@
             :locale="sessionState.locale"
             :options-map="leadQuickOptionsMap"
             @submit="submitQuickLead(false)"
+            @request-related-create="onLeadRelatedCreateRequested"
           />
         </QuickCreateDialogShell>
       </template>
@@ -239,7 +240,8 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
-import { readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
+import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
+import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import {
   extractCustomFilterPresetId,
   isCustomFilterPresetValue,
@@ -938,10 +940,46 @@ async function submitQuickLead(openAfter = false) {
     quickLeadLoading.value = false;
   }
 }
+
+function applyQuickLeadPrefills(prefills = {}) {
+  if (!prefills || typeof prefills !== "object") return;
+  for (const field of leadQuickFields.value) {
+    const fieldName = String(field?.name || "").trim();
+    if (!fieldName || !(fieldName in prefills)) continue;
+    quickLeadForm[fieldName] = String(prefills[fieldName] ?? "").trim();
+  }
+}
+
+function buildLeadQuickReturnTo() {
+  const prefills = {};
+  for (const field of leadQuickFields.value) {
+    const fieldName = String(field?.name || "").trim();
+    if (!fieldName) continue;
+    const value = String(quickLeadForm[fieldName] ?? "").trim();
+    if (!value) continue;
+    prefills[fieldName] = value;
+  }
+  return router.resolve({
+    name: "lead-list",
+    query: buildQuickCreateIntentQuery({ prefills }),
+  }).fullPath;
+}
+
+function onLeadRelatedCreateRequested(request = {}) {
+  const navigation = buildRelatedQuickCreateNavigation({
+    optionsSource: request?.optionsSource,
+    query: request?.query,
+    returnTo: buildLeadQuickReturnTo(),
+  });
+  if (!navigation) return;
+  router.push(navigation).catch(() => {});
+}
+
 function consumeQuickLeadRouteIntent() {
   const intent = readQuickCreateIntent(route.query);
   if (!intent.quick) return;
   openQuickLeadDialog({ fromIntent: true, returnTo: intent.returnTo });
+  applyQuickLeadPrefills(intent.prefills || {});
   const nextQuery = stripQuickCreateIntentQuery(route.query);
   router.replace({ name: "lead-list", query: nextQuery }).catch(() => {});
 }

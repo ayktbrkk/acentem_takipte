@@ -5,6 +5,7 @@ import App from "./App.vue";
 import router from "./router";
 import { hydrateSessionState } from "./state/session";
 import "./style.css";
+import "vue3-select-component/styles";
 
 function readCookie(name) {
   if (typeof document === "undefined") return "";

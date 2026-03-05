@@ -19,7 +19,8 @@
   "dependencies": {
     "frappe-ui": "^0.1.10",
     "vue": "^3.4.38",
-    "vue-router": "^4.4.3"
+    "vue-router": "^4.4.3",
+    "vue3-select-component": "^0.16.0"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.91",

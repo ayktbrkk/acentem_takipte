@@ -554,7 +554,8 @@ def search_quick_options(
     options_source: str,
     query: str | None = None,
     limit: int | str | None = 20,
-) -> dict[str, list[dict[str, str]]]:
+    start: int | str | None = 0,
+) -> dict[str, object]:
     assert_authenticated()
     source_key = _normalize_quick_option_source(options_source)
     source_config = QUICK_OPTION_SEARCH_SOURCES[source_key]
@@ -568,6 +569,7 @@ def search_quick_options(
 
     query_text = (query or "").strip()
     page_limit = min(max(cint(limit or 20), 1), MAX_QUICK_OPTION_SEARCH_LIMIT)
+    page_start = max(cint(start or 0), 0)
 
     rows = frappe.get_list(
         doctype,
@@ -575,10 +577,18 @@ def search_quick_options(
         filters=dict(source_config.get("filters") or {}) or None,
         or_filters=_build_quick_option_or_filters(doctype, source_config, query_text) or None,
         order_by=str(source_config.get("order_by") or "modified desc"),
-        limit_page_length=page_limit,
+        limit_start=page_start,
+        limit_page_length=page_limit + 1,
     )
-    options = [_format_quick_option_row(source_key, row or {}) for row in rows or []]
-    return {"options": options}
+    page_rows = (rows or [])[:page_limit]
+    options = [_format_quick_option_row(source_key, row or {}) for row in page_rows]
+    has_more = len(rows or []) > page_limit
+    next_start = page_start + page_limit if has_more else None
+    return {
+        "options": options,
+        "has_more": has_more,
+        "next_start": next_start,
+    }
 
 
 def _normalize_quick_option_source(value: str | None) -> str:
