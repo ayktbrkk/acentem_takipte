@@ -17,6 +17,7 @@ from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import (
     create_policy_snapshot,
     serialize_policy_snapshot,
 )
+from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyEndorsementStatus
 
 ALLOWED_ENDORSEMENT_FIELDS = {
     "insurance_company",
@@ -53,7 +54,7 @@ def apply_endorsement(endorsement_name: str) -> dict[str, str]:
     assert_post_request("Only POST requests are allowed for endorsement application.")
     endorsement_name = str(endorsement_name or "").strip()
     endorsement = assert_doc_permission("AT Policy Endorsement", endorsement_name, "write")
-    if endorsement.status == "Applied":
+    if endorsement.status == ATPolicyEndorsementStatus.APPLIED:
         return {
             "policy": endorsement.policy,
             "snapshot": endorsement.snapshot_record,
@@ -89,7 +90,7 @@ def apply_endorsement(endorsement_name: str) -> dict[str, str]:
     endorsement.db_set("snapshot_record", snapshot.name, update_modified=False)
     endorsement.db_set("before_snapshot", frappe.as_json(before_snapshot), update_modified=False)
     endorsement.db_set("after_snapshot", frappe.as_json(after_snapshot), update_modified=False)
-    endorsement.db_set("status", "Applied", update_modified=False)
+    endorsement.db_set("status", ATPolicyEndorsementStatus.APPLIED, update_modified=False)
     endorsement.db_set("applied_on", now_datetime(), update_modified=False)
     endorsement.db_set("applied_by", frappe.session.user, update_modified=False)
 

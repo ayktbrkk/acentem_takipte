@@ -11,6 +11,7 @@ from acentem_takipte.acentem_takipte.api.security import (
     assert_roles,
     audit_admin_action,
 )
+from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus
 from acentem_takipte.acentem_takipte import communication as communication_logic
 
 
@@ -66,7 +67,9 @@ def get_queue_snapshot(
     )
 
     # Filter for Drafts (only showing recent drafts that aren't yet sent)
-    draft_filters = {"status": ["in", ["Draft", "Queued", "Failed"]]}
+    draft_filters = {
+        "status": ["in", [ATNotificationDraftStatus.DRAFT, ATNotificationDraftStatus.QUEUED, ATNotificationDraftStatus.FAILED]]
+    }
     if customer: draft_filters["customer"] = customer
     if channel: draft_filters["channel"] = channel
     

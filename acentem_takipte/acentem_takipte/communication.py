@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import frappe
 from frappe.utils import add_to_date, cint, cstr, now_datetime
+from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus, ATNotificationOutboxStatus
 
 DEFAULT_RETRY_MINUTES = 5
 DEFAULT_MAX_ATTEMPTS = 3
@@ -22,9 +23,9 @@ class DeliveryResult:
 
 
 def queue_notification_drafts(limit: int = 200, include_failed: bool = True) -> dict[str, int]:
-    statuses = ["Draft"]
+    statuses = [ATNotificationDraftStatus.DRAFT]
     if include_failed:
-        statuses.append("Failed")
+        statuses.append(ATNotificationDraftStatus.FAILED)
 
     drafts = frappe.get_all(
         "AT Notification Draft",
@@ -64,14 +65,14 @@ def queue_notification_drafts(limit: int = 200, include_failed: bool = True) -> 
 def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
     draft = frappe.get_doc("AT Notification Draft", draft_name)
 
-    if draft.status == "Sent":
+    if draft.status == ATNotificationDraftStatus.SENT:
         return {"outcome": "skipped", "reason": "already_sent"}
 
     recipient = (draft.recipient or "").strip()
     if not recipient:
         _set_draft_status(
             draft,
-            status="Failed",
+            status=ATNotificationDraftStatus.FAILED,
             error_message="Recipient is required for notification delivery.",
         )
         return {"outcome": "invalid", "reason": "missing_recipient"}
@@ -89,18 +90,23 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
     outbox_name = frappe.db.get_value("AT Notification Outbox", {"draft": draft.name}, "name")
     if outbox_name:
         outbox_doc = frappe.get_doc("AT Notification Outbox", outbox_name)
-        if outbox_doc.status == "Sent":
-            _set_draft_status(draft, status="Sent", outbox_record=outbox_doc.name, sent_at=outbox_doc.last_attempt_on)
+        if outbox_doc.status == ATNotificationOutboxStatus.SENT:
+            _set_draft_status(
+                draft,
+                status=ATNotificationDraftStatus.SENT,
+                outbox_record=outbox_doc.name,
+                sent_at=outbox_doc.last_attempt_on,
+            )
             return {"outcome": "skipped", "reason": "outbox_already_sent"}
 
-        if outbox_doc.status == "Dead":
+        if outbox_doc.status == ATNotificationOutboxStatus.DEAD:
             # Allow manual recovery without dropping history.
-            outbox_doc.status = "Queued"
+            outbox_doc.status = ATNotificationOutboxStatus.QUEUED
             outbox_doc.next_retry_on = now_datetime()
             outbox_doc.error_message = None
             outbox_doc.save(ignore_permissions=True)
         else:
-            outbox_doc.status = "Queued"
+            outbox_doc.status = ATNotificationOutboxStatus.QUEUED
             outbox_doc.next_retry_on = now_datetime()
             outbox_doc.error_message = None
             outbox_doc.save(ignore_permissions=True)
@@ -117,7 +123,7 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
                     "reference_doctype": reference_doctype,
                     "reference_name": reference_name,
                     "provider": _default_provider_for_channel(draft.channel),
-                    "status": "Queued",
+                    "status": ATNotificationOutboxStatus.QUEUED,
                     "attempt_count": 0,
                     "max_attempts": DEFAULT_MAX_ATTEMPTS,
                     "next_retry_on": now_datetime(),
@@ -126,13 +132,13 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
         except Exception:
             _set_draft_status(
                 draft,
-                status="Failed",
+                status=ATNotificationDraftStatus.FAILED,
                 error_message="Outbox insert failed. Check reference links.",
             )
             frappe.log_error(frappe.get_traceback(), f"AT Notification Outbox Insert Error: {draft.name}")
             return {"outcome": "invalid", "reason": "outbox_insert_failed"}
 
-    _set_draft_status(draft, status="Queued", outbox_record=outbox_doc.name)
+    _set_draft_status(draft, status=ATNotificationDraftStatus.QUEUED, outbox_record=outbox_doc.name)
     return {"outcome": "queued", "outbox": outbox_doc.name}
 
 
@@ -142,13 +148,19 @@ def process_notification_queue(limit: int = 50) -> dict[str, int]:
         """
         select name
         from `tabAT Notification Outbox`
-        where status in ('Queued', 'Failed')
-            and ifnull(attempt_count, 0) < ifnull(max_attempts, %s)
-            and (next_retry_on is null or next_retry_on <= %s)
+        where status in (%(queued)s, %(failed)s)
+            and ifnull(attempt_count, 0) < ifnull(max_attempts, %(max_attempts)s)
+            and (next_retry_on is null or next_retry_on <= %(next_retry_on)s)
         order by priority desc, modified asc
-        limit %s
+        limit %(limit)s
         """,
-        (DEFAULT_MAX_ATTEMPTS, now_datetime(), limit),
+        {
+            "queued": ATNotificationOutboxStatus.QUEUED,
+            "failed": ATNotificationOutboxStatus.FAILED,
+            "max_attempts": DEFAULT_MAX_ATTEMPTS,
+            "next_retry_on": now_datetime(),
+            "limit": limit,
+        },
         as_dict=True,
     )
 
@@ -160,11 +172,11 @@ def process_notification_queue(limit: int = 50) -> dict[str, int]:
     for row in pending_rows:
         result = dispatch_notification_outbox(row.name)
         status = result.get("status")
-        if status == "Sent":
+        if status == ATNotificationOutboxStatus.SENT:
             sent += 1
-        elif status == "Failed":
+        elif status == ATNotificationOutboxStatus.FAILED:
             failed += 1
-        elif status == "Dead":
+        elif status == ATNotificationOutboxStatus.DEAD:
             dead += 1
         else:
             skipped += 1
@@ -187,16 +199,16 @@ def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> di
     outbox = frappe.get_doc("AT Notification Outbox", outbox_name)
     draft = frappe.get_doc("AT Notification Draft", outbox.draft)
 
-    if outbox.status == "Sent":
+    if outbox.status == ATNotificationOutboxStatus.SENT:
         return {"status": "Skipped", "reason": "already_sent"}
-    if outbox.status == "Dead" and not force:
+    if outbox.status == ATNotificationOutboxStatus.DEAD and not force:
         return {"status": "Skipped", "reason": "dead_letter"}
 
     if not outbox.recipient:
         _mark_delivery_failure(outbox, draft, "Recipient is missing on outbox item.")
         return {"status": outbox.status, "reason": "missing_recipient"}
 
-    outbox.status = "Processing"
+    outbox.status = ATNotificationOutboxStatus.PROCESSING
     outbox.attempt_count = cint(outbox.attempt_count) + 1
     outbox.last_attempt_on = now_datetime()
     outbox.error_message = None
@@ -216,7 +228,7 @@ def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> di
     )
 
     if delivery.ok:
-        outbox.status = "Sent"
+        outbox.status = ATNotificationOutboxStatus.SENT
         outbox.provider = delivery.provider
         outbox.provider_message_id = delivery.message_id
         outbox.response_log = delivery.response_log
@@ -226,11 +238,11 @@ def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> di
 
         _set_draft_status(
             draft,
-            status="Sent",
+            status=ATNotificationDraftStatus.SENT,
             sent_at=outbox.last_attempt_on,
             outbox_record=outbox.name,
         )
-        return {"status": "Sent", "outbox": outbox.name}
+        return {"status": ATNotificationOutboxStatus.SENT, "outbox": outbox.name}
 
     _mark_delivery_failure(outbox, draft, delivery.error or "Unknown delivery error.")
     return {"status": outbox.status, "outbox": outbox.name}
@@ -242,19 +254,19 @@ def retry_notification_outbox(outbox_name: str) -> dict[str, str]:
         return {"status": "Skipped", "reason": "missing_outbox"}
 
     outbox = frappe.get_doc("AT Notification Outbox", outbox_name)
-    if outbox.status == "Sent":
+    if outbox.status == ATNotificationOutboxStatus.SENT:
         return {"status": "Skipped", "reason": "already_sent"}
 
-    outbox.status = "Queued"
+    outbox.status = ATNotificationOutboxStatus.QUEUED
     outbox.next_retry_on = now_datetime()
     outbox.error_message = None
     outbox.save(ignore_permissions=True)
 
     draft = frappe.get_doc("AT Notification Draft", outbox.draft)
-    _set_draft_status(draft, status="Queued", outbox_record=outbox.name)
+    _set_draft_status(draft, status=ATNotificationDraftStatus.QUEUED, outbox_record=outbox.name)
     if not frappe.flags.in_test:
         frappe.db.commit()
-    return {"status": "Queued", "outbox": outbox.name}
+    return {"status": ATNotificationOutboxStatus.QUEUED, "outbox": outbox.name}
 
 
 def requeue_notification_outbox(outbox_name: str) -> dict[str, str]:
@@ -285,14 +297,14 @@ def _mark_delivery_failure(outbox, draft, error_message: str) -> None:
     outbox.response_log = cstr(error_message)[:500]
 
     if attempts >= max_attempts:
-        outbox.status = "Dead"
+        outbox.status = ATNotificationOutboxStatus.DEAD
         outbox.next_retry_on = None
-        draft_status = "Dead"
+        draft_status = ATNotificationDraftStatus.FAILED
     else:
-        outbox.status = "Failed"
+        outbox.status = ATNotificationOutboxStatus.FAILED
         retry_minutes = DEFAULT_RETRY_MINUTES * (2 ** max(attempts - 1, 0))
         outbox.next_retry_on = add_to_date(now_datetime(), minutes=retry_minutes)
-        draft_status = "Failed"
+        draft_status = ATNotificationDraftStatus.FAILED
     outbox.save(ignore_permissions=True)
 
     _set_draft_status(

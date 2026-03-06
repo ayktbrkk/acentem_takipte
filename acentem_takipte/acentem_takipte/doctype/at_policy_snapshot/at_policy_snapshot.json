@@ -72,7 +72,9 @@
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Notes"
+   "label": "Sistem Notu",
+   "description": "Sistem tarafından otomatik üretilir.",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,

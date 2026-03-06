@@ -5,6 +5,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import flt, getdate
+from acentem_takipte.acentem_takipte.utils.statuses import ATClaimStatus
 
 
 class ATClaim(Document):
@@ -48,11 +49,11 @@ class ATClaim(Document):
             frappe.throw(_("Paid amount cannot be greater than approved amount."))
 
         if approved_amount and flt(self.paid_amount) >= approved_amount and self.claim_status in {
-            "Open",
-            "Under Review",
-            "Approved",
+            ATClaimStatus.OPEN,
+            ATClaimStatus.UNDER_REVIEW,
+            ATClaimStatus.APPROVED,
         }:
-            self.claim_status = "Paid"
+            self.claim_status = ATClaimStatus.PAID
 
 
 def _get_paid_amount(claim_name: str, claim_currency: str | None = None) -> float:
@@ -68,7 +69,7 @@ def _get_paid_amount_totals(claim_name: str, claim_currency: str | None = None) 
         "AT Payment",
         filters={
             "claim": claim_name,
-            "status": "Paid",
+            "status": ATClaimStatus.PAID,
             "payment_direction": "Outbound",
         },
         fields=["currency", "amount", "amount_try"],

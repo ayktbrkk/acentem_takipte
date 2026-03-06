@@ -5,6 +5,10 @@ from hashlib import sha256
 
 import frappe
 from frappe.utils import cint, cstr, flt, now_datetime
+from acentem_takipte.acentem_takipte.utils.statuses import (
+    ATAccountingEntryStatus,
+    ATReconciliationItemStatus,
+)
 
 SOURCE_DOCTYPES = ("AT Policy", "AT Payment", "AT Claim")
 ENTRY_TYPE_MAP = {
@@ -44,9 +48,9 @@ def sync_accounting_entries(limit: int = 200) -> dict[str, int]:
         scanned += 1
         result = sync_accounting_entry(source_doctype, source_name)
         status = result.get("status")
-        if status == "Synced":
+        if status == ATAccountingEntryStatus.SYNCED:
             synced += 1
-        elif status == "Failed":
+        elif status == ATAccountingEntryStatus.FAILED:
             failed += 1
         else:
             skipped += 1
@@ -77,7 +81,7 @@ def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool 
     entry = _get_or_create_entry(source_doctype, source_name)
     payload_hash = _hash_payload(payload)
 
-    if entry.name and entry.status == "Synced" and entry.integration_hash == payload_hash and not force:
+    if entry.name and entry.status == ATAccountingEntryStatus.SYNCED and entry.integration_hash == payload_hash and not force:
         return {"status": "Skipped", "reason": "already_synced", "entry": entry.name}
 
     try:
@@ -94,7 +98,7 @@ def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool 
         entry.external_ref = external_payload.get("external_ref")
         entry.payload_json = frappe.as_json(payload)
         entry.integration_hash = payload_hash
-        entry.status = "Synced"
+        entry.status = ATAccountingEntryStatus.SYNCED
         entry.error_message = None
         entry.sync_attempt_count = cint(entry.sync_attempt_count) + 1
         entry.last_synced_on = now_datetime()
@@ -104,10 +108,10 @@ def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool 
         else:
             entry.insert(ignore_permissions=True)
 
-        return {"status": "Synced", "entry": entry.name}
+        return {"status": ATAccountingEntryStatus.SYNCED, "entry": entry.name}
     except Exception:
         _mark_entry_failed(entry, frappe.get_traceback())
-        return {"status": "Failed", "entry": entry.name or "", "reason": "sync_exception"}
+        return {"status": ATAccountingEntryStatus.FAILED, "entry": entry.name or "", "reason": "sync_exception"}
 
 
 def run_reconciliation_now(limit: int = 400) -> dict[str, int]:
@@ -118,7 +122,7 @@ def run_reconciliation(limit: int = 400) -> dict[str, int]:
     limit = max(cint(limit), 1)
     entries = frappe.get_all(
         "AT Accounting Entry",
-        filters={"status": ["in", ["Synced", "Failed"]]},
+        filters={"status": ["in", [ATAccountingEntryStatus.SYNCED, ATAccountingEntryStatus.FAILED]]},
         fields=[
             "name",
             "source_doctype",
@@ -169,10 +173,10 @@ def resolve_reconciliation_item(item_name: str, resolution_action: str = "Matche
         return {"status": "Skipped", "reason": "missing_item"}
 
     item = frappe.get_doc("AT Reconciliation Item", item_name)
-    if resolution_action == "Ignored":
-        item.status = "Ignored"
+    if resolution_action == ATReconciliationItemStatus.IGNORED:
+        item.status = ATReconciliationItemStatus.IGNORED
     else:
-        item.status = "Resolved"
+        item.status = ATReconciliationItemStatus.RESOLVED
     item.resolution_action = resolution_action or "Matched"
     if notes:
         item.notes = cstr(notes)[:500]
@@ -291,7 +295,7 @@ def _collect_sync_candidates(limit: int) -> list[tuple[str, str]]:
 
     failed_rows = frappe.get_all(
         "AT Accounting Entry",
-        filters={"status": "Failed"},
+        filters={"status": ATAccountingEntryStatus.FAILED},
         fields=["source_doctype", "source_name"],
         order_by="modified desc",
         limit_page_length=limit,
@@ -346,7 +350,7 @@ def _get_or_create_entry(source_doctype: str, source_name: str):
             "source_doctype": source_doctype,
             "source_name": source_name,
             "entry_type": ENTRY_TYPE_MAP[source_doctype],
-            "status": "Draft",
+            "status": ATAccountingEntryStatus.DRAFT,
         }
     )
 
@@ -355,7 +359,7 @@ def _mark_entry_failed(entry, traceback_text: str) -> None:
     if not entry:
         return
     try:
-        entry.status = "Failed"
+        entry.status = ATAccountingEntryStatus.FAILED
         entry.error_message = cstr(traceback_text)[-500:]
         entry.sync_attempt_count = cint(entry.sync_attempt_count) + 1
         entry.last_synced_on = now_datetime()
@@ -393,7 +397,7 @@ def _evaluate_mismatch(entry_row) -> tuple[str | None, dict]:
     external_try = flt(entry_row.external_amount_try)
     difference_try = external_try - local_try
 
-    if entry_row.status == "Failed":
+    if entry_row.status == ATAccountingEntryStatus.FAILED:
         return "Status", {"reason": "sync_failed", "difference_try": difference_try}
 
     if not entry_row.external_ref:
@@ -423,7 +427,7 @@ def _upsert_open_item(entry_row, mismatch_type: str, details: dict) -> None:
             }
         )
 
-    item.status = "Open"
+    item.status = ATReconciliationItemStatus.OPEN
     item.mismatch_type = mismatch_type
     item.local_amount_try = flt(entry_row.local_amount_try)
     item.external_amount_try = flt(entry_row.external_amount_try)
@@ -441,7 +445,7 @@ def _upsert_open_item(entry_row, mismatch_type: str, details: dict) -> None:
 def _close_open_items(accounting_entry: str, keep_mismatch_type: str | None) -> int:
     open_items = frappe.get_all(
         "AT Reconciliation Item",
-        filters={"accounting_entry": accounting_entry, "status": "Open"},
+        filters={"accounting_entry": accounting_entry, "status": ATReconciliationItemStatus.OPEN},
         fields=["name", "mismatch_type"],
         limit_page_length=0,
     )
@@ -450,7 +454,7 @@ def _close_open_items(accounting_entry: str, keep_mismatch_type: str | None) -> 
         if keep_mismatch_type and row.mismatch_type == keep_mismatch_type:
             continue
         item = frappe.get_doc("AT Reconciliation Item", row.name)
-        item.status = "Resolved"
+        item.status = ATReconciliationItemStatus.RESOLVED
         item.resolution_action = "Matched"
         item.notes = "Auto-closed by reconciliation job."
         item.save(ignore_permissions=True)
@@ -472,7 +476,7 @@ def _has_open_reconciliation(accounting_entry: str) -> bool:
     return bool(
         frappe.db.exists(
             "AT Reconciliation Item",
-            {"accounting_entry": accounting_entry, "status": "Open"},
+            {"accounting_entry": accounting_entry, "status": ATReconciliationItemStatus.OPEN},
         )
     )
 

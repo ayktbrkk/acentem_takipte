@@ -86,7 +86,8 @@
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Notes"
+   "label": "Kullanıcı Notu",
+   "description": "Kullanıcı tarafından eklenen serbest metin."
   },
   {
    "fieldname": "converted_offer",

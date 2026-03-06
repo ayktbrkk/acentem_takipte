@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt, nowdate, validate_email_address
+from acentem_takipte.acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
     assert_doc_permission,
@@ -17,7 +18,7 @@ class ATLead(Document):
         self.first_name = (self.first_name or "").strip()
         self.last_name = (self.last_name or "").strip()
         self.email = (self.email or "").strip().lower()
-        self.status = self.status or "Draft"
+        self.status = self.status or ATLeadStatus.DRAFT
         self.estimated_gross_premium = flt(self.estimated_gross_premium)
 
         if not self.first_name:
@@ -73,13 +74,13 @@ def convert_to_offer(lead_name: str) -> dict[str, str]:
             "valid_until": add_days(nowdate(), 7),
             "currency": "TRY",
             "gross_premium": flt(lead.estimated_gross_premium),
-            "status": "Draft",
+            "status": ATOfferStatus.DRAFT,
             "notes": notes,
         }
     )
 
     lead.db_set("converted_offer", offer.name, update_modified=False)
-    lead.db_set("status", "Replied", update_modified=False)
+    lead.db_set("status", ATLeadStatus.REPLIED, update_modified=False)
     frappe.db.commit()
     audit_admin_action(
         "doctype.at_lead.convert_to_offer",

@@ -8,6 +8,7 @@ from acentem_takipte.acentem_takipte.accounting import (
     run_reconciliation,
     sync_accounting_entries,
 )
+from acentem_takipte.acentem_takipte.utils.statuses import ATAccountingEntryStatus, ATReconciliationItemStatus
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
     assert_doc_permission,
@@ -21,7 +22,11 @@ ACCOUNTING_ADMIN_ROLES = ("System Manager", "Manager", "Accountant")
 
 
 @frappe.whitelist()
-def get_reconciliation_workbench(status: str | None = "Open", mismatch_type: str | None = None, limit: int = 100) -> dict:
+def get_reconciliation_workbench(
+    status: str | None = ATReconciliationItemStatus.OPEN,
+    mismatch_type: str | None = None,
+    limit: int = 100,
+) -> dict:
     assert_authenticated()
     assert_doctype_permission(
         "AT Reconciliation Item",
@@ -89,10 +94,10 @@ def get_reconciliation_workbench(status: str | None = "Open", mismatch_type: str
         row["accounting"] = entry_map.get(row.accounting_entry, {})
 
     metrics = {
-        "open": frappe.db.count("AT Reconciliation Item", {"status": "Open"}),
-        "resolved": frappe.db.count("AT Reconciliation Item", {"status": "Resolved"}),
-        "ignored": frappe.db.count("AT Reconciliation Item", {"status": "Ignored"}),
-        "failed_entries": frappe.db.count("AT Accounting Entry", {"status": "Failed"}),
+        "open": frappe.db.count("AT Reconciliation Item", {"status": ATReconciliationItemStatus.OPEN}),
+        "resolved": frappe.db.count("AT Reconciliation Item", {"status": ATReconciliationItemStatus.RESOLVED}),
+        "ignored": frappe.db.count("AT Reconciliation Item", {"status": ATReconciliationItemStatus.IGNORED}),
+        "failed_entries": frappe.db.count("AT Accounting Entry", {"status": ATAccountingEntryStatus.FAILED}),
     }
 
     return {

@@ -5,6 +5,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import flt, getdate, nowdate
+from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
 
 from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import fetch_tcmb_rate
 
@@ -24,12 +25,13 @@ class ATPayment(Document):
         if self.policy and not self.customer:
             self.customer = frappe.db.get_value("AT Policy", self.policy, "customer")
 
+        self._validate_status()
         self._validate_claim_links()
         self._validate_amounts()
         self._set_exchange_rate()
         self.amount_try = flt(self.amount) * flt(self.fx_rate)
 
-        if self.status == "Paid" and not self.payment_date:
+        if self.status == ATPaymentStatus.PAID and not self.payment_date:
             self.payment_date = nowdate()
 
     def after_insert(self):
@@ -84,8 +86,14 @@ class ATPayment(Document):
 
         due_date = getdate(self.due_date) if self.due_date else None
         payment_date = getdate(self.payment_date) if self.payment_date else None
-        if due_date and payment_date and due_date > payment_date and self.status == "Paid":
+        if due_date and payment_date and due_date > payment_date and self.status == ATPaymentStatus.PAID:
             frappe.msgprint(_("Payment is marked as paid before due date."), alert=True)
+
+    def _validate_status(self):
+        if self.status and self.status not in ATPaymentStatus.VALID:
+            frappe.throw(
+                _("Unsupported payment status: {0}").format(self.status),
+            )
 
     def _set_exchange_rate(self):
         self.currency = (self.currency or "TRY").upper()

@@ -166,7 +166,8 @@
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Notes"
+   "label": "Kullanıcı Notu",
+   "description": "Kullanıcı tarafından eklenen serbest metin."
   }
  ],
  "index_web_pages_for_search": 1,

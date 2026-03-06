@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt, getdate, now_datetime, nowdate
+from acentem_takipte.acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus, ATPolicyStatus
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
     assert_doc_permission,
@@ -12,7 +13,6 @@ from acentem_takipte.acentem_takipte.api.security import (
 )
 
 MONEY_TOLERANCE = 0.01
-CONVERTIBLE_STATUSES = {"Sent", "Accepted"}
 
 
 class ATOffer(Document):
@@ -23,7 +23,7 @@ class ATOffer(Document):
         if offer_date and valid_until and valid_until < offer_date:
             frappe.throw(_("Valid until date cannot be earlier than offer date."))
 
-        if self.status == "Converted" and not self.converted_policy:
+        if self.status == ATOfferStatus.CONVERTED and not self.converted_policy:
             frappe.throw(_("Converted offers must be linked to a policy."))
 
         self._normalize_financials()
@@ -35,7 +35,7 @@ class ATOffer(Document):
         commission_value = flt(self.commission_amount)
 
         # Quick drafts may start with zero financials and complete later.
-        if self.status == "Draft" and gross_value <= 0 and net_value <= 0 and tax_value == 0 and commission_value == 0:
+        if self.status == ATOfferStatus.DRAFT and gross_value <= 0 and net_value <= 0 and tax_value == 0 and commission_value == 0:
             self.net_premium = 0
             self.tax_amount = 0
             self.commission_amount = 0
@@ -101,8 +101,8 @@ def create_quick_offer(
     if expiry_day < offer_day:
         frappe.throw(_("Valid until date cannot be earlier than offer date."))
 
-    normalized_status = (status or "Draft").strip() or "Draft"
-    if normalized_status not in {"Draft", "Sent", "Accepted", "Rejected"}:
+    normalized_status = (status or ATOfferStatus.DRAFT).strip() or ATOfferStatus.DRAFT
+    if normalized_status not in ATOfferStatus.CREATION_ALLOWED:
         frappe.throw(_("Unsupported quick offer status: {0}").format(normalized_status))
 
     gross_value = flt(gross_premium) if gross_premium not in {None, ""} else 0
@@ -194,7 +194,7 @@ def convert_to_policy(
         "sales_entity": offer.sales_entity,
         "insurance_company": offer.insurance_company,
         "branch": offer.branch,
-        "status": "Active",
+        "status": ATPolicyStatus.ACTIVE,
         "issue_date": nowdate(),
         "start_date": start,
         "end_date": end,
@@ -219,7 +219,7 @@ def convert_to_policy(
     offer.db_set("commission_amount", commission_value, update_modified=False)
     offer.db_set("gross_premium", calculated_gross, update_modified=False)
     offer.db_set("converted_policy", policy.name, update_modified=False)
-    offer.db_set("status", "Converted", update_modified=False)
+    offer.db_set("status", ATOfferStatus.CONVERTED, update_modified=False)
 
     if offer.source_lead and frappe.db.exists("AT Lead", offer.source_lead):
         lead = frappe.get_doc("AT Lead", offer.source_lead)
@@ -227,7 +227,7 @@ def convert_to_policy(
         if not lead.converted_offer:
             lead.db_set("converted_offer", offer.name, update_modified=False)
         lead.db_set("converted_policy", policy.name, update_modified=False)
-        lead.db_set("status", "Closed", update_modified=False)
+        lead.db_set("status", ATLeadStatus.CLOSED, update_modified=False)
 
     frappe.db.commit()
     return {"policy": policy.name, "message": _("Offer converted to Policy successfully.")}
@@ -249,7 +249,7 @@ def _validate_offer_conversion_inputs(offer: ATOffer) -> None:
     if missing:
         frappe.throw(_("Offer is missing required fields: {0}").format(", ".join(missing)))
 
-    if offer.status not in CONVERTIBLE_STATUSES:
+    if offer.status not in ATOfferStatus.CONVERTIBLE:
         frappe.throw(_("Offer status must be Sent or Accepted before conversion."))
 
     today = getdate(nowdate())
