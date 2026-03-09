@@ -18,6 +18,7 @@ from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import has_
 from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
 from acentem_takipte.acentem_takipte.services.customer_360 import build_customer_360_payload
 from acentem_takipte.acentem_takipte.services.follow_up_sla import build_follow_up_sla_payload
+from acentem_takipte.acentem_takipte.services.work_management import build_my_tasks_payload
 from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
@@ -275,6 +276,17 @@ def get_follow_up_sla_payload(filters=None) -> dict:
         office_branch=office_branch,
         allowed_customers=allowed_customers,
     )
+
+
+@frappe.whitelist()
+def get_my_tasks_payload(filters=None) -> dict:
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Authentication required")
+
+    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    office_branch = normalize_requested_office_branch(payload.get("office_branch"))
+    return build_my_tasks_payload(office_branch=office_branch, assigned_to=user)
 
 
 @frappe.whitelist()

@@ -1,0 +1,141 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "task_title",
+  "task_type",
+  "source_doctype",
+  "source_name",
+  "customer",
+  "policy",
+  "claim",
+  "office_branch",
+  "assigned_to",
+  "status",
+  "priority",
+  "due_date",
+  "reminder_at",
+  "completed_on",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "task_title",
+   "fieldtype": "Data",
+   "label": "Gorev Basligi",
+   "reqd": 1
+  },
+  {
+   "default": "Follow-up",
+   "fieldname": "task_type",
+   "fieldtype": "Select",
+   "label": "Gorev Tipi",
+   "options": "\nFollow-up\nVisit\nCall\nCollection\nClaim\nRenewal\nReview\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_doctype",
+   "fieldtype": "Select",
+   "label": "Kaynak Tipi",
+   "options": "\nAT Customer\nAT Policy\nAT Claim\nAT Renewal Task\nAT Campaign\nAT Ownership Assignment\nAT Call Note"
+  },
+  {
+   "fieldname": "source_name",
+   "fieldtype": "Data",
+   "label": "Kaynak Kayit"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer"
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy"
+  },
+  {
+   "fieldname": "claim",
+   "fieldtype": "Link",
+   "label": "Claim",
+   "options": "AT Claim"
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Atanan Kisi",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Durum",
+   "options": "\nOpen\nIn Progress\nBlocked\nDone\nCancelled",
+   "reqd": 1
+  },
+  {
+   "default": "Normal",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "label": "Oncelik",
+   "options": "\nLow\nNormal\nHigh\nCritical",
+   "reqd": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Termin Tarihi"
+  },
+  {
+   "fieldname": "reminder_at",
+   "fieldtype": "Datetime",
+   "label": "Hatirlatma Zamani"
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Datetime",
+   "label": "Tamamlanma Zamani",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Kullanici Notu",
+   "description": "Kullanici tarafindan eklenen serbest metin."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Task",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

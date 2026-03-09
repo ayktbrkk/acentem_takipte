@@ -16,8 +16,7 @@ class ATSegment(Document):
         if self.criteria_json:
             try:
                 parsed = json.loads(self.criteria_json)
-            except json.JSONDecodeError as exc:
-                frappe.throw(_("Criteria JSON is not valid JSON.")) from exc
+            except json.JSONDecodeError:
+                frappe.throw(_("Criteria JSON is not valid JSON."))
             if not isinstance(parsed, (dict, list)):
                 frappe.throw(_("Criteria JSON must be an object or array."))
-

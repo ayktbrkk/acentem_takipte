@@ -292,3 +292,26 @@ def create_ownership_assignment(payload: dict) -> dict[str, str]:
         },
         "ownership_assignment",
     )
+
+
+def create_task(payload: dict) -> dict[str, str]:
+    return _insert_doc(
+        {
+            "doctype": "AT Task",
+            "task_title": payload.get("task_title"),
+            "task_type": payload.get("task_type"),
+            "source_doctype": payload.get("source_doctype"),
+            "source_name": payload.get("source_name"),
+            "customer": payload.get("customer"),
+            "policy": payload.get("policy"),
+            "claim": payload.get("claim"),
+            "office_branch": payload.get("office_branch"),
+            "assigned_to": payload.get("assigned_to"),
+            "status": payload.get("status"),
+            "priority": payload.get("priority"),
+            "due_date": payload.get("due_date"),
+            "reminder_at": payload.get("reminder_at"),
+            "notes": payload.get("notes"),
+        },
+        "task",
+    )

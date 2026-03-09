@@ -878,6 +878,73 @@ export const quickCreateRegistry = {
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
     ],
   },
+  task: {
+    key: "task",
+    title: i18nLabel("Hizli Gorev", "Quick Task"),
+    subtitle: i18nLabel("Gorev ve takip kaydi olustur", "Create a task and follow-up item"),
+    submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_task",
+    resultKey: "task",
+    openRouteName: "tasks-detail",
+    successRefreshTargets: ["tasks-list"],
+    defaults: {
+      task_title: "",
+      task_type: "Follow-up",
+      source_doctype: "AT Customer",
+      source_name: "",
+      customer: "",
+      policy: "",
+      claim: "",
+      assigned_to: "",
+      status: "Open",
+      priority: "Normal",
+      due_date: "",
+      reminder_at: "",
+      notes: "",
+    },
+    fields: [
+      { name: "task_title", type: "text", label: i18nLabel("Gorev Basligi", "Task Title"), required: true },
+      { name: "task_type", type: "select", label: i18nLabel("Gorev Tipi", "Task Type"), options: [
+        option("Follow-up", "Takip", "Follow-up"),
+        option("Visit", "Ziyaret", "Visit"),
+        option("Call", "Arama", "Call"),
+        option("Collection", "Tahsilat", "Collection"),
+        option("Claim", "Hasar", "Claim"),
+        option("Renewal", "Yenileme", "Renewal"),
+        option("Review", "Inceleme", "Review"),
+        option("Other", "Diger", "Other"),
+      ] },
+      { name: "source_doctype", type: "select", label: i18nLabel("Kaynak Tipi", "Source Type"), options: [
+        option("AT Customer", "Musteri", "Customer"),
+        option("AT Policy", "Police", "Policy"),
+        option("AT Claim", "Hasar", "Claim"),
+        option("AT Renewal Task", "Yenileme Gorevi", "Renewal Task"),
+        option("AT Campaign", "Kampanya", "Campaign"),
+        option("AT Ownership Assignment", "Atama", "Assignment"),
+        option("AT Call Note", "Arama Notu", "Call Note"),
+      ] },
+      { name: "source_name", type: "text", label: i18nLabel("Kaynak Kayit", "Source Record") },
+      { name: "customer", type: "select", label: i18nLabel("Musteri", "Customer"), optionsSource: "customers" },
+      { name: "policy", type: "select", label: i18nLabel("Police", "Policy"), optionsSource: "policies" },
+      { name: "claim", type: "text", label: i18nLabel("Hasar", "Claim") },
+      { name: "assigned_to", type: "text", label: i18nLabel("Atanan Kullanici", "Assigned User"), required: true },
+      { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
+        option("Open", "Acik", "Open"),
+        option("In Progress", "Devam Ediyor", "In Progress"),
+        option("Blocked", "Bloke", "Blocked"),
+        option("Done", "Tamamlandi", "Done"),
+        option("Cancelled", "Iptal", "Cancelled"),
+      ] },
+      { name: "priority", type: "select", label: i18nLabel("Oncelik", "Priority"), options: [
+        option("Low", "Dusuk", "Low"),
+        option("Normal", "Normal", "Normal"),
+        option("High", "Yuksek", "High"),
+        option("Critical", "Kritik", "Critical"),
+      ] },
+      { name: "due_date", type: "date", label: i18nLabel("Termin", "Due Date") },
+      { name: "reminder_at", type: "datetime-local", label: i18nLabel("Hatirlatma", "Reminder At") },
+      { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
+    ],
+  },
 };
 
 function addQuickEditVariant(baseKey, editKey, trTitle, enTitle, trSubtitle, enSubtitle) {
@@ -966,6 +1033,14 @@ addQuickEditVariant(
   "Edit Assignment",
   "Atama alanlarini guncelle",
   "Update assignment fields"
+);
+addQuickEditVariant(
+  "task",
+  "task_edit",
+  "Gorevi Duzenle",
+  "Edit Task",
+  "Gorev alanlarini guncelle",
+  "Update task fields"
 );
 addQuickEditVariant(
   "notification_template_master",

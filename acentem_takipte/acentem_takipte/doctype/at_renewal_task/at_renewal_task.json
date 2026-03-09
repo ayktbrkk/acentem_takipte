@@ -67,6 +67,17 @@
    "reqd": 1
   },
   {
+   "fieldname": "lost_reason_code",
+   "fieldtype": "Select",
+   "label": "Lost Reason Code",
+   "options": "\nPrice\nCompetitor\nService\nCustomer Cancelled\nCoverage Gap\nNo Response"
+  },
+  {
+   "fieldname": "competitor_name",
+   "fieldtype": "Data",
+   "label": "Competitor Name"
+  },
+  {
    "fieldname": "assigned_to",
    "fieldtype": "Link",
    "label": "Assigned To",
@@ -96,8 +107,8 @@
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Kullanıcı Notu",
-   "description": "Kullanıcı tarafından eklenen serbest metin."
+   "label": "Kullanici Notu",
+   "description": "Kullanici tarafindan eklenen serbest metin."
   }
  ],
  "index_web_pages_for_search": 1,

@@ -116,6 +116,21 @@ describe("Dashboard page store integration", () => {
           ],
         },
       },
+      {
+        data: {
+          summary: { total: 2, overdue: 1, due_today: 1, due_soon: 0 },
+          items: [
+            {
+              name: "TASK-0001",
+              task_title: "Call customer",
+              task_type: "Call",
+              assigned_to: "manager@example.com",
+              status: "Open",
+              due_date: "2026-03-09",
+            },
+          ],
+        },
+      },
     );
     setActivePinia(createPinia());
 
@@ -207,5 +222,35 @@ describe("Dashboard page store integration", () => {
     expect(text).toContain("Hasar Masasi");
     expect(text).toContain("Yenileme Panosu");
     expect(text).toContain("Iletisim Merkezi");
+  });
+
+  it("renders my task panel and opens task detail route", async () => {
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          SectionCardHeader: genericStub,
+          DashboardStatCard: true,
+          StatusBadge: true,
+          ActionPreviewCard: genericStub,
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain("Benim Gorevlerim");
+    expect(wrapper.text()).toContain("Call customer");
+    const openButtons = wrapper
+      .findAll(".action-button-stub")
+      .filter((node) => node.text().includes("Ac") || node.text().includes("Open"));
+    await openButtons[openButtons.length - 1].trigger("click");
+    expect(routerPush).toHaveBeenCalledWith({ name: "tasks-detail", params: { name: "TASK-0001" } });
   });
 });

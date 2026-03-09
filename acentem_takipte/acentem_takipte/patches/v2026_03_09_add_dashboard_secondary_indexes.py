@@ -13,24 +13,24 @@ INDEX_SPECS = (
 
 
 def _db_type() -> str:
-    return (frappe.db.db_type or "").lower()
+    raw = (getattr(frappe.db, "db_type", None) or getattr(frappe.conf, "db_type", None) or "").lower()
+    if "postgres" in raw:
+        return "postgres"
+    return "mariadb"
 
 
-def _quote_ident(identifier: str) -> str:
-    if _db_type() == "postgres":
+def _quote_ident(identifier: str, *, db_type: str) -> str:
+    if db_type == "postgres":
         return f'"{identifier}"'
     return f"`{identifier}`"
 
 
 def _table_name_for_doctype(doctype: str) -> str:
-    table_name = frappe.db.get_table_name(doctype)
-    if table_name:
-        return table_name
     return f"tab{doctype}"
 
 
-def _index_exists(table_name: str, index_name: str) -> bool:
-    if _db_type() == "postgres":
+def _index_exists(*, table_name: str, index_name: str, db_type: str) -> bool:
+    if db_type == "postgres":
         return bool(
             frappe.db.sql(
                 """
@@ -46,7 +46,7 @@ def _index_exists(table_name: str, index_name: str) -> bool:
         )
     return bool(
         frappe.db.sql(
-            f"show index from {_quote_ident(table_name)} where Key_name = %s",
+            f"show index from {_quote_ident(table_name, db_type=db_type)} where Key_name = %s",
             (index_name,),
         )
     )
@@ -57,15 +57,15 @@ def _is_duplicate_index_error(exc: Exception) -> bool:
     return "duplicate" in message or "already exists" in message
 
 
-def _create_index_if_missing(doctype: str, index_name: str, columns: tuple[str, ...]) -> None:
+def _create_index_if_missing(doctype: str, index_name: str, columns: tuple[str, ...], *, db_type: str) -> None:
     table_name = _table_name_for_doctype(doctype)
-    if _index_exists(table_name, index_name):
+    if _index_exists(table_name=table_name, index_name=index_name, db_type=db_type):
         return
 
-    column_sql = ", ".join(_quote_ident(column) for column in columns)
+    column_sql = ", ".join(_quote_ident(column, db_type=db_type) for column in columns)
     create_sql = (
-        f"create index {_quote_ident(index_name)} "
-        f"on {_quote_ident(table_name)} ({column_sql})"
+        f"create index {_quote_ident(index_name, db_type=db_type)} "
+        f"on {_quote_ident(table_name, db_type=db_type)} ({column_sql})"
     )
     try:
         frappe.db.sql(create_sql)
@@ -75,5 +75,6 @@ def _create_index_if_missing(doctype: str, index_name: str, columns: tuple[str, 
 
 
 def execute() -> None:
+    db_type = _db_type()
     for doctype, index_name, columns in INDEX_SPECS:
-        _create_index_if_missing(doctype, index_name, columns)
+        _create_index_if_missing(doctype, index_name, columns, db_type=db_type)

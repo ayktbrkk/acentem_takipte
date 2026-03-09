@@ -548,3 +548,4 @@
 
 - Faz 13.7 tamamlandi: Files aux panel aksiyonu attached_to_doctype/attached_to_name uzerinden hedef kayda gider hale geldi.
 - Faz 13 plan seviyesinde kapatildi. Belge merkezi policy/customer/claim drill-down, files aux operatorlugu ve document profile zinciri tamamlandi. Yeni aktif odak: Faz 14.
+- Faz 14 basladi. `AT Task` veri modeli, quick create/aux workbench omurgasi ve Dashboard gunluk gorev paneli eklendi.

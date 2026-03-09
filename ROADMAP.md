@@ -1766,3 +1766,4 @@ ext_follow_up_on). Controller guard'lari reddedilen hasar, itiraz ve takip tarih
 
 - Faz 13.7 tamamlandi: Files aux panel aksiyonu attached_to_doctype/attached_to_name bagli hedef kayda gider hale getirildi.
 - Faz 13 tamamlandi: Policy 360 ve Customer 360 document profile, claim document summary, files drill-down, files aux operatorlugu ve belge merkezi preset/ozet kartlari tamamlandi. Yeni aktif odak Faz 14.
+- Faz 14 basladi: `AT Task` veri modeli, quick create ve aux workbench omurgasi acildi; `Dashboard` gunluk sekmesine `Benim Gorevlerim / My Tasks` paneli ve ilk backend/frontend kontrat testleri eklendi.

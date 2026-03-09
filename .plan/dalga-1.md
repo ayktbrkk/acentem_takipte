@@ -556,3 +556,10 @@ ext_follow_up_on alanlari eklendi
 - [x] Faz 13.7 tamamlandi: Files aux ekraninda panel aksiyonu artik attached target kayda gider; belge merkezi policy/customer/claim taraflariyla simetrik drill-down davranisina kavustu.
 - [x] Faz 13 tamamlandi: Policy 360 ve Customer 360 document profile, claim document summary, files drill-down, files aux operatorlugu ve belge merkezi preset/ozet kartlari tamamlandi.
 - [ ] Sonraki aktif odak: Faz 14.
+
+### Faz 14 Ilk Uygulama Durumu
+- [x] `AT Task` DocType veri modeli eklendi
+- [x] `create_quick_task` + `services/work_management.py` ile ilk genel gorev omurgasi acildi
+- [x] `tasks` aux workbench yuzeyi ve `task/task_edit` quick create config'i eklendi
+- [x] `Dashboard.vue` gunluk sekmeye `Benim Gorevlerim / My Tasks` paneli eklendi
+- [x] `test_work_management.py` ve `Dashboard.test.js` ile ilk backend/frontend kontrat testi eklendi

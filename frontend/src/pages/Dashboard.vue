@@ -490,6 +490,52 @@
           </ul>
         </article>
       </div>
+
+      <div class="space-y-4">
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('myTasksTitle')" :count="formatNumber(myTaskItems.length)" />
+          <p class="mb-3 text-xs text-slate-500">{{ t("myTasksHint") }}</p>
+          <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else class="space-y-3">
+            <div class="grid grid-cols-3 gap-2">
+              <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("taskOverdue") }}</p>
+                <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(myTaskSummary.overdue) }}</p>
+              </div>
+              <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskToday") }}</p>
+                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
+              </div>
+              <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("taskSoon") }}</p>
+                <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
+              </div>
+            </div>
+            <ul v-if="myTaskItems.length > 0" class="space-y-2">
+              <MetaListCard
+                v-for="task in myTaskItems"
+                :key="task.name"
+                :title="task.task_title || task.name || '-'"
+                :description="task.status || '-'"
+                description-class="mt-2 text-xs font-semibold text-slate-600"
+              >
+                <template #trailing>
+                  <ActionButton variant="ghost" size="sm" @click="openTaskItem(task)">
+                    {{ t("openItem") }}
+                  </ActionButton>
+                </template>
+                <MiniFactList :items="taskFacts(task)" />
+              </MetaListCard>
+            </ul>
+            <div v-else class="at-empty-block text-sm">{{ t("noMyTasks") }}</div>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'tasks-list' })">
+                {{ t("openTasksAction") }}
+              </ActionButton>
+            </div>
+          </div>
+        </article>
+      </div>
     </div>
 
 
@@ -716,6 +762,15 @@ const copy = {
     followUpClaimsAction: "Hasar Masasi",
     followUpRenewalsAction: "Yenileme Panosu",
     followUpCommunicationAction: "Iletisim Merkezi",
+    myTasksTitle: "Benim Gorevlerim",
+    myTasksHint: "Atanmis gorevleri bugun ve gelecek hafta icin izleyin.",
+    noMyTasks: "Atanmis gorev yok.",
+    taskOverdue: "Geciken",
+    taskToday: "Bugun",
+    taskSoon: "7 Gun",
+    taskType: "Tip",
+    taskAssignee: "Atanan",
+    openTasksAction: "Gorev Listesi",
     policyCount: "Police Adedi",
     grossProduction: "Brut Uretim",
     recentPolicies: "Son Policeler",
@@ -866,6 +921,15 @@ const copy = {
     followUpClaimsAction: "Claims Desk",
     followUpRenewalsAction: "Renewals Board",
     followUpCommunicationAction: "Communication Center",
+    myTasksTitle: "My Tasks",
+    myTasksHint: "Track assigned tasks for today and the coming week.",
+    noMyTasks: "No assigned tasks.",
+    taskOverdue: "Overdue",
+    taskToday: "Today",
+    taskSoon: "7 Days",
+    taskType: "Type",
+    taskAssignee: "Assignee",
+    openTasksAction: "Task List",
     policyCount: "Policy Count",
     grossProduction: "Gross Production",
     recentPolicies: "Recent Policies",
@@ -918,6 +982,12 @@ const kpiResource = createResource({
 
 const followUpResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_follow_up_sla_payload",
+  params: withOfficeBranchFilter({ filters: {} }),
+  auto: true,
+});
+
+const myTasksResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_tasks_payload",
   params: withOfficeBranchFilter({ filters: {} }),
   auto: true,
 });
@@ -1080,6 +1150,7 @@ const dashboardLoadingRaw = computed(
   () => Boolean((isDailyTab.value ? kpiResource.loading : false) || dashboardTabPayloadResource.loading)
 );
 const followUpLoading = computed(() => Boolean(followUpResource.loading));
+const myTasksLoading = computed(() => Boolean(myTasksResource.loading));
 const dashboardLoading = computed(() => dashboardStore.state.loading);
 const dashboardPermissionError = computed(() => {
   const candidates = [dashboardTabPayloadResource.error, isDailyTab.value ? kpiResource.error : null];
@@ -1170,6 +1241,9 @@ const renewalRetentionSummary = computed(
 const followUpPayload = computed(() => followUpResource.data || {});
 const followUpSummary = computed(() => followUpPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
 const followUpItems = computed(() => (Array.isArray(followUpPayload.value.items) ? followUpPayload.value.items : []));
+const myTasksPayload = computed(() => myTasksResource.data || {});
+const myTaskSummary = computed(() => myTasksPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
+const myTaskItems = computed(() => (Array.isArray(myTasksPayload.value.items) ? myTasksPayload.value.items : []));
 
 const visibleRange = computed(() => {
   const range = getDateRange(selectedRange.value);
@@ -1771,6 +1845,19 @@ function openFollowUpItem(item) {
     });
     return;
   }
+}
+
+function taskFacts(task) {
+  return [
+    { label: t("taskType"), value: task?.task_type || "-" },
+    { label: t("taskAssignee"), value: task?.assigned_to || "-" },
+    { label: t("dueDate"), value: formatDate(task?.due_date) },
+  ];
+}
+
+function openTaskItem(task) {
+  if (!task?.name) return;
+  router.push({ name: "tasks-detail", params: { name: task.name } });
 }
 
 function recentLeadFacts(lead) {

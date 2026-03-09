@@ -31,6 +31,7 @@ export function getSourcePanelConfig(sourceDoctype, sourceName) {
   if (sourceDoctype === "AT Campaign") return { url: `/at/campaigns/${encodeURIComponent(sourceName)}`, labelKey: "openCommunicationPanel" };
   if (sourceDoctype === "AT Customer Segment Snapshot") return { url: `/at/customer-segment-snapshots/${encodeURIComponent(sourceName)}`, labelKey: "openCustomerPanel" };
   if (sourceDoctype === "AT Ownership Assignment") return { url: `/at/ownership-assignments/${encodeURIComponent(sourceName)}`, labelKey: "openCustomerPanel" };
+  if (sourceDoctype === "AT Task") return { url: `/at/tasks/${encodeURIComponent(sourceName)}`, labelKey: "openCustomerPanel" };
   if (sourceDoctype === "File") return { url: `/at/files/${encodeURIComponent(sourceName)}`, labelKey: "openDocumentsPanel" };
   if (sourceDoctype === "AT Insurance Company") return { url: `/at/insurance-companies/${encodeURIComponent(sourceName)}`, labelKey: "openMasterDataPanel" };
   if (sourceDoctype === "AT Branch") return { url: `/at/branches/${encodeURIComponent(sourceName)}`, labelKey: "openMasterDataPanel" };

@@ -295,3 +295,4 @@
 
 - Tamamlandi: Faz 13.7 Files aux attached-target panel gecisi.
 - Faz 13 kapanis notu: policy/customer/claim belge profili, files drill-down ve files aux operatorlugu tamamlandi. Sonraki odak Faz 14.
+- Faz 14 ilk slice notu: `AT Task` veri modeli, quick create/aux route ve Dashboard gunluk gorev paneli tamamlandi.
