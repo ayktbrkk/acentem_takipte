@@ -5,6 +5,11 @@ from typing import Any
 import frappe
 from frappe.utils import flt, getdate, nowdate
 
+from acentem_takipte.acentem_takipte.services.customer_segments import (
+    build_customer_segment_snapshot_payload,
+    upsert_customer_segment_snapshot,
+)
+
 
 OPEN_OFFER_STATUSES = {"Draft", "Sent", "Accepted", "Negotiation"}
 ACTIVE_POLICY_STATUSES = {"Active", "Renewal", "Pending Renewal"}
@@ -65,6 +70,27 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
         order_by="payment_date desc, modified desc",
         limit_page_length=50,
     )
+    payment_installments = (
+        frappe.get_list(
+            "AT Payment Installment",
+            fields=[
+                "name",
+                "payment",
+                "installment_no",
+                "installment_count",
+                "status",
+                "due_date",
+                "paid_on",
+                "amount",
+                "amount_try",
+            ],
+            filters={"customer": customer_name},
+            order_by="due_date asc, modified desc",
+            limit_page_length=200,
+        )
+        if frappe.db.exists("DocType", "AT Payment Installment")
+        else []
+    )
     claims = frappe.get_list(
         "AT Claim",
         fields=[
@@ -107,6 +133,7 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
         if str(row.get("status") or "") in OPEN_OFFER_STATUSES and not str(row.get("converted_policy") or "").strip()
     )
     overdue_payments = [row for row in payments if _is_overdue_payment(row, today)]
+    overdue_installments = [row for row in payment_installments if str(row.get("status") or "") == "Overdue"]
     open_claim_count = sum(1 for row in claims if str(row.get("claim_status") or "") in OPEN_CLAIM_STATUSES)
     upcoming_renewals = [row for row in renewals if _is_upcoming_renewal(row, today)]
 
@@ -117,6 +144,23 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
         reverse=True,
     )[:25]
 
+    insights_payload = build_customer_segment_snapshot_payload(
+        active_policy_count=active_policy_count,
+        policy_total_premium=policy_total_premium,
+        open_claim_count=open_claim_count,
+        upcoming_renewal_count=len(upcoming_renewals),
+        overdue_payment_count=len(overdue_payments),
+        overdue_payment_amount=sum(flt(row.get("amount_try")) for row in overdue_payments),
+        total_policy_count=len(policies),
+        cancelled_policy_count=cancelled_policy_count,
+    )
+    insights = upsert_customer_segment_snapshot(
+        customer_name=customer_name,
+        office_branch=customer.office_branch,
+        snapshot_date=today,
+        insight_payload=insights_payload,
+    )
+
     return {
         "customer": _serialize_customer(customer, can_view_sensitive=can_view_sensitive),
         "summary": {
@@ -126,6 +170,8 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
             "open_offer_count": open_offer_count,
             "overdue_payment_count": len(overdue_payments),
             "overdue_payment_amount": sum(flt(row.get("amount_try")) for row in overdue_payments),
+            "overdue_installment_count": len(overdue_installments),
+            "overdue_installment_amount": sum(flt(row.get("amount_try") or row.get("amount")) for row in overdue_installments),
             "open_claim_count": open_claim_count,
             "upcoming_renewal_count": len(upcoming_renewals),
             "total_premium": policy_total_premium,
@@ -134,6 +180,7 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
             "policies": policies[:20],
             "offers": offers[:20],
             "payments": payments[:20],
+            "payment_installments": payment_installments[:50],
             "claims": claims[:20],
             "renewals": upcoming_renewals[:20],
         },
@@ -142,17 +189,11 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
             "channel_summary": _build_channel_summary(communications),
             "timeline": timeline,
         },
-        "insights": _build_customer_insights(
-            active_policy_count=active_policy_count,
-            policy_total_premium=policy_total_premium,
-            open_claim_count=open_claim_count,
-            upcoming_renewal_count=len(upcoming_renewals),
-            overdue_payment_count=len(overdue_payments),
-            overdue_payment_amount=sum(flt(row.get("amount_try")) for row in overdue_payments),
-            total_policy_count=len(policies),
-            cancelled_policy_count=cancelled_policy_count,
-        ),
+        "insights": insights,
         "cross_sell": _build_cross_sell_payload(customer_name, policies),
+        "operations": {
+            "assignments": _get_assignments(customer_name=customer_name),
+        },
     }
 
 
@@ -209,6 +250,30 @@ def _get_comments(customer_name: str) -> list[dict[str, Any]]:
     )
 
 
+def _get_assignments(*, customer_name: str) -> list[dict[str, Any]]:
+    if not frappe.db.exists("DocType", "AT Ownership Assignment"):
+        return []
+    return frappe.get_list(
+        "AT Ownership Assignment",
+        fields=[
+            "name",
+            "source_doctype",
+            "source_name",
+            "customer",
+            "policy",
+            "assigned_to",
+            "assignment_role",
+            "status",
+            "priority",
+            "due_date",
+            "notes",
+        ],
+        filters={"customer": customer_name},
+        order_by="modified desc",
+        limit_page_length=50,
+    )
+
+
 def _is_overdue_payment(row: dict[str, Any], today) -> bool:
     status = str(row.get("status") or "")
     if status in {"Paid", "Cancelled"}:
@@ -261,99 +326,6 @@ def _build_comment_timeline_item(item: dict[str, Any]) -> dict[str, Any]:
         "title": item.get("comment_by") or "Comment",
         "meta": item.get("content"),
         "payload": item,
-    }
-
-
-def _build_customer_insights(
-    *,
-    active_policy_count: int,
-    policy_total_premium: float,
-    open_claim_count: int,
-    upcoming_renewal_count: int,
-    overdue_payment_count: int,
-    overdue_payment_amount: float,
-    total_policy_count: int,
-    cancelled_policy_count: int,
-) -> dict[str, Any]:
-    score = 0
-    strengths: list[str] = []
-    risks: list[str] = []
-
-    if active_policy_count >= 3:
-        score += 40
-        strengths.append("multi_policy")
-    elif active_policy_count >= 1:
-        score += 20
-        strengths.append("active_portfolio")
-
-    if policy_total_premium >= 100000:
-        score += 30
-        strengths.append("high_premium")
-    elif policy_total_premium >= 25000:
-        score += 15
-        strengths.append("medium_premium")
-
-    if open_claim_count == 0 and total_policy_count > 0:
-        score += 15
-        strengths.append("clean_claims")
-    elif open_claim_count >= 2:
-        score -= 10
-        risks.append("claim_pressure")
-
-    if upcoming_renewal_count > 0:
-        score += 15
-        strengths.append("renewal_pipeline")
-
-    if overdue_payment_count >= 2 or overdue_payment_amount >= 10000:
-        score -= 20
-        risks.append("collection_risk")
-    elif overdue_payment_count == 1:
-        score -= 10
-        risks.append("overdue_payment")
-
-    if cancelled_policy_count >= 2:
-        score -= 10
-        risks.append("cancellation_history")
-
-    score = max(0, min(100, score))
-
-    if score >= 80:
-        segment = "Strategic"
-    elif score >= 50:
-        segment = "Growth"
-    elif score >= 25:
-        segment = "Core"
-    else:
-        segment = "Dormant"
-
-    claim_risk = "Low"
-    if open_claim_count >= 2 or cancelled_policy_count >= 2:
-        claim_risk = "High"
-    elif open_claim_count >= 1:
-        claim_risk = "Medium"
-
-    value_band = "Standard"
-    if policy_total_premium >= 100000:
-        value_band = "High Value"
-    elif policy_total_premium >= 25000:
-        value_band = "Mid Value"
-
-    return {
-        "score": score,
-        "segment": segment,
-        "claim_risk": claim_risk,
-        "value_band": value_band,
-        "strengths": strengths[:4],
-        "risks": risks[:4],
-        "score_reason": {
-            "active_policy_count": active_policy_count,
-            "policy_total_premium": policy_total_premium,
-            "open_claim_count": open_claim_count,
-            "upcoming_renewal_count": upcoming_renewal_count,
-            "overdue_payment_count": overdue_payment_count,
-            "overdue_payment_amount": overdue_payment_amount,
-            "cancelled_policy_count": cancelled_policy_count,
-        },
     }
 
 

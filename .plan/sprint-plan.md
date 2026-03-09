@@ -1,4 +1,20 @@
-ï»¿# Haftalik Sprint Plani
+# Haftalik Sprint Plani
+
+## 2026-03-09 Guncel Sprint Durumu
+
+- **Aktif dalga:** 1
+- **Aktif faz:** 9
+- **Son tamamlanan faz:** 8
+- **Son tamamlanan teslimler:**
+  - snapshot admin UI tetikleme butonu
+  - snapshot liste/detail okunabilirligi
+  - snapshot liste taranabilirligi
+  - snapshot operasyon ozet kartlari
+  - segment snapshot trend gorunurlugu
+  - segment snapshot export gorunurlugu
+- **Siradaki adim:** Faz 9 ilk veri katmani
+- **Not:** Asagidaki haftalik plan baseline niteligindedir; guncel operasyon durumu bu bloktan okunur.
+
 
 ## Planlama Cercevesi
 
@@ -72,7 +88,7 @@
 - [x] Faz 2.1 icin ilk request-scope cache optimizasyonu uygulandi
 - [x] Faz 2.1 icin aggregate request-cache optimizasyonu uygulandi
 - [x] Faz 2.1 icin ilk dashboard hot-path index patch'i olusturuldu
-- [x] Faz 2.1 icin dashboard v2 where/value cache sadeleÅŸtirmesi uygulandi
+- [x] Faz 2.1 icin dashboard v2 where/value cache sadeleþtirmesi uygulandi
 - [x] Faz 2.1 icin ikinci dashboard index patch'i olusturuldu
 - [x] Faz 2.1 plan seviyesinde kapatildi
 - [x] Faz 2.2 scheduled report outbox dispatch fan-out refaktoru alindi
@@ -132,3 +148,98 @@
 - [x] Pinia facade store temeli (uth, ui) olusturuldu
 - [ ] Dashboard.vue icin ilk store migration dilimi
 
+
+## Guncel Sprint Durumu (2026-03-09)
+- Aktif Dalga: 1
+- Aktif Faz: 5
+- Son tamamlanan adim: ReconciliationWorkbench ekstre ice aktarma preview dialog kontrati sayfa testine eklendi.
+- Sonraki adim: statement import preview satirlarini persistence katmanina baglamak.
+- Not: Dalga 4 tamamlandi, Dalga 5 aktif olarak ilerliyor.
+
+- 2026-03-09 aktif teslim: Faz 5 statement import preview -> persistence zinciri tamamlandi; siradaki mantikli adim import edilen satirlar icin toplu resolve/ignore yardimcilari veya Faz 5 kapanis notu.
+
+- 2026-03-09 aktif teslim: Faz 5 statement import persistence ve toplu reconciliation aksiyonlari tamamlandi; sonraki mantikli adim Faz 5 kapanis notu veya backend bulk mutation testleri.
+
+- 2026-03-09 aktif teslim: Faz 5 bulk reconciliation backend kontrati sabitlendi; Faz 5 kapanis notuna gecilebilir.
+
+- 2026-03-09 aktif durum: Faz 5 plan seviyesinde kapatildi. Sonraki sprint kesiti Faz 6 - hasar ve iletisim merkezi derinlestirme.
+
+- 2026-03-09 guncelleme: Faz 6 ilk kesitinde claim lifecycle alanlari ve backend guard/test zemini eklendi. Sonraki adim ClaimsBoard gorunurlugu.
+
+- 2026-03-09 Faz 6 ikinci kesit: ClaimsBoard lifecycle gorunurlugu eklendi. Sonraki adim claim status aksiyonlari ve musteri notification gorunurlugu.
+
+- 2026-03-09 Faz 6 ucuncu kesit: ClaimsBoard hizli status aksiyonlari ve notification template ipucu eklendi. Sonraki adim rejected/appeal ve outbox gorunurlugu.
+
+- 2026-03-09 Faz 6 dorduncu kesit: ClaimsBoard notification draft/outbox gorunurlugu ve rejected aksiyonu eklendi. Sonraki adim claim outbox aksiyonlari veya iletiþim merkezi genislemesi.
+
+- 2026-03-09 Faz 6 besinci kesit: AT Call Note veri modeli, quick create ve Communication Center hizli giris yuzeyi eklendi. Sonraki adim test kapsami ve kampanya/segment modeli.
+
+- 2026-03-09 Faz 6 altinci kesit: call note backend/UI ilk test turu tamamlandi. Sonraki adim kampanya/segment veri modeli.
+## Guncel OdaK
+
+- **Aktif dalga:** 1
+- **Aktif faz:** 6
+- **Son teslim:** `AT Campaign` execution servisi ve endpoint'i eklendi
+- **Bu sprintin yeni hedefi:** campaign execution akisini `CommunicationCenter.vue` icinden tetiklenebilir hale getirmek
+
+- 2026-03-09: CommunicationCenter campaign execution akisi icin secici ve test sertlestirmesi tamamlandi.
+
+- 2026-03-09: Campaign execution summary alanlari campaign list/detail yuzeyinde gorunur olacak sekilde eklendi.
+
+- 2026-03-09: Due campaign worker ve gunluk scheduler entegrasyonu tamamlandi.
+
+- 2026-03-09: Campaign detail related cards ile draft/outbox delivery trace eklendi.
+
+## Faz 6 Kapanis
+- Claim ve Communication Center derinlestirme tamamlandi.
+- Sonraki sprint odagi: Faz 7.
+
+
+- 2026-03-09: Reports icinde communication operations raporu eklendi; sonraki adim test ve export kontrati.
+
+- 2026-03-09: Communication operations report icin backend ve frontend test kontratlari eklendi.
+
+- 2026-03-09: Reconciliation operations raporu ve test kontratlari tamamlandi.
+
+- Tamamlandi: Hasar operasyonlari yonetim raporu (claims_operations) backend/frontend kontratlariyla eklendi. Sonraki mantikli hedef: Faz 7 icinde period-comparison veya ucuncu yonetsel dashboard kartlari.
+
+- Tamamlandi: Reports ekranina client-side previous-period comparison kartlari eklendi ve sayfa testi ile sabitlendi. Sonraki hedef: Faz 7 icinde scheduled/export operatorlugu veya yeni yonetsel kartlar.
+
+- Tamamlandi: Scheduled report yonetimi operasyon raporlarina genisletildi. Sonraki hedef: Faz 7 icinde yeni yonetsel kart veya Faz 7 kapanis notu.
+
+## Faz 7 Kapanis Notu
+- Tamamlandi: yonetsel operasyon raporlari + previous-period comparison + scheduled operatorluk.
+- Yeni aktif hedef: Faz 8 ilk kesiti.
+
+- Tamamlandi: Faz 8 ilk kesiti olarak customer segment snapshot veri modeli ve customer_360 entegrasyonu eklendi. Sonraki hedef: snapshot toplu yenileme veya snapshot gorunurlugu.
+# Guncel Sprint Notu
+- Faz 8
+- Tamamlandi: snapshot veri omurgasi
+- Tamamlandi: batch refresh job ve daily scheduler
+- Tamamlandi: CustomerDetail snapshot metadata gorunurlugu
+- Tamamlandi: snapshot batch refresh icin admin tetikleme ve liste gorunurlugu
+- Tamamlandi: snapshot admin UI tetikleme butonu
+- Tamamlandi: snapshot liste/detail okunabilirligini artirma
+- Tamamlandi: snapshot liste taranabilirligini artirma
+- Tamamlandi: snapshot operasyon ozet kartlarini acma
+- Tamamlandi: segment snapshot trend gorunurlugu
+- Tamamlandi: segment snapshot export gorunurlugu
+- Tamamlandi: Faz 8 kapanis ve sonraki veri katmani
+- Siradaki adim: Faz 9 ilk veri katmani
+
+
+## Faz 9 Guncel Sprint Notu
+- Aktif Faz: 9
+- Tamamlandi:
+  - `AT Ownership Assignment` veri modeli
+  - ownership assignment quick create / aux edit-delete
+  - Customer 360 ve Policy 360 assignment payload gorunurlugu
+  - CustomerDetail inline assignment create/edit/delete
+  - ClaimsBoard claim kaynakli assignment prefill
+  - CustomerDetail ownership assignment sayfa testi
+- Siradaki adim: assignment gorunurlugunu claim ve policy operasyon yuzeylerinde derinlestirmek
+- 2026-03-09: Faz 9 ikinci kesit: ClaimsBoard ownership assignment gorunurlugu eklendi. Sonraki adim PolicyDetail ve aux detail yuzeyinde assignment operasyonlarini derinlestirmek.
+- 2026-03-09: Faz 9 ucuncu kesit: PolicyDetail inline ownership assignment create/edit akisi tamamlandi. Sonraki adim aux/detail operasyonlarini derinlestirmek ve Faz 9 kapanisini hazirlamak.
+- 2026-03-09: Faz 9 dorduncu kesit: ownership assignment aux/detail okunabilirligi eklendi.
+- Faz 9 kapanis karari: ownership katmani veri modeli, ana operasyon yuzeyleri ve ilk test seviyesiyle tamamlandi.
+- Sonraki adim: lokal build + docker restart + smoke ardindan GitHub gonderimi.

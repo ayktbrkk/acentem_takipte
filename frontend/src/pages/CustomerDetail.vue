@@ -289,6 +289,9 @@
             <ActionButton variant="secondary" size="sm" @click="openQuickInsuredAsset">
               {{ t("newAsset") }}
             </ActionButton>
+            <ActionButton variant="secondary" size="sm" @click="openQuickOwnershipAssignment">
+              {{ t("newAssignment") }}
+            </ActionButton>
             <ActionButton
               v-if="deskActionsEnabled()"
               variant="secondary"
@@ -470,6 +473,49 @@
               :meta="insightRiskRows.join(' / ') || t('noRiskSignal')"
             />
           </div>
+          <div class="mt-3 grid gap-3 md:grid-cols-2">
+            <MetaListCard
+              :title="t('snapshotDate')"
+              :description="t('segmentSnapshotHint')"
+              :meta="formatDate(customer360Insights.snapshot_date)"
+            />
+            <MetaListCard
+              :title="t('sourceVersion')"
+              :description="t('segmentSourceVersionHint')"
+              :meta="customer360Insights.source_version || '-'"
+            />
+          </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('assignmentsTitle')" :count="ownershipAssignmentRows.length" />
+          <div v-if="ownershipAssignmentRows.length === 0" class="at-empty-block">
+            {{ t("noAssignment") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <MetaListCard
+              v-for="assignment in ownershipAssignmentRows"
+              :key="assignment.name"
+              :title="assignment.assigned_to || '-'"
+              :description="assignment.assignment_role || '-'"
+              :meta="assignment.priority || '-'"
+            >
+              <template #trailing>
+                <div class="flex items-center gap-2">
+                  <ActionButton variant="secondary" size="xs" @click.stop="openEditOwnershipAssignment(assignment)">
+                    {{ t("edit") }}
+                  </ActionButton>
+                  <ActionButton variant="secondary" size="xs" @click.stop="deleteOwnershipAssignment(assignment)">
+                    {{ t("delete") }}
+                  </ActionButton>
+                </div>
+              </template>
+              <p class="mt-2 text-xs text-slate-500">{{ assignmentSummaryLabel(assignment) }}</p>
+            </MetaListCard>
+          </div>
         </article>
 
         <article
@@ -640,6 +686,24 @@
       :before-open="prepareInsuredAssetEditDialog"
       :success-handlers="customer360QuickSuccessHandlers"
     />
+
+    <QuickCreateManagedDialog
+      v-model="showOwnershipAssignmentDialog"
+      config-key="ownership_assignment"
+      :locale="activeLocale"
+      :options-map="customer360QuickOptionsMap"
+      :before-open="prepareOwnershipAssignmentDialog"
+      :success-handlers="customer360QuickSuccessHandlers"
+    />
+
+    <QuickCreateManagedDialog
+      v-model="showOwnershipAssignmentEditDialog"
+      config-key="ownership_assignment_edit"
+      :locale="activeLocale"
+      :options-map="customer360QuickOptionsMap"
+      :before-open="prepareOwnershipAssignmentEditDialog"
+      :success-handlers="customer360QuickSuccessHandlers"
+    />
   </section>
 </template>
 
@@ -683,10 +747,12 @@ const copy = {
     communication: "Iletisim",
     newRelation: "Yeni Iliski",
     newAsset: "Yeni Varlik",
+    newAssignment: "Yeni Atama",
     edit: "Duzenle",
     delete: "Sil",
     deleteRelationConfirm: "Bu iliski kaydi silinsin mi?",
     deleteAssetConfirm: "Bu varlik kaydi silinsin mi?",
+    deleteAssignmentConfirm: "Bu atama kaydi silinsin mi?",
     editProfile: "Duzenle",
     cancelEdit: "Vazgec",
     saveProfile: "Kaydet",
@@ -743,6 +809,10 @@ const copy = {
     riskSignalsHint: "Takip gerektiren risk baskilari",
     noStrengthSignal: "Belirgin pozitif sinyal bulunamadi.",
     noRiskSignal: "Belirgin risk sinyali bulunamadi.",
+    snapshotDate: "Snapshot Tarihi",
+    sourceVersion: "Kaynak Surumu",
+    segmentSnapshotHint: "Segment gorunumu son hesaplanan gune aittir",
+    segmentSourceVersionHint: "Skor kurali surumu",
     valueBandHighValue: "Yuksek Deger",
     valueBandMidValue: "Orta Deger",
     valueBandStandard: "Standart",
@@ -761,6 +831,7 @@ const copy = {
     paymentSummaryTitle: "Odeme Ozeti",
     noPaymentHistory: "Odeme kaydi bulunamadi.",
     paymentDate: "Odeme Tarihi",
+    overdueInstallments: "Geciken Taksit",
     claimsTitle: "Hasarlar",
     noClaims: "Hasar kaydi bulunamadi.",
     reportedDate: "Bildirim Tarihi",
@@ -781,6 +852,8 @@ const copy = {
     noRelatedCustomer: "Iliskili kisi kaydi bulunamadi.",
     sameHousehold: "Ayni hane",
     insuredAssetsTitle: "Sigortalanan Varliklar",
+    assignmentsTitle: "Atamalar",
+    noAssignment: "Atama kaydi yok.",
     noInsuredAsset: "Sigortalanan varlik bulunamadi.",
     assetType: "Varlik Turu",
     assetIdentifier: "Varlik Kimligi",
@@ -809,10 +882,12 @@ const copy = {
     communication: "Communication",
     newRelation: "New Relation",
     newAsset: "New Asset",
+    newAssignment: "New Assignment",
     edit: "Edit",
     delete: "Delete",
     deleteRelationConfirm: "Delete this relation record?",
     deleteAssetConfirm: "Delete this asset record?",
+    deleteAssignmentConfirm: "Delete this assignment record?",
     editProfile: "Edit",
     cancelEdit: "Cancel",
     saveProfile: "Save",
@@ -869,6 +944,10 @@ const copy = {
     riskSignalsHint: "Risk pressure points that need follow-up",
     noStrengthSignal: "No major positive signal found.",
     noRiskSignal: "No major risk signal found.",
+    snapshotDate: "Snapshot Date",
+    sourceVersion: "Source Version",
+    segmentSnapshotHint: "Segment view reflects the latest calculated business date",
+    segmentSourceVersionHint: "Scoring rule version",
     valueBandHighValue: "High Value",
     valueBandMidValue: "Mid Value",
     valueBandStandard: "Standard",
@@ -887,6 +966,7 @@ const copy = {
     paymentSummaryTitle: "Payment Summary",
     noPaymentHistory: "No payment records found.",
     paymentDate: "Payment Date",
+    overdueInstallments: "Overdue Installments",
     claimsTitle: "Claims",
     noClaims: "No claims found.",
     reportedDate: "Reported Date",
@@ -907,6 +987,8 @@ const copy = {
     noRelatedCustomer: "No related customer records found.",
     sameHousehold: "Same household",
     insuredAssetsTitle: "Insured Assets",
+    assignmentsTitle: "Assignments",
+    noAssignment: "No assignments found.",
     noInsuredAsset: "No insured asset found.",
     assetType: "Asset Type",
     assetIdentifier: "Asset Identifier",
@@ -968,6 +1050,7 @@ const customer360CrossSell = computed(() => customer360Payload.value.cross_sell 
 const policies = computed(() => customer360Portfolio.value.policies || []);
 const offers = computed(() => customer360Portfolio.value.offers || []);
 const payments = computed(() => customer360Portfolio.value.payments || []);
+const paymentInstallments = computed(() => customer360Portfolio.value.payment_installments || []);
 const claims = computed(() => customer360Portfolio.value.claims || []);
 const renewals = computed(() => customer360Portfolio.value.renewals || []);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
@@ -978,8 +1061,11 @@ const showCustomerRelationDialog = ref(false);
 const showInsuredAssetDialog = ref(false);
 const showCustomerRelationEditDialog = ref(false);
 const showInsuredAssetEditDialog = ref(false);
+const showOwnershipAssignmentDialog = ref(false);
+const showOwnershipAssignmentEditDialog = ref(false);
 const editingCustomerRelation = ref(null);
 const editingInsuredAsset = ref(null);
+const editingOwnershipAssignment = ref(null);
 let profileFlashTimer = null;
 const profileFormErrors = reactive({
   full_name: "",
@@ -1015,12 +1101,24 @@ const openOffers = computed(() =>
   offers.value.filter((offer) => !["Rejected", "Converted"].includes(String(offer.status || "")))
 );
 const paymentPreviewRows = computed(() => payments.value.slice(0, 6));
+const paymentInstallmentsByPayment = computed(() => {
+  const map = new Map();
+  for (const row of paymentInstallments.value) {
+    const paymentName = String(row?.payment || "").trim();
+    if (!paymentName) continue;
+    const existing = map.get(paymentName) || [];
+    existing.push(row);
+    map.set(paymentName, existing);
+  }
+  return map;
+});
 const claimPreviewRows = computed(() => claims.value.slice(0, 6));
 const renewalPreviewRows = computed(() => renewals.value.slice(0, 6));
 const communicationChannelRows = computed(() => customer360Communication.value.channel_summary || []);
 const insuredAssetRows = computed(() => customer360CrossSell.value.insured_assets || []);
 const crossSellOpportunityRows = computed(() => customer360CrossSell.value.opportunity_branches || []);
 const relatedCustomerRows = computed(() => customer360CrossSell.value.related_customers || []);
+const ownershipAssignmentRows = computed(() => customer360Payload.value.operations?.assignments || []);
 const valueBandLabel = computed(() => describeValueBand(customer360Insights.value.value_band));
 const insightStrengthRows = computed(() =>
   (customer360Insights.value.strengths || []).map((item) => describeInsightSignal(item)).filter(Boolean)
@@ -1043,6 +1141,9 @@ const customer360QuickSuccessHandlers = {
     await loadCustomer360();
   },
   "insured-assets-list": async () => {
+    await loadCustomer360();
+  },
+  "ownership-assignments-list": async () => {
     await loadCustomer360();
   },
 };
@@ -1366,6 +1467,10 @@ function openQuickInsuredAsset() {
   showInsuredAssetDialog.value = true;
 }
 
+function openQuickOwnershipAssignment() {
+  showOwnershipAssignmentDialog.value = true;
+}
+
 function openEditCustomerRelation(relation) {
   editingCustomerRelation.value = relation || null;
   showCustomerRelationEditDialog.value = true;
@@ -1374,6 +1479,11 @@ function openEditCustomerRelation(relation) {
 function openEditInsuredAsset(asset) {
   editingInsuredAsset.value = asset || null;
   showInsuredAssetEditDialog.value = true;
+}
+
+function openEditOwnershipAssignment(assignment) {
+  editingOwnershipAssignment.value = assignment || null;
+  showOwnershipAssignmentEditDialog.value = true;
 }
 
 
@@ -1394,6 +1504,16 @@ async function deleteInsuredAsset(asset) {
   await insuredAssetDeleteResource.submit({
     doctype: "AT Insured Asset",
     name: asset.name,
+  });
+  await loadCustomer360();
+}
+
+async function deleteOwnershipAssignment(assignment) {
+  if (!assignment?.name) return;
+  if (!globalThis.confirm?.(t("deleteAssignmentConfirm"))) return;
+  await insuredAssetDeleteResource.submit({
+    doctype: "AT Ownership Assignment",
+    name: assignment.name,
   });
   await loadCustomer360();
 }
@@ -1427,6 +1547,13 @@ async function prepareInsuredAssetDialog({ form }) {
   if (!form.policy && activePolicies.value[0]?.name) form.policy = activePolicies.value[0].name;
 }
 
+async function prepareOwnershipAssignmentDialog({ form }) {
+  await ensureCustomer360QuickOptionSources();
+  if (!form.source_doctype) form.source_doctype = "AT Customer";
+  if (!form.source_name) form.source_name = props.name || "";
+  if (!form.customer) form.customer = props.name || "";
+}
+
 async function prepareCustomerRelationEditDialog({ resetForm }) {
   await ensureCustomer360QuickOptionSources();
   const relation = editingCustomerRelation.value || {};
@@ -1454,6 +1581,29 @@ async function prepareInsuredAssetEditDialog({ resetForm }) {
     asset_identifier: asset.asset_identifier || asset.insurance_company || "",
     notes: asset.notes || "",
   });
+}
+
+async function prepareOwnershipAssignmentEditDialog({ resetForm }) {
+  await ensureCustomer360QuickOptionSources();
+  const assignment = editingOwnershipAssignment.value || {};
+  resetForm({
+    doctype: "AT Ownership Assignment",
+    name: assignment.name || "",
+    source_doctype: assignment.source_doctype || "AT Customer",
+    source_name: assignment.source_name || props.name || "",
+    customer: assignment.customer || props.name || "",
+    policy: assignment.policy || "",
+    assigned_to: assignment.assigned_to || "",
+    assignment_role: assignment.assignment_role || "Owner",
+    status: assignment.status || "Open",
+    priority: assignment.priority || "Normal",
+    due_date: assignment.due_date || "",
+    notes: assignment.notes || "",
+  });
+}
+
+function assignmentSummaryLabel(assignment) {
+  return [assignment.status || "-", assignment.due_date || "-"].filter(Boolean).join(" / ");
 }
 
 function policyCardFacts(policy) {
@@ -1511,6 +1661,8 @@ function offerCardFacts(offer) {
 }
 
 function paymentCardFacts(payment) {
+  const relatedInstallments = paymentInstallmentsByPayment.value.get(payment?.name) || [];
+  const overdueInstallmentCount = relatedInstallments.filter((row) => String(row?.status || "") === "Overdue").length;
   return [
     {
       key: "paymentDate",
@@ -1523,6 +1675,12 @@ function paymentCardFacts(payment) {
       label: t("grossPremium"),
       value: formatCurrency(payment?.amount_try, "TRY"),
       valueClass: "text-sm font-semibold text-slate-900",
+    },
+    {
+      key: "overdueInstallments",
+      label: t("overdueInstallments"),
+      value: String(overdueInstallmentCount),
+      valueClass: overdueInstallmentCount > 0 ? "text-sm font-semibold text-rose-700" : "text-sm text-slate-700",
     },
   ];
 }

@@ -136,6 +136,8 @@ def create_payment(payload: dict) -> dict[str, str]:
             "status": payload.get("status"),
             "payment_date": getdate(payload.get("payment_date")) if payload.get("payment_date") else getdate(nowdate()),
             "due_date": getdate(payload.get("due_date")) if payload.get("due_date") else None,
+            "installment_count": payload.get("installment_count"),
+            "installment_interval_days": payload.get("installment_interval_days"),
             "currency": payload.get("currency"),
             "amount": flt(payload.get("amount") or 0),
             "reference_no": payload.get("reference_no"),
@@ -194,4 +196,77 @@ def create_insured_asset(payload: dict) -> dict[str, str]:
             "notes": payload.get("notes"),
         },
         "insured_asset",
+    )
+
+
+def create_call_note(payload: dict) -> dict[str, str]:
+    return _insert_doc(
+        {
+            "doctype": "AT Call Note",
+            "customer": payload.get("customer"),
+            "policy": payload.get("policy"),
+            "claim": payload.get("claim"),
+            "office_branch": payload.get("office_branch"),
+            "channel": payload.get("channel"),
+            "direction": payload.get("direction"),
+            "call_status": payload.get("call_status"),
+            "call_outcome": payload.get("call_outcome"),
+            "note_at": payload.get("note_at"),
+            "next_follow_up_on": payload.get("next_follow_up_on"),
+            "notes": payload.get("notes"),
+        },
+        "call_note",
+    )
+
+
+def create_segment(payload: dict) -> dict[str, str]:
+    return _insert_doc(
+        {
+            "doctype": "AT Segment",
+            "segment_name": payload.get("segment_name"),
+            "segment_type": payload.get("segment_type"),
+            "channel_focus": payload.get("channel_focus"),
+            "office_branch": payload.get("office_branch"),
+            "status": payload.get("status"),
+            "criteria_json": payload.get("criteria_json"),
+            "notes": payload.get("notes"),
+        },
+        "segment",
+    )
+
+
+def create_campaign(payload: dict) -> dict[str, str]:
+    return _insert_doc(
+        {
+            "doctype": "AT Campaign",
+            "campaign_name": payload.get("campaign_name"),
+            "segment": payload.get("segment"),
+            "template": payload.get("template"),
+            "channel": payload.get("channel"),
+            "office_branch": payload.get("office_branch"),
+            "status": payload.get("status"),
+            "scheduled_for": payload.get("scheduled_for"),
+            "notes": payload.get("notes"),
+        },
+        "campaign",
+    )
+
+
+def create_ownership_assignment(payload: dict) -> dict[str, str]:
+    return _insert_doc(
+        {
+            "doctype": "AT Ownership Assignment",
+            "source_doctype": payload.get("source_doctype"),
+            "source_name": payload.get("source_name"),
+            "customer": payload.get("customer"),
+            "policy": payload.get("policy"),
+            "office_branch": payload.get("office_branch"),
+            "assigned_to": payload.get("assigned_to"),
+            "assignment_role": payload.get("assignment_role"),
+            "status": payload.get("status"),
+            "priority": payload.get("priority"),
+            "due_date": payload.get("due_date"),
+            "notes": payload.get("notes"),
+        },
+        "ownership_assignment",
     )

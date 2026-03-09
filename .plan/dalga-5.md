@@ -33,3 +33,9 @@ Yenileme motoru, tahsilat, komisyon, reconciliation ve mali raporlama cekirdegi 
 **Tahmini sure:** 40 saat
 **Bitti kriteri:** Temel mali operasyonlar raporlanabilir ve reconcile edilebilir
 **Test:** Hesaplama kontrati + reconciliation smoke
+
+## Guncel Durum (2026-03-09)
+- Durum: Tamamlandi
+- Tamamlananlar: overdue tahsilat, taksit veri modeli, quick create taksit girisi, komisyon tahakkuk gorunurlugu, preview-first ekstre ice aktarma, matched row persistence, bulk reconciliation aksiyonlari.
+- Sonuc: Mali takip omurgasi ilk operasyonel seviyede kapatildi.
+

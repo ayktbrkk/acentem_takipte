@@ -50,6 +50,13 @@ def build_policy_360_payload(name: str) -> dict:
             order_by="payment_date desc",
             limit_page_length=50,
         ),
+        "payment_installments": _get_rows(
+            "AT Payment Installment",
+            fields=["name", "payment", "installment_no", "installment_count", "status", "due_date", "paid_on", "currency", "amount", "amount_try"],
+            filters={"policy": policy_name},
+            order_by="due_date asc",
+            limit_page_length=200,
+        ),
         "files": _get_rows(
             "File",
             fields=["name", "file_name", "file_url", "creation"],
@@ -64,6 +71,13 @@ def build_policy_360_payload(name: str) -> dict:
             order_by="creation desc",
             limit_page_length=100,
         ),
+        "assignments": _get_rows(
+            "AT Ownership Assignment",
+            fields=["name", "source_doctype", "source_name", "customer", "policy", "assigned_to", "assignment_role", "status", "priority", "due_date", "notes"],
+            filters={"policy": policy_name},
+            order_by="modified desc",
+            limit_page_length=50,
+        ) if frappe.db.exists("DocType", "AT Ownership Assignment") else [],
         "product_profile": _build_product_profile(policy),
     }
 

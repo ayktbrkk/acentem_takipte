@@ -20,3 +20,33 @@ def test_customer_segmentation_report_definition_includes_loyalty_columns():
     assert "cancelled_policy_count" in definition["columns"]
     assert "claim_history_segment" in definition["columns"]
     assert "loyalty_segment" in definition["columns"]
+
+
+def test_communication_operations_report_definition_includes_delivery_columns():
+    definition = get_report_definition("communication_operations")
+
+    assert "campaign_name" in definition["columns"]
+    assert "matched_customer_count" in definition["columns"]
+    assert "sent_count" in definition["columns"]
+    assert "sent_outbox_count" in definition["columns"]
+    assert "failed_outbox_count" in definition["columns"]
+
+
+def test_reconciliation_operations_report_definition_includes_resolution_columns():
+    definition = get_report_definition("reconciliation_operations")
+
+    assert "accounting_entry" in definition["columns"]
+    assert "mismatch_type" in definition["columns"]
+    assert "difference_try" in definition["columns"]
+    assert "resolution_action" in definition["columns"]
+    assert "needs_reconciliation" in definition["columns"]
+
+
+def test_claims_operations_report_definition_includes_claim_workflow_columns():
+    definition = get_report_definition("claims_operations")
+
+    assert "claim_no" in definition["columns"]
+    assert "assigned_expert" in definition["columns"]
+    assert "rejection_reason" in definition["columns"]
+    assert "appeal_status" in definition["columns"]
+    assert "sent_outbox_count" in definition["columns"]

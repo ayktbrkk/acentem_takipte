@@ -22,6 +22,8 @@ def dispatch_admin_job(action_key: str, **kwargs) -> dict[str, Any]:
         safe_limit = max(cint(kwargs.get("limit")), 1)
         safe_frequency = str(kwargs.get("frequency") or "daily").strip().lower() or "daily"
         return task_jobs.run_scheduled_reports_job(frequency=safe_frequency, limit=safe_limit)
+    if normalized_action == "run_customer_segment_snapshot_job":
+        return task_jobs.run_customer_segment_snapshot_job(limit=max(cint(kwargs.get("limit")), 1))
     if normalized_action == "run_accounting_sync_job":
         return task_jobs.run_accounting_sync_job(limit=max(cint(kwargs.get("limit")), 1))
     if normalized_action == "run_accounting_reconciliation_job":

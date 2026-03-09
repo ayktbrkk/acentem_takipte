@@ -3,6 +3,14 @@
     <PageToolbar :title="label('list')" :subtitle="subtitleLabel" :show-refresh="true" :refresh-label="t('refresh')" :busy="isLoading" @refresh="refreshList">
       <template #actions>
         <div class="flex flex-wrap items-center gap-2">
+          <ActionButton
+            v-if="canExportSnapshotRows"
+            variant="secondary"
+            size="sm"
+            @click="exportSnapshotRows"
+          >
+            {{ t("exportCsv") }}
+          </ActionButton>
           <QuickCreateLauncher
             v-if="auxQuickCreate && canLaunchAuxQuickCreate"
             variant="primary"
@@ -95,7 +103,50 @@
       :empty-description="t('emptyDescription')"
     >
       <template #header>
-        <p class="text-xs text-slate-500">{{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
+        <div class="space-y-3">
+          <div
+            v-if="snapshotSummaryCards.length"
+            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          >
+            <article
+              v-for="card in snapshotSummaryCards"
+              :key="card.key"
+              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+            >
+              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
+            </article>
+          </div>
+          <div
+            v-if="snapshotTrendRows.length"
+            class="grid gap-3 xl:grid-cols-3"
+          >
+            <article class="rounded-2xl border border-slate-200 bg-white px-4 py-3 xl:col-span-3">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t("snapshotTrendTitle") }}</p>
+                  <p class="mt-1 text-xs text-slate-500">{{ t("snapshotTrendHint") }}</p>
+                </div>
+              </div>
+              <div class="mt-4 grid gap-3 md:grid-cols-3">
+                <article
+                  v-for="row in snapshotTrendRows"
+                  :key="row.snapshotDate"
+                  class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                >
+                  <p class="text-sm font-semibold text-slate-900">{{ row.snapshotDateLabel }}</p>
+                  <div class="mt-2 space-y-1 text-xs text-slate-600">
+                    <p>{{ t("totalSnapshots") }}: {{ row.total }}</p>
+                    <p>{{ t("averageScore") }}: {{ row.averageScore }}</p>
+                    <p>{{ t("highRiskSnapshots") }}: {{ row.highRisk }}</p>
+                  </div>
+                </article>
+              </div>
+            </article>
+          </div>
+          <p class="text-xs text-slate-500">{{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
+        </div>
       </template>
 
       <div class="at-table-wrap">
@@ -270,6 +321,17 @@ const copy = {
     status: "Durum",
     info: "Bilgiler",
     actions: "Aksiyon",
+    exportCsv: "CSV Disa Aktar",
+    totalSnapshots: "Toplam Snapshot",
+    highRiskSnapshots: "Yuksek Risk",
+    highValueSnapshots: "Yuksek Deger",
+    averageScore: "Ortalama Skor",
+    snapshotTrendTitle: "Snapshot Trendi",
+    snapshotTrendHint: "Gorunen kayitlardan son uc snapshot gunu ozetlenir",
+    snapshotWindowHint: "Mevcut filtre penceresindeki kayitlar",
+    highRiskHint: "Claim risk seviyesi High olan kayitlar",
+    highValueHint: "Deger bandi High veya Premium olan kayitlar",
+    averageScoreHint: "Filtreli kayitlar icin ortalama skor",
     newRecord: "Yeni Kayit",
     openDetail: "Detay",
     openDesk: "Yonetim",
@@ -306,6 +368,17 @@ const copy = {
     status: "Status",
     info: "Info",
     actions: "Actions",
+    exportCsv: "Export CSV",
+    totalSnapshots: "Total Snapshots",
+    highRiskSnapshots: "High Risk",
+    highValueSnapshots: "High Value",
+    averageScore: "Average Score",
+    snapshotTrendTitle: "Snapshot Trend",
+    snapshotTrendHint: "Summarizes the latest three snapshot days from visible records",
+    snapshotWindowHint: "Records in the current filtered window",
+    highRiskHint: "Records where claim risk is High",
+    highValueHint: "Records with High or Premium value band",
+    averageScoreHint: "Average score for filtered records",
     newRecord: "New Record",
     openDetail: "Detail",
     openDesk: "Desk",
@@ -444,6 +517,8 @@ const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
 const OFFICE_BRANCH_LOOKUP_DOCTYPES = new Set(["AT Customer", "AT Policy", "AT Accounting Entry"]);
 
 const rows = computed(() => listResource.data || []);
+const snapshotRows = computed(() => (config.key === "customer-segment-snapshots" ? rows.value : []));
+const canExportSnapshotRows = computed(() => config.key === "customer-segment-snapshots" && snapshotRows.value.length > 0);
 const isLoading = computed(() => Boolean(listResource.loading || countResource.loading));
 const auxQuickCreate = computed(() => config.quickCreate || null);
 const canLaunchAuxQuickCreate = computed(() => {
@@ -467,6 +542,54 @@ const activeFilterCount = computed(() => {
   let count = filters.query ? 1 : 0;
   for (const fd of config.filterDefs || []) if (String(filters[fd.key] ?? "").trim() !== "") count += 1;
   return count;
+});
+const snapshotSummaryCards = computed(() => {
+  if (config.key !== "customer-segment-snapshots") return [];
+  const total = snapshotRows.value.length;
+  const highRisk = snapshotRows.value.filter((row) => String(row?.claim_risk || "").toLowerCase() === "high").length;
+  const highValue = snapshotRows.value.filter((row) => {
+    const valueBand = String(row?.value_band || "").toLowerCase();
+    return valueBand === "high" || valueBand === "premium";
+  }).length;
+  const scored = snapshotRows.value
+    .map((row) => Number(row?.score))
+    .filter((value) => Number.isFinite(value));
+  const averageScore = scored.length ? Math.round(scored.reduce((sum, value) => sum + value, 0) / scored.length) : 0;
+  return [
+    { key: "total", label: t("totalSnapshots"), value: String(total), hint: t("snapshotWindowHint") },
+    { key: "high-risk", label: t("highRiskSnapshots"), value: String(highRisk), hint: t("highRiskHint") },
+    { key: "high-value", label: t("highValueSnapshots"), value: String(highValue), hint: t("highValueHint") },
+    { key: "avg-score", label: t("averageScore"), value: String(averageScore), hint: t("averageScoreHint") },
+  ];
+});
+const snapshotTrendRows = computed(() => {
+  if (config.key !== "customer-segment-snapshots") return [];
+  const grouped = new Map();
+  for (const row of snapshotRows.value) {
+    const snapshotDate = String(row?.snapshot_date || "").trim();
+    if (!snapshotDate) continue;
+    if (!grouped.has(snapshotDate)) {
+      grouped.set(snapshotDate, { total: 0, highRisk: 0, scoreSum: 0, scoreCount: 0 });
+    }
+    const bucket = grouped.get(snapshotDate);
+    bucket.total += 1;
+    if (String(row?.claim_risk || "").toLowerCase() === "high") bucket.highRisk += 1;
+    const score = Number(row?.score);
+    if (Number.isFinite(score)) {
+      bucket.scoreSum += score;
+      bucket.scoreCount += 1;
+    }
+  }
+  return [...grouped.entries()]
+    .sort((a, b) => String(b[0]).localeCompare(String(a[0])))
+    .slice(0, 3)
+    .map(([snapshotDate, bucket]) => ({
+      snapshotDate,
+      snapshotDateLabel: formatField(snapshotDate, "snapshot_date"),
+      total: bucket.total,
+      highRisk: bucket.highRisk,
+      averageScore: bucket.scoreCount ? Math.round(bucket.scoreSum / bucket.scoreCount) : 0,
+    }));
 });
 
 const subtitleLabel = computed(() => localize(config.subtitle));
@@ -576,6 +699,9 @@ function isFieldType(field, typeName) {
 
 function formatField(value, field) {
   if (value == null || value === "") return "-";
+  if (["strengths_json", "risks_json", "score_reason_json"].includes(field)) {
+    return formatSignalSummary(value, field);
+  }
   if (isFieldType(field, "bool")) {
     const active = value === true || String(value) === "1";
     return active ? (activeLocale.value === "tr" ? "Evet" : "Yes") : (activeLocale.value === "tr" ? "Hayir" : "No");
@@ -602,6 +728,85 @@ function formatField(value, field) {
     try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
   }
   return String(value);
+}
+
+function parseSignalEntries(value) {
+  if (value == null || value === "") return [];
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry ?? "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    try {
+      return parseSignalEntries(JSON.parse(value));
+    } catch {
+      return value
+        .split(/\r?\n/)
+        .map((entry) => entry.replace(/^[-*]\s*/, "").trim())
+        .filter(Boolean);
+    }
+  }
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(([key, entry]) => `${humanizeField(key)}: ${entry}`)
+      .filter(Boolean);
+  }
+  return [String(value)];
+}
+
+function formatSignalSummary(value, field) {
+  const entries = parseSignalEntries(value);
+  if (!entries.length) return "-";
+  const first = entries[0];
+  const count = entries.length;
+  if (field === "score_reason_json") {
+    return count > 1 ? `${first} (+${count - 1})` : first;
+  }
+  const prefix =
+    field === "strengths_json"
+      ? activeLocale.value === "tr" ? "Guclu" : "Strengths"
+      : activeLocale.value === "tr" ? "Risk" : "Risks";
+  return `${prefix}: ${count}`;
+}
+
+function toCsvValue(value) {
+  const normalized = value == null ? "" : String(value);
+  if (normalized.includes(",") || normalized.includes("\"") || normalized.includes("\n")) {
+    return `"${normalized.replace(/"/g, "\"\"")}"`;
+  }
+  return normalized;
+}
+
+function exportSnapshotRows() {
+  if (!canExportSnapshotRows.value) return;
+  const columns = [
+    ["customer", "Customer"],
+    ["snapshot_date", "Snapshot Date"],
+    ["segment", "Segment"],
+    ["value_band", "Value Band"],
+    ["claim_risk", "Claim Risk"],
+    ["score", "Score"],
+    ["source_version", "Source Version"],
+    ["strengths_json", "Strength Summary"],
+    ["risks_json", "Risk Summary"],
+    ["score_reason_json", "Score Reason Summary"],
+  ];
+  const lines = [
+    columns.map(([, label]) => toCsvValue(label)).join(","),
+    ...snapshotRows.value.map((row) =>
+      columns
+        .map(([field]) => toCsvValue(formatField(row?.[field], field)))
+        .join(",")
+    ),
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `customer-segment-snapshots-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 function factItems(row, fields) {

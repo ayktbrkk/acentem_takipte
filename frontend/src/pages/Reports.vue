@@ -112,6 +112,30 @@
       </article>
     </section>
 
+    <section v-if="comparisonSummaryItems.length" class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-900">{{ t("comparisonSummaryTitle") }}</h3>
+        <span class="text-[11px] font-medium text-slate-500">{{ t("comparisonSummaryHint") }}</span>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <article
+          v-for="item in comparisonSummaryItems"
+          :key="item.key"
+          class="surface-card rounded-2xl border border-slate-200 px-4 py-4"
+        >
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            {{ item.label }}
+          </p>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">
+            {{ item.value }}
+          </p>
+          <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+            {{ formatComparisonDelta(item.delta, item.previous) }}
+          </p>
+        </article>
+      </div>
+    </section>
+
     <DataTableShell
       :loading="loading"
       :error="error"
@@ -193,6 +217,23 @@
       @save="saveScheduledReport"
       @remove="removeScheduledReport"
     />
+    <article v-if="canManageScheduledReports" class="surface-card rounded-2xl p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="space-y-1">
+          <h3 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h3>
+          <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
+        </div>
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          data-testid="run-segment-snapshot-job"
+          :disabled="snapshotRunLoading"
+          @click="runCustomerSegmentSnapshots"
+        >
+          {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
+        </ActionButton>
+      </div>
+    </article>
   </section>
 </template>
 
@@ -254,6 +295,17 @@ const copy = {
     summaryOpenRenewals: "Acik Yenileme Yuku",
     summaryLoyalCustomers: "Sadik Musteri",
     summaryClaimCustomers: "Hasarli Musteri",
+    summaryMatchedCustomers: "Eslesen Musteri",
+    summaryCreatedDrafts: "Uretilen Taslak",
+    summarySuccessfulDeliveries: "Basarili Gonderim",
+    summaryOpenReconciliation: "Acik Mutabakat",
+    summaryDifferenceAmount: "Fark Tutari",
+    summaryResolvedItems: "Cozulen Kalem",
+    summaryOpenClaims: "Acik Hasar",
+    summaryRejectedClaims: "Reddedilen Hasar",
+    summarySuccessfulNotifications: "Basarili Bildirim",
+    comparisonSummaryTitle: "Donem Kiyaslamasi",
+    comparisonSummaryHint: "Secili aralik onceki esit periyot ile karsilastirilir",
     columns: "Kolonlar",
     showAllColumns: "Tumunu Goster",
     viewStateError: "Rapor gorunumu kaydedilemedi.",
@@ -272,6 +324,11 @@ const copy = {
     scheduledDisabled: "Pasif",
     scheduledRunError: "Zamanlanmis raporlar tetiklenemedi.",
     scheduledLoadError: "Zamanlanmis raporlar yuklenemedi.",
+    segmentSnapshotTitle: "Segment Snapshotlari",
+    segmentSnapshotHint: "Musteri segment skorlarini toplu olarak yeniler",
+    runSegmentSnapshots: "Snapshotlari Calistir",
+    runningSegmentSnapshots: "Snapshotlar Calisiyor...",
+    segmentSnapshotRunError: "Segment snapshot isi tetiklenemedi.",
   },
   en: {
     title: "Reports",
@@ -309,6 +366,17 @@ const copy = {
     summaryOpenRenewals: "Open Renewal Load",
     summaryLoyalCustomers: "Loyal Customers",
     summaryClaimCustomers: "Customers With Claims",
+    summaryMatchedCustomers: "Matched Customers",
+    summaryCreatedDrafts: "Created Drafts",
+    summarySuccessfulDeliveries: "Successful Deliveries",
+    summaryOpenReconciliation: "Open Reconciliation",
+    summaryDifferenceAmount: "Difference Amount",
+    summaryResolvedItems: "Resolved Items",
+    summaryOpenClaims: "Open Claims",
+    summaryRejectedClaims: "Rejected Claims",
+    summarySuccessfulNotifications: "Successful Notifications",
+    comparisonSummaryTitle: "Period Comparison",
+    comparisonSummaryHint: "Selected range is compared with the previous equal period",
     columns: "Columns",
     showAllColumns: "Show All",
     viewStateError: "Failed to save report view.",
@@ -327,6 +395,11 @@ const copy = {
     scheduledDisabled: "Disabled",
     scheduledRunError: "Failed to trigger scheduled reports.",
     scheduledLoadError: "Failed to load scheduled reports.",
+    segmentSnapshotTitle: "Segment Snapshots",
+    segmentSnapshotHint: "Refreshes customer segment scores in batch",
+    runSegmentSnapshots: "Run Snapshots",
+    runningSegmentSnapshots: "Snapshots Running...",
+    segmentSnapshotRunError: "Failed to trigger segment snapshot job.",
   },
 };
 
@@ -368,6 +441,21 @@ const reportCatalog = {
     readMethod: "acentem_takipte.acentem_takipte.api.reports.get_customer_segmentation_report",
     exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_customer_segmentation_report",
   },
+  communication_operations: {
+    label: { tr: "Iletisim Operasyonlari", en: "Communication Operations" },
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_communication_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_communication_operations_report",
+  },
+  reconciliation_operations: {
+    label: { tr: "Mutabakat Operasyonlari", en: "Reconciliation Operations" },
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_reconciliation_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_reconciliation_operations_report",
+  },
+  claims_operations: {
+    label: { tr: "Hasar Operasyonlari", en: "Claims Operations" },
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claims_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claims_operations_report",
+  },
 };
 
 const columnLabels = {
@@ -408,6 +496,31 @@ const columnLabels = {
   loyalty_segment: { tr: "Sadakat Segmenti", en: "Loyalty Segment" },
   policy_segment: { tr: "Police Segmenti", en: "Policy Segment" },
   premium_segment: { tr: "Prim Segmenti", en: "Premium Segment" },
+  campaign_name: { tr: "Kampanya", en: "Campaign" },
+  segment: { tr: "Segment", en: "Segment" },
+  channel: { tr: "Kanal", en: "Channel" },
+  scheduled_for: { tr: "Planlanan Calisma", en: "Scheduled Run" },
+  last_run_on: { tr: "Son Calisma", en: "Last Run" },
+  matched_customer_count: { tr: "Eslesen Musteri", en: "Matched Customers" },
+  sent_count: { tr: "Uretilen Taslak", en: "Created Drafts" },
+  skipped_count: { tr: "Atlanan", en: "Skipped" },
+  draft_count: { tr: "Toplam Taslak", en: "Draft Count" },
+  sent_outbox_count: { tr: "Basarili Gonderim", en: "Successful Deliveries" },
+  failed_outbox_count: { tr: "Hatali Gonderim", en: "Failed Deliveries" },
+  accounting_entry: { tr: "Muhasebe Kaydi", en: "Accounting Entry" },
+  claim_no: { tr: "Hasar No", en: "Claim No" },
+  source_doctype: { tr: "Kaynak Tipi", en: "Source Type" },
+  source_name: { tr: "Kaynak Kayit", en: "Source Record" },
+  mismatch_type: { tr: "Uyumsuzluk Tipi", en: "Mismatch Type" },
+  difference_try: { tr: "Fark Tutari", en: "Difference Amount" },
+  resolution_action: { tr: "Cozum", en: "Resolution" },
+  resolved_on: { tr: "Cozum Tarihi", en: "Resolved On" },
+  needs_reconciliation: { tr: "Mutabakat Gerekli", en: "Needs Reconciliation" },
+  assigned_expert: { tr: "Eksper", en: "Assigned Expert" },
+  rejection_reason: { tr: "Red Sebebi", en: "Rejection Reason" },
+  appeal_status: { tr: "Itiraz Durumu", en: "Appeal Status" },
+  next_follow_up_on: { tr: "Sonraki Takip", en: "Next Follow-up" },
+  reported_date: { tr: "Bildirim Tarihi", en: "Reported Date" },
   unique_key: { tr: "Benzersiz Anahtar", en: "Unique Key" },
 };
 
@@ -418,6 +531,9 @@ const reportFilterConfig = {
   claim_loss_ratio: ["branch", "insuranceCompany", "status"],
   agent_performance: ["branch", "salesEntity"],
   customer_segmentation: ["branch", "salesEntity"],
+  communication_operations: ["status"],
+  reconciliation_operations: ["status"],
+  claims_operations: ["branch", "insuranceCompany", "status"],
 };
 
 const filters = reactive({
@@ -434,9 +550,11 @@ const loading = ref(false);
 const exportLoading = ref(false);
 const scheduledLoading = ref(false);
 const scheduledRunLoading = ref(false);
+const snapshotRunLoading = ref(false);
 const error = ref("");
 const columns = ref([]);
 const rows = ref([]);
+const comparisonRows = ref([]);
 const scheduledReports = ref([]);
 const visibleColumnKeys = ref([]);
 const pendingVisibleColumnKeys = ref([]);
@@ -483,6 +601,13 @@ const numberFormatter = computed(() =>
   new Intl.NumberFormat(localeCode.value, {
     maximumFractionDigits: 2,
   }),
+);
+
+const comparisonEnabled = computed(
+  () =>
+    ["communication_operations", "reconciliation_operations", "claims_operations"].includes(filters.reportKey)
+    && Boolean(filters.fromDate)
+    && Boolean(filters.toDate),
 );
 
 const visibleColumns = computed(() => {
@@ -579,6 +704,89 @@ const summaryItems = computed(() => {
     ];
   }
 
+  if (filters.reportKey === "communication_operations") {
+    return [
+      {
+        key: "rows",
+        label: t("summaryRows"),
+        value: numberFormatter.value.format(rows.value.length),
+      },
+      {
+        key: "matched_customers",
+        label: t("summaryMatchedCustomers"),
+        value: numberFormatter.value.format(numericTotal(["matched_customer_count"])),
+      },
+      {
+        key: "created_drafts",
+        label: t("summaryCreatedDrafts"),
+        value: numberFormatter.value.format(numericTotal(["sent_count"])),
+      },
+      {
+        key: "successful_deliveries",
+        label: t("summarySuccessfulDeliveries"),
+        value: numberFormatter.value.format(numericTotal(["sent_outbox_count"])),
+      },
+    ];
+  }
+
+  if (filters.reportKey === "reconciliation_operations") {
+    return [
+      {
+        key: "rows",
+        label: t("summaryRows"),
+        value: numberFormatter.value.format(rows.value.length),
+      },
+      {
+        key: "open_reconciliation",
+        label: t("summaryOpenReconciliation"),
+        value: numberFormatter.value.format(
+          rows.value.filter((row) => String(row?.status || "") === "Open").length,
+        ),
+      },
+      {
+        key: "difference_amount",
+        label: t("summaryDifferenceAmount"),
+        value: numberFormatter.value.format(numericTotal(["difference_try"])),
+      },
+      {
+        key: "resolved_items",
+        label: t("summaryResolvedItems"),
+        value: numberFormatter.value.format(
+          rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length,
+        ),
+      },
+    ];
+  }
+
+  if (filters.reportKey === "claims_operations") {
+    return [
+      {
+        key: "rows",
+        label: t("summaryRows"),
+        value: numberFormatter.value.format(rows.value.length),
+      },
+      {
+        key: "open_claims",
+        label: t("summaryOpenClaims"),
+        value: numberFormatter.value.format(
+          rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length,
+        ),
+      },
+      {
+        key: "rejected_claims",
+        label: t("summaryRejectedClaims"),
+        value: numberFormatter.value.format(
+          rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length,
+        ),
+      },
+      {
+        key: "successful_notifications",
+        label: t("summarySuccessfulNotifications"),
+        value: numberFormatter.value.format(numericTotal(["sent_outbox_count"])),
+      },
+    ];
+  }
+
   return [
     {
       key: "rows",
@@ -601,6 +809,68 @@ const summaryItems = computed(() => {
       value: numberFormatter.value.format(numericTotal(["paid_amount", "approved_amount"])),
     },
   ];
+});
+
+function numericTotalFromRows(rowSet, keys) {
+  return rowSet.reduce((total, row) => {
+    for (const key of keys) {
+      const value = Number(row?.[key] || 0);
+      if (Number.isFinite(value) && value !== 0) {
+        return total + value;
+      }
+    }
+    return total;
+  }, 0);
+}
+
+const comparisonSummaryItems = computed(() => {
+  if (!comparisonEnabled.value || !comparisonRows.value.length) {
+    return [];
+  }
+
+  if (filters.reportKey === "communication_operations") {
+    const currentMatched = numericTotal(["matched_customer_count"]);
+    const previousMatched = numericTotalFromRows(comparisonRows.value, ["matched_customer_count"]);
+    const currentDrafts = numericTotal(["sent_count"]);
+    const previousDrafts = numericTotalFromRows(comparisonRows.value, ["sent_count"]);
+    const currentDeliveries = numericTotal(["sent_outbox_count"]);
+    const previousDeliveries = numericTotalFromRows(comparisonRows.value, ["sent_outbox_count"]);
+    return [
+      { key: "cmp_matched", label: t("summaryMatchedCustomers"), value: numberFormatter.value.format(currentMatched), previous: previousMatched, delta: currentMatched - previousMatched },
+      { key: "cmp_drafts", label: t("summaryCreatedDrafts"), value: numberFormatter.value.format(currentDrafts), previous: previousDrafts, delta: currentDrafts - previousDrafts },
+      { key: "cmp_deliveries", label: t("summarySuccessfulDeliveries"), value: numberFormatter.value.format(currentDeliveries), previous: previousDeliveries, delta: currentDeliveries - previousDeliveries },
+    ];
+  }
+
+  if (filters.reportKey === "reconciliation_operations") {
+    const currentOpen = rows.value.filter((row) => String(row?.status || "") === "Open").length;
+    const previousOpen = comparisonRows.value.filter((row) => String(row?.status || "") === "Open").length;
+    const currentDiff = numericTotal(["difference_try"]);
+    const previousDiff = numericTotalFromRows(comparisonRows.value, ["difference_try"]);
+    const currentResolved = rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length;
+    const previousResolved = comparisonRows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length;
+    return [
+      { key: "cmp_open", label: t("summaryOpenReconciliation"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen },
+      { key: "cmp_difference", label: t("summaryDifferenceAmount"), value: numberFormatter.value.format(currentDiff), previous: previousDiff, delta: currentDiff - previousDiff },
+      { key: "cmp_resolved", label: t("summaryResolvedItems"), value: numberFormatter.value.format(currentResolved), previous: previousResolved, delta: currentResolved - previousResolved },
+    ];
+  }
+
+  if (filters.reportKey === "claims_operations") {
+    const currentOpen = rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length;
+    const previousOpen = comparisonRows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length;
+    const currentRejected = rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length;
+    const previousRejected = comparisonRows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length;
+    const currentNotifications = numericTotal(["sent_outbox_count"]);
+    const previousNotifications = numericTotalFromRows(comparisonRows.value, ["sent_outbox_count"]);
+    return [
+      { key: "cmp_claim_open", label: t("summaryOpenClaims"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen },
+      { key: "cmp_claim_rejected", label: t("summaryRejectedClaims"), value: numberFormatter.value.format(currentRejected), previous: previousRejected, delta: currentRejected - previousRejected },
+      { key: "cmp_claim_notifications", label: t("summarySuccessfulNotifications"), value: numberFormatter.value.format(currentNotifications), previous: previousNotifications, delta: currentNotifications - previousNotifications },
+    ];
+  }
+
+  return [];
 });
 
 const dateFormatter = computed(() =>
@@ -665,6 +935,40 @@ function buildFiltersPayload() {
     status: visibleFilters.value.has("status") ? filters.status || null : null,
     office_branch: branchStore.requestBranch || null,
   };
+}
+
+function shiftDateString(dateString, deltaDays) {
+  const base = new Date(`${dateString}T00:00:00`);
+  if (Number.isNaN(base.getTime())) {
+    return "";
+  }
+  base.setDate(base.getDate() + deltaDays);
+  const year = base.getFullYear();
+  const month = String(base.getMonth() + 1).padStart(2, "0");
+  const day = String(base.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildPreviousPeriodFiltersPayload() {
+  if (!comparisonEnabled.value) {
+    return null;
+  }
+  const fromDate = new Date(`${filters.fromDate}T00:00:00`);
+  const toDate = new Date(`${filters.toDate}T00:00:00`);
+  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime()) || toDate < fromDate) {
+    return null;
+  }
+  const diffDays = Math.round((toDate.getTime() - fromDate.getTime()) / 86400000) + 1;
+  return {
+    ...buildFiltersPayload(),
+    from_date: shiftDateString(filters.fromDate, -diffDays),
+    to_date: shiftDateString(filters.toDate, -diffDays),
+  };
+}
+
+function formatComparisonDelta(delta, previous) {
+  const sign = delta >= 0 ? "+" : "";
+  return `${sign}${numberFormatter.value.format(delta)} / ${numberFormatter.value.format(previous)}`;
 }
 
 function isFilterVisible(key) {
@@ -877,6 +1181,21 @@ async function loadReport() {
     const message = payload?.message || payload || {};
     columns.value = message.columns || [];
     rows.value = message.rows || [];
+    comparisonRows.value = [];
+
+    const previousFilters = buildPreviousPeriodFiltersPayload();
+    if (previousFilters) {
+      const comparisonPayload = await frappeRequest({
+        url: `/api/method/${reportCatalog[filters.reportKey].readMethod}`,
+        method: "GET",
+        params: {
+          filters: JSON.stringify(previousFilters),
+          limit: 500,
+        },
+      });
+      const comparisonMessage = comparisonPayload?.message || comparisonPayload || {};
+      comparisonRows.value = Array.isArray(comparisonMessage.rows) ? comparisonMessage.rows : [];
+    }
   } catch (err) {
     const errorMessage =
       err?.response?.message
@@ -886,6 +1205,7 @@ async function loadReport() {
     error.value = String(errorMessage);
     columns.value = [];
     rows.value = [];
+    comparisonRows.value = [];
   } finally {
     loading.value = false;
   }
@@ -967,6 +1287,23 @@ async function runScheduledReports() {
     error.value = String(err?.message || err || t("scheduledRunError"));
   } finally {
     scheduledRunLoading.value = false;
+  }
+}
+
+async function runCustomerSegmentSnapshots() {
+  snapshotRunLoading.value = true;
+  try {
+    await frappeRequest({
+      url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+      method: "POST",
+      params: {
+        limit: 250,
+      },
+    });
+  } catch (err) {
+    error.value = String(err?.message || err || t("segmentSnapshotRunError"));
+  } finally {
+    snapshotRunLoading.value = false;
   }
 }
 

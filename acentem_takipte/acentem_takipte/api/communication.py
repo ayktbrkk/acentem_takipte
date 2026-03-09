@@ -14,6 +14,8 @@ from acentem_takipte.acentem_takipte.services.branches import (
     get_default_office_branch,
     normalize_requested_office_branch,
 )
+from acentem_takipte.acentem_takipte.services.campaigns import execute_campaign as execute_campaign_service
+from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
 from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus
 from acentem_takipte.acentem_takipte import communication as communication_logic
 from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
@@ -22,6 +24,7 @@ from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_ac
 COMMUNICATION_ADMIN_ROLES = ("System Manager", "Manager", "Accountant")
 COMMUNICATION_MUTATION_DOCTYPES = build_doctype_permission_map(
     create_quick_notification_draft=("AT Notification Draft",),
+    execute_campaign=("AT Campaign", "AT Segment", "AT Notification Draft"),
     run_dispatch_cycle=("AT Notification Outbox",),
     send_draft_now=("AT Notification Draft",),
     retry_outbox_item=("AT Notification Outbox",),
@@ -248,6 +251,36 @@ def requeue_outbox_item(outbox_name: str) -> dict:
     )
     assert_doc_permission("AT Notification Outbox", outbox_name, "write")
     return communication_logic.requeue_notification_outbox(outbox_name)
+
+
+@frappe.whitelist()
+def preview_segment_members(segment_name: str, limit: int = 50) -> dict[str, object]:
+    segment_name = str(segment_name or "").strip()
+    assert_authenticated()
+    assert_doctype_permission(
+        "AT Segment",
+        "read",
+        "You do not have permission to view segments.",
+    )
+    assert_doctype_permission(
+        "AT Customer",
+        "read",
+        "You do not have permission to view customers.",
+    )
+    assert_doc_permission("AT Segment", segment_name, "read")
+    return build_segment_membership_preview(segment_name, limit=max(cint(limit), 1))
+
+
+@frappe.whitelist()
+def execute_campaign(campaign_name: str, limit: int = 200) -> dict[str, object]:
+    campaign_name = str(campaign_name or "").strip()
+    _assert_dispatch_mutation_access(
+        "api.communication.execute_campaign",
+        details={"campaign": campaign_name, "limit": max(cint(limit), 1)},
+        permission_targets=COMMUNICATION_MUTATION_DOCTYPES["execute_campaign"],
+    )
+    assert_doc_permission("AT Campaign", campaign_name, "write")
+    return execute_campaign_service(campaign_name, limit=max(cint(limit), 1))
 
 
 def _resolve_notification_office_branch(

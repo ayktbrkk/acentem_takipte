@@ -1,0 +1,104 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "office_branch",
+  "snapshot_date",
+  "source_version",
+  "score",
+  "segment",
+  "claim_risk",
+  "value_band",
+  "strengths_json",
+  "risks_json",
+  "score_reason_json"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Ofis Sube",
+   "options": "AT Office Branch"
+  },
+  {
+   "fieldname": "snapshot_date",
+   "fieldtype": "Date",
+   "label": "Snapshot Date",
+   "reqd": 1
+  },
+  {
+   "default": "v1",
+   "fieldname": "source_version",
+   "fieldtype": "Data",
+   "label": "Source Version"
+  },
+  {
+   "fieldname": "score",
+   "fieldtype": "Int",
+   "label": "Score"
+  },
+  {
+   "fieldname": "segment",
+   "fieldtype": "Data",
+   "label": "Segment"
+  },
+  {
+   "fieldname": "claim_risk",
+   "fieldtype": "Data",
+   "label": "Claim Risk"
+  },
+  {
+   "fieldname": "value_band",
+   "fieldtype": "Data",
+   "label": "Deger Bandi"
+  },
+  {
+   "fieldname": "strengths_json",
+   "fieldtype": "Long Text",
+   "label": "Strength Signals JSON"
+  },
+  {
+   "fieldname": "risks_json",
+   "fieldtype": "Long Text",
+   "label": "Risk Signals JSON"
+  },
+  {
+   "fieldname": "score_reason_json",
+   "fieldtype": "Long Text",
+   "label": "Score Reason JSON"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Customer Segment Snapshot",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

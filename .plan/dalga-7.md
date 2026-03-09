@@ -10,8 +10,7 @@ Executive analytics, PDF/Excel export, scheduled reports, regression hardening v
 ## Durum
 - **Durum:** Tamamlandi
 - **Mevcut odak:** Kapanis yapildi
-- **Sonraki hamle:** Dalga 1 icindeki aktif teknik borca geri donuldu
-
+- **Sonraki hamle:** Dalga 1 icindeki aktif veri omurgasi islerine geri donuldu
 ## Tamamlananlar
 
 ### Gorev 7.1 - Scheduled report summary endpoint
@@ -58,4 +57,11 @@ Executive analytics, PDF/Excel export, scheduled reports, regression hardening v
 - [x] Guest auth blokajinin dogrulanmasi
 
 ## Not
+- Son sync: Dalga 7 tamamlandi olarak korunuyor; aktif teknik odak Dalga 1 / Faz 6'ya geri dondu.
 - Authenticated operasyon ve admin smoke'i ayrica uygulanacak operasyonel checklist olarak backlog'da kalir.
+
+## Guncel Durum (2026-03-09)
+- Durum: Tamamlandi
+- Not: Raporlama ve release hardening kapsami plan ve uygulama seviyesinde kapatildi.
+
+

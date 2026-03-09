@@ -32,3 +32,7 @@ Vue SPA tarafinda facade store'dan domain store mimarisine gecis, route/auth/boo
 **Tahmini sure:** 14 saat
 **Bitti kriteri:** Ana akislarda ortak UX state davranisi gorunur olur
 **Test:** Sayfa bazli manuel smoke checklist'i
+
+## Guncel Durum (2026-03-09)
+- Durum: Beklemede
+- Not: Dalga 3 henuz aktif degil. UX/loading/empty-state standardizasyonu daha sonra alinacak.

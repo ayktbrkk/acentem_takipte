@@ -80,6 +80,125 @@ describe("ClaimsBoard page store integration", () => {
         ]),
       },
       {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => null),
+        submit: vi.fn(async () => ({ name: "CLM-001" })),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => [
+          { name: "ASN-001", source_name: "CLM-001", status: "Open", assigned_to: "agent@example.com" },
+        ]),
+      },
+    );
+
+    const wrapper = mount(ClaimsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          AmountPairSummary: true,
+          DataTableShell: genericStub,
+          DataTableCell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: true,
+          TableFactsCell: true,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+          TableEntityCell: true,
+        },
+      },
+    });
+
+    const claimStore = useClaimStore();
+
+    await wrapper.find(".action-button-stub").trigger("click");
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(claimStore.state.items).toHaveLength(2);
+    expect(claimStore.filteredItems).toHaveLength(2);
+    expect(wrapper.text()).toContain("Atama: 1 / 1 acik / agent@example.com");
+
+    const inputs = wrapper.findAll(".input");
+    await inputs[0].setValue("POL-001");
+
+    expect(claimStore.state.filters.query).toBe("POL-001");
+    expect(claimStore.activeFilterCount).toBe(1);
+  });
+
+  it("submits claim status mutation and reloads rows", async () => {
+    const reloadMock = vi.fn(async () => [
+      { name: "CLM-001", claim_no: "H-001", policy: "POL-001", claim_status: "Open", approved_amount: 1000, paid_amount: 0 },
+    ]);
+    const submitMock = vi.fn(async () => ({ name: "CLM-001" }));
+
+    resourceQueue.push(
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: reloadMock,
+      },
+      {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => null),
+        submit: submitMock,
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
         data: ref([]),
         loading: ref(false),
         error: ref(null),
@@ -114,17 +233,105 @@ describe("ClaimsBoard page store integration", () => {
       },
     });
 
-    const claimStore = useClaimStore();
+    const buttons = wrapper.findAll(".action-button-stub");
+    await buttons[1].trigger("click");
 
-    await wrapper.find(".action-button-stub").trigger("click");
+    expect(submitMock).toHaveBeenCalledWith({
+      doctype: "AT Claim",
+      name: "CLM-001",
+      data: {
+        claim_status: "Under Review",
+      },
+    });
+    expect(reloadMock).toHaveBeenCalledTimes(1);
+  });
 
-    expect(claimStore.state.items).toHaveLength(2);
-    expect(claimStore.filteredItems).toHaveLength(2);
+  it("submits rejected status with rejection reason", async () => {
+    const reloadMock = vi.fn(async () => [
+      { name: "CLM-001", claim_no: "H-001", policy: "POL-001", claim_status: "Open", approved_amount: 1000, paid_amount: 0 },
+    ]);
+    const submitMock = vi.fn(async () => ({ name: "CLM-001" }));
+    const promptMock = vi.spyOn(window, "prompt").mockReturnValue("Eksik evrak");
 
-    const inputs = wrapper.findAll(".input");
-    await inputs[0].setValue("POL-001");
+    resourceQueue.push(
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: reloadMock,
+      },
+      {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => null),
+        submit: submitMock,
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+    );
 
-    expect(claimStore.state.filters.query).toBe("POL-001");
-    expect(claimStore.activeFilterCount).toBe(1);
+    const wrapper = mount(ClaimsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          AmountPairSummary: true,
+          DataTableShell: genericStub,
+          DataTableCell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: true,
+          TableFactsCell: true,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+          TableEntityCell: true,
+        },
+      },
+    });
+
+    const buttons = wrapper.findAll(".action-button-stub");
+    await buttons[4].trigger("click");
+
+    expect(promptMock).toHaveBeenCalled();
+    expect(submitMock).toHaveBeenCalledWith({
+      doctype: "AT Claim",
+      name: "CLM-001",
+      data: {
+        claim_status: "Rejected",
+        rejection_reason: "Eksik evrak",
+        appeal_status: "",
+      },
+    });
+
+    promptMock.mockRestore();
   });
 });

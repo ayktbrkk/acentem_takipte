@@ -1,11 +1,14 @@
 # Acentem Takipte - VS Code Uygulama Plani
 
-- **Toplam efor:** 476 saat
-- **Tahmini sure:** 22 hafta
+- **Toplam efor baselini:** 476 saat
+- **Tahmini sure baselini:** 22 hafta
 - **Calisma modeli:** Tek gelistirici, gunde 4-6 saat
 - **Kaynak:** ROADMAP.md v2 + Mart 2026 karar kayitlari
-- **Guncel baslangic noktasi:** Dalga 7 tamamlandi; odak yeniden Dalga 1 ve Faz 3.2.1 Pinia facade migration akisina alindi
-- **Son tamamlanan is:** `App.vue` ve `OfferBoard.vue` kalan facade borclari kapatildi; `Faz 3.2.1` plan seviyesinde kapanis notuna cekildi.
+- **Aktif dalga:** Dalga 1
+- **Aktif faz:** Faz 9 ilk veri katmani
+- **Son tamamlanan faz:** Faz 8
+- **Son tamamlanan is:** segment snapshot export gorunurlugu
+- **Siradaki is:** Faz 9 ilk veri katmani
 
 ## Faz 3.2.1 Kapanis Ozeti
 
@@ -96,7 +99,7 @@
 
 - **Aktif Dalga:** 1
 - **Son tamamlanan is:** `LeadList.vue` locale facade migration ilk dilimi.
-- **Bir sonraki hedef:** `CustomerDetail.vue` veya `LeadDetail.vue` migration adayini secmek ve facade turunu surdurmek.
+- **Bir sonraki hedef:** `CommunicationCenter.vue` icinden campaign execution tetikleyicisini acmak ve sonuc ozetini gostermek.
 - **Dil notu:** Yeni DocType/alan eklerken mevcut label deseni korunacak; `Kullan�c� Notu` ve `Sistem Notu` gibi T�rk�e alan isimlerinde bozuk encoding kabul edilmeyecek.
 
 ## Guncel Durum
@@ -382,3 +385,111 @@
 - 2026-03-09: Faz 5 icin payment installment sync ve overdue collection fallback mantigi backend test altina alindi.
 
 - 2026-03-09: Faz 5 icin `PaymentsBoard.vue` uzerinde taksit gorunurlugu acildi; payment satirlarinda installment summary ve sonraki vade bilgisi gorunur hale geldi.
+
+- 2026-03-09: Faz 5 icin `frontend/src/pages/PaymentsBoard.test.js` genisletildi; taksit ozet satirlari (`taksit`, `odenen`, `geciken`, `sonraki vade`) sayfa testinde sabitlendi.
+
+- 2026-03-09: Faz 5 icin odeme quick create akisi taksit alanlariyla genisletildi; `installment_count` ve `installment_interval_days` artik frontend formundan backend create servisine kadar tasiniyor.
+
+- 2026-03-09: Faz 5 icin `Policy 360` payload `payment_installments` ile genisletildi ve `PolicyDetail.vue` icinde taksit plani preview karti eklendi.
+
+- 2026-03-09: Faz 5 icin rontend/src/pages/PolicyDetail.test.js genisletildi; taksit plani preview kontrati sayfa testinde sabitlendi.
+
+- 2026-03-09: Faz 5 icin Customer 360 payload payment_installments ve overdue_installment ozetleri ile genisletildi; CustomerDetail odeme kartlari geciken taksit sinyali gosterir hale geldi.
+
+- 2026-03-09: Faz 5 icin odeme quick create installment alanlari backend kontrat testi ile sabitlendi -> acentem_takipte/acentem_takipte/tests/test_quick_create_customer360_aux.py
+
+- 2026-03-09: Faz 5 icin mutabakat workbench komisyon tahakkuk sayisi, tutari ve preview listesi ile genisletildi; sayfa testi ReconciliationWorkbench.test.js ile sabitlendi.
+
+- 2026-03-09: Faz 5 icin preview-first ekstre ice aktarma akisi eklendi; CSV parse ve policy/payment eslesme onizlemesi ReconciliationWorkbench icinde acildi.
+
+- 2026-03-09: Faz 5 icin ekstre ice aktarma preview kontrati backend testleri ile sabitlendi -> acentem_takipte/acentem_takipte/tests/test_accounting_statement_import.py
+
+- 2026-03-09: Faz 5 icin ReconciliationWorkbench ekstre ice aktarma preview dialog kontrati sayfa testinde sabitlendi -> frontend/src/pages/ReconciliationWorkbench.test.js
+
+- 2026-03-09: Faz 5 icin ekstre preview satirlarini eslesen policy/payment kayitlari uzerinden accounting entry ve reconciliation adayina baglayan persistence katmani eklendi; backend ve UI testleri guncellendi.
+
+- 2026-03-09: Faz 5 icin ReconciliationWorkbench gorunen acik kayitlar icin toplu resolve/ignore aksiyonlari ile genisletildi; sayfa testi guncellendi.
+
+- 2026-03-09: Faz 5 icin bulk_resolve_items backend kontrati test altina alindi -> acentem_takipte/acentem_takipte/tests/test_accounting_reconciliation.py
+
+- 2026-03-09: Faz 5 plan seviyesinde kapatildi. Sonraki aktif odak Faz 6 - Hasar ve iletisim merkezi derinlestirme.
+
+- 2026-03-09: Faz 6 basladi. AT Claim uzerinde operasyonel lifecycle alanlari ve ilk backend validation kontrati eklendi. Sonraki kesit ClaimsBoard gorunurlugu ve claim notification akisini derinlestirmek.
+
+- 2026-03-09: ClaimsBoard ilk lifecycle gorunurlugunu aldi. Claim listesinde eksper, red sebebi, itiraz ve takip tarihi gorunuyor. Sonraki kesit claim status aksiyonlari ve notification gorunurlugu.
+
+- 2026-03-09: ClaimsBoard ikinci Faz 6 kesitini aldi. Claim listesinde hizli status aksiyonlari (Under Review, Approved, Closed) ve notification template ipucu gorunur hale geldi. Rejected sebep toplama ve outbox gorunurlugu sonraki adim.
+
+- 2026-03-09: ClaimsBoard ucuncu Faz 6 kesitini aldi. Claim satirlarinda notification draft/outbox ozetleri gorunuyor, Rejected aksiyonu red sebebi toplayarak hizli mutation zincirine baglandi. Sonraki adim claim-specific outbox aksiyonlari veya omnichannel call-note/kampanya kesiti.
+
+- 2026-03-09: Faz 6 iletisim merkezi ilk veri modeli acildi. AT Call Note doc type, quick create, aux workbench yuzeyi ve Communication Center icinden hizli arama notu girisi eklendi. Sonraki kesit test kapsami ve kampanya/segment modeli.
+
+- 2026-03-09: Faz 6 call note ilk test turu tamamlandi. Backend quick create payload ve Communication Center dialog/prefill zinciri test altina alindi. Sonraki kesit kampanya/segment veri modeli.
+
+- 2026-03-09: CommunicationCenter campaign execution UI/test hardening tamamlandi.
+
+- 2026-03-09: Faz 6 campaign execution sonucu campaign aux/detail yuzeyine tasindi.
+
+- 2026-03-09: Faz 6 campaign execution artik scheduler ile de calisiyor.
+
+- 2026-03-09: Campaign aux/detail yuzeyinde teslimat izi gorunur hale getirildi.
+
+## 2026-03-09 Faz 6 Kapanis
+- Faz 6 tamamlandi.
+- Yeni aktif odak: Faz 7 raporlama, operasyon analitigi ve yonetsel gorunurluk.
+
+
+- 2026-03-09: Faz 7 ilk kesit tamamlandi; campaign/communication yonetsel gorunurlugu Reports ekranina tasindi.
+
+- 2026-03-09: Faz 7 ilk rapor kesiti testle sabitlendi.
+
+- 2026-03-09: Faz 7 ikinci rapor kesiti tamamlandi; reconciliation operations raporu eklendi.
+
+- Guncel odak: Faz 7 icinde communication_operations ve reconciliation_operations sonrasinda claims_operations yonetsel raporu da eklendi; rapor zinciri artik uc operasyon omurgasini kapsiyor.
+
+- Guncel odak: Faz 7 raporlari artik communication, reconciliation ve claims operasyon raporlarinda onceki donem kiyas kartlarini da gosteriyor.
+
+- Faz 7 guncellemesi: scheduled report operatorlugu operasyon raporlarini da kapsiyor. Claims, reconciliation ve communication operasyon raporlari artik zamanlanmis rapor formunda uygun filtrelerle secilebiliyor.
+
+## Guncel Durum
+- Faz 7 tamamlandi.
+- Son tamamlananlar: operasyon raporlari, donem kiyas kartlari, scheduled report operatorlugu.
+- Yeni aktif odak: Faz 8.
+
+- Faz 8 basladi: segment snapshot veri omurgasi eklendi. Customer 360 icgorusu artik AT Customer Segment Snapshot kayitlariyla destekleniyor.
+# Guncel Durum
+- Aktif odak: Faz 8
+- Son tamamlanan is: snapshot batch refresh icin admin tetikleme ve liste gorunurlugu
+- Son tamamlanan is: snapshot admin UI tetikleme butonu
+- Son tamamlanan is: snapshot liste/detail okunabilirligini artirma
+- Son tamamlanan is: snapshot liste taranabilirligini artirma
+- Son tamamlanan is: snapshot operasyon ozet kartlarini acma
+- Son tamamlanan is: segment snapshot trend gorunurlugu
+- Son tamamlanan is: segment snapshot export gorunurlugu
+- Son tamamlanan is: Faz 8 kapanis ve sonraki veri katmani
+- Siradaki is: Faz 9 ilk veri katmani
+
+## Guncel Durum (2026-03-09 / Faz 9)
+- Aktif odak: operasyonel ownership/assignment veri katmani
+- Tamamlananlar:
+  - `AT Ownership Assignment` DocType
+  - quick create / aux edit / delete kontrati
+  - `Customer 360` ve `Policy 360` assignment gorunurlugu
+  - `CustomerDetail.vue` inline assignment create/edit/delete
+  - `ClaimsBoard.vue` claim kaynakli assignment prefill girisi
+  - `CustomerDetail.test.js` ownership assignment kontrati
+- Sonraki is: assignment gorunurlugunu claim/policy operasyon yuzeylerinde derinlestirmek
+
+- 2026-03-09: Faz 9 ikinci kesit tamamlandi. ClaimsBoard claim satirlarinda ownership assignment ozeti (count/open/assignee) gorunur hale geldi; sayfa testi ile sabitlendi.
+- 2026-03-09: Faz 9 ucuncu kesit tamamlandi. PolicyDetail icinde inline ownership assignment create/edit akisi ve sayfa testi eklendi.
+- 2026-03-09: Faz 9 dorduncu kesit tamamlandi. AuxRecordDetail icinde ownership assignment ozel detail bloklari ve sayfa testi eklendi.
+
+## Guncel Durum (2026-03-09 / Faz 9 Kapanis)
+- Faz 9 tamamlandi.
+- Son tamamlananlar:
+  - `AT Ownership Assignment` veri modeli
+  - quick create / aux edit-delete
+  - Customer 360, Policy 360 ve Claims gorunurlugu
+  - CustomerDetail / PolicyDetail inline create-edit
+  - Aux detail okunabilirligi ve ilk sayfa testleri
+- Sonraki aktif odak: Faz 10

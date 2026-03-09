@@ -54,6 +54,42 @@ class TestAccountingReconciliation(IntegrationTestCase):
         )
         audit_mock.assert_called_once_with("api.accounting.run_sync", {"limit": 10})
 
+    def test_bulk_resolve_items_resolves_visible_rows_with_doc_permission(self):
+        with patch.object(accounting_api, "_assert_accounting_mutation_access") as mutation_mock:
+            with patch.object(accounting_api, "assert_doc_permission") as doc_permission_mock:
+                with patch.object(
+                    accounting_api,
+                    "resolve_reconciliation_item",
+                    side_effect=[
+                        {"status": "Resolved", "item": "REC-001"},
+                        {"status": "Ignored", "item": "REC-002"},
+                    ],
+                ) as resolve_mock:
+                    result = accounting_api.bulk_resolve_items(
+                        item_names=["REC-001", "REC-002"],
+                        resolution_action="Ignored",
+                        notes="Toplu islem",
+                    )
+
+        mutation_mock.assert_called_once_with(
+            "api.accounting.bulk_resolve_items",
+            details={"resolution_action": "Ignored"},
+            permission_targets=accounting_api.ACCOUNTING_MUTATION_DOCTYPES["bulk_resolve_items"],
+        )
+        assert doc_permission_mock.call_count == 2
+        doc_permission_mock.assert_any_call("AT Reconciliation Item", "REC-001", "write")
+        doc_permission_mock.assert_any_call("AT Reconciliation Item", "REC-002", "write")
+        resolve_mock.assert_any_call(item_name="REC-001", resolution_action="Ignored", notes="Toplu islem")
+        resolve_mock.assert_any_call(item_name="REC-002", resolution_action="Ignored", notes="Toplu islem")
+        self.assertEqual(
+            result,
+            {
+                "processed": 2,
+                "skipped": 0,
+                "resolution_action": "Ignored",
+            },
+        )
+
     def test_policy_sync_and_reconciliation_resolution(self):
         deps = _create_dependencies()
         policy = frappe.get_doc(

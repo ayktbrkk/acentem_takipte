@@ -278,6 +278,9 @@ const reportFilterConfig = {
   claim_loss_ratio: ["office_branch", "branch", "insurance_company", "status", "from_date", "to_date"],
   agent_performance: ["office_branch", "branch", "sales_entity", "from_date", "to_date"],
   customer_segmentation: ["office_branch", "branch"],
+  communication_operations: ["office_branch", "status", "from_date", "to_date"],
+  reconciliation_operations: ["office_branch", "status", "from_date", "to_date"],
+  claims_operations: ["office_branch", "branch", "insurance_company", "status", "from_date", "to_date"],
 };
 
 const copy = {

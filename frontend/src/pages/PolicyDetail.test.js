@@ -64,6 +64,42 @@ vi.mock("frappe-ui", () => ({
             payments: [],
             files: [],
             notifications: [],
+            assignments: [
+              {
+                name: "ASN-001",
+                source_doctype: "AT Policy",
+                source_name: "POL-001",
+                customer: "CUST-001",
+                policy: "POL-001",
+                assigned_to: "agent@example.com",
+                assignment_role: "Owner",
+                status: "Open",
+                priority: "High",
+                due_date: "2026-03-20",
+              },
+            ],
+            payment_installments: [
+              {
+                name: "PINST-001",
+                payment: "PAY-001",
+                installment_no: 1,
+                installment_count: 3,
+                status: "Overdue",
+                due_date: "2026-04-01",
+                currency: "TRY",
+                amount_try: 4000,
+              },
+              {
+                name: "PINST-002",
+                payment: "PAY-001",
+                installment_no: 2,
+                installment_count: 3,
+                status: "Scheduled",
+                due_date: "2026-05-01",
+                currency: "TRY",
+                amount_try: 4000,
+              },
+            ],
             product_profile: {
               product_family: "Motor",
               insured_subject: "Vehicle",
@@ -121,6 +157,21 @@ const DetailTabsBarStub = defineComponent({
   `,
 });
 
+const QuickCreateManagedDialogStub = {
+  ...defineComponent({
+    props: ["modelValue", "configKey", "beforeOpen", "optionsMap"],
+    methods: {
+      async triggerBeforeOpen(form = {}, resetForm = vi.fn()) {
+        if (typeof this.beforeOpen === "function") {
+          await this.beforeOpen({ form, resetForm });
+        }
+        return { form, resetForm };
+      },
+    },
+    template: `<div class="quick-create-dialog-stub" :data-config-key="configKey" :data-open="String(modelValue)"></div>`,
+  }),
+};
+
 const genericStub = {
   template: `<div><slot /><slot name="actions" /><slot name="trailing" /><slot name="footer" /></div>`,
 };
@@ -158,6 +209,7 @@ describe("PolicyDetail policy 360 integration", () => {
           DocHeaderCard: genericStub,
           DocSummaryGrid: true,
           MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
           SectionCardHeader: genericStub,
           StatusBadge: true,
         },
@@ -194,6 +246,7 @@ describe("PolicyDetail policy 360 integration", () => {
           DocHeaderCard: genericStub,
           DocSummaryGrid: true,
           MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
           SectionCardHeader: genericStub,
           StatusBadge: true,
         },
@@ -213,5 +266,95 @@ describe("PolicyDetail policy 360 integration", () => {
 
     await clickByText("Musteri 360");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "customer-detail", params: { name: "CUST-001" } });
+  });
+
+  it("renders installment preview on premiums tab", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const premiumsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Prim"));
+    await premiumsTab.trigger("click");
+
+    expect(wrapper.text()).toContain("Taksit Plani");
+    expect(wrapper.text()).toContain("Taksit 1/3");
+    expect(wrapper.text()).toContain("PAY-001");
+    expect(wrapper.text()).toContain("Gecikti");
+    expect(wrapper.text()).toContain("2026-04-01");
+  });
+
+  it("renders assignments and prefills assignment dialogs on summary tab", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Atamalar");
+    expect(wrapper.text()).toContain("agent@example.com");
+
+    const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
+    const buttons = wrapper.findAll(".action-button-stub");
+
+    await buttons.find((candidate) => candidate.text().includes("Yeni Atama")).trigger("click");
+    const createForm = {};
+    await dialogs[0].vm.triggerBeforeOpen(createForm);
+    expect(createForm).toEqual(
+      expect.objectContaining({
+        source_doctype: "AT Policy",
+        source_name: "POL-001",
+        policy: "POL-001",
+        customer: "CUST-001",
+      })
+    );
+
+    await buttons.find((candidate) => candidate.text().includes("Duzenle")).trigger("click");
+    const resetForm = vi.fn();
+    await dialogs[1].vm.triggerBeforeOpen({}, resetForm);
+    expect(resetForm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        doctype: "AT Ownership Assignment",
+        name: "ASN-001",
+        source_doctype: "AT Policy",
+        source_name: "POL-001",
+        policy: "POL-001",
+        customer: "CUST-001",
+        assigned_to: "agent@example.com",
+      })
+    );
   });
 });

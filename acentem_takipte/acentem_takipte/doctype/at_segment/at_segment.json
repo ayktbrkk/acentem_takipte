@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "autoname": "format:AT-SEG-.YYYY.-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "segment_name",
+  "segment_type",
+  "channel_focus",
+  "office_branch",
+  "status",
+  "criteria_json",
+  "estimated_customer_count",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "segment_name",
+   "fieldtype": "Data",
+   "label": "Segment Name",
+   "reqd": 1
+  },
+  {
+   "default": "Static",
+   "fieldname": "segment_type",
+   "fieldtype": "Select",
+   "label": "Segment Type",
+   "options": "Static\nDynamic\nOperational",
+   "reqd": 1
+  },
+  {
+   "default": "WHATSAPP",
+   "fieldname": "channel_focus",
+   "fieldtype": "Select",
+   "label": "Channel Focus",
+   "options": "WHATSAPP\nSMS\nEmail\nPhone Call",
+   "reqd": 1
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nActive\nArchived",
+   "reqd": 1
+  },
+  {
+   "fieldname": "criteria_json",
+   "fieldtype": "Code",
+   "label": "Criteria JSON",
+   "options": "JSON"
+  },
+  {
+   "default": "0",
+   "fieldname": "estimated_customer_count",
+   "fieldtype": "Int",
+   "label": "Estimated Customer Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Kullanýcý Notu",
+   "description": "Kullanýcý tarafýndan eklenen serbest metin."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Segment",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

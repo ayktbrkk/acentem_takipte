@@ -187,6 +187,15 @@ const copy = {
     relatedAccountingEntry: "Muhasebe Kaydi",
     relatedReference: "Referans Kayit",
     relatedSource: "Kaynak Kayit",
+    snapshotContext: "Snapshot Baglami",
+    snapshotSignals: "Segment Sinyalleri",
+    strengthSignals: "Guclu Sinyaller",
+    riskSignals: "Risk Sinyalleri",
+    scoreReasons: "Skor Gerekceleri",
+    noSignals: "Kayitli sinyal bulunamadi.",
+    assignmentContext: "Atama Baglami",
+    assignmentLifecycle: "Atama Yasam Dongusu",
+    assignmentNotes: "Atama Notlari",
     createdAt: "Olusturma",
     modifiedAt: "Guncelleme",
     resolvedAt: "Cozulme",
@@ -236,6 +245,15 @@ const copy = {
     relatedAccountingEntry: "Accounting Entry",
     relatedReference: "Reference Record",
     relatedSource: "Source Record",
+    snapshotContext: "Snapshot Context",
+    snapshotSignals: "Segment Signals",
+    strengthSignals: "Strength Signals",
+    riskSignals: "Risk Signals",
+    scoreReasons: "Score Reasons",
+    noSignals: "No signals recorded.",
+    assignmentContext: "Assignment Context",
+    assignmentLifecycle: "Assignment Lifecycle",
+    assignmentNotes: "Assignment Notes",
     createdAt: "Created",
     modifiedAt: "Modified",
     resolvedAt: "Resolved",
@@ -312,6 +330,28 @@ const auxQuickAccountingEntryResource = createResource({
     filters: buildOfficeBranchLookupFilters("AT Accounting Entry"),
     order_by: "modified desc",
     limit_page_length: 500,
+  },
+});
+const campaignDraftsResource = createResource({
+  url: "frappe.client.get_list",
+  auto: false,
+  params: {
+    doctype: "AT Notification Draft",
+    fields: ["name", "status", "channel", "recipient", "modified"],
+    filters: {},
+    order_by: "modified desc",
+    limit_page_length: 20,
+  },
+});
+const campaignOutboxResource = createResource({
+  url: "frappe.client.get_list",
+  auto: false,
+  params: {
+    doctype: "AT Notification Outbox",
+    fields: ["name", "status", "channel", "recipient", "attempt_count", "modified"],
+    filters: {},
+    order_by: "modified desc",
+    limit_page_length: 20,
   },
 });
 
@@ -394,6 +434,8 @@ const specialDetailMode = computed(() => {
   if (config.key === "accounting-entries") return "accounting";
   if (config.key === "templates") return "template";
   if (config.key === "notification-outbox") return "outbox";
+  if (config.key === "customer-segment-snapshots") return "segment_snapshot";
+  if (config.key === "ownership-assignments") return "ownership_assignment";
   return "";
 });
 
@@ -420,6 +462,59 @@ const specialBadges = computed(() => {
     if (doc.value.status) badges.push({ key: "status", type: "notification_status", status: String(doc.value.status) });
     if (doc.value.channel) badges.push({ key: "channel", type: "notification_channel", status: String(doc.value.channel) });
     return badges;
+  }
+  if (specialDetailMode.value === "segment_snapshot") {
+    return [
+      {
+        key: "snapshot-context",
+        title: t("snapshotContext"),
+        items: [
+          item("customer"),
+          item("office_branch", t("officeBranch")),
+          item("snapshot_date"),
+          item("segment"),
+          item("value_band"),
+          item("claim_risk"),
+          item("score"),
+          item("source_version"),
+        ],
+      },
+      {
+        key: "snapshot-signals",
+        title: t("snapshotSignals"),
+        items: [
+          { key: "strength_count", label: t("strengthSignals"), value: String(parseSignalEntries(doc.value?.strengths_json).length) },
+          { key: "risk_count", label: t("riskSignals"), value: String(parseSignalEntries(doc.value?.risks_json).length) },
+          { key: "reason_count", label: t("scoreReasons"), value: String(parseSignalEntries(doc.value?.score_reason_json).length) },
+        ],
+      },
+    ];
+  }
+  if (specialDetailMode.value === "ownership_assignment") {
+    return [
+      {
+        key: "assignment-context",
+        title: t("assignmentContext"),
+        items: [
+          item("source_doctype"),
+          item("source_name"),
+          item("customer"),
+          item("policy"),
+          item("office_branch", t("officeBranch")),
+        ],
+      },
+      {
+        key: "assignment-lifecycle",
+        title: t("assignmentLifecycle"),
+        items: [
+          item("assigned_to"),
+          item("assignment_role"),
+          item("status"),
+          item("priority"),
+          item("due_date"),
+        ],
+      },
+    ];
   }
   return [];
 });
@@ -535,6 +630,34 @@ const specialGroups = computed(() => {
       },
     ];
   }
+  if (specialDetailMode.value === "segment_snapshot") {
+    return [
+      {
+        key: "strengths_json",
+        field: "strengths_json",
+        title: t("strengthSignals"),
+        value: formatSignalText(doc.value?.strengths_json),
+      },
+      {
+        key: "risks_json",
+        field: "risks_json",
+        title: t("riskSignals"),
+        value: formatSignalText(doc.value?.risks_json),
+      },
+      {
+        key: "score_reason_json",
+        field: "score_reason_json",
+        title: t("scoreReasons"),
+        value: formatSignalText(doc.value?.score_reason_json),
+        fullWidth: true,
+      },
+    ].filter((item) => item.value != null && String(item.value).trim() !== "");
+  }
+  if (specialDetailMode.value === "ownership_assignment") {
+    return [
+      { key: "notes", field: "notes", title: t("assignmentNotes"), value: doc.value?.notes, fullWidth: true },
+    ].filter((item) => item.value != null && String(item.value).trim() !== "");
+  }
   return [];
 });
 
@@ -637,6 +760,34 @@ const relatedRecordCards = computed(() => {
   pushRef("accounting_entry", t("relatedAccountingEntry"), "AT Accounting Entry", d.accounting_entry);
   if (d.reference_doctype && d.reference_name) pushRef("reference", t("relatedReference"), d.reference_doctype, d.reference_name);
   if (d.source_doctype && d.source_name) pushRef("source", t("relatedSource"), d.source_doctype, d.source_name);
+  if (config.doctype === "AT Campaign") {
+    for (const draft of campaignDraftsResource.data || []) {
+      items.push({
+        key: `campaign-draft-${draft.name}`,
+        title: `${t("relatedDraft")} • ${draft.name}`,
+        subtitle: [draft.channel, draft.status].filter(Boolean).join(" / ") || "AT Notification Draft",
+        description: draft.recipient || draft.name,
+        meta: formatValue("modified", draft.modified),
+        open: () => {
+          const panel = getSourcePanelConfig("AT Notification Draft", draft.name);
+          if (panel?.url) window.location.href = panel.url;
+        },
+      });
+    }
+    for (const outbox of campaignOutboxResource.data || []) {
+      items.push({
+        key: `campaign-outbox-${outbox.name}`,
+        title: `${t("relatedOutbox")} • ${outbox.name}`,
+        subtitle: [outbox.channel, outbox.status].filter(Boolean).join(" / ") || "AT Notification Outbox",
+        description: outbox.recipient || outbox.name,
+        meta: outbox.attempt_count != null ? `${outbox.attempt_count}` : formatValue("modified", outbox.modified),
+        open: () => {
+          const panel = getSourcePanelConfig("AT Notification Outbox", outbox.name);
+          if (panel?.url) window.location.href = panel.url;
+        },
+      });
+    }
+  }
   return items;
 });
 
@@ -775,7 +926,27 @@ async function afterQuickEditSubmit() {
 }
 
 function reloadDetail() {
-  return resource.reload({ doctype: config.doctype, name: props.name });
+  const detailPromise = resource.reload({ doctype: config.doctype, name: props.name });
+  if (config.doctype !== "AT Campaign") return detailPromise;
+  campaignDraftsResource.params = {
+    ...campaignDraftsResource.params,
+    filters: {
+      reference_doctype: "AT Campaign",
+      reference_name: props.name,
+    },
+  };
+  campaignOutboxResource.params = {
+    ...campaignOutboxResource.params,
+    filters: {
+      reference_doctype: "AT Campaign",
+      reference_name: props.name,
+    },
+  };
+  return Promise.allSettled([
+    detailPromise,
+    campaignDraftsResource.reload(),
+    campaignOutboxResource.reload(),
+  ]).then(([detailResult]) => detailResult.value);
 }
 
 function goBack() {
@@ -787,6 +958,34 @@ function openDesk() {
 function openPanel() {
   if (!panelConfig.value?.url) return;
   window.location.href = panelConfig.value.url;
+}
+
+function parseSignalEntries(value) {
+  if (value == null || value === "") return [];
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry ?? "").trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    try {
+      return parseSignalEntries(JSON.parse(value));
+    } catch {
+      return value
+        .split(/\r?\n/)
+        .map((entry) => entry.replace(/^[-*]\s*/, "").trim())
+        .filter(Boolean);
+    }
+  }
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(([key, entry]) => `${humanizeField(key)}: ${entry}`)
+      .filter(Boolean);
+  }
+  return [String(value)];
+}
+
+function formatSignalText(value) {
+  const entries = parseSignalEntries(value);
+  return entries.length ? entries.map((entry) => `- ${entry}`).join("\n") : t("noSignals");
 }
 
 watch(

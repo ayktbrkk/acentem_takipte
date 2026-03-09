@@ -50,9 +50,9 @@
             @keyup.enter="applyClaimFilters"
           />
           <select v-model="filters.status" class="input">
-            <option value="">{{ t("allStatuses") }}</option>
-            <option v-for="option in claimStatusOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
+          <option value="">{{ t("allStatuses") }}</option>
+          <option v-for="option in claimStatusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
             </option>
           </select>
           <select v-model.number="filters.limit" class="input">
@@ -101,6 +101,7 @@
                 <th class="at-table-head-cell">{{ t("claim") }}</th>
                 <th class="at-table-head-cell">{{ t("policy") }}</th>
                 <th class="at-table-head-cell">{{ t("status") }}</th>
+                <th class="at-table-head-cell">{{ t("operations") }}</th>
                 <th class="at-table-head-cell">{{ t("amounts") }}</th>
                 <th class="at-table-head-cell">{{ t("actions") }}</th>
               </tr>
@@ -114,6 +115,7 @@
                 <DataTableCell>
                   <StatusBadge type="claim" :status="claim.claim_status" />
                 </DataTableCell>
+                <TableFactsCell :items="claimOperationalFacts(claim)" />
                 <DataTableCell cell-class="min-w-[220px]">
                   <AmountPairSummary
                     :left-label="t('approved')"
@@ -124,7 +126,66 @@
                   />
                 </DataTableCell>
                 <DataTableCell>
+                  <div class="mb-2 text-xs text-slate-500">
+                    {{ notificationHint(claim) }}
+                  </div>
+                  <div class="mb-2 text-xs text-slate-500">
+                    {{ notificationStatusLabel(claim) }}
+                  </div>
+                  <div class="mb-2 text-xs text-slate-500">
+                    {{ assignmentHint(claim) }}
+                  </div>
                   <InlineActionRow>
+                    <ActionButton
+                      v-if="canMoveClaimToStatus(claim, 'Under Review')"
+                      variant="secondary"
+                      size="xs"
+                      :disabled="claimMutationResource.loading"
+                      @click="updateClaimStatus(claim, 'Under Review')"
+                    >
+                      {{ t("markUnderReview") }}
+                    </ActionButton>
+                    <ActionButton
+                      v-if="canMoveClaimToStatus(claim, 'Approved')"
+                      variant="secondary"
+                      size="xs"
+                      :disabled="claimMutationResource.loading"
+                      @click="updateClaimStatus(claim, 'Approved')"
+                    >
+                      {{ t("markApproved") }}
+                    </ActionButton>
+                    <ActionButton
+                      v-if="canMoveClaimToStatus(claim, 'Closed')"
+                      variant="secondary"
+                      size="xs"
+                      :disabled="claimMutationResource.loading"
+                      @click="updateClaimStatus(claim, 'Closed')"
+                    >
+                      {{ t("markClosed") }}
+                    </ActionButton>
+                    <ActionButton
+                      v-if="canRejectClaim(claim)"
+                      variant="secondary"
+                      size="xs"
+                      :disabled="claimMutationResource.loading"
+                      @click="rejectClaim(claim)"
+                    >
+                      {{ t("markRejected") }}
+                    </ActionButton>
+                    <ActionButton
+                      variant="secondary"
+                      size="xs"
+                      @click="openClaimNotifications(claim)"
+                    >
+                      {{ t("openNotifications") }}
+                    </ActionButton>
+                    <ActionButton
+                      variant="secondary"
+                      size="xs"
+                      @click="openClaimAssignment(claim)"
+                    >
+                      {{ t("newAssignment") }}
+                    </ActionButton>
                     <ActionButton
                       v-if="claim.policy"
                       variant="secondary"
@@ -151,6 +212,15 @@
       :show-save-and-open="false"
       :before-open="prepareQuickClaimDialog"
       :success-handlers="quickClaimSuccessHandlers"
+    />
+    <QuickCreateManagedDialog
+      v-model="showOwnershipAssignmentDialog"
+      config-key="ownership_assignment"
+      :locale="activeLocale"
+      :options-map="claimQuickOptionsMap"
+      :show-save-and-open="false"
+      :before-open="prepareOwnershipAssignmentDialog"
+      :success-handlers="ownershipAssignmentSuccessHandlers"
     />
   </section>
 </template>
@@ -191,11 +261,23 @@ const copy = {
     claim: "Hasar",
     policy: "Police",
     status: "Durum",
+    operations: "Operasyon",
     amounts: "Tutarlar",
     approved: "Onaylanan",
     paid: "Odenen",
     recordId: "Kayit",
     actions: "Aksiyon",
+    newAssignment: "Atama",
+    markUnderReview: "Incelemeye Al",
+    markApproved: "Onayla",
+    markClosed: "Kapat",
+    markRejected: "Reddet",
+    notificationDraft: "Bildirim Taslagi",
+    notificationMissing: "Bildirim Akisi Yok",
+    notificationQueue: "Bildirim Kuyrugu",
+    notificationNone: "Bildirim Kaydi Yok",
+    openNotifications: "Bildirimler",
+    rejectReasonPrompt: "Red sebebini girin",
     openDesk: "Yonetim",
     openPolicy: "Policeyi Ac",
     advancedFilters: "Gelismis Filtreler",
@@ -217,6 +299,14 @@ const copy = {
     amountStateUnpaid: "Odenmeyen kayitlar",
     amountStateApprovedOnly: "Onayli tutari olanlar",
     amountStatePendingPayment: "Onayli ama eksik odeme",
+    assignedExpert: "Eksper",
+    rejectionReason: "Red Sebebi",
+    appealStatus: "Itiraz",
+    nextFollowUpOn: "Sonraki Takip",
+    noExpert: "Atanmadi",
+    assignmentSummary: "Atama",
+    assignmentNone: "Acik atama yok",
+    assignmentOpenCount: "acik",
   },
   en: {
     title: "Claims",
@@ -231,11 +321,23 @@ const copy = {
     claim: "Claim",
     policy: "Policy",
     status: "Status",
+    operations: "Operations",
     amounts: "Amounts",
     approved: "Approved",
     paid: "Paid",
     recordId: "Record",
     actions: "Actions",
+    newAssignment: "Assignment",
+    markUnderReview: "Move to Review",
+    markApproved: "Approve",
+    markClosed: "Close",
+    markRejected: "Reject",
+    notificationDraft: "Notification Draft",
+    notificationMissing: "No Notification Flow",
+    notificationQueue: "Notification Queue",
+    notificationNone: "No Notification Records",
+    openNotifications: "Notifications",
+    rejectReasonPrompt: "Enter rejection reason",
     openDesk: "Desk",
     openPolicy: "Open Policy",
     advancedFilters: "Advanced Filters",
@@ -257,6 +359,14 @@ const copy = {
     amountStateUnpaid: "Unpaid claims",
     amountStateApprovedOnly: "Approved amount exists",
     amountStatePendingPayment: "Approved but underpaid",
+    assignedExpert: "Assigned Expert",
+    rejectionReason: "Rejection Reason",
+    appealStatus: "Appeal Status",
+    nextFollowUpOn: "Next Follow Up",
+    noExpert: "Unassigned",
+    assignmentSummary: "Assignment",
+    assignmentNone: "No open assignment",
+    assignmentOpenCount: "open",
   },
 };
 
@@ -315,6 +425,22 @@ const claimsResource = createResource({
   params: buildClaimListParams(),
   auto: true,
 });
+const claimMutationResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  auto: false,
+});
+const claimNotificationDraftResource = createResource({
+  url: "frappe.client.get_list",
+  auto: false,
+});
+const claimNotificationOutboxResource = createResource({
+  url: "frappe.client.get_list",
+  auto: false,
+});
+const claimAssignmentResource = createResource({
+  url: "frappe.client.get_list",
+  auto: false,
+});
 
 const claimQuickPolicyResource = createResource({
   url: "frappe.client.get_list",
@@ -343,6 +469,8 @@ const claimQuickCustomerResource = createResource({
 const claims = computed(() => claimStore.filteredItems);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const showQuickClaimDialog = ref(false);
+const showOwnershipAssignmentDialog = ref(false);
+const selectedClaimForAssignment = ref(null);
 const claimQuickOptionsMap = computed(() => ({
   policies: (claimQuickPolicyResource.data || []).map((row) => ({
     value: row.name,
@@ -358,12 +486,20 @@ const quickClaimSuccessHandlers = {
     await reloadClaims();
   },
 };
+const ownershipAssignmentSuccessHandlers = {
+  "ownership-assignments-list": async () => {
+    await reloadClaims();
+  },
+};
 const claimsErrorText = computed(() => {
   if (claimStore.state.error) return claimStore.state.error;
   const err = claimsResource.error;
   if (!err) return "";
   return err?.messages?.join(" ") || err?.message || t("loadError");
 });
+const claimNotificationDraftMap = computed(() => buildClaimNotificationMap(unref(claimNotificationDraftResource.data) || []));
+const claimNotificationOutboxMap = computed(() => buildClaimNotificationMap(unref(claimNotificationOutboxResource.data) || []));
+const claimAssignmentMap = computed(() => buildClaimAssignmentMap(unref(claimAssignmentResource.data) || []));
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -376,7 +512,19 @@ function normalizeText(value) {
 function buildClaimListParams() {
   const params = {
     doctype: "AT Claim",
-    fields: ["name", "claim_no", "policy", "claim_status", "approved_amount", "paid_amount"],
+    fields: [
+      "name",
+      "claim_no",
+      "policy",
+      "customer",
+      "claim_status",
+      "assigned_expert",
+      "rejection_reason",
+      "appeal_status",
+      "next_follow_up_on",
+      "approved_amount",
+      "paid_amount",
+    ],
     order_by: "modified desc",
     limit_page_length: Number(filters.limit) || 30,
   };
@@ -407,6 +555,7 @@ function reloadClaims() {
     .reload()
     .then((result) => {
       claimStore.setItems(result || []);
+      void Promise.allSettled([reloadClaimNotifications(result || []), reloadClaimAssignments(result || [])]);
       claimStore.setLoading(false);
       return result;
     })
@@ -461,6 +610,199 @@ function claimIdentityFacts(claim) {
 
 function claimPolicyFacts(claim) {
   return [subtleFact("policy", t("policy"), claim?.policy || "-")];
+}
+
+function claimOperationalFacts(claim) {
+  return [
+    subtleFact("expert", t("assignedExpert"), claim?.assigned_expert || t("noExpert")),
+    claim?.rejection_reason
+      ? subtleFact("rejection", t("rejectionReason"), claim.rejection_reason)
+      : null,
+    claim?.appeal_status
+      ? subtleFact("appeal", t("appealStatus"), claim.appeal_status)
+      : null,
+    claim?.next_follow_up_on
+      ? subtleFact("follow-up", t("nextFollowUpOn"), claim.next_follow_up_on)
+      : null,
+  ].filter(Boolean);
+}
+
+const claimStatusTemplateKeys = {
+  Open: "claim_status_open",
+  "Under Review": "claim_status_under_review",
+  Approved: "claim_status_approved",
+  Rejected: "claim_status_rejected",
+  Paid: "claim_status_paid",
+  Closed: "claim_status_closed",
+};
+
+function notificationHint(claim) {
+  const templateKey = claimStatusTemplateKeys[String(claim?.claim_status || "").trim()];
+  return templateKey ? `${t("notificationDraft")}: ${templateKey}` : t("notificationMissing");
+}
+
+function buildClaimNotificationMap(rows) {
+  return (rows || []).reduce((acc, row) => {
+    const referenceName = String(row?.reference_name || "").trim();
+    if (!referenceName) return acc;
+    const current = acc[referenceName] || { count: 0, latestStatus: "" };
+    current.count += 1;
+    current.latestStatus = current.latestStatus || String(row?.status || "").trim();
+    acc[referenceName] = current;
+    return acc;
+  }, {});
+}
+
+function buildClaimAssignmentMap(rows) {
+  return (rows || []).reduce((acc, row) => {
+    const sourceName = String(row?.source_name || "").trim();
+    if (!sourceName) return acc;
+    const current = acc[sourceName] || { count: 0, openCount: 0, latestAssignee: "" };
+    current.count += 1;
+    if (["Open", "In Progress", "Blocked"].includes(String(row?.status || "").trim())) current.openCount += 1;
+    if (!current.latestAssignee) current.latestAssignee = String(row?.assigned_to || "").trim();
+    acc[sourceName] = current;
+    return acc;
+  }, {});
+}
+
+function notificationStatusLabel(claim) {
+  const claimName = String(claim?.name || "").trim();
+  const draft = claimNotificationDraftMap.value[claimName];
+  const outbox = claimNotificationOutboxMap.value[claimName];
+  if (!draft && !outbox) return t("notificationNone");
+  const parts = [];
+  if (draft) parts.push(`${t("notificationDraft")}: ${draft.count}${draft.latestStatus ? ` (${draft.latestStatus})` : ""}`);
+  if (outbox) parts.push(`${t("notificationQueue")}: ${outbox.count}${outbox.latestStatus ? ` (${outbox.latestStatus})` : ""}`);
+  return parts.join(" / ");
+}
+
+function assignmentHint(claim) {
+  const assignment = claimAssignmentMap.value[String(claim?.name || "").trim()];
+  if (!assignment) return `${t("assignmentSummary")}: ${t("assignmentNone")}`;
+  const parts = [`${t("assignmentSummary")}: ${assignment.count}`];
+  if (assignment.openCount) parts.push(`${assignment.openCount} ${t("assignmentOpenCount")}`);
+  if (assignment.latestAssignee) parts.push(assignment.latestAssignee);
+  return parts.join(" / ");
+}
+
+function canMoveClaimToStatus(claim, nextStatus) {
+  const current = String(claim?.claim_status || "").trim();
+  if (!current || current === nextStatus) return false;
+  const transitions = {
+    Open: ["Under Review", "Approved", "Closed"],
+    "Under Review": ["Approved", "Closed"],
+    Approved: ["Closed"],
+    Paid: ["Closed"],
+  };
+  return Boolean(transitions[current]?.includes(nextStatus));
+}
+
+function canRejectClaim(claim) {
+  return ["Open", "Under Review", "Approved"].includes(String(claim?.claim_status || "").trim());
+}
+
+async function updateClaimStatus(claim, nextStatus) {
+  if (!claim?.name || !nextStatus) return;
+  await claimMutationResource.submit({
+    doctype: "AT Claim",
+    name: claim.name,
+    data: {
+      claim_status: nextStatus,
+    },
+  });
+  await reloadClaims();
+}
+
+async function rejectClaim(claim) {
+  const rejectionReason = String(window.prompt(t("rejectReasonPrompt"), claim?.rejection_reason || "") || "").trim();
+  if (!rejectionReason) return;
+  await claimMutationResource.submit({
+    doctype: "AT Claim",
+    name: claim.name,
+    data: {
+      claim_status: "Rejected",
+      rejection_reason: rejectionReason,
+      appeal_status: "",
+    },
+  });
+  await reloadClaims();
+}
+
+async function reloadClaimNotifications(claimRows) {
+  const claimNames = (claimRows || []).map((row) => row?.name).filter(Boolean);
+  if (!claimNames.length) {
+    setNotificationResourceData(claimNotificationDraftResource, []);
+    setNotificationResourceData(claimNotificationOutboxResource, []);
+    return;
+  }
+  claimNotificationDraftResource.params = {
+    doctype: "AT Notification Draft",
+    fields: ["name", "status", "reference_name"],
+    filters: {
+      reference_doctype: "AT Claim",
+      reference_name: ["in", claimNames],
+    },
+    limit_page_length: 200,
+  };
+  claimNotificationOutboxResource.params = {
+    doctype: "AT Notification Outbox",
+    fields: ["name", "status", "reference_name"],
+    filters: {
+      reference_doctype: "AT Claim",
+      reference_name: ["in", claimNames],
+    },
+    limit_page_length: 200,
+  };
+  await Promise.all([claimNotificationDraftResource.reload(), claimNotificationOutboxResource.reload()]);
+}
+
+async function reloadClaimAssignments(claimRows) {
+  const claimNames = (claimRows || []).map((row) => row?.name).filter(Boolean);
+  if (!claimNames.length) {
+    setNotificationResourceData(claimAssignmentResource, []);
+    return;
+  }
+  claimAssignmentResource.params = {
+    doctype: "AT Ownership Assignment",
+    fields: ["name", "status", "source_name", "assigned_to"],
+    filters: {
+      source_doctype: "AT Claim",
+      source_name: ["in", claimNames],
+    },
+    limit_page_length: 200,
+  };
+  await claimAssignmentResource.reload();
+}
+
+function setNotificationResourceData(resource, value) {
+  if (resource?.data && typeof resource.data === "object" && "value" in resource.data) {
+    resource.data.value = value;
+    return;
+  }
+  resource.data = value;
+}
+
+function openClaimNotifications(claim) {
+  if (!claim?.name) return;
+  const query = new URLSearchParams({
+    reference_doctype: "AT Claim",
+    reference_name: claim.name,
+  });
+  window.location.href = `/at/communication?${query.toString()}`;
+}
+
+function openClaimAssignment(claim) {
+  selectedClaimForAssignment.value = claim || null;
+  showOwnershipAssignmentDialog.value = true;
+}
+
+async function prepareOwnershipAssignmentDialog({ form }) {
+  const claim = selectedClaimForAssignment.value;
+  form.source_doctype = "AT Claim";
+  form.source_name = claim?.name || "";
+  form.customer = claim?.customer || "";
+  form.policy = claim?.policy || "";
 }
 
 function openPolicy(policyName) {

@@ -98,12 +98,36 @@
             <SectionCardHeader :title="t('scheduleTitle')" :show-count="false" />
             <DocSummaryGrid :items="scheduleSummaryItems" />
           </article>
+          <article class="surface-card rounded-2xl p-5">
+            <SectionCardHeader :title="t('assignmentsTitle')" :count="assignments.length" />
+            <div class="mb-3 flex justify-end">
+              <ActionButton variant="secondary" size="xs" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</ActionButton>
+            </div>
+            <div v-if="policy360Resource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+            <div v-else-if="assignments.length === 0" class="at-empty-block">{{ t("emptyAssignments") }}</div>
+            <ul v-else class="space-y-2 text-sm">
+              <MetaListCard
+                v-for="assignment in assignments"
+                :key="assignment.name"
+                :title="assignment.assigned_to || '-'"
+                :description="assignment.assignment_role || '-'"
+                :meta="assignment.priority || '-'"
+              >
+                <template #trailing>
+                  <div class="flex items-center gap-2">
+                    <p class="text-xs text-slate-500">{{ assignment.status || '-' }}</p>
+                    <ActionButton variant="secondary" size="xs" @click.stop="openEditOwnershipAssignment(assignment)">{{ t("edit") }}</ActionButton>
+                  </div>
+                </template>
+              </MetaListCard>
+            </ul>
+          </article>
         </div>
       </div>
     </template>
 
     <template v-else-if="activeTab === 'premiums'">
-      <div class="grid gap-4 lg:grid-cols-2">
+      <div class="grid gap-4 xl:grid-cols-3">
         <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('premiumTitle')" :show-count="false" />
           <DocSummaryGrid :items="premiumPrimarySummaryItems" />
@@ -125,6 +149,27 @@
               </template>
               <p class="mt-2 font-semibold text-slate-900">
                 {{ fmtMoney(p.amount_try || p.amount, p.amount_try ? "TRY" : p.currency) }}
+              </p>
+            </MetaListCard>
+          </ul>
+        </article>
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('installmentsTitle')" :count="paymentInstallments.length" />
+          <div v-if="paymentLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="paymentInstallments.length === 0" class="at-empty-block">{{ t("emptyInstallments") }}</div>
+          <ul v-else class="space-y-2 text-sm">
+            <MetaListCard
+              v-for="installment in paymentInstallmentPreviewRows"
+              :key="installment.name"
+              :title="installment.title"
+              :description="installment.description"
+              :meta="installment.meta"
+            >
+              <template #trailing>
+                <p class="text-xs text-slate-500">{{ installment.statusLabel }}</p>
+              </template>
+              <p class="mt-2 font-semibold text-slate-900">
+                {{ installment.amountLabel }}
               </p>
             </MetaListCard>
           </ul>
@@ -249,6 +294,22 @@
         </article>
       </div>
     </template>
+    <QuickCreateManagedDialog
+      v-model="showOwnershipAssignmentDialog"
+      config-key="ownership_assignment"
+      :locale="activeLocale"
+      :options-map="policyQuickOptionsMap"
+      :before-open="prepareOwnershipAssignmentDialog"
+      :success-handlers="ownershipAssignmentSuccessHandlers"
+    />
+    <QuickCreateManagedDialog
+      v-model="showOwnershipAssignmentEditDialog"
+      config-key="ownership_assignment_edit"
+      :locale="activeLocale"
+      :options-map="policyQuickOptionsMap"
+      :before-open="prepareOwnershipAssignmentEditDialog"
+      :success-handlers="ownershipAssignmentSuccessHandlers"
+    />
   </section>
 </template>
 
@@ -265,6 +326,7 @@ import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
 import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
 import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
+import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 
 const props = defineProps({ name: { type: String, default: "" } });
@@ -280,7 +342,7 @@ const labels = {
     emptyCustomer: "Musteri kaydi yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Musteri 360",
     scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Baslangic", end: "Bitis", remaining: "Kalan Gun",
     net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brut Prim", commissionRate: "Komisyon Orani", gwpTry: "GWP TRY",
-    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti",
+    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", installmentNo: "Taksit", paidOn: "Odeme Tarihi", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti", newAssignment: "Yeni Atama", edit: "Duzenle",
     productProfileTitle: "Urun Profili",
     productReadinessTitle: "Urun Hazirlik Durumu",
     company: "Sigorta Sirketi", branch: "Brans", customer: "Musteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
@@ -299,7 +361,7 @@ const labels = {
     emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Customer 360",
     scheduleTitle: "Schedule", issue: "Issue Date", start: "Start Date", end: "End Date", remaining: "Days Remaining",
     net: "Net Premium", tax: "Tax", commission: "Commission", gross: "Gross Premium", commissionRate: "Commission Rate", gwpTry: "GWP TRY",
-    payments: "Payments", emptyPayments: "No payments.", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary",
+    payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit",
     productProfileTitle: "Product Profile",
     productReadinessTitle: "Product Readiness",
     company: "Insurance Company", branch: "Branch", customer: "Customer", status: "Status", currency: "Currency", fxRate: "FX Rate", fxDate: "FX Date",
@@ -323,6 +385,9 @@ const tabs = computed(() => [
 ]);
 const activeTab = ref("summary");
 const selectedSnapshotName = ref("");
+const showOwnershipAssignmentDialog = ref(false);
+const showOwnershipAssignmentEditDialog = ref(false);
+const editingOwnershipAssignment = ref(null);
 
 const policy360Resource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_policy_360_payload",
@@ -337,6 +402,8 @@ const snapshotR = createResource({ url: "frappe.client.get_list", auto: false })
 const paymentR = createResource({ url: "frappe.client.get_list", auto: false });
 const fileR = createResource({ url: "frappe.client.get_list", auto: false });
 const notificationR = createResource({ url: "frappe.client.get_list", auto: false });
+const policyQuickCustomerResource = createResource({ url: "frappe.client.get_list", auto: false });
+const policyQuickPolicyResource = createResource({ url: "frappe.client.get_list", auto: false });
 
 const policy = computed(() => policyR.data || {});
 const customer = computed(() => customerR.data || null);
@@ -345,8 +412,10 @@ const comments = computed(() => commentR.data || []);
 const communications = computed(() => communicationR.data || []);
 const snapshots = computed(() => [...(snapshotR.data || [])].sort((a, b) => Number(a.snapshot_version || 0) - Number(b.snapshot_version || 0)));
 const payments = computed(() => paymentR.data || []);
+const paymentInstallments = computed(() => policy360Resource.data?.payment_installments || []);
 const files = computed(() => fileR.data || []);
 const notifications = computed(() => notificationR.data || []);
+const assignments = computed(() => policy360Resource.data?.assignments || []);
 const productProfile = computed(() => policy360Resource.data?.product_profile || {});
 
 const locale = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
@@ -357,6 +426,15 @@ const endorsementLoading = computed(() => policy360Resource.loading);
 const paymentLoading = computed(() => policy360Resource.loading);
 const fileLoading = computed(() => policy360Resource.loading);
 const notificationLoading = computed(() => policy360Resource.loading);
+const policyQuickOptionsMap = computed(() => ({
+  customers: (policyQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+  policies: (policyQuickPolicyResource.data || []).map((row) => ({ value: row.name, label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}` })),
+}));
+const ownershipAssignmentSuccessHandlers = {
+  "ownership-assignments-list": async () => {
+    await load();
+  },
+};
 
 const selectedSnapshot = computed(() => {
   if (!snapshots.value.length) return null;
@@ -539,6 +617,16 @@ const coverageSummaryItems = computed(() => [
     value: fmtDate(policy.value.fx_date),
   },
 ]);
+const paymentInstallmentPreviewRows = computed(() =>
+  paymentInstallments.value.slice(0, 6).map((row) => ({
+    name: row.name,
+    title: `${t("installmentNo")} ${row.installment_no || "-"}/${row.installment_count || "-"}`,
+    description: row.payment || "-",
+    meta: fmtDate(row.due_date),
+    statusLabel: installmentStatusLabel(row.status),
+    amountLabel: fmtMoney(row.amount_try || row.amount, row.amount_try ? "TRY" : row.currency),
+  }))
+);
 const productProfileSummaryItems = computed(() => [
   {
     key: "productFamily",
@@ -658,6 +746,11 @@ async function load() {
 const goBack = () => router.push({ name: "policy-list" });
 const openDeskPolicy = () => props.name && (window.location.href = `/app/at-policy/${encodeURIComponent(props.name)}`);
 const openCustomer = (name) => name && router.push({ name: "customer-detail", params: { name } });
+const openQuickOwnershipAssignment = () => { showOwnershipAssignmentDialog.value = true; };
+const openEditOwnershipAssignment = (assignment) => {
+  editingOwnershipAssignment.value = assignment || null;
+  showOwnershipAssignmentEditDialog.value = true;
+};
 const endorsementStatusClass = (s) => (s === "Applied" ? "text-emerald-700" : s === "Cancelled" ? "text-rose-700" : "text-slate-700");
 
 function policyStatusLabel(status) {
@@ -675,6 +768,15 @@ function paymentStatusLabel(status) {
   if (status === "Draft") return "Taslak";
   if (status === "Cancelled") return "Iptal";
   if (status === "Paid") return "Odendi";
+  return status || "-";
+}
+
+function installmentStatusLabel(status) {
+  if (activeLocale.value !== "tr") return status || "-";
+  if (status === "Scheduled") return "Planlandi";
+  if (status === "Overdue") return "Gecikti";
+  if (status === "Paid") return "Odendi";
+  if (status === "Cancelled") return "Iptal";
   return status || "-";
 }
 
@@ -702,4 +804,48 @@ const fmtDateTime = (v) => (v ? new Intl.DateTimeFormat(locale.value, { dateStyl
 const fmtMoney = (v, c) => new Intl.NumberFormat(locale.value, { style: "currency", currency: c || "TRY", maximumFractionDigits: 2 }).format(Number(v || 0));
 const fmtPct = (v) => `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(Number(v || 0))}%`;
 const stripHtml = (v) => (v ? String(v).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "");
+
+async function ensurePolicyQuickOptionSources() {
+  await Promise.allSettled([
+    policyQuickCustomerResource.reload({
+      doctype: "AT Customer",
+      fields: ["name", "full_name"],
+      filters: customer.value?.name ? { name: customer.value.name } : {},
+      limit_page_length: 50,
+    }),
+    policyQuickPolicyResource.reload({
+      doctype: "AT Policy",
+      fields: ["name", "policy_no", "customer"],
+      filters: props.name ? { name: props.name } : {},
+      limit_page_length: 50,
+    }),
+  ]);
+}
+
+async function prepareOwnershipAssignmentDialog({ form }) {
+  await ensurePolicyQuickOptionSources();
+  if (!form.source_doctype) form.source_doctype = "AT Policy";
+  if (!form.source_name) form.source_name = props.name || "";
+  if (!form.policy) form.policy = props.name || "";
+  if (!form.customer) form.customer = customer.value?.name || policy.value.customer || "";
+}
+
+async function prepareOwnershipAssignmentEditDialog({ resetForm }) {
+  await ensurePolicyQuickOptionSources();
+  const assignment = editingOwnershipAssignment.value || {};
+  resetForm({
+    doctype: "AT Ownership Assignment",
+    name: assignment.name || "",
+    source_doctype: assignment.source_doctype || "AT Policy",
+    source_name: assignment.source_name || props.name || "",
+    customer: assignment.customer || customer.value?.name || policy.value.customer || "",
+    policy: assignment.policy || props.name || "",
+    assigned_to: assignment.assigned_to || "",
+    assignment_role: assignment.assignment_role || "Owner",
+    status: assignment.status || "Open",
+    priority: assignment.priority || "Normal",
+    due_date: assignment.due_date || "",
+    notes: assignment.notes || "",
+  });
+}
 </script>

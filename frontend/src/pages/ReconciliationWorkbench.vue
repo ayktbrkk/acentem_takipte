@@ -10,6 +10,15 @@
         @refresh="reloadWorkbench"
       >
         <template #actions>
+          <ActionButton variant="secondary" size="sm" @click="openImportDialog">
+            {{ t("importStatement") }}
+          </ActionButton>
+          <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Matched')">
+            {{ bulkActionLoading ? t("bulkResolving") : t("bulkResolve") }}
+          </ActionButton>
+          <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Ignored')">
+            {{ bulkActionLoading ? t("bulkIgnoring") : t("bulkIgnore") }}
+          </ActionButton>
           <ActionButton variant="secondary" size="sm" :disabled="syncing" @click="runSync">
             {{ syncing ? t("syncing") : t("sync") }}
           </ActionButton>
@@ -81,7 +90,78 @@
       {{ operationError }}
     </div>
 
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+    <Dialog v-model="showImportDialog" :options="{ title: t('importStatementTitle'), size: 'xl' }">
+      <template #body-content>
+        <QuickCreateDialogShell
+          :error="importError"
+          :subtitle="t('importStatementSubtitle')"
+          :loading="importLoading"
+          :show-save-and-open="false"
+          :labels="importDialogLabels"
+          @cancel="closeImportDialog"
+          @save="previewStatementImport"
+        >
+          <div class="space-y-3">
+            <textarea
+              v-model="statementImportCsv"
+              class="input min-h-[180px] font-mono text-xs"
+              :placeholder="t('importStatementPlaceholder')"
+              :disabled="importLoading"
+            />
+            <div class="grid gap-3 md:grid-cols-3">
+              <input v-model.trim="statementImportInsuranceCompany" class="input" type="text" :placeholder="t('insuranceCompany')" />
+              <input v-model.trim="statementImportDelimiter" class="input" type="text" maxlength="1" :placeholder="t('delimiter')" />
+              <input v-model.number="statementImportLimit" class="input" type="number" min="1" max="500" />
+            </div>
+            <div v-if="statementImportSummary.total_rows" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <article class="at-metric-card">
+                <p class="at-metric-label">{{ t("importTotalRows") }}</p>
+                <p class="at-metric-value">{{ statementImportSummary.total_rows || 0 }}</p>
+              </article>
+              <article class="at-metric-card">
+                <p class="at-metric-label">{{ t("importMatchedRows") }}</p>
+                <p class="at-metric-value !text-emerald-700">{{ statementImportSummary.matched_rows || 0 }}</p>
+              </article>
+              <article class="at-metric-card">
+                <p class="at-metric-label">{{ t("importUnmatchedRows") }}</p>
+                <p class="at-metric-value !text-amber-700">{{ statementImportSummary.unmatched_rows || 0 }}</p>
+              </article>
+              <article class="at-metric-card">
+                <p class="at-metric-label">{{ t("importAmount") }}</p>
+                <p class="at-metric-value !text-sky-700">{{ formatMoney(statementImportSummary.total_amount_try || 0) }}</p>
+              </article>
+            </div>
+            <div v-if="statementImportRows.length" class="flex justify-end">
+              <ActionButton variant="primary" size="sm" :disabled="importLoading" @click="importStatementPreviewRows">
+                {{ importLoading ? t("importingStatement") : t("importStatementRows") }}
+              </ActionButton>
+            </div>
+            <div v-if="statementImportRows.length" class="rounded-xl border border-slate-200 bg-white">
+              <div class="grid grid-cols-5 gap-2 border-b border-slate-200 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                <span>{{ t("externalRef") }}</span>
+                <span>{{ t("policy") }}</span>
+                <span>{{ t("payment") }}</span>
+                <span>{{ t("metricOverdueAmount") }}</span>
+                <span>{{ t("status") }}</span>
+              </div>
+              <div
+                v-for="row in statementImportRows"
+                :key="`${row.external_ref}-${row.policy_no}-${row.payment_no}`"
+                class="grid grid-cols-5 gap-2 px-3 py-2 text-sm text-slate-700"
+              >
+                <span>{{ row.external_ref || "-" }}</span>
+                <span>{{ row.policy_no || "-" }}</span>
+                <span>{{ row.payment_no || "-" }}</span>
+                <span>{{ formatMoney(row.amount_try || 0) }}</span>
+                <span :class="row.match_status === 'Matched' ? 'text-emerald-700' : 'text-amber-700'">{{ row.match_status || "-" }}</span>
+              </div>
+            </div>
+          </div>
+        </QuickCreateDialogShell>
+      </template>
+    </Dialog>
+
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-8">
       <article class="at-metric-card">
         <p class="at-metric-label">{{ t("metricOpen") }}</p>
         <p class="at-metric-value !text-amber-700">{{ metrics.open || 0 }}</p>
@@ -106,6 +186,14 @@
         <p class="at-metric-label">{{ t("metricOverdueAmount") }}</p>
         <p class="at-metric-value !text-rose-700">{{ formatMoney(metrics.overdue_amount_try || 0) }}</p>
       </article>
+      <article class="at-metric-card">
+        <p class="at-metric-label">{{ t("metricCommissionAccrual") }}</p>
+        <p class="at-metric-value !text-sky-700">{{ metrics.commission_accrual_count || 0 }}</p>
+      </article>
+      <article class="at-metric-card">
+        <p class="at-metric-label">{{ t("metricCommissionAccrualAmount") }}</p>
+        <p class="at-metric-value !text-emerald-700">{{ formatMoney(metrics.commission_accrual_amount_try || 0) }}</p>
+      </article>
     </div>
 
     <article class="surface-card rounded-2xl p-5">
@@ -124,6 +212,28 @@
             <div class="text-right">
               <p class="text-xs text-slate-500">{{ t("dueDate") }}: {{ row.due_date || "-" }}</p>
               <p class="text-xs text-amber-700">{{ row.status || "-" }}</p>
+            </div>
+          </template>
+        </MetaListCard>
+      </ul>
+    </article>
+
+    <article class="surface-card rounded-2xl p-5">
+      <SectionCardHeader :title="t('commissionPreviewTitle')" :count="commissionPreviewRows.length" />
+      <div v-if="workbenchResource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+      <div v-else-if="commissionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCommissionPreview") }}</div>
+      <ul v-else class="space-y-2 text-sm">
+        <MetaListCard
+          v-for="row in commissionPreviewRows"
+          :key="row.name"
+          :title="row.policy_no || row.name"
+          :description="`${row.customer || '-'} / ${row.insurance_company || '-'}`"
+          :meta="formatMoney(row.commission_amount_try || row.commission_amount)"
+        >
+          <template #trailing>
+            <div class="text-right">
+              <p class="text-xs text-slate-500">{{ row.office_branch || "-" }}</p>
+              <p class="text-xs text-sky-700">{{ row.status || "-" }}</p>
             </div>
           </template>
         </MetaListCard>
@@ -266,8 +376,28 @@ const copy = {
   tr: {
     title: "Mutabakat Masasi",
     subtitle: "Muhasebe uyumsuzluklarini izle, eslestir ve kapat",
+    importStatement: "Ekstre Ice Aktar",
+    importStatementTitle: "Ekstre Ice Aktarma Onizlemesi",
+    importStatementSubtitle: "CSV icerigini yapistir, policy veya payment eslesmelerini onizle.",
+    importStatementPlaceholder: "external_ref,policy_no,payment_no,customer,amount_try",
+    importStatementRows: "Eslesenleri Ice Aktar",
+    importingStatement: "Ice Aktariliyor...",
+    importTotalRows: "Toplam Satir",
+    importMatchedRows: "Eslesen",
+    importUnmatchedRows: "Eslesmeyen",
+    importAmount: "Toplam Tutar",
+    insuranceCompany: "Sigorta Sirketi",
+    delimiter: "Ayirac",
+    policy: "Police",
+    payment: "Odeme",
     sync: "Sync Calistir",
     syncing: "Sync...",
+    bulkResolve: "Aciklari Toplu Coz",
+    bulkResolving: "Toplu Cozuluyor...",
+    bulkIgnore: "Aciklari Toplu Yoksay",
+    bulkIgnoring: "Toplu Yoksayiliyor...",
+    bulkResolveConfirm: "Gorunen acik mutabakat kayitlari cozulmus olarak isaretlensin mi?",
+    bulkIgnoreConfirm: "Gorunen acik mutabakat kayitlari yoksayilsin mi?",
     reconcile: "Mutabakat Calistir",
     reconciling: "Calisiyor...",
     refresh: "Yenile",
@@ -295,8 +425,12 @@ const copy = {
     metricFailed: "Basarisiz Entry",
     metricOverdueCollections: "Geciken Tahsilat",
     metricOverdueAmount: "Geciken Tutar",
+    metricCommissionAccrual: "Komisyon Tahakkuk",
+    metricCommissionAccrualAmount: "Tahakkuk Tutari",
     collectionPreviewTitle: "Geciken Tahsilat Onizleme",
     emptyCollectionPreview: "Geciken tahsilat kaydi bulunamadi.",
+    commissionPreviewTitle: "Komisyon Tahakkuk Onizleme",
+    emptyCommissionPreview: "Komisyon tahakkuk kaydi bulunamadi.",
     loading: "Yukleniyor...",
     loadErrorTitle: "Mutabakat Verileri Yuklenemedi",
     loadError: "Mutabakat masasi verileri yuklenirken bir hata olustu.",
@@ -350,8 +484,28 @@ const copy = {
   en: {
     title: "Reconciliation Workbench",
     subtitle: "Track, match and close accounting mismatches",
+    importStatement: "Import Statement",
+    importStatementTitle: "Statement Import Preview",
+    importStatementSubtitle: "Paste CSV content and preview policy or payment matches.",
+    importStatementPlaceholder: "external_ref,policy_no,payment_no,customer,amount_try",
+    importStatementRows: "Import Matched Rows",
+    importingStatement: "Importing...",
+    importTotalRows: "Total Rows",
+    importMatchedRows: "Matched",
+    importUnmatchedRows: "Unmatched",
+    importAmount: "Total Amount",
+    insuranceCompany: "Insurance Company",
+    delimiter: "Delimiter",
+    policy: "Policy",
+    payment: "Payment",
     sync: "Run Sync",
     syncing: "Syncing...",
+    bulkResolve: "Resolve Visible Open Items",
+    bulkResolving: "Resolving...",
+    bulkIgnore: "Ignore Visible Open Items",
+    bulkIgnoring: "Ignoring...",
+    bulkResolveConfirm: "Mark visible open reconciliation rows as resolved?",
+    bulkIgnoreConfirm: "Ignore visible open reconciliation rows?",
     reconcile: "Run Reconciliation",
     reconciling: "Running...",
     refresh: "Refresh",
@@ -379,8 +533,12 @@ const copy = {
     metricFailed: "Failed Entries",
     metricOverdueCollections: "Overdue Collections",
     metricOverdueAmount: "Overdue Amount",
+    metricCommissionAccrual: "Commission Accruals",
+    metricCommissionAccrualAmount: "Accrual Amount",
     collectionPreviewTitle: "Overdue Collection Preview",
     emptyCollectionPreview: "No overdue collection found.",
+    commissionPreviewTitle: "Commission Accrual Preview",
+    emptyCommissionPreview: "No commission accrual found.",
     loading: "Loading...",
     loadErrorTitle: "Failed to Load Reconciliation Data",
     loadError: "An error occurred while loading reconciliation workbench data.",
@@ -446,6 +604,15 @@ const filters = accountingStore.state.filters;
 const syncing = ref(false);
 const reconciling = ref(false);
 const operationError = ref("");
+const bulkActionLoading = ref(false);
+const showImportDialog = ref(false);
+const importLoading = ref(false);
+const importError = ref("");
+const statementImportCsv = ref("");
+const statementImportInsuranceCompany = ref("");
+const statementImportDelimiter = ref(",");
+const statementImportLimit = ref(100);
+const statementImportPreview = ref({ rows: [], summary: {} });
 
 const workbenchResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
@@ -460,12 +627,21 @@ const syncResource = createResource({
 const runReconciliationResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.accounting.run_reconciliation_job",
 });
+const bulkResolveResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.accounting.bulk_resolve_items",
+});
 
 const resolveResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.accounting.resolve_item",
 });
 const setValueResource = createResource({
   url: "frappe.client.set_value",
+});
+const previewStatementImportResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.accounting.preview_statement_import",
+});
+const importStatementPreviewResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.accounting.import_statement_preview",
 });
 
 const workbenchData = computed(() => accountingStore.state.workbench || {});
@@ -493,8 +669,12 @@ const {
 });
 const sourceDoctypeOptions = computed(() => accountingStore.sourceDoctypeOptions);
 const rows = computed(() => accountingStore.rows);
+const openRowCount = computed(() => rows.value.filter((row) => String(row?.status || "") === "Open").length);
 const metrics = computed(() => accountingStore.metrics);
 const collectionPreviewRows = computed(() => workbenchData.value.collection_preview?.overdue_rows || []);
+const commissionPreviewRows = computed(() => workbenchData.value.commission_preview?.rows || []);
+const statementImportRows = computed(() => statementImportPreview.value?.rows || []);
+const statementImportSummary = computed(() => statementImportPreview.value?.summary || {});
 const localeCode = computed(() => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"));
 const workbenchErrorText = computed(() => {
   if (accountingStore.state.error) return accountingStore.state.error;
@@ -536,6 +716,10 @@ const reconciliationActionDialogSubtitle = computed(() => {
   if (actionDialogMode.value === "Ignored") return t("actionIgnoreSubtitle");
   return t("actionNoteSubtitle");
 });
+const importDialogLabels = computed(() => ({
+  cancel: unref(authStore.locale) === "tr" ? "Vazgec" : "Cancel",
+  save: unref(authStore.locale) === "tr" ? "Onizleme Olustur" : "Build Preview",
+}));
 
 function buildParams() {
   const officeBranch = branchStore.requestBranch;
@@ -630,6 +814,91 @@ async function runReconciliation() {
       : error?.messages?.join(" ") || error?.message || t("actionFailed");
   } finally {
     reconciling.value = false;
+  }
+}
+
+async function runBulkResolution(resolutionAction) {
+  const itemNames = rows.value
+    .filter((row) => String(row?.status || "") === "Open")
+    .map((row) => row.name)
+    .filter(Boolean);
+  if (!itemNames.length) return;
+
+  const confirmText =
+    resolutionAction === "Ignored"
+      ? t("bulkIgnoreConfirm")
+      : t("bulkResolveConfirm");
+  if (!globalThis.confirm?.(confirmText)) return;
+
+  bulkActionLoading.value = true;
+  operationError.value = "";
+  try {
+    await bulkResolveResource.submit({
+      item_names: itemNames,
+      resolution_action: resolutionAction,
+    });
+    await reloadWorkbench();
+  } catch (error) {
+    operationError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedAction")
+      : error?.messages?.join(" ") || error?.message || t("actionFailed");
+  } finally {
+    bulkActionLoading.value = false;
+  }
+}
+
+function openImportDialog() {
+  showImportDialog.value = true;
+  importError.value = "";
+}
+
+function closeImportDialog() {
+  if (importLoading.value) return;
+  showImportDialog.value = false;
+  importError.value = "";
+}
+
+async function previewStatementImport() {
+  importLoading.value = true;
+  importError.value = "";
+  try {
+    const result = await previewStatementImportResource.submit({
+      csv_text: statementImportCsv.value,
+      office_branch: branchStore.requestBranch || null,
+      insurance_company: statementImportInsuranceCompany.value || null,
+      delimiter: statementImportDelimiter.value || ",",
+      limit: statementImportLimit.value || 100,
+    });
+    statementImportPreview.value = result || { rows: [], summary: {} };
+  } catch (error) {
+    importError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedAction")
+      : error?.messages?.join(" ") || error?.message || t("actionFailed");
+  } finally {
+    importLoading.value = false;
+  }
+}
+
+async function importStatementPreviewRows() {
+  importLoading.value = true;
+  importError.value = "";
+  try {
+    await importStatementPreviewResource.submit({
+      csv_text: statementImportCsv.value,
+      office_branch: branchStore.requestBranch || null,
+      insurance_company: statementImportInsuranceCompany.value || null,
+      delimiter: statementImportDelimiter.value || ",",
+      limit: statementImportLimit.value || 100,
+    });
+    showImportDialog.value = false;
+    statementImportPreview.value = { rows: [], summary: {} };
+    await reloadWorkbench();
+  } catch (error) {
+    importError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedAction")
+      : error?.messages?.join(" ") || error?.message || t("actionFailed");
+  } finally {
+    importLoading.value = false;
   }
 }
 

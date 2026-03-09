@@ -31,3 +31,7 @@ Branch/office modeli, veri izolasyonu ve servis katmani derinlestirmesi bu dalga
 **Tahmini sure:** 16 saat
 **Bitti kriteri:** Sube bazli veri gorunurlugu hem `/at` hem Desk icin tutarli olur
 **Test:** Rol/sube bazli veri gorunurlugu smoke checklist'i
+
+## Guncel Durum (2026-03-09)
+- Durum: Beklemede
+- Not: Dalga 2 henuz aktif degil. Branch veri modeli ve izolasyon adimlari Dalga 1 / Faz 5 tamamlandiktan sonra alinacak.

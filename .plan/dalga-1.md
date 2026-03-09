@@ -9,9 +9,9 @@ Rol yonlendirme, API auth kontrati, log redaction, dashboard performansi ve serv
 
 ## Durum
 - **Durum:** Devam Ediyor
-- **Mevcut odak:** `Faz 3.2.1 Frontend Pinia store mimarisini yeniden tasarla`
-- **Sonraki hamle:** `frontend/src/components/app-shell/OfficeBranchSelect.vue` facade migration ve sonraki migration adaylarini siralamak
-
+- **Mevcut odak:** `Faz 9 ilk veri katmani`
+- **Son tamamlanan faz:** `Faz 8`
+- **Sonraki hamle:** `Faz 9 ilk veri katmanini acmak`
 ## Tamamlananlar
 
 ### Gorev 1.1 - Rol ve oturum yonlendirme temelini stabilize et
@@ -258,6 +258,34 @@ Rol yonlendirme, API auth kontrati, log redaction, dashboard performansi ve serv
   - iletisim kanal ozeti ve timeline
   - segment/skor icgorusel ozet
 - [x] `CustomerDetail.vue` ilk turda tek payload modeline baglandi
+
+## Faz 6 Aktif Durum
+- **Durum:** Devam Ediyor
+- **Mevcut odak:** Claim lifecycle ve Communication Center veri modeli derinlestirme
+- **Sonraki hamle:** `AT Segment` ve `AT Campaign` veri modelini quick create ve aux workbench yuzeyine tasimak
+
+### Faz 6 Ilk Uygulama Durumu
+- [x] `AT Claim` operasyon alanlari eklendi:
+  - `assigned_expert`
+  - `rejection_reason`
+  - `appeal_status`
+  - `next_follow_up_on`
+- [x] `ClaimsBoard.vue` icinde lifecycle kolonlari, hizli status aksiyonlari ve claim notification gorunurlugu eklendi
+- [x] `AT Call Note` veri modeli, quick create endpoint'i ve `CommunicationCenter.vue` hizli giris akisi eklendi
+- [x] `AT Call Note` icin backend/UI ilk test turu eklendi
+- [x] `AT Segment` veri modeli, quick create endpoint'i ve aux workbench config'i eklendi
+- [x] `AT Campaign` veri modeli, quick create endpoint'i ve aux workbench config'i eklendi
+- [x] Segment/campaign icin backend quick create kontrat testleri eklendi
+- [x] `CommunicationCenter.vue` icinde segment ve kampanya launcher/dialog akisi eklendi
+- [x] `CommunicationCenter.test.js` icinde segment/campaign dialog gorunurlugu test altina alindi
+- [x] `services/segments.py` ile kriter bazli segment membership preview servisi eklendi
+- [x] `api/communication.py` icinde `preview_segment_members` endpoint'i eklendi
+- [x] `tests/test_segments.py` ile service ve endpoint permission kontrati eklendi
+- [x] `CommunicationCenter.vue` icinde segment uye onizleme dialog'u eklendi
+- [x] `CommunicationCenter.test.js` icinde segment preview yukleme sozlesmesi eklendi
+- [x] `services/campaigns.py` ile kampanyadan notification draft ureten execution servisi eklendi
+- [x] `api/communication.py` icinde `execute_campaign` endpoint'i eklendi
+- [x] `tests/test_campaigns.py` ile campaign execution service ve endpoint kontrati eklendi
 - [x] customer 360 ekranina odeme/hasar/yenileme bloklari ve iletisim kanal ozeti eklendi
 - [x] musteri segment/skor karti ve capraz satis alanlari ilk turda eklendi
 - [x] `AT Customer Relation` ve `AT Insured Asset` ile ilk baglanti veri modeli acildi
@@ -311,3 +339,150 @@ Rol yonlendirme, API auth kontrati, log redaction, dashboard performansi ve serv
 - [x] Faz 5 guncelleme (2026-03-09): Payment installment sync ve overdue fallback backend testleri eklendi -> acentem_takipte/acentem_takipte/tests/test_accounting_installments.py
 
 - [x] Faz 5 guncelleme (2026-03-09): `PaymentsBoard.vue` taksit gorunurlugu eklendi; odeme detay satirlarinda toplam taksit, odenen taksit, geciken taksit ve sonraki vade gosteriliyor.
+
+- [x] Faz 5 test guncelleme (2026-03-09): `frontend/src/pages/PaymentsBoard.test.js` taksit gorunurlugu kontrati ile genisletildi; installment summary satirlari DOM seviyesinde sabitlendi.
+
+- [x] Faz 5 guncelleme (2026-03-09): payment quick create sozlesmesi taksit alanlariyla genisletildi -> `frontend/src/config/quickCreateRegistry.js`, `api/quick_create.py`, `services/quick_create.py`
+
+- [x] Faz 5 guncelleme (2026-03-09): `Policy 360` payload ve `PolicyDetail.vue` taksit preview ile genisletildi; poliçe detayinda taksit plani gorunur hale geldi.
+
+- [x] Faz 5 test guncelleme (2026-03-09): rontend/src/pages/PolicyDetail.test.js taksit preview kontrati ile genisletildi; installment preview alanlari sayfa seviyesinde test altina alindi.
+
+- [x] Faz 5 guncelleme (2026-03-09): Customer 360 payload installment ozetleri ile genisletildi; CustomerDetail odeme kartlarinda geciken taksit sinyali gorunur hale geldi.
+
+- [x] Faz 5 test guncelleme (2026-03-09): odeme quick create installment sozlesmesi backend testleri ile sabitlendi -> acentem_takipte/acentem_takipte/tests/test_quick_create_customer360_aux.py
+
+- [x] Faz 5 guncelleme (2026-03-09): mutabakat ekrani komisyon tahakkuk metrikleri ve preview listesi ile genisletildi -> services/accounting_runtime.py, frontend/src/pages/ReconciliationWorkbench.vue, frontend/src/pages/ReconciliationWorkbench.test.js
+
+- [x] Faz 5 guncelleme (2026-03-09): mutabakat workbench icin preview-first ekstre ice aktarma akisi eklendi -> services/accounting_statement_import.py, api/accounting.py, frontend/src/pages/ReconciliationWorkbench.vue
+
+- [x] Faz 5 test guncelleme (2026-03-09): preview-first ekstre ice aktarma parse ve eslesme kontrati backend testleri ile sabitlendi -> acentem_takipte/acentem_takipte/tests/test_accounting_statement_import.py
+
+- [x] Faz 5 test guncelleme (2026-03-09): ReconciliationWorkbench ekstre ice aktarma preview dialog kontrati sayfa testine eklendi -> frontend/src/pages/ReconciliationWorkbench.test.js
+
+## Guncel Durum (2026-03-09)
+- Durum: Aktif
+- Aktif Faz: Faz 5 - Tahsilat ve mali takip derinlestirme
+- Tamamlanan son adim: ReconciliationWorkbench ekstre ice aktarma preview dialog kontrati sayfa testine eklendi.
+- Sonraki hedef: preview satirlarini AT Accounting Entry / reconciliation adayina donusturen persistence katmani.
+
+- [x] Faz 5 guncelleme (2026-03-09): ekstre preview satirlarini eslesen policy/payment kayitlari uzerinden AT Accounting Entry ve reconciliation adayina baglayan persistence katmani eklendi -> services/accounting_statement_import.py, api/accounting.py, frontend/src/pages/ReconciliationWorkbench.vue
+
+- [x] Faz 5 test guncelleme (2026-03-09): statement import persistence backend ve UI kontrat testleri eklendi -> acentem_takipte/acentem_takipte/tests/test_accounting_statement_import.py, frontend/src/pages/ReconciliationWorkbench.test.js
+
+- [x] Faz 5 guncelleme (2026-03-09): ReconciliationWorkbench gorunen acik kayitlar icin toplu coz / yoksay aksiyonlari ile genisletildi -> api/accounting.py, frontend/src/pages/ReconciliationWorkbench.vue
+
+- [x] Faz 5 test guncelleme (2026-03-09): ReconciliationWorkbench toplu coz aksiyonu sayfa testine eklendi -> frontend/src/pages/ReconciliationWorkbench.test.js
+
+- [x] Faz 5 test guncelleme (2026-03-09): bulk_resolve_items backend kontrati sabitlendi -> acentem_takipte/acentem_takipte/tests/test_accounting_reconciliation.py
+
+- [x] Faz 5 plan seviyesinde kapatildi. Mali takip zinciri: installment modeli, overdue tahsilat, komisyon tahakkuk, statement preview/import ve bulk reconciliation aksiyonlari ile ilk operasyonel surume ulasti.
+- [ ] Sonraki aktif odak: Faz 6 - Hasar ve iletisim merkezi derinlestirme.
+
+### Faz 6 Baslangic Durumu
+- [x] AT Claim semasina ssigned_expert, ejection_reason, ppeal_status, 
+ext_follow_up_on alanlari eklendi
+- [x] doctype/at_claim/at_claim.py uzerinde rejection/appeal/follow-up guard'lari baglandi
+- [x] 	ests/test_claim_operational_fields.py ile ilk backend kontrat testi eklendi
+- [ ] Sonraki adim: ClaimsBoard.vue uzerinde hasar operasyon gorunurlugunu genisletmek
+
+- [x] rontend/src/pages/ClaimsBoard.vue uzerinde hasar operasyon kolonu eklendi; eksper, red sebebi, itiraz ve takip tarihi gorunur hale geldi
+- [ ] Sonraki adim: claim status aksiyonlari ve musteri bildirim gorunurlugunu acmak
+
+- [x] pi/quick_create.py icinde AT Claim quick aux edit whitelist'i acildi
+- [x] rontend/src/pages/ClaimsBoard.vue uzerinde hizli claim status aksiyonlari ve notification template ipucu eklendi
+- [x] rontend/src/pages/ClaimsBoard.test.js ile claim status mutation payload zinciri test altina alindi
+- [ ] Sonraki adim: rejected sebep toplama ve claim notification outbox gorunurlugunu acmak
+
+- [x] rontend/src/pages/ClaimsBoard.vue icinde claim'e bagli notification draft/outbox ozetleri gorunur hale geldi
+- [x] Rejected claim aksiyonu red sebebi toplayarak hizli update zincirine baglandi
+- [x] rontend/src/pages/ClaimsBoard.test.js rejected payload zinciri ile guncellendi
+- [ ] Sonraki adim: claim-specific outbox aksiyonlari veya iletisim merkezi kampanya/call-note veri modeli
+
+- [x] AT Call Note veri modeli eklendi
+- [x] pi/quick_create.py ve services/quick_create.py uzerinde quick call note create akisi acildi
+- [x] rontend/src/config/auxWorkbenchConfigs.js ile call-notes aux route'u eklendi
+- [x] rontend/src/pages/CommunicationCenter.vue icinden hizli arama notu girisi acildi
+- [ ] Sonraki adim: call note test kapsami ve kampanya/segment veri modeli
+
+- [x] 	ests/test_quick_create_customer360_aux.py uzerinde quick call note service payload kontrati eklendi
+- [x] rontend/src/pages/CommunicationCenter.test.js uzerinde call note dialog config ve prefill kontrati eklendi
+- [ ] Sonraki adim: kampanya/segment veri modeli
+
+- 2026-03-09: CommunicationCenter campaign execution UI secicileri ve test hedefleri sabitlendi.
+
+- 2026-03-09: Campaign execution sonucu AT Campaign kaydinda last_run_on/matched/skipped/sent alanlariyla gorunur hale getirildi.
+
+- 2026-03-09: Planned/Running kampanyalar icin scheduler tabanli due campaign job eklendi.
+
+- 2026-03-09: AT Campaign detail ekranina bagli notification draft/outbox related kartlari eklendi.
+
+## Faz 6 Kapanis Notu
+- Durum: Tamamlandi
+- Kapsam: Claim lifecycle, call note, segment, campaign, segment preview, campaign execution, scheduler, campaign delivery trace.
+- Sonraki aktif faz: Faz 7.
+
+
+- 2026-03-09: Faz 7 baslangic olarak Reports omurgasina communication operations yonetsel raporu eklendi.
+
+- 2026-03-09: Communication operations raporu icin backend registry/service/api ve frontend Reports sayfa kontrat testleri eklendi.
+
+- 2026-03-09: Reconciliation operations yonetsel raporu eklendi ve backend/frontend kontrat testleri ile sabitlendi.
+
+- Tamamlandi: Faz 7 ikinci yonetsel rapor turu sonrasi claims_operations raporu eklendi; backend row builder, registry, API, Reports UI ve backend/frontend kontrat testleri yazildi.
+
+- Tamamlandi: Faz 7 icinde operasyon raporlarina donem karsilastirmasi eklendi; Reports ekrani secili tarih araligini onceki esit periyot ile ikinci istek uzerinden kiyasliyor.
+
+- Tamamlandi: ScheduledReportsManager yeni operasyon raporlariyla hizalandi; communication_operations, reconciliation_operations ve claims_operations icin branch/status/date filtre operatorlugu acildi ve component testi eklendi.
+
+## Faz 7 Kapanis
+- Durum: Tamamlandi
+- Kapsam: communication_operations, reconciliation_operations ve claims_operations yonetsel raporlari; previous-period comparison kartlari; scheduled report operatorlugu genisletmesi.
+- Sonuc: Rapor zinciri artik operasyon, kiyas ve zamanlanmis teslim katmanlariyla birlikte calisir durumda.
+- Sonraki aktif odak: Faz 8.
+
+- Tamamlandi: Faz 8 ilk kesiti olarak AT Customer Segment Snapshot veri modeli eklendi; customer_360 artik canli insight payload'ini snapshot kaydina yaziyor ve snapshot-first omurga olusuyor.
+# Guncel Not
+- [x] Faz 8.1: Customer segment snapshot veri omurgasi
+- [x] Faz 8.2: Customer 360 icinden snapshot upsert
+- [x] Faz 8.3: Batch refresh job ve daily scheduler
+- [x] Faz 8.4: CustomerDetail icinde snapshot metadata gorunurlugu
+- [x] Faz 8.5: Snapshot batch refresh icin admin tetikleme ve liste gorunurlugu
+- [x] Faz 8.6: Snapshot admin UI tetikleme butonu
+- [x] Faz 8.7: Snapshot liste/detail okunabilirligini artir
+- [x] Faz 8.8: Snapshot liste taranabilirligini artir
+- [x] Faz 8.9: Snapshot operasyon ozet kartlarini ac
+- [x] Faz 8.10: Segment snapshot trend gorunurlugu
+- [x] Faz 8.11: Segment snapshot export gorunurlugu
+- [x] Faz 8.12: Faz 8 kapanis ve sonraki veri katmani
+
+## Faz 8 Kapanis
+- Durum: Tamamlandi
+- Kapsam: snapshot veri omurgasi, batch refresh, scheduler, admin tetikleme, Customer 360 metadata, aux liste/detail okunabilirligi, trend ve CSV export gorunurlugu.
+- Sonraki aktif faz: Faz 9
+
+## Faz 9 Baslangic Durumu
+- [x] `AT Ownership Assignment` veri modeli eklendi
+- [x] quick create ve aux edit/delete zinciri ownership assignment icin acildi
+- [x] `Customer 360` ve `Policy 360` payload'larina assignment gorunurlugu eklendi
+- [x] `CustomerDetail.vue` icinde inline assignment create/edit/delete akisina gecildi
+- [x] `ClaimsBoard.vue` icinden claim kaynakli assignment create prefilleri acildi
+- [x] `CustomerDetail.test.js` ownership assignment create/edit prefill ve render kontrati ile genisletildi
+- [ ] Sonraki adim: assignment liste/operasyon gorunurlugunu claim/policy tarafinda derinlestirmek
+
+- [x] Faz 9.2: ClaimsBoard assignment gorunurlugu eklendi
+  - `frontend/src/pages/ClaimsBoard.vue` claim satirlarinda assignment count/open/assignee ozeti gorunur
+  - `frontend/src/pages/ClaimsBoard.test.js` assignment hint kontrati ile genisletildi
+- [ ] Sonraki adim: PolicyDetail ve ownership aux yuzeyinde assignment operasyonlarini derinlestirmek
+- [x] Faz 9.3: PolicyDetail inline assignment create/edit akisi eklendi
+  - `frontend/src/pages/PolicyDetail.vue` policy kaynakli assignment dialoglari acildi
+  - `frontend/src/pages/PolicyDetail.test.js` create/edit prefill kontrati ile genisletildi
+- [ ] Sonraki adim: ownership assignment aux/detail operasyonlarini genisletmek ve Faz 9 kapanisina gitmek
+- [x] Faz 9.4: Ownership assignment aux/detail okunabilirligi eklendi
+  - `frontend/src/pages/AuxRecordDetail.vue` ownership assignment icin ozel detail bloklari acildi
+  - `frontend/src/pages/AuxRecordDetail.test.js` ownership assignment detail kontrati eklendi
+
+## Faz 9 Kapanis
+- Durum: Tamamlandi
+- Kapsam: `AT Ownership Assignment` veri modeli, quick create/aux edit-delete, Customer 360/Policy 360/Claims gorunurlugu, inline create-edit akislar, aux/detail okunabilirligi ve ilk sayfa testleri.
+- Sonraki aktif faz: Faz 10

@@ -467,6 +467,190 @@ def get_customer_segmentation_report_rows(filters: dict[str, Any] | None = None,
     )
 
 
+def get_communication_operations_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+    normalized = normalize_report_filters(filters)
+    conditions = ["1=1"]
+    values: dict[str, Any] = {}
+
+    if normalized.get("office_branch"):
+        conditions.append("c.office_branch = %(office_branch)s")
+        values["office_branch"] = normalized["office_branch"]
+    if normalized.get("status"):
+        conditions.append("c.status = %(status)s")
+        values["status"] = normalized["status"]
+    if normalized.get("from_date"):
+        conditions.append("ifnull(c.last_run_on, c.scheduled_for) >= %(from_date)s")
+        values["from_date"] = normalized["from_date"]
+    if normalized.get("to_date"):
+        conditions.append("ifnull(c.last_run_on, c.scheduled_for) <= %(to_date)s")
+        values["to_date"] = normalized["to_date"]
+
+    where_clause = " and ".join(conditions)
+    return frappe.db.sql(
+        f"""
+        select
+            c.name,
+            c.campaign_name,
+            c.segment,
+            c.channel,
+            c.office_branch,
+            c.status,
+            c.scheduled_for,
+            c.last_run_on,
+            ifnull(c.matched_customer_count, 0) as matched_customer_count,
+            ifnull(c.sent_count, 0) as sent_count,
+            ifnull(c.skipped_count, 0) as skipped_count,
+            (
+                select count(d.name)
+                from `tabAT Notification Draft` d
+                where d.reference_doctype = 'AT Campaign'
+                  and d.reference_name = c.name
+            ) as draft_count,
+            (
+                select count(o.name)
+                from `tabAT Notification Outbox` o
+                where o.reference_doctype = 'AT Campaign'
+                  and o.reference_name = c.name
+                  and o.status = 'Sent'
+            ) as sent_outbox_count,
+            (
+                select count(o.name)
+                from `tabAT Notification Outbox` o
+                where o.reference_doctype = 'AT Campaign'
+                  and o.reference_name = c.name
+                  and o.status in ('Failed', 'Dead')
+            ) as failed_outbox_count
+        from `tabAT Campaign` c
+        where {where_clause}
+        order by ifnull(c.last_run_on, c.scheduled_for) desc, c.modified desc
+        limit %(limit)s
+        """,
+        {**values, "limit": max(int(limit or 500), 1)},
+        as_dict=True,
+    )
+
+
+def get_reconciliation_operations_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+    normalized = normalize_report_filters(filters)
+    conditions = ["1=1"]
+    values: dict[str, Any] = {}
+
+    if normalized.get("office_branch"):
+        conditions.append("ae.office_branch = %(office_branch)s")
+        values["office_branch"] = normalized["office_branch"]
+    if normalized.get("status"):
+        conditions.append("ri.status = %(status)s")
+        values["status"] = normalized["status"]
+    if normalized.get("from_date"):
+        conditions.append("ifnull(ri.resolved_on, ri.modified) >= %(from_date)s")
+        values["from_date"] = normalized["from_date"]
+    if normalized.get("to_date"):
+        conditions.append("ifnull(ri.resolved_on, ri.modified) <= %(to_date)s")
+        values["to_date"] = normalized["to_date"]
+
+    where_clause = " and ".join(conditions)
+    return frappe.db.sql(
+        f"""
+        select
+            ri.name,
+            ae.office_branch,
+            ri.accounting_entry,
+            ae.source_doctype,
+            ae.source_name,
+            ae.policy,
+            ae.customer,
+            ri.status,
+            ri.mismatch_type,
+            ifnull(ri.difference_try, 0) as difference_try,
+            ri.resolution_action,
+            ri.resolved_on,
+            ifnull(ri.needs_reconciliation, 0) as needs_reconciliation
+        from `tabAT Reconciliation Item` ri
+        left join `tabAT Accounting Entry` ae on ae.name = ri.accounting_entry
+        where {where_clause}
+        order by ifnull(ri.resolved_on, ri.modified) desc, ri.modified desc
+        limit %(limit)s
+        """,
+        {**values, "limit": max(int(limit or 500), 1)},
+        as_dict=True,
+    )
+
+
+def get_claims_operations_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+    normalized = normalize_report_filters(filters)
+    conditions = ["1=1"]
+    values: dict[str, Any] = {}
+
+    if normalized.get("office_branch"):
+        conditions.append("cl.office_branch = %(office_branch)s")
+        values["office_branch"] = normalized["office_branch"]
+    if normalized.get("status"):
+        conditions.append("cl.claim_status = %(status)s")
+        values["status"] = normalized["status"]
+    if normalized.get("branch"):
+        conditions.append("p.branch = %(branch)s")
+        values["branch"] = normalized["branch"]
+    if normalized.get("insurance_company"):
+        conditions.append("p.insurance_company = %(insurance_company)s")
+        values["insurance_company"] = normalized["insurance_company"]
+    if normalized.get("from_date"):
+        conditions.append("cl.reported_date >= %(from_date)s")
+        values["from_date"] = normalized["from_date"]
+    if normalized.get("to_date"):
+        conditions.append("cl.reported_date <= %(to_date)s")
+        values["to_date"] = normalized["to_date"]
+
+    where_clause = " and ".join(conditions)
+    return frappe.db.sql(
+        f"""
+        select
+            cl.name,
+            cl.claim_no,
+            cl.customer,
+            cl.policy,
+            cl.office_branch,
+            p.branch,
+            p.insurance_company,
+            cl.claim_status,
+            cl.assigned_expert,
+            cl.rejection_reason,
+            cl.appeal_status,
+            cl.next_follow_up_on,
+            cl.reported_date,
+            ifnull(cl.estimated_amount, 0) as estimated_amount,
+            ifnull(cl.approved_amount, 0) as approved_amount,
+            ifnull(cl.paid_amount, 0) as paid_amount,
+            (
+                select count(d.name)
+                from `tabAT Notification Draft` d
+                where d.reference_doctype = 'AT Claim'
+                  and d.reference_name = cl.name
+            ) as draft_count,
+            (
+                select count(o.name)
+                from `tabAT Notification Outbox` o
+                where o.reference_doctype = 'AT Claim'
+                  and o.reference_name = cl.name
+                  and o.status = 'Sent'
+            ) as sent_outbox_count,
+            (
+                select count(o.name)
+                from `tabAT Notification Outbox` o
+                where o.reference_doctype = 'AT Claim'
+                  and o.reference_name = cl.name
+                  and o.status in ('Failed', 'Dead')
+            ) as failed_outbox_count
+        from `tabAT Claim` cl
+        left join `tabAT Policy` p on p.name = cl.policy
+        where {where_clause}
+        order by cl.reported_date desc, cl.modified desc
+        limit %(limit)s
+        """,
+        {**values, "limit": max(int(limit or 500), 1)},
+        as_dict=True,
+    )
+
+
 def _as_text(value: Any) -> str | None:
     text = str(value or "").strip()
     return text or None

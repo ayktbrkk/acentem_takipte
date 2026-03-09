@@ -102,3 +102,69 @@ def test_get_customer_segmentation_report_rows_passes_office_branch(monkeypatch)
     assert "loyalty_segment" in captured["query"]
     assert "active_policy_count" in captured["query"]
     assert "cancelled_policy_count" in captured["query"]
+
+
+def test_get_communication_operations_report_rows_passes_office_branch_and_status(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: "BR-IST")
+    monkeypatch.setattr(
+        reporting.frappe.db,
+        "sql",
+        lambda query, values, as_dict=False: captured.update({"query": query, "values": values}) or [],
+    )
+
+    reporting.get_communication_operations_report_rows({"office_branch": "FORBIDDEN", "status": "Completed"})
+
+    assert "c.office_branch = %(office_branch)s" in captured["query"]
+    assert "c.status = %(status)s" in captured["query"]
+    assert captured["values"]["office_branch"] == "BR-IST"
+    assert captured["values"]["status"] == "Completed"
+    assert "draft_count" in captured["query"]
+    assert "sent_outbox_count" in captured["query"]
+
+
+def test_get_reconciliation_operations_report_rows_passes_office_branch_and_status(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: "BR-ANK")
+    monkeypatch.setattr(
+        reporting.frappe.db,
+        "sql",
+        lambda query, values, as_dict=False: captured.update({"query": query, "values": values}) or [],
+    )
+
+    reporting.get_reconciliation_operations_report_rows({"office_branch": "FORBIDDEN", "status": "Open"})
+
+    assert "ae.office_branch = %(office_branch)s" in captured["query"]
+    assert "ri.status = %(status)s" in captured["query"]
+    assert captured["values"]["office_branch"] == "BR-ANK"
+    assert captured["values"]["status"] == "Open"
+    assert "difference_try" in captured["query"]
+    assert "resolution_action" in captured["query"]
+
+
+def test_get_claims_operations_report_rows_passes_claim_filters(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: "BR-IZM")
+    monkeypatch.setattr(
+        reporting.frappe.db,
+        "sql",
+        lambda query, values, as_dict=False: captured.update({"query": query, "values": values}) or [],
+    )
+
+    reporting.get_claims_operations_report_rows(
+        {
+            "office_branch": "FORBIDDEN",
+            "status": "Rejected",
+            "branch": "Kasko",
+            "insurance_company": "ACME",
+        }
+    )
+
+    assert "cl.office_branch = %(office_branch)s" in captured["query"]
+    assert "cl.claim_status = %(status)s" in captured["query"]
+    assert "p.branch = %(branch)s" in captured["query"]
+    assert "p.insurance_company = %(insurance_company)s" in captured["query"]
+    assert captured["values"]["office_branch"] == "BR-IZM"
+    assert captured["values"]["status"] == "Rejected"
+    assert "assigned_expert" in captured["query"]
+    assert "sent_outbox_count" in captured["query"]

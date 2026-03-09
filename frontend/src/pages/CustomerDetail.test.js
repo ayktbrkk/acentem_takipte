@@ -48,11 +48,17 @@ vi.mock("frappe-ui", () => ({
               active_policy_count: 1,
               open_offer_count: 1,
               total_premium: 12500,
+              overdue_installment_count: 1,
+              overdue_installment_amount: 1200,
             },
             portfolio: {
               policies: [{ name: "POL-001", policy_no: "P-100", status: "Aktif", insurance_company: "Anadolu" }],
               offers: [{ name: "OFF-001", status: "Open", insurance_company: "Anadolu" }],
               payments: [{ name: "PAY-001", payment_no: "PAY-1", amount_try: 2500 }],
+              payment_installments: [
+                { name: "PINST-001", payment: "PAY-001", installment_no: 1, installment_count: 3, status: "Overdue", due_date: "2026-03-01", amount_try: 1200 },
+                { name: "PINST-002", payment: "PAY-001", installment_no: 2, installment_count: 3, status: "Scheduled", due_date: "2026-04-01", amount_try: 1300 },
+              ],
               claims: [{ name: "CLM-001", reported_date: "2026-03-01", claim_amount: 1500 }],
               renewals: [{ name: "REN-001", due_date: "2026-04-01", status: "Open", lost_reason_code: "" }],
             },
@@ -64,6 +70,8 @@ vi.mock("frappe-ui", () => ({
               score: 82,
               segment: "Gold",
               claim_risk: "Medium",
+              snapshot_date: "2026-03-09",
+              source_version: "v1",
             },
             cross_sell: {
               related_customers: [
@@ -87,6 +95,23 @@ vi.mock("frappe-ui", () => ({
                 },
               ],
               opportunity_branches: [{ branch: "Saglik", label: "Saglik" }],
+            },
+            operations: {
+              assignments: [
+                {
+                  name: "ASN-001",
+                  source_doctype: "AT Customer",
+                  source_name: "CUST-001",
+                  customer: "CUST-001",
+                  policy: "POL-001",
+                  assigned_to: "agent@example.com",
+                  assignment_role: "Owner",
+                  status: "Open",
+                  priority: "High",
+                  due_date: "2026-03-15",
+                  notes: "Ilk temas",
+                },
+              ],
             },
           };
           data.value = payload;
@@ -249,6 +274,10 @@ describe("CustomerDetail customer 360 integration", () => {
     expect(wrapper.text()).toContain("Sigortalanan Varliklar");
     expect(wrapper.text()).toContain("Ayse Bekir");
     expect(wrapper.text()).toContain("34 ABC 123");
+    expect(wrapper.text()).toContain("Geciken Taksit");
+    expect(wrapper.text()).toContain("Snapshot Tarihi");
+    expect(wrapper.text()).toContain("Kaynak Surumu");
+    expect(wrapper.text()).toContain("v1");
 
     const dialogs = () => wrapper.findAll(".quick-create-dialog-stub");
     const buttonByText = (label) =>
@@ -469,5 +498,68 @@ describe("CustomerDetail customer 360 integration", () => {
       name: "AST-001",
     });
     expect(customer360Reload).toHaveBeenCalledTimes(3);
+  });
+
+  it("renders ownership assignments and prefills assignment dialogs", async () => {
+    const wrapper = mount(CustomerDetail, {
+      props: {
+        name: "CUST-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: true,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+          TimelineActivityList: genericStub,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Atamalar");
+    expect(wrapper.text()).toContain("agent@example.com");
+    expect(wrapper.text()).toContain("2026-03-15");
+
+    const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
+
+    const createButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Yeni Atama"));
+    await createButtons[0].trigger("click");
+
+    const assignmentCreateForm = {};
+    await dialogs[4].vm.triggerBeforeOpen(assignmentCreateForm);
+    expect(assignmentCreateForm).toEqual(
+      expect.objectContaining({
+        source_doctype: "AT Customer",
+        source_name: "CUST-001",
+        customer: "CUST-001",
+      })
+    );
+
+    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Duzenle"));
+    await editButtons[2].trigger("click");
+
+    const assignmentResetForm = vi.fn();
+    await dialogs[5].vm.triggerBeforeOpen({}, assignmentResetForm);
+    expect(assignmentResetForm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        doctype: "AT Ownership Assignment",
+        name: "ASN-001",
+        source_doctype: "AT Customer",
+        source_name: "CUST-001",
+        customer: "CUST-001",
+        policy: "POL-001",
+        assigned_to: "agent@example.com",
+      })
+    );
   });
 });

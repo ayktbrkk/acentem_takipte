@@ -127,12 +127,18 @@ def build_reconciliation_workbench(
     overdue_amount_try = sum(flt(row.amount_try or row.amount or 0) for row in overdue_payment_rows)
     metrics["overdue_collections"] = len(overdue_payment_rows)
     metrics["overdue_amount_try"] = overdue_amount_try
+    commission_preview_rows = _get_commission_accrual_rows(normalized_office_branch)
+    metrics["commission_accrual_count"] = len(commission_preview_rows)
+    metrics["commission_accrual_amount_try"] = sum(flt(row.get("commission_amount_try")) for row in commission_preview_rows)
 
     return {
         "rows": rows,
         "metrics": metrics,
         "collection_preview": {
             "overdue_rows": overdue_payment_rows,
+        },
+        "commission_preview": {
+            "rows": commission_preview_rows,
         },
     }
 
@@ -194,5 +200,30 @@ def _get_overdue_collection_rows(office_branch: str | None) -> list[dict]:
             "office_branch",
         ],
         order_by="due_date asc, modified desc",
+        limit_page_length=10,
+    )
+
+
+def _get_commission_accrual_rows(office_branch: str | None) -> list[dict]:
+    policy_filters: dict[str, Any] = {
+        "status": ["in", ["Active", "Renewal", "Pending Renewal"]],
+        "commission_amount": [">", 0],
+    }
+    if office_branch:
+        policy_filters["office_branch"] = office_branch
+
+    return frappe.get_all(
+        "AT Policy",
+        filters=policy_filters,
+        fields=[
+            "name",
+            "policy_no",
+            "customer",
+            "insurance_company",
+            "status",
+            "commission_amount",
+            "office_branch",
+        ],
+        order_by="commission_amount desc, modified desc",
         limit_page_length=10,
     )

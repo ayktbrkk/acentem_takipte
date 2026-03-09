@@ -102,6 +102,8 @@ scheduler_events = {
         "acentem_takipte.acentem_takipte.tasks.create_renewal_tasks",
         "acentem_takipte.acentem_takipte.tasks.run_stale_renewal_task_job",
         "acentem_takipte.acentem_takipte.tasks.run_payment_due_job",
+        "acentem_takipte.acentem_takipte.tasks.run_due_campaigns_job",
+        "acentem_takipte.acentem_takipte.tasks.run_customer_segment_snapshot_job",
         "acentem_takipte.acentem_takipte.tasks.run_scheduled_reports_job",
         "acentem_takipte.acentem_takipte.tasks.run_accounting_reconciliation_job",
     ]

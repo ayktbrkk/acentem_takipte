@@ -7,6 +7,9 @@ const reportCatalog = {
   policy_list: {
     label: { tr: "Police Listesi", en: "Policy List" },
   },
+  claims_operations: {
+    label: { tr: "Hasar Operasyonlari", en: "Claims Operations" },
+  },
 };
 
 describe("ScheduledReportsManager", () => {
@@ -91,5 +94,28 @@ describe("ScheduledReportsManager", () => {
 
     vi.mocked(window.confirm).mockRestore();
   });
-});
 
+  it("shows branch, company, status and date filters for claims operations", async () => {
+    const wrapper = mount(ScheduledReportsManager, {
+      props: {
+        items: [],
+        loading: false,
+        running: false,
+        locale: "tr",
+        reportCatalog,
+      },
+    });
+
+    const newButton = wrapper.findAll("button").find((button) => button.text() === "Yeni Kural");
+    await newButton?.trigger("click");
+
+    const selects = wrapper.findAll("select");
+    await selects[0].setValue("claims_operations");
+
+    expect(wrapper.text()).toContain("Sigorta Bransi");
+    expect(wrapper.text()).toContain("Sigorta Sirketi");
+    expect(wrapper.text()).toContain("Durum");
+    expect(wrapper.text()).toContain("Baslangic Tarihi");
+    expect(wrapper.text()).toContain("Bitis Tarihi");
+  });
+});

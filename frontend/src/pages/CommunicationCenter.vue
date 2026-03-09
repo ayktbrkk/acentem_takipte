@@ -11,6 +11,36 @@
       >
         <template #actions>
           <QuickCreateLauncher
+            variant="secondary"
+            size="sm"
+            :label="t('quickSegment')"
+            @launch="showSegmentDialog = true"
+          />
+          <QuickCreateLauncher
+            variant="secondary"
+            size="sm"
+            :label="t('quickCampaign')"
+            @launch="showCampaignDialog = true"
+          />
+          <QuickCreateLauncher
+            variant="secondary"
+            size="sm"
+            :label="t('runCampaign')"
+            @launch="showCampaignRunDialog = true"
+          />
+          <QuickCreateLauncher
+            variant="secondary"
+            size="sm"
+            :label="t('previewSegment')"
+            @launch="showSegmentPreviewDialog = true"
+          />
+          <QuickCreateLauncher
+            variant="secondary"
+            size="sm"
+            :label="t('quickCallNote')"
+            @launch="showCallNoteDialog = true"
+          />
+          <QuickCreateLauncher
             v-if="canCreateQuickMessage"
             variant="primary"
             size="sm"
@@ -298,6 +328,184 @@
     </DataTableShell>
 
     <QuickCreateManagedDialog
+      v-model="showSegmentDialog"
+      config-key="segment"
+      :locale="activeLocale"
+      :options-map="communicationQuickOptionsMap"
+      :title-override="t('quickSegment')"
+      :subtitle-override="t('quickSegmentSubtitle')"
+      :show-save-and-open="false"
+      :success-handlers="segmentSuccessHandlers"
+    />
+
+    <QuickCreateManagedDialog
+      v-model="showCampaignDialog"
+      config-key="campaign"
+      :locale="activeLocale"
+      :options-map="communicationQuickOptionsMap"
+      :title-override="t('quickCampaign')"
+      :subtitle-override="t('quickCampaignSubtitle')"
+      :show-save-and-open="false"
+      :success-handlers="campaignSuccessHandlers"
+    />
+
+    <Dialog
+      v-model="showCampaignRunDialog"
+      :options="{
+        title: t('campaignRunTitle'),
+        size: '3xl',
+      }"
+    >
+      <template #body-content>
+        <div class="space-y-4">
+          <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_120px]">
+            <select v-model="campaignRunSelection" class="input" data-testid="campaign-run-select">
+              <option value="">{{ t("selectCampaign") }}</option>
+              <option v-for="option in communicationQuickOptionsMap.campaigns" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <ActionButton
+              variant="primary"
+              size="sm"
+              :disabled="!campaignRunSelection || campaignRunLoading"
+              data-testid="campaign-run-submit"
+              @click="runCampaignExecution"
+            >
+              {{ campaignRunLoading ? t("dispatching") : t("runCampaign") }}
+            </ActionButton>
+          </div>
+
+          <article
+            v-if="campaignRunError"
+            class="surface-card rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-700"
+          >
+            {{ campaignRunError }}
+          </article>
+
+          <article
+            v-else-if="campaignRunResult"
+            class="surface-card rounded-xl border border-slate-200 bg-slate-50/80 p-4"
+          >
+            <div class="grid gap-3 sm:grid-cols-3">
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("createdDrafts") }}</p>
+                <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.created || 0 }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("skippedRows") }}</p>
+                <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.skipped || 0 }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("matchedCustomers") }}</p>
+                <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.matched_customers || 0 }}</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model="showSegmentPreviewDialog"
+      :options="{
+        title: t('segmentPreviewTitle'),
+        size: '4xl',
+      }"
+    >
+      <template #body-content>
+        <div class="space-y-4">
+          <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_140px]">
+            <select v-model="segmentPreviewSegment" class="input" data-testid="segment-preview-select">
+              <option value="">{{ t("selectSegment") }}</option>
+              <option v-for="option in communicationQuickOptionsMap.segments" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <ActionButton
+              variant="primary"
+              size="sm"
+              :disabled="!segmentPreviewSegment || segmentPreviewLoading"
+              data-testid="segment-preview-submit"
+              @click="loadSegmentPreview"
+            >
+              {{ segmentPreviewLoading ? t("loading") : t("previewSegment") }}
+            </ActionButton>
+          </div>
+
+          <article
+            v-if="segmentPreviewError"
+            class="surface-card rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-700"
+          >
+            {{ segmentPreviewError }}
+          </article>
+
+          <article
+            v-else-if="segmentPreviewSummary"
+            class="surface-card rounded-xl border border-slate-200 bg-slate-50/80 p-4"
+          >
+            <div class="grid gap-3 sm:grid-cols-3">
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("matchedCustomers") }}</p>
+                <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.matched_count || 0 }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("previewRows") }}</p>
+                <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.preview_count || 0 }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("hasMore") }}</p>
+                <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.has_more ? t("yes") : t("no") }}</p>
+              </div>
+            </div>
+          </article>
+
+          <div v-if="segmentPreviewRows.length" class="overflow-auto">
+            <table class="at-table">
+              <thead>
+                <tr class="at-table-head-row">
+                  <th class="at-table-head-cell">{{ t("customer") }}</th>
+                  <th class="at-table-head-cell">{{ t("policies") }}</th>
+                  <th class="at-table-head-cell">{{ t("overdueInstallments") }}</th>
+                  <th class="at-table-head-cell">{{ t("renewalWindow") }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in segmentPreviewRows" :key="row.name" class="at-table-row">
+                  <DataTableCell>
+                    <p class="font-medium text-slate-800">{{ row.full_name || row.name }}</p>
+                    <p class="text-xs text-slate-500">{{ row.name }}</p>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <span class="text-slate-700">{{ row.active_policy_count || 0 }}</span>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <span class="text-slate-700">{{ row.has_overdue_installment ? t("yes") : t("no") }}</span>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <span class="text-slate-700">{{ row.in_renewal_window ? t("yes") : t("no") }}</span>
+                  </DataTableCell>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </template>
+    </Dialog>
+
+    <QuickCreateManagedDialog
+      v-model="showCallNoteDialog"
+      config-key="call_note"
+      :locale="activeLocale"
+      :options-map="communicationQuickOptionsMap"
+      :title-override="t('quickCallNote')"
+      :subtitle-override="t('quickCallNoteSubtitle')"
+      :show-save-and-open="false"
+      :before-open="prepareCallNoteDialog"
+      :success-handlers="callNoteSuccessHandlers"
+    />
+
+    <QuickCreateManagedDialog
       v-if="canCreateQuickMessage"
       v-model="showQuickMessageDialog"
       config-key="communication_message"
@@ -317,7 +525,7 @@
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { createResource } from "frappe-ui";
+import { Dialog, createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -347,6 +555,18 @@ const copy = {
     refresh: "Yenile",
     dispatch: "Dagitimi Calistir",
     dispatching: "Calisiyor...",
+    runCampaign: "Kampanyayi Calistir",
+    campaignRunTitle: "Kampanya Calistir",
+    selectCampaign: "Kampanya secin",
+    previewSegment: "Segment Onizleme",
+    segmentPreviewTitle: "Segment Uye Onizleme",
+    selectSegment: "Segment secin",
+    quickSegment: "Segment",
+    quickSegmentSubtitle: "Hedef musteri segmenti olustur",
+    quickCampaign: "Kampanya",
+    quickCampaignSubtitle: "Segmente bagli kampanya olustur",
+    quickCallNote: "Arama Notu",
+    quickCallNoteSubtitle: "Telefon gorusmesini not olarak kaydet",
     quickMessage: "Hizli Iletisim",
     quickMessageSubtitle: "Taslak kaydet veya secili kanal ile hemen gonder",
     saveDraft: "Taslak Kaydet",
@@ -416,6 +636,16 @@ const copy = {
     referenceRenewalTask: "Yenileme",
     referenceAccountingEntry: "Muhasebe",
     referenceReconciliationItem: "Mutabakat",
+    matchedCustomers: "Eslesen Musteriler",
+    createdDrafts: "Uretilen Taslaklar",
+    skippedRows: "Atlanan Kayitlar",
+    previewRows: "Onizleme Satiri",
+    hasMore: "Devami Var",
+    yes: "Evet",
+    no: "Hayir",
+    policies: "Police",
+    overdueInstallments: "Geciken Taksit",
+    renewalWindow: "Yenileme Penceresi",
   },
   en: {
     title: "Communication Center",
@@ -423,6 +653,18 @@ const copy = {
     refresh: "Refresh",
     dispatch: "Run Dispatch",
     dispatching: "Running...",
+    runCampaign: "Run Campaign",
+    campaignRunTitle: "Run Campaign",
+    selectCampaign: "Select campaign",
+    previewSegment: "Preview Segment",
+    segmentPreviewTitle: "Segment Member Preview",
+    selectSegment: "Select segment",
+    quickSegment: "Segment",
+    quickSegmentSubtitle: "Create a target customer segment",
+    quickCampaign: "Campaign",
+    quickCampaignSubtitle: "Create a segment-based campaign",
+    quickCallNote: "Call Note",
+    quickCallNoteSubtitle: "Log a phone conversation as an interaction note",
     quickMessage: "Quick Message",
     quickMessageSubtitle: "Save as draft or send immediately",
     saveDraft: "Save Draft",
@@ -492,6 +734,16 @@ const copy = {
     referenceRenewalTask: "Renewal",
     referenceAccountingEntry: "Accounting",
     referenceReconciliationItem: "Reconciliation",
+    matchedCustomers: "Matched Customers",
+    createdDrafts: "Created Drafts",
+    skippedRows: "Skipped Rows",
+    previewRows: "Preview Rows",
+    hasMore: "Has More",
+    yes: "Yes",
+    no: "No",
+    policies: "Policies",
+    overdueInstallments: "Overdue Installments",
+    renewalWindow: "Renewal Window",
   },
 };
 
@@ -504,8 +756,21 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 const filters = communicationStore.state.filters;
 
 const dispatching = ref(false);
+const showSegmentDialog = ref(false);
+const showCampaignDialog = ref(false);
+const showCampaignRunDialog = ref(false);
+const showSegmentPreviewDialog = ref(false);
+const showCallNoteDialog = ref(false);
 const showQuickMessageDialog = ref(false);
 const operationError = ref("");
+const campaignRunSelection = ref("");
+const campaignRunLoading = ref(false);
+const campaignRunError = ref("");
+const campaignRunResult = ref(null);
+const segmentPreviewSegment = ref("");
+const segmentPreviewLoading = ref(false);
+const segmentPreviewError = ref("");
+const segmentPreviewPayload = ref(null);
 
 const snapshotResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot",
@@ -545,6 +810,56 @@ const communicationQuickCustomerResource = createResource({
     order_by: "modified desc",
     limit_page_length: 500,
   },
+});
+const communicationQuickPolicyResource = createResource({
+  url: "frappe.client.get_list",
+  auto: true,
+  params: {
+    doctype: "AT Policy",
+    fields: ["name", "policy_no", "customer"],
+    filters: buildCustomerQuickFilters(),
+    order_by: "modified desc",
+    limit_page_length: 500,
+  },
+});
+const communicationQuickClaimResource = createResource({
+  url: "frappe.client.get_list",
+  auto: true,
+  params: {
+    doctype: "AT Claim",
+    fields: ["name", "claim_no", "policy", "customer"],
+    filters: buildCustomerQuickFilters(),
+    order_by: "modified desc",
+    limit_page_length: 500,
+  },
+});
+const communicationQuickSegmentResource = createResource({
+  url: "frappe.client.get_list",
+  auto: true,
+  params: {
+    doctype: "AT Segment",
+    fields: ["name", "segment_name", "channel_focus", "status"],
+    filters: buildCustomerQuickFilters(),
+    order_by: "modified desc",
+    limit_page_length: 500,
+  },
+});
+const communicationQuickCampaignResource = createResource({
+  url: "frappe.client.get_list",
+  auto: true,
+  params: {
+    doctype: "AT Campaign",
+    fields: ["name", "campaign_name", "channel", "status"],
+    filters: buildCustomerQuickFilters(),
+    order_by: "modified desc",
+    limit_page_length: 500,
+  },
+});
+const segmentPreviewResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.communication.preview_segment_members",
+});
+const campaignRunResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.communication.execute_campaign",
 });
 
 const snapshotData = computed(() => communicationStore.state.snapshot || {});
@@ -623,6 +938,8 @@ const referenceDoctypeOptions = computed(() => [
   { value: "AT Renewal Task", label: referenceTypeLabel("AT Renewal Task") },
   { value: "AT Accounting Entry", label: referenceTypeLabel("AT Accounting Entry") },
   { value: "AT Reconciliation Item", label: referenceTypeLabel("AT Reconciliation Item") },
+  { value: "AT Segment", label: referenceTypeLabel("AT Segment") },
+  { value: "AT Campaign", label: referenceTypeLabel("AT Campaign") },
 ]);
 const communicationQuickOptionsMap = computed(() => ({
   notificationTemplates: (communicationQuickTemplateResource.data || []).map((row) => ({
@@ -633,6 +950,22 @@ const communicationQuickOptionsMap = computed(() => ({
     value: row.name,
     label: row.full_name || row.name,
   })),
+  policies: (communicationQuickPolicyResource.data || []).map((row) => ({
+    value: row.name,
+    label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
+  })),
+  claims: (communicationQuickClaimResource.data || []).map((row) => ({
+    value: row.name,
+    label: `${row.claim_no || row.name}${row.policy ? ` - ${row.policy}` : ""}`,
+  })),
+  segments: (communicationQuickSegmentResource.data || []).map((row) => ({
+    value: row.name,
+    label: `${row.segment_name || row.name}${row.channel_focus ? ` - ${channelLabel(row.channel_focus)}` : ""}`,
+  })),
+  campaigns: (communicationQuickCampaignResource.data || []).map((row) => ({
+    value: row.name,
+    label: `${row.campaign_name || row.name}${row.channel ? ` - ${channelLabel(row.channel)}` : ""}`,
+  })),
 }));
 const canCreateQuickMessage = computed(() => authStore.can(["quickCreate", "communication_message"]));
 const canSendDraftNowAction = computed(() => authStore.can(["actions", "communication", "sendDraftNow"]));
@@ -642,10 +975,21 @@ const quickMessageDialogLabels = computed(() => ({
   save: t("saveDraft"),
   saveAndOpen: t("sendImmediately"),
 }));
+const segmentPreviewSummary = computed(() => segmentPreviewPayload.value?.summary || null);
+const segmentPreviewRows = computed(() => segmentPreviewPayload.value?.customers || []);
 const quickMessageSuccessHandlers = {
   communication_snapshot: async () => {
     await reloadSnapshot();
   },
+};
+const callNoteSuccessHandlers = {
+  "call-notes-list": async () => {},
+};
+const segmentSuccessHandlers = {
+  "segments-list": async () => {},
+};
+const campaignSuccessHandlers = {
+  "campaigns-list": async () => {},
 };
 
 const statusCards = computed(() =>
@@ -750,7 +1094,29 @@ function reloadQuickCustomers() {
     ...communicationQuickCustomerResource.params,
     filters: buildCustomerQuickFilters(),
   };
-  return communicationQuickCustomerResource.reload();
+  communicationQuickPolicyResource.params = {
+    ...communicationQuickPolicyResource.params,
+    filters: buildCustomerQuickFilters(),
+  };
+  communicationQuickClaimResource.params = {
+    ...communicationQuickClaimResource.params,
+    filters: buildCustomerQuickFilters(),
+  };
+  communicationQuickSegmentResource.params = {
+    ...communicationQuickSegmentResource.params,
+    filters: buildCustomerQuickFilters(),
+  };
+  communicationQuickCampaignResource.params = {
+    ...communicationQuickCampaignResource.params,
+    filters: buildCustomerQuickFilters(),
+  };
+  return Promise.all([
+    communicationQuickCustomerResource.reload(),
+    communicationQuickPolicyResource.reload(),
+    communicationQuickClaimResource.reload(),
+    communicationQuickSegmentResource.reload(),
+    communicationQuickCampaignResource.reload(),
+  ]);
 }
 function applySnapshotFilters() {
   return reloadSnapshot();
@@ -911,6 +1277,54 @@ async function prepareQuickMessageDialog({ form }) {
   if (filters.referenceDoctype && !form.reference_doctype) form.reference_doctype = filters.referenceDoctype;
   if (filters.referenceName && !form.reference_name) form.reference_name = filters.referenceName;
   if (!form.language) form.language = activeLocale.value === "tr" ? "tr" : "en";
+}
+
+async function loadSegmentPreview() {
+  if (!segmentPreviewSegment.value) return;
+  segmentPreviewLoading.value = true;
+  segmentPreviewError.value = "";
+  try {
+    const result = await segmentPreviewResource.submit({
+      segment_name: segmentPreviewSegment.value,
+      limit: 20,
+    });
+    segmentPreviewPayload.value = result || null;
+  } catch (error) {
+    segmentPreviewPayload.value = null;
+    segmentPreviewError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedRead")
+      : error?.message || error?.exc || t("loadErrorTitle");
+  } finally {
+    segmentPreviewLoading.value = false;
+  }
+}
+
+async function runCampaignExecution() {
+  if (!campaignRunSelection.value) return;
+  campaignRunLoading.value = true;
+  campaignRunError.value = "";
+  try {
+    const result = await campaignRunResource.submit({
+      campaign_name: campaignRunSelection.value,
+      limit: 200,
+    });
+    campaignRunResult.value = result || null;
+    await reloadSnapshot();
+  } catch (error) {
+    campaignRunResult.value = null;
+    campaignRunError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedAction")
+      : error?.message || error?.exc || t("loadErrorTitle");
+  } finally {
+    campaignRunLoading.value = false;
+  }
+}
+
+async function prepareCallNoteDialog({ form }) {
+  if (filters.customer && !form.customer) form.customer = filters.customer;
+  if (filters.referenceDoctype === "AT Policy" && filters.referenceName && !form.policy) form.policy = filters.referenceName;
+  if (filters.referenceDoctype === "AT Claim" && filters.referenceName && !form.claim) form.claim = filters.referenceName;
+  if (!form.note_at) form.note_at = new Date().toISOString().slice(0, 16);
 }
 
 function hasRouteContextQuery() {

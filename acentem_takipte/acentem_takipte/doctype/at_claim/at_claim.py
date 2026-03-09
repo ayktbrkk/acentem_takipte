@@ -26,6 +26,8 @@ class ATClaim(Document):
         if self.policy and not self.customer:
             self.customer = frappe.db.get_value("AT Policy", self.policy, "customer")
 
+        self._validate_operational_fields()
+
         incident_date = getdate(self.incident_date) if self.incident_date else None
         reported_date = getdate(self.reported_date) if self.reported_date else None
         if incident_date and reported_date and incident_date > reported_date:
@@ -58,6 +60,22 @@ class ATClaim(Document):
         }:
             self.claim_status = ATClaimStatus.PAID
 
+    def _validate_operational_fields(self):
+        self.rejection_reason = (self.rejection_reason or "").strip()
+        self.appeal_status = (self.appeal_status or "").strip()
+
+        if self.claim_status == ATClaimStatus.REJECTED and not self.rejection_reason:
+            frappe.throw(_("Rejection reason is required when claim status is Rejected."))
+
+        if self.appeal_status and self.claim_status != ATClaimStatus.REJECTED:
+            frappe.throw(_("Appeal status can only be set for rejected claims."))
+
+        if self.next_follow_up_on and self.reported_date:
+            next_follow_up_on = getdate(self.next_follow_up_on)
+            reported_date = getdate(self.reported_date)
+            if next_follow_up_on and reported_date and next_follow_up_on < reported_date:
+                frappe.throw(_("Next follow up date cannot be earlier than reported date."))
+
     def on_update(self):
         if not self.has_value_changed("claim_status"):
             return
@@ -77,6 +95,9 @@ class ATClaim(Document):
                     "claim": self.name,
                     "claim_status": self.claim_status,
                     "policy": self.policy,
+                    "rejection_reason": self.rejection_reason,
+                    "appeal_status": self.appeal_status,
+                    "next_follow_up_on": self.next_follow_up_on,
                     "approved_amount": self.approved_amount,
                     "paid_amount": self.paid_amount,
                 },

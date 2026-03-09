@@ -62,6 +62,21 @@ def get_customer_segmentation_report(filters: dict | None = None, limit: int = 5
 
 
 @frappe.whitelist()
+def get_communication_operations_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("communication_operations", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_reconciliation_operations_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("reconciliation_operations", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_claims_operations_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("claims_operations", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
 def export_policy_list_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
     _export_report_payload("policy_list", filters=filters, export_format=export_format, limit=limit)
 
@@ -89,6 +104,21 @@ def export_agent_performance_report(filters: dict | None = None, export_format: 
 @frappe.whitelist()
 def export_customer_segmentation_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
     _export_report_payload("customer_segmentation", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_communication_operations_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("communication_operations", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_reconciliation_operations_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("reconciliation_operations", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_claims_operations_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("claims_operations", filters=filters, export_format=export_format, limit=limit)
 
 
 @frappe.whitelist()

@@ -8,8 +8,12 @@
   "policy",
   "customer",
   "office_branch",
+  "assigned_expert",
   "claim_type",
   "claim_status",
+  "rejection_reason",
+  "appeal_status",
+  "next_follow_up_on",
   "incident_date",
   "reported_date",
   "currency",
@@ -47,6 +51,12 @@
    "options": "AT Office Branch"
   },
   {
+   "fieldname": "assigned_expert",
+   "fieldtype": "Link",
+   "label": "Assigned Expert",
+   "options": "User"
+  },
+  {
    "default": "Damage",
    "fieldname": "claim_type",
    "fieldtype": "Select",
@@ -61,6 +71,22 @@
    "label": "Claim Status",
    "options": "Draft\nOpen\nUnder Review\nApproved\nRejected\nPaid\nClosed",
    "reqd": 1
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason"
+  },
+  {
+   "fieldname": "appeal_status",
+   "fieldtype": "Select",
+   "label": "Appeal Status",
+   "options": "\nNo Appeal\nAppeal Pending\nAppeal Accepted\nAppeal Rejected"
+  },
+  {
+   "fieldname": "next_follow_up_on",
+   "fieldtype": "Date",
+   "label": "Next Follow Up On"
   },
   {
    "fieldname": "incident_date",

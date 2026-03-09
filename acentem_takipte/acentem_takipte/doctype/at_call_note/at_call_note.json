@@ -1,0 +1,117 @@
+{
+ "actions": [],
+ "autoname": "format:AT-CALL-.YYYY.-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "policy",
+  "claim",
+  "office_branch",
+  "channel",
+  "direction",
+  "call_status",
+  "call_outcome",
+  "note_at",
+  "next_follow_up_on",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy"
+  },
+  {
+   "fieldname": "claim",
+   "fieldtype": "Link",
+   "label": "Claim",
+   "options": "AT Claim"
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
+  },
+  {
+   "default": "Phone Call",
+   "fieldname": "channel",
+   "fieldtype": "Select",
+   "label": "Channel",
+   "options": "Phone Call\nWhatsApp Call\nVideo Call\nOther",
+   "reqd": 1
+  },
+  {
+   "default": "Outbound",
+   "fieldname": "direction",
+   "fieldtype": "Select",
+   "label": "Direction",
+   "options": "Inbound\nOutbound",
+   "reqd": 1
+  },
+  {
+   "default": "Completed",
+   "fieldname": "call_status",
+   "fieldtype": "Select",
+   "label": "Call Status",
+   "options": "Planned\nCompleted\nMissed\nNo Answer\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "call_outcome",
+   "fieldtype": "Data",
+   "label": "Call Outcome"
+  },
+  {
+   "default": "Now",
+   "fieldname": "note_at",
+   "fieldtype": "Datetime",
+   "label": "Note At",
+   "reqd": 1
+  },
+  {
+   "fieldname": "next_follow_up_on",
+   "fieldtype": "Date",
+   "label": "Next Follow Up On"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Kullanýcý Notu",
+   "description": "Kullanýcý tarafýndan eklenen serbest metin."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Call Note",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+
+

@@ -13,6 +13,8 @@ from acentem_takipte.acentem_takipte.renewal.pipeline import (
     run_renewal_task_creation,
     run_stale_renewal_task_remediation,
 )
+from acentem_takipte.acentem_takipte.services.campaigns import execute_due_campaigns
+from acentem_takipte.acentem_takipte.services.customer_segments import refresh_due_customer_segment_snapshots
 from acentem_takipte.acentem_takipte.services.payments import build_payment_reminder_payload
 from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_scheduled_reports
 from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
@@ -141,6 +143,40 @@ def run_scheduled_reports_job(frequency: str = "daily", limit: int = 10) -> dict
     )
 
 
+def run_due_campaigns_job(limit: int = 25, member_limit: int = 200) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    safe_member_limit = max(cint(member_limit), 1)
+    job = frappe.enqueue(
+        "acentem_takipte.acentem_takipte.tasks._run_due_campaigns_logic",
+        limit=safe_limit,
+        member_limit=safe_member_limit,
+        queue="long",
+        timeout=1500,
+    )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.acentem_takipte.tasks._run_due_campaigns_logic",
+        limit=safe_limit,
+    )
+
+
+def run_customer_segment_snapshot_job(limit: int = 250) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    job = frappe.enqueue(
+        "acentem_takipte.acentem_takipte.tasks._run_customer_segment_snapshot_logic",
+        limit=safe_limit,
+        queue="long",
+        timeout=1500,
+    )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.acentem_takipte.tasks._run_customer_segment_snapshot_logic",
+        limit=safe_limit,
+    )
+
+
 def _run_notification_queue_logic(limit: int = 120) -> dict[str, dict[str, int]]:
     queued = queue_notification_drafts(limit=limit, include_failed=True)
     dispatched = process_notification_queue(limit=limit)
@@ -230,6 +266,14 @@ def _run_scheduled_reports_logic(frequency: str = "daily", limit: int = 10) -> d
     summary["outbox_dead"] = 0
     summary["outbox_skipped"] = fanout["skipped"]
     return summary
+
+
+def _run_due_campaigns_logic(limit: int = 25, member_limit: int = 200) -> dict[str, Any]:
+    return execute_due_campaigns(limit=limit, member_limit=member_limit)
+
+
+def _run_customer_segment_snapshot_logic(limit: int = 250) -> dict[str, Any]:
+    return refresh_due_customer_segment_snapshots(limit=limit)
 
 
 def _enqueue_outbox_dispatch_jobs(outbox_names: list[str]) -> dict[str, int]:
