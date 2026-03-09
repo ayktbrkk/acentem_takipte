@@ -191,7 +191,7 @@
       v-if="auxQuickCreate && canLaunchAuxQuickCreate"
       v-model="showAuxQuickCreateDialog"
       :config-key="auxQuickCreate.registryKey"
-      :locale="sessionState.locale"
+      :locale="activeLocale"
       :options-map="auxQuickOptionsMap"
       :show-save-and-open="auxQuickCreate.showSaveAndOpen !== false"
       :before-open="prepareAuxQuickCreateDialog"
@@ -202,10 +202,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { hasSessionCapability, sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
 import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
@@ -236,6 +237,8 @@ const props = defineProps({
 });
 
 const router = useRouter();
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
 const config = getAuxWorkbenchConfig(props.screenKey);
 
 if (!config) {
@@ -318,14 +321,16 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
 function localize(v) {
   if (!v) return "";
   if (typeof v === "string") return v;
-  return v[sessionState.locale] || v.en || v.tr || "";
+  return v[activeLocale.value] || v.en || v.tr || "";
 }
+
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const draft = reactive({ query: "", sort: config.defaultSort || "modified desc", pageLength: 20 });
 const filters = reactive({ query: "", sort: config.defaultSort || "modified desc" });
@@ -336,7 +341,7 @@ for (const fd of config.filterDefs || []) {
 
 const pagination = reactive({ page: 1, pageLength: 20, total: 0 });
 const loadError = reactive({ text: "" });
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
 const PRESET_STORAGE_KEY = `at:aux:${config.key}:preset`;
 const PRESET_LIST_STORAGE_KEY = `at:aux:${config.key}:preset-list`;
@@ -430,20 +435,28 @@ const auxQuickAccountingEntryResource = createResource({
   },
 });
 
+const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
+  "AT Renewal Task",
+  "AT Accounting Entry",
+  "AT Notification Draft",
+  "AT Notification Outbox",
+]);
+const OFFICE_BRANCH_LOOKUP_DOCTYPES = new Set(["AT Customer", "AT Policy", "AT Accounting Entry"]);
+
 const rows = computed(() => listResource.data || []);
 const isLoading = computed(() => Boolean(listResource.loading || countResource.loading));
 const auxQuickCreate = computed(() => config.quickCreate || null);
 const canLaunchAuxQuickCreate = computed(() => {
   const registryKey = auxQuickCreate.value?.registryKey;
   if (!registryKey) return false;
-  return hasSessionCapability(["quickCreate", registryKey]);
+  return authStore.can(["quickCreate", registryKey]);
 });
 const toolbarActions = computed(() => (Array.isArray(config.toolbarActions) ? config.toolbarActions : []));
 const visibleToolbarActions = computed(() =>
   toolbarActions.value.filter((action) => {
     const capabilityPath = action?.capabilityPath;
     if (!capabilityPath) return true;
-    return hasSessionCapability(capabilityPath);
+    return authStore.can(capabilityPath);
   })
 );
 const totalPages = computed(() => Math.max(1, Math.ceil((pagination.total || 0) / (pagination.pageLength || 1))));
@@ -521,7 +534,7 @@ function label(kind) {
 function sortLabel(orderBy) {
   const [field, dir] = String(orderBy || "").split(/\s+/);
   const base = fieldLabel(field);
-  const suffix = String(dir || "").toLowerCase() === "asc" ? (sessionState.locale === "tr" ? "artan" : "asc") : (sessionState.locale === "tr" ? "azalan" : "desc");
+  const suffix = String(dir || "").toLowerCase() === "asc" ? (activeLocale.value === "tr" ? "artan" : "asc") : (activeLocale.value === "tr" ? "azalan" : "desc");
   return `${base} (${suffix})`;
 }
 
@@ -536,10 +549,10 @@ function fieldLabel(field) {
 }
 
 function optionLabel(fd, opt) {
-  if (opt === "") return sessionState.locale === "tr" ? "Tum" : "All";
+  if (opt === "") return activeLocale.value === "tr" ? "Tum" : "All";
   if (fd.field === "is_active") {
-    if (String(opt) === "1") return sessionState.locale === "tr" ? "Aktif" : "Active";
-    if (String(opt) === "0") return sessionState.locale === "tr" ? "Pasif" : "Inactive";
+    if (String(opt) === "1") return activeLocale.value === "tr" ? "Aktif" : "Active";
+    if (String(opt) === "0") return activeLocale.value === "tr" ? "Pasif" : "Inactive";
   }
   return String(opt);
 }
@@ -565,28 +578,28 @@ function formatField(value, field) {
   if (value == null || value === "") return "-";
   if (isFieldType(field, "bool")) {
     const active = value === true || String(value) === "1";
-    return active ? (sessionState.locale === "tr" ? "Evet" : "Yes") : (sessionState.locale === "tr" ? "Hayir" : "No");
+    return active ? (activeLocale.value === "tr" ? "Evet" : "Yes") : (activeLocale.value === "tr" ? "Hayir" : "No");
   }
   if (isFieldType(field, "currency")) {
     const n = Number(value);
     if (!Number.isFinite(n)) return String(value);
-    return new Intl.NumberFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(n);
+    return new Intl.NumberFormat(localeCode.value, { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(n);
   }
   if (isFieldType(field, "number")) {
     const n = Number(value);
-    return Number.isFinite(n) ? new Intl.NumberFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US").format(n) : String(value);
+    return Number.isFinite(n) ? new Intl.NumberFormat(localeCode.value).format(n) : String(value);
   }
   if (isFieldType(field, "date")) {
-    try { return new Intl.DateTimeFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { dateStyle: "short" }).format(new Date(value)); } catch { return String(value); }
+    try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short" }).format(new Date(value)); } catch { return String(value); }
   }
   if (isFieldType(field, "dateTime")) {
-    try { return new Intl.DateTimeFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); } catch { return String(value); }
+    try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); } catch { return String(value); }
   }
   if (["modified", "creation", "resolved_on", "sent_at", "next_retry_on", "last_attempt_on"].includes(field)) {
-    try { return new Intl.DateTimeFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
+    try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
   }
   if (["due_date", "renewal_date", "policy_end_date"].includes(field)) {
-    try { return new Intl.DateTimeFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { dateStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
+    try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
   }
   return String(value);
 }
@@ -610,6 +623,10 @@ function buildOrFilters() {
 
 function buildFilters() {
   const out = {};
+  const officeBranch = branchStore.requestBranch || "";
+  if (officeBranch && OFFICE_BRANCH_FILTER_DOCTYPES.has(config.doctype)) {
+    out.office_branch = officeBranch;
+  }
   for (const fd of config.filterDefs || []) {
     const raw = draftToAppliedValue(filters[fd.key]);
     if (raw === "") continue;
@@ -619,6 +636,14 @@ function buildFilters() {
     else out[fd.field] = raw;
   }
   return out;
+}
+
+function buildOfficeBranchLookupFilters(doctype) {
+  const officeBranch = branchStore.requestBranch || "";
+  if (!officeBranch || !OFFICE_BRANCH_LOOKUP_DOCTYPES.has(String(doctype || "").trim())) {
+    return {};
+  }
+  return { office_branch: officeBranch };
 }
 
 function draftToAppliedValue(v) {
@@ -725,6 +750,18 @@ function nextPage() {
 async function ensureAuxQuickOptionSources() {
   const registryKey = auxQuickCreate.value?.registryKey;
   if (!registryKey) return;
+  auxQuickCustomerResource.params = {
+    ...auxQuickCustomerResource.params,
+    filters: buildOfficeBranchLookupFilters("AT Customer"),
+  };
+  auxQuickPolicyResource.params = {
+    ...auxQuickPolicyResource.params,
+    filters: buildOfficeBranchLookupFilters("AT Policy"),
+  };
+  auxQuickAccountingEntryResource.params = {
+    ...auxQuickAccountingEntryResource.params,
+    filters: buildOfficeBranchLookupFilters("AT Accounting Entry"),
+  };
   if (["renewal_task", "notification_draft", "communication_message", "accounting_entry"].includes(registryKey)) {
     await Promise.allSettled([auxQuickCustomerResource.reload(), auxQuickPolicyResource.reload()]);
   }
@@ -786,7 +823,7 @@ async function runRowQuickAction(rowName, resource, payloadBuilder) {
 function canSendDraftNowRow(row) {
   return (
     config.key === "notification-drafts" &&
-    hasSessionCapability(["actions", "communication", "sendDraftNow"]) &&
+    authStore.can(["actions", "communication", "sendDraftNow"]) &&
     row?.name &&
     row?.status !== "Sent"
   );
@@ -794,7 +831,7 @@ function canSendDraftNowRow(row) {
 function canRetryOutboxRow(row) {
   return (
     config.key === "notification-outbox" &&
-    hasSessionCapability(["actions", "communication", "retryOutbox"]) &&
+    authStore.can(["actions", "communication", "retryOutbox"]) &&
     row?.name &&
     ["Failed", "Dead"].includes(String(row.status || ""))
   );
@@ -802,21 +839,21 @@ function canRetryOutboxRow(row) {
 function canRequeueOutboxRow(row) {
   return (
     config.key === "notification-outbox" &&
-    hasSessionCapability(["actions", "communication", "requeueOutbox"]) &&
+    authStore.can(["actions", "communication", "requeueOutbox"]) &&
     row?.name &&
     ["Queued", "Processing"].includes(String(row.status || ""))
   );
 }
 async function sendDraftNowRow(row) {
-  if (!hasSessionCapability(["actions", "communication", "sendDraftNow"])) return;
+  if (!authStore.can(["actions", "communication", "sendDraftNow"])) return;
   await runRowQuickAction(row?.name, sendDraftNowRowResource, (name) => ({ draft_name: name }));
 }
 async function retryOutboxRow(row) {
-  if (!hasSessionCapability(["actions", "communication", "retryOutbox"])) return;
+  if (!authStore.can(["actions", "communication", "retryOutbox"])) return;
   await runRowQuickAction(row?.name, retryOutboxRowResource, (name) => ({ outbox_name: name }));
 }
 async function requeueOutboxRow(row) {
-  if (!hasSessionCapability(["actions", "communication", "requeueOutbox"])) return;
+  if (!authStore.can(["actions", "communication", "requeueOutbox"])) return;
   await runRowQuickAction(row?.name, requeueOutboxRowResource, (name) => ({ outbox_name: name }));
 }
 
@@ -835,7 +872,7 @@ function openPanel(row) {
 
 function runToolbarAction(action) {
   if (!action || typeof action !== "object") return;
-  if (action.capabilityPath && !hasSessionCapability(action.capabilityPath)) return;
+  if (action.capabilityPath && !authStore.can(action.capabilityPath)) return;
 
   if (action.type === "route" || action.routeName) {
     router.push({
@@ -974,4 +1011,12 @@ onMounted(() => {
   refreshList();
   void hydratePresetStateFromServer();
 });
+
+watch(
+  () => branchStore.selected,
+  () => {
+    pagination.page = 1;
+    void refreshList();
+  }
+);
 </script>

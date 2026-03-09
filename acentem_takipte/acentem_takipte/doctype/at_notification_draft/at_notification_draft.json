@@ -8,13 +8,16 @@
   "event_key",
   "channel",
   "language",
+  "provider_template_name",
   "customer",
+  "office_branch",
   "recipient",
   "reference_doctype",
   "reference_name",
   "outbox_record",
   "subject",
   "body",
+  "template_components_json",
   "status",
   "error_message",
   "sent_at"
@@ -38,7 +41,7 @@
    "fieldname": "channel",
    "fieldtype": "Select",
    "label": "Channel",
-   "options": "SMS\nEmail",
+   "options": "SMS\nEmail\nWHATSAPP",
    "reqd": 1
   },
   {
@@ -49,10 +52,21 @@
    "reqd": 1
   },
   {
+   "fieldname": "provider_template_name",
+   "fieldtype": "Data",
+   "label": "Provider Template Name"
+  },
+  {
    "fieldname": "customer",
    "fieldtype": "Link",
    "label": "Customer",
    "options": "AT Customer"
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "fieldname": "recipient",
@@ -88,6 +102,11 @@
    "fieldtype": "Long Text",
    "label": "Body",
    "reqd": 1
+  },
+  {
+   "fieldname": "template_components_json",
+   "fieldtype": "Long Text",
+   "label": "Template Components JSON"
   },
   {
    "default": "Draft",

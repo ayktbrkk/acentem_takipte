@@ -33,6 +33,27 @@ class TestAccountingReconciliation(IntegrationTestCase):
         finally:
             frappe.session.user = previous_user
 
+    def test_accounting_mutation_access_checks_action_specific_doctype_permissions(self):
+        with patch.object(accounting_api, "assert_authenticated", return_value="manager@example.com"):
+            with patch.object(accounting_api, "assert_post_request") as post_mock:
+                with patch.object(accounting_api, "assert_roles") as roles_mock:
+                    with patch.object(accounting_api, "assert_doctype_permission") as doctype_mock:
+                        with patch.object(accounting_api, "audit_admin_action") as audit_mock:
+                            accounting_api._assert_accounting_mutation_access(
+                                "api.accounting.run_sync",
+                                details={"limit": 10},
+                                permission_targets=accounting_api.ACCOUNTING_MUTATION_DOCTYPES["run_sync"],
+                            )
+
+        post_mock.assert_called_once()
+        roles_mock.assert_called_once()
+        doctype_mock.assert_called_once_with(
+            "AT Accounting Entry",
+            "write",
+            "You do not have permission to run accounting operations for AT Accounting Entry.",
+        )
+        audit_mock.assert_called_once_with("api.accounting.run_sync", {"limit": 10})
+
     def test_policy_sync_and_reconciliation_resolution(self):
         deps = _create_dependencies()
         policy = frappe.get_doc(

@@ -16,6 +16,16 @@
       </div>
 
       <div class="flex w-full items-center justify-end gap-2 md:w-auto md:gap-3">
+        <OfficeBranchSelect v-if="authStore.officeBranches.length || authStore.canAccessAllOfficeBranches" />
+
+        <div
+          v-if="branchScopeLabel"
+          class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-right"
+        >
+          <p class="text-[11px] text-sky-700">{{ t("scope") }}</p>
+          <p class="max-w-[200px] truncate text-xs font-semibold text-sky-900">{{ branchScopeLabel }}</p>
+        </div>
+
         <button
           class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
           type="button"
@@ -23,11 +33,6 @@
         >
           {{ localeLabel }}
         </button>
-
-        <div class="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-right sm:block">
-          <p class="text-[11px] text-slate-500">{{ branchCaption }}</p>
-          <p class="text-xs font-semibold text-slate-800">{{ branchLabel }}</p>
-        </div>
 
         <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-right">
           <p class="text-[11px] text-slate-500">{{ t("user") }}</p>
@@ -44,55 +49,69 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { createResource } from "frappe-ui";
 
-import { sessionState, setPreferredLocale } from "../state/session";
+import OfficeBranchSelect from "./app-shell/OfficeBranchSelect.vue";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
 
 defineEmits(["toggle-sidebar"]);
 
 const route = useRoute();
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
 
 const copy = {
   tr: {
     menu: "Menu",
     user: "Kullanici",
-    allBranches: "Tum Subeler",
-    branch: "Sube",
     defaultPage: "Pano",
     defaultSection: "Acentem Takipte",
+    scope: "Kapsam",
+    allBranches: "Tum Subeler",
   },
   en: {
     menu: "Menu",
     user: "User",
-    allBranches: "All Branches",
-    branch: "Branch",
     defaultPage: "Dashboard",
     defaultSection: "Acentem Takipte",
+    scope: "Scope",
+    allBranches: "All Branches",
   },
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[authStore.locale]?.[key] || copy.en[key] || key;
 }
 
-const branchLabel = computed(() => sessionState.branch || t("allBranches"));
-const branchCaption = computed(() => t("branch"));
 const pageTitle = computed(() => {
   const title = route.meta?.title;
   if (title && typeof title === "object") {
-    return title[sessionState.locale] || title.en || t("defaultPage");
+    return title[authStore.locale] || title.en || t("defaultPage");
   }
   return title || t("defaultPage");
 });
 const sectionLabel = computed(() => {
   const section = route.meta?.section;
   if (section && typeof section === "object") {
-    return section[sessionState.locale] || section.en || t("defaultSection");
+    return section[authStore.locale] || section.en || t("defaultSection");
   }
   return section || t("defaultSection");
 });
-const localeLabel = computed(() => (sessionState.locale === "tr" ? "TR" : "EN"));
-const displayUser = computed(() => sessionState.user || sessionState.userId || t("user"));
-const displayUserId = computed(() => sessionState.userId || "");
+const localeLabel = computed(() => (authStore.locale === "tr" ? "TR" : "EN"));
+const displayUser = computed(() => authStore.user || authStore.userId || t("user"));
+const displayUserId = computed(() => authStore.userId || "");
 const showUserId = computed(() => Boolean(displayUserId.value && displayUserId.value !== displayUser.value));
+const branchScopeLabel = computed(() => {
+  if (branchStore.canAccessAll && !branchStore.requestBranch) {
+    return t("allBranches");
+  }
+
+  return (
+    branchStore.activeBranch?.label ||
+    branchStore.options.find((option) => option.value === branchStore.requestBranch)?.label ||
+    branchStore.requestBranch ||
+    ""
+  );
+});
 
 const setLocaleResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.session.set_session_locale",
@@ -115,8 +134,8 @@ async function persistLocaleViaFetch(locale) {
 }
 
 async function toggleLocale() {
-  const next = sessionState.locale === "tr" ? "en" : "tr";
-  setPreferredLocale(next);
+  const next = authStore.locale === "tr" ? "en" : "tr";
+  authStore.setLocale(next);
 
   let payload = null;
 
@@ -136,14 +155,9 @@ async function toggleLocale() {
   }
 
   if (payload?.locale) {
-    setPreferredLocale(payload.locale);
+    authStore.setLocale(payload.locale);
   }
-  if (payload?.full_name) {
-    sessionState.user = payload.full_name;
-  }
-  if (payload?.user) {
-    sessionState.userId = payload.user;
-  }
+  if (payload && typeof payload === "object") authStore.applyContext(payload);
 }
 
 </script>

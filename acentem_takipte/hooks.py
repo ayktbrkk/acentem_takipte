@@ -9,6 +9,14 @@ app_license = "MIT"
 app_include_js = []
 app_include_css = []
 
+role_home_page = {
+    "Manager": "/at",
+    "Agent": "/at",
+    "Accountant": "/at",
+    "System Manager": "/at",
+    "Administrator": "/at",
+}
+
 doctype_js = {
     "AT Lead": "public/js/at_lead.js",
     "AT Offer": "public/js/at_offer.js",
@@ -40,10 +48,30 @@ website_route_rules = [
 
 permission_query_conditions = {
     "AT Customer": "acentem_takipte.acentem_takipte.doctype.at_customer.at_customer.get_permission_query_conditions",
+    "AT Lead": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_lead_permission_query_conditions",
+    "AT Offer": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_offer_permission_query_conditions",
+    "AT Policy": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_policy_permission_query_conditions",
+    "AT Payment": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_payment_permission_query_conditions",
+    "AT Claim": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_claim_permission_query_conditions",
+    "AT Renewal Task": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_renewal_task_permission_query_conditions",
+    "AT Accounting Entry": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_accounting_entry_permission_query_conditions",
+    "AT Reconciliation Item": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_reconciliation_item_permission_query_conditions",
+    "AT Notification Draft": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_notification_draft_permission_query_conditions",
+    "AT Notification Outbox": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_notification_outbox_permission_query_conditions",
 }
 
 has_permission = {
     "AT Customer": "acentem_takipte.acentem_takipte.doctype.at_customer.at_customer.has_permission",
+    "AT Lead": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_lead_permission",
+    "AT Offer": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_offer_permission",
+    "AT Policy": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_policy_permission",
+    "AT Payment": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_payment_permission",
+    "AT Claim": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_claim_permission",
+    "AT Renewal Task": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_renewal_task_permission",
+    "AT Accounting Entry": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_accounting_entry_permission",
+    "AT Reconciliation Item": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_reconciliation_item_permission",
+    "AT Notification Draft": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_notification_draft_permission",
+    "AT Notification Outbox": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_notification_outbox_permission",
 }
 
 doc_events = {
@@ -72,6 +100,9 @@ scheduler_events = {
     },
     "daily": [
         "acentem_takipte.acentem_takipte.tasks.create_renewal_tasks",
+        "acentem_takipte.acentem_takipte.tasks.run_stale_renewal_task_job",
+        "acentem_takipte.acentem_takipte.tasks.run_payment_due_job",
+        "acentem_takipte.acentem_takipte.tasks.run_scheduled_reports_job",
         "acentem_takipte.acentem_takipte.tasks.run_accounting_reconciliation_job",
     ]
 }

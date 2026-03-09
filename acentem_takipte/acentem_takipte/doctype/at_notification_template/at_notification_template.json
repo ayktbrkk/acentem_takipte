@@ -7,9 +7,16 @@
   "template_key",
   "event_key",
   "channel",
+  "content_mode",
   "language",
+  "provider_template_name",
+  "provider_template_category",
+  "variables_schema_json",
   "subject",
   "body_template",
+  "sms_body_template",
+  "email_body_template",
+  "whatsapp_body_template",
   "is_active"
  ],
  "fields": [
@@ -31,7 +38,15 @@
    "fieldname": "channel",
    "fieldtype": "Select",
    "label": "Channel",
-   "options": "SMS\nEmail\nBoth",
+   "options": "SMS\nEmail\nWHATSAPP\nBoth",
+   "reqd": 1
+  },
+  {
+   "default": "freeform",
+   "fieldname": "content_mode",
+   "fieldtype": "Select",
+   "label": "Content Mode",
+   "options": "freeform\ntemplate",
    "reqd": 1
   },
   {
@@ -43,6 +58,22 @@
    "reqd": 1
   },
   {
+   "fieldname": "provider_template_name",
+   "fieldtype": "Data",
+   "label": "Provider Template Name"
+  },
+  {
+   "fieldname": "provider_template_category",
+   "fieldtype": "Select",
+   "label": "Provider Template Category",
+   "options": "UTILITY\nMARKETING\nAUTHENTICATION"
+  },
+  {
+   "fieldname": "variables_schema_json",
+   "fieldtype": "Long Text",
+   "label": "Variables Schema JSON"
+  },
+  {
    "fieldname": "subject",
    "fieldtype": "Data",
    "label": "Subject"
@@ -52,6 +83,21 @@
    "fieldtype": "Long Text",
    "label": "Body Template",
    "reqd": 1
+  },
+  {
+   "fieldname": "sms_body_template",
+   "fieldtype": "Long Text",
+   "label": "SMS Body Template"
+  },
+  {
+   "fieldname": "email_body_template",
+   "fieldtype": "Long Text",
+   "label": "Email Body Template"
+  },
+  {
+   "fieldname": "whatsapp_body_template",
+   "fieldtype": "Long Text",
+   "label": "WhatsApp Body Template"
   },
   {
    "default": "1",

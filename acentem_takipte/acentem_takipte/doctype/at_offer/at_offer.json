@@ -6,6 +6,7 @@
  "field_order": [
   "source_lead",
   "customer",
+  "office_branch",
   "sales_entity",
   "insurance_company",
   "branch",
@@ -34,6 +35,12 @@
    "label": "Customer",
    "options": "AT Customer",
    "reqd": 1
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "fieldname": "sales_entity",

@@ -367,7 +367,7 @@
             :model="quickOffer"
             :field-errors="quickOfferFieldErrors"
             :disabled="quickOfferLoading"
-            :locale="sessionState.locale"
+            :locale="activeLocale"
             :options-map="offerQuickOptionsMap"
             @submit="createQuickOffer(false)"
             @request-related-create="onOfferRelatedCreateRequested"
@@ -434,11 +434,12 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
 import StatusBadge from "../components/StatusBadge.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
@@ -471,6 +472,13 @@ import {
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+
+function buildOfficeBranchLookupFilters() {
+  const officeBranch = branchStore.requestBranch || "";
+  return officeBranch ? { office_branch: officeBranch } : {};
+}
 
 const copy = {
   tr: {
@@ -668,8 +676,9 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 const QUICK_OPTION_LIMIT = 2000;
 
 const offersResource = createResource({
@@ -803,7 +812,7 @@ const customerSearchLoading = computed(() => Boolean(customerSearchResource.load
 const offerQuickConfig = getQuickCreateConfig("offer");
 const offerQuickFields = computed(() => offerQuickConfig?.fields || []);
 const offerQuickUi = computed(() => ({
-  subtitle: getLocalizedText(offerQuickConfig?.subtitle, sessionState.locale),
+  subtitle: getLocalizedText(offerQuickConfig?.subtitle, activeLocale.value),
 }));
 const offerQuickOptionsMap = computed(() => ({
   branches: branches.value.map((row) => ({ value: row.name, label: row.branch_name || row.name })),
@@ -840,7 +849,7 @@ const showCustomerNoResults = computed(() => {
     customerOptions.value.length === 0
   );
 });
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const offerViewMode = ref("list");
 const offerListFilters = reactive({
   query: "",
@@ -984,7 +993,7 @@ function validateQuickOfferForm() {
     const empty = typeof rawValue === "boolean" ? false : String(rawValue ?? "").trim() === "";
     if (empty) {
       quickOfferFieldErrors[field.name] =
-        getLocalizedText(field.label, sessionState.locale) || t("quickCreateValidationFailed");
+        getLocalizedText(field.label, activeLocale.value) || t("quickCreateValidationFailed");
       valid = false;
     }
   }
@@ -1066,10 +1075,12 @@ function buildOfferListOrderBy() {
 function buildOfferFilterPayload() {
   const filters = {};
   const out = { filters };
+  const officeBranch = branchStore.requestBranch || "";
 
   if (offerListFilters.insurance_company) filters.insurance_company = offerListFilters.insurance_company;
   if (offerListFilters.valid_until) filters.valid_until = ["<=", offerListFilters.valid_until];
   if (offerListFilters.branch) filters.branch = offerListFilters.branch;
+  if (officeBranch) filters.office_branch = officeBranch;
   if (offerListFilters.gross_min !== "") filters.gross_premium = [">=", Number(offerListFilters.gross_min || 0)];
   if (offerListFilters.gross_max !== "") {
     if (Array.isArray(filters.gross_premium)) {
@@ -1526,6 +1537,7 @@ function onCustomerQuery(value) {
     .reload({
       doctype: "AT Customer",
       fields: ["name", "full_name", "tax_id"],
+      filters: buildOfficeBranchLookupFilters(),
       or_filters: [
         ["AT Customer", "full_name", "like", `%${query}%`],
         ["AT Customer", "name", "like", `%${query}%`],
@@ -1823,6 +1835,15 @@ function formatDate(dateValue) {
 
 applyOfferPreset(offerPresetKey.value, { refresh: false });
 void refreshOffers();
+watch(
+  () => branchStore.selected,
+  () => {
+    customerSearchResource.setData([]);
+    customerSearchResource.error = null;
+    offerListPagination.page = 1;
+    void refreshOffers();
+  }
+);
 void hydrateOfferPresetStateFromServer();
 void consumeOfferRouteIntents();
 </script>

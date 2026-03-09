@@ -1,1 +1,2 @@
 # Keep app requirements empty; Frappe is provided by bench environment.
+openpyxl>=3.1,<4

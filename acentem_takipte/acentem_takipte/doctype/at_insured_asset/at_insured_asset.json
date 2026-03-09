@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "policy",
+  "asset_type",
+  "asset_label",
+  "asset_identifier",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy"
+  },
+  {
+   "fieldname": "asset_type",
+   "fieldtype": "Select",
+   "label": "Varlik Turu",
+   "options": "\nVehicle\nHome\nHealth Person\nWorkplace\nTravel\nBoat\nFarm\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "asset_label",
+   "fieldtype": "Data",
+   "label": "Varlik Basligi",
+   "reqd": 1
+  },
+  {
+   "fieldname": "asset_identifier",
+   "fieldtype": "Data",
+   "label": "Varlik Kimligi"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Kullanici Notu",
+   "description": "Kullanici tarafindan eklenen serbest metin."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Insured Asset",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

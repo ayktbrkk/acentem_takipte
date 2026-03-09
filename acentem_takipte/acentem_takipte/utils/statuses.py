@@ -20,11 +20,15 @@ class ATLeadStatus:
     REPLIED = "Replied"
     CLOSED = "Closed"
 
+    VALID = frozenset({DRAFT, OPEN, REPLIED, CLOSED})
+
 
 class ATPolicyStatus:
     IPT = "IPT"
     KYT = "KYT"
     ACTIVE = "Active"
+
+    VALID = frozenset({ACTIVE, IPT, KYT})
 
 
 class ATPaymentStatus:
@@ -40,12 +44,16 @@ class ATPolicyEndorsementStatus:
     APPLIED = "Applied"
     CANCELLED = "Cancelled"
 
+    VALID = frozenset({DRAFT, APPLIED, CANCELLED})
+
 
 class ATRenewalTaskStatus:
     OPEN = "Open"
     IN_PROGRESS = "In Progress"
     DONE = "Done"
     CANCELLED = "Cancelled"
+
+    VALID = frozenset({OPEN, IN_PROGRESS, DONE, CANCELLED})
 
 
 class ATReconciliationItemStatus:
@@ -61,6 +69,8 @@ class ATAccountingEntryStatus:
     DRAFT = "Draft"
     SYNCED = "Synced"
     FAILED = "Failed"
+
+    VALID = frozenset({DRAFT, SYNCED, FAILED})
 
 
 class ATNotificationOutboxStatus:
@@ -87,3 +97,5 @@ class ATClaimStatus:
     REJECTED = "Rejected"
     PAID = "Paid"
     CLOSED = "Closed"
+
+    VALID = frozenset({DRAFT, OPEN, UNDER_REVIEW, APPROVED, REJECTED, PAID, CLOSED})

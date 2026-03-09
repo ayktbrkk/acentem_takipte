@@ -4,15 +4,16 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt, getdate, now_datetime, nowdate
+from acentem_takipte.acentem_takipte.services.branches import get_default_office_branch
+from acentem_takipte.acentem_takipte.utils.commissions import resolve_commission_amount
 from acentem_takipte.acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus, ATPolicyStatus
+from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
     assert_doc_permission,
     assert_doctype_permission,
     assert_post_request,
 )
-
-MONEY_TOLERANCE = 0.01
 
 
 class ATOffer(Document):
@@ -29,44 +30,18 @@ class ATOffer(Document):
         self._normalize_financials()
 
     def _normalize_financials(self):
-        gross_value = flt(self.gross_premium)
-        net_value = flt(self.net_premium)
-        tax_value = flt(self.tax_amount)
-        commission_value = flt(self.commission_amount)
-
-        # Quick drafts may start with zero financials and complete later.
-        if self.status == ATOfferStatus.DRAFT and gross_value <= 0 and net_value <= 0 and tax_value == 0 and commission_value == 0:
-            self.net_premium = 0
-            self.tax_amount = 0
-            self.commission_amount = 0
-            self.gross_premium = 0
-            return
-
-        if tax_value < 0:
-            frappe.throw(_("Tax amount cannot be negative."))
-        if commission_value < 0:
-            frappe.throw(_("Commission amount cannot be negative."))
-
-        if net_value <= 0 and gross_value <= 0:
-            frappe.throw(_("Either Net Premium or Gross Premium must be greater than zero."))
-
-        if net_value <= 0 and gross_value > 0:
-            net_value = gross_value - tax_value - commission_value
-
-        if net_value <= 0:
-            frappe.throw(_("Net premium must be greater than zero after deductions."))
-
-        calculated_gross = net_value + tax_value + commission_value
-        if calculated_gross <= 0:
-            frappe.throw(_("Gross premium must be greater than zero."))
-
-        if gross_value > 0 and abs(gross_value - calculated_gross) > MONEY_TOLERANCE:
-            frappe.throw(_("Gross premium must equal Net Premium + Commission Amount + Tax Amount."))
-
-        self.net_premium = net_value
-        self.tax_amount = tax_value
-        self.commission_amount = commission_value
-        self.gross_premium = calculated_gross
+        normalized = normalize_financial_amounts(
+            net_premium=self.net_premium,
+            tax_amount=self.tax_amount,
+            commission_amount=self.commission_amount,
+            gross_premium=self.gross_premium,
+            allow_all_zero=self.status == ATOfferStatus.DRAFT,
+            zero_message_context="offer",
+        )
+        self.net_premium = normalized["net_premium"]
+        self.tax_amount = normalized["tax_amount"]
+        self.commission_amount = normalized["commission_amount"]
+        self.gross_premium = normalized["gross_premium"]
 
 
 @frappe.whitelist()
@@ -74,6 +49,7 @@ def create_quick_offer(
     customer: str | None = None,
     customer_name: str | None = None,
     branch: str | None = None,
+    office_branch: str | None = None,
     notes: str | None = None,
     currency: str | None = None,
     offer_date: str | None = None,
@@ -113,6 +89,7 @@ def create_quick_offer(
     payload = {
         "doctype": "AT Offer",
         "customer": resolved_customer,
+        "office_branch": _resolve_offer_office_branch(office_branch, resolved_customer),
         "status": normalized_status,
         "offer_date": offer_day,
         "valid_until": expiry_day,
@@ -185,12 +162,13 @@ def convert_to_policy(
         frappe.throw(_("Net premium must be greater than zero for policy conversion."))
 
     calculated_gross = net_value + tax_value + commission_value
-    if gross_value > 0 and abs(gross_value - calculated_gross) > MONEY_TOLERANCE:
+    if gross_value > 0 and abs(gross_value - calculated_gross) > 0.01:
         frappe.throw(_("Offer premium values are inconsistent. Update offer amounts before conversion."))
 
     policy_payload = {
         "doctype": "AT Policy",
         "customer": offer.customer,
+        "office_branch": offer.office_branch,
         "sales_entity": offer.sales_entity,
         "insurance_company": offer.insurance_company,
         "branch": offer.branch,
@@ -267,7 +245,7 @@ def _resolve_commission_value(offer: ATOffer, *, commission_amount: float | None
     elif commission is not None:
         resolved = flt(commission)
     else:
-        resolved = flt(offer.commission_amount)
+        resolved = resolve_commission_amount(offer.commission_amount, offer.commission)
     if resolved < 0:
         frappe.throw(_("Commission amount cannot be negative."))
     return resolved
@@ -308,9 +286,22 @@ def _resolve_or_create_quick_customer(*, customer: str | None, customer_name: st
             "doctype": "AT Customer",
             "tax_id": temp_tax_id,
             "full_name": full_name,
+            "office_branch": get_default_office_branch(),
         }
     ).insert(ignore_permissions=True)
     return customer_doc.name, True
+
+
+def _resolve_offer_office_branch(office_branch: str | None, customer: str | None) -> str | None:
+    explicit_branch = str(office_branch or "").strip()
+    if explicit_branch:
+        return explicit_branch
+    customer_name = str(customer or "").strip()
+    if customer_name and frappe.db.exists("AT Customer", customer_name):
+        customer_branch = frappe.db.get_value("AT Customer", customer_name, "office_branch")
+        if customer_branch:
+            return customer_branch
+    return get_default_office_branch()
 
 
 def _generate_temporary_tax_id() -> str:

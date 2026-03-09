@@ -81,7 +81,7 @@
       {{ operationError }}
     </div>
 
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
       <article class="at-metric-card">
         <p class="at-metric-label">{{ t("metricOpen") }}</p>
         <p class="at-metric-value !text-amber-700">{{ metrics.open || 0 }}</p>
@@ -98,7 +98,37 @@
         <p class="at-metric-label">{{ t("metricFailed") }}</p>
         <p class="at-metric-value !text-rose-700">{{ metrics.failed_entries || 0 }}</p>
       </article>
+      <article class="at-metric-card">
+        <p class="at-metric-label">{{ t("metricOverdueCollections") }}</p>
+        <p class="at-metric-value !text-amber-700">{{ metrics.overdue_collections || 0 }}</p>
+      </article>
+      <article class="at-metric-card">
+        <p class="at-metric-label">{{ t("metricOverdueAmount") }}</p>
+        <p class="at-metric-value !text-rose-700">{{ formatMoney(metrics.overdue_amount_try || 0) }}</p>
+      </article>
     </div>
+
+    <article class="surface-card rounded-2xl p-5">
+      <SectionCardHeader :title="t('collectionPreviewTitle')" :count="collectionPreviewRows.length" />
+      <div v-if="workbenchResource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+      <div v-else-if="collectionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCollectionPreview") }}</div>
+      <ul v-else class="space-y-2 text-sm">
+        <MetaListCard
+          v-for="row in collectionPreviewRows"
+          :key="row.name"
+          :title="row.payment_no || row.name"
+          :description="`${row.customer || '-'} / ${row.policy || '-'}`"
+          :meta="formatMoney(row.amount_try || row.amount)"
+        >
+          <template #trailing>
+            <div class="text-right">
+              <p class="text-xs text-slate-500">{{ t("dueDate") }}: {{ row.due_date || "-" }}</p>
+              <p class="text-xs text-amber-700">{{ row.status || "-" }}</p>
+            </div>
+          </template>
+        </MetaListCard>
+      </ul>
+    </article>
 
     <DataTableShell
       :loading="workbenchResource.loading"
@@ -211,14 +241,17 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref, unref, watch } from "vue";
 import { Dialog, createResource } from "frappe-ui";
 
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { useAccountingStore } from "../stores/accounting";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import FormattedCurrencyValue from "../components/app-shell/FormattedCurrencyValue.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
+import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
@@ -260,6 +293,10 @@ const copy = {
     metricResolved: "Cozulen",
     metricIgnored: "Yoksayilan",
     metricFailed: "Basarisiz Entry",
+    metricOverdueCollections: "Geciken Tahsilat",
+    metricOverdueAmount: "Geciken Tutar",
+    collectionPreviewTitle: "Geciken Tahsilat Onizleme",
+    emptyCollectionPreview: "Geciken tahsilat kaydi bulunamadi.",
     loading: "Yukleniyor...",
     loadErrorTitle: "Mutabakat Verileri Yuklenemedi",
     loadError: "Mutabakat masasi verileri yuklenirken bir hata olustu.",
@@ -270,6 +307,7 @@ const copy = {
     source: "Kaynak",
     type: "Uyumsuzluk",
     status: "Durum",
+    dueDate: "Vade",
     localTry: "Yerel TRY",
     externalTry: "Harici TRY",
     difference: "Fark",
@@ -339,6 +377,10 @@ const copy = {
     metricResolved: "Resolved",
     metricIgnored: "Ignored",
     metricFailed: "Failed Entries",
+    metricOverdueCollections: "Overdue Collections",
+    metricOverdueAmount: "Overdue Amount",
+    collectionPreviewTitle: "Overdue Collection Preview",
+    emptyCollectionPreview: "No overdue collection found.",
     loading: "Loading...",
     loadErrorTitle: "Failed to Load Reconciliation Data",
     loadError: "An error occurred while loading reconciliation workbench data.",
@@ -349,6 +391,7 @@ const copy = {
     source: "Source",
     type: "Mismatch",
     status: "Status",
+    dueDate: "Due Date",
     localTry: "Local TRY",
     externalTry: "External TRY",
     difference: "Difference",
@@ -389,18 +432,16 @@ const copy = {
     mismatchOther: "Other",
   },
 };
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const accountingStore = useAccountingStore();
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  const locale = unref(authStore.locale) || "en";
+  return copy[locale]?.[key] || copy.en[key] || key;
 }
 
-const filters = reactive({
-  status: "Open",
-  mismatchType: "",
-  sourceQuery: "",
-  sourceDoctype: "",
-  limit: 50,
-});
+const filters = accountingStore.state.filters;
 
 const syncing = ref(false);
 const reconciling = ref(false);
@@ -427,16 +468,8 @@ const setValueResource = createResource({
   url: "frappe.client.set_value",
 });
 
-const workbenchData = computed(() => workbenchResource.data || {});
-const activeFilterCount = computed(() => {
-  let count = 0;
-  if (filters.status && filters.status !== "Open") count += 1;
-  if (filters.mismatchType) count += 1;
-  if (filters.sourceQuery) count += 1;
-  if (filters.sourceDoctype) count += 1;
-  if (Number(filters.limit) !== 50) count += 1;
-  return count;
-});
+const workbenchData = computed(() => accountingStore.state.workbench || {});
+const activeFilterCount = computed(() => accountingStore.activeFilterCount);
 const {
   presetKey,
   presetOptions,
@@ -456,41 +489,15 @@ const {
   setFilterStateFromPayload: setWorkbenchFilterStateFromPayload,
   resetFilterState: resetWorkbenchFilterState,
   refresh: reloadWorkbench,
-  getSortLocale: () => (sessionState.locale === "tr" ? "tr-TR" : "en-US"),
+  getSortLocale: () => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"),
 });
-const sourceDoctypeOptions = computed(() => {
-  const seen = new Set();
-  const options = [];
-  for (const row of workbenchData.value.rows || []) {
-    const value = String(row?.source_doctype || "").trim();
-    if (!value || seen.has(value)) continue;
-    seen.add(value);
-    options.push({ value, label: value });
-  }
-  return options.sort((a, b) => a.label.localeCompare(b.label));
-});
-const rows = computed(() => {
-  let list = Array.isArray(workbenchData.value.rows) ? workbenchData.value.rows.slice() : [];
-  const sourceDoctype = String(filters.sourceDoctype || "").trim();
-  if (sourceDoctype) {
-    list = list.filter((row) => String(row?.source_doctype || "").trim() === sourceDoctype);
-  }
-  const sourceQuery = normalizeText(filters.sourceQuery);
-  if (sourceQuery) {
-    list = list.filter((row) =>
-      [
-        row?.source_doctype,
-        row?.source_name,
-        row?.accounting?.external_ref,
-        row?.accounting?.entry_no,
-      ].some((value) => normalizeText(value).includes(sourceQuery))
-    );
-  }
-  return list;
-});
-const metrics = computed(() => workbenchData.value.metrics || {});
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const sourceDoctypeOptions = computed(() => accountingStore.sourceDoctypeOptions);
+const rows = computed(() => accountingStore.rows);
+const metrics = computed(() => accountingStore.metrics);
+const collectionPreviewRows = computed(() => workbenchData.value.collection_preview?.overdue_rows || []);
+const localeCode = computed(() => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"));
 const workbenchErrorText = computed(() => {
+  if (accountingStore.state.error) return accountingStore.state.error;
   const err = workbenchResource.error;
   if (!err) return "";
   if (isPermissionDeniedError(err)) return t("permissionDeniedRead");
@@ -511,7 +518,7 @@ const actionDialogNotes = ref("");
 const actionDialogLoading = ref(false);
 const actionDialogError = ref("");
 const actionDialogLabels = computed(() => ({
-  cancel: sessionState.locale === "tr" ? "Vazgec" : "Cancel",
+  cancel: unref(authStore.locale) === "tr" ? "Vazgec" : "Cancel",
   save:
     actionDialogMode.value === "Matched"
       ? t("actionSaveResolve")
@@ -531,21 +538,37 @@ const reconciliationActionDialogSubtitle = computed(() => {
 });
 
 function buildParams() {
+  const officeBranch = branchStore.requestBranch;
   return {
     status: filters.status || null,
     mismatch_type: filters.mismatchType || null,
+    office_branch: officeBranch,
     limit: filters.limit,
   };
-}
-
-function normalizeText(value) {
-  return String(value || "").trim().toLocaleLowerCase(sessionState.locale === "tr" ? "tr-TR" : "en-US");
 }
 
 function reloadWorkbench() {
   operationError.value = "";
   workbenchResource.params = buildParams();
-  workbenchResource.reload();
+  accountingStore.setLocaleCode(localeCode.value);
+  accountingStore.setLoading(true);
+  accountingStore.clearError();
+  return workbenchResource
+    .reload()
+    .then((result) => {
+      accountingStore.setWorkbench(result || {});
+      accountingStore.setLoading(false);
+      return result;
+    })
+    .catch((error) => {
+      const message = isPermissionDeniedError(error)
+        ? t("permissionDeniedRead")
+        : error?.messages?.join(" ") || error?.message || t("loadError");
+      accountingStore.setWorkbench({});
+      accountingStore.setError(message);
+      accountingStore.setLoading(false);
+      throw error;
+    });
 }
 
 function applyWorkbenchFilters() {
@@ -553,11 +576,7 @@ function applyWorkbenchFilters() {
 }
 
 function resetWorkbenchFilterState() {
-  filters.status = "Open";
-  filters.mismatchType = "";
-  filters.sourceQuery = "";
-  filters.sourceDoctype = "";
-  filters.limit = 50;
+  accountingStore.resetFilters();
 }
 
 function currentWorkbenchPresetPayload() {
@@ -742,10 +761,19 @@ function formatMoney(value) {
 }
 
 onMounted(() => {
+  accountingStore.setLocaleCode(localeCode.value);
   applyPreset(presetKey.value, { refresh: false });
   if (String(presetKey.value || "default") !== "default") void reloadWorkbench();
   void hydratePresetStateFromServer();
 });
+
+watch(
+  () => branchStore.selected,
+  () => {
+    accountingStore.setLocaleCode(localeCode.value);
+    void reloadWorkbench();
+  }
+);
 </script>
 
 <style scoped>

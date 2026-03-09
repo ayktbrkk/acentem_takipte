@@ -7,14 +7,34 @@ from frappe.utils import add_days, cint, flt, getdate, nowdate
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
     assert_doctype_permission,
-    assert_post_request,
 )
-
-
-def _assert_quick_mutation_request() -> None:
-    assert_authenticated()
-    assert_post_request("Only POST requests are allowed for quick create/update operations.")
-
+from acentem_takipte.acentem_takipte.services.branches import (
+    assert_office_branch_access,
+    get_default_office_branch,
+)
+from acentem_takipte.acentem_takipte.services.quick_create import (
+    create_claim as create_claim_service,
+    create_customer_relation as create_customer_relation_service,
+    create_customer as create_customer_service,
+    create_insured_asset as create_insured_asset_service,
+    create_lead as create_lead_service,
+    create_payment as create_payment_service,
+    create_policy as create_policy_service,
+    create_renewal_task as create_renewal_task_service,
+    delete_aux_record as delete_aux_record_service,
+    update_aux_record as update_aux_record_service,
+)
+from acentem_takipte.acentem_takipte.utils.notes import normalize_note_text
+from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
+from acentem_takipte.acentem_takipte.utils.statuses import (
+    ATAccountingEntryStatus,
+    ATClaimStatus,
+    ATLeadStatus,
+    ATPaymentStatus,
+    ATPolicyStatus,
+    ATReconciliationItemStatus,
+    ATRenewalTaskStatus,
+)
 
 @frappe.whitelist()
 def create_quick_customer(
@@ -29,8 +49,8 @@ def create_quick_customer(
     occupation: str | None = None,
     consent_status: str | None = None,
     assigned_agent: str | None = None,
+    office_branch: str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Customer", _("You do not have permission to create customers."))
 
     payload = {
@@ -40,6 +60,7 @@ def create_quick_customer(
         "phone": (phone or "").strip() or None,
         "email": (email or "").strip() or None,
         "address": (address or "").strip() or None,
+        "office_branch": _resolve_office_branch(office_branch),
         "birth_date": birth_date or None,
         "gender": _normalize_option(gender, {"Unknown", "Male", "Female", "Other"}, default="Unknown"),
         "marital_status": _normalize_option(
@@ -52,10 +73,7 @@ def create_quick_customer(
         "assigned_agent": (assigned_agent or "").strip() or None,
     }
 
-    doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
-    frappe.db.commit()
-    return {"customer": doc.name}
+    return create_customer_service(payload)
 
 
 @frappe.whitelist()
@@ -70,10 +88,10 @@ def create_quick_lead(
     sales_entity: str | None = None,
     insurance_company: str | None = None,
     branch: str | None = None,
+    office_branch: str | None = None,
     estimated_gross_premium: float | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Lead", _("You do not have permission to create leads."))
 
     payload = {
@@ -83,19 +101,17 @@ def create_quick_lead(
         "phone": (phone or "").strip() or None,
         "tax_id": _digits_only(tax_id) or None,
         "email": (email or "").strip() or None,
-        "status": _normalize_option(status, {"Draft", "Open", "Replied", "Closed"}, default="Open"),
+        "status": _normalize_option(status, set(ATLeadStatus.VALID), default=ATLeadStatus.OPEN),
         "customer": _normalize_link("AT Customer", customer),
+        "office_branch": _resolve_office_branch(office_branch, customer=customer),
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company),
         "branch": _normalize_link("AT Branch", branch),
         "estimated_gross_premium": flt(estimated_gross_premium) if estimated_gross_premium not in {None, ""} else 0,
-        "notes": (notes or "").strip() or None,
+        "notes": normalize_note_text(notes),
     }
 
-    doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
-    frappe.db.commit()
-    return {"lead": doc.name}
+    return create_lead_service(payload)
 
 
 @frappe.whitelist()
@@ -104,6 +120,7 @@ def create_quick_policy(
     sales_entity: str | None = None,
     insurance_company: str | None = None,
     branch: str | None = None,
+    office_branch: str | None = None,
     policy_no: str | None = None,
     status: str | None = None,
     issue_date: str | None = None,
@@ -117,7 +134,6 @@ def create_quick_policy(
     source_offer: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Policy", _("You do not have permission to create policies."))
 
     issue = getdate(issue_date) if issue_date else getdate(nowdate())
@@ -127,11 +143,12 @@ def create_quick_policy(
     payload = {
         "doctype": "AT Policy",
         "customer": _normalize_link("AT Customer", customer, required=True),
+        "office_branch": _resolve_office_branch(office_branch, customer=customer),
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity, required=True),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company, required=True),
         "branch": _normalize_link("AT Branch", branch, required=True),
         "policy_no": (policy_no or "").strip() or None,
-        "status": _normalize_option(status, {"Active", "IPT", "KYT"}, default="Active"),
+        "status": _normalize_option(status, set(ATPolicyStatus.VALID), default=ATPolicyStatus.ACTIVE),
         "issue_date": issue,
         "start_date": start,
         "end_date": end,
@@ -141,19 +158,17 @@ def create_quick_policy(
         "commission_amount": flt(commission_amount) if commission_amount not in {None, ""} else 0,
         "gross_premium": flt(gross_premium) if gross_premium not in {None, ""} else 0,
         "source_offer": _normalize_link("AT Offer", source_offer),
-        "notes": (notes or "").strip() or None,
+        "notes": normalize_note_text(notes),
     }
 
-    doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
-    frappe.db.commit()
-    return {"policy": doc.name}
+    return create_policy_service(payload)
 
 
 @frappe.whitelist()
 def create_quick_claim(
     policy: str | None = None,
     customer: str | None = None,
+    office_branch: str | None = None,
     claim_no: str | None = None,
     claim_type: str | None = None,
     claim_status: str | None = None,
@@ -164,7 +179,6 @@ def create_quick_claim(
     approved_amount: float | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Claim", _("You do not have permission to create claims."))
 
     today = getdate(nowdate())
@@ -175,29 +189,23 @@ def create_quick_claim(
         "doctype": "AT Claim",
         "policy": _normalize_link("AT Policy", policy, required=True),
         "customer": _normalize_link("AT Customer", customer, required=True),
+        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "claim_no": (claim_no or "").strip() or None,
         "claim_type": _normalize_option(
             claim_type,
             {"Damage", "Health", "Theft", "Liability", "Other"},
             default="Damage",
         ),
-        "claim_status": _normalize_option(
-            claim_status,
-            {"Draft", "Open", "Under Review", "Approved", "Rejected", "Paid", "Closed"},
-            default="Open",
-        ),
+        "claim_status": _normalize_option(claim_status, set(ATClaimStatus.VALID), default=ATClaimStatus.OPEN),
         "incident_date": incident,
         "reported_date": reported,
         "currency": ((currency or "TRY").strip() or "TRY").upper(),
         "estimated_amount": flt(estimated_amount) if estimated_amount not in {None, ""} else 0,
         "approved_amount": flt(approved_amount) if approved_amount not in {None, ""} else 0,
-        "notes": (notes or "").strip() or None,
+        "notes": normalize_note_text(notes),
     }
 
-    doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
-    frappe.db.commit()
-    return {"claim": doc.name}
+    return create_claim_service(payload)
 
 
 @frappe.whitelist()
@@ -206,6 +214,7 @@ def create_quick_payment(
     policy: str | None = None,
     claim: str | None = None,
     sales_entity: str | None = None,
+    office_branch: str | None = None,
     payment_direction: str | None = None,
     payment_purpose: str | None = None,
     status: str | None = None,
@@ -216,7 +225,6 @@ def create_quick_payment(
     reference_no: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Payment", _("You do not have permission to create payments."))
 
     payload = {
@@ -224,6 +232,7 @@ def create_quick_payment(
         "customer": _normalize_link("AT Customer", customer, required=True),
         "policy": _normalize_link("AT Policy", policy),
         "claim": _normalize_link("AT Claim", claim),
+        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
         "payment_direction": _normalize_option(payment_direction, {"Inbound", "Outbound"}, default="Inbound"),
         "payment_purpose": _normalize_option(
@@ -231,33 +240,32 @@ def create_quick_payment(
             {"Premium Collection", "Commission Payout", "Claim Payout", "Other"},
             default="Premium Collection",
         ),
-        "status": _normalize_option(status, {"Draft", "Paid", "Cancelled"}, default="Draft"),
+        "status": _normalize_option(status, set(ATPaymentStatus.VALID), default=ATPaymentStatus.DRAFT),
         "payment_date": getdate(payment_date) if payment_date else getdate(nowdate()),
         "due_date": getdate(due_date) if due_date else None,
         "currency": ((currency or "TRY").strip() or "TRY").upper(),
         "amount": flt(amount) if amount not in {None, ""} else 0,
         "reference_no": (reference_no or "").strip() or None,
-        "notes": (notes or "").strip() or None,
+        "notes": normalize_note_text(notes),
     }
 
-    doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
-    frappe.db.commit()
-    return {"payment": doc.name}
+    return create_payment_service(payload)
 
 
 @frappe.whitelist()
 def create_quick_renewal_task(
     policy: str | None = None,
     customer: str | None = None,
+    office_branch: str | None = None,
     renewal_date: str | None = None,
     due_date: str | None = None,
     status: str | None = None,
+    lost_reason_code: str | None = None,
+    competitor_name: str | None = None,
     assigned_to: str | None = None,
     notes: str | None = None,
     auto_created: int | None = 0,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Renewal Task", _("You do not have permission to create renewal tasks."))
 
     today = getdate(nowdate())
@@ -268,18 +276,76 @@ def create_quick_renewal_task(
         "doctype": "AT Renewal Task",
         "policy": _normalize_link("AT Policy", policy, required=True),
         "customer": _normalize_link("AT Customer", customer, required=True),
+        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "renewal_date": renewal,
         "due_date": due,
-        "status": _normalize_option(status, {"Open", "In Progress", "Done", "Cancelled"}, default="Open"),
+        "status": _normalize_option(status, set(ATRenewalTaskStatus.VALID), default=ATRenewalTaskStatus.OPEN),
+        "lost_reason_code": _normalize_option(
+            lost_reason_code,
+            {"Price", "Competitor", "Service", "Customer Declined", "Coverage Mismatch", "Other"},
+            default="Competitor",
+        )
+        if (lost_reason_code or "").strip()
+        else None,
+        "competitor_name": (competitor_name or "").strip() or None,
         "assigned_to": (assigned_to or "").strip() or None,
-        "notes": (notes or "").strip() or None,
+        "notes": normalize_note_text(notes),
         "auto_created": 1 if str(auto_created or 0) in {"1", "true", "True"} else 0,
     }
 
-    doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
-    frappe.db.commit()
-    return {"renewal_task": doc.name}
+    return create_renewal_task_service(payload)
+
+
+@frappe.whitelist()
+def create_quick_customer_relation(
+    customer: str | None = None,
+    related_customer: str | None = None,
+    relation_type: str | None = None,
+    is_household: int | str | bool | None = 0,
+    notes: str | None = None,
+) -> dict[str, str]:
+    _assert_create_permission("AT Customer Relation", _("You do not have permission to create customer relations."))
+
+    payload = {
+        "doctype": "AT Customer Relation",
+        "customer": _normalize_link("AT Customer", customer, required=True),
+        "related_customer": _normalize_link("AT Customer", related_customer, required=True),
+        "relation_type": _normalize_option(
+            relation_type,
+            {"Spouse", "Child", "Parent", "Sibling", "Partner", "Household", "Other"},
+            default="Other",
+        ),
+        "is_household": _as_check(is_household, default=0),
+        "notes": normalize_note_text(notes),
+    }
+    return create_customer_relation_service(payload)
+
+
+@frappe.whitelist()
+def create_quick_insured_asset(
+    customer: str | None = None,
+    policy: str | None = None,
+    asset_type: str | None = None,
+    asset_label: str | None = None,
+    asset_identifier: str | None = None,
+    notes: str | None = None,
+) -> dict[str, str]:
+    _assert_create_permission("AT Insured Asset", _("You do not have permission to create insured assets."))
+
+    payload = {
+        "doctype": "AT Insured Asset",
+        "customer": _normalize_link("AT Customer", customer, required=True),
+        "policy": _normalize_link("AT Policy", policy),
+        "asset_type": _normalize_option(
+            asset_type,
+            {"Vehicle", "Home", "Health Person", "Workplace", "Travel", "Boat", "Farm", "Other"},
+            default="Other",
+        ),
+        "asset_label": (asset_label or "").strip(),
+        "asset_identifier": (asset_identifier or "").strip() or None,
+        "notes": normalize_note_text(notes),
+    }
+    return create_insured_asset_service(payload)
 
 
 @frappe.whitelist()
@@ -288,7 +354,6 @@ def create_quick_insurance_company(
     company_code: str | None = None,
     is_active: int | str | bool | None = 1,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Insurance Company", _("You do not have permission to create insurance companies."))
 
     payload = {
@@ -298,7 +363,7 @@ def create_quick_insurance_company(
         "is_active": _as_check(is_active, default=1),
     }
     doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
+    doc.insert()
     frappe.db.commit()
     return {"company": doc.name}
 
@@ -310,7 +375,6 @@ def create_quick_branch(
     insurance_company: str | None = None,
     is_active: int | str | bool | None = 1,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Branch", _("You do not have permission to create branches."))
 
     payload = {
@@ -321,7 +385,7 @@ def create_quick_branch(
         "is_active": _as_check(is_active, default=1),
     }
     doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
+    doc.insert()
     frappe.db.commit()
     return {"branch": doc.name}
 
@@ -332,7 +396,6 @@ def create_quick_sales_entity(
     full_name: str | None = None,
     parent_entity: str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Sales Entity", _("You do not have permission to create sales entities."))
 
     payload = {
@@ -342,7 +405,7 @@ def create_quick_sales_entity(
         "parent_entity": _normalize_link("AT Sales Entity", parent_entity),
     }
     doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
+    doc.insert()
     frappe.db.commit()
     return {"sales_entity": doc.name}
 
@@ -352,26 +415,43 @@ def create_quick_notification_template(
     template_key: str | None = None,
     event_key: str | None = None,
     channel: str | None = None,
+    content_mode: str | None = None,
     language: str | None = None,
+    provider_template_name: str | None = None,
+    provider_template_category: str | None = None,
+    variables_schema_json: str | None = None,
     subject: str | None = None,
     body_template: str | None = None,
+    sms_body_template: str | None = None,
+    email_body_template: str | None = None,
+    whatsapp_body_template: str | None = None,
     is_active: int | str | bool | None = 1,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Notification Template", _("You do not have permission to create notification templates."))
 
     payload = {
         "doctype": "AT Notification Template",
         "template_key": (template_key or "").strip(),
         "event_key": (event_key or "").strip(),
-        "channel": _normalize_option(channel, {"SMS", "Email", "Both"}, default="Both"),
+        "channel": _normalize_option(channel, {"SMS", "Email", "WHATSAPP", "Both"}, default="Both"),
+        "content_mode": _normalize_option(content_mode, {"freeform", "template"}, default="freeform"),
         "language": _normalize_option(language, {"tr", "en"}, default="tr"),
+        "provider_template_name": (provider_template_name or "").strip() or None,
+        "provider_template_category": _normalize_option(
+            provider_template_category,
+            {"UTILITY", "MARKETING", "AUTHENTICATION"},
+            default="UTILITY",
+        ),
+        "variables_schema_json": (variables_schema_json or "").strip() or None,
         "subject": (subject or "").strip() or None,
         "body_template": (body_template or "").strip(),
+        "sms_body_template": (sms_body_template or "").strip() or None,
+        "email_body_template": (email_body_template or "").strip() or None,
+        "whatsapp_body_template": (whatsapp_body_template or "").strip() or None,
         "is_active": _as_check(is_active, default=1),
     }
     doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
+    doc.insert()
     frappe.db.commit()
     return {"template": doc.name}
 
@@ -384,6 +464,7 @@ def create_quick_accounting_entry(
     status: str | None = None,
     policy: str | None = None,
     customer: str | None = None,
+    office_branch: str | None = None,
     insurance_company: str | None = None,
     currency: str | None = None,
     local_amount: float | None = None,
@@ -392,7 +473,6 @@ def create_quick_accounting_entry(
     external_amount_try: float | None = None,
     external_ref: str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Accounting Entry", _("You do not have permission to create accounting entries."))
 
     source_dt = (source_doctype or "").strip()
@@ -409,9 +489,10 @@ def create_quick_accounting_entry(
         "source_doctype": source_dt,
         "source_name": source_nm,
         "entry_type": _normalize_option(entry_type, {"Policy", "Payment", "Claim"}, default="Policy"),
-        "status": _normalize_option(status, {"Draft", "Synced", "Failed"}, default="Draft"),
+        "status": _normalize_option(status, set(ATAccountingEntryStatus.VALID), default=ATAccountingEntryStatus.DRAFT),
         "policy": _normalize_link("AT Policy", policy),
         "customer": _normalize_link("AT Customer", customer),
+        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company),
         "currency": ((currency or "TRY").strip() or "TRY").upper(),
         "local_amount": flt(local_amount) if local_amount not in {None, ""} else 0,
@@ -421,7 +502,7 @@ def create_quick_accounting_entry(
         "external_ref": (external_ref or "").strip() or None,
     }
     doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
+    doc.insert()
     frappe.db.commit()
     return {"accounting_entry": doc.name}
 
@@ -438,7 +519,6 @@ def create_quick_reconciliation_item(
     resolution_action: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     _assert_create_permission("AT Reconciliation Item", _("You do not have permission to create reconciliation items."))
 
     payload = {
@@ -446,7 +526,7 @@ def create_quick_reconciliation_item(
         "accounting_entry": _normalize_link("AT Accounting Entry", accounting_entry, required=True),
         "source_doctype": _normalize_doctype_or_blank(source_doctype),
         "source_name": _normalize_source_name(source_doctype, source_name),
-        "status": _normalize_option(status, {"Open", "Resolved", "Ignored"}, default="Open"),
+        "status": _normalize_option(status, set(ATReconciliationItemStatus.RESOLUTION_REQUIRED | ATReconciliationItemStatus.CLOSED), default=ATReconciliationItemStatus.OPEN),
         "mismatch_type": _normalize_option(
             mismatch_type,
             {"Amount", "Currency", "Missing External", "Missing Local", "Status", "Other"},
@@ -455,10 +535,10 @@ def create_quick_reconciliation_item(
         "local_amount_try": flt(local_amount_try) if local_amount_try not in {None, ""} else 0,
         "external_amount_try": flt(external_amount_try) if external_amount_try not in {None, ""} else 0,
         "resolution_action": _normalize_reconciliation_action(resolution_action),
-        "notes": (notes or "").strip() or None,
+        "notes": normalize_note_text(notes),
     }
     doc = frappe.get_doc(payload)
-    doc.insert(ignore_permissions=True)
+    doc.insert()
     frappe.db.commit()
     return {"reconciliation_item": doc.name}
 
@@ -469,7 +549,6 @@ def update_quick_aux_record(
     name: str,
     data: dict | str | None = None,
 ) -> dict[str, str]:
-    _assert_quick_mutation_request()
     normalized_doctype = _normalize_aux_edit_doctype(doctype)
     _assert_write_permission(normalized_doctype, _("You do not have permission to update this record."))
 
@@ -481,9 +560,23 @@ def update_quick_aux_record(
 
     payload = _parse_update_payload(data)
     _apply_aux_edit_payload(doc, payload)
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-    return {"record": doc.name}
+    return update_aux_record_service(doc)
+
+
+@frappe.whitelist()
+def delete_quick_aux_record(
+    doctype: str,
+    name: str,
+) -> dict[str, str | bool]:
+    normalized_doctype = _normalize_aux_delete_doctype(doctype)
+    _assert_delete_permission(normalized_doctype, _("You do not have permission to delete this record."))
+
+    record_name = (name or "").strip()
+    if not record_name:
+        frappe.throw(_("Record name is required."))
+    doc = frappe.get_doc(normalized_doctype, record_name)
+    doc.check_permission("delete")
+    return delete_aux_record_service(doc)
 
 
 MAX_QUICK_OPTION_SEARCH_LIMIT = 50
@@ -544,6 +637,12 @@ QUICK_OPTION_SEARCH_SOURCES: dict[str, dict] = {
         "doctype": "AT Accounting Entry",
         "display_fields": ["source_doctype", "source_name", "status", "external_ref"],
         "search_fields": ["name", "source_doctype", "source_name", "status", "external_ref"],
+        "order_by": "modified desc",
+    },
+    "insuredAssets": {
+        "doctype": "AT Insured Asset",
+        "display_fields": ["asset_label", "asset_type", "asset_identifier"],
+        "search_fields": ["name", "asset_label", "asset_type", "asset_identifier", "customer", "policy"],
         "order_by": "modified desc",
     },
 }
@@ -664,6 +763,10 @@ def _format_quick_option_row(source_key: str, row: dict) -> dict[str, str]:
         source = _join_non_empty([_value_or_fallback(row, "source_doctype"), _value_or_fallback(row, "source_name")])
         label = f"{name} - {source}" if source else name
         description = _join_non_empty([_value_or_fallback(row, "status"), _value_or_fallback(row, "external_ref")])
+    elif source_key == "insuredAssets":
+        asset_label = _value_or_fallback(row, "asset_label", name)
+        label = asset_label
+        description = _join_non_empty([_value_or_fallback(row, "asset_type"), _value_or_fallback(row, "asset_identifier")])
 
     out = {"value": name, "label": label or name}
     if description:
@@ -682,13 +785,39 @@ def _join_non_empty(parts: list[str]) -> str:
 
 
 def _assert_create_permission(doctype: str, message: str) -> None:
-    if not frappe.has_permission(doctype, "create"):
-        frappe.throw(message)
+    assert_mutation_access(
+        action=f"api.quick_create.create_{doctype.lower().replace(' ', '_')}",
+        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        doctype_permissions=(doctype,),
+        permtype="create",
+        details={"doctype": doctype, "permtype": "create"},
+        role_message=message,
+        post_message="Only POST requests are allowed for quick create/update operations.",
+    )
 
 
 def _assert_write_permission(doctype: str, message: str) -> None:
-    if not frappe.has_permission(doctype, "write"):
-        frappe.throw(message)
+    assert_mutation_access(
+        action=f"api.quick_create.update_{doctype.lower().replace(' ', '_')}",
+        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        doctype_permissions=(doctype,),
+        permtype="write",
+        details={"doctype": doctype, "permtype": "write"},
+        role_message=message,
+        post_message="Only POST requests are allowed for quick create/update operations.",
+    )
+
+
+def _assert_delete_permission(doctype: str, message: str) -> None:
+    assert_mutation_access(
+        action=f"api.quick_create.delete_{doctype.lower().replace(' ', '_')}",
+        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        doctype_permissions=(doctype,),
+        permtype="delete",
+        details={"doctype": doctype, "permtype": "delete"},
+        role_message=message,
+        post_message="Only POST requests are allowed for quick create/update operations.",
+    )
 
 
 def _digits_only(value: str | None) -> str:
@@ -711,6 +840,31 @@ def _normalize_link(doctype: str, value: str | None, *, required: bool = False) 
     if not frappe.db.exists(doctype, normalized):
         frappe.throw(_("{0} not found: {1}").format(frappe.bold(doctype), normalized))
     return normalized
+
+
+def _resolve_office_branch(
+    office_branch: str | None = None,
+    *,
+    customer: str | None = None,
+    policy: str | None = None,
+) -> str | None:
+    explicit_branch = _normalize_link("AT Office Branch", office_branch) if office_branch else None
+    if explicit_branch:
+        return assert_office_branch_access(explicit_branch)
+
+    policy_name = (policy or "").strip()
+    if policy_name and frappe.db.exists("AT Policy", policy_name):
+        policy_branch = frappe.db.get_value("AT Policy", policy_name, "office_branch")
+        if policy_branch:
+            return policy_branch
+
+    customer_name = (customer or "").strip()
+    if customer_name and frappe.db.exists("AT Customer", customer_name):
+        customer_branch = frappe.db.get_value("AT Customer", customer_name, "office_branch")
+        if customer_branch:
+            return customer_branch
+
+    return get_default_office_branch()
 
 
 def _assert_doc_exists(doctype: str, name: str) -> None:
@@ -754,10 +908,27 @@ def _normalize_reconciliation_action(value: str | None) -> str | None:
 
 
 ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
+    "AT Customer Relation": {"customer", "related_customer", "relation_type", "is_household", "notes"},
+    "AT Insured Asset": {"customer", "policy", "asset_type", "asset_label", "asset_identifier", "notes"},
     "AT Insurance Company": {"company_name", "company_code", "is_active"},
     "AT Branch": {"branch_name", "branch_code", "insurance_company", "is_active"},
     "AT Sales Entity": {"entity_type", "full_name", "parent_entity"},
-    "AT Notification Template": {"template_key", "event_key", "channel", "language", "subject", "body_template", "is_active"},
+    "AT Notification Template": {
+        "template_key",
+        "event_key",
+        "channel",
+        "content_mode",
+        "language",
+        "provider_template_name",
+        "provider_template_category",
+        "variables_schema_json",
+        "subject",
+        "body_template",
+        "sms_body_template",
+        "email_body_template",
+        "whatsapp_body_template",
+        "is_active",
+    },
     "AT Accounting Entry": {
         "source_doctype",
         "source_name",
@@ -765,6 +936,7 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
         "status",
         "policy",
         "customer",
+        "office_branch",
         "insurance_company",
         "currency",
         "local_amount",
@@ -794,6 +966,13 @@ def _normalize_aux_edit_doctype(doctype: str | None) -> str:
     return value
 
 
+def _normalize_aux_delete_doctype(doctype: str | None) -> str:
+    value = (doctype or "").strip()
+    if value not in {"AT Customer Relation", "AT Insured Asset"}:
+        frappe.throw(_("Unsupported quick delete doctype: {0}").format(value))
+    return value
+
+
 def _parse_update_payload(data) -> dict:
     if data is None:
         return {}
@@ -817,7 +996,24 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
     for field, value in (payload or {}).items():
         if field not in allowed_fields:
             continue
-        if field in {"company_name", "company_code", "branch_name", "branch_code", "full_name", "template_key", "event_key", "subject", "body_template", "external_ref", "notes"}:
+        if field in {
+            "company_name",
+            "company_code",
+            "branch_name",
+            "branch_code",
+            "full_name",
+            "template_key",
+            "event_key",
+            "provider_template_name",
+            "variables_schema_json",
+            "subject",
+            "body_template",
+            "sms_body_template",
+            "email_body_template",
+            "whatsapp_body_template",
+            "external_ref",
+            "notes",
+        }:
             setattr(doc, field, (value or "").strip() or None)
             continue
         if field in {"is_active"}:
@@ -826,6 +1022,24 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         if field in {"insurance_company"}:
             setattr(doc, field, _normalize_link("AT Insurance Company", value))
             continue
+        if field in {"customer", "related_customer"} and doc.doctype == "AT Customer Relation":
+            setattr(doc, field, _normalize_link("AT Customer", value, required=True))
+            continue
+        if field in {"customer"} and doc.doctype == "AT Insured Asset":
+            setattr(doc, field, _normalize_link("AT Customer", value, required=True))
+            continue
+        if field in {"policy"} and doc.doctype == "AT Insured Asset":
+            setattr(doc, field, _normalize_link("AT Policy", value))
+            continue
+        if field in {"relation_type"}:
+            setattr(doc, field, _normalize_option(value, {"Spouse", "Child", "Parent", "Sibling", "Partner", "Household", "Other"}, default="Other"))
+            continue
+        if field in {"asset_type"}:
+            setattr(doc, field, _normalize_option(value, {"Vehicle", "Home", "Health Person", "Workplace", "Travel", "Boat", "Farm", "Other"}, default="Other"))
+            continue
+        if field in {"asset_label", "asset_identifier"}:
+            setattr(doc, field, (value or "").strip() or None)
+            continue
         if field in {"parent_entity"}:
             setattr(doc, field, _normalize_link("AT Sales Entity", value))
             continue
@@ -833,10 +1047,16 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
             setattr(doc, field, _normalize_option(value, {"Agency", "Sub-Account", "Representative"}, default="Agency"))
             continue
         if field in {"channel"}:
-            setattr(doc, field, _normalize_option(value, {"SMS", "Email", "Both"}, default="Both"))
+            setattr(doc, field, _normalize_option(value, {"SMS", "Email", "WHATSAPP", "Both"}, default="Both"))
+            continue
+        if field in {"content_mode"}:
+            setattr(doc, field, _normalize_option(value, {"freeform", "template"}, default="freeform"))
             continue
         if field in {"language"}:
             setattr(doc, field, _normalize_option(value, {"tr", "en"}, default="tr"))
+            continue
+        if field in {"provider_template_category"}:
+            setattr(doc, field, _normalize_option(value, {"UTILITY", "MARKETING", "AUTHENTICATION"}, default="UTILITY"))
             continue
         if field in {"source_doctype"}:
             setattr(doc, field, _normalize_doctype_or_blank(value))
@@ -848,16 +1068,27 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
             setattr(doc, field, _normalize_option(value, {"Policy", "Payment", "Claim"}, default="Policy"))
             continue
         if field in {"status"} and doc.doctype == "AT Accounting Entry":
-            setattr(doc, field, _normalize_option(value, {"Draft", "Synced", "Failed"}, default="Draft"))
+            setattr(doc, field, _normalize_option(value, set(ATAccountingEntryStatus.VALID), default=ATAccountingEntryStatus.DRAFT))
             continue
         if field in {"status"} and doc.doctype == "AT Reconciliation Item":
-            setattr(doc, field, _normalize_option(value, {"Open", "Resolved", "Ignored"}, default="Open"))
+            setattr(
+                doc,
+                field,
+                _normalize_option(
+                    value,
+                    set(ATReconciliationItemStatus.RESOLUTION_REQUIRED | ATReconciliationItemStatus.CLOSED),
+                    default=ATReconciliationItemStatus.OPEN,
+                ),
+            )
             continue
         if field in {"policy"}:
             setattr(doc, field, _normalize_link("AT Policy", value))
             continue
         if field in {"customer"}:
             setattr(doc, field, _normalize_link("AT Customer", value))
+            continue
+        if field in {"office_branch"}:
+            setattr(doc, field, _normalize_link("AT Office Branch", value))
             continue
         if field in {"accounting_entry"}:
             setattr(doc, field, _normalize_link("AT Accounting Entry", value, required=True))

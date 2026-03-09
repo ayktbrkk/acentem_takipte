@@ -4,7 +4,11 @@ import json
 from hashlib import sha256
 
 import frappe
-from frappe.utils import cint, cstr, flt, now_datetime
+from frappe.utils import cint, flt, now_datetime
+from acentem_takipte.acentem_takipte.utils.commissions import resolve_commission_amount
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.acentem_takipte.utils.notes import normalize_note_text
 from acentem_takipte.acentem_takipte.utils.statuses import (
     ATAccountingEntryStatus,
     ATReconciliationItemStatus,
@@ -17,6 +21,41 @@ ENTRY_TYPE_MAP = {
     "AT Claim": "Claim",
 }
 RECONCILIATION_TOLERANCE = 0.01
+DOC_EVENT_SYNC_DEBOUNCE_SEC = 90
+
+
+def _build_sync_doc_event_cache_key(source_doctype: str, source_name: str) -> str:
+    return f"accounting:sync_doc_event:{source_doctype}:{source_name}"
+
+
+def _enqueue_accounting_sync_doc(source_doctype: str, source_name: str) -> bool:
+    cache_key = _build_sync_doc_event_cache_key(source_doctype, source_name)
+    cache = frappe.cache()
+    if cache.get_value(cache_key):
+        return False
+
+    cache.set_value(cache_key, 1, expires_in_sec=DOC_EVENT_SYNC_DEBOUNCE_SEC)
+    try:
+        frappe.enqueue(
+            "acentem_takipte.acentem_takipte.accounting._run_accounting_sync_doc_event",
+            source_doctype=source_doctype,
+            source_name=source_name,
+            queue="default",
+            timeout=600,
+            enqueue_after_commit=True,
+        )
+        return True
+    except Exception:
+        cache.delete_value(cache_key)
+        raise
+
+
+def _run_accounting_sync_doc_event(source_doctype: str, source_name: str) -> dict[str, str]:
+    cache_key = _build_sync_doc_event_cache_key(source_doctype, source_name)
+    try:
+        return sync_accounting_entry(source_doctype, source_name)
+    finally:
+        frappe.cache().delete_value(cache_key)
 
 
 def sync_doc_event(doc, method=None) -> None:
@@ -24,11 +63,11 @@ def sync_doc_event(doc, method=None) -> None:
         return
 
     try:
-        sync_accounting_entry(doc.doctype, doc.name)
+        _enqueue_accounting_sync_doc(doc.doctype, doc.name)
     except Exception:
-        frappe.log_error(
-            frappe.get_traceback(),
-            f"AT Accounting Sync Hook Error ({doc.doctype}:{doc.name})",
+        log_redacted_error(
+            "AT Accounting Sync Hook Error",
+            details={"source_doctype": doc.doctype, "source_name": doc.name},
         )
 
 
@@ -64,7 +103,14 @@ def sync_accounting_entries(limit: int = 200) -> dict[str, int]:
         "failed": failed,
         "skipped": skipped,
     }
-    frappe.logger("acentem_takipte").info("AT accounting sync summary: %s", summary)
+    frappe.logger("acentem_takipte").info(
+        "AT accounting sync summary: %s",
+        build_metric_event(
+            "accounting.sync",
+            dimensions={"component": "accounting"},
+            values=summary,
+        ),
+    )
     return summary
 
 
@@ -89,6 +135,7 @@ def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool 
         entry.entry_type = payload["entry_type"]
         entry.policy = payload.get("policy")
         entry.customer = payload.get("customer")
+        entry.office_branch = payload.get("office_branch")
         entry.insurance_company = payload.get("insurance_company")
         entry.currency = payload.get("currency") or "TRY"
         entry.local_amount = payload.get("local_amount") or 0
@@ -164,7 +211,14 @@ def run_reconciliation(limit: int = 400) -> dict[str, int]:
         "resolved": resolved_count,
         "matched": matched_count,
     }
-    frappe.logger("acentem_takipte").info("AT reconciliation summary: %s", summary)
+    frappe.logger("acentem_takipte").info(
+        "AT reconciliation summary: %s",
+        build_metric_event(
+            "accounting.reconciliation",
+            dimensions={"component": "accounting"},
+            values=summary,
+        ),
+    )
     return summary
 
 
@@ -178,8 +232,9 @@ def resolve_reconciliation_item(item_name: str, resolution_action: str = "Matche
     else:
         item.status = ATReconciliationItemStatus.RESOLVED
     item.resolution_action = resolution_action or "Matched"
-    if notes:
-        item.notes = cstr(notes)[:500]
+    normalized_notes = normalize_note_text(notes, max_length=500)
+    if normalized_notes:
+        item.notes = normalized_notes
     # Permission checks are enforced by API wrappers (api/accounting.py); this service also runs from trusted internals.
     item.save(ignore_permissions=True)
 
@@ -203,7 +258,10 @@ def _build_policy_payload(policy_name: str) -> dict:
     policy = frappe.get_doc("AT Policy", policy_name)
     local_amount = flt(policy.gross_premium)
     local_amount_try = flt(policy.gwp_try) or (local_amount * (flt(policy.fx_rate) or 1))
-    commission_value = flt(policy.commission_amount or policy.commission)
+    commission_value = resolve_commission_amount(
+        policy.commission_amount,
+        policy.commission,
+    )
 
     return {
         "entry_type": ENTRY_TYPE_MAP["AT Policy"],
@@ -211,6 +269,7 @@ def _build_policy_payload(policy_name: str) -> dict:
         "source_name": policy.name,
         "policy": policy.name,
         "customer": policy.customer,
+        "office_branch": policy.office_branch,
         "insurance_company": policy.insurance_company,
         "currency": cstr(policy.currency or "TRY").upper(),
         "local_amount": local_amount,
@@ -245,6 +304,7 @@ def _build_payment_payload(payment_name: str) -> dict:
         "source_name": payment.name,
         "policy": payment.policy,
         "customer": payment.customer,
+        "office_branch": payment.office_branch or frappe.db.get_value("AT Policy", payment.policy, "office_branch"),
         "insurance_company": policy_company,
         "currency": cstr(payment.currency or "TRY").upper(),
         "local_amount": local_amount,
@@ -275,6 +335,7 @@ def _build_claim_payload(claim_name: str) -> dict:
         "source_name": claim.name,
         "policy": claim.policy,
         "customer": claim.customer,
+        "office_branch": claim.office_branch or frappe.db.get_value("AT Policy", claim.policy, "office_branch"),
         "insurance_company": _policy_company(claim.policy),
         "currency": currency,
         "local_amount": amount,
@@ -350,6 +411,7 @@ def _get_or_create_entry(source_doctype: str, source_name: str):
             "source_doctype": source_doctype,
             "source_name": source_name,
             "entry_type": ENTRY_TYPE_MAP[source_doctype],
+            "office_branch": None,
             "status": ATAccountingEntryStatus.DRAFT,
         }
     )
@@ -368,7 +430,10 @@ def _mark_entry_failed(entry, traceback_text: str) -> None:
         else:
             entry.insert(ignore_permissions=True)
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "AT Accounting Mark Failed Error")
+        log_redacted_error(
+            "AT Accounting Mark Failed Error",
+            details={"entry": getattr(entry, "name", None), "status": getattr(entry, "status", None)},
+        )
 
 
 def _simulate_external_payload(payload: dict) -> dict[str, str | float]:

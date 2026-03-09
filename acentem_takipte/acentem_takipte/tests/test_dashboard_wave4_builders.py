@@ -4,6 +4,7 @@ import importlib
 import sys
 import types
 import unittest
+from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 
 
@@ -13,6 +14,8 @@ def _install_frappe_stub(*, sql_impl=None, get_all_impl=None, get_list_impl=None
 
     utils_mod.cint = lambda value=0: int(value or 0)
     utils_mod.flt = lambda value=0: float(value or 0)
+    utils_mod.getdate = lambda value=None: _as_date(value)
+    utils_mod.add_days = lambda value, days: _as_date(value) + timedelta(days=days)
 
     class _DB:
         def __init__(self, impl):
@@ -45,6 +48,14 @@ def _reload(module_name: str):
     return importlib.import_module(module_name)
 
 
+def _as_date(value):
+    if isinstance(value, date):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    return datetime.strptime(str(value), "%Y-%m-%d").date()
+
+
 class DashboardWave4BuilderTests(unittest.TestCase):
     def tearDown(self):
         for name in [
@@ -74,12 +85,15 @@ class DashboardWave4BuilderTests(unittest.TestCase):
         payload = mod.build_dashboard_kpis_payload(
             from_date="2026-02-01",
             to_date="2026-02-26",
+            period_comparison="previous_period",
             branch="Istanbul",
             months=6,
             allowed_customers=["CUST-1"],
             scope_meta={"access_scope": "scoped"},
             build_policy_where_fn=lambda **kwargs: ("1=1", kwargs),
-            dashboard_cards_summary_fn=lambda **kwargs: {"policy_count": 9, "gwp_try": 12345},
+            dashboard_cards_summary_fn=lambda **kwargs: {"policy_count": 9, "gwp_try": 12345}
+            if kwargs.get("from_date") == "2026-02-01"
+            else {"policy_count": 6, "gwp_try": 10000},
             build_lead_where_fn=lambda **kwargs: ("1=1", kwargs),
             monthly_commission_trend_fn=lambda **kwargs: [{"month": "2026-02", "commission_try": 123}],
         )
@@ -89,6 +103,10 @@ class DashboardWave4BuilderTests(unittest.TestCase):
         self.assertEqual(payload["policy_status"][0]["status"], "Active")
         self.assertEqual(payload["lead_status"][0]["total"], 3)
         self.assertEqual(payload["commission_trend"][0]["month"], "2026-02")
+        self.assertEqual(payload["comparison"]["mode"], "previous_period")
+        self.assertEqual(payload["comparison"]["cards"]["policy_count"], 6)
+        self.assertEqual(payload["comparison"]["delta"]["policy_count"]["delta"], 3.0)
+        self.assertEqual(payload["comparison"]["delta"]["policy_count"]["direction"], "up")
         self.assertFalse(responses)
 
     def test_tab_payload_builder_daily_contract(self):

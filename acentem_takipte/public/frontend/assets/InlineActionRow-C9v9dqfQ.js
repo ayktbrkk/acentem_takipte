@@ -1,0 +1,1 @@
+import{a as o}from"./frappe_ui-do92MjIb.js";import{o as t,c as r,K as s}from"./vue-BEKBvHEa.js";const c={},n={class:"flex flex-wrap items-center gap-1.5 md:gap-2"};function a(e,l){return t(),r("div",n,[s(e.$slots,"default")])}const _=o(c,[["render",a]]);export{_ as I};

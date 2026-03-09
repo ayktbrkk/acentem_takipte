@@ -146,7 +146,7 @@
     <QuickCreateManagedDialog
       v-model="showQuickClaimDialog"
       config-key="claim"
-      :locale="sessionState.locale"
+      :locale="activeLocale"
       :options-map="claimQuickOptionsMap"
       :show-save-and-open="false"
       :before-open="prepareQuickClaimDialog"
@@ -156,10 +156,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { useClaimStore } from "../stores/claim";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import AmountPairSummary from "../components/app-shell/AmountPairSummary.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
@@ -259,16 +261,20 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const filters = reactive({
-  query: "",
-  status: "",
-  policyQuery: "",
-  amountState: "",
-  limit: 30,
-});
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const claimStore = useClaimStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+
+function buildOfficeBranchLookupFilters() {
+  const officeBranch = branchStore.requestBranch || "";
+  return officeBranch ? { office_branch: officeBranch } : {};
+}
+
+const filters = claimStore.state.filters;
 
 const claimStatusOptions = computed(() =>
   [
@@ -281,15 +287,7 @@ const claimStatusOptions = computed(() =>
     "Cancelled",
   ].map((value) => ({ value, label: value }))
 );
-const activeFilterCount = computed(() => {
-  let count = 0;
-  if (filters.query) count += 1;
-  if (filters.status) count += 1;
-  if (filters.policyQuery) count += 1;
-  if (filters.amountState) count += 1;
-  if (Number(filters.limit) !== 30) count += 1;
-  return count;
-});
+const activeFilterCount = computed(() => claimStore.activeFilterCount);
 const {
   presetKey,
   presetOptions,
@@ -309,7 +307,7 @@ const {
   setFilterStateFromPayload: setClaimFilterStateFromPayload,
   resetFilterState: resetClaimFilterState,
   refresh: reloadClaims,
-  getSortLocale: () => (sessionState.locale === "tr" ? "tr-TR" : "en-US"),
+  getSortLocale: () => localeCode.value,
 });
 
 const claimsResource = createResource({
@@ -324,6 +322,7 @@ const claimQuickPolicyResource = createResource({
   params: {
     doctype: "AT Policy",
     fields: ["name", "policy_no", "customer"],
+    filters: buildOfficeBranchLookupFilters(),
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -335,36 +334,14 @@ const claimQuickCustomerResource = createResource({
   params: {
     doctype: "AT Customer",
     fields: ["name", "full_name"],
+    filters: buildOfficeBranchLookupFilters(),
     order_by: "modified desc",
     limit_page_length: 500,
   },
 });
 
-const claimsRaw = computed(() => claimsResource.data || []);
-const claims = computed(() => {
-  let rows = claimsRaw.value.slice();
-  const query = normalizeText(filters.query);
-  if (query) {
-    rows = rows.filter((row) =>
-      [row?.claim_no, row?.name, row?.policy].some((value) => normalizeText(value).includes(query))
-    );
-  }
-  const policyQuery = normalizeText(filters.policyQuery);
-  if (policyQuery) {
-    rows = rows.filter((row) => normalizeText(row?.policy).includes(policyQuery));
-  }
-  if (filters.amountState === "paid") {
-    rows = rows.filter((row) => Number(row?.paid_amount || 0) > 0);
-  } else if (filters.amountState === "unpaid") {
-    rows = rows.filter((row) => Number(row?.paid_amount || 0) <= 0);
-  } else if (filters.amountState === "approved_only") {
-    rows = rows.filter((row) => Number(row?.approved_amount || 0) > 0);
-  } else if (filters.amountState === "pending_payment") {
-    rows = rows.filter((row) => Number(row?.approved_amount || 0) > Number(row?.paid_amount || 0));
-  }
-  return rows;
-});
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const claims = computed(() => claimStore.filteredItems);
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const showQuickClaimDialog = ref(false);
 const claimQuickOptionsMap = computed(() => ({
   policies: (claimQuickPolicyResource.data || []).map((row) => ({
@@ -382,6 +359,7 @@ const quickClaimSuccessHandlers = {
   },
 };
 const claimsErrorText = computed(() => {
+  if (claimStore.state.error) return claimStore.state.error;
   const err = claimsResource.error;
   if (!err) return "";
   return err?.messages?.join(" ") || err?.message || t("loadError");
@@ -392,7 +370,7 @@ function todayIso() {
 }
 
 function normalizeText(value) {
-  return String(value || "").trim().toLocaleLowerCase(sessionState.locale === "tr" ? "tr-TR" : "en-US");
+  return String(value || "").trim().toLocaleLowerCase(localeCode.value);
 }
 
 function buildClaimListParams() {
@@ -405,12 +383,39 @@ function buildClaimListParams() {
   if (filters.status) {
     params.filters = { claim_status: filters.status };
   }
-  return params;
+  return withOfficeBranchFilter(params);
+}
+
+function withOfficeBranchFilter(params) {
+  const officeBranch = branchStore.requestBranch || "";
+  if (!officeBranch) return params;
+  return {
+    ...params,
+    filters: {
+      ...(params.filters || {}),
+      office_branch: officeBranch,
+    },
+  };
 }
 
 function reloadClaims() {
   claimsResource.params = buildClaimListParams();
-  return claimsResource.reload();
+  claimStore.setLocaleCode(localeCode.value);
+  claimStore.setLoading(true);
+  claimStore.clearError();
+  return claimsResource
+    .reload()
+    .then((result) => {
+      claimStore.setItems(result || []);
+      claimStore.setLoading(false);
+      return result;
+    })
+    .catch((error) => {
+      claimStore.setItems([]);
+      claimStore.setError(error?.messages?.join(" ") || error?.message || t("loadError"));
+      claimStore.setLoading(false);
+      throw error;
+    });
 }
 
 function applyClaimFilters() {
@@ -418,11 +423,7 @@ function applyClaimFilters() {
 }
 
 function resetClaimFilterState() {
-  filters.query = "";
-  filters.status = "";
-  filters.policyQuery = "";
-  filters.amountState = "";
-  filters.limit = 30;
+  claimStore.resetFilters();
 }
 
 function currentClaimPresetPayload() {
@@ -468,10 +469,36 @@ function openPolicy(policyName) {
 }
 
 onMounted(() => {
+  claimStore.setLocaleCode(localeCode.value);
   applyPreset(presetKey.value, { refresh: false });
   if (String(presetKey.value || "default") !== "default") void reloadClaims();
   void hydratePresetStateFromServer();
 });
+
+watch(
+  () => branchStore.selected,
+  () => {
+    claimStore.setLocaleCode(localeCode.value);
+    const officeFilters = buildOfficeBranchLookupFilters();
+    claimQuickPolicyResource.params = {
+      doctype: "AT Policy",
+      fields: ["name", "policy_no", "customer"],
+      filters: officeFilters,
+      order_by: "modified desc",
+      limit_page_length: 500,
+    };
+    claimQuickCustomerResource.params = {
+      doctype: "AT Customer",
+      fields: ["name", "full_name"],
+      filters: officeFilters,
+      order_by: "modified desc",
+      limit_page_length: 500,
+    };
+    void claimQuickPolicyResource.reload();
+    void claimQuickCustomerResource.reload();
+    void reloadClaims();
+  }
+);
 
 </script>
 

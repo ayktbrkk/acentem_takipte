@@ -4,6 +4,11 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
+from acentem_takipte.acentem_takipte.services.branches import (
+    get_allowed_office_branch_names,
+    user_can_access_all_office_branches,
+)
+
 BOOTSTRAP_DASHBOARD_FALLBACK_FLAG = "at_dashboard_allow_bootstrap_global_fallback"
 
 # Refactor roadmap artifact: central policy table for dashboard API entry points.
@@ -92,13 +97,34 @@ def allowed_customers_for_user(include_meta: bool = False):
         frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)
 
     roles = set(frappe.get_roles(user))
-    if {"System Manager", "Manager", "Accountant"}.intersection(roles):
+    if user_can_access_all_office_branches(user):
         return _result(None, "global", "privileged_role")
 
+    allowed_branches = sorted(get_allowed_office_branch_names(user))
+    if {"Manager", "Accountant"}.intersection(roles):
+        if not allowed_branches:
+            if fallback_enabled:
+                return _result(None, "global", "bootstrap_fallback_enabled")
+            return _result([], "empty", "branch_unassigned")
+        branch_customers = frappe.get_all(
+            "AT Customer",
+            filters={"office_branch": ["in", allowed_branches]},
+            pluck="name",
+            limit_page_length=0,
+        )
+        if branch_customers:
+            return _result(branch_customers, "scoped", "branch_assignment")
+        if fallback_enabled:
+            return _result(None, "global", "bootstrap_fallback_enabled")
+        return _result([], "empty", "branch_assignment_empty")
+
     if "Agent" in roles:
+        customer_filters = {"assigned_agent": user}
+        if allowed_branches:
+            customer_filters["office_branch"] = ["in", allowed_branches]
         assigned_customers = frappe.get_all(
             "AT Customer",
-            filters={"assigned_agent": user},
+            filters=customer_filters,
             pluck="name",
             limit_page_length=0,
         )
@@ -106,6 +132,8 @@ def allowed_customers_for_user(include_meta: bool = False):
             return _result(assigned_customers, "scoped", "agent_assignment")
         if fallback_enabled:
             return _result(None, "global", "bootstrap_fallback_enabled")
+        if allowed_branches:
+            return _result([], "empty", "agent_branch_assignment_empty")
         return _result([], "empty", "agent_unassigned")
 
     user_type = frappe.db.get_value("User", user, "user_type")

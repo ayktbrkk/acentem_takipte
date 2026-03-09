@@ -6,8 +6,8 @@ import frappe
 
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
+    assert_doctype_permission,
     assert_non_production_or_feature_flag,
-    assert_post_request,
     assert_roles,
     audit_admin_action,
 )
@@ -18,17 +18,43 @@ from acentem_takipte.acentem_takipte.doctype.at_policy_endorsement.at_policy_end
 )
 from acentem_takipte.acentem_takipte.api.dashboard import get_dashboard_kpis
 from acentem_takipte.acentem_takipte.tasks import run_renewal_task_job
+from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
+
+SMOKE_ADMIN_ROLES = ("System Manager",)
+SMOKE_MUTATION_DOCTYPES = (
+    "AT Insurance Company",
+    "AT Branch",
+    "AT Sales Entity",
+    "AT Customer",
+    "AT Notification Template",
+    "AT Lead",
+    "AT Policy Endorsement",
+    "AT Claim",
+    "AT Payment",
+    "AT Notification Draft",
+    "AT Renewal Task",
+)
 
 
 def _assert_smoke_write_access() -> None:
-    assert_authenticated()
-    assert_roles("System Manager", message="Only System Manager can run backend smoke tests.")
     assert_non_production_or_feature_flag(
         "at_enable_demo_endpoints",
         "Backend smoke endpoint is disabled in production. Enable site_config 'at_enable_demo_endpoints' to allow it.",
     )
-    assert_post_request("Only POST requests are allowed for backend smoke tests.")
-    audit_admin_action("api.smoke.run_backend_smoke_test")
+    assert_mutation_access(
+        action="api.smoke.run_backend_smoke_test",
+        roles=SMOKE_ADMIN_ROLES,
+        doctype_permissions=SMOKE_MUTATION_DOCTYPES,
+        permtype="create",
+        role_message="Only System Manager can run backend smoke tests.",
+        post_message="Only POST requests are allowed for backend smoke tests.",
+    )
+    for doctype in SMOKE_MUTATION_DOCTYPES:
+        assert_doctype_permission(
+            doctype,
+            "delete",
+            f"Missing delete permission for {doctype} during backend smoke cleanup.",
+        )
 
 
 def _assert_smoke_read_access() -> None:
@@ -76,7 +102,7 @@ def run_backend_smoke_test() -> dict:
                 "company_name": f"Smoke Company {marker}",
                 "company_code": f"SMK-{marker[-6:]}",
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Insurance Company", company.name))
 
         branch = frappe.get_doc(
@@ -86,7 +112,7 @@ def run_backend_smoke_test() -> dict:
                 "branch_code": f"BR-{marker[-6:]}",
                 "insurance_company": company.name,
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Branch", branch.name))
 
         entity = frappe.get_doc(
@@ -95,7 +121,7 @@ def run_backend_smoke_test() -> dict:
                 "entity_type": "Agency",
                 "full_name": f"Smoke Agency {marker}",
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Sales Entity", entity.name))
 
         customer = frappe.get_doc(
@@ -105,7 +131,7 @@ def run_backend_smoke_test() -> dict:
                 "full_name": f"Smoke Customer {marker}",
                 "phone": "5550000000",
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Customer", customer.name))
 
         policy_template = frappe.get_doc(
@@ -119,7 +145,7 @@ def run_backend_smoke_test() -> dict:
                 "body_template": "Sayin {{ customer.full_name }}, policeniz olusturuldu.",
                 "is_active": 1,
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Notification Template", policy_template.name))
 
         renewal_template = frappe.get_doc(
@@ -133,7 +159,7 @@ def run_backend_smoke_test() -> dict:
                 "body_template": "Sayin {{ customer.full_name }}, yenileme tarihi {{ renewal_date }}.",
                 "is_active": 1,
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Notification Template", renewal_template.name))
 
         lead = frappe.get_doc(
@@ -150,7 +176,7 @@ def run_backend_smoke_test() -> dict:
                 "estimated_gross_premium": 1000,
                 "notes": "Smoke conversion flow",
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Lead", lead.name))
 
         offer_result = convert_to_offer(lead.name)
@@ -162,7 +188,7 @@ def run_backend_smoke_test() -> dict:
             offer_name=offer.name,
             start_date=nowdate(),
             end_date=add_days(nowdate(), 30),
-            commission=150,
+            commission_amount=150,
             policy_no=None,
         )
         policy = frappe.get_doc("AT Policy", policy_result["policy"])
@@ -185,12 +211,12 @@ def run_backend_smoke_test() -> dict:
                 "endorsement_date": nowdate(),
                 "change_payload": frappe.as_json(
                     {
-                        "commission": 175,
+                        "commission_amount": 175,
                     }
                 ),
                 "notes": "Smoke endorsement",
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Policy Endorsement", endorsement.name))
 
         endorsement_result = apply_endorsement(endorsement.name)
@@ -216,7 +242,7 @@ def run_backend_smoke_test() -> dict:
                 "approved_amount": 400,
                 "notes": "Smoke claim flow",
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Claim", claim.name))
 
         inbound_payment = frappe.get_doc(
@@ -233,7 +259,7 @@ def run_backend_smoke_test() -> dict:
                 "amount": 1000,
                 "notes": "Smoke premium collection",
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Payment", inbound_payment.name))
 
         claim_payment = frappe.get_doc(
@@ -251,7 +277,7 @@ def run_backend_smoke_test() -> dict:
                 "amount": 300,
                 "notes": "Smoke claim payout",
             }
-        ).insert(ignore_permissions=True)
+        ).insert()
         created_docs.append(("AT Payment", claim_payment.name))
         claim.reload()
 
@@ -344,7 +370,7 @@ def run_backend_smoke_test() -> dict:
     finally:
         for doctype, name in reversed(created_docs):
             if frappe.db.exists(doctype, name):
-                frappe.delete_doc(doctype, name, ignore_permissions=True, force=True)
+                frappe.delete_doc(doctype, name, force=True)
         frappe.db.commit()
 
 

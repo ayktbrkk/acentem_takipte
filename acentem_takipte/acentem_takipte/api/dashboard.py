@@ -15,6 +15,10 @@ from acentem_takipte.acentem_takipte.api.dashboard_v2 import security as dashboa
 from acentem_takipte.acentem_takipte.api.dashboard_v2 import serializers as dashboard_serializers
 from acentem_takipte.acentem_takipte.api.dashboard_v2 import tab_payload as dashboard_tab_sections
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import has_sensitive_access
+from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
+from acentem_takipte.acentem_takipte.services.customer_360 import build_customer_360_payload
+from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
 CUSTOMER_PROFILE_EDIT_FIELDS = {
     "full_name",
@@ -46,7 +50,11 @@ def get_dashboard_kpis(filters=None) -> dict:
     payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
     from_date = payload.get("from_date")
     to_date = payload.get("to_date")
+    compare_from_date = payload.get("compare_from_date")
+    compare_to_date = payload.get("compare_to_date")
+    period_comparison = str(payload.get("period_comparison") or "").strip().lower() or None
     branch = payload.get("branch")
+    office_branch = normalize_requested_office_branch(payload.get("office_branch"))
     months = int(payload.get("months") or 6)
     months = min(max(months, 1), 24)
 
@@ -57,7 +65,11 @@ def get_dashboard_kpis(filters=None) -> dict:
     return dashboard_kpi_queries.build_dashboard_kpis_payload(
         from_date=from_date,
         to_date=to_date,
+        compare_from_date=compare_from_date,
+        compare_to_date=compare_to_date,
+        period_comparison=period_comparison,
         branch=branch,
+        office_branch=office_branch,
         months=months,
         allowed_customers=allowed_customers,
         scope_meta=scope_meta,
@@ -76,6 +88,7 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
     compare_from_date = payload.get("compare_from_date")
     compare_to_date = payload.get("compare_to_date")
     branch = payload.get("branch")
+    office_branch = normalize_requested_office_branch(payload.get("office_branch"))
     months = min(max(cint(payload.get("months") or 6), 1), 24)
     tab_key = str(tab or "daily").lower()
     if tab_key in {"overview", "operations"}:
@@ -100,12 +113,14 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
         from_date=from_date,
         to_date=to_date,
         branch=branch,
+        office_branch=office_branch,
         allowed_customers=allowed_customers,
     )
     compare_cards = _dashboard_cards_summary(
         from_date=compare_from_date,
         to_date=compare_to_date,
         branch=branch,
+        office_branch=office_branch,
         allowed_customers=allowed_customers,
     )
     tab_sections = dashboard_tab_sections.build_dashboard_tab_sections(
@@ -113,6 +128,7 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
         from_date=from_date,
         to_date=to_date,
         branch=branch,
+        office_branch=office_branch,
         months=months,
         allowed_customers=allowed_customers,
         build_offer_where_fn=_build_offer_where,
@@ -205,6 +221,47 @@ def get_customer_portfolio_summary_map(customers=None) -> dict[str, dict]:
 
 
 @frappe.whitelist()
+def get_customer_360_payload(name: str) -> dict:
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Authentication required")
+
+    customer_name = str(name or "").strip()
+    if not customer_name:
+        frappe.throw("Customer is required")
+
+    customer = frappe.get_doc("AT Customer", customer_name)
+    customer.check_permission("read")
+
+    allowed_customers = _allowed_customers_for_user()
+    if allowed_customers is not None and customer_name not in set(allowed_customers):
+        frappe.throw("Not permitted")
+
+    return build_customer_360_payload(
+        customer_name,
+        can_view_sensitive=has_sensitive_access(),
+    )
+
+
+@frappe.whitelist()
+def get_policy_360_payload(name: str) -> dict:
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Authentication required")
+
+    policy_name = str(name or "").strip()
+    if not policy_name:
+        frappe.throw("Policy is required")
+
+    policy = frappe.get_doc("AT Policy", policy_name)
+    policy.check_permission("read")
+
+    from acentem_takipte.acentem_takipte.services.policy_360 import build_policy_360_payload
+
+    return build_policy_360_payload(policy_name)
+
+
+@frappe.whitelist()
 def get_customer_workbench_rows(filters=None, page: int = 1, page_length: int = 20) -> dict:
     user = frappe.session.user
     if user == "Guest":
@@ -225,6 +282,10 @@ def get_customer_workbench_rows(filters=None, page: int = 1, page_length: int = 
     or_filters = parsed_filters["or_filters"]
     has_active_policy = parsed_filters["has_active_policy"]
     has_open_offer = parsed_filters["has_open_offer"]
+    office_branch = normalize_requested_office_branch(payload.get("office_branch"))
+
+    if office_branch:
+        query_filters["office_branch"] = office_branch
 
     allowed_customers = _allowed_customers_for_user()
     if allowed_customers is not None:
@@ -316,6 +377,10 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
     or_filters = parsed_filters["or_filters"]
     stale_state = parsed_filters["stale_state"]
     can_convert_only = parsed_filters["can_convert_only"]
+    office_branch = normalize_requested_office_branch(payload.get("office_branch"))
+
+    if office_branch:
+        query_filters["office_branch"] = office_branch
 
     allowed_customers = _allowed_customers_for_user()
     if allowed_customers is not None:
@@ -780,8 +845,11 @@ def _access_log_events(reference_doctype: str, reference_name: str) -> list[dict
             order_by="viewed_on desc",
             limit_page_length=8,
         )
-    except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Access log fetch error")
+    except Exception:
+        log_redacted_error(
+            "Access log fetch error",
+            details={"reference_doctype": reference_doctype, "reference_name": reference_name},
+        )
         return []
     return [
         {
@@ -1115,13 +1183,31 @@ def _lead_stale_state(modified_value) -> str:
     return "Fresh"
 
 
-def _monthly_commission_trend(months: int, branch: str | None, allowed_customers: list[str] | None) -> list[dict]:
+def _monthly_commission_trend(
+    months: int,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> list[dict]:
+    cache = _get_request_cache_bucket("at_dashboard_monthly_commission_trend_cache")
+    cache_key = (
+        months,
+        str(branch or ""),
+        str(office_branch or ""),
+        tuple(allowed_customers or []) if allowed_customers is not None else None,
+    )
+    if cache_key in cache:
+        return list(cache[cache_key])
+
     conditions = []
     values = {"months": months}
 
     if branch:
         conditions.append("branch = %(branch)s")
         values["branch"] = branch
+    if office_branch:
+        conditions.append("office_branch = %(office_branch)s")
+        values["office_branch"] = office_branch
 
     if allowed_customers is not None:
         if not allowed_customers:
@@ -1137,7 +1223,7 @@ def _monthly_commission_trend(months: int, branch: str | None, allowed_customers
         f"""
         select
             date_format(issue_date, '%%Y-%%m') as month_key,
-            ifnull(sum(ifnull(commission_amount, commission)), 0) as total_commission,
+            ifnull(sum({commission_sql_expr()}), 0) as total_commission,
             ifnull(sum(gwp_try), 0) as total_gwp_try
         from `tabAT Policy`
         where issue_date >= date_sub(curdate(), interval %(months)s month)
@@ -1148,6 +1234,7 @@ def _monthly_commission_trend(months: int, branch: str | None, allowed_customers
         values=values,
         as_dict=True,
     )
+    cache[cache_key] = list(rows)
     return rows
 
 
@@ -1156,20 +1243,33 @@ def _dashboard_cards_summary(
     from_date: str | None,
     to_date: str | None,
     branch: str | None,
+    office_branch: str | None,
     allowed_customers: list[str] | None,
 ) -> dict:
+    cache = _get_request_cache_bucket("at_dashboard_cards_summary_cache")
+    cache_key = (
+        str(from_date or ""),
+        str(to_date or ""),
+        str(branch or ""),
+        str(office_branch or ""),
+        tuple(allowed_customers or []) if allowed_customers is not None else None,
+    )
+    if cache_key in cache:
+        return dict(cache[cache_key])
+
     policy_where, policy_values = _build_policy_where(
         from_date=from_date,
         to_date=to_date,
         branch=branch,
+        office_branch=office_branch,
         allowed_customers=allowed_customers,
     )
     totals = frappe.db.sql(
         f"""
         select
             ifnull(sum(gwp_try), 0) as total_gwp_try,
-            ifnull(sum(ifnull(commission_amount, commission)), 0) as total_commission,
-            ifnull(avg(case when gross_premium > 0 then (ifnull(commission_amount, commission) / gross_premium) * 100 else null end), 0) as avg_commission_rate,
+            ifnull(sum({commission_sql_expr()}), 0) as total_commission,
+            ifnull(avg(case when gross_premium > 0 then ({commission_sql_expr()} / gross_premium) * 100 else null end), 0) as avg_commission_rate,
             count(name) as total_policies
         from `tabAT Policy`
         where {policy_where}
@@ -1182,13 +1282,14 @@ def _dashboard_cards_summary(
         "status": ["in", ["Open", "In Progress"]],
         "renewal_date": ["<=", add_days(nowdate(), 30)],
     }
-    renewal_policy_filters = {}
-    if branch:
-        renewal_policy_filters["branch"] = branch
-    if allowed_customers is not None:
-        renewal_policy_filters["customer"] = ["in", allowed_customers]
-    if renewal_policy_filters:
-        policy_names = frappe.get_list("AT Policy", filters=renewal_policy_filters, pluck="name", limit_page_length=0)
+    if office_branch:
+        renewal_filters["office_branch"] = office_branch
+    policy_names = _get_scoped_policy_names(
+        branch=branch,
+        office_branch=None,
+        allowed_customers=allowed_customers,
+    )
+    if branch or allowed_customers is not None:
         renewal_filters["policy"] = ["in", policy_names or ["__none__"]]
     pending_renewals = frappe.db.count("AT Renewal Task", filters=renewal_filters)
 
@@ -1196,6 +1297,7 @@ def _dashboard_cards_summary(
         from_date=from_date,
         to_date=to_date,
         branch=branch,
+        office_branch=office_branch,
         allowed_customers=allowed_customers,
     )
     payment_totals = frappe.db.sql(
@@ -1214,6 +1316,7 @@ def _dashboard_cards_summary(
         from_date=from_date,
         to_date=to_date,
         branch=branch,
+        office_branch=office_branch,
         allowed_customers=allowed_customers,
     )
     open_claims = frappe.db.sql(
@@ -1228,7 +1331,7 @@ def _dashboard_cards_summary(
         as_dict=True,
     )[0].get("total", 0)
 
-    return {
+    result = {
         "total_gwp_try": float(totals.get("total_gwp_try") or 0),
         "total_commission": float(totals.get("total_commission") or 0),
         "avg_commission_rate": float(totals.get("avg_commission_rate") or 0),
@@ -1238,6 +1341,8 @@ def _dashboard_cards_summary(
         "payout_try": float(payment_totals.get("payout_try") or 0),
         "open_claims": int(open_claims or 0),
     }
+    cache[cache_key] = dict(result)
+    return result
 
 
 def _build_offer_where(
@@ -1245,6 +1350,7 @@ def _build_offer_where(
     from_date: str | None,
     to_date: str | None,
     branch: str | None,
+    office_branch: str | None,
     allowed_customers: list[str] | None,
 ) -> tuple[str, dict]:
     conditions = ["1=1"]
@@ -1259,6 +1365,9 @@ def _build_offer_where(
     if branch:
         conditions.append("branch = %(branch)s")
         values["branch"] = branch
+    if office_branch:
+        conditions.append("customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)")
+        values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("customer in %(customers)s")
         values["customers"] = tuple(allowed_customers)
@@ -1325,7 +1434,7 @@ def _get_top_companies_rows(*, where_clause: str, values: dict, limit: int = 5) 
             ifnull(ic.company_name, p.insurance_company) as company_name,
             count(p.name) as policy_count,
             ifnull(sum(p.gwp_try), 0) as total_gwp_try,
-            ifnull(sum(ifnull(p.commission_amount, p.commission)), 0) as total_commission
+            ifnull(sum({commission_sql_expr("p.")}), 0) as total_commission
         from `tabAT Policy` p
         left join `tabAT Insurance Company` ic on ic.name = p.insurance_company
         where {where_clause}
@@ -1386,6 +1495,7 @@ def _get_payment_preview_rows(*, where_clause: str, values: dict, limit: int) ->
 def _get_renewal_task_preview_rows(
     *,
     branch: str | None,
+    office_branch: str | None,
     allowed_customers: list[str] | None,
     statuses: list[str] | None = None,
     limit: int = 8,
@@ -1393,13 +1503,14 @@ def _get_renewal_task_preview_rows(
     filters = {}
     if statuses:
         filters["status"] = ["in", statuses]
+    if office_branch:
+        filters["office_branch"] = office_branch
     if branch or allowed_customers is not None:
-        policy_filters = {}
-        if branch:
-            policy_filters["branch"] = branch
-        if allowed_customers is not None:
-            policy_filters["customer"] = ["in", allowed_customers or ["__none__"]]
-        policy_names = frappe.get_list("AT Policy", filters=policy_filters, pluck="name", limit_page_length=0)
+        policy_names = _get_scoped_policy_names(
+            branch=branch,
+            office_branch=None,
+            allowed_customers=allowed_customers,
+        )
         filters["policy"] = ["in", policy_names or ["__none__"]]
 
     return frappe.get_list(
@@ -1416,11 +1527,13 @@ def _build_policy_where(
     from_date: str | None,
     to_date: str | None,
     branch: str | None,
+    office_branch: str | None,
     allowed_customers: list[str] | None,
     table_alias: str | None = None,
 ) -> tuple[str, dict]:
     issue_date_field = _qualified_field("issue_date", table_alias)
     branch_field = _qualified_field("branch", table_alias)
+    office_branch_field = _qualified_field("office_branch", table_alias)
     customer_field = _qualified_field("customer", table_alias)
 
     conditions = ["1=1"]
@@ -1435,6 +1548,9 @@ def _build_policy_where(
     if branch:
         conditions.append(f"{branch_field} = %(branch)s")
         values["branch"] = branch
+    if office_branch:
+        conditions.append(f"{office_branch_field} = %(office_branch)s")
+        values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append(f"{customer_field} in %(customers)s")
         values["customers"] = tuple(allowed_customers)
@@ -1448,13 +1564,21 @@ def _qualified_field(fieldname: str, table_alias: str | None) -> str:
     return f"{table_alias}.{fieldname}"
 
 
-def _build_lead_where(*, branch: str | None, allowed_customers: list[str] | None) -> tuple[str, dict]:
+def _build_lead_where(
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> tuple[str, dict]:
     conditions = ["1=1"]
     values = {}
 
     if branch:
         conditions.append("branch = %(branch)s")
         values["branch"] = branch
+    if office_branch:
+        conditions.append("office_branch = %(office_branch)s")
+        values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("customer in %(customers)s")
         values["customers"] = tuple(allowed_customers)
@@ -1467,6 +1591,7 @@ def _build_payment_where(
     from_date: str | None,
     to_date: str | None,
     branch: str | None,
+    office_branch: str | None,
     allowed_customers: list[str] | None,
 ) -> tuple[str, dict]:
     conditions = ["1=1"]
@@ -1481,6 +1606,9 @@ def _build_payment_where(
     if branch:
         conditions.append("policy in (select name from `tabAT Policy` where branch = %(branch)s)")
         values["branch"] = branch
+    if office_branch:
+        conditions.append("office_branch = %(office_branch)s")
+        values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("customer in %(customers)s")
         values["customers"] = tuple(allowed_customers)
@@ -1493,6 +1621,7 @@ def _build_claim_where(
     from_date: str | None,
     to_date: str | None,
     branch: str | None,
+    office_branch: str | None,
     allowed_customers: list[str] | None,
 ) -> tuple[str, dict]:
     conditions = ["1=1"]
@@ -1507,6 +1636,9 @@ def _build_claim_where(
     if branch:
         conditions.append("p.branch = %(branch)s")
         values["branch"] = branch
+    if office_branch:
+        conditions.append("c.office_branch = %(office_branch)s")
+        values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("c.customer in %(customers)s")
         values["customers"] = tuple(allowed_customers)
@@ -1514,15 +1646,34 @@ def _build_claim_where(
     return " and ".join(conditions), values
 
 
-def _renewal_status_and_buckets(*, branch: str | None, allowed_customers: list[str] | None) -> dict:
+def _renewal_status_and_buckets(
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> dict:
+    cache = _get_request_cache_bucket("at_dashboard_renewal_status_cache")
+    cache_key = (
+        str(branch or ""),
+        str(office_branch or ""),
+        tuple(allowed_customers or []) if allowed_customers is not None else None,
+    )
+    if cache_key in cache:
+        return {
+            "status_rows": [dict(item) for item in cache[cache_key]["status_rows"]],
+            "buckets": dict(cache[cache_key]["buckets"]),
+            "retention": dict(cache[cache_key]["retention"]),
+        }
+
     filters = {}
+    if office_branch:
+        filters["office_branch"] = office_branch
     if branch or allowed_customers is not None:
-        policy_filters = {}
-        if branch:
-            policy_filters["branch"] = branch
-        if allowed_customers is not None:
-            policy_filters["customer"] = ["in", allowed_customers or ["__none__"]]
-        policy_names = frappe.get_list("AT Policy", filters=policy_filters, pluck="name", limit_page_length=0)
+        policy_names = _get_scoped_policy_names(
+            branch=branch,
+            office_branch=None,
+            allowed_customers=allowed_customers,
+        )
         filters["policy"] = ["in", policy_names or ["__none__"]]
 
     rows = frappe.get_list(
@@ -1534,6 +1685,7 @@ def _renewal_status_and_buckets(*, branch: str | None, allowed_customers: list[s
 
     status_counts = {"Open": 0, "In Progress": 0, RENEWAL_STATUS_DONE: 0, "Cancelled": 0}
     buckets = {"overdue": 0, "due7": 0, "due30": 0}
+    retention = {"renewed": 0, "lost": 0, "cancelled": 0, "rate": 0.0}
     today = getdate(nowdate())
 
     for row in rows:
@@ -1557,17 +1709,70 @@ def _renewal_status_and_buckets(*, branch: str | None, allowed_customers: list[s
         elif delta <= 30:
             buckets["due30"] += 1
 
+    outcome_filters = {}
+    if office_branch:
+        outcome_filters["office_branch"] = office_branch
+    if branch or allowed_customers is not None:
+        policy_names = _get_scoped_policy_names(
+            branch=branch,
+            office_branch=None,
+            allowed_customers=allowed_customers,
+        )
+        outcome_filters["policy"] = ["in", policy_names or ["__none__"]]
+
+    outcome_rows = frappe.get_list(
+        "AT Renewal Outcome",
+        fields=["outcome_status"],
+        filters=outcome_filters,
+        limit_page_length=0,
+    )
+    for row in outcome_rows:
+        outcome_status = str(row.get("outcome_status") or "").strip()
+        if outcome_status == "Renewed":
+            retention["renewed"] += 1
+        elif outcome_status == "Lost":
+            retention["lost"] += 1
+        elif outcome_status == "Cancelled":
+            retention["cancelled"] += 1
+
+    retention_base = retention["renewed"] + retention["lost"]
+    if retention_base > 0:
+        retention["rate"] = round((retention["renewed"] / retention_base) * 100, 2)
+
     status_rows = [{"status": key, "total": value} for key, value in status_counts.items()]
-    return {"status_rows": status_rows, "buckets": buckets}
+    result = {"status_rows": status_rows, "buckets": buckets, "retention": retention}
+    cache[cache_key] = {
+        "status_rows": [dict(item) for item in status_rows],
+        "buckets": dict(buckets),
+        "retention": dict(retention),
+    }
+    return result
 
 
-def _reconciliation_open_summary(*, branch: str | None, allowed_customers: list[str] | None) -> dict:
+def _reconciliation_open_summary(
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> dict:
+    cache = _get_request_cache_bucket("at_dashboard_reconciliation_summary_cache")
+    cache_key = (
+        str(branch or ""),
+        str(office_branch or ""),
+        tuple(allowed_customers or []) if allowed_customers is not None else None,
+    )
+    if cache_key in cache:
+        return dict(cache[cache_key])
+
     conditions = ["ri.status = 'Open'"]
     values = {}
 
     if branch:
         conditions.append("((ae.policy is not null and p.branch = %(branch)s) or (ae.policy is null and 1=1))")
         values["branch"] = branch
+    if office_branch:
+        conditions.append("ae.customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)")
+        values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("ae.customer in %(customers)s")
         values["customers"] = tuple(allowed_customers)
@@ -1585,25 +1790,40 @@ def _reconciliation_open_summary(*, branch: str | None, allowed_customers: list[
         values=values,
         as_dict=True,
     )[0]
-    return row or {"open_count": 0, "open_difference_try": 0}
+    result = row or {"open_count": 0, "open_difference_try": 0}
+    cache[cache_key] = dict(result)
+    return result
 
 
 def _reconciliation_filter_conditions(
-    *, branch: str | None, allowed_customers: list[str] | None
+    *, branch: str | None, office_branch: str | None, allowed_customers: list[str] | None
 ) -> tuple[list[str], dict]:
     conditions = ["ri.status = 'Open'"]
     values = {}
     if branch:
         conditions.append("((ae.policy is not null and p.branch = %(branch)s) or (ae.policy is null and 1=1))")
         values["branch"] = branch
+    if office_branch:
+        conditions.append("ae.customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)")
+        values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("ae.customer in %(customers)s")
         values["customers"] = tuple(allowed_customers)
     return conditions, values
 
 
-def _get_reconciliation_open_rows_preview(*, branch: str | None, allowed_customers: list[str] | None, limit: int = 8) -> list[dict]:
-    conditions, values = _reconciliation_filter_conditions(branch=branch, allowed_customers=allowed_customers)
+def _get_reconciliation_open_rows_preview(
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+    limit: int = 8,
+) -> list[dict]:
+    conditions, values = _reconciliation_filter_conditions(
+        branch=branch,
+        office_branch=office_branch,
+        allowed_customers=allowed_customers,
+    )
     rows = frappe.db.sql(
         f"""
         select
@@ -1634,6 +1854,46 @@ def _allowed_customers_for_user(include_meta: bool = False):
     return dashboard_security.allowed_customers_for_user(include_meta=include_meta)
 
 
+def _get_request_cache_bucket(cache_name: str) -> dict:
+    cache = getattr(frappe.local, cache_name, None)
+    if cache is None:
+        cache = {}
+        setattr(frappe.local, cache_name, cache)
+    return cache
+
+
+def _get_scoped_policy_names(
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> list[str]:
+    cache = getattr(frappe.local, "at_dashboard_policy_scope_cache", None)
+    if cache is None:
+        cache = {}
+        frappe.local.at_dashboard_policy_scope_cache = cache
+
+    cache_key = (
+        str(branch or ""),
+        str(office_branch or ""),
+        tuple(allowed_customers or []) if allowed_customers is not None else None,
+    )
+    if cache_key in cache:
+        return cache[cache_key]
+
+    filters = {}
+    if branch:
+        filters["branch"] = branch
+    if office_branch:
+        filters["office_branch"] = office_branch
+    if allowed_customers is not None:
+        filters["customer"] = ["in", allowed_customers or ["__none__"]]
+
+    policy_names = frappe.get_list("AT Policy", filters=filters, pluck="name", limit_page_length=0) if filters else []
+    cache[cache_key] = policy_names
+    return policy_names
+
+
 def _empty_dashboard_payload(meta: dict | None = None) -> dict:
     payload = {
         "cards": {
@@ -1650,6 +1910,7 @@ def _empty_dashboard_payload(meta: dict | None = None) -> dict:
         "policy_status": [],
         "top_companies": [],
         "commission_trend": [],
+        "comparison": {},
     }
     if meta:
         payload["meta"] = meta

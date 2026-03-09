@@ -1,0 +1,115 @@
+{
+ "actions": [],
+ "autoname": "AT-RNO-.YYYY.-.#####.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "renewal_task",
+  "policy",
+  "customer",
+  "office_branch",
+  "outcome_status",
+  "lost_reason_code",
+  "competitor_name",
+  "offer",
+  "recorded_on",
+  "recorded_by",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "renewal_task",
+   "fieldtype": "Link",
+   "label": "Renewal Task",
+   "options": "AT Renewal Task",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
+  },
+  {
+   "default": "Cancelled",
+   "fieldname": "outcome_status",
+   "fieldtype": "Select",
+   "label": "Outcome Status",
+   "options": "Renewed\nLost\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "lost_reason_code",
+   "fieldtype": "Select",
+   "label": "Lost Reason Code",
+   "options": "\nPrice\nCompetitor\nService\nCustomer Declined\nCoverage Mismatch\nOther"
+  },
+  {
+   "fieldname": "competitor_name",
+   "fieldtype": "Data",
+   "label": "Competitor Name"
+  },
+  {
+   "fieldname": "offer",
+   "fieldtype": "Link",
+   "label": "Offer",
+   "options": "AT Offer"
+  },
+  {
+   "fieldname": "recorded_on",
+   "fieldtype": "Datetime",
+   "label": "Recorded On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "recorded_by",
+   "fieldtype": "Link",
+   "label": "Recorded By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Kullanıcı Notu",
+   "description": "Kullanıcı tarafından eklenen serbest metin."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Renewal Outcome",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

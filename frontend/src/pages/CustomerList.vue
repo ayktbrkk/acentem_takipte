@@ -215,7 +215,7 @@
             :model="quickCustomerForm"
             :field-errors="quickCustomerFieldErrors"
             :disabled="quickCustomerLoading"
-            :locale="sessionState.locale"
+            :locale="activeLocale"
             :options-map="{}"
             @submit="submitQuickCustomer(false)"
           />
@@ -226,11 +226,13 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { useCustomerStore } from "../stores/customer";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
@@ -261,6 +263,9 @@ import {
 
 const router = useRouter();
 const route = useRoute();
+const branchStore = useBranchStore();
+const authStore = useAuthStore();
+const customerStore = useCustomerStore();
 
 const copy = {
   tr: {
@@ -458,28 +463,11 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const filters = reactive({
-  query: "",
-  consent_status: "",
-  gender: "",
-  marital_status: "",
-  assigned_agent: "",
-  occupation: "",
-  has_phone: false,
-  has_email: false,
-  has_active_policy: false,
-  has_open_offer: false,
-  sort: "modified desc",
-});
-
-const pagination = reactive({
-  page: 1,
-  pageLength: 20,
-  total: 0,
-});
+const filters = customerStore.state.filters;
+const pagination = customerStore.state.pagination;
 
 const CUSTOMER_PRESET_STORAGE_KEY = "at:customer-list:preset";
 const CUSTOMER_PRESET_LIST_STORAGE_KEY = "at:customer-list:preset-list";
@@ -506,22 +494,24 @@ const presetServerWriteResource = createResource({
   auto: false,
 });
 
-const rows = computed(() => customerListResource.data?.rows || []);
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const rows = computed(() => customerStore.state.items);
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+const currentUserId = computed(() => unref(authStore.userId) || "");
 const customerQuickFields = computed(() => quickCustomerConfig?.fields || []);
 const quickCustomerUi = computed(() => ({
-  title: getLocalizedText(quickCustomerConfig?.title, sessionState.locale),
-  subtitle: getLocalizedText(quickCustomerConfig?.subtitle, sessionState.locale),
-  newLabel: sessionState.locale === "tr" ? "Yeni Musteri" : "New Customer",
+  title: getLocalizedText(quickCustomerConfig?.title, activeLocale.value),
+  subtitle: getLocalizedText(quickCustomerConfig?.subtitle, activeLocale.value),
+  newLabel: activeLocale.value === "tr" ? "Yeni Musteri" : "New Customer",
 }));
 const quickCreateCommon = computed(() => ({
-  cancel: sessionState.locale === "tr" ? "Vazgec" : "Cancel",
-  save: sessionState.locale === "tr" ? "Kaydet" : "Save",
-  saveAndOpen: sessionState.locale === "tr" ? "Kaydet ve Ac" : "Save & Open",
-  validation: sessionState.locale === "tr" ? "Lutfen gerekli alanlari ve formatlari kontrol edin." : "Please check required fields and formats.",
-  failed: sessionState.locale === "tr" ? "Hizli musteri olusturma basarisiz oldu." : "Quick customer create failed.",
+  cancel: activeLocale.value === "tr" ? "Vazgec" : "Cancel",
+  save: activeLocale.value === "tr" ? "Kaydet" : "Save",
+  saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Ac" : "Save & Open",
+  validation: activeLocale.value === "tr" ? "Lutfen gerekli alanlari ve formatlari kontrol edin." : "Please check required fields and formats.",
+  failed: activeLocale.value === "tr" ? "Hizli musteri olusturma basarisiz oldu." : "Quick customer create failed.",
 }));
-const isInitialLoading = computed(() => customerListResource.loading && rows.value.length === 0);
+const isInitialLoading = computed(() => customerStore.state.loading && rows.value.length === 0);
 
 const consentStatusOptions = computed(() => [
   { value: "Unknown", label: t("consentUnknown") },
@@ -570,26 +560,11 @@ const presetOptions = computed(() => [
   })),
 ]);
 const canDeletePreset = computed(() => isCustomFilterPresetValue(presetKey.value));
-const activeFilterCount = computed(
-  () =>
-    [
-      filters.query,
-      filters.consent_status,
-      filters.gender,
-      filters.marital_status,
-      filters.assigned_agent,
-      filters.occupation,
-      filters.has_phone ? "1" : "",
-      filters.has_email ? "1" : "",
-      filters.has_active_policy ? "1" : "",
-      filters.has_open_offer ? "1" : "",
-    ].filter((value) => String(value ?? "").trim() !== "").length
-);
-
-const totalPages = computed(() => Math.max(1, Math.ceil((pagination.total || 0) / pagination.pageLength || 1)));
-const hasNextPage = computed(() => pagination.page < totalPages.value);
-const startRow = computed(() => (pagination.total ? (pagination.page - 1) * pagination.pageLength + 1 : 0));
-const endRow = computed(() => (pagination.total ? Math.min(pagination.total, pagination.page * pagination.pageLength) : 0));
+const activeFilterCount = computed(() => customerStore.activeFilterCount);
+const totalPages = computed(() => customerStore.totalPages);
+const hasNextPage = computed(() => customerStore.hasNextPage);
+const startRow = computed(() => customerStore.startRow);
+const endRow = computed(() => customerStore.endRow);
 
 function normalizeConsentValue(value) {
   const status = String(value || "Unknown");
@@ -615,7 +590,7 @@ function maritalLabel(value) {
 }
 
 function buildListParams() {
-  return {
+  return withOfficeBranchFilter({
     page: pagination.page,
     page_length: pagination.pageLength,
     filters: {
@@ -631,25 +606,41 @@ function buildListParams() {
       has_open_offer: Boolean(filters.has_open_offer),
       sort: filters.sort || "modified desc",
     },
+  });
+}
+
+function withOfficeBranchFilter(params) {
+  const officeBranch = branchStore.requestBranch || "";
+  if (!officeBranch) return params;
+  return {
+    ...params,
+    filters: {
+      ...(params.filters || {}),
+      office_branch: officeBranch,
+    },
   };
 }
 
 async function refreshCustomerList() {
   const params = buildListParams();
   customerListResource.params = params;
+  customerStore.setLoading(true);
+  customerStore.clearError();
   const result = await customerListResource.reload(params).catch((error) => ({ __error: error }));
 
   if (!result?.__error) {
     const payload = result || {};
     customerListResource.setData(payload);
+    customerStore.applyListPayload(payload);
     loadErrorText.value = "";
-    const total = Number(payload?.total || 0);
-    pagination.total = Number.isFinite(total) ? total : 0;
+    customerStore.setLoading(false);
     return;
   }
 
   customerListResource.setData({ rows: [], total: 0 });
-  pagination.total = 0;
+  customerStore.applyListPayload({ rows: [], total: 0 });
+  customerStore.setError(t("loadError"));
+  customerStore.setLoading(false);
   loadErrorText.value = t("loadError");
 }
 
@@ -757,9 +748,9 @@ function applyPreset(key, { refresh = true } = {}) {
   } else if (requested === "consentGranted") {
     filters.consent_status = "Granted";
   } else if (requested === "assignedToMe") {
-    filters.assigned_agent = sessionState.userId || "";
+    filters.assigned_agent = currentUserId.value;
   } else if (requested === "assignedUnknownConsent") {
-    filters.assigned_agent = sessionState.userId || "";
+    filters.assigned_agent = currentUserId.value;
     filters.consent_status = "Unknown";
   } else if (requested === "withPhone") {
     filters.has_phone = true;
@@ -782,7 +773,7 @@ function applyPreset(key, { refresh = true } = {}) {
     filters.has_open_offer = true;
     filters.sort = "open_offer_count desc";
   } else if (requested === "assignedPortfolio") {
-    filters.assigned_agent = sessionState.userId || "";
+    filters.assigned_agent = currentUserId.value;
     filters.has_active_policy = true;
     filters.sort = "active_policy_count desc";
   }
@@ -904,14 +895,14 @@ function validateQuickCustomerForm() {
   for (const field of customerQuickFields.value) {
     if (!field?.required) continue;
     if (String(quickCustomerForm[field.name] ?? "").trim() === "") {
-      quickCustomerFieldErrors[field.name] = getLocalizedText(field.label, sessionState.locale);
+      quickCustomerFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
       valid = false;
     }
   }
 
   const email = String(quickCustomerForm.email || "").trim();
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    quickCustomerFieldErrors.email = sessionState.locale === "tr" ? "Gecerli e-posta girin." : "Enter a valid email.";
+    quickCustomerFieldErrors.email = activeLocale.value === "tr" ? "Gecerli e-posta girin." : "Enter a valid email.";
     valid = false;
   }
   const birthDate = String(quickCustomerForm.birth_date || "");
@@ -919,7 +910,7 @@ function validateQuickCustomerForm() {
     const parsed = new Date(birthDate);
     if (!Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
       quickCustomerFieldErrors.birth_date =
-        sessionState.locale === "tr" ? "Dogum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
+        activeLocale.value === "tr" ? "Dogum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
       valid = false;
     }
   }
@@ -1042,6 +1033,13 @@ function formatCurrency(value) {
 
 applyPreset(presetKey.value, { refresh: false });
 void refreshCustomerList();
+watch(
+  () => branchStore.selected,
+  () => {
+    pagination.page = 1;
+    void refreshCustomerList();
+  }
+);
 void hydratePresetStateFromServer();
 void consumeQuickCustomerRouteIntent();
 </script>

@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "autoname": "field:office_branch_name",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "office_branch_name",
+  "office_branch_code",
+  "parent_office_branch",
+  "city",
+  "manager_user",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "office_branch_name",
+   "fieldtype": "Data",
+   "label": "Office Branch Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "office_branch_code",
+   "fieldtype": "Data",
+   "label": "Office Branch Code",
+   "unique": 1
+  },
+  {
+   "fieldname": "parent_office_branch",
+   "fieldtype": "Link",
+   "label": "Parent Office Branch",
+   "options": "AT Office Branch"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "manager_user",
+   "fieldtype": "Link",
+   "label": "Manager User",
+   "options": "User"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Office Branch",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

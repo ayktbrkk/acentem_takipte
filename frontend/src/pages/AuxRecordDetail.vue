@@ -97,7 +97,7 @@
       v-if="quickEditConfig && canUseQuickEdit"
       v-model="showQuickEditDialog"
       :config-key="quickEditConfig.registryKey"
-      :locale="sessionState.locale"
+      :locale="activeLocale"
       :options-map="quickEditOptionsMap"
       :show-save-and-open="false"
       :before-open="prepareQuickEditDialog"
@@ -110,10 +110,11 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { hasSessionCapability, sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
 import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
@@ -135,6 +136,10 @@ const props = defineProps({
 });
 
 const router = useRouter();
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const config = getAuxWorkbenchConfig(props.screenKey);
 
 if (!config) {
@@ -189,6 +194,7 @@ const copy = {
     lastAttemptAt: "Son Deneme",
     nextRetryAt: "Sonraki Deneme",
     lastSyncedAt: "Son Senkron",
+    officeBranch: "Ofis Sube",
   },
   en: {
     backToList: "Back to List",
@@ -237,10 +243,11 @@ const copy = {
     lastAttemptAt: "Last Attempt",
     nextRetryAt: "Next Retry",
     lastSyncedAt: "Last Synced",
+    officeBranch: "Office Branch",
   },
 };
-function t(key) { return copy[sessionState.locale]?.[key] || copy.en[key] || key; }
-function localize(v) { return typeof v === "string" ? v : v?.[sessionState.locale] || v?.en || v?.tr || ""; }
+function t(key) { return copy[activeLocale.value]?.[key] || copy.en[key] || key; }
+function localize(v) { return typeof v === "string" ? v : v?.[activeLocale.value] || v?.en || v?.tr || ""; }
 
 const resource = createResource({ url: "frappe.client.get", auto: false });
 const doc = computed(() => resource.data?.docs?.[0] || resource.data?.message || resource.data || null);
@@ -251,7 +258,7 @@ const quickEditConfig = computed(() => config.quickEdit || null);
 const canUseQuickEdit = computed(() => {
   const registryKey = quickEditConfig.value?.registryKey;
   if (!registryKey) return false;
-  return hasSessionCapability(["quickEdit", registryKey]);
+  return authStore.can(["quickEdit", registryKey]);
 });
 
 const auxQuickCustomerResource = createResource({
@@ -260,6 +267,7 @@ const auxQuickCustomerResource = createResource({
   params: {
     doctype: "AT Customer",
     fields: ["name", "full_name"],
+    filters: buildOfficeBranchLookupFilters("AT Customer"),
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -270,6 +278,7 @@ const auxQuickPolicyResource = createResource({
   params: {
     doctype: "AT Policy",
     fields: ["name", "policy_no", "customer"],
+    filters: buildOfficeBranchLookupFilters("AT Policy"),
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -300,6 +309,7 @@ const auxQuickAccountingEntryResource = createResource({
   params: {
     doctype: "AT Accounting Entry",
     fields: ["name", "source_doctype", "source_name", "status"],
+    filters: buildOfficeBranchLookupFilters("AT Accounting Entry"),
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -328,29 +338,29 @@ function formatValue(field, value) {
   if (value == null || value === "") return "-";
   if (isFieldType(field, "bool")) {
     const active = value === true || String(value) === "1";
-    return active ? (sessionState.locale === "tr" ? "Evet" : "Yes") : (sessionState.locale === "tr" ? "Hayir" : "No");
+    return active ? (activeLocale.value === "tr" ? "Evet" : "Yes") : (activeLocale.value === "tr" ? "Hayir" : "No");
   }
   if (isFieldType(field, "currency")) {
     const n = Number(value);
     return Number.isFinite(n)
-      ? new Intl.NumberFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(n)
+      ? new Intl.NumberFormat(localeCode.value, { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(n)
       : String(value);
   }
   if (isFieldType(field, "number")) {
     const n = Number(value);
-    return Number.isFinite(n) ? new Intl.NumberFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US").format(n) : String(value);
+    return Number.isFinite(n) ? new Intl.NumberFormat(localeCode.value).format(n) : String(value);
   }
   if (isFieldType(field, "date")) {
-    try { return new Intl.DateTimeFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { dateStyle: "short" }).format(new Date(value)); } catch { return String(value); }
+    try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short" }).format(new Date(value)); } catch { return String(value); }
   }
   if (isFieldType(field, "dateTime")) {
-    try { return new Intl.DateTimeFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); } catch { return String(value); }
+    try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); } catch { return String(value); }
   }
   if (["modified", "creation", "resolved_on", "sent_at", "next_retry_on", "last_attempt_on"].includes(field)) {
-    try { return new Intl.DateTimeFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
+    try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
   }
   if (["due_date", "renewal_date", "policy_end_date"].includes(field)) {
-    try { return new Intl.DateTimeFormat(sessionState.locale === "tr" ? "tr-TR" : "en-US", { dateStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
+    try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
   }
   return String(value);
 }
@@ -362,15 +372,21 @@ const recordTitle = computed(() => {
 const recordSubtitle = computed(() => {
   const d = doc.value;
   if (!d) return localize(config.subtitle);
-  return `${config.doctype} • ${d.name}`;
+  const officeBranch = String(d.office_branch || "").trim();
+  return officeBranch ? `${config.doctype} • ${d.name} • ${officeBranch}` : `${config.doctype} • ${d.name}`;
 });
 
 const summaryItems = computed(() =>
-  (config.summaryFields || ["name", "owner", "modified"]).map((field) => ({
-    key: field,
-    label: fieldLabel(field),
-    value: formatValue(field, doc.value?.[field]),
-  }))
+  [
+    ...(config.summaryFields || ["name", "owner", "modified"]),
+    ...(doc.value?.office_branch ? ["office_branch"] : []),
+  ]
+    .filter((field, index, all) => all.indexOf(field) === index)
+    .map((field) => ({
+      key: field,
+      label: field === "office_branch" ? t("officeBranch") : fieldLabel(field),
+      value: formatValue(field, doc.value?.[field]),
+    }))
 );
 
 const detailGroups = computed(() => config.detailGroups || []);
@@ -542,12 +558,12 @@ const operationGroups = computed(() => renderedGroups.value.filter((g) => isOper
 
 function groupTitle(key) {
   const titles = {
-    base: sessionState.locale === "tr" ? "Temel Bilgiler" : "Base Info",
-    schedule: sessionState.locale === "tr" ? "Takvim" : "Schedule",
-    assignment: sessionState.locale === "tr" ? "Atama" : "Assignment",
-    draft: sessionState.locale === "tr" ? "Taslak Bilgisi" : "Draft Info",
-    delivery: sessionState.locale === "tr" ? "Gonderim Bilgisi" : "Delivery Info",
-    reference: sessionState.locale === "tr" ? "Kaynak Baglami" : "Reference Context",
+    base: activeLocale.value === "tr" ? "Temel Bilgiler" : "Base Info",
+    schedule: activeLocale.value === "tr" ? "Takvim" : "Schedule",
+    assignment: activeLocale.value === "tr" ? "Atama" : "Assignment",
+    draft: activeLocale.value === "tr" ? "Taslak Bilgisi" : "Draft Info",
+    delivery: activeLocale.value === "tr" ? "Gonderim Bilgisi" : "Delivery Info",
+    reference: activeLocale.value === "tr" ? "Kaynak Baglami" : "Reference Context",
   };
   return titles[key] || humanizeField(key);
 }
@@ -674,9 +690,28 @@ function getQuickEditRegistryCfg() {
   return quickEditConfig.value?.registryKey ? getQuickCreateConfig(quickEditConfig.value.registryKey) : null;
 }
 
+function buildOfficeBranchLookupFilters(doctype) {
+  const officeBranch = branchStore.requestBranch;
+  if (!officeBranch) return {};
+  if (!["AT Customer", "AT Policy", "AT Accounting Entry"].includes(String(doctype || "").trim())) return {};
+  return { office_branch: officeBranch };
+}
+
 async function ensureQuickEditOptionSources() {
   const registryKey = quickEditConfig.value?.registryKey;
   if (!registryKey) return;
+  auxQuickCustomerResource.params = {
+    ...auxQuickCustomerResource.params,
+    filters: buildOfficeBranchLookupFilters("AT Customer"),
+  };
+  auxQuickPolicyResource.params = {
+    ...auxQuickPolicyResource.params,
+    filters: buildOfficeBranchLookupFilters("AT Policy"),
+  };
+  auxQuickAccountingEntryResource.params = {
+    ...auxQuickAccountingEntryResource.params,
+    filters: buildOfficeBranchLookupFilters("AT Accounting Entry"),
+  };
   if (["accounting_entry_edit", "reconciliation_item_edit"].includes(registryKey)) {
     await auxQuickAccountingEntryResource.reload().catch(() => {});
   }
@@ -753,6 +788,14 @@ function openPanel() {
   if (!panelConfig.value?.url) return;
   window.location.href = panelConfig.value.url;
 }
+
+watch(
+  () => branchStore.selected,
+  () => {
+    if (!showQuickEditDialog.value) return;
+    void ensureQuickEditOptionSources();
+  }
+);
 
 reloadDetail();
 </script>

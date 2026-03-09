@@ -1,9 +1,11 @@
 import { createApp } from "vue";
+import { createPinia } from "pinia";
 import { FrappeUI, frappeRequest, setConfig } from "frappe-ui";
 
 import App from "./App.vue";
 import router from "./router";
 import { hydrateSessionState } from "./state/session";
+import { useBranchStore } from "./stores/branch";
 import "./style.css";
 import "vue3-select-component/styles";
 
@@ -48,7 +50,13 @@ function isReadOnlyMethod(url) {
     methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows" ||
     methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_lead_detail_payload" ||
     methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_offer_detail_payload" ||
-    methodName === "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot"
+    methodName === "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot" ||
+    methodName === "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report" ||
+    methodName === "acentem_takipte.acentem_takipte.api.reports.get_payment_status_report" ||
+    methodName === "acentem_takipte.acentem_takipte.api.reports.get_renewal_performance_report" ||
+    methodName === "acentem_takipte.acentem_takipte.api.reports.get_claim_loss_ratio_report" ||
+    methodName === "acentem_takipte.acentem_takipte.api.reports.get_agent_performance_report" ||
+    methodName === "acentem_takipte.acentem_takipte.api.reports.get_customer_segmentation_report"
   );
 }
 
@@ -84,8 +92,16 @@ if (mountTarget) {
     await hydrateSessionState();
 
     const app = createApp(App);
+    const pinia = createPinia();
+    app.use(pinia);
     app.use(FrappeUI);
     app.use(router);
+    const branchStore = useBranchStore(pinia);
+    branchStore.hydrateFromSession();
+    branchStore.syncFromRoute(router.currentRoute.value);
+    router.afterEach((to) => {
+      branchStore.syncFromRoute(to);
+    });
     app.mount(mountTarget);
   };
 

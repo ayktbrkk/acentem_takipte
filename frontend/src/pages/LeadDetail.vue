@@ -306,11 +306,12 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, unref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
 import { deskActionsEnabled } from "../utils/deskActions";
+import { useAuthStore } from "../stores/auth";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
 import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
@@ -321,13 +322,14 @@ import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import StatusBadge from "../components/StatusBadge.vue";
-import { sessionState } from "../state/session";
 
 const props = defineProps({
   name: { type: String, default: "" },
 });
 
 const router = useRouter();
+const authStore = useAuthStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const copy = {
   tr: {
@@ -469,7 +471,7 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
 const leadResource = createResource({ url: "frappe.client.get", auto: false });
@@ -490,7 +492,7 @@ const loadErrorText = computed(() => {
   if (!err) return "";
   return err?.message || err?.exc || t("loadError");
 });
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const actionErrorText = ref("");
 const actionSuccessText = ref("");
 const lastConvertedOfferName = ref("");
@@ -826,9 +828,9 @@ function leadStaleState(row) {
   return "Fresh";
 }
 function leadStaleLabel(state) {
-  if (state === "Fresh") return sessionState.locale === "tr" ? "Guncel" : "Fresh";
-  if (state === "FollowUp") return sessionState.locale === "tr" ? "Takip Et" : "Follow Up";
-  return sessionState.locale === "tr" ? "Bekliyor" : "Stale";
+  if (state === "Fresh") return activeLocale.value === "tr" ? "Guncel" : "Fresh";
+  if (state === "FollowUp") return activeLocale.value === "tr" ? "Takip Et" : "Follow Up";
+  return activeLocale.value === "tr" ? "Bekliyor" : "Stale";
 }
 
 function fmtMoney(value, currency = "TRY") {

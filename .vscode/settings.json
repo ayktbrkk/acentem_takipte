@@ -1,0 +1,55 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/../env/Scripts/python.exe",
+  "editor.formatOnSave": true,
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "eslint.validate": ["javascript", "vue"],
+  "tailwindCSS.includeLanguages": {
+    "vue": "html"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "json.schemas": [
+    {
+      "fileMatch": ["/acentem_takipte/**/doctype/*/*.json"],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "doctype": { "type": "string" },
+          "name": { "type": "string" },
+          "module": { "type": "string" },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fieldname": { "type": "string" },
+                "label": { "type": "string" },
+                "fieldtype": { "type": "string" },
+                "options": {
+                  "type": ["string", "number", "boolean", "object", "array", "null"]
+                },
+                "reqd": { "type": ["integer", "boolean"] },
+                "hidden": { "type": ["integer", "boolean"] }
+              },
+              "required": ["fieldname", "fieldtype"]
+            }
+          },
+          "permissions": { "type": "array" },
+          "links": { "type": "array" }
+        }
+      }
+    }
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.analysis.typeCheckingMode": "basic",
+  "vitest.enable": true,
+  "playwright.reuseBrowser": true
+}

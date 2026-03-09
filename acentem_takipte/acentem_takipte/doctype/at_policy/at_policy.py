@@ -10,8 +10,8 @@ from frappe.model.naming import make_autoname
 from frappe.utils import add_days, flt, getdate, now_datetime, nowdate
 from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
 from acentem_takipte.acentem_takipte.policy_documents import attach_policy_pdf_to_customer_folder
-
-MONEY_TOLERANCE = 0.01
+from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
 POLICY_SNAPSHOT_FIELDS = [
     "name",
@@ -50,35 +50,16 @@ class ATPolicy(Document):
 
     def validate(self):
         self.policy_no = (self.policy_no or "").strip()
-        net_premium = flt(self.net_premium)
-        tax_value = flt(self.tax_amount)
-        commission_value = flt(self.commission_amount) or flt(self.commission)
-        gross_premium = flt(self.gross_premium)
         issue_date = getdate(self.issue_date) if self.issue_date else None
         start_date = getdate(self.start_date) if self.start_date else None
         end_date = getdate(self.end_date) if self.end_date else None
-
-        if commission_value < 0:
-            frappe.throw(_("Commission amount cannot be negative."))
-
-        if tax_value < 0:
-            frappe.throw(_("Tax amount cannot be negative."))
-
-        if net_premium <= 0 and gross_premium <= 0:
-            frappe.throw(_("Either Net Premium or Gross Premium must be greater than zero."))
-
-        if net_premium <= 0 and gross_premium > 0:
-            net_premium = gross_premium - commission_value - tax_value
-
-        if net_premium <= 0:
-            frappe.throw(_("Net premium must be greater than zero after deductions."))
-
-        calculated_gross = net_premium + commission_value + tax_value
-        if calculated_gross <= 0:
-            frappe.throw(_("Gross premium must be greater than zero."))
-
-        if gross_premium > 0 and abs(gross_premium - calculated_gross) > MONEY_TOLERANCE:
-            frappe.throw(_("Gross premium must equal Net Premium + Commission Amount + Tax Amount."))
+        normalized = normalize_financial_amounts(
+            net_premium=self.net_premium,
+            tax_amount=self.tax_amount,
+            commission_amount=flt(self.commission_amount) or flt(self.commission),
+            gross_premium=self.gross_premium,
+            zero_message_context="policy",
+        )
 
         if issue_date and start_date and issue_date > start_date:
             frappe.throw(_("Issue date cannot be later than start date."))
@@ -86,14 +67,14 @@ class ATPolicy(Document):
         if start_date and end_date and start_date > end_date:
             frappe.throw(_("Start date cannot be later than end date."))
 
-        self.net_premium = net_premium
-        self.tax_amount = tax_value
-        self.commission_amount = commission_value
-        self.commission = commission_value
-        self.gross_premium = calculated_gross
-        self.commission_rate = (commission_value / calculated_gross) * 100 if calculated_gross else 0
+        self.net_premium = normalized["net_premium"]
+        self.tax_amount = normalized["tax_amount"]
+        self.commission_amount = normalized["commission_amount"]
+        self.commission = normalized["commission_amount"]
+        self.gross_premium = normalized["gross_premium"]
+        self.commission_rate = (self.commission_amount / self.gross_premium) * 100 if self.gross_premium else 0
         self._set_exchange_rate()
-        self.gwp_try = calculated_gross * flt(self.fx_rate)
+        self.gwp_try = self.gross_premium * flt(self.fx_rate)
 
     def after_insert(self):
         try:
@@ -107,11 +88,12 @@ class ATPolicy(Document):
             )
             self.db_set("current_version", baseline_snapshot.snapshot_version, update_modified=False)
         except Exception:
-            frappe.log_error(frappe.get_traceback(), "AT Policy Baseline Snapshot Error")
+            log_redacted_error("AT Policy Baseline Snapshot Error", details={"policy": self.name, "customer": self.customer})
 
         try:
             create_notification_drafts(
                 event_key="policy_created",
+                template_key="policy_delivery",
                 reference_doctype=self.doctype,
                 reference_name=self.name,
                 customer=self.customer,
@@ -131,12 +113,18 @@ class ATPolicy(Document):
                 },
             )
         except Exception:
-            frappe.log_error(frappe.get_traceback(), "AT Policy Notification Draft Error")
+            log_redacted_error(
+                "AT Policy Notification Draft Error",
+                details={"policy": self.name, "policy_no": self.policy_no, "customer": self.customer},
+            )
 
         try:
             attach_policy_pdf_to_customer_folder(self)
         except Exception:
-            frappe.log_error(frappe.get_traceback(), "AT Policy PDF Attachment Error")
+            log_redacted_error(
+                "AT Policy PDF Attachment Error",
+                details={"policy": self.name, "policy_no": self.policy_no, "customer": self.customer},
+            )
 
     def _set_exchange_rate(self):
         self.currency = (self.currency or "TRY").upper()

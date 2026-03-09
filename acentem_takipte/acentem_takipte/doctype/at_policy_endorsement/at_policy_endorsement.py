@@ -17,6 +17,7 @@ from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import (
     create_policy_snapshot,
     serialize_policy_snapshot,
 )
+from acentem_takipte.acentem_takipte.utils.commissions import sync_legacy_commission_fields
 from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyEndorsementStatus
 
 ALLOWED_ENDORSEMENT_FIELDS = {
@@ -72,6 +73,11 @@ def apply_endorsement(endorsement_name: str) -> dict[str, str]:
     for fieldname in ALLOWED_ENDORSEMENT_FIELDS:
         if fieldname in payload:
             policy.set(fieldname, payload[fieldname])
+    if "commission_amount" in payload or "commission" in payload:
+        sync_legacy_commission_fields(
+            policy,
+            payload.get("commission_amount", payload.get("commission")),
+        )
 
     policy.save(ignore_permissions=True)
     policy.reload()

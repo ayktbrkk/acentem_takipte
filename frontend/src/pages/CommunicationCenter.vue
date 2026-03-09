@@ -301,7 +301,7 @@
       v-if="canCreateQuickMessage"
       v-model="showQuickMessageDialog"
       config-key="communication_message"
-      :locale="sessionState.locale"
+      :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
       :title-override="t('quickMessage')"
       :subtitle-override="t('quickMessageSubtitle')"
@@ -315,11 +315,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
-import { hasSessionCapability, sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { useCommunicationStore } from "../stores/communication";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
@@ -334,6 +336,9 @@ import { getSourcePanelConfig } from "../utils/sourcePanel";
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const communicationStore = useCommunicationStore();
 
 const copy = {
   tr: {
@@ -392,6 +397,7 @@ const copy = {
     dead: "Kalici Hata",
     sms: "SMS",
     email: "E-posta",
+    whatsapp: "WhatsApp",
     openPolicyPanel: "Policeyi Ac",
     openCustomerPanel: "Musteriyi Ac",
     openOffersPanel: "Teklif Panosu",
@@ -467,6 +473,7 @@ const copy = {
     dead: "Dead",
     sms: "SMS",
     email: "Email",
+    whatsapp: "WhatsApp",
     openPolicyPanel: "Open Policy",
     openCustomerPanel: "Open Customer",
     openOffersPanel: "Offers Board",
@@ -489,17 +496,12 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const filters = reactive({
-  customer: "",
-  status: "",
-  channel: "",
-  referenceDoctype: "",
-  referenceName: "",
-  limit: 50,
-});
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+
+const filters = communicationStore.state.filters;
 
 const dispatching = ref(false);
 const showQuickMessageDialog = ref(false);
@@ -539,32 +541,25 @@ const communicationQuickCustomerResource = createResource({
   params: {
     doctype: "AT Customer",
     fields: ["name", "full_name"],
+    filters: buildCustomerQuickFilters(),
     order_by: "modified desc",
     limit_page_length: 500,
   },
 });
 
-const snapshotData = computed(() => snapshotResource.data || {});
+const snapshotData = computed(() => communicationStore.state.snapshot || {});
 const snapshotErrorMessage = computed(() => {
+  if (communicationStore.state.error) return communicationStore.state.error;
   const raw = snapshotResource.error;
   if (!raw) return "";
   if (isPermissionDeniedError(raw)) return t("permissionDeniedRead");
   if (typeof raw === "string") return raw;
   return raw?.message || raw?.exc || t("loadErrorTitle");
 });
-const outboxItems = computed(() => snapshotData.value.outbox || []);
-const draftItems = computed(() => snapshotData.value.drafts || []);
-const breakdown = computed(() => snapshotData.value.status_breakdown || []);
-const activeFilterCount = computed(() => {
-  let count = 0;
-  if (filters.customer) count += 1;
-  if (filters.status) count += 1;
-  if (filters.channel) count += 1;
-  if (filters.referenceDoctype) count += 1;
-  if (filters.referenceName) count += 1;
-  if (Number(filters.limit) !== 50) count += 1;
-  return count;
-});
+const outboxItems = computed(() => communicationStore.outboxItems);
+const draftItems = computed(() => communicationStore.draftItems);
+const breakdown = computed(() => communicationStore.breakdown);
+const activeFilterCount = computed(() => communicationStore.activeFilterCount);
 const {
   presetKey,
   presetOptions,
@@ -584,7 +579,7 @@ const {
   setFilterStateFromPayload: setCommunicationFilterStateFromPayload,
   resetFilterState: resetCommunicationFilterState,
   refresh: reloadSnapshot,
-  getSortLocale: () => (sessionState.locale === "tr" ? "tr-TR" : "en-US"),
+  getSortLocale: () => (activeLocale.value === "tr" ? "tr-TR" : "en-US"),
 });
 const customerContextLabel = computed(
   () => String(route.query.customer_label || filters.customer || "").trim() || String(filters.customer || "").trim()
@@ -616,6 +611,7 @@ const statusOptions = computed(() => [
 const channelOptions = computed(() => [
   { value: "SMS", label: t("sms") },
   { value: "Email", label: t("email") },
+  { value: "WHATSAPP", label: t("whatsapp") },
 ]);
 const referenceDoctypeOptions = computed(() => [
   { value: "AT Customer", label: referenceTypeLabel("AT Customer") },
@@ -638,10 +634,10 @@ const communicationQuickOptionsMap = computed(() => ({
     label: row.full_name || row.name,
   })),
 }));
-const canCreateQuickMessage = computed(() => hasSessionCapability(["quickCreate", "communication_message"]));
-const canSendDraftNowAction = computed(() => hasSessionCapability(["actions", "communication", "sendDraftNow"]));
-const canRetryOutboxAction = computed(() => hasSessionCapability(["actions", "communication", "retryOutbox"]));
-const canRunDispatchCycle = computed(() => hasSessionCapability(["actions", "communication", "runDispatchCycle"]));
+const canCreateQuickMessage = computed(() => authStore.can(["quickCreate", "communication_message"]));
+const canSendDraftNowAction = computed(() => authStore.can(["actions", "communication", "sendDraftNow"]));
+const canRetryOutboxAction = computed(() => authStore.can(["actions", "communication", "retryOutbox"]));
+const canRunDispatchCycle = computed(() => authStore.can(["actions", "communication", "runDispatchCycle"]));
 const quickMessageDialogLabels = computed(() => ({
   save: t("saveDraft"),
   saveAndOpen: t("sendImmediately"),
@@ -652,13 +648,13 @@ const quickMessageSuccessHandlers = {
   },
 };
 
-const statusCards = computed(() => [
-  { key: "queued", label: t("queued"), value: statusCount("Queued") },
-  { key: "processing", label: t("processing"), value: statusCount("Processing") },
-  { key: "sent", label: t("sent"), value: statusCount("Sent") },
-  { key: "failed", label: t("failed"), value: statusCount("Failed") },
-  { key: "dead", label: t("dead"), value: statusCount("Dead") },
-]);
+const statusCards = computed(() =>
+  communicationStore.statusCards.map((item) => ({
+    key: item.key,
+    label: statusLabel(item.status),
+    value: item.value,
+  }))
+);
 
 function buildParams() {
   return {
@@ -667,17 +663,18 @@ function buildParams() {
     channel: filters.channel || null,
     reference_doctype: filters.referenceDoctype || null,
     reference_name: filters.referenceName || null,
+    office_branch: branchStore.requestBranch || null,
     limit: filters.limit,
   };
 }
 
+function buildCustomerQuickFilters() {
+  if (!branchStore.requestBranch) return {};
+  return { office_branch: branchStore.requestBranch };
+}
+
 function resetCommunicationFilterState() {
-  filters.customer = "";
-  filters.status = "";
-  filters.channel = "";
-  filters.referenceDoctype = "";
-  filters.referenceName = "";
-  filters.limit = 50;
+  communicationStore.resetFilters();
 }
 
 function currentCommunicationPresetPayload() {
@@ -698,11 +695,6 @@ function setCommunicationFilterStateFromPayload(payload) {
   filters.referenceDoctype = String(payload?.referenceDoctype || "");
   filters.referenceName = String(payload?.referenceName || "");
   filters.limit = Number(payload?.limit || 50) || 50;
-}
-
-function statusCount(status) {
-  const row = breakdown.value.find((item) => item.status === status);
-  return Number(row?.total || 0);
 }
 
 function statusClass(status) {
@@ -726,13 +718,39 @@ function statusLabel(status) {
 function channelLabel(channel) {
   if (channel === "SMS") return t("sms");
   if (channel === "Email") return t("email");
+  if (channel === "WHATSAPP") return t("whatsapp");
   return channel || "-";
 }
 
 function reloadSnapshot() {
   operationError.value = "";
   snapshotResource.params = buildParams();
-  return snapshotResource.reload();
+  communicationStore.setLoading(true);
+  communicationStore.clearError();
+  return snapshotResource
+    .reload()
+    .then((result) => {
+      communicationStore.setSnapshot(result || {});
+      communicationStore.setLoading(false);
+      return result;
+    })
+    .catch((error) => {
+      const message = isPermissionDeniedError(error)
+        ? t("permissionDeniedRead")
+        : error?.message || error?.exc || t("loadErrorTitle");
+      communicationStore.setSnapshot({});
+      communicationStore.setError(message);
+      communicationStore.setLoading(false);
+      throw error;
+    });
+}
+
+function reloadQuickCustomers() {
+  communicationQuickCustomerResource.params = {
+    ...communicationQuickCustomerResource.params,
+    filters: buildCustomerQuickFilters(),
+  };
+  return communicationQuickCustomerResource.reload();
 }
 function applySnapshotFilters() {
   return reloadSnapshot();
@@ -751,11 +769,13 @@ function clearCustomerFilter() {
   reloadSnapshot();
 }
 function clearContextFilters() {
-  filters.customer = "";
-  filters.status = "";
-  filters.channel = "";
-  filters.referenceDoctype = "";
-  filters.referenceName = "";
+  communicationStore.setFilters({
+    customer: "",
+    status: "",
+    channel: "",
+    referenceDoctype: "",
+    referenceName: "",
+  });
   const nextQuery = { ...route.query };
   delete nextQuery.customer;
   delete nextQuery.customer_label;
@@ -857,6 +877,7 @@ function buildQuickMessagePayload({ form, openAfter }) {
     channel: form.channel || null,
     language: form.language || null,
     customer: form.customer || null,
+    office_branch: branchStore.requestBranch || null,
     recipient: form.recipient || null,
     reference_doctype: form.reference_doctype || null,
     reference_name: form.reference_name || null,
@@ -889,7 +910,7 @@ async function prepareQuickMessageDialog({ form }) {
   if (filters.channel && !form.channel) form.channel = filters.channel;
   if (filters.referenceDoctype && !form.reference_doctype) form.reference_doctype = filters.referenceDoctype;
   if (filters.referenceName && !form.reference_name) form.reference_name = filters.referenceName;
-  if (!form.language) form.language = sessionState.locale === "tr" ? "tr" : "en";
+  if (!form.language) form.language = activeLocale.value === "tr" ? "tr" : "en";
 }
 
 function hasRouteContextQuery() {
@@ -934,14 +955,24 @@ watch(
     ) {
       return;
     }
-    filters.customer = nextCustomer;
-    filters.status = nextStatus;
-    filters.channel = nextChannel;
-    filters.referenceDoctype = nextReferenceDoctype;
-    filters.referenceName = nextReferenceName;
+    communicationStore.setFilters({
+      customer: nextCustomer,
+      status: nextStatus,
+      channel: nextChannel,
+      referenceDoctype: nextReferenceDoctype,
+      referenceName: nextReferenceName,
+    });
     reloadSnapshot();
   },
   { immediate: true }
+);
+
+watch(
+  () => branchStore.selected,
+  () => {
+    void reloadQuickCustomers();
+    void reloadSnapshot();
+  }
 );
 </script>
 

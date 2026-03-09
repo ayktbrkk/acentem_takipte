@@ -35,12 +35,16 @@ class TestDashboardContractSmoke(unittest.TestCase):
                             with patch.object(dashboard_api.frappe.db, "sql", side_effect=[[], [], []]):
                                 payload = dashboard_api.get_dashboard_kpis(filters={})
 
-        self.assertEqual(set(payload.keys()), {"cards", "lead_status", "policy_status", "top_companies", "commission_trend", "meta"})
+        self.assertEqual(
+            set(payload.keys()),
+            {"cards", "lead_status", "policy_status", "top_companies", "commission_trend", "comparison", "meta"},
+        )
         self.assertIsInstance(payload["cards"], dict)
         self.assertIsInstance(payload["lead_status"], list)
         self.assertIsInstance(payload["policy_status"], list)
         self.assertIsInstance(payload["top_companies"], list)
         self.assertIsInstance(payload["commission_trend"], list)
+        self.assertIsInstance(payload["comparison"], dict)
         self.assertEqual(payload["meta"], meta)
 
     def test_get_dashboard_tab_payload_renewals_contract_smoke(self):

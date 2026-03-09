@@ -8,12 +8,15 @@
   "policy",
   "claim",
   "customer",
+  "office_branch",
   "sales_entity",
   "payment_direction",
   "payment_purpose",
   "status",
   "payment_date",
   "due_date",
+  "installment_count",
+  "installment_interval_days",
   "currency",
   "fx_rate",
   "fx_date",
@@ -47,6 +50,12 @@
    "label": "Customer",
    "options": "AT Customer",
    "reqd": 1
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "fieldname": "sales_entity",
@@ -89,6 +98,18 @@
    "fieldname": "due_date",
    "fieldtype": "Date",
    "label": "Due Date"
+  },
+  {
+   "default": "1",
+   "fieldname": "installment_count",
+   "fieldtype": "Int",
+   "label": "Installment Count"
+  },
+  {
+   "default": "30",
+   "fieldname": "installment_interval_days",
+   "fieldtype": "Int",
+   "label": "Installment Interval Days"
   },
   {
    "default": "TRY",

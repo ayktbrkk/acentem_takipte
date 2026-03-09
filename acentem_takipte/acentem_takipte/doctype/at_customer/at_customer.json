@@ -15,6 +15,7 @@
   "masked_phone",
   "email",
   "address",
+  "office_branch",
   "assigned_agent",
   "consent_status",
   "customer_folder"
@@ -83,6 +84,12 @@
    "fieldname": "address",
    "fieldtype": "Small Text",
    "label": "Address"
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "fieldname": "assigned_agent",

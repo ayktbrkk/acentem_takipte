@@ -123,8 +123,8 @@
 
 <script setup>
 import { computed } from "vue";
-import { sessionState } from "../state/session";
-import { toggleSidebarCollapsed, uiState } from "../state/ui";
+import { useAuthStore } from "../stores/auth";
+import { useUiStore } from "../stores/ui";
 
 defineProps({
   mobileOpen: {
@@ -134,6 +134,8 @@ defineProps({
 });
 
 defineEmits(["close", "navigate"]);
+const authStore = useAuthStore();
+const uiStore = useUiStore();
 
 const copy = {
   tr: {
@@ -169,6 +171,7 @@ const copy = {
     renewals: "Yenilemeler",
     reconciliation: "Mutabakat",
     communication: "Iletisim Merkezi",
+    reports: "Raporlar",
     tasks: "Gorevler",
     notificationDrafts: "Bildirim Taslaklari",
     notificationOutbox: "Giden Bildirimler",
@@ -216,6 +219,7 @@ const copy = {
     renewals: "Renewals",
     reconciliation: "Reconciliation",
     communication: "Communication Center",
+    reports: "Reports",
     tasks: "Tasks",
     notificationDrafts: "Notification Drafts",
     notificationOutbox: "Notification Outbox",
@@ -233,13 +237,13 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[authStore.locale]?.[key] || copy.en[key] || key;
 }
 
-const isCollapsed = computed(() => uiState.sidebarCollapsed);
+const isCollapsed = computed(() => uiStore.sidebarCollapsed);
 
 function toggleSidebarCollapsedDesktop() {
-  toggleSidebarCollapsed();
+  uiStore.toggleSidebarCollapsed();
 }
 
 function linkClass(item) {
@@ -276,6 +280,7 @@ const navSections = computed(() => [
       { key: "payments", label: t("payments"), to: "/payments", short: "PM", badgeClass: "text-indigo-700" },
       { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", badgeClass: "text-rose-700" },
       { key: "reconciliation", label: t("reconciliation"), to: "/reconciliation", short: "RC", badgeClass: "text-cyan-700" },
+      { key: "reports", label: t("reports"), to: "/reports", short: "RP", badgeClass: "text-sky-700" },
     ],
   },
   {

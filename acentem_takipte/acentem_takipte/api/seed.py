@@ -3,31 +3,63 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
-from frappe.utils import add_days, cint, flt, getdate, nowdate
+from frappe.utils import add_days, cint, date_diff, flt, getdate, nowdate
 from acentem_takipte.acentem_takipte.api.security import (
-    assert_authenticated,
+    assert_doctype_permission,
     assert_non_production_or_feature_flag,
-    assert_post_request,
-    assert_roles,
-    audit_admin_action,
 )
+from acentem_takipte.acentem_takipte.renewal.reminders import resolve_stage_for_days
+from acentem_takipte.acentem_takipte.notification_seed_service import upsert_default_notification_templates
+from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
 from acentem_takipte.acentem_takipte.tasks import build_renewal_key
+from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
+
+DEMO_SEED_ADMIN_ROLES = ("System Manager",)
+SEED_CREATE_DOCTYPES = (
+    "AT Insurance Company",
+    "AT Branch",
+    "AT Sales Entity",
+    "AT Customer",
+    "AT Lead",
+    "AT Policy",
+    "AT Claim",
+    "AT Payment",
+    "AT Renewal Task",
+)
+SEED_DELETE_DOCTYPES = (
+    "AT Renewal Task",
+    "AT Payment",
+    "AT Claim",
+    "AT Policy",
+    "AT Lead",
+    "AT Customer",
+    "AT Sales Entity",
+    "AT Branch",
+    "AT Insurance Company",
+)
 
 
 def _assert_demo_seed_access(*, reset_existing: int | str = 0) -> None:
-    assert_authenticated()
-    assert_roles("System Manager", message="Only System Manager can run demo seed operations.")
     assert_non_production_or_feature_flag(
         "at_enable_demo_endpoints",
         "Demo seed endpoint is disabled in production. Enable site_config 'at_enable_demo_endpoints' to allow it.",
     )
-    assert_post_request("Only POST requests are allowed for demo seed operations.")
-    audit_admin_action(
-        "api.seed.seed_demo_data",
-        {
-            "reset_existing": bool(cint(reset_existing)),
-        },
+    assert_mutation_access(
+        action="api.seed.seed_demo_data",
+        roles=DEMO_SEED_ADMIN_ROLES,
+        doctype_permissions=SEED_CREATE_DOCTYPES,
+        permtype="create",
+        details={"reset_existing": bool(cint(reset_existing))},
+        role_message="Only System Manager can run demo seed operations.",
+        post_message="Only POST requests are allowed for demo seed operations.",
     )
+    if cint(reset_existing):
+        for doctype in SEED_DELETE_DOCTYPES:
+            assert_doctype_permission(
+                doctype,
+                "delete",
+                f"Missing delete permission for {doctype} during demo seed reset.",
+            )
 
 
 @frappe.whitelist()
@@ -48,7 +80,11 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         "claims": 0,
         "payments": 0,
         "renewal_tasks": 0,
+        "notification_templates": 0,
     }
+
+    template_summary = upsert_default_notification_templates()
+    summary["notification_templates"] = template_summary["total"]
 
     company_names = [
         "DEMO Anadolu Sigorta",
@@ -217,7 +253,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "end_date": add_days(today, 305),
             "currency": "TRY",
             "gross_premium": 18500,
-            "commission": 2100,
+            "commission_amount": 2100,
         },
         {
             "policy_no": "DEMO-POL-002",
@@ -231,7 +267,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "end_date": add_days(today, 340),
             "currency": "TRY",
             "gross_premium": 9200,
-            "commission": 950,
+            "commission_amount": 950,
         },
         {
             "policy_no": "DEMO-POL-003",
@@ -245,7 +281,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "end_date": add_days(today, 240),
             "currency": "TRY",
             "gross_premium": 13400,
-            "commission": 1600,
+            "commission_amount": 1600,
         },
         {
             "policy_no": "DEMO-POL-004",
@@ -259,7 +295,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "end_date": add_days(today, 190),
             "currency": "TRY",
             "gross_premium": 7800,
-            "commission": 700,
+            "commission_amount": 700,
         },
         {
             "policy_no": "DEMO-POL-005",
@@ -275,7 +311,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "fx_rate": 38.25,
             "fx_date": add_days(today, -9),
             "gross_premium": 480,
-            "commission": 55,
+            "commission_amount": 55,
         },
     ]
     for row in policies:
@@ -386,9 +422,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "policy": "DEMO-POL-001",
             "customer": "1000000001",
             "policy_end_date": add_days(today, 305),
-            "renewal_date": add_days(today, 10),
-            "due_date": add_days(today, 5),
-            "unique_key": build_renewal_key("DEMO-POL-001", add_days(today, 5)),
+            "renewal_date": add_days(today, 7),
+            "due_date": today,
+            "unique_key": build_renewal_stage_key("DEMO-POL-001", "1000000001", "D7", today),
             "status": "Open",
             "assigned_to": "Administrator",
             "auto_created": 0,
@@ -398,9 +434,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "policy": "DEMO-POL-003",
             "customer": "1000000003",
             "policy_end_date": add_days(today, 240),
-            "renewal_date": add_days(today, 20),
-            "due_date": add_days(today, 12),
-            "unique_key": build_renewal_key("DEMO-POL-003", add_days(today, 12)),
+            "renewal_date": add_days(today, 15),
+            "due_date": today,
+            "unique_key": build_renewal_stage_key("DEMO-POL-003", "1000000003", "D15", today),
             "status": "In Progress",
             "assigned_to": "Administrator",
             "auto_created": 0,
@@ -420,11 +456,11 @@ def _upsert_by_name(doctype: str, name: str, values: dict[str, Any]):
     if frappe.db.exists(doctype, name):
         doc = frappe.get_doc(doctype, name)
         _apply_values(doc, values)
-        doc.save(ignore_permissions=True)
+        doc.save()
         return doc
 
     payload = {"doctype": doctype, **values}
-    return frappe.get_doc(payload).insert(ignore_permissions=True)
+    return frappe.get_doc(payload).insert()
 
 
 def _upsert_sales_entity(full_name: str, entity_type: str, parent_entity: str | None = None):
@@ -437,10 +473,10 @@ def _upsert_sales_entity(full_name: str, entity_type: str, parent_entity: str | 
     if existing_name:
         doc = frappe.get_doc("AT Sales Entity", existing_name)
         _apply_values(doc, values)
-        doc.save(ignore_permissions=True)
+        doc.save()
         return doc
 
-    return frappe.get_doc({"doctype": "AT Sales Entity", **values}).insert(ignore_permissions=True)
+    return frappe.get_doc({"doctype": "AT Sales Entity", **values}).insert()
 
 
 def _upsert_lead(values: dict[str, Any]):
@@ -451,24 +487,31 @@ def _upsert_lead(values: dict[str, Any]):
     if existing_name:
         doc = frappe.get_doc("AT Lead", existing_name)
         _apply_values(doc, payload)
-        doc.save(ignore_permissions=True)
+        doc.save()
         return doc
 
-    return frappe.get_doc({"doctype": "AT Lead", **payload}).insert(ignore_permissions=True)
+    return frappe.get_doc({"doctype": "AT Lead", **payload}).insert()
 
 
 def _upsert_renewal_task(values: dict[str, Any]):
     if not values.get("unique_key") and values.get("policy") and values.get("due_date"):
-        values["unique_key"] = build_renewal_key(values["policy"], values["due_date"])
+        renewal_date = getdate(values.get("renewal_date")) if values.get("renewal_date") else None
+        due_date = getdate(values.get("due_date")) if values.get("due_date") else None
+        customer = values.get("customer")
+        stage = resolve_stage_for_days(date_diff(renewal_date, due_date)) if renewal_date and due_date else None
+        if stage:
+            values["unique_key"] = build_renewal_stage_key(values["policy"], customer, stage.code, due_date)
+        else:
+            values["unique_key"] = build_renewal_key(values["policy"], values["due_date"])
 
     existing_name = frappe.db.get_value("AT Renewal Task", {"unique_key": values["unique_key"]}, "name")
     if existing_name:
         doc = frappe.get_doc("AT Renewal Task", existing_name)
         _apply_values(doc, values)
-        doc.save(ignore_permissions=True)
+        doc.save()
         return doc
 
-    return frappe.get_doc({"doctype": "AT Renewal Task", **values}).insert(ignore_permissions=True)
+    return frappe.get_doc({"doctype": "AT Renewal Task", **values}).insert()
 
 
 def _apply_values(doc, values: dict[str, Any]):
@@ -499,7 +542,7 @@ def _cleanup_demo_data():
             limit_page_length=0,
         )
         for name in names:
-            frappe.delete_doc(doctype, name, ignore_permissions=True, force=True)
+            frappe.delete_doc(doctype, name, force=True)
 
     sales_entities = frappe.get_all(
         "AT Sales Entity",
@@ -508,7 +551,7 @@ def _cleanup_demo_data():
         limit_page_length=0,
     )
     for name in sales_entities:
-        frappe.delete_doc("AT Sales Entity", name, ignore_permissions=True, force=True)
+        frappe.delete_doc("AT Sales Entity", name, force=True)
 
 
 def _pick_demo_agent() -> str:

@@ -4,12 +4,22 @@ from typing import Any
 
 import frappe
 from frappe.utils import add_days, cint, getdate, nowdate
-from frappe.exceptions import DuplicateEntryError
 
-from acentem_takipte.acentem_takipte.communication import process_notification_queue, queue_notification_drafts
+from acentem_takipte.acentem_takipte.communication import (
+    process_notification_queue,
+    queue_notification_drafts,
+)
+from acentem_takipte.acentem_takipte.renewal.pipeline import (
+    run_renewal_task_creation,
+    run_stale_renewal_task_remediation,
+)
+from acentem_takipte.acentem_takipte.services.payments import build_payment_reminder_payload
+from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_scheduled_reports
+from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
 
-RENEWAL_LOOKAHEAD_DAYS = 30
+RENEWAL_LOOKAHEAD_DAYS = 90
 MAX_POLICIES_PER_RUN = 2000
+MAX_PAYMENTS_PER_RUN = 2000
 
 
 def build_renewal_key(policy_name: str, due_date) -> str:
@@ -47,79 +57,38 @@ def create_renewal_tasks() -> dict[str, Any]:
     )
 
 def _create_renewal_tasks_logic() -> dict[str, int]:
-    today = getdate(nowdate())
-    target_end_date = add_days(today, RENEWAL_LOOKAHEAD_DAYS)
-    policies = frappe.get_all(
-        "AT Policy",
-        filters={
-            "status": "Active",
-            "end_date": ["between", [today, target_end_date]],
-        },
-        fields=["name", "customer", "end_date"],
-        limit_page_length=MAX_POLICIES_PER_RUN,
+    return run_renewal_task_creation(
+        business_date=getdate(nowdate()),
+        lookahead_days=RENEWAL_LOOKAHEAD_DAYS,
+        limit=MAX_POLICIES_PER_RUN,
     )
-
-    policy_names = [policy.name for policy in policies]
-    existing_keys = _load_existing_renewal_keys(policy_names)
-
-    scanned = len(policies)
-    created = 0
-    skipped_existing = 0
-    skipped_race = 0
-    skipped_invalid = 0
-
-    for policy in policies:
-        if not policy.end_date:
-            skipped_invalid += 1
-            continue
-
-        customer = policy.customer or frappe.db.get_value("AT Policy", policy.name, "customer")
-        if not customer:
-            skipped_invalid += 1
-            continue
-
-        due_date = add_days(getdate(policy.end_date), -RENEWAL_LOOKAHEAD_DAYS)
-        unique_key = build_renewal_key(policy.name, due_date)
-
-        if unique_key in existing_keys:
-            skipped_existing += 1
-            continue
-
-        try:
-            frappe.get_doc(
-                {
-                    "doctype": "AT Renewal Task",
-                    "policy": policy.name,
-                    "customer": customer,
-                    "policy_end_date": policy.end_date,
-                    "renewal_date": policy.end_date,
-                    "due_date": due_date,
-                    "status": "Open",
-                    "auto_created": 1,
-                    "unique_key": unique_key,
-                }
-            ).insert(ignore_permissions=True)
-            existing_keys.add(unique_key)
-            created += 1
-        except DuplicateEntryError:
-            skipped_race += 1
-
-    if created:
-        frappe.db.commit()
-
-    summary = {
-        "scanned": scanned,
-        "created": created,
-        "skipped_existing": skipped_existing,
-        "skipped_race": skipped_race,
-        "skipped_invalid": skipped_invalid,
-    }
-    frappe.logger("acentem_takipte").info("AT renewal task job summary: %s", summary)
-    return summary
 
 
 def run_renewal_task_job() -> dict[str, Any]:
     return create_renewal_tasks()
+
+
+def run_stale_renewal_task_job(limit: int = 500) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    job = frappe.enqueue(
+        "acentem_takipte.acentem_takipte.tasks._run_stale_renewal_task_logic",
+        limit=safe_limit,
+        queue="long",
+        timeout=1500,
+    )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.acentem_takipte.tasks._run_stale_renewal_task_logic",
+        limit=safe_limit,
+    )
+
+
+def _run_stale_renewal_task_logic(limit: int = 500) -> dict[str, int]:
+    return run_stale_renewal_task_remediation(
+        business_date=getdate(nowdate()),
+        limit=max(cint(limit), 1),
+    )
 
 
 def run_notification_queue_job(limit: int = 120) -> dict[str, Any]:
@@ -138,10 +107,157 @@ def run_notification_queue_job(limit: int = 120) -> dict[str, Any]:
     )
 
 
+def run_payment_due_job(limit: int = 250) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    job = frappe.enqueue(
+        "acentem_takipte.acentem_takipte.tasks._run_payment_due_logic",
+        limit=safe_limit,
+        queue="default",
+        timeout=600,
+    )
+    return _queued_response(
+        job=job,
+        queue="default",
+        method="acentem_takipte.acentem_takipte.tasks._run_payment_due_logic",
+        limit=safe_limit,
+    )
+
+
+def run_scheduled_reports_job(frequency: str = "daily", limit: int = 10) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    safe_frequency = str(frequency or "daily").strip().lower() or "daily"
+    job = frappe.enqueue(
+        "acentem_takipte.acentem_takipte.tasks._run_scheduled_reports_logic",
+        frequency=safe_frequency,
+        limit=safe_limit,
+        queue="long",
+        timeout=1500,
+    )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.acentem_takipte.tasks._run_scheduled_reports_logic",
+        limit=safe_limit,
+    )
+
+
 def _run_notification_queue_logic(limit: int = 120) -> dict[str, dict[str, int]]:
     queued = queue_notification_drafts(limit=limit, include_failed=True)
     dispatched = process_notification_queue(limit=limit)
     return {"queued": queued, "dispatched": dispatched}
+
+
+def _run_payment_due_logic(limit: int = 250) -> dict[str, int]:
+    today = getdate(nowdate())
+    target_due_date = add_days(today, 7)
+    payments = frappe.get_all(
+        "AT Payment",
+        filters={
+            "status": ATPaymentStatus.DRAFT,
+            "due_date": ["<=", target_due_date],
+        },
+        fields=["name", "customer", "due_date", "policy"],
+        order_by="due_date asc",
+        limit_page_length=max(cint(limit), 1),
+    )
+
+    scanned = len(payments)
+    created = 0
+    skipped_duplicate = 0
+    skipped_invalid = 0
+
+    for payment in payments:
+        if not payment.due_date or not payment.customer:
+            skipped_invalid += 1
+            continue
+
+        reminder_payload = build_payment_reminder_payload(
+            payment_name=payment.name,
+            customer=payment.customer,
+            policy=payment.policy,
+            due_date=getdate(payment.due_date),
+            business_date=today,
+        )
+        if not reminder_payload:
+            skipped_invalid += 1
+            continue
+
+        if _payment_notification_exists_today(payment.name, today):
+            skipped_duplicate += 1
+            continue
+
+        create_notification_drafts(
+            event_key="payment_due",
+            template_key=reminder_payload.template_key,
+            reference_doctype="AT Payment",
+            reference_name=payment.name,
+            customer=payment.customer,
+            context={
+                "payment": reminder_payload.payment,
+                "policy": reminder_payload.policy,
+                "due_date": reminder_payload.due_date,
+                "payment_stage": reminder_payload.stage_code,
+                "payment_dedupe_key": reminder_payload.dedupe_key,
+            },
+        )
+        created += 1
+
+    summary = {
+        "scanned": scanned,
+        "created": created,
+        "skipped_duplicate": skipped_duplicate,
+        "skipped_invalid": skipped_invalid,
+    }
+    frappe.logger("acentem_takipte").info(
+        "AT payment due reminder job summary: %s",
+        build_metric_event(
+            "payment.due_job",
+            dimensions={"component": "tasks"},
+            values=summary,
+        ),
+    )
+    return summary
+
+
+def _run_scheduled_reports_logic(frequency: str = "daily", limit: int = 10) -> dict[str, Any]:
+    summary = dispatch_scheduled_reports(frequency=frequency, limit=limit)
+    outbox_names = [str(item).strip() for item in (summary.pop("outboxes", []) or []) if str(item).strip()]
+    fanout = _enqueue_outbox_dispatch_jobs(outbox_names)
+    summary["outbox_enqueued"] = fanout["queued"]
+    summary["outbox_queue_failed"] = fanout["failed"]
+    summary["outbox_sent"] = 0
+    summary["outbox_failed"] = 0
+    summary["outbox_dead"] = 0
+    summary["outbox_skipped"] = fanout["skipped"]
+    return summary
+
+
+def _enqueue_outbox_dispatch_jobs(outbox_names: list[str]) -> dict[str, int]:
+    queued = 0
+    failed = 0
+    skipped = 0
+
+    for outbox_name in outbox_names:
+        normalized_name = str(outbox_name or "").strip()
+        if not normalized_name:
+            skipped += 1
+            continue
+        try:
+            frappe.enqueue(
+                "acentem_takipte.acentem_takipte.communication.dispatch_notification_outbox",
+                outbox_name=normalized_name,
+                queue="default",
+                timeout=600,
+            )
+            queued += 1
+        except Exception:
+            failed += 1
+
+    return {
+        "queued": queued,
+        "failed": failed,
+        "skipped": skipped,
+    }
 
 
 def run_accounting_sync_job(limit: int = 250) -> dict[str, Any]:
@@ -180,23 +296,24 @@ def _build_renewal_key(policy_name: str, due_date) -> str:
     return build_renewal_key(policy_name, due_date)
 
 
-def _load_existing_renewal_keys(policy_names: list[str]) -> set[str]:
-    if not policy_names:
-        return set()
-
+def _payment_notification_exists_today(payment_name: str, business_date) -> bool:
+    start_of_day = f"{business_date} 00:00:00"
+    end_of_day = f"{business_date} 23:59:59"
     rows = frappe.get_all(
-        "AT Renewal Task",
-        filters={"policy": ["in", policy_names]},
-        fields=["policy", "due_date", "unique_key"],
-        limit_page_length=0,
+        "AT Notification Draft",
+        filters={
+            "reference_doctype": "AT Payment",
+            "reference_name": payment_name,
+            "event_key": "payment_due",
+            "creation": ["between", [start_of_day, end_of_day]],
+        },
+        fields=["name"],
+        limit_page_length=5,
     )
-    keys: set[str] = set()
-    for row in rows:
-        if row.unique_key:
-            keys.add(row.unique_key)
-            continue
+    return bool(rows)
 
-        if row.policy and row.due_date:
-            keys.add(build_renewal_key(row.policy, row.due_date))
 
-    return keys
+def _load_existing_renewal_keys(policy_names: list[str]) -> set[str]:
+    from acentem_takipte.acentem_takipte.renewal.service import load_existing_renewal_keys as load_existing_renewal_keys_service
+
+    return load_existing_renewal_keys_service(policy_names)

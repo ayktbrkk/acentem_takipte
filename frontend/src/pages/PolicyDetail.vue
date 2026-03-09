@@ -139,6 +139,26 @@
           <DocSummaryGrid :items="coverageSummaryItems" />
         </article>
         <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('productProfileTitle')" :show-count="false" />
+          <DocSummaryGrid :items="productProfileSummaryItems" />
+        </article>
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('productReadinessTitle')" :show-count="false" />
+          <DocSummaryGrid :items="productReadinessSummaryItems" />
+          <div class="mt-3">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("missingProductFields") }}</p>
+            <div v-if="productMissingFieldRows.length === 0" class="at-empty-block mt-2">{{ t("noMissingProductField") }}</div>
+            <ul v-else class="mt-2 space-y-2 text-sm">
+              <MetaListCard
+                v-for="item in productMissingFieldRows"
+                :key="item.key"
+                :title="item.label"
+                :meta="t('missingFieldStatus')"
+              />
+            </ul>
+          </div>
+        </article>
+        <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('snapshotSummary')" :show-count="false" />
           <DocSummaryGrid v-if="snapshotPreview" :items="snapshotSummaryItems" />
           <div v-else class="at-empty-block">{{ t("emptyLifecycle") }}</div>
@@ -233,10 +253,10 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, ref, unref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
 import { deskActionsEnabled } from "../utils/deskActions";
 import StatusBadge from "../components/StatusBadge.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
@@ -249,6 +269,8 @@ import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 
 const props = defineProps({ name: { type: String, default: "" } });
 const router = useRouter();
+const authStore = useAuthStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const labels = {
   tr: {
@@ -259,7 +281,12 @@ const labels = {
     scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Baslangic", end: "Bitis", remaining: "Kalan Gun",
     net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brut Prim", commissionRate: "Komisyon Orani", gwpTry: "GWP TRY",
     payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti",
+    productProfileTitle: "Urun Profili",
+    productReadinessTitle: "Urun Hazirlik Durumu",
     company: "Sigorta Sirketi", branch: "Brans", customer: "Musteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
+    productFamily: "Urun Ailesi", insuredSubject: "Sigortalanan Konu", coverageFocus: "Kapsam Odagi",
+    readinessScore: "Hazirlik Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
+    missingProductFields: "Eksik Urun Alanlari", noMissingProductField: "Eksik zorunlu alan bulunamadi.", missingFieldStatus: "Eksik",
     endorsementTitle: "Zeyilname Gecmisi", emptyEndorsement: "Zeyilname yok.", documents: "Dokumanlar", emptyFiles: "Dosya yok.",
     notifications: "Bildirim Taslaklari", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Ac",
     tabSummary: "Ozet", tabPremiums: "Prim/Odeme", tabCoverages: "Teminatlar", tabEndorsements: "Zeyilnameler", tabDocuments: "Dokumanlar",
@@ -273,14 +300,19 @@ const labels = {
     scheduleTitle: "Schedule", issue: "Issue Date", start: "Start Date", end: "End Date", remaining: "Days Remaining",
     net: "Net Premium", tax: "Tax", commission: "Commission", gross: "Gross Premium", commissionRate: "Commission Rate", gwpTry: "GWP TRY",
     payments: "Payments", emptyPayments: "No payments.", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary",
+    productProfileTitle: "Product Profile",
+    productReadinessTitle: "Product Readiness",
     company: "Insurance Company", branch: "Branch", customer: "Customer", status: "Status", currency: "Currency", fxRate: "FX Rate", fxDate: "FX Date",
+    productFamily: "Product Family", insuredSubject: "Insured Subject", coverageFocus: "Coverage Focus",
+    readinessScore: "Readiness Score", completedFields: "Completed Fields", missingFields: "Missing Fields",
+    missingProductFields: "Missing Product Fields", noMissingProductField: "No missing required field found.", missingFieldStatus: "Missing",
     endorsementTitle: "Endorsement History", emptyEndorsement: "No endorsements.", documents: "Documents", emptyFiles: "No files.",
     notifications: "Notification Drafts", emptyNotifications: "No notifications.", version: "Version", open: "Open",
     tabSummary: "Summary", tabPremiums: "Premiums/Payments", tabCoverages: "Coverages", tabEndorsements: "Endorsements", tabDocuments: "Documents",
     typeEndorsement: "Endorsement", typeCall: "Call", typeNote: "Note", expired: "Expired", noDate: "No date",
   },
 };
-const t = (k) => labels[sessionState.locale]?.[k] || labels.en[k] || k;
+const t = (k) => labels[activeLocale.value]?.[k] || labels.en[k] || k;
 
 const tabs = computed(() => [
   { key: "summary", label: t("tabSummary") },
@@ -292,6 +324,10 @@ const tabs = computed(() => [
 const activeTab = ref("summary");
 const selectedSnapshotName = ref("");
 
+const policy360Resource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_policy_360_payload",
+  auto: false,
+});
 const policyR = createResource({ url: "frappe.client.get", auto: false });
 const customerR = createResource({ url: "frappe.client.get", auto: false });
 const endorsementR = createResource({ url: "frappe.client.get_list", auto: false });
@@ -311,15 +347,16 @@ const snapshots = computed(() => [...(snapshotR.data || [])].sort((a, b) => Numb
 const payments = computed(() => paymentR.data || []);
 const files = computed(() => fileR.data || []);
 const notifications = computed(() => notificationR.data || []);
+const productProfile = computed(() => policy360Resource.data?.product_profile || {});
 
-const locale = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
-const timelineLoading = computed(() => endorsementR.loading || commentR.loading || communicationR.loading);
-const snapshotLoading = computed(() => snapshotR.loading);
-const customerLoading = computed(() => customerR.loading);
-const endorsementLoading = computed(() => endorsementR.loading);
-const paymentLoading = computed(() => paymentR.loading);
-const fileLoading = computed(() => fileR.loading);
-const notificationLoading = computed(() => notificationR.loading);
+const locale = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+const timelineLoading = computed(() => policy360Resource.loading);
+const snapshotLoading = computed(() => policy360Resource.loading);
+const customerLoading = computed(() => policy360Resource.loading);
+const endorsementLoading = computed(() => policy360Resource.loading);
+const paymentLoading = computed(() => policy360Resource.loading);
+const fileLoading = computed(() => policy360Resource.loading);
+const notificationLoading = computed(() => policy360Resource.loading);
 
 const selectedSnapshot = computed(() => {
   if (!snapshots.value.length) return null;
@@ -502,6 +539,46 @@ const coverageSummaryItems = computed(() => [
     value: fmtDate(policy.value.fx_date),
   },
 ]);
+const productProfileSummaryItems = computed(() => [
+  {
+    key: "productFamily",
+    label: t("productFamily"),
+    value: productProfile.value.product_family || "-",
+  },
+  {
+    key: "insuredSubject",
+    label: t("insuredSubject"),
+    value: productProfile.value.insured_subject || "-",
+  },
+  {
+    key: "coverageFocus",
+    label: t("coverageFocus"),
+    value: productProfile.value.coverage_focus || productProfile.value.branch_label || "-",
+  },
+  {
+    key: "policyStatus",
+    label: t("status"),
+    value: policyStatusLabel(productProfile.value.policy_status || policy.value.status),
+  },
+]);
+const productReadinessSummaryItems = computed(() => [
+  {
+    key: "readiness",
+    label: t("readinessScore"),
+    value: fmtPct(productProfile.value.readiness_score),
+  },
+  {
+    key: "completed",
+    label: t("completedFields"),
+    value: String(productProfile.value.completed_field_count ?? 0),
+  },
+  {
+    key: "missing",
+    label: t("missingFields"),
+    value: String(productProfile.value.missing_field_count ?? 0),
+  },
+]);
+const productMissingFieldRows = computed(() => productProfile.value.missing_fields || []);
 const snapshotSummaryItems = computed(() => [
   {
     key: "version",
@@ -552,26 +629,29 @@ watch(() => props.name, () => { activeTab.value = "summary"; void load(); }, { i
 async function load() {
   if (!props.name) return;
   try {
-    const data = await policyR.reload({ doctype: "AT Policy", name: props.name });
-    policyR.setData(data || {});
+    const payload = await policy360Resource.reload({ name: props.name });
+    const data = payload || {};
+    policyR.setData(data.policy || {});
+    customerR.setData(data.customer || null);
+    endorsementR.setData(data.endorsements || []);
+    commentR.setData(data.comments || []);
+    communicationR.setData(data.communications || []);
+    snapshotR.setData(data.snapshots || []);
+    paymentR.setData(data.payments || []);
+    fileR.setData(data.files || []);
+    notificationR.setData(data.notifications || []);
   } catch {
-    policyR.setData({}); return;
-  }
-  const calls = [
-    endorsementR.reload({ doctype: "AT Policy Endorsement", fields: ["name", "endorsement_type", "status", "notes", "endorsement_date", "snapshot_version", "applied_on", "applied_by", "owner", "creation"], filters: { policy: props.name }, order_by: "creation desc", limit_page_length: 100 }).catch(() => endorsementR.setData([])),
-    commentR.reload({ doctype: "Comment", fields: ["name", "creation", "owner", "comment_type", "content"], filters: { reference_doctype: "AT Policy", reference_name: props.name }, order_by: "creation desc", limit_page_length: 100 }).catch(() => commentR.setData([])),
-    communicationR.reload({ doctype: "Communication", fields: ["name", "creation", "owner", "communication_date", "subject", "sender", "communication_type", "content"], filters: { reference_doctype: "AT Policy", reference_name: props.name }, order_by: "communication_date desc", limit_page_length: 50 }).catch(() => communicationR.setData([])),
-    snapshotR.reload({ doctype: "AT Policy Snapshot", fields: ["name", "snapshot_version", "snapshot_type", "captured_on", "captured_by", "snapshot_json"], filters: { policy: props.name }, order_by: "snapshot_version asc", limit_page_length: 200 }).catch(() => snapshotR.setData([])),
-    paymentR.reload({ doctype: "AT Payment", fields: ["name", "payment_no", "status", "payment_direction", "payment_purpose", "payment_date", "currency", "amount", "amount_try"], filters: { policy: props.name }, order_by: "payment_date desc", limit_page_length: 50 }).catch(() => paymentR.setData([])),
-    fileR.reload({ doctype: "File", fields: ["name", "file_name", "file_url", "creation"], filters: { attached_to_doctype: "AT Policy", attached_to_name: props.name, is_folder: 0 }, order_by: "creation desc", limit_page_length: 100 }).catch(() => fileR.setData([])),
-    notificationR.reload({ doctype: "AT Notification Draft", fields: ["name", "creation", "channel", "language", "status", "subject", "body"], filters: { reference_doctype: "AT Policy", reference_name: props.name }, order_by: "creation desc", limit_page_length: 100 }).catch(() => notificationR.setData([])),
-  ];
-  if (policy.value.customer) {
-    calls.push(customerR.reload({ doctype: "AT Customer", name: policy.value.customer }).catch(() => customerR.setData(null)));
-  } else {
+    policyR.setData({});
     customerR.setData(null);
+    endorsementR.setData([]);
+    commentR.setData([]);
+    communicationR.setData([]);
+    snapshotR.setData([]);
+    paymentR.setData([]);
+    fileR.setData([]);
+    notificationR.setData([]);
+    return;
   }
-  await Promise.allSettled(calls);
   selectedSnapshotName.value = snapshots.value[snapshots.value.length - 1]?.name || "";
 }
 
@@ -581,7 +661,7 @@ const openCustomer = (name) => name && router.push({ name: "customer-detail", pa
 const endorsementStatusClass = (s) => (s === "Applied" ? "text-emerald-700" : s === "Cancelled" ? "text-rose-700" : "text-slate-700");
 
 function policyStatusLabel(status) {
-  if (sessionState.locale !== "tr") return status || "-";
+  if (activeLocale.value !== "tr") return status || "-";
   if (status === "Active") return "Aktif";
   if (status === "KYT") return "KYT";
   if (status === "IPT" || status === "Cancelled") return "Iptal";
@@ -590,7 +670,7 @@ function policyStatusLabel(status) {
 }
 
 function paymentStatusLabel(status) {
-  if (sessionState.locale !== "tr") return status || "-";
+  if (activeLocale.value !== "tr") return status || "-";
   if (status === "Submitted") return "Gonderildi";
   if (status === "Draft") return "Taslak";
   if (status === "Cancelled") return "Iptal";
@@ -599,7 +679,7 @@ function paymentStatusLabel(status) {
 }
 
 function endorsementStatusLabel(status) {
-  if (sessionState.locale !== "tr") return status || "-";
+  if (activeLocale.value !== "tr") return status || "-";
   if (status === "Applied") return "Uygulandi";
   if (status === "Pending") return "Beklemede";
   if (status === "Cancelled") return "Iptal";
@@ -607,7 +687,7 @@ function endorsementStatusLabel(status) {
 }
 
 function notificationStatusLabel(status) {
-  if (sessionState.locale !== "tr") return status || "-";
+  if (activeLocale.value !== "tr") return status || "-";
   if (status === "Queued") return "Kuyrukta";
   if (status === "Processing") return "Isleniyor";
   if (status === "Sent") return "Gonderildi";

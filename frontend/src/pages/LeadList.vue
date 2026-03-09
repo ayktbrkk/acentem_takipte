@@ -206,7 +206,7 @@
             :model="quickLeadForm"
             :field-errors="quickLeadFieldErrors"
             :disabled="quickLeadLoading"
-            :locale="sessionState.locale"
+            :locale="activeLocale"
             :options-map="leadQuickOptionsMap"
             @submit="submitQuickLead(false)"
             @request-related-create="onLeadRelatedCreateRequested"
@@ -218,11 +218,12 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
@@ -254,6 +255,14 @@ import {
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+
+function buildOfficeBranchLookupFilters() {
+  const officeBranch = branchStore.requestBranch || "";
+  return officeBranch ? { office_branch: officeBranch } : {};
+}
 const copy = {
   tr: {
     title: "Fırsat Yonetimi",
@@ -440,7 +449,7 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
 const filters = reactive({
@@ -503,13 +512,19 @@ const leadQuickSalesEntityResource = createResource({
 const leadQuickCustomerResource = createResource({
   url: "frappe.client.get_list",
   auto: true,
-  params: { doctype: "AT Customer", fields: ["name", "full_name"], order_by: "modified desc", limit_page_length: QUICK_OPTION_LIMIT },
+  params: {
+    doctype: "AT Customer",
+    fields: ["name", "full_name"],
+    filters: buildOfficeBranchLookupFilters(),
+    order_by: "modified desc",
+    limit_page_length: QUICK_OPTION_LIMIT,
+  },
 });
 const presetServerReadResource = createResource({ url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state", auto: false });
 const presetServerWriteResource = createResource({ url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state", auto: false });
 
 const rows = computed(() => leadListResource.data?.rows || []);
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const leadQuickFields = computed(() => quickLeadConfig?.fields || []);
 const leadQuickOptionsMap = computed(() => ({
   branches: (leadQuickBranchResource.data || []).map((row) => ({ value: row.name, label: row.branch_name || row.name })),
@@ -518,16 +533,16 @@ const leadQuickOptionsMap = computed(() => ({
   customers: (leadQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
 }));
 const quickLeadUi = computed(() => ({
-  title: getLocalizedText(quickLeadConfig?.title, sessionState.locale),
-  subtitle: getLocalizedText(quickLeadConfig?.subtitle, sessionState.locale),
-  newLabel: sessionState.locale === "tr" ? "Yeni Fırsat" : "New Lead",
+  title: getLocalizedText(quickLeadConfig?.title, activeLocale.value),
+  subtitle: getLocalizedText(quickLeadConfig?.subtitle, activeLocale.value),
+  newLabel: activeLocale.value === "tr" ? "Yeni Fırsat" : "New Lead",
 }));
 const quickCreateCommon = computed(() => ({
-  cancel: sessionState.locale === "tr" ? "Vazgec" : "Cancel",
-  save: sessionState.locale === "tr" ? "Kaydet" : "Save",
-  saveAndOpen: sessionState.locale === "tr" ? "Kaydet ve Ac" : "Save & Open",
-  validation: sessionState.locale === "tr" ? "Lutfen gerekli alanlari doldurun." : "Please fill required fields.",
-  failed: sessionState.locale === "tr" ? "Hizli kayit olusturulamadi." : "Quick create failed.",
+  cancel: activeLocale.value === "tr" ? "Vazgec" : "Cancel",
+  save: activeLocale.value === "tr" ? "Kaydet" : "Save",
+  saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Ac" : "Save & Open",
+  validation: activeLocale.value === "tr" ? "Lutfen gerekli alanlari doldurun." : "Please fill required fields.",
+  failed: activeLocale.value === "tr" ? "Hizli kayit olusturulamadi." : "Quick create failed.",
 }));
 const isInitialLoading = computed(() => leadListResource.loading && rows.value.length === 0);
 const leadStatusOptions = computed(() => [
@@ -642,7 +657,7 @@ function buildFilterPayload() {
   return out;
 }
 function buildListParams() {
-  return {
+  return withOfficeBranchFilter({
     page: pagination.page,
     page_length: pagination.pageLength,
     filters: {
@@ -659,6 +674,18 @@ function buildListParams() {
       sales_entity: filters.sales_entity || "",
       insurance_company: filters.insurance_company || "",
       status: filters.status || "",
+    },
+  });
+}
+
+function withOfficeBranchFilter(params) {
+  const officeBranch = branchStore.requestBranch || "";
+  if (!officeBranch) return params;
+  return {
+    ...params,
+    filters: {
+      ...(params.filters || {}),
+      office_branch: officeBranch,
     },
   };
 }
@@ -889,7 +916,7 @@ function validateQuickLeadForm() {
     if (!field?.required) continue;
     const value = quickLeadForm[field.name];
     if (String(value ?? "").trim() === "") {
-      quickLeadFieldErrors[field.name] = getLocalizedText(field.label, sessionState.locale);
+      quickLeadFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
       valid = false;
     }
   }
@@ -1108,6 +1135,21 @@ function leadAgeDays(value) {
 
 applyPreset(presetKey.value, { refresh: false });
 void refreshLeadList();
+watch(
+  () => branchStore.selected,
+  () => {
+    pagination.page = 1;
+    leadQuickCustomerResource.params = {
+      doctype: "AT Customer",
+      fields: ["name", "full_name"],
+      filters: buildOfficeBranchLookupFilters(),
+      order_by: "modified desc",
+      limit_page_length: QUICK_OPTION_LIMIT,
+    };
+    void leadQuickCustomerResource.reload();
+    void refreshLeadList();
+  }
+);
 void hydratePresetStateFromServer();
 void consumeQuickLeadRouteIntent();
 onBeforeUnmount(() => {

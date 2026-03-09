@@ -1,7 +1,11 @@
 import frappe
 from frappe.utils import now
 
-from acentem_takipte.acentem_takipte.api.session import _build_session_capabilities, resolve_current_user
+from acentem_takipte.acentem_takipte.api.session import (
+    _build_session_capabilities,
+    _resolve_session_interface,
+    resolve_current_user,
+)
 from acentem_takipte.acentem_takipte.setup_utils import ensure_core_setup_once, ensure_user_default_role
 from acentem_takipte.acentem_takipte.utils.assets import ensure_site_asset_symlink, get_asset_includes
 
@@ -23,8 +27,11 @@ def get_context(context):
     ensure_site_asset_symlink()
     js_includes, css_includes = get_asset_includes(entry="src/main.js")
     asset_version = now()
+    interface = _resolve_session_interface(current_user)
     context.at_js_includes = [_append_version(path, asset_version) for path in js_includes]
     context.at_css_includes = [_append_version(path, asset_version) for path in css_includes]
+    context.at_preferred_home = interface["preferred_home"]
+    context.at_interface_mode = interface["interface_mode"]
     context.at_session = {
         "user": current_user,
         "full_name": frappe.db.get_value("User", current_user, "full_name") or current_user,
@@ -33,6 +40,9 @@ def get_context(context):
             frappe.db.get_value("User", current_user, "language") or frappe.local.lang or "tr"
         ).split("-")[0],
         "capabilities": _build_session_capabilities(),
+        "roles": interface["roles"],
+        "preferred_home": interface["preferred_home"],
+        "interface_mode": interface["interface_mode"],
     }
 
 

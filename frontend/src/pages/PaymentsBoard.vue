@@ -156,7 +156,7 @@
     <QuickCreateManagedDialog
       v-model="showQuickPaymentDialog"
       config-key="payment"
-      :locale="sessionState.locale"
+      :locale="activeLocale"
       :options-map="paymentQuickOptionsMap"
       :show-save-and-open="false"
       :before-open="prepareQuickPaymentDialog"
@@ -166,10 +166,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { usePaymentStore } from "../stores/payment";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
@@ -236,6 +238,10 @@ const copy = {
     sortPaymentDateDesc: "Tarih (Yeni -> Eski)",
     sortPaymentDateAsc: "Tarih (Eski -> Yeni)",
     sortAmountDesc: "Tutar (Yuksek -> Dusuk)",
+    installments: "Taksit",
+    overdueInstallments: "Geciken Taksit",
+    nextInstallmentDue: "Sonraki Vade",
+    paidInstallments: "Odenen Taksit",
   },
   en: {
     title: "Payments",
@@ -286,39 +292,35 @@ const copy = {
     sortPaymentDateDesc: "Payment Date (New -> Old)",
     sortPaymentDateAsc: "Payment Date (Old -> New)",
     sortAmountDesc: "Amount (High -> Low)",
+    installments: "Installments",
+    overdueInstallments: "Overdue Installments",
+    nextInstallmentDue: "Next Due",
+    paidInstallments: "Paid Installments",
   },
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const filters = reactive({
-  query: "",
-  direction: "",
-  customerQuery: "",
-  policyQuery: "",
-  purposeQuery: "",
-  sort: "modified desc",
-  limit: 24,
-});
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const paymentStore = usePaymentStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+
+function buildOfficeBranchLookupFilters() {
+  const officeBranch = branchStore.requestBranch || "";
+  return officeBranch ? { office_branch: officeBranch } : {};
+}
+
+const filters = paymentStore.state.filters;
 const paymentSortOptions = computed(() => [
   { value: "modified desc", label: t("sortModifiedDesc") },
   { value: "payment_date desc", label: t("sortPaymentDateDesc") },
   { value: "payment_date asc", label: t("sortPaymentDateAsc") },
   { value: "amount_try desc", label: t("sortAmountDesc") },
 ]);
-const activeFilterCount = computed(() => {
-  let count = 0;
-  if (filters.query) count += 1;
-  if (filters.direction) count += 1;
-  if (filters.customerQuery) count += 1;
-  if (filters.policyQuery) count += 1;
-  if (filters.purposeQuery) count += 1;
-  if (filters.sort !== "modified desc") count += 1;
-  if (Number(filters.limit) !== 24) count += 1;
-  return count;
-});
+const activeFilterCount = computed(() => paymentStore.activeFilterCount);
 const {
   presetKey,
   presetOptions,
@@ -338,12 +340,17 @@ const {
   setFilterStateFromPayload: setPaymentFilterStateFromPayload,
   resetFilterState: resetPaymentFilterState,
   refresh: reloadPayments,
-  getSortLocale: () => (sessionState.locale === "tr" ? "tr-TR" : "en-US"),
+  getSortLocale: () => localeCode.value,
 });
 
 const paymentsResource = createResource({
   url: "frappe.client.get_list",
   params: buildPaymentListParams(),
+  auto: true,
+});
+const paymentInstallmentResource = createResource({
+  url: "frappe.client.get_list",
+  params: buildPaymentInstallmentListParams(),
   auto: true,
 });
 
@@ -353,6 +360,7 @@ const paymentQuickCustomerResource = createResource({
   params: {
     doctype: "AT Customer",
     fields: ["name", "full_name"],
+    filters: buildOfficeBranchLookupFilters(),
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -363,6 +371,7 @@ const paymentQuickPolicyResource = createResource({
   params: {
     doctype: "AT Policy",
     fields: ["name", "policy_no", "customer"],
+    filters: buildOfficeBranchLookupFilters(),
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -373,6 +382,7 @@ const paymentQuickClaimResource = createResource({
   params: {
     doctype: "AT Claim",
     fields: ["name", "claim_no", "customer", "policy"],
+    filters: buildOfficeBranchLookupFilters(),
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -388,31 +398,35 @@ const paymentQuickSalesEntityResource = createResource({
   },
 });
 
-const paymentsRaw = computed(() => paymentsResource.data || []);
-const payments = computed(() => {
-  let rows = paymentsRaw.value.slice();
-  const query = normalizeText(filters.query);
-  if (query) {
-    rows = rows.filter((row) =>
-      [row?.payment_no, row?.name, row?.customer, row?.policy]
-        .some((value) => normalizeText(value).includes(query))
+const payments = computed(() => paymentStore.filteredItems);
+const installmentSummaryByPayment = computed(() => {
+  const grouped = new Map();
+  for (const installment of paymentInstallmentResource.data || []) {
+    if (!installment?.payment) continue;
+    const current = grouped.get(installment.payment) || {
+      total: 0,
+      paid: 0,
+      overdue: 0,
+      nextDue: "",
+    };
+    current.total = Math.max(
+      Number(current.total || 0),
+      Number(installment.installment_count || installment.installment_no || 0)
     );
+    if (installment.status === "Paid") current.paid += 1;
+    if (installment.status === "Overdue") current.overdue += 1;
+    if (
+      (installment.status === "Scheduled" || installment.status === "Overdue") &&
+      installment.due_date &&
+      (!current.nextDue || installment.due_date < current.nextDue)
+    ) {
+      current.nextDue = installment.due_date;
+    }
+    grouped.set(installment.payment, current);
   }
-  const customerQuery = normalizeText(filters.customerQuery);
-  if (customerQuery) {
-    rows = rows.filter((row) => normalizeText(row?.customer).includes(customerQuery));
-  }
-  const policyQuery = normalizeText(filters.policyQuery);
-  if (policyQuery) {
-    rows = rows.filter((row) => normalizeText(row?.policy).includes(policyQuery));
-  }
-  const purposeQuery = normalizeText(filters.purposeQuery);
-  if (purposeQuery) {
-    rows = rows.filter((row) => normalizeText(row?.payment_purpose).includes(purposeQuery));
-  }
-  return rows;
+  return grouped;
 });
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const showQuickPaymentDialog = ref(false);
 const paymentQuickOptionsMap = computed(() => ({
   customers: (paymentQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
@@ -432,20 +446,13 @@ const quickPaymentSuccessHandlers = {
   },
 };
 const paymentsErrorText = computed(() => {
+  if (paymentStore.state.error) return paymentStore.state.error;
   const err = paymentsResource.error;
   if (!err) return "";
   return err?.messages?.join(" ") || err?.message || t("loadError");
 });
-const inboundTotal = computed(() =>
-  payments.value
-    .filter((row) => row.payment_direction === "Inbound")
-    .reduce((sum, row) => sum + Number(row.amount_try || 0), 0)
-);
-const outboundTotal = computed(() =>
-  payments.value
-    .filter((row) => row.payment_direction === "Outbound")
-    .reduce((sum, row) => sum + Number(row.amount_try || 0), 0)
-);
+const inboundTotal = computed(() => paymentStore.inboundTotal);
+const outboundTotal = computed(() => paymentStore.outboundTotal);
 const showSummaryGrid = computed(
   () => !paymentsResource.loading && !paymentsErrorText.value && payments.value.length > 0
 );
@@ -464,10 +471,6 @@ function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
-function normalizeText(value) {
-  return String(value || "").trim().toLocaleLowerCase(sessionState.locale === "tr" ? "tr-TR" : "en-US");
-}
-
 function buildPaymentListParams() {
   const params = {
     doctype: "AT Payment",
@@ -480,6 +483,7 @@ function buildPaymentListParams() {
       "payment_date",
       "customer",
       "policy",
+      "installment_count",
     ],
     order_by: filters.sort || "modified desc",
     limit_page_length: Number(filters.limit) || 24,
@@ -487,12 +491,48 @@ function buildPaymentListParams() {
   if (filters.direction) {
     params.filters = { payment_direction: filters.direction };
   }
-  return params;
+  return withOfficeBranchFilter(params);
+}
+
+function buildPaymentInstallmentListParams() {
+  return withOfficeBranchFilter({
+    doctype: "AT Payment Installment",
+    fields: ["payment", "installment_no", "installment_count", "status", "due_date", "amount_try"],
+    order_by: "due_date asc",
+    limit_page_length: 1000,
+  });
+}
+
+function withOfficeBranchFilter(params) {
+  const officeBranch = branchStore.requestBranch || "";
+  if (!officeBranch) return params;
+  return {
+    ...params,
+    filters: {
+      ...(params.filters || {}),
+      office_branch: officeBranch,
+    },
+  };
 }
 
 function reloadPayments() {
   paymentsResource.params = buildPaymentListParams();
-  return paymentsResource.reload();
+  paymentInstallmentResource.params = buildPaymentInstallmentListParams();
+  paymentStore.setLocaleCode(localeCode.value);
+  paymentStore.setLoading(true);
+  paymentStore.clearError();
+  return Promise.all([paymentsResource.reload(), paymentInstallmentResource.reload()])
+    .then(([result]) => {
+      paymentStore.setItems(result || []);
+      paymentStore.setLoading(false);
+      return result;
+    })
+    .catch((error) => {
+      paymentStore.setItems([]);
+      paymentStore.setError(error?.messages?.join(" ") || error?.message || t("loadError"));
+      paymentStore.setLoading(false);
+      throw error;
+    });
 }
 
 function applyPaymentFilters() {
@@ -500,13 +540,7 @@ function applyPaymentFilters() {
 }
 
 function resetPaymentFilterState() {
-  filters.query = "";
-  filters.direction = "";
-  filters.customerQuery = "";
-  filters.policyQuery = "";
-  filters.purposeQuery = "";
-  filters.sort = "modified desc";
-  filters.limit = 24;
+  paymentStore.resetFilters();
 }
 
 function currentPaymentPresetPayload() {
@@ -558,6 +592,30 @@ function paymentDetailFacts(payment) {
     mutedFact("customer", t("customer"), payment?.customer || "-"),
   ];
   pushMutedFactIf(items, Boolean(payment?.policy), "policy", t("policy"), payment?.policy);
+  const installmentSummary = installmentSummaryByPayment.value.get(payment?.name);
+  const installmentCount = Number(installmentSummary?.total || payment?.installment_count || 0);
+  pushMutedFactIf(items, installmentCount > 1, "installments", t("installments"), `${installmentCount}`);
+  pushMutedFactIf(
+    items,
+    Number(installmentSummary?.paid || 0) > 0,
+    "paid_installments",
+    t("paidInstallments"),
+    `${installmentSummary?.paid}/${installmentCount || installmentSummary?.paid}`
+  );
+  pushMutedFactIf(
+    items,
+    Number(installmentSummary?.overdue || 0) > 0,
+    "overdue_installments",
+    t("overdueInstallments"),
+    `${installmentSummary?.overdue}`
+  );
+  pushMutedFactIf(
+    items,
+    Boolean(installmentSummary?.nextDue),
+    "next_due",
+    t("nextInstallmentDue"),
+    installmentSummary?.nextDue
+  );
   return items;
 }
 
@@ -572,10 +630,44 @@ function openRelatedRecord(payment) {
 }
 
 onMounted(() => {
+  paymentStore.setLocaleCode(localeCode.value);
   applyPreset(presetKey.value, { refresh: false });
   if (String(presetKey.value || "default") !== "default") void reloadPayments();
   void hydratePresetStateFromServer();
 });
+
+watch(
+  () => branchStore.selected,
+  () => {
+    paymentStore.setLocaleCode(localeCode.value);
+    const officeFilters = buildOfficeBranchLookupFilters();
+    paymentQuickCustomerResource.params = {
+      doctype: "AT Customer",
+      fields: ["name", "full_name"],
+      filters: officeFilters,
+      order_by: "modified desc",
+      limit_page_length: 500,
+    };
+    paymentQuickPolicyResource.params = {
+      doctype: "AT Policy",
+      fields: ["name", "policy_no", "customer"],
+      filters: officeFilters,
+      order_by: "modified desc",
+      limit_page_length: 500,
+    };
+    paymentQuickClaimResource.params = {
+      doctype: "AT Claim",
+      fields: ["name", "claim_no", "customer", "policy"],
+      filters: officeFilters,
+      order_by: "modified desc",
+      limit_page_length: 500,
+    };
+    void paymentQuickCustomerResource.reload();
+    void paymentQuickPolicyResource.reload();
+    void paymentQuickClaimResource.reload();
+    void reloadPayments();
+  }
+);
 </script>
 
 <style scoped>

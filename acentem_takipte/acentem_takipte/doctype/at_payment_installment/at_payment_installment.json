@@ -1,0 +1,125 @@
+{
+ "actions": [],
+ "autoname": "Prompt",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "payment",
+  "customer",
+  "policy",
+  "office_branch",
+  "installment_no",
+  "installment_count",
+  "status",
+  "due_date",
+  "paid_on",
+  "currency",
+  "amount",
+  "amount_try",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "payment",
+   "fieldtype": "Link",
+   "label": "Payment",
+   "options": "AT Payment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "AT Customer"
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "label": "Policy",
+   "options": "AT Policy"
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
+  },
+  {
+   "fieldname": "installment_no",
+   "fieldtype": "Int",
+   "label": "Installment No",
+   "reqd": 1
+  },
+  {
+   "fieldname": "installment_count",
+   "fieldtype": "Int",
+   "label": "Installment Count",
+   "reqd": 1
+  },
+  {
+   "default": "Scheduled",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Scheduled\nOverdue\nPaid\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "paid_on",
+   "fieldtype": "Date",
+   "label": "Paid On"
+  },
+  {
+   "default": "TRY",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount_try",
+   "fieldtype": "Currency",
+   "label": "Amount TRY"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Kullanici Notu",
+   "description": "Kullanici tarafindan eklenen serbest metin."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Payment Installment",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

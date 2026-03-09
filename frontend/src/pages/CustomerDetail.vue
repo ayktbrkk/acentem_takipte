@@ -277,6 +277,18 @@
             <ActionButton variant="secondary" size="sm" :disabled="!activePolicies.length" @click="activePolicies[0] && openPolicyDetail(activePolicies[0].name)">
               {{ t("openPolicy") }}
             </ActionButton>
+            <ActionButton variant="secondary" size="sm" @click="openCustomerRelations">
+              {{ t("relatedCustomersTitle") }}
+            </ActionButton>
+            <ActionButton variant="secondary" size="sm" @click="openInsuredAssets">
+              {{ t("insuredAssetsTitle") }}
+            </ActionButton>
+            <ActionButton variant="secondary" size="sm" @click="openQuickCustomerRelation">
+              {{ t("newRelation") }}
+            </ActionButton>
+            <ActionButton variant="secondary" size="sm" @click="openQuickInsuredAsset">
+              {{ t("newAsset") }}
+            </ActionButton>
             <ActionButton
               v-if="deskActionsEnabled()"
               variant="secondary"
@@ -293,7 +305,7 @@
           class="surface-card rounded-2xl p-5"
         >
           <SectionCardHeader :title="t('activePoliciesTitle')" :count="activePolicies.length" />
-          <div v-if="policyResource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div
             v-else-if="activePolicies.length === 0"
             class="at-empty-block"
@@ -325,7 +337,7 @@
           class="surface-card rounded-2xl p-5"
         >
           <SectionCardHeader :title="t('openOffersTitle')" :count="openOffers.length" />
-          <div v-if="offerResource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div
             v-else-if="openOffers.length === 0"
             class="at-empty-block"
@@ -344,6 +356,221 @@
               </template>
               <MiniFactList class="mt-2" :items="offerCardFacts(offer)" />
             </EntityPreviewCard>
+          </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('paymentSummaryTitle')" :count="paymentPreviewRows.length" />
+          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="paymentPreviewRows.length === 0" class="at-empty-block">
+            {{ t("noPaymentHistory") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <EntityPreviewCard
+              v-for="payment in paymentPreviewRows"
+              :key="payment.name"
+              :title="payment.payment_no || payment.name"
+              :subtitle="payment.policy || '-'"
+            >
+              <template #trailing>
+                <StatusBadge type="payment" :status="payment.status" />
+              </template>
+              <MiniFactList class="mt-2" :items="paymentCardFacts(payment)" />
+            </EntityPreviewCard>
+          </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('claimsTitle')" :count="claimPreviewRows.length" />
+          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="claimPreviewRows.length === 0" class="at-empty-block">
+            {{ t("noClaims") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <EntityPreviewCard
+              v-for="claim in claimPreviewRows"
+              :key="claim.name"
+              :title="claim.name"
+              :subtitle="claim.policy || '-'"
+            >
+              <template #trailing>
+                <StatusBadge type="claim" :status="claim.claim_status" />
+              </template>
+              <MiniFactList class="mt-2" :items="claimCardFacts(claim)" />
+            </EntityPreviewCard>
+          </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('renewalsTitle')" :count="renewalPreviewRows.length" />
+          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="renewalPreviewRows.length === 0" class="at-empty-block">
+            {{ t("noUpcomingRenewal") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <EntityPreviewCard
+              v-for="renewal in renewalPreviewRows"
+              :key="renewal.name"
+              :title="renewal.policy || renewal.name"
+              :subtitle="renewal.competitor_name || '-'"
+            >
+              <template #trailing>
+                <StatusBadge type="renewal" :status="renewal.status" />
+              </template>
+              <MiniFactList class="mt-2" :items="renewalCardFacts(renewal)" />
+            </EntityPreviewCard>
+          </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('insightSummaryTitle')" :show-count="false" />
+          <div class="grid gap-3 md:grid-cols-3">
+            <MetaListCard
+              :title="t('segment')"
+              :description="t('segmentScore')"
+              :meta="customer360Insights.segment || '-'"
+            />
+            <MetaListCard
+              :title="t('score')"
+              :description="t('customerValueScore')"
+              :meta="String(customer360Insights.score ?? '-')"
+            />
+            <MetaListCard
+              :title="t('claimRisk')"
+              :description="t('claimRiskHint')"
+              :meta="customer360Insights.claim_risk || '-'"
+            />
+            <MetaListCard
+              :title="t('valueBand')"
+              :description="t('valueBandHint')"
+              :meta="valueBandLabel"
+            />
+          </div>
+          <div class="mt-3 grid gap-3 md:grid-cols-2">
+            <MetaListCard
+              :title="t('portfolioStrengths')"
+              :description="t('strengthSignalsHint')"
+              :meta="insightStrengthRows.join(' / ') || t('noStrengthSignal')"
+            />
+            <MetaListCard
+              :title="t('portfolioRisks')"
+              :description="t('riskSignalsHint')"
+              :meta="insightRiskRows.join(' / ') || t('noRiskSignal')"
+            />
+          </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('crossSellTitle')" :count="crossSellOpportunityRows.length" />
+          <div v-if="crossSellOpportunityRows.length === 0" class="at-empty-block">
+            {{ t("noCrossSellOpportunity") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <MetaListCard
+              v-for="item in crossSellOpportunityRows"
+              :key="item.branch"
+              :title="item.branch"
+              :description="t('crossSellOpportunityHint')"
+              :meta="t('crossSellOpportunityMeta')"
+            />
+          </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('relatedCustomersTitle')" :count="relatedCustomerRows.length" />
+          <div v-if="relatedCustomerRows.length === 0" class="at-empty-block">
+            {{ t("noRelatedCustomer") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <MetaListCard
+              v-for="relation in relatedCustomerRows"
+              :key="relation.name"
+              :title="relation.related_customer"
+              :description="relation.relation_type || '-'"
+              :meta="relation.is_household ? t('sameHousehold') : '-'"
+            >
+                <template #trailing>
+                  <div class="flex items-center gap-2">
+                    <ActionButton variant="secondary" size="xs" @click.stop="openEditCustomerRelation(relation)">
+                      {{ t("edit") }}
+                    </ActionButton>
+                    <ActionButton variant="secondary" size="xs" @click.stop="deleteCustomerRelation(relation)">
+                      {{ t("delete") }}
+                    </ActionButton>
+                  </div>
+                </template>
+              </MetaListCard>
+            </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('insuredAssetsTitle')" :count="insuredAssetRows.length" />
+          <div v-if="insuredAssetRows.length === 0" class="at-empty-block">
+            {{ t("noInsuredAsset") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <EntityPreviewCard
+              v-for="asset in insuredAssetRows"
+              :key="asset.policy"
+              :title="asset.policy_no || asset.policy"
+              :subtitle="asset.insurance_company || '-'"
+              >
+                <template #trailing>
+                  <StatusBadge type="policy" :status="asset.status" />
+                </template>
+                <MiniFactList class="mt-2" :items="insuredAssetFacts(asset)" />
+                <template #footer>
+                  <div class="flex items-center gap-2">
+                    <ActionButton variant="secondary" size="xs" @click="openEditInsuredAsset(asset)">
+                      {{ t("edit") }}
+                    </ActionButton>
+                    <ActionButton variant="secondary" size="xs" @click="deleteInsuredAsset(asset)">
+                      {{ t("delete") }}
+                    </ActionButton>
+                  </div>
+                </template>
+              </EntityPreviewCard>
+            </div>
+          </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('communicationSummaryTitle')" :count="communicationChannelRows.length" />
+          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="communicationChannelRows.length === 0" class="at-empty-block">
+            {{ t("noCommunicationSummary") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <MetaListCard
+              v-for="channel in communicationChannelRows"
+              :key="channel.channel"
+              :title="channel.channel"
+              :description="t('communicationChannelCount')"
+              :meta="String(channel.total)"
+            />
           </div>
         </article>
 
@@ -378,15 +605,51 @@
         </article>
       </div>
     </div>
+    <QuickCreateManagedDialog
+      v-model="showCustomerRelationDialog"
+      config-key="customer_relation"
+      :locale="activeLocale"
+      :options-map="customer360QuickOptionsMap"
+      :before-open="prepareCustomerRelationDialog"
+      :success-handlers="customer360QuickSuccessHandlers"
+    />
+
+    <QuickCreateManagedDialog
+      v-model="showInsuredAssetDialog"
+      config-key="insured_asset"
+      :locale="activeLocale"
+      :options-map="customer360QuickOptionsMap"
+      :before-open="prepareInsuredAssetDialog"
+      :success-handlers="customer360QuickSuccessHandlers"
+    />
+
+    <QuickCreateManagedDialog
+      v-model="showCustomerRelationEditDialog"
+      config-key="customer_relation_edit"
+      :locale="activeLocale"
+      :options-map="customer360QuickOptionsMap"
+      :before-open="prepareCustomerRelationEditDialog"
+      :success-handlers="customer360QuickSuccessHandlers"
+    />
+
+    <QuickCreateManagedDialog
+      v-model="showInsuredAssetEditDialog"
+      config-key="insured_asset_edit"
+      :locale="activeLocale"
+      :options-map="customer360QuickOptionsMap"
+      :before-open="prepareInsuredAssetEditDialog"
+      :success-handlers="customer360QuickSuccessHandlers"
+    />
   </section>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, unref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
 import { deskActionsEnabled } from "../utils/deskActions";
+import { useAuthStore } from "../stores/auth";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
 import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
@@ -395,9 +658,9 @@ import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
+import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import StatusBadge from "../components/StatusBadge.vue";
-import { sessionState } from "../state/session";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 
 const props = defineProps({
@@ -408,6 +671,8 @@ const props = defineProps({
 });
 
 const router = useRouter();
+const authStore = useAuthStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 const activeCustomerTab = ref("overview");
 
 const copy = {
@@ -416,6 +681,12 @@ const copy = {
     openDesk: "Yonetim Ekraninda Ac",
     newOffer: "Yeni Teklif",
     communication: "Iletisim",
+    newRelation: "Yeni Iliski",
+    newAsset: "Yeni Varlik",
+    edit: "Duzenle",
+    delete: "Sil",
+    deleteRelationConfirm: "Bu iliski kaydi silinsin mi?",
+    deleteAssetConfirm: "Bu varlik kaydi silinsin mi?",
     editProfile: "Duzenle",
     cancelEdit: "Vazgec",
     saveProfile: "Kaydet",
@@ -458,8 +729,62 @@ const copy = {
     activePolicyCount: "Aktif Police",
     openOfferCount: "Acik Teklif",
     totalRiskLimit: "Toplam Risk Limiti",
+    segment: "Segment",
+    score: "Skor",
+    customerValueScore: "Musteri deger puani",
+    claimRisk: "Hasar Riski",
+    claimRiskHint: "Acil risk seviyesi",
+    segmentScore: "Portfoy segmenti",
+    valueBand: "Deger Bandı",
+    valueBandHint: "Portfoy prim seviyesine gore deger sinifi",
+    portfolioStrengths: "Guclu Sinyaller",
+    portfolioRisks: "Risk Sinyalleri",
+    strengthSignalsHint: "Musteri portfoyunu guclendiren faktorler",
+    riskSignalsHint: "Takip gerektiren risk baskilari",
+    noStrengthSignal: "Belirgin pozitif sinyal bulunamadi.",
+    noRiskSignal: "Belirgin risk sinyali bulunamadi.",
+    valueBandHighValue: "Yuksek Deger",
+    valueBandMidValue: "Orta Deger",
+    valueBandStandard: "Standart",
+    insightSignalMultiPolicy: "Coklu aktif police portfoyu",
+    insightSignalActivePortfolio: "Aktif police portfoyu",
+    insightSignalHighPremium: "Yuksek premium katkisi",
+    insightSignalMediumPremium: "Orta premium katkisi",
+    insightSignalCleanClaims: "Temiz hasar gorunumu",
+    insightSignalRenewalPipeline: "Yaklasan yenileme firsati",
+    insightRiskClaimPressure: "Hasar baskisi yuksek",
+    insightRiskCollectionRisk: "Tahsilat riski yuksek",
+    insightRiskOverduePayment: "Geciken tahsilat var",
+    insightRiskCancellationHistory: "Iptal gecmisi dikkat gerektiriyor",
     activePoliciesTitle: "Aktif Policeler",
     noActivePolicy: "Aktif police kaydi bulunamadi.",
+    paymentSummaryTitle: "Odeme Ozeti",
+    noPaymentHistory: "Odeme kaydi bulunamadi.",
+    paymentDate: "Odeme Tarihi",
+    claimsTitle: "Hasarlar",
+    noClaims: "Hasar kaydi bulunamadi.",
+    reportedDate: "Bildirim Tarihi",
+    claimAmount: "Hasar Tutari",
+    renewalsTitle: "Yaklasan Yenilemeler",
+    noUpcomingRenewal: "Yaklasan yenileme bulunamadi.",
+    dueDate: "Vade",
+    lostReason: "Kayip Sebebi",
+    communicationSummaryTitle: "Iletisim Kanal Ozeti",
+    noCommunicationSummary: "Iletisim ozeti bulunamadi.",
+    communicationChannelCount: "Kanal toplam kaydi",
+    insightSummaryTitle: "Musteri Icgoruleri",
+    crossSellTitle: "Capraz Satis Firsatlari",
+    noCrossSellOpportunity: "Ek capraz satis firsati bulunamadi.",
+    crossSellOpportunityHint: "Eksik urun/branş firsati",
+    crossSellOpportunityMeta: "Aksiyon onerisi",
+    relatedCustomersTitle: "Iliskili Kisiler",
+    noRelatedCustomer: "Iliskili kisi kaydi bulunamadi.",
+    sameHousehold: "Ayni hane",
+    insuredAssetsTitle: "Sigortalanan Varliklar",
+    noInsuredAsset: "Sigortalanan varlik bulunamadi.",
+    assetType: "Varlik Turu",
+    assetIdentifier: "Varlik Kimligi",
+    policyBranch: "Brans",
     endDate: "Bitis",
     openPolicy: "Police Detayi",
     openOffersTitle: "Acik Teklifler",
@@ -482,6 +807,12 @@ const copy = {
     openDesk: "Open Desk",
     newOffer: "New Offer",
     communication: "Communication",
+    newRelation: "New Relation",
+    newAsset: "New Asset",
+    edit: "Edit",
+    delete: "Delete",
+    deleteRelationConfirm: "Delete this relation record?",
+    deleteAssetConfirm: "Delete this asset record?",
     editProfile: "Edit",
     cancelEdit: "Cancel",
     saveProfile: "Save",
@@ -524,8 +855,62 @@ const copy = {
     activePolicyCount: "Active Policies",
     openOfferCount: "Open Offers",
     totalRiskLimit: "Total Risk Limit",
+    segment: "Segment",
+    score: "Score",
+    customerValueScore: "Customer value score",
+    claimRisk: "Claim Risk",
+    claimRiskHint: "Current risk level",
+    segmentScore: "Portfolio segment",
+    valueBand: "Value Band",
+    valueBandHint: "Value tier based on portfolio premium level",
+    portfolioStrengths: "Strength Signals",
+    portfolioRisks: "Risk Signals",
+    strengthSignalsHint: "Factors that strengthen the customer portfolio",
+    riskSignalsHint: "Risk pressure points that need follow-up",
+    noStrengthSignal: "No major positive signal found.",
+    noRiskSignal: "No major risk signal found.",
+    valueBandHighValue: "High Value",
+    valueBandMidValue: "Mid Value",
+    valueBandStandard: "Standard",
+    insightSignalMultiPolicy: "Multiple active policies",
+    insightSignalActivePortfolio: "Active policy portfolio",
+    insightSignalHighPremium: "High premium contribution",
+    insightSignalMediumPremium: "Medium premium contribution",
+    insightSignalCleanClaims: "Clean claims outlook",
+    insightSignalRenewalPipeline: "Upcoming renewal opportunity",
+    insightRiskClaimPressure: "High claim pressure",
+    insightRiskCollectionRisk: "High collection risk",
+    insightRiskOverduePayment: "Overdue collection exists",
+    insightRiskCancellationHistory: "Cancellation history needs attention",
     activePoliciesTitle: "Active Policies",
     noActivePolicy: "No active policies found.",
+    paymentSummaryTitle: "Payment Summary",
+    noPaymentHistory: "No payment records found.",
+    paymentDate: "Payment Date",
+    claimsTitle: "Claims",
+    noClaims: "No claims found.",
+    reportedDate: "Reported Date",
+    claimAmount: "Claim Amount",
+    renewalsTitle: "Upcoming Renewals",
+    noUpcomingRenewal: "No upcoming renewals found.",
+    dueDate: "Due Date",
+    lostReason: "Lost Reason",
+    communicationSummaryTitle: "Communication Channel Summary",
+    noCommunicationSummary: "No communication summary found.",
+    communicationChannelCount: "Channel record count",
+    insightSummaryTitle: "Customer Insights",
+    crossSellTitle: "Cross-Sell Opportunities",
+    noCrossSellOpportunity: "No additional cross-sell opportunity found.",
+    crossSellOpportunityHint: "Missing product/branch opportunity",
+    crossSellOpportunityMeta: "Recommended action",
+    relatedCustomersTitle: "Related Customers",
+    noRelatedCustomer: "No related customer records found.",
+    sameHousehold: "Same household",
+    insuredAssetsTitle: "Insured Assets",
+    noInsuredAsset: "No insured asset found.",
+    assetType: "Asset Type",
+    assetIdentifier: "Asset Identifier",
+    policyBranch: "Branch",
     endDate: "End Date",
     openPolicy: "Policy Detail",
     openOffersTitle: "Open Offers",
@@ -546,7 +931,7 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
 const customerDetailTabs = computed(() => [
@@ -556,50 +941,45 @@ const customerDetailTabs = computed(() => [
   { value: "operations", label: t("tabOperations") },
 ]);
 
-const customerResource = createResource({
-  url: "frappe.client.get",
+const customer360Resource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_360_payload",
   auto: false,
 });
 const customerProfileUpdateResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.update_customer_profile",
   auto: false,
 });
-
-const policyResource = createResource({
-  url: "frappe.client.get_list",
+const customerRelationDeleteResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
+  auto: false,
+});
+const insuredAssetDeleteResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
   auto: false,
 });
 
-const offerResource = createResource({
-  url: "frappe.client.get_list",
-  auto: false,
-});
-
-const leadHistoryResource = createResource({
-  url: "frappe.client.get_list",
-  auto: false,
-});
-
-const commentResource = createResource({
-  url: "frappe.client.get_list",
-  auto: false,
-});
-
-const communicationResource = createResource({
-  url: "frappe.client.get_list",
-  auto: false,
-});
-
-const customer = computed(() => customerResource.data || {});
-const policies = computed(() => policyResource.data || []);
-const offers = computed(() => offerResource.data || []);
-const leadHistory = computed(() => leadHistoryResource.data || []);
-const comments = computed(() => commentResource.data || []);
-const communications = computed(() => communicationResource.data || []);
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const customer360Payload = computed(() => customer360Resource.data || {});
+const customer = computed(() => customer360Payload.value.customer || {});
+const customer360Summary = computed(() => customer360Payload.value.summary || {});
+const customer360Portfolio = computed(() => customer360Payload.value.portfolio || {});
+const customer360Communication = computed(() => customer360Payload.value.communication || {});
+const customer360Insights = computed(() => customer360Payload.value.insights || {});
+const customer360CrossSell = computed(() => customer360Payload.value.cross_sell || {});
+const policies = computed(() => customer360Portfolio.value.policies || []);
+const offers = computed(() => customer360Portfolio.value.offers || []);
+const payments = computed(() => customer360Portfolio.value.payments || []);
+const claims = computed(() => customer360Portfolio.value.claims || []);
+const renewals = computed(() => customer360Portfolio.value.renewals || []);
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const profileEditMode = ref(false);
 const profileSaveError = ref("");
 const profileSaveMessage = ref("");
+const showCustomerRelationDialog = ref(false);
+const showInsuredAssetDialog = ref(false);
+const showCustomerRelationEditDialog = ref(false);
+const showInsuredAssetEditDialog = ref(false);
+const editingCustomerRelation = ref(null);
+const editingInsuredAsset = ref(null);
 let profileFlashTimer = null;
 const profileFormErrors = reactive({
   full_name: "",
@@ -617,10 +997,16 @@ const profileForm = reactive({
   consent_status: "Unknown",
 });
 
-const customerLoading = computed(() => customerResource.loading);
-const timelineLoading = computed(
-  () => leadHistoryResource.loading || commentResource.loading || communicationResource.loading
-);
+const customerLoading = computed(() => customer360Resource.loading);
+const timelineLoading = computed(() => customer360Resource.loading);
+const auxQuickCustomerResource = createResource({
+  url: "frappe.client.get_list",
+  auto: false,
+});
+const auxQuickPolicyResource = createResource({
+  url: "frappe.client.get_list",
+  auto: false,
+});
 
 const activePolicies = computed(() =>
   policies.value.filter((policy) => String(policy.status || "").toUpperCase() !== "IPT")
@@ -628,9 +1014,41 @@ const activePolicies = computed(() =>
 const openOffers = computed(() =>
   offers.value.filter((offer) => !["Rejected", "Converted"].includes(String(offer.status || "")))
 );
+const paymentPreviewRows = computed(() => payments.value.slice(0, 6));
+const claimPreviewRows = computed(() => claims.value.slice(0, 6));
+const renewalPreviewRows = computed(() => renewals.value.slice(0, 6));
+const communicationChannelRows = computed(() => customer360Communication.value.channel_summary || []);
+const insuredAssetRows = computed(() => customer360CrossSell.value.insured_assets || []);
+const crossSellOpportunityRows = computed(() => customer360CrossSell.value.opportunity_branches || []);
+const relatedCustomerRows = computed(() => customer360CrossSell.value.related_customers || []);
+const valueBandLabel = computed(() => describeValueBand(customer360Insights.value.value_band));
+const insightStrengthRows = computed(() =>
+  (customer360Insights.value.strengths || []).map((item) => describeInsightSignal(item)).filter(Boolean)
+);
+const insightRiskRows = computed(() =>
+  (customer360Insights.value.risks || []).map((item) => describeInsightSignal(item)).filter(Boolean)
+);
+const customer360QuickOptionsMap = computed(() => ({
+  customers: (auxQuickCustomerResource.data || []).map((row) => ({
+    value: row.name,
+    label: row.full_name || row.name,
+  })),
+  policies: (auxQuickPolicyResource.data || []).map((row) => ({
+    value: row.name,
+    label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
+  })),
+}));
+const customer360QuickSuccessHandlers = {
+  "customer-relations-list": async () => {
+    await loadCustomer360();
+  },
+  "insured-assets-list": async () => {
+    await loadCustomer360();
+  },
+};
 
 const totalRiskLimit = computed(() =>
-  activePolicies.value.reduce((sum, policy) => sum + Number(policy.gross_premium || 0), 0)
+  Number(customer360Summary.value.total_premium || 0)
 );
 const customerHeaderSubtitle = computed(() =>
   [customer.value.email || null, customer.value.phone || customer.value.masked_phone || null]
@@ -641,12 +1059,17 @@ const riskSummaryItems = computed(() => [
   {
     key: "activePolicyCount",
     label: t("activePolicyCount"),
-    value: String(activePolicies.value.length),
+    value: String(customer360Summary.value.active_policy_count || activePolicies.value.length || 0),
   },
   {
     key: "openOfferCount",
     label: t("openOfferCount"),
-    value: String(openOffers.value.length),
+    value: String(customer360Summary.value.open_offer_count || openOffers.value.length || 0),
+  },
+  {
+    key: "segment",
+    label: t("segment"),
+    value: customer360Insights.value.segment || "-",
   },
   {
     key: "totalRiskLimit",
@@ -704,40 +1127,19 @@ const consentStatusOptions = computed(() => [
   { value: "Revoked", label: t("consentRevoked") },
 ]);
 
-const timelineRows = computed(() => {
-  const communicationRows = communications.value.map((item) => ({
-    key: `communication:${item.name}`,
-    date: item.communication_date || item.creation,
-    title: t("typeCommunication"),
-    body: stripHtml(item.content) || item.subject || "-",
-    actor: item.sender || item.owner || "-",
-    dotClass: "bg-sky-500",
-  }));
-
-  const noteRows = comments.value.map((item) => ({
-    key: `comment:${item.name}`,
-    date: item.creation,
-    title: t("typeNote"),
-    body: stripHtml(item.content) || "-",
-    actor: item.owner || "-",
-    dotClass: "bg-amber-500",
-  }));
-
-  const leadRows = leadHistory.value
-    .filter((item) => item.notes)
-    .map((item) => ({
-      key: `lead:${item.name}`,
-      date: item.modified || item.creation,
-      title: t("typeLead"),
-      body: item.notes || "-",
-      actor: item.owner || "-",
-      dotClass: "bg-emerald-500",
-    }));
-
-  return [...communicationRows, ...noteRows, ...leadRows]
+const timelineRows = computed(() =>
+  (customer360Communication.value.timeline || [])
+    .map((item, index) => ({
+      key: `${item.type || "timeline"}:${item.payload?.name || index}`,
+      date: item.timestamp,
+      title: timelineTypeLabel(item.type),
+      body: stripHtml(item.meta) || stripHtml(item.title) || "-",
+      actor: item.payload?.comment_by || item.payload?.sender || "-",
+      dotClass: item.type === "comment" ? "bg-amber-500" : "bg-sky-500",
+    }))
     .filter((item) => Boolean(item.date))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-});
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+);
 
 watch(
   () => props.name,
@@ -856,9 +1258,12 @@ async function saveProfile() {
       },
     });
     if (result && typeof result === "object") {
-      customerResource.setData({
-        ...(customer.value || {}),
-        ...result,
+      customer360Resource.setData({
+        ...(customer360Payload.value || {}),
+        customer: {
+          ...(customer.value || {}),
+          ...result,
+        },
       });
     }
     profileEditMode.value = false;
@@ -893,77 +1298,16 @@ function parseProfileSaveError(error) {
 async function loadCustomer360() {
   if (!props.name) return;
 
-  await Promise.allSettled([
-    customerResource.reload({
-      doctype: "AT Customer",
-      name: props.name,
-    }),
-    policyResource.reload({
-      doctype: "AT Policy",
-      fields: [
-        "name",
-        "policy_no",
-        "status",
-        "currency",
-        "start_date",
-        "end_date",
-        "gross_premium",
-        "insurance_company",
-      ],
-      filters: {
-        customer: props.name,
-      },
-      order_by: "end_date asc",
-      limit_page_length: 100,
-    }),
-    offerResource.reload({
-      doctype: "AT Offer",
-      fields: [
-        "name",
-        "status",
-        "currency",
-        "offer_date",
-        "valid_until",
-        "gross_premium",
-        "insurance_company",
-      ],
-      filters: {
-        customer: props.name,
-      },
-      order_by: "modified desc",
-      limit_page_length: 50,
-    }),
-    leadHistoryResource.reload({
-      doctype: "AT Lead",
-      fields: ["name", "status", "notes", "modified", "owner", "creation"],
-      filters: {
-        customer: props.name,
-      },
-      order_by: "modified desc",
-      limit_page_length: 30,
-    }),
-    commentResource.reload({
-      doctype: "Comment",
-      fields: ["name", "creation", "owner", "content"],
-      filters: {
-        reference_doctype: "AT Customer",
-        reference_name: props.name,
-      },
-      order_by: "creation desc",
-      limit_page_length: 30,
-    }),
-    communicationResource.reload({
-      doctype: "Communication",
-      fields: ["name", "creation", "owner", "communication_date", "subject", "sender", "content"],
-      filters: {
-        reference_doctype: "AT Customer",
-        reference_name: props.name,
-      },
-      order_by: "communication_date desc",
-      limit_page_length: 30,
-    }),
-  ]);
+  await customer360Resource.reload({
+    name: props.name,
+  });
   syncProfileFormFromCustomer();
+}
+
+function timelineTypeLabel(type) {
+  if (type === "comment") return t("typeNote");
+  if (type === "lead") return t("typeLead");
+  return t("typeCommunication");
 }
 
 function openPolicyDetail(policyName) {
@@ -998,6 +1342,120 @@ function openCommunicationCenterForCustomer() {
   });
 }
 
+function openCustomerRelations() {
+  if (!props.name) return;
+  router.push({
+    name: "customer-relations-list",
+    query: { customer: props.name },
+  });
+}
+
+function openInsuredAssets() {
+  if (!props.name) return;
+  router.push({
+    name: "insured-assets-list",
+    query: { customer: props.name },
+  });
+}
+
+function openQuickCustomerRelation() {
+  showCustomerRelationDialog.value = true;
+}
+
+function openQuickInsuredAsset() {
+  showInsuredAssetDialog.value = true;
+}
+
+function openEditCustomerRelation(relation) {
+  editingCustomerRelation.value = relation || null;
+  showCustomerRelationEditDialog.value = true;
+}
+
+function openEditInsuredAsset(asset) {
+  editingInsuredAsset.value = asset || null;
+  showInsuredAssetEditDialog.value = true;
+}
+
+
+async function deleteCustomerRelation(relation) {
+  if (!relation?.name) return;
+  if (!globalThis.confirm?.(t("deleteRelationConfirm"))) return;
+  await customerRelationDeleteResource.submit({
+    doctype: "AT Customer Relation",
+    name: relation.name,
+  });
+  await loadCustomer360();
+}
+
+
+async function deleteInsuredAsset(asset) {
+  if (!asset?.name) return;
+  if (!globalThis.confirm?.(t("deleteAssetConfirm"))) return;
+  await insuredAssetDeleteResource.submit({
+    doctype: "AT Insured Asset",
+    name: asset.name,
+  });
+  await loadCustomer360();
+}
+
+async function ensureCustomer360QuickOptionSources() {
+  await Promise.allSettled([
+    auxQuickCustomerResource.reload({
+      doctype: "AT Customer",
+      fields: ["name", "full_name"],
+      order_by: "modified desc",
+      limit_page_length: 200,
+    }),
+    auxQuickPolicyResource.reload({
+      doctype: "AT Policy",
+      fields: ["name", "policy_no", "customer"],
+      filters: props.name ? { customer: props.name } : {},
+      order_by: "modified desc",
+      limit_page_length: 200,
+    }),
+  ]);
+}
+
+async function prepareCustomerRelationDialog({ form }) {
+  await ensureCustomer360QuickOptionSources();
+  if (!form.customer) form.customer = props.name || "";
+}
+
+async function prepareInsuredAssetDialog({ form }) {
+  await ensureCustomer360QuickOptionSources();
+  if (!form.customer) form.customer = props.name || "";
+  if (!form.policy && activePolicies.value[0]?.name) form.policy = activePolicies.value[0].name;
+}
+
+async function prepareCustomerRelationEditDialog({ resetForm }) {
+  await ensureCustomer360QuickOptionSources();
+  const relation = editingCustomerRelation.value || {};
+  resetForm({
+    doctype: "AT Customer Relation",
+    name: relation.name || "",
+    customer: relation.customer || props.name || "",
+    related_customer: relation.related_customer || "",
+    relation_type: relation.relation_type || "Other",
+    is_household: Boolean(relation.is_household),
+    notes: relation.notes || "",
+  });
+}
+
+async function prepareInsuredAssetEditDialog({ resetForm }) {
+  await ensureCustomer360QuickOptionSources();
+  const asset = editingInsuredAsset.value || {};
+  resetForm({
+    doctype: "AT Insured Asset",
+    name: asset.name || "",
+    customer: asset.customer || props.name || "",
+    policy: asset.policy || "",
+    asset_type: asset.asset_type || "Other",
+    asset_label: asset.asset_label || asset.policy_no || asset.policy || "",
+    asset_identifier: asset.asset_identifier || asset.insurance_company || "",
+    notes: asset.notes || "",
+  });
+}
+
 function policyCardFacts(policy) {
   return [
     {
@@ -1015,6 +1473,26 @@ function policyCardFacts(policy) {
   ];
 }
 
+function describeValueBand(value) {
+  if (value === "High Value") return t("valueBandHighValue");
+  if (value === "Mid Value") return t("valueBandMidValue");
+  return t("valueBandStandard");
+}
+
+function describeInsightSignal(value) {
+  if (value === "multi_policy") return t("insightSignalMultiPolicy");
+  if (value === "active_portfolio") return t("insightSignalActivePortfolio");
+  if (value === "high_premium") return t("insightSignalHighPremium");
+  if (value === "medium_premium") return t("insightSignalMediumPremium");
+  if (value === "clean_claims") return t("insightSignalCleanClaims");
+  if (value === "renewal_pipeline") return t("insightSignalRenewalPipeline");
+  if (value === "claim_pressure") return t("insightRiskClaimPressure");
+  if (value === "collection_risk") return t("insightRiskCollectionRisk");
+  if (value === "overdue_payment") return t("insightRiskOverduePayment");
+  if (value === "cancellation_history") return t("insightRiskCancellationHistory");
+  return value || "";
+}
+
 function offerCardFacts(offer) {
   return [
     {
@@ -1028,6 +1506,74 @@ function offerCardFacts(offer) {
       label: t("grossPremium"),
       value: formatCurrency(offer?.gross_premium, offer?.currency || "TRY"),
       valueClass: "text-sm font-semibold text-slate-900",
+    },
+  ];
+}
+
+function paymentCardFacts(payment) {
+  return [
+    {
+      key: "paymentDate",
+      label: t("paymentDate"),
+      value: formatDate(payment?.payment_date),
+      valueClass: "text-xs text-slate-600",
+    },
+    {
+      key: "amount",
+      label: t("grossPremium"),
+      value: formatCurrency(payment?.amount_try, "TRY"),
+      valueClass: "text-sm font-semibold text-slate-900",
+    },
+  ];
+}
+
+function claimCardFacts(claim) {
+  return [
+    {
+      key: "reportedDate",
+      label: t("reportedDate"),
+      value: formatDate(claim?.reported_date),
+      valueClass: "text-xs text-slate-600",
+    },
+    {
+      key: "claimAmount",
+      label: t("claimAmount"),
+      value: formatCurrency(claim?.claim_amount, "TRY"),
+      valueClass: "text-sm font-semibold text-slate-900",
+    },
+  ];
+}
+
+function renewalCardFacts(renewal) {
+  return [
+    {
+      key: "dueDate",
+      label: t("dueDate"),
+      value: formatDate(renewal?.due_date || renewal?.renewal_date),
+      valueClass: "text-xs text-slate-600",
+    },
+    {
+      key: "lostReason",
+      label: t("lostReason"),
+      value: renewal?.lost_reason_code || "-",
+      valueClass: "text-sm text-slate-800",
+    },
+  ];
+}
+
+function insuredAssetFacts(asset) {
+  return [
+    {
+      key: "assetType",
+      label: t("assetType"),
+      value: asset?.asset_type || asset?.branch || "-",
+      valueClass: "text-xs text-slate-600",
+    },
+    {
+      key: "assetIdentifier",
+      label: t("assetIdentifier"),
+      value: asset?.asset_identifier || asset?.policy || "-",
+      valueClass: "text-sm text-slate-800",
     },
   ];
 }

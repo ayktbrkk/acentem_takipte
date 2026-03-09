@@ -1,0 +1,425 @@
+from __future__ import annotations
+
+from typing import Any
+
+import frappe
+from frappe.utils import flt, getdate, nowdate
+
+
+OPEN_OFFER_STATUSES = {"Draft", "Sent", "Accepted", "Negotiation"}
+ACTIVE_POLICY_STATUSES = {"Active", "Renewal", "Pending Renewal"}
+OPEN_CLAIM_STATUSES = {"Open", "Under Review", "Approved"}
+OPEN_RENEWAL_STATUSES = {"Open", "In Progress"}
+
+
+def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool = False) -> dict[str, Any]:
+    customer = frappe.get_doc("AT Customer", customer_name)
+    today = getdate(nowdate())
+
+    policies = frappe.get_list(
+        "AT Policy",
+        fields=[
+            "name",
+            "policy_no",
+            "branch",
+            "insurance_company",
+            "status",
+            "issue_date",
+            "start_date",
+            "end_date",
+            "gross_premium",
+            "commission_amount",
+        ],
+        filters={"customer": customer_name},
+        order_by="modified desc",
+        limit_page_length=100,
+    )
+    offers = frappe.get_list(
+        "AT Offer",
+        fields=[
+            "name",
+            "insurance_company",
+            "status",
+            "offer_date",
+            "valid_until",
+            "gross_premium",
+            "converted_policy",
+        ],
+        filters={"customer": customer_name},
+        order_by="modified desc",
+        limit_page_length=50,
+    )
+    payments = frappe.get_list(
+        "AT Payment",
+        fields=[
+            "name",
+            "payment_no",
+            "policy",
+            "status",
+            "payment_direction",
+            "payment_date",
+            "amount_try",
+            "notes",
+        ],
+        filters={"customer": customer_name},
+        order_by="payment_date desc, modified desc",
+        limit_page_length=50,
+    )
+    claims = frappe.get_list(
+        "AT Claim",
+        fields=[
+            "name",
+            "policy",
+            "claim_status",
+            "reported_date",
+            "claim_amount",
+            "office_branch",
+            "description",
+        ],
+        filters={"customer": customer_name},
+        order_by="reported_date desc, modified desc",
+        limit_page_length=50,
+    )
+    renewals = frappe.get_list(
+        "AT Renewal Task",
+        fields=[
+            "name",
+            "policy",
+            "status",
+            "due_date",
+            "renewal_date",
+            "lost_reason_code",
+            "competitor_name",
+        ],
+        filters={"customer": customer_name},
+        order_by="due_date asc, modified desc",
+        limit_page_length=50,
+    )
+    communications = _get_communications(customer_name)
+    comments = _get_comments(customer_name)
+
+    policy_total_premium = sum(flt(row.get("gross_premium")) for row in policies)
+    active_policy_count = sum(1 for row in policies if str(row.get("status") or "") in ACTIVE_POLICY_STATUSES)
+    cancelled_policy_count = sum(1 for row in policies if str(row.get("status") or "") == "Cancelled")
+    open_offer_count = sum(
+        1
+        for row in offers
+        if str(row.get("status") or "") in OPEN_OFFER_STATUSES and not str(row.get("converted_policy") or "").strip()
+    )
+    overdue_payments = [row for row in payments if _is_overdue_payment(row, today)]
+    open_claim_count = sum(1 for row in claims if str(row.get("claim_status") or "") in OPEN_CLAIM_STATUSES)
+    upcoming_renewals = [row for row in renewals if _is_upcoming_renewal(row, today)]
+
+    timeline = sorted(
+        [_build_communication_timeline_item(item) for item in communications]
+        + [_build_comment_timeline_item(item) for item in comments],
+        key=lambda item: item.get("timestamp") or "",
+        reverse=True,
+    )[:25]
+
+    return {
+        "customer": _serialize_customer(customer, can_view_sensitive=can_view_sensitive),
+        "summary": {
+            "total_policy_count": len(policies),
+            "active_policy_count": active_policy_count,
+            "cancelled_policy_count": cancelled_policy_count,
+            "open_offer_count": open_offer_count,
+            "overdue_payment_count": len(overdue_payments),
+            "overdue_payment_amount": sum(flt(row.get("amount_try")) for row in overdue_payments),
+            "open_claim_count": open_claim_count,
+            "upcoming_renewal_count": len(upcoming_renewals),
+            "total_premium": policy_total_premium,
+        },
+        "portfolio": {
+            "policies": policies[:20],
+            "offers": offers[:20],
+            "payments": payments[:20],
+            "claims": claims[:20],
+            "renewals": upcoming_renewals[:20],
+        },
+        "communication": {
+            "items": communications[:20],
+            "channel_summary": _build_channel_summary(communications),
+            "timeline": timeline,
+        },
+        "insights": _build_customer_insights(
+            active_policy_count=active_policy_count,
+            policy_total_premium=policy_total_premium,
+            open_claim_count=open_claim_count,
+            upcoming_renewal_count=len(upcoming_renewals),
+            overdue_payment_count=len(overdue_payments),
+            overdue_payment_amount=sum(flt(row.get("amount_try")) for row in overdue_payments),
+            total_policy_count=len(policies),
+            cancelled_policy_count=cancelled_policy_count,
+        ),
+        "cross_sell": _build_cross_sell_payload(customer_name, policies),
+    }
+
+
+def _serialize_customer(customer, *, can_view_sensitive: bool) -> dict[str, Any]:
+    tax_id = customer.tax_id if can_view_sensitive else customer.masked_tax_id
+    phone = customer.phone if can_view_sensitive else customer.masked_phone
+    return {
+        "name": customer.name,
+        "full_name": customer.full_name,
+        "tax_id": tax_id,
+        "phone": phone,
+        "email": customer.email,
+        "address": customer.address,
+        "birth_date": customer.birth_date,
+        "gender": customer.gender,
+        "marital_status": customer.marital_status,
+        "occupation": customer.occupation,
+        "office_branch": customer.office_branch,
+        "assigned_agent": customer.assigned_agent,
+        "consent_status": customer.consent_status,
+        "customer_folder": customer.customer_folder,
+    }
+
+
+def _get_communications(customer_name: str) -> list[dict[str, Any]]:
+    if not frappe.db.exists("DocType", "Communication"):
+        return []
+    return frappe.get_list(
+        "Communication",
+        fields=[
+            "name",
+            "communication_type",
+            "subject",
+            "sender",
+            "reference_doctype",
+            "reference_name",
+            "creation",
+        ],
+        filters={"reference_doctype": "AT Customer", "reference_name": customer_name},
+        order_by="creation desc",
+        limit_page_length=50,
+    )
+
+
+def _get_comments(customer_name: str) -> list[dict[str, Any]]:
+    if not frappe.db.exists("DocType", "Comment"):
+        return []
+    return frappe.get_list(
+        "Comment",
+        fields=["name", "comment_by", "content", "creation", "reference_doctype", "reference_name"],
+        filters={"reference_doctype": "AT Customer", "reference_name": customer_name},
+        order_by="creation desc",
+        limit_page_length=50,
+    )
+
+
+def _is_overdue_payment(row: dict[str, Any], today) -> bool:
+    status = str(row.get("status") or "")
+    if status in {"Paid", "Cancelled"}:
+        return False
+    payment_date = row.get("payment_date")
+    if not payment_date:
+        return False
+    try:
+        return getdate(payment_date) < today
+    except Exception:
+        return False
+
+
+def _is_upcoming_renewal(row: dict[str, Any], today) -> bool:
+    status = str(row.get("status") or "")
+    if status not in OPEN_RENEWAL_STATUSES:
+        return False
+    due_value = row.get("due_date") or row.get("renewal_date")
+    if not due_value:
+        return False
+    try:
+        delta = (getdate(due_value) - today).days
+    except Exception:
+        return False
+    return 0 <= delta <= 90
+
+
+def _build_channel_summary(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    counts: dict[str, int] = {}
+    for item in items:
+        channel = str(item.get("communication_type") or "Other").strip() or "Other"
+        counts[channel] = counts.get(channel, 0) + 1
+    return [{"channel": key, "total": value} for key, value in sorted(counts.items())]
+
+
+def _build_communication_timeline_item(item: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "type": "communication",
+        "timestamp": item.get("creation"),
+        "title": item.get("subject") or item.get("communication_type") or item.get("name"),
+        "meta": item.get("sender"),
+        "payload": item,
+    }
+
+
+def _build_comment_timeline_item(item: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "type": "comment",
+        "timestamp": item.get("creation"),
+        "title": item.get("comment_by") or "Comment",
+        "meta": item.get("content"),
+        "payload": item,
+    }
+
+
+def _build_customer_insights(
+    *,
+    active_policy_count: int,
+    policy_total_premium: float,
+    open_claim_count: int,
+    upcoming_renewal_count: int,
+    overdue_payment_count: int,
+    overdue_payment_amount: float,
+    total_policy_count: int,
+    cancelled_policy_count: int,
+) -> dict[str, Any]:
+    score = 0
+    strengths: list[str] = []
+    risks: list[str] = []
+
+    if active_policy_count >= 3:
+        score += 40
+        strengths.append("multi_policy")
+    elif active_policy_count >= 1:
+        score += 20
+        strengths.append("active_portfolio")
+
+    if policy_total_premium >= 100000:
+        score += 30
+        strengths.append("high_premium")
+    elif policy_total_premium >= 25000:
+        score += 15
+        strengths.append("medium_premium")
+
+    if open_claim_count == 0 and total_policy_count > 0:
+        score += 15
+        strengths.append("clean_claims")
+    elif open_claim_count >= 2:
+        score -= 10
+        risks.append("claim_pressure")
+
+    if upcoming_renewal_count > 0:
+        score += 15
+        strengths.append("renewal_pipeline")
+
+    if overdue_payment_count >= 2 or overdue_payment_amount >= 10000:
+        score -= 20
+        risks.append("collection_risk")
+    elif overdue_payment_count == 1:
+        score -= 10
+        risks.append("overdue_payment")
+
+    if cancelled_policy_count >= 2:
+        score -= 10
+        risks.append("cancellation_history")
+
+    score = max(0, min(100, score))
+
+    if score >= 80:
+        segment = "Strategic"
+    elif score >= 50:
+        segment = "Growth"
+    elif score >= 25:
+        segment = "Core"
+    else:
+        segment = "Dormant"
+
+    claim_risk = "Low"
+    if open_claim_count >= 2 or cancelled_policy_count >= 2:
+        claim_risk = "High"
+    elif open_claim_count >= 1:
+        claim_risk = "Medium"
+
+    value_band = "Standard"
+    if policy_total_premium >= 100000:
+        value_band = "High Value"
+    elif policy_total_premium >= 25000:
+        value_band = "Mid Value"
+
+    return {
+        "score": score,
+        "segment": segment,
+        "claim_risk": claim_risk,
+        "value_band": value_band,
+        "strengths": strengths[:4],
+        "risks": risks[:4],
+        "score_reason": {
+            "active_policy_count": active_policy_count,
+            "policy_total_premium": policy_total_premium,
+            "open_claim_count": open_claim_count,
+            "upcoming_renewal_count": upcoming_renewal_count,
+            "overdue_payment_count": overdue_payment_count,
+            "overdue_payment_amount": overdue_payment_amount,
+            "cancelled_policy_count": cancelled_policy_count,
+        },
+    }
+
+
+def _build_cross_sell_payload(customer_name: str, policies: list[dict[str, Any]]) -> dict[str, Any]:
+    related_customers = (
+        frappe.get_list(
+            "AT Customer Relation",
+            fields=["name", "related_customer", "relation_type", "is_household", "notes"],
+            filters={"customer": customer_name},
+            order_by="modified desc",
+            limit_page_length=20,
+        )
+        if frappe.db.exists("DocType", "AT Customer Relation")
+        else []
+    )
+    insured_assets = (
+        frappe.get_list(
+            "AT Insured Asset",
+            fields=["name", "policy", "asset_type", "asset_label", "asset_identifier"],
+            filters={"customer": customer_name},
+            order_by="modified desc",
+            limit_page_length=20,
+        )
+        if frappe.db.exists("DocType", "AT Insured Asset")
+        else []
+    )
+
+    owned_branch_names = []
+    seen = set()
+    for row in policies:
+        branch_name = str(row.get("branch") or "").strip()
+        if not branch_name or branch_name in seen:
+            continue
+        owned_branch_names.append(branch_name)
+        seen.add(branch_name)
+
+    available_branches = frappe.get_list(
+        "AT Branch",
+        fields=["name"],
+        order_by="name asc",
+        limit_page_length=0,
+    )
+    opportunity_branches = [
+        {"branch": row.get("name")}
+        for row in available_branches
+        if row.get("name") not in seen
+    ][:5]
+
+    if not insured_assets:
+        insured_assets = [
+            {
+                "policy": row.get("name"),
+                "policy_no": row.get("policy_no"),
+                "asset_type": row.get("branch"),
+                "asset_label": row.get("policy_no") or row.get("name"),
+                "asset_identifier": row.get("insurance_company"),
+                "status": row.get("status"),
+            }
+            for row in policies[:10]
+        ]
+
+    return {
+        "related_customers": related_customers,
+        "insured_assets": insured_assets,
+        "portfolio_branches": owned_branch_names[:10],
+        "opportunity_branches": opportunity_branches,
+        "has_cross_sell_opportunity": bool(opportunity_branches),
+        "customer": customer_name,
+    }

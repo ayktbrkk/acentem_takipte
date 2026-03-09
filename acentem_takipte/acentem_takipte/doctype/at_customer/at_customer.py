@@ -7,7 +7,13 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate, nowdate
 
+from acentem_takipte.acentem_takipte.doctype.branch_permissions import (
+    build_office_branch_permission_query,
+    has_office_branch_permission,
+)
 from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_access
+from acentem_takipte.acentem_takipte.services.branches import user_can_access_all_office_branches
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
 SENSITIVE_ROLES = {"System Manager", "Manager", "Accountant"}
 
@@ -46,7 +52,7 @@ class ATCustomer(Document):
         try:
             log_access(reference_doctype=self.doctype, reference_name=self.name, action="View")
         except Exception:
-            frappe.log_error(frappe.get_traceback(), "AT Customer Access Log Error")
+            log_redacted_error("AT Customer Access Log Error", details={"customer": self.name})
 
     def ensure_private_folder(self):
         # Keep a stable relative path for file linking across environments.
@@ -82,11 +88,18 @@ def get_permission_query_conditions(user=None):
     if _can_access_all_customers(user):
         return ""
 
-    if "Agent" in frappe.get_roles(user):
+    roles = set(frappe.get_roles(user))
+    branch_condition = build_office_branch_permission_query("AT Customer", user=user)
+    if "Agent" in roles:
         escaped_user = frappe.db.escape(user)
-        return f"(`tabAT Customer`.`assigned_agent` = {escaped_user} OR `tabAT Customer`.`owner` = {escaped_user})"
+        agent_condition = f"(`tabAT Customer`.`assigned_agent` = {escaped_user} OR `tabAT Customer`.`owner` = {escaped_user})"
+        if branch_condition == "1=0":
+            return "1=0"
+        if branch_condition:
+            return f"({agent_condition} AND {branch_condition})"
+        return agent_condition
 
-    return "1=0"
+    return branch_condition or "1=0"
 
 
 def has_permission(doc, user=None, permission_type="read"):
@@ -94,10 +107,11 @@ def has_permission(doc, user=None, permission_type="read"):
     if _can_access_all_customers(user):
         return True
 
-    if "Agent" in frappe.get_roles(user):
-        return doc.assigned_agent == user or doc.owner == user
+    roles = set(frappe.get_roles(user))
+    if "Agent" in roles:
+        return (doc.assigned_agent == user or doc.owner == user) and has_office_branch_permission(doc, user=user)
 
-    return False
+    return has_office_branch_permission(doc, user=user)
 
 
 def has_sensitive_access(user=None) -> bool:
@@ -128,7 +142,4 @@ def mask_phone(value: str | None) -> str:
 
 
 def _can_access_all_customers(user: str) -> bool:
-    if user == "Administrator":
-        return True
-    roles = set(frappe.get_roles(user))
-    return bool(roles.intersection({"System Manager", "Manager", "Accountant"}))
+    return user_can_access_all_office_branches(user)

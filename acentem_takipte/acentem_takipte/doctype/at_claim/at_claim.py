@@ -5,6 +5,9 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import flt, getdate
+from acentem_takipte.acentem_takipte.claims.notifications import resolve_claim_status_template_key
+from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 from acentem_takipte.acentem_takipte.utils.statuses import ATClaimStatus
 
 
@@ -54,6 +57,35 @@ class ATClaim(Document):
             ATClaimStatus.APPROVED,
         }:
             self.claim_status = ATClaimStatus.PAID
+
+    def on_update(self):
+        if not self.has_value_changed("claim_status"):
+            return
+
+        template_key = resolve_claim_status_template_key(self.claim_status)
+        if not template_key:
+            return
+
+        try:
+            create_notification_drafts(
+                event_key="claim_status_update",
+                template_key=template_key,
+                reference_doctype=self.doctype,
+                reference_name=self.name,
+                customer=self.customer,
+                context={
+                    "claim": self.name,
+                    "claim_status": self.claim_status,
+                    "policy": self.policy,
+                    "approved_amount": self.approved_amount,
+                    "paid_amount": self.paid_amount,
+                },
+            )
+        except Exception:
+            log_redacted_error(
+                "AT Claim Notification Draft Error",
+                details={"claim": self.name, "customer": self.customer, "policy": self.policy},
+            )
 
 
 def _get_paid_amount(claim_name: str, claim_currency: str | None = None) -> float:

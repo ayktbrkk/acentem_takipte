@@ -8,8 +8,8 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { sessionState } from "../state/session";
+import { computed, unref } from "vue";
+import { useAuthStore } from "../stores/auth";
 
 const props = defineProps({
   type: {
@@ -21,6 +21,7 @@ const props = defineProps({
     default: "",
   },
 });
+const authStore = useAuthStore();
 
 const STYLES = {
   offer: {
@@ -268,7 +269,8 @@ const LABELS = {
 
 const style = computed(() => {
   const typeStyles = STYLES[props.type] || {};
-  const localeLabels = LABELS[sessionState.locale]?.[props.type] || LABELS.en[props.type] || {};
+  const locale = unref(authStore.locale) || "en";
+  const localeLabels = LABELS[locale]?.[props.type] || LABELS.en[props.type] || {};
   const fallbackLabels = LABELS.en[props.type] || {};
   const label = localeLabels[props.status] || fallbackLabels[props.status] || props.status || "-";
   return {

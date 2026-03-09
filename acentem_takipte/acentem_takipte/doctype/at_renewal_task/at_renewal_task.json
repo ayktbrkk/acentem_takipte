@@ -6,13 +6,17 @@
  "field_order": [
   "policy",
   "customer",
+  "office_branch",
   "policy_end_date",
   "renewal_date",
   "due_date",
   "status",
+  "lost_reason_code",
+  "competitor_name",
   "assigned_to",
   "auto_created",
   "unique_key",
+  "outcome_record",
   "notes"
  ],
  "fields": [
@@ -29,6 +33,12 @@
    "label": "Customer",
    "options": "AT Customer",
    "reqd": 1
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "fieldname": "policy_end_date",
@@ -75,6 +85,13 @@
    "label": "Unique Key",
    "read_only": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "outcome_record",
+   "fieldtype": "Link",
+   "label": "Outcome Record",
+   "options": "AT Renewal Outcome",
+   "read_only": 1
   },
   {
    "fieldname": "notes",

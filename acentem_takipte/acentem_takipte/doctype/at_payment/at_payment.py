@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
-from frappe.utils import flt, getdate, nowdate
+from frappe.utils import add_days, flt, getdate, nowdate
 from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
 
 from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import fetch_tcmb_rate
@@ -28,6 +28,7 @@ class ATPayment(Document):
         self._validate_status()
         self._validate_claim_links()
         self._validate_amounts()
+        self._validate_installments()
         self._set_exchange_rate()
         self.amount_try = flt(self.amount) * flt(self.fx_rate)
 
@@ -35,12 +36,15 @@ class ATPayment(Document):
             self.payment_date = nowdate()
 
     def after_insert(self):
+        self._sync_installment_schedule()
         self._sync_claim_totals()
 
     def on_update(self):
+        self._sync_installment_schedule()
         self._sync_claim_totals()
 
     def on_trash(self):
+        frappe.db.delete("AT Payment Installment", {"payment": self.name})
         self._sync_claim_totals()
 
     def _validate_claim_links(self):
@@ -95,6 +99,14 @@ class ATPayment(Document):
                 _("Unsupported payment status: {0}").format(self.status),
             )
 
+    def _validate_installments(self):
+        self.installment_count = int(self.installment_count or 1)
+        self.installment_interval_days = int(self.installment_interval_days or 30)
+        if self.installment_count <= 0:
+            frappe.throw(_("Installment count must be greater than zero."))
+        if self.installment_interval_days <= 0:
+            frappe.throw(_("Installment interval must be greater than zero."))
+
     def _set_exchange_rate(self):
         self.currency = (self.currency or "TRY").upper()
         self.fx_rate = flt(self.fx_rate)
@@ -123,3 +135,50 @@ class ATPayment(Document):
             return
         claim_doc = frappe.get_doc("AT Claim", self.claim)
         claim_doc.save(ignore_permissions=True)
+
+    def _sync_installment_schedule(self):
+        frappe.db.delete("AT Payment Installment", {"payment": self.name})
+
+        installment_count = int(self.installment_count or 1)
+        base_date = getdate(self.due_date or self.payment_date or nowdate())
+        interval_days = int(self.installment_interval_days or 30)
+        total_amount = flt(self.amount)
+        fx_rate = flt(self.fx_rate or 1)
+        base_installment_amount = round(total_amount / installment_count, 2)
+        allocated = 0.0
+
+        for index in range(installment_count):
+            installment_no = index + 1
+            due_date = add_days(base_date, index * interval_days)
+            if installment_no == installment_count:
+                amount = round(total_amount - allocated, 2)
+            else:
+                amount = base_installment_amount
+                allocated += amount
+
+            status = "Scheduled"
+            if self.status == ATPaymentStatus.PAID:
+                status = "Paid"
+            elif self.status == ATPaymentStatus.CANCELLED:
+                status = "Cancelled"
+            elif due_date < getdate(nowdate()):
+                status = "Overdue"
+
+            frappe.get_doc(
+                {
+                    "doctype": "AT Payment Installment",
+                    "payment": self.name,
+                    "customer": self.customer,
+                    "policy": self.policy,
+                    "office_branch": self.office_branch,
+                    "installment_no": installment_no,
+                    "installment_count": installment_count,
+                    "status": status,
+                    "due_date": due_date,
+                    "paid_on": self.payment_date if status == "Paid" else None,
+                    "currency": self.currency,
+                    "amount": amount,
+                    "amount_try": round(amount * fx_rate, 2),
+                    "notes": self.notes,
+                }
+            ).insert(ignore_permissions=True)

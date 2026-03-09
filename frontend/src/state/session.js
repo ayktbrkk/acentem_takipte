@@ -16,6 +16,16 @@ function cloneBooleanMap(source) {
   return next;
 }
 
+function cloneStringList(source) {
+  if (!Array.isArray(source)) {
+    return [];
+  }
+
+  return source
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+}
+
 function normalizeCapabilities(raw) {
   const next = {
     quickCreate: {},
@@ -68,8 +78,14 @@ function readBootSession() {
       frappeBoot?.user?.full_name ||
       null,
     branch: serverBoot.branch || null,
+    office_branches: serverBoot.office_branches || [],
+    default_office_branch: serverBoot.default_office_branch || null,
+    can_access_all_office_branches: serverBoot.can_access_all_office_branches || false,
     locale: serverBoot.locale || frappeBoot.lang || null,
     capabilities: serverBoot.capabilities || null,
+    roles: serverBoot.roles || [],
+    preferred_home: serverBoot.preferred_home || null,
+    interface_mode: serverBoot.interface_mode || null,
   };
 }
 
@@ -123,8 +139,14 @@ export const sessionState = reactive({
   user: boot.full_name || boot.user || "",
   userId: boot.user || "",
   branch: boot.branch || null,
+  officeBranches: Array.isArray(boot.office_branches) ? boot.office_branches : [],
+  defaultOfficeBranch: boot.default_office_branch || null,
+  canAccessAllOfficeBranches: Boolean(boot.can_access_all_office_branches),
   locale: normalizeLocale(readStoredLocale() || boot.locale || "tr"),
   capabilities: normalizeCapabilities(boot.capabilities),
+  roles: cloneStringList(boot.roles),
+  preferredHome: boot.preferred_home || "/at",
+  interfaceMode: boot.interface_mode || "spa",
 });
 
 async function getJson(url) {
@@ -172,7 +194,25 @@ function applySessionContext(data, loggedUser) {
   }
 
   sessionState.branch = data.branch || null;
+  if (Object.prototype.hasOwnProperty.call(data, "office_branches")) {
+    sessionState.officeBranches = Array.isArray(data.office_branches) ? data.office_branches : [];
+  }
+  if (Object.prototype.hasOwnProperty.call(data, "default_office_branch")) {
+    sessionState.defaultOfficeBranch = data.default_office_branch || null;
+  }
+  if (Object.prototype.hasOwnProperty.call(data, "can_access_all_office_branches")) {
+    sessionState.canAccessAllOfficeBranches = Boolean(data.can_access_all_office_branches);
+  }
   setPreferredLocale(readStoredLocale() || data.locale || sessionState.locale);
+  if (Object.prototype.hasOwnProperty.call(data, "roles")) {
+    sessionState.roles = cloneStringList(data.roles);
+  }
+  if (data.preferred_home) {
+    sessionState.preferredHome = data.preferred_home;
+  }
+  if (data.interface_mode) {
+    sessionState.interfaceMode = data.interface_mode;
+  }
   if (Object.prototype.hasOwnProperty.call(data, "capabilities")) {
     sessionState.capabilities = normalizeCapabilities(data.capabilities);
   }
@@ -216,4 +256,8 @@ export async function hydrateSessionState() {
   } catch (error) {
     // If request fails, keep bootstrap defaults.
   }
+}
+
+export function applySessionContextForTest(data, loggedUser = null) {
+  applySessionContext(data, loggedUser);
 }

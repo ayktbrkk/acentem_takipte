@@ -10,15 +10,18 @@
   "priority",
   "recipient",
   "customer",
+  "office_branch",
   "reference_doctype",
   "reference_name",
   "provider",
   "status",
   "attempt_count",
   "max_attempts",
+  "fallback_channel",
   "next_retry_on",
   "last_attempt_on",
   "provider_message_id",
+  "provider_payload_json",
   "response_log",
   "error_message"
  ],
@@ -41,7 +44,7 @@
    "fieldname": "channel",
    "fieldtype": "Select",
    "label": "Channel",
-   "options": "SMS\nEmail",
+   "options": "SMS\nEmail\nWHATSAPP",
    "reqd": 1
   },
   {
@@ -61,6 +64,12 @@
    "fieldtype": "Link",
    "label": "Customer",
    "options": "AT Customer"
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "fieldname": "reference_doctype",
@@ -101,6 +110,12 @@
    "reqd": 1
   },
   {
+   "fieldname": "fallback_channel",
+   "fieldtype": "Select",
+   "label": "Fallback Channel",
+   "options": "\nSMS\nEmail"
+  },
+  {
    "fieldname": "next_retry_on",
    "fieldtype": "Datetime",
    "label": "Next Retry On"
@@ -115,6 +130,12 @@
    "fieldname": "provider_message_id",
    "fieldtype": "Data",
    "label": "Provider Message ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "provider_payload_json",
+   "fieldtype": "Long Text",
+   "label": "Provider Payload JSON",
    "read_only": 1
   },
   {

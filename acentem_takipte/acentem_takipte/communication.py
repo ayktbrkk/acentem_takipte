@@ -7,7 +7,11 @@ from dataclasses import dataclass
 
 import frappe
 from frappe.utils import add_to_date, cint, cstr, now_datetime
+from acentem_takipte.acentem_takipte.notification_dispatch import build_provider_message_from_records
+from acentem_takipte.acentem_takipte.providers.router import get_provider_adapter
 from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus, ATNotificationOutboxStatus
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error, redact_payload
+from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 
 DEFAULT_RETRY_MINUTES = 5
 DEFAULT_MAX_ATTEMPTS = 3
@@ -20,6 +24,7 @@ class DeliveryResult:
     message_id: str | None = None
     response_log: str | None = None
     error: str | None = None
+    provider_payload: str | None = None
 
 
 def queue_notification_drafts(limit: int = 200, include_failed: bool = True) -> dict[str, int]:
@@ -58,7 +63,14 @@ def queue_notification_drafts(limit: int = 200, include_failed: bool = True) -> 
         "skipped": skipped,
         "invalid": invalid,
     }
-    frappe.logger("acentem_takipte").info("AT notification queue summary: %s", summary)
+    frappe.logger("acentem_takipte").info(
+        "AT notification queue summary: %s",
+        build_metric_event(
+            "notification.queue",
+            dimensions={"component": "communication"},
+            values=summary,
+        ),
+    )
     return summary
 
 
@@ -78,6 +90,9 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
         return {"outcome": "invalid", "reason": "missing_recipient"}
 
     customer = draft.customer if draft.customer and frappe.db.exists("AT Customer", draft.customer) else None
+    office_branch = draft.get("office_branch")
+    if not office_branch and customer:
+        office_branch = frappe.db.get_value("AT Customer", customer, "office_branch")
     reference_doctype = (
         draft.reference_doctype if draft.reference_doctype and frappe.db.exists("DocType", draft.reference_doctype) else None
     )
@@ -120,6 +135,7 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
                     "channel": draft.channel,
                     "recipient": recipient,
                     "customer": customer,
+                    "office_branch": office_branch,
                     "reference_doctype": reference_doctype,
                     "reference_name": reference_name,
                     "provider": _default_provider_for_channel(draft.channel),
@@ -135,7 +151,16 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
                 status=ATNotificationDraftStatus.FAILED,
                 error_message="Outbox insert failed. Check reference links.",
             )
-            frappe.log_error(frappe.get_traceback(), f"AT Notification Outbox Insert Error: {draft.name}")
+            log_redacted_error(
+                "AT Notification Outbox Insert Error",
+                details={
+                    "draft": draft.name,
+                    "channel": draft.channel,
+                    "recipient": recipient,
+                    "reference_doctype": reference_doctype,
+                    "reference_name": reference_name,
+                },
+            )
             return {"outcome": "invalid", "reason": "outbox_insert_failed"}
 
     _set_draft_status(draft, status=ATNotificationDraftStatus.QUEUED, outbox_record=outbox_doc.name)
@@ -191,13 +216,23 @@ def process_notification_queue(limit: int = 50) -> dict[str, int]:
         "dead": dead,
         "skipped": skipped,
     }
-    frappe.logger("acentem_takipte").info("AT notification dispatch summary: %s", summary)
+    frappe.logger("acentem_takipte").info(
+        "AT notification dispatch summary: %s",
+        redact_payload(
+            build_metric_event(
+                "notification.dispatch",
+                dimensions={"component": "communication"},
+                values=summary,
+            )
+        ),
+    )
     return summary
 
 
 def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> dict[str, str]:
     outbox = frappe.get_doc("AT Notification Outbox", outbox_name)
     draft = frappe.get_doc("AT Notification Draft", outbox.draft)
+    template_doc = frappe.get_doc("AT Notification Template", draft.template)
 
     if outbox.status == ATNotificationOutboxStatus.SENT:
         return {"status": "Skipped", "reason": "already_sent"}
@@ -214,24 +249,14 @@ def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> di
     outbox.error_message = None
     outbox.save(ignore_permissions=True)
 
-    delivery = _send_notification(
-        channel=outbox.channel,
-        recipient=outbox.recipient,
-        subject=draft.subject,
-        body=draft.body,
-        context={
-            "event_key": outbox.event_key,
-            "reference_doctype": outbox.reference_doctype,
-            "reference_name": outbox.reference_name,
-            "customer": outbox.customer,
-        },
-    )
+    delivery = _send_outbox_notification(outbox=outbox, draft=draft, template_doc=template_doc)
 
     if delivery.ok:
         outbox.status = ATNotificationOutboxStatus.SENT
         outbox.provider = delivery.provider
         outbox.provider_message_id = delivery.message_id
         outbox.response_log = delivery.response_log
+        outbox.provider_payload_json = delivery.provider_payload
         outbox.error_message = None
         outbox.next_retry_on = None
         outbox.save(ignore_permissions=True)
@@ -345,14 +370,63 @@ def _send_notification(
     body: str,
     context: dict,
 ) -> DeliveryResult:
-    if channel == "Email":
+    normalized_channel = _normalize_channel(channel)
+
+    if normalized_channel == "EMAIL":
         return _send_email(recipient=recipient, subject=subject, body=body)
 
     # SMS channel is sent via WhatsApp adapter for Sprint 3.
     return _send_whatsapp(recipient=recipient, subject=subject, body=body, context=context)
 
 
-def _send_email(*, recipient: str, subject: str | None, body: str) -> DeliveryResult:
+def _send_outbox_notification(*, outbox, draft, template_doc) -> DeliveryResult:
+    normalized_channel = _normalize_channel(outbox.channel)
+    provider_message = build_provider_message_from_records(template_doc, draft, outbox)
+    provider_payload = redact_payload(
+        {
+            "recipient": provider_message.recipient,
+            "subject": provider_message.subject,
+            "body": provider_message.body,
+            "template_name": provider_message.template_name,
+            "template_language": provider_message.template_language,
+            "components": provider_message.components,
+            "metadata": provider_message.metadata,
+        }
+    )
+
+    if normalized_channel == "EMAIL":
+        result = _send_email(
+            recipient=provider_message.recipient,
+            subject=provider_message.subject,
+            body=provider_message.body,
+            attachments=_get_outbox_attachments(outbox),
+        )
+        result.provider_payload = frappe.as_json(provider_payload)
+        return result
+
+    adapter = get_provider_adapter(normalized_channel, explicit_provider=outbox.provider)
+    if adapter:
+        result = adapter.send(provider_message)
+        return DeliveryResult(
+            ok=result.ok,
+            provider=result.provider,
+            message_id=result.provider_message_id,
+            response_log=frappe.as_json(redact_payload(result.response_payload)) if result.response_payload is not None else None,
+            error=result.error_message,
+            provider_payload=frappe.as_json(provider_payload),
+        )
+
+    result = _send_whatsapp(
+        recipient=provider_message.recipient,
+        subject=provider_message.subject,
+        body=provider_message.body,
+        context=provider_message.metadata,
+    )
+    result.provider_payload = frappe.as_json(provider_payload)
+    return result
+
+
+def _send_email(*, recipient: str, subject: str | None, body: str, attachments: list[dict] | None = None) -> DeliveryResult:
     if _is_dry_run():
         message_id = f"dry-email-{frappe.generate_hash(length=10)}"
         return DeliveryResult(ok=True, provider="Email(DryRun)", message_id=message_id, response_log="dry_run")
@@ -362,6 +436,7 @@ def _send_email(*, recipient: str, subject: str | None, body: str) -> DeliveryRe
             recipients=[recipient],
             subject=subject or "Acentem Takipte Notification",
             message=body,
+            attachments=attachments or None,
             delayed=False,
             now=True,
         )
@@ -453,9 +528,46 @@ def _extract_message_id(response_body: str) -> str | None:
 
 
 def _default_provider_for_channel(channel: str) -> str:
-    if channel == "Email":
+    normalized_channel = _normalize_channel(channel)
+    if normalized_channel == "EMAIL":
         return "Email(Frappe)"
+    if normalized_channel == "WHATSAPP":
+        return "meta_whatsapp"
     return "WhatsApp(API)"
+
+
+def _normalize_channel(channel: str) -> str:
+    raw = cstr(channel or "").strip()
+    if raw.lower() == "email":
+        return "EMAIL"
+    if raw.lower() == "whatsapp":
+        return "WHATSAPP"
+    if raw.lower() == "sms":
+        return "SMS"
+    return raw.upper()
+
+
+def _get_outbox_attachments(outbox) -> list[dict]:
+    attachments: list[dict] = []
+    file_rows = frappe.get_all(
+        "File",
+        filters={
+            "attached_to_doctype": "AT Notification Outbox",
+            "attached_to_name": outbox.name,
+        },
+        fields=["name", "file_name"],
+        order_by="creation asc",
+        limit_page_length=20,
+    )
+    for row in file_rows:
+        file_doc = frappe.get_doc("File", row.name)
+        attachments.append(
+            {
+                "fname": row.file_name or file_doc.file_name or row.name,
+                "fcontent": file_doc.get_content(),
+            }
+        )
+    return attachments
 
 
 def _is_dry_run() -> bool:

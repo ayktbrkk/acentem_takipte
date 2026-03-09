@@ -11,13 +11,23 @@ from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
     assert_post_request,
     assert_roles,
-    audit_admin_action,
 )
-from acentem_takipte.acentem_takipte import tasks as task_jobs
+from acentem_takipte.acentem_takipte.api.mutation_access import assert_role_based_write_access
+from acentem_takipte.acentem_takipte.services.admin_jobs import dispatch_admin_job
+from acentem_takipte.acentem_takipte.utils.permissions import build_doctype_permission_map
 
 ADMIN_JOB_ROLES = ("System Manager", "Manager", "Accountant")
 ADMIN_JOB_RATE_LIMIT_WINDOW_SECONDS = 60
 ADMIN_JOB_RATE_LIMIT_MAX_REQUESTS = 12
+ADMIN_JOB_PERMISSION_DOCTYPES = build_doctype_permission_map(
+    run_renewal_task_job=("AT Renewal Task",),
+    run_stale_renewal_task_job=("AT Renewal Task",),
+    run_notification_queue_job=("AT Notification Outbox",),
+    run_payment_due_job=("AT Payment", "AT Notification Draft"),
+    run_scheduled_reports_job=(),
+    run_accounting_sync_job=("AT Accounting Entry",),
+    run_accounting_reconciliation_job=("AT Reconciliation Item",),
+)
 
 
 def _admin_job_rate_limit_key(user: str, action: str) -> str:
@@ -60,38 +70,65 @@ def _assert_admin_job_rate_limit(user: str, action: str) -> None:
 
 def _assert_admin_job_access(action: str, details: dict | None = None) -> None:
     user = assert_authenticated()
-    assert_post_request("Only POST requests are allowed for admin job triggers.")
-    assert_roles(
-        *ADMIN_JOB_ROLES,
-        user=user,
-        message="You do not have permission to trigger admin jobs.",
+    action_key = str(action or "").rsplit(".", 1)[-1]
+    assert_role_based_write_access(
+        action=action,
+        roles=ADMIN_JOB_ROLES,
+        permission_targets=ADMIN_JOB_PERMISSION_DOCTYPES.get(action_key, ()),
+        details=details,
+        role_message="You do not have permission to trigger admin jobs.",
+        post_message="Only POST requests are allowed for admin job triggers.",
     )
     _assert_admin_job_rate_limit(user, action)
-    audit_admin_action(action, details or {})
 
 
 @frappe.whitelist()
 def run_renewal_task_job() -> dict[str, Any]:
     _assert_admin_job_access("api.admin_jobs.run_renewal_task_job")
-    return task_jobs.run_renewal_task_job()
+    return dispatch_admin_job("run_renewal_task_job")
+
+
+@frappe.whitelist()
+def run_stale_renewal_task_job(limit: int = 500) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    _assert_admin_job_access("api.admin_jobs.run_stale_renewal_task_job", {"limit": safe_limit})
+    return dispatch_admin_job("run_stale_renewal_task_job", limit=safe_limit)
 
 
 @frappe.whitelist()
 def run_notification_queue_job(limit: int = 120) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     _assert_admin_job_access("api.admin_jobs.run_notification_queue_job", {"limit": safe_limit})
-    return task_jobs.run_notification_queue_job(limit=safe_limit)
+    return dispatch_admin_job("run_notification_queue_job", limit=safe_limit)
+
+
+@frappe.whitelist()
+def run_payment_due_job(limit: int = 250) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    _assert_admin_job_access("api.admin_jobs.run_payment_due_job", {"limit": safe_limit})
+    return dispatch_admin_job("run_payment_due_job", limit=safe_limit)
+
+
+@frappe.whitelist()
+def run_scheduled_reports_job(frequency: str = "daily", limit: int = 10) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    safe_frequency = str(frequency or "daily").strip().lower() or "daily"
+    _assert_admin_job_access(
+        "api.admin_jobs.run_scheduled_reports_job",
+        {"limit": safe_limit, "frequency": safe_frequency},
+    )
+    return dispatch_admin_job("run_scheduled_reports_job", frequency=safe_frequency, limit=safe_limit)
 
 
 @frappe.whitelist()
 def run_accounting_sync_job(limit: int = 250) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     _assert_admin_job_access("api.admin_jobs.run_accounting_sync_job", {"limit": safe_limit})
-    return task_jobs.run_accounting_sync_job(limit=safe_limit)
+    return dispatch_admin_job("run_accounting_sync_job", limit=safe_limit)
 
 
 @frappe.whitelist()
 def run_accounting_reconciliation_job(limit: int = 400) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     _assert_admin_job_access("api.admin_jobs.run_accounting_reconciliation_job", {"limit": safe_limit})
-    return task_jobs.run_accounting_reconciliation_job(limit=safe_limit)
+    return dispatch_admin_job("run_accounting_reconciliation_job", limit=safe_limit)

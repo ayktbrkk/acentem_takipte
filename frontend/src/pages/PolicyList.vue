@@ -197,7 +197,7 @@
             :model="quickPolicyForm"
             :field-errors="quickPolicyFieldErrors"
             :disabled="quickPolicyLoading"
-            :locale="sessionState.locale"
+            :locale="activeLocale"
             :options-map="policyQuickOptionsMap"
             @submit="submitQuickPolicy(false)"
             @request-related-create="onPolicyRelatedCreateRequested"
@@ -209,11 +209,13 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { usePolicyStore } from "../stores/policy";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import StatusBadge from "../components/StatusBadge.vue";
@@ -244,6 +246,14 @@ import {
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const policyStore = usePolicyStore();
+
+function buildOfficeBranchLookupFilters() {
+  const officeBranch = branchStore.requestBranch || "";
+  return officeBranch ? { office_branch: officeBranch } : {};
+}
 
 const copy = {
   tr: {
@@ -351,34 +361,21 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const filters = reactive({
-  query: "",
-  insurance_company: "",
-  end_date: "",
-  status: "",
-  customer: "",
-  gross_min: "",
-  gross_max: "",
-  sort: "modified desc",
-});
-
-const pagination = reactive({
-  page: 1,
-  pageLength: 20,
-  total: 0,
-});
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+const filters = policyStore.state.filters;
+const pagination = policyStore.state.pagination;
 const POLICY_PRESET_STORAGE_KEY = "at:policy-list:preset";
 const POLICY_PRESET_LIST_STORAGE_KEY = "at:policy-list:preset-list";
 const policyPresetKey = ref(readFilterPresetKey(POLICY_PRESET_STORAGE_KEY, "default"));
 const policyCustomPresets = ref(readFilterPresetList(POLICY_PRESET_LIST_STORAGE_KEY));
 
 const statusOptions = computed(() => [
-  { value: "Active", label: sessionState.locale === "tr" ? "Aktif" : "Active" },
+  { value: "Active", label: activeLocale.value === "tr" ? "Aktif" : "Active" },
   { value: "KYT", label: "KYT" },
-  { value: "IPT", label: sessionState.locale === "tr" ? "Iptal" : "Cancelled" },
+  { value: "IPT", label: activeLocale.value === "tr" ? "Iptal" : "Cancelled" },
 ]);
 
 const sortOptions = computed(() => [
@@ -445,6 +442,7 @@ const policyQuickCustomerResource = createResource({
   params: {
     doctype: "AT Customer",
     fields: ["name", "full_name"],
+    filters: buildOfficeBranchLookupFilters(),
     order_by: "modified desc",
     limit_page_length: QUICK_OPTION_LIMIT,
   },
@@ -489,8 +487,8 @@ const policyPresetServerWriteResource = createResource({
 });
 
 const companies = computed(() => companyResource.data || []);
-const rows = computed(() => policyResource.data || []);
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
+const rows = computed(() => policyStore.state.items);
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const policyQuickFields = computed(() => quickPolicyConfig?.fields || []);
 const policyQuickOptionsMap = computed(() => ({
   customers: (policyQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
@@ -503,48 +501,24 @@ const policyQuickOptionsMap = computed(() => ({
   })),
 }));
 const quickPolicyUi = computed(() => ({
-  title: getLocalizedText(quickPolicyConfig?.title, sessionState.locale),
-  subtitle: getLocalizedText(quickPolicyConfig?.subtitle, sessionState.locale),
-  newLabel: sessionState.locale === "tr" ? "Yeni Police" : "New Policy",
+  title: getLocalizedText(quickPolicyConfig?.title, activeLocale.value),
+  subtitle: getLocalizedText(quickPolicyConfig?.subtitle, activeLocale.value),
+  newLabel: activeLocale.value === "tr" ? "Yeni Police" : "New Policy",
 }));
 const quickCreateCommon = computed(() => ({
-  cancel: sessionState.locale === "tr" ? "Vazgec" : "Cancel",
-  save: sessionState.locale === "tr" ? "Kaydet" : "Save",
-  saveAndOpen: sessionState.locale === "tr" ? "Kaydet ve Ac" : "Save & Open",
-  validation: sessionState.locale === "tr" ? "Lutfen gerekli alanlari doldurun." : "Please fill required fields.",
-  failed: sessionState.locale === "tr" ? "Hizli police olusturma basarisiz oldu." : "Quick policy create failed.",
+  cancel: activeLocale.value === "tr" ? "Vazgec" : "Cancel",
+  save: activeLocale.value === "tr" ? "Kaydet" : "Save",
+  saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Ac" : "Save & Open",
+  validation: activeLocale.value === "tr" ? "Lutfen gerekli alanlari doldurun." : "Please fill required fields.",
+  failed: activeLocale.value === "tr" ? "Hizli police olusturma basarisiz oldu." : "Quick policy create failed.",
 }));
 const policyListError = ref("");
-
-const totalPages = computed(() => {
-  if (!pagination.total) return 1;
-  return Math.max(1, Math.ceil(pagination.total / pagination.pageLength));
-});
-
-const hasNextPage = computed(() => pagination.page < totalPages.value);
-
-const startRow = computed(() => {
-  if (!pagination.total) return 0;
-  return (pagination.page - 1) * pagination.pageLength + 1;
-});
-
-const endRow = computed(() => {
-  if (!pagination.total) return 0;
-  return Math.min(pagination.total, pagination.page * pagination.pageLength);
-});
-
-const isInitialLoading = computed(() => policyResource.loading && rows.value.length === 0);
-const policyActiveFilterCount = computed(() =>
-  [
-    filters.query,
-    filters.insurance_company,
-    filters.end_date,
-    filters.status,
-    filters.customer,
-    filters.gross_min,
-    filters.gross_max,
-  ].filter((value) => String(value ?? "").trim() !== "").length
-);
+const totalPages = computed(() => policyStore.totalPages);
+const hasNextPage = computed(() => policyStore.hasNextPage);
+const startRow = computed(() => policyStore.startRow);
+const endRow = computed(() => policyStore.endRow);
+const isInitialLoading = computed(() => policyStore.state.loading && rows.value.length === 0);
+const policyActiveFilterCount = computed(() => policyStore.activeFilterCount);
 
 function buildPolicyFilterPayload() {
   const out = { filters: {} };
@@ -693,7 +667,7 @@ function deletePolicyPreset() {
 
 function buildPolicyParams() {
   const payload = buildPolicyFilterPayload();
-  return {
+  return withOfficeBranchFilter({
     doctype: "AT Policy",
     fields: [
       "name",
@@ -713,15 +687,27 @@ function buildPolicyParams() {
     order_by: filters.sort,
     limit_start: (pagination.page - 1) * pagination.pageLength,
     limit_page_length: pagination.pageLength,
-  };
+  });
 }
 
 function buildCountParams() {
   const payload = buildPolicyFilterPayload();
-  return {
+  return withOfficeBranchFilter({
     doctype: "AT Policy",
     filters: payload.filters,
     ...(payload.or_filters ? { or_filters: payload.or_filters } : {}),
+  });
+}
+
+function withOfficeBranchFilter(params) {
+  const officeBranch = branchStore.requestBranch || "";
+  if (!officeBranch) return params;
+  return {
+    ...params,
+    filters: {
+      ...(params.filters || {}),
+      office_branch: officeBranch,
+    },
   };
 }
 
@@ -732,6 +718,8 @@ async function refreshPolicyList() {
 
   policyResource.params = buildPolicyParams();
   policyCountResource.params = buildCountParams();
+  policyStore.setLoading(true);
+  policyStore.clearError();
 
   const [recordsResult, countResult] = await Promise.allSettled([
     policyResource.reload(),
@@ -745,15 +733,18 @@ async function refreshPolicyList() {
 
     if (countResult.status === "fulfilled") {
       const total = Number(countResult.value || 0);
-      pagination.total = Number.isFinite(total) ? total : 0;
+      policyStore.applyListPayload(records, Number.isFinite(total) ? total : 0);
     } else {
-      pagination.total = records.length;
+      policyStore.applyListPayload(records, records.length);
     }
+    policyStore.setLoading(false);
     return;
   }
 
-  pagination.total = 0;
   policyResource.setData([]);
+  policyStore.applyListPayload([], 0);
+  policyStore.setError(t("loadError"));
+  policyStore.setLoading(false);
   policyListError.value = t("loadError");
 }
 
@@ -867,7 +858,7 @@ function validateQuickPolicyForm() {
   for (const field of policyQuickFields.value) {
     if (!field?.required) continue;
     if (String(quickPolicyForm[field.name] ?? "").trim() === "") {
-      quickPolicyFieldErrors[field.name] = getLocalizedText(field.label, sessionState.locale);
+      quickPolicyFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
       valid = false;
     }
   }
@@ -879,7 +870,7 @@ function validateQuickPolicyForm() {
   if (!(Number.isFinite(gross) && gross > 0)) {
     quickPolicyFieldErrors.gross_premium = getLocalizedText(
       policyQuickFields.value.find((f) => f.name === "gross_premium")?.label,
-      sessionState.locale
+      activeLocale.value
     );
     quickPolicyError.value = quickCreateCommon.value.validation;
     return false;
@@ -1035,6 +1026,21 @@ function formatCurrency(value, currency) {
 
 applyPolicyPreset(policyPresetKey.value, { refresh: false });
 void refreshPolicyList();
+watch(
+  () => branchStore.selected,
+  () => {
+    pagination.page = 1;
+    policyQuickCustomerResource.params = {
+      doctype: "AT Customer",
+      fields: ["name", "full_name"],
+      filters: buildOfficeBranchLookupFilters(),
+      order_by: "modified desc",
+      limit_page_length: QUICK_OPTION_LIMIT,
+    };
+    void policyQuickCustomerResource.reload();
+    void refreshPolicyList();
+  }
+);
 void hydratePolicyPresetStateFromServer();
 void consumeQuickPolicyRouteIntent();
 </script>

@@ -5,6 +5,8 @@ from typing import Any
 import frappe
 from frappe.utils import cint
 
+from acentem_takipte.acentem_takipte.utils.logging import redact_payload
+
 
 def assert_authenticated(message: str = "Authentication required") -> str:
     user = frappe.session.user or "Guest"
@@ -31,11 +33,13 @@ def assert_roles(*roles: str, user: str | None = None, message: str | None = Non
 
 
 def assert_doctype_permission(doctype: str, ptype: str, message: str | None = None) -> None:
+    assert_authenticated()
     if not frappe.has_permission(doctype, ptype):
         frappe.throw(frappe._(message or "You do not have permission to access this resource."))
 
 
 def assert_doc_permission(doctype: str, name: str, ptype: str = "read"):
+    assert_authenticated()
     if not name:
         frappe.throw(frappe._("Document name is required."))
     doc = frappe.get_doc(doctype, name)
@@ -57,7 +61,7 @@ def assert_post_request(message: str | None = None) -> None:
     if not request:
         return
     method = str(getattr(request, "method", "") or "").upper()
-    if method and method != "POST":
+    if method != "POST":
         frappe.throw(frappe._(message or "Only POST requests are allowed for this action."))
 
 
@@ -68,5 +72,5 @@ def audit_admin_action(action: str, details: dict[str, Any] | None = None) -> No
         "ip": getattr(frappe.local, "request_ip", None),
         "details": details or {},
     }
-    frappe.logger("acentem_takipte.acentem_takipte.security").info("AT admin action: %s", payload)
+    frappe.logger("acentem_takipte.acentem_takipte.security").info("AT admin action: %s", redact_payload(payload))
 

@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { AUX_WORKBENCH_ROUTE_DEFS } from "../config/auxWorkbenchConfigs";
+import { sessionState } from "../state/session";
+
+export const OFFICE_BRANCH_QUERY_KEY = "office_branch";
 
 const Dashboard = () => import("../pages/Dashboard.vue");
 const OfferBoard = () => import("../pages/OfferBoard.vue");
@@ -14,7 +17,9 @@ const ClaimsBoard = () => import("../pages/ClaimsBoard.vue");
 const PaymentsBoard = () => import("../pages/PaymentsBoard.vue");
 const RenewalsBoard = () => import("../pages/RenewalsBoard.vue");
 const CommunicationCenter = () => import("../pages/CommunicationCenter.vue");
-const ReconciliationWorkbench = () => import("../pages/ReconciliationWorkbench.vue");
+const ReconciliationWorkbench = () =>
+  import("../pages/ReconciliationWorkbench.vue");
+const Reports = () => import("../pages/Reports.vue");
 const AuxWorkbench = () => import("../pages/AuxWorkbench.vue");
 const AuxRecordDetail = () => import("../pages/AuxRecordDetail.vue");
 
@@ -158,6 +163,15 @@ const router = createRouter({
       },
     },
     {
+      path: "/reports",
+      name: "reports",
+      component: Reports,
+      meta: {
+        title: { tr: "Raporlar", en: "Reports" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
       path: "/customers/:name",
       name: "customer-detail",
       component: CustomerDetail,
@@ -184,6 +198,63 @@ const router = createRouter({
       },
     ]),
   ],
+});
+
+export function getDeskRedirectTarget(preferredHome, interfaceMode, userId, roles = []) {
+  const normalizedRoles = new Set(
+    (roles || [])
+      .map((role) => String(role || "").trim().toLowerCase())
+      .filter(Boolean),
+  );
+  const normalizedUserId = String(userId || "").trim().toLowerCase();
+  const isAdminByUserId = normalizedUserId === "administrator";
+  const isRoleDataPresent = normalizedRoles.size > 0;
+  const isSystemRole = normalizedRoles.has("system manager") || normalizedRoles.has("administrator");
+
+  const isDeskOnlyUser =
+    String(interfaceMode || "") === "desk"
+    && isRoleDataPresent
+    && !isSystemRole
+    && normalizedUserId !== "administrator"
+    && userId;
+
+  if (
+    isDeskOnlyUser
+    || (String(preferredHome || "") === "/app" && !isSystemRole && !isAdminByUserId && isRoleDataPresent && userId)
+  ) {
+    return "/app";
+  }
+  return null;
+}
+
+router.beforeEach((to) => {
+  const target = getDeskRedirectTarget(
+    sessionState.preferredHome,
+    sessionState.interfaceMode,
+    sessionState.userId,
+    sessionState.roles,
+  );
+  if (!target) {
+    if (
+      sessionState.defaultOfficeBranch &&
+      !to.query?.[OFFICE_BRANCH_QUERY_KEY]
+    ) {
+      return {
+        path: to.path,
+        query: {
+          ...to.query,
+          [OFFICE_BRANCH_QUERY_KEY]: sessionState.defaultOfficeBranch,
+        },
+        hash: to.hash,
+      };
+    }
+    return true;
+  }
+
+  if (typeof window !== "undefined") {
+    window.location.assign(target);
+  }
+  return false;
 });
 
 export default router;

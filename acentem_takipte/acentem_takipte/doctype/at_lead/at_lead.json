@@ -11,6 +11,7 @@
   "email",
   "status",
   "customer",
+  "office_branch",
   "sales_entity",
   "insurance_company",
   "branch",
@@ -59,6 +60,12 @@
    "fieldtype": "Link",
    "label": "Customer",
    "options": "AT Customer"
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "fieldname": "sales_entity",

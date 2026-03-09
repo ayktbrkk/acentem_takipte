@@ -7,6 +7,7 @@
   "claim_no",
   "policy",
   "customer",
+  "office_branch",
   "claim_type",
   "claim_status",
   "incident_date",
@@ -38,6 +39,12 @@
    "label": "Customer",
    "options": "AT Customer",
    "reqd": 1
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "default": "Damage",

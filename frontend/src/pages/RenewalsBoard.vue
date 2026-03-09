@@ -107,6 +107,7 @@
               <th class="at-table-head-cell">{{ t("task") }}</th>
               <th class="at-table-head-cell">{{ t("policy") }}</th>
               <th class="at-table-head-cell">{{ t("status") }}</th>
+              <th class="at-table-head-cell">{{ lostReasonColumnLabel }}</th>
               <th class="at-table-head-cell">{{ t("due") }}</th>
               <th class="at-table-head-cell">{{ t("renewal") }}</th>
               <th class="at-table-head-cell">{{ t("actions") }}</th>
@@ -118,6 +119,12 @@
               <td class="at-table-cell text-slate-700">{{ task.policy || "-" }}</td>
               <td class="at-table-cell">
                 <StatusBadge type="renewal" :status="task.status" />
+              </td>
+              <td class="at-table-cell text-slate-700">
+                <div class="flex flex-col gap-1">
+                  <span>{{ formatLostReason(task) }}</span>
+                  <span v-if="task.competitor_name" class="text-xs text-slate-500">{{ task.competitor_name }}</span>
+                </div>
               </td>
               <td class="at-table-cell text-slate-700">{{ formatDate(task.due_date) }}</td>
               <td class="at-table-cell text-slate-700">{{ formatDate(task.renewal_date) }}</td>
@@ -142,7 +149,7 @@
     <QuickCreateManagedDialog
       v-model="showQuickRenewalDialog"
       config-key="renewal_task"
-      :locale="sessionState.locale"
+      :locale="activeLocale"
       :options-map="renewalQuickOptionsMap"
       :show-save-and-open="false"
       :before-open="prepareQuickRenewalDialog"
@@ -152,7 +159,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
@@ -165,7 +172,9 @@ import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManaged
 import StatusBadge from "../components/StatusBadge.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { useRenewalStore } from "../stores/renewal";
 
 const copy = {
   tr: {
@@ -259,19 +268,27 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const filters = reactive({
-  query: "",
-  status: "",
-  policyQuery: "",
-  dueScope: "",
-  limit: 40,
-});
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const renewalStore = useRenewalStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+
+function buildOfficeBranchLookupFilters() {
+  const officeBranch = branchStore.requestBranch || "";
+  return officeBranch ? { office_branch: officeBranch } : {};
+}
+
+const filters = renewalStore.state.filters;
 
 const renewalStatusOptions = computed(() =>
   ["Open", "In Progress", "Done", "Cancelled"].map((value) => ({ value, label: value }))
+);
+const lostReasonColumnLabel = computed(() =>
+  activeLocale.value === "tr" ? "Kayip Sonucu" : "Loss Outcome"
 );
 const activeFilterCount = computed(() => {
   let count = 0;
@@ -301,7 +318,7 @@ const {
   setFilterStateFromPayload: setRenewalFilterStateFromPayload,
   resetFilterState: resetRenewalFilterState,
   refresh: reloadRenewals,
-  getSortLocale: () => (sessionState.locale === "tr" ? "tr-TR" : "en-US"),
+  getSortLocale: () => localeCode.value,
 });
 
 const renewalsResource = createResource({
@@ -316,6 +333,7 @@ const renewalQuickPolicyResource = createResource({
   params: {
     doctype: "AT Policy",
     fields: ["name", "policy_no", "customer"],
+    filters: buildOfficeBranchLookupFilters(),
     order_by: "end_date asc, modified desc",
     limit_page_length: 500,
   },
@@ -326,12 +344,13 @@ const renewalQuickCustomerResource = createResource({
   params: {
     doctype: "AT Customer",
     fields: ["name", "full_name"],
+    filters: buildOfficeBranchLookupFilters(),
     order_by: "modified desc",
     limit_page_length: 500,
   },
 });
 
-const renewalsRaw = computed(() => renewalsResource.data || []);
+const renewalsRaw = computed(() => renewalStore.state.items || []);
 const renewals = computed(() => {
   let rows = renewalsRaw.value.slice();
   const query = normalizeText(filters.query);
@@ -349,7 +368,6 @@ const renewals = computed(() => {
   }
   return rows;
 });
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
 const showQuickRenewalDialog = ref(false);
 const renewalQuickOptionsMap = computed(() => ({
   policies: (renewalQuickPolicyResource.data || []).map((row) => ({
@@ -367,40 +385,31 @@ const quickRenewalSuccessHandlers = {
   },
 };
 const showSummaryGrid = computed(
-  () => !renewalsResource.loading && !renewalsError.value && renewals.value.length > 0
+  () => !renewalStore.state.loading && !renewalsError.value && renewals.value.length > 0
 );
 const renewalSummaryItems = computed(() => {
-  const rows = renewals.value;
-  const countByStatus = rows.reduce((acc, row) => {
-    const key = String(row.status || "Open");
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const doneCount = Number(countByStatus.Done || 0) + Number(countByStatus.Completed || 0);
+  const summary = renewalStore.state.summary || {};
   return [
-    { key: "total", label: t("metricTotal"), value: String(rows.length) },
-    { key: "open", label: t("metricOpen"), value: String(countByStatus.Open || 0), valueClass: "text-amber-700" },
+    { key: "total", label: t("metricTotal"), value: String(summary.total || 0) },
+    { key: "open", label: t("metricOpen"), value: String(summary.open || 0), valueClass: "text-amber-700" },
     {
       key: "in-progress",
       label: t("metricInProgress"),
-      value: String(countByStatus["In Progress"] || 0),
+      value: String(summary.inProgress || 0),
       valueClass: "text-sky-700",
     },
-    { key: "done", label: t("metricDone"), value: String(doneCount), valueClass: "text-emerald-700" },
+    { key: "done", label: t("metricDone"), value: String(summary.done || 0), valueClass: "text-emerald-700" },
     {
       key: "cancelled",
       label: t("metricCancelled"),
-      value: String(countByStatus.Cancelled || 0),
+      value: String(summary.cancelled || 0),
       valueClass: "text-rose-700",
     },
   ];
 });
 
 const renewalsError = computed(() => {
-  const err = renewalsResource.error;
-  if (!err) return "";
-  if (Array.isArray(err.messages) && err.messages.length > 0) return err.messages.join(" ");
-  return err.message || t("loadError");
+  return renewalStore.state.error || "";
 });
 
 function reloadRenewals() {
@@ -429,7 +438,7 @@ function isoDateOffset(days) {
 }
 
 function normalizeText(value) {
-  return String(value || "").trim().toLocaleLowerCase(sessionState.locale === "tr" ? "tr-TR" : "en-US");
+  return String(value || "").trim().toLocaleLowerCase(localeCode.value);
 }
 
 function toStartOfDay(value) {
@@ -455,14 +464,26 @@ function matchesDueScope(dueDate, scope) {
 function buildRenewalListParams() {
   const params = {
     doctype: "AT Renewal Task",
-    fields: ["name", "policy", "status", "due_date", "renewal_date"],
+    fields: ["name", "policy", "status", "lost_reason_code", "competitor_name", "due_date", "renewal_date"],
     order_by: "due_date asc",
     limit_page_length: Number(filters.limit) || 40,
   };
   if (filters.status) {
     params.filters = { status: filters.status };
   }
-  return params;
+  return withOfficeBranchFilter(params);
+}
+
+function withOfficeBranchFilter(params) {
+  const officeBranch = branchStore.requestBranch || "";
+  if (!officeBranch) return params;
+  return {
+    ...params,
+    filters: {
+      ...(params.filters || {}),
+      office_branch: officeBranch,
+    },
+  };
 }
 
 function applyRenewalFilters() {
@@ -488,11 +509,13 @@ function currentRenewalPresetPayload() {
 }
 
 function setRenewalFilterStateFromPayload(payload) {
-  filters.query = String(payload?.query || "");
-  filters.status = String(payload?.status || "");
-  filters.policyQuery = String(payload?.policyQuery || "");
-  filters.dueScope = String(payload?.dueScope || "");
-  filters.limit = Number(payload?.limit || 40) || 40;
+  renewalStore.setFilters({
+    query: String(payload?.query || ""),
+    status: String(payload?.status || ""),
+    policyQuery: String(payload?.policyQuery || ""),
+    dueScope: String(payload?.dueScope || ""),
+    limit: Number(payload?.limit || 40) || 40,
+  });
 }
 
 function resetRenewalFilters() {
@@ -506,11 +529,85 @@ function prepareQuickRenewalDialog({ form }) {
   if (!form.due_date) form.due_date = isoDateOffset(15);
 }
 
+function formatLostReason(task) {
+  const rawStatus = String(task?.status || "");
+  const rawReason = String(task?.lost_reason_code || "").trim();
+  if (rawStatus !== "Cancelled") return "-";
+  if (!rawReason) return activeLocale.value === "tr" ? "Iptal" : "Cancelled";
+
+  const labels = {
+    Price: { tr: "Fiyat", en: "Price" },
+    Competitor: { tr: "Rakip", en: "Competitor" },
+    Service: { tr: "Hizmet", en: "Service" },
+    "Customer Declined": { tr: "Musteri Vazgecti", en: "Customer Declined" },
+    "Coverage Mismatch": { tr: "Teminat Uyumsuzlugu", en: "Coverage Mismatch" },
+    Other: { tr: "Diger", en: "Other" },
+  };
+  return labels[rawReason]?.[activeLocale.value] || rawReason;
+}
+
 onMounted(() => {
   applyPreset(presetKey.value, { refresh: false });
   if (String(presetKey.value || "default") !== "default") void reloadRenewals();
   void hydratePresetStateFromServer();
 });
+
+watch(
+  () => renewalsResource.data,
+  (rows) => {
+    const nextRows = Array.isArray(rows) ? rows : [];
+    renewalStore.setItems(nextRows);
+  },
+  { immediate: true }
+);
+
+watch(
+  () => renewalsResource.loading,
+  (value) => {
+    renewalStore.setLoading(value);
+  },
+  { immediate: true }
+);
+
+watch(
+  () => renewalsResource.error,
+  (err) => {
+    if (!err) {
+      renewalStore.clearError();
+      return;
+    }
+    if (Array.isArray(err.messages) && err.messages.length > 0) {
+      renewalStore.setError(err.messages.join(" "));
+      return;
+    }
+    renewalStore.setError(err.message || t("loadError"));
+  },
+  { immediate: true }
+);
+
+watch(
+  () => branchStore.selected,
+  () => {
+    const officeFilters = buildOfficeBranchLookupFilters();
+    renewalQuickPolicyResource.params = {
+      doctype: "AT Policy",
+      fields: ["name", "policy_no", "customer"],
+      filters: officeFilters,
+      order_by: "end_date asc, modified desc",
+      limit_page_length: 500,
+    };
+    renewalQuickCustomerResource.params = {
+      doctype: "AT Customer",
+      fields: ["name", "full_name"],
+      filters: officeFilters,
+      order_by: "modified desc",
+      limit_page_length: 500,
+    };
+    void renewalQuickPolicyResource.reload();
+    void renewalQuickCustomerResource.reload();
+    void reloadRenewals();
+  }
+);
 </script>
 
 <style scoped>

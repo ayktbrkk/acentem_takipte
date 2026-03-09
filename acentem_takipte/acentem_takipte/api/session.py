@@ -3,6 +3,11 @@ from __future__ import annotations
 import frappe
 
 from acentem_takipte.acentem_takipte.api.security import assert_post_request
+from acentem_takipte.acentem_takipte.services.branches import (
+    get_default_office_branch,
+    get_user_office_branches,
+    user_can_access_all_office_branches,
+)
 
 SESSION_CAPABILITY_QUICK_CREATE: dict[str, str] = {
     "renewal_task": "AT Renewal Task",
@@ -24,6 +29,9 @@ SESSION_CAPABILITY_QUICK_EDIT: dict[str, str] = {
     "accounting_entry_edit": "AT Accounting Entry",
     "reconciliation_item_edit": "AT Reconciliation Item",
 }
+
+DESK_HOME_ROLES = {"System Manager", "Administrator"}
+SPA_HOME_ROLES = {"Manager", "Agent", "Accountant"}
 
 
 def _has_permission(doctype: str, ptype: str) -> bool:
@@ -71,6 +79,34 @@ def _build_session_capabilities() -> dict:
     }
 
 
+def _resolve_session_interface(user: str) -> dict:
+    roles = [role for role in frappe.get_roles(user) if role not in {"All", "Guest"}]
+    role_set = set(roles)
+
+    preferred_home = "/at"
+    interface_mode = "spa"
+
+    if role_set.intersection(DESK_HOME_ROLES):
+        preferred_home = "/app"
+        interface_mode = "desk"
+    elif role_set.intersection(SPA_HOME_ROLES):
+        preferred_home = "/at"
+        interface_mode = "spa"
+    elif role_set:
+        # Keep compatibility with future role sets by defaulting to SPA.
+        preferred_home = "/at"
+        interface_mode = "spa"
+    else:
+        preferred_home = "/at"
+        interface_mode = "spa"
+
+    return {
+        "roles": roles,
+        "preferred_home": preferred_home,
+        "interface_mode": interface_mode,
+    }
+
+
 def resolve_current_user() -> str:
     session_user = frappe.session.user or "Guest"
     try:
@@ -91,13 +127,23 @@ def get_session_context() -> dict:
 
     full_name = frappe.db.get_value("User", user, "full_name") or user
     language = (frappe.db.get_value("User", user, "language") or frappe.local.lang or "tr")
+    interface = _resolve_session_interface(user)
+    office_branches = get_user_office_branches(user)
+    default_office_branch = get_default_office_branch(user)
+    can_access_all_office_branches = user_can_access_all_office_branches(user)
 
     return {
         "user": user,
         "full_name": full_name,
         "locale": str(language).split("-")[0].lower(),
         "branch": frappe.defaults.get_user_default("AT Branch"),
+        "office_branches": office_branches,
+        "default_office_branch": default_office_branch,
+        "can_access_all_office_branches": can_access_all_office_branches,
         "capabilities": _build_session_capabilities(),
+        "roles": interface["roles"],
+        "preferred_home": interface["preferred_home"],
+        "interface_mode": interface["interface_mode"],
     }
 
 
@@ -121,10 +167,20 @@ def set_session_locale(locale: str | None = None) -> dict:
         frappe.local.cookie_manager.set_cookie("user_lang", language)
 
     full_name = frappe.db.get_value("User", user, "full_name") or user
+    interface = _resolve_session_interface(user)
+    office_branches = get_user_office_branches(user)
+    default_office_branch = get_default_office_branch(user)
+    can_access_all_office_branches = user_can_access_all_office_branches(user)
     return {
         "user": user,
         "full_name": full_name,
         "locale": language,
         "branch": frappe.defaults.get_user_default("AT Branch"),
+        "office_branches": office_branches,
+        "default_office_branch": default_office_branch,
+        "can_access_all_office_branches": can_access_all_office_branches,
         "capabilities": _build_session_capabilities(),
+        "roles": interface["roles"],
+        "preferred_home": interface["preferred_home"],
+        "interface_mode": interface["interface_mode"],
     }

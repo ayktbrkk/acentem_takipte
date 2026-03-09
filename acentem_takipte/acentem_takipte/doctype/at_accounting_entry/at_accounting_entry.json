@@ -10,6 +10,7 @@
   "status",
   "policy",
   "customer",
+  "office_branch",
   "insurance_company",
   "currency",
   "local_amount",
@@ -66,6 +67,12 @@
    "fieldtype": "Link",
    "label": "Customer",
    "options": "AT Customer"
+  },
+  {
+   "fieldname": "office_branch",
+   "fieldtype": "Link",
+   "label": "Office Branch",
+   "options": "AT Office Branch"
   },
   {
    "fieldname": "insurance_company",

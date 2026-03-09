@@ -495,11 +495,13 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
-import { sessionState } from "../state/session";
+import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { useDashboardStore } from "../stores/dashboard";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import ActionPreviewCard from "../components/app-shell/ActionPreviewCard.vue";
 import ActionToolbarGroup from "../components/app-shell/ActionToolbarGroup.vue";
@@ -515,6 +517,9 @@ import StatusBadge from "../components/StatusBadge.vue";
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const dashboardStore = useDashboardStore();
 
 const copy = {
   tr: {
@@ -561,6 +566,10 @@ const copy = {
     renewalAlertHint: "30 gun icinde sona erecek policeler",
     noRenewalAlert: "Bugun kritik yenileme bulunmuyor.",
     trendAgainstPrevious: "onceki doneme gore",
+    trendAgainstPreviousPeriod: "onceki ayni sureye gore",
+    trendAgainstPreviousMonth: "gecen aya gore",
+    trendAgainstPreviousYear: "gecen yila gore",
+    trendAgainstCustomPeriod: "karsilastirma donemine gore",
     quickActions: "Hizli Aksiyonlar",
     firstName: "Ad",
     lastName: "Soyad",
@@ -578,6 +587,7 @@ const copy = {
     kpiCommission: "Toplam Komisyon",
     kpiPolicy: "Toplam Police",
     kpiRenewal: "Bekleyen Yenileme",
+    kpiRenewalRetention: "Yenileme Tutma Orani",
     kpiCollect: "Tahsilat (TRY)",
     kpiPayout: "Odeme (TRY)",
     kpiClaim: "Acik Hasar",
@@ -586,6 +596,7 @@ const copy = {
     kpiReconciliationOpen: "Acik Mutabakat",
     kpiAvgRate: "Ort. Komisyon Orani",
     todaySnapshot: "Bugunluk gorunum",
+    renewalRetentionHint: "Yenilenen / kaybedilen kapanislar",
     monthlySnapshot: "Secili aralik",
     ratioSnapshot: "Oransal performans",
     quickPolicy: "Police Yonetimi",
@@ -686,6 +697,10 @@ const copy = {
     renewalAlertHint: "Policies ending within 30 days",
     noRenewalAlert: "No critical renewal alert for today.",
     trendAgainstPrevious: "vs previous period",
+    trendAgainstPreviousPeriod: "vs previous period",
+    trendAgainstPreviousMonth: "vs previous month",
+    trendAgainstPreviousYear: "vs previous year",
+    trendAgainstCustomPeriod: "vs comparison period",
     quickActions: "Quick Actions",
     firstName: "First Name",
     lastName: "Last Name",
@@ -703,6 +718,7 @@ const copy = {
     kpiCommission: "Total Commission",
     kpiPolicy: "Total Policies",
     kpiRenewal: "Pending Renewals",
+    kpiRenewalRetention: "Renewal Retention Rate",
     kpiCollect: "Collections (TRY)",
     kpiPayout: "Payouts (TRY)",
     kpiClaim: "Open Claims",
@@ -711,6 +727,7 @@ const copy = {
     kpiReconciliationOpen: "Open Reconciliation",
     kpiAvgRate: "Avg Commission Rate",
     todaySnapshot: "Current snapshot",
+    renewalRetentionHint: "Renewed / lost closed outcomes",
     monthlySnapshot: "Selected range",
     ratioSnapshot: "Rate performance",
     quickPolicy: "Policy Management",
@@ -770,7 +787,8 @@ const copy = {
 };
 
 function t(key) {
-  return copy[sessionState.locale]?.[key] || copy.en[key] || key;
+  const localeValue = unref(authStore.locale) || "en";
+  return copy[localeValue]?.[key] || copy.en[key] || key;
 }
 
 const DASHBOARD_TABS = ["daily", "sales", "collections", "renewals"];
@@ -782,9 +800,14 @@ function normalizeDashboardTab(value) {
 }
 
 const rangeOptions = [1, 7, 30, 90];
-const selectedRange = ref(30);
+const selectedRange = computed({
+  get: () => dashboardStore.state.range || 30,
+  set: (value) => dashboardStore.setRange(value),
+});
 const showLeadDialog = ref(false);
 const isSubmitting = ref(false);
+const DASHBOARD_RELOAD_DEBOUNCE_MS = 300;
+let dashboardReloadTimer = null;
 
 const newLead = reactive({
   first_name: "",
@@ -909,8 +932,8 @@ const createLeadResource = createResource({
   url: "frappe.client.insert",
 });
 
-const localeCode = computed(() => (sessionState.locale === "tr" ? "tr-TR" : "en-US"));
-const dashboardTabPayload = computed(() => dashboardTabPayloadResource.data || {});
+const localeCode = computed(() => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"));
+const dashboardTabPayload = computed(() => dashboardStore.state.tabPayload || {});
 const dashboardTabCards = computed(() => dashboardTabPayload.value.cards || {});
 const dashboardTabCompareCards = computed(() => dashboardTabPayload.value.compare_cards || {});
 const dashboardTabMetrics = computed(() => dashboardTabPayload.value.metrics || {});
@@ -932,31 +955,38 @@ const reconciliationPreviewMetrics = computed(() => ({
     ? { open: Number(dashboardTabMetrics.value.reconciliation_open_count || 0) }
     : {}),
 }));
-const dashboardData = computed(() => kpiResource.data || {});
+const dashboardData = computed(() => dashboardStore.state.kpiPayload || {});
+const dashboardComparison = computed(() => dashboardStore.comparison || {});
 const dashboardMeta = computed(() => {
-  const tabMeta = dashboardTabPayload.value?.meta;
-  if (tabMeta && typeof tabMeta === "object") return tabMeta;
-  const kpiMeta = dashboardData.value?.meta;
-  return kpiMeta && typeof kpiMeta === "object" ? kpiMeta : {};
+  return dashboardStore.meta || {};
 });
 const dashboardAccessScope = computed(() => String(dashboardMeta.value?.access_scope || ""));
 const dashboardAccessReason = computed(() => String(dashboardMeta.value?.scope_reason || ""));
 const dashboardCards = computed(() =>
   Object.keys(dashboardTabCards.value || {}).length ? dashboardTabCards.value : (dashboardData.value.cards || {})
 );
-const previousDashboardCards = computed(() => dashboardTabCompareCards.value || {});
+const previousDashboardCards = computed(() => dashboardStore.previousCards || {});
+const dashboardComparisonTrendHint = computed(() => {
+  const mode = String(dashboardComparison.value?.mode || "").toLowerCase();
+  if (mode === "previous_period") return t("trendAgainstPreviousPeriod");
+  if (mode === "previous_month") return t("trendAgainstPreviousMonth");
+  if (mode === "previous_year") return t("trendAgainstPreviousYear");
+  if (mode === "custom") return t("trendAgainstCustomPeriod");
+  return t("trendAgainstPrevious");
+});
 const commissionTrend = computed(() => dashboardTabSeries.value.commission_trend || dashboardData.value.commission_trend || []);
 const policyStatusRows = computed(() => dashboardData.value.policy_status || []);
 const topCompanies = computed(() => dashboardTabSeries.value.top_companies || dashboardData.value.top_companies || []);
-const dashboardLoading = computed(
+const dashboardLoadingRaw = computed(
   () => Boolean((isDailyTab.value ? kpiResource.loading : false) || dashboardTabPayloadResource.loading)
 );
+const dashboardLoading = computed(() => dashboardStore.state.loading);
 const dashboardPermissionError = computed(() => {
   const candidates = [dashboardTabPayloadResource.error, isDailyTab.value ? kpiResource.error : null];
   return candidates.find((error) => isPermissionDeniedError(error)) || null;
 });
 const dashboardScopeMessage = computed(() => {
-  if (dashboardLoading.value || dashboardPermissionError.value) return "";
+  if (dashboardLoadingRaw.value || dashboardPermissionError.value) return "";
   if (dashboardAccessScope.value !== "empty") return "";
   if (dashboardAccessReason.value === "agent_unassigned") return t("dashboardScopeNoAssignments");
   return t("dashboardScopeRestrictedEmpty");
@@ -973,7 +1003,7 @@ const readyOfferCount = computed(() => {
   }
   return recentOffers.value.filter((offer) => ["Sent", "Accepted"].includes(offer.status) && !offer.converted_policy).length;
 });
-const activeDashboardTab = computed(() => normalizeDashboardTab(route.query?.tab));
+const activeDashboardTab = computed(() => normalizeDashboardTab(route.query?.tab || dashboardStore.state.activeTab));
 const isDailyTab = computed(() => activeDashboardTab.value === "daily");
 const isSalesTab = computed(() => activeDashboardTab.value === "sales");
 const isCollectionsTab = computed(() => activeDashboardTab.value === "collections");
@@ -1033,25 +1063,10 @@ const dailyActionOffers = computed(() =>
     .slice(0, 5)
 );
 
-const renewalBucketCounts = computed(() => {
-  const serverBuckets = dashboardTabSeries.value?.renewal_buckets;
-  if (serverBuckets && typeof serverBuckets === "object") {
-    return {
-      overdue: Number(serverBuckets.overdue || 0),
-      due7: Number(serverBuckets.due7 || 0),
-      due30: Number(serverBuckets.due30 || 0),
-    };
-  }
-  const buckets = { overdue: 0, due7: 0, due30: 0 };
-  for (const task of activeRenewalTasks.value) {
-    const days = daysUntil(task?.due_date || task?.renewal_date);
-    if (days == null) continue;
-    if (days < 0) buckets.overdue += 1;
-    else if (days <= 7) buckets.due7 += 1;
-    else if (days <= 30) buckets.due30 += 1;
-  }
-  return buckets;
-});
+const renewalBucketCounts = computed(() => dashboardStore.renewalBucketCounts || { overdue: 0, due7: 0, due30: 0 });
+const renewalRetentionSummary = computed(
+  () => dashboardStore.renewalRetentionSummary || { renewed: 0, lost: 0, cancelled: 0, rate: 0 }
+);
 
 const visibleRange = computed(() => {
   const range = getDateRange(selectedRange.value);
@@ -1142,6 +1157,13 @@ const collectionQuickStatCards = computed(() => [
 
 const renewalQuickStatCards = computed(() => [
   quickStatCards.value.find((card) => card.key === "quick-renewal"),
+  buildStaticQuickStatCard({
+    key: "quick-renewal-retention",
+    title: t("kpiRenewalRetention"),
+    value: formatPercent(renewalRetentionSummary.value.rate),
+    icon: "repeat",
+    hint: `${t("renewalRetentionHint")} - ${formatNumber(renewalRetentionSummary.value.renewed)} / ${formatNumber(renewalRetentionSummary.value.lost)}`,
+  }),
   buildStaticQuickStatCard({
     key: "quick-renewal-overdue",
     title: t("kpiRenewalOverdue"),
@@ -1379,20 +1401,21 @@ const visibleQuickActions = computed(() => {
 
 function buildKpiParams() {
   const range = getDateRange(selectedRange.value);
-  return {
+  return withOfficeBranchFilter({
     filters: {
       from_date: formatDate(range.from),
       to_date: formatDate(range.to),
+      period_comparison: "previous_period",
       months: 6,
     },
-  };
+  });
 }
 
 function buildTabPayloadParams(tabKey = activeDashboardTab.value) {
   const normalizedTab = normalizeDashboardTab(tabKey);
   const currentRange = getDateRange(selectedRange.value);
   const previousRange = getPreviousDateRange(selectedRange.value);
-  return {
+  return withOfficeBranchFilter({
     tab: normalizedTab,
     filters: {
       from_date: formatDate(currentRange.from),
@@ -1401,7 +1424,19 @@ function buildTabPayloadParams(tabKey = activeDashboardTab.value) {
       compare_to_date: formatDate(previousRange.to),
       months: 6,
     },
-  };
+  });
+}
+
+function withOfficeBranchFilter(params) {
+  const officeBranch = branchStore.requestBranch;
+  if (!officeBranch) {
+    return params;
+  }
+  const next = { ...(params || {}) };
+  const filters = { ...(next.filters || {}) };
+  filters.office_branch = officeBranch;
+  next.filters = filters;
+  return next;
 }
 
 function getDateRange(days) {
@@ -1420,7 +1455,7 @@ function getPreviousDateRange(days) {
   return { from, to };
 }
 
-function buildQuickStatCard({ key, title, value, current, previous, icon, reverseTrend = false }) {
+function buildQuickStatCard({ key, title, value, current, previous, icon, reverseTrend = false, trendHint }) {
   const trend = buildTrend(current, previous, reverseTrend);
   return {
     key,
@@ -1428,7 +1463,7 @@ function buildQuickStatCard({ key, title, value, current, previous, icon, revers
     value,
     trendText: trend.text,
     trendClass: trend.className,
-    trendHint: t("trendAgainstPrevious"),
+    trendHint: trendHint || dashboardComparisonTrendHint.value,
     icon,
   };
 }
@@ -1668,12 +1703,35 @@ function setDashboardTab(tabKey) {
   router.replace({ name: "dashboard", query: nextQuery });
 }
 
+function triggerDashboardReload({ includeKpis = true, immediate = false } = {}) {
+  const runReload = () => {
+    dashboardReloadTimer = null;
+    dashboardTabPayloadResource.params = buildTabPayloadParams();
+    dashboardTabPayloadResource.reload();
+    if (includeKpis) {
+      kpiResource.params = buildKpiParams();
+      kpiResource.reload();
+    }
+  };
+
+  if (immediate) {
+    if (dashboardReloadTimer) {
+      window.clearTimeout(dashboardReloadTimer);
+      dashboardReloadTimer = null;
+    }
+    runReload();
+    return;
+  }
+
+  if (dashboardReloadTimer) {
+    window.clearTimeout(dashboardReloadTimer);
+  }
+  dashboardReloadTimer = window.setTimeout(runReload, DASHBOARD_RELOAD_DEBOUNCE_MS);
+}
+
 function applyRange(days) {
   selectedRange.value = days;
-  kpiResource.params = buildKpiParams();
-  dashboardTabPayloadResource.params = buildTabPayloadParams();
-  kpiResource.reload();
-  dashboardTabPayloadResource.reload();
+  triggerDashboardReload();
 }
 
 function resetLeadForm() {
@@ -1700,8 +1758,7 @@ async function createLead() {
     });
     showLeadDialog.value = false;
     resetLeadForm();
-    dashboardTabPayloadResource.params = buildTabPayloadParams();
-    await Promise.all([kpiResource.reload(), dashboardTabPayloadResource.reload()]);
+    triggerDashboardReload({ immediate: true });
   } finally {
     isSubmitting.value = false;
   }
@@ -1712,10 +1769,7 @@ function openPage(path) {
 }
 
 function reloadData() {
-  kpiResource.params = buildKpiParams();
-  dashboardTabPayloadResource.params = buildTabPayloadParams();
-  kpiResource.reload();
-  dashboardTabPayloadResource.reload();
+  triggerDashboardReload({ immediate: true });
 }
 
 function isPermissionDeniedError(error) {
@@ -1737,12 +1791,50 @@ function isPermissionDeniedError(error) {
 }
 
 watch(
-  activeDashboardTab,
-  () => {
-    dashboardTabPayloadResource.params = buildTabPayloadParams();
-    dashboardTabPayloadResource.reload();
+  () => kpiResource.data,
+  (payload) => {
+    dashboardStore.setKpiPayload(payload || {});
   },
   { immediate: true }
 );
+
+watch(
+  () => dashboardTabPayloadResource.data,
+  (payload) => {
+    dashboardStore.setTabPayload(payload || {});
+  },
+  { immediate: true }
+);
+
+watch(
+  dashboardLoadingRaw,
+  (value) => {
+    dashboardStore.setLoading(value);
+  },
+  { immediate: true }
+);
+
+watch(
+  activeDashboardTab,
+  (value) => {
+    dashboardStore.setActiveTab(value);
+    triggerDashboardReload({ includeKpis: false });
+  },
+  { immediate: true }
+);
+
+watch(
+  () => branchStore.selected,
+  () => {
+    triggerDashboardReload();
+  }
+);
+
+onBeforeUnmount(() => {
+  if (dashboardReloadTimer) {
+    window.clearTimeout(dashboardReloadTimer);
+    dashboardReloadTimer = null;
+  }
+});
 </script>
 
