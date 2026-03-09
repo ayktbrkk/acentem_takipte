@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import frappe
 
+from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
+
 
 def build_policy_360_payload(name: str) -> dict:
     policy_name = str(name or "").strip()
@@ -11,6 +13,14 @@ def build_policy_360_payload(name: str) -> dict:
     policy_doc = frappe.get_doc("AT Policy", policy_name)
     policy = policy_doc.as_dict(no_default_fields=False)
     customer = _get_customer(policy.get("customer"))
+
+    files = _get_rows(
+        "File",
+        fields=["name", "file_name", "file_url", "creation"],
+        filters={"attached_to_doctype": "AT Policy", "attached_to_name": policy_name, "is_folder": 0},
+        order_by="creation desc",
+        limit_page_length=100,
+    )
 
     return {
         "policy": policy,
@@ -57,13 +67,8 @@ def build_policy_360_payload(name: str) -> dict:
             order_by="due_date asc",
             limit_page_length=200,
         ),
-        "files": _get_rows(
-            "File",
-            fields=["name", "file_name", "file_url", "creation"],
-            filters={"attached_to_doctype": "AT Policy", "attached_to_name": policy_name, "is_folder": 0},
-            order_by="creation desc",
-            limit_page_length=100,
-        ),
+        "files": files,
+        "document_profile": build_document_profile(files),
         "notifications": _get_rows(
             "AT Notification Draft",
             fields=["name", "creation", "channel", "language", "status", "subject", "body"],

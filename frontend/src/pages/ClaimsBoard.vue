@@ -173,6 +173,15 @@
                       {{ t("markRejected") }}
                     </ActionButton>
                     <ActionButton
+                      v-if="claim.next_follow_up_on"
+                      variant="secondary"
+                      size="xs"
+                      :disabled="claimMutationResource.loading"
+                      @click="clearClaimFollowUp(claim)"
+                    >
+                      {{ t("clearFollowUp") }}
+                    </ActionButton>
+                    <ActionButton
                       variant="secondary"
                       size="xs"
                       @click="openClaimNotifications(claim)"
@@ -228,6 +237,7 @@
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
+import { useRoute } from "vue-router";
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -272,11 +282,13 @@ const copy = {
     markApproved: "Onayla",
     markClosed: "Kapat",
     markRejected: "Reddet",
+    clearFollowUp: "Takibi Temizle",
     notificationDraft: "Bildirim Taslagi",
     notificationMissing: "Bildirim Akisi Yok",
     notificationQueue: "Bildirim Kuyrugu",
     notificationNone: "Bildirim Kaydi Yok",
     openNotifications: "Bildirimler",
+    openDocuments: "Dokumanlar",
     rejectReasonPrompt: "Red sebebini girin",
     openDesk: "Yonetim",
     openPolicy: "Policeyi Ac",
@@ -303,6 +315,9 @@ const copy = {
     rejectionReason: "Red Sebebi",
     appealStatus: "Itiraz",
     nextFollowUpOn: "Sonraki Takip",
+    documentSummary: "Dokuman",
+    documentNone: "Dosya yok",
+    lastUpload: "Son Yukleme",
     noExpert: "Atanmadi",
     assignmentSummary: "Atama",
     assignmentNone: "Acik atama yok",
@@ -332,11 +347,13 @@ const copy = {
     markApproved: "Approve",
     markClosed: "Close",
     markRejected: "Reject",
+    clearFollowUp: "Clear Follow-up",
     notificationDraft: "Notification Draft",
     notificationMissing: "No Notification Flow",
     notificationQueue: "Notification Queue",
     notificationNone: "No Notification Records",
     openNotifications: "Notifications",
+    openDocuments: "Documents",
     rejectReasonPrompt: "Enter rejection reason",
     openDesk: "Desk",
     openPolicy: "Open Policy",
@@ -363,6 +380,9 @@ const copy = {
     rejectionReason: "Rejection Reason",
     appealStatus: "Appeal Status",
     nextFollowUpOn: "Next Follow Up",
+    documentSummary: "Documents",
+    documentNone: "No files",
+    lastUpload: "Last Upload",
     noExpert: "Unassigned",
     assignmentSummary: "Assignment",
     assignmentNone: "No open assignment",
@@ -377,6 +397,7 @@ function t(key) {
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const claimStore = useClaimStore();
+const route = useRoute();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function buildOfficeBranchLookupFilters() {
@@ -441,6 +462,10 @@ const claimAssignmentResource = createResource({
   url: "frappe.client.get_list",
   auto: false,
 });
+const claimFileResource = createResource({
+  url: "frappe.client.get_list",
+  auto: false,
+});
 
 const claimQuickPolicyResource = createResource({
   url: "frappe.client.get_list",
@@ -500,6 +525,7 @@ const claimsErrorText = computed(() => {
 const claimNotificationDraftMap = computed(() => buildClaimNotificationMap(unref(claimNotificationDraftResource.data) || []));
 const claimNotificationOutboxMap = computed(() => buildClaimNotificationMap(unref(claimNotificationOutboxResource.data) || []));
 const claimAssignmentMap = computed(() => buildClaimAssignmentMap(unref(claimAssignmentResource.data) || []));
+const claimFileMap = computed(() => buildClaimFileMap(unref(claimFileResource.data) || []));
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -555,7 +581,7 @@ function reloadClaims() {
     .reload()
     .then((result) => {
       claimStore.setItems(result || []);
-      void Promise.allSettled([reloadClaimNotifications(result || []), reloadClaimAssignments(result || [])]);
+      void Promise.allSettled([reloadClaimNotifications(result || []), reloadClaimAssignments(result || []), reloadClaimFiles(result || [])]);
       claimStore.setLoading(false);
       return result;
     })
@@ -615,6 +641,7 @@ function claimPolicyFacts(claim) {
 function claimOperationalFacts(claim) {
   return [
     subtleFact("expert", t("assignedExpert"), claim?.assigned_expert || t("noExpert")),
+    subtleFact("documents", t("documentSummary"), claimDocumentSummary(claim)),
     claim?.rejection_reason
       ? subtleFact("rejection", t("rejectionReason"), claim.rejection_reason)
       : null,
@@ -664,6 +691,26 @@ function buildClaimAssignmentMap(rows) {
     acc[sourceName] = current;
     return acc;
   }, {});
+}
+
+function buildClaimFileMap(rows) {
+  return (rows || []).reduce((acc, row) => {
+    const claimName = String(row?.attached_to_name || "").trim();
+    if (!claimName) return acc;
+    const current = acc[claimName] || { count: 0, lastUploadedOn: "" };
+    current.count += 1;
+    if (!current.lastUploadedOn) current.lastUploadedOn = String(row?.creation || "").trim();
+    acc[claimName] = current;
+    return acc;
+  }, {});
+}
+
+function claimDocumentSummary(claim) {
+  const fileInfo = claimFileMap.value[String(claim?.name || "").trim()];
+  if (!fileInfo) return t("documentNone");
+  const parts = [`${fileInfo.count}`];
+  if (fileInfo.lastUploadedOn) parts.push(`${t("lastUpload")}: ${fmtDate(fileInfo.lastUploadedOn)}`);
+  return parts.join(" / ");
 }
 
 function notificationStatusLabel(claim) {
@@ -729,6 +776,18 @@ async function rejectClaim(claim) {
   await reloadClaims();
 }
 
+async function clearClaimFollowUp(claim) {
+  if (!claim?.name) return;
+  await claimMutationResource.submit({
+    doctype: "AT Claim",
+    name: claim.name,
+    data: {
+      next_follow_up_on: null,
+    },
+  });
+  await reloadClaims();
+}
+
 async function reloadClaimNotifications(claimRows) {
   const claimNames = (claimRows || []).map((row) => row?.name).filter(Boolean);
   if (!claimNames.length) {
@@ -775,6 +834,26 @@ async function reloadClaimAssignments(claimRows) {
   await claimAssignmentResource.reload();
 }
 
+async function reloadClaimFiles(claimRows) {
+  const claimNames = (claimRows || []).map((row) => row?.name).filter(Boolean);
+  if (!claimNames.length) {
+    setNotificationResourceData(claimFileResource, []);
+    return;
+  }
+  claimFileResource.params = {
+    doctype: "File",
+    fields: ["name", "attached_to_name", "file_name", "creation"],
+    filters: {
+      attached_to_doctype: "AT Claim",
+      attached_to_name: ["in", claimNames],
+      is_folder: 0,
+    },
+    order_by: "creation desc",
+    limit_page_length: 500,
+  };
+  await claimFileResource.reload();
+}
+
 function setNotificationResourceData(resource, value) {
   if (resource?.data && typeof resource.data === "object" && "value" in resource.data) {
     resource.data.value = value;
@@ -810,8 +889,16 @@ function openPolicy(policyName) {
   window.location.href = `/at/policies/${encodeURIComponent(policyName)}`;
 }
 
+function syncClaimsRouteFilters({ refresh = true } = {}) {
+  const routeClaim = String(route.query.claim || "").trim();
+  if (!routeClaim || filters.query === routeClaim) return;
+  claimStore.setFilters({ query: routeClaim });
+  if (refresh) void reloadClaims();
+}
+
 onMounted(() => {
   claimStore.setLocaleCode(localeCode.value);
+  syncClaimsRouteFilters({ refresh: false });
   applyPreset(presetKey.value, { refresh: false });
   if (String(presetKey.value || "default") !== "default") void reloadClaims();
   void hydratePresetStateFromServer();
@@ -842,6 +929,14 @@ watch(
   }
 );
 
+watch(
+  () => route.query.claim,
+  () => {
+    syncClaimsRouteFilters();
+  },
+  { immediate: true }
+);
+
 </script>
 
 <style scoped>
@@ -849,3 +944,4 @@ watch(
   @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
 }
 </style>
+

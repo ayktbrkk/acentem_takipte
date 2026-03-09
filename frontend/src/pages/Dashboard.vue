@@ -176,6 +176,61 @@
     <div v-if="isDailyTab" class="grid gap-4 xl:grid-cols-3">
       <div class="space-y-4 xl:col-span-2">
         <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('followUpSlaTitle')" :count="formatNumber(followUpItems.length)" />
+          <p class="mb-3 text-xs text-slate-500">{{ t("followUpSlaHint") }}</p>
+          <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else class="space-y-3">
+            <div class="grid grid-cols-3 gap-2">
+              <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("followUpOverdue") }}</p>
+                <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(followUpSummary.overdue) }}</p>
+              </div>
+              <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("followUpToday") }}</p>
+                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.due_today) }}</p>
+              </div>
+              <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("followUpSoon") }}</p>
+                <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(followUpSummary.due_soon) }}</p>
+              </div>
+            </div>
+            <ul v-if="followUpItems.length > 0" class="space-y-2">
+              <MetaListCard
+                v-for="item in followUpItems"
+                :key="`${item.source_type}-${item.source_name}`"
+                :title="followUpTitle(item)"
+                :description="followUpDescription(item)"
+                description-class="mt-2 text-xs font-semibold text-slate-600"
+              >
+                <template #trailing>
+                  <div class="flex items-center gap-2">
+                    <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                      {{ followUpTypeLabel(item.source_type) }}
+                    </span>
+                    <ActionButton variant="ghost" size="sm" @click="openFollowUpItem(item)">
+                      {{ t("openItem") }}
+                    </ActionButton>
+                  </div>
+                </template>
+                <MiniFactList :items="followUpFacts(item)" />
+              </MetaListCard>
+            </ul>
+            <div v-else class="at-empty-block text-sm">{{ t("noFollowUpItems") }}</div>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <ActionButton variant="secondary" size="sm" @click="openPage('/claims')">
+                {{ t("followUpClaimsAction") }}
+              </ActionButton>
+              <ActionButton variant="secondary" size="sm" @click="openPage('/renewals')">
+                {{ t("followUpRenewalsAction") }}
+              </ActionButton>
+              <ActionButton variant="secondary" size="sm" @click="openPage('/communication')">
+                {{ t("followUpCommunicationAction") }}
+              </ActionButton>
+            </div>
+          </div>
+        </article>
+
+        <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length" />
           <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -642,6 +697,25 @@ const copy = {
     statusIpt: "IPT",
     topCompanies: "Top Sigorta Sirketleri",
     noTopCompanies: "Sirket bazli uretim verisi bulunamadi.",
+    followUpSlaTitle: "Takip SLA",
+    followUpSlaHint: "Acil ve yaklasan takip yukunu tek blokta izleyin.",
+    followUpOverdue: "Geciken",
+    followUpToday: "Bugun",
+    followUpSoon: "7 Gun",
+    noFollowUpItems: "Takip gerektiren kayit yok.",
+    followUpTypeClaim: "Hasar",
+    followUpTypeRenewal: "Yenileme",
+    followUpTypeAssignment: "Atama",
+    followUpTypeCallNote: "Arama Notu",
+    followUpDeltaOverdue: "Gecikme",
+    followUpDeltaToday: "Bugun",
+    followUpDeltaDays: "gun",
+    followUpDate: "Takip",
+    followUpAssignee: "Sorumlu",
+    openItem: "Ac",
+    followUpClaimsAction: "Hasar Masasi",
+    followUpRenewalsAction: "Yenileme Panosu",
+    followUpCommunicationAction: "Iletisim Merkezi",
     policyCount: "Police Adedi",
     grossProduction: "Brut Uretim",
     recentPolicies: "Son Policeler",
@@ -773,6 +847,25 @@ const copy = {
     statusIpt: "IPT",
     topCompanies: "Top Insurance Companies",
     noTopCompanies: "No company production data found.",
+    followUpSlaTitle: "Follow-up SLA",
+    followUpSlaHint: "Track urgent and upcoming follow-up workload in one block.",
+    followUpOverdue: "Overdue",
+    followUpToday: "Today",
+    followUpSoon: "7 Days",
+    noFollowUpItems: "No items requiring follow-up.",
+    followUpTypeClaim: "Claim",
+    followUpTypeRenewal: "Renewal",
+    followUpTypeAssignment: "Assignment",
+    followUpTypeCallNote: "Call Note",
+    followUpDeltaOverdue: "Overdue",
+    followUpDeltaToday: "Today",
+    followUpDeltaDays: "days",
+    followUpDate: "Follow-up",
+    followUpAssignee: "Assignee",
+    openItem: "Open",
+    followUpClaimsAction: "Claims Desk",
+    followUpRenewalsAction: "Renewals Board",
+    followUpCommunicationAction: "Communication Center",
     policyCount: "Policy Count",
     grossProduction: "Gross Production",
     recentPolicies: "Recent Policies",
@@ -821,6 +914,12 @@ const kpiResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
   params: buildKpiParams(),
   auto: false,
+});
+
+const followUpResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_follow_up_sla_payload",
+  params: withOfficeBranchFilter({ filters: {} }),
+  auto: true,
 });
 
 const leadListResource = createResource({
@@ -980,6 +1079,7 @@ const topCompanies = computed(() => dashboardTabSeries.value.top_companies || da
 const dashboardLoadingRaw = computed(
   () => Boolean((isDailyTab.value ? kpiResource.loading : false) || dashboardTabPayloadResource.loading)
 );
+const followUpLoading = computed(() => Boolean(followUpResource.loading));
 const dashboardLoading = computed(() => dashboardStore.state.loading);
 const dashboardPermissionError = computed(() => {
   const candidates = [dashboardTabPayloadResource.error, isDailyTab.value ? kpiResource.error : null];
@@ -1067,6 +1167,9 @@ const renewalBucketCounts = computed(() => dashboardStore.renewalBucketCounts ||
 const renewalRetentionSummary = computed(
   () => dashboardStore.renewalRetentionSummary || { renewed: 0, lost: 0, cancelled: 0, rate: 0 }
 );
+const followUpPayload = computed(() => followUpResource.data || {});
+const followUpSummary = computed(() => followUpPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
+const followUpItems = computed(() => (Array.isArray(followUpPayload.value.items) ? followUpPayload.value.items : []));
 
 const visibleRange = computed(() => {
   const range = getDateRange(selectedRange.value);
@@ -1616,6 +1719,60 @@ function dashboardReconciliationFacts(row) {
   ];
 }
 
+function followUpTypeLabel(type) {
+  if (type === "claim") return t("followUpTypeClaim");
+  if (type === "renewal") return t("followUpTypeRenewal");
+  if (type === "assignment") return t("followUpTypeAssignment");
+  if (type === "call_note") return t("followUpTypeCallNote");
+  return type || "-";
+}
+
+function followUpTitle(item) {
+  return item?.source_name || "-";
+}
+
+function followUpDescription(item) {
+  const delta = Number(item?.days_delta ?? 0);
+  if (delta < 0) return `${t("followUpDeltaOverdue")} ${Math.abs(delta)} ${t("followUpDeltaDays")}`;
+  if (delta === 0) return t("followUpDeltaToday");
+  return `${delta} ${t("followUpDeltaDays")}`;
+}
+
+function followUpFacts(item) {
+  return [
+    { label: t("customer"), value: item?.customer || "-" },
+    { label: t("status"), value: item?.status || "-" },
+    { label: t("followUpDate"), value: formatDate(item?.follow_up_on) },
+    ...(item?.assigned_to ? [{ label: t("followUpAssignee"), value: item.assigned_to }] : []),
+  ];
+}
+
+function openFollowUpItem(item) {
+  const sourceType = String(item?.source_type || "");
+  const sourceName = String(item?.source_name || "");
+  if (!sourceName) {
+    return;
+  }
+  if (sourceType === "claim") {
+    router.push({ name: "claims", query: { claim: sourceName } });
+    return;
+  }
+  if (sourceType === "renewal") {
+    router.push({ name: "renewals", query: { task: sourceName } });
+    return;
+  }
+  if (sourceType === "assignment" || sourceType === "call_note") {
+    router.push({
+      path: "/communication",
+      query: {
+        reference_doctype: sourceType === "assignment" ? "AT Ownership Assignment" : "AT Call Note",
+        reference_name: sourceName,
+      },
+    });
+    return;
+  }
+}
+
 function recentLeadFacts(lead) {
   return [
     { label: t("email"), value: lead.email || "-" },
@@ -1708,6 +1865,8 @@ function triggerDashboardReload({ includeKpis = true, immediate = false } = {}) 
     dashboardReloadTimer = null;
     dashboardTabPayloadResource.params = buildTabPayloadParams();
     dashboardTabPayloadResource.reload();
+    followUpResource.params = withOfficeBranchFilter({ filters: {} });
+    followUpResource.reload();
     if (includeKpis) {
       kpiResource.params = buildKpiParams();
       kpiResource.reload();

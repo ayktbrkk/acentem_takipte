@@ -142,7 +142,25 @@
             {{ channelStatusContextLabel }}
           </p>
         </div>
-        <ActionButton variant="link" size="xs" @click="clearContextFilters">{{ t("clearContext") }}</ActionButton>
+        <div class="flex flex-wrap items-center gap-2">
+          <ActionButton
+            v-if="canCloseAssignmentContext"
+            variant="secondary"
+            size="xs"
+            @click="closeAssignmentContext"
+          >
+            {{ t("closeAssignmentContext") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canClearCallNoteContext"
+            variant="secondary"
+            size="xs"
+            @click="clearCallNoteContext"
+          >
+            {{ t("clearCallFollowUpContext") }}
+          </ActionButton>
+          <ActionButton variant="link" size="xs" @click="clearContextFilters">{{ t("clearContext") }}</ActionButton>
+        </div>
       </div>
     </article>
 
@@ -567,6 +585,8 @@ const copy = {
     quickCampaignSubtitle: "Segmente bagli kampanya olustur",
     quickCallNote: "Arama Notu",
     quickCallNoteSubtitle: "Telefon gorusmesini not olarak kaydet",
+    closeAssignmentContext: "Atamayi Kapat",
+    clearCallFollowUpContext: "Arama Takibini Temizle",
     quickMessage: "Hizli Iletisim",
     quickMessageSubtitle: "Taslak kaydet veya secili kanal ile hemen gonder",
     saveDraft: "Taslak Kaydet",
@@ -665,6 +685,8 @@ const copy = {
     quickCampaignSubtitle: "Create a segment-based campaign",
     quickCallNote: "Call Note",
     quickCallNoteSubtitle: "Log a phone conversation as an interaction note",
+    closeAssignmentContext: "Close Assignment",
+    clearCallFollowUpContext: "Clear Call Follow-up",
     quickMessage: "Quick Message",
     quickMessageSubtitle: "Save as draft or send immediately",
     saveDraft: "Save Draft",
@@ -788,6 +810,9 @@ const sendDraftResource = createResource({
 
 const retryOutboxResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
+});
+const auxMutationResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
 });
 const communicationQuickTemplateResource = createResource({
   url: "frappe.client.get_list",
@@ -915,6 +940,12 @@ const channelStatusContextLabel = computed(() => {
 });
 const hasContextFilters = computed(
   () => Boolean(filters.customer || filters.referenceDoctype || filters.referenceName || filters.channel || filters.status)
+);
+const canCloseAssignmentContext = computed(
+  () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
+);
+const canClearCallNoteContext = computed(
+  () => filters.referenceDoctype === "AT Call Note" && Boolean(String(filters.referenceName || "").trim())
 );
 const statusOptions = computed(() => [
   { value: "Queued", label: t("queued") },
@@ -1188,6 +1219,44 @@ async function sendDraftNow(draftName) {
   operationError.value = "";
   try {
     await sendDraftResource.submit({ draft_name: draftName });
+    await reloadSnapshot();
+  } catch (error) {
+    operationError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedAction")
+      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
+  }
+}
+
+async function closeAssignmentContext() {
+  if (!canCloseAssignmentContext.value) return;
+  operationError.value = "";
+  try {
+    await auxMutationResource.submit({
+      doctype: "AT Ownership Assignment",
+      name: filters.referenceName,
+      data: {
+        status: "Done",
+      },
+    });
+    await reloadSnapshot();
+  } catch (error) {
+    operationError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedAction")
+      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
+  }
+}
+
+async function clearCallNoteContext() {
+  if (!canClearCallNoteContext.value) return;
+  operationError.value = "";
+  try {
+    await auxMutationResource.submit({
+      doctype: "AT Call Note",
+      name: filters.referenceName,
+      data: {
+        next_follow_up_on: null,
+      },
+    });
     await reloadSnapshot();
   } catch (error) {
     operationError.value = isPermissionDeniedError(error)

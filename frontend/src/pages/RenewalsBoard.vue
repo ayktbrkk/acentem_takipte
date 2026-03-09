@@ -131,6 +131,24 @@
               <td class="at-table-cell">
                 <InlineActionRow>
                   <ActionButton
+                    v-if="canMoveRenewalToStatus(task, 'In Progress')"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="renewalMutationResource.loading"
+                    @click="updateRenewalStatus(task, 'In Progress')"
+                  >
+                    {{ t("markInProgress") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canMoveRenewalToStatus(task, 'Done')"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="renewalMutationResource.loading"
+                    @click="updateRenewalStatus(task, 'Done')"
+                  >
+                    {{ t("markDone") }}
+                  </ActionButton>
+                  <ActionButton
                     v-if="task.policy"
                     variant="secondary"
                     size="xs"
@@ -161,6 +179,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
+import { useRoute } from "vue-router";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
@@ -196,6 +215,8 @@ const copy = {
     actions: "Aksiyon",
     openDesk: "Yonetim",
     openPolicy: "Policeyi Ac",
+    markInProgress: "Takibe Al",
+    markDone: "Tamamla",
     metricTotal: "Toplam Gorev",
     metricOpen: "Acik",
     metricInProgress: "Devam Eden",
@@ -240,6 +261,8 @@ const copy = {
     actions: "Actions",
     openDesk: "Desk",
     openPolicy: "Open Policy",
+    markInProgress: "Start Follow-up",
+    markDone: "Mark Done",
     metricTotal: "Total Tasks",
     metricOpen: "Open",
     metricInProgress: "In Progress",
@@ -274,6 +297,7 @@ function t(key) {
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const renewalStore = useRenewalStore();
+const route = useRoute();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
@@ -325,6 +349,10 @@ const renewalsResource = createResource({
   url: "frappe.client.get_list",
   params: buildRenewalListParams(),
   auto: true,
+});
+const renewalMutationResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  auto: false,
 });
 
 const renewalQuickPolicyResource = createResource({
@@ -415,6 +443,28 @@ const renewalsError = computed(() => {
 function reloadRenewals() {
   renewalsResource.params = buildRenewalListParams();
   return renewalsResource.reload();
+}
+
+function canMoveRenewalToStatus(task, nextStatus) {
+  const current = String(task?.status || "").trim();
+  if (!current || current === nextStatus) return false;
+  const transitions = {
+    Open: ["In Progress", "Done", "Cancelled"],
+    "In Progress": ["Done", "Cancelled"],
+  };
+  return Boolean(transitions[current]?.includes(nextStatus));
+}
+
+async function updateRenewalStatus(task, nextStatus) {
+  if (!task?.name || !nextStatus) return;
+  await renewalMutationResource.submit({
+    doctype: "AT Renewal Task",
+    name: task.name,
+    data: {
+      status: nextStatus,
+    },
+  });
+  await reloadRenewals();
 }
 
 function openPolicy(policyName) {
@@ -546,7 +596,15 @@ function formatLostReason(task) {
   return labels[rawReason]?.[activeLocale.value] || rawReason;
 }
 
+function syncRenewalRouteFilters({ refresh = true } = {}) {
+  const routeTask = String(route.query.task || "").trim();
+  if (!routeTask || filters.query === routeTask) return;
+  renewalStore.setFilters({ query: routeTask });
+  if (refresh) void reloadRenewals();
+}
+
 onMounted(() => {
+  syncRenewalRouteFilters({ refresh: false });
   applyPreset(presetKey.value, { refresh: false });
   if (String(presetKey.value || "default") !== "default") void reloadRenewals();
   void hydratePresetStateFromServer();
@@ -607,6 +665,14 @@ watch(
     void renewalQuickCustomerResource.reload();
     void reloadRenewals();
   }
+);
+
+watch(
+  () => route.query.task,
+  () => {
+    syncRenewalRouteFilters();
+  },
+  { immediate: true }
 );
 </script>
 

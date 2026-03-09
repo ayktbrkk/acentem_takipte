@@ -9,6 +9,7 @@ from acentem_takipte.acentem_takipte.services.customer_segments import (
     build_customer_segment_snapshot_payload,
     upsert_customer_segment_snapshot,
 )
+from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
 
 
 OPEN_OFFER_STATUSES = {"Draft", "Sent", "Accepted", "Negotiation"}
@@ -123,6 +124,7 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
     )
     communications = _get_communications(customer_name)
     comments = _get_comments(customer_name)
+    files = _get_customer_files(customer_name)
 
     policy_total_premium = sum(flt(row.get("gross_premium")) for row in policies)
     active_policy_count = sum(1 for row in policies if str(row.get("status") or "") in ACTIVE_POLICY_STATUSES)
@@ -189,6 +191,10 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
             "channel_summary": _build_channel_summary(communications),
             "timeline": timeline,
         },
+        "documents": {
+            "items": files[:20],
+            "document_profile": build_document_profile(files),
+        },
         "insights": insights,
         "cross_sell": _build_cross_sell_payload(customer_name, policies),
         "operations": {
@@ -247,6 +253,18 @@ def _get_comments(customer_name: str) -> list[dict[str, Any]]:
         filters={"reference_doctype": "AT Customer", "reference_name": customer_name},
         order_by="creation desc",
         limit_page_length=50,
+    )
+
+
+def _get_customer_files(customer_name: str) -> list[dict[str, Any]]:
+    if not frappe.db.exists("DocType", "File"):
+        return []
+    return frappe.get_list(
+        "File",
+        fields=["name", "file_name", "file_url", "file_type", "creation", "attached_to_doctype", "attached_to_name"],
+        filters={"attached_to_doctype": "AT Customer", "attached_to_name": customer_name, "is_folder": 0},
+        order_by="creation desc",
+        limit_page_length=100,
     )
 
 

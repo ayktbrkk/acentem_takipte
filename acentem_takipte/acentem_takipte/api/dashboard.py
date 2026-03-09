@@ -17,6 +17,7 @@ from acentem_takipte.acentem_takipte.api.dashboard_v2 import tab_payload as dash
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import has_sensitive_access
 from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
 from acentem_takipte.acentem_takipte.services.customer_360 import build_customer_360_payload
+from acentem_takipte.acentem_takipte.services.follow_up_sla import build_follow_up_sla_payload
 from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
@@ -259,6 +260,21 @@ def get_policy_360_payload(name: str) -> dict:
     from acentem_takipte.acentem_takipte.services.policy_360 import build_policy_360_payload
 
     return build_policy_360_payload(policy_name)
+
+
+@frappe.whitelist()
+def get_follow_up_sla_payload(filters=None) -> dict:
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Authentication required")
+
+    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    office_branch = normalize_requested_office_branch(payload.get("office_branch"))
+    allowed_customers = _allowed_customers_for_user()
+    return build_follow_up_sla_payload(
+        office_branch=office_branch,
+        allowed_customers=allowed_customers,
+    )
 
 
 @frappe.whitelist()

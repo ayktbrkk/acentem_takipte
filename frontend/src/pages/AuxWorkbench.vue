@@ -119,6 +119,34 @@
             </article>
           </div>
           <div
+            v-if="accessLogSummaryCards.length"
+            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          >
+            <article
+              v-for="card in accessLogSummaryCards"
+              :key="card.key"
+              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+            >
+              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
+            </article>
+          </div>
+          <div
+            v-if="fileSummaryCards.length"
+            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          >
+            <article
+              v-for="card in fileSummaryCards"
+              :key="card.key"
+              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+            >
+              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
+            </article>
+          </div>
+          <div
             v-if="snapshotTrendRows.length"
             class="grid gap-3 xl:grid-cols-3"
           >
@@ -215,7 +243,7 @@
                     {{ rowActionBusyName === row.name ? t("running") : t("requeue") }}
                   </ActionButton>
                   <ActionButton variant="secondary" size="xs" @click.stop="openDetail(row)">{{ t("openDetail") }}</ActionButton>
-                  <ActionButton v-if="panelCfg(row)" variant="link" size="xs" trailing-icon=">" @click.stop="openPanel(row)">{{ t("panel") }}</ActionButton>
+                  <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="openPanel(row)">{{ t("panel") }}</ActionButton>
                 </InlineActionRow>
               </DataTableCell>
             </tr>
@@ -255,7 +283,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
@@ -288,6 +316,7 @@ const props = defineProps({
 });
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const config = getAuxWorkbenchConfig(props.screenKey);
@@ -326,12 +355,36 @@ const copy = {
     highRiskSnapshots: "Yuksek Risk",
     highValueSnapshots: "Yuksek Deger",
     averageScore: "Ortalama Skor",
+    totalAuditEvents: "Toplam Audit",
+    createEvents: "Create",
+    editEvents: "Edit",
+    deleteEvents: "Delete",
+    runEvents: "Run",
+    totalFiles: "Toplam Dosya",
+    pdfFiles: "PDF",
+    imageFiles: "Gorsel",
+    spreadsheetFiles: "Tablo",
+    attachedCustomers: "Musteri Baglantisi",
+    attachedPolicies: "Police Baglantisi",
+    attachedClaims: "Hasar Baglantisi",
     snapshotTrendTitle: "Snapshot Trendi",
     snapshotTrendHint: "Gorunen kayitlardan son uc snapshot gunu ozetlenir",
     snapshotWindowHint: "Mevcut filtre penceresindeki kayitlar",
     highRiskHint: "Claim risk seviyesi High olan kayitlar",
     highValueHint: "Deger bandi High veya Premium olan kayitlar",
     averageScoreHint: "Filtreli kayitlar icin ortalama skor",
+    auditWindowHint: "Mevcut filtre penceresindeki audit kayitlari",
+    createEventsHint: "Olusturma aksiyonlari",
+    editEventsHint: "Duzenleme aksiyonlari",
+    deleteEventsHint: "Silme aksiyonlari",
+    runEventsHint: "Calistirma aksiyonlari",
+    filesWindowHint: "Mevcut filtre penceresindeki dosyalar",
+    pdfFilesHint: "PDF tipindeki belgeler",
+    imageFilesHint: "Gorsel tipindeki belgeler",
+    spreadsheetFilesHint: "Tablo ve spreadsheet belgeleri",
+    attachedCustomersHint: "AT Customer kayitlarina bagli dosyalar",
+    attachedPoliciesHint: "AT Policy kayitlarina bagli dosyalar",
+    attachedClaimsHint: "AT Claim kayitlarina bagli dosyalar",
     newRecord: "Yeni Kayit",
     openDetail: "Detay",
     openDesk: "Yonetim",
@@ -373,12 +426,36 @@ const copy = {
     highRiskSnapshots: "High Risk",
     highValueSnapshots: "High Value",
     averageScore: "Average Score",
+    totalAuditEvents: "Total Audit Events",
+    createEvents: "Create",
+    editEvents: "Edit",
+    deleteEvents: "Delete",
+    runEvents: "Run",
+    totalFiles: "Total Files",
+    pdfFiles: "PDF",
+    imageFiles: "Images",
+    spreadsheetFiles: "Spreadsheets",
+    attachedCustomers: "Customer Attached",
+    attachedPolicies: "Policy Attached",
+    attachedClaims: "Claim Attached",
     snapshotTrendTitle: "Snapshot Trend",
     snapshotTrendHint: "Summarizes the latest three snapshot days from visible records",
     snapshotWindowHint: "Records in the current filtered window",
     highRiskHint: "Records where claim risk is High",
     highValueHint: "Records with High or Premium value band",
     averageScoreHint: "Average score for filtered records",
+    auditWindowHint: "Audit events in the current filtered window",
+    createEventsHint: "Create actions",
+    editEventsHint: "Edit actions",
+    deleteEventsHint: "Delete actions",
+    runEventsHint: "Run actions",
+    filesWindowHint: "Files in the current filtered window",
+    pdfFilesHint: "Documents in PDF format",
+    imageFilesHint: "Image files",
+    spreadsheetFilesHint: "Spreadsheet documents",
+    attachedCustomersHint: "Files attached to AT Customer records",
+    attachedPoliciesHint: "Files attached to AT Policy records",
+    attachedClaimsHint: "Files attached to AT Claim records",
     newRecord: "New Record",
     openDetail: "Detail",
     openDesk: "Desk",
@@ -518,6 +595,8 @@ const OFFICE_BRANCH_LOOKUP_DOCTYPES = new Set(["AT Customer", "AT Policy", "AT A
 
 const rows = computed(() => listResource.data || []);
 const snapshotRows = computed(() => (config.key === "customer-segment-snapshots" ? rows.value : []));
+const accessLogRows = computed(() => (config.key === "access-logs" ? rows.value : []));
+const fileRows = computed(() => (config.key === "files" ? rows.value : []));
 const canExportSnapshotRows = computed(() => config.key === "customer-segment-snapshots" && snapshotRows.value.length > 0);
 const isLoading = computed(() => Boolean(listResource.loading || countResource.loading));
 const auxQuickCreate = computed(() => config.quickCreate || null);
@@ -590,6 +669,33 @@ const snapshotTrendRows = computed(() => {
       highRisk: bucket.highRisk,
       averageScore: bucket.scoreCount ? Math.round(bucket.scoreSum / bucket.scoreCount) : 0,
     }));
+});
+const accessLogSummaryCards = computed(() => {
+  if (config.key !== "access-logs") return [];
+  const actions = accessLogRows.value.map((row) => String(row?.action || "").trim().toLowerCase());
+  const countByAction = (action) => actions.filter((value) => value === action).length;
+  return [
+    { key: "total-audit", label: t("totalAuditEvents"), value: String(accessLogRows.value.length), hint: t("auditWindowHint") },
+    { key: "create-audit", label: t("createEvents"), value: String(countByAction("create")), hint: t("createEventsHint") },
+    { key: "edit-audit", label: t("editEvents"), value: String(countByAction("edit")), hint: t("editEventsHint") },
+    { key: "delete-audit", label: t("deleteEvents"), value: String(countByAction("delete")), hint: t("deleteEventsHint") },
+    { key: "run-audit", label: t("runEvents"), value: String(countByAction("run")), hint: t("runEventsHint") },
+  ];
+});
+const fileSummaryCards = computed(() => {
+  if (config.key !== "files") return [];
+  const total = fileRows.value.length;
+  const byType = (matcher) => fileRows.value.filter((row) => matcher(String(row?.file_type || "").toLowerCase())).length;
+  const byDoctype = (doctype) => fileRows.value.filter((row) => String(row?.attached_to_doctype || "").trim() === doctype).length;
+  return [
+    { key: "total-files", label: t("totalFiles"), value: String(total), hint: t("filesWindowHint") },
+    { key: "pdf-files", label: t("pdfFiles"), value: String(byType((v) => v.includes("pdf"))), hint: t("pdfFilesHint") },
+    { key: "image-files", label: t("imageFiles"), value: String(byType((v) => v.startsWith("image/") || ["jpg", "jpeg", "png", "webp", "gif"].some((token) => v.includes(token)))), hint: t("imageFilesHint") },
+    { key: "spreadsheet-files", label: t("spreadsheetFiles"), value: String(byType((v) => ["sheet", "excel", "csv", "xls", "xlsx"].some((token) => v.includes(token)))), hint: t("spreadsheetFilesHint") },
+    { key: "customer-files", label: t("attachedCustomers"), value: String(byDoctype("AT Customer")), hint: t("attachedCustomersHint") },
+    { key: "policy-files", label: t("attachedPolicies"), value: String(byDoctype("AT Policy")), hint: t("attachedPoliciesHint") },
+    { key: "claim-files", label: t("attachedClaims"), value: String(byDoctype("AT Claim")), hint: t("attachedClaimsHint") },
+  ];
 });
 
 const subtitleLabel = computed(() => localize(config.subtitle));
@@ -900,6 +1006,33 @@ function setFilterStateFromPayload(payload = {}) {
   }
 }
 
+function syncRouteFilters({ refresh = true } = {}) {
+  const payload = currentPresetPayload();
+  let changed = false;
+
+  if (route.query.query != null) {
+    const queryValue = String(route.query.query || "").trim();
+    if (payload.query !== queryValue) {
+      payload.query = queryValue;
+      changed = true;
+    }
+  }
+
+  for (const fd of config.filterDefs || []) {
+    if (route.query[fd.key] == null) continue;
+    const nextValue = String(route.query[fd.key] || "").trim();
+    if (String(payload[fd.key] || "") !== nextValue) {
+      payload[fd.key] = nextValue;
+      changed = true;
+    }
+  }
+
+  if (!changed) return;
+  setFilterStateFromPayload(payload);
+  pagination.page = 1;
+  if (refresh) refreshList();
+}
+
 async function refreshList() {
   loadError.text = "";
   const listParams = buildListParams();
@@ -1069,8 +1202,14 @@ function panelCfg(row) {
   if (!config.panelRef) return null;
   return getSourcePanelConfig(row?.[config.panelRef.doctypeField], row?.[config.panelRef.nameField]);
 }
+function panelCfgForRow(row) {
+  if (config.key === "access-logs") {
+    return getSourcePanelConfig(row?.reference_doctype, row?.reference_name);
+  }
+  return panelCfg(row);
+}
 function openPanel(row) {
-  const cfg = panelCfg(row);
+  const cfg = panelCfgForRow(row);
   if (!cfg?.url) return;
   window.location.href = cfg.url;
 }
@@ -1213,9 +1352,18 @@ async function hydratePresetStateFromServer() {
 
 onMounted(() => {
   applyPreset(presetKey.value, { refresh: false });
+  syncRouteFilters({ refresh: false });
   refreshList();
   void hydratePresetStateFromServer();
 });
+
+watch(
+  () => route.query,
+  () => {
+    syncRouteFilters();
+  },
+  { deep: true }
+);
 
 watch(
   () => branchStore.selected,

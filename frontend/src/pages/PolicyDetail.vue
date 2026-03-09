@@ -23,6 +23,17 @@
       />
     </article>
 
+    <article class="surface-card rounded-2xl p-4 md:hidden">
+      <SectionCardHeader :title="t('mobileQuickActionsTitle')" :show-count="false" />
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <ActionButton variant="secondary" size="sm" @click="goBack">{{ t("backList") }}</ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="customer?.name && openCustomer(customer.name)">{{ t("customer360") }}</ActionButton>
+        <ActionButton variant="primary" size="sm" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="openPolicyDocuments">{{ t("documents") }}</ActionButton>
+        <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="sm" @click="openDeskPolicy">{{ t("openDesk") }}</ActionButton>
+      </div>
+    </article>
+
     <template v-if="activeTab === 'summary'">
       <article class="surface-card rounded-2xl p-5">
         <SectionCardHeader :title="t('lifecycleTitle')" :count="snapshots.length" />
@@ -157,7 +168,7 @@
           <SectionCardHeader :title="t('installmentsTitle')" :count="paymentInstallments.length" />
           <div v-if="paymentLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="paymentInstallments.length === 0" class="at-empty-block">{{ t("emptyInstallments") }}</div>
-          <ul v-else class="space-y-2 text-sm">
+          <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
             <MetaListCard
               v-for="installment in paymentInstallmentPreviewRows"
               :key="installment.name"
@@ -217,7 +228,7 @@
           <SectionCardHeader :title="t('endorsementTitle')" :count="endorsements.length" />
           <div v-if="endorsementLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="endorsements.length === 0" class="at-empty-block">{{ t("emptyEndorsement") }}</div>
-          <ul v-else class="space-y-2 text-sm">
+          <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
             <MetaListCard
               v-for="e in endorsements"
               :key="e.name"
@@ -257,21 +268,28 @@
     <template v-else>
       <div class="grid gap-4 lg:grid-cols-2">
         <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('documents')" :count="files.length" />
+          <SectionCardHeader :title="t('documents')" :count="files.length">
+            <template #trailing>
+              <ActionButton variant="secondary" size="xs" @click="openPolicyDocuments">{{ t("open") }}</ActionButton>
+            </template>
+          </SectionCardHeader>
           <div v-if="fileLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="files.length === 0" class="at-empty-block">{{ t("emptyFiles") }}</div>
-          <ul v-else class="space-y-2 text-sm">
-            <MetaListCard
-              v-for="f in files"
-              :key="f.name"
-              :title="f.file_name || f.name"
-              :meta="fmtDateTime(f.creation)"
-            >
-              <template #trailing>
-                <a class="at-btn-sm shrink-0" :href="f.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
-              </template>
-            </MetaListCard>
-          </ul>
+          <div v-else class="space-y-3">
+            <DocSummaryGrid :items="documentProfileSummaryItems" />
+            <ul class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
+              <MetaListCard
+                v-for="f in files"
+                :key="f.name"
+                :title="f.file_name || f.name"
+                :meta="fmtDateTime(f.creation)"
+              >
+                <template #trailing>
+                  <a class="at-btn-sm shrink-0" :href="f.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
+                </template>
+              </MetaListCard>
+            </ul>
+          </div>
         </article>
         <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('notifications')" :count="notifications.length" />
@@ -337,6 +355,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 const labels = {
   tr: {
     overview: "Police Detayi", openDesk: "Yonetim Ekraninda Ac", backList: "Listeye Don", loading: "Yukleniyor...",
+    mobileQuickActionsTitle: "Hizli Islemler",
     timelineTitle: "Zaman Tuneli", emptyTimeline: "Bu policede zaman tuneli kaydi yok.", lifecycleTitle: "Police Yasam Dongusu",
     emptyLifecycle: "Anlik goruntu kaydi yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Musteri Karti",
     emptyCustomer: "Musteri kaydi yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Musteri 360",
@@ -350,12 +369,14 @@ const labels = {
     readinessScore: "Hazirlik Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
     missingProductFields: "Eksik Urun Alanlari", noMissingProductField: "Eksik zorunlu alan bulunamadi.", missingFieldStatus: "Eksik",
     endorsementTitle: "Zeyilname Gecmisi", emptyEndorsement: "Zeyilname yok.", documents: "Dokumanlar", emptyFiles: "Dosya yok.",
+    totalDocuments: "Toplam Dokuman", pdfDocuments: "PDF", imageDocuments: "Gorsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diger", lastUploadedOn: "Son Yukleme",
     notifications: "Bildirim Taslaklari", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Ac",
     tabSummary: "Ozet", tabPremiums: "Prim/Odeme", tabCoverages: "Teminatlar", tabEndorsements: "Zeyilnameler", tabDocuments: "Dokumanlar",
     typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Suresi doldu", noDate: "Tarih yok",
   },
   en: {
     overview: "Policy Detail", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
+    mobileQuickActionsTitle: "Quick Actions",
     timelineTitle: "Timeline", emptyTimeline: "No timeline activity.", lifecycleTitle: "Policy Lifecycle",
     emptyLifecycle: "No snapshot records.", premiumTitle: "Premium Details", customerTitle: "Customer Card",
     emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Customer 360",
@@ -369,6 +390,7 @@ const labels = {
     readinessScore: "Readiness Score", completedFields: "Completed Fields", missingFields: "Missing Fields",
     missingProductFields: "Missing Product Fields", noMissingProductField: "No missing required field found.", missingFieldStatus: "Missing",
     endorsementTitle: "Endorsement History", emptyEndorsement: "No endorsements.", documents: "Documents", emptyFiles: "No files.",
+    totalDocuments: "Total Documents", pdfDocuments: "PDF", imageDocuments: "Images", spreadsheetDocuments: "Spreadsheets", otherDocuments: "Other", lastUploadedOn: "Last Upload",
     notifications: "Notification Drafts", emptyNotifications: "No notifications.", version: "Version", open: "Open",
     tabSummary: "Summary", tabPremiums: "Premiums/Payments", tabCoverages: "Coverages", tabEndorsements: "Endorsements", tabDocuments: "Documents",
     typeEndorsement: "Endorsement", typeCall: "Call", typeNote: "Note", expired: "Expired", noDate: "No date",
@@ -417,6 +439,7 @@ const files = computed(() => fileR.data || []);
 const notifications = computed(() => notificationR.data || []);
 const assignments = computed(() => policy360Resource.data?.assignments || []);
 const productProfile = computed(() => policy360Resource.data?.product_profile || {});
+const documentProfile = computed(() => policy360Resource.data?.document_profile || {});
 
 const locale = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const timelineLoading = computed(() => policy360Resource.loading);
@@ -666,6 +689,38 @@ const productReadinessSummaryItems = computed(() => [
     value: String(productProfile.value.missing_field_count ?? 0),
   },
 ]);
+const documentProfileSummaryItems = computed(() => [
+  {
+    key: "totalDocuments",
+    label: t("totalDocuments"),
+    value: String(documentProfile.value.total_files ?? files.value.length ?? 0),
+  },
+  {
+    key: "pdfDocuments",
+    label: t("pdfDocuments"),
+    value: String(documentProfile.value.pdf_count ?? 0),
+  },
+  {
+    key: "imageDocuments",
+    label: t("imageDocuments"),
+    value: String(documentProfile.value.image_count ?? 0),
+  },
+  {
+    key: "spreadsheetDocuments",
+    label: t("spreadsheetDocuments"),
+    value: String(documentProfile.value.spreadsheet_count ?? 0),
+  },
+  {
+    key: "otherDocuments",
+    label: t("otherDocuments"),
+    value: String(documentProfile.value.other_count ?? 0),
+  },
+  {
+    key: "lastUploadedOn",
+    label: t("lastUploadedOn"),
+    value: documentProfile.value.last_uploaded_on ? fmtDateTime(documentProfile.value.last_uploaded_on) : t("noDate"),
+  },
+]);
 const productMissingFieldRows = computed(() => productProfile.value.missing_fields || []);
 const snapshotSummaryItems = computed(() => [
   {
@@ -746,6 +801,15 @@ async function load() {
 const goBack = () => router.push({ name: "policy-list" });
 const openDeskPolicy = () => props.name && (window.location.href = `/app/at-policy/${encodeURIComponent(props.name)}`);
 const openCustomer = (name) => name && router.push({ name: "customer-detail", params: { name } });
+const openPolicyDocuments = () =>
+  props.name &&
+  router.push({
+    name: "files-list",
+    query: {
+      attached_to_doctype: "AT Policy",
+      attached_to_name: props.name,
+    },
+  });
 const openQuickOwnershipAssignment = () => { showOwnershipAssignmentDialog.value = true; };
 const openEditOwnershipAssignment = (assignment) => {
   editingOwnershipAssignment.value = assignment || null;

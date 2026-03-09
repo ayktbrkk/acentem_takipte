@@ -62,7 +62,10 @@ vi.mock("frappe-ui", () => ({
             communications: [],
             snapshots: [],
             payments: [],
-            files: [],
+            files: [
+              { name: "FILE-001", file_name: "police.pdf", file_url: "/files/police.pdf", creation: "2026-03-09T09:00:00Z" },
+              { name: "FILE-002", file_name: "hasar-foto.jpg", file_url: "/files/hasar-foto.jpg", creation: "2026-03-08T09:00:00Z" },
+            ],
             notifications: [],
             assignments: [
               {
@@ -112,6 +115,14 @@ vi.mock("frappe-ui", () => ({
                 { key: "vehicle_chassis_no", label: "Chassis No" },
                 { key: "vehicle_engine_no", label: "Engine No" },
               ],
+            },
+            document_profile: {
+              total_files: 2,
+              pdf_count: 1,
+              image_count: 1,
+              spreadsheet_count: 0,
+              other_count: 0,
+              last_uploaded_on: "2026-03-09T09:00:00Z",
             },
           };
           data.value = payload;
@@ -299,6 +310,79 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(wrapper.text()).toContain("PAY-001");
     expect(wrapper.text()).toContain("Gecikti");
     expect(wrapper.text()).toContain("2026-04-01");
+  });
+
+  it("renders document profile on documents tab", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const documentsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Dokuman"));
+    await documentsTab.trigger("click");
+
+    expect(wrapper.text()).toContain("Toplam Dokuman");
+    expect(wrapper.text()).toContain("PDF");
+    expect(wrapper.text()).toContain("Gorsel");
+    expect(wrapper.text()).toContain("2");
+    expect(wrapper.text()).toContain("1");
+    expect(wrapper.text()).toContain("police.pdf");
+    expect(wrapper.text()).toContain("hasar-foto.jpg");
+  });
+
+  it("routes policy documents action to filtered files list", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const documentsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Dokuman"));
+    await documentsTab.trigger("click");
+
+    const openButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Ac"));
+    await openButton.trigger("click");
+
+    expect(routerPush).toHaveBeenLastCalledWith({
+      name: "files-list",
+      query: {
+        attached_to_doctype: "AT Policy",
+        attached_to_name: "POL-001",
+      },
+    });
   });
 
   it("renders assignments and prefills assignment dialogs on summary tab", async () => {

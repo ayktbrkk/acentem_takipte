@@ -486,3 +486,73 @@ ext_follow_up_on alanlari eklendi
 - Durum: Tamamlandi
 - Kapsam: `AT Ownership Assignment` veri modeli, quick create/aux edit-delete, Customer 360/Policy 360/Claims gorunurlugu, inline create-edit akislar, aux/detail okunabilirligi ve ilk sayfa testleri.
 - Sonraki aktif faz: Faz 10
+
+## Faz 10 Baslangic Durumu
+- [x] Detay ekranlari icin mobil shell iyilestirmesi yapildi.
+  - rontend/src/components/app-shell/DetailActionRow.vue mobilde dikey ve tam genislik aksiyon akisina gecirildi
+  - rontend/src/components/app-shell/DetailTabsBar.vue mobil yatay sekme scroller + snap davranisi ile guclendirildi
+- [ ] Sonraki adim: CustomerDetail ve PolicyDetail icinde mobilde veri yogunlugunu azaltan section siralama ve preview kisitlari
+
+- [x] rontend/src/pages/CustomerDetail.vue ve rontend/src/pages/PolicyDetail.vue icin mobil hizli aksiyon seridi eklendi
+- [ ] Sonraki adim: mobilde preview/list bloklarinda bilgi yogunlugunu azaltan responsive kisitlar
+
+- [x] rontend/src/pages/CustomerDetail.vue ve rontend/src/pages/PolicyDetail.vue icinde mobilde preview yogunlugu azaltildi; fazla kartlar yalnizca masaustunde gosteriliyor
+- [ ] Sonraki adim: liste ekranlarinda mobil filter/summary ergonomisini guclendirmek
+
+- [x] rontend/src/pages/CustomerList.vue ve rontend/src/pages/PolicyList.vue icin mobil liste ozet kartlari eklendi
+- [ ] Sonraki adim: Faz 10 icin ilk sayfa test/kapanis turu
+
+- [x] rontend/src/pages/CustomerList.test.js ve rontend/src/pages/PolicyList.test.js mobil liste ozeti gorunurlugu ile genisletildi
+- [ ] Sonraki adim: Faz 10 kapanis notu
+
+
+## Faz 10 Kapanis
+- [x] Detail shell mobil davranisi iyilestirildi
+- [x] CustomerDetail ve PolicyDetail mobil hizli aksiyon seritleri eklendi
+- [x] CustomerDetail ve PolicyDetail mobil preview yogunlugu azaltildi
+- [x] CustomerList ve PolicyList mobil liste ozet kartlari eklendi
+- [x] Mobil liste ozeti sayfa testleri ile sabitlendi
+- [x] Faz 10 tamamlandi
+- [ ] Sonraki aktif faz: Faz 11
+
+
+- Faz 11.1 tamamlandi: Dashboard takip SLA paneli eklendi.
+- Faz 11.2 basladi: SLA paneline drill-down aksiyonlari eklendi.
+- Faz 11.2 test turu tamamlandi: Dashboard SLA panel route davranisi sabitlendi.
+
+- Faz 11.3 tamamlandi: Dashboard SLA drill-down query paramlari ClaimsBoard, RenewalsBoard ve CommunicationCenter tarafinda filtre senkronuna baglandi.
+
+- Faz 11.4 tamamlandi: ClaimsBoard ve RenewalsBoard icin hizli takip kapatma aksiyonlari eklendi ve sayfa testleriyle sabitlendi.
+
+- Faz 11.5 tamamlandi: CommunicationCenter context kartina assignment kapatma ve call note takip temizleme aksiyonlari eklendi; UI kontrati testlerle sabitlendi.
+
+- Faz 11 tamamlandi: Dashboard takip SLA paneli, drill-down, hedef ekran query senkronu ve hizli kapanis aksiyonlari ile operasyonel SLA omurgasi tamamlandi.
+
+- Faz 12.1 tamamlandi: AT Access Log mutation audit icin genisletildi; quick create service katmaninda create/edit/delete izleri yaziliyor ve aux yuzeyinde gorunur hale getirildi.
+
+- Faz 12.2 tamamlandi: Admin job dispatch ve campaign execution akislari Run audit iziyle AT Access Log uzerinden kaydediliyor.
+
+- Faz 12.3 tamamlandi: Access & Audit Logs aux ekranina aksiyon bazli audit ozet kartlari (total/create/edit/delete/run) ve reference_doctype/reference_name uzerinden hedef kayda dogrudan panel drill-down davranisi eklendi.
+
+- Faz 12.4 tamamlandi: AT Access Log detail ekranina Audit Baglami ve Karar ve Eylem kartlari eklendi; action_summary ve decision_context alanlari okunur bloklar halinde gosteriliyor ve AuxRecordDetail sayfa testi ile sabitlendi.
+
+- Faz 12.5 tamamlandi: Access & Audit Logs ekrani icin Create/Edit/Delete/Run odakli hazir presetler, action select filtresi ve viewed_on desc varsayilan siralama eklendi.
+
+- Faz 12 tamamlandi: mutation ve run audit yazimi, Access & Audit Logs aux list/detail okunurlugu, hedef kayda drill-down ve hazir action presetleri ile operasyonel audit omurgasi tamamlandi.
+- Sonraki aktif odak: Faz 13.
+
+- Faz 13.1 tamamlandi: Policy 360 payload'ina document_profile eklendi; PolicyDetail dokuman sekmesinde toplam/PDF/gorsel/tablo/diger ve son yukleme ozet kartlari acildi; sayfa testi eklendi.
+
+- [x] Faz 13.2: ClaimsBoard claim bazli dokuman gorunurlugu ve test hizalamasi tamamlandi.
+
+- [x] Faz 13.3: Claim belgeleri icin Files aux drill-down ve route-query filtre senkronu tamamlandi.
+
+- [x] Faz 13.4 tamamlandi: Customer 360 belge profili ve Files drill-down acildi; CustomerDetail icinde dokuman ozeti kartlari, files-list gecisi ve sayfa testi eklendi.
+
+- [x] Faz 13.5 tamamlandi: Policy 360 dokuman sekmesine files-list drill-down eklendi; PolicyDetail testine filtreli files route sozlesmesi eklendi.
+
+- [x] Faz 13.6 tamamlandi: Files aux yuzeyi dosya tipi ve bagli doctype ozet kartlari, select filtreleri ve hazir belge presetleri ile operasyonel hale getirildi.
+
+- [x] Faz 13.7 tamamlandi: Files aux ekraninda panel aksiyonu artik attached target kayda gider; belge merkezi policy/customer/claim taraflariyla simetrik drill-down davranisina kavustu.
+- [x] Faz 13 tamamlandi: Policy 360 ve Customer 360 document profile, claim document summary, files drill-down, files aux operatorlugu ve belge merkezi preset/ozet kartlari tamamlandi.
+- [ ] Sonraki aktif odak: Faz 14.

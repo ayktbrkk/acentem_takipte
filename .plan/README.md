@@ -493,3 +493,58 @@
   - CustomerDetail / PolicyDetail inline create-edit
   - Aux detail okunabilirligi ve ilk sayfa testleri
 - Sonraki aktif odak: Faz 10
+
+- 2026-03-09: Faz 10 baslangici olarak detay shell mobil kullanilabilirligi guclendirildi; DetailActionRow ve DetailTabsBar mobil davranisi tum detail ekranlari icin iyilestirildi.
+
+- 2026-03-09: Faz 10 ikinci slice ile CustomerDetail ve PolicyDetail icine mobil hizli aksiyon seritleri eklendi.
+
+- 2026-03-09: Faz 10 ucuncu slice ile CustomerDetail ve PolicyDetail mobil preview yogunlugu azaltildi; mobilde ilk 2-3 kayit gorunur, masaustunde tam liste korunur.
+
+- 2026-03-09: Faz 10 dorduncu slice ile CustomerList ve PolicyList icine mobil liste ozet kartlari eklendi; gosterilen aralik, aktif filtre sayisi ve sayfa boyutu ustten okunur hale geldi.
+
+- 2026-03-09: Faz 10 liste summary mobil gorunurlugu sayfa testleri ile sabitlendi.
+
+## 2026-03-09 Faz 10 Kapanis
+- Mobil ergonomi icin ilk yuksek etkili tur tamamlandi.
+- Detail shell, mobil hizli aksiyonlar, preview yogunlugu ve liste summary katmani tamamlandi.
+- Sonraki aktif odak: Faz 11.
+
+
+- Aktif odak: Faz 11.1 takip SLA paneli tamamlandi. Sonraki hedef operasyonel drill-down.
+- Aktif odak: Faz 11.2 takip SLA drill-down aksiyonlari.
+- Aktif odak: Faz 11.2 takip SLA route testleri tamamlandi.
+
+- Aktif odak: Faz 11.3 tamamlandi. Dashboard SLA drill-down artik hedef ekranlarda query tabanli filtreye donusuyor.
+
+- Aktif odak: Faz 11.4 tamamlandi. Claim follow-up temizleme ve renewal hizli durum gecisleri eklendi.
+
+- Aktif odak: Faz 11.5 tamamlandi. CommunicationCenter artik assignment ve call note kaynakli takip kapatma aksiyonlarini destekliyor.
+
+- Faz 11 tamamlandi. Yeni aktif odak: Faz 12 ilk veri ve operasyon kesiti.
+
+- Aktif odak: Faz 12.1 tamamlandi. Access log artik mutation audit izi tasiyor ve Access & Audit Logs aux ekranindan okunabiliyor.
+
+- Aktif odak: Faz 12.2 tamamlandi. CRUD audit sonrasinda operasyon calistirma aksiyonlari da Run iziyle kayda alinmaya baslandi.
+
+- Aktif odak: Faz 12.3 tamamlandi. Access & Audit Logs ekrani artik aksiyon bazli audit kartlari ve hedef kayda panel drill-down ile operasyonel okunurluk sagliyor.
+
+- Aktif odak: Faz 12.4 tamamlandi. Access log detail yuzeyi artik action_summary ve decision_context icin operasyonel okunurluk sagliyor.
+
+- Aktif odak: Faz 12.5 tamamlandi. Access log operatorlugu hazir action presetleri ve standart audit siralamasi ile hizlandirildi.
+
+- Faz 12 plan seviyesinde kapatildi. Mutation/Run audit, audit list/detail okunurlugu ve operator presetleri tamamlandi. Yeni aktif odak: Faz 13.
+
+- Faz 13 basladi. Ilk slice olarak Policy 360 dokuman operasyon katmani acildi; document profile backend ve PolicyDetail dokuman ozet kartlari eklendi.
+
+- Guncel odak: Faz 13.2 claim dokuman gorunurlugu backend/UI/test zinciri tamamlandi.
+
+- Guncel odak: Faz 13.3 claim belge drill-down, files aux route ve query filtre senkronu tamamlandi.
+
+- Guncel odak: Faz 13.4 tamamlandi. Customer 360 belge profili backend/UI/test zinciri ve files-list drill-down davranisi eklendi.
+
+- Guncel odak: Faz 13.5 tamamlandi. PolicyDetail dokuman sekmesi artik filtreli files-list paneline drill-down aciyor; route davranisi sayfa testi ile sabitlendi.
+
+- Guncel odak: Faz 13.6 tamamlandi. Files aux ekranina toplam/PDF/gorsel/tablo ve customer/policy/claim baglanti kartlari ile hazir dosya presetleri eklendi.
+
+- Faz 13.7 tamamlandi: Files aux panel aksiyonu attached_to_doctype/attached_to_name uzerinden hedef kayda gider hale geldi.
+- Faz 13 plan seviyesinde kapatildi. Belge merkezi policy/customer/claim drill-down, files aux operatorlugu ve document profile zinciri tamamlandi. Yeni aktif odak: Faz 14.

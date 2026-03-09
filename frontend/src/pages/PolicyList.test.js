@@ -151,6 +151,9 @@ describe("PolicyList page store integration", () => {
     expect(policyStore.state.pagination.total).toBe(2);
     expect(policyStore.startRow).toBe(1);
     expect(policyStore.endRow).toBe(2);
+    expect(wrapper.text()).toContain("Liste Ozeti");
+    expect(wrapper.text()).toContain("Sayfa Boyutu");
+    expect(wrapper.text()).toContain("20");
 
     const inputs = wrapper.findAll(".input");
     await inputs[0].setValue("TR-001");
@@ -158,5 +161,6 @@ describe("PolicyList page store integration", () => {
 
     expect(policyStore.state.filters.query).toBe("TR-001");
     expect(policyStore.state.pagination.pageLength).toBe(50);
+    expect(wrapper.text()).toContain("50");
   });
 });

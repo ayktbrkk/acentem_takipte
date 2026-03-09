@@ -126,6 +126,9 @@ describe("CustomerList page store integration", () => {
     expect(customerStore.state.pagination.total).toBe(2);
     expect(customerStore.startRow).toBe(1);
     expect(customerStore.endRow).toBe(2);
+    expect(wrapper.text()).toContain("Liste Ozeti");
+    expect(wrapper.text()).toContain("Sayfa Boyutu");
+    expect(wrapper.text()).toContain("20");
 
     const inputs = wrapper.findAll(".input");
     await inputs[0].setValue("aykut");
@@ -133,5 +136,6 @@ describe("CustomerList page store integration", () => {
 
     expect(customerStore.state.filters.query).toBe("aykut");
     expect(customerStore.state.pagination.pageLength).toBe(50);
+    expect(wrapper.text()).toContain("50");
   });
 });

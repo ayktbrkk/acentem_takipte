@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 
 import ClaimsBoard from "./ClaimsBoard.vue";
 import { useAuthStore } from "../stores/auth";
@@ -9,6 +9,7 @@ import { useBranchStore } from "../stores/branch";
 import { useClaimStore } from "../stores/claim";
 
 const resourceQueue = [];
+const routeState = reactive({ query: {} });
 
 vi.mock("frappe-ui", () => ({
   createResource: () => resourceQueue.shift() || {
@@ -35,6 +36,10 @@ vi.mock("../composables/useCustomFilterPresets", () => ({
   }),
 }));
 
+vi.mock("vue-router", () => ({
+  useRoute: () => routeState,
+}));
+
 const ActionButtonStub = {
   emits: ["click"],
   template: `<button class="action-button-stub" @click="$emit('click')"><slot /></button>`,
@@ -48,6 +53,7 @@ const genericStub = {
 describe("ClaimsBoard page store integration", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
+    routeState.query = {};
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
@@ -246,6 +252,75 @@ describe("ClaimsBoard page store integration", () => {
     expect(reloadMock).toHaveBeenCalledTimes(1);
   });
 
+  it("clears claim follow-up date and reloads rows", async () => {
+    const reloadMock = vi.fn(async () => [
+      {
+        name: "CLM-001",
+        claim_no: "H-001",
+        policy: "POL-001",
+        claim_status: "Open",
+        approved_amount: 1000,
+        paid_amount: 0,
+        next_follow_up_on: "2026-03-10",
+      },
+    ]);
+    const submitMock = vi.fn(async () => ({ name: "CLM-001" }));
+
+    resourceQueue.push(
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: reloadMock,
+      },
+      {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => null),
+        submit: submitMock,
+      },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+    );
+
+    const wrapper = mount(ClaimsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          AmountPairSummary: true,
+          DataTableShell: genericStub,
+          DataTableCell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: true,
+          TableFactsCell: true,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+          TableEntityCell: true,
+        },
+      },
+    });
+
+    const clearButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Takibi Temizle"));
+    await clearButton.trigger("click");
+
+    expect(submitMock).toHaveBeenCalledWith({
+      doctype: "AT Claim",
+      name: "CLM-001",
+      data: {
+        next_follow_up_on: null,
+      },
+    });
+    expect(reloadMock).toHaveBeenCalledTimes(1);
+  });
+
   it("submits rejected status with rejection reason", async () => {
     const reloadMock = vi.fn(async () => [
       { name: "CLM-001", claim_no: "H-001", policy: "POL-001", claim_status: "Open", approved_amount: 1000, paid_amount: 0 },
@@ -334,4 +409,62 @@ describe("ClaimsBoard page store integration", () => {
 
     promptMock.mockRestore();
   });
+
+  it("opens filtered files panel for claim documents", async () => {
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { href: "" };
+
+    resourceQueue.push(
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => [
+          { name: "CLM-001", claim_no: "H-001", policy: "POL-001", claim_status: "Open", approved_amount: 1000, paid_amount: 0 },
+        ]),
+      },
+      {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => null),
+        submit: vi.fn(async () => ({})),
+      },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+    );
+
+    const wrapper = mount(ClaimsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          AmountPairSummary: true,
+          DataTableShell: genericStub,
+          DataTableCell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: true,
+          TableFactsCell: true,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+          TableEntityCell: true,
+        },
+      },
+    });
+
+    const documentsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Dokumanlar"));
+    await documentsButton.trigger("click");
+
+    expect(window.location.href).toBe("/at/files?attached_to_doctype=AT+Claim&attached_to_name=CLM-001");
+
+    window.location = originalLocation;
+  });
 });
+

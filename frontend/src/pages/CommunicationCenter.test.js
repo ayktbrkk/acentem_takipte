@@ -237,6 +237,7 @@ describe("CommunicationCenter page store integration", () => {
       },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
@@ -296,6 +297,7 @@ describe("CommunicationCenter page store integration", () => {
         })),
         submit: vi.fn(async () => ({})),
       },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
@@ -463,5 +465,109 @@ describe("CommunicationCenter page store integration", () => {
     expect(snapshotReload).toHaveBeenCalled();
     expect(wrapper.text()).toContain("Uretilen Taslaklar");
     expect(wrapper.text()).toContain("3");
+  });
+
+  it("closes assignment context from context action", async () => {
+    const snapshotReload = vi.fn(async () => ({
+      outbox: [],
+      drafts: [],
+      status_breakdown: [],
+    }));
+    const auxSubmit = vi.fn(async () => ({}));
+
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: auxSubmit },
+    );
+
+    routeState.query = {
+      reference_doctype: "AT Ownership Assignment",
+      reference_name: "ASN-001",
+      reference_label: "Atama",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayi Kapat"));
+    await button.trigger("click");
+
+    expect(auxSubmit).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "Done",
+      },
+    });
+    expect(snapshotReload).toHaveBeenCalled();
+  });
+
+  it("clears call note follow-up from context action", async () => {
+    const snapshotReload = vi.fn(async () => ({
+      outbox: [],
+      drafts: [],
+      status_breakdown: [],
+    }));
+    const auxSubmit = vi.fn(async () => ({}));
+
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: auxSubmit },
+    );
+
+    routeState.query = {
+      reference_doctype: "AT Call Note",
+      reference_name: "CALL-001",
+      reference_label: "Arama Notu",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Arama Takibini Temizle"));
+    await button.trigger("click");
+
+    expect(auxSubmit).toHaveBeenCalledWith({
+      doctype: "AT Call Note",
+      name: "CALL-001",
+      data: {
+        next_follow_up_on: null,
+      },
+    });
+    expect(snapshotReload).toHaveBeenCalled();
   });
 });

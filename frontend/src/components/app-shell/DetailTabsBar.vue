@@ -1,11 +1,11 @@
 <template>
-  <div class="overflow-x-auto">
-    <div class="flex min-w-max items-center gap-2">
+  <div class="-mx-1 overflow-x-auto px-1 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div class="flex min-w-max snap-x snap-mandatory items-center gap-2">
       <button
         v-for="tab in tabs"
         :key="tab.value"
         type="button"
-        class="at-tab-chip"
+        class="at-tab-chip shrink-0 snap-start"
         :class="modelValue === tab.value ? 'at-tab-chip-active' : 'at-tab-chip-idle'"
         @click="$emit('update:modelValue', tab.value)"
       >

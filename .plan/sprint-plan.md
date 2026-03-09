@@ -243,3 +243,55 @@
 - 2026-03-09: Faz 9 dorduncu kesit: ownership assignment aux/detail okunabilirligi eklendi.
 - Faz 9 kapanis karari: ownership katmani veri modeli, ana operasyon yuzeyleri ve ilk test seviyesiyle tamamlandi.
 - Sonraki adim: lokal build + docker restart + smoke ardindan GitHub gonderimi.
+
+- 2026-03-09: Faz 10 ilk slice tamamlandi; detay shell mobil aksiyon ve sekme deneyimi iyilestirildi. Sonraki hedef CustomerDetail/PolicyDetail mobil veri yogunlugu.
+
+- 2026-03-09: Faz 10 ikinci slice tamamlandi; CustomerDetail ve PolicyDetail mobil hizli aksiyon yuzeyleri acildi.
+
+- 2026-03-09: Faz 10 ucuncu slice tamamlandi; detail ekranlarda mobil preview listeleri kisitlanarak okunabilirlik artirildi.
+
+- 2026-03-09: Faz 10 dorduncu slice tamamlandi; CustomerList ve PolicyList mobil summary ergonomisi guclendirildi.
+
+- 2026-03-09: Faz 10 mobil liste summary sozlesmesi CustomerList ve PolicyList testleri ile sabitlendi.
+
+## 2026-03-09 Faz 10 Kapanis
+- Mobil kullanilabilirlik icin ilk ergonomi turu tamamlandi.
+- Sonraki hedef Faz 11 veri/operasyon katmani.
+
+
+- Mevcut sprint odagi: Dashboard takip SLA paneli tamamlandi.
+
+- Faz 11.3 notu: ClaimsBoard ve RenewalsBoard route query ile acilip filtrelerini otomatik dolduruyor.
+
+- Faz 11.4 notu: SLA hedef ekranlarinda hizli operasyon aksiyonlari acildi.
+
+- Faz 11.5 notu: CommunicationCenter context aksiyonlari ile assignment ve call note takipleri hizli kapatilabiliyor.
+
+- Faz 11 kapanis notu: SLA payload, dashboard paneli, hedef ekran drill-down ve hizli closure aksiyonlari tamamlandi. Sonraki odak Faz 12.
+
+- Faz 12.1 notu: Mutation audit izi AT Access Log uzerinden create/edit/delete quick operasyonlarina baglandi.
+
+- Faz 12.2 notu: Admin job ve campaign execution operasyonlari AT Access Log Run kayitlari ile izlenebilir hale geldi.
+
+- Faz 12.3 notu: Access & Audit Logs aux yuzeyi total/create/edit/delete/run kartlari ve hedef kayda panel drill-down davranisi ile guclendirildi.
+
+- Faz 12.4 notu: AuxRecordDetail icinde AT Access Log kayitlari Audit Baglami ve Karar ve Eylem kartlari ile okunur hale getirildi; detail testi eklendi.
+
+- Faz 12.5 notu: Access & Audit Logs yuzeyine Create/Edit/Delete/Run presetleri, action select filtresi ve viewed_on desc varsayilan siralama eklendi.
+
+- Faz 12 kapanis notu: Access log veri modeli, service-level audit, admin/campaign run audit, audit ozet kartlari, target drill-down, detail okunurlugu ve action presetleri tamamlandi. Sonraki odak Faz 13.
+
+- Faz 13.1 notu: Policy 360 icin document_profile backend ozeti ve PolicyDetail dokuman sekmesi operasyon kartlari eklendi; detail testi ile sabitlendi.
+
+- Tamamlandi: Faz 13.2 claim dokuman ozet gorunurlugu ve ClaimsBoard sayfa testi hizalamasi.
+
+- Tamamlandi: Faz 13.3 claim belge drill-down, Files aux surface ve ClaimsBoard route testi.
+
+- Tamamlandi: Faz 13.4 Customer 360 belge profili, files drill-down ve CustomerDetail sayfa testi.
+
+- Tamamlandi: Faz 13.5 Policy 360 dokuman drill-down ve PolicyDetail files route testi.
+
+- Tamamlandi: Faz 13.6 Files aux operasyon kartlari, belge tip ozetleri ve hazir filter presetleri.
+
+- Tamamlandi: Faz 13.7 Files aux attached-target panel gecisi.
+- Faz 13 kapanis notu: policy/customer/claim belge profili, files drill-down ve files aux operatorlugu tamamlandi. Sonraki odak Faz 14.

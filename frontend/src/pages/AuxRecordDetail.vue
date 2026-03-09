@@ -196,6 +196,11 @@ const copy = {
     assignmentContext: "Atama Baglami",
     assignmentLifecycle: "Atama Yasam Dongusu",
     assignmentNotes: "Atama Notlari",
+    auditContext: "Audit Baglami",
+    auditDecision: "Karar ve Eylem",
+    auditActionSummary: "Eylem Ozeti",
+    auditDecisionContext: "Karar Baglami",
+    noDecisionContext: "Karar baglami girilmemis.",
     createdAt: "Olusturma",
     modifiedAt: "Guncelleme",
     resolvedAt: "Cozulme",
@@ -254,6 +259,11 @@ const copy = {
     assignmentContext: "Assignment Context",
     assignmentLifecycle: "Assignment Lifecycle",
     assignmentNotes: "Assignment Notes",
+    auditContext: "Audit Context",
+    auditDecision: "Decision & Action",
+    auditActionSummary: "Action Summary",
+    auditDecisionContext: "Decision Context",
+    noDecisionContext: "No decision context recorded.",
     createdAt: "Created",
     modifiedAt: "Modified",
     resolvedAt: "Resolved",
@@ -436,6 +446,7 @@ const specialDetailMode = computed(() => {
   if (config.key === "notification-outbox") return "outbox";
   if (config.key === "customer-segment-snapshots") return "segment_snapshot";
   if (config.key === "ownership-assignments") return "ownership_assignment";
+  if (config.key === "access-logs") return "access_log";
   return "";
 });
 
@@ -512,6 +523,34 @@ const specialBadges = computed(() => {
           item("status"),
           item("priority"),
           item("due_date"),
+        ],
+      },
+    ];
+  }
+  if (specialDetailMode.value === "access_log") {
+    return [
+      {
+        key: "audit-context",
+        title: t("auditContext"),
+        items: [
+          item("reference_doctype"),
+          item("reference_name"),
+          item("viewed_by"),
+          item("action"),
+          item("viewed_on"),
+          item("ip_address"),
+        ],
+      },
+      {
+        key: "audit-decision",
+        title: t("auditDecision"),
+        items: [
+          item("action_summary", t("auditActionSummary")),
+          {
+            key: "decision_context_count",
+            label: t("auditDecisionContext"),
+            value: String(parseSignalEntries(doc.value?.decision_context).length || 0),
+          },
         ],
       },
     ];
@@ -656,6 +695,24 @@ const specialGroups = computed(() => {
   if (specialDetailMode.value === "ownership_assignment") {
     return [
       { key: "notes", field: "notes", title: t("assignmentNotes"), value: doc.value?.notes, fullWidth: true },
+    ].filter((item) => item.value != null && String(item.value).trim() !== "");
+  }
+  if (specialDetailMode.value === "access_log") {
+    return [
+      {
+        key: "action_summary",
+        field: "action_summary",
+        title: t("auditActionSummary"),
+        value: doc.value?.action_summary,
+        fullWidth: true,
+      },
+      {
+        key: "decision_context",
+        field: "decision_context",
+        title: t("auditDecisionContext"),
+        value: formatSignalText(doc.value?.decision_context) || t("noDecisionContext"),
+        fullWidth: true,
+      },
     ].filter((item) => item.value != null && String(item.value).trim() !== "");
   }
   return [];

@@ -66,6 +66,25 @@ vi.mock("frappe-ui", () => ({
               channel_summary: [{ channel: "WhatsApp", total: 2 }],
               timeline: [{ type: "comment", timestamp: "2026-03-01T10:00:00Z", payload: { name: "COM-1", comment_by: "Agent" } }],
             },
+            documents: {
+              items: [
+                {
+                  name: "FILE-001",
+                  file_name: "kimlik.pdf",
+                  attached_to_doctype: "AT Customer",
+                  attached_to_name: "CUST-001",
+                  creation: "2026-03-09T08:00:00Z",
+                },
+              ],
+              document_profile: {
+                total_files: 1,
+                pdf_count: 1,
+                image_count: 0,
+                spreadsheet_count: 0,
+                other_count: 0,
+                last_uploaded_on: "2026-03-09T08:00:00Z",
+              },
+            },
             insights: {
               score: 82,
               segment: "Gold",
@@ -275,6 +294,9 @@ describe("CustomerDetail customer 360 integration", () => {
     expect(wrapper.text()).toContain("Ayse Bekir");
     expect(wrapper.text()).toContain("34 ABC 123");
     expect(wrapper.text()).toContain("Geciken Taksit");
+    expect(wrapper.text()).toContain("Dokuman Ozeti");
+    expect(wrapper.text()).toContain("Toplam Dokuman");
+    expect(wrapper.text()).toContain("PDF");
     expect(wrapper.text()).toContain("Snapshot Tarihi");
     expect(wrapper.text()).toContain("Kaynak Surumu");
     expect(wrapper.text()).toContain("v1");
@@ -350,6 +372,15 @@ describe("CustomerDetail customer 360 integration", () => {
       query: {
         customer: "CUST-001",
         customer_label: "Aykut Bekir",
+      },
+    });
+
+    await clickByText("Dokumanlar");
+    expect(routerPush).toHaveBeenLastCalledWith({
+      name: "files-list",
+      query: {
+        attached_to_doctype: "AT Customer",
+        attached_to_name: "CUST-001",
       },
     });
   });

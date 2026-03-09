@@ -1706,3 +1706,63 @@ ext_follow_up_on). Controller guard'lari reddedilen hasar, itiraz ve takip tarih
 - Faz 9 tamamlandi.
 - Kapsam: `AT Ownership Assignment` veri modeli, quick create/aux edit-delete, Customer 360/Policy 360/Claims gorunurlugu, inline create-edit akislar ve aux/detail okunabilirligi.
 - Sonraki aktif odak: Faz 10.
+
+- 2026-03-09 Faz 10 baslangici: detail shell mobil kullanilabilirligi iyilestirildi; DetailActionRow mobilde dikey tam-genislik aksiyon davranisina, DetailTabsBar ise yatay snap tab scroller davranisina cekildi.
+
+
+- 2026-03-09 Faz 10 ilerleme: CustomerDetail ve PolicyDetail icine mobil hizli aksiyon seritleri eklendi; sik kullanilan gecisler mobilde ust bolgede gorunur hale geldi.
+
+
+- 2026-03-09 Faz 10 ilerleme: CustomerDetail ve PolicyDetail icinde mobilde preview veri yogunlugu azaltildi; fazla kartlar mobilde gizlenip masaustunde tam liste korunuyor.
+
+
+- 2026-03-09 Faz 10 ilerleme: CustomerList ve PolicyList icine mobil liste ozet kartlari eklendi; gosterilen aralik, aktif filtre sayisi ve sayfa boyutu mobilde ust bolgede gorunur hale geldi.
+
+
+- 2026-03-09 Faz 10 ilerleme: CustomerList ve PolicyList mobil liste ozeti gorunurlugu sayfa testleri ile sabitlendi.
+
+
+## 2026-03-09 Faz 10 Kapanis
+- Faz 10 tamamlandi.
+- Kapsam: mobil detail shell, mobil hizli aksiyonlar, detail preview yogunlugu azaltimi, mobil liste ozet katmani ve ilk sayfa testleri.
+- Sonraki aktif odak: Faz 11.
+
+
+- Faz 11 ilerleme notu: Dashboard'a claim, renewal, assignment ve call note kaynaklarini birlestiren takip SLA paneli eklendi.
+- Faz 11 ilerleme notu: SLA paneline claim, renewal ve communication drill-down aksiyonlari eklendi.
+- Faz 11 ilerleme notu: Dashboard SLA paneli sayfa testinde route davranisiyla sabitlendi.
+
+- Faz 11 ilerleme notu: Dashboard takip SLA drill-down aksiyonlari artik hedef ekranlarda query tabanli filtre senkronu ile calisiyor.
+
+- Faz 11 ilerleme notu: ClaimsBoard icin takip temizleme ve RenewalsBoard icin hizli durum gecisi aksiyonlari eklendi.
+
+- Faz 11 ilerleme notu: CommunicationCenter context kartina assignment kapatma ve call note takip temizleme aksiyonlari eklendi.
+
+- Faz 11 tamamlandi: Takip SLA backend payload, dashboard paneli, drill-down, query senkronu ve closure aksiyonlari tamamlandi. Yeni aktif odak Faz 12.
+
+- Faz 12 ilerleme notu: AT Access Log mutation audit icin genisletildi; quick create service create/edit/delete operasyonlari action summary ve decision context ile kaydediliyor.
+
+- Faz 12 ilerleme notu: Admin job dispatch ve campaign execution akislari action=Run, action_summary ve decision_context ile audit zincirine baglandi.
+
+- Faz 12 ilerleme notu: Access & Audit Logs ekrani aksiyon bazli audit ozet kartlari ve reference_doctype/reference_name uzerinden hedef kayda panel gecisi ile operasyonel hale getirildi.
+
+- Faz 12 ilerleme notu: AT Access Log detail ekrani action_summary ve decision_context alanlarini Audit Baglami / Karar ve Eylem kartlariyla okunur hale getirecek sekilde guclendirildi.
+
+- Faz 12 ilerleme notu: Access & Audit Logs operatorlugu Create/Edit/Delete/Run presetleri, action select filtresi ve viewed_on tabanli varsayilan audit siralamasi ile hizlandirildi.
+
+- Faz 12 tamamlandi: AT Access Log mutation/run audit omurgasi, Access & Audit Logs operasyon ekraný, detail okunurlugu ve hazir action presetleri tamamlandi. Yeni aktif odak Faz 13.
+
+- Faz 13 ilerleme notu: Policy 360 dokuman katmani acildi; document_profile backend ozeti ve PolicyDetail dokuman sekmesinde toplam/PDF/gorsel/tablo/diger ile son yukleme gorunurlugu eklendi.
+
+- Faz 13.2 tamamlandi: Claim tarafinda dokuman sayisi ve son yukleme sinyali ClaimsBoard ekranina tasindi; test zinciri claim file resource ile hizalandi.
+
+- Faz 13.3 tamamlandi: Claim satirindan dosya paneline filtreli drill-down acildi; Files aux yuzeyi ve route-query filtre senkronu eklendi.
+
+- Faz 13.4 tamamlandi: Customer 360 belge profili documents payload uzerinden ekrana tasindi; CustomerDetail icinde dokuman ozeti kartlari ve files-list drill-down acildi, sayfa testi ile sabitlendi.
+
+- Faz 13.5 tamamlandi: PolicyDetail dokuman sekmesine filtreli files-list drill-down eklendi; Policy 360 belge operasyonu policy, claim ve customer tarafinda simetrik hale yaklasti.
+
+- Faz 13.6 tamamlandi: Files aux yuzeyi dosya tipi ozet kartlari, customer/policy/claim baglanti sayaclari ve hazir belge presetleri ile guclendirildi; belge merkezi operasyonel tarama ekranina donustu.
+
+- Faz 13.7 tamamlandi: Files aux panel aksiyonu attached_to_doctype/attached_to_name bagli hedef kayda gider hale getirildi.
+- Faz 13 tamamlandi: Policy 360 ve Customer 360 document profile, claim document summary, files drill-down, files aux operatorlugu ve belge merkezi preset/ozet kartlari tamamlandi. Yeni aktif odak Faz 14.

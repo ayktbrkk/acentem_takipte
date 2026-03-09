@@ -8,6 +8,8 @@
   "reference_name",
   "viewed_by",
   "action",
+  "action_summary",
+  "decision_context",
   "ip_address",
   "viewed_on"
  ],
@@ -38,8 +40,18 @@
    "fieldname": "action",
    "fieldtype": "Select",
    "label": "Action",
-   "options": "View\nEdit\nExport",
+   "options": "View\nCreate\nEdit\nDelete\nExport\nRun",
    "reqd": 1
+  },
+  {
+   "fieldname": "action_summary",
+   "fieldtype": "Small Text",
+   "label": "Action Summary"
+  },
+  {
+   "fieldname": "decision_context",
+   "fieldtype": "Small Text",
+   "label": "Decision Context"
   },
   {
    "fieldname": "ip_address",

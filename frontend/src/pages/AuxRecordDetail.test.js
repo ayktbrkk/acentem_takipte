@@ -50,6 +50,24 @@ vi.mock("frappe-ui", () => ({
                   owner: "Administrator",
                 },
               }
+            : params?.doctype === "AT Access Log"
+              ? {
+                  message: {
+                    name: "LOG-001",
+                    reference_doctype: "AT Campaign",
+                    reference_name: "CMP-001",
+                    viewed_by: "admin@example.com",
+                    action: "Run",
+                    action_summary: "Campaign executed via segment SEG-001",
+                    decision_context: JSON.stringify([
+                      "created=12",
+                      "skipped=3",
+                      "matched=15",
+                    ]),
+                    ip_address: "127.0.0.1",
+                    viewed_on: "2026-03-09T11:00:00Z",
+                  },
+                }
             : {
                 message: {
                   name: "SNAP-001",
@@ -241,5 +259,46 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     expect(wrapper.text()).toContain("Atama Notlari");
     expect(wrapper.text()).toContain("Musteri ile tekrar gorusulecek");
+  });
+
+  it("renders readable access log decision blocks", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "access-logs",
+        name: "LOG-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Audit Baglami");
+    expect(wrapper.text()).toContain("Karar ve Eylem");
+    expect(wrapper.text()).toContain("AT Campaign");
+    expect(wrapper.text()).toContain("CMP-001");
+    expect(wrapper.text()).toContain("Campaign executed via segment SEG-001");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+
+    expect(wrapper.text()).toContain("Eylem Ozeti");
+    expect(wrapper.text()).toContain("Karar Baglami");
+    expect(wrapper.text()).toContain("created=12");
+    expect(wrapper.text()).toContain("skipped=3");
+    expect(wrapper.text()).toContain("matched=15");
   });
 });

@@ -45,9 +45,17 @@ def test_execute_campaign_creates_drafts_for_matched_customers():
                 return_value={"name": "CUST-001", "phone": "05550001122", "email": "a@example.com", "office_branch": "IST"},
             ):
                 with patch.object(campaigns_service.communication_logic, "enqueue_notification_draft") as enqueue_mock:
-                    result = campaigns_service.execute_campaign("AT-CAMP-2026-00001", limit=50)
+                    with patch.object(campaigns_service, "log_decision_event") as audit_mock:
+                        result = campaigns_service.execute_campaign("AT-CAMP-2026-00001", limit=50)
 
     enqueue_mock.assert_called_once_with("DRF-001")
+    audit_mock.assert_called_once_with(
+        "AT Campaign",
+        "AT-CAMP-2026-00001",
+        action="Run",
+        action_summary="Campaign executed via segment AT-SEG-2026-00001",
+        decision_context="created=1;skipped=0;matched=1",
+    )
     inserted_doc.insert.assert_called_once_with(ignore_permissions=True)
     assert campaign_doc.sent_count == 1
     assert campaign_doc.status == "Completed"

@@ -5,6 +5,7 @@ from frappe import _
 from frappe.utils import cint, now_datetime
 
 from acentem_takipte.acentem_takipte import communication as communication_logic
+from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
 from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
 from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus
 
@@ -79,6 +80,13 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
     )
     campaign.status = "Completed" if created else "Cancelled"
     campaign.save(ignore_permissions=True)
+    log_decision_event(
+        "AT Campaign",
+        campaign.name,
+        action="Run",
+        action_summary=f"Campaign executed via segment {campaign.segment}",
+        decision_context=f"created={created};skipped={skipped};matched={campaign.matched_customer_count}",
+    )
     if not frappe.flags.in_test:
         frappe.db.commit()
 

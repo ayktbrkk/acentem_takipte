@@ -10,6 +10,32 @@ class ATAccessLog(Document):
 
 
 def log_access(reference_doctype: str, reference_name: str, action: str = "View") -> None:
+    _insert_access_log(reference_doctype, reference_name, action=action)
+
+
+def log_decision_event(
+    reference_doctype: str,
+    reference_name: str,
+    action: str,
+    action_summary: str | None = None,
+    decision_context: str | None = None,
+) -> None:
+    _insert_access_log(
+        reference_doctype,
+        reference_name,
+        action=action,
+        action_summary=action_summary,
+        decision_context=decision_context,
+    )
+
+
+def _insert_access_log(
+    reference_doctype: str,
+    reference_name: str,
+    action: str = "View",
+    action_summary: str | None = None,
+    decision_context: str | None = None,
+) -> None:
     user = frappe.session.user if frappe.session else "Guest"
     if not user or user == "Guest":
         return
@@ -40,5 +66,7 @@ def log_access(reference_doctype: str, reference_name: str, action: str = "View"
             "action": action,
             "ip_address": ip_address,
             "viewed_on": now_datetime(),
+            "action_summary": action_summary,
+            "decision_context": decision_context,
         }
     ).insert(ignore_permissions=True)

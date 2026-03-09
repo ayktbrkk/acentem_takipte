@@ -25,6 +25,27 @@
       <DetailTabsBar v-model="activeCustomerTab" :tabs="customerDetailTabs" />
     </article>
 
+    <article class="surface-card rounded-2xl p-4 md:hidden">
+      <SectionCardHeader :title="t('mobileQuickActionsTitle')" :show-count="false" />
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
+          {{ t("newOffer") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
+          {{ t("communication") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="openCustomerDocuments">
+          {{ t("documents") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="openQuickCustomerRelation">
+          {{ t("newRelation") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="openQuickOwnershipAssignment">
+          {{ t("newAssignment") }}
+        </ActionButton>
+      </div>
+    </article>
+
     <div class="at-detail-split-wide">
       <aside class="at-detail-aside">
         <article class="surface-card rounded-2xl p-5">
@@ -274,6 +295,9 @@
             <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
               {{ t("communication") }}
             </ActionButton>
+            <ActionButton variant="secondary" size="sm" @click="openCustomerDocuments">
+              {{ t("documents") }}
+            </ActionButton>
             <ActionButton variant="secondary" size="sm" :disabled="!activePolicies.length" @click="activePolicies[0] && openPolicyDetail(activePolicies[0].name)">
               {{ t("openPolicy") }}
             </ActionButton>
@@ -347,7 +371,7 @@
           >
             {{ t("noOpenOffer") }}
           </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
+          <div v-else class="grid gap-3 md:grid-cols-2 [&>*:nth-child(n+3)]:hidden md:[&>*:nth-child(n+3)]:block">
             <EntityPreviewCard
               v-for="offer in openOffers"
               :key="offer.name"
@@ -371,7 +395,7 @@
           <div v-else-if="paymentPreviewRows.length === 0" class="at-empty-block">
             {{ t("noPaymentHistory") }}
           </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
+          <div v-else class="grid gap-3 md:grid-cols-2 [&>*:nth-child(n+3)]:hidden md:[&>*:nth-child(n+3)]:block">
             <EntityPreviewCard
               v-for="payment in paymentPreviewRows"
               :key="payment.name"
@@ -564,7 +588,22 @@
                   </div>
                 </template>
               </MetaListCard>
-            </div>
+          </div>
+        </article>
+
+        <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('documentsTitle')" :show-count="false" />
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <MetaListCard :label="t('totalDocuments')" :value="String(customerDocumentProfile.total_files || 0)" />
+            <MetaListCard :label="t('pdfDocuments')" :value="String(customerDocumentProfile.pdf_count || 0)" />
+            <MetaListCard :label="t('imageDocuments')" :value="String(customerDocumentProfile.image_count || 0)" />
+            <MetaListCard :label="t('spreadsheetDocuments')" :value="String(customerDocumentProfile.spreadsheet_count || 0)" />
+            <MetaListCard :label="t('otherDocuments')" :value="String(customerDocumentProfile.other_count || 0)" />
+            <MetaListCard :label="t('lastUpload')" :value="formatDate(customerDocumentProfile.last_uploaded_on)" />
+          </div>
         </article>
 
         <article
@@ -865,6 +904,15 @@ const copy = {
     validUntil: "Gecerlilik",
     grossPremium: "Brut Prim",
     operationsTitle: "Operasyonlar",
+    documents: "Dokumanlar",
+    documentsTitle: "Dokuman Ozeti",
+    totalDocuments: "Toplam Dokuman",
+    pdfDocuments: "PDF",
+    imageDocuments: "Gorsel",
+    spreadsheetDocuments: "Tablo",
+    otherDocuments: "Diger",
+    lastUpload: "Son Yukleme",
+    mobileQuickActionsTitle: "Hizli Islemler",
     tabOverview: "Ozet",
     tabPortfolio: "Portfoy",
     tabActivity: "Aktivite",
@@ -1000,6 +1048,15 @@ const copy = {
     validUntil: "Valid Until",
     grossPremium: "Gross Premium",
     operationsTitle: "Operations",
+    documents: "Documents",
+    documentsTitle: "Document Summary",
+    totalDocuments: "Total Documents",
+    pdfDocuments: "PDF",
+    imageDocuments: "Images",
+    spreadsheetDocuments: "Spreadsheets",
+    otherDocuments: "Other",
+    lastUpload: "Last Upload",
+    mobileQuickActionsTitle: "Quick Actions",
     tabOverview: "Overview",
     tabPortfolio: "Portfolio",
     tabActivity: "Activity",
@@ -1047,6 +1104,8 @@ const customer360Portfolio = computed(() => customer360Payload.value.portfolio |
 const customer360Communication = computed(() => customer360Payload.value.communication || {});
 const customer360Insights = computed(() => customer360Payload.value.insights || {});
 const customer360CrossSell = computed(() => customer360Payload.value.cross_sell || {});
+const customer360Documents = computed(() => customer360Payload.value.documents || {});
+const customerDocumentProfile = computed(() => customer360Documents.value.document_profile || {});
 const policies = computed(() => customer360Portfolio.value.policies || []);
 const offers = computed(() => customer360Portfolio.value.offers || []);
 const payments = computed(() => customer360Portfolio.value.payments || []);
@@ -1439,6 +1498,17 @@ function openCommunicationCenterForCustomer() {
     query: {
       customer: props.name,
       customer_label: String(customer.value.full_name || props.name),
+    },
+  });
+}
+
+function openCustomerDocuments() {
+  if (!props.name) return;
+  router.push({
+    name: "files-list",
+    query: {
+      attached_to_doctype: "AT Customer",
+      attached_to_name: props.name,
     },
   });
 }

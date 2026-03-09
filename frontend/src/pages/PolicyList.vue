@@ -111,6 +111,24 @@
       </PageToolbar>
     </div>
 
+    <article class="surface-card rounded-2xl p-4 md:hidden">
+      <SectionCardHeader :title="t('mobileSummaryTitle')" :show-count="false" />
+      <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("showing") }}</p>
+          <p class="mt-1 font-semibold text-slate-900">{{ startRow }}-{{ endRow }}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activeFilters") }}</p>
+          <p class="mt-1 font-semibold text-slate-900">{{ policyActiveFilterCount }}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("pageSize") }}</p>
+          <p class="mt-1 font-semibold text-slate-900">{{ pagination.pageLength }}</p>
+        </div>
+      </div>
+    </article>
+
     <DataTableShell
       :loading="isInitialLoading"
       :error="policyListError"
@@ -278,6 +296,8 @@ const copy = {
     deletePresetConfirm: "Secili ozel filtre sablonu silinsin mi?",
     applyFilters: "Uygula",
     clearFilters: "Filtreleri Temizle",
+    mobileSummaryTitle: "Liste Ozeti",
+    pageSize: "Sayfa Boyutu",
     customerFilter: "Musteri (icerir)",
     grossMinFilter: "Min Brut Prim",
     grossMaxFilter: "Max Brut Prim",
@@ -329,6 +349,8 @@ const copy = {
     deletePresetConfirm: "Delete selected custom filter preset?",
     applyFilters: "Apply",
     clearFilters: "Clear Filters",
+    mobileSummaryTitle: "List Summary",
+    pageSize: "Page Size",
     customerFilter: "Customer (contains)",
     grossMinFilter: "Min Gross Premium",
     grossMaxFilter: "Max Gross Premium",

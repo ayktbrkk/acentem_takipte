@@ -109,8 +109,12 @@ def test_dispatch_admin_job_runs_customer_segment_snapshot_job(monkeypatch):
         "run_customer_segment_snapshot_job",
         lambda limit=250: called.update({"limit": limit}) or {"queued": True, "limit": limit},
     )
+    audit_calls = []
+    monkeypatch.setattr(admin_jobs, "log_decision_event", lambda *args, **kwargs: audit_calls.append((args, kwargs)))
 
     payload = admin_jobs.dispatch_admin_job("run_customer_segment_snapshot_job", limit=120)
 
     assert called["limit"] == 120
+    assert audit_calls[0][0] == ("DocType", "AT Customer Segment Snapshot")
+    assert audit_calls[0][1]["action"] == "Run"
     assert payload == {"queued": True, "limit": 120}
