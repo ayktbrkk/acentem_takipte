@@ -279,14 +279,8 @@ function t(key) { return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 function localize(v) { return typeof v === "string" ? v : v?.[activeLocale.value] || v?.en || v?.tr || ""; }
 
 const resource = createResource({ url: "frappe.client.get", auto: false });
-const listDetailResource = createResource({ url: "frappe.client.get_list", auto: false });
-const usesListDetailFetch = computed(() => ["accounting-entries", "reconciliation-items"].includes(config.key));
-const activeResource = computed(() => (usesListDetailFetch.value ? listDetailResource : resource));
+const activeResource = computed(() => resource);
 const doc = computed(() => {
-  if (usesListDetailFetch.value) {
-    const payload = listDetailResource.data?.message ?? listDetailResource.data ?? [];
-    return Array.isArray(payload) ? payload[0] || null : null;
-  }
   return resource.data?.docs?.[0] || resource.data?.message || resource.data || null;
 });
 const errorText = computed(() => {
@@ -967,7 +961,7 @@ const relatedRecordCards = computed(() => {
     for (const draft of campaignDraftsResource.data || []) {
       items.push({
         key: `campaign-draft-${draft.name}`,
-        title: `${t("relatedDraft")} â€¢ ${draft.name}`,
+        title: `${t("relatedDraft")} - ${draft.name}`,
         subtitle: [draft.channel, draft.status].filter(Boolean).join(" / ") || "AT Notification Draft",
         description: draft.recipient || draft.name,
         meta: formatValue("modified", draft.modified),
@@ -980,7 +974,7 @@ const relatedRecordCards = computed(() => {
     for (const outbox of campaignOutboxResource.data || []) {
       items.push({
         key: `campaign-outbox-${outbox.name}`,
-        title: `${t("relatedOutbox")} â€¢ ${outbox.name}`,
+        title: `${t("relatedOutbox")} - ${outbox.name}`,
         subtitle: [outbox.channel, outbox.status].filter(Boolean).join(" / ") || "AT Notification Outbox",
         description: outbox.recipient || outbox.name,
         meta: outbox.attempt_count != null ? `${outbox.attempt_count}` : formatValue("modified", outbox.modified),
@@ -1129,14 +1123,7 @@ async function afterQuickEditSubmit() {
 }
 
 function reloadDetail() {
-  const detailPromise = usesListDetailFetch.value
-    ? listDetailResource.reload({
-        doctype: config.doctype,
-        fields: detailFieldSet.value,
-        filters: { name: props.name },
-        limit_page_length: 1,
-      })
-    : resource.reload({ doctype: config.doctype, name: props.name });
+  const detailPromise = resource.reload({ doctype: config.doctype, name: props.name });
   if (config.doctype !== "AT Campaign") return detailPromise;
   campaignDraftsResource.params = {
     ...campaignDraftsResource.params,
