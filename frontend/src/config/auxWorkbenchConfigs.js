@@ -311,6 +311,7 @@ export const AUX_WORKBENCH_CONFIGS = {
     subtitle: L("Muhasebe kayitlarini ve entegrasyon izlerini inceleyin", "Inspect accounting records and integration traces"),
     titleField: "name",
     statusField: "status",
+    statusType: "accounting_sync",
     listFields: ["name", "source_doctype", "source_name", "entry_type", "status", "policy", "customer", "local_amount_try", "difference_try", "needs_reconciliation", "modified"],
     searchFields: ["name", "source_doctype", "source_name", "policy", "customer", "external_ref"],
     primaryFields: ["source_doctype", "source_name"],

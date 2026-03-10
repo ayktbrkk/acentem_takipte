@@ -74,6 +74,11 @@ const STYLES = {
     Done: { className: "bg-emerald-100 text-emerald-700" },
     Cancelled: { className: "bg-rose-100 text-rose-700" },
   },
+  accounting_sync: {
+    Draft: { className: "bg-slate-200 text-slate-700" },
+    Synced: { className: "bg-emerald-100 text-emerald-700" },
+    Failed: { className: "bg-rose-100 text-rose-700" },
+  },
   reconciliation: {
     Open: { className: "bg-amber-100 text-amber-700" },
     Resolved: { className: "bg-emerald-100 text-emerald-700" },
@@ -156,6 +161,11 @@ const LABELS = {
       Done: "Tamamlandi",
       Cancelled: "Iptal",
     },
+    accounting_sync: {
+      Draft: "Taslak",
+      Synced: "Senkronize",
+      Failed: "Basarisiz",
+    },
     reconciliation: {
       Open: "Acik",
       Resolved: "Cozuldu",
@@ -235,6 +245,11 @@ const LABELS = {
       Completed: "Completed",
       Done: "Done",
       Cancelled: "Cancelled",
+    },
+    accounting_sync: {
+      Draft: "Draft",
+      Synced: "Synced",
+      Failed: "Failed",
     },
     reconciliation: {
       Open: "Open",
