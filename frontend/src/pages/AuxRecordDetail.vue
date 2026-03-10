@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <DocHeaderCard :eyebrow="label('list')" :title="recordTitle" :subtitle="recordSubtitle">
+    <DocHeaderCard :eyebrow="localize(config.labels?.list)" :title="recordTitle" :subtitle="recordSubtitle">
       <template #actions>
         <DetailActionRow>
           <ActionButton variant="secondary" size="xs" @click="goBack">{{ t("backToList") }}</ActionButton>

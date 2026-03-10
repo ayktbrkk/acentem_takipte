@@ -30,7 +30,9 @@ SENSITIVE_KEYS = {
 
 def redact_value(key: str, value):
     normalized_key = str(key or "").strip().lower()
-    if value in {None, ""}:
+    if value is None:
+        return value
+    if isinstance(value, str) and value == "":
         return value
     if normalized_key not in SENSITIVE_KEYS:
         return value
