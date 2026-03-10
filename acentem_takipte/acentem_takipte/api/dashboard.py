@@ -417,7 +417,7 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
         frappe.throw("Authentication required")
 
     payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
-    payload = dashboard_filters.normalize_lead_workbench_payload(payload)
+    payload = dashboard_filters.normalize_customer_workbench_payload(payload)
 
     page_no = max(cint(page), 1)
     per_page = min(max(cint(page_length or payload.get("page_length") or 20), 1), 100)

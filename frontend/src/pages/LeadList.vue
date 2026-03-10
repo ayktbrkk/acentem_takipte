@@ -258,6 +258,10 @@ const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
+const safeRouteQuery = computed(() => {
+  const query = route && typeof route === "object" ? route.query : null;
+  return query && typeof query === "object" ? query : {};
+});
 
 function buildOfficeBranchLookupFilters() {
   const officeBranch = branchStore.requestBranch || "";
