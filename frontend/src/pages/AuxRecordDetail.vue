@@ -12,11 +12,11 @@
     </DocHeaderCard>
 
     <DataTableShell
-      :loading="resource.loading && !doc"
+      :loading="activeResource.loading && !doc"
       :error="errorText"
       :loading-label="t('loading')"
       :error-title="t('loadErrorTitle')"
-      :empty="!resource.loading && !doc && !errorText"
+      :empty="!activeResource.loading && !doc && !errorText"
       :empty-title="t('emptyTitle')"
       :empty-description="t('emptyDescription')"
     >
@@ -279,8 +279,20 @@ function t(key) { return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 function localize(v) { return typeof v === "string" ? v : v?.[activeLocale.value] || v?.en || v?.tr || ""; }
 
 const resource = createResource({ url: "frappe.client.get", auto: false });
-const doc = computed(() => resource.data?.docs?.[0] || resource.data?.message || resource.data || null);
-const errorText = computed(() => resource.error?.messages?.[0] || resource.error?.message || "");
+const listDetailResource = createResource({ url: "frappe.client.get_list", auto: false });
+const usesListDetailFetch = computed(() => ["accounting-entries", "reconciliation-items"].includes(config.key));
+const activeResource = computed(() => (usesListDetailFetch.value ? listDetailResource : resource));
+const doc = computed(() => {
+  if (usesListDetailFetch.value) {
+    const payload = listDetailResource.data?.message ?? listDetailResource.data ?? [];
+    return Array.isArray(payload) ? payload[0] || null : null;
+  }
+  return resource.data?.docs?.[0] || resource.data?.message || resource.data || null;
+});
+const errorText = computed(() => {
+  const current = activeResource.value;
+  return current.error?.messages?.[0] || current.error?.message || "";
+});
 const showQuickEditDialog = ref(false);
 const activeDetailTab = ref("overview");
 const quickEditConfig = computed(() => config.quickEdit || null);
@@ -383,7 +395,74 @@ const quickEditSuccessHandlers = {
 function humanizeField(field) {
   return String(field || "").replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
-function fieldLabel(field) { return humanizeField(field); }
+const AUX_DETAIL_FIELD_LABELS = {
+  "accounting-entries": {
+    tr: {
+      source_doctype: "Kaynak DocType",
+      source_name: "Kaynak Kayit",
+      source_label: "Kaynak Etiketi",
+      source_status: "Kaynak Durumu",
+      local_amount_try: "Yerel Tutar (TRY)",
+      external_amount_try: "Harici Tutar (TRY)",
+      difference_try: "Fark (TRY)",
+      policy: "Police",
+      customer: "Musteri",
+      insurance_company: "Sigorta Sirketi",
+      office_branch: "Ofis Subesi",
+      external_ref: "Harici Referans",
+      integration_hash: "Entegrasyon Ozet Degeri",
+      payload_json: "Payload",
+      synced_on: "Senkronizasyon Tarihi",
+    },
+    en: {
+      source_doctype: "Source DocType",
+      source_name: "Source Record",
+      source_label: "Source Label",
+      source_status: "Source Status",
+      local_amount_try: "Local Amount (TRY)",
+      external_amount_try: "External Amount (TRY)",
+      difference_try: "Difference (TRY)",
+      policy: "Policy",
+      customer: "Customer",
+      insurance_company: "Insurance Company",
+      office_branch: "Office Branch",
+      external_ref: "External Reference",
+      integration_hash: "Integration Hash",
+      payload_json: "Payload",
+      synced_on: "Synced On",
+    },
+  },
+  "reconciliation-items": {
+    tr: {
+      accounting_entry: "Muhasebe Kaydi",
+      source_doctype: "Kaynak DocType",
+      source_name: "Kaynak Kayit",
+      mismatch_type: "Uyumsuzluk Tipi",
+      difference_try: "Fark (TRY)",
+      resolution_action: "Cozum Islemi",
+      resolved_on: "Cozum Tarihi",
+      needs_reconciliation: "Mutabakat Gerekli",
+      notes: "Notlar",
+      details_json: "Detaylar",
+    },
+    en: {
+      accounting_entry: "Accounting Entry",
+      source_doctype: "Source DocType",
+      source_name: "Source Record",
+      mismatch_type: "Mismatch Type",
+      difference_try: "Difference (TRY)",
+      resolution_action: "Resolution Action",
+      resolved_on: "Resolved On",
+      needs_reconciliation: "Needs Reconciliation",
+      notes: "Notes",
+      details_json: "Details",
+    },
+  },
+};
+function fieldLabel(field) {
+  const localized = AUX_DETAIL_FIELD_LABELS[config.key]?.[activeLocale.value]?.[field] || AUX_DETAIL_FIELD_LABELS[config.key]?.en?.[field];
+  return localized || humanizeField(field);
+}
 function isFieldType(field, kind) { return Array.isArray(config[`${kind}Fields`]) && config[`${kind}Fields`].includes(field); }
 function formatValue(field, value) {
   if (value == null || value === "") return "-";
@@ -424,7 +503,7 @@ const recordSubtitle = computed(() => {
   const d = doc.value;
   if (!d) return localize(config.subtitle);
   const officeBranch = String(d.office_branch || "").trim();
-  return officeBranch ? `${config.doctype} • ${d.name} • ${officeBranch}` : `${config.doctype} • ${d.name}`;
+  return officeBranch ? `${config.doctype} | ${d.name} | ${officeBranch}` : `${config.doctype} | ${d.name}`;
 });
 
 const summaryItems = computed(() =>
@@ -441,8 +520,27 @@ const summaryItems = computed(() =>
 );
 
 const detailGroups = computed(() => config.detailGroups || []);
+const detailFieldSet = computed(() => {
+  const fieldSet = new Set([
+    "name",
+    config.titleField,
+    config.statusField,
+    config.secondaryStatusField,
+    ...(config.summaryFields || []),
+    ...(config.textFields || []),
+  ]);
+  for (const group of config.detailGroups || []) {
+    for (const field of group.fields || []) fieldSet.add(field);
+  }
+  if (config.panelRef?.doctypeField) fieldSet.add(config.panelRef.doctypeField);
+  if (config.panelRef?.nameField) fieldSet.add(config.panelRef.nameField);
+  fieldSet.add("owner");
+  fieldSet.add("modified");
+  return Array.from(fieldSet).filter(Boolean);
+});
 const specialDetailMode = computed(() => {
   if (config.key === "accounting-entries") return "accounting";
+  if (config.key === "reconciliation-items") return "reconciliation";
   if (config.key === "templates") return "template";
   if (config.key === "notification-outbox") return "outbox";
   if (config.key === "customer-segment-snapshots") return "segment_snapshot";
@@ -461,6 +559,11 @@ function item(field, customLabel = "") {
 
 const specialBadges = computed(() => {
   if (!doc.value) return [];
+  if (specialDetailMode.value === "reconciliation") {
+    const badges = [];
+    if (doc.value.status) badges.push({ key: "status", type: "reconciliation", status: String(doc.value.status) });
+    return badges;
+  }
   if (specialDetailMode.value === "template") {
     const badges = [];
     if (doc.value.channel) badges.push({ key: "channel", type: "notification_channel", status: String(doc.value.channel) });
@@ -596,6 +699,42 @@ const specialGroups = computed(() => {
           item("needs_reconciliation"),
           item("last_synced_on"),
           item("sync_attempt_count"),
+          item("modified"),
+        ],
+      },
+    ];
+  }
+  if (specialDetailMode.value === "reconciliation") {
+    return [
+      {
+        key: "reconciliation-context",
+        title: activeLocale.value === "tr" ? "Kaynak ve Kayit Baglami" : "Source & Record Context",
+        items: [
+          item("accounting_entry"),
+          item("source_doctype"),
+          item("source_name"),
+          item("status"),
+          item("unique_key"),
+        ],
+      },
+      {
+        key: "reconciliation-amounts",
+        title: activeLocale.value === "tr" ? "Mutabakat Tutar Ozeti" : "Reconciliation Amount Summary",
+        items: [
+          item("mismatch_type"),
+          item("local_amount_try"),
+          item("external_amount_try"),
+          item("difference_try"),
+          item("resolution_action"),
+        ],
+      },
+      {
+        key: "reconciliation-resolution",
+        title: activeLocale.value === "tr" ? "Cozum ve Yasam Dongusu" : "Resolution & Lifecycle",
+        items: [
+          item("resolved_by"),
+          item("resolved_on"),
+          item("owner"),
           item("modified"),
         ],
       },
@@ -770,6 +909,12 @@ const specialTextBlocks = computed(() => {
       { key: "error_message", field: "error_message", title: fieldLabel("error_message"), value: doc.value?.error_message },
     ].filter((item) => item.value != null && String(item.value).trim() !== "");
   }
+  if (specialDetailMode.value === "reconciliation") {
+    return [
+      { key: "notes", field: "notes", title: fieldLabel("notes"), value: doc.value?.notes, fullWidth: true },
+      { key: "details_json", field: "details_json", title: fieldLabel("details_json"), value: doc.value?.details_json, fullWidth: true },
+    ].filter((item) => item.value != null && String(item.value).trim() !== "");
+  }
   if (specialDetailMode.value === "template") {
     return [
       { key: "body_template", field: "body_template", title: t("bodyTemplate"), value: doc.value?.body_template, fullWidth: true },
@@ -822,7 +967,7 @@ const relatedRecordCards = computed(() => {
     for (const draft of campaignDraftsResource.data || []) {
       items.push({
         key: `campaign-draft-${draft.name}`,
-        title: `${t("relatedDraft")} • ${draft.name}`,
+        title: `${t("relatedDraft")} â€¢ ${draft.name}`,
         subtitle: [draft.channel, draft.status].filter(Boolean).join(" / ") || "AT Notification Draft",
         description: draft.recipient || draft.name,
         meta: formatValue("modified", draft.modified),
@@ -835,7 +980,7 @@ const relatedRecordCards = computed(() => {
     for (const outbox of campaignOutboxResource.data || []) {
       items.push({
         key: `campaign-outbox-${outbox.name}`,
-        title: `${t("relatedOutbox")} • ${outbox.name}`,
+        title: `${t("relatedOutbox")} â€¢ ${outbox.name}`,
         subtitle: [outbox.channel, outbox.status].filter(Boolean).join(" / ") || "AT Notification Outbox",
         description: outbox.recipient || outbox.name,
         meta: outbox.attempt_count != null ? `${outbox.attempt_count}` : formatValue("modified", outbox.modified),
@@ -984,7 +1129,14 @@ async function afterQuickEditSubmit() {
 }
 
 function reloadDetail() {
-  const detailPromise = resource.reload({ doctype: config.doctype, name: props.name });
+  const detailPromise = usesListDetailFetch.value
+    ? listDetailResource.reload({
+        doctype: config.doctype,
+        fields: detailFieldSet.value,
+        filters: { name: props.name },
+        limit_page_length: 1,
+      })
+    : resource.reload({ doctype: config.doctype, name: props.name });
   if (config.doctype !== "AT Campaign") return detailPromise;
   campaignDraftsResource.params = {
     ...campaignDraftsResource.params,

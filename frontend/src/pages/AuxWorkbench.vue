@@ -889,8 +889,92 @@ function humanizeField(field) {
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
+const AUX_FIELD_LABELS = {
+  "accounting-entries": {
+    tr: {
+      source_doctype: "Kaynak DocType",
+      source_name: "Kaynak Kayit",
+      policy: "Police",
+      customer: "Musteri",
+      local_amount_try: "Yerel Tutar (TRY)",
+      external_amount_try: "Harici Tutar (TRY)",
+      difference_try: "Fark (TRY)",
+      local_amount: "Yerel Tutar",
+      external_amount: "Harici Tutar",
+      status: "Durum",
+      entry_type: "Kayit Tipi",
+      insurance_company: "Sigorta Sirketi",
+      external_ref: "Harici Referans",
+      needs_reconciliation: "Mutabakat Gerekli",
+      last_synced_on: "Son Senkron",
+      sync_attempt_count: "Senkron Denemesi",
+      payload_json: "Payload (JSON)",
+      error_message: "Hata Mesaji",
+      modified: "Guncellendi",
+    },
+    en: {
+      source_doctype: "Source DocType",
+      source_name: "Source Record",
+      policy: "Policy",
+      customer: "Customer",
+      local_amount_try: "Local Amount (TRY)",
+      external_amount_try: "External Amount (TRY)",
+      difference_try: "Difference (TRY)",
+      local_amount: "Local Amount",
+      external_amount: "External Amount",
+      status: "Status",
+      entry_type: "Entry Type",
+      insurance_company: "Insurance Company",
+      external_ref: "External Reference",
+      needs_reconciliation: "Needs Reconciliation",
+      last_synced_on: "Last Synced",
+      sync_attempt_count: "Sync Attempts",
+      payload_json: "Payload (JSON)",
+      error_message: "Error Message",
+      modified: "Modified",
+    },
+  },
+  "reconciliation-items": {
+    tr: {
+      accounting_entry: "Muhasebe Kaydi",
+      source_doctype: "Kaynak DocType",
+      source_name: "Kaynak Kayit",
+      mismatch_type: "Uyumsuzluk Tipi",
+      difference_try: "Fark (TRY)",
+      local_amount_try: "Yerel Tutar (TRY)",
+      external_amount_try: "Harici Tutar (TRY)",
+      resolution_action: "Cozum Aksiyonu",
+      resolved_by: "Cozen Kullanici",
+      resolved_on: "Cozulme Tarihi",
+      unique_key: "Benzersiz Anahtar",
+      notes: "Notlar",
+      details_json: "Detay JSON",
+      status: "Durum",
+      modified: "Guncellendi",
+    },
+    en: {
+      accounting_entry: "Accounting Entry",
+      source_doctype: "Source DocType",
+      source_name: "Source Record",
+      mismatch_type: "Mismatch Type",
+      difference_try: "Difference (TRY)",
+      local_amount_try: "Local Amount (TRY)",
+      external_amount_try: "External Amount (TRY)",
+      resolution_action: "Resolution Action",
+      resolved_by: "Resolved By",
+      resolved_on: "Resolved On",
+      unique_key: "Unique Key",
+      notes: "Notes",
+      details_json: "Details JSON",
+      status: "Status",
+      modified: "Modified",
+    },
+  },
+};
+
 function fieldLabel(field) {
-  return humanizeField(field);
+  const localized = AUX_FIELD_LABELS[config.key]?.[activeLocale.value]?.[field] || AUX_FIELD_LABELS[config.key]?.en?.[field];
+  return localized || humanizeField(field);
 }
 
 function optionLabel(fd, opt) {
