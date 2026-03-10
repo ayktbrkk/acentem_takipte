@@ -1,4 +1,4 @@
-# Acentem Takipte - VS Code Uygulama Plani
+﻿# Acentem Takipte - VS Code Uygulama Plani
 
 - **Toplam efor baselini:** 476 saat
 - **Tahmini sure baselini:** 22 hafta
@@ -100,7 +100,7 @@
 - **Aktif Dalga:** 1
 - **Son tamamlanan is:** `LeadList.vue` locale facade migration ilk dilimi.
 - **Bir sonraki hedef:** `CommunicationCenter.vue` icinden campaign execution tetikleyicisini acmak ve sonuc ozetini gostermek.
-- **Dil notu:** Yeni DocType/alan eklerken mevcut label deseni korunacak; `Kullan�c� Notu` ve `Sistem Notu` gibi T�rk�e alan isimlerinde bozuk encoding kabul edilmeyecek.
+- **Dil notu:** Yeni DocType/alan eklerken mevcut label deseni korunacak; `Kullanï¿½cï¿½ Notu` ve `Sistem Notu` gibi Tï¿½rkï¿½e alan isimlerinde bozuk encoding kabul edilmeyecek.
 
 ## Guncel Durum
 
@@ -183,7 +183,7 @@
 - Ilk migration/DDL adimi:
   - `acentem_takipte/acentem_takipte/patches/v2026_03_09_add_dashboard_hot_path_indexes.py`
   - `AT Policy`, `AT Payment`, `AT Claim`, `AT Renewal Task`, `AT Lead`, `AT Accounting Entry` icin idempotent index patch'i eklendi
-- Ikinci gecis sadele�tirme adimi:
+- Ikinci gecis sadeleï¿½tirme adimi:
   - `queries_kpis.py` ve `tab_payload.py` icinde tekrar eden where/value uretimleri yerel cache altina alindi
 - Ikinci migration/DDL adimi:
   - `acentem_takipte/acentem_takipte/patches/v2026_03_09_add_dashboard_secondary_indexes.py`
@@ -271,7 +271,7 @@
 - Karar notu:
   - `quick_create.py` normalization yardimcilari API katmaninda birakildi
   - bu yardimcilar request parsing, Frappe hata dili ve doctype-ozel validation ile fazla bagli
-  - Faz 3.2 sonunda yardimci tekillestirme kazanci alindi; sinir bulan�kla�t�r�lmad�
+  - Faz 3.2 sonunda yardimci tekillestirme kazanci alindi; sinir bulanï¿½klaï¿½tï¿½rï¿½lmadï¿½
 
 ## Faz 3.3 Ilk Durum
 
@@ -304,7 +304,7 @@
 
 1. Karar 1 tamamlanmadan role/interface testleri guvenli kapanmis sayilmaz.
 2. Karar 2 tamamlanmadan branch filtreli dashboard ve raporlar nihai kabul almaz.
-3. Dalga 1 icin aktif kritik hareket Faz 3.3 altinda SQL seviyesindeki `commission` legacy fallback ifadelerini sadele�tirmektir.
+3. Dalga 1 icin aktif kritik hareket Faz 3.3 altinda SQL seviyesindeki `commission` legacy fallback ifadelerini sadeleï¿½tirmektir.
 
 ## Ilk Commit Talimati
 
@@ -568,4 +568,13 @@
 ## Faz 14 Kapanis
 - Faz 14 tamamlandi.
 - Sonraki devam noktasi: Faz 15 / reminder ya da sonraki operasyon veri katmani.
+
+
+- 2026-03-10: Faz 15 reminder kapsami Dashboard + Aux + CustomerDetail + PolicyDetail + CommunicationCenter olarak netlendi.
+
+- 2026-03-10: Faz 15 reminder operasyonlari detail yuzeylerinde tamamlandi (done/cancel).
+
+- 2026-03-10: Faz 15 reminder operasyon kapsami CommunicationCenter context closure ile tamamlandi.
+
+- 2026-03-10: Faz 15 kapatildi. Reminder aux operatorlugu open/high/done/cancelled presetleri ve ozet kartlari ile tamamlandi. Faz 16'ya gecilmedi; kullanici onayi bekleniyor.
 

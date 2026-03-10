@@ -6,6 +6,7 @@ import frappe
 
 from acentem_takipte.acentem_takipte.providers.base import ProviderAdapter, ProviderMessage, ProviderResult
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error, redact_payload
+from acentem_takipte.acentem_takipte.utils.network_security import normalize_whatsapp_api_url
 
 
 class MetaWhatsAppAdapter(ProviderAdapter):
@@ -29,7 +30,11 @@ class MetaWhatsAppAdapter(ProviderAdapter):
         phone_number_id = (frappe.conf.get("at_whatsapp_phone_number_id") or "").strip()
         if not api_url or not phone_number_id:
             raise frappe.ValidationError("Missing WhatsApp API url or phone number id in site config")
-        return f"{api_url.rstrip('/')}/{phone_number_id}/messages"
+        try:
+            api_url = normalize_whatsapp_api_url(api_url)
+        except ValueError as exc:
+            raise frappe.ValidationError(str(exc))
+        return f"{api_url}/{phone_number_id}/messages"
 
     def build_payload(self, message: ProviderMessage) -> Dict[str, object]:
         template_name = (message.template_name or "").strip()

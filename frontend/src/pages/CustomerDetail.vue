@@ -368,7 +368,25 @@
               :subtitle="reminder.status || '-'"
             >
               <template #trailing>
-                <StatusBadge type="generic" :status="reminder.status" />
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                  <StatusBadge type="generic" :status="reminder.status" />
+                  <ActionButton
+                    v-if="reminder.status !== 'Done'"
+                    variant="secondary"
+                    size="xs"
+                    @click="markReminderDone(reminder)"
+                  >
+                    {{ t("markDone") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="reminder.status !== 'Cancelled'"
+                    variant="secondary"
+                    size="xs"
+                    @click="cancelReminder(reminder)"
+                  >
+                    {{ t("cancelReminder") }}
+                  </ActionButton>
+                </div>
               </template>
               <MiniFactList class="mt-2" :items="reminderCardFacts(reminder)" />
             </EntityPreviewCard>
@@ -947,6 +965,8 @@ const copy = {
     noReminder: "Hatirlatici kaydi yok.",
     reminderAt: "Hatirlatma",
     reminderPriority: "Oncelik",
+    markDone: "Tamamla",
+    cancelReminder: "Iptal Et",
     noInsuredAsset: "Sigortalanan varlik bulunamadi.",
     assetType: "Varlik Turu",
     assetIdentifier: "Varlik Kimligi",
@@ -1097,6 +1117,8 @@ const copy = {
     noReminder: "No reminders found.",
     reminderAt: "Reminder At",
     reminderPriority: "Priority",
+    markDone: "Mark Done",
+    cancelReminder: "Cancel",
     noInsuredAsset: "No insured asset found.",
     assetType: "Asset Type",
     assetIdentifier: "Asset Identifier",
@@ -1154,6 +1176,10 @@ const customerRelationDeleteResource = createResource({
 });
 const insuredAssetDeleteResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
+  auto: false,
+});
+const reminderUpdateResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 
@@ -1648,6 +1674,26 @@ async function deleteOwnershipAssignment(assignment) {
     name: assignment.name,
   });
   await loadCustomer360();
+}
+
+async function updateReminderStatus(reminder, status) {
+  if (!reminder?.name) return;
+  await reminderUpdateResource.submit({
+    doctype: "AT Reminder",
+    name: reminder.name,
+    data: {
+      status,
+    },
+  });
+  await loadCustomer360();
+}
+
+async function markReminderDone(reminder) {
+  await updateReminderStatus(reminder, "Done");
+}
+
+async function cancelReminder(reminder) {
+  await updateReminderStatus(reminder, "Cancelled");
 }
 
 async function ensureCustomer360QuickOptionSources() {

@@ -12,6 +12,7 @@ from acentem_takipte.acentem_takipte.providers.router import get_provider_adapte
 from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus, ATNotificationOutboxStatus
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error, redact_payload
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.acentem_takipte.utils.network_security import normalize_whatsapp_api_url
 
 DEFAULT_RETRY_MINUTES = 5
 DEFAULT_MAX_ATTEMPTS = 3
@@ -470,6 +471,11 @@ def _send_whatsapp(*, recipient: str, subject: str | None, body: str, context: d
         return DeliveryResult(ok=False, provider="WhatsApp(API)", error="Missing at_whatsapp_api_url.")
     if not api_token:
         return DeliveryResult(ok=False, provider="WhatsApp(API)", error="Missing at_whatsapp_api_token.")
+
+    try:
+        api_url = normalize_whatsapp_api_url(api_url)
+    except ValueError as exc:
+        return DeliveryResult(ok=False, provider="WhatsApp(API)", error=cstr(exc))
 
     payload = {
         "to": recipient,

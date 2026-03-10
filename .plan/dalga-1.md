@@ -1,4 +1,4 @@
-# Dalga 1 - Guvenlik, Yetkilendirme, Performans ve Mimari Cekirdek
+﻿# Dalga 1 - Guvenlik, Yetkilendirme, Performans ve Mimari Cekirdek
 
 ## Ozet
 Rol yonlendirme, API auth kontrati, log redaction, dashboard performansi ve servis katmani ayrisimi bu dalgada toplandi. Mevcut aktif is Pinia facade migration'inin ilk ekranlari olan `Dashboard.vue` ve `Reports.vue` sonrasinda `RenewalsBoard.vue`.
@@ -344,7 +344,7 @@ Rol yonlendirme, API auth kontrati, log redaction, dashboard performansi ve serv
 
 - [x] Faz 5 guncelleme (2026-03-09): payment quick create sozlesmesi taksit alanlariyla genisletildi -> `frontend/src/config/quickCreateRegistry.js`, `api/quick_create.py`, `services/quick_create.py`
 
-- [x] Faz 5 guncelleme (2026-03-09): `Policy 360` payload ve `PolicyDetail.vue` taksit preview ile genisletildi; poliçe detayinda taksit plani gorunur hale geldi.
+- [x] Faz 5 guncelleme (2026-03-09): `Policy 360` payload ve `PolicyDetail.vue` taksit preview ile genisletildi; poliÃ§e detayinda taksit plani gorunur hale geldi.
 
 - [x] Faz 5 test guncelleme (2026-03-09): rontend/src/pages/PolicyDetail.test.js taksit preview kontrati ile genisletildi; installment preview alanlari sayfa seviyesinde test altina alindi.
 
@@ -594,4 +594,15 @@ ext_follow_up_on alanlari eklendi
 - [x] Faz 14 tamamlandi.
 - Kapsam: AT Task, task lifecycle aksiyonlari, AT Activity, Customer 360 / Policy 360 activity gorunurlugu, Dashboard my tasks + my activities.
 - Sonraki aktif odak: Faz 15 veya AT Reminder veri katmani.
+
+
+- 2026-03-10: Faz 15 reminder gorunurlugu ve route-aware prefill testleri tamamlandi.
+
+- 2026-03-10: CustomerDetail ve PolicyDetail reminder hizli aksiyonlari ile Faz 15 reminder operasyon kapsami genisletildi.
+
+- 2026-03-10: CommunicationCenter reminder context aksiyonlari ve testleri tamamlandi.
+
+- 2026-03-10: Faz 15 reminder aux operatorlugu presetler ve ozet kartlari ile tamamlandi.
+
+- 2026-03-10: Faz 15 kapandi. Faz 16'ya gecis oncesi duruldu ve kullanici onayi bekleniyor.
 

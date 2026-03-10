@@ -1,17 +1,16 @@
-# GitHub Backlog - Acentem Takipte
+ï»¿# GitHub Backlog - Acentem Takipte
 
 ## 2026-03-09 Guncel Takip Ozet
 
 - **Aktif dalga:** 1
-- **Aktif faz:** 9 ilk veri katmani
-- **Son tamamlanan faz:** 8
+- **Aktif faz:** 15 kapanis bekleme
+- **Son tamamlanan faz:** 15
 - **Son tamamlanan backlog temalari:**
-  - snapshot admin UI tetikleme
-  - snapshot detail okunabilirligi
-  - snapshot liste taranabilirligi
-  - snapshot operasyon ozet kartlari
-  - segment snapshot trend gorunurlugu
-  - segment snapshot export gorunurlugu
+  - reminder dashboard/aux/detail/communication kapsami
+  - reminder detail hizli aksiyonlari
+  - reminder communication context closure
+  - reminder aux presetleri
+  - reminder aux ozet kartlari
 - **Not:** Asagidaki issue kayitlari tarihsel backlog'dur. Guncel yon bilgisi icin bu blok, .plan/README.md ve ROADMAP.md birlikte okunmalidir.
 
 
@@ -350,7 +349,7 @@
 
 ---
 
-## Issue: 2.1.5 Dashboard v2 where/value cache sadeleþtirmesi
+## Issue: 2.1.5 Dashboard v2 where/value cache sadeleÅŸtirmesi
 
 **Etiketler:** dalga-1, oncelik-dusuk, backend
 **Bagli Dalga:** 1
@@ -428,7 +427,7 @@
 **Bagli Dalga:** 1
 **Durum:** Tamamlandi
 
-**Aciklama:** `sync_doc_event` inline muhasebe senkronundan cikarildi; ayni belge icin tekrarlý update patlamasi cache tabanli debounce ile tek queue job'ina indirildi.
+**Aciklama:** `sync_doc_event` inline muhasebe senkronundan cikarildi; ayni belge icin tekrarlÄ± update patlamasi cache tabanli debounce ile tek queue job'ina indirildi.
 
 **Dosyalar:**
 - `acentem_takipte/acentem_takipte/accounting.py`
@@ -967,3 +966,4 @@
   - ClaimsBoard claim kaynakli assignment prefill
   - CustomerDetail ownership assignment sayfa testi
 - Sonraki is: claim ve policy operasyon yuzeylerinde assignment gorunurlugunu derinlestirmek
+

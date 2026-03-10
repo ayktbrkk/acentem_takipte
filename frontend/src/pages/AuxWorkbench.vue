@@ -119,6 +119,20 @@
             </article>
           </div>
           <div
+            v-if="reminderSummaryCards.length"
+            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          >
+            <article
+              v-for="card in reminderSummaryCards"
+              :key="card.key"
+              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+            >
+              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
+              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
+            </article>
+          </div>
+          <div
             v-if="accessLogSummaryCards.length"
             class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
           >
@@ -410,6 +424,10 @@ const copy = {
     highValueSnapshots: "Yuksek Deger",
     averageScore: "Ortalama Skor",
     totalAuditEvents: "Toplam Audit",
+    totalReminders: "Toplam Hatirlatici",
+    openReminders: "Acik",
+    overdueReminders: "Geciken",
+    highPriorityReminders: "Yuksek Oncelik",
     createEvents: "Create",
     editEvents: "Edit",
     deleteEvents: "Delete",
@@ -428,6 +446,10 @@ const copy = {
     highValueHint: "Deger bandi High veya Premium olan kayitlar",
     averageScoreHint: "Filtreli kayitlar icin ortalama skor",
     auditWindowHint: "Mevcut filtre penceresindeki audit kayitlari",
+    reminderWindowHint: "Mevcut filtre penceresindeki hatirlaticilar",
+    openRemindersHint: "Durumu Open olan hatirlaticilar",
+    overdueRemindersHint: "Hatirlatma zamani gecmis acik hatirlaticilar",
+    highPriorityRemindersHint: "Onceligi High olan acik hatirlaticilar",
     createEventsHint: "Olusturma aksiyonlari",
     editEventsHint: "Duzenleme aksiyonlari",
     deleteEventsHint: "Silme aksiyonlari",
@@ -485,6 +507,10 @@ const copy = {
     highValueSnapshots: "High Value",
     averageScore: "Average Score",
     totalAuditEvents: "Total Audit Events",
+    totalReminders: "Total Reminders",
+    openReminders: "Open",
+    overdueReminders: "Overdue",
+    highPriorityReminders: "High Priority",
     createEvents: "Create",
     editEvents: "Edit",
     deleteEvents: "Delete",
@@ -503,6 +529,10 @@ const copy = {
     highValueHint: "Records with High or Premium value band",
     averageScoreHint: "Average score for filtered records",
     auditWindowHint: "Audit events in the current filtered window",
+    reminderWindowHint: "Reminders in the current filtered window",
+    openRemindersHint: "Reminders with Open status",
+    overdueRemindersHint: "Open reminders whose remind time has passed",
+    highPriorityRemindersHint: "Open reminders with High priority",
     createEventsHint: "Create actions",
     editEventsHint: "Edit actions",
     deleteEventsHint: "Delete actions",
@@ -663,6 +693,7 @@ const rows = computed(() => listResource.data || []);
 const snapshotRows = computed(() => (config.key === "customer-segment-snapshots" ? rows.value : []));
 const accessLogRows = computed(() => (config.key === "access-logs" ? rows.value : []));
 const fileRows = computed(() => (config.key === "files" ? rows.value : []));
+const reminderRows = computed(() => (config.key === "reminders" ? rows.value : []));
 const canExportSnapshotRows = computed(() => config.key === "customer-segment-snapshots" && snapshotRows.value.length > 0);
 const isLoading = computed(() => Boolean(listResource.loading || countResource.loading));
 const auxQuickCreate = computed(() => config.quickCreate || null);
@@ -746,6 +777,24 @@ const accessLogSummaryCards = computed(() => {
     { key: "edit-audit", label: t("editEvents"), value: String(countByAction("edit")), hint: t("editEventsHint") },
     { key: "delete-audit", label: t("deleteEvents"), value: String(countByAction("delete")), hint: t("deleteEventsHint") },
     { key: "run-audit", label: t("runEvents"), value: String(countByAction("run")), hint: t("runEventsHint") },
+  ];
+});
+const reminderSummaryCards = computed(() => {
+  if (config.key !== "reminders") return [];
+  const openRows = reminderRows.value.filter((row) => String(row?.status || "").trim() === "Open");
+  const now = Date.now();
+  const overdueRows = openRows.filter((row) => {
+    const remindAt = row?.remind_at;
+    if (!remindAt) return false;
+    const value = new Date(remindAt).getTime();
+    return Number.isFinite(value) && value < now;
+  });
+  const highPriorityRows = openRows.filter((row) => String(row?.priority || "").trim() === "High");
+  return [
+    { key: "total-reminders", label: t("totalReminders"), value: String(reminderRows.value.length), hint: t("reminderWindowHint") },
+    { key: "open-reminders", label: t("openReminders"), value: String(openRows.length), hint: t("openRemindersHint") },
+    { key: "overdue-reminders", label: t("overdueReminders"), value: String(overdueRows.length), hint: t("overdueRemindersHint") },
+    { key: "high-reminders", label: t("highPriorityReminders"), value: String(highPriorityRows.length), hint: t("highPriorityRemindersHint") },
   ];
 });
 const fileSummaryCards = computed(() => {

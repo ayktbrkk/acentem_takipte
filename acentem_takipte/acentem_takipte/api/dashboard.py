@@ -82,6 +82,7 @@ def get_dashboard_kpis(filters=None) -> dict:
         build_policy_where_fn=_build_policy_where,
         dashboard_cards_summary_fn=_dashboard_cards_summary,
         build_lead_where_fn=_build_lead_where,
+        build_lead_filters_fn=_build_lead_filters,
         monthly_commission_trend_fn=_monthly_commission_trend,
     )
 
@@ -139,6 +140,7 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
         allowed_customers=allowed_customers,
         build_offer_where_fn=_build_offer_where,
         build_lead_where_fn=_build_lead_where,
+        build_lead_filters_fn=_build_lead_filters,
         build_policy_where_fn=_build_policy_where,
         build_payment_where_fn=_build_payment_where,
         get_offer_preview_rows_fn=_get_offer_preview_rows,
@@ -1347,43 +1349,42 @@ def _dashboard_cards_summary(
         renewal_filters["policy"] = ["in", policy_names or ["__none__"]]
     pending_renewals = frappe.db.count("AT Renewal Task", filters=renewal_filters)
 
-    payment_where, payment_values = _build_payment_where(
-        from_date=from_date,
-        to_date=to_date,
-        branch=branch,
-        office_branch=office_branch,
-        allowed_customers=allowed_customers,
+    payment_rows = frappe.get_all(
+        "AT Payment",
+        filters=_build_payment_filters(
+            from_date=from_date,
+            to_date=to_date,
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+        ),
+        fields=["payment_direction", "status", "amount_try"],
+        limit_page_length=0,
     )
-    payment_totals = frappe.db.sql(
-        f"""
-        select
-            ifnull(sum(case when payment_direction = 'Inbound' and status = 'Paid' then amount_try else 0 end), 0) as collected_try,
-            ifnull(sum(case when payment_direction = 'Outbound' and status = 'Paid' then amount_try else 0 end), 0) as payout_try
-        from `tabAT Payment`
-        where {payment_where}
-        """,
-        values=payment_values,
-        as_dict=True,
-    )[0]
+    payment_totals = {
+        "collected_try": sum(
+            flt(row.get("amount_try") or 0)
+            for row in payment_rows
+            if row.get("payment_direction") == "Inbound" and row.get("status") == "Paid"
+        ),
+        "payout_try": sum(
+            flt(row.get("amount_try") or 0)
+            for row in payment_rows
+            if row.get("payment_direction") == "Outbound" and row.get("status") == "Paid"
+        ),
+    }
 
-    claim_where, claim_values = _build_claim_where(
-        from_date=from_date,
-        to_date=to_date,
-        branch=branch,
-        office_branch=office_branch,
-        allowed_customers=allowed_customers,
+    open_claims = frappe.db.count(
+        "AT Claim",
+        filters=_build_claim_filters(
+            from_date=from_date,
+            to_date=to_date,
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+            open_only=True,
+        ),
     )
-    open_claims = frappe.db.sql(
-        f"""
-        select count(c.name) as total
-        from `tabAT Claim` c
-        left join `tabAT Policy` p on p.name = c.policy
-        where {claim_where}
-            and c.claim_status in ('Open', 'Under Review', 'Approved')
-        """,
-        values=claim_values,
-        as_dict=True,
-    )[0].get("total", 0)
 
     result = {
         "total_gwp_try": float(totals.get("total_gwp_try") or 0),
@@ -1430,54 +1431,78 @@ def _build_offer_where(
 
 
 def _get_offer_preview_rows(*, where_clause: str, values: dict, limit: int, ready_only: bool = False) -> list[dict]:
-    offer_where = where_clause
-    offer_values = dict(values or {})
+def _get_offer_preview_rows(
+    *,
+    from_date: str | None,
+    to_date: str | None,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+    limit: int,
+    ready_only: bool = False,
+) -> list[dict]:
+    filters = _build_offer_filters(
+        from_date=from_date,
+        to_date=to_date,
+        branch=branch,
+        office_branch=office_branch,
+        allowed_customers=allowed_customers,
+    )
     if ready_only:
-        offer_where = f"({offer_where}) and status in ('Sent', 'Accepted') and ifnull(converted_policy, '') = ''"
-    rows = frappe.db.sql(
-        f"""
-        select
-            name,
-            customer,
-            insurance_company,
-            status,
-            currency,
-            valid_until,
-            gross_premium,
-            converted_policy
-        from `tabAT Offer`
-        where {offer_where}
-        order by modified desc
-        limit %(limit)s
-        """,
-        values={**offer_values, "limit": cint(limit)},
-        as_dict=True,
+        filters.append(["status", "in", ["Sent", "Accepted"]])
+    rows = frappe.get_all(
+        "AT Offer",
+        filters=filters,
+        fields=[
+            "name",
+            "customer",
+            "insurance_company",
+            "status",
+            "currency",
+            "valid_until",
+            "gross_premium",
+            "converted_policy",
+        ],
+        order_by="modified desc",
+        limit_page_length=max(cint(limit), 1) * (3 if ready_only else 1),
     )
-    return rows
+    if ready_only:
+        rows = [row for row in rows if not row.get("converted_policy")]
+    return rows[: max(cint(limit), 1)]
 
 
-def _get_policy_preview_rows(*, where_clause: str, values: dict, limit: int) -> list[dict]:
-    rows = frappe.db.sql(
-        f"""
-        select
-            name,
-            policy_no,
-            customer,
-            status,
-            currency,
-            issue_date,
-            gross_premium,
-            commission_amount,
-            commission
-        from `tabAT Policy`
-        where {where_clause}
-        order by modified desc
-        limit %(limit)s
-        """,
-        values={**(values or {}), "limit": cint(limit)},
-        as_dict=True,
+def _get_policy_preview_rows(
+    *,
+    from_date: str | None,
+    to_date: str | None,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+    limit: int,
+) -> list[dict]:
+    return frappe.get_all(
+        "AT Policy",
+        filters=_build_policy_filters(
+            from_date=from_date,
+            to_date=to_date,
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+        ),
+        fields=[
+            "name",
+            "policy_no",
+            "customer",
+            "status",
+            "currency",
+            "issue_date",
+            "gross_premium",
+            "commission_amount",
+            "commission",
+        ],
+        order_by="modified desc",
+        limit_page_length=max(cint(limit), 1),
     )
-    return rows
 
 
 def _get_top_companies_rows(*, where_clause: str, values: dict, limit: int = 5) -> list[dict]:
@@ -1502,48 +1527,64 @@ def _get_top_companies_rows(*, where_clause: str, values: dict, limit: int = 5) 
     return rows
 
 
-def _get_lead_preview_rows(*, lead_where: str, values: dict, limit: int) -> list[dict]:
-    rows = frappe.db.sql(
-        f"""
-        select
-            name,
-            first_name,
-            last_name,
-            email,
-            status,
-            estimated_gross_premium,
-            notes
-        from `tabAT Lead`
-        where {lead_where}
-        order by modified desc
-        limit %(limit)s
-        """,
-        values={**(values or {}), "limit": cint(limit)},
-        as_dict=True,
+def _get_lead_preview_rows(
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+    limit: int,
+) -> list[dict]:
+    return frappe.get_all(
+        "AT Lead",
+        filters=_build_lead_filters(
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+        ),
+        fields=[
+            "name",
+            "first_name",
+            "last_name",
+            "email",
+            "status",
+            "estimated_gross_premium",
+            "notes",
+        ],
+        order_by="modified desc",
+        limit_page_length=max(cint(limit), 1),
     )
-    return rows
 
 
-def _get_payment_preview_rows(*, where_clause: str, values: dict, limit: int) -> list[dict]:
-    rows = frappe.db.sql(
-        f"""
-        select
-            name,
-            payment_no,
-            payment_direction,
-            payment_date,
-            amount_try,
-            customer,
-            policy
-        from `tabAT Payment`
-        where {where_clause}
-        order by modified desc
-        limit %(limit)s
-        """,
-        values={**(values or {}), "limit": cint(limit)},
-        as_dict=True,
+def _get_payment_preview_rows(
+    *,
+    from_date: str | None,
+    to_date: str | None,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+    limit: int,
+) -> list[dict]:
+    return frappe.get_all(
+        "AT Payment",
+        filters=_build_payment_filters(
+            from_date=from_date,
+            to_date=to_date,
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+        ),
+        fields=[
+            "name",
+            "payment_no",
+            "payment_direction",
+            "payment_date",
+            "amount_try",
+            "customer",
+            "policy",
+        ],
+        order_by="modified desc",
+        limit_page_length=max(cint(limit), 1),
     )
-    return rows
 
 
 def _get_renewal_task_preview_rows(

@@ -41,6 +41,12 @@
             @launch="showCallNoteDialog = true"
           />
           <QuickCreateLauncher
+            variant="secondary"
+            size="sm"
+            :label="t('quickReminder')"
+            @launch="showReminderDialog = true"
+          />
+          <QuickCreateLauncher
             v-if="canCreateQuickMessage"
             variant="primary"
             size="sm"
@@ -158,6 +164,22 @@
             @click="clearCallNoteContext"
           >
             {{ t("clearCallFollowUpContext") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canCompleteReminderContext"
+            variant="secondary"
+            size="xs"
+            @click="completeReminderContext"
+          >
+            {{ t("completeReminderContext") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canCancelReminderContext"
+            variant="secondary"
+            size="xs"
+            @click="cancelReminderContext"
+          >
+            {{ t("cancelReminderContext") }}
           </ActionButton>
           <ActionButton variant="link" size="xs" @click="clearContextFilters">{{ t("clearContext") }}</ActionButton>
         </div>
@@ -524,6 +546,18 @@
     />
 
     <QuickCreateManagedDialog
+      v-model="showReminderDialog"
+      config-key="reminder"
+      :locale="activeLocale"
+      :options-map="communicationQuickOptionsMap"
+      :title-override="t('quickReminder')"
+      :subtitle-override="t('quickReminderSubtitle')"
+      :show-save-and-open="false"
+      :before-open="prepareReminderDialog"
+      :success-handlers="reminderSuccessHandlers"
+    />
+
+    <QuickCreateManagedDialog
       v-if="canCreateQuickMessage"
       v-model="showQuickMessageDialog"
       config-key="communication_message"
@@ -585,8 +619,12 @@ const copy = {
     quickCampaignSubtitle: "Segmente bagli kampanya olustur",
     quickCallNote: "Arama Notu",
     quickCallNoteSubtitle: "Telefon gorusmesini not olarak kaydet",
+    quickReminder: "Hatirlatici",
+    quickReminderSubtitle: "Musteri veya kayit icin zaman bazli hatirlatici ekle",
     closeAssignmentContext: "Atamayi Kapat",
     clearCallFollowUpContext: "Arama Takibini Temizle",
+    completeReminderContext: "Hatirlaticiyi Tamamla",
+    cancelReminderContext: "Hatirlaticiyi Iptal Et",
     quickMessage: "Hizli Iletisim",
     quickMessageSubtitle: "Taslak kaydet veya secili kanal ile hemen gonder",
     saveDraft: "Taslak Kaydet",
@@ -685,8 +723,12 @@ const copy = {
     quickCampaignSubtitle: "Create a segment-based campaign",
     quickCallNote: "Call Note",
     quickCallNoteSubtitle: "Log a phone conversation as an interaction note",
+    quickReminder: "Reminder",
+    quickReminderSubtitle: "Create a time-based reminder for the current context",
     closeAssignmentContext: "Close Assignment",
     clearCallFollowUpContext: "Clear Call Follow-up",
+    completeReminderContext: "Complete Reminder",
+    cancelReminderContext: "Cancel Reminder",
     quickMessage: "Quick Message",
     quickMessageSubtitle: "Save as draft or send immediately",
     saveDraft: "Save Draft",
@@ -783,6 +825,7 @@ const showCampaignDialog = ref(false);
 const showCampaignRunDialog = ref(false);
 const showSegmentPreviewDialog = ref(false);
 const showCallNoteDialog = ref(false);
+const showReminderDialog = ref(false);
 const showQuickMessageDialog = ref(false);
 const operationError = ref("");
 const campaignRunSelection = ref("");
@@ -947,6 +990,12 @@ const canCloseAssignmentContext = computed(
 const canClearCallNoteContext = computed(
   () => filters.referenceDoctype === "AT Call Note" && Boolean(String(filters.referenceName || "").trim())
 );
+const canCompleteReminderContext = computed(
+  () => filters.referenceDoctype === "AT Reminder" && Boolean(String(filters.referenceName || "").trim())
+);
+const canCancelReminderContext = computed(
+  () => filters.referenceDoctype === "AT Reminder" && Boolean(String(filters.referenceName || "").trim())
+);
 const statusOptions = computed(() => [
   { value: "Queued", label: t("queued") },
   { value: "Processing", label: t("processing") },
@@ -966,6 +1015,7 @@ const referenceDoctypeOptions = computed(() => [
   { value: "AT Policy", label: referenceTypeLabel("AT Policy") },
   { value: "AT Claim", label: referenceTypeLabel("AT Claim") },
   { value: "AT Payment", label: referenceTypeLabel("AT Payment") },
+  { value: "AT Reminder", label: referenceTypeLabel("AT Reminder") },
   { value: "AT Renewal Task", label: referenceTypeLabel("AT Renewal Task") },
   { value: "AT Accounting Entry", label: referenceTypeLabel("AT Accounting Entry") },
   { value: "AT Reconciliation Item", label: referenceTypeLabel("AT Reconciliation Item") },
@@ -1015,6 +1065,11 @@ const quickMessageSuccessHandlers = {
 };
 const callNoteSuccessHandlers = {
   "call-notes-list": async () => {},
+};
+const reminderSuccessHandlers = {
+  "reminders-list": async () => {
+    await reloadSnapshot();
+  },
 };
 const segmentSuccessHandlers = {
   "segments-list": async () => {},
@@ -1265,6 +1320,44 @@ async function clearCallNoteContext() {
   }
 }
 
+async function completeReminderContext() {
+  if (!canCompleteReminderContext.value) return;
+  operationError.value = "";
+  try {
+    await auxMutationResource.submit({
+      doctype: "AT Reminder",
+      name: filters.referenceName,
+      data: {
+        status: "Done",
+      },
+    });
+    await reloadSnapshot();
+  } catch (error) {
+    operationError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedAction")
+      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
+  }
+}
+
+async function cancelReminderContext() {
+  if (!canCancelReminderContext.value) return;
+  operationError.value = "";
+  try {
+    await auxMutationResource.submit({
+      doctype: "AT Reminder",
+      name: filters.referenceName,
+      data: {
+        status: "Cancelled",
+      },
+    });
+    await reloadSnapshot();
+  } catch (error) {
+    operationError.value = isPermissionDeniedError(error)
+      ? t("permissionDeniedAction")
+      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
+  }
+}
+
 function canRetryOutboxRow(row) {
   return canRetryOutboxAction.value && ["Failed", "Dead"].includes(String(row?.status || ""));
 }
@@ -1394,6 +1487,15 @@ async function prepareCallNoteDialog({ form }) {
   if (filters.referenceDoctype === "AT Policy" && filters.referenceName && !form.policy) form.policy = filters.referenceName;
   if (filters.referenceDoctype === "AT Claim" && filters.referenceName && !form.claim) form.claim = filters.referenceName;
   if (!form.note_at) form.note_at = new Date().toISOString().slice(0, 16);
+}
+
+async function prepareReminderDialog({ form }) {
+  if (filters.customer && !form.customer) form.customer = filters.customer;
+  if (filters.referenceDoctype && !form.source_doctype) form.source_doctype = filters.referenceDoctype;
+  if (filters.referenceName && !form.source_name) form.source_name = filters.referenceName;
+  if (filters.referenceDoctype === "AT Policy" && filters.referenceName && !form.policy) form.policy = filters.referenceName;
+  if (filters.referenceDoctype === "AT Claim" && filters.referenceName && !form.claim) form.claim = filters.referenceName;
+  if (!form.remind_at) form.remind_at = new Date().toISOString().slice(0, 16);
 }
 
 function hasRouteContextQuery() {

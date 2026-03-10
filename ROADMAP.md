@@ -1,176 +1,176 @@
-# Acentem Takipte - Yol Haritas� (v1)
+﻿# Acentem Takipte - Yol Haritasï¿½ (v1)
 
-**Referans:** 26 May�s 2026 tarihinde yap�lan kalite ve g�venlik incelemesi ��kt�lar�na g�re haz�rlanm��t�r.
+**Referans:** 26 Mayï¿½s 2026 tarihinde yapï¿½lan kalite ve gï¿½venlik incelemesi ï¿½ï¿½ktï¿½larï¿½na gï¿½re hazï¿½rlanmï¿½ï¿½tï¿½r.
 
-## Ama�
-Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�lebilir hale getirmek; �nce g�venlik ve b�t�nl�k risklerini kapatmak, ard�ndan mimari/performans/deneyim iyile�tirmeleri yapmak.
+## Amaï¿½
+Repoyu endï¿½stri standartlarï¿½nda gï¿½venli, ï¿½lï¿½eklenebilir ve sï¿½rdï¿½rï¿½lebilir hale getirmek; ï¿½nce gï¿½venlik ve bï¿½tï¿½nlï¿½k risklerini kapatmak, ardï¿½ndan mimari/performans/deneyim iyileï¿½tirmeleri yapmak.
 
-## Uygulama Durumu (G�ncel)
+## Uygulama Durumu (Gï¿½ncel)
 
-### Son Durak / Kald���m Yer
-- **Aktif dalga:** **Dalga 1 � G�venlik, Yetkilendirme ve Eri�im Kontratlar�**
+### Son Durak / Kaldï¿½ï¿½ï¿½m Yer
+- **Aktif dalga:** **Dalga 1 ï¿½ Gï¿½venlik, Yetkilendirme ve Eriï¿½im Kontratlarï¿½**
 - **Mevcut odak:** **Faz 4 Customer 360 ve Productized Policy Foundation; backend Customer 360 payload service + API endpoint iskeleti tamamlandi; CustomerDetail.vue tek payload entegrasyonu, odeme/hasar/yenileme bloklari, segment/skor, capraz satis ve related customer ilk turu alindi; `AT Customer Relation` ve `AT Insured Asset` ile ilk baglanti veri modeli acildi; relation/asset akislarinin test kapsami eklendi; segment/skor backend kurali aktif police, premium, hasar, geciken odeme ve iptal gecmisi ile genisletildi; yeni skor alanlari UI kartlarinda gorunur hale getirildi; sonraki adim relation/asset delete akisini acmak**.
 
-### Tamamlanan Mod�l (Bu Tur)
+### Tamamlanan Modï¿½l (Bu Tur)
 - `acentem_takipte/acentem_takipte/api/dashboard_v2/queries_kpis.py`
-  - `period_comparison` tabanl� kar��la�t�rma penceresi ��z�m�
-  - KPI kartlar� i�in `comparison.cards` ve `comparison.delta` �retimi
+  - `period_comparison` tabanlï¿½ karï¿½ï¿½laï¿½tï¿½rma penceresi ï¿½ï¿½zï¿½mï¿½
+  - KPI kartlarï¿½ iï¿½in `comparison.cards` ve `comparison.delta` ï¿½retimi
 - `acentem_takipte/acentem_takipte/api/dashboard.py`
-  - `get_dashboard_kpis` i�inde `period_comparison`, `compare_from_date`, `compare_to_date` ge�i�i
-  - bo� payload kontrat�na `comparison` alan�
+  - `get_dashboard_kpis` iï¿½inde `period_comparison`, `compare_from_date`, `compare_to_date` geï¿½iï¿½i
+  - boï¿½ payload kontratï¿½na `comparison` alanï¿½
 - `acentem_takipte/acentem_takipte/tests/test_dashboard_contract_smoke.py`
-  - `comparison` alan� kontrat testi
+  - `comparison` alanï¿½ kontrat testi
 - `acentem_takipte/acentem_takipte/tests/test_dashboard_wave4_builders.py`
   - builder seviyesinde previous-period delta testi
 - `frontend/src/pages/Dashboard.vue`
-  - KPI kartlar�na `period_comparison` �a�r�s� ve comparison hint fallback ba�land�
+  - KPI kartlarï¿½na `period_comparison` ï¿½aï¿½rï¿½sï¿½ ve comparison hint fallback baï¿½landï¿½
 - `acentem_takipte/acentem_takipte/services/report_registry.py`
-  - `agent_performance` raporu i�in scorecard kolonlar� geni�letildi
+  - `agent_performance` raporu iï¿½in scorecard kolonlarï¿½ geniï¿½letildi
 - `acentem_takipte/acentem_takipte/services/reporting.py`
-  - �al��an bazl� karne i�in d�n���m/yenileme ba�ar� metrikleri eklendi
+  - ï¿½alï¿½ï¿½an bazlï¿½ karne iï¿½in dï¿½nï¿½ï¿½ï¿½m/yenileme baï¿½arï¿½ metrikleri eklendi
 - `frontend/src/pages/Reports.vue`
-  - yeni karne kolon etiketleri ve y�zde formatlamas�
+  - yeni karne kolon etiketleri ve yï¿½zde formatlamasï¿½
 - `acentem_takipte/acentem_takipte/tests/test_reporting_service.py`
-  - agent performance SQL s�zle�mesi geni�letildi
+  - agent performance SQL sï¿½zleï¿½mesi geniï¿½letildi
 - `acentem_takipte/acentem_takipte/tests/test_report_registry.py`
-  - report registry kolon kontrat� testi
+  - report registry kolon kontratï¿½ testi
 - `acentem_takipte/acentem_takipte/services/reporting.py`
-  - m��teri segmentasyonu i�in claim ge�mi�i ve sadakat segmenti k�r�l�mlar�
+  - mï¿½ï¿½teri segmentasyonu iï¿½in claim geï¿½miï¿½i ve sadakat segmenti kï¿½rï¿½lï¿½mlarï¿½
 - `frontend/src/pages/Reports.vue`
-  - segmentasyon raporu i�in temsilci filtresi ve yeni kolon etiketleri
-  - agent performance ve customer segmentation i�in rapor-�zel summary kartlar�
+  - segmentasyon raporu iï¿½in temsilci filtresi ve yeni kolon etiketleri
+  - agent performance ve customer segmentation iï¿½in rapor-ï¿½zel summary kartlarï¿½
 - `acentem_takipte/acentem_takipte/api/reports.py`
   - `get_scheduled_report_configs`
   - `save_scheduled_report_config`
   - `remove_scheduled_report_config`
   - `_build_report_payload_safe` hata sarma
 - `frontend/src/pages/Reports.vue`
-  - System Manager / Administrator i�in �Zamanlanm�� Raporlar� alan�
-  - `scheduledReports`, `scheduledLoading`, `scheduledRunLoading` state�leri
-  - listelendirme, manuel tetikleme, hata g�sterimi
+  - System Manager / Administrator iï¿½in ï¿½Zamanlanmï¿½ï¿½ Raporlarï¿½ alanï¿½
+  - `scheduledReports`, `scheduledLoading`, `scheduledRunLoading` stateï¿½leri
+  - listelendirme, manuel tetikleme, hata gï¿½sterimi
 - `frontend/src/components/reports/ScheduledReportsManager.vue`
-  - create/update/delete form ak���
-  - client-side validation ve silme onay�
+  - create/update/delete form akï¿½ï¿½ï¿½
+  - client-side validation ve silme onayï¿½
 - `frontend/src/components/reports/ScheduledReportsManager.test.js`
   - validation, save emit ve delete confirmation testleri
 - `acentem_takipte/acentem_takipte/tests/test_reports_scheduled_configs.py`
-  - endpoint summary, CRUD �a�r�lar� ve normalizasyon testleri
+  - endpoint summary, CRUD ï¿½aï¿½rï¿½larï¿½ ve normalizasyon testleri
 - `acentem_takipte/acentem_takipte/services/scheduled_reports.py`
-  - outbox queue sonucu i�in `queued/failed/outboxes` �zeti
+  - outbox queue sonucu iï¿½in `queued/failed/outboxes` ï¿½zeti
 - `acentem_takipte/acentem_takipte/tasks.py`
-  - queued scheduled report outbox kay�tlar�n� ayn� job i�inde dispatch etme
+  - queued scheduled report outbox kayï¿½tlarï¿½nï¿½ aynï¿½ job iï¿½inde dispatch etme
 - `acentem_takipte/acentem_takipte/tests/test_scheduled_reports.py`
-  - outbox queue ba�ar�/ba�ar�s�zl�k �zet testleri
+  - outbox queue baï¿½arï¿½/baï¿½arï¿½sï¿½zlï¿½k ï¿½zet testleri
 - `acentem_takipte/acentem_takipte/tests/test_tasks_scheduled_reports.py`
-  - scheduled job i�i outbox dispatch �zeti testi
+  - scheduled job iï¿½i outbox dispatch ï¿½zeti testi
 - `acentem_takipte/acentem_takipte/tests/test_reports_api.py`
-  - getter auth/permission zinciri `build_report_payload` s�zle�mesine ta��nd�
+  - getter auth/permission zinciri `build_report_payload` sï¿½zleï¿½mesine taï¿½ï¿½ndï¿½
   - `agent_performance` ve `customer_segmentation` export contract testleri eklendi
-  - `_build_report_payload_safe` limit normalizasyonu test alt�na al�nd�
+  - `_build_report_payload_safe` limit normalizasyonu test altï¿½na alï¿½ndï¿½
 - `acentem_takipte/acentem_takipte/api/dashboard.py`
   - `_get_scoped_policy_names(...)` request-scope cache helper'i eklendi
-  - renewal card, renewal preview ve renewal bucket ak��lar�ndaki tekrar eden `AT Policy` name sorgular� tek cache alt�nda topland�
-  - `_get_request_cache_bucket(...)` ile cards, trend, renewal bucket ve reconciliation summary hesaplar� request-cache alt�na al�nd�
+  - renewal card, renewal preview ve renewal bucket akï¿½ï¿½larï¿½ndaki tekrar eden `AT Policy` name sorgularï¿½ tek cache altï¿½nda toplandï¿½
+  - `_get_request_cache_bucket(...)` ile cards, trend, renewal bucket ve reconciliation summary hesaplarï¿½ request-cache altï¿½na alï¿½ndï¿½
 
-### En Son B�rak�lan Nokta (Sonraki Hamle)
-- Dalga 7 kullan�c� karar�yla tamamland� olarak kapat�ld�
-- Dalga 1 i�inde Gorev 1.1 rol/oturum dok�mantasyonu ve regression checklist tamamland�
-- `reports.py`, `quick_create.py`, `admin_jobs.py`, `communication.py`, `accounting.py`, `seed.py`, `smoke.py` auth kontrat matrisi ��kar�ld� ve helper diline hizaland�
+### En Son Bï¿½rakï¿½lan Nokta (Sonraki Hamle)
+- Dalga 7 kullanï¿½cï¿½ kararï¿½yla tamamlandï¿½ olarak kapatï¿½ldï¿½
+- Dalga 1 iï¿½inde Gorev 1.1 rol/oturum dokï¿½mantasyonu ve regression checklist tamamlandï¿½
+- `reports.py`, `quick_create.py`, `admin_jobs.py`, `communication.py`, `accounting.py`, `seed.py`, `smoke.py` auth kontrat matrisi ï¿½ï¿½karï¿½ldï¿½ ve helper diline hizalandï¿½
 - Ortak karar:
   - read -> `assert_read_access`
   - mutation -> `assert_mutation_access`
   - doc-level -> `assert_doc_permission`
-  - demo/smoke -> feature-flag + create/delete ayr�m�
-- Faz 1.3 ilk uygulama dilimi tamamland�:
-  - `utils/logging.py` i�ine `build_redacted_log_message(...)` ve `log_redacted_error(...)` eklendi
-  - hassas anahtar s�zl��� recipient/policy/tax varyasyonlar�yla geni�letildi
-  - `api/reports.py`, `communication.py`, `services/scheduled_reports.py`, `accounting.py` hata loglar� redacted helper'a ta��nd�
-  - `tests/test_logging_redaction.py` ve `tests/test_reports_api.py` kontrat� geni�letildi
-- Faz 1.3 ikinci uygulama dilimi tamamland�:
-  - `notifications.py`, `doctype/at_claim/at_claim.py`, `doctype/at_policy/at_policy.py`, `doctype/at_renewal_task/at_renewal_task.py` notification/controller hata zinciri redacted helper'a ta��nd�
-  - `providers/whatsapp_meta.py` provider dispatch hata logu structured redaction format�na �ekildi
-  - operasyonel PII ta��yabilecek ham `frappe.log_error(...)` y�zeyleri temizlendi
-- Faz 1.3 ���nc� uygulama dilimi tamamland�:
-  - `api/dashboard.py` access log fetch error redacted helper'a ta��nd�
-  - `doctype/at_customer/at_customer.py` customer access log error redacted helper'a ta��nd�
-  - `utils/assets.py` teknik altyap� istisnas� olarak ayr�ld�
-- Faz 1.3 plan seviyesinde kapat�ld�
-- Faz 2.1 ilk uygulama dilimi tamamland�:
-  - `dashboard.py` i�inde request-scope policy cache eklendi
-  - renewal kartlar�, renewal preview ve renewal bucket hesaplar�nda tekrar eden policy lookup azalt�ld�
-- Faz 2.1 ikinci uygulama dilimi tamamland�:
-  - cards, commission trend, renewal bucket ve reconciliation summary hesaplar� request-cache ile tekrar kullan�l�r hale getirildi
-- Faz 2.1 sorgu envanteri ��kar�ld�:
-  - s�cak tablolar: `AT Policy`, `AT Payment`, `AT Renewal Task`, `AT Claim`, `AT Lead`, `AT Reconciliation Item`
-  - composite index adaylar� belirlendi
-  - kalan maliyet oda�� raw SQL aggregate ve preview sorgular� olarak netle�ti
-- Faz 2.1 ���nc� uygulama dilimi tamamland�:
+  - demo/smoke -> feature-flag + create/delete ayrï¿½mï¿½
+- Faz 1.3 ilk uygulama dilimi tamamlandï¿½:
+  - `utils/logging.py` iï¿½ine `build_redacted_log_message(...)` ve `log_redacted_error(...)` eklendi
+  - hassas anahtar sï¿½zlï¿½ï¿½ï¿½ recipient/policy/tax varyasyonlarï¿½yla geniï¿½letildi
+  - `api/reports.py`, `communication.py`, `services/scheduled_reports.py`, `accounting.py` hata loglarï¿½ redacted helper'a taï¿½ï¿½ndï¿½
+  - `tests/test_logging_redaction.py` ve `tests/test_reports_api.py` kontratï¿½ geniï¿½letildi
+- Faz 1.3 ikinci uygulama dilimi tamamlandï¿½:
+  - `notifications.py`, `doctype/at_claim/at_claim.py`, `doctype/at_policy/at_policy.py`, `doctype/at_renewal_task/at_renewal_task.py` notification/controller hata zinciri redacted helper'a taï¿½ï¿½ndï¿½
+  - `providers/whatsapp_meta.py` provider dispatch hata logu structured redaction formatï¿½na ï¿½ekildi
+  - operasyonel PII taï¿½ï¿½yabilecek ham `frappe.log_error(...)` yï¿½zeyleri temizlendi
+- Faz 1.3 ï¿½ï¿½ï¿½ncï¿½ uygulama dilimi tamamlandï¿½:
+  - `api/dashboard.py` access log fetch error redacted helper'a taï¿½ï¿½ndï¿½
+  - `doctype/at_customer/at_customer.py` customer access log error redacted helper'a taï¿½ï¿½ndï¿½
+  - `utils/assets.py` teknik altyapï¿½ istisnasï¿½ olarak ayrï¿½ldï¿½
+- Faz 1.3 plan seviyesinde kapatï¿½ldï¿½
+- Faz 2.1 ilk uygulama dilimi tamamlandï¿½:
+  - `dashboard.py` iï¿½inde request-scope policy cache eklendi
+  - renewal kartlarï¿½, renewal preview ve renewal bucket hesaplarï¿½nda tekrar eden policy lookup azaltï¿½ldï¿½
+- Faz 2.1 ikinci uygulama dilimi tamamlandï¿½:
+  - cards, commission trend, renewal bucket ve reconciliation summary hesaplarï¿½ request-cache ile tekrar kullanï¿½lï¿½r hale getirildi
+- Faz 2.1 sorgu envanteri ï¿½ï¿½karï¿½ldï¿½:
+  - sï¿½cak tablolar: `AT Policy`, `AT Payment`, `AT Renewal Task`, `AT Claim`, `AT Lead`, `AT Reconciliation Item`
+  - composite index adaylarï¿½ belirlendi
+  - kalan maliyet odaï¿½ï¿½ raw SQL aggregate ve preview sorgularï¿½ olarak netleï¿½ti
+- Faz 2.1 ï¿½ï¿½ï¿½ncï¿½ uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/patches.txt`
   - `acentem_takipte/acentem_takipte/patches/v2026_03_09_add_dashboard_hot_path_indexes.py`
   - ilk hot-path composite index seti migration patch'i olarak eklendi
-- Faz 2.1 d�rd�nc� uygulama dilimi tamamland�:
+- Faz 2.1 dï¿½rdï¿½ncï¿½ uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/api/dashboard_v2/queries_kpis.py`
   - `acentem_takipte/acentem_takipte/api/dashboard_v2/tab_payload.py`
-  - tekrar eden `where/value` �retimleri yerel cache ile sadele�tirildi
-- Faz 2.1 be�inci uygulama dilimi tamamland�:
+  - tekrar eden `where/value` ï¿½retimleri yerel cache ile sadeleï¿½tirildi
+- Faz 2.1 beï¿½inci uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/patches.txt`
   - `acentem_takipte/acentem_takipte/patches/v2026_03_09_add_dashboard_secondary_indexes.py`
   - insurance company, policy/status ve reconciliation desenleri icin ikinci index patch'i eklendi
-- Faz 2.1 plan seviyesinde kapat�ld�:
+- Faz 2.1 plan seviyesinde kapatï¿½ldï¿½:
   - request-cache
   - where/value cache
   - iki asamali dashboard index patch seti
 - Faz 2.2 ilk envanter cikarildi:
   - `tasks.py` icinde enqueue edilen ve senkron kalan agir bloklar ayrildi
   - `hooks.py` icinde scheduler/doc-event tetikleyici frekanslari ve fan-out riski notlandi
-- Faz 2.2 ilk refaktor tamamland�:
+- Faz 2.2 ilk refaktor tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/tasks.py`
   - scheduled report outbox dispatch ayni job icinden cikarilip ayri queue fan-out modeline tasindi
   - `outbox_enqueued` ve `outbox_queue_failed` ozeti eklendi
-- Faz 2.2 ikinci refaktor tamamland�:
+- Faz 2.2 ikinci refaktor tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/accounting.py`
   - `sync_doc_event` inline muhasebe senkronundan queue + debounce modeline tasindi
   - ayni belge icin kisa sureli tekrar update'ler tek job'a indirildi
-- Faz 2.2 plan seviyesinde kapat�ld�:
+- Faz 2.2 plan seviyesinde kapatï¿½ldï¿½:
   - scheduled reports fan-out
   - accounting doc-event debounce
   - queue/idempotency riskleri ilk turda sertlestirildi
 - Faz 2.3 ilk envanter baslatildi:
   - `frontend/src/pages/Reports.vue`
   - `frontend/src/pages/Dashboard.vue`
-- Faz 2.3 ilk uygulama dilimi tamamland�:
+- Faz 2.3 ilk uygulama dilimi tamamlandï¿½:
   - `frontend/src/pages/Dashboard.vue`
   - tab/range/branch degisimleri `300ms` debounced reload kapisina toplandi
   - manuel refresh ve create-lead sonrasi yenileme anlik birakildi
-- Faz 2.3 ikinci uygulama dilimi tamamland�:
+- Faz 2.3 ikinci uygulama dilimi tamamlandï¿½:
   - `frontend/src/pages/Reports.vue`
   - branch ve report key degisimi `300ms` debounce ile toplandi
   - manuel apply/refresh/export akislarina dokunulmadi
-- Faz 2.3 plan seviyesinde kapat�ld�
-- Faz 3.1 ilk uygulama dilimi tamamland�:
+- Faz 2.3 plan seviyesinde kapatï¿½ldï¿½
+- Faz 3.1 ilk uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/services/quick_create.py`
   - `create_quick_customer`, `create_quick_lead`, `create_quick_policy` persistence bolumu service katmanina tasindi
   - `api/quick_create.py` bu akislar icin delegation modeline cekildi
-- Faz 3.1 ikinci uygulama dilimi tamamland�:
+- Faz 3.1 ikinci uygulama dilimi tamamlandï¿½:
   - `claim`, `payment`, `renewal_task` quick create akislarinin persistence bolumu de `services/quick_create.py` altina tasindi
   - ilk alti operasyonel quick create endpoint'i service delegation modeline gecmis oldu
-- Faz 3.1 ���nc� uygulama dilimi tamamland�:
+- Faz 3.1 ï¿½ï¿½ï¿½ncï¿½ uygulama dilimi tamamlandï¿½:
   - `services/quick_create.py` icinde ortak `_insert_doc(...)` helper'i eklendi
   - `update_quick_aux_record` persistence bolumu de service katmanina devredildi
 - Faz 3.1 ara karari yazildi:
   - request parsing, field normalization ve link validation API katmaninda kalacak
   - persistence ve sonuc sozlesmesi service katmaninda kalacak
   - sonraki extraction adaylari: `api/reports.py`, `api/admin_jobs.py`, `api/accounting.py`
-- Faz 3.1 dorduncu uygulama dilimi tamamland�:
+- Faz 3.1 dorduncu uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/services/reports_runtime.py`
   - `api/reports.py` icindeki payload build/export/config orchestration service katmanina tasindi
-- Faz 3.1 besinci uygulama dilimi tamamland�:
+- Faz 3.1 besinci uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/services/admin_jobs.py`
   - `api/admin_jobs.py` icindeki action routing / dispatch mapping service katmanina tasindi
-- Faz 3.1 altinci uygulama dilimi tamamland�:
+- Faz 3.1 altinci uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/services/accounting_runtime.py`
   - `api/accounting.py` icindeki reconciliation workbench read orchestration service katmanina tasindi
-- Faz 3.1 plan seviyesinde kapat�ld�:
+- Faz 3.1 plan seviyesinde kapatï¿½ldï¿½:
   - quick_create
   - reports runtime
   - admin_jobs dispatch
@@ -180,316 +180,316 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - report getter/export endpoint ciftleri
   - admin/accounting mutation access wrapper kaliplari
   - quick_create normalization yardimcilari
-- Faz 3.2 ilk uygulama dilimi tamamland�:
+- Faz 3.2 ilk uygulama dilimi tamamlandï¿½:
   - `api/reports.py`
   - report getter/export endpoint ciftleri ortak helper altinda toplandi
-- Faz 3.2 ikinci uygulama dilimi tamamland�:
+- Faz 3.2 ikinci uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/api/mutation_access.py`
   - `api/admin_jobs.py` ve `api/accounting.py` icindeki write-mutation wrapper deseni ortak helper altinda toplandi
 - Faz 3.2 karar notu yazildi:
   - `quick_create.py` normalization yardimcilari request-contract ve doctype-ozel validation bagimliligi nedeniyle API katmaninda birakildi
-- Faz 3.2 plan seviyesinde kapat�ld�
-- Faz 3.3 ilk uygulama dilimi tamamland�:
+- Faz 3.2 plan seviyesinde kapatï¿½ldï¿½
+- Faz 3.3 ilk uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/utils/financials.py`
   - `AT Offer` ve `AT Policy` finans tutarlilik dogrulamasi ortak helper altina tasindi
-- Faz 3.3 ikinci uygulama dilimi tamamland�:
+- Faz 3.3 ikinci uygulama dilimi tamamlandï¿½:
   - `acentem_takipte/acentem_takipte/utils/commissions.py`
   - `commission_amount` kanonik alan olarak sabitlendi
   - Python tarafindaki legacy `commission` fallback'leri helper arkasina alindi
   - `accounting.py` ve `doctype/at_offer/at_offer.py` bu helper'a hizalandi
-- Faz 3.3 ucuncu uygulama dilimi tamamland�:
+- Faz 3.3 ucuncu uygulama dilimi tamamlandï¿½:
   - `utils/commissions.py` altina `commission_sql_expr(...)` eklendi
   - `api/dashboard.py`, `api/dashboard_v2/queries_kpis.py`, `services/reporting.py` icindeki sicak SQL fallback ifadeleri ortak helper'a tasindi
-- Faz 3.3 dorduncu uygulama dilimi tamamland�:
+- Faz 3.3 dorduncu uygulama dilimi tamamlandï¿½:
   - `api/seed.py` ve `api/smoke.py` demo payload'lari `commission_amount` alanina cekildi
   - `doctype/at_policy_endorsement/at_policy_endorsement.py` legacy `commission` payload'ini kabul etmeye devam ederken policy uzerinde aynalama helper'i ile normalize edildi
-- Faz 3.3 besinci uygulama dilimi tamamland�:
+- Faz 3.3 besinci uygulama dilimi tamamlandï¿½:
   - `utils/statuses.py` altinda lead/policy/claim/renewal/accounting icin `VALID` sabitleri genisletildi
   - `api/quick_create.py` icindeki literal status setleri merkezi enum sabitlerine baglandi
-- Faz 3.3 altinci uygulama dilimi tamamland�:
+- Faz 3.3 altinci uygulama dilimi tamamlandï¿½:
   - `utils/notes.py` altina `normalize_note_text(...)` eklendi
   - `api/quick_create.py` icindeki tekrar eden notes trim/none deseni ortak helper'a tasindi
   - `accounting.py` icindeki reconciliation notes uzunluk kisiti ayni helper ile normalize edildi
-- Faz 3.3 plan seviyesinde kapat�ld�:
+- Faz 3.3 plan seviyesinde kapatï¿½ldï¿½:
   - finans, commission, status ve notes alanlarindaki tekrar eden domain kurallari ortak helper/sabit altina toplandi
-  - bilincli istisna: DocType JSON seviyesindeki legacy `commission` alan� backward compatibility icin korunuyor
-- Faz 3.4 ilk uygulama dilimi tamamland�:
+  - bilincli istisna: DocType JSON seviyesindeki legacy `commission` alanï¿½ backward compatibility icin korunuyor
+- Faz 3.4 ilk uygulama dilimi tamamlandï¿½:
   - `renewal/service.py`, `renewal/pipeline.py`, `renewal/telemetry.py` eklendi
   - `tasks.py` icindeki renewal task create job orchestration'i pipeline katmanina tasindi
   - `doctype/at_renewal_task/at_renewal_task.py` icindeki unique key ve notification side-effect'i renewal service/pipeline altina cekildi
-- Faz 3.4 ikinci uygulama dilimi tamamland�:
+- Faz 3.4 ikinci uygulama dilimi tamamlandï¿½:
   - stale renewal task remediation servisi ve job'u eklendi
   - `AT Renewal Task` status transition guard'i merkezilestirildi
   - `admin_jobs.py` ve `hooks.py` stale remediation job'unu gorebilir/tetikleyebilir hale geldi
-- Faz 3.4 ucuncu uygulama dilimi tamamland�:
+- Faz 3.4 ucuncu uygulama dilimi tamamlandï¿½:
   - yeni `AT Renewal Outcome` DocType eklendi
   - `AT Renewal Task` uzerine `outcome_record` baglantisi eklendi
   - terminal renewal task statulerinde outcome sync iskeleti eklendi
 - Dil/locale uyumluluk notu:
   - DocType JSON field label ve description alanlarinda mevcut uygulama deseni korunacak
-  - `Kullan�c� Notu` / `Sistem Notu` gibi mevcut T�rk�e alan adlari yeni DocType'larda ayni sekilde devam edecek
-  - backend exception ve teknik mesajlar mod�l�n mevcut dili neyse onunla tutarl� kalacak; bozuk encoding (`�`, `�`) kabul edilmeyecek
-- S�radaki i�: lost reason / competitor alanlarini UI ve job akislariyla beslemek, ardindan retention metri�ini dashboard'a ba�lamak
-### Faz 16 Smoke Checklist (Aktif Haz�rl�k)
+  - `Kullanï¿½cï¿½ Notu` / `Sistem Notu` gibi mevcut Tï¿½rkï¿½e alan adlari yeni DocType'larda ayni sekilde devam edecek
+  - backend exception ve teknik mesajlar modï¿½lï¿½n mevcut dili neyse onunla tutarlï¿½ kalacak; bozuk encoding (`ï¿½`, `ï¿½`) kabul edilmeyecek
+- Sï¿½radaki iï¿½: lost reason / competitor alanlarini UI ve job akislariyla beslemek, ardindan retention metriï¿½ini dashboard'a baï¿½lamak
+### Faz 16 Smoke Checklist (Aktif Hazï¿½rlï¿½k)
 - `Reports.vue`
-  - policy list, payment status, renewal performance, claim loss ratio ekran y�klenmesi
-  - `agent_performance` ve `customer_segmentation` summary kartlar�n�n veriyle a��lmas�
-  - scheduled reports admin alan�n�n yaln�zca `System Manager` / `Administrator` i�in g�r�nmesi
+  - policy list, payment status, renewal performance, claim loss ratio ekran yï¿½klenmesi
+  - `agent_performance` ve `customer_segmentation` summary kartlarï¿½nï¿½n veriyle aï¿½ï¿½lmasï¿½
+  - scheduled reports admin alanï¿½nï¿½n yalnï¿½zca `System Manager` / `Administrator` iï¿½in gï¿½rï¿½nmesi
 - `api/reports.py`
-  - t�m report getter endpoint'lerinde `report_key`, `columns`, `rows`, `filters` s�zle�mesi korunmal�
-  - export endpoint'lerinde `filename`, `filecontent`, `type`, `content_type` download s�zle�mesi korunmal�
+  - tï¿½m report getter endpoint'lerinde `report_key`, `columns`, `rows`, `filters` sï¿½zleï¿½mesi korunmalï¿½
+  - export endpoint'lerinde `filename`, `filecontent`, `type`, `content_type` download sï¿½zleï¿½mesi korunmalï¿½
 - `services/scheduled_reports.py` + `tasks.py`
-  - scheduled run sonras� outbox �zet alanlar� (`queued`, `failed`, `outbox_sent`, `outbox_failed`) beklenen payload ile d�nmeli
+  - scheduled run sonrasï¿½ outbox ï¿½zet alanlarï¿½ (`queued`, `failed`, `outbox_sent`, `outbox_failed`) beklenen payload ile dï¿½nmeli
 - `api/dashboard_v2/queries_kpis.py` + `frontend/src/pages/Dashboard.vue`
-  - KPI comparison kartlar� previous-period verisini bozmadan g�stermeli
+  - KPI comparison kartlarï¿½ previous-period verisini bozmadan gï¿½stermeli
 
-### Faz 16 Manuel Do�rulama Notlar�
-- Normal operasyon kullan�c�s� ile `/at` alt�nda rapor ekran� a��l�r:
-  - rapor filtresi �al���r
-  - tablo y�klenir
-  - export aksiyonu g�r�n�r
-  - scheduled report admin paneli g�r�nmez
-- Admin kullan�c� ile `/at` alt�nda rapor ekran� a��l�r:
-  - scheduled report listesi g�r�n�r
-  - create/update/delete ak��� form seviyesinde do�rulan�r
+### Faz 16 Manuel Doï¿½rulama Notlarï¿½
+- Normal operasyon kullanï¿½cï¿½sï¿½ ile `/at` altï¿½nda rapor ekranï¿½ aï¿½ï¿½lï¿½r:
+  - rapor filtresi ï¿½alï¿½ï¿½ï¿½r
+  - tablo yï¿½klenir
+  - export aksiyonu gï¿½rï¿½nï¿½r
+  - scheduled report admin paneli gï¿½rï¿½nmez
+- Admin kullanï¿½cï¿½ ile `/at` altï¿½nda rapor ekranï¿½ aï¿½ï¿½lï¿½r:
+  - scheduled report listesi gï¿½rï¿½nï¿½r
+  - create/update/delete akï¿½ï¿½ï¿½ form seviyesinde doï¿½rulanï¿½r
   - manual run aksiyonu hata vermeden summary yeniler
-- Dashboard ekran�nda tarih aral��� de�i�ti�inde:
-  - comparison hint metni do�ru moda g�re de�i�ir
-  - KPI kartlar� bo� veya k�r�k state'e d��mez
+- Dashboard ekranï¿½nda tarih aralï¿½ï¿½ï¿½ deï¿½iï¿½tiï¿½inde:
+  - comparison hint metni doï¿½ru moda gï¿½re deï¿½iï¿½ir
+  - KPI kartlarï¿½ boï¿½ veya kï¿½rï¿½k state'e dï¿½ï¿½mez
 
-### Faz 16 Smoke Bulgular� (09 Mart 2026)
+### Faz 16 Smoke Bulgularï¿½ (09 Mart 2026)
 - `http://localhost:8080/at`
-  - anonim kullan�c� i�in `301 -> /login?redirect-to=/at`
-  - sonu�: route korumas� aktif, authenticated smoke gerekir
+  - anonim kullanï¿½cï¿½ iï¿½in `301 -> /login?redirect-to=/at`
+  - sonuï¿½: route korumasï¿½ aktif, authenticated smoke gerekir
 - `get_session_context`
-  - anonim �a�r�da `403 FORBIDDEN`
-  - sonu�: session endpoint guest eri�imine kapal�
+  - anonim ï¿½aï¿½rï¿½da `403 FORBIDDEN`
+  - sonuï¿½: session endpoint guest eriï¿½imine kapalï¿½
 - `get_policy_list_report`
-  - anonim �a�r�da `403 FORBIDDEN`
-  - sonu�: report endpoint auth korumas� aktif
-- **Blokaj:** ger�ek UI smoke ak��� i�in giri� yap�lm�� operasyon ve admin oturumu gerekiyor
-- **Sonraki ad�m:** authenticated session ile checklist maddelerini uygulamak
+  - anonim ï¿½aï¿½rï¿½da `403 FORBIDDEN`
+  - sonuï¿½: report endpoint auth korumasï¿½ aktif
+- **Blokaj:** gerï¿½ek UI smoke akï¿½ï¿½ï¿½ iï¿½in giriï¿½ yapï¿½lmï¿½ï¿½ operasyon ve admin oturumu gerekiyor
+- **Sonraki adï¿½m:** authenticated session ile checklist maddelerini uygulamak
 
-### Faz 16 Test Ko�um S�ras�
-1. Backend s�zle�me testleri
+### Faz 16 Test Koï¿½um Sï¿½rasï¿½
+1. Backend sï¿½zleï¿½me testleri
    - `acentem_takipte/acentem_takipte/tests/test_reports_api.py`
    - `acentem_takipte/acentem_takipte/tests/test_reporting_service.py`
    - `acentem_takipte/acentem_takipte/tests/test_report_registry.py`
-2. Scheduled report ak���
+2. Scheduled report akï¿½ï¿½ï¿½
    - `acentem_takipte/acentem_takipte/tests/test_reports_scheduled_configs.py`
    - `acentem_takipte/acentem_takipte/tests/test_scheduled_reports.py`
    - `acentem_takipte/acentem_takipte/tests/test_tasks_scheduled_reports.py`
-3. Dashboard kar��la�t�rma regresyonu
+3. Dashboard karï¿½ï¿½laï¿½tï¿½rma regresyonu
    - `acentem_takipte/acentem_takipte/tests/test_dashboard_contract_smoke.py`
    - `acentem_takipte/acentem_takipte/tests/test_dashboard_wave4_builders.py`
-4. Frontend bile�en do�rulamas�
+4. Frontend bileï¿½en doï¿½rulamasï¿½
    - `frontend/src/components/reports/ScheduledReportsManager.test.js`
-5. Son ad�m manuel smoke
+5. Son adï¿½m manuel smoke
    - `Reports.vue`
    - `Dashboard.vue`
 
-### Faz 16 Kapan�� Kriteri
-- Rapor endpoint s�zle�meleri backend testleriyle korunmu� olmal�
-- Scheduled reports admin g�r�n�rl��� ve outbox �zeti regression kapsam�na al�nm�� olmal�
-- Dashboard comparison ve rapor summary kartlar� manuel smoke listesinde do�rulanm�� olmal�
-- Dalga 7 takip dosyalar�nda aktif i� yerine kapan�� ad�m� g�r�nmeli
+### Faz 16 Kapanï¿½ï¿½ Kriteri
+- Rapor endpoint sï¿½zleï¿½meleri backend testleriyle korunmuï¿½ olmalï¿½
+- Scheduled reports admin gï¿½rï¿½nï¿½rlï¿½ï¿½ï¿½ ve outbox ï¿½zeti regression kapsamï¿½na alï¿½nmï¿½ï¿½ olmalï¿½
+- Dashboard comparison ve rapor summary kartlarï¿½ manuel smoke listesinde doï¿½rulanmï¿½ï¿½ olmalï¿½
+- Dalga 7 takip dosyalarï¿½nda aktif iï¿½ yerine kapanï¿½ï¿½ adï¿½mï¿½ gï¿½rï¿½nmeli
 
-## Yol Haritas� (�ncelik S�ras�na G�re)
+## Yol Haritasï¿½ (ï¿½ncelik Sï¿½rasï¿½na Gï¿½re)
 
-### Faz 1 � G�venlik ve Yetkilendirme �stikrar�
+### Faz 1 ï¿½ Gï¿½venlik ve Yetkilendirme ï¿½stikrarï¿½
 
-#### 1.1 API yetkilendirme s�zle�mesini tekille�tir
+#### 1.1 API yetkilendirme sï¿½zleï¿½mesini tekilleï¿½tir
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 12 saat
 - **Kapsam:**
   - `acentem_takipte/api/security.py`
   - `acentem_takipte/api/session.py`
   - `acentem_takipte/api/communication.py`
   - `acentem_takipte/api/quick_create.py`
-- **Ama�:** T�m whitelisted endpoint'lerde
-  - Kimlik do�rulama (`Guest` reddi)
-  - Rol/izin kontrol� (`doctype` + `permtype`)
-  - Metot k�s�tlamas� (write-only i�in POST)
-  - Tutarl� hata/silindir/yan�t format�
+- **Amaï¿½:** Tï¿½m whitelisted endpoint'lerde
+  - Kimlik doï¿½rulama (`Guest` reddi)
+  - Rol/izin kontrolï¿½ (`doctype` + `permtype`)
+  - Metot kï¿½sï¿½tlamasï¿½ (write-only iï¿½in POST)
+  - Tutarlï¿½ hata/silindir/yanï¿½t formatï¿½
   uygulamak.
 - **Kabul Kriterleri:**
-  - `allow_guest=True` olmayan endpoint say�s� do�rulan�r.
-  - Her mutasyon endpointinde en az bir action-level izin kontrol� olur.
-  - �Sadece oturum a��k� kontrol� ile �do�ru izne sahip� kontrol� net ayr�l�r.
+  - `allow_guest=True` olmayan endpoint sayï¿½sï¿½ doï¿½rulanï¿½r.
+  - Her mutasyon endpointinde en az bir action-level izin kontrolï¿½ olur.
+  - ï¿½Sadece oturum aï¿½ï¿½kï¿½ kontrolï¿½ ile ï¿½doï¿½ru izne sahipï¿½ kontrolï¿½ net ayrï¿½lï¿½r.
 
-#### 1.2 `ignore_permissions=True` kullan�m�n� g�venli hale getir
+#### 1.2 `ignore_permissions=True` kullanï¿½mï¿½nï¿½ gï¿½venli hale getir
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 10 saat
 - **Kapsam:**
   - `acentem_takipte/api/quick_create.py`
   - `acentem_takipte/api/seed.py`
   - `acentem_takipte/api/smoke.py`
   - `acentem_takipte/doctype/*`
-- **Ama�:** `ignore_permissions=True` yaln�zca kontroll�, teknik zorunlulukl� ve denetimli noktalarda kalmal�.
+- **Amaï¿½:** `ignore_permissions=True` yalnï¿½zca kontrollï¿½, teknik zorunluluklï¿½ ve denetimli noktalarda kalmalï¿½.
 - **Kabul Kriterleri:**
-  - Her `ignore_permissions=True` sat�r� i�in i� gerek�esi ve g�venlik kontrol� belgelenecek.
-  - Gereksiz kullan�m kald�r�l�r veya sistem izni ile de�i�tirilir.
-  - Denetim notlar� ve kod yorumlar�yla izlenebilirlik sa�lan�r.
+  - Her `ignore_permissions=True` satï¿½rï¿½ iï¿½in iï¿½ gerekï¿½esi ve gï¿½venlik kontrolï¿½ belgelenecek.
+  - Gereksiz kullanï¿½m kaldï¿½rï¿½lï¿½r veya sistem izni ile deï¿½iï¿½tirilir.
+  - Denetim notlarï¿½ ve kod yorumlarï¿½yla izlenebilirlik saï¿½lanï¿½r.
 
 #### 1.3 Loglama redaksiyonunu zorunlu hale getir
-- **Durum:** Tamamland�
-- **�ncelik:** Y�ksek
+- **Durum:** Tamamlandï¿½
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 8 saat
 - **Kapsam:**
   - `acentem_takipte/api/security.py`
-  - backend servis loglama katman�
-- **Ama�:** TC kimlik no, poli�e no gibi hassas alanlar�n loglara yaz�lmamas�.
+  - backend servis loglama katmanï¿½
+- **Amaï¿½:** TC kimlik no, poliï¿½e no gibi hassas alanlarï¿½n loglara yazï¿½lmamasï¿½.
 - **Kabul Kriterleri:**
-  - `tc_kimlik_no`, `policy_no`, `iban`, `telefon`, `email` alanlar� maskelenir.
-  - Uygulanan redaksiyon i�in test ve �rnek log kontrol� eklenir.
+  - `tc_kimlik_no`, `policy_no`, `iban`, `telefon`, `email` alanlarï¿½ maskelenir.
+  - Uygulanan redaksiyon iï¿½in test ve ï¿½rnek log kontrolï¿½ eklenir.
 
 ---
 
-### Faz 2 � Performans ve Sorgu Sa�l���
+### Faz 2 ï¿½ Performans ve Sorgu Saï¿½lï¿½ï¿½ï¿½
 
-#### 2.1 Dashboard ve yo�un sorgular�n profilini ��kar ve optimize et
-- **Durum:** Tamamland�
-- **�ncelik:** Y�ksek
+#### 2.1 Dashboard ve yoï¿½un sorgularï¿½n profilini ï¿½ï¿½kar ve optimize et
+- **Durum:** Tamamlandï¿½
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 16 saat
 - **Kapsam:**
   - `acentem_takipte/api/dashboard.py`
   - `acentem_takipte/api/dashboard_v2/queries_kpis.py`
   - `acentem_takipte/api/dashboard_v2/tab_payload.py`
-- **Ama�:** `frappe.db.sql` kullan�lan kritik noktalarda
+- **Amaï¿½:** `frappe.db.sql` kullanï¿½lan kritik noktalarda
   - Filtre indeksleri
-  - Sorgu tekrar�n� azaltma
-  - �nbellek stratejisi
-  ile performans kazan�m� sa�lamak.
+  - Sorgu tekrarï¿½nï¿½ azaltma
+  - ï¿½nbellek stratejisi
+  ile performans kazanï¿½mï¿½ saï¿½lamak.
 - **Kabul Kriterleri:**
-  - En az 5 kritik dashboard endpointi i�in sorgu say�s� d���r�l�r.
-  - B�y�k rapor sorgular� i�in limit/offset ve index uyumu eklenir.
-  - �lgili alanlar i�in index listesi dok�mante edilir.
+  - En az 5 kritik dashboard endpointi iï¿½in sorgu sayï¿½sï¿½ dï¿½ï¿½ï¿½rï¿½lï¿½r.
+  - Bï¿½yï¿½k rapor sorgularï¿½ iï¿½in limit/offset ve index uyumu eklenir.
+  - ï¿½lgili alanlar iï¿½in index listesi dokï¿½mante edilir.
 
-#### 2.2 Arkaplan i�lerini kuyruk stratejisine oturt
-- **Durum:** Tamamland�
-- **�ncelik:** Orta
+#### 2.2 Arkaplan iï¿½lerini kuyruk stratejisine oturt
+- **Durum:** Tamamlandï¿½
+- **ï¿½ncelik:** Orta
 - **Efor:** 8 saat
 - **Kapsam:**
   - `acentem_takipte/tasks.py`
   - `hooks.py` scheduler
-- **Ama�:** Uzun s�ren i�lemler i�in senkron i�leme yerine enqueue standard�n� art�rmak.
+- **Amaï¿½:** Uzun sï¿½ren iï¿½lemler iï¿½in senkron iï¿½leme yerine enqueue standardï¿½nï¿½ artï¿½rmak.
 - **Kabul Kriterleri:**
-  - 2 sn�den uzun s�ren i�lemlerden en az biri queue�ya al�n�r.
-  - Job ba��na idempotent davran�� ve hata logu eklenir.
+  - 2 snï¿½den uzun sï¿½ren iï¿½lemlerden en az biri queueï¿½ya alï¿½nï¿½r.
+  - Job baï¿½ï¿½na idempotent davranï¿½ï¿½ ve hata logu eklenir.
 
-#### 2.3 Frontend veri �a�r�lar�n� debounced hale getir
-- **Durum:** Tamamland�
-- **�ncelik:** Orta
+#### 2.3 Frontend veri ï¿½aï¿½rï¿½larï¿½nï¿½ debounced hale getir
+- **Durum:** Tamamlandï¿½
+- **ï¿½ncelik:** Orta
 - **Efor:** 6 saat
 - **Kapsam:**
-  - `frontend/src` i�inde list filtreleme ak��lar�
-- **Ama�:** Arama, filtre ve otomatik yenileme call�lar�n� throttle/debounce etmek.
+  - `frontend/src` iï¿½inde list filtreleme akï¿½ï¿½larï¿½
+- **Amaï¿½:** Arama, filtre ve otomatik yenileme callï¿½larï¿½nï¿½ throttle/debounce etmek.
 - **Kabul Kriterleri:**
-  - UI'da arama inputuna her yaz�mda request patlamas� olmaz.
-  - 300ms debounce ile en az bir �rnekte �l��lebilir istek azal���.
+  - UI'da arama inputuna her yazï¿½mda request patlamasï¿½ olmaz.
+  - 300ms debounce ile en az bir ï¿½rnekte ï¿½lï¿½ï¿½lebilir istek azalï¿½ï¿½ï¿½.
 
 ---
 
-### Faz 3 � Mimari ve Kod Kalitesi
+### Faz 3 ï¿½ Mimari ve Kod Kalitesi
 
-#### 3.1 Servis katman� ve izin katman�n� ay�r
+#### 3.1 Servis katmanï¿½ ve izin katmanï¿½nï¿½ ayï¿½r
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 14 saat
 - **Kapsam:**
   - `acentem_takipte/api/quick_create.py`
   - `acentem_takipte/doctype/*`
   - Yeni: `acentem_takipte/services/*`
-- **Ama�:** API handler��n� �HTTP + do�rulama� ile s�n�rlay�p i� mant���n� servislere ta��mak.
+- **Amaï¿½:** API handlerï¿½ï¿½nï¿½ ï¿½HTTP + doï¿½rulamaï¿½ ile sï¿½nï¿½rlayï¿½p iï¿½ mantï¿½ï¿½ï¿½nï¿½ servislere taï¿½ï¿½mak.
 - **Kabul Kriterleri:**
-  - En az 3 endpoint i� mant��� service katman�na ta��n�r.
-  - Service fonksiyonlar� test edilebilir ve ba��ms�z hale gelir.
+  - En az 3 endpoint iï¿½ mantï¿½ï¿½ï¿½ service katmanï¿½na taï¿½ï¿½nï¿½r.
+  - Service fonksiyonlarï¿½ test edilebilir ve baï¿½ï¿½msï¿½z hale gelir.
 
-#### 3.2 DRY ve g�venli yard�mc� katman
+#### 3.2 DRY ve gï¿½venli yardï¿½mcï¿½ katman
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 10 saat
 - **Kapsam:**
-  - `acentem_takipte/api/*` (auth/helper tekrarlar�)
+  - `acentem_takipte/api/*` (auth/helper tekrarlarï¿½)
   - Yeni: `acentem_takipte/utils/permissions.py`
-- **Ama�:** Yetki, validasyon ve audit yard�mc�lar�n� tekille�tirerek tekrarlar� azaltmak.
+- **Amaï¿½:** Yetki, validasyon ve audit yardï¿½mcï¿½larï¿½nï¿½ tekilleï¿½tirerek tekrarlarï¿½ azaltmak.
 - **Kabul Kriterleri:**
-  - En az 5 endpoint�in ortak g�venlik ak��� standart fonksiyona al�n�r.
-  - Tekille�tirme sonras� kod okunabilirli�i artar, duplicate kontrol� azal�r.
+  - En az 5 endpointï¿½in ortak gï¿½venlik akï¿½ï¿½ï¿½ standart fonksiyona alï¿½nï¿½r.
+  - Tekilleï¿½tirme sonrasï¿½ kod okunabilirliï¿½i artar, duplicate kontrolï¿½ azalï¿½r.
 
 #### 3.2.1 Frontend Pinia store mimarisini yeniden tasarla
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 12 saat
 - **Kapsam:**
   - `frontend/src/stores`
   - `frontend/src/composables`
   - `frontend/src/api`
   - `frontend/src/views` / `frontend/src/components`
-- **Ama�:** Component odakl� da��n�k state y�netimini domain bazl�, test edilebilir ve merkezi Pinia mimarisine ta��mak.
+- **Amaï¿½:** Component odaklï¿½ daï¿½ï¿½nï¿½k state yï¿½netimini domain bazlï¿½, test edilebilir ve merkezi Pinia mimarisine taï¿½ï¿½mak.
 - **Kabul Kriterleri:**
-  - Store katmanlar� `domain` ayr�m�nda yeniden grupland�r�l�r:
+  - Store katmanlarï¿½ `domain` ayrï¿½mï¿½nda yeniden gruplandï¿½rï¿½lï¿½r:
     - `auth`, `dashboard`, `policy`, `claim`, `communication`, `accounting`
-  - API yan etkileri yaln�zca store action�lar�ndan y�r�t�l�r; component i�inde do�rudan `fetch`/raw axios kullan�m�n� minimize eder.
-  - Liste/sayfa state�leri i�in tek bir `loading/error/loaded` pattern�i standardize edilir.
-  - `getters` ile t�retilmi� hesaplamalar (k�m�latif say�lar, filtrelenmi� listeler) store i�inde toplan�r.
-  - `Pinia plugin` ile route veya toast gibi d�� etkilerden izole test edilebilir bir mimari olu�turulur.
-  - Mevcut kritik 3 frontend ak��� i�in (en az bir dashboard, one form, bir modal/queue flow) store ak�� diyagram� ve migration plan� tamamlan�r.
+  - API yan etkileri yalnï¿½zca store actionï¿½larï¿½ndan yï¿½rï¿½tï¿½lï¿½r; component iï¿½inde doï¿½rudan `fetch`/raw axios kullanï¿½mï¿½nï¿½ minimize eder.
+  - Liste/sayfa stateï¿½leri iï¿½in tek bir `loading/error/loaded` patternï¿½i standardize edilir.
+  - `getters` ile tï¿½retilmiï¿½ hesaplamalar (kï¿½mï¿½latif sayï¿½lar, filtrelenmiï¿½ listeler) store iï¿½inde toplanï¿½r.
+  - `Pinia plugin` ile route veya toast gibi dï¿½ï¿½ etkilerden izole test edilebilir bir mimari oluï¿½turulur.
+  - Mevcut kritik 3 frontend akï¿½ï¿½ï¿½ iï¿½in (en az bir dashboard, one form, bir modal/queue flow) store akï¿½ï¿½ diyagramï¿½ ve migration planï¿½ tamamlanï¿½r.
 
-#### 3.3 DocType �ema normalizasyonu (veri modeli)
+#### 3.3 DocType ï¿½ema normalizasyonu (veri modeli)
 - **Durum:** Devam Ediyor
-- **Uygulama Durumu:** 1. ve 2. alt maddeler i�in uygulama tamamland�
-- **�ncelik:** Y�ksek
+- **Uygulama Durumu:** 1. ve 2. alt maddeler iï¿½in uygulama tamamlandï¿½
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 14 saat
 - **Kapsam:**
-  - `acentem_takipte/doctype/at_offer/at_offer.json` (sat�r 1-122)
-  - `acentem_takipte/doctype/at_policy/at_policy.json` (sat�r 1-194)
-  - `acentem_takipte/doctype/at_claim/at_claim.json` (sat�r 1-108)
-  - `acentem_takipte/doctype/at_payment/at_payment.json` (sat�r 1-134)
-  - `acentem_takipte/doctype/at_renewal_task/at_renewal_task.json` (sat�r 1-84)
-  - `acentem_takipte/doctype/at_policy_endorsement/at_policy_endorsement.json` (sat�r 1-124)
-  - `acentem_takipte/doctype/at_policy_snapshot/at_policy_snapshot.json` (sat�r 1-100)
-  - `acentem_takipte/doctype/at_customer/at_customer.json` (sat�r 1-129)
-  - `acentem_takipte/doctype/at_lead/at_lead.json` (sat�r 1-128)
-  - `acentem_takipte/doctype/at_accounting_entry/at_accounting_entry.json` (sat�r 1-152)
-  - `acentem_takipte/doctype/at_reconciliation_item/at_reconciliation_item.json` (sat�r 1-110)
-  - `acentem_takipte/doctype/at_access_log/at_access_log.json` (sat�r 1-78)
+  - `acentem_takipte/doctype/at_offer/at_offer.json` (satï¿½r 1-122)
+  - `acentem_takipte/doctype/at_policy/at_policy.json` (satï¿½r 1-194)
+  - `acentem_takipte/doctype/at_claim/at_claim.json` (satï¿½r 1-108)
+  - `acentem_takipte/doctype/at_payment/at_payment.json` (satï¿½r 1-134)
+  - `acentem_takipte/doctype/at_renewal_task/at_renewal_task.json` (satï¿½r 1-84)
+  - `acentem_takipte/doctype/at_policy_endorsement/at_policy_endorsement.json` (satï¿½r 1-124)
+  - `acentem_takipte/doctype/at_policy_snapshot/at_policy_snapshot.json` (satï¿½r 1-100)
+  - `acentem_takipte/doctype/at_customer/at_customer.json` (satï¿½r 1-129)
+  - `acentem_takipte/doctype/at_lead/at_lead.json` (satï¿½r 1-128)
+  - `acentem_takipte/doctype/at_accounting_entry/at_accounting_entry.json` (satï¿½r 1-152)
+  - `acentem_takipte/doctype/at_reconciliation_item/at_reconciliation_item.json` (satï¿½r 1-110)
+  - `acentem_takipte/doctype/at_access_log/at_access_log.json` (satï¿½r 1-78)
   - `acentem_takipte/api/security.py` ve ilgili servisler
-- **Ama�:** Ortak alanlar� standardize etmek ve teknik bor� alanlar�n� azaltmak.
+- **Amaï¿½:** Ortak alanlarï¿½ standardize etmek ve teknik borï¿½ alanlarï¿½nï¿½ azaltmak.
 - **Bulgular:**
-  - `status` alan� 9+ DocType�ta tekrar ediyor; de�erler heterojen oldu�u i�in ad�m 1 ile merkezi enum�a ta��nd�.
-  - `notes` alan�nda kullan�c�/sistem ayr�m� eksikti; ad�m 2 ile kullan�c� notlar� etiketlendi, sistem notu �rne�i `AT Policy Snapshot` i�inde ayr��t�r�ld�.
-  - Finans alanlar� (`net_premium`, `tax_amount`, `commission_amount`, `gross_premium`) tekrarlan�yor; hesaplama mant��� ayr�ca controller�da �o�unlukla ayn�.
-  - `AT Policy` i�inde `commission` alan� legacy olarak saklan�yor (`at_policy.json` sat�r 147-153) ve kullan�mda fallback ile birlikte i�liyor (`at_policy.py` sat�r 55, 92, 202).
-  - `AT Claim` ve `AT Payment` i�inde `customer` alan� belge kayna��ndan t�retilebilirken ayr�ca saklanm�� durumda (`at_claim.json` sat�r 29-40, `at_payment.json` sat�r 45-48).
+  - `status` alanï¿½ 9+ DocTypeï¿½ta tekrar ediyor; deï¿½erler heterojen olduï¿½u iï¿½in adï¿½m 1 ile merkezi enumï¿½a taï¿½ï¿½ndï¿½.
+  - `notes` alanï¿½nda kullanï¿½cï¿½/sistem ayrï¿½mï¿½ eksikti; adï¿½m 2 ile kullanï¿½cï¿½ notlarï¿½ etiketlendi, sistem notu ï¿½rneï¿½i `AT Policy Snapshot` iï¿½inde ayrï¿½ï¿½tï¿½rï¿½ldï¿½.
+  - Finans alanlarï¿½ (`net_premium`, `tax_amount`, `commission_amount`, `gross_premium`) tekrarlanï¿½yor; hesaplama mantï¿½ï¿½ï¿½ ayrï¿½ca controllerï¿½da ï¿½oï¿½unlukla aynï¿½.
+  - `AT Policy` iï¿½inde `commission` alanï¿½ legacy olarak saklanï¿½yor (`at_policy.json` satï¿½r 147-153) ve kullanï¿½mda fallback ile birlikte iï¿½liyor (`at_policy.py` satï¿½r 55, 92, 202).
+  - `AT Claim` ve `AT Payment` iï¿½inde `customer` alanï¿½ belge kaynaï¿½ï¿½ndan tï¿½retilebilirken ayrï¿½ca saklanmï¿½ï¿½ durumda (`at_claim.json` satï¿½r 29-40, `at_payment.json` satï¿½r 45-48).
 - **Kabul Kriterleri:**
-  - Ad�m 1: `status` kar��la�t�rmalar� kontrol merkezine ta��narak string tekrarlar� azalt�ld� (`acentem_takipte/utils/statuses.py`).
-  - Ad�m 2: `notes` alanlar� i�in anlamland�rma standartlar� eklendi; sistem notu �rne�i `AT Policy Snapshot` i�inde `Sistem Notu` olarak ayr��t�r�ld�.
-  - Finans hesaplama ve validasyon mant���na tek bir yard�mc� eklenir ve `AT Offer`/`AT Policy`/`AT Policy Endorsement` ayn� do�rulama kural�n� kullan�r.
-  - `commission` alan� i�in migration plan� ��kar�l�r; yeni kay�tlar i�in tek kayna�a ge�i� do�rulan�r.
-  - `customer` t�retilebilir alanlar� i�in normalizasyon/performans de�erlendirmesi tamamlan�r.
+  - Adï¿½m 1: `status` karï¿½ï¿½laï¿½tï¿½rmalarï¿½ kontrol merkezine taï¿½ï¿½narak string tekrarlarï¿½ azaltï¿½ldï¿½ (`acentem_takipte/utils/statuses.py`).
+  - Adï¿½m 2: `notes` alanlarï¿½ iï¿½in anlamlandï¿½rma standartlarï¿½ eklendi; sistem notu ï¿½rneï¿½i `AT Policy Snapshot` iï¿½inde `Sistem Notu` olarak ayrï¿½ï¿½tï¿½rï¿½ldï¿½.
+  - Finans hesaplama ve validasyon mantï¿½ï¿½ï¿½na tek bir yardï¿½mcï¿½ eklenir ve `AT Offer`/`AT Policy`/`AT Policy Endorsement` aynï¿½ doï¿½rulama kuralï¿½nï¿½ kullanï¿½r.
+  - `commission` alanï¿½ iï¿½in migration planï¿½ ï¿½ï¿½karï¿½lï¿½r; yeni kayï¿½tlar iï¿½in tek kaynaï¿½a geï¿½iï¿½ doï¿½rulanï¿½r.
+  - `customer` tï¿½retilebilir alanlarï¿½ iï¿½in normalizasyon/performans deï¿½erlendirmesi tamamlanï¿½r.
 
-#### 3.3.1 DocType gereksiz alan �n inceleme (analiz)
+#### 3.3.1 DocType gereksiz alan ï¿½n inceleme (analiz)
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 2 saat
 - **Kapsam:**
   - `at_policy.json` (`commission`, `customer`)
   - `at_claim.json` (`customer`)
   - `at_payment.json` (`customer`)
-- **Ama�:** Bu alanlar�n kal�c�l�k gereklili�ini ve veri b�t�nl��� etkisini belgelemek.
+- **Amaï¿½:** Bu alanlarï¿½n kalï¿½cï¿½lï¿½k gerekliliï¿½ini ve veri bï¿½tï¿½nlï¿½ï¿½ï¿½ etkisini belgelemek.
 - **Kabul Kriterleri:**
   - Belirlenen her alanda:
-    - �retim raporu (kullan�m s�kl���)
-    - T�retim maliyetine etkisi
-    - Migration veya geriye d�n�k uyumluluk riski
-  - envanteri ��kar�l�r.
+    - ï¿½retim raporu (kullanï¿½m sï¿½klï¿½ï¿½ï¿½)
+    - Tï¿½retim maliyetine etkisi
+    - Migration veya geriye dï¿½nï¿½k uyumluluk riski
+  - envanteri ï¿½ï¿½karï¿½lï¿½r.
 
-#### 3.4 Poli�e yenileme ak���n� ba�tan yaz (yeniden mimari)
+#### 3.4 Poliï¿½e yenileme akï¿½ï¿½ï¿½nï¿½ baï¿½tan yaz (yeniden mimari)
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 18 saat
 - **Kapsam:**
   - `acentem_takipte/tasks.py`
@@ -498,137 +498,137 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `acentem_takipte/api/quick_create.py`
   - `acentem_takipte/api/admin_jobs.py`
   - `acentem_takipte/api/dashboard.py`
-  - `public/frontend/assets` i�inde yenileme ekranlar�n� besleyen bile�en/state u�lar�
-- **Ama�:** Mevcut �deadline tabanl� g�revlendirme + manuel m�dahale� modelini; durum makinesi + servis katman� + idempotent kuyruk tetikleyicisi ile tekrar kullan�labilir hale getirmek.
-- **�nerilen Mimari:**
-  - **Teknik katman ayr�m�:**
-    - `renewal/service.py`: politika se�imi, pencere (due/renewal hesaplama), aday �retimi, i� kurallar� (eski-g�ncel e�zamanl�l�k/tekrar �retebilirlik).
-    - `renewal/pipeline.py`: ad�m bazl� ak�� (detect -> create_task -> notify -> track -> close/error).
-    - `renewal/telemetry.py`: metrik + event loglar� (ne zaman, hangi policy, hangi filtre seti ile tetiklendi).
+  - `public/frontend/assets` iï¿½inde yenileme ekranlarï¿½nï¿½ besleyen bileï¿½en/state uï¿½larï¿½
+- **Amaï¿½:** Mevcut ï¿½deadline tabanlï¿½ gï¿½revlendirme + manuel mï¿½dahaleï¿½ modelini; durum makinesi + servis katmanï¿½ + idempotent kuyruk tetikleyicisi ile tekrar kullanï¿½labilir hale getirmek.
+- **ï¿½nerilen Mimari:**
+  - **Teknik katman ayrï¿½mï¿½:**
+    - `renewal/service.py`: politika seï¿½imi, pencere (due/renewal hesaplama), aday ï¿½retimi, iï¿½ kurallarï¿½ (eski-gï¿½ncel eï¿½zamanlï¿½lï¿½k/tekrar ï¿½retebilirlik).
+    - `renewal/pipeline.py`: adï¿½m bazlï¿½ akï¿½ï¿½ (detect -> create_task -> notify -> track -> close/error).
+    - `renewal/telemetry.py`: metrik + event loglarï¿½ (ne zaman, hangi policy, hangi filtre seti ile tetiklendi).
   - **Durum makinesi:**
     - `OPEN -> IN_PROGRESS -> DONE / CANCELLED`
-    - Durum ge�i�leri merkezile�tirilir (tek ge�i� fonksiyonu + guard).
-  - **Ayn� i�i birden fazla kaynakta tekrar etme:**
-    - `unique_key` ile idempotent �retim,
-    - policy bazl� dedupe (`open task` kontrol� + `locked` pencere).
-  - **Task lifecycle y�netimi:**
-    - Eskisi kalan/yenilenen g�revler i�in otomatik kapan�� kural�,
-    - Eski tarihli tamamlanmam�� g�revlerde "stale task remediation" job�u.
-  - **API g�venli�i:**
-    - `api/admin_jobs.py` �zerinden sadece job-level eri�im,
+    - Durum geï¿½iï¿½leri merkezileï¿½tirilir (tek geï¿½iï¿½ fonksiyonu + guard).
+  - **Aynï¿½ iï¿½i birden fazla kaynakta tekrar etme:**
+    - `unique_key` ile idempotent ï¿½retim,
+    - policy bazlï¿½ dedupe (`open task` kontrolï¿½ + `locked` pencere).
+  - **Task lifecycle yï¿½netimi:**
+    - Eskisi kalan/yenilenen gï¿½revler iï¿½in otomatik kapanï¿½ï¿½ kuralï¿½,
+    - Eski tarihli tamamlanmamï¿½ï¿½ gï¿½revlerde "stale task remediation" jobï¿½u.
+  - **API gï¿½venliï¿½i:**
+    - `api/admin_jobs.py` ï¿½zerinden sadece job-level eriï¿½im,
     - action-level izin + doc permission birlikte.
-  - **UI ak���:**
-    - Form, liste ve detay ak���n� tek store event ak���na ba�layan store actionlar�,
-    - stat� d�n���mleri tek kaynakta okunur.
+  - **UI akï¿½ï¿½ï¿½:**
+    - Form, liste ve detay akï¿½ï¿½ï¿½nï¿½ tek store event akï¿½ï¿½ï¿½na baï¿½layan store actionlarï¿½,
+    - statï¿½ dï¿½nï¿½ï¿½ï¿½mleri tek kaynakta okunur.
 - **Kabul Kriterleri:**
-  - Yenileme ak���nda g�rev �retimi, bildirim ve tamamlanma ad�mlar� tek servis fonksiyonunda izlenebilir.
-  - Ayn� `policy + due_date` i�in �ift g�rev �retimi olmuyor.
-  - `Done`/`Completed` stat� uyumsuzlu�u kald�r�l�yor; frontend/backend tek bir renewal durum modeli kullan�yor.
-  - Yenileme batch job�u i�in idempotent ve retry-safe test senaryosu ekleniyor (unit/integration).
-  - Ba�ar�/ba�ar�s�z/atlanan g�rev i�in metrikler dashboard�a yans�t�l�yor.
+  - Yenileme akï¿½ï¿½ï¿½nda gï¿½rev ï¿½retimi, bildirim ve tamamlanma adï¿½mlarï¿½ tek servis fonksiyonunda izlenebilir.
+  - Aynï¿½ `policy + due_date` iï¿½in ï¿½ift gï¿½rev ï¿½retimi olmuyor.
+  - `Done`/`Completed` statï¿½ uyumsuzluï¿½u kaldï¿½rï¿½lï¿½yor; frontend/backend tek bir renewal durum modeli kullanï¿½yor.
+  - Yenileme batch jobï¿½u iï¿½in idempotent ve retry-safe test senaryosu ekleniyor (unit/integration).
+  - Baï¿½arï¿½/baï¿½arï¿½sï¿½z/atlanan gï¿½rev iï¿½in metrikler dashboardï¿½a yansï¿½tï¿½lï¿½yor.
 
 ---
 
-### Faz 4 � Test G��lendirmesi
+### Faz 4 ï¿½ Test Gï¿½ï¿½lendirmesi
 
-#### 4.1 Backend kritik i� ak��� integration testleri
+#### 4.1 Backend kritik iï¿½ akï¿½ï¿½ï¿½ integration testleri
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 18 saat
 - **Kapsam:**
   - `acentem_takipte/tests/test_api_*.py`
   - `acentem_takipte/doctype/*/test_*.py`
-- **Ama�:** Poli�e olu�turma, teklif->poli�e d�n���m�, yenileme, claim bildirim ak��lar�n� u�tan uca do�rulamak.
+- **Amaï¿½:** Poliï¿½e oluï¿½turma, teklif->poliï¿½e dï¿½nï¿½ï¿½ï¿½mï¿½, yenileme, claim bildirim akï¿½ï¿½larï¿½nï¿½ uï¿½tan uca doï¿½rulamak.
 - **Kabul Kriterleri:**
-  - Kritik 3 ak�� i�in en az 2 senaryo (yetki + ba�ar�l� ak��) eklenir.
-  - CI�de bu testler fail etmeden ge�mek zorunlu olur.
+  - Kritik 3 akï¿½ï¿½ iï¿½in en az 2 senaryo (yetki + baï¿½arï¿½lï¿½ akï¿½ï¿½) eklenir.
+  - CIï¿½de bu testler fail etmeden geï¿½mek zorunlu olur.
 
-#### 4.2 Frontend test kapsam�n� a�
+#### 4.2 Frontend test kapsamï¿½nï¿½ aï¿½
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 12 saat
 - **Kapsam:**
   - `frontend/tests`
   - `frontend/src/components`
-- **Ama�:** Sayfa/component baz�nda unit test, form validasyon ve API state testi eklemek.
+- **Amaï¿½:** Sayfa/component bazï¿½nda unit test, form validasyon ve API state testi eklemek.
 - **Kabul Kriterleri:**
   - En az 10 yeni Vue unit/ component testi.
-  - E2E senaryolar�nda en az iki kritik kullan�c� yolunda regresyon korumas�.
+  - E2E senaryolarï¿½nda en az iki kritik kullanï¿½cï¿½ yolunda regresyon korumasï¿½.
 
-#### 4.3 Test verisi ve CI kap�s�n� netle�tir
+#### 4.3 Test verisi ve CI kapï¿½sï¿½nï¿½ netleï¿½tir
 - **Durum:** Plan
-- **�ncelik:** D���k
+- **ï¿½ncelik:** Dï¿½ï¿½ï¿½k
 - **Efor:** 6 saat
 - **Kapsam:**
   - `.github/workflows/backend-ci.yml`
   - `.github/workflows/frontend-ci.yml`
   - `.github/workflows/desk-free-smoke.yml`
-- **Ama�:** Test ko�ullar� deterministik olsun, fail-fast ve quality gate eklenmesi.
+- **Amaï¿½:** Test koï¿½ullarï¿½ deterministik olsun, fail-fast ve quality gate eklenmesi.
 
 ---
 
-### Faz 5 � CI/CD ve Operasyonel G�venlik
+### Faz 5 ï¿½ CI/CD ve Operasyonel Gï¿½venlik
 
-#### 5.1 Ba��ml�l�k y�netimini s�k�la�t�r
+#### 5.1 Baï¿½ï¿½mlï¿½lï¿½k yï¿½netimini sï¿½kï¿½laï¿½tï¿½r
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 4 saat
 - **Kapsam:**
   - `requirements.txt`
   - `pyproject.toml`
   - `setup.py`
-- **Ama�:** Versiyon pinning ve geri d�n���ml� kurulum g�venli�ini artt�rmak.
+- **Amaï¿½:** Versiyon pinning ve geri dï¿½nï¿½ï¿½ï¿½mlï¿½ kurulum gï¿½venliï¿½ini arttï¿½rmak.
 - **Kabul Kriterleri:**
-  - Ba��ml�l�klar pinlenir veya benzer izlenebilir strateji belirlenir.
-  - `pip check`/g�venlik tarama ad�m� eklenir.
+  - Baï¿½ï¿½mlï¿½lï¿½klar pinlenir veya benzer izlenebilir strateji belirlenir.
+  - `pip check`/gï¿½venlik tarama adï¿½mï¿½ eklenir.
 
-#### 5.2 CI g�venlik kontrollerini ekle
+#### 5.2 CI gï¿½venlik kontrollerini ekle
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 6 saat
 - **Kapsam:**
   - `.github/workflows/backend-ci.yml`
   - `.github/workflows/frontend-ci.yml`
-- **Ama�:** Secret leakage, dependency audit ve temel SAST ad�mlar� eklemek.
+- **Amaï¿½:** Secret leakage, dependency audit ve temel SAST adï¿½mlarï¿½ eklemek.
 - **Kabul Kriterleri:**
-  - CI'da en az bir g�venlik taraftar� tarama ad�m� zorunlu.
-  - Hatal� secret pattern�leri i�in otomatik fail.
+  - CI'da en az bir gï¿½venlik taraftarï¿½ tarama adï¿½mï¿½ zorunlu.
+  - Hatalï¿½ secret patternï¿½leri iï¿½in otomatik fail.
 
 ---
 
-### Faz 6 � UX ve Eri�ilebilirlik
+### Faz 6 ï¿½ UX ve Eriï¿½ilebilirlik
 
-#### 6.1 Eri�ilebilirlik standard�n� y�kselt
+#### 6.1 Eriï¿½ilebilirlik standardï¿½nï¿½ yï¿½kselt
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 10 saat
 - **Kapsam:**
   - `frontend/src/components`
   - `frontend/src/views`
-- **Ama�:** `aria-*`, klavye navigation, `aria-busy`, odak y�netimi standartlar�n� getirmek.
+- **Amaï¿½:** `aria-*`, klavye navigation, `aria-busy`, odak yï¿½netimi standartlarï¿½nï¿½ getirmek.
 - **Kabul Kriterleri:**
-  - Form ve tablo aksiyonlar�nda en az 1:1 klavye eri�ilebilirli�i.
-  - Kritik kontrol bile�enlerinde ekran okuyucu dostu etiketleme.
+  - Form ve tablo aksiyonlarï¿½nda en az 1:1 klavye eriï¿½ilebilirliï¿½i.
+  - Kritik kontrol bileï¿½enlerinde ekran okuyucu dostu etiketleme.
 
-#### 6.2 Bo� durum / y�kleme durumu pattern'ini standardize et
+#### 6.2 Boï¿½ durum / yï¿½kleme durumu pattern'ini standardize et
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 6 saat
 - **Kapsam:**
   - `frontend/src/components/EmptyState.vue`
-  - Sayfa bazl� listeler
-- **Ama�:** Bo� liste, bekleme ve hata durumlar�nda tutarl� kullan�c� geri bildirimi.
+  - Sayfa bazlï¿½ listeler
+- **Amaï¿½:** Boï¿½ liste, bekleme ve hata durumlarï¿½nda tutarlï¿½ kullanï¿½cï¿½ geri bildirimi.
 - **Kabul Kriterleri:**
-  - 8 kritik sayfan�n t�m�nde empty/loading/error state var.
+  - 8 kritik sayfanï¿½n tï¿½mï¿½nde empty/loading/error state var.
   - Mobil breakpoint testleri eklenir.
 
 ---
 
-### Faz 7 � G�zlemlenebilirlik, Uyum ve Entegrasyon Stratejisi
+### Faz 7 ï¿½ Gï¿½zlemlenebilirlik, Uyum ve Entegrasyon Stratejisi
 
-#### 7.1 Observability altyap�s� (structured logging, metrics)
+#### 7.1 Observability altyapï¿½sï¿½ (structured logging, metrics)
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 12 saat
 - **Kapsam:**
   - `acentem_takipte/hooks.py`
@@ -642,16 +642,16 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `acentem_takipte/acentem_takipte/tests/test_api_hardening_contracts.py`
   - `acentem_takipte/acentem_takipte/doctype/at_access_log/at_access_log.json`
   - `acentem_takipte/acentem_takipte/doctype/at_notification_outbox/at_notification_outbox.json`
-- **Ama�:** T�m kritik API/job/event ak��lar�nda yap�land�r�lm�� log, standart metrik ve hata/a�ama kodu standard�n� olu�turmak.
+- **Amaï¿½:** Tï¿½m kritik API/job/event akï¿½ï¿½larï¿½nda yapï¿½landï¿½rï¿½lmï¿½ï¿½ log, standart metrik ve hata/aï¿½ama kodu standardï¿½nï¿½ oluï¿½turmak.
 - **Kabul Kriterleri:**
-  - Her API �a�r�s�na request-id / doctype / user / action alanlar�n� ta��yan yap�land�r�lm�� log format� eklenir.
-  - Admin/job endpoint�leri i�in `queue`, `job_id`, `duration_ms`, `retry_count`, `result` metrikleri standart hale getirilir.
-  - Notification/accounting job�lar� i�in sent/success/fail/error oranlar� toplan�r.
-  - `AT Access Log` ve `AT Notification Outbox` alanlar� �zerinden izlenebilirlik ana ak��lar� do�rulan�r.
+  - Her API ï¿½aï¿½rï¿½sï¿½na request-id / doctype / user / action alanlarï¿½nï¿½ taï¿½ï¿½yan yapï¿½landï¿½rï¿½lmï¿½ï¿½ log formatï¿½ eklenir.
+  - Admin/job endpointï¿½leri iï¿½in `queue`, `job_id`, `duration_ms`, `retry_count`, `result` metrikleri standart hale getirilir.
+  - Notification/accounting jobï¿½larï¿½ iï¿½in sent/success/fail/error oranlarï¿½ toplanï¿½r.
+  - `AT Access Log` ve `AT Notification Outbox` alanlarï¿½ ï¿½zerinden izlenebilirlik ana akï¿½ï¿½larï¿½ doï¿½rulanï¿½r.
 
-#### 7.2 KVKK / veri ya�am d�ng�s� uyumu
+#### 7.2 KVKK / veri yaï¿½am dï¿½ngï¿½sï¿½ uyumu
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 14 saat
 - **Kapsam:**
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`
@@ -665,16 +665,16 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `acentem_takipte/acentem_takipte/communication.py`
   - `acentem_takipte/acentem_takipte/doctype/at_access_log/at_access_log.json`
   - `acentem_takipte/acentem_takipte/doctype/at_accounting_entry/at_accounting_entry.json`
-- **Ama�:** TC kimlik no, telefon, e-posta, poli�e ve i�lem kimlikleri i�in ama� s�n�rlamas�, maskelenme, saklama s�resi ve silme hakk�n� tek ak��ta ele alan bir KVKK modelini uygulamak.
+- **Amaï¿½:** TC kimlik no, telefon, e-posta, poliï¿½e ve iï¿½lem kimlikleri iï¿½in amaï¿½ sï¿½nï¿½rlamasï¿½, maskelenme, saklama sï¿½resi ve silme hakkï¿½nï¿½ tek akï¿½ï¿½ta ele alan bir KVKK modelini uygulamak.
 - **Kabul Kriterleri:**
-  - Duyarl� alanlar i�in response taraf�nda maskeli g�r�n�m zorunlu olan endpointler tan�mlan�r.
-  - `tax_id`, `policy_no`, m��teri referanslar� i�in `retention_class` ve silinme s�reci dok�mante edilir.
-  - KVKK audit ��kt�s�: silme/anonimle�tirme i�lemleri i�in admin onay kay�tlar� eklenir.
-  - PII i�eren log ve payload �rnekleri log redaction fonksiyonuna al�n�r.
+  - Duyarlï¿½ alanlar iï¿½in response tarafï¿½nda maskeli gï¿½rï¿½nï¿½m zorunlu olan endpointler tanï¿½mlanï¿½r.
+  - `tax_id`, `policy_no`, mï¿½ï¿½teri referanslarï¿½ iï¿½in `retention_class` ve silinme sï¿½reci dokï¿½mante edilir.
+  - KVKK audit ï¿½ï¿½ktï¿½sï¿½: silme/anonimleï¿½tirme iï¿½lemleri iï¿½in admin onay kayï¿½tlarï¿½ eklenir.
+  - PII iï¿½eren log ve payload ï¿½rnekleri log redaction fonksiyonuna alï¿½nï¿½r.
 
 #### 7.3 API versiyonlama stratejisi
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 10 saat
 - **Kapsam:**
   - `acentem_takipte/acentem_takipte/api/dashboard.py`
@@ -686,16 +686,16 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `acentem_takipte/hooks.py`
   - `acentem_takipte/acentem_takipte/tests/test_api_hardening_contracts.py`
   - `acentem_takipte/acentem_takipte/tests/test_dashboard_contract_smoke.py`
-- **Ama�:** Mevcut dashboard v2 yakla��m�n� geni�letip v1/v2 API kontrat�n� netle�tirmek; geriye uyumluluk k�rmadan client ve server taraf�n� ayr��t�rmak.
+- **Amaï¿½:** Mevcut dashboard v2 yaklaï¿½ï¿½mï¿½nï¿½ geniï¿½letip v1/v2 API kontratï¿½nï¿½ netleï¿½tirmek; geriye uyumluluk kï¿½rmadan client ve server tarafï¿½nï¿½ ayrï¿½ï¿½tï¿½rmak.
 - **Kabul Kriterleri:**
-  - `v1`-`v2` ayr�m�yla rota/isimlendirme standartlar� belgelenir.
-  - Deprecated endpointler i�in ta��nma ve deprecation uyar� politikas� ��kar�l�r.
-  - Versiyon ge�i�ini zorlayan ve koruyan en az 2 entegrasyon test senaryosu eklenir.
-  - Hata format�, sayfalama ve filtre kontratlar� her iki versiyonda da net kontrat dok�man� ve test ile do�rulan�r.
+  - `v1`-`v2` ayrï¿½mï¿½yla rota/isimlendirme standartlarï¿½ belgelenir.
+  - Deprecated endpointler iï¿½in taï¿½ï¿½nma ve deprecation uyarï¿½ politikasï¿½ ï¿½ï¿½karï¿½lï¿½r.
+  - Versiyon geï¿½iï¿½ini zorlayan ve koruyan en az 2 entegrasyon test senaryosu eklenir.
+  - Hata formatï¿½, sayfalama ve filtre kontratlarï¿½ her iki versiyonda da net kontrat dokï¿½manï¿½ ve test ile doï¿½rulanï¿½r.
 
-#### 7.4 D�� sistem entegrasyon s�zle�meleri
+#### 7.4 Dï¿½ï¿½ sistem entegrasyon sï¿½zleï¿½meleri
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 16 saat
 - **Kapsam:**
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
@@ -709,221 +709,221 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `acentem_takipte/acentem_takipte/tests/test_notification_dispatcher.py`
   - `acentem_takipte/acentem_takipte/tests/test_dashboard_contract_smoke.py`
   - `acentem_takipte/hooks.py`
-- **Ama�:** Her harici sistem �a�r�s� i�in timeout, retry, hata/ba�ar�s�zl�k e�ikleri, kimlik do�rulama, payload �emas� ve idempotency varsay�mlar�yla bir s�zle�me katman� kurmak.
+- **Amaï¿½:** Her harici sistem ï¿½aï¿½rï¿½sï¿½ iï¿½in timeout, retry, hata/baï¿½arï¿½sï¿½zlï¿½k eï¿½ikleri, kimlik doï¿½rulama, payload ï¿½emasï¿½ ve idempotency varsayï¿½mlarï¿½yla bir sï¿½zleï¿½me katmanï¿½ kurmak.
 - **Kabul Kriterleri:**
-  - TCMB, WhatsApp provider ve hesaplama/senkronizasyon ak��lar� i�in ayr� adapter contract dosyalar� olu�turulur.
-  - Site config anahtarlar� (`at_whatsapp_api_url`, `at_whatsapp_api_token`, vb.) i�in kullan�m ve fail-fast/fail-safe davran��lar� yaz�l�r.
-  - `AT Accounting Entry` i�in `external_ref`, `integration_hash`, `payload_json` alanlar� kullan�m rehberi ve do�rulama testi eklenir.
-  - Integration testleri timeout, rate-limit, bozuk payload ve response-parsing senaryolar�n� kapsar.
+  - TCMB, WhatsApp provider ve hesaplama/senkronizasyon akï¿½ï¿½larï¿½ iï¿½in ayrï¿½ adapter contract dosyalarï¿½ oluï¿½turulur.
+  - Site config anahtarlarï¿½ (`at_whatsapp_api_url`, `at_whatsapp_api_token`, vb.) iï¿½in kullanï¿½m ve fail-fast/fail-safe davranï¿½ï¿½larï¿½ yazï¿½lï¿½r.
+  - `AT Accounting Entry` iï¿½in `external_ref`, `integration_hash`, `payload_json` alanlarï¿½ kullanï¿½m rehberi ve doï¿½rulama testi eklenir.
+  - Integration testleri timeout, rate-limit, bozuk payload ve response-parsing senaryolarï¿½nï¿½ kapsar.
 
 ---
 
-## Eksik Mod�l ve �zellik Analizi (v2)
+## Eksik Modï¿½l ve ï¿½zellik Analizi (v2)
 
-### ALAN 1 � M��teri Y�netimi (360� M��teri G�r�n�m�)
+### ALAN 1 ï¿½ Mï¿½ï¿½teri Yï¿½netimi (360ï¿½ Mï¿½ï¿½teri Gï¿½rï¿½nï¿½mï¿½)
 
-**Mevcut Durum:** `AT Customer` kimlik, ileti�im, atanan acente, KVKK onay� ve klas�r yolunu tutuyor; fakat ili�kisel m��teri 360 modeli olu�turmuyor.
+**Mevcut Durum:** `AT Customer` kimlik, iletiï¿½im, atanan acente, KVKK onayï¿½ ve klasï¿½r yolunu tutuyor; fakat iliï¿½kisel mï¿½ï¿½teri 360 modeli oluï¿½turmuyor.
 
 **Kritik Eksikler:**
-- `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`: `links` bo�, household/yak�nlar/ara�lar/ek varl�klar i�in ili�ki alan� yok.
-- `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`: m��teri segmenti, skor, portf�y de�eri, risk i�tah�, �apraz sat�� potansiyeli alanlar� yok.
-- `frontend/src/pages/CustomerDetail.vue`: aktif poli�e, a��k teklif, lead/comment/Communication g�steriyor; �deme, hasar, yenileme, overdue prim ve m��teri skoru yok.
-- `frontend/src/pages/CustomerDetail.vue`: ileti�im ge�mi�i Frappe `Communication` ve yorumlardan toplan�yor; SMS/WhatsApp/outbox/call note birle�ik g�r�nm�yor.
-- `acentem_takipte/acentem_takipte/api/dashboard.py`: m��teri workbench endpointleri var, fakat tek �a�r�da tam 360 payload d�nen customer detail API yok.
+- `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`: `links` boï¿½, household/yakï¿½nlar/araï¿½lar/ek varlï¿½klar iï¿½in iliï¿½ki alanï¿½ yok.
+- `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`: mï¿½ï¿½teri segmenti, skor, portfï¿½y deï¿½eri, risk iï¿½tahï¿½, ï¿½apraz satï¿½ï¿½ potansiyeli alanlarï¿½ yok.
+- `frontend/src/pages/CustomerDetail.vue`: aktif poliï¿½e, aï¿½ï¿½k teklif, lead/comment/Communication gï¿½steriyor; ï¿½deme, hasar, yenileme, overdue prim ve mï¿½ï¿½teri skoru yok.
+- `frontend/src/pages/CustomerDetail.vue`: iletiï¿½im geï¿½miï¿½i Frappe `Communication` ve yorumlardan toplanï¿½yor; SMS/WhatsApp/outbox/call note birleï¿½ik gï¿½rï¿½nmï¿½yor.
+- `acentem_takipte/acentem_takipte/api/dashboard.py`: mï¿½ï¿½teri workbench endpointleri var, fakat tek ï¿½aï¿½rï¿½da tam 360 payload dï¿½nen customer detail API yok.
 
-**�nerilen Eklentiler:**
-- Yeni `AT Customer Relation` DocType: e�, �ocuk, referans, ticari ba�lant�.
-- Yeni `AT Customer Asset` DocType: ara�, konut, i�yeri, sa�l�k grubu, tekne, tar�m ekipman�.
-- Yeni `AT Customer Segment Snapshot` DocType: m��teri skoru, tahmini gelir, �apraz sat�� f�rsat�, churn riski.
+**ï¿½nerilen Eklentiler:**
+- Yeni `AT Customer Relation` DocType: eï¿½, ï¿½ocuk, referans, ticari baï¿½lantï¿½.
+- Yeni `AT Customer Asset` DocType: araï¿½, konut, iï¿½yeri, saï¿½lï¿½k grubu, tekne, tarï¿½m ekipmanï¿½.
+- Yeni `AT Customer Segment Snapshot` DocType: mï¿½ï¿½teri skoru, tahmini gelir, ï¿½apraz satï¿½ï¿½ fï¿½rsatï¿½, churn riski.
 - Yeni endpoint: `acentem_takipte/acentem_takipte/api/customer_360.py -> get_customer_360(name, window_days=90)`.
-- Yeni UI: m��teri detay�nda `Portfolio`, `Collections`, `Claims`, `Communications`, `Renewals`, `Assets & Family`, `Insights` sekmeleri.
+- Yeni UI: mï¿½ï¿½teri detayï¿½nda `Portfolio`, `Collections`, `Claims`, `Communications`, `Renewals`, `Assets & Family`, `Insights` sekmeleri.
 
-**Yol Haritas�na Entegrasyon:** Yeni `Faz 8 � Customer 360 ve CRM Graph` olarak eklenmeli.
+**Yol Haritasï¿½na Entegrasyon:** Yeni `Faz 8 ï¿½ Customer 360 ve CRM Graph` olarak eklenmeli.
 
-**�ncelik:** Kritik
+**ï¿½ncelik:** Kritik
 
 **Tahmini Efor:** 32 saat
 
 ---
 
-### ALAN 2 � Poli�e Y�netimi (Tam Ya�am D�ng�s�)
+### ALAN 2 ï¿½ Poliï¿½e Yï¿½netimi (Tam Yaï¿½am Dï¿½ngï¿½sï¿½)
 
-**Mevcut Durum:** `AT Policy` genel m��teri/�irket/bran�/tarih/prim yap�s�na sahip. Poli�e PDF ili�tirme ve snapshot mevcut, ancak �r�n bazl� poli�e modellemesi yok.
+**Mevcut Durum:** `AT Policy` genel mï¿½ï¿½teri/ï¿½irket/branï¿½/tarih/prim yapï¿½sï¿½na sahip. Poliï¿½e PDF iliï¿½tirme ve snapshot mevcut, ancak ï¿½rï¿½n bazlï¿½ poliï¿½e modellemesi yok.
 
 **Kritik Eksikler:**
-- `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`: ara� plaka/motor/�asi, konut adres/metrekare, sa�l�k sigortal�lar�, BES s�zle�me bilgileri gibi �r�n tipine �zg� alanlar yok.
-- `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`: status yaln�zca `IPT`, `KYT`, `Active`; tekliften yenilemeye uzanan ger�ek ya�am d�ng�s� eksik.
-- `acentem_takipte/acentem_takipte/doctype/at_policy_endorsement/at_policy_endorsement.py`: `ALLOWED_ENDORSEMENT_FIELDS` sadece �ekirdek finans/tarih alanlar�n� kaps�yor; risk nesnesi de�i�imi desteklenmiyor.
-- `frontend/src/pages/PolicyDetail.vue`: endorsement, snapshot, payment, file ve notification listeleri var; �r�n/risk/teminat detay kartlar� yok.
-- `acentem_takipte/acentem_takipte/doctype/at_offer/at_offer.py`: tekliften poli�eye d�n���m var, fakat �r�n tipine g�re prefill ve do�rulama yok.
+- `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`: araï¿½ plaka/motor/ï¿½asi, konut adres/metrekare, saï¿½lï¿½k sigortalï¿½larï¿½, BES sï¿½zleï¿½me bilgileri gibi ï¿½rï¿½n tipine ï¿½zgï¿½ alanlar yok.
+- `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`: status yalnï¿½zca `IPT`, `KYT`, `Active`; tekliften yenilemeye uzanan gerï¿½ek yaï¿½am dï¿½ngï¿½sï¿½ eksik.
+- `acentem_takipte/acentem_takipte/doctype/at_policy_endorsement/at_policy_endorsement.py`: `ALLOWED_ENDORSEMENT_FIELDS` sadece ï¿½ekirdek finans/tarih alanlarï¿½nï¿½ kapsï¿½yor; risk nesnesi deï¿½iï¿½imi desteklenmiyor.
+- `frontend/src/pages/PolicyDetail.vue`: endorsement, snapshot, payment, file ve notification listeleri var; ï¿½rï¿½n/risk/teminat detay kartlarï¿½ yok.
+- `acentem_takipte/acentem_takipte/doctype/at_offer/at_offer.py`: tekliften poliï¿½eye dï¿½nï¿½ï¿½ï¿½m var, fakat ï¿½rï¿½n tipine gï¿½re prefill ve doï¿½rulama yok.
 
-**�nerilen Eklentiler:**
-- Yeni �st model: `AT Policy Product Profile`.
+**ï¿½nerilen Eklentiler:**
+- Yeni ï¿½st model: `AT Policy Product Profile`.
 - Child tablolar: `AT Vehicle Risk`, `AT Property Risk`, `AT Health Insured Person`, `AT Coverage Line`, `AT Policy Insured Object`.
-- Poli�e durum makinesi: `Teklif Bekliyor -> Aktiflestirme Bekliyor -> Aktif -> Yenileme Havuzu -> Iptal / Tamamlandi`.
-- Zeyilname i�in typed endorsement payload ve alan bazl� diff/snapshot ekran�.
-- Sigorta �irketi ve �r�n kombinasyonu bazl� �ablon/preset yap�s�.
+- Poliï¿½e durum makinesi: `Teklif Bekliyor -> Aktiflestirme Bekliyor -> Aktif -> Yenileme Havuzu -> Iptal / Tamamlandi`.
+- Zeyilname iï¿½in typed endorsement payload ve alan bazlï¿½ diff/snapshot ekranï¿½.
+- Sigorta ï¿½irketi ve ï¿½rï¿½n kombinasyonu bazlï¿½ ï¿½ablon/preset yapï¿½sï¿½.
 
-**Yol Haritas�na Entegrasyon:** Yeni `Faz 9 � Productized Policy Lifecycle`, mevcut `3.3` ve `3.4` ile ba�lant�l�.
+**Yol Haritasï¿½na Entegrasyon:** Yeni `Faz 9 ï¿½ Productized Policy Lifecycle`, mevcut `3.3` ve `3.4` ile baï¿½lantï¿½lï¿½.
 
-**�ncelik:** Kritik
+**ï¿½ncelik:** Kritik
 
 **Tahmini Efor:** 44 saat
 
 ---
 
-### ALAN 3 � Yenileme Takibi (Gelir Koruma Motoru)
+### ALAN 3 ï¿½ Yenileme Takibi (Gelir Koruma Motoru)
 
-**Mevcut Durum:** Yenileme g�revi otomatik �retiliyor, ama pencere sadece 30 g�n. Stat� modeli operasyonel takip yerine g�rev tamamland� mant���nda.
+**Mevcut Durum:** Yenileme gï¿½revi otomatik ï¿½retiliyor, ama pencere sadece 30 gï¿½n. Statï¿½ modeli operasyonel takip yerine gï¿½rev tamamlandï¿½ mantï¿½ï¿½ï¿½nda.
 
 **Kritik Eksikler:**
-- `acentem_takipte/acentem_takipte/tasks.py`: `RENEWAL_LOOKAHEAD_DAYS = 30`; 90/60/15/7/1 g�n kademeleri yok.
-- `acentem_takipte/acentem_takipte/doctype/at_renewal_task/at_renewal_task.json`: `status` yaln�zca `Open`, `In Progress`, `Done`, `Cancelled`.
-- `acentem_takipte/acentem_takipte/doctype/at_renewal_task/at_renewal_task.py`: notification draft �retiyor ama yenileme teklif �retmiyor.
-- `acentem_takipte/acentem_takipte/api/dashboard.py`: renewal bucket ve pending count var; retention rate, lost renewal reason, competitor loss analiti�i yok.
-- `frontend/src/pages/RenewalsBoard.vue`: filtrelenebilir liste var; m�zakere, kaybedildi, rakibe gitti, sebep se�imi ve teklif ili�kisi yok.
+- `acentem_takipte/acentem_takipte/tasks.py`: `RENEWAL_LOOKAHEAD_DAYS = 30`; 90/60/15/7/1 gï¿½n kademeleri yok.
+- `acentem_takipte/acentem_takipte/doctype/at_renewal_task/at_renewal_task.json`: `status` yalnï¿½zca `Open`, `In Progress`, `Done`, `Cancelled`.
+- `acentem_takipte/acentem_takipte/doctype/at_renewal_task/at_renewal_task.py`: notification draft ï¿½retiyor ama yenileme teklif ï¿½retmiyor.
+- `acentem_takipte/acentem_takipte/api/dashboard.py`: renewal bucket ve pending count var; retention rate, lost renewal reason, competitor loss analitiï¿½i yok.
+- `frontend/src/pages/RenewalsBoard.vue`: filtrelenebilir liste var; mï¿½zakere, kaybedildi, rakibe gitti, sebep seï¿½imi ve teklif iliï¿½kisi yok.
 
-**�nerilen Eklentiler:**
-- Yeni `AT Renewal Opportunity` DocType: sat�� a�amalar�, teklif ili�kisi, renewal owner.
-- Yeni `AT Renewal Outcome Reason` DocType: fiyat, hizmet, rakip, m��teri vazge�ti, kapsam uyumsuzlu�u.
-- �nceki poli�eden otomatik renewal offer prefill servisi.
+**ï¿½nerilen Eklentiler:**
+- Yeni `AT Renewal Opportunity` DocType: satï¿½ï¿½ aï¿½amalarï¿½, teklif iliï¿½kisi, renewal owner.
+- Yeni `AT Renewal Outcome Reason` DocType: fiyat, hizmet, rakip, mï¿½ï¿½teri vazgeï¿½ti, kapsam uyumsuzluï¿½u.
+- ï¿½nceki poliï¿½eden otomatik renewal offer prefill servisi.
 - KPI: `retention_rate`, `renewal_pipeline_value`, `lost_renewal_count`, `competitor_loss_rate`.
 
-**Yol Haritas�na Entegrasyon:** Mevcut `3.4` geni�letilmeli ve yeni `Faz 10 � Revenue Retention Engine` a��lmal�.
+**Yol Haritasï¿½na Entegrasyon:** Mevcut `3.4` geniï¿½letilmeli ve yeni `Faz 10 ï¿½ Revenue Retention Engine` aï¿½ï¿½lmalï¿½.
 
-**�ncelik:** Kritik
+**ï¿½ncelik:** Kritik
 
 **Tahmini Efor:** 36 saat
 
 ---
 
-### ALAN 4 � Tahsilat ve Mali Takip
+### ALAN 4 ï¿½ Tahsilat ve Mali Takip
 
-**Mevcut Durum:** Tekil �deme kayd�, muhasebe entry ve reconciliation yap�s� mevcut. Temel collection/payout ve mutabakat izlenebiliyor.
+**Mevcut Durum:** Tekil ï¿½deme kaydï¿½, muhasebe entry ve reconciliation yapï¿½sï¿½ mevcut. Temel collection/payout ve mutabakat izlenebiliyor.
 
 **Kritik Eksikler:**
-- `acentem_takipte/acentem_takipte/doctype/at_payment/at_payment.json`: taksit plan�, taksit no, plan toplam�, kalan bakiye alanlar� yok.
-- `acentem_takipte/acentem_takipte/doctype/at_payment/at_payment.py`: `due_date` do�rulan�yor ama taksit bazl� vade zinciri, gecikme faizi, hat�rlatma seviyesi yok.
-- `acentem_takipte/acentem_takipte/doctype/at_accounting_entry/at_accounting_entry.json`: KDV, BSMV, gider vergisi, komisyon tahakkuk/�deme ayr�m� yok.
-- `acentem_takipte/acentem_takipte/api/accounting.py`: workbench ve run/resolve operasyonlar� var; Excel/CSV ekstre import endpoint'i yok.
-- `frontend/src/pages/PaymentsBoard.vue` ve `frontend/src/pages/ReconciliationWorkbench.vue`: operasyon ekran� var, fakat kasa raporu, �irket ekstre y�kleme ve muhasebe d��a aktarma yok.
+- `acentem_takipte/acentem_takipte/doctype/at_payment/at_payment.json`: taksit planï¿½, taksit no, plan toplamï¿½, kalan bakiye alanlarï¿½ yok.
+- `acentem_takipte/acentem_takipte/doctype/at_payment/at_payment.py`: `due_date` doï¿½rulanï¿½yor ama taksit bazlï¿½ vade zinciri, gecikme faizi, hatï¿½rlatma seviyesi yok.
+- `acentem_takipte/acentem_takipte/doctype/at_accounting_entry/at_accounting_entry.json`: KDV, BSMV, gider vergisi, komisyon tahakkuk/ï¿½deme ayrï¿½mï¿½ yok.
+- `acentem_takipte/acentem_takipte/api/accounting.py`: workbench ve run/resolve operasyonlarï¿½ var; Excel/CSV ekstre import endpoint'i yok.
+- `frontend/src/pages/PaymentsBoard.vue` ve `frontend/src/pages/ReconciliationWorkbench.vue`: operasyon ekranï¿½ var, fakat kasa raporu, ï¿½irket ekstre yï¿½kleme ve muhasebe dï¿½ï¿½a aktarma yok.
 
-**�nerilen Eklentiler:**
+**ï¿½nerilen Eklentiler:**
 - Yeni `AT Installment Plan`, `AT Installment Item`, `AT Commission Accrual`, `AT Cash Ledger`, `AT Statement Import Batch`.
-- Ekstre import parser katman�: CSV/Excel -> staging -> e�le�tirme -> reconciliation �nerileri.
-- Vergi k�r�l�m alanlar� ve muhasebe export adapter'�.
-- Gecikmi� prim uyar� servisi ve m��teri/agent g�rev �retimi.
+- Ekstre import parser katmanï¿½: CSV/Excel -> staging -> eï¿½leï¿½tirme -> reconciliation ï¿½nerileri.
+- Vergi kï¿½rï¿½lï¿½m alanlarï¿½ ve muhasebe export adapter'ï¿½.
+- Gecikmiï¿½ prim uyarï¿½ servisi ve mï¿½ï¿½teri/agent gï¿½rev ï¿½retimi.
 
-**Yol Haritas�na Entegrasyon:** Yeni `Faz 11 � Collections and Finance Ops`.
+**Yol Haritasï¿½na Entegrasyon:** Yeni `Faz 11 ï¿½ Collections and Finance Ops`.
 
-**�ncelik:** Kritik
+**ï¿½ncelik:** Kritik
 
 **Tahmini Efor:** 40 saat
 
 ---
 
-### ALAN 5 � Hasar Y�netimi
+### ALAN 5 ï¿½ Hasar Yï¿½netimi
 
-**Mevcut Durum:** `AT Claim` temel claim kayd� ve �deme ba�lant�s� sa�l�yor. Liste ekran�nda claim durum ve �deme/approval tutarlar� g�r�lebiliyor.
+**Mevcut Durum:** `AT Claim` temel claim kaydï¿½ ve ï¿½deme baï¿½lantï¿½sï¿½ saï¿½lï¿½yor. Liste ekranï¿½nda claim durum ve ï¿½deme/approval tutarlarï¿½ gï¿½rï¿½lebiliyor.
 
 **Kritik Eksikler:**
-- `acentem_takipte/acentem_takipte/doctype/at_claim/at_claim.json`: eksper, dosya sorumlusu, red sebebi, itiraz durumu, belge/foto�raf alanlar� yok.
-- `acentem_takipte/acentem_takipte/doctype/at_claim/at_claim.py`: claim �deme toplam�n� hesapl�yor; dosya ya�am d�ng�s�, SLA ve atama kural� yok.
-- `frontend/src/pages/ClaimsBoard.vue`: liste var, ama claim detail/case management ekran� yok.
-- `acentem_takipte/acentem_takipte/communication.py`: claim status de�i�imlerinde m��teri bildirimi i�in �zel ak�� g�r�nm�yor.
-- Repo genelinde claim attachment/photo upload/inspection/workflow yap�s� bulunmuyor.
+- `acentem_takipte/acentem_takipte/doctype/at_claim/at_claim.json`: eksper, dosya sorumlusu, red sebebi, itiraz durumu, belge/fotoï¿½raf alanlarï¿½ yok.
+- `acentem_takipte/acentem_takipte/doctype/at_claim/at_claim.py`: claim ï¿½deme toplamï¿½nï¿½ hesaplï¿½yor; dosya yaï¿½am dï¿½ngï¿½sï¿½, SLA ve atama kuralï¿½ yok.
+- `frontend/src/pages/ClaimsBoard.vue`: liste var, ama claim detail/case management ekranï¿½ yok.
+- `acentem_takipte/acentem_takipte/communication.py`: claim status deï¿½iï¿½imlerinde mï¿½ï¿½teri bildirimi iï¿½in ï¿½zel akï¿½ï¿½ gï¿½rï¿½nmï¿½yor.
+- Repo genelinde claim attachment/photo upload/inspection/workflow yapï¿½sï¿½ bulunmuyor.
 
-**�nerilen Eklentiler:**
+**ï¿½nerilen Eklentiler:**
 - Yeni `AT Claim File`, `AT Claim Document`, `AT Expert Assignment`, `AT Claim Appeal`.
-- Claim detail sayfas�: olay bilgisi, eksper s�reci, �deme s�reci, itiraz sekmesi, belge y�kleme.
-- Claim status transition + m��teri notification rule set.
-- Loss ratio veri mart�: m��teri/�r�n/�irket baz�nda claim-to-premium analiti�i.
+- Claim detail sayfasï¿½: olay bilgisi, eksper sï¿½reci, ï¿½deme sï¿½reci, itiraz sekmesi, belge yï¿½kleme.
+- Claim status transition + mï¿½ï¿½teri notification rule set.
+- Loss ratio veri martï¿½: mï¿½ï¿½teri/ï¿½rï¿½n/ï¿½irket bazï¿½nda claim-to-premium analitiï¿½i.
 
-**Yol Haritas�na Entegrasyon:** Yeni `Faz 12 � Claims Case Management`.
+**Yol Haritasï¿½na Entegrasyon:** Yeni `Faz 12 ï¿½ Claims Case Management`.
 
-**�ncelik:** Kritik
+**ï¿½ncelik:** Kritik
 
 **Tahmini Efor:** 30 saat
 
 ---
 
-### ALAN 6 � �leti�im Merkezi
+### ALAN 6 ï¿½ ï¿½letiï¿½im Merkezi
 
-**Mevcut Durum:** Template, draft, outbox ve dispatcher kuyru�u mevcut. WhatsApp API adapter tasla�� ve scheduler dispatch var.
+**Mevcut Durum:** Template, draft, outbox ve dispatcher kuyruï¿½u mevcut. WhatsApp API adapter taslaï¿½ï¿½ ve scheduler dispatch var.
 
 **Kritik Eksikler:**
-- `acentem_takipte/acentem_takipte/doctype/at_notification_template/at_notification_template.json`: kanal modeli `SMS`, `Email`, `Both`; WhatsApp first-class channel de�il.
-- `acentem_takipte/acentem_takipte/doctype/at_notification_outbox/at_notification_outbox.json`: outbox kanallar� `SMS`, `Email`; telefon aramas�/notu yok.
-- `acentem_takipte/acentem_takipte/communication.py`: SMS ak��� yorum seviyesinde WhatsApp adapter �zerinden �al���yor; ger�ek SMS provider ayr�m� yok.
-- `frontend/src/pages/CommunicationCenter.vue`: outbox/draft y�netimi var; m��teri bazl� t�m ileti�im ge�mi�i, kampanya ve segment ekran� yok.
-- `acentem_takipte/hooks.py`: queue schedule var; zamanlanm�� kampanya veya m��teri segment broadcast job'u yok.
+- `acentem_takipte/acentem_takipte/doctype/at_notification_template/at_notification_template.json`: kanal modeli `SMS`, `Email`, `Both`; WhatsApp first-class channel deï¿½il.
+- `acentem_takipte/acentem_takipte/doctype/at_notification_outbox/at_notification_outbox.json`: outbox kanallarï¿½ `SMS`, `Email`; telefon aramasï¿½/notu yok.
+- `acentem_takipte/acentem_takipte/communication.py`: SMS akï¿½ï¿½ï¿½ yorum seviyesinde WhatsApp adapter ï¿½zerinden ï¿½alï¿½ï¿½ï¿½yor; gerï¿½ek SMS provider ayrï¿½mï¿½ yok.
+- `frontend/src/pages/CommunicationCenter.vue`: outbox/draft yï¿½netimi var; mï¿½ï¿½teri bazlï¿½ tï¿½m iletiï¿½im geï¿½miï¿½i, kampanya ve segment ekranï¿½ yok.
+- `acentem_takipte/hooks.py`: queue schedule var; zamanlanmï¿½ï¿½ kampanya veya mï¿½ï¿½teri segment broadcast job'u yok.
 
-**�nerilen Eklentiler:**
+**ï¿½nerilen Eklentiler:**
 - Yeni `AT Communication Log`, `AT Campaign`, `AT Segment`, `AT Scheduled Message`, `AT Call Note`.
 - Channel modeli: `WhatsApp`, `SMS`, `Email`, `Phone Call`.
-- Segment bazl� kampanya hedefleme: �r. "30 g�n i�inde kasko bitenler".
-- Planl� g�nderim ve approval workflow.
+- Segment bazlï¿½ kampanya hedefleme: ï¿½r. "30 gï¿½n iï¿½inde kasko bitenler".
+- Planlï¿½ gï¿½nderim ve approval workflow.
 
-**Yol Haritas�na Entegrasyon:** Yeni `Faz 13 � Omnichannel Communication Hub`.
+**Yol Haritasï¿½na Entegrasyon:** Yeni `Faz 13 ï¿½ Omnichannel Communication Hub`.
 
-**�ncelik:** Kritik
+**ï¿½ncelik:** Kritik
 
 **Tahmini Efor:** 34 saat
 
 ---
 
-### ALAN 7 � G�rev ve Aktivite Y�netimi
+### ALAN 7 ï¿½ Gï¿½rev ve Aktivite Yï¿½netimi
 
-**Mevcut Durum:** Uygulamada genel g�rev sistemi yok; g�rev kavram� fiilen `AT Renewal Task` ile s�n�rl�.
+**Mevcut Durum:** Uygulamada genel gï¿½rev sistemi yok; gï¿½rev kavramï¿½ fiilen `AT Renewal Task` ile sï¿½nï¿½rlï¿½.
 
 **Kritik Eksikler:**
-- `acentem_takipte/acentem_takipte/doctype/at_renewal_task/at_renewal_task.json`: yaln�zca renewal odakl� task modeli var.
-- `acentem_takipte/acentem_takipte/tasks.py`: admin job ve queue i�leri var; kullan�c� g�rev, reminder, follow-up ve daily task listesi yok.
-- `frontend/src/pages/Dashboard.vue`: renewal alerts ve offer queues var; ki�isel "bug�n yap�lacaklar" g�r�n�m� yok.
-- `frontend/src/router/index.js`: ziyaret plan�, aktivite, tak�m performans� gibi mod�ller i�in rota yok.
+- `acentem_takipte/acentem_takipte/doctype/at_renewal_task/at_renewal_task.json`: yalnï¿½zca renewal odaklï¿½ task modeli var.
+- `acentem_takipte/acentem_takipte/tasks.py`: admin job ve queue iï¿½leri var; kullanï¿½cï¿½ gï¿½rev, reminder, follow-up ve daily task listesi yok.
+- `frontend/src/pages/Dashboard.vue`: renewal alerts ve offer queues var; kiï¿½isel "bugï¿½n yapï¿½lacaklar" gï¿½rï¿½nï¿½mï¿½ yok.
+- `frontend/src/router/index.js`: ziyaret planï¿½, aktivite, takï¿½m performansï¿½ gibi modï¿½ller iï¿½in rota yok.
 
-**�nerilen Eklentiler:**
+**ï¿½nerilen Eklentiler:**
 - Yeni `AT Task`, `AT Activity`, `AT Reminder`, `AT Visit Plan`.
-- Domain event'lerden g�rev �reten rule engine: overdue �deme, claim follow-up, teklif follow-up, renewal call.
-- Ekip performans panosu: poli�e kesim, teklif d�n���m, tahsilat takibi, g�rev tamamlama.
+- Domain event'lerden gï¿½rev ï¿½reten rule engine: overdue ï¿½deme, claim follow-up, teklif follow-up, renewal call.
+- Ekip performans panosu: poliï¿½e kesim, teklif dï¿½nï¿½ï¿½ï¿½m, tahsilat takibi, gï¿½rev tamamlama.
 
-**Yol Haritas�na Entegrasyon:** Yeni `Faz 14 � Work Management and Team Ops`.
+**Yol Haritasï¿½na Entegrasyon:** Yeni `Faz 14 ï¿½ Work Management and Team Ops`.
 
-**�ncelik:** Kritik
+**ï¿½ncelik:** Kritik
 
 **Tahmini Efor:** 28 saat
 
 ---
 
-### ALAN 8 � Raporlama ve Analitik
+### ALAN 8 ï¿½ Raporlama ve Analitik
 
-**Mevcut Durum:** Dashboard v1/v2 ile GWP, komisyon, poli�e say�s�, renewal bucket, payment ve claim �zetleri al�nabiliyor. Tarih aral��� ve branch filtreleri �al���yor.
+**Mevcut Durum:** Dashboard v1/v2 ile GWP, komisyon, poliï¿½e sayï¿½sï¿½, renewal bucket, payment ve claim ï¿½zetleri alï¿½nabiliyor. Tarih aralï¿½ï¿½ï¿½ ve branch filtreleri ï¿½alï¿½ï¿½ï¿½yor.
 
 **Kritik Eksikler:**
-- `acentem_takipte/acentem_takipte/api/dashboard_v2/queries_kpis.py`: policy ve lead status �zetleri var; m��teri ba��na gelir, retention, churn, loss ratio yok.
-- `acentem_takipte/acentem_takipte/api/dashboard_v2/tab_payload.py`: offer/payment/renewal �zetleri var; �al��an bazl� �retim ve �r�n bazl� da��l�m yok.
-- `frontend/src/pages/Dashboard.vue`: �irket bazl� top companies var; �r�n/�al��an/segment/LTV k�r�l�m� yok.
-- Repo genelinde Excel/PDF export endpoint ve UI aksiyonu g�r�nm�yor.
+- `acentem_takipte/acentem_takipte/api/dashboard_v2/queries_kpis.py`: policy ve lead status ï¿½zetleri var; mï¿½ï¿½teri baï¿½ï¿½na gelir, retention, churn, loss ratio yok.
+- `acentem_takipte/acentem_takipte/api/dashboard_v2/tab_payload.py`: offer/payment/renewal ï¿½zetleri var; ï¿½alï¿½ï¿½an bazlï¿½ ï¿½retim ve ï¿½rï¿½n bazlï¿½ daï¿½ï¿½lï¿½m yok.
+- `frontend/src/pages/Dashboard.vue`: ï¿½irket bazlï¿½ top companies var; ï¿½rï¿½n/ï¿½alï¿½ï¿½an/segment/LTV kï¿½rï¿½lï¿½mï¿½ yok.
+- Repo genelinde Excel/PDF export endpoint ve UI aksiyonu gï¿½rï¿½nmï¿½yor.
 
-**�nerilen Eklentiler:**
-- Analitik mart katman�: `customer_value`, `renewal_retention`, `loss_ratio`, `agent_productivity`.
-- Export ve BI katman�: PDF/Excel export, zamanlanm�� rapor, d�nem kar��la�t�rma ve �al��an performans karnesi.
-- Y�netici ekran�: g�nl�k operasyon, haftal�k kay�p analizi, ayl�k �irket/�r�n/�al��an �retimi, y�ll�k b�y�me trendi.
+**ï¿½nerilen Eklentiler:**
+- Analitik mart katmanï¿½: `customer_value`, `renewal_retention`, `loss_ratio`, `agent_productivity`.
+- Export ve BI katmanï¿½: PDF/Excel export, zamanlanmï¿½ï¿½ rapor, dï¿½nem karï¿½ï¿½laï¿½tï¿½rma ve ï¿½alï¿½ï¿½an performans karnesi.
+- Yï¿½netici ekranï¿½: gï¿½nlï¿½k operasyon, haftalï¿½k kayï¿½p analizi, aylï¿½k ï¿½irket/ï¿½rï¿½n/ï¿½alï¿½ï¿½an ï¿½retimi, yï¿½llï¿½k bï¿½yï¿½me trendi.
 
-**Yol Haritas�na Entegrasyon:** Yeni `Faz 15 � Executive Analytics and Reporting`.
+**Yol Haritasï¿½na Entegrasyon:** Yeni `Faz 15 ï¿½ Executive Analytics and Reporting`.
 
-**�ncelik:** �nemli
+**ï¿½ncelik:** ï¿½nemli
 
 **Tahmini Efor:** 44 saat
 
 ---
 
-### Faz 15 G�ncellenmi� Versiyon
+### Faz 15 Gï¿½ncellenmiï¿½ Versiyon
 
-#### 15.1 PDF/Excel Export Altyap�s�
-- **Durum:** Tamamland�
-- **Durum G�ncelleme:** scheduled report config�lar�n�n admin g�r�n�rl���, manuel tetikleme, UI y�netim formu ve outbox teslim stratejisi tamamland�.
-- **�ncelik:** Y�ksek
+#### 15.1 PDF/Excel Export Altyapï¿½sï¿½
+- **Durum:** Tamamlandï¿½
+- **Durum Gï¿½ncelleme:** scheduled report configï¿½larï¿½nï¿½n admin gï¿½rï¿½nï¿½rlï¿½ï¿½ï¿½, manuel tetikleme, UI yï¿½netim formu ve outbox teslim stratejisi tamamlandï¿½.
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 18 saat
 - **Kapsam:**
   - `acentem_takipte/acentem_takipte/api/dashboard_v2/queries_kpis.py`
@@ -939,59 +939,59 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `frontend/src/pages/PolicyList.vue`
   - `frontend/src/pages/PaymentsBoard.vue`
   - `frontend/src/pages/ClaimsBoard.vue`
-- **Teknik Karar (PDF ve Excel i�in se�ilen yakla��m):**
+- **Teknik Karar (PDF ve Excel iï¿½in seï¿½ilen yaklaï¿½ï¿½m):**
   - PDF: `Frappe native print/html + Jinja + frappe.utils.pdf.get_pdf`
-    - Gerek�e: repo i�inde `policy_documents.py` zaten `get_pdf` kullan�yor; Desk uyumu ve kurumsal PDF standard� i�in mevcut stack ile en uyumlu yakla��m bu.
-    - Uygulama notu: DocType bazl� belgelerde Print Format; BI raporlar�nda server-side Jinja HTML �ablonu + `get_pdf`.
+    - Gerekï¿½e: repo iï¿½inde `policy_documents.py` zaten `get_pdf` kullanï¿½yor; Desk uyumu ve kurumsal PDF standardï¿½ iï¿½in mevcut stack ile en uyumlu yaklaï¿½ï¿½m bu.
+    - Uygulama notu: DocType bazlï¿½ belgelerde Print Format; BI raporlarï¿½nda server-side Jinja HTML ï¿½ablonu + `get_pdf`.
   - Excel: `openpyxl` server-side
-    - Gerek�e: 1000+ sat�r, �ok sheet, zamanlanm�� �retim ve kurumsal format kontrol� i�in backend �retim en g�venli yol.
+    - Gerekï¿½e: 1000+ satï¿½r, ï¿½ok sheet, zamanlanmï¿½ï¿½ ï¿½retim ve kurumsal format kontrolï¿½ iï¿½in backend ï¿½retim en gï¿½venli yol.
   - Tetikleme modeli: `Her ikisi de`
-    - anl�k indirme: kullan�c� filtreleyip indirir
-    - zamanlanm�� �retim: haftal�k/ayl�k job + bildirim
-- **�retilecek Rapor Tipleri:**
-  - `Poli�e Listesi Raporu`
+    - anlï¿½k indirme: kullanï¿½cï¿½ filtreleyip indirir
+    - zamanlanmï¿½ï¿½ ï¿½retim: haftalï¿½k/aylï¿½k job + bildirim
+- **ï¿½retilecek Rapor Tipleri:**
+  - `Poliï¿½e Listesi Raporu`
     - Kaynak: `AT Policy` + `AT Customer` + `AT Insurance Company` + opsiyonel `AT Sales Entity`
-    - Filtreler: tarih aral���, sigorta �irketi, sigorta bran��, fiziksel �ube, durum, �al��an
-    - PDF d�zeni: logo, rapor ba�l���, filtre �zeti, tablo, toplam prim/komisyon �zet sat�r�
-    - Excel yap�s�: `Summary`, `Policies`
+    - Filtreler: tarih aralï¿½ï¿½ï¿½, sigorta ï¿½irketi, sigorta branï¿½ï¿½, fiziksel ï¿½ube, durum, ï¿½alï¿½ï¿½an
+    - PDF dï¿½zeni: logo, rapor baï¿½lï¿½ï¿½ï¿½, filtre ï¿½zeti, tablo, toplam prim/komisyon ï¿½zet satï¿½rï¿½
+    - Excel yapï¿½sï¿½: `Summary`, `Policies`
   - `Komisyon Tahakkuk Raporu`
     - Kaynak: `AT Policy`, `AT Payment`, `AT Accounting Entry`, `AT Reconciliation Item`
-    - Filtreler: d�nem, �irket, �al��an, fiziksel �ube, tahakkuk durumu
-    - PDF d�zeni: d�nem �zeti, �irket bazl� k�r�l�m tablosu, tahakkuk/tahsilat fark �zeti
-    - Excel yap�s�: `Summary`, `By Company`, `Lines`
+    - Filtreler: dï¿½nem, ï¿½irket, ï¿½alï¿½ï¿½an, fiziksel ï¿½ube, tahakkuk durumu
+    - PDF dï¿½zeni: dï¿½nem ï¿½zeti, ï¿½irket bazlï¿½ kï¿½rï¿½lï¿½m tablosu, tahakkuk/tahsilat fark ï¿½zeti
+    - Excel yapï¿½sï¿½: `Summary`, `By Company`, `Lines`
   - `Yenileme Performans Raporu`
     - Kaynak: `AT Renewal Task`, `AT Renewal Opportunity`, `AT Renewal Outcome`, `AT Offer`, `AT Policy`
-    - Filtreler: d�nem, �al��an, �irket, bran�, fiziksel �ube
-    - PDF d�zeni: retention KPI kartlar�, stage da��l�m� tablosu, kay�p nedenleri �zeti
-    - Excel yap�s�: `Summary`, `Pipeline`, `Lost Reasons`, `Agent Breakdown`
-  - `Hasar/Prim Oran� Raporu`
+    - Filtreler: dï¿½nem, ï¿½alï¿½ï¿½an, ï¿½irket, branï¿½, fiziksel ï¿½ube
+    - PDF dï¿½zeni: retention KPI kartlarï¿½, stage daï¿½ï¿½lï¿½mï¿½ tablosu, kayï¿½p nedenleri ï¿½zeti
+    - Excel yapï¿½sï¿½: `Summary`, `Pipeline`, `Lost Reasons`, `Agent Breakdown`
+  - `Hasar/Prim Oranï¿½ Raporu`
     - Kaynak: `AT Claim`, `AT Payment`, `AT Policy`, `AT Customer`
-    - Filtreler: d�nem, �irket, �r�n/bran�, m��teri segmenti, fiziksel �ube
-    - PDF d�zeni: loss ratio �zeti, �irket/�r�n bazl� tablo, riskli m��teri listesi
-    - Excel yap�s�: `Summary`, `By Product`, `By Company`, `Risk Customers`
-  - `Acente �retim Karnesi`
+    - Filtreler: dï¿½nem, ï¿½irket, ï¿½rï¿½n/branï¿½, mï¿½ï¿½teri segmenti, fiziksel ï¿½ube
+    - PDF dï¿½zeni: loss ratio ï¿½zeti, ï¿½irket/ï¿½rï¿½n bazlï¿½ tablo, riskli mï¿½ï¿½teri listesi
+    - Excel yapï¿½sï¿½: `Summary`, `By Product`, `By Company`, `Risk Customers`
+  - `Acente ï¿½retim Karnesi`
     - Kaynak: `AT Policy`, `AT Offer`, `AT Renewal Task`, `AT Renewal Outcome`, `AT Payment`, `AT Task`
-    - Filtreler: �al��an, d�nem, fiziksel �ube
-    - PDF d�zeni: �al��an ba�l���, KPI kartlar�, hedef-ger�ekle�en tablosu, a��k g�rev �zeti
-    - Excel yap�s�: `Summary`, `Agents`, `Open Tasks`, `Conversions`
+    - Filtreler: ï¿½alï¿½ï¿½an, dï¿½nem, fiziksel ï¿½ube
+    - PDF dï¿½zeni: ï¿½alï¿½ï¿½an baï¿½lï¿½ï¿½ï¿½, KPI kartlarï¿½, hedef-gerï¿½ekleï¿½en tablosu, aï¿½ï¿½k gï¿½rev ï¿½zeti
+    - Excel yapï¿½sï¿½: `Summary`, `Agents`, `Open Tasks`, `Conversions`
   - `Tahsilat Durumu Raporu`
     - Kaynak: `AT Payment`, `AT Installment Plan`, `AT Accounting Entry`, `AT Reconciliation Item`
-    - Filtreler: d�nem, �deme durumu, vadesi ge�enler, �irket, fiziksel �ube
-    - PDF d�zeni: kasa �zeti, gecikmi� tahsilat listesi, taksit �zeti
-    - Excel yap�s�: `Summary`, `Overdue`, `Installments`, `Cash`
+    - Filtreler: dï¿½nem, ï¿½deme durumu, vadesi geï¿½enler, ï¿½irket, fiziksel ï¿½ube
+    - PDF dï¿½zeni: kasa ï¿½zeti, gecikmiï¿½ tahsilat listesi, taksit ï¿½zeti
+    - Excel yapï¿½sï¿½: `Summary`, `Overdue`, `Installments`, `Cash`
 - **Kabul Kriterleri:**
-  - En az 6 rapor tipi i�in ortak export servis katman� olu�ur.
-  - PDF ��kt�lar�nda kurumsal ba�l�k, filtre �zeti, �zet sat�r� ve sayfa numaras� standard� uygulan�r.
-  - Excel ��kt�lar�nda �oklu sheet, ba�l�k stili, say�/tarih format� ve filtre sat�r� bulunur.
-  - Uzun s�ren export i�leri queue �zerinden y�r�r; k���k veri setlerinde anl�k indirme desteklenir.
-  - Dashboard v2 ve liste ekranlar� ayn� filtre s�zle�mesi ile export al�r.
-- **Desk Uyumlulu�u:**
-  - Evet. `System Manager` ve `Administrator` Desk �zerinden de rapor alabilmeli.
-  - Desk taraf�nda export action ve rapor parametre formu bulunur; normal kullan�c� ayn� raporlar� `/at` i�inden kullan�r.
+  - En az 6 rapor tipi iï¿½in ortak export servis katmanï¿½ oluï¿½ur.
+  - PDF ï¿½ï¿½ktï¿½larï¿½nda kurumsal baï¿½lï¿½k, filtre ï¿½zeti, ï¿½zet satï¿½rï¿½ ve sayfa numarasï¿½ standardï¿½ uygulanï¿½r.
+  - Excel ï¿½ï¿½ktï¿½larï¿½nda ï¿½oklu sheet, baï¿½lï¿½k stili, sayï¿½/tarih formatï¿½ ve filtre satï¿½rï¿½ bulunur.
+  - Uzun sï¿½ren export iï¿½leri queue ï¿½zerinden yï¿½rï¿½r; kï¿½ï¿½ï¿½k veri setlerinde anlï¿½k indirme desteklenir.
+  - Dashboard v2 ve liste ekranlarï¿½ aynï¿½ filtre sï¿½zleï¿½mesi ile export alï¿½r.
+- **Desk Uyumluluï¿½u:**
+  - Evet. `System Manager` ve `Administrator` Desk ï¿½zerinden de rapor alabilmeli.
+  - Desk tarafï¿½nda export action ve rapor parametre formu bulunur; normal kullanï¿½cï¿½ aynï¿½ raporlarï¿½ `/at` iï¿½inden kullanï¿½r.
 
-#### 15.2 Kar��la�t�rmal� D�nem Analizi
+#### 15.2 Karï¿½ï¿½laï¿½tï¿½rmalï¿½ Dï¿½nem Analizi
 - **Durum:** Plan
-- **�ncelik:** Y�ksek
+- **ï¿½ncelik:** Yï¿½ksek
 - **Efor:** 8 saat
 - **Kapsam:**
   - `acentem_takipte/acentem_takipte/api/dashboard_v2/queries_kpis.py`
@@ -999,18 +999,18 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `acentem_takipte/acentem_takipte/api/dashboard.py`
   - `frontend/src/pages/Dashboard.vue`
 - **Kabul Kriterleri:**
-  - KPI payload'�na `period_comparison` parametresi eklenir: `none`, `previous_period`, `previous_month`, `previous_year`.
-  - Her KPI i�in `current`, `previous`, `delta_value`, `delta_percent`, `direction` alanlar� d�ner.
-  - �u senaryolar desteklenir:
-    - bu ay vs ge�en ay
-    - bu y�l vs ge�en y�l
-    - se�ili d�nem vs ayn� uzunlukta �nceki d�nem
-  - Dashboard kartlar� `^ / �` y�n g�stergesi ve y�zde de�i�im g�sterir.
-  - Ayn� comparison helper export raporlar�nda tekrar kullan�labilir �ekilde ayr��t�r�l�r.
+  - KPI payload'ï¿½na `period_comparison` parametresi eklenir: `none`, `previous_period`, `previous_month`, `previous_year`.
+  - Her KPI iï¿½in `current`, `previous`, `delta_value`, `delta_percent`, `direction` alanlarï¿½ dï¿½ner.
+  - ï¿½u senaryolar desteklenir:
+    - bu ay vs geï¿½en ay
+    - bu yï¿½l vs geï¿½en yï¿½l
+    - seï¿½ili dï¿½nem vs aynï¿½ uzunlukta ï¿½nceki dï¿½nem
+  - Dashboard kartlarï¿½ `^ / ï¿½` yï¿½n gï¿½stergesi ve yï¿½zde deï¿½iï¿½im gï¿½sterir.
+  - Aynï¿½ comparison helper export raporlarï¿½nda tekrar kullanï¿½labilir ï¿½ekilde ayrï¿½ï¿½tï¿½rï¿½lï¿½r.
 
 #### 15.3 Acente Performans Karnesi
 - **Durum:** Plan
-- **�ncelik:** Orta
+- **ï¿½ncelik:** Orta
 - **Efor:** 10 saat
 - **Kapsam:**
   - `acentem_takipte/acentem_takipte/api/dashboard_v2/queries_kpis.py`
@@ -1022,21 +1022,21 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `acentem_takipte/acentem_takipte/doctype/at_offer/*`
   - `acentem_takipte/acentem_takipte/doctype/at_payment/*`
 - **Kabul Kriterleri:**
-  - �al��an bazl� �u metrikler �retilir:
-    - kesilen poli�e say�s�
+  - ï¿½alï¿½ï¿½an bazlï¿½ ï¿½u metrikler ï¿½retilir:
+    - kesilen poliï¿½e sayï¿½sï¿½
     - toplam prim
-    - teklif d�n���m oran�
-    - yenileme ba�ar� oran�
+    - teklif dï¿½nï¿½ï¿½ï¿½m oranï¿½
+    - yenileme baï¿½arï¿½ oranï¿½
     - komisyon geliri
-    - a��k g�rev say�s�
-  - Hem ekran g�r�n�m� hem PDF export desteklenir.
-  - Fiziksel �ube ve �al��an filtresi ayn� s�zle�me ile �al���r.
-  - KPI tan�mlar� Faz 14 g�rev modeli tamamland�ktan sonra g�rev bazl� metriklerle geni�leyebilir.
-- **Ba��ml�l�k:** `Faz 14 � Work Management and Team Ops`
+    - aï¿½ï¿½k gï¿½rev sayï¿½sï¿½
+  - Hem ekran gï¿½rï¿½nï¿½mï¿½ hem PDF export desteklenir.
+  - Fiziksel ï¿½ube ve ï¿½alï¿½ï¿½an filtresi aynï¿½ sï¿½zleï¿½me ile ï¿½alï¿½ï¿½ï¿½r.
+  - KPI tanï¿½mlarï¿½ Faz 14 gï¿½rev modeli tamamlandï¿½ktan sonra gï¿½rev bazlï¿½ metriklerle geniï¿½leyebilir.
+- **Baï¿½ï¿½mlï¿½lï¿½k:** `Faz 14 ï¿½ Work Management and Team Ops`
 
-#### 15.4 M��teri Segmentasyon Raporu
-- **Durum:** Tamamland�
-- **�ncelik:** Orta
+#### 15.4 Mï¿½ï¿½teri Segmentasyon Raporu
+- **Durum:** Tamamlandï¿½
+- **ï¿½ncelik:** Orta
 - **Efor:** 8 saat
 - **Kapsam:**
   - `acentem_takipte/acentem_takipte/api/dashboard_v2/queries_kpis.py`
@@ -1047,140 +1047,140 @@ Repoyu end�stri standartlar�nda g�venli, �l�eklenebilir ve s�rd�r�
   - `frontend/src/pages/CustomerList.vue`
   - `frontend/src/pages/CustomerSegments.vue` (yeni)
 - **Kabul Kriterleri:**
-  - Temel segmentasyon, `AT Customer Segment Snapshot` olmadan �u kurallarla �al���r:
-    - poli�e say�s�: `1`, `2-5`, `5+`
+  - Temel segmentasyon, `AT Customer Segment Snapshot` olmadan ï¿½u kurallarla ï¿½alï¿½ï¿½ï¿½r:
+    - poliï¿½e sayï¿½sï¿½: `1`, `2-5`, `5+`
     - toplam prim segmenti
     - yenileme sadakat skoru
-    - hasar ge�mi�i var/yok
-  - M��teri listesi ekran�nda segment filtreleme + export birlikte �al���r.
-  - `AT Customer Segment Snapshot` geldi�inde ayn� endpoint s�zle�mesi korunarak geli�mi� segmente ge�ilebilir.
-  - Desk'te admin kullan�c� segment raporunu m��teri listesi/export y�zeyi �zerinden alabilir.
-- **Ba��ml�l�k:** `Faz 8 � Customer 360 ve CRM Graph` (opsiyonel; temel versiyon ba��ms�z �al���r)
+    - hasar geï¿½miï¿½i var/yok
+  - Mï¿½ï¿½teri listesi ekranï¿½nda segment filtreleme + export birlikte ï¿½alï¿½ï¿½ï¿½r.
+  - `AT Customer Segment Snapshot` geldiï¿½inde aynï¿½ endpoint sï¿½zleï¿½mesi korunarak geliï¿½miï¿½ segmente geï¿½ilebilir.
+  - Desk'te admin kullanï¿½cï¿½ segment raporunu mï¿½ï¿½teri listesi/export yï¿½zeyi ï¿½zerinden alabilir.
+- **Baï¿½ï¿½mlï¿½lï¿½k:** `Faz 8 ï¿½ Customer 360 ve CRM Graph` (opsiyonel; temel versiyon baï¿½ï¿½msï¿½z ï¿½alï¿½ï¿½ï¿½r)
 
 ---
 
-### ALAN 10 � Mobil Kullan�m
+### ALAN 10 ï¿½ Mobil Kullanï¿½m
 
-**Mevcut Durum:** Vue SPA route bazl� lazy-load kullan�yor. Sayfalarda temel responsive s�n�flar var; fakat deneyim masa�st� workbench mant��� a��rl�kl�.
+**Mevcut Durum:** Vue SPA route bazlï¿½ lazy-load kullanï¿½yor. Sayfalarda temel responsive sï¿½nï¿½flar var; fakat deneyim masaï¿½stï¿½ workbench mantï¿½ï¿½ï¿½ aï¿½ï¿½rlï¿½klï¿½.
 
 **Kritik Eksikler:**
-- `frontend/src/router/index.js`: mobil sahaya �zel field mode veya mini-detail route modeli yok.
-- `frontend/src/pages/CustomerDetail.vue`, `PolicyDetail.vue`, `ClaimsBoard.vue`, `PaymentsBoard.vue`: veri yo�un kart ve tablo yap�s� mobil kullan�m i�in optimize edilmemi�.
-- `frontend/src/state/session.js`: global session state var; Pinia veya offline-friendly domain store yap�s� yok.
-- `frontend/src/pages/ClaimsBoard.vue`: foto�raf ekleme, kamera y�kleme, sahadan hasar kayd� ak��� yok.
-- `frontend/src/pages/OfferBoard.vue` ve `PolicyDetail.vue`: h�zl� teklif sihirbaz� ve m��teri ziyaretinde kullan�lacak tek-ekran aksiyon seti yok.
+- `frontend/src/router/index.js`: mobil sahaya ï¿½zel field mode veya mini-detail route modeli yok.
+- `frontend/src/pages/CustomerDetail.vue`, `PolicyDetail.vue`, `ClaimsBoard.vue`, `PaymentsBoard.vue`: veri yoï¿½un kart ve tablo yapï¿½sï¿½ mobil kullanï¿½m iï¿½in optimize edilmemiï¿½.
+- `frontend/src/state/session.js`: global session state var; Pinia veya offline-friendly domain store yapï¿½sï¿½ yok.
+- `frontend/src/pages/ClaimsBoard.vue`: fotoï¿½raf ekleme, kamera yï¿½kleme, sahadan hasar kaydï¿½ akï¿½ï¿½ï¿½ yok.
+- `frontend/src/pages/OfferBoard.vue` ve `PolicyDetail.vue`: hï¿½zlï¿½ teklif sihirbazï¿½ ve mï¿½ï¿½teri ziyaretinde kullanï¿½lacak tek-ekran aksiyon seti yok.
 
-**�nerilen Eklentiler:**
+**ï¿½nerilen Eklentiler:**
 - Yeni mobil-first `Field Mode` navigasyonu.
-- H�zl� aksiyon kartlar�: `Musteri Ara`, `Hizli Teklif`, `Hasar Bildir`, `Tahsilat Notu`, `Fotograf Yukle`.
-- Kamera/file capture destekli claim ve belge ak��lar�.
-- Pinia tabanl� offline toleransl� domain cache.
+- Hï¿½zlï¿½ aksiyon kartlarï¿½: `Musteri Ara`, `Hizli Teklif`, `Hasar Bildir`, `Tahsilat Notu`, `Fotograf Yukle`.
+- Kamera/file capture destekli claim ve belge akï¿½ï¿½larï¿½.
+- Pinia tabanlï¿½ offline toleranslï¿½ domain cache.
 
-**Yol Haritas�na Entegrasyon:** Yeni `Faz 16 � Mobile Field Operations`.
+**Yol Haritasï¿½na Entegrasyon:** Yeni `Faz 16 ï¿½ Mobile Field Operations`.
 
-**�ncelik:** �nemli
+**ï¿½ncelik:** ï¿½nemli
 
 **Tahmini Efor:** 24 saat
 
 ---
 
-## Yol Haritas� (v2 � Birle�tirilmi� ve Ba��ml�l�k S�ral�)
+## Yol Haritasï¿½ (v2 ï¿½ Birleï¿½tirilmiï¿½ ve Baï¿½ï¿½mlï¿½lï¿½k Sï¿½ralï¿½)
 
-Bu b�l�m, yukar�daki alan analizinden ��kan `Faz 8-16` �nerilerini mevcut `Faz 1-7` ile �ak��mayacak �ekilde birle�tirir. Ama� ayr� backlog k�meleri �retmek de�il; uygulamaya ba�lanabilecek tek bir, ba��ml�l�k s�ral� icra dizisi olu�turmakt�r.
+Bu bï¿½lï¿½m, yukarï¿½daki alan analizinden ï¿½ï¿½kan `Faz 8-16` ï¿½nerilerini mevcut `Faz 1-7` ile ï¿½akï¿½ï¿½mayacak ï¿½ekilde birleï¿½tirir. Amaï¿½ ayrï¿½ backlog kï¿½meleri ï¿½retmek deï¿½il; uygulamaya baï¿½lanabilecek tek bir, baï¿½ï¿½mlï¿½lï¿½k sï¿½ralï¿½ icra dizisi oluï¿½turmaktï¿½r.
 
-### Dalga 1 � G�venlik, Uyum ve S�zle�me Temeli
-- **Birle�en Fazlar:** `Faz 1`, `Faz 5.2`, `Faz 7.1`, `Faz 7.2`, `Faz 7.3`, `Faz 7.4`
-- **�ncelik:** Y�ksek
+### Dalga 1 ï¿½ Gï¿½venlik, Uyum ve Sï¿½zleï¿½me Temeli
+- **Birleï¿½en Fazlar:** `Faz 1`, `Faz 5.2`, `Faz 7.1`, `Faz 7.2`, `Faz 7.3`, `Faz 7.4`
+- **ï¿½ncelik:** Yï¿½ksek
 - **Toplam Efor:** 88 saat
 - **Odak:**
-  - Auth, permission, `ignore_permissions=True`, log redaction ve admin job eri�im standard�n� kapatmak
-  - Structured logging, metrics, KVKK ya�am d�ng�s� ve harici entegrasyon s�zle�melerini sabitlemek
-  - API versioning ve CI g�venlik kap�s�n� uygulamak
-- **Bu Dalga Tamamlanmadan Ba�lanmamas� Gerekenler:**
-  - Omnichannel communication geni�lemesi
+  - Auth, permission, `ignore_permissions=True`, log redaction ve admin job eriï¿½im standardï¿½nï¿½ kapatmak
+  - Structured logging, metrics, KVKK yaï¿½am dï¿½ngï¿½sï¿½ ve harici entegrasyon sï¿½zleï¿½melerini sabitlemek
+  - API versioning ve CI gï¿½venlik kapï¿½sï¿½nï¿½ uygulamak
+- **Bu Dalga Tamamlanmadan Baï¿½lanmamasï¿½ Gerekenler:**
+  - Omnichannel communication geniï¿½lemesi
   - Muhasebe/entegrasyon rollout'u
-  - Customer 360 i�in geni� PII g�r�n�rl�k y�zeyi
+  - Customer 360 iï¿½in geniï¿½ PII gï¿½rï¿½nï¿½rlï¿½k yï¿½zeyi
 
-### Dalga 2 � Veri Modeli ve Servis Katman� Temeli
-- **Birle�en Fazlar:** `Faz 3.1`, `Faz 3.2`, `Faz 3.3`, `Faz 3.3.1`
-- **�ncelik:** Y�ksek
+### Dalga 2 ï¿½ Veri Modeli ve Servis Katmanï¿½ Temeli
+- **Birleï¿½en Fazlar:** `Faz 3.1`, `Faz 3.2`, `Faz 3.3`, `Faz 3.3.1`
+- **ï¿½ncelik:** Yï¿½ksek
 - **Toplam Efor:** 40 saat
 - **Odak:**
-  - Ortak servis katman�, permission helper ve domain yard�mc�lar�n� oturtmak
-  - DocType normalizasyonu, legacy alan temizli�i ve ortak finans/status do�rulamas�n� tekille�tirmek
-  - Sonraki dalgalarda eklenecek m��teri ili�ki, risk nesnesi, taksit, claim case, communication log ve task modelleri i�in �ema standard� belirlemek
-- **Bu Dalga Tamamlanmadan Ba�lanmamas� Gerekenler:**
+  - Ortak servis katmanï¿½, permission helper ve domain yardï¿½mcï¿½larï¿½nï¿½ oturtmak
+  - DocType normalizasyonu, legacy alan temizliï¿½i ve ortak finans/status doï¿½rulamasï¿½nï¿½ tekilleï¿½tirmek
+  - Sonraki dalgalarda eklenecek mï¿½ï¿½teri iliï¿½ki, risk nesnesi, taksit, claim case, communication log ve task modelleri iï¿½in ï¿½ema standardï¿½ belirlemek
+- **Bu Dalga Tamamlanmadan Baï¿½lanmamasï¿½ Gerekenler:**
   - Productized policy lifecycle rollout
   - Collections/installment modeli
   - Claims case management ve unified activity modeli
 
-### Dalga 3 � Frontend State, UX ve Mobil Foundation
-- **Birle�en Fazlar:** `Faz 2.3`, `Faz 3.2.1`, `Faz 6.1`, `Faz 6.2`
-- **�ncelik:** Y�ksek
+### Dalga 3 ï¿½ Frontend State, UX ve Mobil Foundation
+- **Birleï¿½en Fazlar:** `Faz 2.3`, `Faz 3.2.1`, `Faz 6.1`, `Faz 6.2`
+- **ï¿½ncelik:** Yï¿½ksek
 - **Toplam Efor:** 34 saat
 - **Odak:**
-  - Pinia tabanl� domain store mimarisine ge�mek
-  - Loading/error/empty state standard�n� oturtmak
-  - Eri�ilebilirlik ve responsive davran��� temel seviyede g�venceye almak
-  - Mobil saha moduna altyap� haz�rlamak
-- **Bu Dalga Tamamlanmadan Ba�lanmamas� Gerekenler:**
-  - Customer 360 ekran�n�n geni�letilmesi
+  - Pinia tabanlï¿½ domain store mimarisine geï¿½mek
+  - Loading/error/empty state standardï¿½nï¿½ oturtmak
+  - Eriï¿½ilebilirlik ve responsive davranï¿½ï¿½ï¿½ temel seviyede gï¿½venceye almak
+  - Mobil saha moduna altyapï¿½ hazï¿½rlamak
+- **Bu Dalga Tamamlanmadan Baï¿½lanmamasï¿½ Gerekenler:**
+  - Customer 360 ekranï¿½nï¿½n geniï¿½letilmesi
   - Mobile field operations rollout
-  - B�y�k �ok-sekmeli operasyon ekranlar�
+  - Bï¿½yï¿½k ï¿½ok-sekmeli operasyon ekranlarï¿½
 
-### Dalga 4 � Customer 360 ve Productized Policy Foundation
-- **Birle�en Fazlar:** `Faz 8`, `Faz 9` i�indeki veri modeli ve �ekirdek servis maddeleri
-- **�ncelik:** Y�ksek
+### Dalga 4 ï¿½ Customer 360 ve Productized Policy Foundation
+- **Birleï¿½en Fazlar:** `Faz 8`, `Faz 9` iï¿½indeki veri modeli ve ï¿½ekirdek servis maddeleri
+- **ï¿½ncelik:** Yï¿½ksek
 - **Toplam Efor:** 46 saat
 - **Odak:**
-  - `AT Customer` �evresine household, asset, segment ve skor katmanlar�n� eklemek
-  - `AT Policy` i�in �r�n bazl� risk nesnesi modelini kurmak
-  - Ger�ek endorsement diff ve product-specific validation altyap�s�n� ��karmak
-- **Ba��ml�l�k:** `Dalga 1`, `Dalga 2`, `Dalga 3`
+  - `AT Customer` ï¿½evresine household, asset, segment ve skor katmanlarï¿½nï¿½ eklemek
+  - `AT Policy` iï¿½in ï¿½rï¿½n bazlï¿½ risk nesnesi modelini kurmak
+  - Gerï¿½ek endorsement diff ve product-specific validation altyapï¿½sï¿½nï¿½ ï¿½ï¿½karmak
+- **Baï¿½ï¿½mlï¿½lï¿½k:** `Dalga 1`, `Dalga 2`, `Dalga 3`
 
-### Dalga 5 � Gelir Koruma ve Mali Operasyon Motoru
-- **Birle�en Fazlar:** `Faz 2.2`, `Faz 3.4`, `Faz 10`, `Faz 11`
-- **�ncelik:** Y�ksek
+### Dalga 5 ï¿½ Gelir Koruma ve Mali Operasyon Motoru
+- **Birleï¿½en Fazlar:** `Faz 2.2`, `Faz 3.4`, `Faz 10`, `Faz 11`
+- **ï¿½ncelik:** Yï¿½ksek
 - **Toplam Efor:** 92 saat
 - **Odak:**
   - Renewal engine'i 90/60/30/15/7/1 kademeli hale getirmek
-  - Auto renewal offer, lost reason ve retention KPI'lar�n� eklemek
-  - Installment plan, overdue premium, commission accrual ve statement import ak���n� kurmak
-  - Accounting/reconciliation workbench'i finans operasyon merkezine d�n��t�rmek
-- **Ba��ml�l�k:** `Dalga 1`, `Dalga 2`
+  - Auto renewal offer, lost reason ve retention KPI'larï¿½nï¿½ eklemek
+  - Installment plan, overdue premium, commission accrual ve statement import akï¿½ï¿½ï¿½nï¿½ kurmak
+  - Accounting/reconciliation workbench'i finans operasyon merkezine dï¿½nï¿½ï¿½tï¿½rmek
+- **Baï¿½ï¿½mlï¿½lï¿½k:** `Dalga 1`, `Dalga 2`
 
-### Dalga 6 � Claims, �leti�im ve Tak�m Operasyonlar�
-- **Birle�en Fazlar:** `Faz 12`, `Faz 13`, `Faz 14`
-- **�ncelik:** Y�ksek
+### Dalga 6 ï¿½ Claims, ï¿½letiï¿½im ve Takï¿½m Operasyonlarï¿½
+- **Birleï¿½en Fazlar:** `Faz 12`, `Faz 13`, `Faz 14`
+- **ï¿½ncelik:** Yï¿½ksek
 - **Toplam Efor:** 92 saat
 - **Odak:**
-  - Claim case management, eksper, belge/foto�raf ve itiraz s�recini eklemek
-  - WhatsApp, SMS, e-posta ve telefon notunu tek communication timeline alt�nda birle�tirmek
-  - Segment/kampanya/zamanlanm�� g�nderim ve genel task/activity/reminder modelini kurmak
-  - �al��an bazl� g�rev ve performans takibini dashboard ile ba�lamak
-- **Ba��ml�l�k:** `Dalga 1`, `Dalga 2`, `Dalga 3`
+  - Claim case management, eksper, belge/fotoï¿½raf ve itiraz sï¿½recini eklemek
+  - WhatsApp, SMS, e-posta ve telefon notunu tek communication timeline altï¿½nda birleï¿½tirmek
+  - Segment/kampanya/zamanlanmï¿½ï¿½ gï¿½nderim ve genel task/activity/reminder modelini kurmak
+  - ï¿½alï¿½ï¿½an bazlï¿½ gï¿½rev ve performans takibini dashboard ile baï¿½lamak
+- **Baï¿½ï¿½mlï¿½lï¿½k:** `Dalga 1`, `Dalga 2`, `Dalga 3`
 
-### Dalga 7 � Y�netici Analiti�i, Test ve Release Hardening
-- **Birle�en Fazlar:** `Faz 4`, `Faz 5.1`, `Faz 15`, `Faz 16`
-- **�ncelik:** Orta
+### Dalga 7 ï¿½ Yï¿½netici Analitiï¿½i, Test ve Release Hardening
+- **Birleï¿½en Fazlar:** `Faz 4`, `Faz 5.1`, `Faz 15`, `Faz 16`
+- **ï¿½ncelik:** Orta
 - **Toplam Efor:** 84 saat
 - **Odak:**
-  - Executive KPI setini m��teri de�eri, retention, loss ratio ve agent �retkenli�i ile geni�letmek
-  - PDF/Excel export, scheduled reports, d�nem kar��la�t�rma ve performans/segment raporlamas�n� eklemek
-  - Backend/frontend/E2E kritik ak�� testlerini tamamlamak
-  - Mobil saha kullan�m�n� production seviyesine ta��mak
-- **Ba��ml�l�k:** `Dalga 4`, `Dalga 5`, `Dalga 6`
+  - Executive KPI setini mï¿½ï¿½teri deï¿½eri, retention, loss ratio ve agent ï¿½retkenliï¿½i ile geniï¿½letmek
+  - PDF/Excel export, scheduled reports, dï¿½nem karï¿½ï¿½laï¿½tï¿½rma ve performans/segment raporlamasï¿½nï¿½ eklemek
+  - Backend/frontend/E2E kritik akï¿½ï¿½ testlerini tamamlamak
+  - Mobil saha kullanï¿½mï¿½nï¿½ production seviyesine taï¿½ï¿½mak
+- **Baï¿½ï¿½mlï¿½lï¿½k:** `Dalga 4`, `Dalga 5`, `Dalga 6`
 
-### Birle�tirilmi� v2 Uygulama S�ras�
-1. `Dalga 1 � G�venlik, Uyum ve S�zle�me Temeli`
-2. `Dalga 2 � Veri Modeli ve Servis Katman� Temeli`
-3. `Dalga 3 � Frontend State, UX ve Mobil Foundation`
-4. `Dalga 4 � Customer 360 ve Productized Policy Foundation`
-5. `Dalga 5 � Gelir Koruma ve Mali Operasyon Motoru`
-6. `Dalga 6 � Claims, �leti�im ve Tak�m Operasyonlar�`
-7. `Dalga 7 � Y�netici Analiti�i, Test ve Release Hardening`
+### Birleï¿½tirilmiï¿½ v2 Uygulama Sï¿½rasï¿½
+1. `Dalga 1 ï¿½ Gï¿½venlik, Uyum ve Sï¿½zleï¿½me Temeli`
+2. `Dalga 2 ï¿½ Veri Modeli ve Servis Katmanï¿½ Temeli`
+3. `Dalga 3 ï¿½ Frontend State, UX ve Mobil Foundation`
+4. `Dalga 4 ï¿½ Customer 360 ve Productized Policy Foundation`
+5. `Dalga 5 ï¿½ Gelir Koruma ve Mali Operasyon Motoru`
+6. `Dalga 6 ï¿½ Claims, ï¿½letiï¿½im ve Takï¿½m Operasyonlarï¿½`
+7. `Dalga 7 ï¿½ Yï¿½netici Analitiï¿½i, Test ve Release Hardening`
 
-### Birle�tirilmi� v2 Toplam Efor �zeti
+### Birleï¿½tirilmiï¿½ v2 Toplam Efor ï¿½zeti
 - `Dalga 1`: 88 saat
 - `Dalga 2`: 40 saat
 - `Dalga 3`: 34 saat
@@ -1190,34 +1190,34 @@ Bu b�l�m, yukar�daki alan analizinden ��kan `Faz 8-16` �nerilerini m
 - `Dalga 7`: 84 saat
 - **Toplam:** 476 saat
 
-## Karar Kay�tlar� (Mart 2026 Revizyonu)
+## Karar Kayï¿½tlarï¿½ (Mart 2026 Revizyonu)
 
-Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�tirir. �nceki �Desk kald�r�lacak� varsay�m� iptal edilmi�tir. Yeni hedef model:
+Bu bï¿½lï¿½m, mevcut v2 yol haritasï¿½nï¿½n uygulanma kararlarï¿½nï¿½ netleï¿½tirir. ï¿½nceki ï¿½Desk kaldï¿½rï¿½lacakï¿½ varsayï¿½mï¿½ iptal edilmiï¿½tir. Yeni hedef model:
 
-- Birincil operasyon y�zeyi: `/at` Vue SPA
-- Frappe Desk: yaln�zca `System Manager` ve `Administrator`
-- Normal kullan�c�lar: Desk g�rmeden do�rudan `/at`
-- T�m domain ak��lar� hem Desk hem SPA ile uyumlu backend s�zle�meleri �zerinden �al���r
+- Birincil operasyon yï¿½zeyi: `/at` Vue SPA
+- Frappe Desk: yalnï¿½zca `System Manager` ve `Administrator`
+- Normal kullanï¿½cï¿½lar: Desk gï¿½rmeden doï¿½rudan `/at`
+- Tï¿½m domain akï¿½ï¿½larï¿½ hem Desk hem SPA ile uyumlu backend sï¿½zleï¿½meleri ï¿½zerinden ï¿½alï¿½ï¿½ï¿½r
 
-### Karar 1 � Frappe Desk Eri�imini Rol Bazl� Kilitle
-- **Se�ilen Yakla��m:** Desk kald�r�lmaz; yaln�zca `System Manager` / `Administrator` kullan�c�lar� Desk'e eri�ir. Di�er t�m roller i�in varsay�lan giri� y�zeyi `/at` olur ve `/app/*` eri�imi y�nlendirme/guard ile kesilir.
+### Karar 1 ï¿½ Frappe Desk Eriï¿½imini Rol Bazlï¿½ Kilitle
+- **Seï¿½ilen Yaklaï¿½ï¿½m:** Desk kaldï¿½rï¿½lmaz; yalnï¿½zca `System Manager` / `Administrator` kullanï¿½cï¿½larï¿½ Desk'e eriï¿½ir. Diï¿½er tï¿½m roller iï¿½in varsayï¿½lan giriï¿½ yï¿½zeyi `/at` olur ve `/app/*` eriï¿½imi yï¿½nlendirme/guard ile kesilir.
 - **Roadmap Etkisi:** `Dalga 1` ve `Dalga 3`
-- **Desk Uyumlulu�u:**
-  - DocType form/list ayarlar� korunur.
-  - `public/js` client script'ler korunur; ��nk� admin/superuser i�in Desk operasyon ve bak�m y�zeyi olarak kalacakt�r.
-  - API endpoint'leri Desk'ten ba��ms�z kal�r; Desk ve SPA ayn� backend i� kurallar�n� kullan�r.
-- **Uygulama Notlar�:**
-  - `hooks.py` i�inde `home_page` / `role_home_page` kural� SPA �ncelikli olacak �ekilde g�ncellenir.
-  - `api/session.py` ve giri� sonras� boot ak���nda normal kullan�c� i�in `/at` zorlamas� uygulan�r.
-  - `www/app.py` veya benzeri route guard katman�nda `System Manager` d��� kullan�c� i�in `/app` eri�imi `/at`'a �evrilir.
-  - Admin/superuser i�in Desk'te kalacak y�zeyler:
-    - DocType ve Custom Field y�netimi
-    - User / Role / User Permission y�netimi
+- **Desk Uyumluluï¿½u:**
+  - DocType form/list ayarlarï¿½ korunur.
+  - `public/js` client script'ler korunur; ï¿½ï¿½nkï¿½ admin/superuser iï¿½in Desk operasyon ve bakï¿½m yï¿½zeyi olarak kalacaktï¿½r.
+  - API endpoint'leri Desk'ten baï¿½ï¿½msï¿½z kalï¿½r; Desk ve SPA aynï¿½ backend iï¿½ kurallarï¿½nï¿½ kullanï¿½r.
+- **Uygulama Notlarï¿½:**
+  - `hooks.py` iï¿½inde `home_page` / `role_home_page` kuralï¿½ SPA ï¿½ncelikli olacak ï¿½ekilde gï¿½ncellenir.
+  - `api/session.py` ve giriï¿½ sonrasï¿½ boot akï¿½ï¿½ï¿½nda normal kullanï¿½cï¿½ iï¿½in `/at` zorlamasï¿½ uygulanï¿½r.
+  - `www/app.py` veya benzeri route guard katmanï¿½nda `System Manager` dï¿½ï¿½ï¿½ kullanï¿½cï¿½ iï¿½in `/app` eriï¿½imi `/at`'a ï¿½evrilir.
+  - Admin/superuser iï¿½in Desk'te kalacak yï¿½zeyler:
+    - DocType ve Custom Field yï¿½netimi
+    - User / Role / User Permission yï¿½netimi
     - Error Log, Background Jobs, Scheduler izleme
-    - Patch/Migration ge�mi�i ve sistem te�hisi
-  - SPA'ya ta��nacak operasyon y�zeyleri:
-    - m��teri, teklif, poli�e, yenileme, hasar, tahsilat, dashboard
-- **�lgili Dosyalar:**
+    - Patch/Migration geï¿½miï¿½i ve sistem teï¿½hisi
+  - SPA'ya taï¿½ï¿½nacak operasyon yï¿½zeyleri:
+    - mï¿½ï¿½teri, teklif, poliï¿½e, yenileme, hasar, tahsilat, dashboard
+- **ï¿½lgili Dosyalar:**
   - `acentem_takipte/hooks.py`
   - `acentem_takipte/api/session.py`
   - `acentem_takipte/public/js/*.js`
@@ -1225,19 +1225,19 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
   - `frontend/src/state/session.js`
 - **Tahmini Efor:** 14 saat
 
-### Karar 2 � �ok �ubeli Yap� ��in Veri Modeli
-- **Se�ilen Yakla��m:** Fiziksel lokasyon/�ube i�in mevcut sigorta bran�� modelinden ayr� bir �zel DocType kullan�l�r. Mevcut `AT Branch` sigorta bran��/�r�n bran�� anlam�nda kal�r; fiziksel �ube i�in yeni bir model eklenir.
+### Karar 2 ï¿½ ï¿½ok ï¿½ubeli Yapï¿½ ï¿½ï¿½in Veri Modeli
+- **Seï¿½ilen Yaklaï¿½ï¿½m:** Fiziksel lokasyon/ï¿½ube iï¿½in mevcut sigorta branï¿½ï¿½ modelinden ayrï¿½ bir ï¿½zel DocType kullanï¿½lï¿½r. Mevcut `AT Branch` sigorta branï¿½ï¿½/ï¿½rï¿½n branï¿½ï¿½ anlamï¿½nda kalï¿½r; fiziksel ï¿½ube iï¿½in yeni bir model eklenir.
 - **Roadmap Etkisi:** `Dalga 1`, `Dalga 2`, `Dalga 4`, `Dalga 5`, `Dalga 6`
-- **Desk Uyumlulu�u:**
-  - Desk form/list g�r�n�m�nde fiziksel �ube alan� standart Link field olarak �al���r.
-  - `User Permission` ile Desk filtrelemesi desteklenir; dashboard ve raw SQL taraf�nda ek custom filter enforcement uygulan�r.
-- **Se�ilen Permission Stratejisi:**
-  - Birincil model: `AT Office Branch` + kullan�c�ya �oklu �ube atamas�
-  - Desk uyumu i�in: `User Permission`
-  - API ve dashboard sorgular� i�in: merkezi `office_branch` filter helper + permission hook
-  - `System Manager`: t�m �ubeler
-  - Normal kullan�c�: yaln�zca atanm�� �ubeler
-- **�ncelikli DocType S�ras�:**
+- **Desk Uyumluluï¿½u:**
+  - Desk form/list gï¿½rï¿½nï¿½mï¿½nde fiziksel ï¿½ube alanï¿½ standart Link field olarak ï¿½alï¿½ï¿½ï¿½r.
+  - `User Permission` ile Desk filtrelemesi desteklenir; dashboard ve raw SQL tarafï¿½nda ek custom filter enforcement uygulanï¿½r.
+- **Seï¿½ilen Permission Stratejisi:**
+  - Birincil model: `AT Office Branch` + kullanï¿½cï¿½ya ï¿½oklu ï¿½ube atamasï¿½
+  - Desk uyumu iï¿½in: `User Permission`
+  - API ve dashboard sorgularï¿½ iï¿½in: merkezi `office_branch` filter helper + permission hook
+  - `System Manager`: tï¿½m ï¿½ubeler
+  - Normal kullanï¿½cï¿½: yalnï¿½zca atanmï¿½ï¿½ ï¿½ubeler
+- **ï¿½ncelikli DocType Sï¿½rasï¿½:**
   1. `AT Customer`
   2. `AT Lead`
   3. `AT Offer`
@@ -1247,14 +1247,14 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
   7. `AT Claim`
   8. `AT Accounting Entry`
   9. `AT Reconciliation Item`
-- **Migration Notlar�:**
-  - Yeni alan ad�: `office_branch`
-  - Backfill s�ras�:
-    - m��teri manuel/seed veya kullan�c� varsay�lan�na g�re
-    - poli�e teklif/m��teri �zerinden
-    - �deme/hasar/yenileme muhasebe kay�tlar� poli�e veya m��teri �zerinden
-  - Dashboard v2 taraf�nda `queries_kpis.py` ve `tab_payload.py` i�inde `office_branch` param� zorunlu helper ile i�lenir.
-- **�lgili Dosyalar:**
+- **Migration Notlarï¿½:**
+  - Yeni alan adï¿½: `office_branch`
+  - Backfill sï¿½rasï¿½:
+    - mï¿½ï¿½teri manuel/seed veya kullanï¿½cï¿½ varsayï¿½lanï¿½na gï¿½re
+    - poliï¿½e teklif/mï¿½ï¿½teri ï¿½zerinden
+    - ï¿½deme/hasar/yenileme muhasebe kayï¿½tlarï¿½ poliï¿½e veya mï¿½ï¿½teri ï¿½zerinden
+  - Dashboard v2 tarafï¿½nda `queries_kpis.py` ve `tab_payload.py` iï¿½inde `office_branch` paramï¿½ zorunlu helper ile iï¿½lenir.
+- **ï¿½lgili Dosyalar:**
   - `acentem_takipte/doctype/at_customer/at_customer.json`
   - `acentem_takipte/doctype/at_policy/at_policy.json`
   - `acentem_takipte/doctype/at_renewal_task/at_renewal_task.json`
@@ -1268,38 +1268,38 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
 - **Yeni Dosyalar / DocType'lar:**
   - `AT Office Branch`
   - `AT User Branch Access`
-  - branch migration patch dosyas�
+  - branch migration patch dosyasï¿½
 - **Tahmini Efor:** 24 saat
 
-### Karar 3 � WhatsApp Business API Entegrasyonu
-- **Se�ilen Yakla��m:** �ncelikli provider olarak `Meta Cloud API` kullan�l�r. Notification outbox yap�s� korunur; �zerine provider adapter katman� eklenir. Ba�ar�s�z WhatsApp g�nderimi varsay�lan olarak otomatik SMS fallback yapmaz; fallback template bazl�, a��k i� kural� ile se�ilir.
+### Karar 3 ï¿½ WhatsApp Business API Entegrasyonu
+- **Seï¿½ilen Yaklaï¿½ï¿½m:** ï¿½ncelikli provider olarak `Meta Cloud API` kullanï¿½lï¿½r. Notification outbox yapï¿½sï¿½ korunur; ï¿½zerine provider adapter katmanï¿½ eklenir. Baï¿½arï¿½sï¿½z WhatsApp gï¿½nderimi varsayï¿½lan olarak otomatik SMS fallback yapmaz; fallback template bazlï¿½, aï¿½ï¿½k iï¿½ kuralï¿½ ile seï¿½ilir.
 - **Roadmap Etkisi:** `Dalga 1`, `Dalga 5`, `Dalga 6`
-- **Neden:** T�rkiye pazar� i�in do�rudan Meta entegrasyonu uzun vadede daha az ba��ml�l�k, daha a��k HSM y�netimi ve daha d���k arac� maliyeti sa�lar. SMS sa�lay�c�s� ile fallback ak��� daha sonra ayr� bir s�zle�me olarak eklenmelidir; ilk a�amada kanal kar���kl��� yaratmamak gerekir.
-- **Desk Uyumlulu�u:**
-  - `AT Notification Template`, `AT Notification Draft`, `AT Notification Outbox` Desk'te y�netilebilir kal�r.
-  - System Manager WhatsApp template, provider ayar� ve kuyruk durumunu Desk'ten g�rebilir.
-- **Uygulama Notlar�:**
-  - Scheduler ak��� korunur: `hooks.py` � queue/disptach job
-  - Kanal modeli `SMS/Email/Both` yakla��m�ndan `WHATSAPP/SMS/EMAIL` bazl� geni�letilir.
-  - Yeni adapter ak���: `outbox -> dispatcher -> provider router -> whatsapp adapter`
+- **Neden:** Tï¿½rkiye pazarï¿½ iï¿½in doï¿½rudan Meta entegrasyonu uzun vadede daha az baï¿½ï¿½mlï¿½lï¿½k, daha aï¿½ï¿½k HSM yï¿½netimi ve daha dï¿½ï¿½ï¿½k aracï¿½ maliyeti saï¿½lar. SMS saï¿½layï¿½cï¿½sï¿½ ile fallback akï¿½ï¿½ï¿½ daha sonra ayrï¿½ bir sï¿½zleï¿½me olarak eklenmelidir; ilk aï¿½amada kanal karï¿½ï¿½ï¿½klï¿½ï¿½ï¿½ yaratmamak gerekir.
+- **Desk Uyumluluï¿½u:**
+  - `AT Notification Template`, `AT Notification Draft`, `AT Notification Outbox` Desk'te yï¿½netilebilir kalï¿½r.
+  - System Manager WhatsApp template, provider ayarï¿½ ve kuyruk durumunu Desk'ten gï¿½rebilir.
+- **Uygulama Notlarï¿½:**
+  - Scheduler akï¿½ï¿½ï¿½ korunur: `hooks.py` ï¿½ queue/disptach job
+  - Kanal modeli `SMS/Email/Both` yaklaï¿½ï¿½mï¿½ndan `WHATSAPP/SMS/EMAIL` bazlï¿½ geniï¿½letilir.
+  - Yeni adapter akï¿½ï¿½ï¿½: `outbox -> dispatcher -> provider router -> whatsapp adapter`
   - Teknik kurallar:
     - timeout: `8s`
     - retry: `max 3`
-    - rate-limit: Redis saya�l� provider limiter
-    - dead-letter: mevcut ba�ar�s�z kuyruk mant��� korunur
-  - �ncelikli trigger noktalar�:
-    1. yenileme hat�rlatmas�: `tasks.py`, `at_renewal_task.py`
-    2. �deme vade uyar�s�: yeni scheduler + `AT Payment`
-    3. hasar durum g�ncellemesi: `AT Claim.on_update`
-    4. poli�e teslim bildirimi: `AT Policy.after_insert` / belge haz�r olay�
-- **Template �ema Geni�lemesi:**
+    - rate-limit: Redis sayaï¿½lï¿½ provider limiter
+    - dead-letter: mevcut baï¿½arï¿½sï¿½z kuyruk mantï¿½ï¿½ï¿½ korunur
+  - ï¿½ncelikli trigger noktalarï¿½:
+    1. yenileme hatï¿½rlatmasï¿½: `tasks.py`, `at_renewal_task.py`
+    2. ï¿½deme vade uyarï¿½sï¿½: yeni scheduler + `AT Payment`
+    3. hasar durum gï¿½ncellemesi: `AT Claim.on_update`
+    4. poliï¿½e teslim bildirimi: `AT Policy.after_insert` / belge hazï¿½r olayï¿½
+- **Template ï¿½ema Geniï¿½lemesi:**
   - `provider_template_name`
   - `provider_template_language`
   - `provider_template_category`
   - `content_mode`
   - `variables_schema_json`
-  - kanal bazl� body/header alanlar�
-- **�lgili Dosyalar:**
+  - kanal bazlï¿½ body/header alanlarï¿½
+- **ï¿½lgili Dosyalar:**
   - `acentem_takipte/communication.py`
   - `acentem_takipte/notifications.py`
   - `acentem_takipte/hooks.py`
@@ -1313,33 +1313,33 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
   - `acentem_takipte/providers/whatsapp_meta.py`
 - **Tahmini Efor:** 28 saat
 
-### Karar 4 � Renewal Engine Yeniden Yaz�m�
-- **Se�ilen Yakla��m:** `AT Renewal Task` yaln�zca g�rev/hat�rlatma kayd� olarak kal�r. As�l yenileme sat�� ya�am d�ng�s� yeni servis katman� ve ek outcome/opportunity modelleri ile y�netilir.
+### Karar 4 ï¿½ Renewal Engine Yeniden Yazï¿½mï¿½
+- **Seï¿½ilen Yaklaï¿½ï¿½m:** `AT Renewal Task` yalnï¿½zca gï¿½rev/hatï¿½rlatma kaydï¿½ olarak kalï¿½r. Asï¿½l yenileme satï¿½ï¿½ yaï¿½am dï¿½ngï¿½sï¿½ yeni servis katmanï¿½ ve ek outcome/opportunity modelleri ile yï¿½netilir.
 - **Roadmap Etkisi:** `Dalga 5`
-- **Desk Uyumlulu�u:**
-  - Desk'te `AT Renewal Task`, `AT Renewal Opportunity`, `AT Renewal Outcome` formlar� y�netilebilir olur.
-  - Manual trigger ve exception ��z�m� admin/manager kullan�c� i�in hem Desk hem SPA �zerinden m�mk�n olur.
+- **Desk Uyumluluï¿½u:**
+  - Desk'te `AT Renewal Task`, `AT Renewal Opportunity`, `AT Renewal Outcome` formlarï¿½ yï¿½netilebilir olur.
+  - Manual trigger ve exception ï¿½ï¿½zï¿½mï¿½ admin/manager kullanï¿½cï¿½ iï¿½in hem Desk hem SPA ï¿½zerinden mï¿½mkï¿½n olur.
 - **Yeni Mimari:**
-  - `renewal/service.py`: aday �retimi, i� kurallar�, prefill offer �retimi
+  - `renewal/service.py`: aday ï¿½retimi, iï¿½ kurallarï¿½, prefill offer ï¿½retimi
   - `renewal/pipeline.py`: `detect -> ensure_opportunity -> ensure_task -> notify -> create_offer -> close_or_lost`
-  - `renewal/telemetry.py`: stage saya�lar�, dedupe kay�tlar�, retention metrikleri
+  - `renewal/telemetry.py`: stage sayaï¿½larï¿½, dedupe kayï¿½tlarï¿½, retention metrikleri
 - **Kademe Sistemi:**
   - `90/60/30/15/7/1`
-  - Template yakla��m�: tek dinamik template yerine stage bazl� template family
-  - Dedupe anahtar�: `policy + stage_code + channel + business_date`
+  - Template yaklaï¿½ï¿½mï¿½: tek dinamik template yerine stage bazlï¿½ template family
+  - Dedupe anahtarï¿½: `policy + stage_code + channel + business_date`
 - **Prefill Yenileme Teklifi:**
   - otomatik alanlar:
-    - m��teri
-    - sigorta �irketi
-    - sigorta bran��
+    - mï¿½ï¿½teri
+    - sigorta ï¿½irketi
+    - sigorta branï¿½ï¿½
     - para birimi
-    - �nceki prim/komisyon referanslar�
-  - kullan�c� onay� gerektiren alanlar:
-    - fiyat de�i�imi
-    - tarih kaymas�
-    - risk nesnesi de�i�ikli�i
-    - ek teminat / limit farklar�
-- **Yeni Outcome �emas�:**
+    - ï¿½nceki prim/komisyon referanslarï¿½
+  - kullanï¿½cï¿½ onayï¿½ gerektiren alanlar:
+    - fiyat deï¿½iï¿½imi
+    - tarih kaymasï¿½
+    - risk nesnesi deï¿½iï¿½ikliï¿½i
+    - ek teminat / limit farklarï¿½
+- **Yeni Outcome ï¿½emasï¿½:**
   - `renewal_opportunity`
   - `policy`
   - `status`
@@ -1357,7 +1357,7 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
   - `renewal_lost_count`
   - `renewal_lost_by_reason`
   - `renewal_stage_aging`
-- **�lgili Dosyalar:**
+- **ï¿½lgili Dosyalar:**
   - `acentem_takipte/tasks.py`
   - `acentem_takipte/doctype/at_renewal_task/at_renewal_task.py`
   - `acentem_takipte/doctype/at_offer/at_offer.py`
@@ -1371,13 +1371,13 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
   - `AT Renewal Outcome`
 - **Tahmini Efor:** 34 saat
 
-### Karar 5 � Pinia Store Mimarisi (Domain Bazl�)
-- **Se�ilen Yakla��m:** SPA taraf� Pinia setup store mimarisine ge�irilir. Backend s�zle�mesi Desk uyumlu kal�r; frontend yaln�zca bu s�zle�menin organize edilmi� istemci katman� olur.
+### Karar 5 ï¿½ Pinia Store Mimarisi (Domain Bazlï¿½)
+- **Seï¿½ilen Yaklaï¿½ï¿½m:** SPA tarafï¿½ Pinia setup store mimarisine geï¿½irilir. Backend sï¿½zleï¿½mesi Desk uyumlu kalï¿½r; frontend yalnï¿½zca bu sï¿½zleï¿½menin organize edilmiï¿½ istemci katmanï¿½ olur.
 - **Roadmap Etkisi:** `Dalga 3`, `Dalga 4`, `Dalga 5`, `Dalga 6`
-- **Desk Uyumlulu�u:**
-  - Desk'e �zel ak��lar etkilenmez.
-  - Store'lar yaln�zca `/at` y�zeyi i�in istemci orkestrasyonu sa�lar; i� kurallar� backend'de kal�r.
-- **Store Yap�s�:**
+- **Desk Uyumluluï¿½u:**
+  - Desk'e ï¿½zel akï¿½ï¿½lar etkilenmez.
+  - Store'lar yalnï¿½zca `/at` yï¿½zeyi iï¿½in istemci orkestrasyonu saï¿½lar; iï¿½ kurallarï¿½ backend'de kalï¿½r.
+- **Store Yapï¿½sï¿½:**
   - `stores/auth.js`
   - `stores/branch.js`
   - `stores/customer.js`
@@ -1388,23 +1388,23 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
   - `stores/communication.js`
   - `stores/accounting.js`
   - `stores/dashboard.js`
-- **Standart Store S�zle�mesi:**
+- **Standart Store Sï¿½zleï¿½mesi:**
   - `state`: `items`, `selected`, `loading`, `error`
   - `actions`: `fetch`, `create`, `update`, `remove`
   - `getters`: `filtered`, `grouped`, `computed_kpis`
 - **Branch Filter Stratejisi:**
-  - aktif fiziksel �ube global store'da tutulur
-  - System Manager i�in `Tum Subeler` se�ene�i g�r�n�r
+  - aktif fiziksel ï¿½ube global store'da tutulur
+  - System Manager iï¿½in `Tum Subeler` seï¿½eneï¿½i gï¿½rï¿½nï¿½r
   - filtre router query param ile URL'de persist edilir
-  - sigorta bran�� filtresi ile fiziksel �ube filtresi ayr� tutulur
-- **Migration Kapsam�:**
-  - do�rudan resource/fetch kullanan sayfalar s�ras�yla store action'lar�na ta��n�r:
-    - m��teri ekranlar�
-    - teklif/poli�e ekranlar�
-    - yenileme ekranlar�
-    - hasar/tahsilat/ileti�im workbench'leri
+  - sigorta branï¿½ï¿½ filtresi ile fiziksel ï¿½ube filtresi ayrï¿½ tutulur
+- **Migration Kapsamï¿½:**
+  - doï¿½rudan resource/fetch kullanan sayfalar sï¿½rasï¿½yla store action'larï¿½na taï¿½ï¿½nï¿½r:
+    - mï¿½ï¿½teri ekranlarï¿½
+    - teklif/poliï¿½e ekranlarï¿½
+    - yenileme ekranlarï¿½
+    - hasar/tahsilat/iletiï¿½im workbench'leri
     - dashboard
-- **�lgili Dosyalar:**
+- **ï¿½lgili Dosyalar:**
   - `frontend/src/state/session.js`
   - `frontend/src/state/ui.js`
   - `frontend/src/router/index.js`
@@ -1414,30 +1414,30 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
   - `frontend/src/api/client.js`
 - **Tahmini Efor:** 26 saat
 
-### Rol-Aray�z Matrisi
-| Rol | Birincil Aray�z | Desk Eri�imi | Not |
+### Rol-Arayï¿½z Matrisi
+| Rol | Birincil Arayï¿½z | Desk Eriï¿½imi | Not |
 |---|---|---|---|
-| `Administrator` | `/at` + Desk | Var | Sistem y�netimi, patch, log, scheduler |
-| `System Manager` | `/at` + Desk | Var | Sistem ve operasyon hibrit kullan�m |
+| `Administrator` | `/at` + Desk | Var | Sistem yï¿½netimi, patch, log, scheduler |
+| `System Manager` | `/at` + Desk | Var | Sistem ve operasyon hibrit kullanï¿½m |
 | `AT Manager` | `/at` | Yok | Operasyon ve dashboard |
-| `AT Agent` | `/at` | Yok | M��teri, teklif, yenileme, hasar |
-| `AT Accountant` | `/at` | Yok | Tahsilat, mutabakat, finans i� ak��� |
-| Di�er operasyon rolleri | `/at` | Yok | Yetki kapsam� API + SPA ile belirlenir |
+| `AT Agent` | `/at` | Yok | Mï¿½ï¿½teri, teklif, yenileme, hasar |
+| `AT Accountant` | `/at` | Yok | Tahsilat, mutabakat, finans iï¿½ akï¿½ï¿½ï¿½ |
+| Diï¿½er operasyon rolleri | `/at` | Yok | Yetki kapsamï¿½ API + SPA ile belirlenir |
 
-### Kararlar�n Dalgalara Da��l�m�
-1. `Karar 1` � `Dalga 1`, `Dalga 3`
-2. `Karar 2` � `Dalga 1`, `Dalga 2`, `Dalga 4`, `Dalga 5`, `Dalga 6`
-3. `Karar 3` � `Dalga 1`, `Dalga 5`, `Dalga 6`
-4. `Karar 4` � `Dalga 5`
-5. `Karar 5` � `Dalga 3`, `Dalga 4`, `Dalga 5`, `Dalga 6`
+### Kararlarï¿½n Dalgalara Daï¿½ï¿½lï¿½mï¿½
+1. `Karar 1` ï¿½ `Dalga 1`, `Dalga 3`
+2. `Karar 2` ï¿½ `Dalga 1`, `Dalga 2`, `Dalga 4`, `Dalga 5`, `Dalga 6`
+3. `Karar 3` ï¿½ `Dalga 1`, `Dalga 5`, `Dalga 6`
+4. `Karar 4` ï¿½ `Dalga 5`
+5. `Karar 5` ï¿½ `Dalga 3`, `Dalga 4`, `Dalga 5`, `Dalga 6`
 
-### Revize Uygulama Ba��ml�l�k S�ras�
-1. `Karar 1` ve `Karar 2` temel eri�im ve veri izolasyonu i�in �nce uygulan�r.
-2. `Karar 5`, `/at` taraf�n� yeni branch ve permission s�zle�mesine ba�lamak i�in ikinci katmand�r.
-3. `Karar 3`, notification altyap�s�n� ve WhatsApp provider s�zle�mesini sabitler.
-4. `Karar 4`, branch-aware renewal verisi ve communication adapter haz�r olduktan sonra uygulan�r.
+### Revize Uygulama Baï¿½ï¿½mlï¿½lï¿½k Sï¿½rasï¿½
+1. `Karar 1` ve `Karar 2` temel eriï¿½im ve veri izolasyonu iï¿½in ï¿½nce uygulanï¿½r.
+2. `Karar 5`, `/at` tarafï¿½nï¿½ yeni branch ve permission sï¿½zleï¿½mesine baï¿½lamak iï¿½in ikinci katmandï¿½r.
+3. `Karar 3`, notification altyapï¿½sï¿½nï¿½ ve WhatsApp provider sï¿½zleï¿½mesini sabitler.
+4. `Karar 4`, branch-aware renewal verisi ve communication adapter hazï¿½r olduktan sonra uygulanï¿½r.
 
-### Karar Bazl� Toplam Efor
+### Karar Bazlï¿½ Toplam Efor
 - `Karar 1`: 14 saat
 - `Karar 2`: 24 saat
 - `Karar 3`: 28 saat
@@ -1446,23 +1446,23 @@ Bu b�l�m, mevcut v2 yol haritas�n�n uygulanma kararlar�n� netle�ti
 - **Toplam:** 126 saat
 
 ### Planlama Notu
-- Bu `126 saat`, mevcut `458 saat` v2 toplam�na ek ba��ms�z bir paket de�ildir.
-- Kararlar, mevcut dalgalar�n uygulanma bi�imini ve teknik y�n�n� netle�tiren mimari karar kay�tlar�d�r.
-- Sprint planlama yap�l�rken karar eforu ilgili dalga eforunun i�inde de�erlendirilmelidir.
+- Bu `126 saat`, mevcut `458 saat` v2 toplamï¿½na ek baï¿½ï¿½msï¿½z bir paket deï¿½ildir.
+- Kararlar, mevcut dalgalarï¿½n uygulanma biï¿½imini ve teknik yï¿½nï¿½nï¿½ netleï¿½tiren mimari karar kayï¿½tlarï¿½dï¿½r.
+- Sprint planlama yapï¿½lï¿½rken karar eforu ilgili dalga eforunun iï¿½inde deï¿½erlendirilmelidir.
 
-## Genel Kabul Kurallar�
+## Genel Kabul Kurallarï¿½
 
-- Her g�rev i�in:
-  - �nce teknik not (ama�, kapsam, varsay�m), ard�ndan kod de�i�ikli�i.
-  - �lgili dosya ve fonksiyona referans.
-  - Risk/geri ad�m senaryosu.
-- Her commit �ncesi:
-  - G�venlik etkisi kontrol�
+- Her gï¿½rev iï¿½in:
+  - ï¿½nce teknik not (amaï¿½, kapsam, varsayï¿½m), ardï¿½ndan kod deï¿½iï¿½ikliï¿½i.
+  - ï¿½lgili dosya ve fonksiyona referans.
+  - Risk/geri adï¿½m senaryosu.
+- Her commit ï¿½ncesi:
+  - Gï¿½venlik etkisi kontrolï¿½
   - Test etkisi raporu
-  - �zin/kullan�c� etkisi de�erlendirmesi
+  - ï¿½zin/kullanï¿½cï¿½ etkisi deï¿½erlendirmesi
 
 ## Referans Notu
-Bu yol haritas� tamamlanmadan do�rudan kod �retimine ge�ilmeyecektir. �nce her faz, kabul kriteri ve test ile onay al�nd�ktan sonra uygulanacakt�r.
+Bu yol haritasï¿½ tamamlanmadan doï¿½rudan kod ï¿½retimine geï¿½ilmeyecektir. ï¿½nce her faz, kabul kriteri ve test ile onay alï¿½ndï¿½ktan sonra uygulanacaktï¿½r.
 
 
 
@@ -1750,7 +1750,7 @@ ext_follow_up_on). Controller guard'lari reddedilen hasar, itiraz ve takip tarih
 
 - Faz 12 ilerleme notu: Access & Audit Logs operatorlugu Create/Edit/Delete/Run presetleri, action select filtresi ve viewed_on tabanli varsayilan audit siralamasi ile hizlandirildi.
 
-- Faz 12 tamamlandi: AT Access Log mutation/run audit omurgasi, Access & Audit Logs operasyon ekran�, detail okunurlugu ve hazir action presetleri tamamlandi. Yeni aktif odak Faz 13.
+- Faz 12 tamamlandi: AT Access Log mutation/run audit omurgasi, Access & Audit Logs operasyon ekranı, detail okunurlugu ve hazir action presetleri tamamlandi. Yeni aktif odak Faz 13.
 
 - Faz 13 ilerleme notu: Policy 360 dokuman katmani acildi; document_profile backend ozeti ve PolicyDetail dokuman sekmesinde toplam/PDF/gorsel/tablo/diger ile son yukleme gorunurlugu eklendi.
 
@@ -1787,4 +1787,15 @@ ext_follow_up_on). Controller guard'lari reddedilen hasar, itiraz ve takip tarih
 ## Kapanis - Faz 14
 - Faz 14 tamamlandi.
 - Kalan not: devam noktasi Faz 15 veya AT Reminder veri katmani.
+
+
+- 2026-03-10: Faz 15 reminder gorunurlugu CommunicationCenter prefill ve test sozlesmesi ile genisletildi.
+
+- 2026-03-10: Faz 15 reminder hizli aksiyonlari CustomerDetail ve PolicyDetail yuzeylerine eklendi.
+
+- 2026-03-10: Faz 15 CommunicationCenter reminder context aksiyonlari (Done/Cancelled) ve filtre secenegi eklendi.
+
+- 2026-03-10: Faz 15 reminder aux operatorlugu open/high/done/cancelled presetleri ve ozet kartlari ile tamamlandi.
+
+- 2026-03-10: Faz 15 tamamlandi. Faz 16 oncesi kullanici onayi bekleniyor.
 

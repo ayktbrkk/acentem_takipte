@@ -1,4 +1,4 @@
-# Haftalik Sprint Plani
+ï»¿# Haftalik Sprint Plani
 
 ## 2026-03-09 Guncel Sprint Durumu
 
@@ -88,7 +88,7 @@
 - [x] Faz 2.1 icin ilk request-scope cache optimizasyonu uygulandi
 - [x] Faz 2.1 icin aggregate request-cache optimizasyonu uygulandi
 - [x] Faz 2.1 icin ilk dashboard hot-path index patch'i olusturuldu
-- [x] Faz 2.1 icin dashboard v2 where/value cache sadeleþtirmesi uygulandi
+- [x] Faz 2.1 icin dashboard v2 where/value cache sadeleÅŸtirmesi uygulandi
 - [x] Faz 2.1 icin ikinci dashboard index patch'i olusturuldu
 - [x] Faz 2.1 plan seviyesinde kapatildi
 - [x] Faz 2.2 scheduled report outbox dispatch fan-out refaktoru alindi
@@ -170,7 +170,7 @@
 
 - 2026-03-09 Faz 6 ucuncu kesit: ClaimsBoard hizli status aksiyonlari ve notification template ipucu eklendi. Sonraki adim rejected/appeal ve outbox gorunurlugu.
 
-- 2026-03-09 Faz 6 dorduncu kesit: ClaimsBoard notification draft/outbox gorunurlugu ve rejected aksiyonu eklendi. Sonraki adim claim outbox aksiyonlari veya iletiþim merkezi genislemesi.
+- 2026-03-09 Faz 6 dorduncu kesit: ClaimsBoard notification draft/outbox gorunurlugu ve rejected aksiyonu eklendi. Sonraki adim claim outbox aksiyonlari veya iletiÅŸim merkezi genislemesi.
 
 - 2026-03-09 Faz 6 besinci kesit: AT Call Note veri modeli, quick create ve Communication Center hizli giris yuzeyi eklendi. Sonraki adim test kapsami ve kampanya/segment modeli.
 
@@ -317,4 +317,15 @@
 ## Faz 14 Kapanis
 - Durum: tamamlandi.
 - Sonraki aktif is: Faz 15 veya AT Reminder veri katmani.
+
+
+- 2026-03-10: Faz 15 reminder coverage Customer/Policy/Communication yuzeylerinde tamamlandi.
+
+- 2026-03-10: Faz 15 reminder detail aksiyonlari eklendi; sonraki odak CommunicationCenter filtre/preset turu.
+
+- 2026-03-10: Faz 15 reminder zinciri dashboard/aux/detail/communication yuzeylerinde tamamlama seviyesine geldi.
+
+- 2026-03-10: Faz 15 reminder aux operatorlugu presetler ve ozet kartlari ile tamamlandi.
+
+- 2026-03-10: Faz 15 tamamlandi. Sprint odagi Faz 16 oncesi bekleme durumuna alindi.
 

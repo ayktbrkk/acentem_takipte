@@ -283,6 +283,71 @@ describe("CommunicationCenter page store integration", () => {
     expect(typeof form.note_at).toBe("string");
   });
 
+  it("opens reminder dialog with route-aware prefill", async () => {
+    resourceQueue.push(
+      {
+        data: ref({}),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => ({
+          outbox: [],
+          drafts: [],
+          status_breakdown: [],
+        })),
+        submit: vi.fn(async () => ({})),
+      },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+    );
+
+    routeState.query = {
+      customer: "CUST-001",
+      reference_doctype: "AT Policy",
+      reference_name: "POL-001",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const dialog = wrapper
+      .findAllComponents(QuickCreateManagedDialogStub)
+      .find((item) => item.props("configKey") === "reminder");
+    expect(dialog?.exists()).toBe(true);
+
+    const beforeOpen = dialog.props("beforeOpen");
+    const form = {};
+    await beforeOpen({ form });
+
+    expect(form.customer).toBe("CUST-001");
+    expect(form.source_doctype).toBe("AT Policy");
+    expect(form.source_name).toBe("POL-001");
+    expect(form.policy).toBe("POL-001");
+    expect(typeof form.remind_at).toBe("string");
+  });
+
   it("renders segment and campaign quick dialogs", async () => {
     resourceQueue.push(
       {
@@ -332,6 +397,7 @@ describe("CommunicationCenter page store integration", () => {
     expect(dialogKeys).toContain("segment");
     expect(dialogKeys).toContain("campaign");
     expect(dialogKeys).toContain("call_note");
+    expect(dialogKeys).toContain("reminder");
   });
 
   it("loads segment member preview", async () => {
@@ -566,6 +632,110 @@ describe("CommunicationCenter page store integration", () => {
       name: "CALL-001",
       data: {
         next_follow_up_on: null,
+      },
+    });
+    expect(snapshotReload).toHaveBeenCalled();
+  });
+
+  it("completes reminder from context action", async () => {
+    const snapshotReload = vi.fn(async () => ({
+      outbox: [],
+      drafts: [],
+      status_breakdown: [],
+    }));
+    const auxSubmit = vi.fn(async () => ({}));
+
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: auxSubmit },
+    );
+
+    routeState.query = {
+      reference_doctype: "AT Reminder",
+      reference_name: "REM-001",
+      reference_label: "Hatirlatici",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatirlaticiyi Tamamla"));
+    await button.trigger("click");
+
+    expect(auxSubmit).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: {
+        status: "Done",
+      },
+    });
+    expect(snapshotReload).toHaveBeenCalled();
+  });
+
+  it("cancels reminder from context action", async () => {
+    const snapshotReload = vi.fn(async () => ({
+      outbox: [],
+      drafts: [],
+      status_breakdown: [],
+    }));
+    const auxSubmit = vi.fn(async () => ({}));
+
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: auxSubmit },
+    );
+
+    routeState.query = {
+      reference_doctype: "AT Reminder",
+      reference_name: "REM-001",
+      reference_label: "Hatirlatici",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatirlaticiyi Iptal Et"));
+    await button.trigger("click");
+
+    expect(auxSubmit).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: {
+        status: "Cancelled",
       },
     });
     expect(snapshotReload).toHaveBeenCalled();

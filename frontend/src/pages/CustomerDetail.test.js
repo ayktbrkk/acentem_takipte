@@ -9,6 +9,7 @@ import { useAuthStore } from "../stores/auth";
 const routerPush = vi.fn();
 const customer360Reload = vi.fn();
 const auxDeleteSubmitMock = vi.fn();
+const auxUpdateSubmitMock = vi.fn();
 const confirmMock = vi.fn(() => true);
 
 vi.stubGlobal("confirm", confirmMock);
@@ -191,6 +192,18 @@ vi.mock("frappe-ui", () => ({
       };
     }
 
+    if (url.includes("update_quick_aux_record")) {
+      return {
+        data: ref({}),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData: vi.fn(),
+        reload: vi.fn(async () => ({})),
+        submit: auxUpdateSubmitMock,
+      };
+    }
+
     if (url.includes("frappe.client.get_list")) {
       const data = ref([]);
       return {
@@ -272,6 +285,8 @@ describe("CustomerDetail customer 360 integration", () => {
     customer360Reload.mockReset();
     auxDeleteSubmitMock.mockReset();
     auxDeleteSubmitMock.mockResolvedValue({ deleted: true });
+    auxUpdateSubmitMock.mockReset();
+    auxUpdateSubmitMock.mockResolvedValue({ ok: true });
     confirmMock.mockReset();
     confirmMock.mockReturnValue(true);
     setActivePinia(createPinia());
@@ -623,5 +638,52 @@ describe("CustomerDetail customer 360 integration", () => {
         assigned_to: "agent@example.com",
       })
     );
+  });
+
+  it("updates reminder status from customer detail actions", async () => {
+    const wrapper = mount(CustomerDetail, {
+      props: {
+        name: "CUST-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: true,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+          TimelineActivityList: genericStub,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const buttons = wrapper.findAll(".action-button-stub");
+    await buttons.find((candidate) => candidate.text().includes("Tamamla")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: {
+        status: "Done",
+      },
+    });
+
+    await buttons.find((candidate) => candidate.text().includes("Iptal Et")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: {
+        status: "Cancelled",
+      },
+    });
+    expect(customer360Reload).toHaveBeenCalled();
   });
 });

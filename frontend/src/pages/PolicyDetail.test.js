@@ -8,6 +8,7 @@ import { useAuthStore } from "../stores/auth";
 
 const routerPush = vi.fn();
 const policy360Reload = vi.fn();
+const auxUpdateSubmitMock = vi.fn();
 
 vi.mock("vue-router", () => ({
   useRouter: () => ({
@@ -160,6 +161,20 @@ vi.mock("frappe-ui", () => ({
       };
     }
 
+    if (url.includes("update_quick_aux_record")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: auxUpdateSubmitMock,
+      };
+    }
+
     return {
       data,
       loading: ref(false),
@@ -219,6 +234,8 @@ describe("PolicyDetail policy 360 integration", () => {
   beforeEach(() => {
     routerPush.mockReset();
     policy360Reload.mockReset();
+    auxUpdateSubmitMock.mockReset();
+    auxUpdateSubmitMock.mockResolvedValue({ ok: true });
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
@@ -524,5 +541,49 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(wrapper.text()).toContain("Police yenileme gorusmesi");
     expect(wrapper.text()).toContain("Renewal Update");
     expect(wrapper.text()).toContain("agent@example.com");
+  });
+
+  it("updates reminder status from policy detail actions", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const buttons = wrapper.findAll(".action-button-stub");
+    await buttons.find((candidate) => candidate.text().includes("Tamamla")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: {
+        status: "Done",
+      },
+    });
+
+    await buttons.find((candidate) => candidate.text().includes("Iptal Et")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: {
+        status: "Cancelled",
+      },
+    });
+    expect(policy360Reload).toHaveBeenCalled();
   });
 });

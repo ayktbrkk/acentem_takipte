@@ -176,8 +176,13 @@ def _fetch_tcmb_rate_for_day(currency: str, lookup_date):
     except requests.exceptions.RequestException:
         return None
 
+    if _contains_unsafe_xml_constructs(xml_payload):
+        return None
+
     try:
-        xml_root = ET.fromstring(xml_payload)
+        parser = ET.XMLParser()
+        parser.feed(xml_payload)
+        xml_root = parser.close()
     except ET.ParseError:
         return None
 
@@ -210,6 +215,11 @@ def _parse_tcmb_rate(raw_rate: str | None):
         return None
 
     return parsed_rate if parsed_rate > 0 else None
+
+
+def _contains_unsafe_xml_constructs(xml_payload: bytes) -> bool:
+    normalized = (xml_payload or b"").upper()
+    return b"<!DOCTYPE" in normalized or b"<!ENTITY" in normalized
 
 
 def serialize_policy_snapshot(policy_doc: ATPolicy) -> dict:

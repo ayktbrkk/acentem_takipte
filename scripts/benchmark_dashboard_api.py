@@ -11,6 +11,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 
@@ -66,7 +67,7 @@ def request_json(
             encoded_params[key] = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
         else:
             encoded_params[key] = str(value)
-    url = f"{base_url.rstrip('/')}/api/method/{method_path}"
+    url = f"{normalize_base_url(base_url)}/api/method/{method_path}"
     if encoded_params:
         url = f"{url}?{urllib.parse.urlencode(encoded_params)}"
 
@@ -93,14 +94,14 @@ def build_scenarios(args: argparse.Namespace) -> list[Scenario]:
     if args.filters_json:
         filters_payload = json.loads(args.filters_json)
     elif args.filters_file:
-        with open(args.filters_file, "r", encoding="utf-8") as f:
+        with open(resolve_json_input_path(args.filters_file), "r", encoding="utf-8") as f:
             filters_payload = json.load(f)
 
     workbench_filters = None
     if args.workbench_filters_json:
         workbench_filters = json.loads(args.workbench_filters_json)
     elif args.workbench_filters_file:
-        with open(args.workbench_filters_file, "r", encoding="utf-8") as f:
+        with open(resolve_json_input_path(args.workbench_filters_file), "r", encoding="utf-8") as f:
             workbench_filters = json.load(f)
 
     tabs = [tab.strip() for tab in (args.tabs or "").split(",") if tab.strip()]
@@ -154,6 +155,34 @@ def summarize_timings(ms_values: list[float]) -> dict[str, float]:
         "p95_ms": round(percentile(ms_values, 95), 2) if ms_values else 0.0,
         "p99_ms": round(percentile(ms_values, 99), 2) if ms_values else 0.0,
     }
+
+
+def normalize_base_url(base_url: str) -> str:
+    parsed = urllib.parse.urlparse(str(base_url or "").strip())
+    if parsed.scheme not in {"http", "https"}:
+        raise ValueError("Base URL must use http or https.")
+    if not parsed.netloc:
+        raise ValueError("Base URL must include a host.")
+    if parsed.username or parsed.password:
+        raise ValueError("Base URL must not include credentials.")
+    return urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path.rstrip("/"), "", "", ""))
+
+
+def resolve_json_input_path(raw_path: str) -> Path:
+    candidate = Path(raw_path or "").expanduser()
+    if not candidate.is_absolute():
+        candidate = (Path.cwd() / candidate).resolve()
+    else:
+        candidate = candidate.resolve()
+
+    workspace_root = Path.cwd().resolve()
+    if workspace_root != candidate and workspace_root not in candidate.parents:
+        raise ValueError("JSON input files must be inside the current workspace.")
+    if candidate.suffix.lower() != ".json":
+        raise ValueError("Only JSON input files are allowed.")
+    if not candidate.is_file():
+        raise FileNotFoundError(candidate)
+    return candidate
 
 
 def run_scenario(scenario: Scenario, args: argparse.Namespace, headers: dict[str, str]) -> dict[str, Any]:

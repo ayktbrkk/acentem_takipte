@@ -164,7 +164,25 @@
                   :meta="fmtDateTime(reminder.remind_at)"
                 >
                   <template #trailing>
-                    <p class="text-xs text-slate-500">{{ reminder.priority || '-' }}</p>
+                    <div class="flex flex-wrap items-center justify-end gap-2">
+                      <p class="text-xs text-slate-500">{{ reminder.priority || '-' }}</p>
+                      <ActionButton
+                        v-if="reminder.status !== 'Done'"
+                        variant="secondary"
+                        size="xs"
+                        @click="markReminderDone(reminder)"
+                      >
+                        {{ t("markDone") }}
+                      </ActionButton>
+                      <ActionButton
+                        v-if="reminder.status !== 'Cancelled'"
+                        variant="secondary"
+                        size="xs"
+                        @click="cancelReminder(reminder)"
+                      >
+                        {{ t("cancelReminder") }}
+                      </ActionButton>
+                    </div>
                   </template>
                 </MetaListCard>
               </ul>
@@ -397,7 +415,7 @@ const labels = {
     emptyCustomer: "Musteri kaydi yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Musteri 360",
     scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Baslangic", end: "Bitis", remaining: "Kalan Gun",
     net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brut Prim", commissionRate: "Komisyon Orani", gwpTry: "GWP TRY",
-    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydi yok.", remindersTitle: "Hatirlaticilar", emptyReminders: "Hatirlatici kaydi yok.", reminderAt: "Hatirlatma", reminderPriority: "Oncelik", installmentNo: "Taksit", paidOn: "Odeme Tarihi", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti", newAssignment: "Yeni Atama", edit: "Duzenle",
+    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydi yok.", remindersTitle: "Hatirlaticilar", emptyReminders: "Hatirlatici kaydi yok.", reminderAt: "Hatirlatma", reminderPriority: "Oncelik", markDone: "Tamamla", cancelReminder: "Iptal Et", installmentNo: "Taksit", paidOn: "Odeme Tarihi", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti", newAssignment: "Yeni Atama", edit: "Duzenle",
     productProfileTitle: "Urun Profili",
     productReadinessTitle: "Urun Hazirlik Durumu",
     company: "Sigorta Sirketi", branch: "Brans", customer: "Musteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
@@ -418,7 +436,7 @@ const labels = {
     emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Customer 360",
     scheduleTitle: "Schedule", issue: "Issue Date", start: "Start Date", end: "End Date", remaining: "Days Remaining",
     net: "Net Premium", tax: "Tax", commission: "Commission", gross: "Gross Premium", commissionRate: "Commission Rate", gwpTry: "GWP TRY",
-    payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", activitiesTitle: "Activities", emptyActivities: "No activities found.", remindersTitle: "Reminders", emptyReminders: "No reminders found.", reminderAt: "Reminder At", reminderPriority: "Priority", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit",
+    payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", activitiesTitle: "Activities", emptyActivities: "No activities found.", remindersTitle: "Reminders", emptyReminders: "No reminders found.", reminderAt: "Reminder At", reminderPriority: "Priority", markDone: "Mark Done", cancelReminder: "Cancel", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit",
     productProfileTitle: "Product Profile",
     productReadinessTitle: "Product Readiness",
     company: "Insurance Company", branch: "Branch", customer: "Customer", status: "Status", currency: "Currency", fxRate: "FX Rate", fxDate: "FX Date",
@@ -462,6 +480,10 @@ const fileR = createResource({ url: "frappe.client.get_list", auto: false });
 const notificationR = createResource({ url: "frappe.client.get_list", auto: false });
 const policyQuickCustomerResource = createResource({ url: "frappe.client.get_list", auto: false });
 const policyQuickPolicyResource = createResource({ url: "frappe.client.get_list", auto: false });
+const reminderUpdateResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  auto: false,
+});
 
 const policy = computed(() => policyR.data || {});
 const customer = computed(() => customerR.data || null);
@@ -922,6 +944,26 @@ async function ensurePolicyQuickOptionSources() {
       limit_page_length: 50,
     }),
   ]);
+}
+
+async function updateReminderStatus(reminder, status) {
+  if (!reminder?.name) return;
+  await reminderUpdateResource.submit({
+    doctype: "AT Reminder",
+    name: reminder.name,
+    data: {
+      status,
+    },
+  });
+  await load();
+}
+
+async function markReminderDone(reminder) {
+  await updateReminderStatus(reminder, "Done");
+}
+
+async function cancelReminder(reminder) {
+  await updateReminderStatus(reminder, "Cancelled");
 }
 
 async function prepareOwnershipAssignmentDialog({ form }) {

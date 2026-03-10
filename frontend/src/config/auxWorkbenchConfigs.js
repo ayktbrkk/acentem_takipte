@@ -580,7 +580,17 @@ export const AUX_WORKBENCH_CONFIGS = {
     summaryFields: ["status", "priority", "remind_at"],
     detailGroups: [{ key: "reminder", fields: ["source_doctype", "source_name", "customer", "policy", "claim", "office_branch", "assigned_to", "status", "priority", "remind_at", "completed_on", "owner", "modified"] }],
     textFields: ["notes"],
-    filterDefs: [F("status", "status", "text", { mode: "like" }), F("assigned_to", "assigned_to", "text", { mode: "like" }), F("priority", "priority", "text", { mode: "like" })],
+    filterDefs: [
+      F("status", "status", "select", { options: ["", "Open", "Done", "Cancelled"] }),
+      F("assigned_to", "assigned_to", "text", { mode: "like" }),
+      F("priority", "priority", "select", { options: ["", "Low", "Medium", "High"] }),
+    ],
+    presetDefs: [
+      P("open", L("Acik Hatirlaticilar", "Open Reminders"), { status: "Open", sort: "remind_at asc" }),
+      P("high", L("Yuksek Oncelik", "High Priority"), { status: "Open", priority: "High", sort: "remind_at asc" }),
+      P("done", L("Tamamlananlar", "Completed"), { status: "Done", sort: "modified desc" }),
+      P("cancelled", L("Iptal Edilenler", "Cancelled"), { status: "Cancelled", sort: "modified desc" }),
+    ],
     quickCreate: { registryKey: "reminder", label: L("Yeni Hatirlatici", "New Reminder"), showSaveAndOpen: true },
     quickEdit: { registryKey: "reminder_edit", label: L("Hizli Duzenle", "Quick Edit") },
     sortOptions: ["remind_at asc", "modified desc"],
