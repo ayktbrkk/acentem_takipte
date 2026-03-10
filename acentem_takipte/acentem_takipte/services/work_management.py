@@ -37,3 +37,41 @@ def build_my_tasks_payload(*, office_branch: str | None = None, assigned_to: str
         elif due_date <= add_days(today, 7):
             summary["due_soon"] += 1
     return {"summary": summary, "items": rows}
+
+
+def build_my_activities_payload(*, office_branch: str | None = None, assigned_to: str | None = None, limit: int = 12) -> dict[str, Any]:
+    office_branch = normalize_requested_office_branch(office_branch)
+    user = str(assigned_to or frappe.session.user or "").strip()
+    filters: dict[str, Any] = {"assigned_to": user}
+    if office_branch:
+        filters["office_branch"] = office_branch
+
+    rows = frappe.get_list(
+        "AT Activity",
+        fields=[
+            "name",
+            "activity_title",
+            "activity_type",
+            "source_doctype",
+            "source_name",
+            "customer",
+            "policy",
+            "claim",
+            "status",
+            "assigned_to",
+            "activity_at",
+        ],
+        filters=filters,
+        order_by="activity_at desc, modified desc",
+        limit_page_length=max(min(int(limit or 12), 50), 1),
+    )
+    summary = {"total": len(rows), "logged": 0, "shared": 0, "archived": 0}
+    for row in rows:
+        status = str(row.get("status") or "")
+        if status == "Logged":
+            summary["logged"] += 1
+        elif status == "Shared":
+            summary["shared"] += 1
+        elif status == "Archived":
+            summary["archived"] += 1
+    return {"summary": summary, "items": rows}

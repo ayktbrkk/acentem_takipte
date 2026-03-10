@@ -328,6 +328,30 @@
         </article>
 
         <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('activitiesTitle')" :count="activityRows.length" />
+          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="activityRows.length === 0" class="at-empty-block">
+            {{ t("noActivity") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <EntityPreviewCard
+              v-for="activity in activityRows"
+              :key="activity.name"
+              :title="activity.activity_title || activity.activity_type || activity.name"
+              :subtitle="activity.activity_type || '-'"
+            >
+              <template #trailing>
+                <StatusBadge type="generic" :status="activity.status" />
+              </template>
+              <MiniFactList class="mt-2" :items="activityCardFacts(activity)" />
+            </EntityPreviewCard>
+          </div>
+        </article>
+
+        <article
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
           class="surface-card rounded-2xl p-5"
         >
@@ -892,7 +916,9 @@ const copy = {
     sameHousehold: "Ayni hane",
     insuredAssetsTitle: "Sigortalanan Varliklar",
     assignmentsTitle: "Atamalar",
+    activitiesTitle: "Aktiviteler",
     noAssignment: "Atama kaydi yok.",
+    noActivity: "Aktivite kaydi yok.",
     noInsuredAsset: "Sigortalanan varlik bulunamadi.",
     assetType: "Varlik Turu",
     assetIdentifier: "Varlik Kimligi",
@@ -1036,7 +1062,9 @@ const copy = {
     sameHousehold: "Same household",
     insuredAssetsTitle: "Insured Assets",
     assignmentsTitle: "Assignments",
+    activitiesTitle: "Activities",
     noAssignment: "No assignments found.",
+    noActivity: "No activities found.",
     noInsuredAsset: "No insured asset found.",
     assetType: "Asset Type",
     assetIdentifier: "Asset Identifier",
@@ -1300,6 +1328,7 @@ const timelineRows = computed(() =>
     .filter((item) => Boolean(item.date))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 );
+const activityRows = computed(() => (customer360Payload.value?.operations?.activities || []).slice(0, 6));
 
 watch(
   () => props.name,
@@ -1674,6 +1703,29 @@ async function prepareOwnershipAssignmentEditDialog({ resetForm }) {
 
 function assignmentSummaryLabel(assignment) {
   return [assignment.status || "-", assignment.due_date || "-"].filter(Boolean).join(" / ");
+}
+
+function activityCardFacts(activity) {
+  return [
+    {
+      key: "activityAt",
+      label: t("date"),
+      value: formatDateTime(activity?.activity_at),
+      valueClass: "text-xs text-slate-600",
+    },
+    {
+      key: "assignedTo",
+      label: t("assignedTo"),
+      value: activity?.assigned_to || "-",
+      valueClass: "text-sm text-slate-800",
+    },
+    {
+      key: "source",
+      label: t("source"),
+      value: [activity?.source_doctype, activity?.source_name].filter(Boolean).join(" / ") || "-",
+      valueClass: "text-sm text-slate-800",
+    },
+  ];
 }
 
 function policyCardFacts(policy) {

@@ -549,3 +549,23 @@
 - Faz 13.7 tamamlandi: Files aux panel aksiyonu attached_to_doctype/attached_to_name uzerinden hedef kayda gider hale geldi.
 - Faz 13 plan seviyesinde kapatildi. Belge merkezi policy/customer/claim drill-down, files aux operatorlugu ve document profile zinciri tamamlandi. Yeni aktif odak: Faz 14.
 - Faz 14 basladi. `AT Task` veri modeli, quick create/aux workbench omurgasi ve Dashboard gunluk gorev paneli eklendi.
+
+- Faz 14 ilerleme notu: Dashboard ve task aux listesi icin hizli task lifecycle aksiyonlari tamamlandi; ikinci veri katmani olarak AT Activity DocType, quick create/service omurgasi ve activities aux yuzeyi eklendi.
+
+## Guncel Durum - 2026-03-09
+- Faz 14 aktif.
+- Yeni ilerleme: AT Activity customer 360 payload ve detail gorunurlugu tamamlandi.
+
+
+## Guncel Durum - 2026-03-09 Faz 14.4
+- Policy 360 artik recent activity verisini de tasiyor.
+
+
+## Guncel Durum - 2026-03-09 Faz 14.5
+- Dashboard tarafinda My Activities paneli acildi.
+
+
+## Faz 14 Kapanis
+- Faz 14 tamamlandi.
+- Sonraki devam noktasi: Faz 15 / reminder ya da sonraki operasyon veri katmani.
+

@@ -1,0 +1,113 @@
+{
+  "doctype": "DocType",
+  "name": "AT Activity",
+  "module": "Acentem Takipte",
+  "custom": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "naming_rule": "Random",
+  "fields": [
+    {
+      "fieldname": "activity_title",
+      "fieldtype": "Data",
+      "label": "Aktivite Basligi",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "activity_type",
+      "fieldtype": "Select",
+      "label": "Aktivite Tipi",
+      "options": "Call\nVisit\nNote\nClaim Update\nRenewal Update\nCollection\nCampaign\nReview\nOther",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "source_doctype",
+      "fieldtype": "Data",
+      "label": "Kaynak Tipi"
+    },
+    {
+      "fieldname": "source_name",
+      "fieldtype": "Data",
+      "label": "Kaynak Kayit"
+    },
+    {
+      "fieldname": "customer",
+      "fieldtype": "Link",
+      "label": "Musteri",
+      "options": "AT Customer",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "policy",
+      "fieldtype": "Link",
+      "label": "Police",
+      "options": "AT Policy"
+    },
+    {
+      "fieldname": "claim",
+      "fieldtype": "Link",
+      "label": "Hasar",
+      "options": "AT Claim"
+    },
+    {
+      "fieldname": "office_branch",
+      "fieldtype": "Link",
+      "label": "Ofis Sube",
+      "options": "AT Office Branch"
+    },
+    {
+      "fieldname": "assigned_to",
+      "fieldtype": "Link",
+      "label": "Atanan Kullanici",
+      "options": "User"
+    },
+    {
+      "fieldname": "activity_at",
+      "fieldtype": "Datetime",
+      "label": "Aktivite Zamani",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Durum",
+      "options": "Logged\nShared\nArchived",
+      "default": "Logged",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notlar"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Agent",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "Accountant",
+      "read": 1
+    }
+  ]
+}

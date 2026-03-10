@@ -21,6 +21,7 @@ from acentem_takipte.acentem_takipte.services.quick_create import (
     create_insured_asset as create_insured_asset_service,
     create_lead as create_lead_service,
     create_ownership_assignment as create_ownership_assignment_service,
+    create_activity as create_activity_service,
     create_payment as create_payment_service,
     create_policy as create_policy_service,
     create_renewal_task as create_renewal_task_service,
@@ -530,6 +531,45 @@ def create_quick_task(
         "notes": normalize_note_text(notes),
     }
     return create_task_service(payload)
+
+
+@frappe.whitelist()
+def create_quick_activity(
+    activity_title: str | None = None,
+    activity_type: str | None = None,
+    source_doctype: str | None = None,
+    source_name: str | None = None,
+    customer: str | None = None,
+    policy: str | None = None,
+    claim: str | None = None,
+    office_branch: str | None = None,
+    assigned_to: str | None = None,
+    activity_at: str | None = None,
+    status: str | None = None,
+    notes: str | None = None,
+) -> dict[str, str]:
+    _assert_create_permission("AT Activity", _("You do not have permission to create activities."))
+
+    payload = {
+        "doctype": "AT Activity",
+        "activity_title": (activity_title or "").strip(),
+        "activity_type": _normalize_option(
+            activity_type,
+            {"Call", "Visit", "Note", "Claim Update", "Renewal Update", "Collection", "Campaign", "Review", "Other"},
+            default="Note",
+        ),
+        "source_doctype": _normalize_doctype_or_blank(source_doctype),
+        "source_name": _normalize_source_name(source_doctype, source_name),
+        "customer": _normalize_link("AT Customer", customer) if (customer or "").strip() else None,
+        "policy": _normalize_link("AT Policy", policy) if (policy or "").strip() else None,
+        "claim": _normalize_link("AT Claim", claim) if (claim or "").strip() else None,
+        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "assigned_to": _normalize_link("User", assigned_to) if (assigned_to or "").strip() else None,
+        "activity_at": frappe.utils.get_datetime(activity_at) if activity_at else frappe.utils.now_datetime(),
+        "status": _normalize_option(status, {"Logged", "Shared", "Archived"}, default="Logged"),
+        "notes": normalize_note_text(notes),
+    }
+    return create_activity_service(payload)
 
 
 @frappe.whitelist()
@@ -1174,6 +1214,20 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
         "priority",
         "due_date",
         "reminder_at",
+        "notes",
+    },
+    "AT Activity": {
+        "activity_title",
+        "activity_type",
+        "source_doctype",
+        "source_name",
+        "customer",
+        "policy",
+        "claim",
+        "office_branch",
+        "assigned_to",
+        "activity_at",
+        "status",
         "notes",
     },
     "AT Insurance Company": {"company_name", "company_code", "is_active"},

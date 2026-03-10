@@ -131,6 +131,20 @@ vi.mock("frappe-ui", () => ({
                   notes: "Ilk temas",
                 },
               ],
+              activities: [
+                {
+                  name: "ACT-001",
+                  activity_title: "Musteri ile ilk gorusme",
+                  activity_type: "Call",
+                  source_doctype: "AT Customer",
+                  source_name: "CUST-001",
+                  customer: "CUST-001",
+                  assigned_to: "agent@example.com",
+                  activity_at: "2026-03-09T09:00:00Z",
+                  status: "Logged",
+                  notes: "Bilgi verildi",
+                },
+              ],
             },
           };
           data.value = payload;
@@ -558,8 +572,10 @@ describe("CustomerDetail customer 360 integration", () => {
     await Promise.resolve();
 
     expect(wrapper.text()).toContain("Atamalar");
+    expect(wrapper.text()).toContain("Aktiviteler");
     expect(wrapper.text()).toContain("agent@example.com");
     expect(wrapper.text()).toContain("2026-03-15");
+    expect(wrapper.text()).toContain("Musteri ile ilk gorusme");
 
     const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
 

@@ -83,6 +83,13 @@ def build_policy_360_payload(name: str) -> dict:
             order_by="modified desc",
             limit_page_length=50,
         ) if frappe.db.exists("DocType", "AT Ownership Assignment") else [],
+        "activities": _get_rows(
+            "AT Activity",
+            fields=["name", "activity_title", "activity_type", "source_doctype", "source_name", "customer", "policy", "claim", "assigned_to", "activity_at", "status", "notes"],
+            filters={"policy": policy_name},
+            order_by="activity_at desc, modified desc",
+            limit_page_length=50,
+        ) if frappe.db.exists("DocType", "AT Activity") else [],
         "product_profile": _build_product_profile(policy),
     }
 

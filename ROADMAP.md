@@ -1767,3 +1767,24 @@ ext_follow_up_on). Controller guard'lari reddedilen hasar, itiraz ve takip tarih
 - Faz 13.7 tamamlandi: Files aux panel aksiyonu attached_to_doctype/attached_to_name bagli hedef kayda gider hale getirildi.
 - Faz 13 tamamlandi: Policy 360 ve Customer 360 document profile, claim document summary, files drill-down, files aux operatorlugu ve belge merkezi preset/ozet kartlari tamamlandi. Yeni aktif odak Faz 14.
 - Faz 14 basladi: `AT Task` veri modeli, quick create ve aux workbench omurgasi acildi; `Dashboard` gunluk sekmesine `Benim Gorevlerim / My Tasks` paneli ve ilk backend/frontend kontrat testleri eklendi.
+
+- Faz 14 ilerleme notu: Dashboard ve task aux listesinde task lifecycle hizli aksiyonlari (Start/Block/Done/Cancel) acildi ve sayfa testine mutation kontrati eklendi.
+- Faz 14 ilerleme notu: Ikinci is modeli olarak AT Activity veri modeli, quick create/service omurgasi, activities aux yuzeyi ve ilk backend kontrat testi eklendi.
+
+## Guncelleme - Faz 14.3
+- Customer 360 payload artik activities listesi de donuyor.
+- CustomerDetail ekraninda aktiviteler bolumu ve sayfa testi eklendi.
+
+
+## Guncelleme - Faz 14.4
+- Policy 360 payload ve PolicyDetail ekranina aktiviteler eklendi.
+
+
+## Guncelleme - Faz 14.5
+- Dashboard icinde Benim Aktivitelerim paneli ve detay route entegrasyonu eklendi.
+
+
+## Kapanis - Faz 14
+- Faz 14 tamamlandi.
+- Kalan not: devam noktasi Faz 15 veya AT Reminder veri katmani.
+

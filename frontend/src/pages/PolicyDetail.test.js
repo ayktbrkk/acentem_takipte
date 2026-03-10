@@ -81,6 +81,20 @@ vi.mock("frappe-ui", () => ({
                 due_date: "2026-03-20",
               },
             ],
+            activities: [
+              {
+                name: "ACT-001",
+                activity_title: "Police yenileme gorusmesi",
+                activity_type: "Renewal Update",
+                source_doctype: "AT Policy",
+                source_name: "POL-001",
+                customer: "CUST-001",
+                policy: "POL-001",
+                assigned_to: "agent@example.com",
+                activity_at: "2026-03-09T10:00:00Z",
+                status: "Logged",
+              },
+            ],
             payment_installments: [
               {
                 name: "PINST-001",
@@ -440,5 +454,34 @@ describe("PolicyDetail policy 360 integration", () => {
         assigned_to: "agent@example.com",
       })
     );
+  });
+
+  it("renders recent activities on summary tab", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Aktiviteler");
+    expect(wrapper.text()).toContain("Police yenileme gorusmesi");
+    expect(wrapper.text()).toContain("Renewal Update");
+    expect(wrapper.text()).toContain("agent@example.com");
   });
 });

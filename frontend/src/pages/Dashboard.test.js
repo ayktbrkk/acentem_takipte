@@ -42,8 +42,8 @@ vi.mock("frappe-ui", () => {
         data: ref(next.data ?? {}),
         loading: ref(next.loading ?? false),
         params: next.params ?? {},
-        reload: vi.fn(),
-        submit: vi.fn(async () => ({})),
+        reload: next.reload ?? vi.fn(),
+        submit: next.submit ?? vi.fn(async () => ({})),
       };
     },
   };
@@ -131,6 +131,22 @@ describe("Dashboard page store integration", () => {
           ],
         },
       },
+      {
+        data: {
+          summary: { total: 1, logged: 1, shared: 0, archived: 0 },
+          items: [
+            {
+              name: "ACT-0001",
+              activity_title: "Customer follow-up call",
+              activity_type: "Call",
+              assigned_to: "manager@example.com",
+              status: "Logged",
+              activity_at: "2026-03-09",
+            },
+          ],
+        },
+      },
+      { data: {} },
     );
     setActivePinia(createPinia());
 
@@ -252,5 +268,108 @@ describe("Dashboard page store integration", () => {
       .filter((node) => node.text().includes("Ac") || node.text().includes("Open"));
     await openButtons[openButtons.length - 1].trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "tasks-detail", params: { name: "TASK-0001" } });
+  });
+
+  it("renders my activity panel and opens activity detail route", async () => {
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          SectionCardHeader: genericStub,
+          DashboardStatCard: true,
+          StatusBadge: true,
+          ActionPreviewCard: genericStub,
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain("Benim Aktivitelerim");
+    expect(wrapper.text()).toContain("Customer follow-up call");
+    expect(wrapper.text()).toContain("Kayitli");
+    const openButtons = wrapper
+      .findAll(".action-button-stub")
+      .filter((node) => node.text().includes("Ac") || node.text().includes("Open"));
+    await openButtons[openButtons.length - 1].trigger("click");
+    expect(routerPush).toHaveBeenCalledWith({ name: "activities-detail", params: { name: "ACT-0001" } });
+  });
+
+  it("starts task from my task panel", async () => {
+    const submit = vi.fn(async () => ({}));
+    resourceQueue[8] = { data: {}, submit };
+
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          SectionCardHeader: genericStub,
+          DashboardStatCard: true,
+          StatusBadge: true,
+          ActionPreviewCard: genericStub,
+        },
+      },
+    });
+
+    const startButtons = wrapper
+      .findAll(".action-button-stub")
+      .filter((node) => node.text().includes("Takibe Al") || node.text().includes("Start"));
+    await startButtons[0].trigger("click");
+
+    expect(submit).toHaveBeenCalledWith({
+      doctype: "AT Task",
+      name: "TASK-0001",
+      data: { status: "In Progress" },
+    });
+  });
+
+  it("cancels task from my task panel", async () => {
+    const submit = vi.fn(async () => ({}));
+    resourceQueue[8] = { data: {}, submit };
+
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          SectionCardHeader: genericStub,
+          DashboardStatCard: true,
+          StatusBadge: true,
+          ActionPreviewCard: genericStub,
+        },
+      },
+    });
+
+    const cancelButtons = wrapper
+      .findAll(".action-button-stub")
+      .filter((node) => node.text().includes("Iptal Et") || node.text().includes("Cancel"));
+    await cancelButtons[0].trigger("click");
+
+    expect(submit).toHaveBeenCalledWith({
+      doctype: "AT Task",
+      name: "TASK-0001",
+      data: { status: "Cancelled" },
+    });
   });
 });

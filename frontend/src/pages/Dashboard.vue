@@ -520,6 +520,18 @@
                 description-class="mt-2 text-xs font-semibold text-slate-600"
               >
                 <template #trailing>
+                  <ActionButton v-if="canStartTask(task)" variant="ghost" size="sm" @click="startTask(task)">
+                    {{ t("startTaskAction") }}
+                  </ActionButton>
+                  <ActionButton v-if="canBlockTask(task)" variant="ghost" size="sm" @click="blockTask(task)">
+                    {{ t("blockTaskAction") }}
+                  </ActionButton>
+                  <ActionButton v-if="canCompleteTask(task)" variant="ghost" size="sm" @click="completeTask(task)">
+                    {{ t("completeTaskAction") }}
+                  </ActionButton>
+                  <ActionButton v-if="canCancelTask(task)" variant="ghost" size="sm" @click="cancelTask(task)">
+                    {{ t("cancelTaskAction") }}
+                  </ActionButton>
                   <ActionButton variant="ghost" size="sm" @click="openTaskItem(task)">
                     {{ t("openItem") }}
                   </ActionButton>
@@ -532,11 +544,55 @@
               <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'tasks-list' })">
                 {{ t("openTasksAction") }}
               </ActionButton>
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
+
+          <article class="surface-card rounded-2xl p-5">
+            <SectionCardHeader :title="t('myActivitiesTitle')" :count="formatNumber(myActivityItems.length)" />
+            <p class="mb-3 text-xs text-slate-500">{{ t("myActivitiesHint") }}</p>
+            <div v-if="myActivitiesLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+            <div v-else class="space-y-3">
+              <div class="grid grid-cols-3 gap-2">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activityLogged") }}</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(myActivitySummary.logged) }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activityShared") }}</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(myActivitySummary.shared) }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activityArchived") }}</p>
+                  <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(myActivitySummary.archived) }}</p>
+                </div>
+              </div>
+              <ul v-if="myActivityItems.length > 0" class="space-y-2">
+                <MetaListCard
+                  v-for="activity in myActivityItems"
+                  :key="activity.name"
+                  :title="activity.activity_title || activity.activity_type || activity.name || '-'"
+                  :description="activity.status || '-'"
+                  description-class="mt-2 text-xs font-semibold text-slate-600"
+                >
+                  <template #trailing>
+                    <ActionButton variant="ghost" size="sm" @click="openActivityItem(activity)">
+                      {{ t("openItem") }}
+                    </ActionButton>
+                  </template>
+                  <MiniFactList :items="activityFacts(activity)" />
+                </MetaListCard>
+              </ul>
+              <div v-else class="at-empty-block text-sm">{{ t("noMyActivities") }}</div>
+              <div class="flex flex-wrap gap-2 pt-2">
+                <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'activities-list' })">
+                  {{ t("openActivitiesAction") }}
+                </ActionButton>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
-    </div>
 
 
 
@@ -762,14 +818,27 @@ const copy = {
     followUpClaimsAction: "Hasar Masasi",
     followUpRenewalsAction: "Yenileme Panosu",
     followUpCommunicationAction: "Iletisim Merkezi",
-    myTasksTitle: "Benim Gorevlerim",
-    myTasksHint: "Atanmis gorevleri bugun ve gelecek hafta icin izleyin.",
-    noMyTasks: "Atanmis gorev yok.",
-    taskOverdue: "Geciken",
+      myTasksTitle: "Benim Gorevlerim",
+      myTasksHint: "Atanmis gorevleri bugun ve gelecek hafta icin izleyin.",
+      noMyTasks: "Atanmis gorev yok.",
+      myActivitiesTitle: "Benim Aktivitelerim",
+      myActivitiesHint: "Kaydedilen son aktiviteleri takip edin.",
+      noMyActivities: "Kaydedilmis aktivite yok.",
+      activityLogged: "Kayitli",
+      activityShared: "Paylasildi",
+      activityArchived: "Arsiv",
+      activityType: "Aktivite Tipi",
+      activityAt: "Aktivite Tarihi",
+      openActivitiesAction: "Aktivite Listesi",
+      taskOverdue: "Geciken",
     taskToday: "Bugun",
     taskSoon: "7 Gun",
     taskType: "Tip",
     taskAssignee: "Atanan",
+    startTaskAction: "Takibe Al",
+    blockTaskAction: "Bloke Et",
+    completeTaskAction: "Tamamla",
+    cancelTaskAction: "Iptal Et",
     openTasksAction: "Gorev Listesi",
     policyCount: "Police Adedi",
     grossProduction: "Brut Uretim",
@@ -921,14 +990,27 @@ const copy = {
     followUpClaimsAction: "Claims Desk",
     followUpRenewalsAction: "Renewals Board",
     followUpCommunicationAction: "Communication Center",
-    myTasksTitle: "My Tasks",
-    myTasksHint: "Track assigned tasks for today and the coming week.",
-    noMyTasks: "No assigned tasks.",
-    taskOverdue: "Overdue",
+      myTasksTitle: "My Tasks",
+      myTasksHint: "Track assigned tasks for today and the coming week.",
+      noMyTasks: "No assigned tasks.",
+      myActivitiesTitle: "My Activities",
+      myActivitiesHint: "Track recently logged activities.",
+      noMyActivities: "No logged activities.",
+      activityLogged: "Logged",
+      activityShared: "Shared",
+      activityArchived: "Archived",
+      activityType: "Activity Type",
+      activityAt: "Activity Date",
+      openActivitiesAction: "Activity List",
+      taskOverdue: "Overdue",
     taskToday: "Today",
     taskSoon: "7 Days",
     taskType: "Type",
     taskAssignee: "Assignee",
+    startTaskAction: "Start",
+    blockTaskAction: "Block",
+    completeTaskAction: "Mark Done",
+    cancelTaskAction: "Cancel",
     openTasksAction: "Task List",
     policyCount: "Policy Count",
     grossProduction: "Gross Production",
@@ -990,6 +1072,16 @@ const myTasksResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_tasks_payload",
   params: withOfficeBranchFilter({ filters: {} }),
   auto: true,
+});
+const myActivitiesResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_activities_payload",
+  params: withOfficeBranchFilter({ filters: {} }),
+  auto: true,
+});
+
+const myTaskMutationResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  auto: false,
 });
 
 const leadListResource = createResource({
@@ -1151,6 +1243,7 @@ const dashboardLoadingRaw = computed(
 );
 const followUpLoading = computed(() => Boolean(followUpResource.loading));
 const myTasksLoading = computed(() => Boolean(myTasksResource.loading));
+const myActivitiesLoading = computed(() => Boolean(myActivitiesResource.loading));
 const dashboardLoading = computed(() => dashboardStore.state.loading);
 const dashboardPermissionError = computed(() => {
   const candidates = [dashboardTabPayloadResource.error, isDailyTab.value ? kpiResource.error : null];
@@ -1244,6 +1337,9 @@ const followUpItems = computed(() => (Array.isArray(followUpPayload.value.items)
 const myTasksPayload = computed(() => myTasksResource.data || {});
 const myTaskSummary = computed(() => myTasksPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
 const myTaskItems = computed(() => (Array.isArray(myTasksPayload.value.items) ? myTasksPayload.value.items : []));
+const myActivitiesPayload = computed(() => myActivitiesResource.data || {});
+const myActivitySummary = computed(() => myActivitiesPayload.value.summary || { total: 0, logged: 0, shared: 0, archived: 0 });
+const myActivityItems = computed(() => (Array.isArray(myActivitiesPayload.value.items) ? myActivitiesPayload.value.items : []));
 
 const visibleRange = computed(() => {
   const range = getDateRange(selectedRange.value);
@@ -1860,6 +1956,61 @@ function openTaskItem(task) {
   router.push({ name: "tasks-detail", params: { name: task.name } });
 }
 
+function activityFacts(activity) {
+  return [
+    { label: t("activityType"), value: activity?.activity_type || "-" },
+    { label: t("taskAssignee"), value: activity?.assigned_to || "-" },
+    { label: t("activityAt"), value: formatDate(activity?.activity_at) },
+  ];
+}
+
+function openActivityItem(activity) {
+  if (!activity?.name) return;
+  router.push({ name: "activities-detail", params: { name: activity.name } });
+}
+
+function canStartTask(task) {
+  return cstr(task?.status) === "Open";
+}
+
+function canBlockTask(task) {
+  return ["Open", "In Progress"].includes(cstr(task?.status));
+}
+
+function canCompleteTask(task) {
+  return ["Open", "In Progress", "Blocked"].includes(cstr(task?.status));
+}
+
+function canCancelTask(task) {
+  return ["Open", "In Progress", "Blocked"].includes(cstr(task?.status));
+}
+
+async function updateTaskStatus(task, nextStatus) {
+  if (!task?.name || !nextStatus) return;
+  await myTaskMutationResource.submit({
+    doctype: "AT Task",
+    name: task.name,
+    data: { status: nextStatus },
+  });
+  triggerDashboardReload({ immediate: true });
+}
+
+async function startTask(task) {
+  await updateTaskStatus(task, "In Progress");
+}
+
+async function blockTask(task) {
+  await updateTaskStatus(task, "Blocked");
+}
+
+async function completeTask(task) {
+  await updateTaskStatus(task, "Done");
+}
+
+async function cancelTask(task) {
+  await updateTaskStatus(task, "Cancelled");
+}
+
 function recentLeadFacts(lead) {
   return [
     { label: t("email"), value: lead.email || "-" },
@@ -1954,6 +2105,10 @@ function triggerDashboardReload({ includeKpis = true, immediate = false } = {}) 
     dashboardTabPayloadResource.reload();
     followUpResource.params = withOfficeBranchFilter({ filters: {} });
     followUpResource.reload();
+    myActivitiesResource.params = withOfficeBranchFilter({ filters: {} });
+    myActivitiesResource.reload();
+    myTasksResource.params = withOfficeBranchFilter({ filters: {} });
+    myTasksResource.reload();
     if (includeKpis) {
       kpiResource.params = buildKpiParams();
       kpiResource.reload();

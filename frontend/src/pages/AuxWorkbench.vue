@@ -242,6 +242,42 @@
                   >
                     {{ rowActionBusyName === row.name ? t("running") : t("requeue") }}
                   </ActionButton>
+                  <ActionButton
+                    v-if="canStartTaskRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="startTaskRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("startTask") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canBlockTaskRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="blockTaskRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("blockTaskAction") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canCompleteTaskRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="completeTaskRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canCancelTaskRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="cancelTaskRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("cancelTaskAction") }}
+                  </ActionButton>
                   <ActionButton variant="secondary" size="xs" @click.stop="openDetail(row)">{{ t("openDetail") }}</ActionButton>
                   <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="openPanel(row)">{{ t("panel") }}</ActionButton>
                 </InlineActionRow>
@@ -392,6 +428,10 @@ const copy = {
     sendNow: "Hemen Gonder",
     retry: "Tekrar Dene",
     requeue: "Kuyruga Al",
+    startTask: "Takibe Al",
+    blockTaskAction: "Bloke Et",
+    completeTaskAction: "Tamamla",
+    cancelTaskAction: "Iptal Et",
     running: "Calisiyor...",
     page: "Sayfa",
     prev: "Onceki",
@@ -463,6 +503,10 @@ const copy = {
     sendNow: "Send Now",
     retry: "Retry",
     requeue: "Requeue",
+    startTask: "Start",
+    blockTaskAction: "Block",
+    completeTaskAction: "Mark Done",
+    cancelTaskAction: "Cancel",
     running: "Running...",
     page: "Page",
     prev: "Previous",
@@ -520,6 +564,10 @@ const retryOutboxRowResource = createResource({
 });
 const requeueOutboxRowResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
+  auto: false,
+});
+const taskRowMutationResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 const auxQuickCustomerResource = createResource({
@@ -1182,6 +1230,18 @@ function canRequeueOutboxRow(row) {
     ["Queued", "Processing"].includes(String(row.status || ""))
   );
 }
+function canStartTaskRow(row) {
+  return config.key === "tasks" && row?.name && String(row.status || "") === "Open";
+}
+function canBlockTaskRow(row) {
+  return config.key === "tasks" && row?.name && ["Open", "In Progress"].includes(String(row.status || ""));
+}
+function canCompleteTaskRow(row) {
+  return config.key === "tasks" && row?.name && ["Open", "In Progress", "Blocked"].includes(String(row.status || ""));
+}
+function canCancelTaskRow(row) {
+  return config.key === "tasks" && row?.name && ["Open", "In Progress", "Blocked"].includes(String(row.status || ""));
+}
 async function sendDraftNowRow(row) {
   if (!authStore.can(["actions", "communication", "sendDraftNow"])) return;
   await runRowQuickAction(row?.name, sendDraftNowRowResource, (name) => ({ draft_name: name }));
@@ -1193,6 +1253,34 @@ async function retryOutboxRow(row) {
 async function requeueOutboxRow(row) {
   if (!authStore.can(["actions", "communication", "requeueOutbox"])) return;
   await runRowQuickAction(row?.name, requeueOutboxRowResource, (name) => ({ outbox_name: name }));
+}
+async function startTaskRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Task",
+    name,
+    data: { status: "In Progress" },
+  }));
+}
+async function blockTaskRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Task",
+    name,
+    data: { status: "Blocked" },
+  }));
+}
+async function completeTaskRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Task",
+    name,
+    data: { status: "Done" },
+  }));
+}
+async function cancelTaskRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Task",
+    name,
+    data: { status: "Cancelled" },
+  }));
 }
 
 function openDetail(row) {

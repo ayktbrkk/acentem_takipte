@@ -945,6 +945,61 @@ export const quickCreateRegistry = {
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
     ],
   },
+  activity: {
+    key: "activity",
+    title: i18nLabel("Hizli Aktivite", "Quick Activity"),
+    subtitle: i18nLabel("Gerceklesen operasyon adimini kaydet", "Log a completed operational step"),
+    submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_activity",
+    resultKey: "activity",
+    openRouteName: "activities-detail",
+    successRefreshTargets: ["activities-list"],
+    defaults: {
+      activity_title: "",
+      activity_type: "Note",
+      source_doctype: "AT Customer",
+      source_name: "",
+      customer: "",
+      policy: "",
+      claim: "",
+      assigned_to: "",
+      activity_at: "",
+      status: "Logged",
+      notes: "",
+    },
+    fields: [
+      { name: "activity_title", type: "text", label: i18nLabel("Aktivite Basligi", "Activity Title"), required: true },
+      { name: "activity_type", type: "select", label: i18nLabel("Aktivite Tipi", "Activity Type"), options: [
+        option("Call", "Arama", "Call"),
+        option("Visit", "Ziyaret", "Visit"),
+        option("Note", "Not", "Note"),
+        option("Claim Update", "Hasar Guncelleme", "Claim Update"),
+        option("Renewal Update", "Yenileme Guncelleme", "Renewal Update"),
+        option("Collection", "Tahsilat", "Collection"),
+        option("Campaign", "Kampanya", "Campaign"),
+        option("Review", "Inceleme", "Review"),
+        option("Other", "Diger", "Other"),
+      ] },
+      { name: "source_doctype", type: "select", label: i18nLabel("Kaynak Tipi", "Source Type"), options: [
+        option("AT Customer", "Musteri", "Customer"),
+        option("AT Policy", "Police", "Policy"),
+        option("AT Claim", "Hasar", "Claim"),
+        option("AT Task", "Gorev", "Task"),
+        option("AT Campaign", "Kampanya", "Campaign"),
+      ] },
+      { name: "source_name", type: "text", label: i18nLabel("Kaynak Kayit", "Source Record") },
+      { name: "customer", type: "select", label: i18nLabel("Musteri", "Customer"), optionsSource: "customers" },
+      { name: "policy", type: "select", label: i18nLabel("Police", "Policy"), optionsSource: "policies" },
+      { name: "claim", type: "text", label: i18nLabel("Hasar", "Claim") },
+      { name: "assigned_to", type: "text", label: i18nLabel("Atanan Kullanici", "Assigned User") },
+      { name: "activity_at", type: "datetime-local", label: i18nLabel("Aktivite Zamani", "Activity Time") },
+      { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
+        option("Logged", "Kaydedildi", "Logged"),
+        option("Shared", "Paylasildi", "Shared"),
+        option("Archived", "Arsivlendi", "Archived"),
+      ] },
+      { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
+    ],
+  },
 };
 
 function addQuickEditVariant(baseKey, editKey, trTitle, enTitle, trSubtitle, enSubtitle) {
@@ -1041,6 +1096,14 @@ addQuickEditVariant(
   "Edit Task",
   "Gorev alanlarini guncelle",
   "Update task fields"
+);
+addQuickEditVariant(
+  "activity",
+  "activity_edit",
+  "Aktiviteyi Duzenle",
+  "Edit Activity",
+  "Aktivite alanlarini guncelle",
+  "Update activity fields"
 );
 addQuickEditVariant(
   "notification_template_master",

@@ -563,3 +563,35 @@ ext_follow_up_on alanlari eklendi
 - [x] `tasks` aux workbench yuzeyi ve `task/task_edit` quick create config'i eklendi
 - [x] `Dashboard.vue` gunluk sekmeye `Benim Gorevlerim / My Tasks` paneli eklendi
 - [x] `test_work_management.py` ve `Dashboard.test.js` ile ilk backend/frontend kontrat testi eklendi
+
+- [x] Dashboard ve task aux listesi icin Takibe Al / Bloke Et / Tamamla / Iptal Et hizli aksiyonlari eklendi
+- [x] AT Activity DocType veri modeli eklendi
+- [x] create_quick_activity + quick create service/persistence omurgasi eklendi
+- [x] activities aux workbench yuzeyi ve activity/activity_edit quick create config'i eklendi
+- [x] sourcePanel icinde AT Activity route cozumu eklendi
+- [x] test_activity_quick_create.py ile ilk backend kontrat testi eklendi
+- [ ] Sonraki aktif odak: Faz 14 AT Activity gorunurlugunu dashboard/detail yuzeylerine tasimak
+
+## Guncelleme - 2026-03-09 Faz 14.3
+- [x] AT Activity customer 360 payload ve CustomerDetail gorunurlugu eklendi.
+- [x] CustomerDetail sayfa testi activity bolumu ile genisletildi.
+- Sonraki odak: activity gorunurlugunu policy ve dashboard operasyon yuzeylerine tasimak.
+
+
+## Guncelleme - 2026-03-09 Faz 14.4
+- [x] AT Activity policy 360 payload ve PolicyDetail gorunurlugu eklendi.
+- [x] PolicyDetail sayfa testi activity bolumu ile genisletildi.
+- Sonraki odak: AT Activity gorunurlugunu dashboard veya my work yuzeyine tasimak.
+
+
+## Guncelleme - 2026-03-09 Faz 14.5
+- [x] Dashboard icine Benim Aktivitelerim paneli eklendi.
+- [x] Policy 360 ve Customer 360 sonrasi activity gorunurlugu dashboard ile tamamlandi.
+- Sonraki odak: Faz 14 kapanis notu veya AT Reminder veri katmani.
+
+
+## Kapanis - 2026-03-09 Faz 14
+- [x] Faz 14 tamamlandi.
+- Kapsam: AT Task, task lifecycle aksiyonlari, AT Activity, Customer 360 / Policy 360 activity gorunurlugu, Dashboard my tasks + my activities.
+- Sonraki aktif odak: Faz 15 veya AT Reminder veri katmani.
+

@@ -315,3 +315,24 @@ def create_task(payload: dict) -> dict[str, str]:
         },
         "task",
     )
+
+
+def create_activity(payload: dict) -> dict[str, str]:
+    return _insert_doc(
+        {
+            "doctype": "AT Activity",
+            "activity_title": payload.get("activity_title"),
+            "activity_type": payload.get("activity_type"),
+            "source_doctype": payload.get("source_doctype"),
+            "source_name": payload.get("source_name"),
+            "customer": payload.get("customer"),
+            "policy": payload.get("policy"),
+            "claim": payload.get("claim"),
+            "office_branch": payload.get("office_branch"),
+            "assigned_to": payload.get("assigned_to"),
+            "activity_at": payload.get("activity_at"),
+            "status": payload.get("status"),
+            "notes": payload.get("notes"),
+        },
+        "activity",
+    )

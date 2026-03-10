@@ -296,3 +296,25 @@
 - Tamamlandi: Faz 13.7 Files aux attached-target panel gecisi.
 - Faz 13 kapanis notu: policy/customer/claim belge profili, files drill-down ve files aux operatorlugu tamamlandi. Sonraki odak Faz 14.
 - Faz 14 ilk slice notu: `AT Task` veri modeli, quick create/aux route ve Dashboard gunluk gorev paneli tamamlandi.
+
+- Faz 14 ikinci slice notu: dashboard/task list hizli lifecycle aksiyonlari tamamlandi; AT Activity veri modeli, quick create ve activities aux yuzeyi acildi.
+
+## Guncelleme - Faz 14
+- Tamamlandi: CustomerDetail activity visibility + page test.
+- Siradaki is: activity operasyon gorunurlugunu policy/dashboard yuzeylerine yaymak.
+
+
+## Faz 14.4
+- Tamamlandi: PolicyDetail activity visibility + page test.
+- Siradaki is: Dashboard veya my work yuzeyinde activity ozetini acmak.
+
+
+## Faz 14.5
+- Tamamlandi: Dashboard my activities paneli + page test.
+- Siradaki is: Faz 14 kapanis veya reminder veri katmani.
+
+
+## Faz 14 Kapanis
+- Durum: tamamlandi.
+- Sonraki aktif is: Faz 15 veya AT Reminder veri katmani.
+
