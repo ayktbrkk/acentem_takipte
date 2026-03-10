@@ -12,7 +12,7 @@ from acentem_takipte.acentem_takipte.providers.router import get_provider_adapte
 from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus, ATNotificationOutboxStatus
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error, redact_payload
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
-from acentem_takipte.acentem_takipte.utils.network_security import normalize_whatsapp_api_url
+from acentem_takipte.acentem_takipte.utils.network_security import normalize_whatsapp_api_url, safe_urlopen
 
 DEFAULT_RETRY_MINUTES = 5
 DEFAULT_MAX_ATTEMPTS = 3
@@ -496,7 +496,12 @@ def _send_whatsapp(*, recipient: str, subject: str | None, body: str, context: d
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=8) as response:
+        with safe_urlopen(
+            request,
+            timeout=8,
+            allowed_schemes=("https",),
+            allowed_hosts={"graph.facebook.com"},
+        ) as response:
             response_body = response.read().decode("utf-8", errors="ignore")
             message_id = _extract_message_id(response_body) or f"wa-{frappe.generate_hash(length=10)}"
             return DeliveryResult(

@@ -357,6 +357,7 @@ import { Dialog, createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useAccountingStore } from "../stores/accounting";
+import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import FormattedCurrencyValue from "../components/app-shell/FormattedCurrencyValue.vue";
@@ -987,7 +988,7 @@ function canOpenSourcePanel(row) {
 function openSourcePanel(row) {
   const url = sourcePanelUrl(row);
   if (!url) return;
-  window.location.href = url;
+  navigateToSameOriginPath(url);
 }
 
 function sourcePanelLabel(row) {

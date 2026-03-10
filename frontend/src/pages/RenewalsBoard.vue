@@ -469,7 +469,7 @@ async function updateRenewalStatus(task, nextStatus) {
 
 function openPolicy(policyName) {
   if (!policyName) return;
-  window.location.href = `/at/policies/${encodeURIComponent(policyName)}`;
+  window.location.assign(`/at/policies/${encodeURIComponent(policyName)}`);
 }
 
 function formatDate(value) {

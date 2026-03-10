@@ -621,11 +621,11 @@ function paymentDetailFacts(payment) {
 
 function openRelatedRecord(payment) {
   if (payment?.policy) {
-    window.location.href = `/at/policies/${encodeURIComponent(payment.policy)}`;
+    window.location.assign(`/at/policies/${encodeURIComponent(payment.policy)}`);
     return;
   }
   if (payment?.customer) {
-    window.location.href = `/at/customers/${encodeURIComponent(payment.customer)}`;
+    window.location.assign(`/at/customers/${encodeURIComponent(payment.customer)}`);
   }
 }
 

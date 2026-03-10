@@ -413,7 +413,7 @@ describe("ClaimsBoard page store integration", () => {
   it("opens filtered files panel for claim documents", async () => {
     const originalLocation = window.location;
     delete window.location;
-    window.location = { href: "" };
+    window.location = { assign: vi.fn(), href: "" };
 
     resourceQueue.push(
       {
@@ -462,7 +462,7 @@ describe("ClaimsBoard page store integration", () => {
     const documentsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Dokumanlar"));
     await documentsButton.trigger("click");
 
-    expect(window.location.href).toBe("/at/files?attached_to_doctype=AT+Claim&attached_to_name=CLM-001");
+    expect(window.location.assign).toHaveBeenCalledWith("/at/files?attached_to_doctype=AT+Claim&attached_to_name=CLM-001");
 
     window.location = originalLocation;
   });

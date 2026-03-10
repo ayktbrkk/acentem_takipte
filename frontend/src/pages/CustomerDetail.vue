@@ -1564,7 +1564,7 @@ function openPolicyDetail(policyName) {
 
 function openCustomerDesk() {
   if (!props.name) return;
-  window.location.href = `/app/at-customer/${encodeURIComponent(props.name)}`;
+  window.location.assign(`/app/at-customer/${encodeURIComponent(props.name)}`);
 }
 function openQuickOfferForCustomer() {
   if (!props.name) return;

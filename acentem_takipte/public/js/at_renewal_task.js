@@ -1,11 +1,16 @@
 frappe.ui.form.on("AT Renewal Task", {
   refresh(frm) {
+    const navigate = (target) => {
+      const url = new URL(target, window.location.origin);
+      if (url.origin !== window.location.origin) return;
+      window.location.assign(`${url.pathname}${url.search}${url.hash}`);
+    };
     if (frm.is_new()) return;
 
     frm.add_custom_button(
       __("Open Renewals Board"),
       () => {
-        window.location.href = "/at/renewals";
+        navigate("/at/renewals");
       },
       __("Navigate")
     );
@@ -13,7 +18,7 @@ frappe.ui.form.on("AT Renewal Task", {
     frm.add_custom_button(
       __("Open Renewals Dashboard"),
       () => {
-        window.location.href = "/at/dashboard/renewals";
+        navigate("/at/dashboard/renewals");
       },
       __("Navigate")
     );
@@ -52,7 +57,7 @@ frappe.ui.form.on("AT Renewal Task", {
       frm.add_custom_button(
         __("Open Customer 360"),
         () => {
-          window.location.href = `/at/customers/${encodeURIComponent(frm.doc.customer)}`;
+          navigate(`/at/customers/${encodeURIComponent(frm.doc.customer)}`);
         },
         __("Related")
       );

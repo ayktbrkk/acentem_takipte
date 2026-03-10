@@ -1,5 +1,10 @@
 frappe.ui.form.on("AT Customer", {
   refresh(frm) {
+    const navigate = (target) => {
+      const url = new URL(target, window.location.origin);
+      if (url.origin !== window.location.origin) return;
+      window.location.assign(`${url.pathname}${url.search}${url.hash}`);
+    };
     const roles = frappe.user_roles || [];
     const canViewSensitive =
       frappe.session.user === "Administrator" ||
@@ -17,7 +22,7 @@ frappe.ui.form.on("AT Customer", {
     frm.add_custom_button(
       __("Open Customer 360"),
       () => {
-        window.location.href = `/at/customers/${encodeURIComponent(frm.doc.name)}`;
+        navigate(`/at/customers/${encodeURIComponent(frm.doc.name)}`);
       },
       __("Navigate")
     );
@@ -25,7 +30,7 @@ frappe.ui.form.on("AT Customer", {
     frm.add_custom_button(
       __("Open Dashboard"),
       () => {
-        window.location.href = "/at";
+        navigate("/at");
       },
       __("Navigate")
     );

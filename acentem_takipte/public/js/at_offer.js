@@ -1,5 +1,10 @@
 frappe.ui.form.on("AT Offer", {
   refresh(frm) {
+    const navigate = (target) => {
+      const url = new URL(target, window.location.origin);
+      if (url.origin !== window.location.origin) return;
+      window.location.assign(`${url.pathname}${url.search}${url.hash}`);
+    };
     if (frm.is_new()) return;
 
     const isConvertibleStatus = ["Sent", "Accepted"].includes(frm.doc.status);
@@ -7,7 +12,7 @@ frappe.ui.form.on("AT Offer", {
     frm.add_custom_button(
       __("Open Offer Board"),
       () => {
-        window.location.href = "/at/offers";
+        navigate("/at/offers");
       },
       __("Navigate")
     );
@@ -15,7 +20,7 @@ frappe.ui.form.on("AT Offer", {
     frm.add_custom_button(
       __("Open Policy Workbench"),
       () => {
-        window.location.href = "/at/policies";
+        navigate("/at/policies");
       },
       __("Navigate")
     );
@@ -32,7 +37,7 @@ frappe.ui.form.on("AT Offer", {
       frm.add_custom_button(
         __("Open Customer 360"),
         () => {
-          window.location.href = `/at/customers/${encodeURIComponent(frm.doc.customer)}`;
+          navigate(`/at/customers/${encodeURIComponent(frm.doc.customer)}`);
         },
         __("Related")
       );

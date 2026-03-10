@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from acentem_takipte.acentem_takipte.utils.network_security import normalize_outbound_url, safe_urlopen
+
 
 @dataclass
 class Scenario:
@@ -74,7 +76,12 @@ def request_json(
     req = urllib.request.Request(url=url, headers=headers, method="GET")
     started = time.perf_counter()
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with safe_urlopen(
+            req,
+            timeout=timeout,
+            allowed_schemes=("http", "https"),
+            allow_private_hosts=args.allow_private_target,
+        ) as resp:
             body = resp.read()
             elapsed_ms = (time.perf_counter() - started) * 1000.0
             payload = json.loads(body.decode("utf-8", errors="replace") or "{}")
@@ -94,15 +101,13 @@ def build_scenarios(args: argparse.Namespace) -> list[Scenario]:
     if args.filters_json:
         filters_payload = json.loads(args.filters_json)
     elif args.filters_file:
-        with open(resolve_json_input_path(args.filters_file), "r", encoding="utf-8") as f:
-            filters_payload = json.load(f)
+        filters_payload = json.loads(resolve_json_input_path(args.filters_file).read_text(encoding="utf-8"))
 
     workbench_filters = None
     if args.workbench_filters_json:
         workbench_filters = json.loads(args.workbench_filters_json)
     elif args.workbench_filters_file:
-        with open(resolve_json_input_path(args.workbench_filters_file), "r", encoding="utf-8") as f:
-            workbench_filters = json.load(f)
+        workbench_filters = json.loads(resolve_json_input_path(args.workbench_filters_file).read_text(encoding="utf-8"))
 
     tabs = [tab.strip() for tab in (args.tabs or "").split(",") if tab.strip()]
     scenarios: list[Scenario] = [
@@ -158,14 +163,11 @@ def summarize_timings(ms_values: list[float]) -> dict[str, float]:
 
 
 def normalize_base_url(base_url: str) -> str:
-    parsed = urllib.parse.urlparse(str(base_url or "").strip())
-    if parsed.scheme not in {"http", "https"}:
-        raise ValueError("Base URL must use http or https.")
-    if not parsed.netloc:
-        raise ValueError("Base URL must include a host.")
-    if parsed.username or parsed.password:
-        raise ValueError("Base URL must not include credentials.")
-    return urllib.parse.urlunparse((parsed.scheme, parsed.netloc, parsed.path.rstrip("/"), "", "", ""))
+    return normalize_outbound_url(
+        base_url,
+        allowed_schemes=("http", "https"),
+        allow_private_hosts=True,
+    )
 
 
 def resolve_json_input_path(raw_path: str) -> Path:
@@ -285,6 +287,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workbench-filters-json", help="Workbench filters JSON string")
     parser.add_argument("--workbench-filters-file", help="Workbench filters JSON file path")
     parser.add_argument("--output-json", help="Optional path to write JSON report")
+    parser.add_argument("--allow-private-target", action="store_true", help="Allow localhost/private benchmark targets.")
     args = parser.parse_args()
     if not args.auth_token and not args.sid:
         parser.error("Either --auth-token or --sid is required.")

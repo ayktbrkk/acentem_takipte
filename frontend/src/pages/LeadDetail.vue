@@ -691,7 +691,7 @@ function goBack() {
 }
 function openDeskLead() {
   if (!props.name) return;
-  window.location.href = `/app/at-lead/${encodeURIComponent(props.name)}`;
+  window.location.assign(`/app/at-lead/${encodeURIComponent(props.name)}`);
 }
 function openCustomer360(name) {
   if (!name) return;

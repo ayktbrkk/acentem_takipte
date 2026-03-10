@@ -859,7 +859,7 @@ async function load() {
 }
 
 const goBack = () => router.push({ name: "policy-list" });
-const openDeskPolicy = () => props.name && (window.location.href = `/app/at-policy/${encodeURIComponent(props.name)}`);
+const openDeskPolicy = () => props.name && window.location.assign(`/app/at-policy/${encodeURIComponent(props.name)}`);
 const openCustomer = (name) => name && router.push({ name: "customer-detail", params: { name } });
 const openPolicyDocuments = () =>
   props.name &&

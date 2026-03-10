@@ -1,7 +1,9 @@
 (() => {
   function goToUrl(url) {
     if (!url) return;
-    window.location.href = url;
+    const target = new URL(url, window.location.origin);
+    if (target.origin !== window.location.origin) return;
+    window.location.assign(`${target.pathname}${target.search}${target.hash}`);
   }
 
   function addInnerButtonOnce(listview, label, action, group) {

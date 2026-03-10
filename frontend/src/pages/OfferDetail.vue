@@ -685,7 +685,7 @@ async function loadOffer() {
 
 function openOfferDesk() {
   if (!props.name) return;
-  window.location.href = `/app/at-offer/${encodeURIComponent(props.name)}`;
+  window.location.assign(`/app/at-offer/${encodeURIComponent(props.name)}`);
 }
 function goBack() {
   router.push({ name: "offer-board", query: { view: "list" } }).catch(() => {

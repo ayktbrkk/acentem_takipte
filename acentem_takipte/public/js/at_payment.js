@@ -1,11 +1,16 @@
 frappe.ui.form.on("AT Payment", {
   refresh(frm) {
+    const navigate = (target) => {
+      const url = new URL(target, window.location.origin);
+      if (url.origin !== window.location.origin) return;
+      window.location.assign(`${url.pathname}${url.search}${url.hash}`);
+    };
     if (frm.is_new()) return;
 
     frm.add_custom_button(
       __("Open Payments Board"),
       () => {
-        window.location.href = "/at/payments";
+        navigate("/at/payments");
       },
       __("Navigate")
     );
@@ -42,7 +47,7 @@ frappe.ui.form.on("AT Payment", {
       frm.add_custom_button(
         __("Open Customer 360"),
         () => {
-          window.location.href = `/at/customers/${encodeURIComponent(frm.doc.customer)}`;
+          navigate(`/at/customers/${encodeURIComponent(frm.doc.customer)}`);
         },
         __("Related")
       );

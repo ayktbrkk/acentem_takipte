@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import frappe
+from frappe.query_builder.functions import Count
 from frappe.utils import add_days, getdate
 from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
 
@@ -85,21 +86,10 @@ def build_dashboard_kpis_payload(
         allowed_customers=allowed_customers,
     )
 
-    lead_where, lead_values = build_lead_where_fn(
+    lead_status_rows = _get_lead_status_rows(
         branch=branch,
         office_branch=office_branch,
         allowed_customers=allowed_customers,
-    )
-    lead_status_rows = frappe.db.sql(
-        f"""
-        select status, count(name) as total
-        from `tabAT Lead`
-        where {lead_where}
-        group by status
-        order by status asc
-        """,
-        values=lead_values,
-        as_dict=True,
     )
 
     trend = monthly_commission_trend_fn(
@@ -131,6 +121,23 @@ def build_dashboard_kpis_payload(
         "comparison": comparison,
         "meta": scope_meta,
     }
+
+
+def _get_lead_status_rows(*, branch, office_branch, allowed_customers) -> list[dict]:
+    lead = frappe.qb.DocType("AT Lead")
+    query = (
+        frappe.qb.from_(lead)
+        .select(lead.status, Count(lead.name).as_("total"))
+        .groupby(lead.status)
+        .orderby(lead.status)
+    )
+    if branch:
+        query = query.where(lead.branch == branch)
+    if office_branch:
+        query = query.where(lead.office_branch == office_branch)
+    if allowed_customers:
+        query = query.where(lead.customer.isin(list(allowed_customers)))
+    return query.run(as_dict=True)
 
 
 def _build_kpi_comparison_payload(

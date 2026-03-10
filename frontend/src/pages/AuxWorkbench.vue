@@ -357,6 +357,7 @@ import { useBranchStore } from "../stores/branch";
 import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
+import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import {
   extractCustomFilterPresetId,
   isCustomFilterPresetValue,
@@ -1386,7 +1387,7 @@ function panelCfgForRow(row) {
 function openPanel(row) {
   const cfg = panelCfgForRow(row);
   if (!cfg?.url) return;
-  window.location.href = cfg.url;
+  navigateToSameOriginPath(cfg.url);
 }
 
 function runToolbarAction(action) {
@@ -1403,7 +1404,7 @@ function runToolbarAction(action) {
   }
 
   if (typeof action.href === "string" && action.href.trim()) {
-    window.location.href = action.href;
+    navigateToSameOriginPath(action.href);
   }
 }
 

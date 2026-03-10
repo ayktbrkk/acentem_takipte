@@ -868,7 +868,7 @@ function openClaimNotifications(claim) {
     reference_doctype: "AT Claim",
     reference_name: claim.name,
   });
-  window.location.href = `/at/communication?${query.toString()}`;
+  window.location.assign(`/at/communication?${query.toString()}`);
 }
 
 function openClaimAssignment(claim) {
@@ -886,7 +886,7 @@ async function prepareOwnershipAssignmentDialog({ form }) {
 
 function openPolicy(policyName) {
   if (!policyName) return;
-  window.location.href = `/at/policies/${encodeURIComponent(policyName)}`;
+  window.location.assign(`/at/policies/${encodeURIComponent(policyName)}`);
 }
 
 function syncClaimsRouteFilters({ refresh = true } = {}) {

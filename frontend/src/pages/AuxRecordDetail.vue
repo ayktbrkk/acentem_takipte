@@ -117,6 +117,7 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
+import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { deskActionsEnabled } from "../utils/deskActions";
 import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
@@ -807,7 +808,7 @@ const relatedRecordCards = computed(() => {
       subtitle: subtitle || doctype || "-",
       description: recName,
       meta: doctype || "-",
-      open: panel?.url ? () => { window.location.href = panel.url; } : null,
+      open: panel?.url ? () => { navigateToSameOriginPath(panel.url); } : null,
     });
   };
   pushRef("customer", t("relatedCustomer"), "AT Customer", d.customer);
@@ -827,7 +828,7 @@ const relatedRecordCards = computed(() => {
         meta: formatValue("modified", draft.modified),
         open: () => {
           const panel = getSourcePanelConfig("AT Notification Draft", draft.name);
-          if (panel?.url) window.location.href = panel.url;
+          if (panel?.url) navigateToSameOriginPath(panel.url);
         },
       });
     }
@@ -840,7 +841,7 @@ const relatedRecordCards = computed(() => {
         meta: outbox.attempt_count != null ? `${outbox.attempt_count}` : formatValue("modified", outbox.modified),
         open: () => {
           const panel = getSourcePanelConfig("AT Notification Outbox", outbox.name);
-          if (panel?.url) window.location.href = panel.url;
+          if (panel?.url) navigateToSameOriginPath(panel.url);
         },
       });
     }
@@ -1010,11 +1011,11 @@ function goBack() {
   router.push({ name: `${config.key}-list` });
 }
 function openDesk() {
-  window.location.href = `/app/Form/${encodeURIComponent(config.doctype)}/${encodeURIComponent(props.name)}`;
+  navigateToSameOriginPath(`/app/Form/${encodeURIComponent(config.doctype)}/${encodeURIComponent(props.name)}`);
 }
 function openPanel() {
   if (!panelConfig.value?.url) return;
-  window.location.href = panelConfig.value.url;
+  navigateToSameOriginPath(panelConfig.value.url);
 }
 
 function parseSignalEntries(value) {

@@ -1,11 +1,16 @@
 frappe.ui.form.on("AT Lead", {
   refresh(frm) {
+    const navigate = (target) => {
+      const url = new URL(target, window.location.origin);
+      if (url.origin !== window.location.origin) return;
+      window.location.assign(`${url.pathname}${url.search}${url.hash}`);
+    };
     if (frm.is_new()) return;
 
     frm.add_custom_button(
       __("Open Sales Dashboard"),
       () => {
-        window.location.href = "/at/dashboard/sales";
+        navigate("/at/dashboard/sales");
       },
       __("Navigate")
     );
@@ -13,7 +18,7 @@ frappe.ui.form.on("AT Lead", {
     frm.add_custom_button(
       __("Open Offer Board"),
       () => {
-        window.location.href = "/at/offers";
+        navigate("/at/offers");
       },
       __("Navigate")
     );
@@ -30,7 +35,7 @@ frappe.ui.form.on("AT Lead", {
       frm.add_custom_button(
         __("Open Customer 360"),
         () => {
-          window.location.href = `/at/customers/${encodeURIComponent(frm.doc.customer)}`;
+          navigate(`/at/customers/${encodeURIComponent(frm.doc.customer)}`);
         },
         __("Related")
       );

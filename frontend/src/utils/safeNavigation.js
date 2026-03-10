@@ -16,6 +16,6 @@ export function resolveSameOriginPath(target) {
 export function navigateToSameOriginPath(target) {
   const safePath = resolveSameOriginPath(target);
   if (!safePath) return false;
-  window.open(safePath, "_self", "noopener");
+  window.location.assign(safePath);
   return true;
 }
