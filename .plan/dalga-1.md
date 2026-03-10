@@ -606,3 +606,5 @@ ext_follow_up_on alanlari eklendi
 
 - 2026-03-10: Faz 15 kapandi. Faz 16'ya gecis oncesi duruldu ve kullanici onayi bekleniyor.
 
+
+- 2026-03-10: Faz 15 icin AuxWorkbench reminder sayfa testi eklendi; reminder aux presetleri, ozet kartlari ve Done mutation kontrati test ile sabitlendi.

@@ -329,3 +329,5 @@
 
 - 2026-03-10: Faz 15 tamamlandi. Sprint odagi Faz 16 oncesi bekleme durumuna alindi.
 
+
+- 2026-03-10: Faz 15 reminder aux operatorlugu icin sayfa testi eklendi; reminder summary ve hizli aksiyon kontrati sabitlendi.

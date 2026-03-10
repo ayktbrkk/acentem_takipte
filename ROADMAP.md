@@ -1799,3 +1799,5 @@ ext_follow_up_on). Controller guard'lari reddedilen hasar, itiraz ve takip tarih
 
 - 2026-03-10: Faz 15 tamamlandi. Faz 16 oncesi kullanici onayi bekleniyor.
 
+
+- 2026-03-10: Faz 15 reminder operatorlugu AuxWorkbench.test.js ile test sertlestirme turu aldi; reminder ozet kartlari ve Done hizli aksiyonu test altina alindi.

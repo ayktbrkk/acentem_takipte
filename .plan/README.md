@@ -578,3 +578,5 @@
 
 - 2026-03-10: Faz 15 kapatildi. Reminder aux operatorlugu open/high/done/cancelled presetleri ve ozet kartlari ile tamamlandi. Faz 16'ya gecilmedi; kullanici onayi bekleniyor.
 
+
+- 2026-03-10: Faz 15 test sertlestirme notu: frontend/src/pages/AuxWorkbench.test.js ile reminder aux ozet kartlari ve Done hizli aksiyonu test altina alindi.
