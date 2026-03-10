@@ -20,6 +20,7 @@ from acentem_takipte.acentem_takipte.services.customer_360 import build_customer
 from acentem_takipte.acentem_takipte.services.follow_up_sla import build_follow_up_sla_payload
 from acentem_takipte.acentem_takipte.services.work_management import (
     build_my_activities_payload,
+    build_my_reminders_payload,
     build_my_tasks_payload,
 )
 from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
@@ -301,6 +302,17 @@ def get_my_activities_payload(filters=None) -> dict:
     payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
     office_branch = normalize_requested_office_branch(payload.get("office_branch"))
     return build_my_activities_payload(office_branch=office_branch, assigned_to=user)
+
+
+@frappe.whitelist()
+def get_my_reminders_payload(filters=None) -> dict:
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw("Authentication required")
+
+    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    office_branch = normalize_requested_office_branch(payload.get("office_branch"))
+    return build_my_reminders_payload(office_branch=office_branch, assigned_to=user)
 
 
 @frappe.whitelist()

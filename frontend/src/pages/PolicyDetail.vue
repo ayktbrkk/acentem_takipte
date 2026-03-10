@@ -151,6 +151,24 @@
                 </MetaListCard>
               </ul>
             </article>
+            <article class="surface-card rounded-2xl p-5">
+              <SectionCardHeader :title="t('remindersTitle')" :count="reminders.length" />
+              <div v-if="policy360Resource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+              <div v-else-if="reminders.length === 0" class="at-empty-block">{{ t("emptyReminders") }}</div>
+              <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
+                <MetaListCard
+                  v-for="reminder in reminders"
+                  :key="reminder.name"
+                  :title="reminder.reminder_title || reminder.name"
+                  :description="reminder.status || '-'"
+                  :meta="fmtDateTime(reminder.remind_at)"
+                >
+                  <template #trailing>
+                    <p class="text-xs text-slate-500">{{ reminder.priority || '-' }}</p>
+                  </template>
+                </MetaListCard>
+              </ul>
+            </article>
           </div>
         </div>
       </template>
@@ -379,7 +397,7 @@ const labels = {
     emptyCustomer: "Musteri kaydi yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Musteri 360",
     scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Baslangic", end: "Bitis", remaining: "Kalan Gun",
     net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brut Prim", commissionRate: "Komisyon Orani", gwpTry: "GWP TRY",
-    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydi yok.", installmentNo: "Taksit", paidOn: "Odeme Tarihi", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti", newAssignment: "Yeni Atama", edit: "Duzenle",
+    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydi yok.", remindersTitle: "Hatirlaticilar", emptyReminders: "Hatirlatici kaydi yok.", reminderAt: "Hatirlatma", reminderPriority: "Oncelik", installmentNo: "Taksit", paidOn: "Odeme Tarihi", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti", newAssignment: "Yeni Atama", edit: "Duzenle",
     productProfileTitle: "Urun Profili",
     productReadinessTitle: "Urun Hazirlik Durumu",
     company: "Sigorta Sirketi", branch: "Brans", customer: "Musteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
@@ -400,7 +418,7 @@ const labels = {
     emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Customer 360",
     scheduleTitle: "Schedule", issue: "Issue Date", start: "Start Date", end: "End Date", remaining: "Days Remaining",
     net: "Net Premium", tax: "Tax", commission: "Commission", gross: "Gross Premium", commissionRate: "Commission Rate", gwpTry: "GWP TRY",
-    payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", activitiesTitle: "Activities", emptyActivities: "No activities found.", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit",
+    payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", activitiesTitle: "Activities", emptyActivities: "No activities found.", remindersTitle: "Reminders", emptyReminders: "No reminders found.", reminderAt: "Reminder At", reminderPriority: "Priority", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit",
     productProfileTitle: "Product Profile",
     productReadinessTitle: "Product Readiness",
     company: "Insurance Company", branch: "Branch", customer: "Customer", status: "Status", currency: "Currency", fxRate: "FX Rate", fxDate: "FX Date",
@@ -457,6 +475,7 @@ const files = computed(() => fileR.data || []);
 const notifications = computed(() => notificationR.data || []);
 const assignments = computed(() => policy360Resource.data?.assignments || []);
 const activities = computed(() => policy360Resource.data?.activities || []);
+const reminders = computed(() => policy360Resource.data?.reminders || []);
 const productProfile = computed(() => policy360Resource.data?.product_profile || {});
 const documentProfile = computed(() => policy360Resource.data?.document_profile || {});
 

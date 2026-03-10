@@ -352,6 +352,30 @@
         </article>
 
         <article
+          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
+          class="surface-card rounded-2xl p-5"
+        >
+          <SectionCardHeader :title="t('remindersTitle')" :count="reminderRows.length" />
+          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="reminderRows.length === 0" class="at-empty-block">
+            {{ t("noReminder") }}
+          </div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <EntityPreviewCard
+              v-for="reminder in reminderRows"
+              :key="reminder.name"
+              :title="reminder.reminder_title || reminder.name"
+              :subtitle="reminder.status || '-'"
+            >
+              <template #trailing>
+                <StatusBadge type="generic" :status="reminder.status" />
+              </template>
+              <MiniFactList class="mt-2" :items="reminderCardFacts(reminder)" />
+            </EntityPreviewCard>
+          </div>
+        </article>
+
+        <article
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
           class="surface-card rounded-2xl p-5"
         >
@@ -917,8 +941,12 @@ const copy = {
     insuredAssetsTitle: "Sigortalanan Varliklar",
     assignmentsTitle: "Atamalar",
     activitiesTitle: "Aktiviteler",
+    remindersTitle: "Hatirlaticilar",
     noAssignment: "Atama kaydi yok.",
     noActivity: "Aktivite kaydi yok.",
+    noReminder: "Hatirlatici kaydi yok.",
+    reminderAt: "Hatirlatma",
+    reminderPriority: "Oncelik",
     noInsuredAsset: "Sigortalanan varlik bulunamadi.",
     assetType: "Varlik Turu",
     assetIdentifier: "Varlik Kimligi",
@@ -1063,8 +1091,12 @@ const copy = {
     insuredAssetsTitle: "Insured Assets",
     assignmentsTitle: "Assignments",
     activitiesTitle: "Activities",
+    remindersTitle: "Reminders",
     noAssignment: "No assignments found.",
     noActivity: "No activities found.",
+    noReminder: "No reminders found.",
+    reminderAt: "Reminder At",
+    reminderPriority: "Priority",
     noInsuredAsset: "No insured asset found.",
     assetType: "Asset Type",
     assetIdentifier: "Asset Identifier",
@@ -1329,6 +1361,7 @@ const timelineRows = computed(() =>
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 );
 const activityRows = computed(() => (customer360Payload.value?.operations?.activities || []).slice(0, 6));
+const reminderRows = computed(() => (customer360Payload.value?.operations?.reminders || []).slice(0, 6));
 
 watch(
   () => props.name,
@@ -1724,6 +1757,35 @@ function activityCardFacts(activity) {
       label: t("source"),
       value: [activity?.source_doctype, activity?.source_name].filter(Boolean).join(" / ") || "-",
       valueClass: "text-sm text-slate-800",
+    },
+  ];
+}
+
+function reminderCardFacts(reminder) {
+  return [
+    {
+      key: "remindAt",
+      label: t("reminderAt"),
+      value: formatDateTime(reminder?.remind_at),
+      valueClass: "text-xs text-slate-600",
+    },
+    {
+      key: "priority",
+      label: t("reminderPriority"),
+      value: reminder?.priority || "-",
+      valueClass: "text-xs text-slate-700",
+    },
+    {
+      key: "assignedTo",
+      label: t("assignedTo"),
+      value: reminder?.assigned_to || "-",
+      valueClass: "text-xs text-slate-700",
+    },
+    {
+      key: "source",
+      label: t("recordId"),
+      value: reminder?.source_name || reminder?.policy || reminder?.claim || "-",
+      valueClass: "text-xs text-slate-700",
     },
   ];
 }

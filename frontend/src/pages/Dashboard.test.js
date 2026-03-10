@@ -146,6 +146,21 @@ describe("Dashboard page store integration", () => {
           ],
         },
       },
+      {
+        data: {
+          summary: { total: 1, overdue: 0, due_today: 1, due_soon: 0 },
+          items: [
+            {
+              name: "REM-0001",
+              reminder_title: "Send quote reminder",
+              customer: "CUST-001",
+              status: "Open",
+              priority: "Normal",
+              remind_at: "2026-03-09 10:00:00",
+            },
+          ],
+        },
+      },
       { data: {} },
     );
     setActivePinia(createPinia());
@@ -301,9 +316,39 @@ describe("Dashboard page store integration", () => {
     expect(routerPush).toHaveBeenCalledWith({ name: "activities-detail", params: { name: "ACT-0001" } });
   });
 
+  it("renders my reminder panel and opens reminder detail route", async () => {
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          SectionCardHeader: genericStub,
+          DashboardStatCard: true,
+          StatusBadge: true,
+          ActionPreviewCard: genericStub,
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain("Benim Hatirlaticilarim");
+    expect(wrapper.text()).toContain("Send quote reminder");
+    const openButtons = wrapper
+      .findAll(".action-button-stub")
+      .filter((node) => node.text().includes("Ac") || node.text().includes("Open"));
+    await openButtons[openButtons.length - 1].trigger("click");
+    expect(routerPush).toHaveBeenCalledWith({ name: "reminders-detail", params: { name: "REM-0001" } });
+  });
+
   it("starts task from my task panel", async () => {
     const submit = vi.fn(async () => ({}));
-    resourceQueue[8] = { data: {}, submit };
+    resourceQueue[10] = { data: {}, submit };
 
     const wrapper = mount(Dashboard, {
       global: {
@@ -339,7 +384,7 @@ describe("Dashboard page store integration", () => {
 
   it("cancels task from my task panel", async () => {
     const submit = vi.fn(async () => ({}));
-    resourceQueue[8] = { data: {}, submit };
+    resourceQueue[10] = { data: {}, submit };
 
     const wrapper = mount(Dashboard, {
       global: {
@@ -370,6 +415,42 @@ describe("Dashboard page store integration", () => {
       doctype: "AT Task",
       name: "TASK-0001",
       data: { status: "Cancelled" },
+    });
+  });
+
+  it("completes reminder from my reminder panel", async () => {
+    const submit = vi.fn(async () => ({}));
+    resourceQueue[10] = { data: {}, submit };
+
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          SectionCardHeader: genericStub,
+          DashboardStatCard: true,
+          StatusBadge: true,
+          ActionPreviewCard: genericStub,
+        },
+      },
+    });
+
+    const completeButtons = wrapper
+      .findAll(".action-button-stub")
+      .filter((node) => node.text().includes("Tamamla") || node.text().includes("Mark Done"));
+    await completeButtons[completeButtons.length - 1].trigger("click");
+
+    expect(submit).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-0001",
+      data: { status: "Done" },
     });
   });
 });

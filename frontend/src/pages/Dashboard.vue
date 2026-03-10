@@ -591,6 +591,56 @@
               </div>
             </div>
           </article>
+
+          <article class="surface-card rounded-2xl p-5">
+            <SectionCardHeader :title="t('myRemindersTitle')" :count="formatNumber(myReminderItems.length)" />
+            <p class="mb-3 text-xs text-slate-500">{{ t("myRemindersHint") }}</p>
+            <div v-if="myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+            <div v-else class="space-y-3">
+              <div class="grid grid-cols-3 gap-2">
+                <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("reminderOverdue") }}</p>
+                  <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(myReminderSummary.overdue) }}</p>
+                </div>
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("reminderToday") }}</p>
+                  <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myReminderSummary.due_today) }}</p>
+                </div>
+                <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("reminderSoon") }}</p>
+                  <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myReminderSummary.due_soon) }}</p>
+                </div>
+              </div>
+              <ul v-if="myReminderItems.length > 0" class="space-y-2">
+                <MetaListCard
+                  v-for="reminder in myReminderItems"
+                  :key="reminder.name"
+                  :title="reminder.reminder_title || reminder.name || '-'"
+                  :description="reminder.status || '-'"
+                  description-class="mt-2 text-xs font-semibold text-slate-600"
+                >
+                  <template #trailing>
+                    <ActionButton v-if="canCompleteReminder(reminder)" variant="ghost" size="sm" @click="completeReminder(reminder)">
+                      {{ t("completeTaskAction") }}
+                    </ActionButton>
+                    <ActionButton v-if="canCancelReminder(reminder)" variant="ghost" size="sm" @click="cancelReminder(reminder)">
+                      {{ t("cancelTaskAction") }}
+                    </ActionButton>
+                    <ActionButton variant="ghost" size="sm" @click="openReminderItem(reminder)">
+                      {{ t("openItem") }}
+                    </ActionButton>
+                  </template>
+                  <MiniFactList :items="reminderFacts(reminder)" />
+                </MetaListCard>
+              </ul>
+              <div v-else class="at-empty-block text-sm">{{ t("noMyReminders") }}</div>
+              <div class="flex flex-wrap gap-2 pt-2">
+                <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'reminders-list' })">
+                  {{ t("openRemindersAction") }}
+                </ActionButton>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
 
@@ -818,21 +868,27 @@ const copy = {
     followUpClaimsAction: "Hasar Masasi",
     followUpRenewalsAction: "Yenileme Panosu",
     followUpCommunicationAction: "Iletisim Merkezi",
-      myTasksTitle: "Benim Gorevlerim",
-      myTasksHint: "Atanmis gorevleri bugun ve gelecek hafta icin izleyin.",
-      noMyTasks: "Atanmis gorev yok.",
-      myActivitiesTitle: "Benim Aktivitelerim",
-      myActivitiesHint: "Kaydedilen son aktiviteleri takip edin.",
-      noMyActivities: "Kaydedilmis aktivite yok.",
-      activityLogged: "Kayitli",
-      activityShared: "Paylasildi",
-      activityArchived: "Arsiv",
-      activityType: "Aktivite Tipi",
-      activityAt: "Aktivite Tarihi",
-      openActivitiesAction: "Aktivite Listesi",
-      taskOverdue: "Geciken",
+    myTasksTitle: "Benim Gorevlerim",
+    myTasksHint: "Atanmis gorevleri bugun ve gelecek hafta icin izleyin.",
+    noMyTasks: "Atanmis gorev yok.",
+    myRemindersTitle: "Benim Hatirlaticilarim",
+    myRemindersHint: "Zaman bazli takip hatirlaticilarini izleyin.",
+    noMyReminders: "Acik hatirlatici bulunmuyor.",
+    myActivitiesTitle: "Benim Aktivitelerim",
+    myActivitiesHint: "Kaydedilen son aktiviteleri takip edin.",
+    noMyActivities: "Kaydedilmis aktivite yok.",
+    activityLogged: "Kayitli",
+    activityShared: "Paylasildi",
+    activityArchived: "Arsiv",
+    activityType: "Aktivite Tipi",
+    activityAt: "Aktivite Tarihi",
+    openActivitiesAction: "Aktivite Listesi",
+    taskOverdue: "Geciken",
     taskToday: "Bugun",
     taskSoon: "7 Gun",
+    reminderOverdue: "Geciken",
+    reminderToday: "Bugun",
+    reminderSoon: "7 Gun",
     taskType: "Tip",
     taskAssignee: "Atanan",
     startTaskAction: "Takibe Al",
@@ -840,6 +896,7 @@ const copy = {
     completeTaskAction: "Tamamla",
     cancelTaskAction: "Iptal Et",
     openTasksAction: "Gorev Listesi",
+    openRemindersAction: "Hatirlatici Listesi",
     policyCount: "Police Adedi",
     grossProduction: "Brut Uretim",
     recentPolicies: "Son Policeler",
@@ -990,21 +1047,27 @@ const copy = {
     followUpClaimsAction: "Claims Desk",
     followUpRenewalsAction: "Renewals Board",
     followUpCommunicationAction: "Communication Center",
-      myTasksTitle: "My Tasks",
-      myTasksHint: "Track assigned tasks for today and the coming week.",
-      noMyTasks: "No assigned tasks.",
-      myActivitiesTitle: "My Activities",
-      myActivitiesHint: "Track recently logged activities.",
-      noMyActivities: "No logged activities.",
-      activityLogged: "Logged",
-      activityShared: "Shared",
-      activityArchived: "Archived",
-      activityType: "Activity Type",
-      activityAt: "Activity Date",
-      openActivitiesAction: "Activity List",
-      taskOverdue: "Overdue",
+    myTasksTitle: "My Tasks",
+    myTasksHint: "Track assigned tasks for today and the coming week.",
+    noMyTasks: "No assigned tasks.",
+    myRemindersTitle: "My Reminders",
+    myRemindersHint: "Track time-based follow-up reminders.",
+    noMyReminders: "No open reminders found.",
+    myActivitiesTitle: "My Activities",
+    myActivitiesHint: "Track recently logged activities.",
+    noMyActivities: "No logged activities.",
+    activityLogged: "Logged",
+    activityShared: "Shared",
+    activityArchived: "Archived",
+    activityType: "Activity Type",
+    activityAt: "Activity Date",
+    openActivitiesAction: "Activity List",
+    taskOverdue: "Overdue",
     taskToday: "Today",
     taskSoon: "7 Days",
+    reminderOverdue: "Overdue",
+    reminderToday: "Today",
+    reminderSoon: "7 Days",
     taskType: "Type",
     taskAssignee: "Assignee",
     startTaskAction: "Start",
@@ -1012,6 +1075,7 @@ const copy = {
     completeTaskAction: "Mark Done",
     cancelTaskAction: "Cancel",
     openTasksAction: "Task List",
+    openRemindersAction: "Reminder List",
     policyCount: "Policy Count",
     grossProduction: "Gross Production",
     recentPolicies: "Recent Policies",
@@ -1075,6 +1139,11 @@ const myTasksResource = createResource({
 });
 const myActivitiesResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_activities_payload",
+  params: withOfficeBranchFilter({ filters: {} }),
+  auto: true,
+});
+const myRemindersResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_reminders_payload",
   params: withOfficeBranchFilter({ filters: {} }),
   auto: true,
 });
@@ -1244,6 +1313,7 @@ const dashboardLoadingRaw = computed(
 const followUpLoading = computed(() => Boolean(followUpResource.loading));
 const myTasksLoading = computed(() => Boolean(myTasksResource.loading));
 const myActivitiesLoading = computed(() => Boolean(myActivitiesResource.loading));
+const myRemindersLoading = computed(() => Boolean(myRemindersResource.loading));
 const dashboardLoading = computed(() => dashboardStore.state.loading);
 const dashboardPermissionError = computed(() => {
   const candidates = [dashboardTabPayloadResource.error, isDailyTab.value ? kpiResource.error : null];
@@ -1340,6 +1410,9 @@ const myTaskItems = computed(() => (Array.isArray(myTasksPayload.value.items) ? 
 const myActivitiesPayload = computed(() => myActivitiesResource.data || {});
 const myActivitySummary = computed(() => myActivitiesPayload.value.summary || { total: 0, logged: 0, shared: 0, archived: 0 });
 const myActivityItems = computed(() => (Array.isArray(myActivitiesPayload.value.items) ? myActivitiesPayload.value.items : []));
+const myRemindersPayload = computed(() => myRemindersResource.data || {});
+const myReminderSummary = computed(() => myRemindersPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
+const myReminderItems = computed(() => (Array.isArray(myRemindersPayload.value.items) ? myRemindersPayload.value.items : []));
 
 const visibleRange = computed(() => {
   const range = getDateRange(selectedRange.value);
@@ -1964,9 +2037,50 @@ function activityFacts(activity) {
   ];
 }
 
+function reminderFacts(reminder) {
+  return [
+    { label: t("customer"), value: reminder?.customer || "-" },
+    { label: t("policyLabel"), value: reminder?.policy || "-" },
+    { label: t("claimLabel"), value: reminder?.claim || "-" },
+    { label: t("taskAssignee"), value: reminder?.assigned_to || "-" },
+    { label: t("date"), value: formatDate(reminder?.remind_at) },
+  ].filter((item) => item.value && item.value !== "-");
+}
+
 function openActivityItem(activity) {
   if (!activity?.name) return;
   router.push({ name: "activities-detail", params: { name: activity.name } });
+}
+
+function openReminderItem(reminder) {
+  if (!reminder?.name) return;
+  router.push({ name: "reminders-detail", params: { name: reminder.name } });
+}
+
+function canCompleteReminder(reminder) {
+  return cstr(reminder?.status) === "Open";
+}
+
+function canCancelReminder(reminder) {
+  return cstr(reminder?.status) === "Open";
+}
+
+async function updateReminderStatus(reminder, nextStatus) {
+  if (!reminder?.name || !nextStatus) return;
+  await myTaskMutationResource.submit({
+    doctype: "AT Reminder",
+    name: reminder.name,
+    data: { status: nextStatus },
+  });
+  triggerDashboardReload({ immediate: true });
+}
+
+async function completeReminder(reminder) {
+  await updateReminderStatus(reminder, "Done");
+}
+
+async function cancelReminder(reminder) {
+  await updateReminderStatus(reminder, "Cancelled");
 }
 
 function canStartTask(task) {
@@ -2107,6 +2221,8 @@ function triggerDashboardReload({ includeKpis = true, immediate = false } = {}) 
     followUpResource.reload();
     myActivitiesResource.params = withOfficeBranchFilter({ filters: {} });
     myActivitiesResource.reload();
+    myRemindersResource.params = withOfficeBranchFilter({ filters: {} });
+    myRemindersResource.reload();
     myTasksResource.params = withOfficeBranchFilter({ filters: {} });
     myTasksResource.reload();
     if (includeKpis) {

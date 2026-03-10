@@ -95,6 +95,20 @@ vi.mock("frappe-ui", () => ({
                 status: "Logged",
               },
             ],
+            reminders: [
+              {
+                name: "REM-001",
+                reminder_title: "Police belge yukleme takibi",
+                source_doctype: "AT Policy",
+                source_name: "POL-001",
+                customer: "CUST-001",
+                policy: "POL-001",
+                assigned_to: "agent@example.com",
+                status: "Open",
+                priority: "Normal",
+                remind_at: "2026-03-10T11:00:00Z",
+              },
+            ],
             payment_installments: [
               {
                 name: "PINST-001",
@@ -256,6 +270,33 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(wrapper.text()).toContain("67%");
     expect(wrapper.text()).toContain("Chassis No");
     expect(wrapper.text()).toContain("Engine No");
+  });
+
+  it("renders reminder section on summary tab", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Hatirlaticilar");
+    expect(wrapper.text()).toContain("Police belge yukleme takibi");
   });
 
   it("routes back to policy list and customer 360", async () => {

@@ -90,6 +90,13 @@ def build_policy_360_payload(name: str) -> dict:
             order_by="activity_at desc, modified desc",
             limit_page_length=50,
         ) if frappe.db.exists("DocType", "AT Activity") else [],
+        "reminders": _get_rows(
+            "AT Reminder",
+            fields=["name", "reminder_title", "source_doctype", "source_name", "customer", "policy", "claim", "assigned_to", "status", "priority", "remind_at", "completed_on", "notes"],
+            filters={"policy": policy_name},
+            order_by="remind_at asc, modified desc",
+            limit_page_length=50,
+        ) if frappe.db.exists("DocType", "AT Reminder") else [],
         "product_profile": _build_product_profile(policy),
     }
 

@@ -75,3 +75,45 @@ def build_my_activities_payload(*, office_branch: str | None = None, assigned_to
         elif status == "Archived":
             summary["archived"] += 1
     return {"summary": summary, "items": rows}
+
+
+def build_my_reminders_payload(*, office_branch: str | None = None, assigned_to: str | None = None, limit: int = 12) -> dict[str, Any]:
+    office_branch = normalize_requested_office_branch(office_branch)
+    user = str(assigned_to or frappe.session.user or "").strip()
+    filters: dict[str, Any] = {"assigned_to": user, "status": "Open"}
+    if office_branch:
+        filters["office_branch"] = office_branch
+
+    rows = frappe.get_list(
+        "AT Reminder",
+        fields=[
+            "name",
+            "reminder_title",
+            "source_doctype",
+            "source_name",
+            "customer",
+            "policy",
+            "claim",
+            "assigned_to",
+            "status",
+            "priority",
+            "remind_at",
+        ],
+        filters=filters,
+        order_by="remind_at asc, modified desc",
+        limit_page_length=max(min(int(limit or 12), 50), 1),
+    )
+    today = getdate(nowdate())
+    summary = {"total": len(rows), "overdue": 0, "due_today": 0, "due_soon": 0}
+    for row in rows:
+        remind_at = row.get("remind_at")
+        if not remind_at:
+            continue
+        remind_date = getdate(remind_at)
+        if remind_date < today:
+            summary["overdue"] += 1
+        elif remind_date == today:
+            summary["due_today"] += 1
+        elif remind_date <= add_days(today, 7):
+            summary["due_soon"] += 1
+    return {"summary": summary, "items": rows}

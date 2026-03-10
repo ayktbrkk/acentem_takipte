@@ -336,3 +336,24 @@ def create_activity(payload: dict) -> dict[str, str]:
         },
         "activity",
     )
+
+
+def create_reminder(payload: dict) -> dict[str, str]:
+    return _insert_doc(
+        {
+            "doctype": "AT Reminder",
+            "reminder_title": payload.get("reminder_title"),
+            "source_doctype": payload.get("source_doctype"),
+            "source_name": payload.get("source_name"),
+            "customer": payload.get("customer"),
+            "policy": payload.get("policy"),
+            "claim": payload.get("claim"),
+            "office_branch": payload.get("office_branch"),
+            "assigned_to": payload.get("assigned_to"),
+            "status": payload.get("status"),
+            "priority": payload.get("priority"),
+            "remind_at": payload.get("remind_at"),
+            "notes": payload.get("notes"),
+        },
+        "reminder",
+    )

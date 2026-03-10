@@ -145,6 +145,19 @@ vi.mock("frappe-ui", () => ({
                   notes: "Bilgi verildi",
                 },
               ],
+              reminders: [
+                {
+                  name: "REM-001",
+                  reminder_title: "Teklif hatirlatmasi",
+                  source_doctype: "AT Customer",
+                  source_name: "CUST-001",
+                  customer: "CUST-001",
+                  assigned_to: "agent@example.com",
+                  status: "Open",
+                  priority: "High",
+                  remind_at: "2026-03-10T09:00:00Z",
+                },
+              ],
             },
           };
           data.value = payload;
@@ -311,6 +324,8 @@ describe("CustomerDetail customer 360 integration", () => {
     expect(wrapper.text()).toContain("Dokuman Ozeti");
     expect(wrapper.text()).toContain("Toplam Dokuman");
     expect(wrapper.text()).toContain("PDF");
+    expect(wrapper.text()).toContain("Hatirlaticilar");
+    expect(wrapper.text()).toContain("Teklif hatirlatmasi");
     expect(wrapper.text()).toContain("Snapshot Tarihi");
     expect(wrapper.text()).toContain("Kaynak Surumu");
     expect(wrapper.text()).toContain("v1");

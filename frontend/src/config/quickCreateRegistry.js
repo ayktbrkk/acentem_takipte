@@ -1000,6 +1000,59 @@ export const quickCreateRegistry = {
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
     ],
   },
+  reminder: {
+    key: "reminder",
+    title: i18nLabel("Hizli Hatirlatici", "Quick Reminder"),
+    subtitle: i18nLabel("Zaman bazli takip kaydi olustur", "Create a time-based follow-up record"),
+    submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_reminder",
+    resultKey: "reminder",
+    openRouteName: "reminders-detail",
+    successRefreshTargets: ["reminders-list"],
+    defaults: {
+      reminder_title: "",
+      source_doctype: "AT Customer",
+      source_name: "",
+      customer: "",
+      policy: "",
+      claim: "",
+      assigned_to: "",
+      status: "Open",
+      priority: "Normal",
+      remind_at: "",
+      notes: "",
+    },
+    fields: [
+      { name: "reminder_title", type: "text", label: i18nLabel("Hatirlatici Basligi", "Reminder Title"), required: true },
+      { name: "source_doctype", type: "select", label: i18nLabel("Kaynak Tipi", "Source Type"), options: [
+        option("AT Customer", "Musteri", "Customer"),
+        option("AT Policy", "Police", "Policy"),
+        option("AT Claim", "Hasar", "Claim"),
+        option("AT Renewal Task", "Yenileme Gorevi", "Renewal Task"),
+        option("AT Campaign", "Kampanya", "Campaign"),
+        option("AT Ownership Assignment", "Atama", "Assignment"),
+        option("AT Call Note", "Arama Notu", "Call Note"),
+        option("AT Task", "Gorev", "Task"),
+      ] },
+      { name: "source_name", type: "text", label: i18nLabel("Kaynak Kayit", "Source Record") },
+      { name: "customer", type: "select", label: i18nLabel("Musteri", "Customer"), optionsSource: "customers" },
+      { name: "policy", type: "select", label: i18nLabel("Police", "Policy"), optionsSource: "policies" },
+      { name: "claim", type: "text", label: i18nLabel("Hasar", "Claim") },
+      { name: "assigned_to", type: "text", label: i18nLabel("Atanan Kullanici", "Assigned User"), required: true },
+      { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
+        option("Open", "Acik", "Open"),
+        option("Done", "Tamamlandi", "Done"),
+        option("Cancelled", "Iptal", "Cancelled"),
+      ] },
+      { name: "priority", type: "select", label: i18nLabel("Oncelik", "Priority"), options: [
+        option("Low", "Dusuk", "Low"),
+        option("Normal", "Normal", "Normal"),
+        option("High", "Yuksek", "High"),
+        option("Critical", "Kritik", "Critical"),
+      ] },
+      { name: "remind_at", type: "datetime-local", label: i18nLabel("Hatirlatma Zamani", "Reminder Time"), required: true },
+      { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
+    ],
+  },
 };
 
 function addQuickEditVariant(baseKey, editKey, trTitle, enTitle, trSubtitle, enSubtitle) {
@@ -1104,6 +1157,14 @@ addQuickEditVariant(
   "Edit Activity",
   "Aktivite alanlarini guncelle",
   "Update activity fields"
+);
+addQuickEditVariant(
+  "reminder",
+  "reminder_edit",
+  "Hatirlaticiyi Duzenle",
+  "Edit Reminder",
+  "Hatirlatici alanlarini guncelle",
+  "Update reminder fields"
 );
 addQuickEditVariant(
   "notification_template_master",

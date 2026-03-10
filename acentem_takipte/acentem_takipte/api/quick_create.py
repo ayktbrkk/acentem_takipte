@@ -22,6 +22,7 @@ from acentem_takipte.acentem_takipte.services.quick_create import (
     create_lead as create_lead_service,
     create_ownership_assignment as create_ownership_assignment_service,
     create_activity as create_activity_service,
+    create_reminder as create_reminder_service,
     create_payment as create_payment_service,
     create_policy as create_policy_service,
     create_renewal_task as create_renewal_task_service,
@@ -570,6 +571,50 @@ def create_quick_activity(
         "notes": normalize_note_text(notes),
     }
     return create_activity_service(payload)
+
+
+@frappe.whitelist()
+def create_quick_reminder(
+    reminder_title: str | None = None,
+    source_doctype: str | None = None,
+    source_name: str | None = None,
+    customer: str | None = None,
+    policy: str | None = None,
+    claim: str | None = None,
+    office_branch: str | None = None,
+    assigned_to: str | None = None,
+    status: str | None = None,
+    priority: str | None = None,
+    remind_at: str | None = None,
+    notes: str | None = None,
+) -> dict[str, str]:
+    _assert_create_permission("AT Reminder", _("You do not have permission to create reminders."))
+
+    normalized_source_doctype = _normalize_option(
+        source_doctype,
+        {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign", "AT Ownership Assignment", "AT Call Note", "AT Task"},
+        default=None,
+    )
+    normalized_source_name = (source_name or "").strip() or None
+    if normalized_source_doctype and normalized_source_name and not frappe.db.exists(normalized_source_doctype, normalized_source_name):
+        frappe.throw(_("Linked source record was not found"))
+
+    payload = {
+        "doctype": "AT Reminder",
+        "reminder_title": (reminder_title or "").strip(),
+        "source_doctype": normalized_source_doctype,
+        "source_name": normalized_source_name,
+        "customer": _normalize_link("AT Customer", customer),
+        "policy": _normalize_link("AT Policy", policy),
+        "claim": _normalize_link("AT Claim", claim),
+        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "assigned_to": _normalize_link("User", assigned_to, required=True),
+        "status": _normalize_option(status, {"Open", "Done", "Cancelled"}, default="Open"),
+        "priority": _normalize_option(priority, {"Low", "Normal", "High", "Critical"}, default="Normal"),
+        "remind_at": frappe.utils.get_datetime(remind_at) if remind_at else frappe.utils.now_datetime(),
+        "notes": normalize_note_text(notes),
+    }
+    return create_reminder_service(payload)
 
 
 @frappe.whitelist()
@@ -1230,6 +1275,20 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
         "status",
         "notes",
     },
+    "AT Reminder": {
+        "reminder_title",
+        "source_doctype",
+        "source_name",
+        "customer",
+        "policy",
+        "claim",
+        "office_branch",
+        "assigned_to",
+        "status",
+        "priority",
+        "remind_at",
+        "notes",
+    },
     "AT Insurance Company": {"company_name", "company_code", "is_active"},
     "AT Branch": {"branch_name", "branch_code", "insurance_company", "is_active"},
     "AT Sales Entity": {"entity_type", "full_name", "parent_entity"},
@@ -1369,11 +1428,17 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         if field in {"assigned_to"} and doc.doctype == "AT Task":
             setattr(doc, field, _normalize_link("User", value, required=True))
             continue
+        if field in {"assigned_to"} and doc.doctype == "AT Reminder":
+            setattr(doc, field, _normalize_link("User", value, required=True))
+            continue
         if field in {"source_doctype"} and doc.doctype == "AT Ownership Assignment":
             setattr(doc, field, _normalize_option(value, {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign"}, default=None))
             continue
         if field in {"source_doctype"} and doc.doctype == "AT Task":
             setattr(doc, field, _normalize_option(value, {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign", "AT Ownership Assignment", "AT Call Note"}, default=None))
+            continue
+        if field in {"source_doctype"} and doc.doctype == "AT Reminder":
+            setattr(doc, field, _normalize_option(value, {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign", "AT Ownership Assignment", "AT Call Note", "AT Task"}, default=None))
             continue
         if field in {"source_name"} and doc.doctype == "AT Ownership Assignment":
             setattr(doc, field, (value or "").strip() or None)
@@ -1381,10 +1446,16 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         if field in {"source_name"} and doc.doctype == "AT Task":
             setattr(doc, field, (value or "").strip() or None)
             continue
+        if field in {"source_name"} and doc.doctype == "AT Reminder":
+            setattr(doc, field, (value or "").strip() or None)
+            continue
         if field in {"office_branch"} and doc.doctype == "AT Ownership Assignment":
             setattr(doc, field, _normalize_link("AT Office Branch", value))
             continue
         if field in {"office_branch"} and doc.doctype == "AT Task":
+            setattr(doc, field, _normalize_link("AT Office Branch", value))
+            continue
+        if field in {"office_branch"} and doc.doctype == "AT Reminder":
             setattr(doc, field, _normalize_link("AT Office Branch", value))
             continue
         if field in {"relation_type"}:
@@ -1438,6 +1509,9 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         if field in {"status"} and doc.doctype == "AT Task":
             setattr(doc, field, _normalize_option(value, {"Open", "In Progress", "Blocked", "Done", "Cancelled"}, default="Open"))
             continue
+        if field in {"status"} and doc.doctype == "AT Reminder":
+            setattr(doc, field, _normalize_option(value, {"Open", "Done", "Cancelled"}, default="Open"))
+            continue
         if field in {"due_date"} and doc.doctype == "AT Ownership Assignment":
             setattr(doc, field, getdate(value) if value else None)
             continue
@@ -1445,6 +1519,9 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
             setattr(doc, field, getdate(value) if value else None)
             continue
         if field in {"reminder_at"} and doc.doctype == "AT Task":
+            setattr(doc, field, frappe.utils.get_datetime(value) if value else None)
+            continue
+        if field in {"remind_at"} and doc.doctype == "AT Reminder":
             setattr(doc, field, frappe.utils.get_datetime(value) if value else None)
             continue
         if field in {"source_doctype"}:

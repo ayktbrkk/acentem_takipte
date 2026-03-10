@@ -200,6 +200,7 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
         "operations": {
             "assignments": _get_assignments(customer_name=customer_name),
             "activities": _get_activities(customer_name=customer_name),
+            "reminders": _get_reminders(customer_name=customer_name),
         },
     }
 
@@ -314,6 +315,32 @@ def _get_activities(*, customer_name: str) -> list[dict[str, Any]]:
         ],
         filters={"customer": customer_name},
         order_by="activity_at desc, modified desc",
+        limit_page_length=50,
+    )
+
+
+def _get_reminders(*, customer_name: str) -> list[dict[str, Any]]:
+    if not frappe.db.exists("DocType", "AT Reminder"):
+        return []
+    return frappe.get_list(
+        "AT Reminder",
+        fields=[
+            "name",
+            "reminder_title",
+            "source_doctype",
+            "source_name",
+            "customer",
+            "policy",
+            "claim",
+            "assigned_to",
+            "status",
+            "priority",
+            "remind_at",
+            "completed_on",
+            "notes",
+        ],
+        filters={"customer": customer_name},
+        order_by="remind_at asc, modified desc",
         limit_page_length=50,
     )
 

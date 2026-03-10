@@ -278,6 +278,24 @@
                   >
                     {{ rowActionBusyName === row.name ? t("running") : t("cancelTaskAction") }}
                   </ActionButton>
+                  <ActionButton
+                    v-if="canCompleteReminderRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="completeReminderRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canCancelReminderRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="cancelReminderRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("cancelTaskAction") }}
+                  </ActionButton>
                   <ActionButton variant="secondary" size="xs" @click.stop="openDetail(row)">{{ t("openDetail") }}</ActionButton>
                   <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="openPanel(row)">{{ t("panel") }}</ActionButton>
                 </InlineActionRow>
@@ -1242,6 +1260,12 @@ function canCompleteTaskRow(row) {
 function canCancelTaskRow(row) {
   return config.key === "tasks" && row?.name && ["Open", "In Progress", "Blocked"].includes(String(row.status || ""));
 }
+function canCompleteReminderRow(row) {
+  return config.key === "reminders" && row?.name && String(row.status || "") === "Open";
+}
+function canCancelReminderRow(row) {
+  return config.key === "reminders" && row?.name && String(row.status || "") === "Open";
+}
 async function sendDraftNowRow(row) {
   if (!authStore.can(["actions", "communication", "sendDraftNow"])) return;
   await runRowQuickAction(row?.name, sendDraftNowRowResource, (name) => ({ draft_name: name }));
@@ -1278,6 +1302,20 @@ async function completeTaskRow(row) {
 async function cancelTaskRow(row) {
   await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
     doctype: "AT Task",
+    name,
+    data: { status: "Cancelled" },
+  }));
+}
+async function completeReminderRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Reminder",
+    name,
+    data: { status: "Done" },
+  }));
+}
+async function cancelReminderRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Reminder",
     name,
     data: { status: "Cancelled" },
   }));
