@@ -89,20 +89,6 @@
       />
     </div>
 
-
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <DashboardStatCard
-        v-for="card in visibleQuickStatCards"
-        :key="card.key"
-        :title="card.title"
-        :value="card.value"
-        :trend-text="card.trendText"
-        :trend-class="card.trendClass"
-        :trend-hint="card.trendHint"
-        :icon="card.icon"
-      />
-    </div>
-
     <div v-if="showAnalyticsRow" class="grid gap-4 xl:grid-cols-3">
       <article class="surface-card rounded-2xl p-5">
         <SectionCardHeader :title="t('leadPipeline')" :show-count="false">

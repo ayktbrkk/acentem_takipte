@@ -12,6 +12,12 @@ def normalize_customer_workbench_payload(payload) -> dict:
     return payload
 
 
+def normalize_lead_workbench_payload(payload) -> dict:
+    if not isinstance(payload, dict):
+        return {}
+    return payload
+
+
 def parse_customer_workbench_filters(payload: dict, *, as_bool) -> dict:
     query_filters = {}
     or_filters = []
