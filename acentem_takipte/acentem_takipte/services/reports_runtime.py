@@ -73,11 +73,18 @@ def build_report_download_response(
 
 
 def get_scheduled_report_config_summary() -> dict[str, Any]:
-    configs = summarize_scheduled_report_configs()
-    return {
-        "items": configs,
-        "total": len(configs),
-    }
+    try:
+        configs = summarize_scheduled_report_configs()
+        return {
+            "items": configs,
+            "total": len(configs),
+        }
+    except Exception:
+        log_redacted_error("Scheduled report config summary failed", details={})
+        return {
+            "items": [],
+            "total": 0,
+        }
 
 
 def save_scheduled_report(index: int | None = None, config: dict | str | None = None) -> dict[str, Any]:

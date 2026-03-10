@@ -21,7 +21,14 @@ from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 def load_scheduled_report_configs() -> list[dict[str, Any]]:
     raw = frappe.get_site_config().get("at_scheduled_reports") or []
     if isinstance(raw, str):
-        raw = frappe.parse_json(raw) or []
+        try:
+            raw = frappe.parse_json(raw) or []
+        except Exception:
+            log_redacted_error(
+                "Scheduled Report Config Parse Error",
+                details={"config_key": "at_scheduled_reports"},
+            )
+            raw = []
     if not isinstance(raw, list):
         return []
     return [item for item in raw if isinstance(item, dict) and item.get("report_key")]
@@ -46,6 +53,9 @@ def summarize_scheduled_report_configs() -> list[dict[str, Any]]:
     summaries: list[dict[str, Any]] = []
     for index, config in enumerate(load_scheduled_report_configs(), start=1):
         report_key = str(config.get("report_key") or "").strip()
+        raw_recipients = config.get("recipients") or []
+        if isinstance(raw_recipients, str):
+            raw_recipients = [part.strip() for part in raw_recipients.split(",")]
         summaries.append(
             {
                 "index": index,
@@ -54,7 +64,7 @@ def summarize_scheduled_report_configs() -> list[dict[str, Any]]:
                 "frequency": str(config.get("frequency") or "daily").strip().lower() or "daily",
                 "format": str(config.get("format") or "xlsx").strip().lower() or "xlsx",
                 "delivery_channel": str(config.get("delivery_channel") or "email").strip().lower() or "email",
-                "recipients": [str(item).strip() for item in (config.get("recipients") or []) if str(item).strip()],
+                "recipients": [str(item).strip() for item in raw_recipients if str(item).strip()],
                 "filters": config.get("filters") if isinstance(config.get("filters"), dict) else {},
                 "limit": max(cint(config.get("limit")) or 1000, 1),
                 "weekday": cint(config.get("weekday")),

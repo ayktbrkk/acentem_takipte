@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="space-y-6">
     <header class="dashboard-hero rounded-2xl p-6 text-white shadow-lg shadow-slate-900/20">
       <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -713,16 +713,19 @@ const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const dashboardStore = useDashboardStore();
+function normalizeResourcePayload(payload) {
+  return payload?.message || payload || {};
+}
 
 const copy = {
   tr: {
     heroTag: "Sigorta Kontrol Merkezi",
     heroTitle: "Sigorta Operasyon Panosu",
-    heroSubtitle: "Frappe CRM yapisina benzer panelde fırsat, police, hasar ve odeme akislarini canli takip edin.",
+    heroSubtitle: "Frappe CRM yapisina benzer panelde fÄ±rsat, police, hasar ve odeme akislarini canli takip edin.",
     heroTitleDaily: "Operasyon Panosu",
     heroSubtitleDaily: "Operasyon oncelikleri, bekleyen isler ve kritik kuyruklar icin canli operasyon gorunumu.",
     heroTitleSales: "Satis Panosu",
-    heroSubtitleSales: "Fırsat, teklif ve police uretimini satis odaginda izleyin.",
+    heroSubtitleSales: "FÄ±rsat, teklif ve police uretimini satis odaginda izleyin.",
     heroTitleCollections: "Tahsilat Panosu",
     heroSubtitleCollections: "Tahsilat, odeme ve mutabakat akislarini tek ekranda yonetin.",
     heroTitleRenewals: "Yenileme Panosu",
@@ -733,8 +736,8 @@ const copy = {
     tabRenewals: "Yenileme",
     rangeLabel: "Tarih araligi",
     refresh: "Yenile",
-    newLead: "Yeni Fırsat Ekle",
-    leadPipeline: "Fırsat Sureci",
+    newLead: "Yeni FÄ±rsat Ekle",
+    leadPipeline: "FÄ±rsat Sureci",
     offerStatusOverviewTitle: "Teklif Durum Dagilimi",
     liveData: "Canli veri",
     loading: "Yukleniyor...",
@@ -742,9 +745,9 @@ const copy = {
     lastMonths: "Son aylar",
     noTrendData: "Trend verisi bulunamadi.",
     noOfferStatus: "Teklif durum verisi bulunamadi.",
-    recentLeads: "Guncel Fırsat Kartlari",
+    recentLeads: "Guncel FÄ±rsat Kartlari",
     cardView: "Kart Gorunumu",
-    noLead: "Fırsat kaydi bulunamadi.",
+    noLead: "FÄ±rsat kaydi bulunamadi.",
     estPremium: "Tahmini Brut Prim",
     noNote: "Not yok.",
     renewalQueue: "Yenileme Kuyrugu",
@@ -1278,9 +1281,10 @@ const dashboardMeta = computed(() => {
 });
 const dashboardAccessScope = computed(() => String(dashboardMeta.value?.access_scope || ""));
 const dashboardAccessReason = computed(() => String(dashboardMeta.value?.scope_reason || ""));
-const dashboardCards = computed(() =>
-  Object.keys(dashboardTabCards.value || {}).length ? dashboardTabCards.value : (dashboardData.value.cards || {})
-);
+const dashboardCards = computed(() => ({
+  ...(dashboardData.value.cards || {}),
+  ...(dashboardTabCards.value || {}),
+}));
 const previousDashboardCards = computed(() => dashboardStore.previousCards || {});
 const dashboardComparisonTrendHint = computed(() => {
   const mode = String(dashboardComparison.value?.mode || "").toLowerCase();
@@ -2296,7 +2300,7 @@ function isPermissionDeniedError(error) {
 watch(
   () => kpiResource.data,
   (payload) => {
-    dashboardStore.setKpiPayload(payload || {});
+    dashboardStore.setKpiPayload(normalizeResourcePayload(payload));
   },
   { immediate: true }
 );
@@ -2304,7 +2308,7 @@ watch(
 watch(
   () => dashboardTabPayloadResource.data,
   (payload) => {
-    dashboardStore.setTabPayload(payload || {});
+    dashboardStore.setTabPayload(normalizeResourcePayload(payload));
   },
   { immediate: true }
 );
@@ -2340,4 +2344,5 @@ onBeforeUnmount(() => {
   }
 });
 </script>
+
 

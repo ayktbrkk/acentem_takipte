@@ -1,4 +1,4 @@
-function i18nLabel(tr, en) {
+﻿function i18nLabel(tr, en) {
   return { tr, en };
 }
 
@@ -728,8 +728,6 @@ export const quickCreateRegistry = {
     openRouteName: "accounting-entries-detail",
     successRefreshTargets: ["aux_list"],
     defaults: {
-      source_doctype: "AT Policy",
-      source_name: "",
       entry_type: "Policy",
       status: "Draft",
       policy: "",
@@ -743,12 +741,6 @@ export const quickCreateRegistry = {
       external_ref: "",
     },
     fields: [
-      { name: "source_doctype", type: "select", label: i18nLabel("Kaynak Tipi", "Source DocType"), required: true, options: [
-        option("AT Policy","Police","Policy"),
-        option("AT Payment","Odeme","Payment"),
-        option("AT Claim","Hasar","Claim"),
-      ]},
-      { name: "source_name", type: "text", label: i18nLabel("Kaynak Kayit", "Source Name"), required: true },
       { name: "entry_type", type: "select", label: i18nLabel("Kayit Turu", "Entry Type"), required: true, options: [
         option("Policy","Police","Policy"),
         option("Payment","Odeme","Payment"),
@@ -780,8 +772,6 @@ export const quickCreateRegistry = {
     successRefreshTargets: ["aux_list"],
     defaults: {
       accounting_entry: "",
-      source_doctype: "",
-      source_name: "",
       status: "Open",
       mismatch_type: "Amount",
       local_amount_try: "",
@@ -791,13 +781,6 @@ export const quickCreateRegistry = {
     },
     fields: [
       { name: "accounting_entry", type: "select", label: i18nLabel("Muhasebe Kaydi", "Accounting Entry"), optionsSource: "accountingEntries", required: true, fullWidth: true },
-      { name: "source_doctype", type: "select", label: i18nLabel("Kaynak Tipi", "Source DocType"), options: [
-        option("","Bos Birak","Blank"),
-        option("AT Policy","Police","Policy"),
-        option("AT Payment","Odeme","Payment"),
-        option("AT Claim","Hasar","Claim"),
-      ]},
-      { name: "source_name", type: "text", label: i18nLabel("Kaynak Kayit", "Source Name") },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), required: true, options: [
         option("Open","Acik","Open"),
         option("Resolved","Cozuldu","Resolved"),
@@ -1206,3 +1189,4 @@ export function getLocalizedText(value, locale = "tr") {
   if (typeof value === "object") return value[locale] || value.tr || value.en || "";
   return String(value);
 }
+

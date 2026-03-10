@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import frappe
 from frappe import _
@@ -109,7 +109,7 @@ def create_quick_lead(
         "tax_id": _digits_only(tax_id) or None,
         "email": (email or "").strip() or None,
         "status": _normalize_option(status, set(ATLeadStatus.VALID), default=ATLeadStatus.OPEN),
-        "customer": _normalize_link("AT Customer", customer),
+        "customer": normalized_customer,
         "office_branch": _resolve_office_branch(office_branch, customer=customer),
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company),
@@ -239,7 +239,7 @@ def create_quick_payment(
     payload = {
         "doctype": "AT Payment",
         "customer": _normalize_link("AT Customer", customer, required=True),
-        "policy": _normalize_link("AT Policy", policy),
+        "policy": normalized_policy,
         "claim": _normalize_link("AT Claim", claim),
         "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
@@ -346,7 +346,7 @@ def create_quick_insured_asset(
     payload = {
         "doctype": "AT Insured Asset",
         "customer": _normalize_link("AT Customer", customer, required=True),
-        "policy": _normalize_link("AT Policy", policy),
+        "policy": normalized_policy,
         "asset_type": _normalize_option(
             asset_type,
             {"Vehicle", "Home", "Health Person", "Workplace", "Travel", "Boat", "Farm", "Other"},
@@ -378,7 +378,7 @@ def create_quick_call_note(
     payload = {
         "doctype": "AT Call Note",
         "customer": _normalize_link("AT Customer", customer, required=True),
-        "policy": _normalize_link("AT Policy", policy),
+        "policy": normalized_policy,
         "claim": _normalize_link("AT Claim", claim),
         "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "channel": _normalize_option(channel, {"Phone Call", "WhatsApp Call", "Video Call", "Other"}, default="Phone Call"),
@@ -473,8 +473,8 @@ def create_quick_ownership_assignment(
         "doctype": "AT Ownership Assignment",
         "source_doctype": normalized_source_doctype,
         "source_name": normalized_source_name,
-        "customer": _normalize_link("AT Customer", customer),
-        "policy": _normalize_link("AT Policy", policy),
+        "customer": normalized_customer,
+        "policy": normalized_policy,
         "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "assigned_to": _normalize_link("User", assigned_to, required=True),
         "assignment_role": _normalize_option(assignment_role, {"Owner", "Assignee", "Reviewer", "Follower"}, default="Owner"),
@@ -520,8 +520,8 @@ def create_quick_task(
         "task_type": _normalize_option(task_type, {"Follow-up", "Visit", "Call", "Collection", "Claim", "Renewal", "Review", "Other"}, default="Follow-up"),
         "source_doctype": normalized_source_doctype,
         "source_name": normalized_source_name,
-        "customer": _normalize_link("AT Customer", customer),
-        "policy": _normalize_link("AT Policy", policy),
+        "customer": normalized_customer,
+        "policy": normalized_policy,
         "claim": _normalize_link("AT Claim", claim),
         "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "assigned_to": _normalize_link("User", assigned_to, required=True),
@@ -604,8 +604,8 @@ def create_quick_reminder(
         "reminder_title": (reminder_title or "").strip(),
         "source_doctype": normalized_source_doctype,
         "source_name": normalized_source_name,
-        "customer": _normalize_link("AT Customer", customer),
-        "policy": _normalize_link("AT Policy", policy),
+        "customer": normalized_customer,
+        "policy": normalized_policy,
         "claim": _normalize_link("AT Claim", claim),
         "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "assigned_to": _normalize_link("User", assigned_to, required=True),
@@ -745,12 +745,22 @@ def create_quick_accounting_entry(
     _assert_create_permission("AT Accounting Entry", _("You do not have permission to create accounting entries."))
 
     source_dt = (source_doctype or "").strip()
-    if not source_dt:
-        frappe.throw(_("Source DocType is required."))
-    _assert_doc_exists("DocType", source_dt)
     source_nm = (source_name or "").strip()
+    normalized_policy = _normalize_link("AT Policy", policy)
+    normalized_customer = _normalize_link("AT Customer", customer)
+
+    if normalized_policy:
+        source_dt = "AT Policy"
+        source_nm = normalized_policy
+    elif normalized_customer:
+        source_dt = "AT Customer"
+        source_nm = normalized_customer
+
+    if not source_dt:
+        frappe.throw(_("Policy or customer selection is required."))
+    _assert_doc_exists("DocType", source_dt)
     if not source_nm:
-        frappe.throw(_("Source Name is required."))
+        frappe.throw(_("Source record is required."))
     _assert_doc_exists(source_dt, source_nm)
 
     payload = {
@@ -759,8 +769,8 @@ def create_quick_accounting_entry(
         "source_name": source_nm,
         "entry_type": _normalize_option(entry_type, {"Policy", "Payment", "Claim"}, default="Policy"),
         "status": _normalize_option(status, set(ATAccountingEntryStatus.VALID), default=ATAccountingEntryStatus.DRAFT),
-        "policy": _normalize_link("AT Policy", policy),
-        "customer": _normalize_link("AT Customer", customer),
+        "policy": normalized_policy,
+        "customer": normalized_customer,
         "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company),
         "currency": ((currency or "TRY").strip() or "TRY").upper(),
@@ -790,11 +800,18 @@ def create_quick_reconciliation_item(
 ) -> dict[str, str]:
     _assert_create_permission("AT Reconciliation Item", _("You do not have permission to create reconciliation items."))
 
+    source_dt = _normalize_doctype_or_blank(source_doctype)
+    source_nm = _normalize_source_name(source_doctype, source_name)
+    if accounting_entry:
+        accounting_entry_doc = frappe.get_doc("AT Accounting Entry", _normalize_link("AT Accounting Entry", accounting_entry, required=True))
+        source_dt = accounting_entry_doc.source_doctype or ""
+        source_nm = accounting_entry_doc.source_name or ""
+
     payload = {
         "doctype": "AT Reconciliation Item",
         "accounting_entry": _normalize_link("AT Accounting Entry", accounting_entry, required=True),
-        "source_doctype": _normalize_doctype_or_blank(source_doctype),
-        "source_name": _normalize_source_name(source_doctype, source_name),
+        "source_doctype": source_dt,
+        "source_name": source_nm,
         "status": _normalize_option(status, set(ATReconciliationItemStatus.RESOLUTION_REQUIRED | ATReconciliationItemStatus.CLOSED), default=ATReconciliationItemStatus.OPEN),
         "mismatch_type": _normalize_option(
             mismatch_type,
@@ -1590,3 +1607,4 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         if field in {"scheduled_for"}:
             setattr(doc, field, frappe.utils.get_datetime(value) if value else None)
             continue
+

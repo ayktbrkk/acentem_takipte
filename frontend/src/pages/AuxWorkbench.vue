@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="space-y-6">
     <PageToolbar :title="label('list')" :subtitle="subtitleLabel" :show-refresh="true" :refresh-label="t('refresh')" :busy="isLoading" @refresh="refreshList">
       <template #actions>
@@ -889,30 +889,69 @@ function humanizeField(field) {
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
+const AUX_FIELD_VALUE_LABELS = {
+  tr: {
+    Synced: "Senkron",
+    Draft: "Taslak",
+    Failed: "Başarısız",
+    Claim: "Hasar",
+    Policy: "Poliçe",
+    Payment: "Ödeme",
+    Resolved: "Çözüldü",
+    Open: "Açık",
+    Ignored: "Yoksayıldı",
+    Amount: "Tutar",
+    Currency: "Döviz",
+    "Missing External": "Harici Kayıt Eksik",
+    "Missing Local": "Yerel Kayıt Eksik",
+    Status: "Durum",
+    Other: "Diğer",
+    Matched: "Eşleşti",
+    Adjusted: "Düzeltildi",
+    "Manual Override": "Manuel Geçersiz Kılma",
+    "AT Policy": "Poliçe",
+    "AT Claim": "Hasar",
+    "AT Payment": "Ödeme",
+    "AT Customer": "Müşteri",
+    "AT Accounting Entry": "Muhasebe Kaydı",
+  },
+  en: {},
+};
+
+function translateFieldValue(value) {
+  const key = String(value ?? "");
+  return AUX_FIELD_VALUE_LABELS[activeLocale.value]?.[key] || key;
+}
+
 const AUX_FIELD_LABELS = {
   "accounting-entries": {
     tr: {
-      source_doctype: "Kaynak DocType",
-      source_name: "Kaynak Kayit",
-      policy: "Police",
-      customer: "Musteri",
+      name: "Kayıt",
+      source_doctype: "Kaynak Tipi",
+      source_name: "Kaynak Kaydı",
+      policy: "Poliçe",
+      customer: "Müşteri",
       local_amount_try: "Yerel Tutar (TRY)",
       external_amount_try: "Harici Tutar (TRY)",
       difference_try: "Fark (TRY)",
       local_amount: "Yerel Tutar",
       external_amount: "Harici Tutar",
       status: "Durum",
-      entry_type: "Kayit Tipi",
-      insurance_company: "Sigorta Sirketi",
+      entry_type: "Kayıt Türü",
+      insurance_company: "Sigorta Şirketi",
       external_ref: "Harici Referans",
       needs_reconciliation: "Mutabakat Gerekli",
       last_synced_on: "Son Senkron",
       sync_attempt_count: "Senkron Denemesi",
       payload_json: "Payload (JSON)",
-      error_message: "Hata Mesaji",
-      modified: "Guncellendi",
+      error_message: "Hata Mesajı",
+      currency: "Döviz",
+      accounting_entry: "Muhasebe Kaydı",
+      owner: "Kayıt Sahibi",
+      modified: "Güncellendi",
     },
     en: {
+      name: "Record",
       source_doctype: "Source DocType",
       source_name: "Source Record",
       policy: "Policy",
@@ -931,28 +970,34 @@ const AUX_FIELD_LABELS = {
       sync_attempt_count: "Sync Attempts",
       payload_json: "Payload (JSON)",
       error_message: "Error Message",
+      currency: "Currency",
+      accounting_entry: "Accounting Entry",
+      owner: "Owner",
       modified: "Modified",
     },
   },
   "reconciliation-items": {
     tr: {
-      accounting_entry: "Muhasebe Kaydi",
-      source_doctype: "Kaynak DocType",
-      source_name: "Kaynak Kayit",
+      name: "Kayıt",
+      accounting_entry: "Muhasebe Kaydı",
+      source_doctype: "Kaynak Tipi",
+      source_name: "Kaynak Kaydı",
       mismatch_type: "Uyumsuzluk Tipi",
       difference_try: "Fark (TRY)",
       local_amount_try: "Yerel Tutar (TRY)",
       external_amount_try: "Harici Tutar (TRY)",
-      resolution_action: "Cozum Aksiyonu",
-      resolved_by: "Cozen Kullanici",
-      resolved_on: "Cozulme Tarihi",
+      resolution_action: "Çözüm İşlemi",
+      resolved_by: "Çözen Kullanıcı",
+      resolved_on: "Çözüm Tarihi",
       unique_key: "Benzersiz Anahtar",
       notes: "Notlar",
       details_json: "Detay JSON",
       status: "Durum",
-      modified: "Guncellendi",
+      owner: "Kayıt Sahibi",
+      modified: "Güncellendi",
     },
     en: {
+      name: "Record",
       accounting_entry: "Accounting Entry",
       source_doctype: "Source DocType",
       source_name: "Source Record",
@@ -967,6 +1012,7 @@ const AUX_FIELD_LABELS = {
       notes: "Notes",
       details_json: "Details JSON",
       status: "Status",
+      owner: "Owner",
       modified: "Modified",
     },
   },
@@ -1032,6 +1078,9 @@ function formatField(value, field) {
   }
   if (["due_date", "renewal_date", "policy_end_date"].includes(field)) {
     try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
+  }
+  if (["status", "entry_type", "source_doctype", "mismatch_type", "resolution_action"].includes(field)) {
+    return translateFieldValue(value);
   }
   return String(value);
 }
@@ -1633,3 +1682,4 @@ watch(
   }
 );
 </script>
+

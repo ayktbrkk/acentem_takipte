@@ -1,6 +1,15 @@
 import { computed, reactive, ref } from "vue";
 import { defineStore } from "pinia";
 
+function firstNonEmptyObject(...values) {
+  for (const value of values) {
+    if (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0) {
+      return value;
+    }
+  }
+  return {};
+}
+
 function createDashboardInitialState() {
   return {
     items: [],
@@ -25,12 +34,12 @@ export const useDashboardStore = defineStore("dashboard", () => {
 
   const hasError = computed(() => Boolean(state.error));
   const isReady = computed(() => !state.loading && !state.error);
-  const visibleCards = computed(() => state.tabPayload?.cards || state.kpiPayload?.cards || state.cards || {});
-  const visibleSeries = computed(() => state.tabPayload?.series || state.kpiPayload?.series || state.series || {});
-  const visibleMetrics = computed(() => state.tabPayload?.metrics || state.kpiPayload?.metrics || state.metrics || {});
-  const visiblePreviews = computed(() => state.tabPayload?.previews || state.previews || {});
-  const comparison = computed(() => state.kpiPayload?.comparison || {});
-  const meta = computed(() => state.tabPayload?.meta || state.kpiPayload?.meta || {});
+  const visibleCards = computed(() => firstNonEmptyObject(state.tabPayload?.cards, state.kpiPayload?.cards, state.cards));
+  const visibleSeries = computed(() => firstNonEmptyObject(state.tabPayload?.series, state.kpiPayload?.series, state.series));
+  const visibleMetrics = computed(() => firstNonEmptyObject(state.tabPayload?.metrics, state.kpiPayload?.metrics, state.metrics));
+  const visiblePreviews = computed(() => firstNonEmptyObject(state.tabPayload?.previews, state.kpiPayload?.previews, state.previews));
+  const comparison = computed(() => firstNonEmptyObject(state.kpiPayload?.comparison));
+  const meta = computed(() => firstNonEmptyObject(state.tabPayload?.meta, state.kpiPayload?.meta));
   const previousCards = computed(() => {
     const tabCards = state.tabPayload?.compare_cards;
     if (tabCards && typeof tabCards === "object" && Object.keys(tabCards).length) return tabCards;
@@ -96,19 +105,19 @@ export const useDashboardStore = defineStore("dashboard", () => {
 
   function setKpiPayload(payload) {
     state.kpiPayload = payload && typeof payload === "object" ? payload : {};
-    state.cards = state.kpiPayload.cards || state.cards;
-    state.metrics = state.kpiPayload.metrics || state.metrics;
-    state.series = state.kpiPayload.series || state.series;
-    state.previews = state.kpiPayload.previews || state.previews;
+    if (Object.keys(state.kpiPayload.cards || {}).length) state.cards = state.kpiPayload.cards;
+    if (Object.keys(state.kpiPayload.metrics || {}).length) state.metrics = state.kpiPayload.metrics;
+    if (Object.keys(state.kpiPayload.series || {}).length) state.series = state.kpiPayload.series;
+    if (Object.keys(state.kpiPayload.previews || {}).length) state.previews = state.kpiPayload.previews;
     lastLoadedAt.value = Date.now();
   }
 
   function setTabPayload(payload) {
     state.tabPayload = payload && typeof payload === "object" ? payload : {};
-    state.cards = state.tabPayload.cards || state.cards;
-    state.metrics = state.tabPayload.metrics || state.metrics;
-    state.series = state.tabPayload.series || state.series;
-    state.previews = state.tabPayload.previews || state.previews;
+    if (Object.keys(state.tabPayload.cards || {}).length) state.cards = state.tabPayload.cards;
+    if (Object.keys(state.tabPayload.metrics || {}).length) state.metrics = state.tabPayload.metrics;
+    if (Object.keys(state.tabPayload.series || {}).length) state.series = state.tabPayload.series;
+    if (Object.keys(state.tabPayload.previews || {}).length) state.previews = state.tabPayload.previews;
     lastLoadedAt.value = Date.now();
   }
 

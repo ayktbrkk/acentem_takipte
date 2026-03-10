@@ -120,3 +120,42 @@ def test_normalize_scheduled_report_config_rejects_invalid_delivery_channel():
                 "recipients": ["ops@example.com"],
             }
         )
+
+
+def test_load_scheduled_report_configs_returns_empty_list_for_invalid_json(monkeypatch):
+    monkeypatch.setattr(
+        scheduled_reports.frappe,
+        "get_site_config",
+        lambda: {"at_scheduled_reports": "{invalid-json"},
+    )
+    calls = []
+    monkeypatch.setattr(
+        scheduled_reports,
+        "log_redacted_error",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+
+    payload = scheduled_reports.load_scheduled_report_configs()
+
+    assert payload == []
+    assert len(calls) == 1
+
+
+def test_summarize_scheduled_report_configs_normalizes_recipient_string(monkeypatch):
+    monkeypatch.setattr(
+        scheduled_reports,
+        "load_scheduled_report_configs",
+        lambda: [
+            {
+                "report_key": "policy_list",
+                "frequency": "daily",
+                "format": "xlsx",
+                "recipients": "ops@example.com, finance@example.com , ",
+                "filters": {"office_branch": "Istanbul"},
+            }
+        ],
+    )
+
+    payload = scheduled_reports.summarize_scheduled_report_configs()
+
+    assert payload[0]["recipients"] == ["ops@example.com", "finance@example.com"]

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="space-y-6">
     <DocHeaderCard :eyebrow="localize(config.labels?.list)" :title="recordTitle" :subtitle="recordSubtitle">
       <template #actions>
@@ -155,19 +155,19 @@ const copy = {
     panel: "Panel",
     saveChanges: "Degisiklikleri Kaydet",
     cancel: "Vazgec",
-    loading: "Kayit yukleniyor...",
-    loadErrorTitle: "Kayit Yuklenemedi",
-    emptyTitle: "Kayit bulunamadi",
-    emptyDescription: "Kayit silinmis veya erisim yetkiniz olmayabilir.",
+    loading: "Kayıt yukleniyor...",
+    loadErrorTitle: "Kayıt Yuklenemedi",
+    emptyTitle: "Kayıt bulunamadi",
+    emptyDescription: "Kayıt silinmis veya erisim yetkiniz olmayabilir.",
     stateSummary: "Durum Ozet",
     accountingAmounts: "Tutarlar",
     accountingSource: "Kaynak Baglami",
     accountingSync: "Senkronizasyon",
     templateMeta: "Sablon Ozeti",
-    templateLifecycle: "Yayin ve Kayit",
+    templateLifecycle: "Yayin ve Kayıt",
     outboxDelivery: "Gonderim Ozeti",
     outboxRetry: "Deneme ve Zamanlama",
-    outboxReference: "Bagli Kayitlar",
+    outboxReference: "Bagli Kayıtlar",
     outboxQueue: "Kuyruk ve Islem",
     bodyTemplate: "Sablon Icerigi",
     payloadJson: "Payload (JSON)",
@@ -177,7 +177,7 @@ const copy = {
     tabActivity: "Aktivite",
     tabOperations: "Operasyon",
     tabLogs: "Loglar",
-    relatedTitle: "Iliskili Kayitlar",
+    relatedTitle: "Iliskili Kayıtlar",
     noRelatedRecords: "Iliskili kayit bulunamadi.",
     activityTitle: "Aktivite",
     noActivity: "Aktivite kaydi bulunamadi.",
@@ -186,14 +186,14 @@ const copy = {
     relatedDraft: "Bildirim Taslagi",
     relatedOutbox: "Giden Bildirim",
     relatedAccountingEntry: "Muhasebe Kaydi",
-    relatedReference: "Referans Kayit",
-    relatedSource: "Kaynak Kayit",
+    relatedReference: "Referans Kayıt",
+    relatedSource: "Kaynak Kayıt",
     snapshotContext: "Snapshot Baglami",
     snapshotSignals: "Segment Sinyalleri",
     strengthSignals: "Guclu Sinyaller",
     riskSignals: "Risk Sinyalleri",
     scoreReasons: "Skor Gerekceleri",
-    noSignals: "Kayitli sinyal bulunamadi.",
+    noSignals: "Kayıtli sinyal bulunamadi.",
     assignmentContext: "Atama Baglami",
     assignmentLifecycle: "Atama Yasam Dongusu",
     assignmentNotes: "Atama Notlari",
@@ -389,30 +389,73 @@ const quickEditSuccessHandlers = {
 function humanizeField(field) {
   return String(field || "").replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }
+const AUX_DETAIL_VALUE_LABELS = {
+  tr: {
+    Synced: "Senkron",
+    Draft: "Taslak",
+    Failed: "Başarısız",
+    Claim: "Hasar",
+    Policy: "Poliçe",
+    Payment: "Ödeme",
+    Resolved: "Çözüldü",
+    Open: "Açık",
+    Ignored: "Yoksayıldı",
+    Amount: "Tutar",
+    Currency: "Döviz",
+    "Missing External": "Harici Kayıt Eksik",
+    "Missing Local": "Yerel Kayıt Eksik",
+    Status: "Durum",
+    Other: "Diğer",
+    Matched: "Eşleşti",
+    Adjusted: "Düzeltildi",
+    "Manual Override": "Manuel Geçersiz Kılma",
+    "AT Policy": "Poliçe",
+    "AT Claim": "Hasar",
+    "AT Payment": "Ödeme",
+    "AT Customer": "Müşteri",
+    "AT Accounting Entry": "Muhasebe Kaydı",
+    "AT Reconciliation Item": "Mutabakat Kalemi",
+  },
+  en: {},
+};
 const AUX_DETAIL_FIELD_LABELS = {
   "accounting-entries": {
     tr: {
-      source_doctype: "Kaynak DocType",
-      source_name: "Kaynak Kayit",
+      name: "Kayıt",
+      status: "Durum",
+      entry_type: "Kayıt Türü",
+      currency: "Döviz",
+      source_doctype: "Kaynak Tipi",
+      source_name: "Kaynak Kayıt",
       source_label: "Kaynak Etiketi",
       source_status: "Kaynak Durumu",
+      accounting_entry: "Muhasebe Kaydı",
       local_amount_try: "Yerel Tutar (TRY)",
       external_amount_try: "Harici Tutar (TRY)",
       difference_try: "Fark (TRY)",
-      policy: "Police",
-      customer: "Musteri",
-      insurance_company: "Sigorta Sirketi",
-      office_branch: "Ofis Subesi",
+      policy: "Poliçe",
+      customer: "Müşteri",
+      insurance_company: "Sigorta Şirketi",
+      office_branch: "Ofis Şubesi",
       external_ref: "Harici Referans",
-      integration_hash: "Entegrasyon Ozet Degeri",
+      integration_hash: "Entegrasyon Özet Değeri",
       payload_json: "Payload",
       synced_on: "Senkronizasyon Tarihi",
+      local_amount: "Yerel Tutar",
+      external_amount: "Harici Tutar",
+      owner: "Kayıt Sahibi",
+      modified: "Güncellendi",
     },
     en: {
+      name: "Record",
+      status: "Status",
+      entry_type: "Entry Type",
+      currency: "Currency",
       source_doctype: "Source DocType",
       source_name: "Source Record",
       source_label: "Source Label",
       source_status: "Source Status",
+      accounting_entry: "Accounting Entry",
       local_amount_try: "Local Amount (TRY)",
       external_amount_try: "External Amount (TRY)",
       difference_try: "Difference (TRY)",
@@ -424,22 +467,36 @@ const AUX_DETAIL_FIELD_LABELS = {
       integration_hash: "Integration Hash",
       payload_json: "Payload",
       synced_on: "Synced On",
+      local_amount: "Local Amount",
+      external_amount: "External Amount",
+      owner: "Owner",
+      modified: "Modified",
     },
   },
   "reconciliation-items": {
     tr: {
-      accounting_entry: "Muhasebe Kaydi",
-      source_doctype: "Kaynak DocType",
-      source_name: "Kaynak Kayit",
+      name: "Kayıt",
+      status: "Durum",
+      accounting_entry: "Muhasebe Kaydı",
+      source_doctype: "Kaynak Tipi",
+      source_name: "Kaynak Kayıt",
       mismatch_type: "Uyumsuzluk Tipi",
       difference_try: "Fark (TRY)",
-      resolution_action: "Cozum Islemi",
-      resolved_on: "Cozum Tarihi",
+      resolution_action: "Çözüm İşlemi",
+      resolved_on: "Çözüm Tarihi",
       needs_reconciliation: "Mutabakat Gerekli",
       notes: "Notlar",
       details_json: "Detaylar",
+      unique_key: "Benzersiz Anahtar",
+      local_amount_try: "Yerel Tutar (TRY)",
+      external_amount_try: "Harici Tutar (TRY)",
+      resolved_by: "Çözen Kullanıcı",
+      owner: "Kayıt Sahibi",
+      modified: "Güncellendi",
     },
     en: {
+      name: "Record",
+      status: "Status",
       accounting_entry: "Accounting Entry",
       source_doctype: "Source DocType",
       source_name: "Source Record",
@@ -450,6 +507,12 @@ const AUX_DETAIL_FIELD_LABELS = {
       needs_reconciliation: "Needs Reconciliation",
       notes: "Notes",
       details_json: "Details",
+      unique_key: "Unique Key",
+      local_amount_try: "Local Amount (TRY)",
+      external_amount_try: "External Amount (TRY)",
+      resolved_by: "Resolved By",
+      owner: "Owner",
+      modified: "Modified",
     },
   },
 };
@@ -458,6 +521,10 @@ function fieldLabel(field) {
   return localized || humanizeField(field);
 }
 function isFieldType(field, kind) { return Array.isArray(config[`${kind}Fields`]) && config[`${kind}Fields`].includes(field); }
+function translateDetailValue(value) {
+  const key = String(value ?? "");
+  return AUX_DETAIL_VALUE_LABELS[activeLocale.value]?.[key] || key;
+}
 function formatValue(field, value) {
   if (value == null || value === "") return "-";
   if (isFieldType(field, "bool")) {
@@ -486,6 +553,9 @@ function formatValue(field, value) {
   if (["due_date", "renewal_date", "policy_end_date"].includes(field)) {
     try { return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
   }
+  if (["status", "entry_type", "source_doctype", "mismatch_type", "resolution_action"].includes(field)) {
+    return translateDetailValue(value);
+  }
   return String(value);
 }
 
@@ -497,7 +567,8 @@ const recordSubtitle = computed(() => {
   const d = doc.value;
   if (!d) return localize(config.subtitle);
   const officeBranch = String(d.office_branch || "").trim();
-  return officeBranch ? `${config.doctype} | ${d.name} | ${officeBranch}` : `${config.doctype} | ${d.name}`;
+  const localizedDoctype = localize(config.labels?.list) || config.doctype;
+  return officeBranch ? `${localizedDoctype} | ${d.name} | ${officeBranch}` : `${localizedDoctype} | ${d.name}`;
 });
 
 const summaryItems = computed(() =>
@@ -702,7 +773,7 @@ const specialGroups = computed(() => {
     return [
       {
         key: "reconciliation-context",
-        title: activeLocale.value === "tr" ? "Kaynak ve Kayit Baglami" : "Source & Record Context",
+        title: activeLocale.value === "tr" ? "Kaynak ve Kayıt Baglami" : "Source & Record Context",
         items: [
           item("accounting_entry"),
           item("source_doctype"),
@@ -713,7 +784,7 @@ const specialGroups = computed(() => {
       },
       {
         key: "reconciliation-amounts",
-        title: activeLocale.value === "tr" ? "Mutabakat Tutar Ozeti" : "Reconciliation Amount Summary",
+        title: activeLocale.value === "tr" ? "Mutabakat Tutar Özeti" : "Reconciliation Amount Summary",
         items: [
           item("mismatch_type"),
           item("local_amount_try"),
@@ -724,7 +795,7 @@ const specialGroups = computed(() => {
       },
       {
         key: "reconciliation-resolution",
-        title: activeLocale.value === "tr" ? "Cozum ve Yasam Dongusu" : "Resolution & Lifecycle",
+        title: activeLocale.value === "tr" ? "Çözüm ve Yaşam Döngüsü" : "Resolution & Lifecycle",
         items: [
           item("resolved_by"),
           item("resolved_on"),
@@ -1195,3 +1266,4 @@ watch(
 
 reloadDetail();
 </script>
+
