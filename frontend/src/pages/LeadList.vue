@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="space-y-4">
     <div class="surface-card rounded-2xl p-5">
       <PageToolbar
@@ -265,10 +265,10 @@ function buildOfficeBranchLookupFilters() {
 }
 const copy = {
   tr: {
-    title: "Fırsat Yonetimi",
-    subtitle: "Fırsat workbench: filtre, preset ve donusum takibi",
+    title: "Firsat Yonetimi",
+    subtitle: "Firsat workbench: filtre, preset ve donusum takibi",
     refresh: "Yenile",
-    searchPlaceholder: "Fırsat / e-posta / musteri / kayit ara",
+    searchPlaceholder: "Firsat / e-posta / musteri / kayit ara",
     allStatuses: "Tum Durumlar",
     allConversionStates: "Tum Donusum Durumlari",
     allStaleStates: "Tum Takip Durumlari",
@@ -291,14 +291,14 @@ const copy = {
     canConvertOnly: "Sadece teklife cevrilebilir",
     loading: "Yukleniyor...",
     loadErrorTitle: "Liste Yuklenemedi",
-    loadError: "Fırsat listesi yuklenirken hata olustu. Lutfen tekrar deneyin.",
-    emptyTitle: "Fırsat Bulunamadi",
-    emptyDescription: "Filtrelere uygun fırsat kaydi bulunamadi.",
+    loadError: "Firsat listesi yuklenirken hata olustu. Lutfen tekrar deneyin.",
+    emptyTitle: "Firsat Bulunamadi",
+    emptyDescription: "Filtrelere uygun firsat kaydi bulunamadi.",
     showing: "Gosterilen",
     page: "Sayfa",
     previous: "Onceki",
     next: "Sonraki",
-    colLead: "Fırsat",
+    colLead: "Firsat",
     colDetails: "Detaylar",
     colStatus: "Durum",
     colConversion: "Donusum",
@@ -309,15 +309,15 @@ const copy = {
     openOffer: "Teklif",
     convertToOffer: "Teklife Cevir",
     converting: "Cevriliyor...",
-    convertLeadSuccess: "Fırsat teklife donusturuldu.",
-    convertLeadError: "Fırsat teklife donusturulemedi. Eksik alanlari kontrol edin.",
+    convertLeadSuccess: "Firsat teklife donusturuldu.",
+    convertLeadError: "Firsat teklife donusturulemedi. Eksik alanlari kontrol edin.",
     presetDefault: "Standart",
-    presetOpen: "Acik Fırsatlar",
+    presetOpen: "Acik Firsatlar",
     presetHighPotential: "Yuksek Potansiyel",
     presetUnconverted: "Donusmeyenler",
     presetConvertedPolicy: "Policeye Donusenler",
     presetFollowUpQueue: "Takip Kuyrugu",
-    presetWaitingLeads: "Bekleyen Fırsatlar",
+    presetWaitingLeads: "Bekleyen Firsatlar",
     presetConvertible: "Teklife Cevrilebilir",
     record: "Kayit",
     modified: "Guncellendi",
@@ -334,7 +334,7 @@ const copy = {
     missingFields: "Eksik Alanlar",
     conversionActionConvert: "Teklife Cevir",
     conversionActionReview: "Bilgileri Tamamla",
-    conversionActionClosed: "Kapali Fırsat",
+    conversionActionClosed: "Kapali Firsat",
     sortModifiedDesc: "Son Guncellenen",
     sortNameAsc: "Ada Gore (A-Z)",
     sortNameDesc: "Ada Gore (Z-A)",
@@ -535,7 +535,7 @@ const leadQuickOptionsMap = computed(() => ({
 const quickLeadUi = computed(() => ({
   title: getLocalizedText(quickLeadConfig?.title, activeLocale.value),
   subtitle: getLocalizedText(quickLeadConfig?.subtitle, activeLocale.value),
-  newLabel: activeLocale.value === "tr" ? "Yeni Fırsat" : "New Lead",
+  newLabel: activeLocale.value === "tr" ? "Yeni Firsat" : "New Lead",
 }));
 const quickCreateCommon = computed(() => ({
   cancel: activeLocale.value === "tr" ? "Vazgec" : "Cancel",
@@ -1003,11 +1003,11 @@ function onLeadRelatedCreateRequested(request = {}) {
 }
 
 function consumeQuickLeadRouteIntent() {
-  const intent = readQuickCreateIntent(route.query);
+  const intent = readQuickCreateIntent(safeRouteQuery.value);
   if (!intent.quick) return;
   openQuickLeadDialog({ fromIntent: true, returnTo: intent.returnTo });
   applyQuickLeadPrefills(intent.prefills || {});
-  const nextQuery = stripQuickCreateIntentQuery(route.query);
+  const nextQuery = stripQuickCreateIntentQuery(safeRouteQuery.value);
   router.replace({ name: "lead-list", query: nextQuery }).catch(() => {});
 }
 function openLeadDetail(name) { router.push({ name: "lead-detail", params: { name } }); }
@@ -1160,3 +1160,4 @@ onBeforeUnmount(() => {
 <style scoped>
 .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm; }
 </style>
+
