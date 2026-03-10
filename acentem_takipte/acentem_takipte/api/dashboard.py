@@ -1430,10 +1430,9 @@ def _build_offer_where(
     return " and ".join(conditions), values
 
 
-def _get_offer_preview_rows(*, where_clause: str, values: dict, limit: int, ready_only: bool = False) -> list[dict]:
 def _get_offer_preview_rows(
-    *,
-    from_date: str | None,
+	*,
+	from_date: str | None,
     to_date: str | None,
     branch: str | None,
     office_branch: str | None,
