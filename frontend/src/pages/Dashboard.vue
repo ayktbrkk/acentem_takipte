@@ -1091,6 +1091,10 @@ function normalizeDashboardTab(value) {
   return DASHBOARD_TABS.includes(candidate) ? candidate : "daily";
 }
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 const rangeOptions = [1, 7, 30, 90];
 const selectedRange = computed({
   get: () => dashboardStore.state.range || 30,
@@ -1258,16 +1262,36 @@ const dashboardTabCompareCards = computed(() => dashboardTabPayload.value.compar
 const dashboardTabMetrics = computed(() => dashboardTabPayload.value.metrics || {});
 const dashboardTabSeries = computed(() => dashboardTabPayload.value.series || {});
 const dashboardTabPreviews = computed(() => dashboardTabPayload.value.previews || {});
-const leads = computed(() => dashboardTabPreviews.value.leads || leadListResource.data || []);
-const renewalTasks = computed(() => dashboardTabPreviews.value.renewal_tasks || renewalTaskResource.data || []);
+const leads = computed(() => asArray(dashboardTabPreviews.value.leads).length ? asArray(dashboardTabPreviews.value.leads) : asArray(leadListResource.data));
+const renewalTasks = computed(() =>
+  asArray(dashboardTabPreviews.value.renewal_tasks).length
+    ? asArray(dashboardTabPreviews.value.renewal_tasks)
+    : asArray(renewalTaskResource.data)
+);
 const activeRenewalTasks = computed(() =>
   renewalTasks.value.filter((task) => ["Open", "In Progress"].includes(String(task?.status || "")))
 );
-const recentPolicies = computed(() => dashboardTabPreviews.value.policies || policyListResource.data || []);
-const recentOffers = computed(() => dashboardTabPreviews.value.offers || offerListResource.data || []);
-const collectionPayments = computed(() => dashboardTabPreviews.value.payments || paymentPreviewResource.data || []);
+const recentPolicies = computed(() =>
+  asArray(dashboardTabPreviews.value.policies).length
+    ? asArray(dashboardTabPreviews.value.policies)
+    : asArray(policyListResource.data)
+);
+const recentOffers = computed(() =>
+  asArray(dashboardTabPreviews.value.offers).length
+    ? asArray(dashboardTabPreviews.value.offers)
+    : asArray(offerListResource.data)
+);
+const collectionPayments = computed(() =>
+  asArray(dashboardTabPreviews.value.payments).length
+    ? asArray(dashboardTabPreviews.value.payments)
+    : asArray(paymentPreviewResource.data)
+);
 const reconciliationPreviewData = computed(() => reconciliationPreviewResource.data || {});
-const reconciliationPreviewRows = computed(() => dashboardTabPreviews.value.reconciliation_rows || reconciliationPreviewData.value.rows || []);
+const reconciliationPreviewRows = computed(() =>
+  asArray(dashboardTabPreviews.value.reconciliation_rows).length
+    ? asArray(dashboardTabPreviews.value.reconciliation_rows)
+    : asArray(reconciliationPreviewData.value.rows)
+);
 const reconciliationPreviewMetrics = computed(() => ({
   ...(reconciliationPreviewData.value.metrics || {}),
   ...(dashboardTabMetrics.value?.reconciliation_open_count != null
@@ -1294,9 +1318,17 @@ const dashboardComparisonTrendHint = computed(() => {
   if (mode === "custom") return t("trendAgainstCustomPeriod");
   return t("trendAgainstPrevious");
 });
-const commissionTrend = computed(() => dashboardTabSeries.value.commission_trend || dashboardData.value.commission_trend || []);
-const policyStatusRows = computed(() => dashboardData.value.policy_status || []);
-const topCompanies = computed(() => dashboardTabSeries.value.top_companies || dashboardData.value.top_companies || []);
+const commissionTrend = computed(() =>
+  asArray(dashboardTabSeries.value.commission_trend).length
+    ? asArray(dashboardTabSeries.value.commission_trend)
+    : asArray(dashboardData.value.commission_trend)
+);
+const policyStatusRows = computed(() => asArray(dashboardData.value.policy_status));
+const topCompanies = computed(() =>
+  asArray(dashboardTabSeries.value.top_companies).length
+    ? asArray(dashboardTabSeries.value.top_companies)
+    : asArray(dashboardData.value.top_companies)
+);
 const dashboardLoadingRaw = computed(
   () => Boolean((isDailyTab.value ? kpiResource.loading : false) || dashboardTabPayloadResource.loading)
 );
@@ -1327,7 +1359,7 @@ const readyOfferCount = computed(() => {
   }
   return recentOffers.value.filter((offer) => ["Sent", "Accepted"].includes(offer.status) && !offer.converted_policy).length;
 });
-const activeDashboardTab = computed(() => normalizeDashboardTab(route.query?.tab || dashboardStore.state.activeTab));
+const activeDashboardTab = computed(() => normalizeDashboardTab(route.query?.tab));
 const isDailyTab = computed(() => activeDashboardTab.value === "daily");
 const isSalesTab = computed(() => activeDashboardTab.value === "sales");
 const isCollectionsTab = computed(() => activeDashboardTab.value === "collections");

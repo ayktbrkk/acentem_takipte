@@ -34,10 +34,34 @@
           {{ localeLabel }}
         </button>
 
-        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-right">
-          <p class="text-[11px] text-slate-500">{{ t("user") }}</p>
-          <p class="max-w-[180px] truncate text-xs font-semibold text-slate-800">{{ displayUser }}</p>
-          <p v-if="showUserId" class="max-w-[180px] truncate text-[11px] text-slate-500">{{ displayUserId }}</p>
+        <div ref="accountMenuRef" class="relative">
+          <button
+            class="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-lg font-medium text-emerald-700 transition hover:bg-emerald-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+            type="button"
+            :aria-expanded="accountMenuOpen ? 'true' : 'false'"
+            aria-haspopup="menu"
+            :aria-label="displayUser"
+            @click="toggleAccountMenu"
+          >
+            {{ userInitials }}
+          </button>
+
+          <div
+            v-if="accountMenuOpen"
+            class="absolute right-0 top-[calc(100%+0.75rem)] z-40 min-w-[12rem] overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-lg shadow-slate-900/10"
+            role="menu"
+          >
+            <button
+              v-for="item in accountMenuItems"
+              :key="item.key"
+              class="block w-full px-4 py-2.5 text-left text-base text-slate-800 transition hover:bg-slate-50"
+              type="button"
+              role="menuitem"
+              @click="runAccountAction(item.action)"
+            >
+              {{ item.label }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -45,7 +69,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { createResource } from "frappe-ui";
 
@@ -58,6 +82,8 @@ defineEmits(["toggle-sidebar"]);
 const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
+const accountMenuOpen = ref(false);
+const accountMenuRef = ref(null);
 
 const copy = {
   tr: {
@@ -67,6 +93,9 @@ const copy = {
     defaultSection: "Acentem Takipte",
     scope: "Kapsam",
     allBranches: "Tum Subeler",
+    account: "Hesabim",
+    logout: "Cikis",
+    desk: "Uygulamaya Git",
   },
   en: {
     menu: "Menu",
@@ -75,6 +104,9 @@ const copy = {
     defaultSection: "Acentem Takipte",
     scope: "Scope",
     allBranches: "All Branches",
+    account: "My Account",
+    logout: "Logout",
+    desk: "Go to Desk",
   },
 };
 
@@ -99,7 +131,25 @@ const sectionLabel = computed(() => {
 const localeLabel = computed(() => (authStore.locale === "tr" ? "TR" : "EN"));
 const displayUser = computed(() => authStore.user || authStore.userId || t("user"));
 const displayUserId = computed(() => authStore.userId || "");
-const showUserId = computed(() => Boolean(displayUserId.value && displayUserId.value !== displayUser.value));
+const userInitials = computed(() => {
+  const source = String(displayUser.value || displayUserId.value || t("user")).trim();
+  if (!source) return "A";
+
+  const parts = source
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return source[0].toUpperCase();
+});
+const accountMenuItems = computed(() => [
+  { key: "account", label: t("account"), action: "account" },
+  { key: "logout", label: t("logout"), action: "logout" },
+  { key: "desk", label: t("desk"), action: "desk" },
+]);
 const branchScopeLabel = computed(() => {
   if (branchStore.canAccessAll && !branchStore.requestBranch) {
     return t("allBranches");
@@ -133,6 +183,41 @@ async function persistLocaleViaFetch(locale) {
   return payload?.message || null;
 }
 
+function toggleAccountMenu() {
+  accountMenuOpen.value = !accountMenuOpen.value;
+}
+
+function closeAccountMenu() {
+  accountMenuOpen.value = false;
+}
+
+function runAccountAction(action) {
+  closeAccountMenu();
+  if (action === "account") {
+    window.location.assign("/me");
+    return;
+  }
+  if (action === "logout") {
+    window.location.assign("/logout");
+    return;
+  }
+  if (action === "desk") {
+    window.location.assign("/desk");
+  }
+}
+
+function handleDocumentClick(event) {
+  if (!accountMenuOpen.value) return;
+  if (accountMenuRef.value?.contains(event.target)) return;
+  closeAccountMenu();
+}
+
+function handleEscape(event) {
+  if (event.key === "Escape") {
+    closeAccountMenu();
+  }
+}
+
 async function toggleLocale() {
   const next = authStore.locale === "tr" ? "en" : "tr";
   authStore.setLocale(next);
@@ -159,5 +244,15 @@ async function toggleLocale() {
   }
   if (payload && typeof payload === "object") authStore.applyContext(payload);
 }
+
+onMounted(() => {
+  document.addEventListener("click", handleDocumentClick);
+  document.addEventListener("keydown", handleEscape);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleDocumentClick);
+  document.removeEventListener("keydown", handleEscape);
+});
 
 </script>

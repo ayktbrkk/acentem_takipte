@@ -22,6 +22,10 @@ const routerReplace = vi.fn(async (target) => {
 const routerPush = vi.fn(async (target) => target);
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({
+    beforeEach: vi.fn(),
+  }),
+  createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
   useRouter: () => ({
     replace: routerReplace,
@@ -218,6 +222,42 @@ describe("Dashboard page store integration", () => {
     expect(routerReplace).toHaveBeenCalled();
     expect(routeState.query.tab).toBe("renewals");
     expect(dashboardStore.state.activeTab).toBe("renewals");
+  });
+
+  it("returns to daily tab when dashboard query tab is cleared", async () => {
+    const wrapper = mount(Dashboard, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionToolbarGroup: genericStub,
+          FilterChipButton: FilterChipButtonStub,
+          ActionButton: ActionButtonStub,
+          ProgressMetricRow: true,
+          TrendMetricRow: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          SectionCardHeader: genericStub,
+          DashboardStatCard: true,
+          StatusBadge: true,
+          ActionPreviewCard: genericStub,
+        },
+      },
+    });
+
+    const dashboardStore = useDashboardStore();
+
+    await wrapper.findAll(".at-tab-chip")[3].trigger("click");
+    await nextTick();
+
+    expect(routeState.query.tab).toBe("renewals");
+    expect(dashboardStore.state.activeTab).toBe("renewals");
+
+    await wrapper.findAll(".at-tab-chip")[0].trigger("click");
+    await nextTick();
+
+    expect(routeState.query.tab).toBeUndefined();
+    expect(dashboardStore.state.activeTab).toBe("daily");
   });
 
   it("opens SLA drill-down actions and item routes", async () => {

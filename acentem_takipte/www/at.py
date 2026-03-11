@@ -12,6 +12,7 @@ from acentem_takipte.acentem_takipte.utils.assets import ensure_site_asset_symli
 
 def get_context(context):
     context.no_cache = 1
+    context.full_width = True
     if frappe.session.user == "Guest":
         frappe.local.flags.redirect_location = "/login?redirect-to=/at"
         raise frappe.Redirect

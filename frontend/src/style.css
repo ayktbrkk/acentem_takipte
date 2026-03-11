@@ -34,6 +34,15 @@
 }
 
 @layer components {
+  .dialog-overlay {
+    z-index: 60;
+  }
+
+  .dialog-content {
+    position: relative;
+    z-index: 61;
+  }
+
   .app-shell {
     width: 100%;
     min-height: 100dvh;

@@ -82,7 +82,6 @@ def get_dashboard_kpis(filters=None) -> dict:
         build_policy_where_fn=_build_policy_where,
         dashboard_cards_summary_fn=_dashboard_cards_summary,
         build_lead_where_fn=_build_lead_where,
-        build_lead_filters_fn=_build_lead_filters,
         monthly_commission_trend_fn=_monthly_commission_trend,
     )
 
@@ -140,7 +139,6 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
         allowed_customers=allowed_customers,
         build_offer_where_fn=_build_offer_where,
         build_lead_where_fn=_build_lead_where,
-        build_lead_filters_fn=_build_lead_filters,
         build_policy_where_fn=_build_policy_where,
         build_payment_where_fn=_build_payment_where,
         get_offer_preview_rows_fn=_get_offer_preview_rows,
@@ -1430,16 +1428,156 @@ def _build_offer_where(
     return " and ".join(conditions), values
 
 
-def _get_offer_preview_rows(
-	*,
-	from_date: str | None,
+def _build_offer_filters(
+    *,
+    from_date: str | None,
     to_date: str | None,
     branch: str | None,
     office_branch: str | None,
     allowed_customers: list[str] | None,
+) -> list:
+    filters: list = []
+    if from_date:
+        filters.append(["offer_date", ">=", getdate(from_date)])
+    if to_date:
+        filters.append(["offer_date", "<=", getdate(to_date)])
+    if branch:
+        filters.append(["branch", "=", branch])
+    if office_branch:
+        filters.append(["customer", "in", _get_scoped_customer_names(office_branch=office_branch, allowed_customers=allowed_customers) or ["__none__"]])
+    elif allowed_customers is not None:
+        filters.append(["customer", "in", allowed_customers or ["__none__"]])
+    return filters
+
+
+def _build_policy_filters(
+    *,
+    from_date: str | None,
+    to_date: str | None,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> list:
+    filters: list = []
+    if from_date:
+        filters.append(["issue_date", ">=", getdate(from_date)])
+    if to_date:
+        filters.append(["issue_date", "<=", getdate(to_date)])
+    if branch:
+        filters.append(["branch", "=", branch])
+    if office_branch:
+        filters.append(["office_branch", "=", office_branch])
+    if allowed_customers is not None:
+        filters.append(["customer", "in", allowed_customers or ["__none__"]])
+    return filters
+
+
+def _build_lead_filters(
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> list:
+    filters: list = []
+    if branch:
+        filters.append(["branch", "=", branch])
+    if office_branch:
+        filters.append(["office_branch", "=", office_branch])
+    if allowed_customers is not None:
+        filters.append(["customer", "in", allowed_customers or ["__none__"]])
+    return filters
+
+
+def _build_payment_filters(
+    *,
+    from_date: str | None,
+    to_date: str | None,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> list:
+    filters: list = []
+    if from_date:
+        filters.append(["payment_date", ">=", getdate(from_date)])
+    if to_date:
+        filters.append(["payment_date", "<=", getdate(to_date)])
+    if office_branch:
+        filters.append(["office_branch", "=", office_branch])
+    if branch or allowed_customers is not None:
+        policy_names = _get_scoped_policy_names(
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+        )
+        filters.append(["policy", "in", policy_names or ["__none__"]])
+    return filters
+
+
+def _build_claim_filters(
+    *,
+    from_date: str | None,
+    to_date: str | None,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+    open_only: bool = False,
+) -> list:
+    filters: list = []
+    if from_date:
+        filters.append(["reported_date", ">=", getdate(from_date)])
+    if to_date:
+        filters.append(["reported_date", "<=", getdate(to_date)])
+    if office_branch:
+        filters.append(["office_branch", "=", office_branch])
+    if branch or allowed_customers is not None:
+        policy_names = _get_scoped_policy_names(
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+        )
+        filters.append(["policy", "in", policy_names or ["__none__"]])
+    if open_only:
+        filters.append(["claim_status", "in", ["Open", "Under Review", "Approved"]])
+    return filters
+
+
+def _get_offer_preview_rows(
+	*,
+    where_clause: str | None = None,
+    values: dict | None = None,
+	from_date: str | None = None,
+    to_date: str | None = None,
+    branch: str | None = None,
+    office_branch: str | None = None,
+    allowed_customers: list[str] | None = None,
     limit: int,
     ready_only: bool = False,
 ) -> list[dict]:
+    if where_clause:
+        extra_ready_filter = " and status in ('Sent', 'Accepted')" if ready_only else ""
+        rows = frappe.db.sql(
+            f"""
+            select
+                name,
+                customer,
+                insurance_company,
+                status,
+                currency,
+                valid_until,
+                gross_premium,
+                converted_policy
+            from `tabAT Offer`
+            where {where_clause}{extra_ready_filter}
+            order by modified desc
+            limit %(limit)s
+            """,
+            values={**(values or {}), "limit": max(cint(limit), 1) * (3 if ready_only else 1)},
+            as_dict=True,
+        )
+        if ready_only:
+            rows = [row for row in rows if not row.get("converted_policy")]
+        return rows[: max(cint(limit), 1)]
+
     filters = _build_offer_filters(
         from_date=from_date,
         to_date=to_date,
@@ -1472,13 +1610,37 @@ def _get_offer_preview_rows(
 
 def _get_policy_preview_rows(
     *,
-    from_date: str | None,
-    to_date: str | None,
-    branch: str | None,
-    office_branch: str | None,
-    allowed_customers: list[str] | None,
+    where_clause: str | None = None,
+    values: dict | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    branch: str | None = None,
+    office_branch: str | None = None,
+    allowed_customers: list[str] | None = None,
     limit: int,
 ) -> list[dict]:
+    if where_clause:
+        return frappe.db.sql(
+            f"""
+            select
+                name,
+                policy_no,
+                customer,
+                status,
+                currency,
+                issue_date,
+                gross_premium,
+                commission_amount,
+                commission
+            from `tabAT Policy`
+            where {where_clause}
+            order by modified desc
+            limit %(limit)s
+            """,
+            values={**(values or {}), "limit": max(cint(limit), 1)},
+            as_dict=True,
+        )
+
     return frappe.get_all(
         "AT Policy",
         filters=_build_policy_filters(
@@ -1528,11 +1690,33 @@ def _get_top_companies_rows(*, where_clause: str, values: dict, limit: int = 5) 
 
 def _get_lead_preview_rows(
     *,
-    branch: str | None,
-    office_branch: str | None,
-    allowed_customers: list[str] | None,
+    lead_where: str | None = None,
+    values: dict | None = None,
+    branch: str | None = None,
+    office_branch: str | None = None,
+    allowed_customers: list[str] | None = None,
     limit: int,
 ) -> list[dict]:
+    if lead_where:
+        return frappe.db.sql(
+            f"""
+            select
+                name,
+                first_name,
+                last_name,
+                email,
+                status,
+                estimated_gross_premium,
+                notes
+            from `tabAT Lead`
+            where {lead_where}
+            order by modified desc
+            limit %(limit)s
+            """,
+            values={**(values or {}), "limit": max(cint(limit), 1)},
+            as_dict=True,
+        )
+
     return frappe.get_all(
         "AT Lead",
         filters=_build_lead_filters(
@@ -1556,13 +1740,35 @@ def _get_lead_preview_rows(
 
 def _get_payment_preview_rows(
     *,
-    from_date: str | None,
-    to_date: str | None,
-    branch: str | None,
-    office_branch: str | None,
-    allowed_customers: list[str] | None,
+    where_clause: str | None = None,
+    values: dict | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    branch: str | None = None,
+    office_branch: str | None = None,
+    allowed_customers: list[str] | None = None,
     limit: int,
 ) -> list[dict]:
+    if where_clause:
+        return frappe.db.sql(
+            f"""
+            select
+                name,
+                payment_no,
+                payment_direction,
+                payment_date,
+                amount_try,
+                customer,
+                policy
+            from `tabAT Payment`
+            where {where_clause}
+            order by modified desc
+            limit %(limit)s
+            """,
+            values={**(values or {}), "limit": max(cint(limit), 1)},
+            as_dict=True,
+        )
+
     return frappe.get_all(
         "AT Payment",
         filters=_build_payment_filters(
@@ -1986,6 +2192,34 @@ def _get_scoped_policy_names(
     policy_names = frappe.get_list("AT Policy", filters=filters, pluck="name", limit_page_length=0) if filters else []
     cache[cache_key] = policy_names
     return policy_names
+
+
+def _get_scoped_customer_names(
+    *,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> list[str]:
+    cache = getattr(frappe.local, "at_dashboard_customer_scope_cache", None)
+    if cache is None:
+        cache = {}
+        frappe.local.at_dashboard_customer_scope_cache = cache
+
+    cache_key = (
+        str(office_branch or ""),
+        tuple(allowed_customers or []) if allowed_customers is not None else None,
+    )
+    if cache_key in cache:
+        return cache[cache_key]
+
+    filters = {}
+    if office_branch:
+        filters["office_branch"] = office_branch
+    if allowed_customers is not None:
+        filters["name"] = ["in", allowed_customers or ["__none__"]]
+
+    customer_names = frappe.get_list("AT Customer", filters=filters, pluck="name", limit_page_length=0) if filters else []
+    cache[cache_key] = customer_names
+    return customer_names
 
 
 def _empty_dashboard_payload(meta: dict | None = None) -> dict:
