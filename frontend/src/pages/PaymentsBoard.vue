@@ -20,6 +20,22 @@
           <ActionButton variant="secondary" size="sm" :disabled="paymentsResource.loading" @click="reloadPayments">
             {{ t("refresh") }}
           </ActionButton>
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            :disabled="paymentsResource.loading"
+            @click="downloadPaymentExport('xlsx')"
+          >
+            {{ t("exportXlsx") }}
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            size="sm"
+            :disabled="paymentsResource.loading"
+            @click="downloadPaymentExport('pdf')"
+          >
+            {{ t("exportPdf") }}
+          </ActionButton>
         </div>
       </template>
       <template #filters>
@@ -187,12 +203,15 @@ import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { mutedFact, pushMutedFactIf, subtleFact } from "../utils/factItems";
+import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
     title: "Tahsilatlar",
     subtitle: "Tahsilat ve odeme hareketleri",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     newPayment: "Yeni Odeme/Tahsilat",
     loading: "Yukleniyor...",
     loadErrorTitle: "Tahsilatlar Yuklenemedi",
@@ -247,6 +266,8 @@ const copy = {
     title: "Payments",
     subtitle: "Collection and payout transactions",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     newPayment: "New Payment",
     loading: "Loading...",
     loadErrorTitle: "Failed to Load Payments",
@@ -533,6 +554,44 @@ function reloadPayments() {
       paymentStore.setLoading(false);
       throw error;
     });
+}
+
+function downloadPaymentExport(format) {
+  openTabularExport({
+    permissionDoctypes: ["AT Payment"],
+    exportKey: "payments_board",
+    title: t("title"),
+    columns: [
+      t("payment"),
+      t("direction"),
+      t("amount"),
+      t("date"),
+      t("customer"),
+      t("policy"),
+      t("purpose"),
+      t("installments"),
+      t("overdueInstallments"),
+      t("nextInstallmentDue"),
+    ],
+    rows: payments.value.map((payment) => {
+      const installmentSummary = installmentSummaryByPayment.value.get(payment?.name) || {};
+      const installmentCount = Number(installmentSummary?.total || payment?.installment_count || 0);
+      return {
+        [t("payment")]: payment.payment_no || payment.name || "-",
+        [t("direction")]: payment.payment_direction === "Inbound" ? t("inbound") : payment.payment_direction === "Outbound" ? t("outbound") : "-",
+        [t("amount")]: formatCurrency(payment.amount_try),
+        [t("date")]: payment.payment_date || "-",
+        [t("customer")]: payment.customer || "-",
+        [t("policy")]: payment.policy || "-",
+        [t("purpose")]: payment.payment_purpose || "-",
+        [t("installments")]: installmentCount || "-",
+        [t("overdueInstallments")]: Number(installmentSummary?.overdue || 0) || "-",
+        [t("nextInstallmentDue")]: installmentSummary?.nextDue || "-",
+      };
+    }),
+    filters: currentPaymentPresetPayload(),
+    format,
+  });
 }
 
 function applyPaymentFilters() {

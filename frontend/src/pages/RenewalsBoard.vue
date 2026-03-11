@@ -20,6 +20,22 @@
             <ActionButton variant="secondary" size="sm" :disabled="renewalsResource.loading" @click="reloadRenewals">
               {{ t("refresh") }}
             </ActionButton>
+            <ActionButton
+              variant="secondary"
+              size="sm"
+              :disabled="renewalsResource.loading"
+              @click="downloadRenewalExport('xlsx')"
+            >
+              {{ t("exportXlsx") }}
+            </ActionButton>
+            <ActionButton
+              variant="primary"
+              size="sm"
+              :disabled="renewalsResource.loading"
+              @click="downloadRenewalExport('pdf')"
+            >
+              {{ t("exportPdf") }}
+            </ActionButton>
           </div>
         </template>
         <template #filters>
@@ -194,12 +210,15 @@ import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useRenewalStore } from "../stores/renewal";
+import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
     title: "Yenilemeler",
     subtitle: "Bitise yakin policeler ve takip gorevleri",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     newTask: "Yeni Gorev",
     loading: "Yukleniyor...",
     loadErrorTitle: "Yenilemeler Yuklenemedi",
@@ -210,6 +229,7 @@ const copy = {
     task: "Gorev",
     policy: "Police",
     status: "Durum",
+    competitor: "Rakip",
     due: "Termin",
     renewal: "Yenileme",
     actions: "Aksiyon",
@@ -246,6 +266,8 @@ const copy = {
     title: "Renewals",
     subtitle: "Near-expiry policies and follow-up tasks",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     newTask: "New Task",
     loading: "Loading...",
     loadErrorTitle: "Failed to Load Renewals",
@@ -256,6 +278,7 @@ const copy = {
     task: "Task",
     policy: "Policy",
     status: "Status",
+    competitor: "Competitor",
     due: "Due",
     renewal: "Renewal",
     actions: "Actions",
@@ -443,6 +466,34 @@ const renewalsError = computed(() => {
 function reloadRenewals() {
   renewalsResource.params = buildRenewalListParams();
   return renewalsResource.reload();
+}
+
+function downloadRenewalExport(format) {
+  openTabularExport({
+    permissionDoctypes: ["AT Renewal Task"],
+    exportKey: "renewals_board",
+    title: t("title"),
+    columns: [
+      t("task"),
+      t("policy"),
+      t("status"),
+      lostReasonColumnLabel.value,
+      t("competitor"),
+      t("due"),
+      t("renewal"),
+    ],
+    rows: renewals.value.map((task) => ({
+      [t("task")]: task.name || "-",
+      [t("policy")]: task.policy || "-",
+      [t("status")]: task.status || "-",
+      [lostReasonColumnLabel.value]: formatLostReason(task),
+      [t("competitor")]: task.competitor_name || "-",
+      [t("due")]: formatDate(task.due_date),
+      [t("renewal")]: formatDate(task.renewal_date),
+    })),
+    filters: currentRenewalPresetPayload(),
+    format,
+  });
 }
 
 function canMoveRenewalToStatus(task, nextStatus) {

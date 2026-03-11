@@ -28,6 +28,22 @@
           <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
             {{ t("refresh") }}
           </ActionButton>
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            :disabled="workbenchResource.loading"
+            @click="downloadReconciliationExport('xlsx')"
+          >
+            {{ t("exportXlsx") }}
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            size="sm"
+            :disabled="workbenchResource.loading"
+            @click="downloadReconciliationExport('pdf')"
+          >
+            {{ t("exportPdf") }}
+          </ActionButton>
         </template>
         <template #filters>
           <WorkbenchFilterToolbar
@@ -372,6 +388,7 @@ import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
+import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
@@ -402,6 +419,8 @@ const copy = {
     reconcile: "Mutabakat Calistir",
     reconciling: "Calisiyor...",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     statusOpen: "Acik",
     statusResolved: "Cozuldu",
     statusIgnored: "Yoksayildi",
@@ -446,6 +465,8 @@ const copy = {
     localTry: "Yerel TRY",
     externalTry: "Harici TRY",
     difference: "Fark",
+    accountingEntry: "Muhasebe Kaydi",
+    resolution: "Cozum",
     actions: "Aksiyon",
     resolve: "Coz",
     ignore: "Yoksay",
@@ -510,6 +531,8 @@ const copy = {
     reconcile: "Run Reconciliation",
     reconciling: "Running...",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     statusOpen: "Open",
     statusResolved: "Resolved",
     statusIgnored: "Ignored",
@@ -554,6 +577,8 @@ const copy = {
     localTry: "Local TRY",
     externalTry: "External TRY",
     difference: "Difference",
+    accountingEntry: "Accounting Entry",
+    resolution: "Resolution",
     actions: "Actions",
     resolve: "Resolve",
     ignore: "Ignore",
@@ -754,6 +779,38 @@ function reloadWorkbench() {
       accountingStore.setLoading(false);
       throw error;
     });
+}
+
+function downloadReconciliationExport(format) {
+  openTabularExport({
+    permissionDoctypes: ["AT Reconciliation Item"],
+    exportKey: "reconciliation_workbench",
+    title: t("title"),
+    columns: [
+      t("source"),
+      t("type"),
+      t("status"),
+      t("localTry"),
+      t("externalTry"),
+      t("difference"),
+      t("accountingEntry"),
+      t("resolution"),
+      t("noteLabel"),
+    ],
+    rows: rows.value.map((row) => ({
+      [t("source")]: `${row.source_doctype || "-"} / ${row.source_name || "-"}`,
+      [t("type")]: row.mismatch_type || "-",
+      [t("status")]: row.status || "-",
+      [t("localTry")]: formatMoney(row.local_amount_try || 0),
+      [t("externalTry")]: formatMoney(row.external_amount_try || 0),
+      [t("difference")]: formatMoney(row.difference_try || 0),
+      [t("accountingEntry")]: row.accounting_entry || "-",
+      [t("resolution")]: row.resolution_action || "-",
+      [t("noteLabel")]: row.notes || "-",
+    })),
+    filters: currentWorkbenchPresetPayload(),
+    format,
+  });
 }
 
 function applyWorkbenchFilters() {

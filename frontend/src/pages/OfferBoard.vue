@@ -14,6 +14,12 @@
             <ActionButton variant="secondary" size="sm" @click="refreshOffers">
               {{ t("refresh") }}
             </ActionButton>
+            <ActionButton variant="secondary" size="sm" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">
+              {{ t("exportXlsx") }}
+            </ActionButton>
+            <ActionButton variant="primary" size="sm" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('pdf')">
+              {{ t("exportPdf") }}
+            </ActionButton>
           </div>
         </template>
         <template #filters>
@@ -458,6 +464,7 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
+import { openListExport } from "../utils/listExport";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import {
@@ -501,6 +508,8 @@ const copy = {
     createQuickOfferAndOpen: "Kaydet ve Ac",
     quickCreateValidationFailed: "Lutfen gerekli alanlari kontrol edin.",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     searchPlaceholder: "Teklif / Musteri / Kayit ara",
     allCompanies: "Tum Sigorta Sirketleri",
     allBranches: "Tum Branslar",
@@ -597,6 +606,8 @@ const copy = {
     createQuickOfferAndOpen: "Save & Open",
     quickCreateValidationFailed: "Please check required fields.",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     searchPlaceholder: "Search offer / customer / record",
     allCompanies: "All Insurance Companies",
     allBranches: "All Branches",
@@ -1276,6 +1287,24 @@ function buildOfferListParams() {
     limit_start: (offerListPagination.page - 1) * offerListPagination.pageLength,
     limit_page_length: offerListPagination.pageLength,
   };
+}
+
+function buildOfferExportQuery() {
+  const payload = buildOfferFilterPayload();
+  return {
+    filters: payload.filters,
+    ...(payload.or_filters ? { or_filters: payload.or_filters } : {}),
+    order_by: buildOfferListOrderBy(),
+  };
+}
+
+function downloadOfferExport(format) {
+  openListExport({
+    screen: "offer_list",
+    query: buildOfferExportQuery(),
+    format,
+    limit: 1000,
+  });
 }
 
 function buildOfferListCountParams() {

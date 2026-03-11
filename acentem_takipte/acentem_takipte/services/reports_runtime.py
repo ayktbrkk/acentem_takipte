@@ -7,9 +7,10 @@ from frappe import _
 from frappe.utils import cint
 
 from acentem_takipte.acentem_takipte.services.report_exports import (
-    build_report_filename,
-    render_report_pdf,
-    render_report_xlsx,
+    build_export_filename,
+    build_report_title,
+    render_tabular_pdf,
+    render_tabular_xlsx,
 )
 from acentem_takipte.acentem_takipte.services.report_registry import build_report_payload
 from acentem_takipte.acentem_takipte.services.scheduled_reports import (
@@ -42,25 +43,66 @@ def build_report_download_response(
     export_format: str,
 ) -> dict[str, Any]:
     locale = str(getattr(frappe.local, "lang", "tr") or "tr").split("-")[0]
+    return _build_download_response(
+        export_key=report_key,
+        title=build_report_title(report_key, locale),
+        columns=columns,
+        rows=rows,
+        filters=filters,
+        export_format=export_format,
+        locale=locale,
+    )
+
+
+def build_tabular_download_response(
+    *,
+    export_key: str,
+    title: str | dict[str, str],
+    columns: list[str],
+    rows: list[dict],
+    filters: dict,
+    export_format: str,
+) -> dict[str, Any]:
+    locale = str(getattr(frappe.local, "lang", "tr") or "tr").split("-")[0]
+    resolved_title = title.get(locale) or title.get("en") or export_key if isinstance(title, dict) else str(title or export_key)
+    return _build_download_response(
+        export_key=export_key,
+        title=resolved_title,
+        columns=columns,
+        rows=rows,
+        filters=filters,
+        export_format=export_format,
+        locale=locale,
+    )
+
+
+def _build_download_response(
+    *,
+    export_key: str,
+    title: str,
+    columns: list[str],
+    rows: list[dict],
+    filters: dict,
+    export_format: str,
+    locale: str,
+) -> dict[str, Any]:
     normalized_format = normalize_export_format(export_format)
-    filename = build_report_filename(report_key, normalized_format)
+    filename = build_export_filename(export_key, normalized_format)
 
     if normalized_format == "pdf":
-        content = render_report_pdf(
-            report_key=report_key,
+        content = render_tabular_pdf(
+            title=title,
             columns=columns,
             rows=rows,
             filters=filters,
-            locale=locale,
         )
         content_type = "application/pdf"
     else:
-        content = render_report_xlsx(
-            report_key=report_key,
+        content = render_tabular_xlsx(
+            title=title,
             columns=columns,
             rows=rows,
             filters=filters,
-            locale=locale,
         )
         content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 

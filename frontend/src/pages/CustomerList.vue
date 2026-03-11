@@ -15,6 +15,12 @@
             <ActionButton variant="secondary" size="sm" :disabled="customerListResource.loading" @click="refreshCustomerList">
               {{ t("refresh") }}
             </ActionButton>
+            <ActionButton variant="secondary" size="sm" :disabled="customerListResource.loading" @click="downloadCustomerExport('xlsx')">
+              {{ t("exportXlsx") }}
+            </ActionButton>
+            <ActionButton variant="primary" size="sm" :disabled="customerListResource.loading" @click="downloadCustomerExport('pdf')">
+              {{ t("exportPdf") }}
+            </ActionButton>
           </div>
         </template>
         <template #filters>
@@ -268,6 +274,7 @@ import StatusBadge from "../components/StatusBadge.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
+import { openListExport } from "../utils/listExport";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import {
   extractCustomFilterPresetId,
@@ -290,6 +297,8 @@ const copy = {
     title: "Musteri Yonetimi",
     subtitle: "Musteri workbench: filtre, preset ve 360 erisim",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     searchPlaceholder: "Musteri / TC-VKN / telefon / e-posta ara",
     allConsentStatuses: "Tum Izin Durumlari",
     allGenders: "Tum Cinsiyetler",
@@ -388,6 +397,8 @@ const copy = {
     title: "Customer Workbench",
     subtitle: "Customer workbench with filters, presets and 360 access",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     searchPlaceholder: "Search customer / tax id / phone / email",
     allConsentStatuses: "All Consent Statuses",
     allGenders: "All Genders",
@@ -628,6 +639,23 @@ function buildListParams() {
       has_open_offer: Boolean(filters.has_open_offer),
       sort: filters.sort || "modified desc",
     },
+  });
+}
+
+function buildCustomerExportQuery() {
+  return {
+    filters: {
+      ...(buildListParams().filters || {}),
+    },
+  };
+}
+
+function downloadCustomerExport(format) {
+  openListExport({
+    screen: "customer_list",
+    query: buildCustomerExportQuery(),
+    format,
+    limit: 1000,
   });
 }
 

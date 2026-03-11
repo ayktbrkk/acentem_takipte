@@ -11,6 +11,22 @@
           >
             {{ t("exportCsv") }}
           </ActionButton>
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            :disabled="isLoading"
+            @click="downloadAuxExport('xlsx')"
+          >
+            {{ t("exportXlsx") }}
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            size="sm"
+            :disabled="isLoading"
+            @click="downloadAuxExport('pdf')"
+          >
+            {{ t("exportPdf") }}
+          </ActionButton>
           <QuickCreateLauncher
             v-if="auxQuickCreate && canLaunchAuxQuickCreate"
             variant="primary"
@@ -379,6 +395,7 @@ import ActionButton from "../components/app-shell/ActionButton.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import StatusBadge from "../components/StatusBadge.vue";
+import { openTabularExport } from "../utils/listExport";
 
 const props = defineProps({
   screenKey: { type: String, required: true },
@@ -420,6 +437,8 @@ const copy = {
     info: "Bilgiler",
     actions: "Aksiyon",
     exportCsv: "CSV Disa Aktar",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     totalSnapshots: "Toplam Snapshot",
     highRiskSnapshots: "Yuksek Risk",
     highValueSnapshots: "Yuksek Deger",
@@ -503,6 +522,8 @@ const copy = {
     info: "Info",
     actions: "Actions",
     exportCsv: "Export CSV",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     totalSnapshots: "Total Snapshots",
     highRiskSnapshots: "High Risk",
     highValueSnapshots: "High Value",
@@ -1162,6 +1183,30 @@ function exportSnapshotRows() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+function downloadAuxExport(format) {
+  const exportFields = Array.from(
+    new Set([
+      config.titleField,
+      ...(config.listFields || []),
+    ].filter(Boolean))
+  );
+  const columns = exportFields.map((field) => fieldLabel(field));
+  const exportedRows = rows.value.map((row) =>
+    Object.fromEntries(
+      exportFields.map((field) => [fieldLabel(field), formatField(row?.[field], field)])
+    )
+  );
+  openTabularExport({
+    permissionDoctypes: [config.doctype],
+    exportKey: `aux_${config.key}`,
+    title: label("list"),
+    columns,
+    rows: exportedRows,
+    filters: currentPresetPayload(),
+    format,
+  });
 }
 
 function factItems(row, fields) {

@@ -56,6 +56,22 @@
           <ActionButton variant="secondary" size="sm" @click="reloadSnapshot">
             {{ t("refresh") }}
           </ActionButton>
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            :disabled="snapshotResource.loading"
+            @click="downloadCommunicationExport('xlsx')"
+          >
+            {{ t("exportXlsx") }}
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            size="sm"
+            :disabled="snapshotResource.loading"
+            @click="downloadCommunicationExport('pdf')"
+          >
+            {{ t("exportPdf") }}
+          </ActionButton>
           <ActionButton v-if="canRunDispatchCycle" variant="primary" size="sm" :disabled="dispatching" @click="runDispatchCycle">
             {{ dispatching ? t("dispatching") : t("dispatch") }}
           </ActionButton>
@@ -593,6 +609,7 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import StatusBadge from "../components/StatusBadge.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
+import { openTabularExport } from "../utils/listExport";
 
 const route = useRoute();
 const router = useRouter();
@@ -605,6 +622,8 @@ const copy = {
     title: "Iletisim Merkezi",
     subtitle: "Bildirim kuyrugu, dagitim ve tekrar deneme operasyonlari",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     dispatch: "Dagitimi Calistir",
     dispatching: "Calisiyor...",
     runCampaign: "Kampanyayi Calistir",
@@ -662,9 +681,11 @@ const copy = {
     recipient: "Alici",
     channel: "Kanal",
     status: "Durum",
+    recordType: "Kayit Turu",
     attempts: "Deneme",
     nextRetry: "Sonraki Deneme",
     actions: "Aksiyon",
+    error: "Hata",
     retry: "Tekrar Dene",
     sendNow: "Hemen Gonder",
     openRef: "Kaydi Ac",
@@ -709,6 +730,8 @@ const copy = {
     title: "Communication Center",
     subtitle: "Notification queue, dispatch and retry operations",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     dispatch: "Run Dispatch",
     dispatching: "Running...",
     runCampaign: "Run Campaign",
@@ -766,9 +789,11 @@ const copy = {
     recipient: "Recipient",
     channel: "Channel",
     status: "Status",
+    recordType: "Record Type",
     attempts: "Attempts",
     nextRetry: "Next Retry",
     actions: "Actions",
+    error: "Error",
     retry: "Retry",
     sendNow: "Send Now",
     openRef: "Open Record",
@@ -1173,6 +1198,48 @@ function reloadSnapshot() {
       communicationStore.setLoading(false);
       throw error;
     });
+}
+
+function downloadCommunicationExport(format) {
+  openTabularExport({
+    permissionDoctypes: ["AT Notification Outbox", "AT Notification Draft"],
+    exportKey: "communication_center",
+    title: t("title"),
+    columns: [
+      t("recordType"),
+      t("status"),
+      t("channel"),
+      t("recipient"),
+      t("attempts"),
+      t("nextRetry"),
+      t("referenceContext"),
+      t("error"),
+    ],
+    rows: [
+      ...outboxItems.value.map((row) => ({
+        [t("recordType")]: t("outboxTitle"),
+        [t("status")]: `${t("outboxTitle")} / ${statusLabel(row.status)}`,
+        [t("channel")]: channelLabel(row.channel),
+        [t("recipient")]: row.recipient || "-",
+        [t("attempts")]: `${row.attempt_count || 0}/${row.max_attempts || 0}`,
+        [t("nextRetry")]: row.next_retry_on || "-",
+        [t("referenceContext")]: [referenceTypeLabel(row.reference_doctype), row.reference_name].filter(Boolean).join(" / ") || "-",
+        [t("error")]: row.error_message || "-",
+      })),
+      ...draftItems.value.map((row) => ({
+        [t("recordType")]: t("draftTitle"),
+        [t("status")]: `${t("draftTitle")} / ${statusLabel(row.status)}`,
+        [t("channel")]: channelLabel(row.channel),
+        [t("recipient")]: row.recipient || "-",
+        [t("attempts")]: "-",
+        [t("nextRetry")]: "-",
+        [t("referenceContext")]: [referenceTypeLabel(row.reference_doctype), row.reference_name].filter(Boolean).join(" / ") || "-",
+        [t("error")]: row.error_message || "-",
+      })),
+    ],
+    filters: currentCommunicationPresetPayload(),
+    format,
+  });
 }
 
 function reloadQuickCustomers() {

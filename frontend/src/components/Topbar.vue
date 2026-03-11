@@ -18,14 +18,6 @@
       <div class="flex w-full items-center justify-end gap-2 md:w-auto md:gap-3">
         <OfficeBranchSelect v-if="authStore.officeBranches.length || authStore.canAccessAllOfficeBranches" />
 
-        <div
-          v-if="branchScopeLabel"
-          class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-right"
-        >
-          <p class="text-[11px] text-sky-700">{{ t("scope") }}</p>
-          <p class="max-w-[200px] truncate text-xs font-semibold text-sky-900">{{ branchScopeLabel }}</p>
-        </div>
-
         <button
           class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
           type="button"
@@ -75,13 +67,11 @@ import { createResource } from "frappe-ui";
 
 import OfficeBranchSelect from "./app-shell/OfficeBranchSelect.vue";
 import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
 
 defineEmits(["toggle-sidebar"]);
 
 const route = useRoute();
 const authStore = useAuthStore();
-const branchStore = useBranchStore();
 const accountMenuOpen = ref(false);
 const accountMenuRef = ref(null);
 
@@ -150,18 +140,6 @@ const accountMenuItems = computed(() => [
   { key: "logout", label: t("logout"), action: "logout" },
   { key: "desk", label: t("desk"), action: "desk" },
 ]);
-const branchScopeLabel = computed(() => {
-  if (branchStore.canAccessAll && !branchStore.requestBranch) {
-    return t("allBranches");
-  }
-
-  return (
-    branchStore.activeBranch?.label ||
-    branchStore.options.find((option) => option.value === branchStore.requestBranch)?.label ||
-    branchStore.requestBranch ||
-    ""
-  );
-});
 
 const setLocaleResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.session.set_session_locale",

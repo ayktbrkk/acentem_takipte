@@ -20,11 +20,15 @@ REPORT_TITLES = {
 }
 
 
-def build_report_filename(report_key: str, export_format: str) -> str:
+def build_export_filename(export_key: str, export_format: str) -> str:
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    safe_key = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in str(report_key or "report"))
+    safe_key = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in str(export_key or "report"))
     extension = "pdf" if export_format == "pdf" else "xlsx"
     return f"{safe_key}_{timestamp}.{extension}"
+
+
+def build_report_filename(report_key: str, export_format: str) -> str:
+    return build_export_filename(report_key, export_format)
 
 
 def build_report_title(report_key: str, locale: str = "tr") -> str:
@@ -32,15 +36,13 @@ def build_report_title(report_key: str, locale: str = "tr") -> str:
     return entry.get(locale) or entry.get("en") or str(report_key or "Report")
 
 
-def render_report_pdf(
+def render_tabular_pdf(
     *,
-    report_key: str,
+    title: str,
     columns: list[str],
     rows: list[dict[str, Any]],
     filters: dict[str, Any],
-    locale: str = "tr",
 ) -> bytes:
-    report_title = build_report_title(report_key, locale)
     html = frappe.render_template(
         """
         <html>
@@ -84,7 +86,7 @@ def render_report_pdf(
         </html>
         """,
         {
-            "report_title": report_title,
+            "report_title": title,
             "columns": columns,
             "rows": rows,
             "filters": filters,
@@ -93,7 +95,7 @@ def render_report_pdf(
     return get_pdf(html)
 
 
-def render_report_xlsx(
+def render_report_pdf(
     *,
     report_key: str,
     columns: list[str],
@@ -101,11 +103,25 @@ def render_report_xlsx(
     filters: dict[str, Any],
     locale: str = "tr",
 ) -> bytes:
+    return render_tabular_pdf(
+        title=build_report_title(report_key, locale),
+        columns=columns,
+        rows=rows,
+        filters=filters,
+    )
+
+
+def render_tabular_xlsx(
+    *,
+    title: str,
+    columns: list[str],
+    rows: list[dict[str, Any]],
+    filters: dict[str, Any],
+) -> bytes:
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Report"
 
-    title = build_report_title(report_key, locale)
     sheet["A1"] = title
     sheet["A1"].font = Font(bold=True, size=14)
     sheet["A2"] = f"Filters: {filters}"
@@ -123,3 +139,19 @@ def render_report_xlsx(
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
+
+
+def render_report_xlsx(
+    *,
+    report_key: str,
+    columns: list[str],
+    rows: list[dict[str, Any]],
+    filters: dict[str, Any],
+    locale: str = "tr",
+) -> bytes:
+    return render_tabular_xlsx(
+        title=build_report_title(report_key, locale),
+        columns=columns,
+        rows=rows,
+        filters=filters,
+    )

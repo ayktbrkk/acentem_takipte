@@ -15,6 +15,12 @@
             <ActionButton variant="secondary" size="sm" :disabled="leadListResource.loading" @click="refreshLeadList">
               {{ t("refresh") }}
             </ActionButton>
+            <ActionButton variant="secondary" size="sm" :disabled="leadListResource.loading" @click="downloadLeadExport('xlsx')">
+              {{ t("exportXlsx") }}
+            </ActionButton>
+            <ActionButton variant="primary" size="sm" :disabled="leadListResource.loading" @click="downloadLeadExport('pdf')">
+              {{ t("exportPdf") }}
+            </ActionButton>
           </div>
         </template>
         <template #filters>
@@ -241,6 +247,7 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
+import { openListExport } from "../utils/listExport";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import {
@@ -272,6 +279,8 @@ const copy = {
     title: "Firsat Yonetimi",
     subtitle: "Firsat workbench: filtre, preset ve donusum takibi",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     searchPlaceholder: "Firsat / e-posta / musteri / kayit ara",
     allStatuses: "Tum Durumlar",
     allConversionStates: "Tum Donusum Durumlari",
@@ -363,6 +372,8 @@ const copy = {
     title: "Lead Workbench",
     subtitle: "Lead workbench with filters, presets and conversion tracking",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     searchPlaceholder: "Search lead / email / customer / record",
     allStatuses: "All Statuses",
     allConversionStates: "All Conversion States",
@@ -679,6 +690,23 @@ function buildListParams() {
       insurance_company: filters.insurance_company || "",
       status: filters.status || "",
     },
+  });
+}
+
+function buildLeadExportQuery() {
+  return {
+    filters: {
+      ...(buildListParams().filters || {}),
+    },
+  };
+}
+
+function downloadLeadExport(format) {
+  openListExport({
+    screen: "lead_list",
+    query: buildLeadExportQuery(),
+    format,
+    limit: 1000,
   });
 }
 

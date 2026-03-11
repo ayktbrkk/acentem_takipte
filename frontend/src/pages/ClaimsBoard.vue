@@ -20,6 +20,22 @@
           <ActionButton variant="secondary" size="sm" :disabled="claimsResource.loading" @click="reloadClaims">
             {{ t("refresh") }}
           </ActionButton>
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            :disabled="claimsResource.loading"
+            @click="downloadClaimExport('xlsx')"
+          >
+            {{ t("exportXlsx") }}
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            size="sm"
+            :disabled="claimsResource.loading"
+            @click="downloadClaimExport('pdf')"
+          >
+            {{ t("exportPdf") }}
+          </ActionButton>
         </div>
       </template>
       <template #filters>
@@ -256,12 +272,15 @@ import StatusBadge from "../components/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { subtleFact } from "../utils/factItems";
+import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
     title: "Hasarlar",
     subtitle: "Hasar dosyalari ve odeme durumu",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     newClaim: "Yeni Hasar",
     loading: "Yukleniyor...",
     loadErrorTitle: "Hasarlar Yuklenemedi",
@@ -327,6 +346,8 @@ const copy = {
     title: "Claims",
     subtitle: "Claim files and payment status",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     newClaim: "New Claim",
     loading: "Loading...",
     loadErrorTitle: "Failed to Load Claims",
@@ -591,6 +612,38 @@ function reloadClaims() {
       claimStore.setLoading(false);
       throw error;
     });
+}
+
+function downloadClaimExport(format) {
+  openTabularExport({
+    permissionDoctypes: ["AT Claim"],
+    exportKey: "claims_board",
+    title: t("title"),
+    columns: [
+      t("claim"),
+      t("policy"),
+      t("status"),
+      t("approved"),
+      t("paid"),
+      t("assignedExpert"),
+      t("appealStatus"),
+      t("nextFollowUpOn"),
+      t("rejectionReason"),
+    ],
+    rows: claims.value.map((claim) => ({
+      [t("claim")]: claim.claim_no || claim.name || "-",
+      [t("policy")]: claim.policy || "-",
+      [t("status")]: claim.claim_status || "-",
+      [t("approved")]: claim.approved_amount ?? "-",
+      [t("paid")]: claim.paid_amount ?? "-",
+      [t("assignedExpert")]: claim.assigned_expert || t("noExpert"),
+      [t("appealStatus")]: claim.appeal_status || "-",
+      [t("nextFollowUpOn")]: claim.next_follow_up_on || "-",
+      [t("rejectionReason")]: claim.rejection_reason || "-",
+    })),
+    filters: currentClaimPresetPayload(),
+    format,
+  });
 }
 
 function applyClaimFilters() {

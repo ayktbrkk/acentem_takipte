@@ -15,6 +15,12 @@
             <ActionButton variant="secondary" size="sm" :disabled="policyResource.loading" @click="refreshPolicyList">
               {{ t("refresh") }}
             </ActionButton>
+            <ActionButton variant="secondary" size="sm" :disabled="policyResource.loading" @click="downloadPolicyExport('xlsx')">
+              {{ t("exportXlsx") }}
+            </ActionButton>
+            <ActionButton variant="primary" size="sm" :disabled="policyResource.loading" @click="downloadPolicyExport('pdf')">
+              {{ t("exportPdf") }}
+            </ActionButton>
           </div>
         </template>
         <template #filters>
@@ -250,6 +256,7 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
+import { openListExport } from "../utils/listExport";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import {
@@ -278,6 +285,8 @@ const copy = {
     title: "Police Yonetimi",
     subtitle: "Frappe CRM tarzinda police listesi, filtre, siralama ve sayfalama",
     refresh: "Yenile",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     allCompanies: "Tum Sigorta Sirketleri",
     searchPlaceholder: "Police / Musteri / Kayit ara",
     endDateFilter: "Bitis Tarihi",
@@ -331,6 +340,8 @@ const copy = {
     title: "Policy Workbench",
     subtitle: "Frappe CRM style policy list with filters, sorting and pagination",
     refresh: "Refresh",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
     allCompanies: "All Insurance Companies",
     searchPlaceholder: "Search policy / customer / record",
     endDateFilter: "End Date",
@@ -709,6 +720,24 @@ function buildPolicyParams() {
     order_by: filters.sort,
     limit_start: (pagination.page - 1) * pagination.pageLength,
     limit_page_length: pagination.pageLength,
+  });
+}
+
+function buildPolicyExportQuery() {
+  const payload = buildPolicyFilterPayload();
+  return withOfficeBranchFilter({
+    filters: payload.filters,
+    ...(payload.or_filters ? { or_filters: payload.or_filters } : {}),
+    order_by: filters.sort,
+  });
+}
+
+function downloadPolicyExport(format) {
+  openListExport({
+    screen: "policy_list",
+    query: buildPolicyExportQuery(),
+    format,
+    limit: 1000,
   });
 }
 

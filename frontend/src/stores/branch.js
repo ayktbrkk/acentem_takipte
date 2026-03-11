@@ -18,6 +18,13 @@ export const useBranchStore = defineStore("branch", () => {
     city: item.city || "",
     isDefault: Boolean(item.is_default),
   })));
+  const defaultBranch = computed(() => {
+    const defaultName = sessionState.defaultOfficeBranch || null;
+    if (defaultName) {
+      return items.value.find((item) => item.name === defaultName) || null;
+    }
+    return items.value.find((item) => Boolean(item.is_default)) || items.value[0] || null;
+  });
 
   const activeBranch = computed(() => {
     if (!selected.value) {
@@ -25,6 +32,7 @@ export const useBranchStore = defineStore("branch", () => {
     }
     return items.value.find((item) => item.name === selected.value) || null;
   });
+  const selectedBranch = computed(() => activeBranch.value || defaultBranch.value);
   const requestBranch = computed(() => {
     if (selected.value) {
       return selected.value;
@@ -101,7 +109,9 @@ export const useBranchStore = defineStore("branch", () => {
     error,
     canAccessAll,
     options,
+    defaultBranch,
     activeBranch,
+    selectedBranch,
     requestBranch,
     hydrateFromSession,
     setActiveBranch,
