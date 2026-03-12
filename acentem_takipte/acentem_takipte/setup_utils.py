@@ -340,6 +340,14 @@ def ensure_core_setup():
         frappe.db.commit()
 
 
+def ensure_core_setup_once():
+    cache = frappe.cache()
+    if cache.get_value(CORE_SETUP_CACHE_KEY):
+        return
+    ensure_core_setup()
+    cache.set_value(CORE_SETUP_CACHE_KEY, 1)
+
+
 def ensure_user_default_role(user: str | None = None) -> bool:
     target_user = user or frappe.session.user
     if target_user in {"Guest", "Administrator"}:
