@@ -1241,7 +1241,10 @@ async function downloadReport(format) {
       export_format: format,
       limit: "1000",
     });
-    window.open(`/api/method/${method}?${params.toString()}`, "_blank", "noopener");
+    const popup = window.open(`/api/method/${method}?${params.toString()}`, "_blank", "noopener");
+    if (!popup) {
+      throw new Error("Popup blocked");
+    }
   } catch (err) {
     error.value = String(err?.message || err || t("exportError"));
   } finally {

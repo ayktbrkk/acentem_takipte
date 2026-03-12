@@ -595,6 +595,30 @@
             >
               <template #trailing>
                 <div class="flex items-center gap-2">
+                  <ActionButton
+                    v-if="assignment.status !== 'In Progress'"
+                    variant="secondary"
+                    size="xs"
+                    @click.stop="markAssignmentInProgress(assignment)"
+                  >
+                    {{ t("startAssignment") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="assignment.status !== 'Blocked'"
+                    variant="secondary"
+                    size="xs"
+                    @click.stop="markAssignmentBlocked(assignment)"
+                  >
+                    {{ t("blockAssignment") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="assignment.status !== 'Done'"
+                    variant="secondary"
+                    size="xs"
+                    @click.stop="markAssignmentDone(assignment)"
+                  >
+                    {{ t("closeAssignment") }}
+                  </ActionButton>
                   <ActionButton variant="secondary" size="xs" @click.stop="openEditOwnershipAssignment(assignment)">
                     {{ t("edit") }}
                   </ActionButton>
@@ -967,6 +991,9 @@ const copy = {
     reminderPriority: "Oncelik",
     markDone: "Tamamla",
     cancelReminder: "Iptal Et",
+    startAssignment: "Isleme Al",
+    blockAssignment: "Bloke Et",
+    closeAssignment: "Kapat",
     noInsuredAsset: "Sigortalanan varlik bulunamadi.",
     assetType: "Varlik Turu",
     assetIdentifier: "Varlik Kimligi",
@@ -1119,6 +1146,9 @@ const copy = {
     reminderPriority: "Priority",
     markDone: "Mark Done",
     cancelReminder: "Cancel",
+    startAssignment: "Start",
+    blockAssignment: "Block",
+    closeAssignment: "Close",
     noInsuredAsset: "No insured asset found.",
     assetType: "Asset Type",
     assetIdentifier: "Asset Identifier",
@@ -1586,6 +1616,7 @@ function openCommunicationCenterForCustomer() {
     query: {
       customer: props.name,
       customer_label: String(customer.value.full_name || props.name),
+      return_to: router.currentRoute.value?.fullPath || "",
     },
   });
 }
@@ -1688,12 +1719,36 @@ async function updateReminderStatus(reminder, status) {
   await loadCustomer360();
 }
 
+async function updateOwnershipAssignmentStatus(assignment, status) {
+  if (!assignment?.name) return;
+  await reminderUpdateResource.submit({
+    doctype: "AT Ownership Assignment",
+    name: assignment.name,
+    data: {
+      status,
+    },
+  });
+  await loadCustomer360();
+}
+
 async function markReminderDone(reminder) {
   await updateReminderStatus(reminder, "Done");
 }
 
 async function cancelReminder(reminder) {
   await updateReminderStatus(reminder, "Cancelled");
+}
+
+async function markAssignmentInProgress(assignment) {
+  await updateOwnershipAssignmentStatus(assignment, "In Progress");
+}
+
+async function markAssignmentBlocked(assignment) {
+  await updateOwnershipAssignmentStatus(assignment, "Blocked");
+}
+
+async function markAssignmentDone(assignment) {
+  await updateOwnershipAssignmentStatus(assignment, "Done");
 }
 
 async function ensureCustomer360QuickOptionSources() {

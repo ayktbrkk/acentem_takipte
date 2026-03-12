@@ -38,13 +38,25 @@ vi.mock("../composables/useCustomFilterPresets", () => ({
 }));
 
 const genericStub = {
+  props: ["error"],
   template:
-    `<div><slot /><slot name="actions" /><slot name="filters" /><slot name="default" /><slot name="header" /><slot name="advanced" /><slot name="actionsSuffix" /></div>`,
+    `<div><slot /><slot name="actions" /><slot name="filters" /><slot name="default" /><slot name="header" /><slot name="advanced" /><slot name="actionsSuffix" /><div v-if="error">{{ error }}</div></div>`,
 };
 
 const actionButtonStub = {
   emits: ["click"],
   template: `<button type="button" @click="$emit('click')"><slot /></button>`,
+};
+
+const scheduledManagerStub = {
+  emits: ["run", "save", "remove"],
+  template: `
+    <div>
+      <button type="button" data-testid="scheduled-run" @click="$emit('run')">Run Scheduled</button>
+      <button type="button" data-testid="scheduled-save" @click="$emit('save', { index: '', config: { title: 'Weekly', report_key: 'policy_list' } })">Save Scheduled</button>
+      <button type="button" data-testid="scheduled-remove" @click="$emit('remove', '0')">Remove Scheduled</button>
+    </div>
+  `,
 };
 
 describe("Reports page communication operations report", () => {
@@ -310,5 +322,382 @@ describe("Reports page communication operations report", () => {
         params: expect.objectContaining({ limit: 250 }),
       }),
     );
+  });
+
+  it("syncs report view state from route query for visible columns", async () => {
+    routeState.query = {
+      report: "policy_list",
+      report_cols: "customer,policy",
+    };
+
+    frappeRequestMock.mockResolvedValue({ message: { columns: ["customer", "policy", "office_branch"], rows: [] } });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: true,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await nextTick();
+
+    const headerCells = wrapper.findAll("th");
+    expect(headerCells).toHaveLength(2);
+  });
+
+  it("persists column visibility changes to the route", async () => {
+    frappeRequestMock.mockResolvedValue({ message: { columns: ["customer", "policy", "office_branch"], rows: [] } });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: true,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await nextTick();
+
+    const toggleButtons = wrapper.findAll("button");
+    const policyToggle = toggleButtons.find((node) => node.text().includes("Police"));
+    await policyToggle.trigger("click");
+
+    expect(routerReplace).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        query: expect.objectContaining({
+          report_cols: expect.not.stringContaining("policy"),
+        }),
+      }),
+    );
+  });
+
+  it("runs scheduled reports and updates configs via manager actions", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      interface_mode: "desk",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: true,
+      capabilities: {},
+    });
+
+    frappeRequestMock.mockResolvedValue({ message: { columns: [], rows: [] } });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: true,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: scheduledManagerStub,
+        },
+      },
+    });
+
+    await nextTick();
+
+    await wrapper.find('[data-testid="scheduled-run"]').trigger("click");
+    expect(frappeRequestMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
+        method: "POST",
+        params: expect.objectContaining({ frequency: "daily", limit: 10 }),
+      }),
+    );
+
+    await wrapper.find('[data-testid="scheduled-save"]').trigger("click");
+    expect(frappeRequestMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_scheduled_report_config",
+        method: "POST",
+        params: expect.objectContaining({
+          index: "",
+          config: expect.objectContaining({ report_key: "policy_list" }),
+        }),
+      }),
+    );
+
+    await wrapper.find('[data-testid="scheduled-remove"]').trigger("click");
+    expect(frappeRequestMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.remove_scheduled_report_config",
+        method: "POST",
+        params: expect.objectContaining({ index: "0" }),
+      }),
+    );
+  });
+
+  it("shows error when scheduled reports run fails", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      interface_mode: "desk",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: true,
+      capabilities: {},
+    });
+
+    frappeRequestMock
+      .mockResolvedValueOnce({ message: { columns: [], rows: [] } })
+      .mockResolvedValueOnce({ message: { items: [] } })
+      .mockRejectedValueOnce(new Error("Run failed"));
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: true,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: scheduledManagerStub,
+        },
+      },
+    });
+
+    await nextTick();
+
+    await wrapper.find('[data-testid="scheduled-run"]').trigger("click");
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Zamanlanmis raporlar tetiklenemedi.");
+  });
+
+  it("shows error when scheduled report save/remove fails", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      interface_mode: "desk",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: true,
+      capabilities: {},
+    });
+
+    frappeRequestMock
+      .mockResolvedValueOnce({ message: { columns: [], rows: [] } })
+      .mockResolvedValueOnce({ message: { items: [] } })
+      .mockRejectedValueOnce(new Error("Save failed"))
+      .mockRejectedValueOnce(new Error("Remove failed"));
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: true,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: scheduledManagerStub,
+        },
+      },
+    });
+
+    await nextTick();
+
+    await wrapper.find('[data-testid="scheduled-save"]').trigger("click");
+    await nextTick();
+    expect(wrapper.text()).toContain("Zamanlanmis rapor kaydedilemedi.");
+
+    await wrapper.find('[data-testid="scheduled-remove"]').trigger("click");
+    await nextTick();
+    expect(wrapper.text()).toContain("Zamanlanmis rapor silinemedi.");
+  });
+
+  it("shows error when scheduled reports load fails", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      interface_mode: "desk",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: true,
+      capabilities: {},
+    });
+
+    frappeRequestMock
+      .mockResolvedValueOnce({ message: { columns: [], rows: [] } })
+      .mockRejectedValueOnce(new Error("Load failed"));
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: true,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: scheduledManagerStub,
+        },
+      },
+    });
+
+    await nextTick();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Zamanlanmis raporlar yuklenemedi.");
+  });
+
+  it("shows load error when report fetch fails", async () => {
+    frappeRequestMock.mockRejectedValueOnce(new Error("Fetch failed"));
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: true,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await nextTick();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Rapor Yuklenemedi");
+  });
+
+  it("exports report in pdf format", async () => {
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+    frappeRequestMock.mockResolvedValue({ message: { columns: [], rows: [] } });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: actionButtonStub,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await nextTick();
+
+    const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
+    await pdfButton.trigger("click");
+
+    expect(openSpy).toHaveBeenCalledWith(
+      expect.stringContaining("export_policy_list_report"),
+      "_blank",
+      "noopener",
+    );
+    expect(openSpy.mock.calls[0][0]).toContain("export_format=pdf");
+    expect(openSpy.mock.calls[0][0]).toContain("office_branch");
+
+    openSpy.mockRestore();
+  });
+
+  it("exports report in xlsx format", async () => {
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+    frappeRequestMock.mockResolvedValue({ message: { columns: [], rows: [] } });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: actionButtonStub,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await nextTick();
+
+    const xlsxButton = wrapper.findAll("button").find((node) => node.text().trim() === "Excel");
+    await xlsxButton.trigger("click");
+
+    expect(openSpy).toHaveBeenCalledWith(
+      expect.stringContaining("export_policy_list_report"),
+      "_blank",
+      "noopener",
+    );
+    expect(openSpy.mock.calls[0][0]).toContain("export_format=xlsx");
+
+    openSpy.mockRestore();
+  });
+
+  it("shows export error when window.open fails", async () => {
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => {
+      throw new Error("Blocked");
+    });
+    frappeRequestMock.mockResolvedValue({ message: { columns: [], rows: [] } });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: actionButtonStub,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await nextTick();
+
+    const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
+    await pdfButton.trigger("click");
+
+    expect(wrapper.text()).toContain("Rapor disa aktarma basarisiz oldu.");
+
+    openSpy.mockRestore();
+  });
+
+  it("shows export error when popup is blocked", async () => {
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
+    frappeRequestMock.mockResolvedValue({ message: { columns: [], rows: [] } });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ActionButton: actionButtonStub,
+          DataTableShell: genericStub,
+          PageToolbar: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await nextTick();
+
+    const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
+    await pdfButton.trigger("click");
+
+    expect(wrapper.text()).toContain("Popup blocked");
+
+    openSpy.mockRestore();
   });
 });

@@ -273,6 +273,14 @@
                     {{ rowActionBusyName === row.name ? t("running") : t("requeue") }}
                   </ActionButton>
                   <ActionButton
+                    v-if="canOpenCommunicationContextRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    @click.stop="openCommunicationContextRow(row)"
+                  >
+                    {{ t("openCommunication") }}
+                  </ActionButton>
+                  <ActionButton
                     v-if="canStartTaskRow(row)"
                     variant="secondary"
                     size="xs"
@@ -325,6 +333,33 @@
                     @click.stop="cancelReminderRow(row)"
                   >
                     {{ rowActionBusyName === row.name ? t("running") : t("cancelTaskAction") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canStartOwnershipAssignmentRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="startOwnershipAssignmentRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("startTask") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canBlockOwnershipAssignmentRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="blockOwnershipAssignmentRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("blockTaskAction") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canCompleteOwnershipAssignmentRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="completeOwnershipAssignmentRow(row)"
+                  >
+                    {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
                   </ActionButton>
                   <ActionButton variant="secondary" size="xs" @click.stop="openDetail(row)">{{ t("openDetail") }}</ActionButton>
                   <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="openPanel(row)">{{ t("panel") }}</ActionButton>
@@ -485,6 +520,7 @@ const copy = {
     openDetail: "Detay",
     openDesk: "Yonetim",
     panel: "Panel",
+    openCommunication: "Iletisim Merkezi",
     sendNow: "Hemen Gonder",
     retry: "Tekrar Dene",
     requeue: "Kuyruga Al",
@@ -570,6 +606,7 @@ const copy = {
     openDetail: "Detail",
     openDesk: "Desk",
     panel: "Panel",
+    openCommunication: "Communication Center",
     sendNow: "Send Now",
     retry: "Retry",
     requeue: "Requeue",
@@ -1476,6 +1513,9 @@ function canRequeueOutboxRow(row) {
     ["Queued", "Processing"].includes(String(row.status || ""))
   );
 }
+function canOpenCommunicationContextRow(row) {
+  return ["notification-drafts", "notification-outbox", "reminders", "tasks", "ownership-assignments"].includes(config.key) && row?.name;
+}
 function canStartTaskRow(row) {
   return config.key === "tasks" && row?.name && String(row.status || "") === "Open";
 }
@@ -1494,6 +1534,15 @@ function canCompleteReminderRow(row) {
 function canCancelReminderRow(row) {
   return config.key === "reminders" && row?.name && String(row.status || "") === "Open";
 }
+function canStartOwnershipAssignmentRow(row) {
+  return config.key === "ownership-assignments" && row?.name && String(row.status || "") === "Open";
+}
+function canBlockOwnershipAssignmentRow(row) {
+  return config.key === "ownership-assignments" && row?.name && ["Open", "In Progress"].includes(String(row.status || ""));
+}
+function canCompleteOwnershipAssignmentRow(row) {
+  return config.key === "ownership-assignments" && row?.name && ["Open", "In Progress", "Blocked"].includes(String(row.status || ""));
+}
 async function sendDraftNowRow(row) {
   if (!authStore.can(["actions", "communication", "sendDraftNow"])) return;
   await runRowQuickAction(row?.name, sendDraftNowRowResource, (name) => ({ draft_name: name }));
@@ -1505,6 +1554,18 @@ async function retryOutboxRow(row) {
 async function requeueOutboxRow(row) {
   if (!authStore.can(["actions", "communication", "requeueOutbox"])) return;
   await runRowQuickAction(row?.name, requeueOutboxRowResource, (name) => ({ outbox_name: name }));
+}
+function openCommunicationContextRow(row) {
+  if (!canOpenCommunicationContextRow(row)) return;
+  router.push({
+    name: "communication-center",
+    query: {
+      reference_doctype: config.doctype,
+      reference_name: row.name,
+      reference_label: row.event_key || row.name,
+      return_to: route.fullPath || route.path,
+    },
+  });
 }
 async function startTaskRow(row) {
   await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
@@ -1546,6 +1607,27 @@ async function cancelReminderRow(row) {
     doctype: "AT Reminder",
     name,
     data: { status: "Cancelled" },
+  }));
+}
+async function startOwnershipAssignmentRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Ownership Assignment",
+    name,
+    data: { status: "In Progress" },
+  }));
+}
+async function blockOwnershipAssignmentRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Ownership Assignment",
+    name,
+    data: { status: "Blocked" },
+  }));
+}
+async function completeOwnershipAssignmentRow(row) {
+  await runRowQuickAction(row?.name, taskRowMutationResource, (name) => ({
+    doctype: "AT Ownership Assignment",
+    name,
+    data: { status: "Done" },
   }));
 }
 

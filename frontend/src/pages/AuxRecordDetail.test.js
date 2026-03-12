@@ -7,9 +7,15 @@ import AuxRecordDetail from "./AuxRecordDetail.vue";
 import { useAuthStore } from "../stores/auth";
 
 const routerPush = vi.fn();
+const routeState = { fullPath: "/at/aux-records/notification-drafts/DRF-001", path: "/at/aux-records/notification-drafts/DRF-001" };
 const detailReload = vi.fn();
+const auxUpdateSubmitMock = vi.fn();
+const sendDraftSubmitMock = vi.fn();
+const retryOutboxSubmitMock = vi.fn();
+const requeueOutboxSubmitMock = vi.fn();
 
 vi.mock("vue-router", () => ({
+  useRoute: () => routeState,
   useRouter: () => ({
     push: routerPush,
   }),
@@ -50,6 +56,83 @@ vi.mock("frappe-ui", () => ({
                   owner: "Administrator",
                 },
               }
+            : params?.doctype === "AT Task"
+              ? {
+                  message: {
+                    name: "TASK-001",
+                    task_title: "Poliçe yenileme kontrolu",
+                    task_type: "Renewal",
+                    source_doctype: "AT Policy",
+                    source_name: "POL-001",
+                    customer: "CUST-001",
+                    policy: "POL-001",
+                    office_branch: "IST",
+                    assigned_to: "agent@example.com",
+                    status: "Open",
+                    priority: "High",
+                    due_date: "2026-03-18",
+                    notes: "Yenileme oncesi teklif kontrolu",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Notification Draft"
+              ? {
+                  message: {
+                    name: "DRF-001",
+                    status: "Draft",
+                    channel: "Email",
+                    customer: "CUST-001",
+                    recipient: "customer@example.com",
+                    reference_doctype: "AT Customer",
+                    reference_name: "CUST-001",
+                    template: "TPL-001",
+                    event_key: "reminder_followup",
+                    language: "tr",
+                    subject: "Hatirlatma",
+                    body: "Merhaba",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Notification Outbox"
+              ? {
+                  message: {
+                    name: "OUT-001",
+                    status: "Failed",
+                    channel: "Email",
+                    recipient: "customer@example.com",
+                    provider: "SMTP",
+                    priority: "High",
+                    attempt_count: 2,
+                    max_attempts: 5,
+                    reference_doctype: "AT Customer",
+                    reference_name: "CUST-001",
+                    customer: "CUST-001",
+                    error_message: "SMTP timeout",
+                    response_log: "{\"error\":\"timeout\"}",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Reminder"
+              ? {
+                  message: {
+                    name: "REM-001",
+                    reminder_title: "Evrak hatirlatmasi",
+                    source_doctype: "AT Customer",
+                    source_name: "CUST-001",
+                    customer: "CUST-001",
+                    office_branch: "IST",
+                    assigned_to: "agent@example.com",
+                    status: "Open",
+                    priority: "High",
+                    remind_at: "2026-03-18T09:00:00Z",
+                    notes: "Eksik evrak takibi",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
             : params?.doctype === "AT Access Log"
               ? {
                   message: {
@@ -90,6 +173,62 @@ vi.mock("frappe-ui", () => ({
           return payload;
         }),
         submit: vi.fn(async () => ({})),
+      };
+    }
+
+    if (url.includes("update_quick_aux_record")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: auxUpdateSubmitMock,
+      };
+    }
+
+    if (url.includes("send_draft_now")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: sendDraftSubmitMock,
+      };
+    }
+
+    if (url.includes("retry_outbox_item")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: retryOutboxSubmitMock,
+      };
+    }
+
+    if (url.includes("requeue_outbox_item")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: requeueOutboxSubmitMock,
       };
     }
 
@@ -137,6 +276,14 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
   beforeEach(() => {
     routerPush.mockReset();
     detailReload.mockReset();
+    auxUpdateSubmitMock.mockReset();
+    sendDraftSubmitMock.mockReset();
+    retryOutboxSubmitMock.mockReset();
+    requeueOutboxSubmitMock.mockReset();
+    auxUpdateSubmitMock.mockResolvedValue({ ok: true });
+    sendDraftSubmitMock.mockResolvedValue({ ok: true });
+    retryOutboxSubmitMock.mockResolvedValue({ ok: true });
+    requeueOutboxSubmitMock.mockResolvedValue({ ok: true });
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
@@ -259,6 +406,438 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     expect(wrapper.text()).toContain("Atama Notlari");
     expect(wrapper.text()).toContain("Musteri ile tekrar gorusulecek");
+  });
+
+  it("updates ownership assignment lifecycle from detail header actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "ownership-assignments",
+        name: "ASN-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const buttons = wrapper.findAll(".action-button-stub");
+
+    await buttons.find((node) => node.text().includes("Isleme Al")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "In Progress",
+      },
+    });
+
+    await buttons.find((node) => node.text().includes("Bloke Et")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "Blocked",
+      },
+    });
+
+    await buttons.find((node) => node.text().includes("Kapat")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "Done",
+      },
+    });
+    expect(detailReload).toHaveBeenCalled();
+  });
+
+  it("updates task lifecycle from detail header actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "tasks",
+        name: "TASK-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const buttons = wrapper.findAll(".action-button-stub");
+
+    await buttons.find((node) => node.text().includes("Takibe Al")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Task",
+      name: "TASK-001",
+      data: {
+        status: "In Progress",
+      },
+    });
+
+    await buttons.find((node) => node.text().includes("Bloke Et")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Task",
+      name: "TASK-001",
+      data: {
+        status: "Blocked",
+      },
+    });
+
+    await buttons.find((node) => node.text().includes("Tamamla")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Task",
+      name: "TASK-001",
+      data: {
+        status: "Done",
+      },
+    });
+
+    await buttons.find((node) => node.text().includes("Iptal Et")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Task",
+      name: "TASK-001",
+      data: {
+        status: "Cancelled",
+      },
+    });
+  });
+
+  it("updates reminder lifecycle from detail header actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "reminders",
+        name: "REM-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const buttons = wrapper.findAll(".action-button-stub");
+
+    await buttons.find((node) => node.text().includes("Tamamla")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: {
+        status: "Done",
+      },
+    });
+
+    await buttons.find((node) => node.text().includes("Iptal Et")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: {
+        status: "Cancelled",
+      },
+    });
+  });
+
+  it("retries outbox lifecycle from detail header actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "notification-outbox",
+        name: "OUT-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const retryButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Tekrar Dene"));
+    await retryButton.trigger("click");
+
+    expect(retryOutboxSubmitMock).toHaveBeenCalledWith({
+      outbox_name: "OUT-001",
+    });
+    expect(detailReload).toHaveBeenCalled();
+  });
+
+  it("sends draft lifecycle from detail header actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "notification-drafts",
+        name: "DRF-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const sendButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Hemen Gonder"));
+    await sendButton.trigger("click");
+
+    expect(sendDraftSubmitMock).toHaveBeenCalledWith({
+      draft_name: "DRF-001",
+    });
+    expect(detailReload).toHaveBeenCalled();
+  });
+
+  it("opens communication center from notification draft detail header", async () => {
+    routeState.fullPath = "/at/aux-records/notification-drafts/DRF-001";
+    routeState.path = "/at/aux-records/notification-drafts/DRF-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "notification-drafts",
+        name: "DRF-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    await button.trigger("click");
+
+    expect(routerPush).toHaveBeenCalledWith({
+      name: "communication-center",
+      query: {
+        reference_doctype: "AT Notification Draft",
+        reference_name: "DRF-001",
+        reference_label: "reminder_followup",
+        return_to: "/at/aux-records/notification-drafts/DRF-001",
+      },
+    });
+  });
+
+  it("opens communication center from reminder detail header", async () => {
+    routeState.fullPath = "/at/aux-records/reminders/REM-001";
+    routeState.path = "/at/aux-records/reminders/REM-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "reminders",
+        name: "REM-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    await button.trigger("click");
+
+    expect(routerPush).toHaveBeenCalledWith({
+      name: "communication-center",
+      query: {
+        reference_doctype: "AT Reminder",
+        reference_name: "REM-001",
+        reference_label: "Evrak hatirlatmasi",
+        return_to: "/at/aux-records/reminders/REM-001",
+      },
+    });
+  });
+
+  it("opens communication center from task detail header", async () => {
+    routeState.fullPath = "/at/aux-records/tasks/TASK-001";
+    routeState.path = "/at/aux-records/tasks/TASK-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "tasks",
+        name: "TASK-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    await button.trigger("click");
+
+    expect(routerPush).toHaveBeenCalledWith({
+      name: "communication-center",
+      query: {
+        reference_doctype: "AT Task",
+        reference_name: "TASK-001",
+        reference_label: "PoliÃ§e yenileme kontrolu",
+        return_to: "/at/aux-records/tasks/TASK-001",
+      },
+    });
+  });
+
+  it("opens communication center from ownership assignment detail header", async () => {
+    routeState.fullPath = "/at/aux-records/ownership-assignments/ASN-001";
+    routeState.path = "/at/aux-records/ownership-assignments/ASN-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "ownership-assignments",
+        name: "ASN-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    await button.trigger("click");
+
+    expect(routerPush).toHaveBeenCalledWith({
+      name: "communication-center",
+      query: {
+        reference_doctype: "AT Ownership Assignment",
+        reference_name: "ASN-001",
+        reference_label: "agent@example.com",
+        return_to: "/at/aux-records/ownership-assignments/ASN-001",
+      },
+    });
+  });
+
+  it("requeues outbox lifecycle from detail header actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "notification-outbox",
+        name: "OUT-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          DataTableShell: genericStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const requeueButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Kuyruga Al"));
+    await requeueButton.trigger("click");
+
+    expect(requeueOutboxSubmitMock).toHaveBeenCalledWith({
+      outbox_name: "OUT-001",
+    });
+    expect(detailReload).toHaveBeenCalled();
   });
 
   it("renders readable access log decision blocks", async () => {

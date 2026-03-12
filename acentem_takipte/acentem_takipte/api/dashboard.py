@@ -51,8 +51,27 @@ def _normalize_renewal_status(value: str | None) -> str:
     return status
 
 
+def _assert_dashboard_endpoint_method(action: str) -> None:
+    request = getattr(frappe.local, "request", None)
+    if not request:
+        return
+
+    policy = dashboard_security.DASHBOARD_ENDPOINT_PERMISSION_POLICY.get(action) or {}
+    allowed_methods = [str(method or "").strip().upper() for method in policy.get("http_methods") or [] if method]
+    if not allowed_methods:
+        return
+
+    request_method = str(getattr(request, "method", "") or "").strip().upper()
+    if request_method in allowed_methods:
+        return
+
+    allowed_label = " / ".join(allowed_methods)
+    frappe.throw(_(f"Only {allowed_label} requests are allowed for this action."))
+
+
 @frappe.whitelist()
 def get_dashboard_kpis(filters=None) -> dict:
+    _assert_dashboard_endpoint_method("get_dashboard_kpis")
     payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
     from_date = payload.get("from_date")
     to_date = payload.get("to_date")
@@ -88,6 +107,7 @@ def get_dashboard_kpis(filters=None) -> dict:
 
 @frappe.whitelist()
 def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
+    _assert_dashboard_endpoint_method("get_dashboard_tab_payload")
     payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
     from_date = payload.get("from_date")
     to_date = payload.get("to_date")
@@ -169,6 +189,7 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
 
 @frappe.whitelist()
 def get_customer_list(filters=None, limit: int = 20) -> list[dict]:
+    _assert_dashboard_endpoint_method("get_customer_list")
     payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
     query_filters = {}
     if payload.get("assigned_agent"):
@@ -197,6 +218,7 @@ def get_customer_list(filters=None, limit: int = 20) -> list[dict]:
 
 @frappe.whitelist()
 def get_customer_portfolio_summary_map(customers=None) -> dict[str, dict]:
+    _assert_dashboard_endpoint_method("get_customer_portfolio_summary_map")
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("Authentication required")
@@ -317,6 +339,7 @@ def get_my_reminders_payload(filters=None) -> dict:
 
 @frappe.whitelist()
 def get_customer_workbench_rows(filters=None, page: int = 1, page_length: int = 20) -> dict:
+    _assert_dashboard_endpoint_method("get_customer_workbench_rows")
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("Authentication required")
@@ -410,6 +433,7 @@ def get_customer_workbench_rows(filters=None, page: int = 1, page_length: int = 
 
 @frappe.whitelist()
 def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) -> dict:
+    _assert_dashboard_endpoint_method("get_lead_workbench_rows")
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("Authentication required")
@@ -501,6 +525,7 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
 
 @frappe.whitelist()
 def get_lead_detail_payload(name: str) -> dict:
+    _assert_dashboard_endpoint_method("get_lead_detail_payload")
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("Authentication required")
@@ -532,6 +557,7 @@ def get_lead_detail_payload(name: str) -> dict:
 
 @frappe.whitelist()
 def get_offer_detail_payload(name: str) -> dict:
+    _assert_dashboard_endpoint_method("get_offer_detail_payload")
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("Authentication required")
@@ -563,6 +589,7 @@ def get_offer_detail_payload(name: str) -> dict:
 
 @frappe.whitelist()
 def update_customer_profile(name: str, values=None) -> dict:
+    _assert_dashboard_endpoint_method("update_customer_profile")
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("Authentication required")

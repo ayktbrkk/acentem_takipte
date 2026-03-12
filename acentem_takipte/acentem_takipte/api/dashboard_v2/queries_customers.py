@@ -64,12 +64,12 @@ def count_customer_workbench_rows(*, query_filters: dict, or_filters=None) -> in
     if not or_filters:
         return cint(frappe.db.count("AT Customer", filters=query_filters) or 0)
 
-    # Fallback path for complex OR filters; optimize later with query builder / SQL count.
     count_kwargs = {
         "doctype": "AT Customer",
+        "fields": ["count(name) as total"],
         "filters": query_filters,
         "or_filters": or_filters,
-        "pluck": "name",
-        "limit_page_length": 0,
+        "limit_page_length": 1,
     }
-    return len(frappe.get_list(**count_kwargs))
+    rows = frappe.get_list(**count_kwargs)
+    return cint((rows[0] or {}).get("total") if rows else 0)

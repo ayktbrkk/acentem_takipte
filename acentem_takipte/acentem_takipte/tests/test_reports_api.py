@@ -186,3 +186,233 @@ def test_report_payload_error_is_wrapped_and_logged(monkeypatch):
     assert captured["details"]["report_key"] == "policy_list"
     assert captured["details"]["filters"] == {"status": "Active"}
     assert captured["details"]["limit"] == 20
+
+
+def test_get_scheduled_report_configs_coerces_invalid_summary_shape(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "get_scheduled_report_config_summary", lambda: {"items": ["bad"], "total": -1})
+
+    payload = reports.get_scheduled_report_configs()
+
+    assert payload == {"items": [], "total": 0}
+
+
+def test_save_scheduled_report_config_coerces_blank_index(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_post_request", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    captured = {}
+    monkeypatch.setattr(
+        reports,
+        "save_scheduled_report",
+        lambda index=None, config=None: captured.update({"index": index, "config": config}) or {"ok": True},
+    )
+
+    reports.save_scheduled_report_config(index="", config={"report_key": "policy_list"})
+
+    assert captured["index"] is None
+
+
+def test_remove_scheduled_report_config_coerces_string_index(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_post_request", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    captured = {}
+    monkeypatch.setattr(
+        reports,
+        "remove_scheduled_report",
+        lambda index: captured.update({"index": index}) or {"ok": True},
+    )
+
+    reports.remove_scheduled_report_config(index="2")
+
+    assert captured["index"] == 2
+
+
+def test_get_report_payload_coerces_json_filters_and_positive_limit(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: None)
+    monkeypatch.setattr(reports, "assert_doctype_permission", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "get_report_definition", lambda key: {"permission_doctype": "AT Policy"})
+    captured = {}
+    monkeypatch.setattr(
+        reports,
+        "build_safe_report_payload",
+        lambda report_key, filters=None, limit=0: captured.update(
+            {"report_key": report_key, "filters": filters, "limit": limit}
+        ) or {"report_key": report_key},
+    )
+
+    reports._get_report_payload(" policy_list ", filters='{"office_branch":"Istanbul"}', limit=0)
+
+    assert captured["report_key"] == "policy_list"
+    assert captured["filters"] == {"office_branch": "Istanbul"}
+    assert captured["limit"] == 1
+
+
+def test_respond_with_report_file_coerces_invalid_download_payload(monkeypatch):
+    monkeypatch.setattr(
+        reports,
+        "build_report_download_response",
+        lambda **kwargs: {"filename": " ", "filecontent": None, "content_type": " ", "type": " "},
+    )
+    monkeypatch.setattr(reports.frappe, "response", {})
+
+    reports._respond_with_report_file(
+        report_key="policy_list",
+        columns=[],
+        rows=[],
+        filters={},
+        export_format="xlsx",
+    )
+
+    assert reports.frappe.response["filename"] == "report.xlsx"
+    assert reports.frappe.response["type"] == "download"
+    assert reports.frappe.response["content_type"] == "application/octet-stream"
+    assert reports.frappe.response["filecontent"] == b""
+
+
+def test_get_scheduled_report_configs_normalizes_summary_items(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        reports,
+        "get_scheduled_report_config_summary",
+        lambda: {
+            "items": [
+                {
+                    "index": "2",
+                    "enabled": 1,
+                    "report_key": " policy_list ",
+                    "frequency": " DAILY ",
+                    "format": " XLSX ",
+                    "delivery_channel": " EMAIL ",
+                    "locale": " tr-TR ",
+                    "recipients": " a@example.com, a@example.com, b@example.com ",
+                    "filters": '{"office_branch":"Istanbul"}',
+                    "limit": 0,
+                    "weekday": -1,
+                    "day_of_month": 0,
+                    "is_valid_report_key": 1,
+                    "last_status": " SENT ",
+                    "last_summary": '{"sent":1}',
+                }
+            ],
+            "total": 0,
+        },
+    )
+
+    payload = reports.get_scheduled_report_configs()
+
+    assert payload["total"] == 1
+    item = payload["items"][0]
+    assert item["index"] == 2
+    assert item["enabled"] is True
+    assert item["report_key"] == "policy_list"
+    assert item["frequency"] == "daily"
+    assert item["format"] == "xlsx"
+    assert item["delivery_channel"] == "email"
+    assert item["locale"] == "tr-TR"
+    assert item["recipients"] == ["a@example.com", "b@example.com"]
+    assert item["filters"] == {"office_branch": "Istanbul"}
+    assert item["limit"] == 1
+    assert item["weekday"] == 0
+    assert item["day_of_month"] == 1
+    assert item["last_status"] == "sent"
+    assert item["last_summary"] == {"sent": 1}
+
+
+def test_respond_with_report_file_uses_filename_extension_for_content_type(monkeypatch):
+    monkeypatch.setattr(
+        reports,
+        "build_report_download_response",
+        lambda **kwargs: {"filename": "policy_list.pdf", "filecontent": bytearray(b"pdf"), "content_type": "", "type": ""},
+    )
+    monkeypatch.setattr(reports.frappe, "response", {})
+
+    reports._respond_with_report_file(
+        report_key="policy_list",
+        columns=[],
+        rows=[],
+        filters={},
+        export_format="pdf",
+    )
+
+    assert reports.frappe.response["content_type"] == "application/pdf"
+    assert reports.frappe.response["filecontent"] == b"pdf"
+
+
+def test_respond_with_report_file_encodes_string_filecontent(monkeypatch):
+    monkeypatch.setattr(
+        reports,
+        "build_report_download_response",
+        lambda **kwargs: {"filename": "policy_list.xlsx", "filecontent": "xlsx", "content_type": "", "type": "download"},
+    )
+    monkeypatch.setattr(reports.frappe, "response", {})
+
+    reports._respond_with_report_file(
+        report_key="policy_list",
+        columns=[],
+        rows=[],
+        filters={},
+        export_format="xlsx",
+    )
+
+    assert reports.frappe.response["content_type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    assert reports.frappe.response["filecontent"] == b"xlsx"
+
+
+def test_get_report_payload_coerces_invalid_report_shape(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: None)
+    monkeypatch.setattr(reports, "assert_doctype_permission", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "get_report_definition", lambda key: {"permission_doctype": "AT Policy"})
+    monkeypatch.setattr(reports, "build_safe_report_payload", lambda *args, **kwargs: {"report_key": " ", "columns": "name", "rows": {"bad": 1}, "filters": "status=Open"})
+
+    payload = reports._get_report_payload(" policy_list ", filters='{"office_branch":"Istanbul"}', limit=0)
+
+    assert payload["report_key"] == "policy_list"
+    assert payload["columns"] == []
+    assert payload["rows"] == []
+    assert payload["filters"] == {"office_branch": "Istanbul"}
+
+
+def test_get_report_payload_falls_back_when_safe_builder_returns_non_dict(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: None)
+    monkeypatch.setattr(reports, "assert_doctype_permission", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "get_report_definition", lambda key: {"permission_doctype": "AT Policy"})
+    monkeypatch.setattr(reports, "build_safe_report_payload", lambda *args, **kwargs: None)
+
+    payload = reports._get_report_payload("policy_list", filters={"status": "Open"}, limit=50)
+
+    assert payload == {
+        "report_key": "policy_list",
+        "columns": [],
+        "rows": [],
+        "filters": {"status": "Open"},
+    }
+
+
+def test_save_scheduled_report_config_coerces_response_shape(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_post_request", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        reports,
+        "save_scheduled_report",
+        lambda index=None, config=None: {"index": "2", "config": {"report_key": "policy_list"}},
+    )
+
+    payload = reports.save_scheduled_report_config(index=2, config={"report_key": "policy_list"})
+
+    assert payload == {"ok": True, "index": 2, "config": {"report_key": "policy_list"}}
+
+
+def test_remove_scheduled_report_config_coerces_remaining(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_post_request", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "remove_scheduled_report", lambda index: {"remaining": -5})
+
+    payload = reports.remove_scheduled_report_config(index=2)
+
+    assert payload == {"ok": True, "remaining": 0}

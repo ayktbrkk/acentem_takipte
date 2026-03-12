@@ -4,11 +4,13 @@
 - **Tahmini sure baselini:** 22 hafta
 - **Calisma modeli:** Tek gelistirici, gunde 4-6 saat
 - **Kaynak:** ROADMAP.md v2 + Mart 2026 karar kayitlari
-- **Aktif dalga:** Dalga 1
-- **Aktif faz:** Faz 9 ilk veri katmani
-- **Son tamamlanan faz:** Faz 8
-- **Son tamamlanan is:** segment snapshot export gorunurlugu
-- **Siradaki is:** Faz 9 ilk veri katmani
+- **Aktif dalga:** Dalga 7
+- **Aktif faz:** yok (kapanis)
+- **Son tamamlanan faz:** Faz 372
+- **Son tamamlanan is:** Faz 372 / Issue: Release Final Parity ve Kapanis Notu tamamlandi.
+- **Son kapanış kaydi:** 2026-03-12 - Faz 372 kapanış kanıtları plan/roadmap/backlog/README/dalga-1 ile senkronlandı.
+- **Son ilerleme:** 2026-03-12 - aktif release checklist ve parity turu kapatildi; guncel planda acik aktif madde birakilmadi.
+- **Siradaki is:** yeni issue secimi veya yeni uygulama dalgasi.
 
 ## Faz 3.2.1 Kapanis Ozeti
 
@@ -576,7 +578,7 @@
 
 - 2026-03-10: Faz 15 reminder operasyon kapsami CommunicationCenter context closure ile tamamlandi.
 
-- 2026-03-10: Faz 15 kapatildi. Reminder aux operatorlugu open/high/done/cancelled presetleri ve ozet kartlari ile tamamlandi. Faz 16'ya gecilmedi; kullanici onayi bekleniyor.
+- 2026-03-10: Faz 15 kapatildi. Reminder aux operatorlugu open/high/done/cancelled presetleri ve ozet kartlari ile tamamlandi. Faz 16 devam ediyor; smoke checklist uygulama sinyalleri hazir.
 
 
 - 2026-03-10: Faz 15 test sertlestirme notu: frontend/src/pages/AuxWorkbench.test.js ile reminder aux ozet kartlari ve Done hizli aksiyonu test altina alindi.

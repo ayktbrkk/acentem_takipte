@@ -2,9 +2,131 @@
 
 ## 2026-03-09 Guncel Takip Ozet
 
-- **Aktif dalga:** 1
-- **Aktif faz:** 15 kapanis bekleme
-- **Son tamamlanan faz:** 15
+- **Aktif dalga:** 7
+- **Aktif faz:** yok (kapanis)
+- **Son tamamlanan faz:** 372
+- **Son kapanis kaydi:** 2026-03-11 - Faz 16 kapanış checklist'i tamamlandı; Faz 17 için run_customer_segment_snapshot_job erişim gate ve GET/POST davranış e2e kanıtı eklendi; Faz 17 kapanış kanıtları plan/roadmap/README ile senkronlandı.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 18 dashboard method hardening, aggregate count optimizasyonu ve benchmark guard seti ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 19 benchmark operatorlugu scenario/preset/artifact akisi ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 20 benchmark preset discoverability ve metadata standardi ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 21 benchmark Markdown artefact ozeti ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 22 preset threshold baseline standardi ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 23 benchmark preset katalog genislemesi ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 24 preset discoverability ozetleri ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 25 preset discoverability JSON katalog cikisi ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 26 ownership assignment lifecycle aksiyonlari operator yuzeylerinde hizalanarak kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 27 aux/list-detail operator action parity notification draft/outbox, task, reminder ve ownership assignment yuzeylerinde kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 28 operator yuzeyleri arasi baglamsal gecis parity reminder/task/ownership assignment/draft/outbox kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-11 - Faz 29 operator yuzeylerinde CommunicationCenter return_to geri donus parity tamamlandi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 30 Reports view-state/scheduled/export test kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 31 Reports scheduled/export/load hata fallback test kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 32 rapor branch filtre parity (payment/communication/reconciliation) ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 33 reports runtime fallback test kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 34 export format `xls` alias destegi ve test kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 35 export popup blocked fallback test kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 36 reports runtime download response None-safe kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 37 reports runtime build_safe_report_payload fallback test kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 38 export format alias genisletme ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 39 download response filters None-safe kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 40 export URL filter kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 41 reports runtime locale/filter/cache hardening ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 42 report title parity ve scheduled format normalize hizalamasi ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 43 list export parse ve locale fallback hardening ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 44 list export permission doctype normalize hardening ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 45 / Issue: List Export Permission Contract Hardening ile bos permission doctype export kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 46 / Issue: Report Payload Limit Contract Hardening ile report registry limit normalize akisi sertlestirildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 47 / Issue: Tabular Export Column Inference ile kolon cikarimi eklendi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 48 / Issue: Tabular Export Column Deduplication ile kolon normalize akisi sertlestirildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 49 / Issue: Tabular Export Filter Shape Hardening ile filter shape kontrolu eklendi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 50 / Issue: Screen Export Query Shape Hardening ile doctype query filter shape kontrolu eklendi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 51 / Issue: Tabular Export Row Collection Hardening ile row payload shape kontrolu eklendi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 52-61 issue serisi ile export payload hygiene kontratlari genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 62-71 issue serisi ile reports runtime/report exports payload hygiene kontratlari genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 72-81 issue serisi ile report export render payload hygiene kontratlari genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 82-106 issue serisi ile scheduled report normalize-dispatch hygiene ve export/runtime string coercion kontratlari genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 107-126 issue serisi ile scheduled report locale-status persistence, config key hijyeni ve export/runtime mapping row-title coercion kontratlari genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 127-146 issue serisi ile scheduled report config sanitize/save hijyeni, locale-aware render dispatch ve runtime export/report key trim kontratlari genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 147-166 issue serisi ile reports API payload-summary-download coercion ve scheduled report API parity kontratlari genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 167-186 issue serisi ile reports API summary item normalize ve download payload fallback kontratlari genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 187-206 issue serisi ile export-list-report ortak normalize helper konsolidasyonu genisletildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 207-226 issue serisi ile list export ortak helper gecisi ve sprint plan tarihsel acik kutu temizligi tamamlandi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 227-246 issue serisi ile list export API payload/download guard kontratlari tamamlandi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 247-266 issue serisi ile reports API payload guard ve scheduled mutation parity kontratlari tamamlandi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 267-286 issue serisi ile backlog/roadmap/sprint aktif durum bloglari sadeleştirildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 287-306 issue serisi ile arsiv okuma kurali ortaklastirildi ve aktif odak tek satirli hale getirildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 307-326 issue serisi ile release hardening blogu, checklist ve kabul kriterleri tanimlandi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 327-346 / Issue: Release Hardening Checklist Uygulamasi ile ortak download payload guard'i ve scheduled report fallback kontratlari kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 347-366 / Issue: Release Smoke Checklist Draft ile minimum release kapisi auth/reports/export/scheduled/list export basliklarinda yazili hale getirildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 367-371 issue serisi ile locale/export-format helper parity ve scheduled channel-format normalize kontratlari kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 372 / Issue: Release Final Parity ve Kapanis Notu ile aktif takipte acik madde kalmadi; plan kapanis durumuna cekildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 35 export popup blocked fallback test kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 36 reports runtime download response None-safe kapsami ile kapatildi.
+- **Son kapanis kaydi:** 2026-03-12 - Faz 37 reports runtime build_safe_report_payload fallback test kapsami ile kapatildi.
+- **Yeni ilerleme:** 2026-03-11 - dashboard endpoint method hardening, frontend GET fetch policy, aggregate OR-count optimizasyonu ve benchmark threshold/output guard adımları tamamlandı.
+- **Yeni ilerleme:** 2026-03-11 - Faz 19 ilk dilimi olarak benchmark script'ine senaryo bazli kosum filtresi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 19 icinde benchmark preset JSON dosyalari ve kullanim notu eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 19 benchmark CLI preset destegi (`--preset default`) eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 19 benchmark artefact output standardi (`--artifact-name`) eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 20 icinde benchmark preset kesfi ve JSON rapor meta alanlari eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 21 icinde benchmark Markdown artefact ozeti eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 22 icinde preset threshold baseline ve rapor threshold metadata'si eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 23 icinde benchmark preset katalogu `quick/default/full` olarak genisletildi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 24 icinde preset discoverability summary bilgisi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 25 icinde preset discoverability JSON katalog cikisi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 26 icinde PolicyDetail ownership assignment delete akisi ve sayfa testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 26 icinde PolicyDetail ownership assignment hizli status aksiyonlari ve sayfa testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 26 icinde CustomerDetail ownership assignment hizli status aksiyonlari ve sayfa testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 26 icinde CommunicationCenter assignment context aksiyonlari Start/Block/Close olarak genisletildi ve testleri eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 27 icinde AuxRecordDetail ownership assignment header lifecycle aksiyonlari ve detail testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 27 icinde AuxWorkbench ownership assignment satir lifecycle aksiyonlari ve liste testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 27 icinde AuxRecordDetail task/reminder header lifecycle aksiyonlari ve detail testleri eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 27 icinde AuxRecordDetail notification-outbox retry aksiyonu ve detail testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 27 icinde AuxRecordDetail notification-outbox requeue aksiyonu ve detail testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 27 icinde AuxRecordDetail notification-draft send-now aksiyonu ve detail testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 28 icinde AuxRecordDetail notification draft/outbox icin CommunicationCenter baglam gecisi ve detail testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 28 icinde AuxWorkbench notification draft satirlarina CommunicationCenter baglam gecisi eklendi ve liste kontrati sabitlendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 28 icinde AuxWorkbench notification outbox satirlarina CommunicationCenter baglam gecisi kontrati eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 28 icinde CommunicationCenter baglam gecisi reminder/task/ownership assignment operator yuzeylerine genisletildi; liste/detail kontratlari eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 28 icinde task ve ownership assignment icin CommunicationCenter baglam gecisi liste/detail kontratlari tamamlandi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde CommunicationCenter `return_to` baglamli geri donus aksiyonu ve sayfa testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde AuxWorkbench/AuxRecordDetail CommunicationCenter gecislerine `return_to` parametresi eklendi; test kontratlari guncellendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde CustomerDetail/LeadDetail/OfferDetail CommunicationCenter gecislerine `return_to` parametresi eklendi; CustomerDetail sayfa testi guncellendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde CommunicationCenter toolbar geri donus butonu eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde CommunicationCenter return_to butonu context disinda da test ile sabitlendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde return_to yoksa CommunicationCenter geri donus butonu router back fallback'i ile calisir hale getirildi; test eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde return_to guvenli path kontrolu ve unsafe URL fallback testi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde return_to guvenli path cozumlemesi resolveSameOriginPath ile same-origin URL cozumleme seviyesine tasindi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde ClaimsBoard notification gecisine CommunicationCenter `return_to` parametresi eklendi; sayfa testi ile sabitlendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 29 icinde Dashboard follow-up CommunicationCenter gecisine `return_to` parametresi eklendi.
+- **Yeni ilerleme:** 2026-03-11 - Faz 30 icinde Reports view-state (kolon gorunurlugu) route senkronu ve geri yazimi testleri eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 30 icinde Reports scheduled reports run/save/remove ve export PDF aksiyonlari test kapsami ile genisletildi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 30 icinde Reports export XLSX ve export failure fallback test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 31 icinde Reports scheduled run/save/remove hata fallback test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 31 icinde scheduled reports load failure ve report load error test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 32 icinde payment status raporunda branch bazli policy scope filtresi ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 32 icinde communication operations raporunda branch filtresi ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 32 icinde reconciliation operations raporunda branch filtresi ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 33 icinde reports runtime export format normalize ve scheduled summary error fallback testleri eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 34 icinde export format `xls` alias destegi ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 35 icinde export popup blocked fallback davranisi ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 36 icinde reports runtime download response None-safe ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 37 icinde build_safe_report_payload hata log test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 38 icinde export format `xlsm/excel` alias destegi ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 39 icinde download response filters None-safe kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 40 icinde Reports export URL office_branch filtresi testle dogrulandi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 41 icinde export MIME aliaslari, tam-locale title fallback, nullish filter normalize ve branch-policy request cache eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 42 icinde report title katalog parity'si ve scheduled report format normalizasyonu runtime helper ile tek kaynak haline getirildi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 43 icinde list export query parse hardening ve tam-locale label fallback kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 44 icinde list export permission_doctypes normalize hardening ve duplicate tekillestirme eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 45 / Issue: List Export Permission Contract Hardening icinde bos permission doctype ile tabular export kapatildi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 46 / Issue: Report Payload Limit Contract Hardening icinde report payload limit normalize akisi `cint` ile hizalandi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 47-51 issue serisi ile list export payload shape kontratlari tamamlandi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 52-61 issue serisi ile title, column, filter/query coercion, row payload ve formatter kontratlari sertlestirildi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 62-71 issue serisi ile reports runtime payload coercion, scheduled config parse hardening ve export key/title trim kontratlari sertlestirildi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 72-81 issue serisi ile report export render payload hygiene kontratlari sertlestirildi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 35 icinde export popup blocked fallback davranisi ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 36 icinde reports runtime download response None-safe ve test kapsami eklendi.
+- **Yeni ilerleme:** 2026-03-12 - Faz 37 icinde build_safe_report_payload hata log test kapsami eklendi.
 - **Son tamamlanan backlog temalari:**
   - reminder dashboard/aux/detail/communication kapsami
   - reminder detail hizli aksiyonlari
@@ -12,6 +134,12 @@
   - reminder aux presetleri
   - reminder aux ozet kartlari
 - **Not:** Asagidaki issue kayitlari tarihsel backlog'dur. Guncel yon bilgisi icin bu blok, .plan/README.md ve ROADMAP.md birlikte okunmalidir.
+
+## Arsiv Notu
+
+- Asagidaki issue kartlari tarihsel backlog arsividir.
+- Aktif takip icin sadece bu ust ozet blok kullanilir.
+- Bu bloktaki aktif odak kapandi; yeni issue secimi bekleniyor.
 
 
 ## Genel Ozet
@@ -211,7 +339,7 @@
 **Bagli Dalga:** 1
 **Durum:** Tamamlandi
 
-**Aciklama:** Dalga 7 tamamlandi olarak kapatildi ve aktif calisma odagi yeniden Dalga 1 altindaki `Gorev 1.2`ye tasindi.
+**Aciklama:** Dalga 7'nin kapanis notu ve Faz 16 doğrulama/smoke turu aktif; plan onay akisi buna gore ilerliyor.
 
 **Dosyalar:**
 - `.plan/README.md`

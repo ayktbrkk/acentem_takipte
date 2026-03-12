@@ -8,9 +8,9 @@ Vue SPA tarafinda facade store'dan domain store mimarisine gecis, route/auth/boo
 - Session/auth/branch kontratinin backend tarafinda sabit kalmasi
 
 ## Durum
-- **Durum:** Kismen Basladi
-- **Mevcut odak:** `auth` ve `ui` facade store'lari hazir
-- **Sonraki hamle:** `dashboard`, `reports`, `renewals` sayfalarini facade store kullanir hale getirmek
+- **Durum:** Tamamlandi
+- **Mevcut odak:** `auth` ve `ui` facade store'lari tamamlandi, sonraki fazlara tasindi
+- **Sonraki hamle:** Dalga 4 tamamlanmasi takiben Faz 16 kapanis/smoke turune gecildi.
 
 ## Gorevler
 
@@ -34,5 +34,5 @@ Vue SPA tarafinda facade store'dan domain store mimarisine gecis, route/auth/boo
 **Test:** Sayfa bazli manuel smoke checklist'i
 
 ## Guncel Durum (2026-03-09)
-- Durum: Beklemede
-- Not: Dalga 3 henuz aktif degil. UX/loading/empty-state standardizasyonu daha sonra alinacak.
+- Durum: Tamamlandi
+- Not: Dalga 3 kapsamindaki temel facade migration tamamlandi, sonraki dalga açılımlariyle devam edildi.

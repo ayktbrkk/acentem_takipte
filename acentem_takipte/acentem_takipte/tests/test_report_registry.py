@@ -1,3 +1,4 @@
+from acentem_takipte.acentem_takipte.services import report_registry
 from acentem_takipte.acentem_takipte.services.report_registry import get_report_definition
 
 
@@ -50,3 +51,40 @@ def test_claims_operations_report_definition_includes_claim_workflow_columns():
     assert "rejection_reason" in definition["columns"]
     assert "appeal_status" in definition["columns"]
     assert "sent_outbox_count" in definition["columns"]
+
+
+def test_build_report_payload_normalizes_non_numeric_limit(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(report_registry, "normalize_report_filters", lambda filters=None: {"status": "Active"})
+    monkeypatch.setitem(
+        report_registry.REPORT_DEFINITIONS,
+        "policy_list",
+        {
+            **report_registry.REPORT_DEFINITIONS["policy_list"],
+            "rows_fn": lambda filters, limit: captured.update({"filters": filters, "limit": limit}) or [],
+        },
+    )
+
+    payload = report_registry.build_report_payload("policy_list", filters={"status": "Active"}, limit="abc")
+
+    assert captured["filters"] == {"status": "Active"}
+    assert captured["limit"] == 1
+    assert payload["total"] == 0
+
+
+def test_build_report_payload_keeps_positive_string_limit(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(report_registry, "normalize_report_filters", lambda filters=None: {})
+    monkeypatch.setitem(
+        report_registry.REPORT_DEFINITIONS,
+        "policy_list",
+        {
+            **report_registry.REPORT_DEFINITIONS["policy_list"],
+            "rows_fn": lambda filters, limit: captured.update({"limit": limit}) or [{"name": "POL-001"}],
+        },
+    )
+
+    payload = report_registry.build_report_payload("policy_list", filters={}, limit="25")
+
+    assert captured["limit"] == 25
+    assert payload["total"] == 1

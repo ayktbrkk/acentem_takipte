@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Callable
 
+from frappe.utils import cint
+
 from acentem_takipte.acentem_takipte.services.reporting import (
     get_communication_operations_report_rows,
     get_agent_performance_report_rows,
@@ -210,7 +212,7 @@ def build_report_payload(report_key: str, filters: dict | None = None, limit: in
     definition = get_report_definition(report_key)
     normalized_filters = normalize_report_filters(filters)
     rows_fn: ReportRowsFn = definition["rows_fn"]  # type: ignore[assignment]
-    rows = rows_fn(normalized_filters, limit=max(int(limit or 0), 1))
+    rows = rows_fn(normalized_filters, limit=max(cint(limit), 1))
     return {
         "report_key": report_key,
         "columns": list(definition["columns"]),

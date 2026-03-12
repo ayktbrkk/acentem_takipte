@@ -8,9 +8,9 @@ Yenileme motoru, tahsilat, komisyon, reconciliation ve mali raporlama cekirdegi 
 - Dalga 1 icinde baslayan renewal altyapisinin uzerine kurulum
 
 ## Durum
-- **Durum:** Kismen Basladi
-- **Mevcut odak:** Renewal cekirdegi Dalga 1 icinde alinmis durumda
-- **Sonraki hamle:** Taksit, komisyon ve reconciliation tarafini ayni operasyona baglamak
+- **Durum:** Tamamlandi
+- **Mevcut odak:** Yenileme ve mali omurga tamamlandi, sonraki dalgaye aktarma tamamlandi
+- **Sonraki hamle:** Dalga 6 kapandi; doğrudan Faz 16 kapanis/smoke turune gecildi.
 
 ## Gorevler
 

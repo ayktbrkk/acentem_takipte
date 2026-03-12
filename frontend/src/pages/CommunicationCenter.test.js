@@ -14,6 +14,7 @@ const routeState = reactive({
 
 const routerPush = vi.fn();
 const routerReplace = vi.fn();
+const routerBack = vi.fn();
 const resourceQueue = [];
 
 vi.mock("vue-router", () => ({
@@ -21,6 +22,7 @@ vi.mock("vue-router", () => ({
   useRouter: () => ({
     push: routerPush,
     replace: routerReplace,
+    back: routerBack,
   }),
 }));
 
@@ -79,6 +81,7 @@ describe("CommunicationCenter page store integration", () => {
     routeState.query = {};
     routerPush.mockReset();
     routerReplace.mockReset();
+    routerBack.mockReset();
     resourceQueue.length = 0;
     setActivePinia(createPinia());
 
@@ -585,6 +588,110 @@ describe("CommunicationCenter page store integration", () => {
     expect(snapshotReload).toHaveBeenCalled();
   });
 
+  it("starts assignment context from context action", async () => {
+    const snapshotReload = vi.fn(async () => ({
+      outbox: [],
+      drafts: [],
+      status_breakdown: [],
+    }));
+    const auxSubmit = vi.fn(async () => ({}));
+
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: auxSubmit },
+    );
+
+    routeState.query = {
+      reference_doctype: "AT Ownership Assignment",
+      reference_name: "ASN-001",
+      reference_label: "Atama",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayi Isleme Al"));
+    await button.trigger("click");
+
+    expect(auxSubmit).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "In Progress",
+      },
+    });
+    expect(snapshotReload).toHaveBeenCalled();
+  });
+
+  it("blocks assignment context from context action", async () => {
+    const snapshotReload = vi.fn(async () => ({
+      outbox: [],
+      drafts: [],
+      status_breakdown: [],
+    }));
+    const auxSubmit = vi.fn(async () => ({}));
+
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: auxSubmit },
+    );
+
+    routeState.query = {
+      reference_doctype: "AT Ownership Assignment",
+      reference_name: "ASN-001",
+      reference_label: "Atama",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayi Bloke Et"));
+    await button.trigger("click");
+
+    expect(auxSubmit).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "Blocked",
+      },
+    });
+    expect(snapshotReload).toHaveBeenCalled();
+  });
+
   it("clears call note follow-up from context action", async () => {
     const snapshotReload = vi.fn(async () => ({
       outbox: [],
@@ -739,5 +846,159 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
     expect(snapshotReload).toHaveBeenCalled();
+  });
+
+  it("returns to source context when return_to is provided", async () => {
+    const snapshotReload = vi.fn(async () => ({
+      outbox: [],
+      drafts: [],
+      status_breakdown: [],
+    }));
+
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+    );
+
+    routeState.query = {
+      reference_doctype: "AT Reminder",
+      reference_name: "REM-001",
+      reference_label: "Hatirlatici",
+      return_to: "/at/aux-workbench?screen=reminders",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Kaynaga Don"));
+    await button.trigger("click");
+
+    expect(routerPush).toHaveBeenCalledWith("/at/aux-workbench?screen=reminders");
+  });
+
+  it("shows return button even without context filters", async () => {
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+    );
+
+    routeState.query = {
+      return_to: "/at/customers/CUST-001",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Kaynaga Don"));
+    await button.trigger("click");
+
+    expect(routerPush).toHaveBeenCalledWith("/at/customers/CUST-001");
+  });
+
+  it("falls back to router back when return_to is missing but context filters exist", async () => {
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+    );
+
+    routeState.query = {
+      customer: "CUST-001",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Geri"));
+    await button.trigger("click");
+
+    expect(routerBack).toHaveBeenCalled();
+  });
+
+  it("falls back to router back when return_to is not a safe path", async () => {
+    resourceQueue.push(
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+    );
+
+    routeState.query = {
+      customer: "CUST-001",
+      return_to: "https://example.com",
+    };
+
+    const wrapper = mount(CommunicationCenter, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DataTableCell: genericStub,
+          DataTableShell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          Dialog: DialogStub,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Geri"));
+    await button.trigger("click");
+
+    expect(routerBack).toHaveBeenCalled();
   });
 });

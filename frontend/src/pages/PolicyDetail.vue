@@ -127,7 +127,32 @@
                 <template #trailing>
                   <div class="flex items-center gap-2">
                     <p class="text-xs text-slate-500">{{ assignment.status || '-' }}</p>
+                    <ActionButton
+                      v-if="assignment.status !== 'In Progress'"
+                      variant="secondary"
+                      size="xs"
+                      @click.stop="markAssignmentInProgress(assignment)"
+                    >
+                      {{ t("startAssignment") }}
+                    </ActionButton>
+                    <ActionButton
+                      v-if="assignment.status !== 'Blocked'"
+                      variant="secondary"
+                      size="xs"
+                      @click.stop="markAssignmentBlocked(assignment)"
+                    >
+                      {{ t("blockAssignment") }}
+                    </ActionButton>
+                    <ActionButton
+                      v-if="assignment.status !== 'Done'"
+                      variant="secondary"
+                      size="xs"
+                      @click.stop="markAssignmentDone(assignment)"
+                    >
+                      {{ t("closeAssignment") }}
+                    </ActionButton>
                     <ActionButton variant="secondary" size="xs" @click.stop="openEditOwnershipAssignment(assignment)">{{ t("edit") }}</ActionButton>
+                    <ActionButton variant="secondary" size="xs" @click.stop="deleteOwnershipAssignment(assignment)">{{ t("delete") }}</ActionButton>
                   </div>
                 </template>
                 </MetaListCard>
@@ -415,7 +440,7 @@ const labels = {
     emptyCustomer: "Musteri kaydi yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Musteri 360",
     scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Baslangic", end: "Bitis", remaining: "Kalan Gun",
     net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brut Prim", commissionRate: "Komisyon Orani", gwpTry: "GWP TRY",
-    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydi yok.", remindersTitle: "Hatirlaticilar", emptyReminders: "Hatirlatici kaydi yok.", reminderAt: "Hatirlatma", reminderPriority: "Oncelik", markDone: "Tamamla", cancelReminder: "Iptal Et", installmentNo: "Taksit", paidOn: "Odeme Tarihi", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti", newAssignment: "Yeni Atama", edit: "Duzenle",
+    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydi yok.", remindersTitle: "Hatirlaticilar", emptyReminders: "Hatirlatici kaydi yok.", reminderAt: "Hatirlatma", reminderPriority: "Oncelik", markDone: "Tamamla", cancelReminder: "Iptal Et", installmentNo: "Taksit", paidOn: "Odeme Tarihi", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti", newAssignment: "Yeni Atama", edit: "Duzenle", delete: "Sil", deleteAssignmentConfirm: "Bu atama kaydi silinsin mi?", startAssignment: "Isleme Al", blockAssignment: "Bloke Et", closeAssignment: "Kapat",
     productProfileTitle: "Urun Profili",
     productReadinessTitle: "Urun Hazirlik Durumu",
     company: "Sigorta Sirketi", branch: "Brans", customer: "Musteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
@@ -436,7 +461,7 @@ const labels = {
     emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Customer 360",
     scheduleTitle: "Schedule", issue: "Issue Date", start: "Start Date", end: "End Date", remaining: "Days Remaining",
     net: "Net Premium", tax: "Tax", commission: "Commission", gross: "Gross Premium", commissionRate: "Commission Rate", gwpTry: "GWP TRY",
-    payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", activitiesTitle: "Activities", emptyActivities: "No activities found.", remindersTitle: "Reminders", emptyReminders: "No reminders found.", reminderAt: "Reminder At", reminderPriority: "Priority", markDone: "Mark Done", cancelReminder: "Cancel", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit",
+    payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", activitiesTitle: "Activities", emptyActivities: "No activities found.", remindersTitle: "Reminders", emptyReminders: "No reminders found.", reminderAt: "Reminder At", reminderPriority: "Priority", markDone: "Mark Done", cancelReminder: "Cancel", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit", delete: "Delete", deleteAssignmentConfirm: "Delete this assignment record?", startAssignment: "Start", blockAssignment: "Block", closeAssignment: "Close",
     productProfileTitle: "Product Profile",
     productReadinessTitle: "Product Readiness",
     company: "Insurance Company", branch: "Branch", customer: "Customer", status: "Status", currency: "Currency", fxRate: "FX Rate", fxDate: "FX Date",
@@ -482,6 +507,10 @@ const policyQuickCustomerResource = createResource({ url: "frappe.client.get_lis
 const policyQuickPolicyResource = createResource({ url: "frappe.client.get_list", auto: false });
 const reminderUpdateResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  auto: false,
+});
+const assignmentDeleteResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
   auto: false,
 });
 
@@ -875,6 +904,15 @@ const openEditOwnershipAssignment = (assignment) => {
   editingOwnershipAssignment.value = assignment || null;
   showOwnershipAssignmentEditDialog.value = true;
 };
+async function deleteOwnershipAssignment(assignment) {
+  if (!assignment?.name) return;
+  if (!globalThis.confirm?.(t("deleteAssignmentConfirm"))) return;
+  await assignmentDeleteResource.submit({
+    doctype: "AT Ownership Assignment",
+    name: assignment.name,
+  });
+  await load();
+}
 const endorsementStatusClass = (s) => (s === "Applied" ? "text-emerald-700" : s === "Cancelled" ? "text-rose-700" : "text-slate-700");
 
 function policyStatusLabel(status) {
@@ -958,12 +996,36 @@ async function updateReminderStatus(reminder, status) {
   await load();
 }
 
+async function updateOwnershipAssignmentStatus(assignment, status) {
+  if (!assignment?.name) return;
+  await reminderUpdateResource.submit({
+    doctype: "AT Ownership Assignment",
+    name: assignment.name,
+    data: {
+      status,
+    },
+  });
+  await load();
+}
+
 async function markReminderDone(reminder) {
   await updateReminderStatus(reminder, "Done");
 }
 
 async function cancelReminder(reminder) {
   await updateReminderStatus(reminder, "Cancelled");
+}
+
+async function markAssignmentInProgress(assignment) {
+  await updateOwnershipAssignmentStatus(assignment, "In Progress");
+}
+
+async function markAssignmentBlocked(assignment) {
+  await updateOwnershipAssignmentStatus(assignment, "Blocked");
+}
+
+async function markAssignmentDone(assignment) {
+  await updateOwnershipAssignmentStatus(assignment, "Done");
 }
 
 async function prepareOwnershipAssignmentDialog({ form }) {

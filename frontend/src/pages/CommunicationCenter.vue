@@ -53,6 +53,14 @@
             :label="t('quickMessage')"
             @launch="showQuickMessageDialog = true"
           />
+          <ActionButton
+            v-if="canReturnToContext"
+            variant="secondary"
+            size="sm"
+            @click="returnToContext"
+          >
+            {{ returnToLabel }}
+          </ActionButton>
           <ActionButton variant="secondary" size="sm" @click="reloadSnapshot">
             {{ t("refresh") }}
           </ActionButton>
@@ -166,6 +174,22 @@
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <ActionButton
+            v-if="canStartAssignmentContext"
+            variant="secondary"
+            size="xs"
+            @click="startAssignmentContext"
+          >
+            {{ t("startAssignmentContext") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canBlockAssignmentContext"
+            variant="secondary"
+            size="xs"
+            @click="blockAssignmentContext"
+          >
+            {{ t("blockAssignmentContext") }}
+          </ActionButton>
+          <ActionButton
             v-if="canCloseAssignmentContext"
             variant="secondary"
             size="xs"
@@ -196,6 +220,14 @@
             @click="cancelReminderContext"
           >
             {{ t("cancelReminderContext") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canReturnToContext"
+            variant="link"
+            size="xs"
+            @click="returnToContext"
+          >
+            {{ returnToLabel }}
           </ActionButton>
           <ActionButton variant="link" size="xs" @click="clearContextFilters">{{ t("clearContext") }}</ActionButton>
         </div>
@@ -596,6 +628,7 @@ import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
+import { resolveSameOriginPath } from "../utils/safeNavigation";
 import { useBranchStore } from "../stores/branch";
 import { useCommunicationStore } from "../stores/communication";
 import ActionButton from "../components/app-shell/ActionButton.vue";
@@ -640,6 +673,8 @@ const copy = {
     quickCallNoteSubtitle: "Telefon gorusmesini not olarak kaydet",
     quickReminder: "Hatirlatici",
     quickReminderSubtitle: "Musteri veya kayit icin zaman bazli hatirlatici ekle",
+    startAssignmentContext: "Atamayi Isleme Al",
+    blockAssignmentContext: "Atamayi Bloke Et",
     closeAssignmentContext: "Atamayi Kapat",
     clearCallFollowUpContext: "Arama Takibini Temizle",
     completeReminderContext: "Hatirlaticiyi Tamamla",
@@ -748,6 +783,8 @@ const copy = {
     quickCallNoteSubtitle: "Log a phone conversation as an interaction note",
     quickReminder: "Reminder",
     quickReminderSubtitle: "Create a time-based reminder for the current context",
+    startAssignmentContext: "Start Assignment",
+    blockAssignmentContext: "Block Assignment",
     closeAssignmentContext: "Close Assignment",
     clearCallFollowUpContext: "Clear Call Follow-up",
     completeReminderContext: "Complete Reminder",
@@ -1009,6 +1046,12 @@ const channelStatusContextLabel = computed(() => {
 const hasContextFilters = computed(
   () => Boolean(filters.customer || filters.referenceDoctype || filters.referenceName || filters.channel || filters.status)
 );
+const canStartAssignmentContext = computed(
+  () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
+);
+const canBlockAssignmentContext = computed(
+  () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
+);
 const canCloseAssignmentContext = computed(
   () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
 );
@@ -1077,6 +1120,13 @@ const canCreateQuickMessage = computed(() => authStore.can(["quickCreate", "comm
 const canSendDraftNowAction = computed(() => authStore.can(["actions", "communication", "sendDraftNow"]));
 const canRetryOutboxAction = computed(() => authStore.can(["actions", "communication", "retryOutbox"]));
 const canRunDispatchCycle = computed(() => authStore.can(["actions", "communication", "runDispatchCycle"]));
+const returnToTarget = computed(() => String(route.query.return_to || "").trim());
+const safeReturnTo = computed(() => resolveSameOriginPath(returnToTarget.value) || "");
+const canReturnToContext = computed(() => Boolean(safeReturnTo.value || hasContextFilters.value));
+const returnToLabel = computed(() => {
+  if (safeReturnTo.value) return activeLocale.value === "tr" ? "Kaynaga Don" : "Back to Source";
+  return activeLocale.value === "tr" ? "Geri" : "Back";
+});
 const quickMessageDialogLabels = computed(() => ({
   save: t("saveDraft"),
   saveAndOpen: t("sendImmediately"),
@@ -1306,6 +1356,14 @@ function clearContextFilters() {
   router.replace({ query: nextQuery });
   reloadSnapshot();
 }
+function returnToContext() {
+  if (!canReturnToContext.value) return;
+  if (safeReturnTo.value) {
+    router.push(safeReturnTo.value);
+    return;
+  }
+  router.back();
+}
 
 async function runDispatchCycle() {
   if (!canRunDispatchCycle.value) return;
@@ -1349,7 +1407,8 @@ async function sendDraftNow(draftName) {
   }
 }
 
-async function closeAssignmentContext() {
+async function updateAssignmentContextStatus(status) {
+  if (!String(status || "").trim()) return;
   if (!canCloseAssignmentContext.value) return;
   operationError.value = "";
   try {
@@ -1357,7 +1416,7 @@ async function closeAssignmentContext() {
       doctype: "AT Ownership Assignment",
       name: filters.referenceName,
       data: {
-        status: "Done",
+        status,
       },
     });
     await reloadSnapshot();
@@ -1366,6 +1425,18 @@ async function closeAssignmentContext() {
       ? t("permissionDeniedAction")
       : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
   }
+}
+
+async function startAssignmentContext() {
+  await updateAssignmentContextStatus("In Progress");
+}
+
+async function blockAssignmentContext() {
+  await updateAssignmentContextStatus("Blocked");
+}
+
+async function closeAssignmentContext() {
+  await updateAssignmentContextStatus("Done");
 }
 
 async function clearCallNoteContext() {

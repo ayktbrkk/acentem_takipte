@@ -9,6 +9,8 @@ import { useAuthStore } from "../stores/auth";
 const routerPush = vi.fn();
 const policy360Reload = vi.fn();
 const auxUpdateSubmitMock = vi.fn();
+const auxDeleteSubmitMock = vi.fn();
+const confirmMock = vi.fn();
 
 vi.mock("vue-router", () => ({
   useRouter: () => ({
@@ -175,6 +177,20 @@ vi.mock("frappe-ui", () => ({
       };
     }
 
+    if (url.includes("delete_quick_aux_record")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: auxDeleteSubmitMock,
+      };
+    }
+
     return {
       data,
       loading: ref(false),
@@ -235,7 +251,12 @@ describe("PolicyDetail policy 360 integration", () => {
     routerPush.mockReset();
     policy360Reload.mockReset();
     auxUpdateSubmitMock.mockReset();
+    auxDeleteSubmitMock.mockReset();
+    confirmMock.mockReset();
     auxUpdateSubmitMock.mockResolvedValue({ ok: true });
+    auxDeleteSubmitMock.mockResolvedValue({ ok: true });
+    confirmMock.mockReturnValue(true);
+    vi.stubGlobal("confirm", confirmMock);
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
@@ -512,6 +533,95 @@ describe("PolicyDetail policy 360 integration", () => {
         assigned_to: "agent@example.com",
       })
     );
+  });
+
+  it("deletes assignment rows and refreshes policy 360 payload", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const deleteButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("Sil"));
+    await deleteButton.trigger("click");
+
+    expect(confirmMock).toHaveBeenCalled();
+    expect(auxDeleteSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+    });
+    expect(policy360Reload).toHaveBeenCalledTimes(2);
+  });
+
+  it("updates assignment status from policy detail actions", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: {
+        name: "POL-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const startButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("Isleme Al"));
+    await startButton.trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "In Progress",
+      },
+    });
+
+    const blockButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("Bloke Et"));
+    await blockButton.trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "Blocked",
+      },
+    });
+
+    const closeButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("Kapat"));
+    await closeButton.trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "Done",
+      },
+    });
+    expect(policy360Reload).toHaveBeenCalled();
   });
 
   it("renders recent activities on summary tab", async () => {

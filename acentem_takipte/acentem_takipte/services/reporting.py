@@ -49,6 +49,9 @@ def build_payment_report_filters(filters: dict[str, Any] | None = None) -> dict[
     query_filters: dict[str, Any] = {}
     if normalized.get("office_branch"):
         query_filters["office_branch"] = normalized["office_branch"]
+    if normalized.get("branch"):
+        policy_names = _policy_names_for_branch(normalized["branch"])
+        query_filters["policy"] = ["in", policy_names or ["__none__"]]
     if normalized.get("status"):
         query_filters["status"] = normalized["status"]
     if normalized.get("sales_entity"):
@@ -60,6 +63,24 @@ def build_payment_report_filters(filters: dict[str, Any] | None = None) -> dict[
     elif normalized.get("to_date"):
         query_filters["due_date"] = ["<=", normalized["to_date"]]
     return query_filters
+
+
+def _policy_names_for_branch(branch: str | None) -> list[str]:
+    branch_name = _as_text(branch)
+    if not branch_name:
+        return []
+    cache = getattr(frappe.local, "_at_reporting_policy_cache", None)
+    if cache is None:
+        cache = {}
+        setattr(frappe.local, "_at_reporting_policy_cache", cache)
+    if branch_name not in cache:
+        cache[branch_name] = frappe.get_all(
+            "AT Policy",
+            filters={"branch": branch_name},
+            pluck="name",
+            limit_page_length=0,
+        )
+    return list(cache.get(branch_name) or [])
 
 
 def get_policy_list_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
@@ -475,6 +496,9 @@ def get_communication_operations_report_rows(filters: dict[str, Any] | None = No
     if normalized.get("office_branch"):
         conditions.append("c.office_branch = %(office_branch)s")
         values["office_branch"] = normalized["office_branch"]
+    if normalized.get("branch"):
+        conditions.append("c.branch = %(branch)s")
+        values["branch"] = normalized["branch"]
     if normalized.get("status"):
         conditions.append("c.status = %(status)s")
         values["status"] = normalized["status"]
@@ -541,6 +565,9 @@ def get_reconciliation_operations_report_rows(filters: dict[str, Any] | None = N
     if normalized.get("status"):
         conditions.append("ri.status = %(status)s")
         values["status"] = normalized["status"]
+    if normalized.get("branch"):
+        conditions.append("p.branch = %(branch)s")
+        values["branch"] = normalized["branch"]
     if normalized.get("from_date"):
         conditions.append("ifnull(ri.resolved_on, ri.modified) >= %(from_date)s")
         values["from_date"] = normalized["from_date"]
@@ -567,6 +594,7 @@ def get_reconciliation_operations_report_rows(filters: dict[str, Any] | None = N
             ifnull(ri.needs_reconciliation, 0) as needs_reconciliation
         from `tabAT Reconciliation Item` ri
         left join `tabAT Accounting Entry` ae on ae.name = ri.accounting_entry
+        left join `tabAT Policy` p on p.name = ae.policy
         where {where_clause}
         order by ifnull(ri.resolved_on, ri.modified) desc, ri.modified desc
         limit %(limit)s
@@ -653,6 +681,8 @@ def get_claims_operations_report_rows(filters: dict[str, Any] | None = None, *, 
 
 def _as_text(value: Any) -> str | None:
     text = str(value or "").strip()
+    if text.lower() in {"null", "none"}:
+        return None
     return text or None
 
 

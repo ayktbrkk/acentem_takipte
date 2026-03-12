@@ -920,6 +920,7 @@ function openClaimNotifications(claim) {
   const query = new URLSearchParams({
     reference_doctype: "AT Claim",
     reference_name: claim.name,
+    return_to: route.fullPath || route.path || "",
   });
   window.location.assign(`/at/communication?${query.toString()}`);
 }

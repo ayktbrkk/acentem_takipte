@@ -410,6 +410,66 @@ describe("ClaimsBoard page store integration", () => {
     promptMock.mockRestore();
   });
 
+  it("opens communication center with return_to for claim notifications", async () => {
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { assign: vi.fn(), href: "" };
+    routeState.fullPath = "/at/claims?claim=CLM-001";
+
+    resourceQueue.push(
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => [
+          { name: "CLM-001", claim_no: "H-001", policy: "POL-001", claim_status: "Open", approved_amount: 1000, paid_amount: 0 },
+        ]),
+      },
+      {
+        data: ref(null),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => null),
+        submit: vi.fn(async () => ({})),
+      },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+    );
+
+    const wrapper = mount(ClaimsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          AmountPairSummary: true,
+          DataTableShell: genericStub,
+          DataTableCell: genericStub,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateLauncher: true,
+          QuickCreateManagedDialog: true,
+          TableFactsCell: true,
+          WorkbenchFilterToolbar: genericStub,
+          StatusBadge: true,
+          TableEntityCell: true,
+        },
+      },
+    });
+
+    const notificationsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Bildirimler"));
+    await notificationsButton.trigger("click");
+
+    expect(window.location.assign).toHaveBeenCalledWith(
+      "/at/communication?reference_doctype=AT+Claim&reference_name=CLM-001&return_to=%2Fat%2Fclaims%3Fclaim%3DCLM-001"
+    );
+
+    window.location = originalLocation;
+  });
+
   it("opens filtered files panel for claim documents", async () => {
     const originalLocation = window.location;
     delete window.location;

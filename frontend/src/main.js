@@ -36,8 +36,27 @@ function ensureCsrfToken() {
   return token;
 }
 
+function getMethodName(url) {
+  return String(url || "").replace(/^\/api\/method\//, "");
+}
+
+const DASHBOARD_READ_ONLY_METHODS = new Set([
+  "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
+  "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
+  "acentem_takipte.acentem_takipte.api.dashboard.get_customer_list",
+  "acentem_takipte.acentem_takipte.api.dashboard.get_customer_portfolio_summary_map",
+  "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows",
+  "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows",
+  "acentem_takipte.acentem_takipte.api.dashboard.get_lead_detail_payload",
+  "acentem_takipte.acentem_takipte.api.dashboard.get_offer_detail_payload",
+]);
+
+function isDashboardReadOnlyMethod(url) {
+  return DASHBOARD_READ_ONLY_METHODS.has(getMethodName(url));
+}
+
 function isReadOnlyMethod(url) {
-  const methodName = String(url || "").replace(/^\/api\/method\//, "");
+  const methodName = getMethodName(url);
   return (
     methodName === "frappe.client.get" ||
     methodName === "frappe.client.get_list" ||
@@ -45,11 +64,7 @@ function isReadOnlyMethod(url) {
     methodName === "frappe.client.count" ||
     methodName === "frappe.client.get_count" ||
     methodName === "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state" ||
-    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_customer_portfolio_summary_map" ||
-    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows" ||
-    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows" ||
-    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_lead_detail_payload" ||
-    methodName === "acentem_takipte.acentem_takipte.api.dashboard.get_offer_detail_payload" ||
+    isDashboardReadOnlyMethod(methodName) ||
     methodName === "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot" ||
     methodName === "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report" ||
     methodName === "acentem_takipte.acentem_takipte.api.reports.get_payment_status_report" ||
@@ -74,9 +89,15 @@ function serializeGetParams(params) {
 function appResourceFetcher(options = {}) {
   const csrf = ensureCsrfToken();
   const requestOptions = { ...options };
+  const methodName = getMethodName(requestOptions.url);
+
+  if (isDashboardReadOnlyMethod(methodName)) {
+    requestOptions.method = "GET";
+    requestOptions.params = serializeGetParams(requestOptions.params);
+  }
 
   // Website routes may not expose window.csrf_token; use GET for safe read methods.
-  if (!csrf && isReadOnlyMethod(requestOptions.url)) {
+  if (!csrf && !requestOptions.method && isReadOnlyMethod(methodName)) {
     requestOptions.method = requestOptions.method || "GET";
     requestOptions.params = serializeGetParams(requestOptions.params);
   }

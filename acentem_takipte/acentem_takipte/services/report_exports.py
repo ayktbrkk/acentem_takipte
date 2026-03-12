@@ -9,6 +9,7 @@ from frappe.utils.pdf import get_pdf
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
+from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_columns, coerce_filters, coerce_rows, normalize_title
 
 REPORT_TITLES = {
     "policy_list": {"tr": "Police Listesi Raporu", "en": "Policy List Report"},
@@ -17,13 +18,17 @@ REPORT_TITLES = {
     "claim_loss_ratio": {"tr": "Hasar Prim Orani Raporu", "en": "Claim Loss Ratio Report"},
     "agent_performance": {"tr": "Acente Uretim Karnesi", "en": "Agency Performance Scorecard"},
     "customer_segmentation": {"tr": "Musteri Segmentasyon Raporu", "en": "Customer Segmentation Report"},
+    "communication_operations": {"tr": "Iletisim Operasyonlari Raporu", "en": "Communication Operations Report"},
+    "reconciliation_operations": {"tr": "Mutabakat Operasyonlari Raporu", "en": "Reconciliation Operations Report"},
+    "claims_operations": {"tr": "Hasar Operasyonlari Raporu", "en": "Claims Operations Report"},
 }
 
 
 def build_export_filename(export_key: str, export_format: str) -> str:
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    safe_key = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in str(export_key or "report"))
-    extension = "pdf" if export_format == "pdf" else "xlsx"
+    raw_key = str(export_key or "").strip() or "report"
+    safe_key = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in raw_key) or "report"
+    extension = "pdf" if str(export_format or "").strip().lower() == "pdf" else "xlsx"
     return f"{safe_key}_{timestamp}.{extension}"
 
 
@@ -32,8 +37,11 @@ def build_report_filename(report_key: str, export_format: str) -> str:
 
 
 def build_report_title(report_key: str, locale: str = "tr") -> str:
-    entry = REPORT_TITLES.get(report_key, {})
-    return entry.get(locale) or entry.get("en") or str(report_key or "Report")
+    normalized_key = str(report_key or "").strip()
+    entry = REPORT_TITLES.get(normalized_key, {})
+    normalized_locale = str(locale or "tr").strip() or "tr"
+    base_locale = normalized_locale.split("-")[0]
+    return entry.get(normalized_locale) or entry.get(base_locale) or entry.get("en") or normalized_key or "Report"
 
 
 def render_tabular_pdf(
@@ -43,6 +51,10 @@ def render_tabular_pdf(
     rows: list[dict[str, Any]],
     filters: dict[str, Any],
 ) -> bytes:
+    safe_title = _normalize_title(title)
+    safe_columns = _coerce_columns(columns)
+    safe_rows = _coerce_rows(rows)
+    safe_filters = _coerce_filters(filters)
     html = frappe.render_template(
         """
         <html>
@@ -86,10 +98,10 @@ def render_tabular_pdf(
         </html>
         """,
         {
-            "report_title": title,
-            "columns": columns,
-            "rows": rows,
-            "filters": filters,
+            "report_title": safe_title,
+            "columns": safe_columns,
+            "rows": safe_rows,
+            "filters": safe_filters,
         },
     )
     return get_pdf(html)
@@ -118,22 +130,26 @@ def render_tabular_xlsx(
     rows: list[dict[str, Any]],
     filters: dict[str, Any],
 ) -> bytes:
+    safe_title = _normalize_title(title)
+    safe_columns = _coerce_columns(columns)
+    safe_rows = _coerce_rows(rows)
+    safe_filters = _coerce_filters(filters)
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Report"
 
-    sheet["A1"] = title
+    sheet["A1"] = safe_title
     sheet["A1"].font = Font(bold=True, size=14)
-    sheet["A2"] = f"Filters: {filters}"
-    sheet["A3"] = f"Total rows: {len(rows)}"
+    sheet["A2"] = f"Filters: {safe_filters}"
+    sheet["A3"] = f"Total rows: {len(safe_rows)}"
 
     header_row = 5
-    for index, column in enumerate(columns, start=1):
+    for index, column in enumerate(safe_columns, start=1):
         cell = sheet.cell(row=header_row, column=index, value=column)
         cell.font = Font(bold=True)
 
-    for row_index, row in enumerate(rows, start=header_row + 1):
-        for column_index, column in enumerate(columns, start=1):
+    for row_index, row in enumerate(safe_rows, start=header_row + 1):
+        for column_index, column in enumerate(safe_columns, start=1):
             sheet.cell(row=row_index, column=column_index, value=row.get(column))
 
     buffer = BytesIO()
@@ -155,3 +171,19 @@ def render_report_xlsx(
         rows=rows,
         filters=filters,
     )
+
+
+def _normalize_title(title: Any) -> str:
+    return normalize_title(title, "Report")
+
+
+def _coerce_columns(columns: Any) -> list[str]:
+    return coerce_columns(columns)
+
+
+def _coerce_rows(rows: Any) -> list[dict[str, Any]]:
+    return coerce_rows(rows)
+
+
+def _coerce_filters(filters: Any) -> dict[str, Any]:
+    return coerce_filters(filters)

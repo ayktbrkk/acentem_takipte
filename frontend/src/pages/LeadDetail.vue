@@ -709,6 +709,7 @@ function openCommunicationCenterForLead(item = null) {
   const query = {
     customer: lead.value.customer || "",
     customer_label: leadDisplayTitle.value || lead.value.customer || "",
+    return_to: router.currentRoute.value?.fullPath || "",
   };
   if (item && typeof item === "object") {
     const channel = String(item.channel || "").trim();

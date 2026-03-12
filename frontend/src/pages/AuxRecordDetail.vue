@@ -4,6 +4,110 @@
       <template #actions>
         <DetailActionRow>
           <ActionButton variant="secondary" size="xs" @click="goBack">{{ t("backToList") }}</ActionButton>
+          <ActionButton
+            v-if="canOpenCommunicationContext"
+            variant="secondary"
+            size="xs"
+            @click="openCommunicationContext"
+          >
+            {{ t("openCommunication") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canSendDraftLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="sendDraftLifecycle"
+          >
+            {{ t("sendNow") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canRetryOutboxLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="retryOutboxLifecycle"
+          >
+            {{ t("retry") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canRequeueOutboxLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="requeueOutboxLifecycle"
+          >
+            {{ t("requeue") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canStartTaskLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markTaskLifecycle('In Progress')"
+          >
+            {{ t("startTask") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canBlockTaskLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markTaskLifecycle('Blocked')"
+          >
+            {{ t("blockTaskAction") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canCompleteTaskLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markTaskLifecycle('Done')"
+          >
+            {{ t("completeTaskAction") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canCancelTaskLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markTaskLifecycle('Cancelled')"
+          >
+            {{ t("cancelTaskAction") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canCompleteReminderLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markReminderLifecycle('Done')"
+          >
+            {{ t("completeTaskAction") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canCancelReminderLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markReminderLifecycle('Cancelled')"
+          >
+            {{ t("cancelTaskAction") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canStartAssignmentLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markAssignmentLifecycle('In Progress')"
+          >
+            {{ t("startAssignment") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canBlockAssignmentLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markAssignmentLifecycle('Blocked')"
+          >
+            {{ t("blockAssignment") }}
+          </ActionButton>
+          <ActionButton
+            v-if="canCloseAssignmentLifecycle"
+            variant="secondary"
+            size="xs"
+            @click="markAssignmentLifecycle('Done')"
+          >
+            {{ t("closeAssignment") }}
+          </ActionButton>
           <ActionButton v-if="quickEditConfig && canUseQuickEdit" variant="secondary" size="xs" @click="showQuickEditDialog = true">{{ t("quickEdit") }}</ActionButton>
           <ActionButton v-if="panelConfig" variant="link" size="xs" trailing-icon=">" @click="openPanel">{{ t("panel") }}</ActionButton>
           <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="xs" @click="openDesk">{{ t("openDesk") }}</ActionButton>
@@ -112,7 +216,7 @@
 <script setup>
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
@@ -137,6 +241,7 @@ const props = defineProps({
 });
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
@@ -155,6 +260,14 @@ const copy = {
     panel: "Panel",
     saveChanges: "Degisiklikleri Kaydet",
     cancel: "Vazgec",
+    openCommunication: "Iletisim Merkezi",
+    sendNow: "Hemen Gonder",
+    retry: "Tekrar Dene",
+    requeue: "Kuyruga Al",
+    startTask: "Takibe Al",
+    blockTaskAction: "Bloke Et",
+    completeTaskAction: "Tamamla",
+    cancelTaskAction: "Iptal Et",
     loading: "Kayıt yukleniyor...",
     loadErrorTitle: "Kayıt Yuklenemedi",
     emptyTitle: "Kayıt bulunamadi",
@@ -197,6 +310,9 @@ const copy = {
     assignmentContext: "Atama Baglami",
     assignmentLifecycle: "Atama Yasam Dongusu",
     assignmentNotes: "Atama Notlari",
+    startAssignment: "Isleme Al",
+    blockAssignment: "Bloke Et",
+    closeAssignment: "Kapat",
     auditContext: "Audit Baglami",
     auditDecision: "Karar ve Eylem",
     auditActionSummary: "Eylem Ozeti",
@@ -218,6 +334,14 @@ const copy = {
     panel: "Panel",
     saveChanges: "Save Changes",
     cancel: "Cancel",
+    openCommunication: "Communication Center",
+    sendNow: "Send Now",
+    retry: "Retry",
+    requeue: "Requeue",
+    startTask: "Start",
+    blockTaskAction: "Block",
+    completeTaskAction: "Mark Done",
+    cancelTaskAction: "Cancel",
     loading: "Loading record...",
     loadErrorTitle: "Failed to Load",
     emptyTitle: "Record not found",
@@ -260,6 +384,9 @@ const copy = {
     assignmentContext: "Assignment Context",
     assignmentLifecycle: "Assignment Lifecycle",
     assignmentNotes: "Assignment Notes",
+    startAssignment: "Start",
+    blockAssignment: "Block",
+    closeAssignment: "Close",
     auditContext: "Audit Context",
     auditDecision: "Decision & Action",
     auditActionSummary: "Action Summary",
@@ -349,6 +476,10 @@ const auxQuickAccountingEntryResource = createResource({
     limit_page_length: 500,
   },
 });
+const auxMutationResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  auto: false,
+});
 const campaignDraftsResource = createResource({
   url: "frappe.client.get_list",
   auto: false,
@@ -371,6 +502,18 @@ const campaignOutboxResource = createResource({
     limit_page_length: 20,
   },
 });
+const sendDraftNowResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
+  auto: false,
+});
+const retryOutboxResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
+  auto: false,
+});
+const requeueOutboxResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
+  auto: false,
+});
 
 const quickEditOptionsMap = computed(() => ({
   customers: (auxQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
@@ -385,6 +528,31 @@ const quickEditSuccessHandlers = {
     await reloadDetail();
   },
 };
+const isDraftDetail = computed(() => config.doctype === "AT Notification Draft");
+const isOutboxDetail = computed(() => config.doctype === "AT Notification Outbox");
+const canOpenCommunicationContext = computed(
+  () => (isDraftDetail.value || isOutboxDetail.value || isReminderDetail.value || isTaskDetail.value || isOwnershipAssignmentDetail.value) && Boolean(doc.value?.name)
+);
+const isTaskDetail = computed(() => config.doctype === "AT Task");
+const isReminderDetail = computed(() => config.doctype === "AT Reminder");
+const isOwnershipAssignmentDetail = computed(() => config.doctype === "AT Ownership Assignment");
+const draftLifecycleStatus = computed(() => String(doc.value?.status || "").trim());
+const canSendDraftLifecycle = computed(() => isDraftDetail.value && Boolean(doc.value?.name) && draftLifecycleStatus.value !== "Sent");
+const outboxLifecycleStatus = computed(() => String(doc.value?.status || "").trim());
+const canRetryOutboxLifecycle = computed(() => isOutboxDetail.value && Boolean(doc.value?.name) && ["Failed", "Dead"].includes(outboxLifecycleStatus.value));
+const canRequeueOutboxLifecycle = computed(() => isOutboxDetail.value && Boolean(doc.value?.name) && ["Queued", "Processing", "Failed", "Dead"].includes(outboxLifecycleStatus.value));
+const taskLifecycleStatus = computed(() => String(doc.value?.status || "").trim());
+const reminderLifecycleStatus = computed(() => String(doc.value?.status || "").trim());
+const canStartTaskLifecycle = computed(() => isTaskDetail.value && Boolean(doc.value?.name) && taskLifecycleStatus.value === "Open");
+const canBlockTaskLifecycle = computed(() => isTaskDetail.value && Boolean(doc.value?.name) && ["Open", "In Progress"].includes(taskLifecycleStatus.value));
+const canCompleteTaskLifecycle = computed(() => isTaskDetail.value && Boolean(doc.value?.name) && ["Open", "In Progress", "Blocked"].includes(taskLifecycleStatus.value));
+const canCancelTaskLifecycle = computed(() => isTaskDetail.value && Boolean(doc.value?.name) && ["Open", "In Progress", "Blocked"].includes(taskLifecycleStatus.value));
+const canCompleteReminderLifecycle = computed(() => isReminderDetail.value && Boolean(doc.value?.name) && reminderLifecycleStatus.value === "Open");
+const canCancelReminderLifecycle = computed(() => isReminderDetail.value && Boolean(doc.value?.name) && reminderLifecycleStatus.value === "Open");
+const assignmentLifecycleStatus = computed(() => String(doc.value?.status || "").trim());
+const canStartAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(doc.value?.name) && assignmentLifecycleStatus.value !== "In Progress");
+const canBlockAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(doc.value?.name) && assignmentLifecycleStatus.value !== "Blocked");
+const canCloseAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(doc.value?.name) && assignmentLifecycleStatus.value !== "Done");
 
 function humanizeField(field) {
   return String(field || "").replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -1193,6 +1361,66 @@ async function afterQuickEditSubmit() {
   await reloadDetail();
 }
 
+async function sendDraftLifecycle() {
+  if (!canSendDraftLifecycle.value || !doc.value?.name) return;
+  await sendDraftNowResource.submit({
+    draft_name: doc.value.name,
+  });
+  await reloadDetail();
+}
+
+async function retryOutboxLifecycle() {
+  if (!canRetryOutboxLifecycle.value || !doc.value?.name) return;
+  await retryOutboxResource.submit({
+    outbox_name: doc.value.name,
+  });
+  await reloadDetail();
+}
+
+async function requeueOutboxLifecycle() {
+  if (!canRequeueOutboxLifecycle.value || !doc.value?.name) return;
+  await requeueOutboxResource.submit({
+    outbox_name: doc.value.name,
+  });
+  await reloadDetail();
+}
+
+async function markTaskLifecycle(status) {
+  if (!isTaskDetail.value || !doc.value?.name || !String(status || "").trim()) return;
+  await auxMutationResource.submit({
+    doctype: "AT Task",
+    name: doc.value.name,
+    data: {
+      status,
+    },
+  });
+  await reloadDetail();
+}
+
+async function markReminderLifecycle(status) {
+  if (!isReminderDetail.value || !doc.value?.name || !String(status || "").trim()) return;
+  await auxMutationResource.submit({
+    doctype: "AT Reminder",
+    name: doc.value.name,
+    data: {
+      status,
+    },
+  });
+  await reloadDetail();
+}
+
+async function markAssignmentLifecycle(status) {
+  if (!isOwnershipAssignmentDetail.value || !doc.value?.name || !String(status || "").trim()) return;
+  await auxMutationResource.submit({
+    doctype: "AT Ownership Assignment",
+    name: doc.value.name,
+    data: {
+      status,
+    },
+  });
+  await reloadDetail();
+}
+
 function reloadDetail() {
   const detailPromise = resource.reload({ doctype: config.doctype, name: props.name });
   if (config.doctype !== "AT Campaign") return detailPromise;
@@ -1219,6 +1447,18 @@ function reloadDetail() {
 
 function goBack() {
   router.push({ name: `${config.key}-list` });
+}
+function openCommunicationContext() {
+  if (!canOpenCommunicationContext.value || !doc.value?.name) return;
+  router.push({
+    name: "communication-center",
+    query: {
+      reference_doctype: config.doctype,
+      reference_name: doc.value.name,
+      reference_label: recordTitle.value || doc.value.name,
+      return_to: route.fullPath || route.path,
+    },
+  });
 }
 function openDesk() {
   navigateToSameOriginPath(`/app/Form/${encodeURIComponent(config.doctype)}/${encodeURIComponent(props.name)}`);

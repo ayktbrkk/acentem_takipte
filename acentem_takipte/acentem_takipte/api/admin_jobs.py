@@ -7,11 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.api.security import (
-    assert_authenticated,
-    assert_post_request,
-    assert_roles,
-)
+from acentem_takipte.acentem_takipte.api.security import assert_authenticated
 from acentem_takipte.acentem_takipte.api.mutation_access import assert_role_based_write_access
 from acentem_takipte.acentem_takipte.services.admin_jobs import dispatch_admin_job
 from acentem_takipte.acentem_takipte.utils.permissions import build_doctype_permission_map
@@ -25,6 +21,7 @@ ADMIN_JOB_PERMISSION_DOCTYPES = build_doctype_permission_map(
     run_notification_queue_job=("AT Notification Outbox",),
     run_payment_due_job=("AT Payment", "AT Notification Draft"),
     run_scheduled_reports_job=(),
+    run_customer_segment_snapshot_job=("AT Customer Segment Snapshot",),
     run_accounting_sync_job=("AT Accounting Entry",),
     run_accounting_reconciliation_job=("AT Reconciliation Item",),
 )
@@ -118,6 +115,13 @@ def run_scheduled_reports_job(frequency: str = "daily", limit: int = 10) -> dict
         {"limit": safe_limit, "frequency": safe_frequency},
     )
     return dispatch_admin_job("run_scheduled_reports_job", frequency=safe_frequency, limit=safe_limit)
+
+
+@frappe.whitelist()
+def run_customer_segment_snapshot_job(limit: int = 250) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    _assert_admin_job_access("api.admin_jobs.run_customer_segment_snapshot_job", {"limit": safe_limit})
+    return dispatch_admin_job("run_customer_segment_snapshot_job", limit=safe_limit)
 
 
 @frappe.whitelist()

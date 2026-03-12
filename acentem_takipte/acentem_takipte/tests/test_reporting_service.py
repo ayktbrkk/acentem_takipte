@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from acentem_takipte.acentem_takipte.services import reporting
 
 
@@ -12,6 +14,16 @@ def test_normalize_report_filters_applies_normalized_office_branch(monkeypatch):
 
 def test_normalize_report_filters_handles_invalid_json_gracefully():
     assert reporting.normalize_report_filters("{invalid-json}") == {}
+
+
+def test_normalize_report_filters_ignores_nullish_strings(monkeypatch):
+    monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: None)
+
+    filters = reporting.normalize_report_filters({"branch": " null ", "status": "None", "sales_entity": " SE-1 "})
+
+    assert "branch" not in filters
+    assert "status" not in filters
+    assert filters["sales_entity"] == "SE-1"
 
 
 def test_build_policy_report_filters_keeps_office_branch_and_date_range(monkeypatch):
@@ -34,6 +46,34 @@ def test_build_payment_report_filters_keeps_office_branch_and_due_date(monkeypat
 
     assert query_filters["office_branch"] == "BR-IZM"
     assert query_filters["due_date"] == [">=", "2026-03-01"]
+
+
+def test_build_payment_report_filters_applies_branch_policy_scope(monkeypatch):
+    monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: None)
+    monkeypatch.setattr(reporting.frappe, "get_all", lambda *args, **kwargs: ["POL-001", "POL-002"])
+
+    query_filters = reporting.build_payment_report_filters({"branch": "Kasko"})
+
+    assert query_filters["policy"] == ["in", ["POL-001", "POL-002"]]
+
+
+def test_build_payment_report_filters_reuses_branch_policy_cache(monkeypatch):
+    monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: None)
+    monkeypatch.setattr(reporting.frappe, "local", SimpleNamespace(), raising=False)
+    captured = {"calls": 0}
+
+    def _get_all(*args, **kwargs):
+        captured["calls"] += 1
+        return ["POL-001"]
+
+    monkeypatch.setattr(reporting.frappe, "get_all", _get_all)
+
+    first_filters = reporting.build_payment_report_filters({"branch": "Kasko"})
+    second_filters = reporting.build_payment_report_filters({"branch": "Kasko"})
+
+    assert first_filters["policy"] == ["in", ["POL-001"]]
+    assert second_filters["policy"] == ["in", ["POL-001"]]
+    assert captured["calls"] == 1
 
 
 def test_get_renewal_performance_report_rows_passes_office_branch(monkeypatch):
@@ -113,11 +153,13 @@ def test_get_communication_operations_report_rows_passes_office_branch_and_statu
         lambda query, values, as_dict=False: captured.update({"query": query, "values": values}) or [],
     )
 
-    reporting.get_communication_operations_report_rows({"office_branch": "FORBIDDEN", "status": "Completed"})
+    reporting.get_communication_operations_report_rows({"office_branch": "FORBIDDEN", "status": "Completed", "branch": "Kasko"})
 
     assert "c.office_branch = %(office_branch)s" in captured["query"]
+    assert "c.branch = %(branch)s" in captured["query"]
     assert "c.status = %(status)s" in captured["query"]
     assert captured["values"]["office_branch"] == "BR-IST"
+    assert captured["values"]["branch"] == "Kasko"
     assert captured["values"]["status"] == "Completed"
     assert "draft_count" in captured["query"]
     assert "sent_outbox_count" in captured["query"]
@@ -132,11 +174,13 @@ def test_get_reconciliation_operations_report_rows_passes_office_branch_and_stat
         lambda query, values, as_dict=False: captured.update({"query": query, "values": values}) or [],
     )
 
-    reporting.get_reconciliation_operations_report_rows({"office_branch": "FORBIDDEN", "status": "Open"})
+    reporting.get_reconciliation_operations_report_rows({"office_branch": "FORBIDDEN", "status": "Open", "branch": "Kasko"})
 
     assert "ae.office_branch = %(office_branch)s" in captured["query"]
+    assert "p.branch = %(branch)s" in captured["query"]
     assert "ri.status = %(status)s" in captured["query"]
     assert captured["values"]["office_branch"] == "BR-ANK"
+    assert captured["values"]["branch"] == "Kasko"
     assert captured["values"]["status"] == "Open"
     assert "difference_try" in captured["query"]
     assert "resolution_action" in captured["query"]

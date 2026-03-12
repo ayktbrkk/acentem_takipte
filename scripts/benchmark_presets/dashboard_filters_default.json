@@ -1,0 +1,8 @@
+{
+  "from_date": "2026-01-01",
+  "to_date": "2026-03-11",
+  "compare_from_date": "2025-10-23",
+  "compare_to_date": "2025-12-31",
+  "period_comparison": "previous_period",
+  "months": 6
+}

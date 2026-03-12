@@ -2304,6 +2304,15 @@ async function createLead() {
 }
 
 function openPage(path) {
+  if (path === "/communication") {
+    router.push({
+      path,
+      query: {
+        return_to: route.fullPath || route.path || "",
+      },
+    });
+    return;
+  }
   router.push(path);
 }
 

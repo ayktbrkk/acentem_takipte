@@ -8,9 +8,9 @@ Musteri 360 gorunumu, policy tip genislemesi, claim/payment/offer linkleri ve te
 - Dalga 3 store/state migration temelinin hazir olmasi
 
 ## Durum
-- **Durum:** Planlandi
-- **Mevcut odak:** Beklemede
-- **Sonraki hamle:** `AT Customer` ve `AT Policy` uzerinden 360 veri alanlarini toparlamak
+- **Durum:** Tamamlandi
+- **Mevcut odak:** `Customer 360` ve `Policy 360` temel omurgalari tamamlandi
+- **Sonraki hamle:** Dalga 4 kapandi; Dalga 5-7 ardışık geçişiyle Faz 16 doğrulama/smoke turu baslatildi.
 
 ## Gorevler
 

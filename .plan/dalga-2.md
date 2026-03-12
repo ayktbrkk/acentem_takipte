@@ -8,9 +8,9 @@ Branch/office modeli, veri izolasyonu ve servis katmani derinlestirmesi bu dalga
 - `ROADMAP.md` icindeki branch ve permission stratejisinin korunmasi
 
 ## Durum
-- **Durum:** Planlandi
-- **Mevcut odak:** Beklemede
-- **Sonraki hamle:** Branch modelinin `native Branch + User Permission` karariyla uygulanmasi
+- **Durum:** Tamamlandi
+- **Mevcut odak:** Kapandi
+- **Sonraki hamle:** Dalga 3 tamamlanma sonrasinda aciklanan sonraki veri omurgalarina gecis
 
 ## Gorevler
 
@@ -33,5 +33,5 @@ Branch/office modeli, veri izolasyonu ve servis katmani derinlestirmesi bu dalga
 **Test:** Rol/sube bazli veri gorunurlugu smoke checklist'i
 
 ## Guncel Durum (2026-03-09)
-- Durum: Beklemede
-- Not: Dalga 2 henuz aktif degil. Branch veri modeli ve izolasyon adimlari Dalga 1 / Faz 5 tamamlandiktan sonra alinacak.
+- Durum: Tamamlandi
+- Not: Dalga 2 kapsamindaki temel servis ve servis-branch izolasyon kararlarının kapatma adımları alindi.

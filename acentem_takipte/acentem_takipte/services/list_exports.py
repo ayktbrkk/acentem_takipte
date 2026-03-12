@@ -8,6 +8,13 @@ import frappe
 from frappe.utils import cint, flt, format_datetime, formatdate
 
 from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
+from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+    coerce_columns,
+    coerce_filters,
+    coerce_rows,
+    normalize_export_key,
+    normalize_title,
+)
 from acentem_takipte.acentem_takipte.services.reports_runtime import build_tabular_download_response
 
 
@@ -173,7 +180,7 @@ def get_screen_export_definition(screen: str) -> dict[str, Any]:
 
 def build_screen_export_payload(screen: str, query: dict | str | None = None, limit: int = 1000) -> dict[str, Any]:
     definition = get_screen_export_definition(screen)
-    normalized_query = frappe.parse_json(query) if isinstance(query, str) else (query or {})
+    normalized_query = _coerce_query_payload(query)
     normalized_limit = max(min(cint(limit), 5000), 1)
     locale = _active_locale()
 
@@ -219,12 +226,14 @@ def build_tabular_payload_export_response(
     *,
     export_format: str = "xlsx",
 ) -> dict[str, Any]:
-    payload = frappe.parse_json(query) if isinstance(query, str) else (query or {})
-    export_key = str(payload.get("export_key") or "workbench").strip() or "workbench"
-    title = payload.get("title") or export_key
-    columns = [str(column).strip() for column in (payload.get("columns") or []) if str(column).strip()]
+    payload = _coerce_query_payload(query)
+    export_key = normalize_export_key(payload.get("export_key"), "workbench")
+    title = _normalize_title(payload.get("title"), export_key)
+    raw_rows = _coerce_rows(payload.get("rows"))
+    columns = _normalize_columns(payload.get("columns"))
+    if not columns:
+        columns = _infer_columns_from_rows(raw_rows)
 
-    raw_rows = payload.get("rows") or []
     rows: list[dict[str, Any]] = []
     for raw_row in raw_rows:
         if not isinstance(raw_row, dict):
@@ -239,7 +248,7 @@ def build_tabular_payload_export_response(
         title=title,
         columns=columns,
         rows=rows,
-        filters=payload.get("filters") or {},
+        filters=_coerce_filters(payload.get("filters")),
         export_format=export_format,
     )
 
@@ -268,7 +277,9 @@ def _collect_dashboard_rows(fetcher: Callable[..., dict[str, Any]], *, filters: 
 
     while len(rows) < limit:
         payload = fetcher(filters=filters, page=page, page_length=min(page_length, limit - len(rows))) or {}
-        batch = list(payload.get("rows") or [])
+        if not isinstance(payload, dict):
+            break
+        batch = [row for row in list(payload.get("rows") or []) if isinstance(row, dict)]
         rows.extend(batch)
         if total is None:
             total = cint(payload.get("total") or 0)
@@ -280,8 +291,8 @@ def _collect_dashboard_rows(fetcher: Callable[..., dict[str, Any]], *, filters: 
 
 
 def _fetch_doctype_rows(definition: dict[str, Any], query: dict[str, Any], limit: int) -> list[dict[str, Any]]:
-    filters = (query or {}).get("filters") or {}
-    or_filters = (query or {}).get("or_filters") or None
+    filters = _coerce_filters((query or {}).get("filters"))
+    or_filters = _coerce_or_filters((query or {}).get("or_filters"))
     order_by = str((query or {}).get("order_by") or "modified desc").strip() or "modified desc"
     return frappe.get_list(
         definition["doctype"],
@@ -326,7 +337,8 @@ def _format_value(value: Any, *, formatter: str | None, locale: str, currency: s
         code = str(currency or "TRY").strip() or "TRY"
         return f"{amount:,.2f} {code}"
     if formatter == "boolean":
-        is_true = value is True or str(value).strip().lower() in {"1", "true", "yes"}
+        normalized_value = str(value).strip().lower()
+        is_true = value is True or normalized_value in {"1", "true", "yes", "on", "evet"}
         return "Evet" if locale == "tr" and is_true else "Hayir" if locale == "tr" else "Yes" if is_true else "No"
     if isinstance(value, (list, tuple, set)):
         return ", ".join(str(item) for item in value if item not in (None, ""))
@@ -349,7 +361,10 @@ def _normalize_payload_value(value: Any) -> Any:
     if isinstance(value, (list, tuple, set)):
         return ", ".join(str(item) for item in value if item not in (None, ""))
     if isinstance(value, dict):
-        return frappe.as_json(value, indent=None)
+        try:
+            return frappe.as_json(value, indent=None)
+        except Exception:
+            return str(value)
     return str(value)
 
 
@@ -361,9 +376,72 @@ def _lead_display_name(row: dict[str, Any]) -> str:
 
 def _localize(value: dict[str, str] | str, locale: str) -> str:
     if isinstance(value, dict):
-        return value.get(locale) or value.get("en") or next(iter(value.values()))
+        base_locale = str(locale or "tr").split("-")[0]
+        return value.get(locale) or value.get(base_locale) or value.get("en") or next(iter(value.values()))
     return str(value or "")
 
 
 def _active_locale() -> str:
-    return str(getattr(frappe.local, "lang", "tr") or "tr").split("-")[0]
+    return str(getattr(frappe.local, "lang", "tr") or "tr").strip() or "tr"
+
+
+def _normalize_columns(columns: Any) -> list[str]:
+    return coerce_columns(columns)
+
+
+def _infer_columns_from_rows(rows: list[dict[str, Any]]) -> list[str]:
+    inferred: list[str] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        for key in row.keys():
+            column = str(key or "").strip()
+            if column and column not in inferred:
+                inferred.append(column)
+    return inferred
+
+
+def _coerce_rows(rows: Any) -> list[dict[str, Any]]:
+    return coerce_rows(rows)
+
+
+def _coerce_filters(filters: Any) -> dict[str, Any]:
+    return coerce_filters(filters)
+
+
+def _coerce_or_filters(or_filters: Any) -> Any:
+    if isinstance(or_filters, str):
+        if not or_filters.strip():
+            return None
+        try:
+            parsed = frappe.parse_json(or_filters) or None
+        except Exception:
+            return None
+        return parsed if isinstance(parsed, (dict, list, tuple)) else None
+    if isinstance(or_filters, (dict, list, tuple)):
+        return or_filters
+    return None
+
+
+def _normalize_title(title: Any, export_key: str) -> Any:
+    if isinstance(title, dict):
+        return title
+    return normalize_title(title, export_key)
+
+
+def _coerce_query_payload(query: dict | str | None) -> dict[str, Any]:
+    if query is None:
+        return {}
+    if isinstance(query, str):
+        if not query.strip():
+            return {}
+        try:
+            parsed = frappe.parse_json(query) or {}
+        except Exception:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    if isinstance(query, dict):
+        return dict(query)
+    if hasattr(query, "items"):
+        return {key: value for key, value in query.items()}
+    return {}

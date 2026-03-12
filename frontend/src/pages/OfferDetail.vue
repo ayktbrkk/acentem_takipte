@@ -704,6 +704,7 @@ function openCommunicationCenterForOffer(item = null) {
   const query = {
     customer: offer.value.customer || "",
     customer_label: offer.value.customer || offer.name || props.name || "",
+    return_to: router.currentRoute.value?.fullPath || "",
   };
   if (item && typeof item === "object") {
     const channel = String(item.channel || "").trim();

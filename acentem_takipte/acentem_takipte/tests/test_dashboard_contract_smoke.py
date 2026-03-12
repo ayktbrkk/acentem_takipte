@@ -4,6 +4,8 @@ import unittest
 from unittest.mock import patch
 
 from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_customers as customer_queries
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_leads as lead_queries
 from acentem_takipte.acentem_takipte.api.dashboard_v2 import security as dashboard_security
 
 
@@ -139,6 +141,30 @@ class TestDashboardContractSmoke(unittest.TestCase):
         self.assertEqual(payload["page_length"], 20)
         self.assertIsInstance(payload["rows"], list)
         self.assertEqual(payload["rows"][0]["name"], "LEAD-0001")
+
+    def test_customer_workbench_count_uses_aggregate_query_for_or_filters(self):
+        with patch.object(customer_queries.frappe, "get_list", return_value=[{"total": 7}]) as get_list_mock:
+            total = customer_queries.count_customer_workbench_rows(
+                query_filters={"status": "Active"},
+                or_filters=[["full_name", "like", "%test%"]],
+            )
+
+        self.assertEqual(total, 7)
+        get_list_mock.assert_called_once()
+        self.assertEqual(get_list_mock.call_args.kwargs["fields"], ["count(name) as total"])
+        self.assertNotIn("pluck", get_list_mock.call_args.kwargs)
+
+    def test_lead_workbench_count_uses_aggregate_query_for_or_filters(self):
+        with patch.object(lead_queries.frappe, "get_list", return_value=[{"total": 5}]) as get_list_mock:
+            total = lead_queries.count_lead_workbench_rows(
+                query_filters={"status": "Open"},
+                or_filters=[["email", "like", "%lead%"]],
+            )
+
+        self.assertEqual(total, 5)
+        get_list_mock.assert_called_once()
+        self.assertEqual(get_list_mock.call_args.kwargs["fields"], ["count(name) as total"])
+        self.assertNotIn("pluck", get_list_mock.call_args.kwargs)
 
 
 if __name__ == "__main__":

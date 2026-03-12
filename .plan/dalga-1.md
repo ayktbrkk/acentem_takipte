@@ -9,9 +9,318 @@ Rol yonlendirme, API auth kontrati, log redaction, dashboard performansi ve serv
 
 ## Durum
 - **Durum:** Devam Ediyor
-- **Mevcut odak:** `Faz 9 ilk veri katmani`
-- **Son tamamlanan faz:** `Faz 8`
-- **Sonraki hamle:** `Faz 9 ilk veri katmanini acmak`
+- **Mevcut odak:** `kapanis`
+- **Son tamamlanan faz:** `Faz 372`
+- **Sonraki hamle:** `yeni issue secimi veya yeni uygulama dalgasi`
+
+## 2026-03-11 Faz 18 Kapanis Notu
+- [x] Dashboard read endpoint method guard backend policy tablosuna baglandi.
+- [x] Frontend resource fetch zinciri dashboard read endpointlerinde `GET` ile hizalandi.
+- [x] Customer/Lead workbench OR-count fallback'i aggregate count sorgusuna indirildi.
+- [x] Benchmark script threshold, workspace-output guard ve violation exit-code davranisi ile sertlestirildi.
+- [x] Faz 18 plan/roadmap/backlog/README senkronu tamamlandi.
+
+## 2026-03-11 Faz 19 Baslangic Notu
+- [x] `scripts/benchmark_dashboard_api.py` icine `--scenarios` filtreleme destegi eklendi.
+- [x] `tests/test_dashboard_benchmark_script.py` icinde scenario secim kontrati eklendi.
+- [x] `scripts/benchmark_presets/` altina varsayilan dashboard/workbench filtre presetleri eklendi.
+- [x] `scripts/benchmark_dashboard_api.md` icinde iki dilli kullanim notu yazildi.
+- [x] `scripts/benchmark_dashboard_api.py` icine `--preset default` otomatik preset yukleme destegi eklendi.
+- [x] `scripts/benchmark_dashboard_api.py` icine `--artifact-name` ve standart output klasoru destegi eklendi.
+- [x] Benchmark preset ve kullanim artefact'lari tamamlandi.
+
+## 2026-03-11 Faz 19 Kapanis Notu
+- [x] Benchmark script scenario, preset ve artefact output akisi ile operasyonel hale geldi.
+- [x] Iki dilli kullanim notu ve varsayilan preset seti repoya baglandi.
+- [x] Faz 19 sprint/roadmap/backlog/README senkronu tamamlandi.
+
+## 2026-03-11 Faz 20 Baslangic Notu
+- [x] `scripts/benchmark_dashboard_api.py` icine `--list-presets` destegi eklendi.
+- [x] JSON benchmark raporuna `preset` ve `scenarios` meta alanlari eklendi.
+- [x] Preset discoverability ve parse istisnasi testleri eklendi.
+- [x] Faz 20 kapanis notu ve sonraki uygulama fazi acildi.
+
+## 2026-03-11 Faz 20 Kapanis Notu
+- [x] Preset discoverability ve metadata standardi tamamlandi.
+- [x] Faz 20 sprint/roadmap/backlog/README senkronu tamamlandi.
+
+## 2026-03-11 Faz 21 Baslangic Notu
+- [x] `scripts/benchmark_dashboard_api.py` `--artifact-name` ile Markdown ozet de uretir hale geldi.
+- [x] Markdown artefact path ve icerik kontrati test altina alindi.
+- [x] Faz 21 kapanis notu ve sonraki uygulama fazi acildi.
+
+## 2026-03-11 Faz 21 Kapanis Notu
+- [x] Benchmark Markdown artefact ozeti tamamlandi.
+- [x] Faz 21 sprint/roadmap/backlog/README senkronu tamamlandi.
+
+## 2026-03-11 Faz 22 Baslangic Notu
+- [x] `--preset default` varsayilan threshold degerlerini de yukler hale geldi.
+- [x] JSON ve Markdown benchmark raporuna threshold metadata'si eklendi.
+- [x] Preset threshold kontrati test altina alindi.
+- [x] Faz 22 kapanis notu ve sonraki uygulama fazi acildi.
+
+## 2026-03-11 Faz 22 Kapanis Notu
+- [x] Preset threshold baseline standardi tamamlandi.
+- [x] Faz 22 sprint/roadmap/backlog/README senkronu tamamlandi.
+
+## 2026-03-11 Faz 23 Baslangic Notu
+- [x] `scripts/benchmark_dashboard_api.py` icinde `quick/default/full` preset katalogu tanimlandi.
+- [x] Preset katalogu ve quick threshold davranisi test altina alindi.
+- [x] Faz 23 kapanis notu ve sonraki uygulama fazi acildi.
+
+## 2026-03-11 Faz 23 Kapanis Notu
+- [x] Benchmark preset katalog genislemesi tamamlandi.
+- [x] Faz 23 sprint/roadmap/backlog/README senkronu tamamlandi.
+
+## 2026-03-11 Faz 24 Baslangic Notu
+- [x] `get_preset_summary(...)` helper'i eklendi.
+- [x] `--list-presets` cikisi threshold ve aciklama ozeti verecek sekilde guncellendi.
+- [x] Preset summary kontrati test altina alindi.
+- [x] Faz 24 kapanis notu ve sonraki uygulama fazi acildi.
+
+## 2026-03-11 Faz 24 Kapanis Notu
+- [x] Preset discoverability summary zenginlestirmesi tamamlandi.
+- [x] Faz 24 sprint/roadmap/backlog/README senkronu tamamlandi.
+
+## 2026-03-11 Faz 25 Baslangic Notu
+- [x] `get_all_preset_summaries(...)` helper'i eklendi.
+- [x] `--list-presets-json` cikisi eklendi.
+- [x] JSON preset katalog kontrati test altina alindi.
+- [x] Faz 25 kapanis notu ve sonraki uygulama fazi acildi.
+
+## 2026-03-11 Faz 25 Kapanis Notu
+- [x] Benchmark preset discoverability JSON katalog cikisi tamamlandi.
+- [x] Kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+- [x] Sonraki aktif faz olarak gercek uygulama gelistirme akisi acildi.
+
+## 2026-03-11 Faz 26 Baslangic Notu
+- [x] `frontend/src/pages/PolicyDetail.vue` icinde ownership assignment satirlarina delete aksiyonu eklendi.
+- [x] Delete onayi TR/EN etiketleri ile eklendi.
+- [x] `frontend/src/pages/PolicyDetail.test.js` icinde assignment delete + payload refresh sozlesmesi eklendi.
+- [ ] Faz 26 icinde Policy 360 operasyon lifecycle tutarliligi derinlestirilecek.
+
+## 2026-03-11 Faz 26 Guncelleme
+- [x] `frontend/src/pages/PolicyDetail.vue` icinde ownership assignment satirlarina hizli status aksiyonlari eklendi.
+- [x] `In Progress`, `Blocked`, `Done` gecisleri `update_quick_aux_record` zinciri ile baglandi.
+- [x] `frontend/src/pages/PolicyDetail.test.js` icinde assignment status aksiyonlari ve payload refresh sozlesmesi eklendi.
+
+## 2026-03-11 Faz 26 Ikinci Guncelleme
+- [x] `frontend/src/pages/CustomerDetail.vue` icinde ownership assignment satirlarina hizli status aksiyonlari eklendi.
+- [x] `In Progress`, `Blocked`, `Done` gecisleri Customer 360 tarafinda mevcut aux update zinciri ile baglandi.
+- [x] `frontend/src/pages/CustomerDetail.test.js` icinde assignment status aksiyonlari ve payload refresh sozlesmesi eklendi.
+
+## 2026-03-11 Faz 26 Ucuncu Guncelleme
+- [x] `frontend/src/pages/CommunicationCenter.vue` icinde assignment context aksiyonlari `Start/Block/Close` olarak genisletildi.
+- [x] Assignment context mutasyonlari mevcut `update_quick_aux_record` zinciri ile baglandi.
+- [x] `frontend/src/pages/CommunicationCenter.test.js` icinde assignment context start/block/close sozlesmeleri eklendi.
+
+## 2026-03-11 Faz 26 Kapanis Notu
+- [x] Ownership assignment lifecycle aksiyonlari `PolicyDetail`, `CustomerDetail`, `CommunicationCenter` ve ilgili takip yuzeylerinde hizalandi.
+- [x] Faz 26 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+- [x] Sonraki aktif faz olarak aux/detail operator deneyimi icin yeni uygulama fazi acildi.
+
+## 2026-03-11 Faz 27 Baslangic Notu
+- [x] `frontend/src/pages/AuxRecordDetail.vue` icinde ownership assignment detail header lifecycle aksiyonlari eklendi.
+- [x] `In Progress`, `Blocked`, `Done` gecisleri detail seviyesinde mevcut aux mutation zinciri ile baglandi.
+- [x] `frontend/src/pages/AuxRecordDetail.test.js` icinde detail lifecycle aksiyon kontrati eklendi.
+- [ ] Faz 27 icinde aux/detail operator deneyimi derinlestirilecek.
+
+## 2026-03-11 Faz 27 Guncelleme
+- [x] `frontend/src/pages/AuxWorkbench.vue` icinde ownership assignment satir lifecycle aksiyonlari eklendi.
+- [x] `In Progress`, `Blocked`, `Done` gecisleri liste seviyesinde mevcut aux mutation zinciri ile baglandi.
+- [x] `frontend/src/pages/AuxWorkbench.test.js` icinde ownership assignment liste aksiyon kontrati eklendi.
+
+## 2026-03-11 Faz 27 Ikinci Guncelleme
+- [x] `frontend/src/pages/AuxRecordDetail.vue` icinde task/reminder header lifecycle aksiyonlari eklendi.
+- [x] Task icin `In Progress`, `Blocked`, `Done`, `Cancelled`; reminder icin `Done`, `Cancelled` gecisleri detail seviyesinde mevcut aux mutation zinciri ile baglandi.
+- [x] `frontend/src/pages/AuxRecordDetail.test.js` icinde task/reminder detail lifecycle aksiyon kontratlari eklendi.
+
+## 2026-03-11 Faz 27 Ucuncu Guncelleme
+- [x] `frontend/src/pages/AuxRecordDetail.vue` icinde notification-outbox retry aksiyonu detail header'a tasindi.
+- [x] Retry aksiyonu mevcut `retry_outbox_item` zinciri ile detail seviyesinde baglandi.
+- [x] `frontend/src/pages/AuxRecordDetail.test.js` icinde notification-outbox detail retry kontrati eklendi.
+
+## 2026-03-11 Faz 27 Dorduncu Guncelleme
+- [x] `frontend/src/pages/AuxRecordDetail.vue` icinde notification-outbox requeue aksiyonu detail header'a acildi.
+- [x] Requeue aksiyonu mevcut `requeue_outbox_item` zinciri ile detail seviyesinde baglandi.
+- [x] `frontend/src/pages/AuxRecordDetail.test.js` icinde notification-outbox detail requeue kontrati eklendi.
+
+## 2026-03-11 Faz 27 Besinci Guncelleme
+- [x] `frontend/src/pages/AuxRecordDetail.vue` icinde notification-draft send-now aksiyonu detail header'a tasindi.
+- [x] Send-now aksiyonu mevcut `send_draft_now` zinciri ile detail seviyesinde baglandi.
+- [x] `frontend/src/pages/AuxRecordDetail.test.js` icinde notification-draft detail send-now kontrati eklendi.
+
+## 2026-03-11 Faz 27 Kapanis Notu
+- [x] Aux/list-detail operator action parity notification draft/outbox, task, reminder ve ownership assignment yuzeylerinde tamamlandi.
+- [x] Faz 27 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+- [x] Sonraki aktif faz olarak operator yuzeyleri arasi baglamsal gecis fazi acildi.
+
+## 2026-03-11 Faz 28 Baslangic Notu
+- [x] `frontend/src/pages/AuxRecordDetail.vue` icinde notification draft/outbox kayitlarindan CommunicationCenter baglamina gecis aksiyonu eklendi.
+- [x] CommunicationCenter gecisi `reference_doctype`, `reference_name`, `reference_label` query parametreleri ile baglandi.
+- [x] `frontend/src/pages/AuxRecordDetail.test.js` icinde baglamsal gecis kontrati eklendi.
+- [ ] Faz 28 icinde operator yuzeyleri arasi baglamsal gecisler derinlestirilecek.
+
+## 2026-03-11 Faz 28 Guncelleme
+- [x] `frontend/src/pages/AuxWorkbench.vue` icinde notification draft satirlarina CommunicationCenter baglam gecisi eklendi.
+- [x] Liste seviyesinde gecis `reference_doctype`, `reference_name`, `reference_label` query parametreleri ile baglandi.
+- [x] `frontend/src/pages/AuxWorkbench.test.js` icinde liste baglam gecis kontrati eklendi.
+
+## 2026-03-11 Faz 28 Ikinci Guncelleme
+- [x] `frontend/src/pages/AuxWorkbench.test.js` icinde notification outbox satirlarindan CommunicationCenter baglam gecisi kontrati eklendi.
+- [x] Liste seviyesindeki ortak baglam gecis helper'inin `AT Notification Outbox` icin de calistigi sabitlendi.
+
+## 2026-03-11 Faz 28 Ucuncu Guncelleme
+- [x] `frontend/src/pages/AuxRecordDetail.vue` ve `frontend/src/pages/AuxWorkbench.vue` icindeki baglam gecis helper'lari reminder/task/ownership assignment yuzeylerini de kapsayacak sekilde genisletildi.
+- [x] Reminder liste/detail kayitlarindan CommunicationCenter baglam gecisi kontratlari eklendi.
+- [x] Faz 28 hedefi dogrultusunda operator kaydindan ilgili iletisim operasyon ekranina tek adim gecis kapsami genisletildi.
+
+## 2026-03-11 Faz 28 Dorduncu Guncelleme
+- [x] `frontend/src/pages/AuxRecordDetail.test.js` icinde task ve ownership assignment detail baglam gecisi kontratlari eklendi.
+- [x] `frontend/src/pages/AuxWorkbench.test.js` icinde task ve ownership assignment liste baglam gecisi kontratlari eklendi.
+- [x] Faz 28 kapsamindaki operator -> CommunicationCenter baglam gecisi parity'si task/reminder/ownership assignment icin test seviyesinde tamamlandi.
+
+## 2026-03-11 Faz 28 Kapanis Notu
+- [x] Operator yuzeyleri arasi baglamsal gecis parity'si reminder/task/ownership assignment/draft/outbox icin tamamlandi.
+- [x] Faz 28 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-11 Faz 29 Baslangic Notu
+- [x] CommunicationCenter icinde `return_to` baglamli geri donus aksiyonu eklendi.
+- [x] `frontend/src/pages/CommunicationCenter.test.js` icinde geri donus aksiyonu kontrati eklendi.
+- [x] Faz 29 icinde operator gecislerinde kaynak ekrana tek adim geri donus deneyimi derinlestirilecek.
+
+## 2026-03-11 Faz 29 Guncelleme
+- [x] `frontend/src/pages/AuxRecordDetail.vue` icinde CommunicationCenter gecisine `return_to` parametresi eklendi.
+- [x] `frontend/src/pages/AuxWorkbench.vue` icinde liste gecislerine `return_to` parametresi eklendi.
+- [x] `frontend/src/pages/AuxRecordDetail.test.js` ve `frontend/src/pages/AuxWorkbench.test.js` return_to kontratlari guncellendi.
+
+## 2026-03-11 Faz 29 Ikinci Guncelleme
+- [x] `frontend/src/pages/CustomerDetail.vue` icinde CommunicationCenter gecisine `return_to` parametresi eklendi.
+- [x] `frontend/src/pages/LeadDetail.vue` ve `frontend/src/pages/OfferDetail.vue` icinde CommunicationCenter gecislerine `return_to` parametresi eklendi.
+- [x] `frontend/src/pages/CustomerDetail.test.js` CommunicationCenter gecis kontrati guncellendi.
+
+## 2026-03-11 Faz 29 Ucuncu Guncelleme
+- [x] CommunicationCenter toolbar aksiyonlarina `return_to` geri donus butonu eklendi.
+
+## 2026-03-11 Faz 29 Dorduncu Guncelleme
+- [x] `frontend/src/pages/CommunicationCenter.test.js` icinde return_to butonu context disinda da gorunur olacak sekilde test eklendi.
+
+## 2026-03-11 Faz 29 Besinci Guncelleme
+- [x] `frontend/src/pages/CommunicationCenter.vue` return_to olmadiginda router back fallback'i ile geri donus yapacak sekilde guncellendi.
+- [x] `frontend/src/pages/CommunicationCenter.test.js` fallback davranisi testle sabitlendi.
+
+## 2026-03-11 Faz 29 Altinci Guncelleme
+- [x] `frontend/src/pages/CommunicationCenter.vue` icinde return_to icin guvenli path kontrolu eklendi.
+- [x] `frontend/src/pages/CommunicationCenter.test.js` unsafe return_to icin router back fallback testi eklendi.
+
+## 2026-03-11 Faz 29 Yedinci Guncelleme
+- [x] `frontend/src/pages/CommunicationCenter.vue` return_to cozumlemesi `resolveSameOriginPath` ile same-origin URL'leri de kapsayacak sekilde guncellendi.
+
+## 2026-03-11 Faz 29 Sekizinci Guncelleme
+- [x] `frontend/src/pages/ClaimsBoard.vue` icinde CommunicationCenter notification gecisine `return_to` parametresi eklendi.
+- [x] `frontend/src/pages/ClaimsBoard.test.js` return_to gecisini sayfa testi ile sabitledi.
+
+## 2026-03-11 Faz 29 Dokuzuncu Guncelleme
+- [x] `frontend/src/pages/Dashboard.vue` follow-up CommunicationCenter gecisine `return_to` parametresi eklendi.
+
+## 2026-03-11 Faz 29 Kapanis Notu
+- [x] Operator yuzeylerinde CommunicationCenter `return_to` geri donus parity’si tamamlandi.
+- [x] Faz 29 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-11 Faz 30 Baslangic Notu
+- [x] Reports view-state (kolon gorunurlugu) route senkronu ve geri yazimi testleri eklendi.
+
+## 2026-03-12 Faz 30 Ikinci Guncelleme
+- [x] Reports scheduled reports run/save/remove akislari test kapsami eklendi.
+- [x] Reports export PDF aksiyonu testle sabitlendi.
+
+## 2026-03-12 Faz 30 Ucuncu Guncelleme
+- [x] Reports export XLSX aksiyonu testle sabitlendi.
+- [x] Reports export failure fallback davranisi testle sabitlendi.
+
+## 2026-03-12 Faz 30 Kapanis Notu
+- [x] Reports view-state, scheduled reports aksiyonlari ve export PDF/XLSX fallback testleri tamamlandi.
+- [x] Faz 30 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 31 Baslangic Notu
+- [x] Reports scheduled run/save/remove hata fallback test kapsami eklendi.
+
+## 2026-03-12 Faz 31 Ikinci Guncelleme
+- [x] Reports scheduled load failure ve report load error test kapsami eklendi.
+
+## 2026-03-12 Faz 31 Kapanis Notu
+- [x] Reports scheduled/run/save/remove ve load/export error fallback testleri tamamlandi.
+- [x] Faz 31 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 32 Baslangic Notu
+- [x] Payment status raporunda branch bazli policy scope filtresi eklendi ve test kapsami guncellendi.
+
+## 2026-03-12 Faz 32 Ikinci Guncelleme
+- [x] Communication operations raporunda branch filtresi eklendi ve test kapsami guncellendi.
+
+## 2026-03-12 Faz 32 Ucuncu Guncelleme
+- [x] Reconciliation operations raporunda branch filtresi eklendi ve test kapsami guncellendi.
+
+## 2026-03-12 Faz 32 Kapanis Notu
+- [x] Payment/communication/reconciliation raporlarinda branch filtresi parity tamamlandi.
+- [x] Faz 32 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 33 Baslangic Notu
+- [x] Reports runtime export format normalize testi eklendi.
+- [x] Scheduled report summary error fallback testi eklendi.
+
+## 2026-03-12 Faz 33 Kapanis Notu
+- [x] Reports runtime fallback test kapsami tamamlandi.
+- [x] Faz 33 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 34 Baslangic Notu
+- [x] Export format `xls` alias destegi eklendi ve test kapsami guncellendi.
+
+## 2026-03-12 Faz 34 Kapanis Notu
+- [x] Export format alias destegi ve test kapsami tamamlandi.
+- [x] Faz 34 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 35 Baslangic Notu
+- [x] Reports export popup blocked hata davranisi ve test kapsami eklendi.
+
+## 2026-03-12 Faz 36 Baslangic Notu
+- [x] Reports runtime download response icin None-safe handling ve test kapsami eklendi.
+
+## 2026-03-12 Faz 37 Baslangic Notu
+- [x] Reports runtime build_safe_report_payload hata log test kapsami eklendi.
+
+## 2026-03-12 Faz 35 Kapanis Notu
+- [x] Export popup blocked fallback test kapsami tamamlandi.
+- [x] Faz 35 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 36 Kapanis Notu
+- [x] Reports runtime download response None-safe kapsami tamamlandi.
+- [x] Faz 36 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 37 Kapanis Notu
+- [x] Reports runtime build_safe_report_payload fallback test kapsami tamamlandi.
+- [x] Faz 37 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 38 Baslangic Notu
+- [x] Export format normalize icin `xlsm/excel` alias destegi ve test kapsami eklendi.
+
+## 2026-03-12 Faz 39 Baslangic Notu
+- [x] Reports runtime download response filters None-safe handling ve test kapsami eklendi.
+
+## 2026-03-12 Faz 40 Baslangic Notu
+- [x] Reports export URL icinde office_branch filtresi testle dogrulandi.
+
+## 2026-03-12 Faz 38 Kapanis Notu
+- [x] Export format alias genisletme tamamlandi.
+- [x] Faz 38 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 39 Kapanis Notu
+- [x] Download response filters None-safe kapsami tamamlandi.
+- [x] Faz 39 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
+
+## 2026-03-12 Faz 40 Kapanis Notu
+- [x] Export URL filter kapsami tamamlandi.
+- [x] Faz 40 kapanis kayitlari plan/roadmap/backlog/README ile senkronlanacak.
 ## Tamamlananlar
 
 ### Gorev 1.1 - Rol ve oturum yonlendirme temelini stabilize et
@@ -604,7 +913,190 @@ ext_follow_up_on alanlari eklendi
 
 - 2026-03-10: Faz 15 reminder aux operatorlugu presetler ve ozet kartlari ile tamamlandi.
 
-- 2026-03-10: Faz 15 kapandi. Faz 16'ya gecis oncesi duruldu ve kullanici onayi bekleniyor.
+- 2026-03-10: Faz 15 kapandi. Faz 16'ya gecis tamamlandi; kapanis/verify turu baslatildi.
 
 
 - 2026-03-10: Faz 15 icin AuxWorkbench reminder sayfa testi eklendi; reminder aux presetleri, ozet kartlari ve Done mutation kontrati test ile sabitlendi.
+
+## 2026-03-12 Faz 41 Baslangic Notu
+- [x] Reports runtime export format normalize akisina MIME alias ve `xlsb` destegi eklenecek backlog olarak secildi.
+- [x] Locale-aware tabular title fallback ve reporting filter normalize hardening ayni faz altina alindi.
+- [x] Payment report branch-policy lookup icin request-scope cache hedefi netlestirildi.
+
+## 2026-03-12 Faz 41 Kapanis Notu
+- [x] `reports_runtime.normalize_export_format(...)` MIME aliaslari ve `xlsb` destegi ile genisletildi.
+- [x] `build_tabular_download_response(...)` tam locale -> base locale -> `en` fallback sirasi ile sertlestirildi.
+- [x] `reporting.normalize_report_filters(...)` nullish string degerlerini dislayacak sekilde sertlestirildi.
+- [x] `_policy_names_for_branch(...)` ayni request icinde cache kullanir hale getirildi.
+- [x] Faz 41 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 42 Kapanis Notu
+- [x] `report_exports.REPORT_TITLES` communication/reconciliation/claims operations raporlarini da kapsar hale getirildi.
+- [x] `build_report_title(...)` tam locale -> base locale -> `en` fallback sirasi ile sertlestirildi.
+- [x] `scheduled_reports` format normalize akisi summary, config normalize ve dispatch adimlarinda ortak helper ile tek kaynaga baglandi.
+- [x] Faz 42 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 43 Kapanis Notu
+- [x] `list_exports.build_screen_export_payload(...)` invalid JSON query icin bos payload fallback'i ile sertlestirildi.
+- [x] `list_exports._localize(...)` tam locale -> base locale -> `en` fallback sirasi ile hizalandi.
+- [x] `build_tabular_payload_export_response(...)` invalid JSON durumunda guvenli varsayilan payload ile calisir hale getirildi.
+- [x] Faz 43 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 44 Kapanis Notu
+- [x] `api/list_exports._normalize_permission_doctypes(...)` comma-separated string girdileri destekler hale getirildi.
+- [x] Invalid permission doctype JSON fallback davranisi patlamadan calisacak sekilde sertlestirildi.
+- [x] Permission doctype listesi tekrar eden girdileri tekillestirir hale getirildi.
+- [x] Faz 44 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 45 Kapanis Notu
+- [x] Issue: List Export Permission Contract Hardening acildi.
+- [x] `export_tabular_payload(...)` en az bir permission doctype zorunlulugu ile sertlestirildi.
+- [x] Bos izin listesi durumunda export akisi kontrollu hata verir hale getirildi.
+- [x] Faz 45 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 46 Kapanis Notu
+- [x] Issue: Report Payload Limit Contract Hardening acildi.
+- [x] `report_registry.build_report_payload(...)` limit normalize akisi `cint` tabanli hale getirildi.
+- [x] Non-numeric ve string limit girdileri icin kontrat test ile sabitlendi.
+- [x] Faz 46 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 47-51 Kapanis Notu
+- [x] Issue: Tabular Export Column Inference ile kolon listesi verilmediginde row anahtarlarindan kolon cikarimi eklendi.
+- [x] Issue: Tabular Export Column Deduplication ile kolon trim ve duplicate temizligi eklendi.
+- [x] Issue: Tabular Export Filter Shape Hardening ile dict-disindaki filter degerleri bos filtreye dusuruldu.
+- [x] Issue: Screen Export Query Shape Hardening ile invalid `filters` / `or_filters` shape'leri kontrollu sekilde dislandi.
+- [x] Issue: Tabular Export Row Collection Hardening ile list/tuple disindaki row payload'lari bos row setine dusuruldu.
+- [x] Faz 47-51 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 52-61 Kapanis Notu
+- [x] Issue: Tabular Export Title Normalize ile bos title degeri `export_key` fallback'ine baglandi.
+- [x] Issue: Tabular Export Column String Input ile comma-separated kolon girdisi desteklendi.
+- [x] Issue: Tabular Export JSON Filter Coercion ile JSON string filtreler dict'e donusturuldu.
+- [x] Issue: Screen Export JSON Filter Coercion ile screen export `filters` / `or_filters` icin JSON string parse destegi eklendi.
+- [x] Issue: Dashboard Row Payload Guard ve Dashboard Row Shape Guard ile fetcher payload/row kontrati sertlestirildi.
+- [x] Issue: Boolean Formatter Token Expansion ile `on` / `evet` gibi tokenler desteklendi.
+- [x] Issue: Payload Dict Serialize Fallback ile `frappe.as_json(...)` hatasinda string fallback eklendi.
+- [x] Faz 52-61 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 62-71 Kapanis Notu
+- [x] Issue: Report Download Full Locale ile `build_report_download_response(...)` tam locale davranisina cekildi.
+- [x] Issue: Tabular Title Trim ve Localized Title Trim ile bos/whitespace title fallback davranisi sertlestirildi.
+- [x] Issue: Download Payload Coercion ile columns/rows/filters shape guard eklendi.
+- [x] Issue: Scheduled Config Parse Hardening ile invalid ve non-dict JSON config bos payload'a dusuruldu.
+- [x] Issue: Export Key Fallback ve Report Key Trim ile filename/title helper'lari trim/fallback davranisina hizalandi.
+- [x] Faz 62-71 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 72-81 Kapanis Notu
+- [x] Issue: Report Export Filename Trim ve Report Title Locale Trim issue'lari tamamlandi.
+- [x] Issue: PDF/XLSX Render Input Coercion ile title/columns/rows/filters shape guard eklendi.
+- [x] Issue: Workbook Payload Hardening ile XLSX satir/sutun yazimi yalnizca gecerli kolon ve row seti uzerinden calisir hale getirildi.
+- [x] Faz 72-81 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 82-106 Kapanis Notu
+- [x] Issue: Scheduled Report Recipient Normalize, Filter Coercion, Frequency/Channel Normalize ve Schedule Clamp issue serisi tamamlandi.
+- [x] Issue: Scheduled Dispatch Recipient/Filter Normalize ile dispatch akisinda string recipients ve JSON filters desteklendi.
+- [x] Issue: Report Export/Runtime String Column ve JSON Filter Coercion issue serisi tamamlandi.
+- [x] Faz 82-106 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 107-126 Kapanis Notu
+- [x] Issue: Scheduled Report Locale Persistence, Last Status Normalize ve Last Summary JSON Coercion issue serisi tamamlandi.
+- [x] Issue: Scheduled Config Load/Save Report Key Trim ve Dispatch Locale-aware Title davranisi tamamlandi.
+- [x] Issue: Report Export/Runtime Mapping Row Coercion, Safe Title Trim ve Safe Filter Build kontratlari tamamlandi.
+- [x] Faz 107-126 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 127-146 Kapanis Notu
+- [x] Issue: Scheduled Report Config Sanitize on Load/Save ve Soft Runtime Normalize issue serisi tamamlandi.
+- [x] Issue: Scheduled Dispatch Locale-aware XLSX/PDF Render davranisi tamamlandi.
+- [x] Issue: Reports Runtime Report Key Trim ve Export Key Fallback sertlestirmesi tamamlandi.
+- [x] Faz 127-146 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 147-166 Kapanis Notu
+- [x] Issue: Reports API Filter/Index Coercion ve Summary Shape Guard issue serisi tamamlandi.
+- [x] Issue: Report Download Response Payload Guard ve Scheduled Report API parity kontratlari tamamlandi.
+- [x] Kaldigimiz yer `Faz 167`; sonraki odak export/list ortak normalize helper konsolidasyonu veya yeni API hardening blogu.
+- [x] Faz 147-166 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 167-186 Kapanis Notu
+- [x] Issue: Reports API Summary Item Normalize ve Total Guard issue serisi tamamlandi.
+- [x] Issue: Download payload content-type, filecontent ve filename-extension fallback kontratlari tamamlandi.
+- [x] Kaldigimiz yer `Faz 187`; sonraki odak export-list-report ortak normalize helper konsolidasyonu.
+- [x] Faz 167-186 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 187-206 Kapanis Notu
+- [x] Issue: Export Payload Utils ortak helper katmani olusturuldu.
+- [x] Issue: Reports Runtime, Report Exports, Scheduled Reports ve Reports API tekrar eden normalize mantigi tek kaynaga cekildi.
+- [x] Kaldigimiz yer `Faz 207`; sonraki odak list export katmanina ortak helper gecisi veya yeni reporting API hardening blogu.
+- [x] Faz 187-206 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 207-226 Kapanis Notu
+- [x] Issue: List Export ortak normalize helper gecisi tamamlandi.
+- [x] Issue: List export API limit ve permission_doctype normalize akisi ortak helper ile hizalandi.
+- [x] Sprint plandaki tarihsel acik kutular gercek durumla temizlendi; aktif odak `Faz 227` olarak guncellendi.
+- [x] Faz 207-226 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 227-246 Kapanis Notu
+- [x] Issue: List export API screen payload guard kontratlari tamamlandi.
+- [x] Issue: List export download payload content-type/filecontent fallback kontratlari tamamlandi.
+- [x] Kaldigimiz yer `Faz 247`; sonraki odak reporting API hardening veya roadmap/backlog sadeleştirme turu.
+- [x] Faz 227-246 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 247-266 Kapanis Notu
+- [x] Issue: Reports API getter/export payload shape guard kontratlari tamamlandi.
+- [x] Issue: Scheduled report mutation response parity ve numeric clamp kontratlari tamamlandi.
+- [x] Kaldigimiz yer `Faz 267`; sonraki odak roadmap-backlog sadeleştirme veya yeni release hardening blogu.
+- [x] Faz 247-266 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 267-286 Kapanis Notu
+- [x] Issue: Dalga 1 aktif durum blogu sadeleştirildi.
+- [x] Issue: Plan dosyalari arasinda aktif faz/sonraki hamle anlatimi tek formata cekildi.
+- [x] Kaldigimiz yer `Faz 287`; sonraki odak yeni release hardening blogu veya plan arsivleme turu.
+- [x] Faz 267-286 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 287-306 Kapanis Notu
+- [x] Issue: Dalga 1 ust blokta arsiv okuma kurali ortaklastirildi.
+- [x] Issue: Aktif odak tek satirli ifade ile `Faz 307`e tasindi.
+- [x] Kaldigimiz yer `Faz 307`; sonraki odak release hardening blogu tanimi.
+- [x] Faz 287-306 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 307-326 Kapanis Notu
+- [x] Issue: Release hardening blogu tanimlandi.
+- [x] Issue: Checklist, kabul kriteri ve sonraki teknik bloklar netlestirildi.
+- [x] Kaldigimiz yer `Faz 327`; sonraki odak release hardening checklist uygulama blogu.
+- [x] Faz 307-326 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 327-346 Kapanis Notu
+- [x] Issue: Release Hardening Checklist Uygulamasi acildi.
+- [x] Reports API ve List Export API download response guard'lari ortak helper katmanina cekildi.
+- [x] Reports runtime scheduled summary ve save/remove mutation fallback kontratlari sertlestirildi.
+- [x] Export payload utils ve reports runtime test kontratlari genisletildi.
+- [x] Kaldigimiz yer `Faz 347`; sonraki odak release smoke checklist taslagi ve final parity turu.
+- [x] Faz 327-346 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 347-366 Kapanis Notu
+- [x] Issue: Release Smoke Checklist Draft acildi.
+- [x] Minimum release smoke checklist ayri plan dosyasina tasindi.
+- [x] Auth gate, reports payload, report export, list export, scheduled reports ve lokalizasyon kritik basliklari tek checklist'te toplandi.
+- [x] Kaldigimiz yer `Faz 367`; sonraki odak final API-export parity turu.
+- [x] Faz 347-366 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 367-371 Kapanis Notu
+- [x] Issue: Locale Normalize Helper tamamlandi.
+- [x] Issue: Export Format Helper Parity tamamlandi.
+- [x] Issue: Scheduled Summary Channel Alias Hardening tamamlandi.
+- [x] Issue: Scheduled Mutation Channel Alias Hardening tamamlandi.
+- [x] Issue: Scheduled Config Format Parity tamamlandi.
+- [x] `coerce_locale(...)` ve `coerce_export_format(...)` ortak helper'lari eklendi.
+- [x] `reports_runtime` scheduled summary ve mutation normalize davranisi `delivery_channel`, locale ve format alias kapsami ile sertlestirildi.
+- [x] Kaldigimiz yer `Faz 372`; sonraki odak release final parity ve kapanis notu.
+- [x] Faz 367-371 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## 2026-03-12 Faz 372 Kapanis Notu
+- [x] Issue: Release Final Parity ve Kapanis Notu tamamlandi.
+- [x] Aktif release checklist ve parity bloklari birlikte kontrol edildi.
+- [x] Arsivdeki acik kutularin tarihsel not oldugu teyit edildi; aktif takipte acik madde birakilmadi.
+- [x] Durum kapanisa cekildi; sonraki adim yeni issue secimi veya yeni uygulama dalgasi olarak sabitlendi.
+- [x] Faz 372 kapanis kayitlari `ROADMAP.md`, `.plan/README.md`, `.plan/backlog.md`, `.plan/sprint-plan.md` ile senkronlandi.
+
+## Arsiv Notu
+- Bu dokumanin alt kisimlari tarihsel dalga notlaridir.
+- Guncel yon bilgisi icin sadece ustteki `Durum` blogu kullanilmalidir.

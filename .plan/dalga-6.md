@@ -8,9 +8,9 @@ Hasar yonetimi, WhatsApp oncelikli iletisim merkezi, takim gorevleri ve operasyo
 - WhatsApp adapter kararinin netlesmis olmasi
 
 ## Durum
-- **Durum:** Devam Ediyor
-- **Mevcut odak:** Claim lifecycle ve Communication Center veri modeli derinlestirme
-- **Sonraki hamle:** Segment ve kampanya operasyon yuzeyini Communication Center'a baglamak
+- **Durum:** Tamamlandi
+- **Mevcut odak:** Claims ve iletisim omurgasi tamamlandi
+- **Sonraki hamle:** Kapanis sonrasinda dogrudan Faz 16 dogrulama/smoke turune gecildi.
 
 ## Gorevler
 
@@ -36,4 +36,3 @@ Hasar yonetimi, WhatsApp oncelikli iletisim merkezi, takim gorevleri ve operasyo
 - Durum: Tamamlandi
 - Tamamlananlar: claim lifecycle alanlari, hizli claim status aksiyonlari, claim notification gorunurlugu, AT Call Note, AT Segment, AT Campaign, segment preview, campaign execution, scheduler ve campaign delivery trace.
 - Sonuc: Claim ve iletisim merkezi omurgasi operasyonel seviyede kapatildi.
-

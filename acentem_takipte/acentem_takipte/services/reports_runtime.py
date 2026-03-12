@@ -6,6 +6,16 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
+from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+    coerce_columns,
+    coerce_export_format,
+    coerce_filters,
+    coerce_locale,
+    coerce_rows,
+    coerce_string_list,
+    normalize_export_key,
+    normalize_title,
+)
 from acentem_takipte.acentem_takipte.services.report_exports import (
     build_export_filename,
     build_report_title,
@@ -24,11 +34,11 @@ from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 def build_safe_report_payload(report_key: str, filters: dict | None, limit: int) -> dict[str, Any]:
     try:
         normalized_limit = max(cint(limit), 1)
-        return build_report_payload(report_key, filters=filters, limit=normalized_limit)
+        return build_report_payload(normalize_export_key(report_key), filters=_coerce_filters(filters), limit=normalized_limit)
     except Exception:
         log_redacted_error(
             "Report payload build failed",
-            details={"report_key": report_key, "filters": filters or {}, "limit": max(cint(limit), 1)},
+            details={"report_key": str(report_key or "").strip(), "filters": _coerce_filters(filters), "limit": max(cint(limit), 1)},
         )
         frappe.throw(_("Report cannot be loaded. Please try again later."))
     return {}
@@ -42,7 +52,7 @@ def build_report_download_response(
     filters: dict,
     export_format: str,
 ) -> dict[str, Any]:
-    locale = str(getattr(frappe.local, "lang", "tr") or "tr").split("-")[0]
+    locale = coerce_locale(getattr(frappe.local, "lang", "tr"))
     return _build_download_response(
         export_key=report_key,
         title=build_report_title(report_key, locale),
@@ -63,8 +73,8 @@ def build_tabular_download_response(
     filters: dict,
     export_format: str,
 ) -> dict[str, Any]:
-    locale = str(getattr(frappe.local, "lang", "tr") or "tr").split("-")[0]
-    resolved_title = title.get(locale) or title.get("en") or export_key if isinstance(title, dict) else str(title or export_key)
+    locale = coerce_locale(getattr(frappe.local, "lang", "tr"))
+    resolved_title = _resolve_tabular_title(title, locale, export_key)
     return _build_download_response(
         export_key=export_key,
         title=resolved_title,
@@ -88,21 +98,25 @@ def _build_download_response(
 ) -> dict[str, Any]:
     normalized_format = normalize_export_format(export_format)
     filename = build_export_filename(export_key, normalized_format)
+    safe_title = normalize_title(title, normalize_export_key(export_key))
+    safe_columns = _coerce_columns(columns)
+    safe_rows = _coerce_rows(rows)
+    safe_filters = _coerce_filters(filters)
 
     if normalized_format == "pdf":
         content = render_tabular_pdf(
-            title=title,
-            columns=columns,
-            rows=rows,
-            filters=filters,
+            title=safe_title,
+            columns=safe_columns,
+            rows=safe_rows,
+            filters=safe_filters,
         )
         content_type = "application/pdf"
     else:
         content = render_tabular_xlsx(
-            title=title,
-            columns=columns,
-            rows=rows,
-            filters=filters,
+            title=safe_title,
+            columns=safe_columns,
+            rows=safe_rows,
+            filters=safe_filters,
         )
         content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -116,11 +130,7 @@ def _build_download_response(
 
 def get_scheduled_report_config_summary() -> dict[str, Any]:
     try:
-        configs = summarize_scheduled_report_configs()
-        return {
-            "items": configs,
-            "total": len(configs),
-        }
+        return _coerce_scheduled_summary_payload(summarize_scheduled_report_configs())
     except Exception:
         log_redacted_error("Scheduled report config summary failed", details={})
         return {
@@ -130,23 +140,98 @@ def get_scheduled_report_config_summary() -> dict[str, Any]:
 
 
 def save_scheduled_report(index: int | None = None, config: dict | str | None = None) -> dict[str, Any]:
-    normalized_config = frappe.parse_json(config) if isinstance(config, str) else (config or {})
+    normalized_config = _coerce_config_payload(config)
     result = upsert_scheduled_report_config(index, normalized_config)
-    return {
-        "ok": True,
-        "index": result["index"],
-        "config": result["config"],
-    }
+    return _coerce_scheduled_mutation_payload(result, include_config=True)
 
 
 def remove_scheduled_report(index: int) -> dict[str, Any]:
     result = delete_scheduled_report_config(index)
-    return {
-        "ok": True,
-        "remaining": result["remaining"],
-    }
+    return _coerce_scheduled_mutation_payload(result)
 
 
 def normalize_export_format(export_format: str | None) -> str:
-    value = str(export_format or "xlsx").strip().lower()
-    return "pdf" if value == "pdf" else "xlsx"
+    return coerce_export_format(export_format)
+
+
+def _resolve_tabular_title(title: str | dict[str, str], locale: str, export_key: str) -> str:
+    safe_export_key = normalize_export_key(export_key)
+    if not isinstance(title, dict):
+        return normalize_title(title, safe_export_key)
+    base_locale = locale.split("-")[0]
+    for key in (locale, base_locale, "en"):
+        value = str(title.get(key) or "").strip()
+        if value:
+            return value
+    return safe_export_key
+
+
+def _coerce_columns(columns: Any) -> list[str]:
+    return coerce_columns(columns)
+
+
+def _coerce_rows(rows: Any) -> list[dict[str, Any]]:
+    return coerce_rows(rows)
+
+
+def _coerce_filters(filters: Any) -> dict[str, Any]:
+    return coerce_filters(filters)
+
+
+def _coerce_config_payload(config: dict | str | None) -> dict[str, Any]:
+    if isinstance(config, str):
+        if not config.strip():
+            return {}
+        try:
+            parsed = frappe.parse_json(config) or {}
+        except Exception:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    if isinstance(config, dict):
+        return dict(config)
+    if hasattr(config, "items"):
+        return {key: value for key, value in config.items()}
+    return {}
+
+
+def _coerce_scheduled_summary_payload(value: Any) -> dict[str, Any]:
+    items = value if isinstance(value, list) else []
+    normalized_items: list[dict[str, Any]] = []
+    for item in items:
+        payload = item if isinstance(item, dict) else {}
+        normalized_items.append(
+            {
+                "report_key": normalize_export_key(payload.get("report_key")),
+                "label": normalize_title(payload.get("label") or payload.get("report_key"), normalize_export_key(payload.get("report_key"))),
+                "frequency": str(payload.get("frequency") or "daily").strip() or "daily",
+                "channel": str(payload.get("channel") or payload.get("delivery_channel") or "email").strip() or "email",
+                "enabled": bool(payload.get("enabled")),
+                "recipients": coerce_string_list(payload.get("recipients")),
+                "locale": coerce_locale(payload.get("locale")),
+                "last_status": str(payload.get("last_status") or "").strip(),
+            }
+        )
+    return {"items": normalized_items, "total": len(normalized_items)}
+
+
+def _coerce_scheduled_mutation_payload(value: Any, include_config: bool = False) -> dict[str, Any]:
+    payload = value if isinstance(value, dict) else {}
+    response: dict[str, Any] = {
+        "ok": True,
+        "index": max(cint(payload.get("index")), 0),
+        "remaining": max(cint(payload.get("remaining")), 0),
+    }
+    if include_config:
+        config = payload.get("config") if isinstance(payload.get("config"), dict) else {}
+        response["config"] = {
+            "report_key": normalize_export_key(config.get("report_key")),
+            "label": normalize_title(config.get("label") or config.get("report_key"), normalize_export_key(config.get("report_key"))),
+            "frequency": str(config.get("frequency") or "daily").strip() or "daily",
+            "channel": str(config.get("channel") or config.get("delivery_channel") or "email").strip() or "email",
+            "enabled": bool(config.get("enabled")),
+            "recipients": coerce_string_list(config.get("recipients")),
+            "filters": coerce_filters(config.get("filters")),
+            "format": coerce_export_format(config.get("format")),
+            "locale": coerce_locale(config.get("locale")),
+        }
+    return response

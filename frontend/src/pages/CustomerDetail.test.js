@@ -416,6 +416,7 @@ describe("CustomerDetail customer 360 integration", () => {
       query: {
         customer: "CUST-001",
         customer_label: "Aykut Bekir",
+        return_to: "/customers/CUST-001",
       },
     });
 
@@ -682,6 +683,63 @@ describe("CustomerDetail customer 360 integration", () => {
       name: "REM-001",
       data: {
         status: "Cancelled",
+      },
+    });
+    expect(customer360Reload).toHaveBeenCalled();
+  });
+
+  it("updates assignment status from customer detail actions", async () => {
+    const wrapper = mount(CustomerDetail, {
+      props: {
+        name: "CUST-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: true,
+          DocHeaderCard: genericStub,
+          DocSummaryGrid: true,
+          EntityPreviewCard: genericStub,
+          MetaListCard: genericStub,
+          MiniFactList: true,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionCardHeader: genericStub,
+          StatusBadge: true,
+          TimelineActivityList: genericStub,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const buttons = wrapper.findAll(".action-button-stub");
+
+    await buttons.find((candidate) => candidate.text().includes("Isleme Al")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "In Progress",
+      },
+    });
+
+    await buttons.find((candidate) => candidate.text().includes("Bloke Et")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "Blocked",
+      },
+    });
+
+    await buttons.find((candidate) => candidate.text().includes("Kapat")).trigger("click");
+    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
+      doctype: "AT Ownership Assignment",
+      name: "ASN-001",
+      data: {
+        status: "Done",
       },
     });
     expect(customer360Reload).toHaveBeenCalled();
