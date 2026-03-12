@@ -182,7 +182,7 @@ export const quickCreateRegistry = {
       ] },
       { name: "consent_status", type: "select", label: i18nLabel("İzin Durumu", "Consent Status"), options: [
         option("Unknown", "Bilinmiyor", "Unknown"),
-        option("Granted", "Onayli", "Granted"),
+        option("Granted", "Onaylı", "Granted"),
         option("Revoked", "İptal", "Revoked"),
       ] },
       { name: "assigned_agent", type: "text", label: i18nLabel("Temsilci (User)", "Assigned Agent (User)") },
@@ -239,7 +239,7 @@ export const quickCreateRegistry = {
   payment: {
     key: "payment",
     title: i18nLabel("Hızlı Ödeme/Tahsilat", "Quick Payment"),
-    subtitle: i18nLabel("Tahsilat veya odeme hareketi oluştur", "Create an inbound or outbound payment record"),
+    subtitle: i18nLabel("Tahsilat veya ödeme hareketi oluştur", "Create an inbound or outbound payment record"),
     submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_payment",
     resultKey: "payment",
     successRefreshTargets: ["payment_list"],
@@ -480,7 +480,7 @@ export const quickCreateRegistry = {
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Draft", "Taslak", "Draft"),
         option("Active", "Aktif", "Active"),
-        option("Archived", "Arsiv", "Archived"),
+        option("Archived", "Arşiv", "Archived"),
       ] },
       { name: "criteria_json", type: "textarea", label: i18nLabel("Kriter JSON", "Criteria JSON"), rows: 4, fullWidth: true },
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
@@ -527,7 +527,7 @@ export const quickCreateRegistry = {
   notification_draft: {
     key: "notification_draft",
     title: i18nLabel("Hızlı Bildirim Taslagi", "Quick Notification Draft"),
-    subtitle: i18nLabel("Şablon tabanli bildirim taslagi oluştur", "Create a template-based notification draft"),
+    subtitle: i18nLabel("Şablon tabanlı bildirim taslağı oluştur", "Create a template-based notification draft"),
     submitUrl: "acentem_takipte.acentem_takipte.api.communication.create_quick_notification_draft",
     resultKey: "draft",
     openRouteName: "notification-drafts-detail",
@@ -552,7 +552,7 @@ export const quickCreateRegistry = {
         label: i18nLabel("Kanal", "Channel"),
         options: [option("", "Template Kanal", "Template Channel"), option("SMS", "SMS", "SMS"), option("Email", "E-posta", "Email"), option("WHATSAPP", "WhatsApp", "WhatsApp")],
       },
-      { name: "language", type: "select", label: i18nLabel("Dil", "Language"), options: [option("tr", "Turkce", "Turkish"), option("en", "Ingilizce", "English")] },
+      { name: "language", type: "select", label: i18nLabel("Dil", "Language"), options: [option("tr", "Türkçe", "Turkish"), option("en", "İngilizce", "English")] },
       { name: "customer", type: "select", label: i18nLabel("Müşteri", "Customer"), optionsSource: "customers" },
       { name: "recipient", type: "text", label: i18nLabel("Alici", "Recipient"), required: true },
       {
@@ -605,7 +605,7 @@ export const quickCreateRegistry = {
         label: i18nLabel("Kanal", "Channel"),
         options: [option("", "Template Kanal", "Template Channel"), option("SMS", "SMS", "SMS"), option("Email", "E-posta", "Email"), option("WHATSAPP", "WhatsApp", "WhatsApp")],
       },
-      { name: "language", type: "select", label: i18nLabel("Dil", "Language"), options: [option("tr", "Turkce", "Turkish"), option("en", "Ingilizce", "English")] },
+      { name: "language", type: "select", label: i18nLabel("Dil", "Language"), options: [option("tr", "Türkçe", "Turkish"), option("en", "İngilizce", "English")] },
       { name: "customer", type: "select", label: i18nLabel("Müşteri", "Customer"), optionsSource: "customers" },
       { name: "recipient", type: "text", label: i18nLabel("Alici", "Recipient"), required: true },
       {
@@ -638,8 +638,8 @@ export const quickCreateRegistry = {
     successRefreshTargets: ["aux_list"],
     defaults: { company_name: "", company_code: "", is_active: true },
     fields: [
-      { name: "company_name", type: "text", label: i18nLabel("Sirket Adi", "Company Name"), required: true, fullWidth: true },
-      { name: "company_code", type: "text", label: i18nLabel("Sirket Kodu", "Company Code") },
+      { name: "company_name", type: "text", label: i18nLabel("Şirket Adı", "Company Name"), required: true, fullWidth: true },
+      { name: "company_code", type: "text", label: i18nLabel("Şirket Kodu", "Company Code") },
       { name: "is_active", type: "checkbox", label: i18nLabel("Aktif", "Active"), checkboxLabel: i18nLabel("Aktif şirket", "Active company") },
     ],
   },
@@ -681,7 +681,7 @@ export const quickCreateRegistry = {
   notification_template_master: {
     key: "notification_template_master",
     title: i18nLabel("Hızlı Bildirim Şablonu", "Quick Notification Template"),
-    subtitle: i18nLabel("Kanal ve dil bazli sablon oluştur", "Create a channel/language template"),
+    subtitle: i18nLabel("Kanal ve dil bazlı şablon oluştur", "Create a channel/language template"),
     submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_notification_template",
     resultKey: "template",
     openRouteName: "templates-detail",
@@ -706,7 +706,7 @@ export const quickCreateRegistry = {
       { name: "template_key", type: "text", label: i18nLabel("Şablon Anahtarı", "Template Key"), required: true },
       { name: "event_key", type: "text", label: i18nLabel("Event Anahtarı", "Event Key"), required: true },
       { name: "channel", type: "select", label: i18nLabel("Kanal", "Channel"), required: true, options: [option("SMS","SMS","SMS"), option("Email","E-posta","Email"), option("WHATSAPP","WhatsApp","WhatsApp"), option("Both","Her Ikisi","Both")] },
-      { name: "language", type: "select", label: i18nLabel("Dil", "Language"), required: true, options: [option("tr","Turkce","Turkish"), option("en","Ingilizce","English")] },
+      { name: "language", type: "select", label: i18nLabel("Dil", "Language"), required: true, options: [option("tr","Türkçe","Turkish"), option("en","İngilizce","English")] },
       { name: "content_mode", type: "select", label: i18nLabel("İçerik Modu", "Content Mode"), required: true, options: [option("freeform","Serbest Metin","Freeform"), option("template","Saglayici Şablonu","Provider Template")] },
       { name: "provider_template_name", type: "text", label: i18nLabel("Saglayici Şablon Adi", "Provider Template Name"), fullWidth: true },
       { name: "provider_template_category", type: "text", label: i18nLabel("Saglayici Kategori", "Provider Category") },
@@ -721,7 +721,7 @@ export const quickCreateRegistry = {
   },
   accounting_entry: {
     key: "accounting_entry",
-    title: i18nLabel("Hızlı Muhasebe Kaydi", "Quick Accounting Entry"),
+    title: i18nLabel("Hızlı Muhasebe Kaydı", "Quick Accounting Entry"),
     subtitle: i18nLabel("Mutabakat odaklı muhasebe kaydı oluştur", "Create an accounting entry for reconciliation workflows"),
     submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_accounting_entry",
     resultKey: "accounting_entry",
@@ -780,7 +780,7 @@ export const quickCreateRegistry = {
       notes: "",
     },
     fields: [
-      { name: "accounting_entry", type: "select", label: i18nLabel("Muhasebe Kaydi", "Accounting Entry"), optionsSource: "accountingEntries", required: true, fullWidth: true },
+      { name: "accounting_entry", type: "select", label: i18nLabel("Muhasebe Kaydı", "Accounting Entry"), optionsSource: "accountingEntries", required: true, fullWidth: true },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), required: true, options: [
         option("Open","Açık","Open"),
         option("Resolved","Cozuldu","Resolved"),
@@ -809,7 +809,7 @@ export const quickCreateRegistry = {
   ownership_assignment: {
     key: "ownership_assignment",
     title: i18nLabel("Hızlı Atama", "Quick Assignment"),
-    subtitle: i18nLabel("Kayıt sahipligi ve operasyon atamasi oluştur", "Create a record ownership and operational assignment"),
+    subtitle: i18nLabel("Kayıt sahipliği ve operasyon ataması oluştur", "Create a record ownership and operational assignment"),
     submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_ownership_assignment",
     resultKey: "ownership_assignment",
     openRouteName: "ownership-assignments-detail",
@@ -931,7 +931,7 @@ export const quickCreateRegistry = {
   activity: {
     key: "activity",
     title: i18nLabel("Hızlı Aktivite", "Quick Activity"),
-    subtitle: i18nLabel("Gerceklesen operasyon adimini kaydet", "Log a completed operational step"),
+    subtitle: i18nLabel("Gerçekleşen operasyon adımını kaydet", "Log a completed operational step"),
     submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_activity",
     resultKey: "activity",
     openRouteName: "activities-detail",
@@ -977,8 +977,8 @@ export const quickCreateRegistry = {
       { name: "activity_at", type: "datetime-local", label: i18nLabel("Aktivite Zamani", "Activity Time") },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Logged", "Kaydedildi", "Logged"),
-        option("Shared", "Paylasildi", "Shared"),
-        option("Archived", "Arsivlendi", "Archived"),
+        option("Shared", "Paylaşıldı", "Shared"),
+        option("Archived", "Arşivlendi", "Archived"),
       ] },
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
     ],

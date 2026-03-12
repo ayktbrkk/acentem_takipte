@@ -1,1 +1,0 @@
-const t=new Set(["http:","https:"]);function i(r){if(!r)return null;try{const n=new URL(String(r),window.location.origin);return!t.has(n.protocol)||n.origin!==window.location.origin?null:`${n.pathname}${n.search}${n.hash}`}catch{return null}}function o(r){const n=i(r);return n?(window.location.assign(n),!0):!1}export{o as n};

@@ -8,7 +8,7 @@ const reportCatalog = {
     label: { tr: "Poliçe Listesi", en: "Policy List" },
   },
   claims_operations: {
-    label: { tr: "Hasar Operasyonlari", en: "Claims Operations" },
+    label: { tr: "Hasar Operasyonları", en: "Claims Operations" },
   },
 };
 

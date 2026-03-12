@@ -17,8 +17,7 @@ const ClaimsBoard = () => import("../pages/ClaimsBoard.vue");
 const PaymentsBoard = () => import("../pages/PaymentsBoard.vue");
 const RenewalsBoard = () => import("../pages/RenewalsBoard.vue");
 const CommunicationCenter = () => import("../pages/CommunicationCenter.vue");
-const ReconciliationWorkbench = () =>
-  import("../pages/ReconciliationWorkbench.vue");
+const ReconciliationWorkbench = () => import("../pages/ReconciliationWorkbench.vue");
 const Reports = () => import("../pages/Reports.vue");
 const AuxWorkbench = () => import("../pages/AuxWorkbench.vue");
 const AuxRecordDetail = () => import("../pages/AuxRecordDetail.vue");
@@ -32,7 +31,7 @@ const router = createRouter({
       component: Dashboard,
       meta: {
         title: { tr: "Pano", en: "Dashboard" },
-        section: { tr: "Genel Bakış", en: "Overview" },
+        section: { tr: "Genel Görünüm", en: "Overview" },
       },
     },
     {
@@ -56,7 +55,7 @@ const router = createRouter({
       name: "lead-list",
       component: LeadList,
       meta: {
-        title: { tr: "Lead Yönetimi", en: "Lead Workbench" },
+        title: { tr: "Fırsat Yönetimi", en: "Lead Management" },
         section: { tr: "Satış ve Portföy", en: "Sales & Portfolio" },
       },
     },
@@ -66,7 +65,7 @@ const router = createRouter({
       component: LeadDetail,
       props: true,
       meta: {
-        title: { tr: "Lead Detay", en: "Lead Detail" },
+        title: { tr: "Fırsat Detayı", en: "Lead Detail" },
         section: { tr: "Satış ve Portföy", en: "Sales & Portfolio" },
       },
     },
@@ -76,7 +75,7 @@ const router = createRouter({
       component: OfferBoard,
       meta: {
         title: { tr: "Teklif Panosu", en: "Offer Board" },
-        section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -85,8 +84,8 @@ const router = createRouter({
       component: OfferDetail,
       props: true,
       meta: {
-        title: { tr: "Teklif Detay", en: "Offer Detail" },
-        section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
+        title: { tr: "Teklif Detayı", en: "Offer Detail" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -95,7 +94,7 @@ const router = createRouter({
       component: PolicyList,
       meta: {
         title: { tr: "Poliçe Yönetimi", en: "Policy Management" },
-        section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -104,8 +103,8 @@ const router = createRouter({
       component: PolicyDetail,
       props: true,
       meta: {
-        title: { tr: "Poliçe Detay", en: "Policy Detail" },
-        section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
+        title: { tr: "Poliçe Detayı", en: "Policy Detail" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -113,7 +112,7 @@ const router = createRouter({
       name: "customer-list",
       component: CustomerList,
       meta: {
-        title: { tr: "Müşteri Yönetimi", en: "Customer Workbench" },
+        title: { tr: "Müşteri Yönetimi", en: "Customer Management" },
         section: { tr: "Satış ve Portföy", en: "Sales & Portfolio" },
       },
     },
@@ -122,8 +121,8 @@ const router = createRouter({
       name: "claims-board",
       component: ClaimsBoard,
       meta: {
-        title: { tr: "Hasar Masasi", en: "Claim Desk" },
-        section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
+        title: { tr: "Hasar Masası", en: "Claims Desk" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -131,8 +130,8 @@ const router = createRouter({
       name: "payments-board",
       component: PaymentsBoard,
       meta: {
-        title: { tr: "Ödeme Operasyonlari", en: "Payment Operations" },
-        section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
+        title: { tr: "Ödeme Operasyonları", en: "Payment Operations" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -141,7 +140,7 @@ const router = createRouter({
       component: RenewalsBoard,
       meta: {
         title: { tr: "Yenileme Panosu", en: "Renewal Board" },
-        section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -158,7 +157,7 @@ const router = createRouter({
       name: "reconciliation-workbench",
       component: ReconciliationWorkbench,
       meta: {
-        title: { tr: "Mutabakat Masasi", en: "Reconciliation Workbench" },
+        title: { tr: "Mutabakat Masası", en: "Reconciliation Workbench" },
         section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
@@ -177,7 +176,7 @@ const router = createRouter({
       component: CustomerDetail,
       props: true,
       meta: {
-        title: { tr: "Müşteri Detay", en: "Customer Detail" },
+        title: { tr: "Müşteri Detayı", en: "Customer Detail" },
         section: { tr: "Müşteri", en: "Customer" },
       },
     },

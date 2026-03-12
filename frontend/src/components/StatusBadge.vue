@@ -21,13 +21,14 @@ const props = defineProps({
     default: "",
   },
 });
+
 const authStore = useAuthStore();
 
 const STYLES = {
   offer: {
     Draft: { className: "bg-slate-200 text-slate-700" },
     Sent: { className: "bg-sky-100 text-sky-700" },
-    Açcepted: { className: "bg-emerald-100 text-emerald-700" },
+    Accepted: { className: "bg-emerald-100 text-emerald-700" },
     Rejected: { className: "bg-rose-100 text-rose-700" },
     Converted: { className: "bg-indigo-100 text-indigo-700" },
   },
@@ -114,7 +115,7 @@ const LABELS = {
     offer: {
       Draft: "Taslak",
       Sent: "Müşteriye Gönderildi",
-      Açcepted: "Kabul Edildi",
+      Accepted: "Kabul Edildi",
       Rejected: "Reddedildi",
       Converted: "Poliçeye Dönüştü",
     },
@@ -122,13 +123,13 @@ const LABELS = {
       Active: "Aktif",
       KYT: "KYT",
       IPT: "İptal",
-      Expired: "Suresi Doldu",
+      Expired: "Süresi Doldu",
       Cancelled: "İptal",
     },
     lead: {
       Draft: "Taslak",
       Open: "Açık",
-      Replied: "Gorusuldu",
+      Replied: "Görüşüldü",
       Closed: "Kapandı",
     },
     lead_conversion: {
@@ -136,17 +137,17 @@ const LABELS = {
       Offer: "Teklife Dönüştü",
       Policy: "Poliçeye Dönüştü",
       Incomplete: "Eksik Bilgi",
-      Closed: "Kapali",
+      Closed: "Kapalı",
     },
     lead_stale: {
-      Fresh: "Guncel",
+      Fresh: "Güncel",
       FollowUp: "Takip Et",
       Stale: "Bekliyor",
     },
     claim: {
       Open: "Açık",
-      Approved: "Onaylandi",
-      Paid: "Odendi",
+      Approved: "Onaylandı",
+      Paid: "Ödendi",
       Closed: "Kapandı",
       Rejected: "Reddedildi",
     },
@@ -164,25 +165,25 @@ const LABELS = {
     accounting_sync: {
       Draft: "Taslak",
       Synced: "Senkronize",
-      Failed: "Basarisiz",
+      Failed: "Başarısız",
     },
     reconciliation: {
       Open: "Açık",
-      Resolved: "Cozuldu",
-      Ignored: "Yoksayildi",
+      Resolved: "Çözüldü",
+      Ignored: "Yoksayıldı",
     },
     consent: {
       Unknown: "Bilinmiyor",
-      Granted: "Onayli",
+      Granted: "Onaylı",
       Revoked: "İptal",
     },
     notification_status: {
       Draft: "Taslak",
       Queued: "Kuyrukta",
-      Processing: "Isleniyor",
+      Processing: "İşleniyor",
       Sent: "Gönderildi",
-      Failed: "Basarisiz",
-      Dead: "Kalici Hata",
+      Failed: "Başarısız",
+      Dead: "Kalıcı Hata",
     },
     notification_channel: {
       SMS: "SMS",
@@ -199,7 +200,7 @@ const LABELS = {
     offer: {
       Draft: "Draft",
       Sent: "Sent",
-      Açcepted: "Açcepted",
+      Accepted: "Accepted",
       Rejected: "Rejected",
       Converted: "Converted",
     },
@@ -288,6 +289,7 @@ const style = computed(() => {
   const localeLabels = LABELS[locale]?.[props.type] || LABELS.en[props.type] || {};
   const fallbackLabels = LABELS.en[props.type] || {};
   const label = localeLabels[props.status] || fallbackLabels[props.status] || props.status || "-";
+
   return {
     label,
     className: typeStyles[props.status]?.className || "bg-slate-200 text-slate-700",

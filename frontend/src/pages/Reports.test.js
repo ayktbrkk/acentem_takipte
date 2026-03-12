@@ -124,7 +124,7 @@ describe("Reports page communication operations report", () => {
         url: expect.stringContaining("get_communication_operations_report"),
       }),
     );
-    expect(wrapper.text()).toContain("İletişim Operasyonlari");
+    expect(wrapper.text()).toContain("İletişim Operasyonları");
     expect(wrapper.text()).toContain("Eşleşen Müşteri");
     expect(wrapper.text()).toContain("March Renewal");
   });
@@ -168,7 +168,7 @@ describe("Reports page communication operations report", () => {
         url: expect.stringContaining("get_reconciliation_operations_report"),
       }),
     );
-    expect(wrapper.text()).toContain("Mutabakat Operasyonlari");
+    expect(wrapper.text()).toContain("Mutabakat Operasyonları");
     expect(wrapper.text()).toContain("Açık Mutabakat");
     expect(wrapper.text()).toContain("ACC-001");
   });
@@ -212,7 +212,7 @@ describe("Reports page communication operations report", () => {
         url: expect.stringContaining("get_claims_operations_report"),
       }),
     );
-    expect(wrapper.text()).toContain("Hasar Operasyonlari");
+    expect(wrapper.text()).toContain("Hasar Operasyonları");
     expect(wrapper.text()).toContain("Reddedilen Hasar");
     expect(wrapper.text()).toContain("CLM-001");
   });

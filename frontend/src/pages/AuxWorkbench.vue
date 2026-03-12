@@ -449,8 +449,8 @@ if (!config) {
 const copy = {
   tr: {
     refresh: "Yenile",
-    advanced: "Gelismis Filtreler",
-    hideAdvanced: "Gelismis Filtreleri Gizle",
+    advanced: "Gelişmiş Filtreler",
+    hideAdvanced: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
     preset: "Filtre Şablonu",
     presetDefault: "Standart",
@@ -459,7 +459,7 @@ const copy = {
     savePreset: "Kaydet",
     deletePreset: "Sil",
     savePresetPrompt: "Filtre şablonu adı",
-    deletePresetConfirm: "Bu özel sablon silinsin mi?",
+    deletePresetConfirm: "Bu özel şablon silinsin mi?",
     searchPlaceholder: "Kayıt ara...",
     loading: "Liste yükleniyor...",
     loadErrorTitle: "Liste Yüklenemedi",
@@ -530,7 +530,7 @@ const copy = {
     cancelTaskAction: "İptal Et",
     running: "Çalışıyor...",
     page: "Sayfa",
-    prev: "Onceki",
+    prev: "Önceki",
     next: "Sonraki",
   },
   en: {
@@ -1082,7 +1082,7 @@ function fieldLabel(field) {
 }
 
 function optionLabel(fd, opt) {
-  if (opt === "") return activeLocale.value === "tr" ? "Tum" : "All";
+  if (opt === "") return activeLocale.value === "tr" ? "Tümü" : "All";
   if (fd.field === "is_active") {
     if (String(opt) === "1") return activeLocale.value === "tr" ? "Aktif" : "Active";
     if (String(opt) === "0") return activeLocale.value === "tr" ? "Pasif" : "Inactive";

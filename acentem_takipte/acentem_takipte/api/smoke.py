@@ -141,8 +141,8 @@ def run_backend_smoke_test() -> dict:
                 "event_key": "policy_created",
                 "channel": "SMS",
                 "language": "tr",
-                "subject": "Policeniz olusturuldu: {{ policy_no }}",
-                "body_template": "Sayin {{ customer.full_name }}, policeniz olusturuldu.",
+                "subject": "Poliçeniz oluşturuldu: {{ policy_no }}",
+                "body_template": "Sayın {{ customer.full_name }}, poliçeniz oluşturuldu.",
                 "is_active": 1,
             }
         ).insert()
@@ -155,7 +155,7 @@ def run_backend_smoke_test() -> dict:
                 "event_key": "renewal_due",
                 "channel": "SMS",
                 "language": "tr",
-                "subject": "Policeniz yenileme zamani",
+                "subject": "Poliçeniz yenileme zamanı",
                 "body_template": "Sayin {{ customer.full_name }}, yenileme tarihi {{ renewal_date }}.",
                 "is_active": 1,
             }

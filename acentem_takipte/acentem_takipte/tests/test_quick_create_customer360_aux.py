@@ -134,7 +134,7 @@ def test_create_quick_segment_uses_service_payload():
     with patch.object(quick_create_api, "_assert_create_permission"):
         with patch.object(quick_create_api, "_resolve_office_branch", return_value="IST"):
             with patch.object(quick_create_api, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
-                with patch.object(quick_create_api, "normalize_note_text", return_value="Yenileme odakli"):
+                with patch.object(quick_create_api, "normalize_note_text", return_value="Yenileme odaklı"):
                     with patch.object(
                         quick_create_api,
                         "create_segment_service",
@@ -147,7 +147,7 @@ def test_create_quick_segment_uses_service_payload():
                             office_branch="IST",
                             status="Active",
                             criteria_json='{"renewal_window_days":30}',
-                            notes="Yenileme odakli",
+                            notes="Yenileme odaklı",
                         )
 
     service_mock.assert_called_önce_with(
@@ -159,7 +159,7 @@ def test_create_quick_segment_uses_service_payload():
             "office_branch": "IST",
             "status": "Active",
             "criteria_json": '{"renewal_window_days":30}',
-            "notes": "Yenileme odakli",
+            "notes": "Yenileme odaklı",
         }
     )
     assert result == {"segment": "AT-SEG-2026-00001"}

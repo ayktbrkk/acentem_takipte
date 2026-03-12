@@ -363,7 +363,7 @@ const copy = {
     tabActivity: "Aktivite",
     openCustomer360: "Müşteri 360",
     openOffer: "Teklif Detayi",
-    openPolicy: "Poliçe Detayı",
+    openPolicy: "Poliçe Detayını Aç",
     openCommunication: "İletişim",
     openPayments: "Ödemeler",
     openRenewals: "Yenilemeler",
@@ -829,7 +829,7 @@ function leadStaleState(row) {
   return "Fresh";
 }
 function leadStaleLabel(state) {
-  if (state === "Fresh") return activeLocale.value === "tr" ? "Guncel" : "Fresh";
+  if (state === "Fresh") return activeLocale.value === "tr" ? "Güncel" : "Fresh";
   if (state === "FollowUp") return activeLocale.value === "tr" ? "Takip Et" : "Follow Up";
   return activeLocale.value === "tr" ? "Bekliyor" : "Stale";
 }

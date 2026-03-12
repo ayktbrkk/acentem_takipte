@@ -39,8 +39,8 @@ const copy = {
     allBranches: "Tüm Şubeler",
     allBranchesActive: "Tüm şubeler seçili",
     singleBranchLocked: "Sabit kapsam",
-    defaultBranchPrefix: "Ana sube",
-    defaultBranchMissing: "Ana sube tanimli degil",
+    defaultBranchPrefix: "Ana şube",
+    defaultBranchMissing: "Ana şube tanımlı değil",
   },
   en: {
     scope: "Branch Scope",
@@ -63,9 +63,9 @@ const defaultBranchLabel = computed(() =>
   branchStore.defaultBranch?.office_branch_name || branchStore.defaultBranch?.name || ""
 );
 const helperLabel = computed(() => {
-  const defaultLabel = (defaultBranchLabel.value
+  const defaultLabel = defaultBranchLabel.value
     ? `${t("defaultBranchPrefix")}: ${defaultBranchLabel.value}`
-    : t("defaultBranchMissing"));
+    : t("defaultBranchMissing");
 
   if (branchStore.canAccessAll && !branchStore.requestBranch) {
     return [t("allBranchesActive"), defaultLabel].filter(Boolean).join(" • ");

@@ -7,9 +7,9 @@ from acentem_takipte.acentem_takipte.services.report_exports import build_export
 
 
 def test_build_report_title_includes_extended_report_catalog():
-    assert build_report_title("communication_operations", "tr") == "İletişim Operasyonlari Raporu"
+    assert build_report_title("communication_operations", "tr") == "İletişim Operasyonları Raporu"
     assert build_report_title("reconciliation_operations", "en") == "Reconciliation Operations Report"
-    assert build_report_title("claims_operations", "tr") == "Hasar Operasyonlari Raporu"
+    assert build_report_title("claims_operations", "tr") == "Hasar Operasyonları Raporu"
 
 
 def test_build_report_title_uses_full_locale_then_base_locale():

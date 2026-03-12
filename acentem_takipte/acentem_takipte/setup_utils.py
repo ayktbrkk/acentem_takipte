@@ -290,7 +290,7 @@ DEFAULT_NOTIFICATION_TEMPLATES = (
         "subject": "Poliçe yenileme hatırlatması",
         "body_template": (
             "Sayin {{ customer.full_name }},\n"
-            "Poliçenizin yenileme tarihi yaklasiyor.\n"
+            "Poliçenizin yenileme tarihi yaklaşıyor.\n"
             "Poliçe: {{ policy }}\n"
             "Yenileme: {{ renewal_date }}\n"
             "Son tarih: {{ due_date }}"

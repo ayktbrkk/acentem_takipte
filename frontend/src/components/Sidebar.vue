@@ -46,7 +46,6 @@
             {{ isCollapsed ? ">>" : "<<" }}
           </button>
         </div>
-
       </div>
 
       <nav class="flex-1 overflow-y-auto px-3 pb-4">
@@ -139,18 +138,11 @@ const uiStore = useUiStore();
 
 const copy = {
   tr: {
-    menu: "Menu",
+    menu: "Menü",
     brand: "Acentem Takipte",
     title: "Sigorta CRM",
     miniTitle: "CRM",
     subtitle: "Fırsat, poliçe, hasar ve tahsilat operasyonları",
-    scopeTitle: "Sprint Kapsamı",
-    scopeValue: "İletişim -> Muhasebe -> Mutabakat",
-    quickCreate: "Hızlı Oluştur",
-    quickOffer: "Yeni Teklif",
-    quickLead: "Yeni Fırsat",
-    quickCustomer: "Yeni Müşteri",
-    quickClaim: "Yeni Hasar",
     sectionOverview: "Genel Görünüm",
     sectionSalesPortfolio: "Satış ve Portföy",
     sectionOperations: "Operasyonlar",
@@ -158,10 +150,6 @@ const copy = {
     sectionMaster: "Ana Veriler",
     sectionFinance: "Finans ve Kontrol",
     dashboard: "Pano",
-    operationsDashboard: "Operasyon Panosu",
-    salesDashboard: "Satış Panosu",
-    collectionsDashboard: "Tahsilat Panosu",
-    renewalsDashboard: "Yenileme Panosu",
     leads: "Fırsatlar",
     offers: "Teklifler",
     policies: "Poliçeler",
@@ -175,30 +163,23 @@ const copy = {
     tasks: "Görevler",
     notificationDrafts: "Bildirim Taslakları",
     notificationOutbox: "Giden Bildirimler",
-    companies: "Sigorta Sirketleri",
+    companies: "Sigorta Şirketleri",
     branches: "Branşlar",
     salesEntities: "Satış Birimleri",
     templates: "Bildirim Şablonları",
-    accountingEntries: "Muhasebe Kayıtlari",
+    accountingEntries: "Muhasebe Kayıtları",
     reconciliationItems: "Mutabakat Kalemleri",
-    collapseSidebar: "Kenar Menusunu Daralt",
-    expandSidebar: "Kenar Menusunu Genislet",
+    collapseSidebar: "Kenar menüsünü daralt",
+    expandSidebar: "Kenar menüsünü genişlet",
     collapseShort: "Daralt",
-    expandShort: "Genislet",
+    expandShort: "Genişlet",
   },
   en: {
     menu: "Menu",
     brand: "Acentem Takipte",
     title: "Insurance CRM",
     miniTitle: "CRM",
-    subtitle: "Lead, policy, claim and collection operations",
-    scopeTitle: "Sprint Scope",
-    scopeValue: "Communication -> Accounting -> Reconciliation",
-    quickCreate: "Quick Create",
-    quickOffer: "New Offer",
-    quickLead: "New Lead",
-    quickCustomer: "New Customer",
-    quickClaim: "New Claim",
+    subtitle: "Lead, policy, claim, and collections operations",
     sectionOverview: "Overview",
     sectionSalesPortfolio: "Sales & Portfolio",
     sectionOperations: "Operations",
@@ -206,10 +187,6 @@ const copy = {
     sectionMaster: "Master Data",
     sectionFinance: "Finance & Control",
     dashboard: "Dashboard",
-    operationsDashboard: "Operations Dashboard",
-    salesDashboard: "Sales Dashboard",
-    collectionsDashboard: "Collections Dashboard",
-    renewalsDashboard: "Renewals Dashboard",
     leads: "Leads",
     offers: "Offers",
     policies: "Policies",
@@ -222,7 +199,7 @@ const copy = {
     reports: "Reports",
     tasks: "Tasks",
     notificationDrafts: "Notification Drafts",
-    notificationOutbox: "Notification Outbox",
+    notificationOutbox: "Sent Notifications",
     companies: "Insurance Companies",
     branches: "Branches",
     salesEntities: "Sales Entities",
@@ -255,7 +232,6 @@ function linkClass(item) {
   }
   return "px-3";
 }
-
 
 const navSections = computed(() => [
   {

@@ -18,9 +18,9 @@ REPORT_TITLES = {
     "claim_loss_ratio": {"tr": "Hasar Prim Oranı Raporu", "en": "Claim Loss Ratio Report"},
     "agent_performance": {"tr": "Açente Uretim Karnesi", "en": "Agency Performance Scorecard"},
     "customer_segmentation": {"tr": "Müşteri Segmentasyon Raporu", "en": "Customer Segmentation Report"},
-    "communication_operations": {"tr": "İletişim Operasyonlari Raporu", "en": "Communication Operations Report"},
-    "reconciliation_operations": {"tr": "Mutabakat Operasyonlari Raporu", "en": "Reconciliation Operations Report"},
-    "claims_operations": {"tr": "Hasar Operasyonlari Raporu", "en": "Claims Operations Report"},
+    "communication_operations": {"tr": "İletişim Operasyonları Raporu", "en": "Communication Operations Report"},
+    "reconciliation_operations": {"tr": "Mutabakat Operasyonları Raporu", "en": "Reconciliation Operations Report"},
+    "claims_operations": {"tr": "Hasar Operasyonları Raporu", "en": "Claims Operations Report"},
 }
 
 
