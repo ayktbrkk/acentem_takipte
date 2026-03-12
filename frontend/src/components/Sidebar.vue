@@ -140,7 +140,7 @@ const uiStore = useUiStore();
 const copy = {
   tr: {
     menu: "Menu",
-    brand: "Açentem Takipte",
+    brand: "Acentem Takipte",
     title: "Sigorta CRM",
     miniTitle: "CRM",
     subtitle: "Fırsat, police, hasar ve tahsilat operasyonlari",
@@ -188,7 +188,7 @@ const copy = {
   },
   en: {
     menu: "Menu",
-    brand: "Açentem Takipte",
+    brand: "Acentem Takipte",
     title: "Insurance CRM",
     miniTitle: "CRM",
     subtitle: "Lead, policy, claim and collection operations",

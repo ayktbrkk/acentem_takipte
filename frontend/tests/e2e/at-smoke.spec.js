@@ -23,7 +23,7 @@ async function callPostMethod(page, method, params = {}) {
   return { ok: response.ok(), status: response.status(), payload };
 }
 
-test.describe("Açentem Takipte smoke", () => {
+test.describe("Acentem Takipte smoke", () => {
   test("dashboard -> offers -> policies navigation", async ({ page }) => {
     await ensureAuthenticated(page);
 
