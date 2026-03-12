@@ -19,7 +19,7 @@
         :disabled="loading"
         @click="$emit('cancel')"
       >
-        {{ labels.cancel || "Vazgec" }}
+        {{ labels.cancel || "Vazgeç" }}
       </button>
       <button
         class="rounded-lg border border-brand-700 px-4 py-2 text-sm font-semibold text-brand-700 disabled:opacity-60"
@@ -48,7 +48,7 @@ defineProps({
   subtitle: { type: String, default: "" },
   labels: {
     type: Object,
-    default: () => ({ cancel: "Vazgec", save: "Kaydet", saveAndOpen: "Kaydet ve Ac" }),
+    default: () => ({ cancel: "Vazgeç", save: "Kaydet", saveAndOpen: "Kaydet ve Aç" }),
   },
   loading: { type: Boolean, default: false },
   saveDisabled: { type: Boolean, default: false },

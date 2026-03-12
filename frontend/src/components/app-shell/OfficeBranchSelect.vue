@@ -37,7 +37,7 @@ const copy = {
   tr: {
     scope: "Şube Kapsamı",
     allBranches: "Tüm Şubeler",
-    allBranchesActive: "Tum subeler secili",
+    allBranchesActive: "Tüm şubeler seçili",
     singleBranchLocked: "Sabit kapsam",
     defaultBranchPrefix: "Ana sube",
     defaultBranchMissing: "Ana sube tanimli degil",

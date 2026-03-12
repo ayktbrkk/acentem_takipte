@@ -519,7 +519,7 @@ describe("PolicyDetail policy 360 integration", () => {
       })
     );
 
-    await buttons.find((candidate) => candidate.text().includes("Duzenle")).trigger("click");
+    await buttons.find((candidate) => candidate.text().includes("Düzenle")).trigger("click");
     const resetForm = vi.fn();
     await dialogs[1].vm.triggerBeforeOpen({}, resetForm);
     expect(resetForm).toHaveBeenCalledWith(

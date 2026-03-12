@@ -84,7 +84,7 @@ const createResourceHandle = createResource({
 });
 
 const labelsResolved = computed(() => ({
-  cancel: props.labels.cancel || (props.locale === "tr" ? "Vazgec" : "Cancel"),
+  cancel: props.labels.cancel || (props.locale === "tr" ? "Vazgeç" : "Cancel"),
   save: props.labels.save || (props.locale === "tr" ? "Kaydet" : "Save"),
   saveAndOpen: props.labels.saveAndOpen || (props.locale === "tr" ? "Kaydet ve Ac" : "Save & Open"),
 }));
@@ -120,7 +120,7 @@ function validateRequiredFields() {
     }
   }
   if (!valid) {
-    errorText.value = props.locale === "tr" ? "Lutfen gerekli alanlari doldurun." : "Please fill required fields.";
+    errorText.value = props.locale === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.";
   }
   return valid;
 }

@@ -112,7 +112,7 @@ describe("ScheduledReportsManager", () => {
     const selects = wrapper.findAll("select");
     await selects[0].setValue("claims_operations");
 
-    expect(wrapper.text()).toContain("Sigorta Bransi");
+    expect(wrapper.text()).toContain("Sigorta Branşı");
     expect(wrapper.text()).toContain("Sigorta Şirketi");
     expect(wrapper.text()).toContain("Durum");
     expect(wrapper.text()).toContain("Başlangıç Tarihi");

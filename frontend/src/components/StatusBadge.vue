@@ -116,7 +116,7 @@ const LABELS = {
       Sent: "Müşteriye Gönderildi",
       Açcepted: "Kabul Edildi",
       Rejected: "Reddedildi",
-      Converted: "Poliçeye Donustu",
+      Converted: "Poliçeye Dönüştü",
     },
     policy: {
       Active: "Aktif",
@@ -133,8 +133,8 @@ const LABELS = {
     },
     lead_conversion: {
       Actionable: "Aksiyon Bekliyor",
-      Offer: "Teklife Donustu",
-      Policy: "Poliçeye Donustu",
+      Offer: "Teklife Dönüştü",
+      Policy: "Poliçeye Dönüştü",
       Incomplete: "Eksik Bilgi",
       Closed: "Kapali",
     },

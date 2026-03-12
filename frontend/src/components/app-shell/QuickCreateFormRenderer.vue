@@ -289,7 +289,7 @@ function resolveRemoteSelectOptions(field) {
 function remoteNoResultsText(field) {
   const label = text(field?.label) || "";
   if (props.locale === "tr") {
-    return label ? `${label} icin kayit bulunamadı.` : "Kayıt bulunamadı.";
+    return label ? `${label} için kayıt bulunamadı.` : "Kayıt bulunamadı.";
   }
   return label ? `No records found for ${label}.` : "No records found.";
 }

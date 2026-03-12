@@ -357,7 +357,7 @@ describe("CustomerDetail customer 360 integration", () => {
     await buttonByText("Yeni Varlık").trigger("click");
     expect(dialogs().find((node) => node.attributes("data-config-key") === "insured_asset")?.attributes("data-open")).toBe("true");
 
-    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Duzenle"));
+    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Düzenle"));
     await editButtons[0].trigger("click");
     expect(dialogs().find((node) => node.attributes("data-config-key") === "customer_relation_edit")?.attributes("data-open")).toBe("true");
 
@@ -506,7 +506,7 @@ describe("CustomerDetail customer 360 integration", () => {
     expect(assetCreateForm.policy).toBe("POL-001");
     expect(dialogs[1].props("optionsMap").policies).toHaveLength(1);
 
-    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Duzenle"));
+    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Düzenle"));
     await editButtons[0].trigger("click");
     const relationResetForm = vi.fn();
     await dialogs[2].vm.triggerBeforeOpen({}, relationResetForm);
@@ -623,7 +623,7 @@ describe("CustomerDetail customer 360 integration", () => {
       })
     );
 
-    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Duzenle"));
+    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Düzenle"));
     await editButtons[2].trigger("click");
 
     const assignmentResetForm = vi.fn();

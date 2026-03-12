@@ -32,7 +32,7 @@ const router = createRouter({
       component: Dashboard,
       meta: {
         title: { tr: "Pano", en: "Dashboard" },
-        section: { tr: "Genel Bakis", en: "Overview" },
+        section: { tr: "Genel Bakış", en: "Overview" },
       },
     },
     {

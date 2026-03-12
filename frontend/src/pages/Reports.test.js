@@ -560,7 +560,7 @@ describe("Reports page communication operations report", () => {
     await nextTick();
     await nextTick();
 
-    expect(wrapper.text()).toContain("Zamanlanmis raporlar yuklenemedi.");
+    expect(wrapper.text()).toContain("Zamanlanmış raporlar yüklenemedi.");
   });
 
   it("shows load error when report fetch fails", async () => {

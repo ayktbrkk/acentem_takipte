@@ -283,7 +283,7 @@ function buildOfficeBranchLookupFilters() {
 const copy = {
   tr: {
     title: "Poliçe Yönetimi",
-    subtitle: "Frappe CRM tarzinda police listesi, filtre, siralama ve sayfalama",
+    subtitle: "Frappe CRM tarzında poliçe listesi, filtre, sıralama ve sayfalama",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -301,7 +301,7 @@ const copy = {
     presetHighPremium: "Yüksek Prim",
     savePreset: "Kaydet",
     deletePreset: "Sil",
-    savePresetPrompt: "Filtre sablonu adi",
+    savePresetPrompt: "Filtre şablonu adı",
     deletePresetConfirm: "Seçili özel filtre sablonu silinsin mi?",
     applyFilters: "Uygula",
     clearFilters: "Filtreleri Temizle",
@@ -310,15 +310,15 @@ const copy = {
     customerFilter: "Müşteri (içerir)",
     grossMinFilter: "Min Brüt Prim",
     grossMaxFilter: "Max Brüt Prim",
-    showing: "Gosterilen",
+    showing: "Gösterilen",
     loading: "Yükleniyor...",
-    emptyTitle: "Poliçe Bulunamadi",
-    empty: "Filtrelere uygun police kaydi bulunamadı.",
+    emptyTitle: "Poliçe Bulunamadı",
+    empty: "Filtrelere uygun poliçe kaydı bulunamadı.",
     loadErrorTitle: "Liste Yüklenemedi",
-    loadError: "Poliçe listesi yuklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+    loadError: "Poliçe listesi yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
     openDesk: "Yönetim Ekranında Aç",
     page: "Sayfa",
-    previous: "Onceki",
+    previous: "Önceki",
     next: "Sonraki",
     colPolicy: "Poliçe",
     colCustomer: "Müşteri",
@@ -539,11 +539,11 @@ const quickPolicyUi = computed(() => ({
   newLabel: activeLocale.value === "tr" ? "Yeni Poliçe" : "New Policy",
 }));
 const quickCreateCommon = computed(() => ({
-  cancel: activeLocale.value === "tr" ? "Vazgec" : "Cancel",
+  cancel: activeLocale.value === "tr" ? "Vazgeç" : "Cancel",
   save: activeLocale.value === "tr" ? "Kaydet" : "Save",
   saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Aç" : "Save & Open",
   validation: activeLocale.value === "tr" ? "Lütfen gerekli alanlari doldurun." : "Please fill required fields.",
-  failed: activeLocale.value === "tr" ? "Hızlı police oluşturma başarısız oldu." : "Quick policy create failed.",
+  failed: activeLocale.value === "tr" ? "Hızlı poliçe oluşturma başarısız oldu." : "Quick policy create failed.",
 }));
 const policyListError = ref("");
 const totalPages = computed(() => policyStore.totalPages);

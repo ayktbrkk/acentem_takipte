@@ -162,9 +162,9 @@ vi.mock("frappe-ui", () => ({
                   claim_risk: "Medium",
                   score: 82,
                   source_version: "v1",
-                  strengths_json: JSON.stringify(["2 aktif police", "Yüksek toplam prim"]),
+                  strengths_json: JSON.stringify(["2 aktif poliçe", "Yüksek toplam prim"]),
                   risks_json: JSON.stringify(["1 geciken taksit"]),
-                  score_reason_json: JSON.stringify(["Yenileme penceresinde aktif police mevcut"]),
+                  score_reason_json: JSON.stringify(["Yenileme penceresinde aktif poliçe mevcut"]),
                   modified: "2026-03-09T10:00:00Z",
                   owner: "Administrator",
                 },
@@ -364,9 +364,9 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     expect(wrapper.text()).toContain("Guclu Sinyaller");
     expect(wrapper.text()).toContain("Risk Sinyalleri");
     expect(wrapper.text()).toContain("Skor Gerekceleri");
-    expect(wrapper.text()).toContain("2 aktif police");
+    expect(wrapper.text()).toContain("2 aktif poliçe");
     expect(wrapper.text()).toContain("1 geciken taksit");
-    expect(wrapper.text()).toContain("Yenileme penceresinde aktif police mevcut");
+    expect(wrapper.text()).toContain("Yenileme penceresinde aktif poliçe mevcut");
   });
 
   it("renders readable ownership assignment detail blocks", async () => {

@@ -23,7 +23,7 @@ const RELATED_QUICK_CREATE_SOURCE_MAP = Object.freeze({
     routeName: "branches-list",
     quickIntent: false,
     prefillField: "branch_name",
-    actionLabel: { tr: "Yeni Brans Ekle", en: "Add New Branch" },
+    actionLabel: { tr: "Yeni Branş Ekle", en: "Add New Branch" },
   },
 });
 
