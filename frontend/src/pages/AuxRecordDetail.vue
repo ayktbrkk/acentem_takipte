@@ -697,7 +697,7 @@ function formatValue(field, value) {
   if (value == null || value === "") return "-";
   if (isFieldType(field, "bool")) {
     const active = value === true || String(value) === "1";
-    return active ? (activeLocale.value === "tr" ? "Evet" : "Yes") : (activeLocale.value === "tr" ? "Hayir" : "No");
+    return active ? (activeLocale.value === "tr" ? "Evet" : "Yes") : (activeLocale.value === "tr" ? "Hayır" : "No");
   }
   if (isFieldType(field, "currency")) {
     const n = Number(value);

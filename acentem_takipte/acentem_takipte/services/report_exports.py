@@ -16,7 +16,7 @@ REPORT_TITLES = {
     "payment_status": {"tr": "Tahsilat Durumu Raporu", "en": "Payment Status Report"},
     "renewal_performance": {"tr": "Yenileme Performans Raporu", "en": "Renewal Performance Report"},
     "claim_loss_ratio": {"tr": "Hasar Prim Oranı Raporu", "en": "Claim Loss Ratio Report"},
-    "agent_performance": {"tr": "Açente Uretim Karnesi", "en": "Agency Performance Scorecard"},
+    "agent_performance": {"tr": "Acente Üretim Karnesi", "en": "Agency Performance Scorecard"},
     "customer_segmentation": {"tr": "Müşteri Segmentasyon Raporu", "en": "Customer Segmentation Report"},
     "communication_operations": {"tr": "İletişim Operasyonları Raporu", "en": "Communication Operations Report"},
     "reconciliation_operations": {"tr": "Mutabakat Operasyonları Raporu", "en": "Reconciliation Operations Report"},

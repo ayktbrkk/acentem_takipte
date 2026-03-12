@@ -28,7 +28,7 @@
   {
    "fieldname": "relation_type",
    "fieldtype": "Select",
-   "label": "Iliski Turu",
+   "label": "İlişki Türü",
    "options": "\nSpouse\nChild\nParent\nSibling\nPartner\nHousehold\nOther",
    "reqd": 1
   },

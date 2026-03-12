@@ -195,7 +195,7 @@ describe("PaymentsBoard page store integration", () => {
     expect(paymentStore.inboundTotal).toBe(1000);
     expect(paymentStore.outboundTotal).toBe(400);
     expect(wrapper.text()).toContain("Taksit: 3");
-    expect(wrapper.text()).toContain("Odenen Taksit: 1/3");
+    expect(wrapper.text()).toContain("Ödenen Taksit: 1/3");
     expect(wrapper.text()).toContain("Geciken Taksit: 1");
     expect(wrapper.text()).toContain("Sonraki Vade: 2026-04-01");
 

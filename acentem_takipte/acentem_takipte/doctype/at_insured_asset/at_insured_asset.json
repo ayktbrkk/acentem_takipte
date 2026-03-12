@@ -28,7 +28,7 @@
   {
    "fieldname": "asset_type",
    "fieldtype": "Select",
-   "label": "Varlik Turu",
+   "label": "Varlık Türü",
    "options": "\nVehicle\nHome\nHealth Person\nWorkplace\nTravel\nBoat\nFarm\nOther",
    "reqd": 1
   },

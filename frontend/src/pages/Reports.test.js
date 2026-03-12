@@ -312,7 +312,7 @@ describe("Reports page communication operations report", () => {
 
     await nextTick();
 
-    const trigger = wrapper.findAll("button").find((node) => node.text().includes("Snapshotlari Çalıştır"));
+    const trigger = wrapper.findAll("button").find((node) => node.text().includes("Snapshotları Çalıştır"));
     await trigger.trigger("click");
 
     expect(frappeRequestMock).toHaveBeenCalledWith(

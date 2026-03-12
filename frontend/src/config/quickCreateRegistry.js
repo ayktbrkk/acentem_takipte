@@ -214,7 +214,7 @@ export const quickCreateRegistry = {
       { name: "policy", type: "select", label: i18nLabel("Poliçe", "Policy"), optionsSource: "policies", required: true },
       { name: "customer", type: "select", label: i18nLabel("Müşteri", "Customer"), optionsSource: "customers", required: true },
       { name: "claim_no", type: "text", label: i18nLabel("Hasar No", "Claim Number") },
-      { name: "claim_type", type: "select", label: i18nLabel("Hasar Turu", "Claim Type"), options: [
+      { name: "claim_type", type: "select", label: i18nLabel("Hasar Türü", "Claim Type"), options: [
         option("Damage", "Hasar", "Damage"),
         option("Health", "Saglik", "Health"),
         option("Theft", "Hirsizlik", "Theft"),
@@ -286,7 +286,7 @@ export const quickCreateRegistry = {
       { name: "installment_interval_days", type: "number", label: i18nLabel("Taksit Araligi (Gun)", "Installment Interval (Days)"), min: 1, step: "1" },
       { name: "currency", type: "select", label: i18nLabel("Döviz", "Currency"), options: [option("TRY", "TRY", "TRY"), option("USD", "USD", "USD"), option("EUR", "EUR", "EUR")] },
       { name: "amount", type: "number", label: i18nLabel("Tutar", "Amount"), required: true, min: 0.01, step: "0.01" },
-      { name: "reference_no", type: "text", label: i18nLabel("Dis Referans", "External Reference") },
+      { name: "reference_no", type: "text", label: i18nLabel("Dış Referans", "External Reference") },
       { name: "notes", type: "textarea", label: i18nLabel("Açıklama", "Notes"), rows: 3, fullWidth: true },
     ],
   },
@@ -466,7 +466,7 @@ export const quickCreateRegistry = {
     },
     fields: [
       { name: "segment_name", type: "text", label: i18nLabel("Segment Adi", "Segment Name"), required: true, fullWidth: true },
-      { name: "segment_type", type: "select", label: i18nLabel("Segment Turu", "Segment Type"), options: [
+      { name: "segment_type", type: "select", label: i18nLabel("Segment Türü", "Segment Type"), options: [
         option("Static", "Statik", "Static"),
         option("Dynamic", "Dinamik", "Dynamic"),
         option("Operational", "Operasyonel", "Operational"),
@@ -554,7 +554,7 @@ export const quickCreateRegistry = {
       },
       { name: "language", type: "select", label: i18nLabel("Dil", "Language"), options: [option("tr", "Türkçe", "Turkish"), option("en", "İngilizce", "English")] },
       { name: "customer", type: "select", label: i18nLabel("Müşteri", "Customer"), optionsSource: "customers" },
-      { name: "recipient", type: "text", label: i18nLabel("Alici", "Recipient"), required: true },
+      { name: "recipient", type: "text", label: i18nLabel("Alıcı", "Recipient"), required: true },
       {
         name: "reference_doctype",
         type: "select",
@@ -607,7 +607,7 @@ export const quickCreateRegistry = {
       },
       { name: "language", type: "select", label: i18nLabel("Dil", "Language"), options: [option("tr", "Türkçe", "Turkish"), option("en", "İngilizce", "English")] },
       { name: "customer", type: "select", label: i18nLabel("Müşteri", "Customer"), optionsSource: "customers" },
-      { name: "recipient", type: "text", label: i18nLabel("Alici", "Recipient"), required: true },
+      { name: "recipient", type: "text", label: i18nLabel("Alıcı", "Recipient"), required: true },
       {
         name: "reference_doctype",
         type: "select",
@@ -749,7 +749,7 @@ export const quickCreateRegistry = {
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), required: true, options: [
         option("Draft","Taslak","Draft"),
         option("Synced","Senkron","Synced"),
-        option("Failed","Basarisiz","Failed"),
+        option("Failed","Başarısız","Failed"),
       ]},
       { name: "policy", type: "select", label: i18nLabel("Poliçe", "Policy"), optionsSource: "policies" },
       { name: "customer", type: "select", label: i18nLabel("Müşteri", "Customer"), optionsSource: "customers" },
@@ -757,9 +757,9 @@ export const quickCreateRegistry = {
       { name: "currency", type: "select", label: i18nLabel("Döviz", "Currency"), options: [option("TRY","TRY","TRY"), option("USD","USD","USD"), option("EUR","EUR","EUR")] },
       { name: "local_amount", type: "number", label: i18nLabel("Yerel Tutar", "Local Amount"), step: "0.01" },
       { name: "local_amount_try", type: "number", label: i18nLabel("Yerel Tutar TRY", "Local Amount TRY"), step: "0.01" },
-      { name: "external_amount", type: "number", label: i18nLabel("Dis Tutar", "External Amount"), step: "0.01" },
-      { name: "external_amount_try", type: "number", label: i18nLabel("Dis Tutar TRY", "External Amount TRY"), step: "0.01" },
-      { name: "external_ref", type: "text", label: i18nLabel("Dis Referans", "External Ref"), fullWidth: true },
+      { name: "external_amount", type: "number", label: i18nLabel("Dış Tutar", "External Amount"), step: "0.01" },
+      { name: "external_amount_try", type: "number", label: i18nLabel("Dış Tutar TRY", "External Amount TRY"), step: "0.01" },
+      { name: "external_ref", type: "text", label: i18nLabel("Dış Referans", "External Ref"), fullWidth: true },
     ],
   },
   reconciliation_item: {
@@ -783,25 +783,25 @@ export const quickCreateRegistry = {
       { name: "accounting_entry", type: "select", label: i18nLabel("Muhasebe Kaydı", "Accounting Entry"), optionsSource: "accountingEntries", required: true, fullWidth: true },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), required: true, options: [
         option("Open","Açık","Open"),
-        option("Resolved","Cozuldu","Resolved"),
-        option("Ignored","Yoksayildi","Ignored"),
+        option("Resolved","Çözüldü","Resolved"),
+        option("Ignored","Yoksayıldı","Ignored"),
       ]},
       { name: "mismatch_type", type: "select", label: i18nLabel("Uyumsuzluk Tipi", "Mismatch Type"), required: true, options: [
         option("Amount","Tutar","Amount"),
         option("Currency","Döviz","Currency"),
-        option("Missing External","Dis Kayıt Eksik","Missing External"),
+        option("Missing External","Dış Kayıt Eksik","Missing External"),
         option("Missing Local","Yerel Kayıt Eksik","Missing Local"),
         option("Status","Durum","Status"),
         option("Other","Diğer","Other"),
       ]},
       { name: "local_amount_try", type: "number", label: i18nLabel("Yerel TRY", "Local TRY"), step: "0.01" },
-      { name: "external_amount_try", type: "number", label: i18nLabel("Dis TRY", "External TRY"), step: "0.01" },
-      { name: "resolution_action", type: "select", label: i18nLabel("Cozum Aksiyonu", "Resolution Action"), options: [
-        option("","Seciniz","Select"),
-        option("Matched","Eslesti","Matched"),
-        option("Adjusted","Duzeltildi","Adjusted"),
+      { name: "external_amount_try", type: "number", label: i18nLabel("Dış TRY", "External TRY"), step: "0.01" },
+      { name: "resolution_action", type: "select", label: i18nLabel("Çözüm Aksiyonu", "Resolution Action"), options: [
+        option("","Seçiniz","Select"),
+        option("Matched","Eşleşti","Matched"),
+        option("Adjusted","Düzeltildi","Adjusted"),
         option("Manual Override","Manuel Override","Manual Override"),
-        option("Ignored","Yoksayildi","Ignored"),
+        option("Ignored","Yoksayıldı","Ignored"),
       ]},
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
     ],

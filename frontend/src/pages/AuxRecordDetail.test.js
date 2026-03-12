@@ -326,7 +326,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
 
     expect(detailReload).toHaveBeenCalledTimes(1);
-    expect(wrapper.text()).toContain("Snapshot Baglami");
+    expect(wrapper.text()).toContain("Snapshot Bağlamı");
     expect(wrapper.text()).toContain("Segment Sinyalleri");
     expect(wrapper.text()).toContain("Gold");
     expect(wrapper.text()).toContain("High");
@@ -361,7 +361,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
     await logsTab.trigger("click");
 
-    expect(wrapper.text()).toContain("Guclu Sinyaller");
+    expect(wrapper.text()).toContain("Güçlü Sinyaller");
     expect(wrapper.text()).toContain("Risk Sinyalleri");
     expect(wrapper.text()).toContain("Skor Gerekceleri");
     expect(wrapper.text()).toContain("2 aktif poliçe");
@@ -394,7 +394,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Atama Baglami");
+    expect(wrapper.text()).toContain("Atama Bağlamı");
     expect(wrapper.text()).toContain("Atama Yasam Döngüsü");
     expect(wrapper.text()).toContain("AT Claim");
     expect(wrapper.text()).toContain("CLM-001");
@@ -633,7 +633,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const sendButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Hemen Gonder"));
+    const sendButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Hemen Gönder"));
     await sendButton.trigger("click");
 
     expect(sendDraftSubmitMock).toHaveBeenCalledWith({
@@ -831,7 +831,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const requeueButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Kuyruga Al"));
+    const requeueButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Kuyruğa Al"));
     await requeueButton.trigger("click");
 
     expect(requeueOutboxSubmitMock).toHaveBeenCalledWith({
@@ -865,7 +865,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Audit Baglami");
+    expect(wrapper.text()).toContain("Audit Bağlamı");
     expect(wrapper.text()).toContain("Karar ve Eylem");
     expect(wrapper.text()).toContain("AT Campaign");
     expect(wrapper.text()).toContain("CMP-001");
@@ -875,7 +875,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await logsTab.trigger("click");
 
     expect(wrapper.text()).toContain("Eylem Özeti");
-    expect(wrapper.text()).toContain("Karar Baglami");
+    expect(wrapper.text()).toContain("Karar Bağlamı");
     expect(wrapper.text()).toContain("created=12");
     expect(wrapper.text()).toContain("skipped=3");
     expect(wrapper.text()).toContain("matched=15");

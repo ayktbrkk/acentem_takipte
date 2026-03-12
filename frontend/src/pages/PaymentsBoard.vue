@@ -260,7 +260,7 @@ const copy = {
     installments: "Taksit",
     overdueInstallments: "Geciken Taksit",
     nextInstallmentDue: "Sonraki Vade",
-    paidInstallments: "Odenen Taksit",
+    paidInstallments: "Ödenen Taksit",
   },
   en: {
     title: "Payments",

@@ -564,7 +564,7 @@ describe("ReconciliationWorkbench page store integration", () => {
       },
     });
 
-    const bulkResolveButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Aciklari Toplu Coz"));
+    const bulkResolveButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Açıkları Toplu Çöz"));
     await bulkResolveButton.trigger("click");
 
     expect(confirmMock).toHaveBeenCalled();

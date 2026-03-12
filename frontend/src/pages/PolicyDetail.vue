@@ -955,8 +955,8 @@ function notificationStatusLabel(status) {
   if (status === "Queued") return "Kuyrukta";
   if (status === "Processing") return "Isleniyor";
   if (status === "Sent") return "Gönderildi";
-  if (status === "Failed") return "Basarisiz";
-  if (status === "Dead") return "Kalici Hata";
+  if (status === "Failed") return "Başarısız";
+  if (status === "Dead") return "Kalıcı Hata";
   if (status === "Draft") return "Taslak";
   return status || "-";
 }

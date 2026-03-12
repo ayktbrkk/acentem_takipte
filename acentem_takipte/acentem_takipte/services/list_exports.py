@@ -53,11 +53,11 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
             _column("customer", _t("Müşteri", "Customer")),
             _column("sales_entity", _t("Satış Birimi", "Sales Entity")),
             _column("insurance_company", _t("Sigorta Şirketi", "Insurance Company")),
-            _column("branch", _t("Brans", "Branch")),
+            _column("branch", _t("Branş", "Branch")),
             _column("status", _t("Durum", "Status")),
             _column("stale_state", _t("Takip Durumu", "Follow-up State")),
-            _column("conversion_state", _t("Donusum", "Conversion")),
-            _column("can_convert_to_offer", _t("Teklife Donusebilir", "Can Convert"), formatter="boolean"),
+            _column("conversion_state", _t("Dönüşüm", "Conversion")),
+            _column("can_convert_to_offer", _t("Teklife Dönüşebilir", "Can Convert"), formatter="boolean"),
             _column("estimated_gross_premium", _t("Tahmini Brüt Prim", "Estimated Gross Premium"), formatter="currency"),
             _column("converted_offer", _t("Dönüşen Teklif", "Converted Offer")),
             _column("converted_policy", _t("Dönüşen Poliçe", "Converted Policy")),
@@ -339,7 +339,7 @@ def _format_value(value: Any, *, formatter: str | None, locale: str, currency: s
     if formatter == "boolean":
         normalized_value = str(value).strip().lower()
         is_true = value is True or normalized_value in {"1", "true", "yes", "on", "evet"}
-        return "Evet" if locale == "tr" and is_true else "Hayir" if locale == "tr" else "Yes" if is_true else "No"
+        return "Evet" if locale == "tr" and is_true else "Hayır" if locale == "tr" else "Yes" if is_true else "No"
     if isinstance(value, (list, tuple, set)):
         return ", ".join(str(item) for item in value if item not in (None, ""))
     if isinstance(value, (datetime, date)):

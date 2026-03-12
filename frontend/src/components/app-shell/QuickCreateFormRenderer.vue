@@ -145,7 +145,7 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   locale: { type: String, default: "tr" },
   optionsMap: { type: Object, default: () => ({}) },
-  defaultSelectPlaceholder: { type: [String, Object], default: () => ({ tr: "Seciniz", en: "Select" }) },
+  defaultSelectPlaceholder: { type: [String, Object], default: () => ({ tr: "Seçiniz", en: "Select" }) },
   defaultSearchPlaceholder: { type: [String, Object], default: () => ({ tr: "Listede ara...", en: "Search in list..." }) },
 });
 

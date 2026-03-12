@@ -442,7 +442,7 @@ const copy = {
     metricOpen: "Açık Fark",
     metricResolved: "Çözülen",
     metricIgnored: "Yoksayılan",
-    metricFailed: "Basarisiz Entry",
+    metricFailed: "Başarısız Kayıt",
     metricOverdueCollections: "Geciken Tahsilat",
     metricOverdueAmount: "Geciken Tutar",
     metricCommissionAçcrual: "Komisyon Tahakkuk",
