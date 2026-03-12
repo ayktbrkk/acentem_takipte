@@ -27,7 +27,7 @@
   {
    "fieldname": "office_branch",
    "fieldtype": "Link",
-   "label": "Ofis Sube",
+   "label": "Ofis Şube",
    "options": "AT Office Branch"
   },
   {
@@ -80,7 +80,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "module": "Acentem Takipte",
+ "module": "Açentem Takipte",
  "name": "AT Customer Segment Snapshot",
  "permissions": [
   {
@@ -101,4 +101,3 @@
  "states": [],
  "track_changes": 1
 }
-

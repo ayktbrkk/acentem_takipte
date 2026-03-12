@@ -469,7 +469,7 @@ describe("CommunicationCenter page store integration", () => {
       segment_name: "SEG-001",
       limit: 20,
     });
-    expect(wrapper.text()).toContain("Eslesen Musteriler");
+    expect(wrapper.text()).toContain("Eşleşen Müşteriler");
     expect(wrapper.text()).toContain("Aykut K.");
   });
 
@@ -627,7 +627,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayi Isleme Al"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayi İşleme Al"));
     await button.trigger("click");
 
     expect(auxSubmit).toHaveBeenCalledWith({
@@ -763,7 +763,7 @@ describe("CommunicationCenter page store integration", () => {
     routeState.query = {
       reference_doctype: "AT Reminder",
       reference_name: "REM-001",
-      reference_label: "Hatirlatici",
+      reference_label: "Hatırlatıcı",
     };
 
     const wrapper = mount(CommunicationCenter, {
@@ -783,7 +783,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatirlaticiyi Tamamla"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatırlatıcıyi Tamamla"));
     await button.trigger("click");
 
     expect(auxSubmit).toHaveBeenCalledWith({
@@ -815,7 +815,7 @@ describe("CommunicationCenter page store integration", () => {
     routeState.query = {
       reference_doctype: "AT Reminder",
       reference_name: "REM-001",
-      reference_label: "Hatirlatici",
+      reference_label: "Hatırlatıcı",
     };
 
     const wrapper = mount(CommunicationCenter, {
@@ -835,7 +835,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatirlaticiyi Iptal Et"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatırlatıcıyi İptal Et"));
     await button.trigger("click");
 
     expect(auxSubmit).toHaveBeenCalledWith({
@@ -866,7 +866,7 @@ describe("CommunicationCenter page store integration", () => {
     routeState.query = {
       reference_doctype: "AT Reminder",
       reference_name: "REM-001",
-      reference_label: "Hatirlatici",
+      reference_label: "Hatırlatıcı",
       return_to: "/at/aux-workbench?screen=reminders",
     };
 

@@ -78,20 +78,20 @@ const accountMenuRef = ref(null);
 const copy = {
   tr: {
     menu: "Menu",
-    user: "Kullanici",
+    user: "Kullanıcı",
     defaultPage: "Pano",
-    defaultSection: "Acentem Takipte",
+    defaultSection: "Açentem Takipte",
     scope: "Kapsam",
-    allBranches: "Tum Subeler",
+    allBranches: "Tüm Şubeler",
     account: "Hesabim",
-    logout: "Cikis",
+    logout: "Çıkış",
     desk: "Uygulamaya Git",
   },
   en: {
     menu: "Menu",
     user: "User",
     defaultPage: "Dashboard",
-    defaultSection: "Acentem Takipte",
+    defaultSection: "Açentem Takipte",
     scope: "Scope",
     allBranches: "All Branches",
     account: "My Account",
@@ -152,7 +152,7 @@ async function persistLocaleViaFetch(locale) {
       method: "GET",
       credentials: "include",
       headers: {
-        Accept: "application/json",
+        Açcept: "application/json",
       },
     },
   );

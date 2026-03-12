@@ -74,7 +74,7 @@ describe("AuxWorkbench reminders", () => {
     const reminderRows = [
       {
         name: "REM-001",
-        reminder_title: "Teklif hatirlatmasi",
+        reminder_title: "Teklif hatırlatması",
         source_doctype: "AT Customer",
         source_name: "CUST-001",
         customer: "CUST-001",
@@ -161,9 +161,9 @@ describe("AuxWorkbench reminders", () => {
     await nextTick();
     await nextTick();
 
-    expect(wrapper.text()).toContain("Toplam Hatirlatici");
-    expect(wrapper.text()).toContain("Yuksek Oncelik");
-    expect(wrapper.text()).toContain("Teklif hatirlatmasi");
+    expect(wrapper.text()).toContain("Toplam Hatırlatıcı");
+    expect(wrapper.text()).toContain("Yüksek Öncelik");
+    expect(wrapper.text()).toContain("Teklif hatırlatması");
 
     const completeButton = wrapper
       .findAll(".action-button-stub")
@@ -362,7 +362,7 @@ describe("AuxWorkbench reminders", () => {
     await nextTick();
     await nextTick();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -452,7 +452,7 @@ describe("AuxWorkbench reminders", () => {
     await nextTick();
     await nextTick();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -472,7 +472,7 @@ describe("AuxWorkbench reminders", () => {
     const reminderRows = [
       {
         name: "REM-001",
-        reminder_title: "Teklif hatirlatmasi",
+        reminder_title: "Teklif hatırlatması",
         source_doctype: "AT Customer",
         source_name: "CUST-001",
         customer: "CUST-001",
@@ -540,7 +540,7 @@ describe("AuxWorkbench reminders", () => {
     await nextTick();
     await nextTick();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -629,7 +629,7 @@ describe("AuxWorkbench reminders", () => {
     await nextTick();
     await nextTick();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -718,7 +718,7 @@ describe("AuxWorkbench reminders", () => {
     await nextTick();
     await nextTick();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({

@@ -64,7 +64,7 @@ def test_build_statement_import_preview_normalizes_alias_columns_and_amounts():
     csv_text = "\n".join(
         [
             "externalRef;policy;payment;customer_name;total",
-            'EXT-900;P-900;PAY-900;Acenta Musteri;"1.250,75"',
+            'EXT-900;P-900;PAY-900;Açenta Müşteri;"1.250,75"',
         ]
     )
 
@@ -79,7 +79,7 @@ def test_build_statement_import_preview_normalizes_alias_columns_and_amounts():
     assert row["external_ref"] == "EXT-900"
     assert row["policy_no"] == "P-900"
     assert row["payment_no"] == "PAY-900"
-    assert row["customer"] == "Acenta Musteri"
+    assert row["customer"] == "Açenta Müşteri"
     assert row["amount_try"] == 1250.75
     assert row["match_status"] == "Unmatched"
 
@@ -164,6 +164,6 @@ def test_import_statement_preview_rows_imports_only_matched_rows():
     assert entry.entry_type == "Payment"
     assert entry.external_ref == "EXT-001"
     assert entry.external_amount_try == 1500
-    close_items.assert_called_once_with("ACC-001", keep_mismatch_type="Amount")
-    upsert_item.assert_called_once()
-    reconcile_flag.assert_called_once_with("ACC-001", True)
+    close_items.assert_called_önce_with("ACC-001", keep_mismatch_type="Amount")
+    upsert_item.assert_called_önce()
+    reconcile_flag.assert_called_önce_with("ACC-001", True)

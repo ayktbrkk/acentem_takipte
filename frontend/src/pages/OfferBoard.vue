@@ -494,43 +494,43 @@ const copy = {
     viewList: "Liste",
     viewBoard: "Pano",
     newOffer: "Yeni Teklif",
-    quickOfferTitle: "Hizli Teklif Olustur",
-    customerField: "Musteri",
-    customerPlaceholder: "Musteri ara veya yaz",
-    createCustomerCta: "+ Yeni Musteri Olustur",
-    noCustomersFound: "Musteri bulunamadi. Yeni musteri olarak olusturabilirsiniz.",
-    selectedCustomer: "Secili Musteri",
+    quickOfferTitle: "Hızlı Teklif Oluştur",
+    customerField: "Müşteri",
+    customerPlaceholder: "Müşteri ara veya yaz",
+    createCustomerCta: "+ Yeni Müşteri Oluştur",
+    noCustomersFound: "Müşteri bulunamadı. Yeni musteri olarak oluşturabilirsiniz.",
+    selectedCustomer: "Seçili Müşteri",
     clearSelection: "Temizle",
     branchField: "Sigorta Bransi",
-    branchPlaceholder: "Brans secin (opsiyonel)",
+    branchPlaceholder: "Brans seçin (opsiyonel)",
     notesField: "Notlar",
-    createQuickOffer: "Teklifi Olustur",
-    createQuickOfferAndOpen: "Kaydet ve Ac",
-    quickCreateValidationFailed: "Lutfen gerekli alanlari kontrol edin.",
+    createQuickOffer: "Teklifi Oluştur",
+    createQuickOfferAndOpen: "Kaydet ve Aç",
+    quickCreateValidationFailed: "Lütfen gerekli alanlari kontrol edin.",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
-    searchPlaceholder: "Teklif / Musteri / Kayit ara",
+    searchPlaceholder: "Teklif / Müşteri / Kayıt ara",
     allCompanies: "Tum Sigorta Sirketleri",
     allBranches: "Tum Branslar",
     allStatuses: "Tum Durumlar",
-    validUntilFilter: "Gecerlilik Tarihi",
+    validUntilFilter: "Geçerlilik Tarihi",
     advancedFilters: "Gelismis Filtreler",
     hideAdvancedFilters: "Gelismis Filtreleri Gizle",
     activeFilters: "aktif filtre",
-    presetLabel: "Filtre Sablonu",
+    presetLabel: "Filtre Şablonu",
     presetDefault: "Standart",
     presetActionable: "Aksiyon Bekleyenler",
-    presetConverted: "Policeye Donusenler",
-    presetExpiring7: "7 Gun Icerisinde Gecerlilik",
+    presetConverted: "Poliçeye Dönüşenler",
+    presetExpiring7: "7 Gun Icerisinde Geçerlilik",
     savePreset: "Kaydet",
     deletePreset: "Sil",
     savePresetPrompt: "Filtre sablonu adi",
-    deletePresetConfirm: "Secili ozel filtre sablonu silinsin mi?",
+    deletePresetConfirm: "Seçili özel filtre sablonu silinsin mi?",
     applyFilters: "Uygula",
     clearFilters: "Filtreleri Temizle",
-    grossMinFilter: "Min Brut Prim",
-    grossMaxFilter: "Max Brut Prim",
+    grossMinFilter: "Min Brüt Prim",
+    grossMaxFilter: "Max Brüt Prim",
     actionableOnly: "Sadece Aksiyon Bekleyen",
     showing: "Gosterilen",
     page: "Sayfa",
@@ -542,48 +542,48 @@ const copy = {
     colPremiums: "Primler",
     colActions: "Aksiyon",
     offerDate: "Teklif Tarihi",
-    validUntil: "Gecerlilik",
-    grossPremium: "Brut Prim",
+    validUntil: "Geçerlilik",
+    grossPremium: "Brüt Prim",
     netPremiumShort: "Net Prim",
     commissionShort: "Komisyon",
-    recordId: "Kayit",
-    openDesk: "Yonetim",
-    sortModifiedDesc: "Son Guncellenen",
-    sortValidUntilAsc: "Gecerlilik (Yakin)",
-    sortValidUntilDesc: "Gecerlilik (Uzak)",
-    sortGrossDesc: "Brut Prim (Yuksek)",
+    recordId: "Kayıt",
+    openDesk: "Yönetim",
+    sortModifiedDesc: "Son Güncellenen",
+    sortValidUntilAsc: "Geçerlilik (Yakın)",
+    sortValidUntilDesc: "Geçerlilik (Uzak)",
+    sortGrossDesc: "Brüt Prim (Yüksek)",
     stage: "Asama",
-    loading: "Yukleniyor...",
-    loadErrorTitle: "Teklifler Yuklenemedi",
-    loadError: "Teklif panosu verileri yuklenirken bir hata olustu. Lutfen tekrar deneyin.",
+    loading: "Yükleniyor...",
+    loadErrorTitle: "Teklifler Yüklenemedi",
+    loadError: "Teklif panosu verileri yuklenirken bir hata oluştu. Lütfen tekrar deneyin.",
     emptyTitle: "Teklif Bulunamadi",
-    empty: "Teklif kaydi bulunamadi.",
+    empty: "Teklif kaydi bulunamadı.",
     emptyLane: "Bu asamada teklif yok.",
-    customerName: "Musteri Adi",
-    premiumAmount: "Prim Tutari",
-    company: "Sigorta Sirketi",
+    customerName: "Müşteri Adi",
+    premiumAmount: "Prim Tutarı",
+    company: "Sigorta Şirketi",
     draftLane: "Taslak",
-    sentLane: "Musteriye Gonderildi",
+    sentLane: "Müşteriye Gönderildi",
     acceptedLane: "Kabul Edildi",
-    convertedLane: "Policeye Donustu",
-    convert: "Policeye Cevir",
-    openPolicy: "Police Detayini Ac",
-    convertDialogTitle: "Teklif -> Police",
-    selectedOffer: "Secili Teklif",
+    convertedLane: "Poliçeye Donustu",
+    convert: "Poliçeye Cevir",
+    openPolicy: "Poliçe Detayıni Aç",
+    convertDialogTitle: "Teklif -> Poliçe",
+    selectedOffer: "Seçili Teklif",
     netPremium: "Net Prim",
-    taxAmount: "Vergi Tutari",
-    commissionAmount: "Komisyon Tutari",
-    policyNo: "Police Numarasi (Opsiyonel)",
+    taxAmount: "Vergi Tutarı",
+    commissionAmount: "Komisyon Tutarı",
+    policyNo: "Poliçe Numarası (Opsiyonel)",
     cancel: "Vazgec",
-    createPolicy: "Police Olustur",
+    createPolicy: "Poliçe Oluştur",
     statusDraft: "Taslak",
-    statusSent: "Gonderildi",
-    statusAccepted: "Kabul Edildi",
+    statusSent: "Gönderildi",
+    statusAçcepted: "Kabul Edildi",
     statusConverted: "Donustu",
     statusRejected: "Reddedildi",
-    customerSearchFailed: "Musteri aramasi basarisiz oldu.",
-    quickOfferCreateFailed: "Hizli teklif olusturma islemi basarisiz oldu.",
-    statusUpdateFailed: "Teklif durumu guncellenemedi.",
+    customerSearchFailed: "Müşteri aramasi başarısız oldu.",
+    quickOfferCreateFailed: "Hızlı teklif oluşturma islemi başarısız oldu.",
+    statusUpdateFailed: "Teklif durumu güncellenemedi.",
     conversionFailed: "Teklif policeye donusturulemedi.",
   },
   en: {
@@ -662,7 +662,7 @@ const copy = {
     company: "Insurance Company",
     draftLane: "Draft",
     sentLane: "Sent to Customer",
-    acceptedLane: "Accepted",
+    acceptedLane: "Açcepted",
     convertedLane: "Converted to Policy",
     convert: "Convert to Policy",
     openPolicy: "Open Policy Detail",
@@ -676,7 +676,7 @@ const copy = {
     createPolicy: "Create Policy",
     statusDraft: "Draft",
     statusSent: "Sent",
-    statusAccepted: "Accepted",
+    statusAçcepted: "Açcepted",
     statusConverted: "Converted",
     statusRejected: "Rejected",
     customerSearchFailed: "Customer search failed.",
@@ -889,7 +889,7 @@ const offerCompanies = computed(() =>
 const offerStatusOptions = computed(() => [
   { value: "Draft", label: t("statusDraft") },
   { value: "Sent", label: t("statusSent") },
-  { value: "Accepted", label: t("statusAccepted") },
+  { value: "Açcepted", label: t("statusAçcepted") },
   { value: "Converted", label: t("statusConverted") },
   { value: "Rejected", label: t("statusRejected") },
 ]);
@@ -939,7 +939,7 @@ const offerActiveFilterCount = computed(() =>
 const lanes = computed(() => [
   { key: "Draft", label: t("draftLane"), borderClass: "border-t-amber-400" },
   { key: "Sent", label: t("sentLane"), borderClass: "border-t-sky-400" },
-  { key: "Accepted", label: t("acceptedLane"), borderClass: "border-t-emerald-400" },
+  { key: "Açcepted", label: t("acceptedLane"), borderClass: "border-t-emerald-400" },
   { key: "Converted", label: t("convertedLane"), borderClass: "border-t-indigo-400" },
 ]);
 
@@ -1011,7 +1011,7 @@ function validateQuickOfferForm() {
 
   const gross = Number(quickOffer.gross_premium || 0);
   const status = String(quickOffer.status || "Draft");
-  if (["Sent", "Accepted", "Rejected"].includes(status) && gross <= 0) {
+  if (["Sent", "Açcepted", "Rejected"].includes(status) && gross <= 0) {
     quickOfferFieldErrors.gross_premium = t("grossPremium");
     valid = false;
   }
@@ -1044,7 +1044,7 @@ function buildQuickOfferPayload() {
 
 function normalizeLane(status, convertedPolicy) {
   if (convertedPolicy || status === "Converted") return "Converted";
-  if (status === "Accepted") return "Accepted";
+  if (status === "Açcepted") return "Açcepted";
   if (status === "Sent") return "Sent";
   return "Draft";
 }
@@ -1102,7 +1102,7 @@ function buildOfferFilterPayload() {
   }
 
   if (offerListFilters.actionable_only) {
-    filters.status = ["in", ["Sent", "Accepted"]];
+    filters.status = ["in", ["Sent", "Açcepted"]];
     filters.converted_policy = ["is", "not set"];
   } else if (offerListFilters.status) {
     if (offerListFilters.status === "Converted") {
@@ -1716,7 +1716,7 @@ async function consumeOfferRouteIntents() {
 }
 
 function isConvertible(offer) {
-  return !offer.converted_policy && ["Sent", "Accepted"].includes(offer.status);
+  return !offer.converted_policy && ["Sent", "Açcepted"].includes(offer.status);
 }
 
 function onCardDragStart(offer) {
@@ -1756,7 +1756,7 @@ async function onLaneDrop(laneKey) {
       };
     }
 
-    if (laneKey === "Accepted" && !nextOffer.converted_policy) {
+    if (laneKey === "Açcepted" && !nextOffer.converted_policy) {
       openConvertDialog(nextOffer);
     }
   } catch (error) {
@@ -1767,7 +1767,7 @@ async function onLaneDrop(laneKey) {
 function laneToStatus(laneKey) {
   if (laneKey === "Draft") return "Draft";
   if (laneKey === "Sent") return "Sent";
-  if (laneKey === "Accepted") return "Accepted";
+  if (laneKey === "Açcepted") return "Açcepted";
   return null;
 }
 

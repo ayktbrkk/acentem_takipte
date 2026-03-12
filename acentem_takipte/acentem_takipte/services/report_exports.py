@@ -12,13 +12,13 @@ from openpyxl.styles import Font
 from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_columns, coerce_filters, coerce_rows, normalize_title
 
 REPORT_TITLES = {
-    "policy_list": {"tr": "Police Listesi Raporu", "en": "Policy List Report"},
+    "policy_list": {"tr": "Poliçe Listesi Raporu", "en": "Policy List Report"},
     "payment_status": {"tr": "Tahsilat Durumu Raporu", "en": "Payment Status Report"},
     "renewal_performance": {"tr": "Yenileme Performans Raporu", "en": "Renewal Performance Report"},
-    "claim_loss_ratio": {"tr": "Hasar Prim Orani Raporu", "en": "Claim Loss Ratio Report"},
-    "agent_performance": {"tr": "Acente Uretim Karnesi", "en": "Agency Performance Scorecard"},
-    "customer_segmentation": {"tr": "Musteri Segmentasyon Raporu", "en": "Customer Segmentation Report"},
-    "communication_operations": {"tr": "Iletisim Operasyonlari Raporu", "en": "Communication Operations Report"},
+    "claim_loss_ratio": {"tr": "Hasar Prim Oranı Raporu", "en": "Claim Loss Ratio Report"},
+    "agent_performance": {"tr": "Açente Uretim Karnesi", "en": "Agency Performance Scorecard"},
+    "customer_segmentation": {"tr": "Müşteri Segmentasyon Raporu", "en": "Customer Segmentation Report"},
+    "communication_operations": {"tr": "İletişim Operasyonlari Raporu", "en": "Communication Operations Report"},
     "reconciliation_operations": {"tr": "Mutabakat Operasyonlari Raporu", "en": "Reconciliation Operations Report"},
     "claims_operations": {"tr": "Hasar Operasyonlari Raporu", "en": "Claims Operations Report"},
 }

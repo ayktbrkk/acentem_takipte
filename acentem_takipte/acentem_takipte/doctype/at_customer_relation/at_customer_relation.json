@@ -36,18 +36,18 @@
    "default": "0",
    "fieldname": "is_household",
    "fieldtype": "Check",
-   "label": "Ayni Hane"
+   "label": "Aynı Hane"
   },
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Kullanici Notu",
-   "description": "Kullanici tarafindan eklenen serbest metin."
+   "label": "Kullanıcı Notu",
+   "description": "Kullanıcı tarafindan eklenen serbest metin."
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "module": "Acentem Takipte",
+ "module": "Açentem Takipte",
  "name": "AT Customer Relation",
  "permissions": [
   {

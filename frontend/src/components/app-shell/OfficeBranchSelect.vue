@@ -35,8 +35,8 @@ const branchStore = useBranchStore();
 
 const copy = {
   tr: {
-    scope: "Sube Kapsami",
-    allBranches: "Tum Subeler",
+    scope: "Şube Kapsamı",
+    allBranches: "Tüm Şubeler",
     allBranchesActive: "Tum subeler secili",
     singleBranchLocked: "Sabit kapsam",
     defaultBranchPrefix: "Ana sube",

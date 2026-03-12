@@ -135,7 +135,7 @@ vi.mock("frappe-ui", () => ({
               activities: [
                 {
                   name: "ACT-001",
-                  activity_title: "Musteri ile ilk gorusme",
+                  activity_title: "Müşteri ile ilk gorusme",
                   activity_type: "Call",
                   source_doctype: "AT Customer",
                   source_name: "CUST-001",
@@ -149,7 +149,7 @@ vi.mock("frappe-ui", () => ({
               reminders: [
                 {
                   name: "REM-001",
-                  reminder_title: "Teklif hatirlatmasi",
+                  reminder_title: "Teklif hatırlatması",
                   source_doctype: "AT Customer",
                   source_name: "CUST-001",
                   customer: "CUST-001",
@@ -331,16 +331,16 @@ describe("CustomerDetail customer 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Iliskili Kisiler");
-    expect(wrapper.text()).toContain("Sigortalanan Varliklar");
+    expect(wrapper.text()).toContain("İlişkili Kişiler");
+    expect(wrapper.text()).toContain("Sigortalanan Varlıklar");
     expect(wrapper.text()).toContain("Ayse Bekir");
     expect(wrapper.text()).toContain("34 ABC 123");
     expect(wrapper.text()).toContain("Geciken Taksit");
-    expect(wrapper.text()).toContain("Dokuman Ozeti");
-    expect(wrapper.text()).toContain("Toplam Dokuman");
+    expect(wrapper.text()).toContain("Doküman Özeti");
+    expect(wrapper.text()).toContain("Toplam Doküman");
     expect(wrapper.text()).toContain("PDF");
-    expect(wrapper.text()).toContain("Hatirlaticilar");
-    expect(wrapper.text()).toContain("Teklif hatirlatmasi");
+    expect(wrapper.text()).toContain("Hatırlatıcılar");
+    expect(wrapper.text()).toContain("Teklif hatırlatması");
     expect(wrapper.text()).toContain("Snapshot Tarihi");
     expect(wrapper.text()).toContain("Kaynak Surumu");
     expect(wrapper.text()).toContain("v1");
@@ -351,10 +351,10 @@ describe("CustomerDetail customer 360 integration", () => {
         .findAll(".action-button-stub")
         .find((candidate) => candidate.text().includes(label));
 
-    await buttonByText("Yeni Iliski").trigger("click");
+    await buttonByText("Yeni İlişki").trigger("click");
     expect(dialogs().find((node) => node.attributes("data-config-key") === "customer_relation")?.attributes("data-open")).toBe("true");
 
-    await buttonByText("Yeni Varlik").trigger("click");
+    await buttonByText("Yeni Varlık").trigger("click");
     expect(dialogs().find((node) => node.attributes("data-config-key") === "insured_asset")?.attributes("data-open")).toBe("true");
 
     const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Duzenle"));
@@ -398,19 +398,19 @@ describe("CustomerDetail customer 360 integration", () => {
       await button.trigger("click");
     };
 
-    await clickByText("Iliskili Kisiler");
+    await clickByText("İlişkili Kişiler");
     expect(routerPush).toHaveBeenLastCalledWith({
       name: "customer-relations-list",
       query: { customer: "CUST-001" },
     });
 
-    await clickByText("Sigortalanan Varliklar");
+    await clickByText("Sigortalanan Varlıklar");
     expect(routerPush).toHaveBeenLastCalledWith({
       name: "insured-assets-list",
       query: { customer: "CUST-001" },
     });
 
-    await clickByText("Iletisim");
+    await clickByText("İletişim");
     expect(routerPush).toHaveBeenLastCalledWith({
       name: "communication-center",
       query: {
@@ -420,7 +420,7 @@ describe("CustomerDetail customer 360 integration", () => {
       },
     });
 
-    await clickByText("Dokumanlar");
+    await clickByText("Dokümanlar");
     expect(routerPush).toHaveBeenLastCalledWith({
       name: "files-list",
       query: {
@@ -606,7 +606,7 @@ describe("CustomerDetail customer 360 integration", () => {
     expect(wrapper.text()).toContain("Aktiviteler");
     expect(wrapper.text()).toContain("agent@example.com");
     expect(wrapper.text()).toContain("2026-03-15");
-    expect(wrapper.text()).toContain("Musteri ile ilk gorusme");
+    expect(wrapper.text()).toContain("Müşteri ile ilk gorusme");
 
     const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
 
@@ -677,7 +677,7 @@ describe("CustomerDetail customer 360 integration", () => {
       },
     });
 
-    await buttons.find((candidate) => candidate.text().includes("Iptal Et")).trigger("click");
+    await buttons.find((candidate) => candidate.text().includes("İptal Et")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",
@@ -716,7 +716,7 @@ describe("CustomerDetail customer 360 integration", () => {
 
     const buttons = wrapper.findAll(".action-button-stub");
 
-    await buttons.find((candidate) => candidate.text().includes("Isleme Al")).trigger("click");
+    await buttons.find((candidate) => candidate.text().includes("İşleme Al")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",

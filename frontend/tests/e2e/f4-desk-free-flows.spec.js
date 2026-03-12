@@ -46,7 +46,7 @@ test.describe.serial("F4 desk-free core flows", () => {
     test.skip(!rowCount, "No lead rows available.");
 
     const convertedOfferBtn = page.getByRole("button", {
-      name: /Teklif Detayi|Teklifi Ac|Open Offer Detail|Open Offer/i,
+      name: /Teklif Detayi|Teklifi Aç|Open Offer Detail|Open Offer/i,
     });
     const convertNowBtn = page.getByRole("button", { name: /Teklife Cevir|Convert to Offer/i });
 
@@ -79,14 +79,14 @@ test.describe.serial("F4 desk-free core flows", () => {
     await page.goto("/at/offers");
     await expect(page).toHaveURL(/\/at\/offers(?:\?|$)/);
 
-    const openPolicyFromList = page.getByRole("button", { name: /Police Detayini Ac|Policy Detail/i });
+    const openPolicyFromList = page.getByRole("button", { name: /Poliçe Detayıni Aç|Policy Detail/i });
     if (await clickIfVisible(openPolicyFromList)) {
       await expect(page).toHaveURL(/\/at\/policies\/[^/?#]+/);
       return;
     }
 
-    const openPolicyFromDetail = page.getByRole("button", { name: /Police Detayi|Open Policy/i });
-    const convertBtn = page.getByRole("button", { name: /Policeye Cevir|Convert to Policy/i });
+    const openPolicyFromDetail = page.getByRole("button", { name: /Poliçe Detayı|Open Policy/i });
+    const convertBtn = page.getByRole("button", { name: /Poliçeye Cevir|Convert to Policy/i });
 
     const rows = page.locator("tbody tr.at-table-row");
     await rows.first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
@@ -105,7 +105,7 @@ test.describe.serial("F4 desk-free core flows", () => {
 
       if (await clickIfVisible(convertBtn)) {
         await expect(page).toHaveURL(/\/at\/offers(?:\?|$)/);
-        await expect(page.getByText(/Teklif -> Police|Offer -> Policy/i).first()).toBeVisible();
+        await expect(page.getByText(/Teklif -> Poliçe|Offer -> Policy/i).first()).toBeVisible();
         return;
       }
 
@@ -127,18 +127,18 @@ test.describe.serial("F4 desk-free core flows", () => {
     await newOfferBtn.click();
 
     await expect(page).toHaveURL(/\/at\/offers/);
-    await expect(page.getByText(/Hizli Teklif|Quick Offer|Yeni Teklif/i).first()).toBeVisible();
+    await expect(page.getByText(/Hızlı Teklif|Quick Offer|Yeni Teklif/i).first()).toBeVisible();
   });
 
   test("Customer -> Communication flow", async ({ page }) => {
     await gotoFirstCustomerDetail(page);
 
-    const communicationBtn = page.getByRole("button", { name: /Iletisim|Communication/i }).first();
+    const communicationBtn = page.getByRole("button", { name: /İletişim|Communication/i }).first();
     await expect(communicationBtn).toBeVisible();
     await communicationBtn.click();
 
     await expect(page).toHaveURL(/\/at\/communication/);
-    await expect(page.getByText(/Iletisim Merkezi|Communication Center/i).first()).toBeVisible();
+    await expect(page.getByText(/İletişim Merkezi|Communication Center/i).first()).toBeVisible();
     await expect(page).toHaveURL(/customer=/);
   });
 

@@ -30,8 +30,8 @@ async function clickSidebarNavLink(page, path) {
 }
 
 async function expectNoDeskFallbackButtons(page) {
-  await expect(page.getByRole("button", { name: /^Yonetim$/i })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /Open Desk|Yonetim \/ Desk/i })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Yönetim$/i })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Open Desk|Yönetim \/ Desk/i })).toHaveCount(0);
 }
 
 async function readSessionContext(page) {
@@ -43,7 +43,7 @@ async function readSessionContext(page) {
   const result = await page.evaluate(async () => {
     const response = await fetch("/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context", {
       credentials: "include",
-      headers: { Accept: "application/json" },
+      headers: { Açcept: "application/json" },
     });
     const text = await response.text();
     let payload = null;
@@ -77,7 +77,7 @@ async function callApiMethod(page, method, params = {}) {
       const response = await fetch(url, {
         method: "GET",
         credentials: "include",
-        headers: { Accept: "application/json" },
+        headers: { Açcept: "application/json" },
       });
       const text = await response.text();
       let payload = null;
@@ -261,8 +261,8 @@ test.describe.serial("G5 desk-free QA assist (restricted role)", () => {
     );
 
     await gotoRoute(page, "/at/communication");
-    await expect(page.getByRole("button", { name: /Hizli Iletisim|Quick Message/i })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Dagitimi Calistir|Run Dispatch/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Hızlı İletişim|Quick Message/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Dagitimi Çalıştır|Run Dispatch/i })).toHaveCount(0);
     await expect(page.locator(".at-table")).toBeVisible();
 
     await gotoRoute(page, "/at/notification-outbox");
@@ -276,7 +276,7 @@ test.describe.serial("G5 desk-free QA assist (restricted role)", () => {
     const openedAccountingDetail = await clickFirstRowIfAny(page);
     if (openedAccountingDetail) {
       await expect(page).toHaveURL(/\/at\/accounting-entries\/[^/?#]+/);
-      await expect(page.getByRole("button", { name: /Hizli Duzenle|Quick Edit/i })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /Hızlı Duzenle|Quick Edit/i })).toHaveCount(0);
     }
 
     await gotoRoute(page, "/at/reconciliation-items");

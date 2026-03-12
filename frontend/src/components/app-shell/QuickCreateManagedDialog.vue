@@ -197,7 +197,7 @@ async function submit(openAfter = false) {
     errorText.value =
       error?.messages?.join(" ") ||
       error?.message ||
-      (props.locale === "tr" ? "Kayit olusturma basarisiz oldu." : "Create failed.");
+      (props.locale === "tr" ? "Kayıt oluşturma başarısız oldu." : "Create failed.");
     emit("error", error);
   } finally {
     loading.value = false;

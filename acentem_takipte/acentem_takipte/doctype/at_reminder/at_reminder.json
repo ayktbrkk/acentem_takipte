@@ -22,7 +22,7 @@
   {
    "fieldname": "reminder_title",
    "fieldtype": "Data",
-   "label": "Hatirlatici Basligi",
+   "label": "Hatırlatıcı Basligi",
    "reqd": 1
   },
   {
@@ -34,7 +34,7 @@
   {
    "fieldname": "source_name",
    "fieldtype": "Data",
-   "label": "Kaynak Kayit"
+   "label": "Kaynak Kayıt"
   },
   {
    "fieldname": "customer",
@@ -63,7 +63,7 @@
   {
    "fieldname": "assigned_to",
    "fieldtype": "Link",
-   "label": "Atanan Kisi",
+   "label": "Atanan Kişi",
    "options": "User",
    "reqd": 1
   },
@@ -79,14 +79,14 @@
    "default": "Normal",
    "fieldname": "priority",
    "fieldtype": "Select",
-   "label": "Oncelik",
+   "label": "Öncelik",
    "options": "\nLow\nNormal\nHigh\nCritical",
    "reqd": 1
   },
   {
    "fieldname": "remind_at",
    "fieldtype": "Datetime",
-   "label": "Hatirlatma Zamani",
+   "label": "Hatırlatma Zamani",
    "reqd": 1
   },
   {
@@ -98,13 +98,13 @@
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Kullanici Notu",
-   "description": "Kullanici tarafindan eklenen serbest metin."
+   "label": "Kullanıcı Notu",
+   "description": "Kullanıcı tarafindan eklenen serbest metin."
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "module": "Acentem Takipte",
+ "module": "Açentem Takipte",
  "name": "AT Reminder",
  "permissions": [
   {

@@ -77,7 +77,7 @@ describe("QuickCreateManagedDialog", () => {
             related_customer: "CUST-002",
             relation_type: "Spouse",
             is_household: true,
-            notes: "Ayni hane",
+            notes: "Aynı hane",
           });
         },
       },
@@ -104,7 +104,7 @@ describe("QuickCreateManagedDialog", () => {
         related_customer: "CUST-002",
         relation_type: "Spouse",
         is_household: true,
-        notes: "Ayni hane",
+        notes: "Aynı hane",
       })
     );
     expect(runSuccessTargetsMock).toHaveBeenCalledWith(

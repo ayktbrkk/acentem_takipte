@@ -56,8 +56,8 @@ const router = createRouter({
       name: "lead-list",
       component: LeadList,
       meta: {
-        title: { tr: "Lead Yonetimi", en: "Lead Workbench" },
-        section: { tr: "Satis ve Portfoy", en: "Sales & Portfolio" },
+        title: { tr: "Lead Yönetimi", en: "Lead Workbench" },
+        section: { tr: "Satış ve Portföy", en: "Sales & Portfolio" },
       },
     },
     {
@@ -67,7 +67,7 @@ const router = createRouter({
       props: true,
       meta: {
         title: { tr: "Lead Detay", en: "Lead Detail" },
-        section: { tr: "Satis ve Portfoy", en: "Sales & Portfolio" },
+        section: { tr: "Satış ve Portföy", en: "Sales & Portfolio" },
       },
     },
     {
@@ -94,7 +94,7 @@ const router = createRouter({
       name: "policy-list",
       component: PolicyList,
       meta: {
-        title: { tr: "Police Yonetimi", en: "Policy Management" },
+        title: { tr: "Poliçe Yönetimi", en: "Policy Management" },
         section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
       },
     },
@@ -104,7 +104,7 @@ const router = createRouter({
       component: PolicyDetail,
       props: true,
       meta: {
-        title: { tr: "Police Detay", en: "Policy Detail" },
+        title: { tr: "Poliçe Detay", en: "Policy Detail" },
         section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
       },
     },
@@ -113,8 +113,8 @@ const router = createRouter({
       name: "customer-list",
       component: CustomerList,
       meta: {
-        title: { tr: "Musteri Yonetimi", en: "Customer Workbench" },
-        section: { tr: "Satis ve Portfoy", en: "Sales & Portfolio" },
+        title: { tr: "Müşteri Yönetimi", en: "Customer Workbench" },
+        section: { tr: "Satış ve Portföy", en: "Sales & Portfolio" },
       },
     },
     {
@@ -131,7 +131,7 @@ const router = createRouter({
       name: "payments-board",
       component: PaymentsBoard,
       meta: {
-        title: { tr: "Odeme Operasyonlari", en: "Payment Operations" },
+        title: { tr: "Ödeme Operasyonlari", en: "Payment Operations" },
         section: { tr: "Sigorta Operasyonlari", en: "Insurance Ops" },
       },
     },
@@ -149,7 +149,7 @@ const router = createRouter({
       name: "communication-center",
       component: CommunicationCenter,
       meta: {
-        title: { tr: "Iletisim Merkezi", en: "Communication Center" },
+        title: { tr: "İletişim Merkezi", en: "Communication Center" },
         section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
@@ -177,8 +177,8 @@ const router = createRouter({
       component: CustomerDetail,
       props: true,
       meta: {
-        title: { tr: "Musteri Detay", en: "Customer Detail" },
-        section: { tr: "Musteri", en: "Customer" },
+        title: { tr: "Müşteri Detay", en: "Customer Detail" },
+        section: { tr: "Müşteri", en: "Customer" },
       },
     },
     ...AUX_WORKBENCH_ROUTE_DEFS.flatMap((def) => [

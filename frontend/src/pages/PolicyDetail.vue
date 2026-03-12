@@ -433,24 +433,24 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const labels = {
   tr: {
-    overview: "Police Detayi", openDesk: "Yonetim Ekraninda Ac", backList: "Listeye Don", loading: "Yukleniyor...",
-    mobileQuickActionsTitle: "Hizli Islemler",
-    timelineTitle: "Zaman Tuneli", emptyTimeline: "Bu policede zaman tuneli kaydi yok.", lifecycleTitle: "Police Yasam Dongusu",
-    emptyLifecycle: "Anlik goruntu kaydi yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Musteri Karti",
-    emptyCustomer: "Musteri kaydi yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Musteri 360",
-    scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Baslangic", end: "Bitis", remaining: "Kalan Gun",
-    net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brut Prim", commissionRate: "Komisyon Orani", gwpTry: "GWP TRY",
-    payments: "Odemeler", emptyPayments: "Odeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydi yok.", remindersTitle: "Hatirlaticilar", emptyReminders: "Hatirlatici kaydi yok.", reminderAt: "Hatirlatma", reminderPriority: "Oncelik", markDone: "Tamamla", cancelReminder: "Iptal Et", installmentNo: "Taksit", paidOn: "Odeme Tarihi", coverageContext: "Police Kapsam Bilgileri", snapshotSummary: "Anlik Goruntu Ozeti", newAssignment: "Yeni Atama", edit: "Duzenle", delete: "Sil", deleteAssignmentConfirm: "Bu atama kaydi silinsin mi?", startAssignment: "Isleme Al", blockAssignment: "Bloke Et", closeAssignment: "Kapat",
-    productProfileTitle: "Urun Profili",
-    productReadinessTitle: "Urun Hazirlik Durumu",
-    company: "Sigorta Sirketi", branch: "Brans", customer: "Musteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
-    productFamily: "Urun Ailesi", insuredSubject: "Sigortalanan Konu", coverageFocus: "Kapsam Odagi",
-    readinessScore: "Hazirlik Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
-    missingProductFields: "Eksik Urun Alanlari", noMissingProductField: "Eksik zorunlu alan bulunamadi.", missingFieldStatus: "Eksik",
-    endorsementTitle: "Zeyilname Gecmisi", emptyEndorsement: "Zeyilname yok.", documents: "Dokumanlar", emptyFiles: "Dosya yok.",
-    totalDocuments: "Toplam Dokuman", pdfDocuments: "PDF", imageDocuments: "Gorsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diger", lastUploadedOn: "Son Yukleme",
-    notifications: "Bildirim Taslaklari", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Ac",
-    tabSummary: "Ozet", tabPremiums: "Prim/Odeme", tabCoverages: "Teminatlar", tabEndorsements: "Zeyilnameler", tabDocuments: "Dokumanlar",
+    overview: "Poliçe Detayı", openDesk: "Yönetim Ekranında Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
+    mobileQuickActionsTitle: "Hızlı Islemler",
+    timelineTitle: "Zaman Tüneli", emptyTimeline: "Bu policede zaman tuneli kaydi yok.", lifecycleTitle: "Poliçe Yaşam Döngüsü",
+    emptyLifecycle: "Anlik görüntü kaydi yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Müşteri Karti",
+    emptyCustomer: "Müşteri kaydi yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Müşteri 360",
+    scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Başlangıç", end: "Bitiş", remaining: "Kalan Gun",
+    net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brüt Prim", commissionRate: "Komisyon Oranı", gwpTry: "GWP TRY",
+    payments: "Ödemeler", emptyPayments: "Ödeme kaydi yok.", installmentsTitle: "Taksit Plani", emptyInstallments: "Taksit kaydi yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydi yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydi yok.", remindersTitle: "Hatırlatıcılar", emptyReminders: "Hatırlatıcı kaydi yok.", reminderAt: "Hatırlatma", reminderPriority: "Öncelik", markDone: "Tamamla", cancelReminder: "İptal Et", installmentNo: "Taksit", paidOn: "Ödeme Tarihi", coverageContext: "Poliçe Kapsam Bilgileri", snapshotSummary: "Anlık Görüntü Özeti", newAssignment: "Yeni Atama", edit: "Duzenle", delete: "Sil", deleteAssignmentConfirm: "Bu atama kaydi silinsin mi?", startAssignment: "İşleme Al", blockAssignment: "Bloke Et", closeAssignment: "Kapat",
+    productProfileTitle: "Ürün Profili",
+    productReadinessTitle: "Ürün Hazırlik Durumu",
+    company: "Sigorta Şirketi", branch: "Brans", customer: "Müşteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
+    productFamily: "Ürün Ailesi", insuredSubject: "Sigortalanan Konu", coverageFocus: "Kapsam Odagi",
+    readinessScore: "Hazırlik Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
+    missingProductFields: "Eksik Ürün Alanlari", noMissingProductField: "Eksik zorunlu alan bulunamadı.", missingFieldStatus: "Eksik",
+    endorsementTitle: "Zeyilname Gecmisi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.",
+    totalDocuments: "Toplam Doküman", pdfDocuments: "PDF", imageDocuments: "Görsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diğer", lastUploadedOn: "Son Yükleme",
+    notifications: "Bildirim Taslakları", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Aç",
+    tabSummary: "Özet", tabPremiums: "Prim/Ödeme", tabCoverages: "Teminatlar", tabEndorsements: "Zeyilnameler", tabDocuments: "Dokümanlar",
     typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Suresi doldu", noDate: "Tarih yok",
   },
   en: {
@@ -919,16 +919,16 @@ function policyStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
   if (status === "Active") return "Aktif";
   if (status === "KYT") return "KYT";
-  if (status === "IPT" || status === "Cancelled") return "Iptal";
+  if (status === "IPT" || status === "Cancelled") return "İptal";
   if (status === "Expired") return "Suresi Doldu";
   return status || "-";
 }
 
 function paymentStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Submitted") return "Gonderildi";
+  if (status === "Submitted") return "Gönderildi";
   if (status === "Draft") return "Taslak";
-  if (status === "Cancelled") return "Iptal";
+  if (status === "Cancelled") return "İptal";
   if (status === "Paid") return "Odendi";
   return status || "-";
 }
@@ -938,7 +938,7 @@ function installmentStatusLabel(status) {
   if (status === "Scheduled") return "Planlandi";
   if (status === "Overdue") return "Gecikti";
   if (status === "Paid") return "Odendi";
-  if (status === "Cancelled") return "Iptal";
+  if (status === "Cancelled") return "İptal";
   return status || "-";
 }
 
@@ -946,7 +946,7 @@ function endorsementStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
   if (status === "Applied") return "Uygulandi";
   if (status === "Pending") return "Beklemede";
-  if (status === "Cancelled") return "Iptal";
+  if (status === "Cancelled") return "İptal";
   return status || "-";
 }
 
@@ -954,7 +954,7 @@ function notificationStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
   if (status === "Queued") return "Kuyrukta";
   if (status === "Processing") return "Isleniyor";
-  if (status === "Sent") return "Gonderildi";
+  if (status === "Sent") return "Gönderildi";
   if (status === "Failed") return "Basarisiz";
   if (status === "Dead") return "Kalici Hata";
   if (status === "Draft") return "Taslak";

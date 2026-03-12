@@ -1,7 +1,7 @@
 {
   "doctype": "DocType",
   "name": "AT Activity",
-  "module": "Acentem Takipte",
+  "module": "Açentem Takipte",
   "custom": 0,
   "istable": 0,
   "track_changes": 1,
@@ -31,19 +31,19 @@
     {
       "fieldname": "source_name",
       "fieldtype": "Data",
-      "label": "Kaynak Kayit"
+      "label": "Kaynak Kayıt"
     },
     {
       "fieldname": "customer",
       "fieldtype": "Link",
-      "label": "Musteri",
+      "label": "Müşteri",
       "options": "AT Customer",
       "in_list_view": 1
     },
     {
       "fieldname": "policy",
       "fieldtype": "Link",
-      "label": "Police",
+      "label": "Poliçe",
       "options": "AT Policy"
     },
     {
@@ -55,13 +55,13 @@
     {
       "fieldname": "office_branch",
       "fieldtype": "Link",
-      "label": "Ofis Sube",
+      "label": "Ofis Şube",
       "options": "AT Office Branch"
     },
     {
       "fieldname": "assigned_to",
       "fieldtype": "Link",
-      "label": "Atanan Kullanici",
+      "label": "Atanan Kullanıcı",
       "options": "User"
     },
     {

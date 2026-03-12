@@ -40,7 +40,7 @@ def test_build_screen_export_payload_formats_policy_rows(monkeypatch):
             {
                 "name": "POL-001",
                 "policy_no": "P-001",
-                "customer": "Acme",
+                "customer": "Açme",
                 "insurance_company": "Demo Sigorta",
                 "status": "Active",
                 "currency": "TRY",
@@ -60,8 +60,8 @@ def test_build_screen_export_payload_formats_policy_rows(monkeypatch):
         limit=100,
     )
 
-    assert payload["columns"][0] == "Police No"
-    assert payload["rows"][0]["Police No"] == "P-001"
+    assert payload["columns"][0] == "Poliçe No"
+    assert payload["rows"][0]["Poliçe No"] == "P-001"
     assert payload["rows"][0]["Komisyon"] == "175.00 TRY"
 
 
@@ -93,7 +93,7 @@ def test_build_screen_export_payload_uses_full_locale_before_base_locale(monkeyp
         [
             {
                 "field": "policy_no",
-                "label": {"tr-TR": "Poliçe No", "tr": "Police No", "en": "Policy No"},
+                "label": {"tr-TR": "Poliçe No", "tr": "Poliçe No", "en": "Policy No"},
                 "formatter": None,
                 "currency_field": None,
                 "getter": None,

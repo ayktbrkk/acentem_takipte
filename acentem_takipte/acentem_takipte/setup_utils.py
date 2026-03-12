@@ -10,11 +10,11 @@ from .utils.assets import ensure_site_asset_symlink
 CORE_ROLES = ("Agent", "Manager", "Accountant")
 CORE_ACCESS_ROLES = {"System Manager", "Agent", "Manager", "Accountant"}
 CORE_SETUP_CACHE_KEY = "acentem_takipte:core_setup_done"
-DESKTOP_ICON_LABEL = "Acentem Takipte"
+DESKTOP_ICON_LABEL = "Açentem Takipte"
 DESKTOP_ICON_URL = "/at"
 DESKTOP_ICON_IMAGE = "/assets/acentem_takipte/icons/acentem-takipte-at.svg"
-WORKSPACE_SIDEBAR_TITLE = "Acentem Takipte"
-WORKSPACE_SIDEBAR_MODULE = "Acentem Takipte"
+WORKSPACE_SIDEBAR_TITLE = "Açentem Takipte"
+WORKSPACE_SIDEBAR_MODULE = "Açentem Takipte"
 WORKSPACE_SIDEBAR_APP = "acentem_takipte"
 WORKSPACE_SIDEBAR_HEADER_ICON = "shield"
 WORKSPACE_SIDEBAR_ITEMS = (
@@ -257,13 +257,13 @@ DEFAULT_NOTIFICATION_TEMPLATES = (
         "event_key": "policy_created",
         "channel": "Both",
         "language": "tr",
-        "subject": "Policeniz olusturuldu: {{ policy_no }}",
+        "subject": "Poliçeniz oluşturuldu: {{ policy_no }}",
         "body_template": (
             "Sayin {{ customer.full_name }},\n"
-            "Policeniz olusturuldu.\n"
-            "Police No: {{ policy_no }}\n"
-            "Baslangic: {{ start_date }}\n"
-            "Bitis: {{ end_date }}\n"
+            "Poliçeniz oluşturuldu.\n"
+            "Poliçe No: {{ policy_no }}\n"
+            "Başlangıç: {{ start_date }}\n"
+            "Bitiş: {{ end_date }}\n"
             "Prim: {{ gross_premium }} {{ currency }}"
         ),
     },
@@ -287,11 +287,11 @@ DEFAULT_NOTIFICATION_TEMPLATES = (
         "event_key": "renewal_due",
         "channel": "Both",
         "language": "tr",
-        "subject": "Police yenileme hatirlatmasi",
+        "subject": "Poliçe yenileme hatırlatması",
         "body_template": (
             "Sayin {{ customer.full_name }},\n"
-            "Policenizin yenileme tarihi yaklasiyor.\n"
-            "Police: {{ policy }}\n"
+            "Poliçenizin yenileme tarihi yaklasiyor.\n"
+            "Poliçe: {{ policy }}\n"
             "Yenileme: {{ renewal_date }}\n"
             "Son tarih: {{ due_date }}"
         ),
@@ -321,7 +321,7 @@ def after_migrate():
     ensure_core_setup()
 
 
-def ensure_core_setup_once():
+def ensure_core_setup_önce():
     cache = frappe.cache()
     if cache.get_value(CORE_SETUP_CACHE_KEY):
         return

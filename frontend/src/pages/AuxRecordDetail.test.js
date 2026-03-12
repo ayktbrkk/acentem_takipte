@@ -51,7 +51,7 @@ vi.mock("frappe-ui", () => ({
                   status: "Open",
                   priority: "High",
                   due_date: "2026-03-15",
-                  notes: "Musteri ile tekrar gorusulecek",
+                  notes: "Müşteri ile tekrar görüşülecek",
                   modified: "2026-03-09T10:00:00Z",
                   owner: "Administrator",
                 },
@@ -71,7 +71,7 @@ vi.mock("frappe-ui", () => ({
                     status: "Open",
                     priority: "High",
                     due_date: "2026-03-18",
-                    notes: "Yenileme oncesi teklif kontrolu",
+                    notes: "Yenileme öncesi teklif kontrolu",
                     modified: "2026-03-09T10:00:00Z",
                     owner: "Administrator",
                   },
@@ -89,7 +89,7 @@ vi.mock("frappe-ui", () => ({
                     template: "TPL-001",
                     event_key: "reminder_followup",
                     language: "tr",
-                    subject: "Hatirlatma",
+                    subject: "Hatırlatma",
                     body: "Merhaba",
                     modified: "2026-03-09T10:00:00Z",
                     owner: "Administrator",
@@ -119,7 +119,7 @@ vi.mock("frappe-ui", () => ({
               ? {
                   message: {
                     name: "REM-001",
-                    reminder_title: "Evrak hatirlatmasi",
+                    reminder_title: "Evrak hatırlatması",
                     source_doctype: "AT Customer",
                     source_name: "CUST-001",
                     customer: "CUST-001",
@@ -162,7 +162,7 @@ vi.mock("frappe-ui", () => ({
                   claim_risk: "Medium",
                   score: 82,
                   source_version: "v1",
-                  strengths_json: JSON.stringify(["2 aktif police", "Yuksek toplam prim"]),
+                  strengths_json: JSON.stringify(["2 aktif police", "Yüksek toplam prim"]),
                   risks_json: JSON.stringify(["1 geciken taksit"]),
                   score_reason_json: JSON.stringify(["Yenileme penceresinde aktif police mevcut"]),
                   modified: "2026-03-09T10:00:00Z",
@@ -395,7 +395,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
 
     expect(wrapper.text()).toContain("Atama Baglami");
-    expect(wrapper.text()).toContain("Atama Yasam Dongusu");
+    expect(wrapper.text()).toContain("Atama Yasam Döngüsü");
     expect(wrapper.text()).toContain("AT Claim");
     expect(wrapper.text()).toContain("CLM-001");
     expect(wrapper.text()).toContain("agent@example.com");
@@ -405,7 +405,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await logsTab.trigger("click");
 
     expect(wrapper.text()).toContain("Atama Notlari");
-    expect(wrapper.text()).toContain("Musteri ile tekrar gorusulecek");
+    expect(wrapper.text()).toContain("Müşteri ile tekrar görüşülecek");
   });
 
   it("updates ownership assignment lifecycle from detail header actions", async () => {
@@ -435,7 +435,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     const buttons = wrapper.findAll(".action-button-stub");
 
-    await buttons.find((node) => node.text().includes("Isleme Al")).trigger("click");
+    await buttons.find((node) => node.text().includes("İşleme Al")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
@@ -518,7 +518,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("Iptal Et")).trigger("click");
+    await buttons.find((node) => node.text().includes("İptal Et")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Task",
       name: "TASK-001",
@@ -564,7 +564,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("Iptal Et")).trigger("click");
+    await buttons.find((node) => node.text().includes("İptal Et")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",
@@ -669,7 +669,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -710,7 +710,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -718,7 +718,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       query: {
         reference_doctype: "AT Reminder",
         reference_name: "REM-001",
-        reference_label: "Evrak hatirlatmasi",
+        reference_label: "Evrak hatırlatması",
         return_to: "/at/aux-records/reminders/REM-001",
       },
     });
@@ -751,7 +751,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -759,7 +759,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       query: {
         reference_doctype: "AT Task",
         reference_name: "TASK-001",
-        reference_label: "PoliÃ§e yenileme kontrolu",
+        reference_label: "Poliçe yenileme kontrolu",
         return_to: "/at/aux-records/tasks/TASK-001",
       },
     });
@@ -792,7 +792,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Iletisim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -874,7 +874,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
     await logsTab.trigger("click");
 
-    expect(wrapper.text()).toContain("Eylem Ozeti");
+    expect(wrapper.text()).toContain("Eylem Özeti");
     expect(wrapper.text()).toContain("Karar Baglami");
     expect(wrapper.text()).toContain("created=12");
     expect(wrapper.text()).toContain("skipped=3");

@@ -116,14 +116,14 @@ def test_build_tabular_download_response_uses_full_locale_before_base_locale(mon
 
     reports_runtime.build_tabular_download_response(
         export_key="policy_list",
-        title={"tr-TR": "Police Listesi", "tr": "Policeler", "en": "Policy List"},
+        title={"tr-TR": "Poliçe Listesi", "tr": "Poliçeler", "en": "Policy List"},
         columns=["name"],
         rows=[{"name": "POL-001"}],
         filters={},
         export_format="xlsx",
     )
 
-    assert captured["title"] == "Police Listesi"
+    assert captured["title"] == "Poliçe Listesi"
 
 
 def test_build_safe_report_payload_logs_and_throws(monkeypatch):

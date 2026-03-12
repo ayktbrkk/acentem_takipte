@@ -519,7 +519,7 @@ describe("ClaimsBoard page store integration", () => {
       },
     });
 
-    const documentsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Dokumanlar"));
+    const documentsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Dokümanlar"));
     await documentsButton.trigger("click");
 
     expect(window.location.assign).toHaveBeenCalledWith("/at/files?attached_to_doctype=AT+Claim&attached_to_name=CLM-001");
@@ -527,4 +527,3 @@ describe("ClaimsBoard page store integration", () => {
     window.location = originalLocation;
   });
 });
-

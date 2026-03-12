@@ -5,7 +5,7 @@ import ScheduledReportsManager from "./ScheduledReportsManager.vue";
 
 const reportCatalog = {
   policy_list: {
-    label: { tr: "Police Listesi", en: "Policy List" },
+    label: { tr: "Poliçe Listesi", en: "Policy List" },
   },
   claims_operations: {
     label: { tr: "Hasar Operasyonlari", en: "Claims Operations" },
@@ -113,9 +113,9 @@ describe("ScheduledReportsManager", () => {
     await selects[0].setValue("claims_operations");
 
     expect(wrapper.text()).toContain("Sigorta Bransi");
-    expect(wrapper.text()).toContain("Sigorta Sirketi");
+    expect(wrapper.text()).toContain("Sigorta Şirketi");
     expect(wrapper.text()).toContain("Durum");
-    expect(wrapper.text()).toContain("Baslangic Tarihi");
-    expect(wrapper.text()).toContain("Bitis Tarihi");
+    expect(wrapper.text()).toContain("Başlangıç Tarihi");
+    expect(wrapper.text()).toContain("Bitiş Tarihi");
   });
 });

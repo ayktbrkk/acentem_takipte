@@ -283,7 +283,7 @@ describe("Dashboard page store integration", () => {
 
     const openButtons = wrapper
       .findAll(".action-button-stub")
-      .filter((node) => node.text().includes("Ac") || node.text().includes("Open"));
+      .filter((node) => node.text().includes("Aç") || node.text().includes("Open"));
     expect(openButtons.length).toBeGreaterThan(0);
     await openButtons[0].trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "claims", query: { claim: "CLM-0001" } });
@@ -292,7 +292,7 @@ describe("Dashboard page store integration", () => {
     expect(text).toContain("Takip SLA");
     expect(text).toContain("Hasar Masasi");
     expect(text).toContain("Yenileme Panosu");
-    expect(text).toContain("Iletisim Merkezi");
+    expect(text).toContain("İletişim Merkezi");
   });
 
   it("renders my task panel and opens task detail route", async () => {
@@ -316,11 +316,11 @@ describe("Dashboard page store integration", () => {
       },
     });
 
-    expect(wrapper.text()).toContain("Benim Gorevlerim");
+    expect(wrapper.text()).toContain("Benim Görevlerim");
     expect(wrapper.text()).toContain("Call customer");
     const openButtons = wrapper
       .findAll(".action-button-stub")
-      .filter((node) => node.text().includes("Ac") || node.text().includes("Open"));
+      .filter((node) => node.text().includes("Aç") || node.text().includes("Open"));
     await openButtons[openButtons.length - 1].trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "tasks-detail", params: { name: "TASK-0001" } });
   });
@@ -348,10 +348,10 @@ describe("Dashboard page store integration", () => {
 
     expect(wrapper.text()).toContain("Benim Aktivitelerim");
     expect(wrapper.text()).toContain("Customer follow-up call");
-    expect(wrapper.text()).toContain("Kayitli");
+    expect(wrapper.text()).toContain("Kayıtli");
     const openButtons = wrapper
       .findAll(".action-button-stub")
-      .filter((node) => node.text().includes("Ac") || node.text().includes("Open"));
+      .filter((node) => node.text().includes("Aç") || node.text().includes("Open"));
     await openButtons[openButtons.length - 1].trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "activities-detail", params: { name: "ACT-0001" } });
   });
@@ -377,11 +377,11 @@ describe("Dashboard page store integration", () => {
       },
     });
 
-    expect(wrapper.text()).toContain("Benim Hatirlaticilarim");
+    expect(wrapper.text()).toContain("Benim Hatırlatıcılarim");
     expect(wrapper.text()).toContain("Send quote reminder");
     const openButtons = wrapper
       .findAll(".action-button-stub")
-      .filter((node) => node.text().includes("Ac") || node.text().includes("Open"));
+      .filter((node) => node.text().includes("Aç") || node.text().includes("Open"));
     await openButtons[openButtons.length - 1].trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "reminders-detail", params: { name: "REM-0001" } });
   });
@@ -448,7 +448,7 @@ describe("Dashboard page store integration", () => {
 
     const cancelButtons = wrapper
       .findAll(".action-button-stub")
-      .filter((node) => node.text().includes("Iptal Et") || node.text().includes("Cancel"));
+      .filter((node) => node.text().includes("İptal Et") || node.text().includes("Cancel"));
     await cancelButtons[0].trigger("click");
 
     expect(submit).toHaveBeenCalledWith({

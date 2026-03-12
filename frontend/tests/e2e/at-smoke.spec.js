@@ -23,7 +23,7 @@ async function callPostMethod(page, method, params = {}) {
   return { ok: response.ok(), status: response.status(), payload };
 }
 
-test.describe("Acentem Takipte smoke", () => {
+test.describe("Açentem Takipte smoke", () => {
   test("dashboard -> offers -> policies navigation", async ({ page }) => {
     await ensureAuthenticated(page);
 
@@ -36,15 +36,15 @@ test.describe("Acentem Takipte smoke", () => {
     await page.goto("/at/");
     await expect(page.getByText("Dashboard").first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Offers|Teklif/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /Policies|Police/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Policies|Poliçe/i }).first()).toBeVisible();
 
     await page.getByRole("link", { name: /Offers|Teklif/i }).first().click();
     await expect(page).toHaveURL(/\/at\/offers/);
     await expect(page.getByRole("heading", { name: /Offer Board|Teklif/i }).first()).toBeVisible();
 
-    await page.getByRole("link", { name: /Policies|Police/i }).first().click();
+    await page.getByRole("link", { name: /Policies|Poliçe/i }).first().click();
     await expect(page).toHaveURL(/\/at\/policies/);
-    await expect(page.getByRole("heading", { name: /Policy Workbench|Police/i }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Policy Workbench|Poliçe/i }).first()).toBeVisible();
   });
 
   test("anonim smoke: /at route ve session endpoint auth duvari", async ({ page, context }) => {

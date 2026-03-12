@@ -124,8 +124,8 @@ describe("Reports page communication operations report", () => {
         url: expect.stringContaining("get_communication_operations_report"),
       }),
     );
-    expect(wrapper.text()).toContain("Iletisim Operasyonlari");
-    expect(wrapper.text()).toContain("Eslesen Musteri");
+    expect(wrapper.text()).toContain("İletişim Operasyonlari");
+    expect(wrapper.text()).toContain("Eşleşen Müşteri");
     expect(wrapper.text()).toContain("March Renewal");
   });
 
@@ -169,7 +169,7 @@ describe("Reports page communication operations report", () => {
       }),
     );
     expect(wrapper.text()).toContain("Mutabakat Operasyonlari");
-    expect(wrapper.text()).toContain("Acik Mutabakat");
+    expect(wrapper.text()).toContain("Açık Mutabakat");
     expect(wrapper.text()).toContain("ACC-001");
   });
 
@@ -312,7 +312,7 @@ describe("Reports page communication operations report", () => {
 
     await nextTick();
 
-    const trigger = wrapper.findAll("button").find((node) => node.text().includes("Snapshotlari Calistir"));
+    const trigger = wrapper.findAll("button").find((node) => node.text().includes("Snapshotlari Çalıştır"));
     await trigger.trigger("click");
 
     expect(frappeRequestMock).toHaveBeenCalledWith(
@@ -368,7 +368,7 @@ describe("Reports page communication operations report", () => {
     await nextTick();
 
     const toggleButtons = wrapper.findAll("button");
-    const policyToggle = toggleButtons.find((node) => node.text().includes("Police"));
+    const policyToggle = toggleButtons.find((node) => node.text().includes("Poliçe"));
     await policyToggle.trigger("click");
 
     expect(routerReplace).toHaveBeenLastCalledWith(
@@ -581,7 +581,7 @@ describe("Reports page communication operations report", () => {
     await nextTick();
     await nextTick();
 
-    expect(wrapper.text()).toContain("Rapor Yuklenemedi");
+    expect(wrapper.text()).toContain("Rapor Yüklenemedi");
   });
 
   it("exports report in pdf format", async () => {
@@ -670,7 +670,7 @@ describe("Reports page communication operations report", () => {
     const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
     await pdfButton.trigger("click");
 
-    expect(wrapper.text()).toContain("Rapor disa aktarma basarisiz oldu.");
+    expect(wrapper.text()).toContain("Rapor disa aktarma başarısız oldu.");
 
     openSpy.mockRestore();
   });

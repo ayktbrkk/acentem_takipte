@@ -5,19 +5,19 @@ const RELATED_QUICK_CREATE_SOURCE_MAP = Object.freeze({
     routeName: "customer-list",
     quickIntent: true,
     prefillField: "full_name",
-    actionLabel: { tr: "Yeni Musteri Ekle", en: "Add New Customer" },
+    actionLabel: { tr: "Yeni Müşteri Ekle", en: "Add New Customer" },
   },
   salesEntities: {
     routeName: "sales-entities-list",
     quickIntent: false,
     prefillField: "full_name",
-    actionLabel: { tr: "Yeni Satis Birimi Ekle", en: "Add New Sales Entity" },
+    actionLabel: { tr: "Yeni Satış Birimi Ekle", en: "Add New Sales Entity" },
   },
   insuranceCompanies: {
     routeName: "companies-list",
     quickIntent: false,
     prefillField: "company_name",
-    actionLabel: { tr: "Yeni Sigorta Sirketi Ekle", en: "Add New Insurance Company" },
+    actionLabel: { tr: "Yeni Sigorta Şirketi Ekle", en: "Add New Insurance Company" },
   },
   branches: {
     routeName: "branches-list",

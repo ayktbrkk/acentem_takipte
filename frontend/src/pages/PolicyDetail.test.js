@@ -87,7 +87,7 @@ vi.mock("frappe-ui", () => ({
             activities: [
               {
                 name: "ACT-001",
-                activity_title: "Police yenileme gorusmesi",
+                activity_title: "Poliçe yenileme görüşmesi",
                 activity_type: "Renewal Update",
                 source_doctype: "AT Policy",
                 source_name: "POL-001",
@@ -101,7 +101,7 @@ vi.mock("frappe-ui", () => ({
             reminders: [
               {
                 name: "REM-001",
-                reminder_title: "Police belge yukleme takibi",
+                reminder_title: "Poliçe belge yükleme takibi",
                 source_doctype: "AT Policy",
                 source_name: "POL-001",
                 customer: "CUST-001",
@@ -301,8 +301,8 @@ describe("PolicyDetail policy 360 integration", () => {
     const coveragesTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Teminatlar"));
     await coveragesTab.trigger("click");
 
-    expect(wrapper.text()).toContain("Urun Profili");
-    expect(wrapper.text()).toContain("Urun Hazirlik Durumu");
+    expect(wrapper.text()).toContain("Ürün Profili");
+    expect(wrapper.text()).toContain("Ürün Hazırlik Durumu");
     expect(wrapper.text()).toContain("Motor");
     expect(wrapper.text()).toContain("Vehicle");
     expect(wrapper.text()).toContain("67%");
@@ -333,8 +333,8 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Hatirlaticilar");
-    expect(wrapper.text()).toContain("Police belge yukleme takibi");
+    expect(wrapper.text()).toContain("Hatırlatıcılar");
+    expect(wrapper.text()).toContain("Poliçe belge yükleme takibi");
   });
 
   it("routes back to policy list and customer 360", async () => {
@@ -365,10 +365,10 @@ describe("PolicyDetail policy 360 integration", () => {
       await button.trigger("click");
     };
 
-    await clickByText("Listeye Don");
+    await clickByText("Listeye Dön");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "policy-list" });
 
-    await clickByText("Musteri 360");
+    await clickByText("Müşteri 360");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "customer-detail", params: { name: "CUST-001" } });
   });
 
@@ -428,12 +428,12 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const documentsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Dokuman"));
+    const documentsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Doküman"));
     await documentsTab.trigger("click");
 
-    expect(wrapper.text()).toContain("Toplam Dokuman");
+    expect(wrapper.text()).toContain("Toplam Doküman");
     expect(wrapper.text()).toContain("PDF");
-    expect(wrapper.text()).toContain("Gorsel");
+    expect(wrapper.text()).toContain("Görsel");
     expect(wrapper.text()).toContain("2");
     expect(wrapper.text()).toContain("1");
     expect(wrapper.text()).toContain("police.pdf");
@@ -463,10 +463,10 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const documentsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Dokuman"));
+    const documentsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Doküman"));
     await documentsTab.trigger("click");
 
-    const openButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Ac"));
+    const openButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Aç"));
     await openButton.trigger("click");
 
     expect(routerPush).toHaveBeenLastCalledWith({
@@ -592,7 +592,7 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const startButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("Isleme Al"));
+    const startButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("İşleme Al"));
     await startButton.trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
@@ -648,7 +648,7 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
 
     expect(wrapper.text()).toContain("Aktiviteler");
-    expect(wrapper.text()).toContain("Police yenileme gorusmesi");
+    expect(wrapper.text()).toContain("Poliçe yenileme görüşmesi");
     expect(wrapper.text()).toContain("Renewal Update");
     expect(wrapper.text()).toContain("agent@example.com");
   });
@@ -686,7 +686,7 @@ describe("PolicyDetail policy 360 integration", () => {
       },
     });
 
-    await buttons.find((candidate) => candidate.text().includes("Iptal Et")).trigger("click");
+    await buttons.find((candidate) => candidate.text().includes("İptal Et")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",

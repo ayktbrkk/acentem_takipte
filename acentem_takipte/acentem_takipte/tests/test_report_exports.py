@@ -7,17 +7,17 @@ from acentem_takipte.acentem_takipte.services.report_exports import build_export
 
 
 def test_build_report_title_includes_extended_report_catalog():
-    assert build_report_title("communication_operations", "tr") == "Iletisim Operasyonlari Raporu"
+    assert build_report_title("communication_operations", "tr") == "İletişim Operasyonlari Raporu"
     assert build_report_title("reconciliation_operations", "en") == "Reconciliation Operations Report"
     assert build_report_title("claims_operations", "tr") == "Hasar Operasyonlari Raporu"
 
 
 def test_build_report_title_uses_full_locale_then_base_locale():
-    assert build_report_title("policy_list", "tr-TR") == "Police Listesi Raporu"
+    assert build_report_title("policy_list", "tr-TR") == "Poliçe Listesi Raporu"
 
 
 def test_build_report_title_trims_report_key():
-    assert build_report_title(" policy_list ", "tr") == "Police Listesi Raporu"
+    assert build_report_title(" policy_list ", "tr") == "Poliçe Listesi Raporu"
 
 
 def test_build_export_filename_uses_report_fallback_for_blank_key():
@@ -33,7 +33,7 @@ def test_build_export_filename_trims_export_format():
 
 
 def test_build_report_title_trims_locale():
-    assert build_report_title("policy_list", " tr-TR ") == "Police Listesi Raporu"
+    assert build_report_title("policy_list", " tr-TR ") == "Poliçe Listesi Raporu"
 
 
 def test_render_tabular_pdf_coerces_invalid_shapes(monkeypatch):
