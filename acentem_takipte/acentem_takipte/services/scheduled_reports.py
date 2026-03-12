@@ -7,7 +7,11 @@ import frappe
 from frappe.utils import cint, getdate, nowdate
 
 from acentem_takipte.acentem_takipte.communication import enqueue_notification_draft
-from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_filters, coerce_string_list
+from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+    coerce_export_format,
+    coerce_filters,
+    coerce_string_list,
+)
 from acentem_takipte.acentem_takipte.services.report_exports import (
     build_report_filename,
     build_report_title,
@@ -15,7 +19,6 @@ from acentem_takipte.acentem_takipte.services.report_exports import (
     render_report_xlsx,
 )
 from acentem_takipte.acentem_takipte.services.report_registry import REPORT_DEFINITIONS, build_report_payload
-from acentem_takipte.acentem_takipte.services.reports_runtime import normalize_export_format
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 
@@ -76,7 +79,7 @@ def summarize_scheduled_report_configs() -> list[dict[str, Any]]:
                 "enabled": bool(cint(config.get("enabled", 1))),
                 "report_key": report_key,
                 "frequency": _normalize_frequency(config.get("frequency")),
-                "format": normalize_export_format(config.get("format")),
+                "format": _normalize_export_format(config.get("format")),
                 "delivery_channel": _normalize_delivery_channel(config.get("delivery_channel")),
                 "locale": _normalize_locale(config.get("locale")),
                 "recipients": _normalize_recipients(config.get("recipients")),
@@ -114,7 +117,7 @@ def normalize_scheduled_report_config(payload: dict[str, Any]) -> dict[str, Any]
         "enabled": 1 if cint(payload.get("enabled", 1)) else 0,
         "report_key": report_key,
         "frequency": frequency,
-        "format": normalize_export_format(payload.get("format")),
+        "format": _normalize_export_format(payload.get("format")),
         "delivery_channel": delivery_channel,
         "locale": _normalize_locale(payload.get("locale")),
         "recipients": recipients,
@@ -207,7 +210,7 @@ def dispatch_scheduled_reports(*, frequency: str | None = None, limit: int = 10,
             continue
 
         filters = _coerce_filters(config.get("filters"))
-        export_format = normalize_export_format(config.get("format"))
+        export_format = _normalize_export_format(config.get("format"))
         delivery_channel = _normalize_delivery_channel(config.get("delivery_channel"))
         payload = build_report_payload(report_key, filters=filters, limit=max(cint(config.get("limit")) or 1000, 1))
 
@@ -445,6 +448,10 @@ def _normalize_locale(value: Any) -> str:
     return normalized or "tr"
 
 
+def _normalize_export_format(value: Any) -> str:
+    return coerce_export_format(value)
+
+
 def _normalize_last_status(value: Any) -> str | None:
     normalized = str(value or "").strip().lower()
     return normalized or None
@@ -455,7 +462,7 @@ def _sanitize_schedule_config(value: dict[str, Any]) -> dict[str, Any]:
         "enabled": 1 if cint(value.get("enabled", 1)) else 0,
         "report_key": str(value.get("report_key") or "").strip(),
         "frequency": _normalize_frequency(value.get("frequency")),
-        "format": normalize_export_format(value.get("format")),
+        "format": _normalize_export_format(value.get("format")),
         "delivery_channel": _normalize_delivery_channel(value.get("delivery_channel")),
         "locale": _normalize_locale(value.get("locale")),
         "recipients": _normalize_recipients(value.get("recipients")),

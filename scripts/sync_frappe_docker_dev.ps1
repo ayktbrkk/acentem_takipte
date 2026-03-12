@@ -50,7 +50,17 @@ function Invoke-Compose {
 }
 
 function Get-FrontendManifestPath {
-    return (Join-Path $PSScriptRoot "..\acentem_takipte\acentem_takipte\public\frontend\.vite\manifest.json")
+    $candidates = @(
+        (Join-Path $PSScriptRoot "..\acentem_takipte\public\frontend\.vite\manifest.json"),
+        (Join-Path $PSScriptRoot "..\acentem_takipte\acentem_takipte\public\frontend\.vite\manifest.json"),
+        (Join-Path $PSScriptRoot "..\acentem_takipte\public\frontend\manifest.json"),
+        (Join-Path $PSScriptRoot "..\acentem_takipte\acentem_takipte\public\frontend\manifest.json")
+    )
+    $existing = @($candidates | Where-Object { Test-Path $_ })
+    if ($existing.Count -gt 0) {
+        return ($existing | Sort-Object { (Get-Item $_).LastWriteTimeUtc.Ticks } -Descending | Select-Object -First 1)
+    }
+    return $candidates[0]
 }
 
 function Show-WatchToast {
