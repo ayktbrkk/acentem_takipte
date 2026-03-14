@@ -22,6 +22,7 @@ class TestATOffer(IntegrationTestCase):
             offer_name=offer.name,
             start_date=nowdate(),
             end_date=add_days(nowdate(), 365),
+            policy_no="EXT-OFFER-001",
         )
         policy_name = result.get("policy")
         self.assertTrue(policy_name)
@@ -29,6 +30,8 @@ class TestATOffer(IntegrationTestCase):
         policy = frappe.get_doc("AT Policy", policy_name)
         self.assertEqual(policy.customer, deps["customer"])
         self.assertEqual(policy.sales_entity, deps["sales_entity"])
+        self.assertEqual(policy.policy_no, "EXT-OFFER-001")
+        self.assertNotEqual(policy.name, policy.policy_no)
         self.assertAlmostEqual(flt(policy.gross_premium), 1000, places=2)
         self.assertAlmostEqual(flt(policy.commission_amount), 100, places=2)
         self.assertAlmostEqual(flt(policy.tax_amount), 50, places=2)

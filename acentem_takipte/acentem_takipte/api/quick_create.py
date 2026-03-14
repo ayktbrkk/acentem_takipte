@@ -1045,6 +1045,8 @@ def _format_quick_option_row(source_key: str, row: dict) -> dict[str, str]:
         description = _join_non_empty([_value_or_fallback(row, "status"), _value_or_fallback(row, "offer_date")])
     elif source_key == "policies":
         policy_no = _value_or_fallback(row, "policy_no", name)
+        if policy_no != name and name:
+            policy_no = f"{policy_no} / {name}"
         customer = _value_or_fallback(row, "customer")
         label = f"{policy_no} - {customer}" if customer else policy_no
         description = _value_or_fallback(row, "status")

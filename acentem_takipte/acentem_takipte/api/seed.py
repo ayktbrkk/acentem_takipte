@@ -314,14 +314,16 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "commission_amount": 55,
         },
     ]
+    policy_name_map: dict[str, str] = {}
     for row in policies:
-        _upsert_by_name("AT Policy", row["policy_no"], row)
+        doc = _upsert_policy(row)
+        policy_name_map[row["policy_no"]] = doc.name
         summary["policies"] += 1
 
     claims = [
         {
             "claim_no": "DEMO-CLM-001",
-            "policy": "DEMO-POL-001",
+            "policy": policy_name_map["DEMO-POL-001"],
             "customer": "1000000001",
             "claim_type": "Damage",
             "claim_status": "Open",
@@ -334,7 +336,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         },
         {
             "claim_no": "DEMO-CLM-002",
-            "policy": "DEMO-POL-003",
+            "policy": policy_name_map["DEMO-POL-003"],
             "customer": "1000000003",
             "claim_type": "Health",
             "claim_status": "Approved",
@@ -353,7 +355,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
     payments = [
         {
             "payment_no": "DEMO-PAY-001",
-            "policy": "DEMO-POL-001",
+            "policy": policy_name_map["DEMO-POL-001"],
             "customer": "1000000001",
             "sales_entity": rep_entity.name,
             "payment_direction": "Inbound",
@@ -368,7 +370,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         },
         {
             "payment_no": "DEMO-PAY-002",
-            "policy": "DEMO-POL-002",
+            "policy": policy_name_map["DEMO-POL-002"],
             "customer": "1000000002",
             "sales_entity": alpha_entity.name,
             "payment_direction": "Inbound",
@@ -383,7 +385,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         },
         {
             "payment_no": "DEMO-PAY-003",
-            "policy": "DEMO-POL-001",
+            "policy": policy_name_map["DEMO-POL-001"],
             "customer": "1000000001",
             "sales_entity": rep_entity.name,
             "payment_direction": "Outbound",
@@ -398,7 +400,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         },
         {
             "payment_no": "DEMO-PAY-004",
-            "policy": "DEMO-POL-003",
+            "policy": policy_name_map["DEMO-POL-003"],
             "claim": "DEMO-CLM-002",
             "customer": "1000000003",
             "sales_entity": rep_entity.name,
@@ -419,24 +421,24 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
 
     renewals = [
         {
-            "policy": "DEMO-POL-001",
+            "policy": policy_name_map["DEMO-POL-001"],
             "customer": "1000000001",
             "policy_end_date": add_days(today, 305),
             "renewal_date": add_days(today, 7),
             "due_date": today,
-            "unique_key": build_renewal_stage_key("DEMO-POL-001", "1000000001", "D7", today),
+            "unique_key": build_renewal_stage_key(policy_name_map["DEMO-POL-001"], "1000000001", "D7", today),
             "status": "Open",
             "assigned_to": "Administrator",
             "auto_created": 0,
             "notes": "DEMO_SEED - renewal open",
         },
         {
-            "policy": "DEMO-POL-003",
+            "policy": policy_name_map["DEMO-POL-003"],
             "customer": "1000000003",
             "policy_end_date": add_days(today, 240),
             "renewal_date": add_days(today, 15),
             "due_date": today,
-            "unique_key": build_renewal_stage_key("DEMO-POL-003", "1000000003", "D15", today),
+            "unique_key": build_renewal_stage_key(policy_name_map["DEMO-POL-003"], "1000000003", "D15", today),
             "status": "In Progress",
             "assigned_to": "Administrator",
             "auto_created": 0,
@@ -461,6 +463,29 @@ def _upsert_by_name(doctype: str, name: str, values: dict[str, Any]):
 
     payload = {"doctype": doctype, **values}
     return frappe.get_doc(payload).insert()
+
+
+def _upsert_policy(values: dict[str, Any]):
+    policy_no = str(values.get("policy_no") or "").strip()
+    insurance_company = values.get("insurance_company")
+    existing_name = None
+
+    if policy_no and insurance_company:
+        existing_name = frappe.db.get_value(
+            "AT Policy",
+            {"insurance_company": insurance_company, "policy_no": policy_no},
+            "name",
+        )
+    if not existing_name and policy_no:
+        existing_name = frappe.db.get_value("AT Policy", {"policy_no": policy_no}, "name")
+
+    if existing_name:
+        doc = frappe.get_doc("AT Policy", existing_name)
+        _apply_values(doc, values)
+        doc.save()
+        return doc
+
+    return frappe.get_doc({"doctype": "AT Policy", **values}).insert()
 
 
 def _upsert_sales_entity(full_name: str, entity_type: str, parent_entity: str | None = None):

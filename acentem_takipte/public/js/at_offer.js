@@ -93,7 +93,7 @@ frappe.ui.form.on("AT Offer", {
             },
             {
               fieldname: "policy_no",
-              label: __("Policy Number (Optional)"),
+              label: __("Carrier Policy Number (Optional)"),
               fieldtype: "Data",
             },
           ],
@@ -114,7 +114,7 @@ frappe.ui.form.on("AT Offer", {
               callback: (r) => {
                 const policy = r?.message?.policy;
                 if (!policy) return;
-                frappe.show_alert({ message: __("Policy created: {0}", [policy]), indicator: "green" });
+                frappe.show_alert({ message: __("Policy created with record number: {0}", [policy]), indicator: "green" });
                 frm.reload_doc();
                 frappe.set_route("Form", "AT Policy", policy);
               },

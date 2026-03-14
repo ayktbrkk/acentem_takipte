@@ -197,7 +197,8 @@ def _build_policy_map(policy_refs: list[str], *, office_branch: str | None, insu
     refs = [str(value or "").strip() for value in policy_refs if str(value or "").strip()]
     if not refs:
         return {}
-    filters: dict[str, Any] = {"policy_no": ["in", list(set(refs))]}
+    ref_set = list(set(refs))
+    filters: dict[str, Any] = {"policy_no": ["in", ref_set]}
     if office_branch:
         filters["office_branch"] = office_branch
     if insurance_company:
@@ -208,7 +209,28 @@ def _build_policy_map(policy_refs: list[str], *, office_branch: str | None, insu
         fields=["name", "policy_no", "customer", "insurance_company", "office_branch", "status"],
         limit_page_length=0,
     )
-    return {str(row.get("policy_no") or "").strip(): row for row in rows}
+    policy_map: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        policy_no = str(row.get("policy_no") or "").strip()
+        if policy_no:
+            policy_map[policy_no] = row
+
+    missing_refs = [ref for ref in ref_set if ref not in policy_map]
+    if not missing_refs:
+        return policy_map
+
+    fallback_filters: dict[str, Any] = {"name": ["in", missing_refs]}
+    if office_branch:
+        fallback_filters["office_branch"] = office_branch
+    fallback_rows = frappe.get_all(
+        "AT Policy",
+        filters=fallback_filters,
+        fields=["name", "policy_no", "customer", "insurance_company", "office_branch", "status"],
+        limit_page_length=0,
+    )
+    for row in fallback_rows:
+        policy_map[str(row.get("name") or "").strip()] = row
+    return policy_map
 
 
 def _build_payment_map(payment_refs: list[str], *, office_branch: str | None) -> dict[str, dict[str, Any]]:

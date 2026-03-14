@@ -39,17 +39,12 @@ POLICY_SNAPSHOT_FIELDS = [
 
 class ATPolicy(Document):
     def autoname(self):
-        self.policy_no = (self.policy_no or "").strip()
-        if self.policy_no:
-            self.name = self.policy_no
+        if self.name:
             return
-
-        generated_name = make_autoname("AT-POL-.#####.")
-        self.name = generated_name
-        self.policy_no = generated_name
+        self.name = make_autoname("AT-POL-.YYYY.-.######")
 
     def validate(self):
-        self.policy_no = (self.policy_no or "").strip()
+        self.policy_no = (self.policy_no or "").strip() or None
         issue_date = getdate(self.issue_date) if self.issue_date else None
         start_date = getdate(self.start_date) if self.start_date else None
         end_date = getdate(self.end_date) if self.end_date else None
@@ -67,6 +62,7 @@ class ATPolicy(Document):
         if start_date and end_date and start_date > end_date:
             frappe.throw(_("Start date cannot be later than end date."))
 
+        self._validate_company_policy_number_uniqueness()
         self.net_premium = normalized["net_premium"]
         self.tax_amount = normalized["tax_amount"]
         self.commission_amount = normalized["commission_amount"]
@@ -76,7 +72,29 @@ class ATPolicy(Document):
         self._set_exchange_rate()
         self.gwp_try = self.gross_premium * flt(self.fx_rate)
 
+    def _validate_company_policy_number_uniqueness(self) -> None:
+        if not self.policy_no or not self.insurance_company:
+            return
+
+        duplicate_name = frappe.db.get_value(
+            "AT Policy",
+            {
+                "insurance_company": self.insurance_company,
+                "policy_no": self.policy_no,
+                "name": ["!=", self.name or ""],
+            },
+            "name",
+        )
+        if duplicate_name:
+            frappe.throw(
+                _("Carrier policy number already exists for {0}: {1}").format(
+                    frappe.bold(self.insurance_company),
+                    frappe.bold(self.policy_no),
+                )
+            )
+
     def after_insert(self):
+        notification_policy_no = self.policy_no or self.name
         try:
             baseline_snapshot = create_policy_snapshot(
                 self,
@@ -98,7 +116,9 @@ class ATPolicy(Document):
                 reference_name=self.name,
                 customer=self.customer,
                 context={
-                    "policy_no": self.policy_no,
+                    "policy_no": notification_policy_no,
+                    "carrier_policy_no": self.policy_no,
+                    "record_no": self.name,
                     "issue_date": self.issue_date,
                     "start_date": self.start_date,
                     "end_date": self.end_date,

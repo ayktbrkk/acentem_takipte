@@ -33,6 +33,8 @@ class TestATPolicy(IntegrationTestCase):
         self.assertAlmostEqual(flt(policy.commission_amount), 80, places=2)
         self.assertAlmostEqual(flt(policy.commission), 80, places=2)
         self.assertAlmostEqual(flt(policy.gwp_try), 1200, places=2)
+        self.assertTrue(str(policy.name).startswith("AT-POL-"))
+        self.assertIsNone(policy.policy_no)
 
     def test_policy_financial_mismatch_throws(self):
         deps = _create_dependencies()
@@ -56,6 +58,84 @@ class TestATPolicy(IntegrationTestCase):
                     "gross_premium": 1500,
                 }
             ).insert()
+
+    def test_policy_number_is_unique_per_insurance_company(self):
+        deps = _create_dependencies()
+        other_company = frappe.get_doc(
+            {
+                "doctype": "AT Insurance Company",
+                "company_name": f"Second Insurance {frappe.generate_hash(length=6)}",
+                "company_code": f"SIC{frappe.generate_hash(length=4)}",
+            }
+        ).insert(ignore_permissions=True)
+        other_branch = frappe.get_doc(
+            {
+                "doctype": "AT Branch",
+                "branch_name": f"Second Branch {frappe.generate_hash(length=6)}",
+                "branch_code": f"SB{frappe.generate_hash(length=4)}",
+                "insurance_company": other_company.name,
+            }
+        ).insert(ignore_permissions=True)
+
+        first_policy = frappe.get_doc(
+            {
+                "doctype": "AT Policy",
+                "customer": deps["customer"],
+                "sales_entity": deps["sales_entity"],
+                "insurance_company": deps["insurance_company"],
+                "branch": deps["branch"],
+                "policy_no": "EXT-12345",
+                "status": "Active",
+                "issue_date": nowdate(),
+                "start_date": nowdate(),
+                "end_date": add_days(nowdate(), 365),
+                "currency": "TRY",
+                "gross_premium": 1000,
+                "commission_amount": 50,
+            }
+        ).insert()
+
+        self.assertEqual(first_policy.policy_no, "EXT-12345")
+        self.assertNotEqual(first_policy.name, first_policy.policy_no)
+
+        with self.assertRaises(frappe.ValidationError):
+            frappe.get_doc(
+                {
+                    "doctype": "AT Policy",
+                    "customer": deps["customer"],
+                    "sales_entity": deps["sales_entity"],
+                    "insurance_company": deps["insurance_company"],
+                    "branch": deps["branch"],
+                    "policy_no": "EXT-12345",
+                    "status": "Active",
+                    "issue_date": nowdate(),
+                    "start_date": nowdate(),
+                    "end_date": add_days(nowdate(), 365),
+                    "currency": "TRY",
+                    "gross_premium": 1200,
+                    "commission_amount": 60,
+                }
+            ).insert()
+
+        second_policy = frappe.get_doc(
+            {
+                "doctype": "AT Policy",
+                "customer": deps["customer"],
+                "sales_entity": deps["sales_entity"],
+                "insurance_company": other_company.name,
+                "branch": other_branch.name,
+                "policy_no": "EXT-12345",
+                "status": "Active",
+                "issue_date": nowdate(),
+                "start_date": nowdate(),
+                "end_date": add_days(nowdate(), 365),
+                "currency": "TRY",
+                "gross_premium": 1500,
+                "commission_amount": 70,
+            }
+        ).insert()
+
+        self.assertEqual(second_policy.policy_no, "EXT-12345")
 
 
 def _create_dependencies() -> dict[str, str]:

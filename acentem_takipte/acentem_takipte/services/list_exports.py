@@ -114,8 +114,8 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
             "modified",
         ],
         "columns": [
-            _column("policy_no", _t("Poliçe No", "Policy No"), getter=lambda row: row.get("policy_no") or row.get("name")),
-            _column("name", _t("Kayıt", "Record")),
+            _column("name", _t("Kayıt No", "Record Number")),
+            _column("policy_no", _t("Sigorta Şirketi Poliçe No", "Carrier Policy Number")),
             _column("customer", _t("Müşteri", "Customer")),
             _column("insurance_company", _t("Sigorta Şirketi", "Insurance Company")),
             _column("status", _t("Durum", "Status")),

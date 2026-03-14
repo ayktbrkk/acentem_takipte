@@ -52,7 +52,7 @@ export const quickCreateRegistry = {
   policy: {
     key: "policy",
     title: i18nLabel("Hızlı Poliçe Kaydı", "Quick Policy Entry"),
-    subtitle: i18nLabel("Temel poliçe alanlarıyla kayıt oluştur", "Create a policy with core fields"),
+    subtitle: i18nLabel("Sistem kayıt numarası otomatik üretilir, şirket poliçe numarası opsiyoneldir", "Create a policy with an auto-generated record number and an optional carrier policy number"),
     submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_policy",
     resultKey: "policy",
     openRouteName: "policy-detail",
@@ -80,7 +80,7 @@ export const quickCreateRegistry = {
       { name: "sales_entity", type: "select", label: i18nLabel("Satış Birimi", "Sales Entity"), optionsSource: "salesEntities", required: true },
       { name: "insurance_company", type: "select", label: i18nLabel("Sigorta Şirketi", "Insurance Company"), optionsSource: "insuranceCompanies", required: true },
       { name: "branch", type: "select", label: i18nLabel("Sigorta Branşı", "Insurance Branch"), optionsSource: "branches", required: true },
-      { name: "policy_no", type: "text", label: i18nLabel("Poliçe No", "Policy Number") },
+      { name: "policy_no", type: "text", label: i18nLabel("Sigorta Şirketi Poliçe No", "Carrier Policy Number") },
       { name: "source_offer", type: "select", label: i18nLabel("Kaynak Teklif", "Source Offer"), optionsSource: "offers" },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Active", "Aktif", "Active"),

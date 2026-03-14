@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import frappe
+from frappe import _
 
 from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
 
@@ -127,9 +128,9 @@ def _build_product_profile(policy: dict) -> dict:
     insured_subject = "Policy"
     coverage_focus = branch_label
     required_fields = [
-        {"key": "policy_no", "label": "Policy No", "value": policy.get("policy_no")},
-        {"key": "start_date", "label": "Start Date", "value": policy.get("start_date")},
-        {"key": "end_date", "label": "End Date", "value": policy.get("end_date")},
+        {"key": "name", "label": _("Record Number"), "value": policy.get("name")},
+        {"key": "start_date", "label": _("Start Date"), "value": policy.get("start_date")},
+        {"key": "end_date", "label": _("End Date"), "value": policy.get("end_date")},
     ]
 
     if any(token in branch_value for token in ["trafik", "kasko", "vehicle", "motor"]):

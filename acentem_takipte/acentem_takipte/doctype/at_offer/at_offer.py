@@ -186,8 +186,21 @@ def convert_to_policy(
 
     if policy_no:
         stripped_policy_no = policy_no.strip()
-        if frappe.db.exists("AT Policy", stripped_policy_no):
-            frappe.throw(_("Policy number already exists: {0}").format(stripped_policy_no))
+        duplicate_name = frappe.db.get_value(
+            "AT Policy",
+            {
+                "insurance_company": offer.insurance_company,
+                "policy_no": stripped_policy_no,
+            },
+            "name",
+        )
+        if duplicate_name:
+            frappe.throw(
+                _("Carrier policy number already exists for {0}: {1}").format(
+                    frappe.bold(offer.insurance_company),
+                    frappe.bold(stripped_policy_no),
+                )
+            )
         policy_payload["policy_no"] = stripped_policy_no
 
     policy = _insert_policy_for_offer_conversion(policy_payload)
@@ -245,7 +258,9 @@ def _resolve_commission_value(offer: ATOffer, *, commission_amount: float | None
     elif commission is not None:
         resolved = flt(commission)
     else:
-        resolved = resolve_commission_amount(offer.commission_amount, offer.commission)
+        # Older data may still carry `commission`, but current AT Offer schema
+        # only persists `commission_amount`.
+        resolved = resolve_commission_amount(offer.commission_amount, getattr(offer, "commission", None))
     if resolved < 0:
         frappe.throw(_("Commission amount cannot be negative."))
     return resolved

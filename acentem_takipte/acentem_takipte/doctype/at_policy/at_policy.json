@@ -66,8 +66,8 @@
   {
    "fieldname": "policy_no",
    "fieldtype": "Data",
-   "label": "Policy Number",
-   "unique": 1
+   "description": "External policy number used by the insurer.",
+   "label": "Carrier Policy Number"
   },
   {
    "fieldname": "source_offer",

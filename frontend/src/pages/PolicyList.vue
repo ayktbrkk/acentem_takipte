@@ -321,6 +321,8 @@ const copy = {
     previous: "Önceki",
     next: "Sonraki",
     colPolicy: "Poliçe",
+    recordNo: "Kayıt No",
+    carrierPolicyNo: "Şirket Poliçe No",
     colCustomer: "Müşteri",
     colCompany: "Sigorta Şirketi",
     colEndDate: "Bitiş Tarihi",
@@ -376,6 +378,8 @@ const copy = {
     previous: "Previous",
     next: "Next",
     colPolicy: "Policy",
+    recordNo: "Record No",
+    carrierPolicyNo: "Carrier Policy No",
     colCustomer: "Customer",
     colCompany: "Insurance Company",
     colEndDate: "End Date",
@@ -1039,7 +1043,10 @@ function openPolicyDetail(policyName) {
 }
 
 function policyIdentityFacts(row) {
-  return [subtleFact("record", "ID", row?.name || "-")];
+  return [
+    subtleFact("record", t("recordNo"), row?.name || "-"),
+    subtleFact("policyNo", t("carrierPolicyNo"), row?.policy_no || "-"),
+  ];
 }
 
 function policyDetailsFacts(row) {

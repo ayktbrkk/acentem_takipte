@@ -434,6 +434,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 const labels = {
   tr: {
     overview: "Poliçe Detayı", openDesk: "Yönetim Ekranında Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
+    recordNo: "Kayıt No", carrierPolicyNo: "Şirket Poliçe No",
     mobileQuickActionsTitle: "Hızlı İşlemler",
     timelineTitle: "Zaman Tüneli", emptyTimeline: "Bu poliçede zaman tüneli kaydı yok.", lifecycleTitle: "Poliçe Yaşam Döngüsü",
     emptyLifecycle: "Anlık görüntü kaydı yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Müşteri Kartı",
@@ -455,6 +456,7 @@ const labels = {
   },
   en: {
     overview: "Policy Detail", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
+    recordNo: "Record No", carrierPolicyNo: "Carrier Policy No",
     mobileQuickActionsTitle: "Quick Actions",
     timelineTitle: "Timeline", emptyTimeline: "No timeline activity.", lifecycleTitle: "Policy Lifecycle",
     emptyLifecycle: "No snapshot records.", premiumTitle: "Premium Details", customerTitle: "Customer Card",
@@ -597,6 +599,16 @@ const remainingDays = computed(() => {
 const remainingLabel = computed(() => (remainingDays.value == null ? t("noDate") : remainingDays.value < 0 ? t("expired") : String(remainingDays.value)));
 const remainingClass = computed(() => (remainingDays.value == null ? "text-slate-500" : remainingDays.value < 0 ? "text-rose-600" : remainingDays.value <= 30 ? "text-amber-600" : "text-emerald-600"));
 const headerSummaryItems = computed(() => [
+  {
+    key: "recordNo",
+    label: t("recordNo"),
+    value: policy.value.name || "-",
+  },
+  {
+    key: "carrierPolicyNo",
+    label: t("carrierPolicyNo"),
+    value: policy.value.policy_no || "-",
+  },
   {
     key: "status",
     label: t("status"),

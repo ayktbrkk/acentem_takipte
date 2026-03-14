@@ -459,8 +459,10 @@ const reportCatalog = {
 };
 
 const columnLabels = {
+  name: { tr: "Kayıt No", en: "Record Number" },
   customer: { tr: "Müşteri", en: "Customer" },
   policy: { tr: "Poliçe", en: "Policy" },
+  policy_no: { tr: "Sigorta Şirketi Poliçe No", en: "Carrier Policy Number" },
   office_branch: { tr: "Ofis Şube", en: "Office Branch" },
   branch: { tr: "Sigorta Branşı", en: "Insurance Branch" },
   insurance_company: { tr: "Sigorta Şirketi", en: "Insurance Company" },
