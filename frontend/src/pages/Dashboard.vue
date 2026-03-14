@@ -41,7 +41,7 @@
             variant="secondary"
             size="sm"
             class="!border-white/30 !bg-white !text-slate-900 hover:!bg-slate-100"
-            @click="showLeadDialog = true"
+            @click="resetLeadForm(); showLeadDialog = true"
           >
             {{ t("newLead") }}
           </ActionButton>
@@ -632,26 +632,22 @@
 
 
 
-    <Dialog v-model="showLeadDialog" :options="{ title: t('newLead'), size: 'xl' }">
+    <Dialog
+      v-model="showLeadDialog"
+      :options="{ title: activeLocale === 'tr' ? 'Hızlı Fırsat Oluştur' : 'Quick Opportunity', size: 'xl' }"
+    >
       <template #body-content>
         <div class="grid gap-3 p-4">
-          <input
-            v-model="newLead.first_name"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            :placeholder="t('firstName')"
-            type="text"
-          />
-          <input
-            v-model="newLead.last_name"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            :placeholder="t('lastName')"
-            type="text"
-          />
-          <input
-            v-model="newLead.email"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            :placeholder="t('email')"
-            type="email"
+          <p v-if="leadDialogError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            {{ leadDialogError }}
+          </p>
+          <QuickCustomerPicker
+            :model="newLead"
+            :field-errors="leadDialogFieldErrors"
+            :disabled="isSubmitting"
+            :locale="activeLocale"
+            :office-branch="branchStore.requestBranch || ''"
+            :customer-label="{ tr: 'Müşteri / Ad Soyad', en: 'Customer / Full Name' }"
           />
           <input
             v-model="newLead.estimated_gross_premium"
@@ -670,14 +666,14 @@
         </div>
       </template>
       <template #actions>
-        <ActionButton variant="secondary" size="sm" @click="showLeadDialog = false">
+        <ActionButton variant="secondary" size="sm" @click="resetLeadForm(); showLeadDialog = false">
           {{ t("cancel") }}
         </ActionButton>
         <ActionButton
           variant="primary"
           size="sm"
           class="!bg-brand-700 hover:!bg-brand-600"
-          :disabled="isSubmitting || !newLead.first_name"
+          :disabled="isSubmitting"
           @click="createLead"
         >
           {{ t("save") }}
@@ -706,7 +702,9 @@ import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
+import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import StatusBadge from "../components/StatusBadge.vue";
+import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 
 const router = useRouter();
 const route = useRoute();
@@ -769,7 +767,13 @@ const copy = {
     quickActions: "Hızlı Aksiyonlar",
     firstName: "Ad",
     lastName: "Soyad",
+    phone: "Telefon",
     customer: "Müşteri",
+    customerType: "Müşteri Tipi",
+    customerTypeIndividual: "Bireysel",
+    customerTypeCorporate: "Kurumsal",
+    tcknLabel: "TC Kimlik No",
+    taxNumberLabel: "Vergi No",
     email: "E-posta",
     estPremiumInput: "Tahmini brut prim",
     note: "Not",
@@ -831,6 +835,9 @@ const copy = {
     statusSent: "Gönderildi",
     statusAçcepted: "Kabul Edildi",
     statusRejected: "Reddedildi",
+    validationTaxNumberLength: "Vergi numarası 10 haneli olmalıdır.",
+    validationTcLength: "TC kimlik numarası 11 haneli olmalıdır.",
+    validationTcInvalid: "Geçerli bir TC kimlik numarası girin.",
     policyMix: "Poliçe Durum Dağılımı",
     noPolicyMix: "Poliçe durum verisi bulunamadı.",
     statusActive: "Aktif",
@@ -948,7 +955,13 @@ const copy = {
     quickActions: "Quick Actions",
     firstName: "First Name",
     lastName: "Last Name",
+    phone: "Phone",
     customer: "Customer",
+    customerType: "Customer Type",
+    customerTypeIndividual: "Individual",
+    customerTypeCorporate: "Corporate",
+    tcknLabel: "T.R. Identity Number",
+    taxNumberLabel: "Tax Number",
     email: "Email",
     estPremiumInput: "Estimated gross premium",
     note: "Notes",
@@ -1008,8 +1021,11 @@ const copy = {
     statusCompleted: "Done",
     statusCancelled: "Cancelled",
     statusSent: "Sent",
-    statusAçcepted: "Açcepted",
+    statusAçcepted: "Accepted",
     statusRejected: "Rejected",
+    validationTaxNumberLength: "Tax number must be 10 digits.",
+    validationTcLength: "T.R. identity number must be 11 digits.",
+    validationTcInvalid: "Enter a valid T.R. identity number.",
     policyMix: "Policy Status Mix",
     noPolicyMix: "No policy status data found.",
     statusActive: "Active",
@@ -1102,12 +1118,19 @@ const selectedRange = computed({
 });
 const showLeadDialog = ref(false);
 const isSubmitting = ref(false);
+const leadDialogError = ref("");
+const leadDialogFieldErrors = reactive({});
 const DASHBOARD_RELOAD_DEBOUNCE_MS = 300;
 let dashboardReloadTimer = null;
 
 const newLead = reactive({
-  first_name: "",
-  last_name: "",
+  customer: "",
+  queryText: "",
+  customerOption: null,
+  createCustomerMode: false,
+  customer_type: "Individual",
+  tax_id: "",
+  phone: "",
   email: "",
   estimated_gross_premium: "",
   notes: "",
@@ -1252,7 +1275,7 @@ const dashboardTabPayloadResource = createResource({
 });
 
 const createLeadResource = createResource({
-  url: "frappe.client.insert",
+  url: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_lead",
 });
 
 const localeCode = computed(() => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"));
@@ -1357,7 +1380,7 @@ const readyOfferCount = computed(() => {
   if (dashboardTabMetrics.value?.ready_offer_count != null) {
     return Number(dashboardTabMetrics.value.ready_offer_count || 0);
   }
-  return recentOffers.value.filter((offer) => ["Sent", "Açcepted"].includes(offer.status) && !offer.converted_policy).length;
+  return recentOffers.value.filter((offer) => ["Sent", "Accepted"].includes(offer.status) && !offer.converted_policy).length;
 });
 const activeDashboardTab = computed(() => normalizeDashboardTab(route.query?.tab));
 const isDailyTab = computed(() => activeDashboardTab.value === "daily");
@@ -1405,7 +1428,7 @@ const displayTopCompanies = computed(() => topCompanies.value.slice(0, 4));
 const displayRecentPolicies = computed(() => recentPolicies.value.slice(0, 4));
 const displayRecentOffers = computed(() => recentOffers.value);
 const displayReadyOfferCount = computed(
-  () => displayRecentOffers.value.filter((offer) => ["Sent", "Açcepted"].includes(offer.status) && !offer.converted_policy).length
+  () => displayRecentOffers.value.filter((offer) => ["Sent", "Accepted"].includes(offer.status) && !offer.converted_policy).length
 );
 const reconciliationPreviewOpenDifference = computed(() => {
   if (dashboardTabMetrics.value?.reconciliation_open_difference_try != null) {
@@ -1415,7 +1438,7 @@ const reconciliationPreviewOpenDifference = computed(() => {
 });
 const dailyActionOffers = computed(() =>
   (dashboardTabPreviews.value.action_offers || recentOffers.value)
-    .filter((offer) => ["Sent", "Açcepted"].includes(String(offer?.status || "")) && !offer.converted_policy)
+    .filter((offer) => ["Sent", "Accepted"].includes(String(offer?.status || "")) && !offer.converted_policy)
     .slice(0, 5)
 );
 
@@ -1590,18 +1613,18 @@ const salesOfferStatusSummary = computed(() => {
   const colorMap = {
     Draft: "bg-amber-500",
     Sent: "bg-sky-500",
-    Açcepted: "bg-emerald-500",
+    Accepted: "bg-emerald-500",
     Rejected: "bg-rose-500",
     Converted: "bg-indigo-500",
   };
   const labelMap = {
     Draft: t("draft"),
     Sent: t("statusSent"),
-    Açcepted: t("statusAçcepted"),
+    Accepted: t("statusAçcepted"),
     Rejected: t("statusRejected"),
     Converted: t("converted"),
   };
-  const order = ["Draft", "Sent", "Açcepted", "Converted", "Rejected"];
+  const order = ["Draft", "Sent", "Accepted", "Converted", "Rejected"];
   return order
     .map((status) => ({
       key: status,
@@ -2274,8 +2297,15 @@ function applyRange(days) {
 }
 
 function resetLeadForm() {
-  newLead.first_name = "";
-  newLead.last_name = "";
+  leadDialogError.value = "";
+  Object.keys(leadDialogFieldErrors).forEach((key) => delete leadDialogFieldErrors[key]);
+  newLead.customer = "";
+  newLead.queryText = "";
+  newLead.customerOption = null;
+  newLead.createCustomerMode = false;
+  newLead.customer_type = "Individual";
+  newLead.tax_id = "";
+  newLead.phone = "";
   newLead.email = "";
   newLead.estimated_gross_premium = "";
   newLead.notes = "";
@@ -2283,21 +2313,62 @@ function resetLeadForm() {
 
 async function createLead() {
   try {
+    leadDialogError.value = "";
+    Object.keys(leadDialogFieldErrors).forEach((key) => delete leadDialogFieldErrors[key]);
+    const selectedCustomer = String(newLead.customer || "").trim();
+    const shouldCreateCustomer = !selectedCustomer && Boolean(newLead.createCustomerMode);
+    const fullName = String(newLead.queryText || "").trim();
+    const customerType = normalizeCustomerType(newLead.customer_type, newLead.tax_id);
+    const identityNumber = normalizeIdentityNumber(newLead.tax_id);
+    if (!selectedCustomer && !shouldCreateCustomer) {
+      leadDialogFieldErrors.customer =
+        activeLocale.value === "tr"
+          ? "Bir müşteri seçin veya yeni müşteri ekleyin."
+          : "Select a customer or add a new customer.";
+      leadDialogError.value = activeLocale.value === "tr" ? "Müşteri alanını tamamlayın." : "Complete the customer section.";
+      return;
+    }
+    if (shouldCreateCustomer && !fullName) {
+      leadDialogFieldErrors.customer =
+        activeLocale.value === "tr" ? "Yeni müşteri adı gerekli." : "New customer name is required.";
+      leadDialogError.value = activeLocale.value === "tr" ? "Müşteri alanını tamamlayın." : "Complete the customer section.";
+      return;
+    }
+    if (shouldCreateCustomer) {
+      if (customerType === "Corporate") {
+        if (identityNumber.length !== 10) {
+          leadDialogFieldErrors.tax_id = t("validationTaxNumberLength");
+          leadDialogError.value = t("validationTaxNumberLength");
+          return;
+        }
+      } else if (identityNumber.length !== 11) {
+        leadDialogFieldErrors.tax_id = t("validationTcLength");
+        leadDialogError.value = t("validationTcLength");
+        return;
+      } else if (!isValidTckn(identityNumber)) {
+        leadDialogFieldErrors.tax_id = t("validationTcInvalid");
+        leadDialogError.value = t("validationTcInvalid");
+        return;
+      }
+    }
+
     isSubmitting.value = true;
     await createLeadResource.submit({
-      doc: {
-        doctype: "AT Lead",
-        first_name: newLead.first_name,
-        last_name: newLead.last_name,
-        email: newLead.email,
-        estimated_gross_premium: Number(newLead.estimated_gross_premium || 0),
-        notes: newLead.notes,
-        status: "Open",
-      },
+      full_name: fullName || null,
+      customer: selectedCustomer || null,
+      customer_type: shouldCreateCustomer ? customerType : null,
+      tax_id: shouldCreateCustomer ? identityNumber : null,
+      phone: shouldCreateCustomer ? newLead.phone : null,
+      email: shouldCreateCustomer ? newLead.email : null,
+      estimated_gross_premium: Number(newLead.estimated_gross_premium || 0),
+      notes: newLead.notes,
+      status: "Open",
     });
     showLeadDialog.value = false;
     resetLeadForm();
     triggerDashboardReload({ immediate: true });
+  } catch (error) {
+    leadDialogError.value = error?.messages?.join(" ") || error?.message || t("loadError");
   } finally {
     isSubmitting.value = false;
   }

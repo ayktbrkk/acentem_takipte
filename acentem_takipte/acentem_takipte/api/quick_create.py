@@ -31,6 +31,8 @@ from acentem_takipte.acentem_takipte.services.quick_create import (
     delete_aux_record as delete_aux_record_service,
     update_aux_record as update_aux_record_service,
 )
+from acentem_takipte.acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
+from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import convert_to_policy as convert_offer_to_policy
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import normalize_customer_type
 from acentem_takipte.acentem_takipte.utils.notes import normalize_note_text
 from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
@@ -88,8 +90,10 @@ def create_quick_customer(
 
 @frappe.whitelist()
 def create_quick_lead(
+    full_name: str | None = None,
     first_name: str | None = None,
     last_name: str | None = None,
+    customer_type: str | None = None,
     phone: str | None = None,
     tax_id: str | None = None,
     email: str | None = None,
@@ -104,16 +108,33 @@ def create_quick_lead(
 ) -> dict[str, str]:
     _assert_create_permission("AT Lead", _("You do not have permission to create leads."))
 
+    normalized_customer = _normalize_link("AT Customer", customer)
+    resolved_office_branch = _resolve_office_branch(office_branch, customer=normalized_customer)
+    full_name = str(full_name or "").strip() or " ".join(
+        part for part in [(first_name or "").strip(), (last_name or "").strip()] if part
+    ).strip()
+    resolved_first_name, resolved_last_name = _split_full_name(full_name)
+    auto_customer, _ = resolve_or_create_quick_customer(
+        customer=normalized_customer,
+        full_name=full_name,
+        customer_type=normalize_customer_type(customer_type, tax_id),
+        tax_id=tax_id,
+        phone=phone,
+        email=email,
+        office_branch=resolved_office_branch,
+        require_customer=False,
+    )
+
     payload = {
         "doctype": "AT Lead",
-        "first_name": (first_name or "").strip(),
-        "last_name": (last_name or "").strip() or None,
+        "first_name": resolved_first_name,
+        "last_name": resolved_last_name,
         "phone": (phone or "").strip() or None,
         "tax_id": _digits_only(tax_id) or None,
         "email": (email or "").strip() or None,
         "status": _normalize_option(status, set(ATLeadStatus.VALID), default=ATLeadStatus.OPEN),
-        "customer": normalized_customer,
-        "office_branch": _resolve_office_branch(office_branch, customer=customer),
+        "customer": auto_customer,
+        "office_branch": resolved_office_branch,
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company),
         "branch": _normalize_link("AT Branch", branch),
@@ -127,6 +148,11 @@ def create_quick_lead(
 @frappe.whitelist()
 def create_quick_policy(
     customer: str | None = None,
+    customer_full_name: str | None = None,
+    customer_type: str | None = None,
+    customer_tax_id: str | None = None,
+    customer_phone: str | None = None,
+    customer_email: str | None = None,
     sales_entity: str | None = None,
     insurance_company: str | None = None,
     branch: str | None = None,
@@ -146,14 +172,38 @@ def create_quick_policy(
 ) -> dict[str, str]:
     _assert_create_permission("AT Policy", _("You do not have permission to create policies."))
 
+    normalized_offer = _normalize_link("AT Offer", source_offer)
+
+    if normalized_offer:
+        return convert_offer_to_policy(
+            offer_name=normalized_offer,
+            start_date=start_date,
+            end_date=end_date,
+            commission_amount=commission_amount,
+            tax_amount=tax_amount,
+            net_premium=net_premium,
+            policy_no=policy_no,
+        )
+
     issue = getdate(issue_date) if issue_date else getdate(nowdate())
     start = getdate(start_date) if start_date else issue
     end = getdate(end_date) if end_date else add_days(start, 365)
+    resolved_office_branch = _resolve_office_branch(office_branch, customer=customer)
+    resolved_customer, _ = resolve_or_create_quick_customer(
+        customer=customer,
+        full_name=customer_full_name,
+        customer_type=normalize_customer_type(customer_type, customer_tax_id),
+        tax_id=customer_tax_id,
+        phone=customer_phone,
+        email=customer_email,
+        office_branch=resolved_office_branch,
+        require_customer=True,
+    )
 
     payload = {
         "doctype": "AT Policy",
-        "customer": _normalize_link("AT Customer", customer, required=True),
-        "office_branch": _resolve_office_branch(office_branch, customer=customer),
+        "customer": resolved_customer,
+        "office_branch": resolved_office_branch,
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity, required=True),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company, required=True),
         "branch": _normalize_link("AT Branch", branch, required=True),
@@ -167,7 +217,7 @@ def create_quick_policy(
         "tax_amount": flt(tax_amount) if tax_amount not in {None, ""} else 0,
         "commission_amount": flt(commission_amount) if commission_amount not in {None, ""} else 0,
         "gross_premium": flt(gross_premium) if gross_premium not in {None, ""} else 0,
-        "source_offer": _normalize_link("AT Offer", source_offer),
+        "source_offer": None,
         "notes": normalize_note_text(notes),
     }
 
@@ -1132,6 +1182,16 @@ def _assert_delete_permission(doctype: str, message: str) -> None:
 
 def _digits_only(value: str | None) -> str:
     return "".join(ch for ch in str(value or "") if ch.isdigit())
+
+
+def _split_full_name(full_name: str | None) -> tuple[str, str | None]:
+    cleaned = " ".join(str(full_name or "").strip().split())
+    if not cleaned:
+        frappe.throw(_("Full name is required."))
+    parts = cleaned.split(" ")
+    if len(parts) == 1:
+        return parts[0], None
+    return " ".join(parts[:-1]), parts[-1]
 
 
 def _normalize_option(value: str | None, allowed: set[str], *, default: str) -> str:

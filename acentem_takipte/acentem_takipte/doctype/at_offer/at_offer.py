@@ -3,8 +3,9 @@ from __future__ import annotations
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, flt, getdate, now_datetime, nowdate
+from frappe.utils import add_days, flt, getdate, nowdate
 from acentem_takipte.acentem_takipte.services.branches import get_default_office_branch
+from acentem_takipte.acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
 from acentem_takipte.acentem_takipte.utils.commissions import resolve_commission_amount
 from acentem_takipte.acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus, ATPolicyStatus
 from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
@@ -48,6 +49,10 @@ class ATOffer(Document):
 def create_quick_offer(
     customer: str | None = None,
     customer_name: str | None = None,
+    customer_type: str | None = None,
+    tax_id: str | None = None,
+    phone: str | None = None,
+    email: str | None = None,
     branch: str | None = None,
     office_branch: str | None = None,
     notes: str | None = None,
@@ -70,6 +75,11 @@ def create_quick_offer(
     resolved_customer, customer_created = _resolve_or_create_quick_customer(
         customer=customer,
         customer_name=customer_name,
+        customer_type=customer_type,
+        tax_id=tax_id,
+        phone=phone,
+        email=email,
+        office_branch=office_branch,
     )
 
     offer_day = getdate(offer_date) if offer_date else getdate(nowdate())
@@ -277,34 +287,30 @@ def _resolve_net_value(offer: ATOffer, *, net_premium: float | None) -> float:
     return flt(net_premium) if net_premium is not None else flt(offer.net_premium)
 
 
-def _resolve_or_create_quick_customer(*, customer: str | None, customer_name: str | None) -> tuple[str, bool]:
-    if customer:
-        customer = customer.strip()
-        if not frappe.db.exists("AT Customer", customer):
-            frappe.throw(_("Customer not found: {0}").format(customer))
-        return customer, False
-
-    full_name = (customer_name or "").strip()
-    if not full_name:
-        frappe.throw(_("Customer is required."))
-
-    existing_by_name = frappe.db.get_value("AT Customer", {"full_name": full_name}, "name")
-    if existing_by_name:
-        return existing_by_name, False
-
-    if not frappe.has_permission("AT Customer", "create"):
+def _resolve_or_create_quick_customer(
+    *,
+    customer: str | None,
+    customer_name: str | None,
+    customer_type: str | None,
+    tax_id: str | None,
+    phone: str | None,
+    email: str | None,
+    office_branch: str | None,
+) -> tuple[str, bool]:
+    if not customer and not frappe.has_permission("AT Customer", "create"):
         frappe.throw(_("You do not have permission to create customers."))
 
-    temp_tax_id = _generate_temporary_tax_id()
-    customer_doc = frappe.get_doc(
-        {
-            "doctype": "AT Customer",
-            "tax_id": temp_tax_id,
-            "full_name": full_name,
-            "office_branch": get_default_office_branch(),
-        }
-    ).insert(ignore_permissions=True)
-    return customer_doc.name, True
+    resolved_customer, customer_created = resolve_or_create_quick_customer(
+        customer=customer,
+        full_name=customer_name,
+        customer_type=customer_type,
+        tax_id=tax_id,
+        phone=phone,
+        email=email,
+        office_branch=_resolve_offer_office_branch(office_branch, customer),
+        require_customer=True,
+    )
+    return str(resolved_customer or "").strip(), customer_created
 
 
 def _resolve_offer_office_branch(office_branch: str | None, customer: str | None) -> str | None:
@@ -317,17 +323,3 @@ def _resolve_offer_office_branch(office_branch: str | None, customer: str | None
         if customer_branch:
             return customer_branch
     return get_default_office_branch()
-
-
-def _generate_temporary_tax_id() -> str:
-    seed = now_datetime().strftime("%y%m%d%H%M%S%f")
-    base_value = int(seed[-10:])
-    for offset in range(0, 1000):
-        candidate = str((base_value + offset) % 10**10).zfill(10)
-        if candidate.startswith("0"):
-            candidate = f"9{candidate[1:]}"
-        if not frappe.db.exists("AT Customer", {"tax_id": candidate}):
-            return candidate
-
-    frappe.throw(_("Could not generate temporary Tax ID. Please retry."))
-    return ""

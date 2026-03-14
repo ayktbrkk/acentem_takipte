@@ -494,7 +494,7 @@ const offerDetailPayload = computed(() =>
   offerDetailPayloadResource.data && typeof offerDetailPayloadResource.data === "object" ? offerDetailPayloadResource.data : {}
 );
 const isOfferConvertible = computed(
-  () => !offer.value.converted_policy && ["Sent", "Açcepted"].includes(String(offer.value.status || ""))
+  () => !offer.value.converted_policy && ["Sent", "Accepted"].includes(String(offer.value.status || ""))
 );
 const relatedOffers = computed(() =>
   Array.isArray(offerDetailPayload.value.related_offers)

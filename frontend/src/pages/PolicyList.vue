@@ -216,8 +216,26 @@
           @save="submitQuickPolicy(false)"
           @save-and-open="submitQuickPolicy(true)"
         >
+          <QuickCustomerPicker
+            v-if="!hasQuickPolicySourceOffer"
+            customer-field-name="customer"
+            identity-field-name="customer_tax_id"
+            phone-field-name="customer_phone"
+            email-field-name="customer_email"
+            :model="quickPolicyForm"
+            :field-errors="quickPolicyFieldErrors"
+            :disabled="quickPolicyLoading"
+            :locale="activeLocale"
+            :office-branch="branchStore.requestBranch || ''"
+          />
+          <div
+            v-else
+            class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
+          >
+            {{ activeLocale === "tr" ? "Kaynak teklif seçildiğinde müşteri bilgisi tekliften alınır." : "Customer information is inherited from the selected source offer." }}
+          </div>
           <QuickCreateFormRenderer
-            :fields="policyQuickFields"
+            :fields="policyQuickFormFields"
             :model="quickPolicyForm"
             :field-errors="quickPolicyFieldErrors"
             :disabled="quickPolicyLoading"
@@ -246,6 +264,7 @@ import StatusBadge from "../components/StatusBadge.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
@@ -259,6 +278,7 @@ import { mutedFact, subtleFact } from "../utils/factItems";
 import { openListExport } from "../utils/listExport";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
+import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 import {
   extractCustomFilterPresetId,
   isCustomFilterPresetValue,
@@ -401,6 +421,22 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
+function resolveFieldValue(source, field) {
+  if (typeof source === "function") {
+    return source({
+      field,
+      model: quickPolicyForm,
+      locale: activeLocale.value,
+      text: (value) => getLocalizedText(value, activeLocale.value),
+    });
+  }
+  return source;
+}
+
+function isFieldRequired(field) {
+  return Boolean(resolveFieldValue(field?.required, field));
+}
+
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const filters = policyStore.state.filters;
 const pagination = policyStore.state.pagination;
@@ -437,7 +473,12 @@ const showQuickPolicyDialog = ref(false);
 const quickPolicyLoading = ref(false);
 const quickPolicyError = ref("");
 const quickPolicyFieldErrors = reactive({});
-const quickPolicyForm = reactive(buildQuickCreateDraft(quickPolicyConfig));
+const quickPolicyForm = reactive({
+  queryText: "",
+  customerOption: null,
+  createCustomerMode: false,
+  ...buildQuickCreateDraft(quickPolicyConfig),
+});
 const quickPolicyReturnTo = ref("");
 const quickPolicyOpenedFromIntent = ref(false);
 const QUICK_OPTION_LIMIT = 2000;
@@ -527,6 +568,15 @@ const companies = computed(() => companyResource.data || []);
 const rows = computed(() => policyStore.state.items);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const policyQuickFields = computed(() => quickPolicyConfig?.fields || []);
+const policyQuickFormFields = computed(() =>
+  policyQuickFields.value.filter(
+    (field) =>
+      !["customer", "customer_full_name", "customer_type", "customer_tax_id", "customer_phone", "customer_email"].includes(
+        field.name
+      )
+  )
+);
+const hasQuickPolicySourceOffer = computed(() => String(quickPolicyForm.source_offer || "").trim() !== "");
 const policyQuickOptionsMap = computed(() => ({
   customers: (policyQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
   salesEntities: (policyQuickSalesEntityResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
@@ -881,7 +931,12 @@ function clearQuickPolicyFieldErrors() {
 }
 
 function resetQuickPolicyForm() {
-  Object.assign(quickPolicyForm, buildQuickCreateDraft(quickPolicyConfig));
+  Object.assign(quickPolicyForm, {
+    queryText: "",
+    customerOption: null,
+    createCustomerMode: false,
+    ...buildQuickCreateDraft(quickPolicyConfig),
+  });
   quickPolicyError.value = "";
   clearQuickPolicyFieldErrors();
 }
@@ -910,10 +965,53 @@ function validateQuickPolicyForm() {
   clearQuickPolicyFieldErrors();
   quickPolicyError.value = "";
   let valid = true;
-  for (const field of policyQuickFields.value) {
-    if (!field?.required) continue;
+  const hasSourceOffer = hasQuickPolicySourceOffer.value;
+  for (const field of policyQuickFormFields.value) {
+    if (!isFieldRequired(field)) continue;
     if (String(quickPolicyForm[field.name] ?? "").trim() === "") {
       quickPolicyFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
+      valid = false;
+    }
+  }
+  if (!hasSourceOffer && !String(quickPolicyForm.customer || "").trim()) {
+    const shouldCreateCustomer = Boolean(quickPolicyForm.createCustomerMode);
+    const customerName = String(quickPolicyForm.queryText || "").trim();
+    const identityNumber = normalizeIdentityNumber(quickPolicyForm.customer_tax_id);
+    const customerType = normalizeCustomerType(quickPolicyForm.customer_type, identityNumber);
+    if (!shouldCreateCustomer) {
+      quickPolicyFieldErrors.customer =
+        activeLocale.value === "tr"
+          ? "Bir müşteri seçin veya yeni müşteri ekleyin."
+          : "Select a customer or add a new customer.";
+      valid = false;
+    } else if (!customerName) {
+      quickPolicyFieldErrors.customer =
+        activeLocale.value === "tr" ? "Yeni müşteri adı gerekli." : "New customer name is required.";
+      valid = false;
+    }
+    if (shouldCreateCustomer && !identityNumber) {
+      quickPolicyFieldErrors.customer_tax_id = getLocalizedText(
+        policyQuickFields.value.find((field) => field.name === "customer_tax_id")?.label,
+        activeLocale.value
+      );
+      valid = false;
+    } else if (shouldCreateCustomer && customerType === "Corporate") {
+      if (identityNumber.length !== 10) {
+        quickPolicyFieldErrors.customer_tax_id =
+          activeLocale.value === "tr" ? "Vergi numarası 10 haneli olmalıdır." : "Tax number must be 10 digits.";
+        valid = false;
+      }
+    } else if (shouldCreateCustomer && identityNumber.length !== 11) {
+      quickPolicyFieldErrors.customer_tax_id =
+        activeLocale.value === "tr"
+          ? "TC kimlik numarası 11 haneli olmalıdır."
+          : "National ID number must be 11 digits.";
+      valid = false;
+    } else if (shouldCreateCustomer && !isValidTckn(identityNumber)) {
+      quickPolicyFieldErrors.customer_tax_id =
+        activeLocale.value === "tr"
+          ? "Geçerli bir TC kimlik numarası girin."
+          : "Enter a valid Turkish national ID number.";
       valid = false;
     }
   }
@@ -922,7 +1020,7 @@ function validateQuickPolicyForm() {
     return false;
   }
   const gross = Number(quickPolicyForm.gross_premium || 0);
-  if (!(Number.isFinite(gross) && gross > 0)) {
+  if (!hasSourceOffer && !(Number.isFinite(gross) && gross > 0)) {
     quickPolicyFieldErrors.gross_premium = getLocalizedText(
       policyQuickFields.value.find((f) => f.name === "gross_premium")?.label,
       activeLocale.value
@@ -934,19 +1032,31 @@ function validateQuickPolicyForm() {
 }
 
 function buildQuickPolicyPayload() {
+  const hasSourceOffer = hasQuickPolicySourceOffer.value;
+  const selectedCustomer = String(quickPolicyForm.customer || "").trim();
+  const shouldCreateCustomer = !hasSourceOffer && !selectedCustomer && Boolean(quickPolicyForm.createCustomerMode);
+  const identityNumber = normalizeIdentityNumber(quickPolicyForm.customer_tax_id);
   return {
-    customer: quickPolicyForm.customer || null,
-    sales_entity: quickPolicyForm.sales_entity || null,
-    insurance_company: quickPolicyForm.insurance_company || null,
-    branch: quickPolicyForm.branch || null,
+    customer: hasSourceOffer ? null : selectedCustomer || null,
+    customer_full_name: shouldCreateCustomer ? String(quickPolicyForm.queryText || "").trim() || null : null,
+    customer_type: shouldCreateCustomer ? normalizeCustomerType(quickPolicyForm.customer_type, identityNumber) : null,
+    customer_tax_id: shouldCreateCustomer ? identityNumber || null : null,
+    customer_phone: shouldCreateCustomer ? quickPolicyForm.customer_phone || null : null,
+    customer_email: shouldCreateCustomer ? quickPolicyForm.customer_email || null : null,
+    sales_entity: hasSourceOffer ? null : quickPolicyForm.sales_entity || null,
+    insurance_company: hasSourceOffer ? null : quickPolicyForm.insurance_company || null,
+    branch: hasSourceOffer ? null : quickPolicyForm.branch || null,
     policy_no: quickPolicyForm.policy_no || null,
     source_offer: quickPolicyForm.source_offer || null,
-    status: quickPolicyForm.status || "Active",
-    issue_date: quickPolicyForm.issue_date || null,
+    status: hasSourceOffer ? null : quickPolicyForm.status || "Active",
+    issue_date: hasSourceOffer ? null : quickPolicyForm.issue_date || null,
     start_date: quickPolicyForm.start_date || null,
     end_date: quickPolicyForm.end_date || null,
     currency: quickPolicyForm.currency || "TRY",
-    gross_premium: quickPolicyForm.gross_premium === "" ? null : Number(quickPolicyForm.gross_premium || 0),
+    gross_premium:
+      hasSourceOffer || quickPolicyForm.gross_premium === ""
+        ? null
+        : Number(quickPolicyForm.gross_premium || 0),
     net_premium: quickPolicyForm.net_premium === "" ? null : Number(quickPolicyForm.net_premium || 0),
     tax_amount: quickPolicyForm.tax_amount === "" ? null : Number(quickPolicyForm.tax_amount || 0),
     commission_amount:
@@ -990,6 +1100,19 @@ function applyQuickPolicyPrefills(prefills = {}) {
     if (!fieldName || !(fieldName in prefills)) continue;
     quickPolicyForm[fieldName] = String(prefills[fieldName] ?? "").trim();
   }
+  const customerName = String(prefills.customer || "").trim();
+  const customerLabel = String(prefills.customer_label || customerName || prefills.queryText || "").trim();
+  if (customerName) {
+    quickPolicyForm.customer = customerName;
+    quickPolicyForm.customerOption = {
+      value: customerName,
+      label: customerLabel || customerName,
+    };
+  }
+  if (customerLabel) quickPolicyForm.queryText = customerLabel;
+  if ("createCustomerMode" in prefills) {
+    quickPolicyForm.createCustomerMode = String(prefills.createCustomerMode || "") === "1";
+  }
 }
 
 function buildPolicyQuickReturnTo() {
@@ -1001,6 +1124,12 @@ function buildPolicyQuickReturnTo() {
     if (!value) continue;
     prefills[fieldName] = value;
   }
+  const customerName = String(quickPolicyForm.customer || "").trim();
+  const customerLabel = String(quickPolicyForm.queryText || quickPolicyForm?.customerOption?.label || "").trim();
+  if (customerName) prefills.customer = customerName;
+  if (customerLabel) prefills.customer_label = customerLabel;
+  if (!customerName && customerLabel) prefills.queryText = customerLabel;
+  if (quickPolicyForm.createCustomerMode) prefills.createCustomerMode = "1";
   return router.resolve({
     name: "policy-list",
     query: buildQuickCreateIntentQuery({ prefills }),
@@ -1097,6 +1226,16 @@ watch(
     };
     void policyQuickCustomerResource.reload();
     void refreshPolicyList();
+  }
+);
+watch(
+  () => quickPolicyForm.source_offer,
+  (value) => {
+    if (!String(value || "").trim()) return;
+    quickPolicyForm.customer = "";
+    quickPolicyForm.queryText = "";
+    quickPolicyForm.customerOption = null;
+    quickPolicyForm.createCustomerMode = false;
   }
 );
 void hydratePolicyPresetStateFromServer();

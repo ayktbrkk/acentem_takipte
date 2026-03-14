@@ -6,6 +6,14 @@ function option(value, tr, en) {
   return { value, label: i18nLabel(tr, en) };
 }
 
+function hasValue(value) {
+  return String(value ?? "").trim() !== "";
+}
+
+function isCorporateCustomer(model, fieldName = "customer_type") {
+  return String(model?.[fieldName] || "Individual") === "Corporate";
+}
+
 export const quickCreateRegistry = {
   offer: {
     key: "offer",
@@ -16,6 +24,10 @@ export const quickCreateRegistry = {
     openRouteName: "offer-detail",
     successRefreshTargets: ["offer_list", "offer_board"],
     defaults: {
+      customer_type: "Individual",
+      tax_id: "",
+      phone: "",
+      email: "",
       branch: "",
       insurance_company: "",
       sales_entity: "",
@@ -33,10 +45,47 @@ export const quickCreateRegistry = {
       { name: "sales_entity", type: "select", label: i18nLabel("Satış Birimi", "Sales Entity"), optionsSource: "salesEntities", fullWidth: false },
       { name: "insurance_company", type: "select", label: i18nLabel("Sigorta Şirketi", "Insurance Company"), optionsSource: "insuranceCompanies", fullWidth: false },
       { name: "branch", type: "select", label: i18nLabel("Sigorta Branşı", "Insurance Branch"), optionsSource: "branches", fullWidth: false },
+      {
+        name: "customer_type",
+        type: "select",
+        label: i18nLabel("Müşteri Tipi", "Customer Type"),
+        required: ({ model }) => !hasValue(model?.customerOption?.value) && hasValue(model?.queryText),
+        disabled: ({ model }) => hasValue(model?.customerOption?.value),
+        options: [
+          option("Individual", "Bireysel", "Individual"),
+          option("Corporate", "Kurumsal", "Corporate"),
+        ],
+        fullWidth: false,
+      },
+      {
+        name: "tax_id",
+        type: "text",
+        required: ({ model }) => !hasValue(model?.customerOption?.value) && hasValue(model?.queryText),
+        disabled: ({ model }) => hasValue(model?.customerOption?.value),
+        label: ({ model, locale }) =>
+          isCorporateCustomer(model)
+            ? locale === "tr"
+              ? "Vergi No"
+              : "Tax Number"
+            : locale === "tr"
+              ? "TC Kimlik No"
+              : "National ID Number",
+        help: ({ model, locale }) =>
+          isCorporateCustomer(model)
+            ? locale === "tr"
+              ? "10 haneli vergi numarası girin."
+              : "Enter a 10-digit tax number."
+            : locale === "tr"
+              ? "11 haneli T.C. kimlik numarası girin."
+              : "Enter an 11-digit Turkish national ID number.",
+        fullWidth: false,
+      },
+      { name: "phone", type: "text", label: i18nLabel("Telefon", "Phone"), disabled: ({ model }) => hasValue(model?.customerOption?.value), fullWidth: false },
+      { name: "email", type: "email", label: i18nLabel("E-posta", "Email"), disabled: ({ model }) => hasValue(model?.customerOption?.value), fullWidth: false },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Draft", "Taslak", "Draft"),
         option("Sent", "Müşteriye Gönderildi", "Sent"),
-        option("Açcepted", "Kabul Edildi", "Açcepted"),
+        option("Accepted", "Kabul Edildi", "Accepted"),
         option("Rejected", "Reddedildi", "Rejected"),
       ], fullWidth: false },
       { name: "offer_date", type: "date", label: i18nLabel("Teklif Tarihi", "Offer Date"), fullWidth: false },
@@ -59,6 +108,11 @@ export const quickCreateRegistry = {
     successRefreshTargets: ["policy_list"],
     defaults: {
       customer: "",
+      customer_full_name: "",
+      customer_type: "Individual",
+      customer_tax_id: "",
+      customer_phone: "",
+      customer_email: "",
       sales_entity: "",
       insurance_company: "",
       branch: "",
@@ -76,22 +130,116 @@ export const quickCreateRegistry = {
       notes: "",
     },
     fields: [
-      { name: "customer", type: "select", label: i18nLabel("Müşteri", "Customer"), optionsSource: "customers", required: true },
-      { name: "sales_entity", type: "select", label: i18nLabel("Satış Birimi", "Sales Entity"), optionsSource: "salesEntities", required: true },
-      { name: "insurance_company", type: "select", label: i18nLabel("Sigorta Şirketi", "Insurance Company"), optionsSource: "insuranceCompanies", required: true },
-      { name: "branch", type: "select", label: i18nLabel("Sigorta Branşı", "Insurance Branch"), optionsSource: "branches", required: true },
+      {
+        name: "customer",
+        type: "select",
+        label: i18nLabel("Müşteri", "Customer"),
+        optionsSource: "customers",
+        disabled: ({ model }) => hasValue(model?.source_offer),
+      },
+      {
+        name: "customer_full_name",
+        type: "text",
+        label: i18nLabel("Yeni Müşteri Adı", "New Customer Name"),
+        required: ({ model }) => !hasValue(model?.customer) && !hasValue(model?.source_offer),
+        disabled: ({ model }) => hasValue(model?.customer) || hasValue(model?.source_offer),
+      },
+      {
+        name: "customer_type",
+        type: "select",
+        label: i18nLabel("Müşteri Tipi", "Customer Type"),
+        required: ({ model }) => !hasValue(model?.customer) && !hasValue(model?.source_offer),
+        disabled: ({ model }) => hasValue(model?.customer) || hasValue(model?.source_offer),
+        options: [
+          option("Individual", "Bireysel", "Individual"),
+          option("Corporate", "Kurumsal", "Corporate"),
+        ],
+      },
+      {
+        name: "customer_tax_id",
+        type: "text",
+        required: ({ model }) => !hasValue(model?.customer) && !hasValue(model?.source_offer),
+        disabled: ({ model }) => hasValue(model?.customer) || hasValue(model?.source_offer),
+        label: ({ model, locale }) =>
+          isCorporateCustomer(model)
+            ? locale === "tr"
+              ? "Vergi No"
+              : "Tax Number"
+            : locale === "tr"
+              ? "TC Kimlik No"
+              : "National ID Number",
+        help: ({ model, locale }) =>
+          isCorporateCustomer(model)
+            ? locale === "tr"
+              ? "10 haneli vergi numarası girin."
+              : "Enter a 10-digit tax number."
+            : locale === "tr"
+              ? "11 haneli T.C. kimlik numarası girin."
+              : "Enter an 11-digit Turkish national ID number.",
+      },
+      {
+        name: "customer_phone",
+        type: "text",
+        label: i18nLabel("Telefon", "Phone"),
+        disabled: ({ model }) => hasValue(model?.customer) || hasValue(model?.source_offer),
+      },
+      {
+        name: "customer_email",
+        type: "email",
+        label: i18nLabel("E-posta", "Email"),
+        disabled: ({ model }) => hasValue(model?.customer) || hasValue(model?.source_offer),
+      },
+      {
+        name: "sales_entity",
+        type: "select",
+        label: i18nLabel("Satış Birimi", "Sales Entity"),
+        optionsSource: "salesEntities",
+        required: ({ model }) => !hasValue(model?.source_offer),
+        disabled: ({ model }) => hasValue(model?.source_offer),
+      },
+      {
+        name: "insurance_company",
+        type: "select",
+        label: i18nLabel("Sigorta Şirketi", "Insurance Company"),
+        optionsSource: "insuranceCompanies",
+        required: ({ model }) => !hasValue(model?.source_offer),
+        disabled: ({ model }) => hasValue(model?.source_offer),
+      },
+      {
+        name: "branch",
+        type: "select",
+        label: i18nLabel("Sigorta Branşı", "Insurance Branch"),
+        optionsSource: "branches",
+        required: ({ model }) => !hasValue(model?.source_offer),
+        disabled: ({ model }) => hasValue(model?.source_offer),
+      },
       { name: "policy_no", type: "text", label: i18nLabel("Sigorta Şirketi Poliçe No", "Carrier Policy Number") },
       { name: "source_offer", type: "select", label: i18nLabel("Kaynak Teklif", "Source Offer"), optionsSource: "offers" },
-      { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
-        option("Active", "Aktif", "Active"),
-        option("KYT", "KYT", "KYT"),
-        option("IPT", "IPT", "IPT"),
-      ] },
-      { name: "issue_date", type: "date", label: i18nLabel("Tanzim Tarihi", "Issue Date") },
+      {
+        name: "status",
+        type: "select",
+        label: i18nLabel("Durum", "Status"),
+        disabled: ({ model }) => hasValue(model?.source_offer),
+        options: [option("Active", "Aktif", "Active")],
+      },
+      {
+        name: "issue_date",
+        type: "date",
+        label: i18nLabel("Tanzim Tarihi", "Issue Date"),
+        disabled: ({ model }) => hasValue(model?.source_offer),
+      },
       { name: "start_date", type: "date", label: i18nLabel("Başlangıç", "Start Date") },
       { name: "end_date", type: "date", label: i18nLabel("Bitiş", "End Date") },
       { name: "currency", type: "select", label: i18nLabel("Döviz", "Currency"), options: [option("TRY", "TRY", "TRY"), option("USD", "USD", "USD"), option("EUR", "EUR", "EUR")] },
-      { name: "gross_premium", type: "number", label: i18nLabel("Brüt Prim", "Gross Premium"), required: true, min: 0, step: "0.01" },
+      {
+        name: "gross_premium",
+        type: "number",
+        label: i18nLabel("Brüt Prim", "Gross Premium"),
+        required: ({ model }) => !hasValue(model?.source_offer),
+        disabled: ({ model }) => hasValue(model?.source_offer),
+        min: 0,
+        step: "0.01",
+      },
       { name: "net_premium", type: "number", label: i18nLabel("Net Prim", "Net Premium"), min: 0, step: "0.01" },
       { name: "tax_amount", type: "number", label: i18nLabel("Vergi Tutarı", "Tax Amount"), min: 0, step: "0.01" },
       { name: "commission_amount", type: "number", label: i18nLabel("Komisyon Tutarı", "Commission Amount"), min: 0, step: "0.01" },
@@ -109,6 +257,7 @@ export const quickCreateRegistry = {
     defaults: {
       first_name: "",
       last_name: "",
+      customer_type: "Individual",
       phone: "",
       tax_id: "",
       email: "",
@@ -123,14 +272,40 @@ export const quickCreateRegistry = {
     fields: [
       { name: "first_name", type: "text", label: i18nLabel("Ad", "First Name"), required: true },
       { name: "last_name", type: "text", label: i18nLabel("Soyad", "Last Name") },
+      {
+        name: "customer_type",
+        type: "select",
+        label: i18nLabel("Müşteri Tipi", "Customer Type"),
+        options: [
+          option("Individual", "Bireysel", "Individual"),
+          option("Corporate", "Kurumsal", "Corporate"),
+        ],
+      },
       { name: "phone", type: "text", label: i18nLabel("Telefon", "Phone") },
-      { name: "tax_id", type: "text", label: i18nLabel("TC/VKN", "Tax ID") },
+      {
+        name: "tax_id",
+        type: "text",
+        label: ({ model, locale }) =>
+          isCorporateCustomer(model)
+            ? locale === "tr"
+              ? "Vergi No"
+              : "Tax Number"
+            : locale === "tr"
+              ? "TC Kimlik No"
+              : "National ID Number",
+        help: ({ model, locale }) =>
+          isCorporateCustomer(model)
+            ? locale === "tr"
+              ? "10 haneli vergi numarası girin."
+              : "Enter a 10-digit tax number."
+            : locale === "tr"
+              ? "11 haneli T.C. kimlik numarası girin."
+              : "Enter an 11-digit Turkish national ID number.",
+      },
       { name: "email", type: "email", label: i18nLabel("E-posta", "Email") },
       { name: "status", type: "select", label: i18nLabel("Lead Durumu", "Lead Status"), options: [
         option("Draft", "Taslak", "Draft"),
         option("Open", "Açık", "Open"),
-        option("Replied", "Görüşüldü", "Replied"),
-        option("Closed", "Kapandı", "Closed"),
       ] },
       { name: "customer", type: "select", label: i18nLabel("Müşteri (Opsiyonel)", "Customer (Optional)"), optionsSource: "customers" },
       { name: "sales_entity", type: "select", label: i18nLabel("Satış Birimi", "Sales Entity"), optionsSource: "salesEntities" },

@@ -305,71 +305,16 @@
           @save="createQuickOffer(false)"
           @save-and-open="createQuickOffer(true)"
         >
-          <div class="space-y-2">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("customerField") }}</p>
-            <div class="space-y-2">
-              <input
-                class="input"
-                :value="quickOffer.queryText"
-                :placeholder="t('customerPlaceholder')"
-                type="text"
-                autocomplete="off"
-                @input="onCustomerInput"
-              />
-
-              <div
-                v-if="showCustomerSuggestions"
-                class="max-h-44 overflow-y-auto rounded-lg border border-slate-200 bg-white"
-              >
-                <button
-                  v-for="option in customerOptions"
-                  :key="option.value"
-                  class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50"
-                  type="button"
-                  @mousedown.prevent="selectCustomerOption(option)"
-                >
-                  <span class="truncate text-slate-800">{{ option.label }}</span>
-                  <span v-if="option.description" class="ml-3 shrink-0 text-xs text-slate-500">
-                    {{ option.description }}
-                  </span>
-                </button>
-              </div>
-
-              <p v-else-if="showCustomerNoResults" class="text-xs text-slate-500">
-                {{ t("noCustomersFound") }}
-              </p>
-              <p v-if="customerSearchErrorText" class="text-xs text-rose-600">
-                {{ customerSearchErrorText }}
-              </p>
-
-              <div
-                v-if="quickOffer.customerOption?.value"
-                class="flex items-center justify-between rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs"
-              >
-                <span class="truncate text-emerald-800">
-                  {{ t("selectedCustomer") }}: {{ quickOffer.queryText }}
-                </span>
-                <button
-                  class="ml-2 shrink-0 font-semibold text-emerald-700 hover:text-emerald-900"
-                  type="button"
-                  @click="clearSelectedCustomer"
-                >
-                  {{ t("clearSelection") }}
-                </button>
-              </div>
-            </div>
-            <button
-              v-if="showCreateCustomerAction"
-              class="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-              type="button"
-              @click="selectCreateCustomerOption"
-            >
-              {{ t("createCustomerCta") }}: {{ quickOffer.queryText }}
-            </button>
-          </div>
+          <QuickCustomerPicker
+            :model="quickOffer"
+            :field-errors="quickOfferFieldErrors"
+            :disabled="quickOfferLoading"
+            :locale="activeLocale"
+            :office-branch="branchStore.requestBranch || ''"
+          />
 
           <QuickCreateFormRenderer
-            :fields="offerQuickFields"
+            :fields="offerQuickFormFields"
             :model="quickOffer"
             :field-errors="quickOfferFieldErrors"
             :disabled="quickOfferLoading"
@@ -454,6 +399,7 @@ import EmptyState from "../components/app-shell/EmptyState.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
@@ -467,6 +413,7 @@ import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { openListExport } from "../utils/listExport";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
+import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 import {
   extractCustomFilterPresetId,
   isCustomFilterPresetValue,
@@ -662,7 +609,7 @@ const copy = {
     company: "Insurance Company",
     draftLane: "Draft",
     sentLane: "Sent to Customer",
-    acceptedLane: "Açcepted",
+    acceptedLane: "Accepted",
     convertedLane: "Converted to Policy",
     convert: "Convert to Policy",
     openPolicy: "Open Policy Detail",
@@ -676,7 +623,7 @@ const copy = {
     createPolicy: "Create Policy",
     statusDraft: "Draft",
     statusSent: "Sent",
-    statusAçcepted: "Açcepted",
+    statusAçcepted: "Accepted",
     statusConverted: "Converted",
     statusRejected: "Rejected",
     customerSearchFailed: "Customer search failed.",
@@ -688,6 +635,22 @@ const copy = {
 
 function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
+}
+
+function resolveFieldValue(source, field) {
+  if (typeof source === "function") {
+    return source({
+      field,
+      model: quickOffer,
+      locale: activeLocale.value,
+      text: (value) => getLocalizedText(value, activeLocale.value),
+    });
+  }
+  return source;
+}
+
+function isFieldRequired(field) {
+  return Boolean(resolveFieldValue(field?.required, field));
 }
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const QUICK_OPTION_LIMIT = 2000;
@@ -822,6 +785,9 @@ const customerOptions = computed(() =>
 const customerSearchLoading = computed(() => Boolean(customerSearchResource.loading));
 const offerQuickConfig = getQuickCreateConfig("offer");
 const offerQuickFields = computed(() => offerQuickConfig?.fields || []);
+const offerQuickFormFields = computed(() =>
+  offerQuickFields.value.filter((field) => !["customer_type", "tax_id", "phone", "email"].includes(field.name))
+);
 const offerQuickUi = computed(() => ({
   subtitle: getLocalizedText(offerQuickConfig?.subtitle, activeLocale.value),
 }));
@@ -889,7 +855,7 @@ const offerCompanies = computed(() =>
 const offerStatusOptions = computed(() => [
   { value: "Draft", label: t("statusDraft") },
   { value: "Sent", label: t("statusSent") },
-  { value: "Açcepted", label: t("statusAçcepted") },
+  { value: "Accepted", label: t("statusAçcepted") },
   { value: "Converted", label: t("statusConverted") },
   { value: "Rejected", label: t("statusRejected") },
 ]);
@@ -939,7 +905,7 @@ const offerActiveFilterCount = computed(() =>
 const lanes = computed(() => [
   { key: "Draft", label: t("draftLane"), borderClass: "border-t-amber-400" },
   { key: "Sent", label: t("sentLane"), borderClass: "border-t-sky-400" },
-  { key: "Açcepted", label: t("acceptedLane"), borderClass: "border-t-emerald-400" },
+  { key: "Accepted", label: t("acceptedLane"), borderClass: "border-t-emerald-400" },
   { key: "Converted", label: t("convertedLane"), borderClass: "border-t-indigo-400" },
 ]);
 
@@ -955,8 +921,9 @@ const draggedOfferName = ref("");
 const quickOfferReturnTo = ref("");
 const quickOfferOpenedFromIntent = ref(false);
 const quickOffer = reactive({
-  customerOption: null,
   queryText: "",
+  customerOption: null,
+  createCustomerMode: false,
   ...buildQuickCreateDraft(offerQuickConfig),
 });
 const convertForm = reactive({
@@ -971,15 +938,7 @@ const convertForm = reactive({
 const canCreateQuickOffer = computed(() => {
   const selectedName = getSelectedCustomerName();
   const typedName = quickOffer.queryText.trim();
-  return Boolean(selectedName || typedName);
-});
-
-const showCreateCustomerAction = computed(() => {
-  const query = quickOffer.queryText.trim();
-  if (!query) return false;
-  const alreadySelected = Boolean(quickOffer.customerOption?.value);
-  if (alreadySelected) return false;
-  return !customerOptions.value.some((item) => String(item.label || "").toLowerCase() === query.toLowerCase());
+  return Boolean(selectedName || (quickOffer.createCustomerMode && typedName));
 });
 
 function clearQuickOfferFieldErrors() {
@@ -990,16 +949,27 @@ function clearQuickOfferFieldErrors() {
 
 function validateQuickOfferForm() {
   clearQuickOfferFieldErrors();
+  quickOfferError.value = "";
   let valid = true;
 
   const selectedCustomerName = getSelectedCustomerName();
-  if (!selectedCustomerName && !quickOffer.queryText.trim()) {
-    quickOfferFieldErrors.customer = t("customerPlaceholder");
+  const typedName = quickOffer.queryText.trim();
+  const shouldCreateCustomer = !selectedCustomerName && Boolean(quickOffer.createCustomerMode);
+  if (!selectedCustomerName && !shouldCreateCustomer) {
+    quickOfferFieldErrors.customer =
+      activeLocale.value === "tr"
+        ? "Bir müşteri seçin veya yeni müşteri ekleyin."
+        : "Select a customer or add a new customer.";
+    valid = false;
+  }
+  if (shouldCreateCustomer && !typedName) {
+    quickOfferFieldErrors.customer =
+      activeLocale.value === "tr" ? "Yeni müşteri adı gerekli." : "New customer name is required.";
     valid = false;
   }
 
-  for (const field of offerQuickFields.value) {
-    if (!field?.required) continue;
+  for (const field of offerQuickFormFields.value) {
+    if (!isFieldRequired(field)) continue;
     const rawValue = quickOffer[field.name];
     const empty = typeof rawValue === "boolean" ? false : String(rawValue ?? "").trim() === "";
     if (empty) {
@@ -1009,9 +979,32 @@ function validateQuickOfferForm() {
     }
   }
 
+  if (shouldCreateCustomer) {
+    const customerType = normalizeCustomerType(quickOffer.customer_type, quickOffer.tax_id);
+    const identityNumber = normalizeIdentityNumber(quickOffer.tax_id);
+    if (customerType === "Corporate") {
+      if (identityNumber.length !== 10) {
+        quickOfferFieldErrors.tax_id = activeLocale.value === "tr"
+          ? "Vergi numarası 10 haneli olmalıdır."
+          : "Tax number must be 10 digits.";
+        valid = false;
+      }
+    } else if (identityNumber.length !== 11) {
+      quickOfferFieldErrors.tax_id = activeLocale.value === "tr"
+        ? "TC kimlik numarası 11 haneli olmalıdır."
+        : "T.R. identity number must be 11 digits.";
+      valid = false;
+    } else if (!isValidTckn(identityNumber)) {
+      quickOfferFieldErrors.tax_id = activeLocale.value === "tr"
+        ? "Geçerli bir TC kimlik numarası girin."
+        : "Enter a valid T.R. identity number.";
+      valid = false;
+    }
+  }
+
   const gross = Number(quickOffer.gross_premium || 0);
   const status = String(quickOffer.status || "Draft");
-  if (["Sent", "Açcepted", "Rejected"].includes(status) && gross <= 0) {
+  if (["Sent", "Accepted", "Rejected"].includes(status) && gross <= 0) {
     quickOfferFieldErrors.gross_premium = t("grossPremium");
     valid = false;
   }
@@ -1024,9 +1017,17 @@ function validateQuickOfferForm() {
 
 function buildQuickOfferPayload() {
   const selectedCustomerName = getSelectedCustomerName();
+  const hasSelectedCustomer = Boolean(selectedCustomerName);
+  const shouldCreateCustomer = !hasSelectedCustomer && Boolean(quickOffer.createCustomerMode);
+  const customerType = normalizeCustomerType(quickOffer.customer_type, quickOffer.tax_id);
+  const taxId = normalizeIdentityNumber(quickOffer.tax_id);
   return {
     customer: selectedCustomerName || null,
-    customer_name: selectedCustomerName ? null : quickOffer.queryText.trim(),
+    customer_name: shouldCreateCustomer ? quickOffer.queryText.trim() : null,
+    customer_type: shouldCreateCustomer ? customerType : null,
+    tax_id: shouldCreateCustomer ? taxId || null : null,
+    phone: shouldCreateCustomer ? String(quickOffer.phone || "").trim() || null : null,
+    email: shouldCreateCustomer ? String(quickOffer.email || "").trim() || null : null,
     branch: quickOffer.branch || null,
     notes: quickOffer.notes || null,
     currency: quickOffer.currency || "TRY",
@@ -1044,7 +1045,7 @@ function buildQuickOfferPayload() {
 
 function normalizeLane(status, convertedPolicy) {
   if (convertedPolicy || status === "Converted") return "Converted";
-  if (status === "Açcepted") return "Açcepted";
+  if (status === "Accepted") return "Accepted";
   if (status === "Sent") return "Sent";
   return "Draft";
 }
@@ -1102,7 +1103,7 @@ function buildOfferFilterPayload() {
   }
 
   if (offerListFilters.actionable_only) {
-    filters.status = ["in", ["Sent", "Açcepted"]];
+    filters.status = ["in", ["Sent", "Accepted"]];
     filters.converted_policy = ["is", "not set"];
   } else if (offerListFilters.status) {
     if (offerListFilters.status === "Converted") {
@@ -1492,6 +1493,9 @@ function applyQuickOfferPrefills(prefills = {}) {
     if (!fieldName || !(fieldName in prefills)) continue;
     quickOffer[fieldName] = String(prefills[fieldName] ?? "").trim();
   }
+  if ("createCustomerMode" in prefills) {
+    quickOffer.createCustomerMode = String(prefills.createCustomerMode || "") === "1";
+  }
 }
 
 function buildQuickOfferReturnTo() {
@@ -1507,6 +1511,8 @@ function buildQuickOfferReturnTo() {
   const customerLabel = String(quickOffer.queryText || quickOffer?.customerOption?.label || "").trim();
   if (customerName) prefills.customer = customerName;
   if (customerLabel) prefills.customer_label = customerLabel;
+  if (!customerName && customerLabel) prefills.queryText = customerLabel;
+  if (quickOffer.createCustomerMode) prefills.createCustomerMode = "1";
 
   return router.resolve({
     name: "offer-board",
@@ -1570,6 +1576,7 @@ function onCustomerQuery(value) {
       or_filters: [
         ["AT Customer", "full_name", "like", `%${query}%`],
         ["AT Customer", "name", "like", `%${query}%`],
+        ["AT Customer", "tax_id", "like", `%${query}%`],
       ],
       order_by: "modified desc",
       limit_page_length: 20,
@@ -1589,12 +1596,6 @@ function selectCustomerOption(option) {
 function clearSelectedCustomer() {
   quickOffer.customerOption = null;
   onCustomerQuery(quickOffer.queryText);
-}
-
-function selectCreateCustomerOption() {
-  const fullName = quickOffer.queryText.trim();
-  if (!fullName) return;
-  quickOffer.customerOption = null;
 }
 
 function getSelectedCustomerName() {
@@ -1642,6 +1643,7 @@ async function createQuickOffer(openAfter = false) {
 function resetQuickOfferForm() {
   quickOffer.customerOption = null;
   quickOffer.queryText = "";
+  quickOffer.createCustomerMode = false;
   Object.assign(quickOffer, buildQuickCreateDraft(offerQuickConfig));
   quickOfferError.value = "";
   clearQuickOfferFieldErrors();
@@ -1716,7 +1718,7 @@ async function consumeOfferRouteIntents() {
 }
 
 function isConvertible(offer) {
-  return !offer.converted_policy && ["Sent", "Açcepted"].includes(offer.status);
+  return !offer.converted_policy && ["Sent", "Accepted"].includes(offer.status);
 }
 
 function onCardDragStart(offer) {
@@ -1756,7 +1758,7 @@ async function onLaneDrop(laneKey) {
       };
     }
 
-    if (laneKey === "Açcepted" && !nextOffer.converted_policy) {
+    if (laneKey === "Accepted" && !nextOffer.converted_policy) {
       openConvertDialog(nextOffer);
     }
   } catch (error) {
@@ -1767,7 +1769,7 @@ async function onLaneDrop(laneKey) {
 function laneToStatus(laneKey) {
   if (laneKey === "Draft") return "Draft";
   if (laneKey === "Sent") return "Sent";
-  if (laneKey === "Açcepted") return "Açcepted";
+  if (laneKey === "Accepted") return "Accepted";
   return null;
 }
 

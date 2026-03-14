@@ -196,7 +196,10 @@
       </template>
     </DataTableShell>
 
-    <Dialog v-model="showQuickLeadDialog" :options="{ title: quickLeadUi.title, size: 'xl' }">
+    <Dialog
+      v-model="showQuickLeadDialog"
+      :options="{ title: activeLocale === 'tr' ? 'Hızlı Fırsat Oluştur' : 'Quick Opportunity', size: 'xl' }"
+    >
       <template #body-content>
         <QuickCreateDialogShell
           :error="quickLeadError"
@@ -207,8 +210,16 @@
           @save="submitQuickLead(false)"
           @save-and-open="submitQuickLead(true)"
         >
+          <QuickCustomerPicker
+            :model="quickLeadForm"
+            :field-errors="quickLeadFieldErrors"
+            :disabled="quickLeadLoading"
+            :locale="activeLocale"
+            :office-branch="branchStore.requestBranch || ''"
+            :customer-label="{ tr: 'Müşteri / Ad Soyad', en: 'Customer / Full Name' }"
+          />
           <QuickCreateFormRenderer
-            :fields="leadQuickFields"
+            :fields="leadQuickFormFields"
             :model="quickLeadForm"
             :field-errors="quickLeadFieldErrors"
             :disabled="quickLeadLoading"
@@ -236,6 +247,7 @@ import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
@@ -250,6 +262,7 @@ import { mutedFact, subtleFact } from "../utils/factItems";
 import { openListExport } from "../utils/listExport";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
+import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 import {
   extractCustomFilterPresetId,
   isCustomFilterPresetValue,
@@ -367,6 +380,9 @@ const copy = {
     statusOpen: "Açık",
     statusReplied: "Görüşüldü",
     statusClosed: "Kapandı",
+    validationTaxNumberLength: "Vergi numarası 10 haneli olmalıdır.",
+    validationTcLength: "TC kimlik numarası 11 haneli olmalıdır.",
+    validationTcInvalid: "Geçerli bir TC kimlik numarası girin.",
   },
   en: {
     title: "Lead Workbench",
@@ -460,11 +476,30 @@ const copy = {
     statusOpen: "Open",
     statusReplied: "Replied",
     statusClosed: "Closed",
+    validationTaxNumberLength: "Tax number must be 10 digits.",
+    validationTcLength: "National ID number must be 11 digits.",
+    validationTcInvalid: "Enter a valid Turkish national ID number.",
   },
 };
 
 function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
+}
+
+function resolveFieldValue(source, field) {
+  if (typeof source === "function") {
+    return source({
+      field,
+      model: quickLeadForm,
+      locale: activeLocale.value,
+      text: (value) => getLocalizedText(value, activeLocale.value),
+    });
+  }
+  return source;
+}
+
+function isFieldRequired(field) {
+  return Boolean(resolveFieldValue(field?.required, field));
 }
 
 const filters = reactive({
@@ -498,7 +533,12 @@ const showQuickLeadDialog = ref(false);
 const quickLeadLoading = ref(false);
 const quickLeadError = ref("");
 const quickLeadFieldErrors = reactive({});
-const quickLeadForm = reactive(buildQuickCreateDraft(quickLeadConfig));
+const quickLeadForm = reactive({
+  queryText: "",
+  customerOption: null,
+  createCustomerMode: false,
+  ...buildQuickCreateDraft(quickLeadConfig),
+});
 const quickLeadReturnTo = ref("");
 const quickLeadOpenedFromIntent = ref(false);
 const QUICK_OPTION_LIMIT = 2000;
@@ -541,6 +581,11 @@ const presetServerWriteResource = createResource({ url: "acentem_takipte.acentem
 const rows = computed(() => leadListResource.data?.rows || []);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const leadQuickFields = computed(() => quickLeadConfig?.fields || []);
+const leadQuickFormFields = computed(() =>
+  leadQuickFields.value.filter(
+    (field) => !["customer", "first_name", "last_name", "customer_type", "tax_id", "phone", "email"].includes(field.name)
+  )
+);
 const leadQuickOptionsMap = computed(() => ({
   branches: (leadQuickBranchResource.data || []).map((row) => ({ value: row.name, label: row.branch_name || row.name })),
   insuranceCompanies: (leadQuickCompanyResource.data || []).map((row) => ({ value: row.name, label: row.company_name || row.name })),
@@ -918,7 +963,12 @@ function clearQuickLeadFieldErrors() {
   Object.keys(quickLeadFieldErrors).forEach((key) => delete quickLeadFieldErrors[key]);
 }
 function resetQuickLeadForm() {
-  Object.assign(quickLeadForm, buildQuickCreateDraft(quickLeadConfig));
+  Object.assign(quickLeadForm, {
+    queryText: "",
+    customerOption: null,
+    createCustomerMode: false,
+    ...buildQuickCreateDraft(quickLeadConfig),
+  });
   quickLeadError.value = "";
   clearQuickLeadFieldErrors();
 }
@@ -944,11 +994,48 @@ function validateQuickLeadForm() {
   clearQuickLeadFieldErrors();
   quickLeadError.value = "";
   let valid = true;
-  for (const field of leadQuickFields.value) {
-    if (!field?.required) continue;
+  for (const field of leadQuickFormFields.value) {
+    if (!isFieldRequired(field)) continue;
     const value = quickLeadForm[field.name];
     if (String(value ?? "").trim() === "") {
       quickLeadFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
+      valid = false;
+    }
+  }
+  const selectedCustomer = String(quickLeadForm.customer || "").trim();
+  const fullName = String(quickLeadForm.queryText || "").trim();
+  const shouldCreateCustomer = !selectedCustomer && Boolean(quickLeadForm.createCustomerMode);
+  if (!selectedCustomer && !shouldCreateCustomer) {
+    quickLeadFieldErrors.customer =
+      activeLocale.value === "tr"
+        ? "Bir müşteri seçin veya yeni müşteri ekleyin."
+        : "Select a customer or add a new customer.";
+    valid = false;
+  }
+  if (shouldCreateCustomer && !fullName) {
+    quickLeadFieldErrors.customer =
+      activeLocale.value === "tr" ? "Yeni müşteri adı gerekli." : "New customer name is required.";
+    valid = false;
+  }
+  const identityNumber = normalizeIdentityNumber(quickLeadForm.tax_id);
+  const customerType = normalizeCustomerType(quickLeadForm.customer_type, identityNumber);
+  if (shouldCreateCustomer) {
+    if (!identityNumber) {
+      quickLeadFieldErrors.tax_id = getLocalizedText(
+        leadQuickFields.value.find((field) => field.name === "tax_id")?.label,
+        activeLocale.value
+      );
+      valid = false;
+    } else if (customerType === "Corporate") {
+      if (identityNumber.length !== 10) {
+        quickLeadFieldErrors.tax_id = t("validationTaxNumberLength");
+        valid = false;
+      }
+    } else if (identityNumber.length !== 11) {
+      quickLeadFieldErrors.tax_id = t("validationTcLength");
+      valid = false;
+    } else if (!isValidTckn(identityNumber)) {
+      quickLeadFieldErrors.tax_id = t("validationTcInvalid");
       valid = false;
     }
   }
@@ -956,14 +1043,17 @@ function validateQuickLeadForm() {
   return valid;
 }
 function buildQuickLeadPayload() {
+  const selectedCustomer = String(quickLeadForm.customer || "").trim();
+  const shouldCreateCustomer = !selectedCustomer && Boolean(quickLeadForm.createCustomerMode);
+  const identityNumber = normalizeIdentityNumber(quickLeadForm.tax_id);
   return {
-    first_name: quickLeadForm.first_name || null,
-    last_name: quickLeadForm.last_name || null,
-    phone: quickLeadForm.phone || null,
-    tax_id: quickLeadForm.tax_id || null,
-    email: quickLeadForm.email || null,
+    full_name: String(quickLeadForm.queryText || "").trim() || null,
+    customer: selectedCustomer || null,
+    customer_type: shouldCreateCustomer ? normalizeCustomerType(quickLeadForm.customer_type, identityNumber) : null,
+    phone: shouldCreateCustomer ? quickLeadForm.phone || null : null,
+    tax_id: shouldCreateCustomer ? identityNumber || null : null,
+    email: shouldCreateCustomer ? quickLeadForm.email || null : null,
     status: quickLeadForm.status || "Open",
-    customer: quickLeadForm.customer || null,
     sales_entity: quickLeadForm.sales_entity || null,
     insurance_company: quickLeadForm.insurance_company || null,
     branch: quickLeadForm.branch || null,
@@ -1007,6 +1097,19 @@ function applyQuickLeadPrefills(prefills = {}) {
     if (!fieldName || !(fieldName in prefills)) continue;
     quickLeadForm[fieldName] = String(prefills[fieldName] ?? "").trim();
   }
+  const customerName = String(prefills.customer || "").trim();
+  const customerLabel = String(prefills.customer_label || customerName || prefills.queryText || "").trim();
+  if (customerName) {
+    quickLeadForm.customer = customerName;
+    quickLeadForm.customerOption = {
+      value: customerName,
+      label: customerLabel || customerName,
+    };
+  }
+  if (customerLabel) quickLeadForm.queryText = customerLabel;
+  if ("createCustomerMode" in prefills) {
+    quickLeadForm.createCustomerMode = String(prefills.createCustomerMode || "") === "1";
+  }
 }
 
 function buildLeadQuickReturnTo() {
@@ -1018,6 +1121,12 @@ function buildLeadQuickReturnTo() {
     if (!value) continue;
     prefills[fieldName] = value;
   }
+  const customerName = String(quickLeadForm.customer || "").trim();
+  const customerLabel = String(quickLeadForm.queryText || quickLeadForm?.customerOption?.label || "").trim();
+  if (customerName) prefills.customer = customerName;
+  if (customerLabel) prefills.customer_label = customerLabel;
+  if (!customerName && customerLabel) prefills.queryText = customerLabel;
+  if (quickLeadForm.createCustomerMode) prefills.createCustomerMode = "1";
   return router.resolve({
     name: "lead-list",
     query: buildQuickCreateIntentQuery({ prefills }),
