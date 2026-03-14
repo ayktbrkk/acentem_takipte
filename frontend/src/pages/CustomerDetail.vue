@@ -104,11 +104,11 @@
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
                   {{ t("birthDate") }}
                 </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ formatDate(customer.birth_date) }}</p>
+                <p class="mt-0.5 text-sm text-slate-800">{{ isCorporateCustomer ? "-" : formatDate(customer.birth_date) }}</p>
               </div>
               <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("taxId") }}
+                  {{ customerTaxIdLabel }}
                 </p>
                 <p class="mt-0.5 text-sm text-slate-800">{{ customerTaxIdDisplay }}</p>
               </div>
@@ -119,13 +119,13 @@
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
                   {{ t("gender") }}
                 </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ genderLabel }}</p>
+                <p class="mt-0.5 text-sm text-slate-800">{{ isCorporateCustomer ? "-" : genderLabel }}</p>
               </div>
               <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
                   {{ t("maritalStatus") }}
                 </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ maritalStatusLabel }}</p>
+                <p class="mt-0.5 text-sm text-slate-800">{{ isCorporateCustomer ? "-" : maritalStatusLabel }}</p>
               </div>
             </div>
 
@@ -157,7 +157,7 @@
               <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
                 {{ t("occupation") }}
               </p>
-              <p class="mt-0.5 text-sm text-slate-800">{{ customer.occupation || "-" }}</p>
+              <p class="mt-0.5 text-sm text-slate-800">{{ isCorporateCustomer ? "-" : customer.occupation || "-" }}</p>
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
@@ -207,11 +207,11 @@
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
                 <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("birthDate") }}</label>
-                <input v-model="profileForm.birth_date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="date" />
+                <input v-model="profileForm.birth_date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="date" :disabled="isCorporateCustomer" />
                 <p v-if="profileFormErrors.birth_date" class="mt-1 text-xs font-medium text-rose-700">{{ profileFormErrors.birth_date }}</p>
               </div>
               <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("taxId") }}</p>
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ customerTaxIdLabel }}</p>
                 <p class="mt-1 text-sm text-slate-800">{{ customerTaxIdDisplay }}</p>
               </div>
             </div>
@@ -219,13 +219,13 @@
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
                 <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("gender") }}</label>
-                <select v-model="profileForm.gender" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                <select v-model="profileForm.gender" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" :disabled="isCorporateCustomer">
                   <option v-for="option in genderOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
               </div>
               <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
                 <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("maritalStatus") }}</label>
-                <select v-model="profileForm.marital_status" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                <select v-model="profileForm.marital_status" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" :disabled="isCorporateCustomer">
                   <option v-for="option in maritalStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                 </select>
               </div>
@@ -250,7 +250,7 @@
 
             <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
               <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("occupation") }}</label>
-              <input v-model.trim="profileForm.occupation" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="text" />
+              <input v-model.trim="profileForm.occupation" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="text" :disabled="isCorporateCustomer" />
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
@@ -900,7 +900,12 @@ const copy = {
     maritalStatus: "Medeni Durumu",
     occupation: "Meslek",
     riskCard: "Risk Özet",
-    taxId: "TC/VKN",
+    taxId: "Kimlik / Vergi No",
+    nationalId: "TC Kimlik No",
+    taxNumber: "Vergi No",
+    customerType: "Müşteri Tipi",
+    customerTypeIndividual: "Bireysel",
+    customerTypeCorporate: "Kurumsal",
     recordId: "Kayıt No",
     phone: "Telefon",
     mobilePhone: "Cep Telefonu",
@@ -1055,7 +1060,12 @@ const copy = {
     maritalStatus: "Marital Status",
     occupation: "Occupation",
     riskCard: "Risk Summary",
-    taxId: "Tax ID",
+    taxId: "Identity / Tax Number",
+    nationalId: "National ID Number",
+    taxNumber: "Tax Number",
+    customerType: "Customer Type",
+    customerTypeIndividual: "Individual",
+    customerTypeCorporate: "Corporate",
     recordId: "Record ID",
     phone: "Phone",
     mobilePhone: "Mobile Phone",
@@ -1355,12 +1365,28 @@ const riskSummaryItems = computed(() => [
 ]);
 const customerHeaderSummaryItems = computed(() => [
   {
+    key: "recordId",
+    label: t("recordId"),
+    value: customer.value.name || props.name || "-",
+  },
+  {
+    key: "customerType",
+    label: t("customerType"),
+    value: customerTypeLabel.value,
+  },
+  {
     key: "taxId",
-    label: t("taxId"),
+    label: customerTaxIdLabel.value,
     value: customer.value.tax_id || customer.value.masked_tax_id || "-",
   },
   ...riskSummaryItems.value,
 ]);
+const customerTypeValue = computed(() => normalizeCustomerType(customer.value.customer_type, customer.value.tax_id));
+const isCorporateCustomer = computed(() => customerTypeValue.value === "Corporate");
+const customerTypeLabel = computed(() =>
+  isCorporateCustomer.value ? t("customerTypeCorporate") : t("customerTypeIndividual")
+);
+const customerTaxIdLabel = computed(() => (isCorporateCustomer.value ? t("taxNumber") : t("nationalId")));
 const customerTaxIdDisplay = computed(() => customer.value.tax_id || customer.value.masked_tax_id || "-");
 const customerPhoneDisplay = computed(() => customer.value.phone || customer.value.masked_phone || "-");
 const genderLabel = computed(() => {
@@ -1402,6 +1428,16 @@ const consentStatusOptions = computed(() => [
   { value: "Granted", label: t("consentGranted") },
   { value: "Revoked", label: t("consentRevoked") },
 ]);
+
+function normalizeIdentityNumber(value) {
+  return String(value || "").replace(/\D+/g, "");
+}
+
+function normalizeCustomerType(value, identityNumber = "") {
+  const normalized = String(value || "").trim();
+  if (normalized === "Individual" || normalized === "Corporate") return normalized;
+  return normalizeIdentityNumber(identityNumber).length === 10 ? "Corporate" : "Individual";
+}
 
 const timelineRows = computed(() =>
   (customer360Communication.value.timeline || [])
@@ -1456,7 +1492,7 @@ function validateProfileForm() {
     valid = false;
   }
   const birth = String(profileForm.birth_date || "").trim();
-  if (birth) {
+  if (!isCorporateCustomer.value && birth) {
     const birthDate = new Date(birth);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1484,10 +1520,10 @@ function scheduleProfileFlashClear() {
 
 function syncProfileFormFromCustomer() {
   profileForm.full_name = String(customer.value.full_name || "");
-  profileForm.birth_date = customer.value.birth_date ? String(customer.value.birth_date) : "";
-  profileForm.gender = String(customer.value.gender || "Unknown") || "Unknown";
-  profileForm.marital_status = String(customer.value.marital_status || "Unknown") || "Unknown";
-  profileForm.occupation = String(customer.value.occupation || "");
+  profileForm.birth_date = isCorporateCustomer.value ? "" : customer.value.birth_date ? String(customer.value.birth_date) : "";
+  profileForm.gender = isCorporateCustomer.value ? "Unknown" : String(customer.value.gender || "Unknown") || "Unknown";
+  profileForm.marital_status = isCorporateCustomer.value ? "Unknown" : String(customer.value.marital_status || "Unknown") || "Unknown";
+  profileForm.occupation = isCorporateCustomer.value ? "" : String(customer.value.occupation || "");
   profileForm.email = String(customer.value.email || "");
   profileForm.address = String(customer.value.address || "");
   profileForm.consent_status = String(customer.value.consent_status || "Unknown") || "Unknown";
@@ -1526,10 +1562,10 @@ async function saveProfile() {
       name: props.name,
       values: {
         full_name: profileForm.full_name,
-        birth_date: profileForm.birth_date || null,
-        gender: profileForm.gender || "Unknown",
-        marital_status: profileForm.marital_status || "Unknown",
-        occupation: profileForm.occupation,
+        birth_date: isCorporateCustomer.value ? null : profileForm.birth_date || null,
+        gender: isCorporateCustomer.value ? "Unknown" : profileForm.gender || "Unknown",
+        marital_status: isCorporateCustomer.value ? "Unknown" : profileForm.marital_status || "Unknown",
+        occupation: isCorporateCustomer.value ? null : profileForm.occupation,
         email: profileForm.email,
         address: profileForm.address,
         consent_status: profileForm.consent_status || "Unknown",

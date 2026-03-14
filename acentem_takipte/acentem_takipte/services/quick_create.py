@@ -51,6 +51,7 @@ def create_customer(payload: dict) -> dict[str, str]:
     return _insert_doc(
         {
             "doctype": "AT Customer",
+            "customer_type": payload.get("customer_type"),
             "full_name": payload.get("full_name"),
             "tax_id": payload.get("tax_id"),
             "phone": payload.get("phone"),

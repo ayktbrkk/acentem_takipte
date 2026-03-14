@@ -6,7 +6,7 @@
 
         <template v-else>
           <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-            {{ text(field.label) }}
+            {{ fieldLabel(field) }}
             <span v-if="field.required" class="text-rose-500">*</span>
           </label>
 
@@ -15,7 +15,7 @@
               v-if="isRemoteSelect(field)"
               v-model="model[field.name]"
               class="qc-remote-select qc-control"
-              :is-disabled="disabled || field.disabled"
+              :is-disabled="isFieldDisabled(field)"
               :is-loading="Boolean(remoteLoadingMap[field.name])"
               :is-searchable="true"
               :is-clearable="true"
@@ -40,7 +40,7 @@
                   v-if="showRelatedCreateAction(field)"
                   type="button"
                   class="qc-remote-create-action"
-                  :disabled="disabled || field.disabled"
+                  :disabled="isFieldDisabled(field)"
                   @mousedown.prevent
                   @click="onRelatedCreateButton(field)"
                 >
@@ -53,7 +53,7 @@
               v-else
               v-model="model[field.name]"
               class="input qc-control"
-              :disabled="disabled || field.disabled"
+              :disabled="isFieldDisabled(field)"
             >
               <option value="">{{ text(field.placeholder) || text(defaultSelectPlaceholder) }}</option>
               <option
@@ -70,7 +70,7 @@
             v-else-if="field.type === 'checkbox'"
             class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
           >
-            <input v-model="model[field.name]" class="h-4 w-4" type="checkbox" :disabled="disabled || field.disabled" />
+            <input v-model="model[field.name]" class="h-4 w-4" type="checkbox" :disabled="isFieldDisabled(field)" />
             <span>{{ text(field.checkboxLabel || field.label) }}</span>
           </label>
 
@@ -80,7 +80,7 @@
             class="input qc-textarea min-h-[90px]"
             :rows="field.rows || 3"
             :placeholder="text(field.placeholder)"
-            :disabled="disabled || field.disabled"
+            :disabled="isFieldDisabled(field)"
           />
 
           <template v-else-if="field.type === 'autocomplete'">
@@ -90,7 +90,7 @@
               type="text"
               :list="autocompleteListId(field)"
               :placeholder="text(field.placeholder)"
-              :disabled="disabled || field.disabled"
+              :disabled="isFieldDisabled(field)"
               @keyup.enter="emit('submit')"
             />
             <datalist :id="autocompleteListId(field)">
@@ -110,7 +110,7 @@
             class="input qc-control"
             :type="normalizeInputType(field.type)"
             :placeholder="text(field.placeholder)"
-            :disabled="disabled || field.disabled"
+            :disabled="isFieldDisabled(field)"
             :min="field.min"
             :max="field.max"
             :step="field.step"
@@ -120,8 +120,8 @@
           <p v-if="fieldErrors?.[field.name]" class="mt-1 text-xs text-rose-600">
             {{ fieldErrors[field.name] }}
           </p>
-          <p v-else-if="field.help" class="mt-1 text-xs text-slate-500">
-            {{ text(field.help) }}
+          <p v-else-if="fieldHelp(field)" class="mt-1 text-xs text-slate-500">
+            {{ fieldHelp(field) }}
           </p>
         </template>
       </div>
@@ -171,6 +171,30 @@ const REMOTE_SEARCH_METHOD = "acentem_takipte.acentem_takipte.api.quick_create.s
 
 function text(value) {
   return getLocalizedText(value, props.locale);
+}
+
+function resolveFieldValue(source, field) {
+  if (typeof source === "function") {
+    return source({
+      field,
+      model: props.model,
+      locale: props.locale,
+      text,
+    });
+  }
+  return source;
+}
+
+function fieldLabel(field) {
+  return text(resolveFieldValue(field?.label, field));
+}
+
+function fieldHelp(field) {
+  return text(resolveFieldValue(field?.help, field));
+}
+
+function isFieldDisabled(field) {
+  return Boolean(props.disabled || resolveFieldValue(field?.disabled, field));
 }
 
 function hasRelatedCreateListener() {

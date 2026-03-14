@@ -12,7 +12,34 @@
           <ActionButton variant="secondary" size="sm" @click="goBack">{{ t("backList") }}</ActionButton>
         </DetailActionRow>
       </template>
-      <DocSummaryGrid :items="headerSummaryItems" />
+      <div class="mt-4 space-y-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm">
+            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("recordNo") }}</span>
+            <span class="font-semibold text-slate-900">{{ policy.name || "-" }}</span>
+            <button
+              class="rounded-full border border-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+              type="button"
+              @click="copyIdentity(policy.name, 'recordNo')"
+            >
+              {{ copiedIdentityKey === "recordNo" ? t("copied") : t("copy") }}
+            </button>
+          </div>
+          <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm">
+            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("carrierPolicyNo") }}</span>
+            <span class="font-semibold text-slate-900">{{ carrierPolicyDisplayValue }}</span>
+            <button
+              class="rounded-full border border-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="!policy.policy_no"
+              type="button"
+              @click="copyIdentity(policy.policy_no, 'carrierPolicyNo')"
+            >
+              {{ copiedIdentityKey === "carrierPolicyNo" ? t("copied") : t("copy") }}
+            </button>
+          </div>
+        </div>
+        <DocSummaryGrid :items="headerSummaryItems" />
+      </div>
     </DocHeaderCard>
 
     <article class="surface-card rounded-2xl p-4">
@@ -411,7 +438,7 @@
 </template>
 
 <script setup>
-import { computed, ref, unref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, unref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
@@ -435,6 +462,7 @@ const labels = {
   tr: {
     overview: "Poliçe Detayı", openDesk: "Yönetim Ekranında Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
     recordNo: "Kayıt No", carrierPolicyNo: "Şirket Poliçe No",
+    copy: "Kopyala", copied: "Kopyalandı", notAssigned: "Henüz atanmadı",
     mobileQuickActionsTitle: "Hızlı İşlemler",
     timelineTitle: "Zaman Tüneli", emptyTimeline: "Bu poliçede zaman tüneli kaydı yok.", lifecycleTitle: "Poliçe Yaşam Döngüsü",
     emptyLifecycle: "Anlık görüntü kaydı yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Müşteri Kartı",
@@ -457,6 +485,7 @@ const labels = {
   en: {
     overview: "Policy Detail", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
     recordNo: "Record No", carrierPolicyNo: "Carrier Policy No",
+    copy: "Copy", copied: "Copied", notAssigned: "Not assigned yet",
     mobileQuickActionsTitle: "Quick Actions",
     timelineTitle: "Timeline", emptyTimeline: "No timeline activity.", lifecycleTitle: "Policy Lifecycle",
     emptyLifecycle: "No snapshot records.", premiumTitle: "Premium Details", customerTitle: "Customer Card",
@@ -549,6 +578,8 @@ const ownershipAssignmentSuccessHandlers = {
     await load();
   },
 };
+const copiedIdentityKey = ref("");
+let copiedIdentityTimer = null;
 
 const selectedSnapshot = computed(() => {
   if (!snapshots.value.length) return null;
@@ -596,19 +627,10 @@ const remainingDays = computed(() => {
   end.setHours(0, 0, 0, 0); now.setHours(0, 0, 0, 0);
   return Math.round((end.getTime() - now.getTime()) / 86400000);
 });
+const carrierPolicyDisplayValue = computed(() => policy.value.policy_no || t("notAssigned"));
 const remainingLabel = computed(() => (remainingDays.value == null ? t("noDate") : remainingDays.value < 0 ? t("expired") : String(remainingDays.value)));
 const remainingClass = computed(() => (remainingDays.value == null ? "text-slate-500" : remainingDays.value < 0 ? "text-rose-600" : remainingDays.value <= 30 ? "text-amber-600" : "text-emerald-600"));
 const headerSummaryItems = computed(() => [
-  {
-    key: "recordNo",
-    label: t("recordNo"),
-    value: policy.value.name || "-",
-  },
-  {
-    key: "carrierPolicyNo",
-    label: t("carrierPolicyNo"),
-    value: policy.value.policy_no || "-",
-  },
   {
     key: "status",
     label: t("status"),
@@ -632,6 +654,40 @@ const headerSummaryItems = computed(() => [
     meta: fmtDate(policy.value.end_date),
   },
 ]);
+
+async function copyIdentity(value, key) {
+  const text = String(value || "").trim();
+  if (!text) return;
+
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "true");
+      textarea.style.position = "absolute";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+
+    copiedIdentityKey.value = key;
+    if (copiedIdentityTimer) clearTimeout(copiedIdentityTimer);
+    copiedIdentityTimer = window.setTimeout(() => {
+      copiedIdentityKey.value = "";
+      copiedIdentityTimer = null;
+    }, 1500);
+  } catch {
+    copiedIdentityKey.value = "";
+  }
+}
+
+onBeforeUnmount(() => {
+  if (copiedIdentityTimer) clearTimeout(copiedIdentityTimer);
+});
 const premiumSummaryItems = computed(() => [
   {
     key: "net",

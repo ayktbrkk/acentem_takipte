@@ -210,6 +210,7 @@ def _serialize_customer(customer, *, can_view_sensitive: bool) -> dict[str, Any]
     phone = customer.phone if can_view_sensitive else customer.masked_phone
     return {
         "name": customer.name,
+        "customer_type": customer.customer_type,
         "full_name": customer.full_name,
         "tax_id": tax_id,
         "phone": phone,

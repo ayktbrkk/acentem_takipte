@@ -1174,6 +1174,111 @@ addQuickEditVariant(
   "Update reconciliation mismatch record"
 );
 
+const customerQuickCreateConfig = quickCreateRegistry.customer;
+if (customerQuickCreateConfig) {
+  customerQuickCreateConfig.defaults = {
+    ...(customerQuickCreateConfig.defaults || {}),
+    customer_type: "Individual",
+    tax_id: "",
+    birth_date: "",
+    gender: "Unknown",
+    marital_status: "Unknown",
+    occupation: "",
+  };
+  customerQuickCreateConfig.fields = [
+    { name: "full_name", type: "text", label: i18nLabel("Ad Soyad", "Full Name"), required: true, fullWidth: true },
+    {
+      name: "customer_type",
+      type: "select",
+      label: i18nLabel("Müşteri Tipi", "Customer Type"),
+      required: true,
+      options: [
+        option("Individual", "Bireysel", "Individual"),
+        option("Corporate", "Kurumsal", "Corporate"),
+      ],
+    },
+    {
+      name: "tax_id",
+      type: "text",
+      required: true,
+      label: ({ model, locale }) =>
+        String(model?.customer_type || "Individual") === "Corporate"
+          ? locale === "tr"
+            ? "Vergi No"
+            : "Tax Number"
+          : locale === "tr"
+            ? "TC Kimlik No"
+            : "National ID Number",
+      help: ({ model, locale }) =>
+        String(model?.customer_type || "Individual") === "Corporate"
+          ? locale === "tr"
+            ? "10 haneli vergi numarası girin."
+            : "Enter a 10-digit tax number."
+          : locale === "tr"
+            ? "11 haneli T.C. kimlik numarası girin."
+            : "Enter an 11-digit Turkish national ID number.",
+    },
+    {
+      name: "birth_date",
+      type: "date",
+      label: i18nLabel("Doğum Tarihi", "Birth Date"),
+      disabled: ({ model }) => String(model?.customer_type || "Individual") === "Corporate",
+      help: ({ model, locale }) =>
+        String(model?.customer_type || "Individual") === "Corporate"
+          ? locale === "tr"
+            ? "Kurumsal müşteriler için devre dışıdır."
+            : "Disabled for corporate customers."
+          : "",
+    },
+    { name: "phone", type: "text", label: i18nLabel("Telefon", "Phone") },
+    { name: "email", type: "email", label: i18nLabel("E-posta", "Email") },
+    {
+      name: "gender",
+      type: "select",
+      label: i18nLabel("Cinsiyet", "Gender"),
+      disabled: ({ model }) => String(model?.customer_type || "Individual") === "Corporate",
+      options: [
+        option("Unknown", "Bilinmiyor", "Unknown"),
+        option("Male", "Erkek", "Male"),
+        option("Female", "Kadın", "Female"),
+        option("Other", "Diğer", "Other"),
+      ],
+    },
+    {
+      name: "marital_status",
+      type: "select",
+      label: i18nLabel("Medeni Durum", "Marital Status"),
+      disabled: ({ model }) => String(model?.customer_type || "Individual") === "Corporate",
+      options: [
+        option("Unknown", "Bilinmiyor", "Unknown"),
+        option("Single", "Bekar", "Single"),
+        option("Married", "Evli", "Married"),
+        option("Divorced", "Boşanmış", "Divorced"),
+        option("Widowed", "Dul", "Widowed"),
+      ],
+    },
+    {
+      name: "consent_status",
+      type: "select",
+      label: i18nLabel("İzin Durumu", "Consent Status"),
+      options: [
+        option("Unknown", "Bilinmiyor", "Unknown"),
+        option("Granted", "Onaylı", "Granted"),
+        option("Revoked", "İptal", "Revoked"),
+      ],
+    },
+    { name: "assigned_agent", type: "text", label: i18nLabel("Temsilci (User)", "Assigned Agent (User)") },
+    {
+      name: "occupation",
+      type: "text",
+      label: i18nLabel("Meslek", "Occupation"),
+      fullWidth: true,
+      disabled: ({ model }) => String(model?.customer_type || "Individual") === "Corporate",
+    },
+    { name: "address", type: "textarea", label: i18nLabel("Adres", "Address"), rows: 3, fullWidth: true },
+  ];
+}
+
 export function getQuickCreateConfig(key) {
   return quickCreateRegistry[key] || null;
 }

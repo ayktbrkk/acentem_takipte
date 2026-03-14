@@ -31,6 +31,7 @@ from acentem_takipte.acentem_takipte.services.quick_create import (
     delete_aux_record as delete_aux_record_service,
     update_aux_record as update_aux_record_service,
 )
+from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import normalize_customer_type
 from acentem_takipte.acentem_takipte.utils.notes import normalize_note_text
 from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
 from acentem_takipte.acentem_takipte.utils.statuses import (
@@ -45,6 +46,7 @@ from acentem_takipte.acentem_takipte.utils.statuses import (
 
 @frappe.whitelist()
 def create_quick_customer(
+    customer_type: str | None = None,
     full_name: str | None = None,
     tax_id: str | None = None,
     phone: str | None = None,
@@ -62,6 +64,7 @@ def create_quick_customer(
 
     payload = {
         "doctype": "AT Customer",
+        "customer_type": normalize_customer_type(customer_type, tax_id),
         "full_name": (full_name or "").strip(),
         "tax_id": _digits_only(tax_id),
         "phone": (phone or "").strip() or None,
@@ -870,7 +873,7 @@ MAX_QUICK_OPTION_SEARCH_LIMIT = 50
 QUICK_OPTION_SEARCH_SOURCES: dict[str, dict] = {
     "customers": {
         "doctype": "AT Customer",
-        "display_fields": ["full_name", "tax_id"],
+        "display_fields": ["full_name", "customer_type", "tax_id"],
         "search_fields": ["name", "full_name", "tax_id", "email", "phone"],
         "order_by": "modified desc",
     },
@@ -1026,7 +1029,14 @@ def _format_quick_option_row(source_key: str, row: dict) -> dict[str, str]:
 
     if source_key == "customers":
         label = _value_or_fallback(row, "full_name", name)
-        description = _value_or_fallback(row, "tax_id")
+        customer_type = str(row.get("customer_type") or "").strip()
+        identity_number = _value_or_fallback(row, "tax_id")
+        if customer_type == "Corporate":
+            description = _join_non_empty(["Kurumsal", identity_number])
+        elif customer_type == "Individual":
+            description = _join_non_empty(["Bireysel", identity_number])
+        else:
+            description = identity_number
     elif source_key == "salesEntities":
         label = _value_or_fallback(row, "full_name", name)
         description = _value_or_fallback(row, "entity_type")

@@ -1,9 +1,10 @@
 {
  "actions": [],
- "autoname": "field:tax_id",
+ "autoname": "Prompt",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "customer_type",
   "tax_id",
   "masked_tax_id",
   "full_name",
@@ -22,9 +23,17 @@
  ],
  "fields": [
   {
+   "default": "Individual",
+   "fieldname": "customer_type",
+   "fieldtype": "Select",
+   "label": "Müşteri Tipi",
+   "options": "Individual\nCorporate",
+   "reqd": 1
+  },
+  {
    "fieldname": "tax_id",
    "fieldtype": "Data",
-   "label": "Tax ID",
+   "label": "TC Kimlik No / Vergi No",
    "permlevel": 1,
    "reqd": 1,
    "unique": 1

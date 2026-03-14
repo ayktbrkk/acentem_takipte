@@ -130,7 +130,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
 
     customers = [
         {
-            "tax_id": "1000000001",
+            "seed_alias": "1000000001",
+            "customer_type": "Individual",
+            "tax_id": _make_valid_tckn("100000001"),
             "full_name": "DEMO Ahmet Yilmaz",
             "birth_date": add_days(today, -(35 * 365)),
             "phone": "05320000001",
@@ -139,7 +141,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "assigned_agent": demo_agent,
         },
         {
-            "tax_id": "1000000002",
+            "seed_alias": "1000000002",
+            "customer_type": "Individual",
+            "tax_id": _make_valid_tckn("100000002"),
             "full_name": "DEMO Elif Kara",
             "birth_date": add_days(today, -(29 * 365)),
             "phone": "05320000002",
@@ -148,7 +152,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "assigned_agent": demo_agent,
         },
         {
-            "tax_id": "1000000003",
+            "seed_alias": "1000000003",
+            "customer_type": "Individual",
+            "tax_id": _make_valid_tckn("100000003"),
             "full_name": "DEMO Mert Demir",
             "birth_date": add_days(today, -(42 * 365)),
             "phone": "05320000003",
@@ -157,7 +163,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "assigned_agent": demo_agent,
         },
         {
-            "tax_id": "1000000004",
+            "seed_alias": "1000000004",
+            "customer_type": "Individual",
+            "tax_id": _make_valid_tckn("100000004"),
             "full_name": "DEMO Sude Acar",
             "birth_date": add_days(today, -(31 * 365)),
             "phone": "05320000004",
@@ -166,8 +174,11 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "assigned_agent": demo_agent,
         },
     ]
+    customer_name_map: dict[str, str] = {}
     for row in customers:
-        _upsert_by_name("AT Customer", row["tax_id"], row)
+        payload = {key: value for key, value in row.items() if key != "seed_alias"}
+        doc = _upsert_customer(payload)
+        customer_name_map[row["seed_alias"]] = doc.name
         summary["customers"] += 1
 
     leads = [
@@ -237,6 +248,8 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         },
     ]
     for row in leads:
+        if row.get("customer"):
+            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
         _upsert_lead(row)
         summary["leads"] += 1
 
@@ -316,6 +329,8 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
     ]
     policy_name_map: dict[str, str] = {}
     for row in policies:
+        if row.get("customer"):
+            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
         doc = _upsert_policy(row)
         policy_name_map[row["policy_no"]] = doc.name
         summary["policies"] += 1
@@ -349,6 +364,8 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         },
     ]
     for row in claims:
+        if row.get("customer"):
+            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
         _upsert_by_name("AT Claim", row["claim_no"], row)
         summary["claims"] += 1
 
@@ -416,6 +433,8 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         },
     ]
     for row in payments:
+        if row.get("customer"):
+            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
         _upsert_by_name("AT Payment", row["payment_no"], row)
         summary["payments"] += 1
 
@@ -446,6 +465,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         },
     ]
     for row in renewals:
+        if row.get("customer"):
+            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
+        row.pop("unique_key", None)
         _upsert_renewal_task(row)
         summary["renewal_tasks"] += 1
 
@@ -463,6 +485,18 @@ def _upsert_by_name(doctype: str, name: str, values: dict[str, Any]):
 
     payload = {"doctype": doctype, **values}
     return frappe.get_doc(payload).insert()
+
+
+def _upsert_customer(values: dict[str, Any]):
+    identity_number = str(values.get("tax_id") or "").strip()
+    existing_name = frappe.db.get_value("AT Customer", {"tax_id": identity_number}, "name")
+    if existing_name:
+        doc = frappe.get_doc("AT Customer", existing_name)
+        _apply_values(doc, values)
+        doc.save()
+        return doc
+
+    return frappe.get_doc({"doctype": "AT Customer", **values}).insert()
 
 
 def _upsert_policy(values: dict[str, Any]):
@@ -556,7 +590,7 @@ def _cleanup_demo_data():
         ("AT Claim", "claim_no", "DEMO-"),
         ("AT Policy", "policy_no", "DEMO-"),
         ("AT Lead", "email", "demo."),
-        ("AT Customer", "tax_id", "100000000"),
+        ("AT Customer", "full_name", "DEMO "),
         ("AT Branch", "branch_name", "DEMO "),
         ("AT Insurance Company", "company_name", "DEMO "),
     ]:
@@ -595,3 +629,13 @@ def _pick_demo_agent() -> str:
         limit_page_length=1,
     )
     return non_system_users[0] if non_system_users else "Administrator"
+
+
+def _make_valid_tckn(seed: str | int) -> str:
+    raw = "".join(char for char in str(seed) if char.isdigit())[:9].ljust(9, "0")
+    if raw.startswith("0"):
+        raw = f"1{raw[1:]}"
+    digits = [int(char) for char in raw]
+    tenth = ((sum(digits[0:9:2]) * 7) - sum(digits[1:8:2])) % 10
+    eleventh = (sum(digits) + tenth) % 10
+    return f"{raw}{tenth}{eleventh}"

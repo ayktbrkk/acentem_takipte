@@ -17,6 +17,7 @@ CUSTOMER_WORKBENCH_ALLOWED_ORDER_BY = {
 
 CUSTOMER_WORKBENCH_BASE_FIELDS = [
     "name",
+    "customer_type",
     "full_name",
     "tax_id",
     "masked_tax_id",
@@ -42,6 +43,7 @@ CUSTOMER_WORKBENCH_DERIVED_SORT_SEED_FIELDS = [
 CUSTOMER_WORKBENCH_QUERY_TEXT_OR_FILTER_FIELDS = [
     "name",
     "full_name",
+    "customer_type",
     "tax_id",
     "masked_tax_id",
     "email",

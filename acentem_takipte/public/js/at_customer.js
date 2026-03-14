@@ -1,3 +1,22 @@
+function applyCustomerTypeState(frm) {
+  const customerType = String(frm.doc.customer_type || "Individual");
+  const isCorporate = customerType === "Corporate";
+  const identityLabel = isCorporate ? __("Vergi No") : __("TC Kimlik No");
+
+  frm.set_df_property("tax_id", "label", identityLabel);
+  frm.set_df_property("birth_date", "read_only", isCorporate ? 1 : 0);
+  frm.set_df_property("gender", "read_only", isCorporate ? 1 : 0);
+  frm.set_df_property("marital_status", "read_only", isCorporate ? 1 : 0);
+  frm.set_df_property("occupation", "read_only", isCorporate ? 1 : 0);
+
+  if (isCorporate) {
+    frm.set_value("birth_date", null);
+    frm.set_value("gender", "Unknown");
+    frm.set_value("marital_status", "Unknown");
+    frm.set_value("occupation", null);
+  }
+}
+
 frappe.ui.form.on("AT Customer", {
   refresh(frm) {
     const navigate = (target) => {
@@ -16,6 +35,7 @@ frappe.ui.form.on("AT Customer", {
     frm.set_df_property("phone", "hidden", !canViewSensitive);
     frm.set_df_property("masked_tax_id", "hidden", canViewSensitive);
     frm.set_df_property("masked_phone", "hidden", canViewSensitive);
+    applyCustomerTypeState(frm);
 
     if (frm.is_new()) return;
 
@@ -59,5 +79,16 @@ frappe.ui.form.on("AT Customer", {
       },
       __("Create")
     );
+  },
+
+  onload(frm) {
+    if (frm.is_new() && !frm.doc.customer_type) {
+      frm.set_value("customer_type", "Individual");
+    }
+    applyCustomerTypeState(frm);
+  },
+
+  customer_type(frm) {
+    applyCustomerTypeState(frm);
   },
 });

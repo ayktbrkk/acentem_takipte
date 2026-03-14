@@ -353,7 +353,13 @@ const copy = {
     colConsentOwner: "İzin / Temsilci",
     colPortfolio: "Portföy Özet",
     colActions: "Aksiyon",
-    taxId: "TC/VKN",
+    taxId: "Kimlik / Vergi No",
+    nationalId: "TC Kimlik No",
+    taxNumber: "Vergi No",
+    customerType: "Müşteri Tipi",
+    customerTypeIndividual: "Bireysel",
+    customerTypeCorporate: "Kurumsal",
+    recordId: "Kayıt No",
     phone: "Telefon",
     email: "E-posta",
     birthDate: "Doğum",
@@ -392,6 +398,10 @@ const copy = {
     maritalOptDivorced: "Boşanmış",
     maritalOptWidowed: "Dul",
     maritalOptUnknown: "Bilinmiyor",
+    validationIdentityRequired: "Kimlik veya vergi numarası zorunludur.",
+    validationTaxNumberLength: "Vergi numarası 10 haneli olmalıdır.",
+    validationTcLength: "TC kimlik numarası 11 haneli olmalıdır.",
+    validationTcInvalid: "Geçerli bir TC kimlik numarası girin.",
   },
   en: {
     title: "Customer Workbench",
@@ -453,7 +463,13 @@ const copy = {
     colConsentOwner: "Consent / Owner",
     colPortfolio: "Portfolio",
     colActions: "Actions",
-    taxId: "Tax ID",
+    taxId: "Identity / Tax Number",
+    nationalId: "National ID Number",
+    taxNumber: "Tax Number",
+    customerType: "Customer Type",
+    customerTypeIndividual: "Individual",
+    customerTypeCorporate: "Corporate",
+    recordId: "Record ID",
     phone: "Phone",
     email: "Email",
     birthDate: "Birth Date",
@@ -492,6 +508,10 @@ const copy = {
     maritalOptDivorced: "Divorced",
     maritalOptWidowed: "Widowed",
     maritalOptUnknown: "Unknown",
+    validationIdentityRequired: "Identity or tax number is required.",
+    validationTaxNumberLength: "Tax number must be 10 digits.",
+    validationTcLength: "National ID number must be 11 digits.",
+    validationTcInvalid: "Enter a valid national ID number.",
   },
 };
 
@@ -544,6 +564,8 @@ const quickCreateCommon = computed(() => ({
   validation: activeLocale.value === "tr" ? "Lütfen gerekli alanlari ve formatlari kontrol edin." : "Please check required fields and formats.",
   failed: activeLocale.value === "tr" ? "Hızlı müşteri oluşturma başarısız oldu." : "Quick customer create failed.",
 }));
+const quickCustomerType = computed(() => normalizeCustomerType(quickCustomerForm.customer_type, quickCustomerForm.tax_id));
+const isCorporateQuickCustomer = computed(() => quickCustomerType.value === "Corporate");
 const isInitialLoading = computed(() => customerStore.state.loading && rows.value.length === 0);
 
 const consentStatusOptions = computed(() => [
@@ -620,6 +642,33 @@ function maritalLabel(value) {
   if (normalized === "Divorced") return t("maritalDivorced");
   if (normalized === "Widowed") return t("maritalWidowed");
   return t("maritalUnknown");
+}
+
+function normalizeIdentityNumber(value) {
+  return String(value || "").replace(/\D+/g, "");
+}
+
+function normalizeCustomerType(value, identityNumber = "") {
+  const normalized = String(value || "").trim();
+  if (normalized === "Individual" || normalized === "Corporate") return normalized;
+  return normalizeIdentityNumber(identityNumber).length === 10 ? "Corporate" : "Individual";
+}
+
+function isValidTckn(value) {
+  const digits = normalizeIdentityNumber(value);
+  if (digits.length !== 11 || digits.startsWith("0")) return false;
+  const list = digits.split("").map((item) => Number(item));
+  const tenth = ((list[0] + list[2] + list[4] + list[6] + list[8]) * 7 - (list[1] + list[3] + list[5] + list[7])) % 10;
+  const eleventh = list.slice(0, 10).reduce((sum, item) => sum + item, 0) % 10;
+  return list[9] === tenth && list[10] === eleventh;
+}
+
+function customerTypeLabel(value) {
+  return normalizeCustomerType(value) === "Corporate" ? t("customerTypeCorporate") : t("customerTypeIndividual");
+}
+
+function customerIdentityLabel(customerType) {
+  return normalizeCustomerType(customerType) === "Corporate" ? t("taxNumber") : t("nationalId");
 }
 
 function buildListParams() {
@@ -943,11 +992,36 @@ function validateQuickCustomerForm() {
   quickCustomerError.value = "";
   let valid = true;
   for (const field of customerQuickFields.value) {
+    const fieldDisabled =
+      typeof field?.disabled === "function"
+        ? field.disabled({ field, model: quickCustomerForm, locale: activeLocale.value })
+        : Boolean(field?.disabled);
+    if (field?.name !== "tax_id" && field?.name !== "customer_type" && fieldDisabled) {
+      continue;
+    }
     if (!field?.required) continue;
     if (String(quickCustomerForm[field.name] ?? "").trim() === "") {
       quickCustomerFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
       valid = false;
     }
+  }
+
+  const customerType = normalizeCustomerType(quickCustomerForm.customer_type, quickCustomerForm.tax_id);
+  const identityNumber = normalizeIdentityNumber(quickCustomerForm.tax_id);
+  if (!identityNumber) {
+    quickCustomerFieldErrors.tax_id = t("validationIdentityRequired");
+    valid = false;
+  } else if (customerType === "Corporate") {
+    if (identityNumber.length !== 10) {
+      quickCustomerFieldErrors.tax_id = t("validationTaxNumberLength");
+      valid = false;
+    }
+  } else if (identityNumber.length !== 11) {
+    quickCustomerFieldErrors.tax_id = t("validationTcLength");
+    valid = false;
+  } else if (!isValidTckn(identityNumber)) {
+    quickCustomerFieldErrors.tax_id = t("validationTcInvalid");
+    valid = false;
   }
 
   const email = String(quickCustomerForm.email || "").trim();
@@ -956,7 +1030,7 @@ function validateQuickCustomerForm() {
     valid = false;
   }
   const birthDate = String(quickCustomerForm.birth_date || "");
-  if (birthDate) {
+  if (!isCorporateQuickCustomer.value && birthDate) {
     const parsed = new Date(birthDate);
     if (!Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
       quickCustomerFieldErrors.birth_date =
@@ -970,9 +1044,18 @@ function validateQuickCustomerForm() {
 }
 
 function buildQuickCustomerPayload() {
-  return Object.fromEntries(
+  const payload = Object.fromEntries(
     Object.entries(quickCustomerForm).map(([key, value]) => [key, String(value ?? "").trim() === "" ? null : value])
   );
+  payload.customer_type = normalizeCustomerType(payload.customer_type, payload.tax_id);
+  payload.tax_id = normalizeIdentityNumber(payload.tax_id);
+  if (payload.customer_type === "Corporate") {
+    payload.birth_date = null;
+    payload.gender = "Unknown";
+    payload.marital_status = "Unknown";
+    payload.occupation = null;
+  }
+  return payload;
 }
 
 async function submitQuickCustomer(openAfter = false) {
@@ -1031,26 +1114,29 @@ function openQuickOfferForCustomer(row) {
 }
 
 function customerIdentityFacts(row) {
+  const customerType = normalizeCustomerType(row?.customer_type, row?.tax_id || row?.masked_tax_id);
   return [
-    subtleFact("record", "ID", row?.name || "-"),
+    subtleFact("record", t("recordId"), row?.name || "-"),
+    subtleFact("customer_type", t("customerType"), customerTypeLabel(customerType)),
     ...(row?.customer_folder ? [subtleFact("folder", t("customerFolder"), row.customer_folder)] : []),
   ];
 }
 
 function customerContactFacts(row) {
   return [
-    mutedFact("tax", t("taxId"), row?.tax_id || row?.masked_tax_id || "-"),
+    mutedFact("tax", customerIdentityLabel(row?.customer_type), row?.tax_id || row?.masked_tax_id || "-"),
     mutedFact("phone", t("phone"), row?.phone || row?.masked_phone || "-"),
     mutedFact("email", t("email"), row?.email || "-"),
   ];
 }
 
 function customerProfileFacts(row) {
+  const isCorporate = normalizeCustomerType(row?.customer_type, row?.tax_id || row?.masked_tax_id) === "Corporate";
   return [
-    mutedFact("birth", t("birthDate"), formatDate(row?.birth_date)),
-    mutedFact("gender", t("gender"), genderLabel(row?.gender)),
-    mutedFact("marital", t("maritalStatus"), maritalLabel(row?.marital_status)),
-    mutedFact("occupation", t("occupation"), row?.occupation || "-"),
+    mutedFact("birth", t("birthDate"), isCorporate ? "-" : formatDate(row?.birth_date)),
+    mutedFact("gender", t("gender"), isCorporate ? "-" : genderLabel(row?.gender)),
+    mutedFact("marital", t("maritalStatus"), isCorporate ? "-" : maritalLabel(row?.marital_status)),
+    mutedFact("occupation", t("occupation"), isCorporate ? "-" : row?.occupation || "-"),
   ];
 }
 
@@ -1083,6 +1169,17 @@ function formatCurrency(value) {
 
 applyPreset(presetKey.value, { refresh: false });
 void refreshCustomerList();
+watch(
+  quickCustomerType,
+  (type) => {
+    if (type !== "Corporate") return;
+    quickCustomerForm.birth_date = "";
+    quickCustomerForm.gender = "Unknown";
+    quickCustomerForm.marital_status = "Unknown";
+    quickCustomerForm.occupation = "";
+  },
+  { immediate: true }
+);
 watch(
   () => branchStore.selected,
   () => {

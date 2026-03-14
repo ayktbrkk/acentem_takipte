@@ -201,7 +201,7 @@ def get_customer_list(filters=None, limit: int = 20) -> list[dict]:
 
     rows = frappe.get_list(
         "AT Customer",
-        fields=["name", "full_name", "tax_id", "masked_tax_id", "phone", "masked_phone", "email", "assigned_agent"],
+        fields=["name", "customer_type", "full_name", "tax_id", "masked_tax_id", "phone", "masked_phone", "email", "assigned_agent"],
         filters=query_filters,
         order_by="modified desc",
         limit_page_length=max(min(int(limit), 100), 1),
@@ -638,12 +638,19 @@ def update_customer_profile(name: str, values=None) -> dict:
     for fieldname, value in updates.items():
         doc.set(fieldname, value)
 
+    if doc.customer_type == "Corporate":
+        doc.birth_date = None
+        doc.gender = "Unknown"
+        doc.marital_status = "Unknown"
+        doc.occupation = None
+
     if updates:
         doc.save()
         frappe.db.commit()
 
     return {
         "name": doc.name,
+        "customer_type": doc.customer_type,
         "full_name": doc.full_name,
         "birth_date": doc.birth_date,
         "gender": doc.gender,
