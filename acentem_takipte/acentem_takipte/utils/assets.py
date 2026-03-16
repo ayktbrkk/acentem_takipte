@@ -8,10 +8,15 @@ from typing import Any, Iterable
 APP_NAME = "acentem_takipte"
 ASSETS_BASE_URL = "/assets/acentem_takipte/frontend/"
 MANIFEST_CANDIDATES = (
+    # Some Bench / app layouts end up nesting the app's "public/" under an extra
+    # "acentem_takipte/" directory (e.g. apps/acentem_takipte/acentem_takipte/acentem_takipte/public/...).
+    "acentem_takipte/public/frontend/.vite/manifest.json",
     "public/frontend/.vite/manifest.json",
+    "acentem_takipte/public/frontend/manifest.json",
     "public/frontend/manifest.json",
 )
 PUBLIC_DIR_CANDIDATES = (
+    "acentem_takipte/public",
     "public",
 )
 
