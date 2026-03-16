@@ -168,7 +168,7 @@ A typical team workflow looks like this:
 ```text
 acentem_takipte/
   acentem_takipte/           Frappe app package: APIs, DocTypes, services, tasks, utilities
-  public/frontend/           Built frontend assets served by Frappe
+  public/frontend/           Generated frontend build output (not committed) served by Frappe
   www/                       Web route entry for /at
 frontend/                    Vue application source, unit tests, Playwright tests
 scripts/                     Development and operational helper scripts
