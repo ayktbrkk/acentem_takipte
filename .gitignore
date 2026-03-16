@@ -9,8 +9,8 @@ frontend/playwright-report/
 frontend/test-results/
 frontend/vite.config.js.timestamp-*.mjs
 acentem_takipte/frontend/
+# Frontend build output (generated during build/deploy; never commit)
 acentem_takipte/public/frontend/
-acentem_takipte/acentem_takipte/public/frontend/
 .plan/
 .vscode/
 .playwright-cli/
