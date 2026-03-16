@@ -1,33 +1,47 @@
 <template>
-  <section class="space-y-4">
-    <DocHeaderCard
-      :eyebrow="t('overview')"
-      :title="customer.full_name || name"
-      :subtitle="customerHeaderSubtitle"
-    >
-      <template #actions>
-        <DetailActionRow>
-          <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
-            {{ t("newOffer") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
-            {{ t("communication") }}
-          </ActionButton>
-          <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="sm" @click="openCustomerDesk">
-            {{ t("openDesk") }}
-          </ActionButton>
-        </DetailActionRow>
-      </template>
-      <DocSummaryGrid :items="customerHeaderSummaryItems" />
-    </DocHeaderCard>
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">{{ t("overview") }}</p>
+        <h1 class="detail-title">
+          {{ customer.full_name || name }}
+          <StatusBadge domain="customer" :status="customerStatus" />
+        </h1>
+        <div class="mt-1.5 flex items-center gap-2">
+          <span class="copy-tag">{{ customer.name || name || "-" }}</span>
+          <span v-if="customerTaxIdDisplay !== '-'" class="copy-tag">
+            {{ customerTaxIdLabel }}: {{ customerTaxIdDisplay }}
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <ActionButton variant="secondary" size="sm" @click="router.push('/customers')">
+          {{ t("tabOverview") }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
+          {{ t("newOffer") }}
+        </ActionButton>
+      </div>
+    </div>
 
-    <article class="surface-card rounded-2xl p-4">
-      <DetailTabsBar v-model="activeCustomerTab" :tabs="customerDetailTabs" />
-    </article>
+    <HeroStrip :cells="heroCells" />
 
-    <article class="surface-card rounded-2xl p-4 md:hidden">
-      <SectionCardHeader :title="t('mobileQuickActionsTitle')" :show-count="false" />
-      <div class="mt-3 grid grid-cols-2 gap-2">
+    <div class="nav-tabs-bar">
+      <button
+        v-for="tab in tabs"
+        :key="tab.key"
+        :class="['nav-tab', activeTab === tab.key && 'is-active']"
+        @click="activeTab = tab.key"
+      >
+        {{ tab.label }}
+        <span v-if="tab.count" class="ml-1 badge badge-blue">
+          {{ tab.count }}
+        </span>
+      </button>
+    </div>
+
+    <DetailCard class="md:hidden" :title="t('mobileQuickActionsTitle')">
+      <div class="mt-1 grid grid-cols-2 gap-2">
         <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
           {{ t("newOffer") }}
         </ActionButton>
@@ -40,14 +54,19 @@
         <ActionButton variant="secondary" size="sm" @click="openQuickCustomerRelation">
           {{ t("newRelation") }}
         </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="openQuickOwnershipAssignment">
-          {{ t("newAssignment") }}
-        </ActionButton>
       </div>
-    </article>
+    </DetailCard>
 
     <div class="at-detail-split-wide">
       <aside class="at-detail-aside">
+        <DetailCard :title="t('contactCard')">
+          <FieldGroup :fields="contactFields" :cols="1" />
+        </DetailCard>
+
+        <DetailCard :title="t('recordId')" class="mt-4">
+          <FieldGroup :fields="recordFields" :cols="1" />
+        </DetailCard>
+
         <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('insuredInfoCard')" :show-count="false">
             <template #trailing>
@@ -344,7 +363,7 @@
               :subtitle="activity.activity_type || '-'"
             >
               <template #trailing>
-                <StatusBadge domain="activity" :status="activity.status" />
+                <StatusBadge domain="activity" :status="activity.status || 'Draft'" />
               </template>
               <MiniFactList class="mt-2" :items="activityCardFacts(activity)" />
             </EntityPreviewCard>
@@ -369,7 +388,7 @@
             >
               <template #trailing>
                 <div class="flex flex-wrap items-center justify-end gap-2">
-                  <StatusBadge domain="reminder" :status="reminder.status" />
+                  <StatusBadge domain="reminder" :status="reminder.status || 'Draft'" />
                   <ActionButton
                     v-if="reminder.status !== 'Done'"
                     variant="secondary"
@@ -413,7 +432,7 @@
               :subtitle="policy.insurance_company || '-'"
             >
               <template #trailing>
-                <StatusBadge domain="policy" :status="policy.status" />
+                <StatusBadge domain="policy" :status="normalizeStatus(policy.status)" />
               </template>
               <MiniFactList class="mt-2" :items="policyCardFacts(policy)" />
               <template #footer>
@@ -445,7 +464,7 @@
               :subtitle="offer.insurance_company || '-'"
             >
               <template #trailing>
-                <StatusBadge domain="offer" :status="offer.status" />
+                <StatusBadge domain="offer" :status="normalizeStatus(offer.status)" />
               </template>
               <MiniFactList class="mt-2" :items="offerCardFacts(offer)" />
             </EntityPreviewCard>
@@ -469,7 +488,7 @@
               :subtitle="payment.policy || '-'"
             >
               <template #trailing>
-                <StatusBadge domain="payment" :status="payment.status" />
+                <StatusBadge domain="payment" :status="payment.status || 'Draft'" />
               </template>
               <MiniFactList class="mt-2" :items="paymentCardFacts(payment)" />
             </EntityPreviewCard>
@@ -493,7 +512,7 @@
               :subtitle="claim.policy || '-'"
             >
               <template #trailing>
-                <StatusBadge domain="claim" :status="claim.claim_status" />
+                <StatusBadge domain="claim" :status="claim.claim_status || 'Draft'" />
               </template>
               <MiniFactList class="mt-2" :items="claimCardFacts(claim)" />
             </EntityPreviewCard>
@@ -517,7 +536,7 @@
               :subtitle="renewal.competitor_name || '-'"
             >
               <template #trailing>
-                <StatusBadge domain="renewal" :status="renewal.status" />
+                <StatusBadge domain="renewal" :status="renewal.status || 'Draft'" />
               </template>
               <MiniFactList class="mt-2" :items="renewalCardFacts(renewal)" />
             </EntityPreviewCard>
@@ -712,7 +731,7 @@
               :subtitle="asset.insurance_company || '-'"
               >
                 <template #trailing>
-                  <StatusBadge domain="policy" :status="asset.status" />
+                  <StatusBadge domain="policy" :status="asset.status || 'Draft'" />
                 </template>
                 <MiniFactList class="mt-2" :items="insuredAssetFacts(asset)" />
                 <template #footer>
@@ -845,7 +864,6 @@ import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
-import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
 import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
 import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
@@ -853,6 +871,9 @@ import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
+import DetailCard from "../components/ui/DetailCard.vue";
+import FieldGroup from "../components/ui/FieldGroup.vue";
+import HeroStrip from "../components/ui/HeroStrip.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 
@@ -1270,6 +1291,78 @@ const profileForm = reactive({
 
 const customerLoading = computed(() => Boolean(unref(customer360Resource.loading)));
 const timelineLoading = computed(() => Boolean(unref(customer360Resource.loading)));
+
+const customerStatus = computed(() => (Number(customer.value.enabled) === 1 ? "active" : "cancel"));
+
+const heroCells = computed(() => [
+  {
+    label: t("customerType"),
+    value: customer.value?.customer_type || (isCorporateCustomer.value ? t("customerTypeCorporate") : t("customerTypeIndividual")) || "-",
+    variant: "default",
+  },
+  {
+    label: customerTaxIdLabel.value,
+    value: customerTaxIdDisplay.value || "-",
+    variant: "default",
+  },
+  {
+    label: t("activePolicyCount"),
+    value: String(activePolicies.value?.length || 0),
+    variant: "accent",
+  },
+  {
+    label: t("totalRiskLimit"),
+    value: formatCurrency(totalRiskLimit.value),
+    variant: "lg",
+  },
+]);
+
+const contactFields = computed(() => [
+  { label: t("mobilePhone"), value: customerPhoneDisplay.value || "-", variant: "default" },
+  { label: t("email"), value: customer.value?.email || "-", variant: "default" },
+  { label: t("address"), value: customer.value?.address || "-", variant: "muted" },
+]);
+
+const recordFields = computed(() => [
+  { label: t("recordId"), value: customer.value?.name || name || "-", variant: "mono" },
+  { label: t("customerFolder"), value: customer.value?.customer_folder || "-", variant: "muted" },
+  { label: t("assignedAgent"), value: customer.value?.assigned_agent || "-", variant: "default" },
+]);
+
+const tabs = computed(() => [
+  { key: "overview", label: t("tabOverview") },
+  { key: "portfolio", label: t("tabPortfolio"), count: activePolicies.value?.length },
+  { key: "activity", label: t("tabActivity"), count: activityRows.value?.length },
+  { key: "operations", label: t("tabOperations"), count: openOffers.value?.length },
+]);
+
+const activeTab = computed({
+  get: () => activeCustomerTab.value,
+  set: (value) => {
+    activeCustomerTab.value = value;
+  },
+});
+
+function initials(nameValue = "") {
+  return String(nameValue)
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
+function normalizeStatus(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (["active", "open", "waiting", "draft", "cancel"].includes(normalized)) {
+    return normalized;
+  }
+  if (normalized === "ipt" || normalized === "cancelled" || normalized === "canceled") {
+    return "cancel";
+  }
+  return normalized || "draft";
+}
 const auxQuickCustomerResource = createResource({
   url: "frappe.client.get_list",
   auto: false,
