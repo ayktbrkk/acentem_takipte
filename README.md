@@ -184,6 +184,10 @@ Even though this README is product-focused, a few implementation details are use
 - scheduler hooks are defined in the Frappe app and power recurring operational jobs
 - `requirements.txt` intentionally stays minimal because the Bench environment provides Frappe itself
 
+Operational docs:
+- Deployment notes: `docs/deploy.md`
+- Scheduler/job notes: `docs/ops/jobs.md` (entry point: `docs/operations.md`)
+
 ## Project Status
 
 This project is under active development. Existing modules are already substantial, but the repository should still be treated as evolving software. Data model details, operational flows, and frontend screens may continue to change as the product matures.
