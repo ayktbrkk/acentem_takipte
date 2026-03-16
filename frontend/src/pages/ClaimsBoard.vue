@@ -1,239 +1,39 @@
 <template>
-  <section class="space-y-4">
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-      :title="t('title')"
-      :subtitle="t('subtitle')"
-      :show-refresh="true"
-      :busy="claimsLoading"
-      :refresh-label="t('refresh')"
-      @refresh="reloadClaims"
-    >
-      <template #actions>
-        <div class="flex flex-wrap items-center gap-2">
-          <QuickCreateLauncher
-            variant="primary"
-            size="sm"
-            :label="t('newClaim')"
-            @launch="showQuickClaimDialog = true"
-          />
-          <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="reloadClaims">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            :disabled="claimsLoading"
-            @click="downloadClaimExport('xlsx')"
-          >
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            size="sm"
-            :disabled="claimsLoading"
-            @click="downloadClaimExport('pdf')"
-          >
-            {{ t("exportPdf") }}
-          </ActionButton>
-        </div>
-      </template>
-      <template #filters>
-        <WorkbenchFilterToolbar
-          v-model="presetKey"
-          :advanced-label="t('advancedFilters')"
-          :collapse-label="t('hideAdvancedFilters')"
-          :active-count="activeFilterCount"
-          :active-count-label="t('activeFilters')"
-          :preset-label="t('presetLabel')"
-          :preset-options="presetOptions"
-          :can-delete-preset="canDeletePreset"
-          :save-label="t('savePreset')"
-          :delete-label="t('deletePreset')"
-          :apply-label="t('applyFilters')"
-          :reset-label="t('clearFilters')"
-          @preset-change="onPresetChange"
-          @preset-save="savePreset"
-          @preset-delete="deletePreset"
-          @apply="applyClaimFilters"
-          @reset="resetClaimFilters"
-        >
-          <input
-            v-model.trim="filters.query"
-            class="input"
-            type="search"
-            :placeholder="t('searchPlaceholder')"
-            @keyup.enter="applyClaimFilters"
-          />
-          <select v-model="filters.status" class="input">
-          <option value="">{{ t("allStatuses") }}</option>
-          <option v-for="option in claimStatusOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-            </option>
-          </select>
-          <select v-model.number="filters.limit" class="input">
-            <option :value="20">20</option>
-            <option :value="30">30</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-          </select>
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Hasarlar</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+      </div>
+      <span class="text-sm text-gray-400">{{ claims.length }} kayıt</span>
+    </div>
 
-          <template #advanced>
-            <input
-              v-model.trim="filters.policyQuery"
-              class="input"
-              type="search"
-              :placeholder="t('policyFilter')"
-              @keyup.enter="applyClaimFilters"
-            />
-            <select v-model="filters.amountState" class="input">
-              <option value="">{{ t("allAmountStates") }}</option>
-              <option value="paid">{{ t("amountStatePaid") }}</option>
-              <option value="unpaid">{{ t("amountStateUnpaid") }}</option>
-              <option value="approved_only">{{ t("amountStateApprovedOnly") }}</option>
-              <option value="pending_payment">{{ t("amountStatePendingPayment") }}</option>
-            </select>
-          </template>
-        </WorkbenchFilterToolbar>
-      </template>
-      </PageToolbar>
-    </article>
+    <div class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        v-model:search="claimsListSearchQuery"
+        :filters="claimsListFilterConfig"
+        :active-count="claimsListActiveCount"
+        @filter-change="onClaimsListFilterChange"
+        @reset="onClaimsListFilterReset"
+      >
+        <template #actions>
+          <button class="btn btn-primary btn-sm" @click="showQuickClaimDialog = true">+ Yeni Hasar</button>
+          <button class="btn btn-sm" :disabled="claimsLoading" @click="reloadClaims">Yenile</button>
+          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">Excel</button>
+          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">PDF</button>
+        </template>
+      </FilterBar>
+    </div>
 
-    <article class="surface-card rounded-2xl p-5">
-      <DataTableShell
-      :loading="claimsLoading"
-      :error="claimsErrorText"
-      :empty="claims.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('empty')"
-    >
-      <template #default>
-        <div class="overflow-auto">
-          <table class="at-table">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("claim") }}</th>
-                <th class="at-table-head-cell">{{ t("policy") }}</th>
-                <th class="at-table-head-cell">{{ t("status") }}</th>
-                <th class="at-table-head-cell">{{ t("operations") }}</th>
-                <th class="at-table-head-cell">{{ t("amounts") }}</th>
-                <th class="at-table-head-cell">{{ t("actions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="claim in claims" :key="claim.name" class="at-table-row">
-                <DataTableCell>
-                  <TableEntityCell :title="claim.claim_no || claim.name" :facts="claimIdentityFacts(claim)" />
-                </DataTableCell>
-                <TableFactsCell :items="claimPolicyFacts(claim)" />
-                <DataTableCell>
-                  <StatusBadge domain="claim" :status="claim.claim_status" />
-                </DataTableCell>
-                <TableFactsCell :items="claimOperationalFacts(claim)" />
-                <DataTableCell cell-class="min-w-[220px]">
-                  <AmountPairSummary
-                    :left-label="t('approved')"
-                    :left-value="claim.approved_amount"
-                    :right-label="t('paid')"
-                    :right-value="claim.paid_amount"
-                    :locale="localeCode"
-                  />
-                </DataTableCell>
-                <DataTableCell>
-                  <div class="mb-2 text-xs text-slate-500">
-                    {{ notificationHint(claim) }}
-                  </div>
-                  <div class="mb-2 text-xs text-slate-500">
-                    {{ notificationStatusLabel(claim) }}
-                  </div>
-                  <div class="mb-2 text-xs text-slate-500">
-                    {{ assignmentHint(claim) }}
-                  </div>
-                  <InlineActionRow>
-                    <ActionButton
-                      v-if="canMoveClaimToStatus(claim, 'Under Review')"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="mutationLoading"
-                      @click="updateClaimStatus(claim, 'Under Review')"
-                    >
-                      {{ t("markUnderReview") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canMoveClaimToStatus(claim, 'Approved')"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="mutationLoading"
-                      @click="updateClaimStatus(claim, 'Approved')"
-                    >
-                      {{ t("markApproved") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canMoveClaimToStatus(claim, 'Closed')"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="mutationLoading"
-                      @click="updateClaimStatus(claim, 'Closed')"
-                    >
-                      {{ t("markClosed") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canRejectClaim(claim)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="mutationLoading"
-                      @click="rejectClaim(claim)"
-                    >
-                      {{ t("markRejected") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="claim.next_follow_up_on"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="mutationLoading"
-                      @click="clearClaimFollowUp(claim)"
-                    >
-                      {{ t("clearFollowUp") }}
-                    </ActionButton>
-                    <ActionButton
-                      variant="secondary"
-                      size="xs"
-                      @click="openClaimNotifications(claim)"
-                    >
-                      {{ t("openNotifications") }}
-                    </ActionButton>
-                    <ActionButton
-                      variant="secondary"
-                      size="xs"
-                      @click="openClaimAssignment(claim)"
-                    >
-                      {{ t("newAssignment") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="claim.policy"
-                      variant="secondary"
-                      size="xs"
-                      @click="openPolicy(claim.policy)"
-                    >
-                      {{ t("openPolicy") }}
-                    </ActionButton>
-                    <ActionButton variant="secondary" size="xs" @click="openClaimDetail(claim)">
-                      {{ t("openClaimDetail") }}
-                    </ActionButton>
-                    <ActionButton variant="secondary" size="xs" @click="openClaimDocuments(claim)">
-                      {{ t("openDocuments") }}
-                    </ActionButton>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-      </DataTableShell>
-    </article>
+    <div class="flex-1 p-5">
+      <ListTable
+        :columns="claimsListColumns"
+        :rows="claimsListRowsWithUrgency"
+        :loading="claimsLoading"
+        empty-message="Hasar bulunamadı."
+        @row-click="openClaimDetail"
+      />
+    </div>
 
     <QuickCreateManagedDialog
       v-model="showQuickClaimDialog"
@@ -276,6 +76,8 @@ import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
+import ListTable from "../components/ui/ListTable.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { subtleFact } from "../utils/factItems";
 import { openTabularExport } from "../utils/listExport";
@@ -525,9 +327,101 @@ const mutationLoading = computed(() => Boolean(unref(claimMutationResource.loadi
 
 const claims = computed(() => claimStore.filteredItems);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+const claimsListSearchQuery = ref("");
+const claimsListLocalFilters = ref({ status: "", amountState: "" });
 const showQuickClaimDialog = ref(false);
 const showOwnershipAssignmentDialog = ref(false);
 const selectedClaimForAssignment = ref(null);
+
+const claimsListColumns = [
+  { key: "claim_no", label: "Hasar No", width: "140px", type: "mono" },
+  { key: "policy", label: "Poliçe", width: "140px", type: "mono" },
+  { key: "customer", label: "Müşteri", width: "220px" },
+  { key: "claim_status", label: "Durum", width: "130px", type: "status" },
+  { key: "approved_amount", label: "Onaylanan", width: "120px", type: "amount", align: "right" },
+  { key: "paid_amount", label: "Ödenen", width: "120px", type: "amount", align: "right" },
+  { key: "remaining_days", label: "Takip Günü", width: "110px", type: "urgency", align: "right" },
+];
+
+const claimsListFilterConfig = computed(() => [
+  {
+    key: "status",
+    label: "Durum",
+    options: claimStatusOptions.value.map((item) => ({ value: item.value, label: item.label })),
+  },
+  {
+    key: "amountState",
+    label: "Tutar Durumu",
+    options: [
+      { value: "paid", label: t("amountStatePaid") },
+      { value: "unpaid", label: t("amountStateUnpaid") },
+      { value: "approved_only", label: t("amountStateApprovedOnly") },
+      { value: "pending_payment", label: t("amountStatePendingPayment") },
+    ],
+  },
+]);
+
+const claimsListFilteredRows = computed(() => {
+  const q = claimsListSearchQuery.value.trim().toLocaleLowerCase(localeCode.value);
+  return claims.value
+    .map((claim) => ({
+      ...claim,
+      remaining_days: computeRemainingFollowUpDays(claim.next_follow_up_on),
+    }))
+    .filter((claim) => {
+      const matchesQuery =
+        !q ||
+        [claim.claim_no, claim.name, claim.policy, claim.customer]
+          .map((value) => String(value || "").toLocaleLowerCase(localeCode.value))
+          .some((value) => value.includes(q));
+      const matchesStatus = !claimsListLocalFilters.value.status || claim.claim_status === claimsListLocalFilters.value.status;
+      const matchesAmountState =
+        !claimsListLocalFilters.value.amountState || matchAmountState(claim, claimsListLocalFilters.value.amountState);
+      return matchesQuery && matchesStatus && matchesAmountState;
+    });
+});
+
+const claimsListRowsWithUrgency = computed(() =>
+  claimsListFilteredRows.value.map((claim) => ({
+    ...claim,
+    _urgency: claim.remaining_days <= 0 ? "row-critical" : claim.remaining_days <= 7 ? "row-warning" : "",
+  }))
+);
+
+const claimsListActiveCount = computed(
+  () =>
+    (claimsListSearchQuery.value.trim() ? 1 : 0) +
+    Object.values(claimsListLocalFilters.value).filter((value) => String(value || "").trim() !== "").length
+);
+
+function onClaimsListFilterChange({ key, value }) {
+  claimsListLocalFilters.value = {
+    ...claimsListLocalFilters.value,
+    [key]: String(value || ""),
+  };
+}
+
+function onClaimsListFilterReset() {
+  claimsListSearchQuery.value = "";
+  claimsListLocalFilters.value = { status: "", amountState: "" };
+}
+
+function computeRemainingFollowUpDays(nextFollowUpOn) {
+  if (!nextFollowUpOn) return null;
+  const target = new Date(nextFollowUpOn);
+  if (Number.isNaN(target.getTime())) return null;
+  return Math.ceil((target.getTime() - Date.now()) / 86400000);
+}
+
+function matchAmountState(claim, amountState) {
+  const approved = Number(claim.approved_amount || 0);
+  const paid = Number(claim.paid_amount || 0);
+  if (amountState === "paid") return paid > 0;
+  if (amountState === "unpaid") return paid <= 0;
+  if (amountState === "approved_only") return approved > 0 && paid <= 0;
+  if (amountState === "pending_payment") return approved > paid;
+  return true;
+}
 
 function resourceValue(resource, fallback) {
   const value = unref(resource?.data);

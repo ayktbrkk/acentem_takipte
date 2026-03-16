@@ -1,209 +1,48 @@
 <template>
-  <section class="space-y-4">
-    <div class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :show-refresh="true"
-        :busy="policyLoading"
-        :refresh-label="t('refresh')"
-        @refresh="refreshPolicyList"
-      >
-        <template #actions>
-          <div class="flex flex-wrap items-center gap-2">
-            <QuickCreateLauncher variant="primary" size="sm" :label="quickPolicyUi.newLabel" @launch="openQuickPolicyDialog" />
-            <ActionButton variant="secondary" size="sm" :disabled="policyLoading" @click="refreshPolicyList">
-              {{ t("refresh") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">
-              {{ t("exportXlsx") }}
-            </ActionButton>
-            <ActionButton variant="primary" size="sm" :disabled="policyLoading" @click="downloadPolicyExport('pdf')">
-              {{ t("exportPdf") }}
-            </ActionButton>
-          </div>
-        </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="policyPresetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="policyActiveFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="policyPresetOptions"
-            :can-delete-preset="canDeletePolicyPreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPolicyPresetChange"
-            @preset-save="savePolicyPreset"
-            @preset-delete="deletePolicyPreset"
-            @apply="applyFilters"
-            @reset="resetFilters"
-          >
-            <input
-              v-model.trim="filters.query"
-              class="input"
-              type="search"
-              :placeholder="t('searchPlaceholder')"
-              @keyup.enter="applyFilters"
-            />
-
-            <select v-model="filters.insurance_company" class="input">
-              <option value="">{{ t("allCompanies") }}</option>
-              <option v-for="company in companies" :key="company.name" :value="company.name">
-                {{ company.company_name || company.name }}
-              </option>
-            </select>
-
-            <input
-              v-model="filters.end_date"
-              class="input"
-              type="date"
-              :placeholder="t('endDateFilter')"
-            />
-
-            <select v-model="filters.status" class="input">
-              <option value="">{{ t("allStatuses") }}</option>
-              <option v-for="status in statusOptions" :key="status.value" :value="status.value">
-                {{ status.label }}
-              </option>
-            </select>
-
-            <select v-model="filters.sort" class="input">
-              <option v-for="option in sortOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-
-            <select v-model.number="pagination.pageLength" class="input">
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
-
-            <template #advanced>
-              <input
-                v-model.trim="filters.customer"
-                class="input"
-                type="search"
-                :placeholder="t('customerFilter')"
-                @keyup.enter="applyFilters"
-              />
-              <input
-                v-model="filters.gross_min"
-                class="input"
-                type="number"
-                min="0"
-                step="0.01"
-                :placeholder="t('grossMinFilter')"
-                @keyup.enter="applyFilters"
-              />
-              <input
-                v-model="filters.gross_max"
-                class="input"
-                type="number"
-                min="0"
-                step="0.01"
-                :placeholder="t('grossMaxFilter')"
-                @keyup.enter="applyFilters"
-              />
-            </template>
-
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Poliçeler</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+      </div>
+      <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
     </div>
 
-    <article class="surface-card rounded-2xl p-4 md:hidden">
-      <SectionCardHeader :title="t('mobileSummaryTitle')" :show-count="false" />
-      <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
-        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("showing") }}</p>
-          <p class="mt-1 font-semibold text-slate-900">{{ startRow }}-{{ endRow }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activeFilters") }}</p>
-          <p class="mt-1 font-semibold text-slate-900">{{ policyActiveFilterCount }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("pageSize") }}</p>
-          <p class="mt-1 font-semibold text-slate-900">{{ pagination.pageLength }}</p>
+    <div class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        v-model:search="policyListSearchQuery"
+        :filters="policyListFilterConfig"
+        :active-count="policyListActiveCount"
+        @filter-change="onPolicyListFilterChange"
+        @reset="onPolicyListFilterReset"
+      >
+        <template #actions>
+          <button class="btn btn-primary btn-sm" @click="openQuickPolicyDialog">+ Yeni Poliçe</button>
+          <button class="btn btn-sm" :disabled="policyLoading" @click="refreshPolicyList">Yenile</button>
+          <button class="btn btn-sm" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">Excel</button>
+          <button class="btn btn-sm" :disabled="policyLoading" @click="downloadPolicyExport('pdf')">PDF</button>
+        </template>
+      </FilterBar>
+    </div>
+
+    <div class="flex-1 p-5">
+      <ListTable
+        :columns="policyListColumns"
+        :rows="policyListRowsWithUrgency"
+        :loading="policyLoading"
+        empty-message="Poliçe bulunamadı."
+        @row-click="(row) => openPolicyDetail(row.name)"
+      />
+
+      <div class="mt-4 flex items-center justify-between">
+        <p class="text-xs text-gray-400">{{ policyListPagedRows.length }} / {{ policyListTotalCount }} kayıt gösteriliyor</p>
+        <div class="flex items-center gap-1">
+          <button class="btn btn-sm" :disabled="policyListPage <= 1" @click="policyListPage--">←</button>
+          <span class="px-2 text-xs text-gray-600">{{ policyListPage }}</span>
+          <button class="btn btn-sm" :disabled="policyListPage >= policyListTotalPages" @click="policyListPage++">→</button>
         </div>
       </div>
-    </article>
-
-    <DataTableShell
-      :loading="isInitialLoading"
-      :error="policyListError"
-      :empty="rows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('empty')"
-    >
-      <template #header>
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <p class="text-sm text-slate-600">
-            {{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}
-          </p>
-        </div>
-      </template>
-
-      <template #default>
-        <div class="at-table-wrap">
-          <table class="at-table min-h-[460px]">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("colPolicy") }}</th>
-                <th class="at-table-head-cell">{{ t("colDetails") }}</th>
-                <th class="at-table-head-cell">{{ t("colStatus") }}</th>
-                <th class="at-table-head-cell">{{ t("colPremiums") }}</th>
-                <th class="at-table-head-cell">{{ t("colActions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="row in rows"
-                :key="row.name"
-                class="at-table-row cursor-pointer"
-                @click="openPolicyDetail(row.name)"
-              >
-                <DataTableCell cell-class="min-w-[220px]">
-                  <TableEntityCell :title="row.policy_no || row.name" :facts="policyIdentityFacts(row)" />
-                </DataTableCell>
-                <TableFactsCell :items="policyDetailsFacts(row)" cell-class="min-w-[240px]" />
-                <DataTableCell>
-                  <StatusBadge domain="policy" :status="row.status" />
-                </DataTableCell>
-                <TableFactsCell :items="policyPremiumFacts(row)" cell-class="min-w-[220px]" />
-                <DataTableCell @click.stop>
-                  <InlineActionRow>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-      </template>
-
-      <template #footer>
-        <TablePagerFooter
-          :page="pagination.page"
-          :total-pages="totalPages"
-          :page-label="t('page')"
-          :previous-label="t('previous')"
-          :next-label="t('next')"
-          :prev-disabled="pagination.page <= 1 || policyLoading"
-          :next-disabled="!hasNextPage || policyLoading"
-          @previous="previousPage"
-          @next="nextPage"
-        />
-      </template>
-    </DataTableShell>
+    </div>
 
     <Dialog v-model="showQuickPolicyDialog" :options="{ title: quickPolicyUi.title, size: 'xl' }">
       <template #body-content>
@@ -273,6 +112,8 @@ import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import ListTable from "../components/ui/ListTable.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
@@ -613,6 +454,109 @@ const startRow = computed(() => policyStore.startRow);
 const endRow = computed(() => policyStore.endRow);
 const isInitialLoading = computed(() => policyStore.state.loading && rows.value.length === 0);
 const policyActiveFilterCount = computed(() => policyStore.activeFilterCount);
+
+const policyListSearchQuery = ref("");
+const policyListPage = ref(1);
+const policyListPageSize = 20;
+const policyListLocalFilters = reactive({ status: "", branch: "" });
+
+const policyListColumns = [
+  { key: "name", label: "Poliçe No", width: "160px", type: "mono" },
+  { key: "customer", label: "Müşteri", width: "220px" },
+  { key: "branch", label: "Branş", width: "160px" },
+  { key: "gross_premium", label: "Brüt Prim", width: "120px", type: "amount", align: "right" },
+  { key: "status", label: "Durum", width: "100px", type: "status" },
+  { key: "remaining_days", label: "Kalan Gün", width: "100px", type: "urgency", align: "right" },
+  { key: "end_date", label: "Bitiş Tarihi", width: "120px", type: "date" },
+];
+
+const policyListFilterConfig = computed(() => {
+  const branchOptions = [...new Set(rows.value.map((row) => String(row.branch || "").trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, localeCode.value))
+    .map((value) => ({ value, label: value }));
+  return [
+    {
+      key: "status",
+      label: "Durum",
+      options: [
+        { value: "active", label: "Aktif" },
+        { value: "draft", label: "Taslak" },
+        { value: "cancel", label: "İptal" },
+        { value: "waiting", label: "Bekliyor" },
+      ],
+    },
+    {
+      key: "branch",
+      label: "Branş",
+      options: branchOptions,
+    },
+  ];
+});
+
+const policyListMappedRows = computed(() =>
+  rows.value.map((row) => ({
+    ...row,
+    name: row.policy_no || row.name,
+    branch: row.branch || "-",
+    remaining_days: computeRemainingDays(row.end_date),
+  }))
+);
+
+const policyListFilteredRows = computed(() => {
+  const q = policyListSearchQuery.value.trim().toLocaleLowerCase(localeCode.value);
+  return policyListMappedRows.value.filter((row) => {
+    const matchesQuery =
+      !q ||
+      [row.name, row.customer, row.branch, row.status]
+        .map((value) => String(value || "").toLocaleLowerCase(localeCode.value))
+        .some((value) => value.includes(q));
+
+    const matchesStatus =
+      !policyListLocalFilters.status ||
+      String(row.status || "").toLocaleLowerCase(localeCode.value).includes(policyListLocalFilters.status);
+
+    const matchesBranch = !policyListLocalFilters.branch || String(row.branch || "") === policyListLocalFilters.branch;
+
+    return matchesQuery && matchesStatus && matchesBranch;
+  });
+});
+
+const policyListTotalCount = computed(() => policyListFilteredRows.value.length);
+const policyListTotalPages = computed(() => Math.max(1, Math.ceil(policyListTotalCount.value / policyListPageSize)));
+const policyListPagedRows = computed(() => {
+  const start = (policyListPage.value - 1) * policyListPageSize;
+  return policyListFilteredRows.value.slice(start, start + policyListPageSize);
+});
+const policyListRowsWithUrgency = computed(() =>
+  policyListPagedRows.value.map((row) => ({
+    ...row,
+    _urgency: row.remaining_days <= 7 ? "row-critical" : row.remaining_days <= 30 ? "row-warning" : "",
+  }))
+);
+const policyListActiveCount = computed(
+  () =>
+    (policyListSearchQuery.value.trim() ? 1 : 0) +
+    Object.values(policyListLocalFilters).filter((value) => String(value || "").trim() !== "").length
+);
+
+function onPolicyListFilterChange({ key, value }) {
+  policyListLocalFilters[key] = String(value || "").toLocaleLowerCase(localeCode.value);
+  policyListPage.value = 1;
+}
+
+function onPolicyListFilterReset() {
+  policyListSearchQuery.value = "";
+  policyListLocalFilters.status = "";
+  policyListLocalFilters.branch = "";
+  policyListPage.value = 1;
+}
+
+function computeRemainingDays(endDate) {
+  if (!endDate) return null;
+  const target = new Date(endDate);
+  if (Number.isNaN(target.getTime())) return null;
+  return Math.ceil((target.getTime() - Date.now()) / 86400000);
+}
 
 function buildPolicyFilterPayload() {
   const out = { filters: {} };

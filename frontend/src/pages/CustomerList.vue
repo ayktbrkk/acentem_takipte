@@ -1,227 +1,48 @@
 <template>
-  <section class="space-y-4">
-    <div class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :show-refresh="true"
-        :busy="customerListLoading"
-        :refresh-label="t('refresh')"
-        @refresh="refreshCustomerList"
-      >
-        <template #actions>
-          <div class="flex flex-wrap items-center gap-2">
-            <QuickCreateLauncher variant="primary" size="sm" :label="quickCustomerUi.newLabel" @launch="openQuickCustomerDialog" />
-            <ActionButton variant="secondary" size="sm" :disabled="customerListLoading" @click="refreshCustomerList">
-              {{ t("refresh") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">
-              {{ t("exportXlsx") }}
-            </ActionButton>
-            <ActionButton variant="primary" size="sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">
-              {{ t("exportPdf") }}
-            </ActionButton>
-          </div>
-        </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applyFilters"
-            @reset="resetFilters"
-          >
-            <input
-              v-model.trim="filters.query"
-              class="input"
-              type="search"
-              :placeholder="t('searchPlaceholder')"
-              @keyup.enter="applyFilters"
-            />
-
-            <select v-model="filters.consent_status" class="input">
-              <option value="">{{ t("allConsentStatuses") }}</option>
-              <option v-for="item in consentStatusOptions" :key="item.value" :value="item.value">
-                {{ item.label }}
-              </option>
-            </select>
-
-            <select v-model="filters.gender" class="input">
-              <option value="">{{ t("allGenders") }}</option>
-              <option v-for="item in genderOptions" :key="item.value" :value="item.value">
-                {{ item.label }}
-              </option>
-            </select>
-
-            <select v-model="filters.sort" class="input">
-              <option v-for="option in sortOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-
-            <select v-model.number="pagination.pageLength" class="input">
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
-
-            <template #advanced>
-              <select v-model="filters.marital_status" class="input">
-                <option value="">{{ t("allMaritalStatuses") }}</option>
-                <option v-for="item in maritalStatusOptions" :key="item.value" :value="item.value">
-                  {{ item.label }}
-                </option>
-              </select>
-
-              <input
-                v-model.trim="filters.assigned_agent"
-                class="input"
-                type="search"
-                :placeholder="t('assignedAgentFilter')"
-                @keyup.enter="applyFilters"
-              />
-
-              <input
-                v-model.trim="filters.occupation"
-                class="input"
-                type="search"
-                :placeholder="t('occupationFilter')"
-                @keyup.enter="applyFilters"
-              />
-
-              <label class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                <input v-model="filters.has_phone" class="h-4 w-4" type="checkbox" />
-                <span>{{ t("hasPhoneOnly") }}</span>
-              </label>
-
-              <label class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                <input v-model="filters.has_email" class="h-4 w-4" type="checkbox" />
-                <span>{{ t("hasEmailOnly") }}</span>
-              </label>
-
-              <label class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                <input v-model="filters.has_active_policy" class="h-4 w-4" type="checkbox" />
-                <span>{{ t("hasActivePolicyOnly") }}</span>
-              </label>
-
-              <label class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                <input v-model="filters.has_open_offer" class="h-4 w-4" type="checkbox" />
-                <span>{{ t("hasOpenOfferOnly") }}</span>
-              </label>
-            </template>
-
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Müşteriler</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+      </div>
+      <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
     </div>
 
-    <article class="surface-card rounded-2xl p-4 md:hidden">
-      <SectionCardHeader :title="t('mobileSummaryTitle')" :show-count="false" />
-      <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
-        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("showing") }}</p>
-          <p class="mt-1 font-semibold text-slate-900">{{ startRow }}-{{ endRow }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activeFilters") }}</p>
-          <p class="mt-1 font-semibold text-slate-900">{{ activeFilterCount }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("pageSize") }}</p>
-          <p class="mt-1 font-semibold text-slate-900">{{ pagination.pageLength }}</p>
+    <div class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        v-model:search="customerListSearchQuery"
+        :filters="customerListFilterConfig"
+        :active-count="customerListActiveCount"
+        @filter-change="onCustomerListFilterChange"
+        @reset="onCustomerListFilterReset"
+      >
+        <template #actions>
+          <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ Yeni Müşteri</button>
+          <button class="btn btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">Yenile</button>
+          <button class="btn btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">Excel</button>
+          <button class="btn btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">PDF</button>
+        </template>
+      </FilterBar>
+    </div>
+
+    <div class="flex-1 p-5">
+      <ListTable
+        :columns="customerListColumns"
+        :rows="customerListPagedRows"
+        :loading="isInitialLoading"
+        empty-message="Müşteri bulunamadı."
+        @row-click="(row) => openCustomer360(row.name)"
+      />
+
+      <div class="mt-4 flex items-center justify-between">
+        <p class="text-xs text-gray-400">{{ customerListPagedRows.length }} / {{ customerListTotalCount }} kayıt gösteriliyor</p>
+        <div class="flex items-center gap-1">
+          <button class="btn btn-sm" :disabled="customerListPage <= 1" @click="customerListPage--">←</button>
+          <span class="px-2 text-xs text-gray-600">{{ customerListPage }}</span>
+          <button class="btn btn-sm" :disabled="customerListPage >= customerListTotalPages" @click="customerListPage++">→</button>
         </div>
       </div>
-    </article>
-
-    <DataTableShell
-      :loading="isInitialLoading"
-      :error="loadErrorText"
-      :empty="rows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template #header>
-        <p class="text-sm text-slate-600">
-          {{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}
-        </p>
-      </template>
-
-      <template #default>
-        <div class="at-table-wrap">
-          <table class="at-table min-h-[460px]">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("colCustomer") }}</th>
-                <th class="at-table-head-cell">{{ t("colContact") }}</th>
-                <th class="at-table-head-cell">{{ t("colProfile") }}</th>
-                <th class="at-table-head-cell">{{ t("colConsentOwner") }}</th>
-                <th class="at-table-head-cell">{{ t("colPortfolio") }}</th>
-                <th class="at-table-head-cell">{{ t("colActions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="row in rows"
-                :key="row.name"
-                class="at-table-row cursor-pointer"
-                @click="openCustomer360(row.name)"
-              >
-                <DataTableCell cell-class="min-w-[220px]">
-                  <TableEntityCell :title="row.full_name || row.name" :facts="customerIdentityFacts(row)" />
-                </DataTableCell>
-                <TableFactsCell :items="customerContactFacts(row)" cell-class="min-w-[240px]" />
-                <TableFactsCell :items="customerProfileFacts(row)" cell-class="min-w-[240px]" />
-                <DataTableCell cell-class="min-w-[220px]">
-                  <div class="space-y-2">
-                    <StatusBadge domain="consent" :status="normalizeConsentValue(row.consent_status)" />
-                    <MiniFactList :items="customerOwnerFacts(row)" />
-                  </div>
-                </DataTableCell>
-                <TableFactsCell :items="customerPortfolioFacts(row)" cell-class="min-w-[220px]" />
-                <DataTableCell @click.stop>
-                  <InlineActionRow>
-                    <ActionButton variant="primary" size="xs" @click.stop="openCustomer360(row.name)">
-                      {{ t("open360") }}
-                    </ActionButton>
-                    <ActionButton variant="link" size="xs" @click.stop="openQuickOfferForCustomer(row)">
-                      {{ t("newOffer") }}
-                    </ActionButton>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-
-      <template #footer>
-        <TablePagerFooter
-          :page="pagination.page"
-          :total-pages="totalPages"
-          :page-label="t('page')"
-          :previous-label="t('previous')"
-          :next-label="t('next')"
-          :prev-disabled="pagination.page <= 1 || customerListLoading"
-          :next-disabled="!hasNextPage || customerListLoading"
-          @previous="previousPage"
-          @next="nextPage"
-        />
-      </template>
-    </DataTableShell>
+    </div>
 
     <Dialog v-model="showQuickCustomerDialog" :options="{ title: quickCustomerUi.title, size: 'xl' }">
       <template #body-content>
@@ -272,6 +93,8 @@ import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
+import ListTable from "../components/ui/ListTable.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
@@ -622,6 +445,73 @@ const totalPages = computed(() => customerStore.totalPages);
 const hasNextPage = computed(() => customerStore.hasNextPage);
 const startRow = computed(() => customerStore.startRow);
 const endRow = computed(() => customerStore.endRow);
+
+const customerListSearchQuery = ref("");
+const customerListPage = ref(1);
+const customerListPageSize = 20;
+const customerListLocalFilters = reactive({ consent_status: "", gender: "" });
+
+const customerListColumns = [
+  { key: "name", label: "Müşteri No", width: "150px", type: "mono" },
+  { key: "full_name", label: "Müşteri", width: "220px" },
+  { key: "mobile_no", label: "Telefon", width: "160px" },
+  { key: "email_id", label: "E-posta", width: "220px" },
+  { key: "gender", label: "Cinsiyet", width: "90px" },
+  { key: "consent_status", label: "İzin", width: "120px", type: "badge" },
+];
+
+const customerListFilterConfig = computed(() => [
+  {
+    key: "consent_status",
+    label: "İzin",
+    options: consentStatusOptions.value.map((item) => ({ value: item.value, label: item.label })),
+  },
+  {
+    key: "gender",
+    label: "Cinsiyet",
+    options: genderOptions.value.map((item) => ({ value: item.value, label: item.label })),
+  },
+]);
+
+const customerListFilteredRows = computed(() => {
+  const q = customerListSearchQuery.value.trim().toLocaleLowerCase(localeCode.value);
+  return rows.value.filter((row) => {
+    const matchesQuery =
+      !q ||
+      [row.name, row.full_name, row.mobile_no, row.email_id]
+        .map((value) => String(value || "").toLocaleLowerCase(localeCode.value))
+        .some((value) => value.includes(q));
+    const matchesConsent =
+      !customerListLocalFilters.consent_status || String(row.consent_status || "") === customerListLocalFilters.consent_status;
+    const matchesGender = !customerListLocalFilters.gender || String(row.gender || "") === customerListLocalFilters.gender;
+    return matchesQuery && matchesConsent && matchesGender;
+  });
+});
+
+const customerListTotalCount = computed(() => customerListFilteredRows.value.length);
+const customerListTotalPages = computed(() => Math.max(1, Math.ceil(customerListTotalCount.value / customerListPageSize)));
+const customerListPagedRows = computed(() => {
+  const start = (customerListPage.value - 1) * customerListPageSize;
+  return customerListFilteredRows.value.slice(start, start + customerListPageSize);
+});
+
+const customerListActiveCount = computed(
+  () =>
+    (customerListSearchQuery.value.trim() ? 1 : 0) +
+    Object.values(customerListLocalFilters).filter((value) => String(value || "").trim() !== "").length
+);
+
+function onCustomerListFilterChange({ key, value }) {
+  customerListLocalFilters[key] = String(value || "");
+  customerListPage.value = 1;
+}
+
+function onCustomerListFilterReset() {
+  customerListSearchQuery.value = "";
+  customerListLocalFilters.consent_status = "";
+  customerListLocalFilters.gender = "";
+  customerListPage.value = 1;
+}
 
 function normalizeConsentValue(value) {
   const status = String(value || "Unknown");

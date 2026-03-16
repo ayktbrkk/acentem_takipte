@@ -1,6 +1,43 @@
 <template>
-  <section class="space-y-4">
-    <div class="surface-card rounded-2xl p-5">
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar" v-if="isListView">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Teklifler</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+      </div>
+      <span class="text-sm text-gray-400">{{ offerListTotal }} kayıt</span>
+    </div>
+
+    <div v-if="isListView" class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        v-model:search="offerListSearchQuery"
+        :filters="offerListFilterConfig"
+        :active-count="offerListFilterBarActiveCount"
+        @filter-change="onOfferListFilterBarChange"
+        @reset="onOfferListFilterBarReset"
+      >
+        <template #actions>
+          <button class="btn btn-sm" @click="setOfferViewMode('list')">Liste</button>
+          <button class="btn btn-sm" @click="setOfferViewMode('board')">Pano</button>
+          <button class="btn btn-primary btn-sm" @click="openQuickOfferDialog">+ Yeni Teklif</button>
+          <button class="btn btn-sm" :disabled="offersResource.loading || offerListResource.loading" @click="refreshOffers">Yenile</button>
+          <button class="btn btn-sm" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">Excel</button>
+          <button class="btn btn-sm" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('pdf')">PDF</button>
+        </template>
+      </FilterBar>
+    </div>
+
+    <div v-if="isListView" class="flex-1 p-5">
+      <ListTable
+        :columns="offerListColumns"
+        :rows="offerListRowsWithUrgency"
+        :loading="isOfferListInitialLoading"
+        empty-message="Teklif bulunamadı."
+        @row-click="(row) => openOfferDetail(row.name)"
+      />
+    </div>
+
+    <div v-if="!isListView" class="surface-card rounded-2xl p-5">
       <PageToolbar :title="t('title')" :subtitle="t('subtitle')" :busy="offersResource.loading">
         <template #actions>
           <div class="flex flex-wrap items-center gap-2">
@@ -120,91 +157,7 @@
       </PageToolbar>
     </div>
 
-    <DataTableShell
-      v-if="isListView"
-      :loading="isOfferListInitialLoading"
-      :error="offerListLoadErrorText"
-      :empty="pagedOfferRows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('empty')"
-    >
-      <template #header>
-        <p class="text-sm text-slate-600">
-          {{ t("showing") }} {{ offerListStartRow }}-{{ offerListEndRow }} / {{ offerListTotal }}
-        </p>
-      </template>
-
-      <template #default>
-        <div class="at-table-wrap">
-          <table class="at-table">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("colOffer") }}</th>
-                <th class="at-table-head-cell">{{ t("colDetails") }}</th>
-                <th class="at-table-head-cell">{{ t("colStatus") }}</th>
-                <th class="at-table-head-cell">{{ t("colPremiums") }}</th>
-                <th class="at-table-head-cell">{{ t("colActions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="offer in pagedOfferRows"
-                :key="offer.name"
-                class="at-table-row cursor-pointer"
-                @click="openOfferDetail(offer.name)"
-              >
-                <DataTableCell cell-class="min-w-[220px]">
-                  <TableEntityCell :title="offer.name" :facts="offerIdentityFacts(offer)" />
-                </DataTableCell>
-                <TableFactsCell :items="offerDetailsFacts(offer)" cell-class="min-w-[240px]" />
-                <DataTableCell>
-                  <StatusBadge domain="offer" :status="offer.status" />
-                </DataTableCell>
-                <TableFactsCell :items="offerPremiumFacts(offer)" cell-class="min-w-[220px]" />
-                <DataTableCell @click.stop>
-                  <InlineActionRow>
-                    <ActionButton
-                      v-if="isConvertible(offer)"
-                      variant="primary"
-                      size="xs"
-                      @click.stop="openConvertDialog(offer)"
-                    >
-                      {{ t("convert") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="offer.converted_policy"
-                      variant="secondary"
-                      size="xs"
-                      @click.stop="openPolicyDetail(offer.converted_policy)"
-                    >
-                      {{ t("openPolicy") }}
-                    </ActionButton>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-
-      <template #footer>
-        <TablePagerFooter
-          :page="offerListPagination.page"
-          :total-pages="offerListTotalPages"
-          :page-label="t('page')"
-          :previous-label="t('previous')"
-          :next-label="t('next')"
-          :prev-disabled="offerListPagination.page <= 1 || offersResource.loading"
-          :next-disabled="!offerListHasNextPage || offersResource.loading"
-          @previous="previousOfferPage"
-          @next="nextOfferPage"
-        />
-      </template>
-    </DataTableShell>
-
-    <template v-else>
+    <template v-if="!isListView">
       <div v-if="offersResource.loading" class="surface-card rounded-2xl p-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
@@ -407,6 +360,8 @@ import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import ListTable from "../components/ui/ListTable.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
@@ -901,6 +856,76 @@ const offerActiveFilterCount = computed(() =>
     offerListFilters.gross_max,
   ].filter((value) => String(value ?? "").trim() !== "").length
 );
+
+const offerListSearchQuery = computed({
+  get: () => String(offerListFilters.query || ""),
+  set: (value) => {
+    offerListFilters.query = String(value || "");
+  },
+});
+
+const offerListColumns = [
+  { key: "name", label: "Teklif No", width: "160px", type: "mono" },
+  { key: "customer", label: "Müşteri", width: "220px" },
+  { key: "insurance_company", label: "Sigorta Şirketi", width: "200px" },
+  { key: "status", label: "Durum", width: "120px", type: "status" },
+  { key: "gross_premium", label: "Brüt Prim", width: "120px", type: "amount", align: "right" },
+  { key: "remaining_days", label: "Kalan Gün", width: "100px", type: "urgency", align: "right" },
+  { key: "valid_until", label: "Geçerlilik", width: "120px", type: "date" },
+];
+
+const offerListFilterConfig = computed(() => [
+  {
+    key: "insurance_company",
+    label: "Sigorta Şirketi",
+    options: offerCompanies.value.map((company) => ({ value: company, label: company })),
+  },
+  {
+    key: "status",
+    label: "Durum",
+    options: offerStatusOptions.value.map((item) => ({ value: item.value, label: item.label })),
+  },
+]);
+
+const offerListRowsWithUrgency = computed(() =>
+  pagedOfferRows.value.map((row) => {
+    const remainingDays = computeOfferRemainingDays(row.valid_until);
+    return {
+      ...row,
+      remaining_days: remainingDays,
+      _urgency: remainingDays <= 7 ? "row-critical" : remainingDays <= 30 ? "row-warning" : "",
+    };
+  })
+);
+
+const offerListFilterBarActiveCount = computed(
+  () =>
+    (offerListSearchQuery.value.trim() ? 1 : 0) +
+    (offerListFilters.insurance_company ? 1 : 0) +
+    (offerListFilters.status ? 1 : 0)
+);
+
+function onOfferListFilterBarChange({ key, value }) {
+  if (key === "insurance_company") offerListFilters.insurance_company = String(value || "");
+  if (key === "status") offerListFilters.status = String(value || "");
+  offerListPagination.page = 1;
+  void applyOfferListFilters();
+}
+
+function onOfferListFilterBarReset() {
+  offerListFilters.query = "";
+  offerListFilters.insurance_company = "";
+  offerListFilters.status = "";
+  offerListPagination.page = 1;
+  void applyOfferListFilters();
+}
+
+function computeOfferRemainingDays(validUntil) {
+  if (!validUntil) return null;
+  const target = new Date(validUntil);
+  if (Number.isNaN(target.getTime())) return null;
+  return Math.ceil((target.getTime() - Date.now()) / 86400000);
+}
 
 const lanes = computed(() => [
   { key: "Draft", label: t("draftLane"), borderClass: "border-t-amber-400" },

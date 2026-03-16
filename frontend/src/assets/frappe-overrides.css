@@ -1,0 +1,97 @@
+/* -- Frappe Form Override - Acentem Takipte Design System -- */
+
+.frappe-control input:not([type="checkbox"]):not([type="radio"]),
+.frappe-control textarea,
+.frappe-control select,
+.form-control {
+  height: 36px !important;
+  padding: 0 10px !important;
+  font-size: 13px !important;
+  border: 0.5px solid #E5E7EB !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s !important;
+}
+
+.frappe-control textarea {
+  height: auto !important;
+  padding: 8px 10px !important;
+  min-height: 80px !important;
+}
+
+.frappe-control input:focus,
+.frappe-control textarea:focus,
+.frappe-control select:focus,
+.form-control:focus {
+  border-color: #1B5DB8 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.frappe-control .control-label,
+.control-label {
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  color: #9CA3AF !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 5px !important;
+}
+
+.section-head,
+.form-section .section-head {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #374151 !important;
+  padding: 10px 0 8px !important;
+  border-bottom: 0.5px solid #F3F4F6 !important;
+  margin-bottom: 12px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+.frappe-control input:disabled,
+.frappe-control textarea:disabled,
+.frappe-control select:disabled {
+  background: #F9FAFB !important;
+  color: #9CA3AF !important;
+  cursor: not-allowed !important;
+}
+
+.frappe-control.has-error input,
+.frappe-control.has-error textarea,
+.frappe-control.has-error select {
+  border-color: #E24B4A !important;
+}
+
+.frappe-control .help-box.small.text-muted {
+  font-size: 11px !important;
+  color: #9CA3AF !important;
+  margin-top: 3px !important;
+}
+
+.frappe-control input[type="checkbox"]:checked {
+  accent-color: #1B5DB8;
+}
+
+.frappe-control .like-disabled-input,
+.control-value {
+  font-size: 13px !important;
+  color: #111827 !important;
+  padding: 0 !important;
+  min-height: unset !important;
+}
+
+.frappe-control .btn-open {
+  color: #1B5DB8 !important;
+}
+
+.frappe-control .grid-heading-row .grid-static-col {
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  color: #9CA3AF !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}

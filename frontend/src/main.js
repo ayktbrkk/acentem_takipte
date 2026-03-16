@@ -8,6 +8,7 @@ import { hydrateSessionState } from "./state/session";
 import { useBranchStore } from "./stores/branch";
 import "./style.css";
 import "@/assets/design-system.css";
+import "@/assets/frappe-overrides.css";
 import "vue3-select-component/styles";
 
 function readCookie(name) {
