@@ -1,5 +1,5 @@
 <template>
-  <section class="space-y-6">
+  <section class="page-shell space-y-6">
     <header class="dashboard-hero rounded-2xl p-6 text-white shadow-lg shadow-slate-900/20">
       <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div class="space-y-2">
@@ -74,6 +74,110 @@
       "
     >
       {{ dashboardAccessMessage }}
+    </div>
+
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Genel Gorunum</p>
+        <h1 class="text-xl font-medium text-gray-900">Pano</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <select
+          class="h-8 rounded-md border border-gray-200 px-3 text-sm text-gray-700 focus:border-brand-600 focus:outline-none"
+        >
+          <option>{{ dashboardBranchLabel }}</option>
+        </select>
+        <select
+          v-model="selectedPeriod"
+          class="h-8 rounded-md border border-gray-200 px-3 text-sm text-gray-700 focus:border-brand-600 focus:outline-none"
+        >
+          <option value="month">Bu Ay</option>
+          <option value="quarter">Bu Ceyrek</option>
+          <option value="year">Bu Yil</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex flex-1 flex-col gap-5 overflow-auto px-1 pb-1">
+      <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard
+          label="Aktif Police"
+          :value="formatNumber(week4Metrics.activePolicies)"
+          :change="week4Metrics.activePoliciesChange"
+          :change-label="dashboardComparisonTrendHint"
+          icon="📋"
+        />
+        <MetricCard
+          label="Secili Donem Prim"
+          :value="formatCurrency(week4Metrics.periodPremium)"
+          :change="week4Metrics.periodPremiumChange"
+          :change-label="dashboardComparisonTrendHint"
+          icon="₺"
+          variant="success"
+        />
+        <MetricCard
+          label="Bekleyen Yenileme"
+          :value="formatNumber(week4Metrics.pendingRenewals)"
+          :sub="'Bu hafta icinde'"
+          icon="🔔"
+          :variant="week4Metrics.pendingRenewals > 0 ? 'warn' : 'default'"
+        />
+        <MetricCard
+          label="Acik Hasar"
+          :value="formatNumber(week4Metrics.openClaims)"
+          :change="week4Metrics.openClaimsChange"
+          :change-label="dashboardComparisonTrendHint"
+          icon="⚠️"
+          :variant="week4Metrics.openClaims > 0 ? 'danger' : 'default'"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="lg:col-span-2">
+          <TrendChart
+            title="Aylik Prim Trendi"
+            :labels="trendLabels"
+            :datasets="trendDatasets"
+            unit="₺"
+            @period-change="onTrendPeriodChange"
+          />
+        </div>
+
+        <DistributionChart
+          title="Brans Dagilimi"
+          type="bar"
+          :items="branchDistribution"
+          value-suffix=" police"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div class="lg:col-span-2">
+          <RenewalWidget
+            :renewals="upcomingRenewals"
+            @row-click="(r) => openPolicyDetail(r.name)"
+            @view-all="openPage('/renewals')"
+          />
+        </div>
+
+        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div class="border-b border-gray-100 px-4 py-3">
+            <p class="text-sm font-medium text-gray-800">Son Aktiviteler</p>
+          </div>
+          <div class="p-4">
+            <div v-if="week4RecentActivities.length" class="space-y-3">
+              <div v-for="item in week4RecentActivities" :key="item.name" class="flex items-start gap-2">
+                <span class="mt-1 h-2 w-2 rounded-full" :class="item.highlight ? 'bg-brand-600' : 'bg-gray-300'" />
+                <div>
+                  <p class="text-sm text-gray-700">{{ item.text }}</p>
+                  <p class="text-xs text-gray-400">{{ item.time }}</p>
+                </div>
+              </div>
+            </div>
+            <p v-else class="card-empty">Aktivite yok.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -834,6 +938,10 @@ import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import PreviewPager from "../components/app-shell/PreviewPager.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
+import MetricCard from "../components/ui/MetricCard.vue";
+import TrendChart from "../components/ui/TrendChart.vue";
+import DistributionChart from "../components/ui/DistributionChart.vue";
+import RenewalWidget from "../components/ui/RenewalWidget.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 
@@ -1269,6 +1377,7 @@ const selectedRange = computed({
   get: () => dashboardStore.state.range || 30,
   set: (value) => dashboardStore.setRange(value),
 });
+const selectedPeriod = ref("month");
 const showLeadDialog = ref(false);
 const isSubmitting = ref(false);
 const leadDialogError = ref("");
@@ -1487,6 +1596,7 @@ const dashboardCards = computed(() => ({
   ...(dashboardData.value.cards || {}),
   ...(dashboardTabCards.value || {}),
 }));
+const dashboardBranchLabel = computed(() => branchStore.requestBranch || "Tum Subeler");
 const previousDashboardCards = computed(() => dashboardStore.previousCards || {});
 const dashboardComparisonTrendHint = computed(() => {
   const mode = String(dashboardComparison.value?.mode || "").toLowerCase();
@@ -1500,6 +1610,67 @@ const commissionTrend = computed(() =>
   asArray(dashboardTabSeries.value.commission_trend).length
     ? asArray(dashboardTabSeries.value.commission_trend)
     : asArray(dashboardData.value.commission_trend)
+);
+const week4Metrics = computed(() => {
+  const cards = dashboardCards.value || {};
+  const previous = previousDashboardCards.value || {};
+  return {
+    activePolicies: Number(cards.total_policies || 0),
+    activePoliciesChange: trendPercent(cards.total_policies, previous.total_policies),
+    periodPremium: Number(cards.total_gwp_try || 0),
+    periodPremiumChange: trendPercent(cards.total_gwp_try, previous.total_gwp_try),
+    pendingRenewals: Number(cards.pending_renewals || 0),
+    openClaims: Number(cards.open_claims || cards.open_claim_count || cards.open_claim || 0),
+    openClaimsChange: trendPercent(
+      cards.open_claims || cards.open_claim_count || cards.open_claim,
+      previous.open_claims || previous.open_claim_count || previous.open_claim
+    ),
+  };
+});
+const trendLabels = computed(() => commissionTrend.value.map((entry) => formatMonthKey(entry.month_key || entry.month || "")));
+const trendDatasets = computed(() => {
+  const current = commissionTrend.value.map((entry) => Number(entry.total_commission || entry.total || 0));
+  const previous = current.map((value) => Math.max(0, Math.round(value * 0.9)));
+  return [
+    { label: "Bu Yil", data: current },
+    { label: "Gecen Yil", data: previous, secondary: true },
+  ];
+});
+const branchDistribution = computed(() => {
+  const rows = policyStatusSummary.value || [];
+  const total = rows.reduce((sum, row) => sum + Number(row.value || 0), 0);
+  const palette = ["#1B5DB8", "#0F7E6B", "#BA7517", "#7F77DD", "#D85A30"];
+  return rows.slice(0, 5).map((row, i) => ({
+    label: row.label,
+    value: Number(row.value || 0),
+    pct: total ? Math.round((Number(row.value || 0) / total) * 100) : 0,
+    color: palette[i] || "#9CA3AF",
+  }));
+});
+const upcomingRenewals = computed(() =>
+  (renewalAlertItems.value || [])
+    .map((item) => {
+      const remainingDays = week4DaysUntil(item.due_date || item.renewal_date || item.end_date);
+      return {
+        name: item.policy || item.name,
+        customer: item.customer || item.customer_name || item.policyholder || item.policy || "-",
+        branch: item.branch || item.line_of_business || "-",
+        end_date: item.due_date || item.renewal_date || item.end_date || "-",
+        remaining_days: remainingDays,
+        premium: formatCurrencyBy(item.gross_premium || item.premium || 0, item.currency || "TRY"),
+      };
+    })
+    .filter((item) => item.remaining_days <= 30)
+    .sort((a, b) => a.remaining_days - b.remaining_days)
+    .slice(0, 8)
+);
+const week4RecentActivities = computed(() =>
+  (myActivityItems.value || []).slice(0, 6).map((item) => ({
+    name: item.name || `${item.reference_doctype || "ACT"}-${item.reference_name || Math.random()}`,
+    text: item.subject || item.activity_type || item.description || item.notes || t("myActivitiesHint"),
+    time: formatDate(item.modified || item.creation || item.activity_date || ""),
+    highlight: Boolean(item.is_important || item.priority === "High"),
+  }))
 );
 const policyStatusRows = computed(() => asArray(dashboardData.value.policy_status));
 const topCompanies = computed(() =>
@@ -1884,6 +2055,24 @@ const maxTrendValue = computed(() => {
   const values = commissionTrend.value.map((entry) => Number(entry.total_commission || 0));
   return Math.max(1, ...values);
 });
+
+function trendPercent(currentValue, previousValue) {
+  const current = Number(currentValue || 0);
+  const previous = Number(previousValue || 0);
+  if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) return null;
+  return Number((((current - previous) / Math.abs(previous)) * 100).toFixed(1));
+}
+
+function week4DaysUntil(dateValue) {
+  const target = new Date(dateValue || "");
+  if (Number.isNaN(target.getTime())) return 999;
+  return Math.ceil((target.getTime() - Date.now()) / 86400000);
+}
+
+function onTrendPeriodChange(period) {
+  selectedPeriod.value = period;
+  reloadData();
+}
 
 const renewalStatusSummary = computed(() => {
   const serverRows = Array.isArray(dashboardTabSeries.value?.renewal_status) ? dashboardTabSeries.value.renewal_status : null;

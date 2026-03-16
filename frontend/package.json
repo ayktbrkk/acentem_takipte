@@ -21,6 +21,7 @@
     "e2e:headed": "playwright test --headed"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "frappe-ui": "^0.1.10",
     "pinia": "^3.0.4",
     "vue": "^3.4.38",
@@ -29,9 +30,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
-    "@types/node": "^22.13.14",
     "@iconify-json/lucide": "^1.2.91",
     "@playwright/test": "^1.58.2",
+    "@types/node": "^22.13.14",
     "@vitejs/plugin-vue": "^5.1.2",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.20",

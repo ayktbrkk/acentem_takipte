@@ -8,7 +8,7 @@
     />
     <aside
       class="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white transition-all duration-200 lg:static lg:z-0"
-      :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full', isCollapsed ? 'lg:w-24' : 'lg:w-[220px]']"
+      :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', isCollapsed ? 'lg:w-24' : 'lg:w-[220px]']"
     >
       <div class="border-b border-gray-100 px-4 py-4">
         <div class="mb-4 flex items-center justify-between lg:hidden">
