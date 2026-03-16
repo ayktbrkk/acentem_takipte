@@ -76,7 +76,7 @@ The backend contains DocTypes, API endpoints, scheduled jobs, permission hooks, 
 - Frappe UI
 
 The frontend source lives in `frontend/` and is built into static assets consumed by the Frappe route at `/at`.
-Frontend build artifacts are generated during deployment or local builds and must never be committed to the repository.
+Frontend build artifacts are generated during build/deployment and are not committed to the repository.
 
 ## Prerequisites
 
@@ -146,7 +146,7 @@ Example:
 
 ```text
 Production: https://your-domain/at
-Local:      http://your-site.local:8000/at
+Local:      http://your-site.local/at
 ```
 
 Unauthenticated users are redirected to the Frappe login page and then back to `/at`.

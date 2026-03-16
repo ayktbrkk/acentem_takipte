@@ -16,7 +16,7 @@ This repository is a Frappe app with a Vue (Vite) SPA mounted at `/at`.
 - Serving path (site assets): `/assets/acentem_takipte/frontend/...`
 
 Important:
-- Frontend build artifacts are generated during deployment (or local build) and are not committed.
+- Frontend build artifacts are generated during build/deployment and are not committed to the repository.
 - `/at` injects the latest Vite assets dynamically from the manifest in `acentem_takipte/www/at.py`.
 
 ## Deploy (Bench, Typical Linux)
@@ -48,7 +48,7 @@ bench restart
 ```
 
 Verify:
-- Local: `http://your-site.local:8000/at`
+- Local: `http://your-site.local/at` (Bench often runs on `:8000`, depending on your setup)
 - Production: `https://your-domain/at`
 
 ## Local Dev (Windows Host + frappe_docker)
@@ -92,4 +92,3 @@ Checks:
    - `npm ci && npm run build` (in `frontend/`)
    - `bench --site <site> clear-cache`
    - `bench restart`
-
