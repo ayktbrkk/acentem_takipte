@@ -14,7 +14,9 @@ const CustomerList = () => import("../pages/CustomerList.vue");
 const CustomerDetail = () => import("../pages/CustomerDetail.vue");
 const OfferDetail = () => import("../pages/OfferDetail.vue");
 const ClaimsBoard = () => import("../pages/ClaimsBoard.vue");
+const ClaimDetail = () => import("../pages/ClaimDetail.vue");
 const PaymentsBoard = () => import("../pages/PaymentsBoard.vue");
+const PaymentDetail = () => import("../pages/PaymentDetail.vue");
 const RenewalsBoard = () => import("../pages/RenewalsBoard.vue");
 const CommunicationCenter = () => import("../pages/CommunicationCenter.vue");
 const ReconciliationWorkbench = () => import("../pages/ReconciliationWorkbench.vue");
@@ -126,11 +128,31 @@ const router = createRouter({
       },
     },
     {
+      path: "/claims/:name",
+      name: "claim-detail",
+      component: ClaimDetail,
+      props: true,
+      meta: {
+        title: { tr: "Hasar Detayı", en: "Claim Detail" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
+      },
+    },
+    {
       path: "/payments",
       name: "payments-board",
       component: PaymentsBoard,
       meta: {
         title: { tr: "Ödeme Operasyonları", en: "Payment Operations" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
+      },
+    },
+    {
+      path: "/payments/:name",
+      name: "payment-detail",
+      component: PaymentDetail,
+      props: true,
+      meta: {
+        title: { tr: "Ödeme Detayı", en: "Payment Detail" },
         section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },

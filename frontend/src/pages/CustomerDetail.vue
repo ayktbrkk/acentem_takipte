@@ -57,8 +57,8 @@
       </div>
     </DetailCard>
 
-    <div class="at-detail-split-wide">
-      <aside class="at-detail-aside">
+    <div class="detail-body at-detail-split-wide">
+      <aside class="detail-sidebar at-detail-aside">
         <DetailCard :title="t('contactCard')">
           <FieldGroup :fields="contactFields" :cols="1" />
         </DetailCard>
@@ -301,7 +301,7 @@
 
       </aside>
 
-      <div class="space-y-4">
+      <div class="detail-main space-y-4">
         <article
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
           class="surface-card rounded-2xl p-5"

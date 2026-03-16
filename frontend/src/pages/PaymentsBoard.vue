@@ -151,6 +151,9 @@
                 <TableFactsCell :items="paymentDetailFacts(payment)" cell-class="min-w-[220px]" />
                 <DataTableCell>
                   <InlineActionRow>
+                    <ActionButton variant="secondary" size="xs" @click="openPaymentDetail(payment)">
+                      {{ t("openPaymentDetail") }}
+                    </ActionButton>
                     <ActionButton
                       v-if="payment.policy || payment.customer"
                       variant="secondary"
@@ -235,6 +238,7 @@ const copy = {
     recordId: "Kayıt",
     openDesk: "Yönetim",
     openRelated: "İlişkili Kaydı Aç",
+    openPaymentDetail: "Ödeme Detayı",
     actions: "Aksiyon",
     inbound: "Tahsilat",
     outbound: "Ödeme",
@@ -291,6 +295,7 @@ const copy = {
     recordId: "Record",
     openDesk: "Desk",
     openRelated: "Open Related",
+    openPaymentDetail: "Payment Detail",
     actions: "Actions",
     inbound: "Inbound",
     outbound: "Outbound",
@@ -710,6 +715,11 @@ function openRelatedRecord(payment) {
   if (payment?.customer) {
     window.location.assign(`/at/customers/${encodeURIComponent(payment.customer)}`);
   }
+}
+
+function openPaymentDetail(payment) {
+  if (!payment?.name) return
+  router.push(`/payments/${encodeURIComponent(payment.name)}`)
 }
 
 onMounted(() => {

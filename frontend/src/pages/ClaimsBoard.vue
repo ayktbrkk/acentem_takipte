@@ -219,6 +219,9 @@
                     >
                       {{ t("openPolicy") }}
                     </ActionButton>
+                    <ActionButton variant="secondary" size="xs" @click="openClaimDetail(claim)">
+                      {{ t("openClaimDetail") }}
+                    </ActionButton>
                     <ActionButton variant="secondary" size="xs" @click="openClaimDocuments(claim)">
                       {{ t("openDocuments") }}
                     </ActionButton>
@@ -314,6 +317,7 @@ const copy = {
     rejectReasonPrompt: "Red sebebini girin",
     openDesk: "Yönetim",
     openPolicy: "Poliçeyi Aç",
+    openClaimDetail: "Hasar Detayı",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
@@ -381,6 +385,7 @@ const copy = {
     rejectReasonPrompt: "Enter rejection reason",
     openDesk: "Desk",
     openPolicy: "Open Policy",
+    openClaimDetail: "Claim Detail",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
@@ -966,6 +971,11 @@ async function prepareOwnershipAssignmentDialog({ form }) {
 function openPolicy(policyName) {
   if (!policyName) return;
   window.location.assign(`/at/policies/${encodeURIComponent(policyName)}`);
+}
+
+function openClaimDetail(claim) {
+  if (!claim?.name) return;
+  window.location.assign(`/at/claims/${encodeURIComponent(claim.name)}`);
 }
 
 function syncClaimsRouteFilters({ refresh = true } = {}) {
