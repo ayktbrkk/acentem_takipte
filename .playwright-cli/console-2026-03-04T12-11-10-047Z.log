@@ -1,3 +1,0 @@
-Total messages: 1 (Errors: 0, Warnings: 0)
-
-[LOG] Deprecated as of 10.6.0. initHighlighting() is deprecated.  Use highlightAll() instead. @ http://77.42.72.44/assets/frappe/dist/js/frappe-web.bundle.YNX7AT6C.js:7
