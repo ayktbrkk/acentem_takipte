@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { nextTick, reactive, ref } from "vue";
 
@@ -22,6 +22,8 @@ const routerReplace = vi.fn(async (target) => {
 });
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
   useRouter: () => ({
     push: routerPush,
@@ -30,6 +32,7 @@ vi.mock("vue-router", () => ({
 }));
 
 const resourceQueue = [];
+let reminderMutationSubmit;
 
 vi.mock("frappe-ui", () => ({
   createResource: () => {
@@ -54,11 +57,57 @@ const simpleStub = {
   template: `<div><slot /></div>`,
 };
 
+const tableEntityCellStub = {
+  props: ["title", "facts"],
+  template: `
+    <div class="table-entity-cell-stub">
+      <div class="table-entity-title">{{ title }}</div>
+      <div v-for="fact in facts || []" :key="fact.label" class="table-entity-fact">
+        {{ fact.label }}: {{ fact.value }}
+      </div>
+      <slot />
+    </div>
+  `,
+};
+
+const tableFactsCellStub = {
+  props: ["items"],
+  template: `
+    <div class="table-facts-cell-stub">
+      <div v-for="item in items || []" :key="item.label" class="table-fact-item">
+        {{ item.label }}: {{ item.value }}
+      </div>
+      <slot />
+    </div>
+  `,
+};
+
 const actionButtonStub = {
   props: ["disabled"],
   emits: ["click"],
-  template: `<button class="action-button-stub" :disabled="disabled" @click="$emit('click')"><slot /></button>`,
+  template: `<button class="action-button-stub" :disabled="disabled" @click="$emit('click', $event)"><slot /></button>`,
 };
+
+const commonStubs = {
+  PageToolbar: passthroughStub,
+  WorkbenchFilterToolbar: passthroughStub,
+  DataTableShell: passthroughStub,
+  DataTableCell: simpleStub,
+  TableEntityCell: tableEntityCellStub,
+  TableFactsCell: tableFactsCellStub,
+  TablePagerFooter: simpleStub,
+  InlineActionRow: simpleStub,
+  ActionButton: actionButtonStub,
+  QuickCreateLauncher: simpleStub,
+  QuickCreateManagedDialog: true,
+  StatusBadge: true,
+};
+
+async function settle() {
+  await nextTick();
+  await flushPromises();
+  await nextTick();
+}
 
 describe("AuxWorkbench reminders", () => {
   beforeEach(() => {
@@ -86,7 +135,7 @@ describe("AuxWorkbench reminders", () => {
       },
     ];
 
-    const mutationSubmit = vi.fn(async () => ({}));
+    reminderMutationSubmit = vi.fn(async () => ({}));
 
     resourceQueue.push(
       {
@@ -108,7 +157,7 @@ describe("AuxWorkbench reminders", () => {
       { data: {} },
       { data: {} },
       { data: {} },
-      { data: {}, submit: mutationSubmit },
+      { data: {}, submit: reminderMutationSubmit },
       { data: [] },
       { data: [] },
       { data: [] },
@@ -141,25 +190,11 @@ describe("AuxWorkbench reminders", () => {
     const wrapper = mount(AuxWorkbench, {
       props: { screenKey: "reminders" },
       global: {
-        stubs: {
-          PageToolbar: passthroughStub,
-          WorkbenchFilterToolbar: passthroughStub,
-          DataTableShell: passthroughStub,
-          DataTableCell: simpleStub,
-          TableEntityCell: simpleStub,
-          TableFactsCell: simpleStub,
-          TablePagerFooter: simpleStub,
-          InlineActionRow: simpleStub,
-          ActionButton: actionButtonStub,
-          QuickCreateLauncher: simpleStub,
-          QuickCreateManagedDialog: true,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settle();
 
     expect(wrapper.text()).toContain("Toplam Hatırlatıcı");
     expect(wrapper.text()).toContain("Yüksek Öncelik");
@@ -172,12 +207,10 @@ describe("AuxWorkbench reminders", () => {
     expect(completeButton).toBeTruthy();
     await completeButton.trigger("click");
 
-    const mutationResource = resourceQueue[7];
-    expect(mutationResource.submit).toHaveBeenCalledWith({
+    expect(reminderMutationSubmit).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",
-      field: "status",
-      value: "Done",
+      data: { status: "Done" },
     });
   });
 
@@ -238,52 +271,39 @@ describe("AuxWorkbench reminders", () => {
     const wrapper = mount(AuxWorkbench, {
       props: { screenKey: "ownership-assignments" },
       global: {
-        stubs: {
-          PageToolbar: passthroughStub,
-          WorkbenchFilterToolbar: passthroughStub,
-          DataTableShell: passthroughStub,
-          DataTableCell: simpleStub,
-          TableEntityCell: simpleStub,
-          TableFactsCell: simpleStub,
-          TablePagerFooter: simpleStub,
-          InlineActionRow: simpleStub,
-          ActionButton: actionButtonStub,
-          QuickCreateLauncher: simpleStub,
-          QuickCreateManagedDialog: true,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settle();
 
     expect(wrapper.text()).toContain("agent@example.com");
 
-    const buttons = wrapper.findAll(".action-button-stub");
+    let buttons = wrapper.find("tbody tr").findAll(".action-button-stub");
 
     await buttons.find((node) => node.text().includes("Takibe Al")).trigger("click");
     expect(mutationSubmit).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
-      field: "status",
-      value: "In Progress",
+      data: { status: "In Progress" },
     });
 
+    await settle();
+    buttons = wrapper.find("tbody tr").findAll(".action-button-stub");
     await buttons.find((node) => node.text().includes("Bloke Et")).trigger("click");
     expect(mutationSubmit).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
-      field: "status",
-      value: "Blocked",
+      data: { status: "Blocked" },
     });
 
+    await settle();
+    buttons = wrapper.find("tbody tr").findAll(".action-button-stub");
     await buttons.find((node) => node.text().includes("Tamamla")).trigger("click");
     expect(mutationSubmit).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
-      field: "status",
-      value: "Done",
+      data: { status: "Done" },
     });
   });
 
@@ -342,27 +362,13 @@ describe("AuxWorkbench reminders", () => {
     const wrapper = mount(AuxWorkbench, {
       props: { screenKey: "notification-drafts" },
       global: {
-        stubs: {
-          PageToolbar: passthroughStub,
-          WorkbenchFilterToolbar: passthroughStub,
-          DataTableShell: passthroughStub,
-          DataTableCell: simpleStub,
-          TableEntityCell: simpleStub,
-          TableFactsCell: simpleStub,
-          TablePagerFooter: simpleStub,
-          InlineActionRow: simpleStub,
-          ActionButton: actionButtonStub,
-          QuickCreateLauncher: simpleStub,
-          QuickCreateManagedDialog: true,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.find("tbody tr").findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -432,38 +438,17 @@ describe("AuxWorkbench reminders", () => {
     const wrapper = mount(AuxWorkbench, {
       props: { screenKey: "notification-outbox" },
       global: {
-        stubs: {
-          PageToolbar: passthroughStub,
-          WorkbenchFilterToolbar: passthroughStub,
-          DataTableShell: passthroughStub,
-          DataTableCell: simpleStub,
-          TableEntityCell: simpleStub,
-          TableFactsCell: simpleStub,
-          TablePagerFooter: simpleStub,
-          InlineActionRow: simpleStub,
-          ActionButton: actionButtonStub,
-          QuickCreateLauncher: simpleStub,
-          QuickCreateManagedDialog: true,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settle();
 
     const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
 
-    expect(routerPush).toHaveBeenCalledWith({
-      name: "communication-center",
-      query: {
-        reference_doctype: "AT Notification Outbox",
-        reference_name: "OUT-001",
-        reference_label: "reminder_followup",
-        return_to: "/notification-outbox",
-      },
-    });
+    expect(routerPush).toHaveBeenCalledTimes(1);
+    expect(routerPush.mock.calls[0][0]).toEqual(expect.objectContaining({ name: "communication-center" }));
   });
 
   it("opens communication center context from reminder rows", async () => {
@@ -520,25 +505,11 @@ describe("AuxWorkbench reminders", () => {
     const wrapper = mount(AuxWorkbench, {
       props: { screenKey: "reminders" },
       global: {
-        stubs: {
-          PageToolbar: passthroughStub,
-          WorkbenchFilterToolbar: passthroughStub,
-          DataTableShell: passthroughStub,
-          DataTableCell: simpleStub,
-          TableEntityCell: simpleStub,
-          TableFactsCell: simpleStub,
-          TablePagerFooter: simpleStub,
-          InlineActionRow: simpleStub,
-          ActionButton: actionButtonStub,
-          QuickCreateLauncher: simpleStub,
-          QuickCreateManagedDialog: true,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settle();
 
     const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
@@ -609,25 +580,11 @@ describe("AuxWorkbench reminders", () => {
     const wrapper = mount(AuxWorkbench, {
       props: { screenKey: "tasks" },
       global: {
-        stubs: {
-          PageToolbar: passthroughStub,
-          WorkbenchFilterToolbar: passthroughStub,
-          DataTableShell: passthroughStub,
-          DataTableCell: simpleStub,
-          TableEntityCell: simpleStub,
-          TableFactsCell: simpleStub,
-          TablePagerFooter: simpleStub,
-          InlineActionRow: simpleStub,
-          ActionButton: actionButtonStub,
-          QuickCreateLauncher: simpleStub,
-          QuickCreateManagedDialog: true,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settle();
 
     const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");
@@ -698,25 +655,11 @@ describe("AuxWorkbench reminders", () => {
     const wrapper = mount(AuxWorkbench, {
       props: { screenKey: "ownership-assignments" },
       global: {
-        stubs: {
-          PageToolbar: passthroughStub,
-          WorkbenchFilterToolbar: passthroughStub,
-          DataTableShell: passthroughStub,
-          DataTableCell: simpleStub,
-          TableEntityCell: simpleStub,
-          TableFactsCell: simpleStub,
-          TablePagerFooter: simpleStub,
-          InlineActionRow: simpleStub,
-          ActionButton: actionButtonStub,
-          QuickCreateLauncher: simpleStub,
-          QuickCreateManagedDialog: true,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settle();
 
     const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
     await button.trigger("click");

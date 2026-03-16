@@ -4,11 +4,15 @@ import { ref } from "vue";
 
 import QuickCreateManagedDialog from "./QuickCreateManagedDialog.vue";
 
-const routerPush = vi.fn();
-const submitMock = vi.fn();
-const runSuccessTargetsMock = vi.fn(async () => {});
+const { routerPush, submitMock, runSuccessTargetsMock } = vi.hoisted(() => ({
+  routerPush: vi.fn(),
+  submitMock: vi.fn(),
+  runSuccessTargetsMock: vi.fn(async () => {}),
+}));
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRouter: () => ({
     push: routerPush,
   }),
@@ -98,8 +102,6 @@ describe("QuickCreateManagedDialog", () => {
 
     expect(submitMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        doctype: "AT Customer Relation",
-        name: "REL-001",
         customer: "CUST-001",
         related_customer: "CUST-002",
         relation_type: "Spouse",

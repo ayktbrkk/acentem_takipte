@@ -131,22 +131,34 @@ def build_dashboard_tab_sections(
             previews["action_offers"] = get_offer_preview_rows_fn(
                 where_clause=offer_where,
                 values=offer_values,
-                limit=5,
+                limit=20,
                 ready_only=True,
+            )
+            policy_where, policy_values = get_policy_scope()
+            previews["policies"] = get_policy_preview_rows_fn(
+                where_clause=policy_where,
+                values=policy_values,
+                limit=20,
+            )
+            company_policy_where, company_policy_values = get_policy_scope("p")
+            series["top_companies"] = get_top_companies_rows_fn(
+                where_clause=company_policy_where,
+                values=company_policy_values,
+                limit=20,
             )
         if tab_key == "sales":
             previews["offers"] = get_offer_preview_rows_fn(
                 where_clause=offer_where,
                 values=offer_values,
-                limit=8,
+                limit=20,
             )
             lead_where, lead_values = get_lead_scope()
-            previews["leads"] = get_lead_preview_rows_fn(lead_where=lead_where, values=lead_values, limit=8)
+            previews["leads"] = get_lead_preview_rows_fn(lead_where=lead_where, values=lead_values, limit=20)
             policy_where, policy_values = get_policy_scope()
             previews["policies"] = get_policy_preview_rows_fn(
                 where_clause=policy_where,
                 values=policy_values,
-                limit=6,
+                limit=20,
             )
             lead_status_rows = frappe.db.sql(
                 f"""
@@ -164,7 +176,7 @@ def build_dashboard_tab_sections(
             series["top_companies"] = get_top_companies_rows_fn(
                 where_clause=company_policy_where,
                 values=company_policy_values,
-                limit=5,
+                limit=20,
             )
             series["commission_trend"] = monthly_commission_trend_fn(
                 months=months,
@@ -194,7 +206,7 @@ def build_dashboard_tab_sections(
             office_branch=office_branch,
             allowed_customers=allowed_customers,
             statuses=["Open", "In Progress"],
-            limit=8 if tab_key == "renewals" else 6,
+            limit=20,
         )
 
     if tab_key in {"daily", "collections"}:
@@ -238,13 +250,13 @@ def build_dashboard_tab_sections(
         previews["payments"] = get_payment_preview_rows_fn(
             where_clause=payment_where,
             values=payment_values,
-            limit=8,
+            limit=20,
         )
         previews["reconciliation_rows"] = get_reconciliation_open_rows_preview_fn(
             branch=branch,
             office_branch=office_branch,
             allowed_customers=allowed_customers,
-            limit=8,
+            limit=20,
         )
 
     return {

@@ -663,7 +663,7 @@
             <MetaListCard
               v-for="relation in relatedCustomerRows"
               :key="relation.name"
-              :title="relation.related_customer"
+              :title="relation.related_customer_name || relation.related_customer"
               :description="relation.relation_type || '-'"
               :meta="relation.is_household ? t('sameHousehold') : '-'"
             >
@@ -708,7 +708,7 @@
             <EntityPreviewCard
               v-for="asset in insuredAssetRows"
               :key="asset.policy"
-              :title="asset.policy_no || asset.policy"
+              :title="asset.asset_label || asset.policy_no || asset.policy"
               :subtitle="asset.insurance_company || '-'"
               >
                 <template #trailing>
@@ -1223,7 +1223,7 @@ const reminderUpdateResource = createResource({
   auto: false,
 });
 
-const customer360Payload = computed(() => customer360Resource.data || {});
+const customer360Payload = computed(() => unref(customer360Resource.data) || {});
 const customer = computed(() => customer360Payload.value.customer || {});
 const customer360Summary = computed(() => customer360Payload.value.summary || {});
 const customer360Portfolio = computed(() => customer360Payload.value.portfolio || {});
@@ -1268,8 +1268,8 @@ const profileForm = reactive({
   consent_status: "Unknown",
 });
 
-const customerLoading = computed(() => customer360Resource.loading);
-const timelineLoading = computed(() => customer360Resource.loading);
+const customerLoading = computed(() => Boolean(unref(customer360Resource.loading)));
+const timelineLoading = computed(() => Boolean(unref(customer360Resource.loading)));
 const auxQuickCustomerResource = createResource({
   url: "frappe.client.get_list",
   auto: false,
@@ -1278,6 +1278,15 @@ const auxQuickPolicyResource = createResource({
   url: "frappe.client.get_list",
   auto: false,
 });
+
+function resourceValue(resource, fallback) {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
 
 const activePolicies = computed(() =>
   policies.value.filter((policy) => String(policy.status || "").toUpperCase() !== "IPT")
@@ -1312,11 +1321,11 @@ const insightRiskRows = computed(() =>
   (customer360Insights.value.risks || []).map((item) => describeInsightSignal(item)).filter(Boolean)
 );
 const customer360QuickOptionsMap = computed(() => ({
-  customers: (auxQuickCustomerResource.data || []).map((row) => ({
+  customers: asArray(resourceValue(auxQuickCustomerResource, [])).map((row) => ({
     value: row.name,
     label: row.full_name || row.name,
   })),
-  policies: (auxQuickPolicyResource.data || []).map((row) => ({
+  policies: asArray(resourceValue(auxQuickPolicyResource, [])).map((row) => ({
     value: row.name,
     label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
   })),

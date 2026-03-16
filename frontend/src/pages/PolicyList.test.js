@@ -20,6 +20,8 @@ const routerPush = vi.fn();
 const routerReplace = vi.fn();
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
   useRouter: () => ({
     push: routerPush,
@@ -151,7 +153,7 @@ describe("PolicyList page store integration", () => {
     expect(policyStore.state.pagination.total).toBe(2);
     expect(policyStore.startRow).toBe(1);
     expect(policyStore.endRow).toBe(2);
-    expect(wrapper.text()).toContain("Liste Ozeti");
+    expect(wrapper.text()).toContain("Liste Özeti");
     expect(wrapper.text()).toContain("Sayfa Boyutu");
     expect(wrapper.text()).toContain("20");
 

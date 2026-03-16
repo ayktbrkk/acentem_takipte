@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 
 import ReconciliationWorkbench from "./ReconciliationWorkbench.vue";
 import { useAuthStore } from "../stores/auth";
@@ -10,22 +10,58 @@ import { useAccountingStore } from "../stores/accounting";
 
 const resourceQueue = [];
 const confirmMock = vi.fn(() => true);
+const routeState = reactive({
+  query: {},
+});
 
 vi.stubGlobal("confirm", confirmMock);
+
+vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
+  useRoute: () => routeState,
+}));
 
 vi.mock("frappe-ui", () => ({
   Dialog: {
     template: `<div class="dialog-stub"><slot name="body-content" /></div>`,
   },
-  createResource: () =>
-    resourceQueue.shift() || {
+  createResource: () => {
+    const fallback = {
       data: ref({}),
       loading: ref(false),
       error: ref(null),
       params: {},
       reload: vi.fn(async () => ({})),
       submit: vi.fn(async () => ({})),
-    },
+    };
+
+    const resource = resourceQueue.shift() || fallback;
+
+    if (resource?.reload && !resource.reload.__wrapped) {
+      const originalReload = resource.reload;
+      const wrappedReload = vi.fn(async (...args) => {
+        const result = await originalReload(...args);
+        if (resource?.data && typeof resource.data === "object" && "value" in resource.data) {
+          resource.data.value = result;
+        } else {
+          resource.data = result;
+        }
+        return result;
+      });
+      wrappedReload.__wrapped = true;
+      resource.reload = wrappedReload;
+    }
+
+    if (resource?.submit && !resource.submit.__wrapped) {
+      const originalSubmit = resource.submit;
+      const wrappedSubmit = vi.fn(async (...args) => originalSubmit(...args));
+      wrappedSubmit.__wrapped = true;
+      resource.submit = wrappedSubmit;
+    }
+
+    return resource;
+  },
 }));
 
 vi.mock("../composables/useCustomFilterPresets", () => ({
@@ -48,7 +84,7 @@ vi.mock("../utils/sourcePanel", () => ({
 
 const ActionButtonStub = {
   emits: ["click"],
-  template: `<button class="action-button-stub" @click="$emit('click')"><slot /></button>`,
+  template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
 
 const QuickCreateDialogShellStub = {
@@ -67,9 +103,23 @@ const genericStub = {
     `<div><slot /><slot name="actions" /><slot name="filters" /><slot name="default" /><slot name="advanced" /><slot name="body-content" /></div>`,
 };
 
+async function settleAsyncWork() {
+  await Promise.resolve();
+  await Promise.resolve();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await Promise.resolve();
+}
+
+async function loadWorkbench(wrapper) {
+  const refreshButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Yenile"));
+  await refreshButton.trigger("click");
+  await settleAsyncWork();
+}
+
 describe("ReconciliationWorkbench page store integration", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
+    routeState.query = {};
     confirmMock.mockReset();
     confirmMock.mockReturnValue(true);
     setActivePinia(createPinia());
@@ -197,6 +247,22 @@ describe("ReconciliationWorkbench page store integration", () => {
         reload: vi.fn(async () => ({})),
         submit: vi.fn(async () => ({ rows: [], summary: {} })),
       },
+      {
+        data: ref({}),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => ({})),
+        submit: vi.fn(async () => ({ rows: [], summary: {} })),
+      },
+      {
+        data: ref({}),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => ({})),
+        submit: vi.fn(async () => ({ imported: 0 })),
+      },
     );
 
     const wrapper = mount(ReconciliationWorkbench, {
@@ -209,6 +275,7 @@ describe("ReconciliationWorkbench page store integration", () => {
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: QuickCreateDialogShellStub,
+          SectionCardHeader: genericStub,
           TableFactsCell: true,
           WorkbenchFilterToolbar: genericStub,
           StatusBadge: true,
@@ -219,8 +286,7 @@ describe("ReconciliationWorkbench page store integration", () => {
 
     const accountingStore = useAccountingStore();
 
-    const refreshButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Yenile"));
-    await refreshButton.trigger("click");
+    await loadWorkbench(wrapper);
 
     expect(accountingStore.metrics.open).toBe(2);
     expect(accountingStore.metrics.overdue_collections).toBe(1);
@@ -234,8 +300,8 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(wrapper.text()).toContain("Komisyon Tahakkuk");
     expect(wrapper.text()).toContain("P-100");
 
-    const inputs = wrapper.findAll(".input");
-    await inputs[2].setValue("PAY-001");
+    const sourceQueryInput = wrapper.find(`input[placeholder="Kaynak kayıt / ref ara"]`);
+    await sourceQueryInput.setValue("PAY-001");
 
     expect(accountingStore.state.filters.sourceQuery).toBe("PAY-001");
     expect(accountingStore.rows).toHaveLength(1);
@@ -313,7 +379,23 @@ describe("ReconciliationWorkbench page store integration", () => {
         error: ref(null),
         params: {},
         reload: vi.fn(async () => ({})),
+        submit: vi.fn(async () => ({})),
+      },
+      {
+        data: ref({}),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => ({})),
         submit: previewSubmit,
+      },
+      {
+        data: ref({}),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => ({})),
+        submit: vi.fn(async () => ({ imported: 0 })),
       },
     );
 
@@ -327,6 +409,7 @@ describe("ReconciliationWorkbench page store integration", () => {
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: QuickCreateDialogShellStub,
+          SectionCardHeader: genericStub,
           TableFactsCell: true,
           WorkbenchFilterToolbar: genericStub,
           StatusBadge: true,
@@ -339,6 +422,7 @@ describe("ReconciliationWorkbench page store integration", () => {
     await importButton.trigger("click");
     await wrapper.find("textarea").setValue("external_ref,policy_no,payment_no,customer,amount_try\nEXT-001,P-100,PAY-100,Aykut,1500");
     await wrapper.find(".dialog-save-stub").trigger("click");
+    await settleAsyncWork();
 
     expect(previewSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -347,7 +431,7 @@ describe("ReconciliationWorkbench page store integration", () => {
       })
     );
     expect(wrapper.text()).toContain("Toplam Satir");
-    expect(wrapper.text()).toContain("Eslesen");
+    expect(wrapper.text()).toContain("Eşleşen");
     expect(wrapper.text()).toContain("EXT-001");
     expect(wrapper.text()).toContain("P-100");
   });
@@ -424,6 +508,14 @@ describe("ReconciliationWorkbench page store integration", () => {
         error: ref(null),
         params: {},
         reload: vi.fn(async () => ({})),
+        submit: vi.fn(async () => ({})),
+      },
+      {
+        data: ref({}),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => ({})),
         submit: previewSubmit,
       },
       {
@@ -446,6 +538,7 @@ describe("ReconciliationWorkbench page store integration", () => {
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: QuickCreateDialogShellStub,
+          SectionCardHeader: genericStub,
           TableFactsCell: true,
           WorkbenchFilterToolbar: genericStub,
           StatusBadge: true,
@@ -458,8 +551,11 @@ describe("ReconciliationWorkbench page store integration", () => {
     await importButton.trigger("click");
     await wrapper.find("textarea").setValue("external_ref,policy_no,payment_no,customer,amount_try\nEXT-001,P-100,PAY-100,Aykut,1500");
     await wrapper.find(".dialog-save-stub").trigger("click");
+    await settleAsyncWork();
 
-    const importMatchedButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Eslesenleri Ice Aktar"));
+    const importMatchedButton = wrapper
+      .findAll(".action-button-stub")
+      .find((node) => node.text().includes("Ice Aktar") && !node.text().includes("Ekstre"));
     await importMatchedButton.trigger("click");
 
     expect(importSubmit).toHaveBeenCalledWith(
@@ -556,6 +652,7 @@ describe("ReconciliationWorkbench page store integration", () => {
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: QuickCreateDialogShellStub,
+          SectionCardHeader: genericStub,
           TableFactsCell: true,
           WorkbenchFilterToolbar: genericStub,
           StatusBadge: true,
@@ -564,8 +661,11 @@ describe("ReconciliationWorkbench page store integration", () => {
       },
     });
 
+    await loadWorkbench(wrapper);
+
     const bulkResolveButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Açıkları Toplu Çöz"));
     await bulkResolveButton.trigger("click");
+    await settleAsyncWork();
 
     expect(confirmMock).toHaveBeenCalled();
     expect(bulkResolveSubmit).toHaveBeenCalledWith({

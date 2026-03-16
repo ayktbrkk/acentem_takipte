@@ -1,9 +1,24 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 
 import App from "./App.vue";
 import { useUiStore } from "./stores/ui";
+
+vi.mock("./components/Sidebar.vue", () => ({
+  default: {
+    props: ["mobileOpen"],
+    emits: ["close", "navigate"],
+    template: `<button class="sidebar-stub" :data-open="String(mobileOpen)" @click="$emit('close')" />`,
+  },
+}));
+
+vi.mock("./components/Topbar.vue", () => ({
+  default: {
+    emits: ["toggle-sidebar"],
+    template: `<button class="topbar-stub" @click="$emit('toggle-sidebar')" />`,
+  },
+}));
 
 const SidebarStub = {
   props: ["mobileOpen"],

@@ -13,6 +13,8 @@ const auxDeleteSubmitMock = vi.fn();
 const confirmMock = vi.fn();
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRouter: () => ({
     push: routerPush,
   }),
@@ -207,7 +209,7 @@ vi.mock("frappe-ui", () => ({
 
 const ActionButtonStub = {
   emits: ["click"],
-  template: `<button class="action-button-stub" @click="$emit('click')"><slot /></button>`,
+  template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
 
 const DetailTabsBarStub = defineComponent({
@@ -245,6 +247,43 @@ const QuickCreateManagedDialogStub = {
 const genericStub = {
   template: `<div><slot /><slot name="actions" /><slot name="trailing" /><slot name="footer" /></div>`,
 };
+const SectionCardHeaderStub = {
+  props: ["title", "count"],
+  template: `<div class="section-card-header-stub">{{ title }}<span v-if="count !== undefined"> {{ count }}</span><slot /><slot name="trailing" /></div>`,
+};
+const DocSummaryGridStub = {
+  props: ["items"],
+  template: `
+    <div class="doc-summary-grid-stub">
+      <div v-for="item in items || []" :key="item.key">{{ item.label }}: {{ item.value }}</div>
+    </div>
+  `,
+};
+const MetaListCardStub = {
+  props: ["title", "subtitle", "description", "meta"],
+  template: `
+    <div class="meta-list-card-stub">
+      <div>{{ title }}</div>
+      <div v-if="subtitle">{{ subtitle }}</div>
+      <div v-if="description">{{ description }}</div>
+      <div v-if="meta">{{ meta }}</div>
+      <slot />
+      <slot name="trailing" />
+      <slot name="footer" />
+    </div>
+  `,
+};
+const commonStubs = {
+  ActionButton: ActionButtonStub,
+  DetailActionRow: genericStub,
+  DetailTabsBar: DetailTabsBarStub,
+  DocHeaderCard: genericStub,
+  DocSummaryGrid: DocSummaryGridStub,
+  MetaListCard: MetaListCardStub,
+  QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+  SectionCardHeader: SectionCardHeaderStub,
+  StatusBadge: true,
+};
 
 describe("PolicyDetail policy 360 integration", () => {
   beforeEach(() => {
@@ -279,17 +318,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -302,7 +331,7 @@ describe("PolicyDetail policy 360 integration", () => {
     await coveragesTab.trigger("click");
 
     expect(wrapper.text()).toContain("Ürün Profili");
-    expect(wrapper.text()).toContain("Ürün Hazırlik Durumu");
+    expect(wrapper.text()).toContain("Ürün Hazırlık Durumu");
     expect(wrapper.text()).toContain("Motor");
     expect(wrapper.text()).toContain("Vehicle");
     expect(wrapper.text()).toContain("67%");
@@ -316,17 +345,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -343,17 +362,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -378,17 +387,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -398,11 +397,11 @@ describe("PolicyDetail policy 360 integration", () => {
     const premiumsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Prim"));
     await premiumsTab.trigger("click");
 
-    expect(wrapper.text()).toContain("Taksit Plani");
+    expect(wrapper.text()).toContain("Taksit Planı");
     expect(wrapper.text()).toContain("Taksit 1/3");
     expect(wrapper.text()).toContain("PAY-001");
     expect(wrapper.text()).toContain("Gecikti");
-    expect(wrapper.text()).toContain("2026-04-01");
+    expect(wrapper.text()).toContain("01.04.2026");
   });
 
   it("renders document profile on documents tab", async () => {
@@ -411,17 +410,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -446,17 +435,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -484,17 +463,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -541,17 +510,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -575,17 +534,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -630,17 +579,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 
@@ -659,17 +598,7 @@ describe("PolicyDetail policy 360 integration", () => {
         name: "POL-001",
       },
       global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          MetaListCard: genericStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
-          StatusBadge: true,
-        },
+        stubs: commonStubs,
       },
     });
 

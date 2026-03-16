@@ -141,7 +141,7 @@
             <div class="mb-3 flex justify-end">
               <ActionButton variant="secondary" size="xs" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</ActionButton>
             </div>
-            <div v-if="policy360Resource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+            <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
             <div v-else-if="assignments.length === 0" class="at-empty-block">{{ t("emptyAssignments") }}</div>
             <ul v-else class="space-y-2 text-sm">
               <MetaListCard
@@ -187,7 +187,7 @@
             </article>
             <article class="surface-card rounded-2xl p-5">
               <SectionCardHeader :title="t('activitiesTitle')" :count="activities.length" />
-              <div v-if="policy360Resource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+              <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
               <div v-else-if="activities.length === 0" class="at-empty-block">{{ t("emptyActivities") }}</div>
               <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
                 <MetaListCard
@@ -205,7 +205,7 @@
             </article>
             <article class="surface-card rounded-2xl p-5">
               <SectionCardHeader :title="t('remindersTitle')" :count="reminders.length" />
-              <div v-if="policy360Resource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+              <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
               <div v-else-if="reminders.length === 0" class="at-empty-block">{{ t("emptyReminders") }}</div>
               <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
                 <MetaListCard
@@ -545,33 +545,42 @@ const assignmentDeleteResource = createResource({
   auto: false,
 });
 
-const policy = computed(() => policyR.data || {});
-const customer = computed(() => customerR.data || null);
-const endorsements = computed(() => endorsementR.data || []);
-const comments = computed(() => commentR.data || []);
-const communications = computed(() => communicationR.data || []);
-const snapshots = computed(() => [...(snapshotR.data || [])].sort((a, b) => Number(a.snapshot_version || 0) - Number(b.snapshot_version || 0)));
-const payments = computed(() => paymentR.data || []);
-const paymentInstallments = computed(() => policy360Resource.data?.payment_installments || []);
-const files = computed(() => fileR.data || []);
-const notifications = computed(() => notificationR.data || []);
-const assignments = computed(() => policy360Resource.data?.assignments || []);
-const activities = computed(() => policy360Resource.data?.activities || []);
-const reminders = computed(() => policy360Resource.data?.reminders || []);
-const productProfile = computed(() => policy360Resource.data?.product_profile || {});
-const documentProfile = computed(() => policy360Resource.data?.document_profile || {});
+const resourceValue = (resource, fallback = null) => {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+};
+const asArray = (value) => (Array.isArray(value) ? value : []);
+const policy = computed(() => resourceValue(policyR, {}));
+const customer = computed(() => resourceValue(customerR, null));
+const endorsements = computed(() => asArray(resourceValue(endorsementR, [])));
+const comments = computed(() => asArray(resourceValue(commentR, [])));
+const communications = computed(() => asArray(resourceValue(communicationR, [])));
+const snapshots = computed(() => {
+  const items = asArray(resourceValue(snapshotR, []));
+  return [...items].sort((a, b) => Number(a.snapshot_version || 0) - Number(b.snapshot_version || 0));
+});
+const policy360Data = computed(() => resourceValue(policy360Resource, {}));
+const payments = computed(() => asArray(resourceValue(paymentR, [])));
+const paymentInstallments = computed(() => asArray(policy360Data.value?.payment_installments));
+const files = computed(() => asArray(resourceValue(fileR, [])));
+const notifications = computed(() => asArray(resourceValue(notificationR, [])));
+const assignments = computed(() => asArray(policy360Data.value?.assignments));
+const activities = computed(() => asArray(policy360Data.value?.activities));
+const reminders = computed(() => asArray(policy360Data.value?.reminders));
+const productProfile = computed(() => policy360Data.value?.product_profile || {});
+const documentProfile = computed(() => policy360Data.value?.document_profile || {});
 
 const locale = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
-const timelineLoading = computed(() => policy360Resource.loading);
-const snapshotLoading = computed(() => policy360Resource.loading);
-const customerLoading = computed(() => policy360Resource.loading);
-const endorsementLoading = computed(() => policy360Resource.loading);
-const paymentLoading = computed(() => policy360Resource.loading);
-const fileLoading = computed(() => policy360Resource.loading);
-const notificationLoading = computed(() => policy360Resource.loading);
+const timelineLoading = computed(() => Boolean(unref(policy360Resource.loading)));
+const snapshotLoading = computed(() => Boolean(unref(policy360Resource.loading)));
+const customerLoading = computed(() => Boolean(unref(policy360Resource.loading)));
+const endorsementLoading = computed(() => Boolean(unref(policy360Resource.loading)));
+const paymentLoading = computed(() => Boolean(unref(policy360Resource.loading)));
+const fileLoading = computed(() => Boolean(unref(policy360Resource.loading)));
+const notificationLoading = computed(() => Boolean(unref(policy360Resource.loading)));
 const policyQuickOptionsMap = computed(() => ({
-  customers: (policyQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
-  policies: (policyQuickPolicyResource.data || []).map((row) => ({ value: row.name, label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}` })),
+  customers: asArray(resourceValue(policyQuickCustomerResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+  policies: asArray(resourceValue(policyQuickPolicyResource, [])).map((row) => ({ value: row.name, label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}` })),
 }));
 const ownershipAssignmentSuccessHandlers = {
   "ownership-assignments-list": async () => {

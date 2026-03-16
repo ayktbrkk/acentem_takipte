@@ -584,9 +584,10 @@ const branchScopeLabel = computed(() => {
 });
 
 const visibleFilters = computed(() => new Set(reportFilterConfig[filters.reportKey] || []));
-const canManageScheduledReports = computed(
-  () => Boolean(unref(authStore.isDeskUser)),
-);
+const canManageScheduledReports = computed(() => {
+  const roles = Array.isArray(unref(authStore.roles)) ? unref(authStore.roles) : [];
+  return Boolean(unref(authStore.isDeskUser)) || roles.includes("Manager");
+});
 
 const activeFilterCount = computed(() => {
   let count = 0;
@@ -1096,6 +1097,12 @@ function getViewStorageKey() {
   return `at:reports:view:${filters.reportKey}`;
 }
 
+function getSafeLocalStorage() {
+  const storage = window?.localStorage;
+  if (!storage) return null;
+  return typeof storage.getItem === "function" && typeof storage.setItem === "function" ? storage : null;
+}
+
 function applyViewState(payload = {}) {
   const columnKeys = Array.isArray(payload?.visibleColumnKeys)
     ? payload.visibleColumnKeys.filter((item) => typeof item === "string" && item)
@@ -1120,7 +1127,9 @@ function buildViewStatePayload() {
 
 function persistViewStateToStorage() {
   try {
-    window.localStorage.setItem(getViewStorageKey(), JSON.stringify(buildViewStatePayload()));
+    const storage = getSafeLocalStorage();
+    if (!storage) return;
+    storage.setItem(getViewStorageKey(), JSON.stringify(buildViewStatePayload()));
   } catch (err) {
     error.value = String(err?.message || err || t("viewStateError"));
   }
@@ -1128,7 +1137,12 @@ function persistViewStateToStorage() {
 
 function syncViewStateFromStorage() {
   try {
-    const raw = window.localStorage.getItem(getViewStorageKey());
+    const storage = getSafeLocalStorage();
+    if (!storage) {
+      applyViewState({});
+      return;
+    }
+    const raw = storage.getItem(getViewStorageKey());
     if (!raw) {
       applyViewState({});
       return;

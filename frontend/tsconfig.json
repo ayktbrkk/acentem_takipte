@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "baseUrl": ".",
+    "jsx": "preserve",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "paths": {
+      "frappe-ui": ["src/types/frappe-ui.d.ts"]
+    },
+    "skipLibCheck": true,
+    "target": "ES2020",
+    "types": ["node", "vite/client"]
+  },
+  "include": [
+    "src/**/*.js",
+    "tests/**/*.js",
+    "playwright.config.js",
+    "vite.config.js",
+    "vitest.config.js",
+    "eslint.config.js",
+    "tailwind.config.js",
+    "postcss.config.js"
+  ]
+}

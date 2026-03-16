@@ -15,6 +15,8 @@ const retryOutboxSubmitMock = vi.fn();
 const requeueOutboxSubmitMock = vi.fn();
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
   useRouter: () => ({
     push: routerPush,
@@ -268,6 +270,29 @@ const DetailTabsBarStub = defineComponent({
   `,
 });
 
+const DocSummaryGridStub = defineComponent({
+  props: ["items"],
+  template: `
+    <dl class="doc-summary-grid-stub">
+      <div v-for="item in items" :key="item.key">
+        <dt>{{ item.label }}</dt>
+        <dd>{{ item.value }}</dd>
+      </div>
+    </dl>
+  `,
+});
+
+const SectionCardHeaderStub = defineComponent({
+  props: ["title", "count"],
+  template: `
+    <header class="section-card-header-stub">
+      <h3>{{ title }}</h3>
+      <span v-if="count != null">{{ count }}</span>
+      <slot />
+    </header>
+  `,
+});
+
 const genericStub = {
   template: `<div><slot /><slot name="actions" /><slot name="trailing" /><slot name="footer" /></div>`,
 };
@@ -312,11 +337,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -345,11 +370,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -363,7 +388,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     expect(wrapper.text()).toContain("Güçlü Sinyaller");
     expect(wrapper.text()).toContain("Risk Sinyalleri");
-    expect(wrapper.text()).toContain("Skor Gerekceleri");
+    expect(wrapper.text()).toContain("Skor Gerekçeleri");
     expect(wrapper.text()).toContain("2 aktif poliçe");
     expect(wrapper.text()).toContain("1 geciken taksit");
     expect(wrapper.text()).toContain("Yenileme penceresinde aktif poliçe mevcut");
@@ -381,11 +406,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -395,8 +420,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
 
     expect(wrapper.text()).toContain("Atama Bağlamı");
-    expect(wrapper.text()).toContain("Atama Yasam Döngüsü");
-    expect(wrapper.text()).toContain("AT Claim");
+    expect(wrapper.text()).toContain("Atama Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Hasar");
     expect(wrapper.text()).toContain("CLM-001");
     expect(wrapper.text()).toContain("agent@example.com");
     expect(wrapper.text()).toContain("High");
@@ -404,7 +429,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
     await logsTab.trigger("click");
 
-    expect(wrapper.text()).toContain("Atama Notlari");
+    expect(wrapper.text()).toContain("Atama Notları");
     expect(wrapper.text()).toContain("Müşteri ile tekrar görüşülecek");
   });
 
@@ -420,11 +445,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -476,11 +501,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -540,11 +565,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -586,11 +611,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -620,11 +645,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -656,11 +681,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -697,11 +722,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -738,11 +763,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -779,11 +804,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -818,11 +843,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -852,11 +877,11 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
+          DocSummaryGrid: DocSummaryGridStub,
           DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -865,7 +890,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Audit Bağlamı");
+    expect(wrapper.text()).toContain("Kayıt Bağlamı");
     expect(wrapper.text()).toContain("Karar ve Eylem");
     expect(wrapper.text()).toContain("AT Campaign");
     expect(wrapper.text()).toContain("CMP-001");

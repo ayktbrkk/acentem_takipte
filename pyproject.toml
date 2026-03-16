@@ -3,7 +3,7 @@ name = "acentem_takipte"
 version = "0.0.1"
 description = "Insurance agency CRM and policy tracking app"
 authors = [
-    { name = "ABK", email = "aykutburakk@gmail.com"}
+    { name = "Acentem Takipte", email = "dev@acentemtakipte.local"}
 ]
 readme = "README.md"
 requires-python = ">=3.10"

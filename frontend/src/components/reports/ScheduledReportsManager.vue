@@ -426,7 +426,7 @@ const form = reactive({
 });
 
 const formError = ref("");
-const recipientEmailRegex = /^\\S+@\\S+\\.\\S+$/;
+const recipientEmailRegex = /^\S+@\S+\.\S+$/;
 
 function resetForm() {
   form.visible = false;

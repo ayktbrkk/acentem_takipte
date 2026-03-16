@@ -74,12 +74,14 @@
             <component
               :is="fd.type === 'select' ? 'select' : 'input'"
               v-model="draft[fd.key]"
-              :type="fd.type === 'number' ? 'number' : 'text'"
+              :type="fd.type === 'select' ? undefined : fd.type === 'number' ? 'number' : 'text'"
               class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
             >
-              <option v-if="fd.type === 'select'" v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-                {{ optionLabel(fd, opt) }}
-              </option>
+              <template v-if="fd.type === 'select'">
+                <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
+                  {{ optionLabel(fd, opt) }}
+                </option>
+              </template>
             </component>
           </template>
 
@@ -95,13 +97,15 @@
               <component
                 :is="fd.type === 'select' ? 'select' : 'input'"
                 v-model="draft[fd.key]"
-                :type="fd.type === 'number' ? 'number' : 'text'"
+                :type="fd.type === 'select' ? undefined : fd.type === 'number' ? 'number' : 'text'"
                 class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 :placeholder="fieldLabel(fd.field)"
               >
-                <option v-if="fd.type === 'select'" v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-                  {{ optionLabel(fd, opt) }}
-                </option>
+                <template v-if="fd.type === 'select'">
+                  <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
+                    {{ optionLabel(fd, opt) }}
+                  </option>
+                </template>
               </component>
             </template>
           </template>
@@ -748,13 +752,18 @@ const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
 ]);
 const OFFICE_BRANCH_LOOKUP_DOCTYPES = new Set(["AT Customer", "AT Policy", "AT Accounting Entry"]);
 
-const rows = computed(() => listResource.data || []);
+const resourceValue = (resource, fallback = null) => {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+};
+const asArray = (value) => (Array.isArray(value) ? value : []);
+const rows = computed(() => asArray(resourceValue(listResource, [])));
 const snapshotRows = computed(() => (config.key === "customer-segment-snapshots" ? rows.value : []));
 const accessLogRows = computed(() => (config.key === "access-logs" ? rows.value : []));
 const fileRows = computed(() => (config.key === "files" ? rows.value : []));
 const reminderRows = computed(() => (config.key === "reminders" ? rows.value : []));
 const canExportSnapshotRows = computed(() => config.key === "customer-segment-snapshots" && snapshotRows.value.length > 0);
-const isLoading = computed(() => Boolean(listResource.loading || countResource.loading));
+const isLoading = computed(() => Boolean(unref(listResource.loading) || unref(countResource.loading)));
 const auxQuickCreate = computed(() => config.quickCreate || null);
 const canLaunchAuxQuickCreate = computed(() => {
   const registryKey = auxQuickCreate.value?.registryKey;
@@ -893,27 +902,27 @@ const presetOptions = computed(() => [
 ]);
 const canDeletePreset = computed(() => isCustomFilterPresetValue(presetKey.value));
 const auxQuickOptionsMap = computed(() => ({
-  customers: (auxQuickCustomerResource.data || []).map((row) => ({
+  customers: asArray(resourceValue(auxQuickCustomerResource, [])).map((row) => ({
     value: row.name,
     label: row.full_name || row.name,
   })),
-  policies: (auxQuickPolicyResource.data || []).map((row) => ({
+  policies: asArray(resourceValue(auxQuickPolicyResource, [])).map((row) => ({
     value: row.name,
     label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
   })),
-  notificationTemplates: (auxQuickTemplateResource.data || []).map((row) => ({
+  notificationTemplates: asArray(resourceValue(auxQuickTemplateResource, [])).map((row) => ({
     value: row.name,
     label: `${row.template_key || row.name}${row.channel ? ` (${row.channel})` : ""}`,
   })),
-  insuranceCompanies: (auxQuickInsuranceCompanyResource.data || []).map((row) => ({
+  insuranceCompanies: asArray(resourceValue(auxQuickInsuranceCompanyResource, [])).map((row) => ({
     value: row.name,
     label: `${row.company_name || row.name}${row.company_code ? ` (${row.company_code})` : ""}`,
   })),
-  salesEntities: (auxQuickSalesEntityResource.data || []).map((row) => ({
+  salesEntities: asArray(resourceValue(auxQuickSalesEntityResource, [])).map((row) => ({
     value: row.name,
     label: `${row.full_name || row.name}${row.entity_type ? ` (${row.entity_type})` : ""}`,
   })),
-  accountingEntries: (auxQuickAccountingEntryResource.data || []).map((row) => ({
+  accountingEntries: asArray(resourceValue(auxQuickAccountingEntryResource, [])).map((row) => ({
     value: row.name,
     label: `${row.name}${row.source_doctype ? ` (${row.source_doctype})` : ""}`,
   })),

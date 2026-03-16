@@ -5,7 +5,7 @@
       :title="t('title')"
       :subtitle="t('subtitle')"
       :show-refresh="true"
-      :busy="claimsResource.loading"
+      :busy="claimsLoading"
       :refresh-label="t('refresh')"
       @refresh="reloadClaims"
     >
@@ -17,13 +17,13 @@
             :label="t('newClaim')"
             @launch="showQuickClaimDialog = true"
           />
-          <ActionButton variant="secondary" size="sm" :disabled="claimsResource.loading" @click="reloadClaims">
+          <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="reloadClaims">
             {{ t("refresh") }}
           </ActionButton>
           <ActionButton
             variant="secondary"
             size="sm"
-            :disabled="claimsResource.loading"
+            :disabled="claimsLoading"
             @click="downloadClaimExport('xlsx')"
           >
             {{ t("exportXlsx") }}
@@ -31,7 +31,7 @@
           <ActionButton
             variant="primary"
             size="sm"
-            :disabled="claimsResource.loading"
+            :disabled="claimsLoading"
             @click="downloadClaimExport('pdf')"
           >
             {{ t("exportPdf") }}
@@ -101,7 +101,7 @@
 
     <article class="surface-card rounded-2xl p-5">
       <DataTableShell
-      :loading="claimsResource.loading"
+      :loading="claimsLoading"
       :error="claimsErrorText"
       :empty="claims.length === 0"
       :loading-label="t('loading')"
@@ -156,7 +156,7 @@
                       v-if="canMoveClaimToStatus(claim, 'Under Review')"
                       variant="secondary"
                       size="xs"
-                      :disabled="claimMutationResource.loading"
+                      :disabled="mutationLoading"
                       @click="updateClaimStatus(claim, 'Under Review')"
                     >
                       {{ t("markUnderReview") }}
@@ -165,7 +165,7 @@
                       v-if="canMoveClaimToStatus(claim, 'Approved')"
                       variant="secondary"
                       size="xs"
-                      :disabled="claimMutationResource.loading"
+                      :disabled="mutationLoading"
                       @click="updateClaimStatus(claim, 'Approved')"
                     >
                       {{ t("markApproved") }}
@@ -174,7 +174,7 @@
                       v-if="canMoveClaimToStatus(claim, 'Closed')"
                       variant="secondary"
                       size="xs"
-                      :disabled="claimMutationResource.loading"
+                      :disabled="mutationLoading"
                       @click="updateClaimStatus(claim, 'Closed')"
                     >
                       {{ t("markClosed") }}
@@ -183,7 +183,7 @@
                       v-if="canRejectClaim(claim)"
                       variant="secondary"
                       size="xs"
-                      :disabled="claimMutationResource.loading"
+                      :disabled="mutationLoading"
                       @click="rejectClaim(claim)"
                     >
                       {{ t("markRejected") }}
@@ -192,7 +192,7 @@
                       v-if="claim.next_follow_up_on"
                       variant="secondary"
                       size="xs"
-                      :disabled="claimMutationResource.loading"
+                      :disabled="mutationLoading"
                       @click="clearClaimFollowUp(claim)"
                     >
                       {{ t("clearFollowUp") }}
@@ -218,6 +218,9 @@
                       @click="openPolicy(claim.policy)"
                     >
                       {{ t("openPolicy") }}
+                    </ActionButton>
+                    <ActionButton variant="secondary" size="xs" @click="openClaimDocuments(claim)">
+                      {{ t("openDocuments") }}
                     </ActionButton>
                   </InlineActionRow>
                 </DataTableCell>
@@ -512,17 +515,30 @@ const claimQuickCustomerResource = createResource({
   },
 });
 
+const claimsLoading = computed(() => Boolean(unref(claimsResource.loading)));
+const mutationLoading = computed(() => Boolean(unref(claimMutationResource.loading)));
+
 const claims = computed(() => claimStore.filteredItems);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const showQuickClaimDialog = ref(false);
 const showOwnershipAssignmentDialog = ref(false);
 const selectedClaimForAssignment = ref(null);
+
+function resourceValue(resource, fallback) {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 const claimQuickOptionsMap = computed(() => ({
-  policies: (claimQuickPolicyResource.data || []).map((row) => ({
+  policies: asArray(resourceValue(claimQuickPolicyResource, [])).map((row) => ({
     value: row.name,
     label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
   })),
-  customers: (claimQuickCustomerResource.data || []).map((row) => ({
+  customers: asArray(resourceValue(claimQuickCustomerResource, [])).map((row) => ({
     value: row.name,
     label: row.full_name || row.name,
   })),
@@ -539,7 +555,7 @@ const ownershipAssignmentSuccessHandlers = {
 };
 const claimsErrorText = computed(() => {
   if (claimStore.state.error) return claimStore.state.error;
-  const err = claimsResource.error;
+  const err = unref(claimsResource.error);
   if (!err) return "";
   return err?.messages?.join(" ") || err?.message || t("loadError");
 });
@@ -923,6 +939,15 @@ function openClaimNotifications(claim) {
     return_to: route.fullPath || route.path || "",
   });
   window.location.assign(`/at/communication?${query.toString()}`);
+}
+
+function openClaimDocuments(claim) {
+  if (!claim?.name) return;
+  const query = new URLSearchParams({
+    attached_to_doctype: "AT Claim",
+    attached_to_name: claim.name,
+  });
+  window.location.assign(`/at/files?${query.toString()}`);
 }
 
 function openClaimAssignment(claim) {

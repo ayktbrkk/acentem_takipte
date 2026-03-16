@@ -9,6 +9,7 @@ frontend/playwright-report/
 frontend/test-results/
 frontend/vite.config.js.timestamp-*.mjs
 acentem_takipte/frontend/
+acentem_takipte/public/frontend/
 acentem_takipte/acentem_takipte/public/frontend/
 .playwright-cli/
 

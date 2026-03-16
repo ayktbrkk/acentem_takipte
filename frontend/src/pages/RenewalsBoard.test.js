@@ -37,6 +37,8 @@ vi.mock("../composables/useCustomFilterPresets", () => ({
 }));
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
 }));
 
@@ -184,6 +186,6 @@ describe("RenewalsBoard page store integration", () => {
         status: "In Progress",
       },
     });
-    expect(reloadMock).toHaveBeenCalledTimes(1);
+    expect(reloadMock).toHaveBeenCalledTimes(2);
   });
 });

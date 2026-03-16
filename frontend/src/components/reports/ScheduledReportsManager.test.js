@@ -30,7 +30,7 @@ describe("ScheduledReportsManager", () => {
     await wrapper.find("textarea").setValue("invalid-email");
     await wrapper.find("form").trigger("submit.prevent");
 
-    expect(wrapper.text()).toContain("Gecersiz alici adresi");
+    expect(wrapper.text()).toContain("Geçersiz alıcı adresi");
     expect(wrapper.emitted("save")).toBeUndefined();
   });
 
@@ -53,7 +53,7 @@ describe("ScheduledReportsManager", () => {
 
     const emitted = wrapper.emitted("save");
     expect(emitted).toHaveLength(1);
-    const payload = emitted[0][0][0];
+    const payload = emitted[0][0];
     expect(payload.config.report_key).toBe("policy_list");
     expect(payload.config.recipients).toEqual(["ops@example.com"]);
     expect(payload.config.delivery_channel).toBe("email");
@@ -90,7 +90,7 @@ describe("ScheduledReportsManager", () => {
     await removeButton?.trigger("click");
 
     expect(wrapper.emitted("remove")).toHaveLength(1);
-    expect(wrapper.emitted("remove")[0][0]).toEqual([1]);
+    expect(wrapper.emitted("remove")[0][0]).toBe(1);
 
     vi.mocked(window.confirm).mockRestore();
   });

@@ -18,6 +18,8 @@ const routerBack = vi.fn();
 const resourceQueue = [];
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
   useRouter: () => ({
     push: routerPush,
@@ -27,6 +29,11 @@ vi.mock("vue-router", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  Dialog: {
+    name: "Dialog",
+    props: ["modelValue", "options"],
+    template: `<div class="frappe-ui-dialog-stub"><slot name="body-content" /></div>`,
+  },
   createResource: () =>
     resourceQueue.shift() || {
       data: ref({}),
@@ -273,9 +280,10 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const dialog = wrapper.findComponent(QuickCreateManagedDialogStub);
-    expect(dialog.exists()).toBe(true);
-    expect(dialog.props("configKey")).toBe("call_note");
+    const dialog = wrapper
+      .findAllComponents(QuickCreateManagedDialogStub)
+      .find((item) => item.props("configKey") === "call_note");
+    expect(dialog?.exists()).toBe(true);
 
     const beforeOpen = dialog.props("beforeOpen");
     const form = {};
@@ -434,14 +442,37 @@ describe("CommunicationCenter page store integration", () => {
         })),
         submit: vi.fn(async () => ({})),
       },
+      // runCycleResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // sendDraftResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // retryOutboxResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // auxMutationResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // communicationQuickTemplateResource
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // communicationQuickCustomerResource
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // communicationQuickPolicyResource
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // communicationQuickClaimResource
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // communicationQuickSegmentResource (used by segment preview select)
+      {
+        data: ref([{ name: "SEG-001", segment_name: "Renewal Risk", channel_focus: "WHATSAPP" }]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+        submit: vi.fn(async () => ({})),
+      },
+      // communicationQuickCampaignResource
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // segmentPreviewResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: previewSubmit },
+      // campaignRunResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
     );
 
     const wrapper = mount(CommunicationCenter, {
@@ -495,14 +526,43 @@ describe("CommunicationCenter page store integration", () => {
         reload: snapshotReload,
         submit: vi.fn(async () => ({})),
       },
+      // runCycleResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // sendDraftResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
-      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
-      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
-      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
-      { data: ref([{ name: "SEG-001", segment_name: "Renewal Risk", channel_focus: "WHATSAPP" }]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
-      { data: ref([{ name: "CAMP-001", campaign_name: "March Renewal", channel: "WHATSAPP" }]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // retryOutboxResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // auxMutationResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // communicationQuickTemplateResource
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // communicationQuickCustomerResource
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // communicationQuickPolicyResource
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // communicationQuickClaimResource
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // communicationQuickSegmentResource
+      {
+        data: ref([{ name: "SEG-001", segment_name: "Renewal Risk", channel_focus: "WHATSAPP" }]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+        submit: vi.fn(async () => ({})),
+      },
+      // communicationQuickCampaignResource (used by campaign run select)
+      {
+        data: ref([{ name: "CAMP-001", campaign_name: "March Renewal", channel: "WHATSAPP" }]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+        submit: vi.fn(async () => ({})),
+      },
+      // segmentPreviewResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // campaignRunResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: campaignSubmit },
     );
 
@@ -532,7 +592,7 @@ describe("CommunicationCenter page store integration", () => {
       limit: 200,
     });
     expect(snapshotReload).toHaveBeenCalled();
-    expect(wrapper.text()).toContain("Uretilen Taslaklar");
+    expect(wrapper.text()).toContain("Üretilen Taslaklar");
     expect(wrapper.text()).toContain("3");
   });
 

@@ -15,6 +15,8 @@ const confirmMock = vi.fn(() => true);
 vi.stubGlobal("confirm", confirmMock);
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRouter: () => ({
     push: routerPush,
     currentRoute: ref({ fullPath: "/customers/CUST-001" }),
@@ -271,8 +273,70 @@ const QuickCreateManagedDialogStub = {
 
 const ActionButtonStub = {
   emits: ["click"],
-  template: `<button class="action-button-stub" @click="$emit('click')"><slot /></button>`,
+  template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
+
+const DocSummaryGridStub = defineComponent({
+  props: ["items"],
+  template: `
+    <dl class="doc-summary-grid-stub">
+      <div v-for="item in items" :key="item.key">
+        <dt>{{ item.label }}</dt>
+        <dd>{{ item.value }}</dd>
+      </div>
+    </dl>
+  `,
+});
+
+const SectionCardHeaderStub = defineComponent({
+  props: ["title", "count"],
+  template: `
+    <header class="section-card-header-stub">
+      <h3>{{ title }}</h3>
+      <span v-if="count != null">{{ count }}</span>
+      <slot />
+    </header>
+  `,
+});
+
+const MetaListCardStub = defineComponent({
+  props: ["title", "subtitle", "description", "meta", "label", "value"],
+  template: `
+    <article class="meta-list-card-stub">
+      <div class="title">{{ title || label }}</div>
+      <div v-if="subtitle" class="subtitle">{{ subtitle }}</div>
+      <div v-if="description || value" class="description">{{ description || value }}</div>
+      <div v-if="meta" class="meta">{{ meta }}</div>
+      <slot />
+      <slot name="trailing" />
+      <slot name="footer" />
+    </article>
+  `,
+});
+
+const EntityPreviewCardStub = defineComponent({
+  props: ["title", "subtitle", "description", "meta"],
+  template: `
+    <article class="entity-preview-card-stub">
+      <div class="title">{{ title }}</div>
+      <div v-if="subtitle" class="subtitle">{{ subtitle }}</div>
+      <div v-if="description" class="description">{{ description }}</div>
+      <div v-if="meta" class="meta">{{ meta }}</div>
+      <slot />
+      <slot name="trailing" />
+      <slot name="footer" />
+    </article>
+  `,
+});
+
+const MiniFactListStub = defineComponent({
+  props: ["items"],
+  template: `
+    <ul class="mini-fact-list-stub">
+      <li v-for="item in items" :key="item.key">{{ item.label }} {{ item.value }}</li>
+    </ul>
+  `,
+});
 
 const genericStub = {
   template:
@@ -316,12 +380,12 @@ describe("CustomerDetail customer 360 integration", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: true,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          EntityPreviewCard: genericStub,
-          MetaListCard: genericStub,
-          MiniFactList: true,
+          DocSummaryGrid: DocSummaryGridStub,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -357,11 +421,22 @@ describe("CustomerDetail customer 360 integration", () => {
     await buttonByText("Yeni Varlık").trigger("click");
     expect(dialogs().find((node) => node.attributes("data-config-key") === "insured_asset")?.attributes("data-open")).toBe("true");
 
-    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Düzenle"));
-    await editButtons[0].trigger("click");
+    const relationCard = wrapper
+      .findAll(".meta-list-card-stub")
+      .find((node) => node.text().includes("Ayse Bekir") || node.text().includes("CUST-002"));
+    await relationCard
+      .findAll(".action-button-stub")
+      .find((candidate) => candidate.text().includes("Düzenle"))
+      .trigger("click");
     expect(dialogs().find((node) => node.attributes("data-config-key") === "customer_relation_edit")?.attributes("data-open")).toBe("true");
 
-    await editButtons[1].trigger("click");
+    const assetCard = wrapper
+      .findAll(".entity-preview-card-stub")
+      .find((node) => node.text().includes("34 ABC 123"));
+    await assetCard
+      .findAll(".action-button-stub")
+      .find((candidate) => candidate.text().includes("Düzenle"))
+      .trigger("click");
     expect(dialogs().find((node) => node.attributes("data-config-key") === "insured_asset_edit")?.attributes("data-open")).toBe("true");
   });
 
@@ -376,12 +451,12 @@ describe("CustomerDetail customer 360 integration", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: true,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          EntityPreviewCard: genericStub,
-          MetaListCard: genericStub,
-          MiniFactList: true,
+          DocSummaryGrid: DocSummaryGridStub,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -441,12 +516,12 @@ describe("CustomerDetail customer 360 integration", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: true,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          EntityPreviewCard: genericStub,
-          MetaListCard: genericStub,
-          MiniFactList: true,
+          DocSummaryGrid: DocSummaryGridStub,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -478,12 +553,12 @@ describe("CustomerDetail customer 360 integration", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: true,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          EntityPreviewCard: genericStub,
-          MetaListCard: genericStub,
-          MiniFactList: true,
+          DocSummaryGrid: DocSummaryGridStub,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -506,8 +581,13 @@ describe("CustomerDetail customer 360 integration", () => {
     expect(assetCreateForm.policy).toBe("POL-001");
     expect(dialogs[1].props("optionsMap").policies).toHaveLength(1);
 
-    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Düzenle"));
-    await editButtons[0].trigger("click");
+    const relationCard = wrapper
+      .findAll(".meta-list-card-stub")
+      .find((node) => node.text().includes("Ayse Bekir") || node.text().includes("CUST-002"));
+    await relationCard
+      .findAll(".action-button-stub")
+      .find((candidate) => candidate.text().includes("Düzenle"))
+      .trigger("click");
     const relationResetForm = vi.fn();
     await dialogs[2].vm.triggerBeforeOpen({}, relationResetForm);
     expect(relationResetForm).toHaveBeenCalledWith(
@@ -519,7 +599,13 @@ describe("CustomerDetail customer 360 integration", () => {
       })
     );
 
-    await editButtons[1].trigger("click");
+    const assetCard = wrapper
+      .findAll(".entity-preview-card-stub")
+      .find((node) => node.text().includes("34 ABC 123"));
+    await assetCard
+      .findAll(".action-button-stub")
+      .find((candidate) => candidate.text().includes("Düzenle"))
+      .trigger("click");
     const assetResetForm = vi.fn();
     await dialogs[3].vm.triggerBeforeOpen({}, assetResetForm);
     expect(assetResetForm).toHaveBeenCalledWith(
@@ -544,12 +630,12 @@ describe("CustomerDetail customer 360 integration", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: true,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          EntityPreviewCard: genericStub,
-          MetaListCard: genericStub,
-          MiniFactList: true,
+          DocSummaryGrid: DocSummaryGridStub,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -559,8 +645,13 @@ describe("CustomerDetail customer 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const deleteButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Sil"));
-    await deleteButtons[0].trigger("click");
+    const relationCard = wrapper
+      .findAll(".meta-list-card-stub")
+      .find((node) => node.text().includes("Ayse Bekir") || node.text().includes("CUST-002"));
+    await relationCard
+      .findAll(".action-button-stub")
+      .find((candidate) => candidate.text().includes("Sil"))
+      .trigger("click");
     expect(confirmMock).toHaveBeenCalled();
     expect(auxDeleteSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Customer Relation",
@@ -568,7 +659,13 @@ describe("CustomerDetail customer 360 integration", () => {
     });
     expect(customer360Reload).toHaveBeenCalledTimes(2);
 
-    await deleteButtons[1].trigger("click");
+    const assetCard = wrapper
+      .findAll(".entity-preview-card-stub")
+      .find((node) => node.text().includes("34 ABC 123"));
+    await assetCard
+      .findAll(".action-button-stub")
+      .find((candidate) => candidate.text().includes("Sil"))
+      .trigger("click");
     expect(auxDeleteSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Insured Asset",
       name: "AST-001",
@@ -587,12 +684,12 @@ describe("CustomerDetail customer 360 integration", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: true,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          EntityPreviewCard: genericStub,
-          MetaListCard: genericStub,
-          MiniFactList: true,
+          DocSummaryGrid: DocSummaryGridStub,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -623,8 +720,13 @@ describe("CustomerDetail customer 360 integration", () => {
       })
     );
 
-    const editButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Düzenle"));
-    await editButtons[2].trigger("click");
+    const assignmentCard = wrapper
+      .findAll(".meta-list-card-stub")
+      .find((node) => node.text().includes("agent@example.com") && node.text().includes("Owner"));
+    await assignmentCard
+      .findAll(".action-button-stub")
+      .find((candidate) => candidate.text().includes("Düzenle"))
+      .trigger("click");
 
     const assignmentResetForm = vi.fn();
     await dialogs[5].vm.triggerBeforeOpen({}, assignmentResetForm);
@@ -652,12 +754,12 @@ describe("CustomerDetail customer 360 integration", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: true,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          EntityPreviewCard: genericStub,
-          MetaListCard: genericStub,
-          MiniFactList: true,
+          DocSummaryGrid: DocSummaryGridStub,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -699,12 +801,12 @@ describe("CustomerDetail customer 360 integration", () => {
           DetailActionRow: genericStub,
           DetailTabsBar: true,
           DocHeaderCard: genericStub,
-          DocSummaryGrid: true,
-          EntityPreviewCard: genericStub,
-          MetaListCard: genericStub,
-          MiniFactList: true,
+          DocSummaryGrid: DocSummaryGridStub,
+          EntityPreviewCard: EntityPreviewCardStub,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: genericStub,
+          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },

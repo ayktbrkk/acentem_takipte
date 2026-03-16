@@ -5,20 +5,20 @@
         :title="t('title')"
         :subtitle="t('subtitle')"
         :show-refresh="true"
-        :busy="customerListResource.loading"
+        :busy="customerListLoading"
         :refresh-label="t('refresh')"
         @refresh="refreshCustomerList"
       >
         <template #actions>
           <div class="flex flex-wrap items-center gap-2">
             <QuickCreateLauncher variant="primary" size="sm" :label="quickCustomerUi.newLabel" @launch="openQuickCustomerDialog" />
-            <ActionButton variant="secondary" size="sm" :disabled="customerListResource.loading" @click="refreshCustomerList">
+            <ActionButton variant="secondary" size="sm" :disabled="customerListLoading" @click="refreshCustomerList">
               {{ t("refresh") }}
             </ActionButton>
-            <ActionButton variant="secondary" size="sm" :disabled="customerListResource.loading" @click="downloadCustomerExport('xlsx')">
+            <ActionButton variant="secondary" size="sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">
               {{ t("exportXlsx") }}
             </ActionButton>
-            <ActionButton variant="primary" size="sm" :disabled="customerListResource.loading" @click="downloadCustomerExport('pdf')">
+            <ActionButton variant="primary" size="sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">
               {{ t("exportPdf") }}
             </ActionButton>
           </div>
@@ -215,8 +215,8 @@
           :page-label="t('page')"
           :previous-label="t('previous')"
           :next-label="t('next')"
-          :prev-disabled="pagination.page <= 1 || customerListResource.loading"
-          :next-disabled="!hasNextPage || customerListResource.loading"
+          :prev-disabled="pagination.page <= 1 || customerListLoading"
+          :next-disabled="!hasNextPage || customerListLoading"
           @previous="previousPage"
           @next="nextPage"
         />
@@ -266,6 +266,7 @@ import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
@@ -551,6 +552,7 @@ const rows = computed(() => customerStore.state.items);
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const currentUserId = computed(() => unref(authStore.userId) || "");
+const customerListLoading = computed(() => Boolean(unref(customerListResource.loading)));
 const customerQuickFields = computed(() => quickCustomerConfig?.fields || []);
 const quickCustomerUi = computed(() => ({
   title: getLocalizedText(quickCustomerConfig?.title, activeLocale.value),

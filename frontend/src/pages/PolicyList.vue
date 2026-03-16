@@ -5,20 +5,20 @@
         :title="t('title')"
         :subtitle="t('subtitle')"
         :show-refresh="true"
-        :busy="policyResource.loading"
+        :busy="policyLoading"
         :refresh-label="t('refresh')"
         @refresh="refreshPolicyList"
       >
         <template #actions>
           <div class="flex flex-wrap items-center gap-2">
             <QuickCreateLauncher variant="primary" size="sm" :label="quickPolicyUi.newLabel" @launch="openQuickPolicyDialog" />
-            <ActionButton variant="secondary" size="sm" :disabled="policyResource.loading" @click="refreshPolicyList">
+            <ActionButton variant="secondary" size="sm" :disabled="policyLoading" @click="refreshPolicyList">
               {{ t("refresh") }}
             </ActionButton>
-            <ActionButton variant="secondary" size="sm" :disabled="policyResource.loading" @click="downloadPolicyExport('xlsx')">
+            <ActionButton variant="secondary" size="sm" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">
               {{ t("exportXlsx") }}
             </ActionButton>
-            <ActionButton variant="primary" size="sm" :disabled="policyResource.loading" @click="downloadPolicyExport('pdf')">
+            <ActionButton variant="primary" size="sm" :disabled="policyLoading" @click="downloadPolicyExport('pdf')">
               {{ t("exportPdf") }}
             </ActionButton>
           </div>
@@ -197,8 +197,8 @@
           :page-label="t('page')"
           :previous-label="t('previous')"
           :next-label="t('next')"
-          :prev-disabled="pagination.page <= 1 || policyResource.loading"
-          :next-disabled="!hasNextPage || policyResource.loading"
+          :prev-disabled="pagination.page <= 1 || policyLoading"
+          :next-disabled="!hasNextPage || policyLoading"
           @previous="previousPage"
           @next="nextPage"
         />
@@ -268,6 +268,7 @@ import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
@@ -564,9 +565,15 @@ const policyPresetServerWriteResource = createResource({
   auto: false,
 });
 
-const companies = computed(() => companyResource.data || []);
+const resourceValue = (resource, fallback = null) => {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+};
+const asArray = (value) => (Array.isArray(value) ? value : value == null ? [] : [value]);
+const companies = computed(() => asArray(resourceValue(companyResource, [])));
 const rows = computed(() => policyStore.state.items);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+const policyLoading = computed(() => Boolean(unref(policyResource.loading)));
 const policyQuickFields = computed(() => quickPolicyConfig?.fields || []);
 const policyQuickFormFields = computed(() =>
   policyQuickFields.value.filter(
@@ -578,11 +585,11 @@ const policyQuickFormFields = computed(() =>
 );
 const hasQuickPolicySourceOffer = computed(() => String(quickPolicyForm.source_offer || "").trim() !== "");
 const policyQuickOptionsMap = computed(() => ({
-  customers: (policyQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
-  salesEntities: (policyQuickSalesEntityResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+  customers: asArray(resourceValue(policyQuickCustomerResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+  salesEntities: asArray(resourceValue(policyQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
   insuranceCompanies: companies.value.map((row) => ({ value: row.name, label: row.company_name || row.name })),
-  branches: (policyQuickBranchResource.data || []).map((row) => ({ value: row.name, label: row.branch_name || row.name })),
-  offers: (policyQuickOfferResource.data || []).map((row) => ({
+  branches: asArray(resourceValue(policyQuickBranchResource, [])).map((row) => ({ value: row.name, label: row.branch_name || row.name })),
+  offers: asArray(resourceValue(policyQuickOfferResource, [])).map((row) => ({
     value: row.name,
     label: `${row.name}${row.customer ? ` - ${row.customer}` : ""}`,
   })),

@@ -993,9 +993,14 @@ const campaignRunResource = createResource({
 });
 
 const snapshotData = computed(() => communicationStore.state.snapshot || {});
+const resourceValue = (resource, fallback = null) => {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+};
+const asArray = (value) => (Array.isArray(value) ? value : []);
 const snapshotErrorMessage = computed(() => {
   if (communicationStore.state.error) return communicationStore.state.error;
-  const raw = snapshotResource.error;
+  const raw = unref(snapshotResource.error);
   if (!raw) return "";
   if (isPermissionDeniedError(raw)) return t("permissionDeniedRead");
   if (typeof raw === "string") return raw;
@@ -1091,27 +1096,27 @@ const referenceDoctypeOptions = computed(() => [
   { value: "AT Campaign", label: referenceTypeLabel("AT Campaign") },
 ]);
 const communicationQuickOptionsMap = computed(() => ({
-  notificationTemplates: (communicationQuickTemplateResource.data || []).map((row) => ({
+  notificationTemplates: asArray(resourceValue(communicationQuickTemplateResource, [])).map((row) => ({
     value: row.name,
     label: `${row.template_key || row.name}${row.channel ? ` (${channelLabel(row.channel)})` : ""}`,
   })),
-  customers: (communicationQuickCustomerResource.data || []).map((row) => ({
+  customers: asArray(resourceValue(communicationQuickCustomerResource, [])).map((row) => ({
     value: row.name,
     label: row.full_name || row.name,
   })),
-  policies: (communicationQuickPolicyResource.data || []).map((row) => ({
+  policies: asArray(resourceValue(communicationQuickPolicyResource, [])).map((row) => ({
     value: row.name,
     label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
   })),
-  claims: (communicationQuickClaimResource.data || []).map((row) => ({
+  claims: asArray(resourceValue(communicationQuickClaimResource, [])).map((row) => ({
     value: row.name,
     label: `${row.claim_no || row.name}${row.policy ? ` - ${row.policy}` : ""}`,
   })),
-  segments: (communicationQuickSegmentResource.data || []).map((row) => ({
+  segments: asArray(resourceValue(communicationQuickSegmentResource, [])).map((row) => ({
     value: row.name,
     label: `${row.segment_name || row.name}${row.channel_focus ? ` - ${channelLabel(row.channel_focus)}` : ""}`,
   })),
-  campaigns: (communicationQuickCampaignResource.data || []).map((row) => ({
+  campaigns: asArray(resourceValue(communicationQuickCampaignResource, [])).map((row) => ({
     value: row.name,
     label: `${row.campaign_name || row.name}${row.channel ? ` - ${channelLabel(row.channel)}` : ""}`,
   })),

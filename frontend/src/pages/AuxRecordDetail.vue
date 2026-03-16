@@ -116,11 +116,11 @@
     </DocHeaderCard>
 
     <DataTableShell
-      :loading="activeResource.loading && !doc"
+      :loading="activeLoading && !doc"
       :error="errorText"
       :loading-label="t('loading')"
       :error-title="t('loadErrorTitle')"
-      :empty="!activeResource.loading && !doc && !errorText"
+      :empty="isEmpty"
       :empty-title="t('emptyTitle')"
       :empty-description="t('emptyDescription')"
     >
@@ -407,13 +407,17 @@ function localize(v) { return typeof v === "string" ? v : v?.[activeLocale.value
 
 const resource = createResource({ url: "frappe.client.get", auto: false });
 const activeResource = computed(() => resource);
+const activeLoading = computed(() => Boolean(unref(activeResource.value?.loading)));
 const doc = computed(() => {
-  return resource.data?.docs?.[0] || resource.data?.message || resource.data || null;
+  const payload = unref(resource.data);
+  return payload?.docs?.[0] || payload?.message || payload || null;
 });
 const errorText = computed(() => {
   const current = activeResource.value;
-  return current.error?.messages?.[0] || current.error?.message || "";
+  const err = unref(current?.error);
+  return err?.messages?.[0] || err?.message || "";
 });
+const isEmpty = computed(() => !activeLoading.value && !doc.value && !errorText.value);
 const showQuickEditDialog = ref(false);
 const activeDetailTab = ref("overview");
 const quickEditConfig = computed(() => config.quickEdit || null);
@@ -515,12 +519,21 @@ const requeueOutboxResource = createResource({
   auto: false,
 });
 
+function resourceValue(resource, fallback) {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 const quickEditOptionsMap = computed(() => ({
-  customers: (auxQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
-  policies: (auxQuickPolicyResource.data || []).map((row) => ({ value: row.name, label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}` })),
-  insuranceCompanies: (auxQuickInsuranceCompanyResource.data || []).map((row) => ({ value: row.name, label: `${row.company_name || row.name}${row.company_code ? ` (${row.company_code})` : ""}` })),
-  salesEntities: (auxQuickSalesEntityResource.data || []).map((row) => ({ value: row.name, label: `${row.full_name || row.name}${row.entity_type ? ` (${row.entity_type})` : ""}` })),
-  accountingEntries: (auxQuickAccountingEntryResource.data || []).map((row) => ({ value: row.name, label: `${row.name}${row.source_doctype ? ` (${row.source_doctype})` : ""}` })),
+  customers: asArray(resourceValue(auxQuickCustomerResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+  policies: asArray(resourceValue(auxQuickPolicyResource, [])).map((row) => ({ value: row.name, label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}` })),
+  insuranceCompanies: asArray(resourceValue(auxQuickInsuranceCompanyResource, [])).map((row) => ({ value: row.name, label: `${row.company_name || row.name}${row.company_code ? ` (${row.company_code})` : ""}` })),
+  salesEntities: asArray(resourceValue(auxQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: `${row.full_name || row.name}${row.entity_type ? ` (${row.entity_type})` : ""}` })),
+  accountingEntries: asArray(resourceValue(auxQuickAccountingEntryResource, [])).map((row) => ({ value: row.name, label: `${row.name}${row.source_doctype ? ` (${row.source_doctype})` : ""}` })),
 }));
 
 const quickEditSuccessHandlers = {
@@ -811,6 +824,11 @@ const specialBadges = computed(() => {
     if (doc.value.channel) badges.push({ key: "channel", type: "notification_channel", status: String(doc.value.channel) });
     return badges;
   }
+  return [];
+});
+
+const specialGroups = computed(() => {
+  if (!doc.value) return [];
   if (specialDetailMode.value === "segment_snapshot") {
     return [
       {
@@ -892,11 +910,6 @@ const specialBadges = computed(() => {
       },
     ];
   }
-  return [];
-});
-
-const specialGroups = computed(() => {
-  if (!doc.value) return [];
   if (specialDetailMode.value === "accounting") {
     return [
       {
@@ -1042,52 +1055,6 @@ const specialGroups = computed(() => {
       },
     ];
   }
-  if (specialDetailMode.value === "segment_snapshot") {
-    return [
-      {
-        key: "strengths_json",
-        field: "strengths_json",
-        title: t("strengthSignals"),
-        value: formatSignalText(doc.value?.strengths_json),
-      },
-      {
-        key: "risks_json",
-        field: "risks_json",
-        title: t("riskSignals"),
-        value: formatSignalText(doc.value?.risks_json),
-      },
-      {
-        key: "score_reason_json",
-        field: "score_reason_json",
-        title: t("scoreReasons"),
-        value: formatSignalText(doc.value?.score_reason_json),
-        fullWidth: true,
-      },
-    ].filter((item) => item.value != null && String(item.value).trim() !== "");
-  }
-  if (specialDetailMode.value === "ownership_assignment") {
-    return [
-      { key: "notes", field: "notes", title: t("assignmentNotes"), value: doc.value?.notes, fullWidth: true },
-    ].filter((item) => item.value != null && String(item.value).trim() !== "");
-  }
-  if (specialDetailMode.value === "access_log") {
-    return [
-      {
-        key: "action_summary",
-        field: "action_summary",
-        title: t("auditActionSummary"),
-        value: doc.value?.action_summary,
-        fullWidth: true,
-      },
-      {
-        key: "decision_context",
-        field: "decision_context",
-        title: t("auditDecisionContext"),
-        value: formatSignalText(doc.value?.decision_context) || t("noDecisionContext"),
-        fullWidth: true,
-      },
-    ].filter((item) => item.value != null && String(item.value).trim() !== "");
-  }
   return [];
 });
 
@@ -1159,6 +1126,52 @@ const specialTextBlocks = computed(() => {
       { key: "response_log", field: "response_log", title: t("responseLog"), value: doc.value?.response_log, fullWidth: true },
     ].filter((item) => item.value != null && String(item.value).trim() !== "");
   }
+  if (specialDetailMode.value === "segment_snapshot") {
+    return [
+      {
+        key: "strengths_json",
+        field: "strengths_json",
+        title: t("strengthSignals"),
+        value: formatSignalText(doc.value?.strengths_json),
+      },
+      {
+        key: "risks_json",
+        field: "risks_json",
+        title: t("riskSignals"),
+        value: formatSignalText(doc.value?.risks_json),
+      },
+      {
+        key: "score_reason_json",
+        field: "score_reason_json",
+        title: t("scoreReasons"),
+        value: formatSignalText(doc.value?.score_reason_json),
+        fullWidth: true,
+      },
+    ].filter((item) => item.value != null && String(item.value).trim() !== "");
+  }
+  if (specialDetailMode.value === "ownership_assignment") {
+    return [
+      { key: "notes", field: "notes", title: t("assignmentNotes"), value: doc.value?.notes, fullWidth: true },
+    ].filter((item) => item.value != null && String(item.value).trim() !== "");
+  }
+  if (specialDetailMode.value === "access_log") {
+    return [
+      {
+        key: "action_summary",
+        field: "action_summary",
+        title: t("auditActionSummary"),
+        value: doc.value?.action_summary,
+        fullWidth: true,
+      },
+      {
+        key: "decision_context",
+        field: "decision_context",
+        title: t("auditDecisionContext"),
+        value: formatSignalText(doc.value?.decision_context) || t("noDecisionContext"),
+        fullWidth: true,
+      },
+    ].filter((item) => item.value != null && String(item.value).trim() !== "");
+  }
   return [];
 });
 
@@ -1197,7 +1210,7 @@ const relatedRecordCards = computed(() => {
   if (d.reference_doctype && d.reference_name) pushRef("reference", t("relatedReference"), d.reference_doctype, d.reference_name);
   if (d.source_doctype && d.source_name) pushRef("source", t("relatedSource"), d.source_doctype, d.source_name);
   if (config.doctype === "AT Campaign") {
-    for (const draft of campaignDraftsResource.data || []) {
+    for (const draft of asArray(resourceValue(campaignDraftsResource, []))) {
       items.push({
         key: `campaign-draft-${draft.name}`,
         title: `${t("relatedDraft")} - ${draft.name}`,
@@ -1210,7 +1223,7 @@ const relatedRecordCards = computed(() => {
         },
       });
     }
-    for (const outbox of campaignOutboxResource.data || []) {
+    for (const outbox of asArray(resourceValue(campaignOutboxResource, []))) {
       items.push({
         key: `campaign-outbox-${outbox.name}`,
         title: `${t("relatedOutbox")} - ${outbox.name}`,

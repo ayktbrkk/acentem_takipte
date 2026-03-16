@@ -183,6 +183,7 @@
 
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
@@ -327,6 +328,7 @@ function t(key) {
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const paymentStore = usePaymentStore();
+const route = useRoute();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function buildOfficeBranchLookupFilters() {
@@ -419,10 +421,15 @@ const paymentQuickSalesEntityResource = createResource({
   },
 });
 
+const resourceValue = (resource, fallback = null) => {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+};
+const asArray = (value) => (Array.isArray(value) ? value : []);
 const payments = computed(() => paymentStore.filteredItems);
 const installmentSummaryByPayment = computed(() => {
   const grouped = new Map();
-  for (const installment of paymentInstallmentResource.data || []) {
+  for (const installment of asArray(resourceValue(paymentInstallmentResource, []))) {
     if (!installment?.payment) continue;
     const current = grouped.get(installment.payment) || {
       total: 0,
@@ -450,16 +457,16 @@ const installmentSummaryByPayment = computed(() => {
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const showQuickPaymentDialog = ref(false);
 const paymentQuickOptionsMap = computed(() => ({
-  customers: (paymentQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
-  policies: (paymentQuickPolicyResource.data || []).map((row) => ({
+  customers: asArray(resourceValue(paymentQuickCustomerResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+  policies: asArray(resourceValue(paymentQuickPolicyResource, [])).map((row) => ({
     value: row.name,
     label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
   })),
-  claims: (paymentQuickClaimResource.data || []).map((row) => ({
+  claims: asArray(resourceValue(paymentQuickClaimResource, [])).map((row) => ({
     value: row.name,
     label: `${row.claim_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
   })),
-  salesEntities: (paymentQuickSalesEntityResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+  salesEntities: asArray(resourceValue(paymentQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
 }));
 const quickPaymentSuccessHandlers = {
   payment_list: async () => {
@@ -624,6 +631,23 @@ function setPaymentFilterStateFromPayload(payload) {
   filters.limit = Number(payload?.limit || 24) || 24;
 }
 
+function applyRouteFilters() {
+  const query = String(route.query?.query || "").trim();
+  const customerQuery = String(route.query?.customer || "").trim();
+  const policyQuery = String(route.query?.policy || "").trim();
+  const purposeQuery = String(route.query?.purpose || "").trim();
+  const direction = String(route.query?.direction || "").trim();
+  const hasRouteFilters = Boolean(query || customerQuery || policyQuery || purposeQuery || direction);
+  if (!hasRouteFilters) return false;
+
+  filters.query = query;
+  filters.customerQuery = customerQuery;
+  filters.policyQuery = policyQuery;
+  filters.purposeQuery = purposeQuery;
+  filters.direction = direction;
+  return true;
+}
+
 function resetPaymentFilters() {
   applyPreset("default", { refresh: false });
   void persistPresetStateToServer();
@@ -691,9 +715,18 @@ function openRelatedRecord(payment) {
 onMounted(() => {
   paymentStore.setLocaleCode(localeCode.value);
   applyPreset(presetKey.value, { refresh: false });
-  if (String(presetKey.value || "default") !== "default") void reloadPayments();
+  applyRouteFilters();
+  void reloadPayments();
   void hydratePresetStateFromServer();
 });
+
+watch(
+  () => [route.query?.query, route.query?.customer, route.query?.policy, route.query?.purpose, route.query?.direction],
+  () => {
+    if (!applyRouteFilters()) return;
+    void reloadPayments();
+  }
+);
 
 watch(
   () => branchStore.selected,

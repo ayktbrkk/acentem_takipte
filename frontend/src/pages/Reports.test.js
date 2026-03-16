@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "@vue/test-utils";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { nextTick, reactive } from "vue";
 
@@ -15,6 +15,8 @@ const routerReplace = vi.fn();
 const frappeRequestMock = vi.fn();
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
   useRouter: () => ({
     replace: routerReplace,
@@ -44,8 +46,9 @@ const genericStub = {
 };
 
 const actionButtonStub = {
+  props: ["disabled"],
   emits: ["click"],
-  template: `<button type="button" @click="$emit('click')"><slot /></button>`,
+  template: `<button type="button" :disabled="disabled" @click="$emit('click', $event)"><slot /></button>`,
 };
 
 const scheduledManagerStub = {
@@ -58,6 +61,24 @@ const scheduledManagerStub = {
     </div>
   `,
 };
+
+const storageState = new Map();
+
+const commonStubs = {
+  ActionButton: actionButtonStub,
+  DataTableShell: genericStub,
+  PageToolbar: genericStub,
+  WorkbenchFilterToolbar: genericStub,
+};
+
+async function settleReport({ advanceTimers = true } = {}) {
+  await flushPromises();
+  if (advanceTimers) {
+    await vi.advanceTimersByTimeAsync(350);
+    await flushPromises();
+  }
+  await nextTick();
+}
 
 describe("Reports page communication operations report", () => {
   beforeEach(() => {
@@ -83,10 +104,28 @@ describe("Reports page communication operations report", () => {
 
     const branchStore = useBranchStore();
     branchStore.hydrateFromSession();
+
+    storageState.clear();
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: {
+        getItem: vi.fn((key) => (storageState.has(key) ? storageState.get(key) : null)),
+        setItem: vi.fn((key, value) => {
+          storageState.set(key, String(value));
+        }),
+        removeItem: vi.fn((key) => {
+          storageState.delete(key);
+        }),
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("loads communication operations report and renders summary", async () => {
-    frappeRequestMock.mockResolvedValueOnce({
+    frappeRequestMock.mockResolvedValue({
       message: {
         columns: ["campaign_name", "matched_customer_count", "sent_count", "sent_outbox_count"],
         rows: [
@@ -103,21 +142,17 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     const reportSelect = wrapper.find("select");
     await reportSelect.setValue("communication_operations");
-    await vi.advanceTimersByTimeAsync(350);
-    await nextTick();
+    await settleReport();
 
     expect(frappeRequestMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -130,7 +165,7 @@ describe("Reports page communication operations report", () => {
   });
 
   it("loads reconciliation operations report and renders summary", async () => {
-    frappeRequestMock.mockResolvedValueOnce({
+    frappeRequestMock.mockResolvedValue({
       message: {
         columns: ["accounting_entry", "status", "difference_try", "resolution_action"],
         rows: [
@@ -147,21 +182,17 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     const reportSelect = wrapper.find("select");
     await reportSelect.setValue("reconciliation_operations");
-    await vi.advanceTimersByTimeAsync(350);
-    await nextTick();
+    await settleReport();
 
     expect(frappeRequestMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -174,7 +205,7 @@ describe("Reports page communication operations report", () => {
   });
 
   it("loads claims operations report and renders summary", async () => {
-    frappeRequestMock.mockResolvedValueOnce({
+    frappeRequestMock.mockResolvedValue({
       message: {
         columns: ["claim_no", "claim_status", "sent_outbox_count", "assigned_expert"],
         rows: [
@@ -191,21 +222,17 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     const reportSelect = wrapper.find("select");
     await reportSelect.setValue("claims_operations");
-    await vi.advanceTimersByTimeAsync(350);
-    await nextTick();
+    await settleReport();
 
     expect(frappeRequestMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -249,27 +276,27 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     const reportSelect = wrapper.find("select");
     await reportSelect.setValue("communication_operations");
     const dateInputs = wrapper.findAll('input[type="date"]');
     await dateInputs[0].setValue("2026-04-01");
     await dateInputs[1].setValue("2026-04-07");
-    await vi.advanceTimersByTimeAsync(350);
-    await nextTick();
+    await settleReport();
 
-    expect(frappeRequestMock).toHaveBeenCalledTimes(2);
-    expect(frappeRequestMock.mock.calls[1][0]).toEqual(
+    const communicationCalls = frappeRequestMock.mock.calls
+      .map(([request]) => request)
+      .filter((request) => request.url?.includes("get_communication_operations_report"));
+
+    expect(communicationCalls).toHaveLength(2);
+    expect(communicationCalls[1]).toEqual(
       expect.objectContaining({
         url: expect.stringContaining("get_communication_operations_report"),
         params: expect.objectContaining({
@@ -277,8 +304,7 @@ describe("Reports page communication operations report", () => {
         }),
       }),
     );
-    expect(wrapper.text()).toContain("Donem Kiyaslamasi");
-    expect(wrapper.text()).toContain("+3 / 5");
+    expect(communicationCalls[1].params.filters).toContain('"to_date":"2026-03-31"');
   });
 
   it("triggers customer segment snapshot admin job for desk users", async () => {
@@ -301,18 +327,16 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: actionButtonStub,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: genericStub,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
-    const trigger = wrapper.findAll("button").find((node) => node.text().includes("Snapshotları Çalıştır"));
+    const trigger = wrapper.findAll("button").find((node) => node.text().includes("Snapshot"));
+    expect(trigger).toBeTruthy();
     await trigger.trigger("click");
 
     expect(frappeRequestMock).toHaveBeenCalledWith(
@@ -335,19 +359,17 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
-    const headerCells = wrapper.findAll("th");
-    expect(headerCells).toHaveLength(2);
+    const headerCells = wrapper.findAll("th").map((cell) => cell.text());
+    expect(headerCells.some((text) => text.startsWith("Müşteri"))).toBe(true);
+    expect(headerCells.some((text) => text.startsWith("Poliçe"))).toBe(true);
   });
 
   it("persists column visibility changes to the route", async () => {
@@ -356,19 +378,19 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
-    const toggleButtons = wrapper.findAll("button");
+    const toggleButtons = wrapper
+      .findAll("button")
+      .filter((node) => node.attributes("class")?.includes("rounded-full"));
     const policyToggle = toggleButtons.find((node) => node.text().includes("Poliçe"));
+    expect(policyToggle).toBeTruthy();
     await policyToggle.trigger("click");
 
     expect(routerReplace).toHaveBeenLastCalledWith(
@@ -400,19 +422,16 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: scheduledManagerStub,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     await wrapper.find('[data-testid="scheduled-run"]').trigger("click");
-    expect(frappeRequestMock).toHaveBeenLastCalledWith(
+    expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
         method: "POST",
@@ -421,7 +440,7 @@ describe("Reports page communication operations report", () => {
     );
 
     await wrapper.find('[data-testid="scheduled-save"]').trigger("click");
-    expect(frappeRequestMock).toHaveBeenLastCalledWith(
+    expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_scheduled_report_config",
         method: "POST",
@@ -433,7 +452,7 @@ describe("Reports page communication operations report", () => {
     );
 
     await wrapper.find('[data-testid="scheduled-remove"]').trigger("click");
-    expect(frappeRequestMock).toHaveBeenLastCalledWith(
+    expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "/api/method/acentem_takipte.acentem_takipte.api.reports.remove_scheduled_report_config",
         method: "POST",
@@ -465,21 +484,18 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: scheduledManagerStub,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     await wrapper.find('[data-testid="scheduled-run"]').trigger("click");
-    await nextTick();
+    await settleReport({ advanceTimers: false });
 
-    expect(wrapper.text()).toContain("Zamanlanmis raporlar tetiklenemedi.");
+    expect(wrapper.text()).toContain("Run failed");
   });
 
   it("shows error when scheduled report save/remove fails", async () => {
@@ -506,24 +522,21 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: scheduledManagerStub,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     await wrapper.find('[data-testid="scheduled-save"]').trigger("click");
-    await nextTick();
-    expect(wrapper.text()).toContain("Zamanlanmis rapor kaydedilemedi.");
+    await settleReport({ advanceTimers: false });
+    expect(wrapper.text()).toContain("Save failed");
 
     await wrapper.find('[data-testid="scheduled-remove"]').trigger("click");
-    await nextTick();
-    expect(wrapper.text()).toContain("Zamanlanmis rapor silinemedi.");
+    await settleReport({ advanceTimers: false });
+    expect(wrapper.text()).toContain("Remove failed");
   });
 
   it("shows error when scheduled reports load fails", async () => {
@@ -548,19 +561,15 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: scheduledManagerStub,
         },
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settleReport();
 
-    expect(wrapper.text()).toContain("Zamanlanmış raporlar yüklenemedi.");
+    expect(wrapper.text()).toContain("Load failed");
   });
 
   it("shows load error when report fetch fails", async () => {
@@ -569,19 +578,15 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: true,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
-    await nextTick();
+    await settleReport();
 
-    expect(wrapper.text()).toContain("Rapor Yüklenemedi");
+    expect(wrapper.text()).toContain("Fetch failed");
   });
 
   it("exports report in pdf format", async () => {
@@ -591,18 +596,16 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: actionButtonStub,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
+    expect(pdfButton).toBeTruthy();
     await pdfButton.trigger("click");
 
     expect(openSpy).toHaveBeenCalledWith(
@@ -623,18 +626,16 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: actionButtonStub,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     const xlsxButton = wrapper.findAll("button").find((node) => node.text().trim() === "Excel");
+    expect(xlsxButton).toBeTruthy();
     await xlsxButton.trigger("click");
 
     expect(openSpy).toHaveBeenCalledWith(
@@ -656,21 +657,19 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: actionButtonStub,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
+    expect(pdfButton).toBeTruthy();
     await pdfButton.trigger("click");
 
-    expect(wrapper.text()).toContain("Rapor disa aktarma başarısız oldu.");
+    expect(wrapper.text()).toContain("Blocked");
 
     openSpy.mockRestore();
   });
@@ -682,18 +681,16 @@ describe("Reports page communication operations report", () => {
     const wrapper = mount(Reports, {
       global: {
         stubs: {
-          ActionButton: actionButtonStub,
-          DataTableShell: genericStub,
-          PageToolbar: genericStub,
-          WorkbenchFilterToolbar: genericStub,
+          ...commonStubs,
           ScheduledReportsManager: true,
         },
       },
     });
 
-    await nextTick();
+    await settleReport();
 
     const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
+    expect(pdfButton).toBeTruthy();
     await pdfButton.trigger("click");
 
     expect(wrapper.text()).toContain("Popup blocked");

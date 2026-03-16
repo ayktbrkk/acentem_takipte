@@ -703,7 +703,7 @@ function openPolicyDetail(name) {
 function openCommunicationCenterForOffer(item = null) {
   const query = {
     customer: offer.value.customer || "",
-    customer_label: offer.value.customer || offer.name || props.name || "",
+    customer_label: offer.value.customer || offer.value.name || props.name || "",
     return_to: router.currentRoute.value?.fullPath || "",
   };
   if (item && typeof item === "object") {

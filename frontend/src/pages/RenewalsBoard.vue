@@ -4,7 +4,7 @@
       <PageToolbar
         :title="t('title')"
         :subtitle="t('subtitle')"
-        :busy="renewalsResource.loading"
+        :busy="renewalsLoading"
         :show-refresh="true"
         :refresh-label="t('refresh')"
         @refresh="reloadRenewals"
@@ -17,13 +17,13 @@
               :label="t('newTask')"
               @launch="showQuickRenewalDialog = true"
             />
-            <ActionButton variant="secondary" size="sm" :disabled="renewalsResource.loading" @click="reloadRenewals">
+            <ActionButton variant="secondary" size="sm" :disabled="renewalsLoading" @click="reloadRenewals">
               {{ t("refresh") }}
             </ActionButton>
             <ActionButton
               variant="secondary"
               size="sm"
-              :disabled="renewalsResource.loading"
+              :disabled="renewalsLoading"
               @click="downloadRenewalExport('xlsx')"
             >
               {{ t("exportXlsx") }}
@@ -31,7 +31,7 @@
             <ActionButton
               variant="primary"
               size="sm"
-              :disabled="renewalsResource.loading"
+              :disabled="renewalsLoading"
               @click="downloadRenewalExport('pdf')"
             >
               {{ t("exportPdf") }}
@@ -102,9 +102,9 @@
     <DocSummaryGrid v-if="showSummaryGrid" :items="renewalSummaryItems" />
 
     <DataTableShell
-      :loading="renewalsResource.loading"
+      :loading="renewalsLoading"
       :error="renewalsError"
-      :empty="!renewalsResource.loading && !renewalsError && renewals.length === 0"
+      :empty="!renewalsLoading && !renewalsError && renewals.length === 0"
       :loading-label="t('loading')"
       :error-title="t('loadErrorTitle')"
       :empty-title="t('emptyTitle')"
@@ -150,7 +150,7 @@
                     v-if="canMoveRenewalToStatus(task, 'In Progress')"
                     variant="secondary"
                     size="xs"
-                    :disabled="renewalMutationResource.loading"
+                    :disabled="renewalMutationLoading"
                     @click="updateRenewalStatus(task, 'In Progress')"
                   >
                     {{ t("markInProgress") }}
@@ -159,7 +159,7 @@
                     v-if="canMoveRenewalToStatus(task, 'Done')"
                     variant="secondary"
                     size="xs"
-                    :disabled="renewalMutationResource.loading"
+                    :disabled="renewalMutationLoading"
                     @click="updateRenewalStatus(task, 'Done')"
                   >
                     {{ t("markDone") }}
@@ -204,6 +204,7 @@ import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import StatusBadge from "../components/StatusBadge.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
@@ -323,6 +324,11 @@ const renewalStore = useRenewalStore();
 const route = useRoute();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+const resourceValue = (resource, fallback = null) => {
+  const value = unref(resource?.data);
+  return value == null ? fallback : value;
+};
+const asArray = (value) => (Array.isArray(value) ? value : []);
 
 function buildOfficeBranchLookupFilters() {
   const officeBranch = branchStore.requestBranch || "";
@@ -402,6 +408,8 @@ const renewalQuickCustomerResource = createResource({
 });
 
 const renewalsRaw = computed(() => renewalStore.state.items || []);
+const renewalsLoading = computed(() => Boolean(unref(renewalsResource.loading)));
+const renewalMutationLoading = computed(() => Boolean(unref(renewalMutationResource.loading)));
 const renewals = computed(() => {
   let rows = renewalsRaw.value.slice();
   const query = normalizeText(filters.query);
@@ -421,11 +429,11 @@ const renewals = computed(() => {
 });
 const showQuickRenewalDialog = ref(false);
 const renewalQuickOptionsMap = computed(() => ({
-  policies: (renewalQuickPolicyResource.data || []).map((row) => ({
+  policies: asArray(resourceValue(renewalQuickPolicyResource, [])).map((row) => ({
     value: row.name,
     label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
   })),
-  customers: (renewalQuickCustomerResource.data || []).map((row) => ({
+  customers: asArray(resourceValue(renewalQuickCustomerResource, [])).map((row) => ({
     value: row.name,
     label: row.full_name || row.name,
   })),
@@ -657,12 +665,12 @@ function syncRenewalRouteFilters({ refresh = true } = {}) {
 onMounted(() => {
   syncRenewalRouteFilters({ refresh: false });
   applyPreset(presetKey.value, { refresh: false });
-  if (String(presetKey.value || "default") !== "default") void reloadRenewals();
+  void reloadRenewals();
   void hydratePresetStateFromServer();
 });
 
 watch(
-  () => renewalsResource.data,
+  () => unref(renewalsResource.data),
   (rows) => {
     const nextRows = Array.isArray(rows) ? rows : [];
     renewalStore.setItems(nextRows);
@@ -671,7 +679,7 @@ watch(
 );
 
 watch(
-  () => renewalsResource.loading,
+  () => Boolean(unref(renewalsResource.loading)),
   (value) => {
     renewalStore.setLoading(value);
   },
@@ -679,7 +687,7 @@ watch(
 );
 
 watch(
-  () => renewalsResource.error,
+  () => unref(renewalsResource.error),
   (err) => {
     if (!err) {
       renewalStore.clearError();

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { ref } from "vue";
+import { nextTick, reactive, ref } from "vue";
 
 import PaymentsBoard from "./PaymentsBoard.vue";
 import { useAuthStore } from "../stores/auth";
@@ -9,6 +9,15 @@ import { useBranchStore } from "../stores/branch";
 import { usePaymentStore } from "../stores/payment";
 
 const resourceQueue = [];
+const routeState = reactive({
+  query: {},
+});
+
+vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
+  useRoute: () => routeState,
+}));
 
 vi.mock("frappe-ui", () => ({
   createResource: () =>
@@ -57,6 +66,7 @@ const TableFactsCellStub = {
 describe("PaymentsBoard page store integration", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
+    routeState.query = {};
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
@@ -77,64 +87,73 @@ describe("PaymentsBoard page store integration", () => {
   });
 
   it("reloads rows into payment store and derives totals from filtered items", async () => {
+    const paymentRows = ref([]);
+    const installmentRows = ref([]);
+
     resourceQueue.push(
       {
-        data: ref([]),
+        data: paymentRows,
         loading: ref(false),
         error: ref(null),
         params: {},
-        reload: vi.fn(async () => [
-          {
-            name: "PAY-001",
-            payment_no: "T-001",
-            payment_direction: "Inbound",
-            amount_try: 1000,
-            customer: "CUST-001",
-            policy: "POL-001",
-            payment_purpose: "Prim",
-          },
-          {
-            name: "PAY-002",
-            payment_no: "T-002",
-            payment_direction: "Outbound",
-            amount_try: 400,
-            customer: "CUST-002",
-            policy: "POL-002",
-            payment_purpose: "Iade",
-          },
-        ]),
+        reload: vi.fn(async () => {
+          paymentRows.value = [
+            {
+              name: "PAY-001",
+              payment_no: "T-001",
+              payment_direction: "Inbound",
+              amount_try: 1000,
+              customer: "CUST-001",
+              policy: "POL-001",
+              payment_purpose: "Prim",
+            },
+            {
+              name: "PAY-002",
+              payment_no: "T-002",
+              payment_direction: "Outbound",
+              amount_try: 400,
+              customer: "CUST-002",
+              policy: "POL-002",
+              payment_purpose: "Iade",
+            },
+          ];
+          return paymentRows.value;
+        }),
       },
       {
-        data: ref([]),
+        data: installmentRows,
         loading: ref(false),
         error: ref(null),
         params: {},
-        reload: vi.fn(async () => [
-          {
-            payment: "PAY-001",
-            installment_no: 1,
-            installment_count: 3,
-            status: "Paid",
-            due_date: "2026-03-01",
-            amount_try: 334,
-          },
-          {
-            payment: "PAY-001",
-            installment_no: 2,
-            installment_count: 3,
-            status: "Overdue",
-            due_date: "2026-04-01",
-            amount_try: 333,
-          },
-          {
-            payment: "PAY-001",
-            installment_no: 3,
-            installment_count: 3,
-            status: "Scheduled",
-            due_date: "2026-05-01",
-            amount_try: 333,
-          },
-        ]),
+        reload: vi.fn(async () => {
+          installmentRows.value = [
+            {
+              payment: "PAY-001",
+              installment_no: 1,
+              installment_count: 3,
+              status: "Paid",
+              due_date: "2026-03-01",
+              amount_try: 334,
+            },
+            {
+              payment: "PAY-001",
+              installment_no: 2,
+              installment_count: 3,
+              status: "Overdue",
+              due_date: "2026-04-01",
+              amount_try: 333,
+            },
+            {
+              payment: "PAY-001",
+              installment_no: 3,
+              installment_count: 3,
+              status: "Scheduled",
+              due_date: "2026-05-01",
+              amount_try: 333,
+            },
+          ];
+          return installmentRows.value;
+        }),
       },
       {
         data: ref([]),
@@ -188,7 +207,9 @@ describe("PaymentsBoard page store integration", () => {
 
     const paymentStore = usePaymentStore();
 
-    await wrapper.find(".action-button-stub").trigger("click");
+    await Promise.resolve();
+    await Promise.resolve();
+    await nextTick();
 
     expect(paymentStore.state.items).toHaveLength(2);
     expect(paymentStore.filteredItems).toHaveLength(2);

@@ -12,13 +12,41 @@ const resourceQueue = [];
 const routeState = reactive({ query: {} });
 
 vi.mock("frappe-ui", () => ({
-  createResource: () => resourceQueue.shift() || {
-    data: ref([]),
-    loading: ref(false),
-    error: ref(null),
-    params: {},
-    reload: vi.fn(async () => []),
-    submit: vi.fn(async () => ({})),
+  createResource: () => {
+    const fallback = {
+      data: ref([]),
+      loading: ref(false),
+      error: ref(null),
+      params: {},
+      reload: vi.fn(async () => []),
+      submit: vi.fn(async () => ({})),
+    };
+
+    const resource = resourceQueue.shift() || fallback;
+
+    if (resource?.reload && !resource.reload.__wrapped) {
+      const originalReload = resource.reload;
+      const wrappedReload = vi.fn(async (...args) => {
+        const result = await originalReload(...args);
+        if (resource?.data && typeof resource.data === "object" && "value" in resource.data) {
+          resource.data.value = result;
+        } else {
+          resource.data = result;
+        }
+        return result;
+      });
+      wrappedReload.__wrapped = true;
+      resource.reload = wrappedReload;
+    }
+
+    if (resource?.submit && !resource.submit.__wrapped) {
+      const originalSubmit = resource.submit;
+      const wrappedSubmit = vi.fn(async (...args) => originalSubmit(...args));
+      wrappedSubmit.__wrapped = true;
+      resource.submit = wrappedSubmit;
+    }
+
+    return resource;
   },
 }));
 
@@ -37,18 +65,36 @@ vi.mock("../composables/useCustomFilterPresets", () => ({
 }));
 
 vi.mock("vue-router", () => ({
+  createRouter: () => ({ beforeEach: vi.fn() }),
+  createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
 }));
 
 const ActionButtonStub = {
   emits: ["click"],
-  template: `<button class="action-button-stub" @click="$emit('click')"><slot /></button>`,
+  template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
 
 const genericStub = {
   template:
     `<div><slot /><slot name="actions" /><slot name="filters" /><slot name="default" /><slot name="advanced" /></div>`,
 };
+
+async function settleAsyncWork() {
+  await Promise.resolve();
+  await Promise.resolve();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await Promise.resolve();
+}
+
+async function loadClaimRows(wrapper) {
+  const refreshButton = wrapper
+    .findAll(".action-button-stub")
+    .find((button) => button.text().includes("Yenile"));
+
+  await refreshButton.trigger("click");
+  await settleAsyncWork();
+}
 
 describe("ClaimsBoard page store integration", () => {
   beforeEach(() => {
@@ -112,23 +158,30 @@ describe("ClaimsBoard page store integration", () => {
         loading: ref(false),
         error: ref(null),
         params: {},
-        reload: vi.fn(async () => []),
-      },
-      {
-        data: ref([]),
-        loading: ref(false),
-        error: ref(null),
-        params: {},
-        reload: vi.fn(async () => []),
-      },
-      {
-        data: ref([]),
-        loading: ref(false),
-        error: ref(null),
-        params: {},
         reload: vi.fn(async () => [
           { name: "ASN-001", source_name: "CLM-001", status: "Open", assigned_to: "agent@example.com" },
         ]),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
       },
     );
 
@@ -153,9 +206,7 @@ describe("ClaimsBoard page store integration", () => {
 
     const claimStore = useClaimStore();
 
-    await wrapper.find(".action-button-stub").trigger("click");
-    await Promise.resolve();
-    await Promise.resolve();
+    await loadClaimRows(wrapper);
 
     expect(claimStore.state.items).toHaveLength(2);
     expect(claimStore.filteredItems).toHaveLength(2);
@@ -218,6 +269,8 @@ describe("ClaimsBoard page store integration", () => {
         params: {},
         reload: vi.fn(async () => []),
       },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
     );
 
     const wrapper = mount(ClaimsBoard, {
@@ -239,8 +292,14 @@ describe("ClaimsBoard page store integration", () => {
       },
     });
 
-    const buttons = wrapper.findAll(".action-button-stub");
-    await buttons[1].trigger("click");
+    await loadClaimRows(wrapper);
+    reloadMock.mockClear();
+
+    const underReviewButton = wrapper
+      .findAll(".action-button-stub")
+      .find((button) => button.text().includes("Incelemeye Al"));
+    await underReviewButton.trigger("click");
+    await settleAsyncWork();
 
     expect(submitMock).toHaveBeenCalledWith({
       doctype: "AT Claim",
@@ -287,6 +346,7 @@ describe("ClaimsBoard page store integration", () => {
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
     );
 
     const wrapper = mount(ClaimsBoard, {
@@ -308,8 +368,12 @@ describe("ClaimsBoard page store integration", () => {
       },
     });
 
+    await loadClaimRows(wrapper);
+    reloadMock.mockClear();
+
     const clearButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Takibi Temizle"));
     await clearButton.trigger("click");
+    await settleAsyncWork();
 
     expect(submitMock).toHaveBeenCalledWith({
       doctype: "AT Claim",
@@ -372,6 +436,8 @@ describe("ClaimsBoard page store integration", () => {
         params: {},
         reload: vi.fn(async () => []),
       },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
     );
 
     const wrapper = mount(ClaimsBoard, {
@@ -393,8 +459,12 @@ describe("ClaimsBoard page store integration", () => {
       },
     });
 
-    const buttons = wrapper.findAll(".action-button-stub");
-    await buttons[4].trigger("click");
+    await loadClaimRows(wrapper);
+    reloadMock.mockClear();
+
+    const rejectButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Reddet"));
+    await rejectButton.trigger("click");
+    await settleAsyncWork();
 
     expect(promptMock).toHaveBeenCalled();
     expect(submitMock).toHaveBeenCalledWith({
@@ -439,6 +509,7 @@ describe("ClaimsBoard page store integration", () => {
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
     );
 
     const wrapper = mount(ClaimsBoard, {
@@ -459,6 +530,8 @@ describe("ClaimsBoard page store integration", () => {
         },
       },
     });
+
+    await loadClaimRows(wrapper);
 
     const notificationsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Bildirimler"));
     await notificationsButton.trigger("click");
@@ -498,6 +571,7 @@ describe("ClaimsBoard page store integration", () => {
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
     );
 
     const wrapper = mount(ClaimsBoard, {
@@ -518,6 +592,8 @@ describe("ClaimsBoard page store integration", () => {
         },
       },
     });
+
+    await loadClaimRows(wrapper);
 
     const documentsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Dokümanlar"));
     await documentsButton.trigger("click");

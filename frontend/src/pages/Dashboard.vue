@@ -160,7 +160,7 @@
     </div>
 
     <div v-if="isDailyTab" class="grid gap-4 xl:grid-cols-3">
-      <div class="space-y-4 xl:col-span-2">
+      <div class="space-y-4">
         <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('followUpSlaTitle')" :count="formatNumber(followUpItems.length)" />
           <p class="mb-3 text-xs text-slate-500">{{ t("followUpSlaHint") }}</p>
@@ -182,26 +182,24 @@
             </div>
             <ul v-if="followUpItems.length > 0" class="space-y-2">
               <MetaListCard
-                v-for="item in followUpItems"
+                v-for="item in pagedPreviewItems(followUpItems, 'dailyFollowUp')"
                 :key="`${item.source_type}-${item.source_name}`"
                 :title="followUpTitle(item)"
                 :description="followUpDescription(item)"
                 description-class="mt-2 text-xs font-semibold text-slate-600"
+                clickable
+                @click="openFollowUpItem(item)"
               >
-                <template #trailing>
-                  <div class="flex items-center gap-2">
-                    <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
-                      {{ followUpTypeLabel(item.source_type) }}
-                    </span>
-                    <ActionButton variant="ghost" size="sm" @click="openFollowUpItem(item)">
-                      {{ t("openItem") }}
-                    </ActionButton>
-                  </div>
-                </template>
                 <MiniFactList :items="followUpFacts(item)" />
               </MetaListCard>
             </ul>
             <div v-else class="at-empty-block text-sm">{{ t("noFollowUpItems") }}</div>
+            <PreviewPager
+              v-if="followUpItems.length > 0"
+              :current-page="previewResolvedPage('dailyFollowUp', followUpItems)"
+              :total-pages="previewPageCount(followUpItems)"
+              @change-page="setPreviewPage('dailyFollowUp', $event, followUpItems)"
+            />
             <div class="flex flex-wrap gap-2 pt-2">
               <ActionButton variant="secondary" size="sm" @click="openPage('/claims')">
                 {{ t("followUpClaimsAction") }}
@@ -217,36 +215,17 @@
         </article>
 
         <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length" />
-          <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
-          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
-            <MetaListCard
-              v-for="task in displayRenewalAlertItems"
-              :key="task.name"
-              :title="task.policy || '-'"
-              :description="formatDaysToDue(task.due_date)"
-              description-class="mt-2 text-xs font-semibold text-amber-700"
-            >
-              <template #trailing>
-                <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
-              </template>
-              <MiniFactList :items="renewalAlertFacts(task)" />
-            </MetaListCard>
-          </ul>
-          <div v-else class="at-empty-block text-sm">{{ t("noRenewalAlert") }}</div>
-        </article>
-
-        <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('actionOfferQueueTitle')" :count="formatNumber(dailyActionOffers.length)" />
           <p class="mb-3 text-xs text-slate-500">{{ t("actionOfferQueueHint") }}</p>
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="dailyActionOffers.length === 0" class="at-empty-block">{{ t("noActionOfferQueue") }}</div>
           <ul v-else class="space-y-3">
             <EntityPreviewCard
-              v-for="offer in dailyActionOffers"
+              v-for="offer in pagedPreviewItems(dailyActionOffers, 'dailyActionOffers')"
               :key="offer.name"
               :title="offer.name"
+              clickable
+              @click="openOfferItem(offer)"
             >
               <template #trailing>
                 <StatusBadge type="offer" :status="offer.status" />
@@ -255,6 +234,15 @@
               <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
             </EntityPreviewCard>
           </ul>
+          <PreviewPager
+            v-if="dailyActionOffers.length > 0"
+            :current-page="previewResolvedPage('dailyActionOffers', dailyActionOffers)"
+            :total-pages="previewPageCount(dailyActionOffers)"
+            :show-view-all="shouldShowViewAll(dailyActionOffers)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('dailyActionOffers', $event, dailyActionOffers)"
+            @view-all="openPreviewList('offers')"
+          />
         </article>
       </div>
 
@@ -269,9 +257,11 @@
           </div>
           <ul v-else class="space-y-3">
             <EntityPreviewCard
-              v-for="policy in displayRecentPolicies"
+              v-for="policy in pagedPreviewItems(displayRecentPolicies, 'dailyPolicies')"
               :key="policy.name"
               :title="policy.policy_no || policy.name"
+              clickable
+              @click="openPolicyItem(policy)"
             >
               <template #trailing>
                 <StatusBadge type="policy" :status="policy.status" />
@@ -284,27 +274,51 @@
               </p>
             </EntityPreviewCard>
           </ul>
+          <PreviewPager
+            v-if="displayRecentPolicies.length > 0"
+            :current-page="previewResolvedPage('dailyPolicies', displayRecentPolicies)"
+            :total-pages="previewPageCount(displayRecentPolicies)"
+            :show-view-all="shouldShowViewAll(displayRecentPolicies)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('dailyPolicies', $event, displayRecentPolicies)"
+            @view-all="openPreviewList('policies')"
+          />
         </article>
 
         <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('topCompanies')" :count="formatNumber(displayTopCompanies.length)" />
-          <div v-if="dashboardLoading" class="text-sm text-slate-500">
-            {{ t("loading") }}
-          </div>
-          <div v-else-if="displayTopCompanies.length === 0" class="at-empty-block">
-            {{ t("noTopCompanies") }}
-          </div>
-          <ul v-else class="space-y-3">
+          <SectionCardHeader :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length" />
+          <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
             <MetaListCard
-              v-for="company in displayTopCompanies"
-              :key="company.insurance_company"
-              :title="company.company_name || '-'"
+              v-for="task in pagedPreviewItems(displayRenewalAlertItems, 'dailyRenewalAlerts')"
+              :key="task.name"
+              :title="task.policy || '-'"
+              :description="formatDaysToDue(task.due_date)"
+              description-class="mt-2 text-xs font-semibold text-amber-700"
+              clickable
+              @click="openRenewalTaskItem(task)"
             >
-              <MiniFactList :items="topCompanyFacts(company)" />
+              <template #trailing>
+                <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
+              </template>
+              <MiniFactList :items="renewalAlertFacts(task)" />
             </MetaListCard>
           </ul>
+          <div v-else class="at-empty-block text-sm">{{ t("noRenewalAlert") }}</div>
+          <PreviewPager
+            v-if="displayRenewalAlertItems.length > 0"
+            :current-page="previewResolvedPage('dailyRenewalAlerts', displayRenewalAlertItems)"
+            :total-pages="previewPageCount(displayRenewalAlertItems)"
+            :show-view-all="shouldShowViewAll(displayRenewalAlertItems)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('dailyRenewalAlerts', $event, displayRenewalAlertItems)"
+            @view-all="openPreviewList('renewals')"
+          />
         </article>
+      </div>
 
+      <div class="space-y-4">
         <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('quickActions')" :show-count="false" />
           <div class="space-y-2">
@@ -317,6 +331,34 @@
             />
           </div>
         </article>
+
+        <article class="surface-card rounded-2xl p-5">
+          <SectionCardHeader :title="t('topCompanies')" :count="formatNumber(displayTopCompanies.length)" />
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">
+            {{ t("loading") }}
+          </div>
+          <div v-else-if="displayTopCompanies.length === 0" class="at-empty-block">
+            {{ t("noTopCompanies") }}
+          </div>
+          <ul v-else class="space-y-3">
+            <MetaListCard
+              v-for="company in pagedPreviewItems(displayTopCompanies, 'dailyTopCompanies')"
+              :key="company.insurance_company"
+              :title="company.company_name || '-'"
+            >
+              <MiniFactList :items="topCompanyFacts(company)" />
+            </MetaListCard>
+          </ul>
+          <PreviewPager
+            v-if="displayTopCompanies.length > 0"
+            :current-page="previewResolvedPage('dailyTopCompanies', displayTopCompanies)"
+            :total-pages="previewPageCount(displayTopCompanies)"
+            :show-view-all="shouldShowViewAll(displayTopCompanies)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('dailyTopCompanies', $event, displayTopCompanies)"
+            @view-all="openPreviewList('companies')"
+          />
+        </article>
       </div>
     </div>
 
@@ -327,9 +369,11 @@
         <div v-else-if="collectionPayments.length === 0" class="at-empty-block">{{ t("noPaymentPreview") }}</div>
         <ul v-else class="space-y-3">
           <EntityPreviewCard
-            v-for="payment in collectionPayments"
+            v-for="payment in pagedPreviewItems(collectionPayments, 'collectionsPayments')"
             :key="payment.name"
             :title="payment.payment_no || payment.name"
+            clickable
+            @click="openPaymentItem(payment)"
           >
             <template #trailing>
               <StatusBadge type="payment_direction" :status="payment.payment_direction" />
@@ -338,6 +382,15 @@
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrency(payment.amount_try) }}</p>
           </EntityPreviewCard>
         </ul>
+        <PreviewPager
+          v-if="collectionPayments.length > 0"
+          :current-page="previewResolvedPage('collectionsPayments', collectionPayments)"
+          :total-pages="previewPageCount(collectionPayments)"
+          :show-view-all="shouldShowViewAll(collectionPayments)"
+          :view-all-label="t('viewAllItems')"
+          @change-page="setPreviewPage('collectionsPayments', $event, collectionPayments)"
+          @view-all="openPreviewList('payments')"
+        />
       </article>
 
       <div class="space-y-4">
@@ -358,9 +411,11 @@
             </div>
             <ul class="space-y-2">
               <MetaListCard
-                v-for="row in reconciliationPreviewRows.slice(0, 4)"
+                v-for="row in pagedPreviewItems(reconciliationPreviewRows, 'collectionsReconciliation')"
                 :key="row.name"
                 :title="`${row.source_doctype || '-'} / ${row.source_name || '-'}`"
+                clickable
+                @click="openReconciliationItem(row)"
               >
                 <template #trailing>
                   <StatusBadge type="reconciliation" :status="row.status" />
@@ -368,6 +423,15 @@
                 <MiniFactList :items="dashboardReconciliationFacts(row)" />
               </MetaListCard>
             </ul>
+            <PreviewPager
+              v-if="reconciliationPreviewRows.length > 0"
+              :current-page="previewResolvedPage('collectionsReconciliation', reconciliationPreviewRows)"
+              :total-pages="previewPageCount(reconciliationPreviewRows)"
+              :show-view-all="shouldShowViewAll(reconciliationPreviewRows)"
+              :view-all-label="t('viewAllItems')"
+              @change-page="setPreviewPage('collectionsReconciliation', $event, reconciliationPreviewRows)"
+              @view-all="openPreviewList('reconciliation')"
+            />
           </div>
         </article>
       </div>
@@ -382,9 +446,11 @@
           <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
           <ul v-else class="space-y-3">
             <MetaListCard
-              v-for="task in displayRenewalTasks"
+              v-for="task in pagedPreviewItems(displayRenewalTasks, 'renewalsQueue')"
               :key="task.name"
               :title="task.policy || '-'"
+              clickable
+              @click="openRenewalTaskItem(task)"
             >
               <template #trailing>
                 <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
@@ -392,6 +458,15 @@
               <MiniFactList :items="renewalTaskFactsDetailed(task)" />
             </MetaListCard>
           </ul>
+          <PreviewPager
+            v-if="displayRenewalTasks.length > 0"
+            :current-page="previewResolvedPage('renewalsQueue', displayRenewalTasks)"
+            :total-pages="previewPageCount(displayRenewalTasks)"
+            :show-view-all="shouldShowViewAll(displayRenewalTasks)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('renewalsQueue', $event, displayRenewalTasks)"
+            @view-all="openPreviewList('renewals')"
+          />
         </article>
       </div>
 
@@ -415,7 +490,7 @@
     </div>
 
     <div v-if="isSalesTab" class="grid gap-4 xl:grid-cols-3">
-      <div class="space-y-4 xl:col-span-2">
+      <div class="space-y-4">
         <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)">
           </SectionCardHeader>
@@ -431,9 +506,11 @@
           </div>
           <ul v-else class="space-y-3">
             <EntityPreviewCard
-              v-for="lead in displayRecentLeads"
+              v-for="lead in pagedPreviewItems(displayRecentLeads, 'salesLeads')"
               :key="lead.name"
               :title="[lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.name"
+              clickable
+              @click="openLeadItem(lead)"
             >
               <template #trailing>
                 <StatusBadge type="lead" :status="lead.status" />
@@ -442,6 +519,15 @@
               <p class="mt-2 max-h-10 overflow-hidden text-sm text-slate-700">{{ lead.notes || t("noNote") }}</p>
             </EntityPreviewCard>
           </ul>
+          <PreviewPager
+            v-if="displayRecentLeads.length > 0"
+            :current-page="previewResolvedPage('salesLeads', displayRecentLeads)"
+            :total-pages="previewPageCount(displayRecentLeads)"
+            :show-view-all="shouldShowViewAll(displayRecentLeads)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('salesLeads', $event, displayRecentLeads)"
+            @view-all="openPreviewList('leads')"
+          />
         </article>
       </div>
 
@@ -449,7 +535,7 @@
         <article class="surface-card rounded-2xl p-5">
           <SectionCardHeader :title="t('offerPipeline')" :show-count="false">
             <template #trailing>
-              <span class="text-xs text-slate-500">{{ t("readyOffers") }}: {{ formatNumber(displayReadyOfferCount) }}</span>
+              <span class="text-xs text-slate-500">{{ formatNumber(displayReadyOfferCount) }}</span>
             </template>
           </SectionCardHeader>
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
@@ -460,9 +546,11 @@
           </div>
           <ul v-else class="space-y-3">
             <EntityPreviewCard
-              v-for="offer in displayRecentOffers"
+              v-for="offer in pagedPreviewItems(displayRecentOffers, 'salesOffers')"
               :key="offer.name"
               :title="offer.name"
+              clickable
+              @click="openOfferItem(offer)"
             >
               <template #trailing>
                 <StatusBadge type="offer" :status="offer.status" />
@@ -474,6 +562,15 @@
               </p>
             </EntityPreviewCard>
           </ul>
+          <PreviewPager
+            v-if="displayRecentOffers.length > 0"
+            :current-page="previewResolvedPage('salesOffers', displayRecentOffers)"
+            :total-pages="previewPageCount(displayRecentOffers)"
+            :show-view-all="shouldShowViewAll(displayRecentOffers)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('salesOffers', $event, displayRecentOffers)"
+            @view-all="openPreviewList('offers')"
+          />
         </article>
       </div>
 
@@ -498,34 +595,45 @@
               </div>
             </div>
             <ul v-if="myTaskItems.length > 0" class="space-y-2">
-              <MetaListCard
-                v-for="task in myTaskItems"
-                :key="task.name"
-                :title="task.task_title || task.name || '-'"
-                :description="task.status || '-'"
-                description-class="mt-2 text-xs font-semibold text-slate-600"
-              >
-                <template #trailing>
-                  <ActionButton v-if="canStartTask(task)" variant="ghost" size="sm" @click="startTask(task)">
+                <MetaListCard
+                  v-for="task in pagedPreviewItems(myTaskItems, 'salesTasks')"
+                  :key="task.name"
+                  :title="task.task_title || task.name || '-'"
+                  :description="task.status || '-'"
+                  description-class="mt-2 text-xs font-semibold text-slate-600"
+                  clickable
+                  @click="openTaskItem(task)"
+                >
+                  <template #trailing>
+                  <ActionButton v-if="canStartTask(task)" variant="ghost" size="sm" @click.stop="startTask(task)">
                     {{ t("startTaskAction") }}
                   </ActionButton>
-                  <ActionButton v-if="canBlockTask(task)" variant="ghost" size="sm" @click="blockTask(task)">
+                  <ActionButton v-if="canBlockTask(task)" variant="ghost" size="sm" @click.stop="blockTask(task)">
                     {{ t("blockTaskAction") }}
                   </ActionButton>
-                  <ActionButton v-if="canCompleteTask(task)" variant="ghost" size="sm" @click="completeTask(task)">
+                  <ActionButton v-if="canCompleteTask(task)" variant="ghost" size="sm" @click.stop="completeTask(task)">
                     {{ t("completeTaskAction") }}
                   </ActionButton>
-                  <ActionButton v-if="canCancelTask(task)" variant="ghost" size="sm" @click="cancelTask(task)">
+                  <ActionButton v-if="canCancelTask(task)" variant="ghost" size="sm" @click.stop="cancelTask(task)">
                     {{ t("cancelTaskAction") }}
                   </ActionButton>
-                  <ActionButton variant="ghost" size="sm" @click="openTaskItem(task)">
+                  <ActionButton variant="ghost" size="sm" @click.stop="openTaskItem(task)">
                     {{ t("openItem") }}
                   </ActionButton>
-                </template>
+                  </template>
                 <MiniFactList :items="taskFacts(task)" />
               </MetaListCard>
             </ul>
             <div v-else class="at-empty-block text-sm">{{ t("noMyTasks") }}</div>
+            <PreviewPager
+              v-if="myTaskItems.length > 0"
+              :current-page="previewResolvedPage('salesTasks', myTaskItems)"
+              :total-pages="previewPageCount(myTaskItems)"
+              :show-view-all="shouldShowViewAll(myTaskItems)"
+              :view-all-label="t('viewAllItems')"
+              @change-page="setPreviewPage('salesTasks', $event, myTaskItems)"
+              @view-all="openPreviewList('tasks')"
+            />
             <div class="flex flex-wrap gap-2 pt-2">
               <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'tasks-list' })">
                 {{ t("openTasksAction") }}
@@ -555,14 +663,16 @@
               </div>
               <ul v-if="myActivityItems.length > 0" class="space-y-2">
                 <MetaListCard
-                  v-for="activity in myActivityItems"
+                  v-for="activity in pagedPreviewItems(myActivityItems, 'salesActivities')"
                   :key="activity.name"
                   :title="activity.activity_title || activity.activity_type || activity.name || '-'"
                   :description="activity.status || '-'"
                   description-class="mt-2 text-xs font-semibold text-slate-600"
+                  clickable
+                  @click="openActivityItem(activity)"
                 >
                   <template #trailing>
-                    <ActionButton variant="ghost" size="sm" @click="openActivityItem(activity)">
+                    <ActionButton variant="ghost" size="sm" @click.stop="openActivityItem(activity)">
                       {{ t("openItem") }}
                     </ActionButton>
                   </template>
@@ -570,6 +680,15 @@
                 </MetaListCard>
               </ul>
               <div v-else class="at-empty-block text-sm">{{ t("noMyActivities") }}</div>
+              <PreviewPager
+                v-if="myActivityItems.length > 0"
+                :current-page="previewResolvedPage('salesActivities', myActivityItems)"
+                :total-pages="previewPageCount(myActivityItems)"
+                :show-view-all="shouldShowViewAll(myActivityItems)"
+                :view-all-label="t('viewAllItems')"
+                @change-page="setPreviewPage('salesActivities', $event, myActivityItems)"
+                @view-all="openPreviewList('activities')"
+              />
               <div class="flex flex-wrap gap-2 pt-2">
                 <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'activities-list' })">
                   {{ t("openActivitiesAction") }}
@@ -599,20 +718,22 @@
               </div>
               <ul v-if="myReminderItems.length > 0" class="space-y-2">
                 <MetaListCard
-                  v-for="reminder in myReminderItems"
+                  v-for="reminder in pagedPreviewItems(myReminderItems, 'salesReminders')"
                   :key="reminder.name"
                   :title="reminder.reminder_title || reminder.name || '-'"
                   :description="reminder.status || '-'"
                   description-class="mt-2 text-xs font-semibold text-slate-600"
+                  clickable
+                  @click="openReminderItem(reminder)"
                 >
                   <template #trailing>
-                    <ActionButton v-if="canCompleteReminder(reminder)" variant="ghost" size="sm" @click="completeReminder(reminder)">
+                    <ActionButton v-if="canCompleteReminder(reminder)" variant="ghost" size="sm" @click.stop="completeReminder(reminder)">
                       {{ t("completeTaskAction") }}
                     </ActionButton>
-                    <ActionButton v-if="canCancelReminder(reminder)" variant="ghost" size="sm" @click="cancelReminder(reminder)">
+                    <ActionButton v-if="canCancelReminder(reminder)" variant="ghost" size="sm" @click.stop="cancelReminder(reminder)">
                       {{ t("cancelTaskAction") }}
                     </ActionButton>
-                    <ActionButton variant="ghost" size="sm" @click="openReminderItem(reminder)">
+                    <ActionButton variant="ghost" size="sm" @click.stop="openReminderItem(reminder)">
                       {{ t("openItem") }}
                     </ActionButton>
                   </template>
@@ -620,6 +741,15 @@
                 </MetaListCard>
               </ul>
               <div v-else class="at-empty-block text-sm">{{ t("noMyReminders") }}</div>
+              <PreviewPager
+                v-if="myReminderItems.length > 0"
+                :current-page="previewResolvedPage('salesReminders', myReminderItems)"
+                :total-pages="previewPageCount(myReminderItems)"
+                :show-view-all="shouldShowViewAll(myReminderItems)"
+                :view-all-label="t('viewAllItems')"
+                @change-page="setPreviewPage('salesReminders', $event, myReminderItems)"
+                @view-all="openPreviewList('reminders')"
+              />
               <div class="flex flex-wrap gap-2 pt-2">
                 <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'reminders-list' })">
                   {{ t("openRemindersAction") }}
@@ -701,6 +831,7 @@ import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
+import PreviewPager from "../components/app-shell/PreviewPager.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import StatusBadge from "../components/StatusBadge.vue";
@@ -711,8 +842,13 @@ const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const dashboardStore = useDashboardStore();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 function normalizeResourcePayload(payload) {
   return payload?.message || payload || {};
+}
+
+function cstr(value) {
+  return String(value ?? "").trim();
 }
 
 const copy = {
@@ -748,7 +884,7 @@ const copy = {
     noLead: "Fırsat kaydı bulunamadı.",
     estPremium: "Tahmini Brüt Prim",
     noNote: "Not yok.",
-    renewalQueue: "Yenileme Kuyrugu",
+    renewalQueue: "Yenileme Takip Listesi",
     noRenewal: "Bekleyen yenileme görevi yok.",
     actionOfferQueueTitle: "Aksiyon Bekleyen Teklifler",
     actionOfferQueueHint: "Gönderildi / kabul edildi ve poliçeye dönüşmesi beklenen teklifler",
@@ -756,8 +892,8 @@ const copy = {
     dueDate: "Son tarih",
     renewalDate: "Yenileme tarihi",
     status: "Durum",
-    renewalAlertTitle: "Yakın Yenileme Alarmlari",
-    renewalAlertHint: "30 gün içinde sona erecek poliçeler",
+    renewalAlertTitle: "Yakın Yenileme Uyarıları",
+    renewalAlertHint: "Önümüzdeki 30 gün içinde sona erecek poliçeleri izleyin.",
     noRenewalAlert: "Bugun kritik yenileme bulunmuyor.",
     trendAgainstPrevious: "önceki döneme göre",
     trendAgainstPreviousPeriod: "önceki aynı süreye göre",
@@ -846,7 +982,7 @@ const copy = {
     topCompanies: "Öne Çıkan Sigorta Şirketleri",
     noTopCompanies: "Şirket bazlı üretim verisi bulunamadı.",
     followUpSlaTitle: "Takip SLA",
-    followUpSlaHint: "Açil ve yaklaşan takip yukunu tek blokta izleyin.",
+    followUpSlaHint: "Geciken, bugün yapılması gereken ve yaklaşan takip kayıtlarını tek listede izleyin.",
     followUpOverdue: "Geciken",
     followUpToday: "Bugun",
     followUpSoon: "7 Gun",
@@ -861,6 +997,7 @@ const copy = {
     followUpDate: "Takip",
     followUpAssignee: "Sorumlu",
     openItem: "Aç",
+    viewAllItems: "Tümünü Gör",
     followUpClaimsAction: "Hasar Masasi",
     followUpRenewalsAction: "Yenileme Panosu",
     followUpCommunicationAction: "İletişim Merkezi",
@@ -896,6 +1033,9 @@ const copy = {
     policyCount: "Poliçe Adedi",
     grossProduction: "Brüt Üretim",
     recentPolicies: "Son Poliçeler",
+    kpiRenewalOverdue: "Geciken Yenilemeler",
+    kpiRenewalDue7: "7 Gün İçinde Yenilenecekler",
+    kpiRenewalDue30: "30 Gün İçinde Yenilenecekler",
     noPolicy: "Poliçe kaydı bulunamadı.",
     issueDate: "Tanzim",
     offerPipeline: "Teklif Süreci",
@@ -903,6 +1043,12 @@ const copy = {
     noOffer: "Teklif kaydı bulunamadı.",
     validUntil: "Geçerlilik",
     converted: "Dönüştü",
+    leadPipeline: "Fırsat Süreci",
+    kpiGwp: "Toplam Brüt Prim",
+    kpiCollect: "Toplam Tahsilat",
+    kpiPayout: "Toplam Ödeme",
+    todaySnapshot: "Güncel görünüm",
+    followUpSlaTitle: "Öncelikli Takipler",
   },
   en: {
     heroTag: "Insurance Control Center",
@@ -936,7 +1082,7 @@ const copy = {
     noLead: "No lead record found.",
     estPremium: "Estimated Gross Premium",
     noNote: "No notes.",
-    renewalQueue: "Renewal Queue",
+    renewalQueue: "Renewal Follow-up List",
     noRenewal: "No pending renewal tasks.",
     actionOfferQueueTitle: "Offers Requiring Action",
     actionOfferQueueHint: "Sent / accepted offers waiting for policy conversion",
@@ -945,7 +1091,7 @@ const copy = {
     renewalDate: "Renewal date",
     status: "Status",
     renewalAlertTitle: "Upcoming Renewal Alerts",
-    renewalAlertHint: "Policies ending within 30 days",
+    renewalAlertHint: "Review policies that will expire within the next 30 days.",
     noRenewalAlert: "No critical renewal alert for today.",
     trendAgainstPrevious: "vs previous period",
     trendAgainstPreviousPeriod: "vs previous period",
@@ -1034,7 +1180,7 @@ const copy = {
     topCompanies: "Top Insurance Companies",
     noTopCompanies: "No company production data found.",
     followUpSlaTitle: "Follow-up SLA",
-    followUpSlaHint: "Track urgent and upcoming follow-up workload in one block.",
+    followUpSlaHint: "Review overdue, due today, and upcoming follow-up records in one list.",
     followUpOverdue: "Overdue",
     followUpToday: "Today",
     followUpSoon: "7 Days",
@@ -1049,6 +1195,7 @@ const copy = {
     followUpDate: "Follow-up",
     followUpAssignee: "Assignee",
     openItem: "Open",
+    viewAllItems: "View All",
     followUpClaimsAction: "Claims Desk",
     followUpRenewalsAction: "Renewals Board",
     followUpCommunicationAction: "Communication Center",
@@ -1084,6 +1231,9 @@ const copy = {
     policyCount: "Policy Count",
     grossProduction: "Gross Production",
     recentPolicies: "Recent Policies",
+    kpiRenewalOverdue: "Overdue Renewals",
+    kpiRenewalDue7: "Renewals Due in 7 Days",
+    kpiRenewalDue30: "Renewals Due in 30 Days",
     noPolicy: "No policy records found.",
     issueDate: "Issue Date",
     offerPipeline: "Offer Pipeline",
@@ -1091,12 +1241,15 @@ const copy = {
     noOffer: "No offer records found.",
     validUntil: "Valid Until",
     converted: "Converted",
+    kpiGwp: "Total Gross Premium",
+    kpiCollect: "Total Collections",
+    kpiPayout: "Total Payouts",
+    followUpSlaTitle: "Priority Follow-ups",
   },
 };
 
 function t(key) {
-  const localeValue = unref(authStore.locale) || "en";
-  return copy[localeValue]?.[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
 const DASHBOARD_TABS = ["daily", "sales", "collections", "renewals"];
@@ -1121,6 +1274,8 @@ const isSubmitting = ref(false);
 const leadDialogError = ref("");
 const leadDialogFieldErrors = reactive({});
 const DASHBOARD_RELOAD_DEBOUNCE_MS = 300;
+const DASHBOARD_PREVIEW_PAGE_SIZE = 5;
+const DASHBOARD_PREVIEW_FETCH_LIMIT = 20;
 let dashboardReloadTimer = null;
 
 const newLead = reactive({
@@ -1309,7 +1464,7 @@ const collectionPayments = computed(() =>
     ? asArray(dashboardTabPreviews.value.payments)
     : asArray(paymentPreviewResource.data)
 );
-const reconciliationPreviewData = computed(() => reconciliationPreviewResource.data || {});
+const reconciliationPreviewData = computed(() => unref(reconciliationPreviewResource.data) || {});
 const reconciliationPreviewRows = computed(() =>
   asArray(dashboardTabPreviews.value.reconciliation_rows).length
     ? asArray(dashboardTabPreviews.value.reconciliation_rows)
@@ -1352,17 +1507,22 @@ const topCompanies = computed(() =>
     ? asArray(dashboardTabSeries.value.top_companies)
     : asArray(dashboardData.value.top_companies)
 );
-const dashboardLoadingRaw = computed(
-  () => Boolean((isDailyTab.value ? kpiResource.loading : false) || dashboardTabPayloadResource.loading)
-);
-const followUpLoading = computed(() => Boolean(followUpResource.loading));
-const myTasksLoading = computed(() => Boolean(myTasksResource.loading));
-const myActivitiesLoading = computed(() => Boolean(myActivitiesResource.loading));
-const myRemindersLoading = computed(() => Boolean(myRemindersResource.loading));
+const dashboardLoadingRaw = computed(() => {
+  const kpiLoading = isDailyTab.value ? Boolean(unref(kpiResource.loading)) : false;
+  const tabLoading = Boolean(unref(dashboardTabPayloadResource.loading));
+  return Boolean(kpiLoading || tabLoading);
+});
+const followUpLoading = computed(() => Boolean(unref(followUpResource.loading)));
+const myTasksLoading = computed(() => Boolean(unref(myTasksResource.loading)));
+const myActivitiesLoading = computed(() => Boolean(unref(myActivitiesResource.loading)));
+const myRemindersLoading = computed(() => Boolean(unref(myRemindersResource.loading)));
 const dashboardLoading = computed(() => dashboardStore.state.loading);
 const dashboardPermissionError = computed(() => {
-  const candidates = [dashboardTabPayloadResource.error, isDailyTab.value ? kpiResource.error : null];
-  return candidates.find((error) => isPermissionDeniedError(error)) || null;
+  const candidates = [
+    unref(dashboardTabPayloadResource.error),
+    isDailyTab.value ? unref(kpiResource.error) : null,
+  ];
+  return candidates.find((error) => Boolean(error) && isPermissionDeniedError(error)) || null;
 });
 const dashboardScopeMessage = computed(() => {
   if (dashboardLoadingRaw.value || dashboardPermissionError.value) return "";
@@ -1419,13 +1579,12 @@ const renewalAlertItems = computed(() =>
   activeRenewalTasks.value
     .slice()
     .sort((a, b) => new Date(a.due_date || a.renewal_date || 0).getTime() - new Date(b.due_date || b.renewal_date || 0).getTime())
-    .slice(0, 5)
 );
-const displayRenewalAlertItems = computed(() => renewalAlertItems.value.slice(0, 5));
-const displayRenewalTasks = computed(() => activeRenewalTasks.value.slice(0, 8));
+const displayRenewalAlertItems = computed(() => renewalAlertItems.value);
+const displayRenewalTasks = computed(() => activeRenewalTasks.value);
 const displayRecentLeads = computed(() => leads.value);
-const displayTopCompanies = computed(() => topCompanies.value.slice(0, 4));
-const displayRecentPolicies = computed(() => recentPolicies.value.slice(0, 4));
+const displayTopCompanies = computed(() => topCompanies.value);
+const displayRecentPolicies = computed(() => recentPolicies.value);
 const displayRecentOffers = computed(() => recentOffers.value);
 const displayReadyOfferCount = computed(
   () => displayRecentOffers.value.filter((offer) => ["Sent", "Accepted"].includes(offer.status) && !offer.converted_policy).length
@@ -1439,23 +1598,66 @@ const reconciliationPreviewOpenDifference = computed(() => {
 const dailyActionOffers = computed(() =>
   (dashboardTabPreviews.value.action_offers || recentOffers.value)
     .filter((offer) => ["Sent", "Accepted"].includes(String(offer?.status || "")) && !offer.converted_policy)
-    .slice(0, 5)
 );
+
+const previewPages = reactive({
+  dailyFollowUp: 1,
+  dailyPolicies: 1,
+  dailyActionOffers: 1,
+  dailyRenewalAlerts: 1,
+  dailyTopCompanies: 1,
+  collectionsPayments: 1,
+  collectionsReconciliation: 1,
+  renewalsQueue: 1,
+  salesLeads: 1,
+  salesOffers: 1,
+  salesTasks: 1,
+  salesActivities: 1,
+  salesReminders: 1,
+});
+
+function previewPageCount(items) {
+  return Math.max(1, Math.ceil(asArray(unref(items)).length / DASHBOARD_PREVIEW_PAGE_SIZE));
+}
+
+function previewResolvedPage(key, items) {
+  return Math.min(previewPages[key] || 1, previewPageCount(items));
+}
+
+function pagedPreviewItems(items, key) {
+  const rows = asArray(unref(items));
+  const page = previewResolvedPage(key, rows);
+  const start = (page - 1) * DASHBOARD_PREVIEW_PAGE_SIZE;
+  return rows.slice(start, start + DASHBOARD_PREVIEW_PAGE_SIZE);
+}
+
+function setPreviewPage(key, page, items) {
+  const maxPage = previewPageCount(items);
+  previewPages[key] = Math.min(Math.max(Number(page) || 1, 1), maxPage);
+}
+
+function shouldShowPreviewPager(items) {
+  return previewPageCount(items) > 1;
+}
+
+function shouldShowViewAll(items) {
+  return asArray(unref(items)).length >= DASHBOARD_PREVIEW_FETCH_LIMIT;
+}
 
 const renewalBucketCounts = computed(() => dashboardStore.renewalBucketCounts || { overdue: 0, due7: 0, due30: 0 });
 const renewalRetentionSummary = computed(
   () => dashboardStore.renewalRetentionSummary || { renewed: 0, lost: 0, cancelled: 0, rate: 0 }
 );
-const followUpPayload = computed(() => followUpResource.data || {});
+const followUpPayload = computed(() => unref(followUpResource.data) || {});
 const followUpSummary = computed(() => followUpPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
 const followUpItems = computed(() => (Array.isArray(followUpPayload.value.items) ? followUpPayload.value.items : []));
-const myTasksPayload = computed(() => myTasksResource.data || {});
+const myTasksPayload = computed(() => unref(myTasksResource.data) || {});
 const myTaskSummary = computed(() => myTasksPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
 const myTaskItems = computed(() => (Array.isArray(myTasksPayload.value.items) ? myTasksPayload.value.items : []));
-const myActivitiesPayload = computed(() => myActivitiesResource.data || {});
+const myActivitiesPayload = computed(() => unref(myActivitiesResource.data) || {});
 const myActivitySummary = computed(() => myActivitiesPayload.value.summary || { total: 0, logged: 0, shared: 0, archived: 0 });
 const myActivityItems = computed(() => (Array.isArray(myActivitiesPayload.value.items) ? myActivitiesPayload.value.items : []));
-const myRemindersPayload = computed(() => myRemindersResource.data || {});
+const myRemindersPayload = computed(() => unref(myRemindersResource.data) || {});
 const myReminderSummary = computed(() => myRemindersPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
 const myReminderItems = computed(() => (Array.isArray(myRemindersPayload.value.items) ? myRemindersPayload.value.items : []));
 
@@ -2007,14 +2209,6 @@ function dashboardReconciliationFacts(row) {
   ];
 }
 
-function followUpTypeLabel(type) {
-  if (type === "claim") return t("followUpTypeClaim");
-  if (type === "renewal") return t("followUpTypeRenewal");
-  if (type === "assignment") return t("followUpTypeAssignment");
-  if (type === "call_note") return t("followUpTypeCallNote");
-  return type || "-";
-}
-
 function followUpTitle(item) {
   return item?.source_name || "-";
 }
@@ -2042,16 +2236,16 @@ function openFollowUpItem(item) {
     return;
   }
   if (sourceType === "claim") {
-    router.push({ name: "claims", query: { claim: sourceName } });
+    router.push({ name: "claims-board", query: { claim: sourceName } });
     return;
   }
   if (sourceType === "renewal") {
-    router.push({ name: "renewals", query: { task: sourceName } });
+    router.push({ name: "renewals-board", query: { task: sourceName } });
     return;
   }
   if (sourceType === "assignment" || sourceType === "call_note") {
     router.push({
-      path: "/communication",
+      name: "communication-center",
       query: {
         reference_doctype: sourceType === "assignment" ? "AT Ownership Assignment" : "AT Call Note",
         reference_name: sourceName,
@@ -2311,6 +2505,81 @@ function resetLeadForm() {
   newLead.notes = "";
 }
 
+function openLeadItem(lead) {
+  if (!lead?.name) return;
+  router.push({ name: "lead-detail", params: { name: lead.name } });
+}
+
+function openOfferItem(offer) {
+  if (!offer?.name) return;
+  router.push({ name: "offer-detail", params: { name: offer.name } });
+}
+
+function openPolicyItem(policy) {
+  if (!policy?.name) return;
+  router.push({ name: "policy-detail", params: { name: policy.name } });
+}
+
+function openRenewalTaskItem(task) {
+  if (!task?.name) return;
+  router.push({ name: "renewals-board", query: { task: task.name } });
+}
+
+function openPaymentItem(payment) {
+  const paymentQuery = String(payment?.payment_no || payment?.name || "").trim();
+  if (!paymentQuery) return;
+  router.push({ name: "payments-board", query: { query: paymentQuery } });
+}
+
+function openReconciliationItem(row) {
+  const sourceQuery = String(row?.source_name || row?.name || "").trim();
+  if (!sourceQuery) return;
+  router.push({
+    name: "reconciliation-workbench",
+    query: {
+      sourceQuery,
+      ...(row?.status ? { status: row.status } : {}),
+    },
+  });
+}
+
+function openPreviewList(target) {
+  switch (target) {
+    case "policies":
+      openPage("/policies");
+      return;
+    case "offers":
+      openPage("/offers");
+      return;
+    case "renewals":
+      openPage("/renewals");
+      return;
+    case "companies":
+      openPage("/insurance-companies");
+      return;
+    case "payments":
+      openPage("/payments");
+      return;
+    case "reconciliation":
+      openPage("/reconciliation-items");
+      return;
+    case "leads":
+      openPage("/leads");
+      return;
+    case "tasks":
+      router.push({ name: "tasks-list" });
+      return;
+    case "activities":
+      router.push({ name: "activities-list" });
+      return;
+    case "reminders":
+      router.push({ name: "reminders-list" });
+      return;
+    default:
+      return;
+  }
+}
+
 async function createLead() {
   try {
     leadDialogError.value = "";
@@ -2410,7 +2679,7 @@ function isPermissionDeniedError(error) {
 }
 
 watch(
-  () => kpiResource.data,
+  () => unref(kpiResource.data),
   (payload) => {
     dashboardStore.setKpiPayload(normalizeResourcePayload(payload));
   },
@@ -2418,7 +2687,7 @@ watch(
 );
 
 watch(
-  () => dashboardTabPayloadResource.data,
+  () => unref(dashboardTabPayloadResource.data),
   (payload) => {
     dashboardStore.setTabPayload(normalizeResourcePayload(payload));
   },

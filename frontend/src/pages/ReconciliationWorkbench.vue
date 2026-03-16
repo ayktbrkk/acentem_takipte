@@ -5,7 +5,7 @@
         :title="t('title')"
         :subtitle="t('subtitle')"
         :show-refresh="true"
-        :busy="workbenchResource.loading || syncing || reconciling"
+        :busy="workbenchLoading || syncing || reconciling"
         :refresh-label="t('refresh')"
         @refresh="reloadWorkbench"
       >
@@ -31,7 +31,7 @@
           <ActionButton
             variant="secondary"
             size="sm"
-            :disabled="workbenchResource.loading"
+            :disabled="workbenchLoading"
             @click="downloadReconciliationExport('xlsx')"
           >
             {{ t("exportXlsx") }}
@@ -39,7 +39,7 @@
           <ActionButton
             variant="primary"
             size="sm"
-            :disabled="workbenchResource.loading"
+            :disabled="workbenchLoading"
             @click="downloadReconciliationExport('pdf')"
           >
             {{ t("exportPdf") }}
@@ -214,7 +214,7 @@
 
     <article class="surface-card rounded-2xl p-5">
       <SectionCardHeader :title="t('collectionPreviewTitle')" :count="collectionPreviewRows.length" />
-      <div v-if="workbenchResource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+      <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
       <div v-else-if="collectionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCollectionPreview") }}</div>
       <ul v-else class="space-y-2 text-sm">
         <MetaListCard
@@ -236,7 +236,7 @@
 
     <article class="surface-card rounded-2xl p-5">
       <SectionCardHeader :title="t('commissionPreviewTitle')" :count="commissionPreviewRows.length" />
-      <div v-if="workbenchResource.loading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+      <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
       <div v-else-if="commissionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCommissionPreview") }}</div>
       <ul v-else class="space-y-2 text-sm">
         <MetaListCard
@@ -257,7 +257,7 @@
     </article>
 
     <DataTableShell
-      :loading="workbenchResource.loading"
+      :loading="workbenchLoading"
       :error="workbenchErrorText"
       :empty="rows.length === 0"
       :loading-label="t('loading')"
@@ -368,6 +368,7 @@
 
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
@@ -619,6 +620,7 @@ const copy = {
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const accountingStore = useAccountingStore();
+const route = useRoute();
 
 function t(key) {
   const locale = unref(authStore.locale) || "en";
@@ -702,9 +704,10 @@ const commissionPreviewRows = computed(() => workbenchData.value.commission_prev
 const statementImportRows = computed(() => statementImportPreview.value?.rows || []);
 const statementImportSummary = computed(() => statementImportPreview.value?.summary || {});
 const localeCode = computed(() => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"));
+const workbenchLoading = computed(() => Boolean(unref(workbenchResource.loading)));
 const workbenchErrorText = computed(() => {
   if (accountingStore.state.error) return accountingStore.state.error;
-  const err = workbenchResource.error;
+  const err = unref(workbenchResource.error);
   if (!err) return "";
   if (isPermissionDeniedError(err)) return t("permissionDeniedRead");
   return err?.messages?.join(" ") || err?.message || t("loadError");
@@ -837,6 +840,19 @@ function setWorkbenchFilterStateFromPayload(payload) {
   filters.sourceQuery = String(payload?.sourceQuery || "");
   filters.sourceDoctype = String(payload?.sourceDoctype || "");
   filters.limit = Number(payload?.limit || 50) || 50;
+}
+
+function applyRouteFilters() {
+  const status = String(route.query?.status || "").trim();
+  const sourceQuery = String(route.query?.sourceQuery || "").trim();
+  const sourceDoctype = String(route.query?.sourceDoctype || "").trim();
+  const hasRouteFilters = Boolean(status || sourceQuery || sourceDoctype);
+  if (!hasRouteFilters) return false;
+
+  filters.status = status || "Open";
+  filters.sourceQuery = sourceQuery;
+  filters.sourceDoctype = sourceDoctype;
+  return true;
 }
 
 function resetWorkbenchFilters() {
@@ -1090,9 +1106,19 @@ function formatMoney(value) {
 onMounted(() => {
   accountingStore.setLocaleCode(localeCode.value);
   applyPreset(presetKey.value, { refresh: false });
+  const appliedRouteFilters = applyRouteFilters();
   if (String(presetKey.value || "default") !== "default") void reloadWorkbench();
+  else if (appliedRouteFilters) void reloadWorkbench();
   void hydratePresetStateFromServer();
 });
+
+watch(
+  () => [route.query?.status, route.query?.sourceQuery, route.query?.sourceDoctype],
+  () => {
+    if (!applyRouteFilters()) return;
+    void reloadWorkbench();
+  }
+);
 
 watch(
   () => branchStore.selected,
