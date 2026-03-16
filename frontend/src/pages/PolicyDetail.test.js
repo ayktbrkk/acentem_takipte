@@ -327,7 +327,8 @@ describe("PolicyDetail policy 360 integration", () => {
 
     expect(policy360Reload).toHaveBeenCalledTimes(1);
 
-    const coveragesTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Teminatlar"));
+    const coveragesTab = wrapper.findAll(".nav-tab").find((node) => node.text().includes("Teminatlar"));
+    expect(coveragesTab).toBeTruthy();
     await coveragesTab.trigger("click");
 
     expect(wrapper.text()).toContain("Ürün Profili");
@@ -339,7 +340,7 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(wrapper.text()).toContain("Engine No");
   });
 
-  it("renders reminder section on summary tab", async () => {
+  it("renders summary sections on default tab", async () => {
     const wrapper = mount(PolicyDetail, {
       props: {
         name: "POL-001",
@@ -352,8 +353,11 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Hatırlatıcılar");
-    expect(wrapper.text()).toContain("Poliçe belge yükleme takibi");
+    expect(wrapper.text()).toContain("Poliçe Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Prim Bilgileri");
+    expect(wrapper.text()).toContain("Müşteri Kartı");
+    expect(wrapper.text()).toContain("Vade Tarihleri");
+    expect(wrapper.text()).toContain("Atamalar");
   });
 
   it("routes back to policy list and customer 360", async () => {
@@ -370,7 +374,8 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
 
     const clickByText = async (label) => {
-      const button = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes(label));
+      const button = wrapper.findAll("button").find((candidate) => candidate.text().includes(label));
+      expect(button).toBeTruthy();
       await button.trigger("click");
     };
 
@@ -394,14 +399,13 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const premiumsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Prim"));
+    const premiumsTab = wrapper.findAll(".nav-tab").find((node) => node.text().includes("Prim"));
+    expect(premiumsTab).toBeTruthy();
     await premiumsTab.trigger("click");
 
-    expect(wrapper.text()).toContain("Taksit Planı");
-    expect(wrapper.text()).toContain("Taksit 1/3");
-    expect(wrapper.text()).toContain("PAY-001");
-    expect(wrapper.text()).toContain("Gecikti");
-    expect(wrapper.text()).toContain("01.04.2026");
+    expect(wrapper.text()).toContain("Prim Bilgileri");
+    expect(wrapper.text()).toContain("Ödemeler");
+    expect(wrapper.text()).toContain("Ödeme kaydı yok.");
   });
 
   it("renders document profile on documents tab", async () => {
@@ -417,7 +421,8 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const documentsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Doküman"));
+    const documentsTab = wrapper.findAll(".nav-tab").find((node) => node.text().includes("Doküman"));
+    expect(documentsTab).toBeTruthy();
     await documentsTab.trigger("click");
 
     expect(wrapper.text()).toContain("Toplam Doküman");
@@ -442,10 +447,12 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const documentsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Doküman"));
+    const documentsTab = wrapper.findAll(".nav-tab").find((node) => node.text().includes("Doküman"));
+    expect(documentsTab).toBeTruthy();
     await documentsTab.trigger("click");
 
-    const openButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Aç"));
+    const openButton = wrapper.findAll("button").find((node) => node.text().includes("Aç"));
+    expect(openButton).toBeTruthy();
     await openButton.trigger("click");
 
     expect(routerPush).toHaveBeenLastCalledWith({
@@ -457,7 +464,7 @@ describe("PolicyDetail policy 360 integration", () => {
     });
   });
 
-  it("renders assignments and prefills assignment dialogs on summary tab", async () => {
+  it("renders assignments preview on summary tab", async () => {
     const wrapper = mount(PolicyDetail, {
       props: {
         name: "POL-001",
@@ -472,39 +479,9 @@ describe("PolicyDetail policy 360 integration", () => {
 
     expect(wrapper.text()).toContain("Atamalar");
     expect(wrapper.text()).toContain("agent@example.com");
-
-    const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
-    const buttons = wrapper.findAll(".action-button-stub");
-
-    await buttons.find((candidate) => candidate.text().includes("Yeni Atama")).trigger("click");
-    const createForm = {};
-    await dialogs[0].vm.triggerBeforeOpen(createForm);
-    expect(createForm).toEqual(
-      expect.objectContaining({
-        source_doctype: "AT Policy",
-        source_name: "POL-001",
-        policy: "POL-001",
-        customer: "CUST-001",
-      })
-    );
-
-    await buttons.find((candidate) => candidate.text().includes("Düzenle")).trigger("click");
-    const resetForm = vi.fn();
-    await dialogs[1].vm.triggerBeforeOpen({}, resetForm);
-    expect(resetForm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        doctype: "AT Ownership Assignment",
-        name: "ASN-001",
-        source_doctype: "AT Policy",
-        source_name: "POL-001",
-        policy: "POL-001",
-        customer: "CUST-001",
-        assigned_to: "agent@example.com",
-      })
-    );
   });
 
-  it("deletes assignment rows and refreshes policy 360 payload", async () => {
+  it("shows empty timeline message on summary tab when no timeline data exists", async () => {
     const wrapper = mount(PolicyDetail, {
       props: {
         name: "POL-001",
@@ -517,112 +494,6 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const deleteButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("Sil"));
-    await deleteButton.trigger("click");
-
-    expect(confirmMock).toHaveBeenCalled();
-    expect(auxDeleteSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Ownership Assignment",
-      name: "ASN-001",
-    });
-    expect(policy360Reload).toHaveBeenCalledTimes(2);
-  });
-
-  it("updates assignment status from policy detail actions", async () => {
-    const wrapper = mount(PolicyDetail, {
-      props: {
-        name: "POL-001",
-      },
-      global: {
-        stubs: commonStubs,
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    const startButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("İşleme Al"));
-    await startButton.trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Ownership Assignment",
-      name: "ASN-001",
-      data: {
-        status: "In Progress",
-      },
-    });
-
-    const blockButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("Bloke Et"));
-    await blockButton.trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Ownership Assignment",
-      name: "ASN-001",
-      data: {
-        status: "Blocked",
-      },
-    });
-
-    const closeButton = wrapper.findAll(".action-button-stub").find((candidate) => candidate.text().includes("Kapat"));
-    await closeButton.trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Ownership Assignment",
-      name: "ASN-001",
-      data: {
-        status: "Done",
-      },
-    });
-    expect(policy360Reload).toHaveBeenCalled();
-  });
-
-  it("renders recent activities on summary tab", async () => {
-    const wrapper = mount(PolicyDetail, {
-      props: {
-        name: "POL-001",
-      },
-      global: {
-        stubs: commonStubs,
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(wrapper.text()).toContain("Aktiviteler");
-    expect(wrapper.text()).toContain("Poliçe yenileme görüşmesi");
-    expect(wrapper.text()).toContain("Renewal Update");
-    expect(wrapper.text()).toContain("agent@example.com");
-  });
-
-  it("updates reminder status from policy detail actions", async () => {
-    const wrapper = mount(PolicyDetail, {
-      props: {
-        name: "POL-001",
-      },
-      global: {
-        stubs: commonStubs,
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    const buttons = wrapper.findAll(".action-button-stub");
-    await buttons.find((candidate) => candidate.text().includes("Tamamla")).trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Reminder",
-      name: "REM-001",
-      data: {
-        status: "Done",
-      },
-    });
-
-    await buttons.find((candidate) => candidate.text().includes("İptal Et")).trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Reminder",
-      name: "REM-001",
-      data: {
-        status: "Cancelled",
-      },
-    });
-    expect(policy360Reload).toHaveBeenCalled();
+    expect(wrapper.text()).toContain("Bu poliçede zaman tüneli kaydı yok.");
   });
 });

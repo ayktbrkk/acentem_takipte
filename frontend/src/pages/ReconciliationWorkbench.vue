@@ -295,7 +295,7 @@
               </td>
               <TableFactsCell :items="mismatchTypeFacts(row)" />
               <td class="at-table-cell">
-                <StatusBadge type="reconciliation" :status="row.status" />
+                <StatusBadge domain="reconciliation" :status="row.status" />
               </td>
               <td class="at-table-cell">
                 <FormattedCurrencyValue :value="row.local_amount_try" :locale="localeCode" :maximum-fraction-digits="2" />
@@ -384,7 +384,7 @@ import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { mutedFact, subtleFact } from "../utils/factItems";

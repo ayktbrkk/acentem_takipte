@@ -1,12 +1,12 @@
 <template>
   <div class="flex items-center justify-between gap-2">
     <p class="text-sm font-semibold text-slate-900 tabular-nums">{{ amountText }}</p>
-    <StatusBadge :type="statusType" :status="status" />
+    <StatusBadge :domain="statusType" :status="status" />
   </div>
 </template>
 
 <script setup>
-import StatusBadge from "../StatusBadge.vue";
+import StatusBadge from "../ui/StatusBadge.vue";
 
 defineProps({
   amountText: {

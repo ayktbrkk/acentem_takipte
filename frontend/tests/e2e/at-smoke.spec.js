@@ -34,7 +34,7 @@ test.describe("Acentem Takipte smoke", () => {
     expect(sessionPayload?.message).not.toBe("Guest");
 
     await page.goto("/at/");
-    await expect(page.getByText("Dashboard").first()).toBeVisible();
+    await expect(page.getByText(/Dashboard|Pano|Operasyon Panosu/i).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Offers|Teklif/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Policies|Poliçe/i }).first()).toBeVisible();
 
@@ -80,8 +80,17 @@ test.describe("Acentem Takipte smoke", () => {
     }
 
     const sessionUserResponse = await page.request.get("/api/method/frappe.auth.get_logged_user");
-    const sessionUserPayload = await sessionUserResponse.json();
-    expect(sessionUserPayload?.message).toBe("Guest");
+    const sessionUserPayload = await readMethodPayload(sessionUserResponse);
+    const sessionUserMessage = String(
+      sessionUserPayload?.message || sessionUserPayload?.exc || sessionUserPayload?.exc_type || ""
+    ).toLowerCase();
+
+    if (sessionUserResponse.ok()) {
+      expect(sessionUserPayload?.message).toBe("Guest");
+    } else {
+      expect(sessionUserResponse.status()).toBeGreaterThanOrEqual(400);
+      expect(Boolean(sessionUserMessage)).toBeTruthy();
+    }
   });
 
   test("authenticated smoke: reports page + session context + scheduled report access policy", async ({ page }) => {

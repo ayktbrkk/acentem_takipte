@@ -143,7 +143,7 @@
                   <TableEntityCell :title="payment.payment_no || payment.name" :facts="paymentIdentityFacts(payment)" />
                 </DataTableCell>
                 <DataTableCell>
-                  <StatusBadge type="payment_direction" :status="payment.payment_direction" />
+                  <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
                 </DataTableCell>
                 <DataTableCell>
                   <FormattedCurrencyValue :value="payment.amount_try" :locale="localeCode" />
@@ -198,7 +198,7 @@ import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";

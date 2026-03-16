@@ -1,423 +1,208 @@
 <template>
-  <section class="space-y-4">
-    <DocHeaderCard
-      :eyebrow="t('overview')"
-      :title="policy.policy_no || policy.name || name"
-      :subtitle="`${policy.insurance_company || '-'} / ${policy.branch || '-'}`"
-    >
-      <template #actions>
-        <DetailActionRow>
-          <StatusBadge type="policy" :status="policy.status" />
-          <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="sm" @click="openDeskPolicy">{{ t("openDesk") }}</ActionButton>
-          <ActionButton variant="secondary" size="sm" @click="goBack">{{ t("backList") }}</ActionButton>
-        </DetailActionRow>
-      </template>
-      <div class="mt-4 space-y-4">
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm">
-            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("recordNo") }}</span>
-            <span class="font-semibold text-slate-900">{{ policy.name || "-" }}</span>
-            <button
-              class="rounded-full border border-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
-              type="button"
-              @click="copyIdentity(policy.name, 'recordNo')"
-            >
-              {{ copiedIdentityKey === "recordNo" ? t("copied") : t("copy") }}
-            </button>
-          </div>
-          <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm">
-            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("carrierPolicyNo") }}</span>
-            <span class="font-semibold text-slate-900">{{ carrierPolicyDisplayValue }}</span>
-            <button
-              class="rounded-full border border-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="!policy.policy_no"
-              type="button"
-              @click="copyIdentity(policy.policy_no, 'carrierPolicyNo')"
-            >
-              {{ copiedIdentityKey === "carrierPolicyNo" ? t("copied") : t("copy") }}
-            </button>
-          </div>
+  <section class="page-shell">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Poliçeler</p>
+        <h1 class="detail-title">
+          {{ policy.policy_no || policy.name || name }}
+           <StatusBadge :status="policy.status" domain="policy" />
+        </h1>
+        <p class="detail-subtitle">{{ `${policy.insurance_company || '-'} / ${policy.branch || '-'}` }}</p>
+        <div class="mt-1.5 flex flex-wrap items-center gap-2">
+          <button class="copy-tag" type="button" @click="copyIdentity(policy.name, 'recordNo')">
+            {{ policy.name || '-' }}
+          </button>
+          <button class="copy-tag" :disabled="!policy.policy_no" type="button" @click="copyIdentity(policy.policy_no, 'carrierPolicyNo')">
+            {{ carrierPolicyDisplayValue }}
+          </button>
         </div>
-        <DocSummaryGrid :items="headerSummaryItems" />
       </div>
-    </DocHeaderCard>
-
-    <article class="surface-card rounded-2xl p-4">
-      <DetailTabsBar
-        :model-value="activeTab"
-        :tabs="tabs.map((tab) => ({ value: tab.key, label: tab.label }))"
-        @update:model-value="activeTab = $event"
-      />
-    </article>
-
-    <article class="surface-card rounded-2xl p-4 md:hidden">
-      <SectionCardHeader :title="t('mobileQuickActionsTitle')" :show-count="false" />
-      <div class="mt-3 grid grid-cols-2 gap-2">
-        <ActionButton variant="secondary" size="sm" @click="goBack">{{ t("backList") }}</ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="customer?.name && openCustomer(customer.name)">{{ t("customer360") }}</ActionButton>
-        <ActionButton variant="primary" size="sm" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="openPolicyDocuments">{{ t("documents") }}</ActionButton>
-        <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="sm" @click="openDeskPolicy">{{ t("openDesk") }}</ActionButton>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-sm" type="button" @click="goBack">{{ t("backList") }}</button>
+        <button class="btn btn-primary btn-sm" type="button" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</button>
       </div>
-    </article>
+    </div>
 
-    <template v-if="activeTab === 'summary'">
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('lifecycleTitle')" :count="snapshots.length" />
-        <div v-if="snapshotLoading" class="at-empty-block">{{ t("loading") }}</div>
-        <div v-else-if="snapshots.length === 0" class="at-empty-block">{{ t("emptyLifecycle") }}</div>
-        <div v-else class="space-y-3">
-          <div class="overflow-x-auto pb-1">
-            <div class="inline-flex min-w-full items-center gap-2">
-              <template v-for="(snapshot, index) in snapshots" :key="snapshot.name">
-                <button
-                  class="at-tab-chip"
-                  :class="selectedSnapshot?.name === snapshot.name ? 'at-tab-chip-active' : 'at-tab-chip-idle'"
-                  type="button"
-                  @click="selectedSnapshotName = snapshot.name"
-                >
-                  v{{ snapshot.snapshot_version }} / {{ snapshot.snapshot_type }}
-                </button>
-                <span v-if="index < snapshots.length - 1" class="h-[2px] w-6 rounded bg-slate-300" />
-              </template>
-            </div>
-          </div>
-          <div v-if="snapshotPreview" class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-            <DocSummaryGrid :items="snapshotPreviewSummaryItems" />
-          </div>
-        </div>
-      </article>
+    <HeroStrip :cells="heroCells" />
 
-      <div class="grid gap-4 xl:grid-cols-[1.65fr_1fr]">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('timelineTitle')" :count="timelineItems.length" />
-          <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="timelineItems.length === 0" class="at-empty-block">{{ t("emptyTimeline") }}</div>
-          <ol v-else class="space-y-3">
-            <MetaListCard
-              v-for="item in timelineItems"
-              :key="item.key"
-              :title="item.title"
-              :description="item.body"
-              :meta="item.actor || '-'"
-            >
-              <template #trailing>
-                <div class="flex items-center gap-2">
-                  <span class="h-2.5 w-2.5 rounded-full" :class="item.dotClass" />
-                  <p class="text-xs text-slate-500">{{ fmtDateTime(item.date) }}</p>
-                </div>
-              </template>
-            </MetaListCard>
-          </ol>
-        </article>
+    <div class="nav-tabs-bar">
+      <button
+        v-for="tab in tabs"
+        :key="tab.key"
+        :class="['nav-tab', activeTab === tab.key && 'is-active']"
+        type="button"
+        @click="activeTab = tab.key"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
 
-        <div class="space-y-4">
-          <article class="surface-card rounded-2xl p-5">
-            <SectionCardHeader :title="t('premiumTitle')" :show-count="false" />
-            <DocSummaryGrid :items="premiumSummaryItems" />
-          </article>
-
-          <article class="surface-card rounded-2xl p-5">
-            <SectionCardHeader :title="t('customerTitle')" :show-count="false" />
-            <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-            <div v-else-if="customer" class="space-y-2 text-sm">
-              <p class="font-semibold text-slate-900">{{ customer.full_name || customer.name }}</p>
-              <p class="text-slate-600">{{ t("taxId") }}: {{ customer.tax_id || "-" }}</p>
-              <p class="text-slate-600">{{ t("phone") }}: {{ customer.phone || "-" }}</p>
-              <p class="text-slate-600">{{ t("address") }}: {{ customer.address || "-" }}</p>
-              <ActionButton class="mt-2" variant="secondary" size="xs" @click="openCustomer(customer.name)">
-                {{ t("customer360") }}
-              </ActionButton>
-            </div>
-          <div v-else class="text-sm text-slate-500">{{ t("emptyCustomer") }}</div>
-          </article>
-
-          <article class="surface-card rounded-2xl p-5">
-            <SectionCardHeader :title="t('scheduleTitle')" :show-count="false" />
-            <DocSummaryGrid :items="scheduleSummaryItems" />
-          </article>
-          <article class="surface-card rounded-2xl p-5">
-            <SectionCardHeader :title="t('assignmentsTitle')" :count="assignments.length" />
-            <div class="mb-3 flex justify-end">
-              <ActionButton variant="secondary" size="xs" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</ActionButton>
-            </div>
-            <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-            <div v-else-if="assignments.length === 0" class="at-empty-block">{{ t("emptyAssignments") }}</div>
-            <ul v-else class="space-y-2 text-sm">
-              <MetaListCard
-                v-for="assignment in assignments"
-                :key="assignment.name"
-                :title="assignment.assigned_to || '-'"
-                :description="assignment.assignment_role || '-'"
-                :meta="assignment.priority || '-'"
-              >
-                <template #trailing>
-                  <div class="flex items-center gap-2">
-                    <p class="text-xs text-slate-500">{{ assignment.status || '-' }}</p>
-                    <ActionButton
-                      v-if="assignment.status !== 'In Progress'"
-                      variant="secondary"
-                      size="xs"
-                      @click.stop="markAssignmentInProgress(assignment)"
-                    >
-                      {{ t("startAssignment") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="assignment.status !== 'Blocked'"
-                      variant="secondary"
-                      size="xs"
-                      @click.stop="markAssignmentBlocked(assignment)"
-                    >
-                      {{ t("blockAssignment") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="assignment.status !== 'Done'"
-                      variant="secondary"
-                      size="xs"
-                      @click.stop="markAssignmentDone(assignment)"
-                    >
-                      {{ t("closeAssignment") }}
-                    </ActionButton>
-                    <ActionButton variant="secondary" size="xs" @click.stop="openEditOwnershipAssignment(assignment)">{{ t("edit") }}</ActionButton>
-                    <ActionButton variant="secondary" size="xs" @click.stop="deleteOwnershipAssignment(assignment)">{{ t("delete") }}</ActionButton>
-                  </div>
-                </template>
-                </MetaListCard>
-              </ul>
-            </article>
-            <article class="surface-card rounded-2xl p-5">
-              <SectionCardHeader :title="t('activitiesTitle')" :count="activities.length" />
-              <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-              <div v-else-if="activities.length === 0" class="at-empty-block">{{ t("emptyActivities") }}</div>
-              <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
-                <MetaListCard
-                  v-for="activity in activities"
-                  :key="activity.name"
-                  :title="activity.activity_title || activity.activity_type || activity.name"
-                  :description="activity.activity_type || '-'"
-                  :meta="fmtDateTime(activity.activity_at)"
-                >
-                  <template #trailing>
-                    <p class="text-xs text-slate-500">{{ activity.assigned_to || '-' }}</p>
-                  </template>
-                </MetaListCard>
-              </ul>
-            </article>
-            <article class="surface-card rounded-2xl p-5">
-              <SectionCardHeader :title="t('remindersTitle')" :count="reminders.length" />
-              <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-              <div v-else-if="reminders.length === 0" class="at-empty-block">{{ t("emptyReminders") }}</div>
-              <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
-                <MetaListCard
-                  v-for="reminder in reminders"
-                  :key="reminder.name"
-                  :title="reminder.reminder_title || reminder.name"
-                  :description="reminder.status || '-'"
-                  :meta="fmtDateTime(reminder.remind_at)"
-                >
-                  <template #trailing>
-                    <div class="flex flex-wrap items-center justify-end gap-2">
-                      <p class="text-xs text-slate-500">{{ reminder.priority || '-' }}</p>
-                      <ActionButton
-                        v-if="reminder.status !== 'Done'"
-                        variant="secondary"
-                        size="xs"
-                        @click="markReminderDone(reminder)"
-                      >
-                        {{ t("markDone") }}
-                      </ActionButton>
-                      <ActionButton
-                        v-if="reminder.status !== 'Cancelled'"
-                        variant="secondary"
-                        size="xs"
-                        @click="cancelReminder(reminder)"
-                      >
-                        {{ t("cancelReminder") }}
-                      </ActionButton>
-                    </div>
-                  </template>
-                </MetaListCard>
-              </ul>
-            </article>
-          </div>
-        </div>
-      </template>
-
-    <template v-else-if="activeTab === 'premiums'">
-      <div class="grid gap-4 xl:grid-cols-3">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('premiumTitle')" :show-count="false" />
-          <DocSummaryGrid :items="premiumPrimarySummaryItems" />
-        </article>
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('payments')" :count="payments.length" />
-          <div v-if="paymentLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="payments.length === 0" class="at-empty-block">{{ t("emptyPayments") }}</div>
-          <ul v-else class="space-y-2 text-sm">
-            <MetaListCard
-              v-for="p in payments"
-              :key="p.name"
-              :title="p.payment_no || p.name"
-              :description="`${p.payment_direction || '-'} / ${p.payment_purpose || '-'}`"
-              :meta="fmtDate(p.payment_date)"
-            >
-              <template #trailing>
-                <p class="text-xs text-slate-500">{{ paymentStatusLabel(p.status) }}</p>
-              </template>
-              <p class="mt-2 font-semibold text-slate-900">
-                {{ fmtMoney(p.amount_try || p.amount, p.amount_try ? "TRY" : p.currency) }}
-              </p>
-            </MetaListCard>
-          </ul>
-        </article>
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('installmentsTitle')" :count="paymentInstallments.length" />
-          <div v-if="paymentLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="paymentInstallments.length === 0" class="at-empty-block">{{ t("emptyInstallments") }}</div>
-          <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
-            <MetaListCard
-              v-for="installment in paymentInstallmentPreviewRows"
-              :key="installment.name"
-              :title="installment.title"
-              :description="installment.description"
-              :meta="installment.meta"
-            >
-              <template #trailing>
-                <p class="text-xs text-slate-500">{{ installment.statusLabel }}</p>
-              </template>
-              <p class="mt-2 font-semibold text-slate-900">
-                {{ installment.amountLabel }}
-              </p>
-            </MetaListCard>
-          </ul>
-        </article>
-      </div>
-    </template>
-
-    <template v-else-if="activeTab === 'coverages'">
-      <div class="grid gap-4 lg:grid-cols-2">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('coverageContext')" :show-count="false" />
-          <DocSummaryGrid :items="coverageSummaryItems" />
-        </article>
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('productProfileTitle')" :show-count="false" />
-          <DocSummaryGrid :items="productProfileSummaryItems" />
-        </article>
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('productReadinessTitle')" :show-count="false" />
-          <DocSummaryGrid :items="productReadinessSummaryItems" />
-          <div class="mt-3">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("missingProductFields") }}</p>
-            <div v-if="productMissingFieldRows.length === 0" class="at-empty-block mt-2">{{ t("noMissingProductField") }}</div>
-            <ul v-else class="mt-2 space-y-2 text-sm">
-              <MetaListCard
-                v-for="item in productMissingFieldRows"
-                :key="item.key"
-                :title="item.label"
-                :meta="t('missingFieldStatus')"
-              />
-            </ul>
-          </div>
-        </article>
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('snapshotSummary')" :show-count="false" />
-          <DocSummaryGrid v-if="snapshotPreview" :items="snapshotSummaryItems" />
-          <div v-else class="at-empty-block">{{ t("emptyLifecycle") }}</div>
-        </article>
-      </div>
-    </template>
-
-    <template v-else-if="activeTab === 'endorsements'">
-      <div class="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('endorsementTitle')" :count="endorsements.length" />
-          <div v-if="endorsementLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="endorsements.length === 0" class="at-empty-block">{{ t("emptyEndorsement") }}</div>
-          <ul v-else class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
-            <MetaListCard
-              v-for="e in endorsements"
-              :key="e.name"
-              :title="e.endorsement_type || '-'"
-              :subtitle="fmtDate(e.endorsement_date)"
-              :description="e.notes || '-'"
-              :meta="`${t('version')}: v${e.snapshot_version || '-'}`"
-            >
-              <template #trailing>
-                <p class="text-xs font-semibold" :class="endorsementStatusClass(e.status)">
-                  {{ endorsementStatusLabel(e.status) }}
-                </p>
-              </template>
-            </MetaListCard>
-          </ul>
-        </article>
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('lifecycleTitle')" :show-count="false" />
-          <div v-if="snapshots.length === 0" class="at-empty-block">{{ t("emptyLifecycle") }}</div>
-          <ol v-else class="space-y-3 text-sm">
-            <MetaListCard
-              v-for="s in snapshots"
-              :key="s.name"
-              :title="`v${s.snapshot_version || '-'}`"
-              :subtitle="fmtDateTime(s.captured_on)"
-              :meta="s.captured_by || '-'"
-            >
-              <template #trailing>
-                <p class="text-xs text-slate-500">{{ s.snapshot_type }}</p>
-              </template>
-            </MetaListCard>
-          </ol>
-        </article>
-      </div>
-    </template>
-
-    <template v-else>
-      <div class="grid gap-4 lg:grid-cols-2">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('documents')" :count="files.length">
-            <template #trailing>
-              <ActionButton variant="secondary" size="xs" @click="openPolicyDocuments">{{ t("open") }}</ActionButton>
+    <div class="detail-body">
+      <div class="detail-main">
+        <template v-if="activeTab === 'summary'">
+          <DetailCard :title="t('lifecycleTitle')">
+            <template #action>
+              <span class="badge badge-blue">v{{ selectedSnapshot?.snapshot_version || '-' }}</span>
             </template>
-          </SectionCardHeader>
-          <div v-if="fileLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="files.length === 0" class="at-empty-block">{{ t("emptyFiles") }}</div>
-          <div v-else class="space-y-3">
-            <DocSummaryGrid :items="documentProfileSummaryItems" />
-            <ul class="space-y-2 text-sm [&>*:nth-child(n+4)]:hidden md:[&>*:nth-child(n+4)]:block">
+            <StepBar :steps="lifecycleSteps" class="mb-4" />
+            <FieldGroup :fields="lifecycleFields" :cols="4" />
+          </DetailCard>
+
+          <DetailCard :title="t('timelineTitle')">
+            <template #action>
+              <button class="btn btn-sm" type="button" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</button>
+            </template>
+            <div v-if="timelineLoading" class="card-empty">{{ t("loading") }}</div>
+            <div v-else-if="timelineItems.length === 0" class="card-empty">{{ t("emptyTimeline") }}</div>
+            <div v-else>
+              <div v-for="item in timelineItems" :key="item.key" class="timeline-item">
+                <span class="tl-dot" :class="item.dotClass || 'tl-dot-active'" />
+                <div class="min-w-0 flex-1">
+                  <p class="tl-text">{{ item.title }}</p>
+                  <p class="text-sm text-gray-500">{{ item.body }}</p>
+                  <p class="tl-time">{{ fmtDateTime(item.date) }} · {{ item.actor || '-' }}</p>
+                </div>
+              </div>
+            </div>
+          </DetailCard>
+        </template>
+
+        <template v-else-if="activeTab === 'premiums'">
+          <DetailCard :title="t('premiumTitle')">
+            <FieldGroup :fields="premiumFieldGroups" :cols="2" />
+          </DetailCard>
+          <DetailCard :title="t('payments')">
+            <div v-if="paymentLoading" class="card-empty">{{ t("loading") }}</div>
+            <div v-else-if="payments.length === 0" class="card-empty">{{ t("emptyPayments") }}</div>
+            <div v-else class="space-y-3">
               <MetaListCard
-                v-for="f in files"
-                :key="f.name"
-                :title="f.file_name || f.name"
-                :meta="fmtDateTime(f.creation)"
+                v-for="p in payments"
+                :key="p.name"
+                :title="p.payment_no || p.name"
+                :description="`${p.payment_direction || '-'} / ${p.payment_purpose || '-'}`"
+                :meta="fmtDate(p.payment_date)"
               >
                 <template #trailing>
-                  <a class="at-btn-sm shrink-0" :href="f.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
+                  <p class="text-xs text-slate-500">{{ paymentStatusLabel(p.status) }}</p>
+                </template>
+                <p class="mt-2 font-semibold text-slate-900">
+                  {{ fmtMoney(p.amount_try || p.amount, p.amount_try ? 'TRY' : p.currency) }}
+                </p>
+              </MetaListCard>
+            </div>
+          </DetailCard>
+        </template>
+
+        <template v-else-if="activeTab === 'coverages'">
+          <DetailCard :title="t('coverageContext')">
+            <FieldGroup :fields="coverageFieldGroups" :cols="2" />
+          </DetailCard>
+          <DetailCard :title="t('productProfileTitle')">
+            <FieldGroup :fields="productProfileFieldGroups" :cols="2" />
+          </DetailCard>
+          <DetailCard :title="t('productReadinessTitle')">
+            <FieldGroup :fields="productReadinessFieldGroups" :cols="3" />
+          </DetailCard>
+        </template>
+
+        <template v-else-if="activeTab === 'endorsements'">
+          <DetailCard :title="t('endorsementTitle')">
+            <div v-if="endorsementLoading" class="card-empty">{{ t("loading") }}</div>
+            <div v-else-if="endorsements.length === 0" class="card-empty">{{ t("emptyEndorsement") }}</div>
+            <div v-else class="space-y-3">
+              <MetaListCard
+                v-for="e in endorsements"
+                :key="e.name"
+                :title="e.endorsement_type || '-'"
+                :subtitle="fmtDate(e.endorsement_date)"
+                :description="e.notes || '-'"
+                :meta="`${t('version')}: v${e.snapshot_version || '-'}`"
+              >
+                <template #trailing>
+                  <p class="text-xs font-semibold" :class="endorsementStatusClass(e.status)">
+                    {{ endorsementStatusLabel(e.status) }}
+                  </p>
                 </template>
               </MetaListCard>
-            </ul>
-          </div>
-        </article>
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('notifications')" :count="notifications.length" />
-          <div v-if="notificationLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="notifications.length === 0" class="at-empty-block">{{ t("emptyNotifications") }}</div>
-          <ul v-else class="space-y-2 text-sm">
-            <MetaListCard
-              v-for="n in notifications"
-              :key="n.name"
-              :title="`${n.channel || '-'} / ${n.language || '-'}`"
-              :description="n.subject || n.body || '-'"
-              description-class="mt-2 line-clamp-2 text-slate-700"
-              :meta="fmtDateTime(n.creation)"
-            >
-              <template #trailing>
-                <p class="text-xs text-slate-500">{{ notificationStatusLabel(n.status) }}</p>
-              </template>
-            </MetaListCard>
-          </ul>
-        </article>
+            </div>
+          </DetailCard>
+        </template>
+
+        <template v-else>
+          <DetailCard :title="t('documents')">
+            <template #action>
+              <button class="btn btn-sm" type="button" @click="openPolicyDocuments">{{ t("open") }}</button>
+            </template>
+            <div v-if="fileLoading" class="card-empty">{{ t("loading") }}</div>
+            <div v-else-if="files.length === 0" class="card-empty">{{ t("emptyFiles") }}</div>
+            <div v-else class="space-y-3">
+              <FieldGroup :fields="documentFieldGroups" :cols="3" />
+              <MetaListCard v-for="f in files" :key="f.name" :title="f.file_name || f.name" :meta="fmtDateTime(f.creation)">
+                <template #trailing>
+                  <a class="btn btn-sm" :href="f.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
+                </template>
+              </MetaListCard>
+            </div>
+          </DetailCard>
+        </template>
       </div>
-    </template>
+
+      <div class="detail-sidebar">
+        <div>
+          <p class="section-title">{{ t('premiumTitle') }}</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div v-for="m in premiumMetrics" :key="m.label" class="mini-metric">
+              <p class="mini-metric-label">{{ m.label }}</p>
+              <p class="mini-metric-value">{{ m.value }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">{{ t('customerTitle') }}</p>
+          <div v-if="customerLoading" class="field-value-muted">{{ t('loading') }}</div>
+          <div v-else-if="customer" class="space-y-3">
+            <div class="flex items-center gap-2.5">
+              <div class="avatar avatar-md avatar-blue">{{ customerInitials }}</div>
+              <div>
+                <p class="text-sm font-medium text-gray-900">{{ customer.full_name || customer.name }}</p>
+                <p class="text-xs text-gray-400">{{ t('taxId') }}: {{ customer.tax_id || '-' }}</p>
+              </div>
+            </div>
+            <button class="btn btn-full btn-sm" type="button" @click="openCustomer(customer.name)">
+              {{ t('customer360') }} →
+            </button>
+          </div>
+          <div v-else class="field-value-muted">{{ t('emptyCustomer') }}</div>
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">{{ t('scheduleTitle') }}</p>
+          <FieldGroup :fields="dateFields" :cols="2" />
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">{{ t('assignmentsTitle') }}</p>
+          <div v-if="assignments.length === 0" class="field-value-muted">{{ t('emptyAssignments') }}</div>
+          <div v-else class="space-y-2">
+            <MetaListCard
+              v-for="assignment in assignments.slice(0, 3)"
+              :key="assignment.name"
+              :title="assignment.assigned_to || '-'"
+              :description="assignment.assignment_role || '-'"
+              :meta="assignment.status || '-'"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <QuickCreateManagedDialog
       v-model="showOwnershipAssignmentDialog"
       config-key="ownership_assignment"
@@ -443,15 +228,13 @@ import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { deskActionsEnabled } from "../utils/deskActions";
-import StatusBadge from "../components/StatusBadge.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
-import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
-import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
+import HeroStrip from "../components/ui/HeroStrip.vue";
+import DetailCard from "../components/ui/DetailCard.vue";
+import FieldGroup from "../components/ui/FieldGroup.vue";
+import StepBar from "../components/ui/StepBar.vue";
 
 const props = defineProps({ name: { type: String, default: "" } });
 const router = useRouter();
@@ -663,6 +446,72 @@ const headerSummaryItems = computed(() => [
     meta: fmtDate(policy.value.end_date),
   },
 ]);
+const heroCells = computed(() => [
+  { label: t("customer"), value: customer.value?.full_name || policy.value.customer || "-", variant: "default" },
+  { label: t("branch"), value: policy.value.branch || "-", variant: "default" },
+  { label: t("gross"), value: fmtMoney(policy.value.gross_premium, policy.value.currency), variant: "lg" },
+  {
+    label: t("remaining"),
+    value: remainingLabel.value,
+    variant: remainingDays.value != null && remainingDays.value <= 30 ? "warn" : "accent",
+    suffix: policy.value.end_date ? `/ ${fmtDate(policy.value.end_date)}` : "",
+  },
+]);
+const lifecycleSteps = computed(() => {
+  const items = [
+    { label: t("issue"), completed: Boolean(policy.value.issue_date) },
+    { label: t("start"), completed: Boolean(policy.value.start_date) },
+    { label: t("end"), completed: Boolean(policy.value.end_date) },
+    { label: t("status"), completed: Boolean(policy.value.status) },
+  ];
+  const firstPendingIndex = items.findIndex((item) => !item.completed);
+  return items.map((item, index) => ({
+    label: item.label,
+    state: item.completed ? "done" : index === firstPendingIndex ? "current" : "pending",
+  }));
+});
+const lifecycleFields = computed(() => [
+  { label: t("company"), value: policy.value.insurance_company || "-" },
+  { label: t("status"), value: policyStatusLabel(policy.value.status) },
+  { label: t("currency"), value: policy.value.currency || "TRY" },
+  { label: t("fxRate"), value: Number(policy.value.fx_rate || 0).toFixed(4) },
+]);
+const premiumMetrics = computed(() => [
+  { label: t("gross"), value: fmtMoney(policy.value.gross_premium, policy.value.currency) },
+  { label: t("net"), value: fmtMoney(policy.value.net_premium, policy.value.currency) },
+  { label: t("commission"), value: fmtMoney(policy.value.commission_amount, policy.value.currency) },
+  { label: t("gwpTry"), value: fmtMoney(policy.value.gwp_try, "TRY") },
+]);
+const dateFields = computed(() => [
+  { label: t("issue"), value: fmtDate(policy.value.issue_date) },
+  { label: t("start"), value: fmtDate(policy.value.start_date) },
+  { label: t("end"), value: fmtDate(policy.value.end_date) },
+  { label: t("remaining"), value: remainingLabel.value, variant: remainingDays.value != null && remainingDays.value > 0 ? "accent" : "muted" },
+]);
+const premiumFieldGroups = computed(() =>
+  premiumSummaryItems.value.map((item) => ({ label: item.label, value: item.value, variant: item.valueClass === remainingClass.value ? "accent" : "default" }))
+);
+const coverageFieldGroups = computed(() => coverageSummaryItems.value.map((item) => ({ label: item.label, value: item.value })));
+const productProfileFieldGroups = computed(() => productProfileSummaryItems.value.map((item) => ({ label: item.label, value: item.value })));
+const productReadinessFieldGroups = computed(() => [
+  ...productReadinessSummaryItems.value.map((item) => ({ label: item.label, value: item.value })),
+  {
+    label: t("missingProductFields"),
+    value: productMissingFieldRows.value.length ? productMissingFieldRows.value.map((item) => item.label).join(", ") : t("noMissingProductField"),
+    span: 3,
+    variant: productMissingFieldRows.value.length ? "accent" : "muted",
+  },
+]);
+const documentFieldGroups = computed(() => documentProfileSummaryItems.value.map((item) => ({ label: item.label, value: item.value })));
+const customerInitials = computed(() => {
+  const source = String(customer.value?.full_name || customer.value?.name || "").trim();
+  if (!source) return "AT";
+  return source
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+});
 
 async function copyIdentity(value, key) {
   const text = String(value || "").trim();

@@ -239,8 +239,8 @@
 
               <DataTableCell>
                 <div class="flex flex-wrap items-center gap-2">
-                  <StatusBadge v-if="config.statusField && row[config.statusField] !== undefined && row[config.statusField] !== null && row[config.statusField] !== ''" :type="config.statusType || 'policy'" :status="statusValue(row, config.statusField, config.statusType)" />
-                  <StatusBadge v-if="config.secondaryStatusField && row[config.secondaryStatusField]" :type="config.secondaryStatusType || 'policy'" :status="statusValue(row, config.secondaryStatusField, config.secondaryStatusType)" />
+                  <StatusBadge v-if="config.statusField && row[config.statusField] !== undefined && row[config.statusField] !== null && row[config.statusField] !== ''" :domain="config.statusType || 'policy'" :status="statusValue(row, config.statusField, config.statusType)" />
+                  <StatusBadge v-if="config.secondaryStatusField && row[config.secondaryStatusField]" :domain="config.secondaryStatusType || 'policy'" :status="statusValue(row, config.secondaryStatusField, config.secondaryStatusType)" />
                   <span v-if="!config.statusField && !config.secondaryStatusField" class="text-xs text-slate-400">-</span>
                 </div>
               </DataTableCell>
@@ -433,7 +433,7 @@ import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import { openTabularExport } from "../utils/listExport";
 
 const props = defineProps({

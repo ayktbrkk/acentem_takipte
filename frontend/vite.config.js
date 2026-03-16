@@ -10,6 +10,11 @@ export default defineConfig({
       compiler: "vue3",
     }),
   ],
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
+    },
+  },
   base: "/assets/acentem_takipte/frontend/",
   build: {
     manifest: true,

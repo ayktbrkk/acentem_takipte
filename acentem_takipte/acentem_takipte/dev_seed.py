@@ -19,6 +19,12 @@ def reset_and_seed_demo_data(
         bench --site localhost execute acentem_takipte.acentem_takipte.dev_seed.reset_and_seed_demo_data \
           --args "[5, 1, 1, 'Demo%', 0]"
     """
+    # Security guard: prevent accidental execution in production
+    if not frappe.conf.developer_mode:
+        frappe.throw(
+            "Seed data operations are only allowed in developer mode.",
+            title="Security: Developer Mode Required"
+        )
 
     count = int(count or 5)
     preserve_templates = int(preserve_templates)
@@ -81,6 +87,13 @@ def reset_and_seed_10(
 
 
 def inspect_at_seed_snapshot():
+    # Security guard: prevent accidental execution in production
+    if not frappe.conf.developer_mode:
+        frappe.throw(
+            "Seed inspection is only allowed in developer mode.",
+            title="Security: Developer Mode Required"
+        )
+
     doctypes = [
         "AT Insurance Company",
         "AT Branch",

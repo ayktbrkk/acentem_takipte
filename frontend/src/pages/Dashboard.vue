@@ -228,7 +228,7 @@
               @click="openOfferItem(offer)"
             >
               <template #trailing>
-                <StatusBadge type="offer" :status="offer.status" />
+                <StatusBadge domain="offer" :status="offer.status" />
               </template>
               <MiniFactList :items="recentOfferFacts(offer)" />
               <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
@@ -264,7 +264,7 @@
               @click="openPolicyItem(policy)"
             >
               <template #trailing>
-                <StatusBadge type="policy" :status="policy.status" />
+                <StatusBadge domain="policy" :status="policy.status" />
               </template>
               <MiniFactList :items="recentPolicyFacts(policy)" />
               <p class="mt-1 text-xs text-slate-600">
@@ -300,7 +300,7 @@
               @click="openRenewalTaskItem(task)"
             >
               <template #trailing>
-                <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
+                <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
               </template>
               <MiniFactList :items="renewalAlertFacts(task)" />
             </MetaListCard>
@@ -376,7 +376,7 @@
             @click="openPaymentItem(payment)"
           >
             <template #trailing>
-              <StatusBadge type="payment_direction" :status="payment.payment_direction" />
+              <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
             </template>
             <MiniFactList :items="dashboardPaymentFacts(payment)" />
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrency(payment.amount_try) }}</p>
@@ -418,7 +418,7 @@
                 @click="openReconciliationItem(row)"
               >
                 <template #trailing>
-                  <StatusBadge type="reconciliation" :status="row.status" />
+                  <StatusBadge domain="reconciliation" :status="row.status" />
                 </template>
                 <MiniFactList :items="dashboardReconciliationFacts(row)" />
               </MetaListCard>
@@ -453,7 +453,7 @@
               @click="openRenewalTaskItem(task)"
             >
               <template #trailing>
-                <StatusBadge v-if="task.status" type="renewal" :status="task.status" />
+                <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
               </template>
               <MiniFactList :items="renewalTaskFactsDetailed(task)" />
             </MetaListCard>
@@ -513,7 +513,7 @@
               @click="openLeadItem(lead)"
             >
               <template #trailing>
-                <StatusBadge type="lead" :status="lead.status" />
+                <StatusBadge domain="lead" :status="lead.status" />
               </template>
               <MiniFactList :items="recentLeadFacts(lead)" />
               <p class="mt-2 max-h-10 overflow-hidden text-sm text-slate-700">{{ lead.notes || t("noNote") }}</p>
@@ -553,7 +553,7 @@
               @click="openOfferItem(offer)"
             >
               <template #trailing>
-                <StatusBadge type="offer" :status="offer.status" />
+                <StatusBadge domain="offer" :status="offer.status" />
               </template>
               <MiniFactList :items="recentOfferFacts(offer)" />
               <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
@@ -834,7 +834,7 @@ import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import PreviewPager from "../components/app-shell/PreviewPager.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 
 const router = useRouter();

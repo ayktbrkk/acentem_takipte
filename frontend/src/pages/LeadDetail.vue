@@ -1,305 +1,162 @@
 <template>
-  <section class="space-y-4">
-    <DocHeaderCard :eyebrow="t('overview')" :title="leadDisplayTitle" :subtitle="leadHeaderSubtitle">
-      <template #actions>
-        <DetailActionRow>
-          <StatusBadge type="lead" :status="lead.status || 'Draft'" />
-          <StatusBadge type="lead_stale" :status="leadStaleState(lead)" />
-          <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="sm" @click="openDeskLead">{{ t("openDesk") }}</ActionButton>
-          <ActionButton variant="secondary" size="sm" @click="goBack">{{ t("backList") }}</ActionButton>
-        </DetailActionRow>
-      </template>
-      <DocSummaryGrid :items="leadHeaderSummaryItems" />
-    </DocHeaderCard>
+  <section class="page-shell">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Satış → Leadler</p>
+        <h1 class="detail-title">
+          {{ leadDisplayTitle }}
+          <StatusBadge :status="uiLeadStatus" />
+          <StatusBadge :status="uiLeadStaleStatus" />
+        </h1>
+        <p class="detail-subtitle">{{ leadHeaderSubtitle }}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-sm" type="button" @click="goBack">{{ t('backList') }}</button>
+        <button v-if="canConvertLead(lead)" class="btn btn-primary btn-sm" type="button" :disabled="leadConvertResource.loading" @click="convertLeadToOffer">
+          {{ leadConvertResource.loading ? t('converting') : t('convertNow') }}
+        </button>
+      </div>
+    </div>
 
-    <div class="at-detail-split">
-      <aside class="at-detail-aside">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('leadInfoTitle')" :show-count="false" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
-          <div v-else class="space-y-3">
-            <MiniFactList :items="leadInfoFacts" />
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("notes") }}</p>
-              <p class="mt-1 whitespace-pre-wrap text-sm text-slate-800">{{ lead.notes || "-" }}</p>
-            </div>
-          </div>
-        </article>
-      </aside>
+    <HeroStrip :cells="heroCells" />
 
-      <div class="space-y-4">
-        <DetailTabsBar v-model="activeLeadTab" :tabs="leadTabs" />
+    <div class="nav-tabs-bar">
+      <button
+        v-for="tab in leadTabs"
+        :key="tab.value"
+        :class="['nav-tab', activeLeadTab === tab.value && 'is-active']"
+        type="button"
+        @click="activeLeadTab = tab.value"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
 
-        <article
-          v-if="activeLeadTab === 'overview' || activeLeadTab === 'related'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('conversionTitle')" :show-count="false" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
-          <div v-else class="space-y-3">
-            <div class="flex flex-wrap items-center gap-2">
-              <StatusBadge type="lead_conversion" :status="leadConversionState(lead)" />
-              <StatusBadge type="lead" :status="lead.status || 'Draft'" />
-            </div>
-            <MiniFactList :items="leadConversionFacts" />
-            <div v-if="linkedConversionCards.length" class="grid gap-3 md:grid-cols-2">
-              <MetaListCard
-                v-for="item in linkedConversionCards"
-                :key="item.key"
-                :title="item.title"
-                :subtitle="item.subtitle"
-                :description="item.description"
-                :meta="item.meta"
-              >
+    <div class="detail-body">
+      <div class="detail-main">
+        <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'related'" :title="t('conversionTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
+          <template v-else>
+            <FieldGroup :fields="leadConversionFields" :cols="2" />
+            <div v-if="linkedConversionCards.length" class="mt-4 grid gap-3 md:grid-cols-2">
+              <MetaListCard v-for="item in linkedConversionCards" :key="item.key" :title="item.title" :subtitle="item.subtitle" :description="item.description" :meta="item.meta">
                 <template #trailing>
-                  <ActionButton variant="link" size="xs" @click="item.open()">{{ item.actionLabel }}</ActionButton>
+                  <button class="btn btn-sm" type="button" @click="item.open()">{{ item.actionLabel }}</button>
                 </template>
               </MetaListCard>
             </div>
-            <p
-              v-if="actionErrorText"
-              class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700"
-            >
-              {{ actionErrorText }}
+            <p v-if="actionErrorText" class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{{ actionErrorText }}</p>
+            <p v-else-if="actionSuccessText || lastConvertedOfferName" class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+              {{ actionSuccessText || t('convertLeadSuccess') }}
             </p>
-            <div
-              v-else-if="lastConvertedOfferName"
-              class="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2"
-            >
-              <p class="text-xs font-medium text-emerald-700">{{ t("convertLeadSuccess") }}</p>
-              <ActionButton variant="link" size="xs" @click="openOfferDetail(lastConvertedOfferName)">
-                {{ t("openOffer") }}
-              </ActionButton>
-            </div>
-            <p
-              v-else-if="actionSuccessText"
-              class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700"
-            >
-              {{ actionSuccessText }}
-            </p>
-            <InlineActionRow>
-              <ActionButton
-                v-if="canConvertLead(lead)"
-                variant="primary"
-                size="xs"
-                :disabled="leadConvertResource.loading"
-                @click="convertLeadToOffer"
-              >
-                {{ leadConvertResource.loading ? t("converting") : t("convertNow") }}
-              </ActionButton>
-              <ActionButton
-                v-if="lead.customer"
-                variant="secondary"
-                size="xs"
-                @click="openCustomer360(lead.customer)"
-              >
-                {{ t("openCustomer360") }}
-              </ActionButton>
-              <ActionButton
-                v-if="lead.converted_offer"
-                variant="secondary"
-                size="xs"
-                @click="openOfferDetail(lead.converted_offer)"
-              >
-                {{ t("openOffer") }}
-              </ActionButton>
-              <ActionButton
-                v-if="lead.converted_policy"
-                variant="secondary"
-                size="xs"
-                @click="openPolicyDetail(lead.converted_policy)"
-              >
-                {{ t("openPolicy") }}
-              </ActionButton>
-            </InlineActionRow>
-          </div>
-        </article>
+          </template>
+        </DetailCard>
 
-        <article
-          v-if="activeLeadTab === 'overview' || activeLeadTab === 'conversion'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('relatedTitle')" :count="relatedRecordsCount" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
+        <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'conversion'" :title="t('relatedTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <div v-else class="grid gap-4 lg:grid-cols-2">
-            <div class="space-y-3">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("recentOffersTitle") }}</p>
-              <ul v-if="relatedOffers.length" class="space-y-3">
-                <MetaListCard
-                  v-for="item in relatedOffers"
-                  :key="'offer-'+item.name"
-                  :title="item.name"
-                  :description="fmtDate(item.offer_date)"
-                  :meta="relatedOfferMeta(item)"
-                >
+            <div>
+              <p class="section-title">{{ t('recentOffersTitle') }}</p>
+              <div v-if="relatedOffers.length" class="space-y-3">
+                <MetaListCard v-for="item in relatedOffers" :key="`offer-${item.name}`" :title="item.name" :description="fmtDate(item.offer_date)" :meta="relatedOfferMeta(item)">
                   <template #trailing>
-                    <ActionButton variant="link" size="xs" @click="openOfferDetail(item.name)">{{ t("openOffer") }}</ActionButton>
+                    <button class="btn btn-sm" type="button" @click="openOfferDetail(item.name)">{{ t('openOffer') }}</button>
                   </template>
                 </MetaListCard>
-              </ul>
-              <div v-else class="at-empty-block">{{ t("noRelatedOffers") }}</div>
+              </div>
+              <div v-else class="card-empty">{{ t('noRelatedOffers') }}</div>
             </div>
-
-            <div class="space-y-3">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("recentPoliciesTitle") }}</p>
-              <ul v-if="relatedPolicies.length" class="space-y-3">
-                <MetaListCard
-                  v-for="item in relatedPolicies"
-                  :key="'policy-'+item.name"
-                  :title="item.policy_no || item.name"
-                  :subtitle="item.name"
-                  :description="fmtDate(item.end_date)"
-                  :meta="relatedPolicyMeta(item)"
-                >
+            <div>
+              <p class="section-title">{{ t('recentPoliciesTitle') }}</p>
+              <div v-if="relatedPolicies.length" class="space-y-3">
+                <MetaListCard v-for="item in relatedPolicies" :key="`policy-${item.name}`" :title="item.policy_no || item.name" :subtitle="item.name" :description="fmtDate(item.end_date)" :meta="relatedPolicyMeta(item)">
                   <template #trailing>
-                    <ActionButton variant="link" size="xs" @click="openPolicyDetail(item.name)">{{ t("openPolicy") }}</ActionButton>
+                    <button class="btn btn-sm" type="button" @click="openPolicyDetail(item.name)">{{ t('openPolicy') }}</button>
                   </template>
                 </MetaListCard>
-              </ul>
-              <div v-else class="at-empty-block">{{ t("noRelatedPolicies") }}</div>
+              </div>
+              <div v-else class="card-empty">{{ t('noRelatedPolicies') }}</div>
             </div>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
-          v-if="activeLeadTab === 'overview' || activeLeadTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('opsPreviewTitle')" :count="opsPreviewCount" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
+        <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'operations'" :title="t('opsPreviewTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <div v-else class="grid gap-4 xl:grid-cols-2">
-            <div class="space-y-4">
-              <div class="space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("notifDraftsTitle") }}</p>
-                <ul v-if="leadNotificationDrafts.length" class="space-y-3">
-                  <MetaListCard
-                    v-for="item in leadNotificationDrafts"
-                    :key="'draft-'+item.name"
-                    :title="item.recipient || item.name"
-                    :subtitle="item.reference_name || item.name"
-                    :description="item.name || '-'"
-                    :meta="notificationPreviewMeta(item)"
-                  >
-                    <template #trailing>
-                      <div class="flex flex-wrap items-center justify-end gap-1">
-                        <StatusBadge v-if="item.status" type="notification_status" :status="item.status" />
-                        <StatusBadge v-if="item.channel" type="notification_channel" :status="item.channel" />
-                        <ActionButton variant="link" size="xs" @click="openCommunicationCenterForLead(item)">{{ t("openCommunication") }}</ActionButton>
-                      </div>
-                    </template>
-                  </MetaListCard>
-                </ul>
-                <div v-else class="at-empty-block">{{ t("noNotifDrafts") }}</div>
+            <div>
+              <p class="section-title">{{ t('notifDraftsTitle') }}</p>
+              <div v-if="leadNotificationDrafts.length" class="space-y-3">
+                <MetaListCard v-for="item in leadNotificationDrafts" :key="`draft-${item.name}`" :title="item.recipient || item.name" :subtitle="item.reference_name || item.name" :description="item.name || '-'" :meta="notificationPreviewMeta(item)">
+                  <template #trailing>
+                    <button class="btn btn-sm" type="button" @click="openCommunicationCenterForLead(item)">{{ t('openCommunication') }}</button>
+                  </template>
+                </MetaListCard>
               </div>
-
-              <div class="space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("notifOutboxTitle") }}</p>
-                <ul v-if="leadNotificationOutbox.length" class="space-y-3">
-                  <MetaListCard
-                    v-for="item in leadNotificationOutbox"
-                    :key="'outbox-'+item.name"
-                    :title="item.recipient || item.name"
-                    :subtitle="item.reference_name || item.name"
-                    :description="item.name || '-'"
-                    :meta="notificationPreviewMeta(item)"
-                  >
-                    <template #trailing>
-                      <div class="flex flex-wrap items-center justify-end gap-1">
-                        <StatusBadge v-if="item.status" type="notification_status" :status="item.status" />
-                        <StatusBadge v-if="item.channel" type="notification_channel" :status="item.channel" />
-                        <ActionButton variant="link" size="xs" @click="openCommunicationCenterForLead(item)">{{ t("openCommunication") }}</ActionButton>
-                      </div>
-                    </template>
-                  </MetaListCard>
-                </ul>
-                <div v-else class="at-empty-block">{{ t("noNotifOutbox") }}</div>
-              </div>
+              <div v-else class="card-empty">{{ t('noNotifDrafts') }}</div>
             </div>
-
-            <div class="space-y-4">
-              <div class="space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("paymentsPreviewTitle") }}</p>
-                <ul v-if="leadPayments.length" class="space-y-3">
-                  <MetaListCard
-                    v-for="item in leadPayments"
-                    :key="'payment-'+item.name"
-                    :title="item.payment_no || item.name"
-                    :subtitle="item.policy || item.customer || '-'"
-                    :description="fmtDate(item.payment_date)"
-                    :meta="leadPaymentMeta(item)"
-                  >
-                    <template #trailing>
-                      <ActionButton
-                        variant="link"
-                        size="xs"
-                        @click="item.policy ? openPolicyDetail(item.policy) : openPaymentsBoard()"
-                      >
-                        {{ item.policy ? t("openPolicy") : t("openPayments") }}
-                      </ActionButton>
-                    </template>
-                  </MetaListCard>
-                </ul>
-                <div v-else class="at-empty-block">{{ t("noPayments") }}</div>
+            <div>
+              <p class="section-title">{{ t('paymentsPreviewTitle') }}</p>
+              <div v-if="leadPayments.length" class="space-y-3">
+                <MetaListCard v-for="item in leadPayments" :key="`payment-${item.name}`" :title="item.payment_no || item.name" :subtitle="item.policy || item.customer || '-'" :description="fmtDate(item.payment_date)" :meta="leadPaymentMeta(item)">
+                  <template #trailing>
+                    <button class="btn btn-sm" type="button" @click="item.policy ? openPolicyDetail(item.policy) : openPaymentsBoard()">
+                      {{ item.policy ? t('openPolicy') : t('openPayments') }}
+                    </button>
+                  </template>
+                </MetaListCard>
               </div>
+              <div v-else class="card-empty">{{ t('noPayments') }}</div>
+            </div>
+          </div>
+        </DetailCard>
 
-              <div class="space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("renewalsPreviewTitle") }}</p>
-                <ul v-if="leadRenewals.length" class="space-y-3">
-                  <MetaListCard
-                    v-for="item in leadRenewals"
-                    :key="'renewal-'+item.name"
-                    :title="item.policy || item.name"
-                    :subtitle="item.customer || '-'"
-                    :description="fmtDate(item.due_date || item.renewal_date)"
-                    :meta="leadRenewalMeta(item)"
-                  >
-                    <template #trailing>
-                      <ActionButton
-                        variant="link"
-                        size="xs"
-                        @click="item.policy ? openPolicyDetail(item.policy) : openRenewalsBoard()"
-                      >
-                        {{ item.policy ? t("openPolicy") : t("openRenewals") }}
-                      </ActionButton>
-                    </template>
-                  </MetaListCard>
-                </ul>
-                <div v-else class="at-empty-block">{{ t("noRenewals") }}</div>
+        <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'activity'" :title="t('timelineMetaTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
+          <div v-else>
+            <FieldGroup :fields="leadMetaFields" :cols="2" />
+            <div class="mt-4">
+              <p class="section-title">{{ t('activityTimelineTitle') }}</p>
+              <div v-for="item in leadActivityItems" :key="item.key" class="timeline-item">
+                <span class="tl-dot tl-dot-blue" />
+                <div class="min-w-0 flex-1">
+                  <p class="tl-text">{{ item.title }}</p>
+                  <p class="text-sm text-gray-500">{{ item.description }}</p>
+                  <p class="tl-time">{{ item.meta }}</p>
+                </div>
               </div>
             </div>
           </div>
-        </article>
+        </DetailCard>
+      </div>
 
-        <article
-          v-if="activeLeadTab === 'overview' || activeLeadTab === 'activity'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('timelineMetaTitle')" :show-count="false" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
-          <div v-else class="space-y-4">
-            <div class="grid gap-3 md:grid-cols-2">
-              <MetaListCard :title="t('createdAt')" :description="fmtDateTime(lead.creation)" :meta="lead.owner || '-'" />
-              <MetaListCard :title="t('modifiedAt')" :description="fmtDateTime(lead.modified)" :meta="lead.modified_by || lead.owner || '-'" />
-            </div>
-            <div class="space-y-3">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("activityTimelineTitle") }}</p>
-              <ul class="space-y-3">
-                <MetaListCard
-                  v-for="item in leadActivityItems"
-                  :key="item.key"
-                  :title="item.title"
-                  :description="item.description"
-                  :meta="item.meta"
-                />
-              </ul>
-            </div>
+      <div class="detail-sidebar">
+        <div>
+          <p class="section-title">{{ t('leadInfoTitle') }}</p>
+          <div v-if="loading" class="field-value-muted">{{ t('loading') }}</div>
+          <FieldGroup v-else :fields="leadInfoFields" :cols="2" />
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">{{ t('notes') }}</p>
+          <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ lead.notes || '-' }}</p>
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">Hızlı İşlemler</p>
+          <div class="space-y-2">
+            <button v-if="lead.customer" class="btn btn-full btn-sm" type="button" @click="openCustomer360(lead.customer)">{{ t('openCustomer360') }} →</button>
+            <button v-if="lead.converted_offer" class="btn btn-full btn-sm" type="button" @click="openOfferDetail(lead.converted_offer)">{{ t('openOffer') }}</button>
+            <button v-if="deskActionsEnabled()" class="btn btn-full btn-sm" type="button" @click="openDeskLead">{{ t('openDesk') }}</button>
           </div>
-        </article>
+        </div>
       </div>
     </div>
   </section>
@@ -312,16 +169,11 @@ import { createResource } from "frappe-ui";
 
 import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
-import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
-import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import MiniFactList from "../components/app-shell/MiniFactList.vue";
-import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
+import HeroStrip from "../components/ui/HeroStrip.vue";
+import DetailCard from "../components/ui/DetailCard.vue";
+import FieldGroup from "../components/ui/FieldGroup.vue";
 
 const props = defineProps({
   name: { type: String, default: "" },
@@ -652,6 +504,22 @@ const linkedConversionCards = computed(() => {
 
 async function loadLeadRelatedRecords() {
   const customer = String(lead.value.customer || "").trim();
+const uiLeadStatus = computed(() => mapLeadStatusTone(lead.value.status));
+const uiLeadStaleStatus = computed(() => mapLeadStaleTone(leadStaleState(lead.value)));
+const heroCells = computed(() => [
+  { label: t("customer"), value: lead.value.customer || lead.value.email || "-" },
+  { label: t("salesEntity"), value: lead.value.sales_entity || "-" },
+  { label: t("estimatedGross"), value: fmtMoney(lead.value.estimated_gross_premium, "TRY"), variant: "lg" },
+  { label: t("status"), value: lead.value.status || "-", variant: canConvertLead(lead.value) ? "accent" : "default" },
+]);
+const leadInfoFields = computed(() => leadInfoFacts.value.map((item) => ({ label: item.label, value: item.value })));
+const leadConversionFields = computed(() => leadConversionFacts.value.map((item) => ({ label: item.label, value: item.value })));
+const leadMetaFields = computed(() => [
+  { label: t("createdAt"), value: fmtDateTime(lead.value.creation) },
+  { label: t("modifiedAt"), value: fmtDateTime(lead.value.modified) },
+  { label: t("status"), value: lead.value.status || "-" },
+  { label: t("stale"), value: leadStaleLabel(leadStaleState(lead.value)) },
+]);
   if (!customer) return;
   await Promise.allSettled([
     leadRelatedOffersResource.reload({
@@ -895,6 +763,19 @@ function leadRenewalMeta(item) {
 }
 function notificationPreviewMeta(item) {
   return [item?.reference_doctype || null, item?.modified ? fmtDateTime(item.modified) : null].filter(Boolean).join(" / ");
+}
+function mapLeadStatusTone(status) {
+  const normalized = String(status || "draft").trim().toLowerCase();
+  if (["converted", "qualified", "won", "active"].includes(normalized)) return "active";
+  if (["open", "new", "contacted", "pending"].includes(normalized)) return "waiting";
+  if (["lost", "closed", "cancelled"].includes(normalized)) return "cancel";
+  return "draft";
+}
+function mapLeadStaleTone(state) {
+  const normalized = String(state || "fresh").trim().toLowerCase();
+  if (["stale", "aging"].includes(normalized)) return "waiting";
+  if (["critical", "overdue"].includes(normalized)) return "cancel";
+  return "active";
 }
 
 watch(

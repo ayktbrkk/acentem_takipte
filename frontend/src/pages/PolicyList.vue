@@ -176,7 +176,7 @@
                 </DataTableCell>
                 <TableFactsCell :items="policyDetailsFacts(row)" cell-class="min-w-[240px]" />
                 <DataTableCell>
-                  <StatusBadge type="policy" :status="row.status" />
+                  <StatusBadge domain="policy" :status="row.status" />
                 </DataTableCell>
                 <TableFactsCell :items="policyPremiumFacts(row)" cell-class="min-w-[220px]" />
                 <DataTableCell @click.stop>
@@ -260,7 +260,7 @@ import { useBranchStore } from "../stores/branch";
 import { usePolicyStore } from "../stores/policy";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";

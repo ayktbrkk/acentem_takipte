@@ -145,13 +145,13 @@
                 <TableFactsCell :items="leadDetailsFacts(row)" cell-class="min-w-[260px]" />
                 <DataTableCell cell-class="min-w-[148px]">
                   <div class="space-y-2">
-                    <StatusBadge type="lead" :status="row.status || 'Draft'" />
-                    <StatusBadge type="lead_stale" :status="leadStaleState(row)" />
+                    <StatusBadge domain="lead" :status="row.status || 'Draft'" />
+                    <StatusBadge domain="lead_stale" :status="leadStaleState(row)" />
                   </div>
                 </DataTableCell>
                 <DataTableCell cell-class="min-w-[240px]">
                   <div class="space-y-2">
-                    <StatusBadge type="lead_conversion" :status="leadConversionState(row)" />
+                    <StatusBadge domain="lead_conversion" :status="leadConversionState(row)" />
                     <MiniFactList :items="leadConversionFacts(row)" />
                   </div>
                 </DataTableCell>
@@ -251,7 +251,7 @@ import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";

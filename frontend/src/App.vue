@@ -18,9 +18,20 @@
 </template>
 
 <script setup>
+import { watch } from "vue";
+import { useRoute } from "vue-router";
 import Sidebar from "./components/Sidebar.vue";
 import Topbar from "./components/Topbar.vue";
 import { useUiStore } from "./stores/ui";
 
 const uiStore = useUiStore();
+const route = useRoute();
+
+watch(
+  () => route.fullPath,
+  () => {
+    // Keep mobile navigation predictable: any route transition closes the drawer.
+    uiStore.closeSidebar();
+  }
+);
 </script>

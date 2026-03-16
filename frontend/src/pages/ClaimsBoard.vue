@@ -129,7 +129,7 @@
                 </DataTableCell>
                 <TableFactsCell :items="claimPolicyFacts(claim)" />
                 <DataTableCell>
-                  <StatusBadge type="claim" :status="claim.claim_status" />
+                  <StatusBadge domain="claim" :status="claim.claim_status" />
                 </DataTableCell>
                 <TableFactsCell :items="claimOperationalFacts(claim)" />
                 <DataTableCell cell-class="min-w-[220px]">
@@ -271,7 +271,7 @@ import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { subtleFact } from "../utils/factItems";

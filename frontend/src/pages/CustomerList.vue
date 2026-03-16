@@ -187,7 +187,7 @@
                 <TableFactsCell :items="customerProfileFacts(row)" cell-class="min-w-[240px]" />
                 <DataTableCell cell-class="min-w-[220px]">
                   <div class="space-y-2">
-                    <StatusBadge type="consent" :status="normalizeConsentValue(row.consent_status)" />
+                    <StatusBadge domain="consent" :status="normalizeConsentValue(row.consent_status)" />
                     <MiniFactList :items="customerOwnerFacts(row)" />
                   </div>
                 </DataTableCell>
@@ -271,7 +271,7 @@ import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";

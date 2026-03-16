@@ -299,11 +299,11 @@
                   </div>
                 </DataTableCell>
                 <DataTableCell>
-                  <StatusBadge v-if="row.channel" type="notification_channel" :status="row.channel" />
+                  <StatusBadge v-if="row.channel" domain="notification_channel" :status="row.channel" />
                   <span v-else class="text-slate-700">-</span>
                 </DataTableCell>
                 <DataTableCell cell-class="min-w-[220px]">
-                  <StatusBadge v-if="row.status" type="notification_status" :status="row.status" />
+                  <StatusBadge v-if="row.status" domain="notification_status" :status="row.status" />
                   <span v-else class="text-slate-700">-</span>
                   <p v-if="row.error_message" class="mt-1 max-w-[320px] truncate text-xs text-rose-600">
                     {{ row.error_message }}
@@ -373,10 +373,10 @@
           >
             <div class="flex items-start justify-between gap-2">
               <p class="text-sm font-semibold text-slate-900">{{ draft.event_key }}</p>
-              <StatusBadge v-if="draft.status" type="notification_status" :status="draft.status" />
+              <StatusBadge v-if="draft.status" domain="notification_status" :status="draft.status" />
             </div>
             <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
-              <StatusBadge v-if="draft.channel" type="notification_channel" :status="draft.channel" />
+              <StatusBadge v-if="draft.channel" domain="notification_channel" :status="draft.channel" />
               <span>{{ draft.recipient || "-" }}</span>
             </div>
             <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
@@ -639,7 +639,7 @@ import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { openTabularExport } from "../utils/listExport";

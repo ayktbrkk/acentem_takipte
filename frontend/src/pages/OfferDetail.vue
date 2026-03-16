@@ -1,297 +1,174 @@
 <template>
-  <section class="space-y-4">
-    <DocHeaderCard :eyebrow="t('overview')" :title="offer.name || name" :subtitle="offerHeaderSubtitle">
-      <template #actions>
-        <DetailActionRow>
-          <StatusBadge type="offer" :status="offer.status || 'Draft'" />
-          <ActionButton v-if="isOfferConvertible" variant="primary" size="sm" @click="openConvertInOfferBoard">
-            {{ t("convertToPolicy") }}
-          </ActionButton>
-          <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="sm" @click="openOfferDesk">{{ t("openDesk") }}</ActionButton>
-          <ActionButton variant="secondary" size="sm" @click="goBack">{{ t("backList") }}</ActionButton>
-        </DetailActionRow>
-      </template>
-      <DocSummaryGrid :items="offerHeaderSummaryItems" />
-    </DocHeaderCard>
+  <section class="page-shell">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Satış → Teklifler</p>
+        <h1 class="detail-title">
+          {{ offer.name || name }}
+          <StatusBadge :status="uiOfferStatus" />
+        </h1>
+        <p class="detail-subtitle">{{ offerHeaderSubtitle }}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-sm" type="button" @click="goBack">{{ t('backList') }}</button>
+        <button v-if="isOfferConvertible" class="btn btn-primary btn-sm" type="button" @click="openConvertInOfferBoard">
+          {{ t('convertToPolicy') }}
+        </button>
+      </div>
+    </div>
 
-    <div class="at-detail-split">
-      <aside class="at-detail-aside">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('offerInfoTitle')" :show-count="false" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
-          <div v-else class="space-y-3">
-            <MiniFactList :items="offerInfoFacts" />
-            <InlineActionRow>
-              <ActionButton v-if="offer.customer" variant="secondary" size="xs" @click="openCustomer360(offer.customer)">
-                {{ t("openCustomer360") }}
-              </ActionButton>
-              <ActionButton
-                v-if="offer.converted_policy"
-                variant="secondary"
-                size="xs"
-                @click="openPolicyDetail(offer.converted_policy)"
-              >
-                {{ t("openPolicy") }}
-              </ActionButton>
-            </InlineActionRow>
-          </div>
-        </article>
-      </aside>
+    <HeroStrip :cells="heroCells" />
 
-      <div class="space-y-4">
-        <DetailTabsBar v-model="activeOfferTab" :tabs="offerTabs" />
+    <div class="nav-tabs-bar">
+      <button
+        v-for="tab in offerTabs"
+        :key="tab.value"
+        :class="['nav-tab', activeOfferTab === tab.value && 'is-active']"
+        type="button"
+        @click="activeOfferTab = tab.value"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
 
-        <article
-          v-if="activeOfferTab === 'overview' || activeOfferTab === 'premium'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('premiumTitle')" :show-count="false" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
-          <DocSummaryGrid v-else :items="premiumSummaryItems" />
-        </article>
+    <div class="detail-body">
+      <div class="detail-main">
+        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'premium'" :title="t('premiumTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
+          <FieldGroup v-else :fields="premiumFields" :cols="2" />
+        </DetailCard>
 
-        <article
-          v-if="activeOfferTab === 'overview' || activeOfferTab === 'related'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('conversionTitle')" :show-count="false" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
-          <div v-else class="space-y-3">
-            <MiniFactList :items="conversionFacts" />
-            <div v-if="conversionLinkedCards.length" class="grid gap-3 md:grid-cols-2">
-              <MetaListCard
-                v-for="item in conversionLinkedCards"
-                :key="item.key"
-                :title="item.title"
-                :subtitle="item.subtitle"
-                :description="item.description"
-                :meta="item.meta"
-              >
+        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'related'" :title="t('conversionTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
+          <template v-else>
+            <FieldGroup :fields="conversionFields" :cols="2" />
+            <div v-if="conversionLinkedCards.length" class="mt-4 grid gap-3 md:grid-cols-2">
+              <MetaListCard v-for="item in conversionLinkedCards" :key="item.key" :title="item.title" :subtitle="item.subtitle" :description="item.description" :meta="item.meta">
                 <template #trailing>
-                  <ActionButton variant="link" size="xs" @click="item.open()">{{ item.actionLabel }}</ActionButton>
+                  <button class="btn btn-sm" type="button" @click="item.open()">{{ item.actionLabel }}</button>
                 </template>
               </MetaListCard>
             </div>
-            <p class="text-xs text-slate-500">
-              {{ t("conversionHint") }}
-            </p>
-            <InlineActionRow>
-              <ActionButton v-if="isOfferConvertible" variant="primary" size="xs" @click="openConvertInOfferBoard">
-                {{ t("convertToPolicy") }}
-              </ActionButton>
-              <ActionButton variant="secondary" size="xs" @click="openOfferWorkbench">
-                {{ t("openOfferBoard") }}
-              </ActionButton>
-              <ActionButton
-                v-if="offer.converted_policy"
-                variant="secondary"
-                size="xs"
-                @click="openPolicyDetail(offer.converted_policy)"
-              >
-                {{ t("openPolicy") }}
-              </ActionButton>
-            </InlineActionRow>
-          </div>
-        </article>
+          </template>
+        </DetailCard>
 
-        <article
-          v-if="activeOfferTab === 'overview' || activeOfferTab === 'conversion'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('relatedTitle')" :count="relatedRecordsCount" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
+        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'conversion'" :title="t('relatedTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <div v-else class="grid gap-4 lg:grid-cols-2">
-            <div class="space-y-3">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("relatedOffersTitle") }}</p>
-              <ul v-if="relatedOffers.length" class="space-y-3">
-                <MetaListCard
-                  v-for="item in relatedOffers"
-                  :key="'offer-'+item.name"
-                  :title="item.name"
-                  :description="fmtDate(item.offer_date)"
-                  :meta="relatedOfferMeta(item)"
-                >
+            <div>
+              <p class="section-title">{{ t('relatedOffersTitle') }}</p>
+              <div v-if="relatedOffers.length" class="space-y-3">
+                <MetaListCard v-for="item in relatedOffers" :key="`offer-${item.name}`" :title="item.name" :description="fmtDate(item.offer_date)" :meta="relatedOfferMeta(item)">
                   <template #trailing>
-                    <ActionButton variant="link" size="xs" @click="openOfferDetail(item.name)">{{ t("openOfferDetail") }}</ActionButton>
+                    <button class="btn btn-sm" type="button" @click="openOfferDetail(item.name)">{{ t('openOfferDetail') }}</button>
                   </template>
                 </MetaListCard>
-              </ul>
-              <div v-else class="at-empty-block">{{ t("noRelatedOffers") }}</div>
+              </div>
+              <div v-else class="card-empty">{{ t('noRelatedOffers') }}</div>
             </div>
-
-            <div class="space-y-3">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("relatedPoliciesTitle") }}</p>
-              <ul v-if="relatedPolicies.length" class="space-y-3">
-                <MetaListCard
-                  v-for="item in relatedPolicies"
-                  :key="'policy-'+item.name"
-                  :title="item.policy_no || item.name"
-                  :subtitle="item.name"
-                  :description="fmtDate(item.end_date)"
-                  :meta="relatedPolicyMeta(item)"
-                >
+            <div>
+              <p class="section-title">{{ t('relatedPoliciesTitle') }}</p>
+              <div v-if="relatedPolicies.length" class="space-y-3">
+                <MetaListCard v-for="item in relatedPolicies" :key="`policy-${item.name}`" :title="item.policy_no || item.name" :subtitle="item.name" :description="fmtDate(item.end_date)" :meta="relatedPolicyMeta(item)">
                   <template #trailing>
-                    <ActionButton variant="link" size="xs" @click="openPolicyDetail(item.name)">{{ t("openPolicy") }}</ActionButton>
+                    <button class="btn btn-sm" type="button" @click="openPolicyDetail(item.name)">{{ t('openPolicy') }}</button>
                   </template>
                 </MetaListCard>
-              </ul>
-              <div v-else class="at-empty-block">{{ t("noRelatedPolicies") }}</div>
+              </div>
+              <div v-else class="card-empty">{{ t('noRelatedPolicies') }}</div>
             </div>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
-          v-if="activeOfferTab === 'overview' || activeOfferTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('opsPreviewTitle')" :count="opsPreviewCount" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
+        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'operations'" :title="t('opsPreviewTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <div v-else class="grid gap-4 xl:grid-cols-2">
-            <div class="space-y-4">
-              <div class="space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("notifDraftsTitle") }}</p>
-                <ul v-if="offerNotificationDrafts.length" class="space-y-3">
-                  <MetaListCard
-                    v-for="item in offerNotificationDrafts"
-                    :key="'draft-'+item.name"
-                    :title="item.recipient || item.name"
-                    :subtitle="item.reference_name || item.name"
-                    :description="item.name || '-'"
-                    :meta="notificationPreviewMeta(item)"
-                  >
-                    <template #trailing>
-                      <div class="flex flex-wrap items-center justify-end gap-1">
-                        <StatusBadge v-if="item.status" type="notification_status" :status="item.status" />
-                        <StatusBadge v-if="item.channel" type="notification_channel" :status="item.channel" />
-                        <ActionButton variant="link" size="xs" @click="openCommunicationCenterForOffer(item)">{{ t("openCommunication") }}</ActionButton>
-                      </div>
-                    </template>
-                  </MetaListCard>
-                </ul>
-                <div v-else class="at-empty-block">{{ t("noNotifDrafts") }}</div>
+            <div>
+              <p class="section-title">{{ t('notifDraftsTitle') }}</p>
+              <div v-if="offerNotificationDrafts.length" class="space-y-3">
+                <MetaListCard v-for="item in offerNotificationDrafts" :key="`draft-${item.name}`" :title="item.recipient || item.name" :subtitle="item.reference_name || item.name" :description="item.name || '-'" :meta="notificationPreviewMeta(item)">
+                  <template #trailing>
+                    <button class="btn btn-sm" type="button" @click="openCommunicationCenterForOffer(item)">{{ t('openCommunication') }}</button>
+                  </template>
+                </MetaListCard>
               </div>
-
-              <div class="space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("notifOutboxTitle") }}</p>
-                <ul v-if="offerNotificationOutbox.length" class="space-y-3">
-                  <MetaListCard
-                    v-for="item in offerNotificationOutbox"
-                    :key="'outbox-'+item.name"
-                    :title="item.recipient || item.name"
-                    :subtitle="item.reference_name || item.name"
-                    :description="item.name || '-'"
-                    :meta="notificationPreviewMeta(item)"
-                  >
-                    <template #trailing>
-                      <div class="flex flex-wrap items-center justify-end gap-1">
-                        <StatusBadge v-if="item.status" type="notification_status" :status="item.status" />
-                        <StatusBadge v-if="item.channel" type="notification_channel" :status="item.channel" />
-                        <ActionButton variant="link" size="xs" @click="openCommunicationCenterForOffer(item)">{{ t("openCommunication") }}</ActionButton>
-                      </div>
-                    </template>
-                  </MetaListCard>
-                </ul>
-                <div v-else class="at-empty-block">{{ t("noNotifOutbox") }}</div>
-              </div>
+              <div v-else class="card-empty">{{ t('noNotifDrafts') }}</div>
             </div>
-
-            <div class="space-y-4">
-              <div class="space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("paymentsPreviewTitle") }}</p>
-                <ul v-if="offerPayments.length" class="space-y-3">
-                  <MetaListCard
-                    v-for="item in offerPayments"
-                    :key="'payment-'+item.name"
-                    :title="item.payment_no || item.name"
-                    :subtitle="item.policy || item.customer || '-'"
-                    :description="fmtDate(item.payment_date)"
-                    :meta="offerPaymentMeta(item)"
-                  >
-                    <template #trailing>
-                      <ActionButton
-                        variant="link"
-                        size="xs"
-                        @click="item.policy ? openPolicyDetail(item.policy) : openPaymentsBoard()"
-                      >
-                        {{ item.policy ? t("openPolicy") : t("openPayments") }}
-                      </ActionButton>
-                    </template>
-                  </MetaListCard>
-                </ul>
-                <div v-else class="at-empty-block">{{ t("noPayments") }}</div>
+            <div>
+              <p class="section-title">{{ t('paymentsPreviewTitle') }}</p>
+              <div v-if="offerPayments.length" class="space-y-3">
+                <MetaListCard v-for="item in offerPayments" :key="`payment-${item.name}`" :title="item.payment_no || item.name" :subtitle="item.policy || item.customer || '-'" :description="fmtDate(item.payment_date)" :meta="offerPaymentMeta(item)">
+                  <template #trailing>
+                    <button class="btn btn-sm" type="button" @click="item.policy ? openPolicyDetail(item.policy) : openPaymentsBoard()">
+                      {{ item.policy ? t('openPolicy') : t('openPayments') }}
+                    </button>
+                  </template>
+                </MetaListCard>
               </div>
+              <div v-else class="card-empty">{{ t('noPayments') }}</div>
+            </div>
+          </div>
+        </DetailCard>
 
-              <div class="space-y-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("renewalsPreviewTitle") }}</p>
-                <ul v-if="offerRenewals.length" class="space-y-3">
-                  <MetaListCard
-                    v-for="item in offerRenewals"
-                    :key="'renewal-'+item.name"
-                    :title="item.policy || item.name"
-                    :subtitle="item.customer || '-'"
-                    :description="fmtDate(item.due_date || item.renewal_date)"
-                    :meta="offerRenewalMeta(item)"
-                  >
-                    <template #trailing>
-                      <ActionButton
-                        variant="link"
-                        size="xs"
-                        @click="item.policy ? openPolicyDetail(item.policy) : openRenewalsBoard()"
-                      >
-                        {{ item.policy ? t("openPolicy") : t("openRenewals") }}
-                      </ActionButton>
-                    </template>
-                  </MetaListCard>
-                </ul>
-                <div v-else class="at-empty-block">{{ t("noRenewals") }}</div>
+        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'activity'" :title="t('notesTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
+          <p v-else class="whitespace-pre-wrap text-sm text-slate-700">{{ offer.notes || '-' }}</p>
+        </DetailCard>
+
+        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'notes'" :title="t('recordMetaTitle')">
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
+          <div v-else>
+            <FieldGroup :fields="offerMetaFields" :cols="2" />
+            <div class="mt-4">
+              <p class="section-title">{{ t('recordTimelineTitle') }}</p>
+              <div v-for="item in offerTimelineItems" :key="item.key" class="timeline-item">
+                <span class="tl-dot tl-dot-draft" />
+                <div class="min-w-0 flex-1">
+                  <p class="tl-text">{{ item.title }}</p>
+                  <p class="text-sm text-gray-500">{{ item.description }}</p>
+                  <p class="tl-time">{{ item.meta }}</p>
+                </div>
               </div>
             </div>
           </div>
-        </article>
+        </DetailCard>
+      </div>
 
-        <article
-          v-if="activeOfferTab === 'overview' || activeOfferTab === 'activity'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('notesTitle')" :show-count="false" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
-          <div v-else class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p class="whitespace-pre-wrap text-sm text-slate-800">{{ offer.notes || "-" }}</p>
-          </div>
-        </article>
+      <div class="detail-sidebar">
+        <div>
+          <p class="section-title">{{ t('offerInfoTitle') }}</p>
+          <div v-if="loading" class="field-value-muted">{{ t('loading') }}</div>
+          <FieldGroup v-else :fields="offerInfoFields" :cols="2" />
+        </div>
 
-        <article
-          v-if="activeOfferTab === 'overview' || activeOfferTab === 'notes'"
-          class="surface-card rounded-2xl p-5"
-        >
-          <SectionCardHeader :title="t('recordMetaTitle')" :show-count="false" />
-          <div v-if="loading" class="at-empty-block">{{ t("loading") }}</div>
-          <div v-else-if="loadErrorText" class="at-empty-block text-rose-700">{{ loadErrorText }}</div>
-          <div v-else class="space-y-4">
-            <div class="grid gap-3 md:grid-cols-2">
-              <MetaListCard :title="t('createdAt')" :description="fmtDateTime(offer.creation)" :meta="offer.owner || '-'" />
-              <MetaListCard :title="t('modifiedAt')" :description="fmtDateTime(offer.modified)" :meta="offer.modified_by || offer.owner || '-'" />
-            </div>
-            <div class="space-y-3">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("recordTimelineTitle") }}</p>
-              <ul class="space-y-3">
-                <MetaListCard
-                  v-for="item in offerTimelineItems"
-                  :key="item.key"
-                  :title="item.title"
-                  :description="item.description"
-                  :meta="item.meta"
-                />
-              </ul>
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">{{ t('conversionTitle') }}</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div v-for="item in conversionMiniMetrics" :key="item.label" class="mini-metric">
+              <p class="mini-metric-label">{{ item.label }}</p>
+              <p class="mini-metric-value">{{ item.value }}</p>
             </div>
           </div>
-        </article>
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">Hızlı İşlemler</p>
+          <div class="space-y-2">
+            <button v-if="offer.customer" class="btn btn-full btn-sm" type="button" @click="openCustomer360(offer.customer)">{{ t('openCustomer360') }} →</button>
+            <button class="btn btn-full btn-sm" type="button" @click="openOfferWorkbench">{{ t('openOfferBoard') }}</button>
+            <button v-if="deskActionsEnabled()" class="btn btn-full btn-sm" type="button" @click="openOfferDesk">{{ t('openDesk') }}</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -304,16 +181,11 @@ import { createResource } from "frappe-ui";
 
 import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
-import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
-import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import MiniFactList from "../components/app-shell/MiniFactList.vue";
-import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
+import HeroStrip from "../components/ui/HeroStrip.vue";
+import DetailCard from "../components/ui/DetailCard.vue";
+import FieldGroup from "../components/ui/FieldGroup.vue";
 
 const props = defineProps({
   name: { type: String, default: "" },
@@ -648,6 +520,28 @@ const conversionLinkedCards = computed(() => {
   }
   return cards;
 });
+const uiOfferStatus = computed(() => mapOfferStatusTone(offer.value.status));
+const heroCells = computed(() => [
+  { label: t("customer"), value: offer.value.customer || "-" },
+  { label: t("company"), value: offer.value.insurance_company || "-" },
+  { label: t("grossPremium"), value: fmtMoney(offer.value.gross_premium, offer.value.currency), variant: "lg" },
+  { label: t("validUntil"), value: fmtDate(offer.value.valid_until), variant: isOfferConvertible.value ? "accent" : "default" },
+]);
+const offerInfoFields = computed(() => offerInfoFacts.value.map((item) => ({ label: item.label, value: item.value })));
+const premiumFields = computed(() => premiumSummaryItems.value.map((item) => ({ label: item.label, value: item.value })));
+const conversionFields = computed(() => conversionFacts.value.map((item) => ({ label: item.label, value: item.value })));
+const conversionMiniMetrics = computed(() => [
+  { label: t("conversionState"), value: offer.value.converted_policy ? t("conversionConverted") : t("conversionPending") },
+  { label: t("convertedPolicy"), value: offer.value.converted_policy || "-" },
+  { label: t("sourceLead"), value: offer.value.source_lead || "-" },
+  { label: t("status"), value: offer.value.status || "-" },
+]);
+const offerMetaFields = computed(() => [
+  { label: t("createdAt"), value: fmtDateTime(offer.value.creation) },
+  { label: t("modifiedAt"), value: fmtDateTime(offer.value.modified) },
+  { label: t("status"), value: offer.value.status || "-" },
+  { label: t("currency"), value: offer.value.currency || "TRY" },
+]);
 
 async function loadRelatedRecords() {
   const customer = String(offer.value.customer || "").trim();
@@ -770,6 +664,13 @@ function offerRenewalMeta(item) {
 }
 function notificationPreviewMeta(item) {
   return [item?.reference_doctype || null, item?.modified ? fmtDateTime(item.modified) : null].filter(Boolean).join(" / ");
+}
+function mapOfferStatusTone(status) {
+  const normalized = String(status || "draft").trim().toLowerCase();
+  if (["accepted", "converted", "active"].includes(normalized)) return "active";
+  if (["sent", "waiting", "pending"].includes(normalized)) return "waiting";
+  if (["cancelled", "rejected", "expired"].includes(normalized)) return "cancel";
+  return "draft";
 }
 function mapOfferActivityEvent(event) {
   if (!event || typeof event !== "object") return null;

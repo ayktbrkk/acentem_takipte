@@ -134,7 +134,7 @@
               <td class="at-table-cell font-medium text-slate-800">{{ task.name }}</td>
               <td class="at-table-cell text-slate-700">{{ task.policy || "-" }}</td>
               <td class="at-table-cell">
-                <StatusBadge type="renewal" :status="task.status" />
+                <StatusBadge domain="renewal" :status="task.status" />
               </td>
               <td class="at-table-cell text-slate-700">
                 <div class="flex flex-col gap-1">
@@ -205,7 +205,7 @@ import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { useAuthStore } from "../stores/auth";

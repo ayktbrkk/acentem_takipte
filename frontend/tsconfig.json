@@ -8,6 +8,7 @@
     "moduleResolution": "Bundler",
     "noEmit": true,
     "paths": {
+      "@/*": ["src/*"],
       "frappe-ui": ["src/types/frappe-ui.d.ts"]
     },
     "skipLibCheck": true,

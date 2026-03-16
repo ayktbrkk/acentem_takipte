@@ -133,7 +133,7 @@
             <StatusBadge
               v-for="badge in specialBadges"
               :key="badge.key"
-              :type="badge.type"
+              :domain="badge.type"
               :status="badge.status"
             />
           </div>
@@ -233,7 +233,7 @@ import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 
 const props = defineProps({
   screenKey: { type: String, required: true },

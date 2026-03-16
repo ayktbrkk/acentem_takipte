@@ -344,7 +344,7 @@
               :subtitle="activity.activity_type || '-'"
             >
               <template #trailing>
-                <StatusBadge type="generic" :status="activity.status" />
+                <StatusBadge domain="activity" :status="activity.status" />
               </template>
               <MiniFactList class="mt-2" :items="activityCardFacts(activity)" />
             </EntityPreviewCard>
@@ -369,7 +369,7 @@
             >
               <template #trailing>
                 <div class="flex flex-wrap items-center justify-end gap-2">
-                  <StatusBadge type="generic" :status="reminder.status" />
+                  <StatusBadge domain="reminder" :status="reminder.status" />
                   <ActionButton
                     v-if="reminder.status !== 'Done'"
                     variant="secondary"
@@ -413,7 +413,7 @@
               :subtitle="policy.insurance_company || '-'"
             >
               <template #trailing>
-                <StatusBadge type="policy" :status="policy.status" />
+                <StatusBadge domain="policy" :status="policy.status" />
               </template>
               <MiniFactList class="mt-2" :items="policyCardFacts(policy)" />
               <template #footer>
@@ -445,7 +445,7 @@
               :subtitle="offer.insurance_company || '-'"
             >
               <template #trailing>
-                <StatusBadge type="offer" :status="offer.status" />
+                <StatusBadge domain="offer" :status="offer.status" />
               </template>
               <MiniFactList class="mt-2" :items="offerCardFacts(offer)" />
             </EntityPreviewCard>
@@ -469,7 +469,7 @@
               :subtitle="payment.policy || '-'"
             >
               <template #trailing>
-                <StatusBadge type="payment" :status="payment.status" />
+                <StatusBadge domain="payment" :status="payment.status" />
               </template>
               <MiniFactList class="mt-2" :items="paymentCardFacts(payment)" />
             </EntityPreviewCard>
@@ -493,7 +493,7 @@
               :subtitle="claim.policy || '-'"
             >
               <template #trailing>
-                <StatusBadge type="claim" :status="claim.claim_status" />
+                <StatusBadge domain="claim" :status="claim.claim_status" />
               </template>
               <MiniFactList class="mt-2" :items="claimCardFacts(claim)" />
             </EntityPreviewCard>
@@ -517,7 +517,7 @@
               :subtitle="renewal.competitor_name || '-'"
             >
               <template #trailing>
-                <StatusBadge type="renewal" :status="renewal.status" />
+                <StatusBadge domain="renewal" :status="renewal.status" />
               </template>
               <MiniFactList class="mt-2" :items="renewalCardFacts(renewal)" />
             </EntityPreviewCard>
@@ -712,7 +712,7 @@
               :subtitle="asset.insurance_company || '-'"
               >
                 <template #trailing>
-                  <StatusBadge type="policy" :status="asset.status" />
+                  <StatusBadge domain="policy" :status="asset.status" />
                 </template>
                 <MiniFactList class="mt-2" :items="insuredAssetFacts(asset)" />
                 <template #footer>
@@ -853,7 +853,7 @@ import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 
 const props = defineProps({

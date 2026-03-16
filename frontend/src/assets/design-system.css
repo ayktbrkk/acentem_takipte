@@ -1,0 +1,300 @@
+  .page-shell {
+    @apply flex min-h-screen flex-col bg-gray-50;
+  }
+
+  .detail-topbar {
+    @apply flex items-start justify-between border-b border-gray-200 bg-white px-5 py-3.5;
+  }
+
+  .detail-breadcrumb {
+    @apply mb-1 text-xs text-gray-400;
+  }
+
+  .detail-title {
+    @apply flex items-center gap-2.5 text-xl font-medium text-gray-900;
+  }
+
+  .detail-subtitle {
+    @apply mt-1 text-xs text-gray-400;
+  }
+
+  .hero-strip {
+    @apply grid divide-x divide-gray-200 border-b border-gray-200 bg-white;
+  }
+
+  .hero-cell {
+    @apply px-5 py-3.5;
+  }
+
+  .hero-label {
+    @apply mb-1 text-2xs font-medium uppercase tracking-wider text-gray-400;
+  }
+
+  .hero-value {
+    @apply text-sm font-medium text-gray-900;
+  }
+
+  .hero-value-lg {
+    @apply text-xl font-medium text-gray-900;
+  }
+
+  .hero-value-accent {
+    @apply text-xl font-medium text-brand-600;
+  }
+
+  .hero-value-warn {
+    @apply text-xl font-medium text-status-waiting-text;
+  }
+
+  .nav-tabs-bar {
+    @apply flex border-b border-gray-200 bg-white px-5;
+  }
+
+  .nav-tab {
+    @apply cursor-pointer whitespace-nowrap border-b-2 border-transparent px-3.5 py-2.5 text-sm text-gray-500 transition-all duration-150;
+  }
+
+  .nav-tab:hover {
+    @apply text-gray-900;
+  }
+
+  .nav-tab.is-active {
+    @apply border-brand-600 font-medium text-brand-600;
+  }
+
+  .detail-body {
+    @apply flex flex-1 flex-col min-h-0 xl:flex-row;
+  }
+
+  .detail-main {
+    @apply flex flex-1 flex-col gap-3.5 p-5;
+  }
+
+  .detail-sidebar {
+    @apply flex shrink-0 flex-col gap-3.5 border-l border-gray-200 bg-white p-5 xl:w-80;
+  }
+
+  .card {
+    @apply overflow-hidden rounded-lg border border-gray-200 bg-white;
+  }
+
+  .card-head {
+    @apply flex items-center justify-between border-b border-gray-100 px-4 py-2.5;
+  }
+
+  .card-title {
+    @apply text-sm font-medium text-gray-800;
+  }
+
+  .card-body {
+    @apply p-4;
+  }
+
+  .card-empty {
+    @apply py-5 text-center text-sm text-gray-400;
+  }
+
+  .field-label {
+    @apply mb-1 text-2xs font-medium uppercase tracking-wider text-gray-400;
+  }
+
+  .field-value {
+    @apply text-sm text-gray-900;
+  }
+
+  .field-value-lg {
+    @apply text-xl font-medium text-gray-900;
+  }
+
+  .field-value-mono {
+    @apply font-mono text-xs text-gray-700;
+  }
+
+  .field-value-muted {
+    @apply text-sm text-gray-400;
+  }
+
+  .field-value-accent {
+    @apply text-sm font-medium text-brand-600;
+  }
+
+  .field-value-success {
+    @apply text-sm font-medium text-green-700;
+  }
+
+  .copy-tag {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-200 bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-500 transition-colors hover:border-gray-400;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .status-badge::before {
+    content: "";
+    @apply h-1.5 w-1.5 rounded-full bg-current;
+  }
+
+  .status-active {
+    @apply bg-status-active-bg text-status-active-text;
+  }
+
+  .status-draft {
+    @apply bg-status-draft-bg text-status-draft-text;
+  }
+
+  .status-waiting {
+    @apply bg-status-waiting-bg text-status-waiting-text;
+  }
+
+  .status-open {
+    @apply bg-status-open-bg text-status-open-text;
+  }
+
+  .status-cancel {
+    @apply bg-status-cancel-bg text-status-cancel-text;
+  }
+
+  .badge {
+    @apply inline-block rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  .badge-blue {
+    @apply bg-brand-50 text-brand-600;
+  }
+
+  .badge-green {
+    @apply bg-green-50 text-green-700;
+  }
+
+  .badge-amber {
+    @apply bg-status-waiting-bg text-status-waiting-text;
+  }
+
+  .badge-red {
+    @apply bg-status-cancel-bg text-status-cancel-text;
+  }
+
+  .badge-gray {
+    @apply bg-gray-100 text-gray-500;
+  }
+
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-transparent px-3 py-1.5 text-sm text-gray-700 transition-all duration-150 hover:bg-gray-50 active:scale-95;
+  }
+
+  .btn-sm {
+    @apply px-2.5 py-1 text-xs;
+  }
+
+  .btn-primary {
+    @apply border-brand-600 bg-brand-600 text-white hover:bg-brand-700;
+  }
+
+  .btn-full {
+    @apply w-full justify-center;
+  }
+
+  .divider {
+    @apply my-3 h-px bg-gray-100;
+  }
+
+  .mini-metric {
+    @apply rounded-lg bg-gray-50 p-3;
+  }
+
+  .mini-metric-label {
+    @apply mb-1 text-2xs text-gray-400;
+  }
+
+  .mini-metric-value {
+    @apply text-base font-medium text-gray-900;
+  }
+
+  .stepbar {
+    @apply flex items-center;
+  }
+
+  .step-item {
+    @apply flex items-center gap-1.5 text-xs text-gray-400;
+  }
+
+  .step-item.done {
+    @apply text-green-700;
+  }
+
+  .step-item.current {
+    @apply font-medium text-brand-600;
+  }
+
+  .step-circle {
+    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] border-current text-[10px] font-medium;
+  }
+
+  .step-item.done .step-circle {
+    @apply border-green-700 bg-green-700 text-white;
+  }
+
+  .step-item.current .step-circle {
+    @apply border-brand-600 bg-brand-600 text-white;
+  }
+
+  .step-line {
+    @apply h-px min-w-[14px] flex-1 bg-gray-200;
+  }
+
+  .step-line.done {
+    @apply bg-green-700;
+  }
+
+  .timeline-item {
+    @apply flex gap-3 border-b border-gray-100 py-2.5 last:border-0;
+  }
+
+  .tl-dot {
+    @apply mt-1 h-2 w-2 shrink-0 rounded-full bg-gray-300;
+  }
+
+  .tl-dot-active {
+    @apply bg-brand-600;
+  }
+
+  .tl-dot-blue {
+    @apply bg-brand-600;
+  }
+
+  .tl-dot-draft {
+    @apply bg-gray-400;
+  }
+
+  .tl-text {
+    @apply text-sm leading-snug text-gray-800;
+  }
+
+  .tl-time {
+    @apply mt-0.5 text-xs text-gray-400;
+  }
+
+  .avatar {
+    @apply flex shrink-0 items-center justify-center rounded-full text-xs font-medium;
+  }
+
+  .avatar-sm {
+    @apply h-8 w-8;
+  }
+
+  .avatar-md {
+    @apply h-9 w-9;
+  }
+
+  .avatar-blue {
+    @apply bg-brand-50 text-brand-600;
+  }
+
+  .avatar-amber {
+    @apply bg-status-waiting-bg text-status-waiting-text;
+  }
+
+  .section-title {
+    @apply mb-2.5 text-sm font-medium text-gray-800;
+  }

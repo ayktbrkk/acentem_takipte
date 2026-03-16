@@ -160,7 +160,7 @@
                 </DataTableCell>
                 <TableFactsCell :items="offerDetailsFacts(offer)" cell-class="min-w-[240px]" />
                 <DataTableCell>
-                  <StatusBadge type="offer" :status="offer.status" />
+                  <StatusBadge domain="offer" :status="offer.status" />
                 </DataTableCell>
                 <TableFactsCell :items="offerPremiumFacts(offer)" cell-class="min-w-[220px]" />
                 <DataTableCell @click.stop>
@@ -254,7 +254,7 @@
                 >
                   {{ offer.name }}
                 </button>
-                <StatusBadge type="offer" :status="offer.status" />
+                <StatusBadge domain="offer" :status="offer.status" />
               </div>
 
               <div class="mt-3">
@@ -391,7 +391,7 @@ import { Dialog, createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
-import StatusBadge from "../components/StatusBadge.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
