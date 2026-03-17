@@ -2,10 +2,37 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar" v-if="isListView">
       <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Teklifler</p>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">Teklifler</h1>
+        <p class="detail-subtitle">{{ offerListTotal }} teklif</p>
       </div>
-      <span class="text-sm text-gray-400">{{ offerListTotal }} kayıt</span>
+      <div class="flex gap-2">
+        <button class="btn btn-outline btn-sm" type="button" @click="focusOfferSearch">Filtrele</button>
+        <button class="btn btn-outline btn-sm" type="button" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">Disa Aktar</button>
+        <button class="btn btn-primary btn-sm" type="button" @click="openQuickOfferDialog">+ Yeni Teklif</button>
+      </div>
+    </div>
+
+    <div v-if="isListView" class="grid grid-cols-1 gap-4 px-5 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Teklif</p>
+        <p class="mini-metric-value">{{ formatCount(offerSummary.total) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Taslak</p>
+        <p class="mini-metric-value text-gray-600">{{ formatCount(offerSummary.draft) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Gonderildi</p>
+        <p class="mini-metric-value text-blue-600">{{ formatCount(offerSummary.sent) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Kabul Edildi</p>
+        <p class="mini-metric-value text-green-600">{{ formatCount(offerSummary.accepted) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Donusum Orani</p>
+        <p class="mini-metric-value text-brand-600">{{ offerConversionRate }}%</p>
+      </div>
     </div>
 
     <div v-if="isListView" class="border-b border-gray-200 bg-white px-5 py-3">
@@ -19,10 +46,8 @@
         <template #actions>
           <button class="btn btn-sm" @click="setOfferViewMode('list')">Liste</button>
           <button class="btn btn-sm" @click="setOfferViewMode('board')">Pano</button>
-          <button class="btn btn-primary btn-sm" @click="openQuickOfferDialog">+ Yeni Teklif</button>
           <button class="btn btn-sm" :disabled="offersResource.loading || offerListResource.loading" @click="refreshOffers">Yenile</button>
-          <button class="btn btn-sm" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">Excel</button>
-          <button class="btn btn-sm" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('pdf')">PDF</button>
+          <button v-if="offerListFilterBarActiveCount > 0" class="btn btn-outline btn-sm" @click="onOfferListFilterBarReset">Temizle</button>
         </template>
       </FilterBar>
     </div>
@@ -146,40 +171,20 @@
       </div>
     </div>
 
-    <Dialog v-model="showQuickOfferDialog" :options="{ title: t('quickOfferTitle'), size: 'xl' }">
-      <template #body-content>
-        <QuickCreateDialogShell
-          :error="quickOfferError"
-          :subtitle="offerQuickUi.subtitle"
-          :labels="{ cancel: t('cancel'), save: t('createQuickOffer'), saveAndOpen: t('createQuickOfferAndOpen') }"
-          :loading="quickOfferLoading"
-          :save-disabled="!canCreateQuickOffer"
-          :save-and-open-disabled="!canCreateQuickOffer"
-          @cancel="cancelQuickOfferDialog"
-          @save="createQuickOffer(false)"
-          @save-and-open="createQuickOffer(true)"
-        >
-          <QuickCustomerPicker
-            :model="quickOffer"
-            :field-errors="quickOfferFieldErrors"
-            :disabled="quickOfferLoading"
-            :locale="activeLocale"
-            :office-branch="branchStore.requestBranch || ''"
-          />
-
-          <QuickCreateFormRenderer
-            :fields="offerQuickFormFields"
-            :model="quickOffer"
-            :field-errors="quickOfferFieldErrors"
-            :disabled="quickOfferLoading"
-            :locale="activeLocale"
-            :options-map="offerQuickOptionsMap"
-            @submit="createQuickOffer(false)"
-            @request-related-create="onOfferRelatedCreateRequested"
-          />
-        </QuickCreateDialogShell>
-      </template>
-    </Dialog>
+    <QuickCreateOffer
+      v-model="showQuickOfferDialog"
+      :locale="activeLocale"
+      :title-override="t('quickOfferTitle')"
+      :subtitle-override="offerQuickUi.subtitle"
+      :labels="{ cancel: t('cancel'), save: t('createQuickOffer'), saveAndOpen: t('createQuickOfferAndOpen') }"
+      :options-map="offerQuickOptionsMap"
+      :return-to="quickOfferOpenedFromIntent ? quickOfferReturnTo : ''"
+      :validate="validateQuickOfferManaged"
+      :build-payload="buildQuickOfferManagedPayload"
+      :success-handlers="quickOfferSuccessHandlers"
+      @cancel="cancelQuickOfferDialog"
+      @created="onQuickOfferManagedCreated"
+    />
 
     <Dialog v-model="showConvertDialog" :options="{ title: t('convertDialogTitle'), size: 'xl' }">
       <template #body-content>
@@ -253,7 +258,6 @@ import EmptyState from "../components/app-shell/EmptyState.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
-import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
@@ -263,6 +267,7 @@ import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
+import QuickCreateOffer from "../components/QuickCreateOffer.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
@@ -799,6 +804,39 @@ const offerListRowsWithUrgency = computed(() =>
   })
 );
 
+const offerSummary = computed(() => {
+  const rows = Array.isArray(offerListRows.value) ? offerListRows.value : [];
+  let draft = 0;
+  let sent = 0;
+  let accepted = 0;
+  let rejected = 0;
+  let expired = 0;
+
+  rows.forEach((row) => {
+    const status = String(row?.status || "").toLocaleLowerCase(localeCode.value);
+    if (status.includes("draft")) draft += 1;
+    if (status.includes("sent")) sent += 1;
+    if (status.includes("accepted")) accepted += 1;
+    if (status.includes("rejected")) rejected += 1;
+    if (status.includes("expired")) expired += 1;
+  });
+
+  return {
+    total: offerListTotal.value,
+    draft,
+    sent,
+    accepted,
+    rejected,
+    expired,
+  };
+});
+
+const offerConversionRate = computed(() => {
+  const total = Number(offerSummary.value.total || 0);
+  if (!total) return "0.0";
+  return ((Number(offerSummary.value.accepted || 0) / total) * 100).toFixed(1);
+});
+
 const offerListFilterBarActiveCount = computed(
   () =>
     (offerListSearchQuery.value.trim() ? 1 : 0) +
@@ -819,6 +857,14 @@ function onOfferListFilterBarReset() {
   offerListFilters.status = "";
   offerListPagination.page = 1;
   void applyOfferListFilters();
+}
+
+function focusOfferSearch() {
+  const searchInput = document.querySelector('input[placeholder*="ara"]');
+  if (searchInput instanceof HTMLInputElement) {
+    searchInput.focus();
+    searchInput.select();
+  }
 }
 
 function computeOfferRemainingDays(validUntil) {
@@ -846,6 +892,13 @@ const quickOfferFieldErrors = reactive({});
 const draggedOfferName = ref("");
 const quickOfferReturnTo = ref("");
 const quickOfferOpenedFromIntent = ref(false);
+const quickOfferSuccessHandlers = {
+  offer_list: refreshOfferList,
+  offer_board: async () => {
+    offersResource.params = buildOfferBoardParams();
+    await offersResource.reload();
+  },
+};
 const quickOffer = reactive({
   queryText: "",
   customerOption: null,
@@ -941,6 +994,31 @@ function validateQuickOfferForm() {
   return valid;
 }
 
+function validateQuickOfferManaged({ form, fieldErrors, setError }) {
+  Object.keys(fieldErrors).forEach((key) => delete fieldErrors[key]);
+  let valid = true;
+
+  for (const field of offerQuickFormFields.value) {
+    if (!isFieldRequired(field)) continue;
+    const rawValue = form?.[field.name];
+    const empty = typeof rawValue === "boolean" ? false : String(rawValue ?? "").trim() === "";
+    if (empty) {
+      fieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value) || t("quickCreateValidationFailed");
+      valid = false;
+    }
+  }
+
+  const gross = Number(form?.gross_premium || 0);
+  const status = String(form?.status || "Draft");
+  if (["Sent", "Accepted", "Rejected"].includes(status) && gross <= 0) {
+    fieldErrors.gross_premium = t("grossPremium");
+    valid = false;
+  }
+
+  if (!valid) setError(t("quickCreateValidationFailed"));
+  return valid;
+}
+
 function buildQuickOfferPayload() {
   const selectedCustomerName = getSelectedCustomerName();
   const hasSelectedCustomer = Boolean(selectedCustomerName);
@@ -967,6 +1045,36 @@ function buildQuickOfferPayload() {
     tax_amount: quickOffer.tax_amount === "" ? null : Number(quickOffer.tax_amount || 0),
     commission_amount: quickOffer.commission_amount === "" ? null : Number(quickOffer.commission_amount || 0),
   };
+}
+
+function buildQuickOfferManagedPayload({ form }) {
+  const payload = {};
+  for (const field of offerQuickFormFields.value) {
+    const fieldName = field?.name;
+    if (!fieldName) continue;
+    const value = form?.[fieldName];
+    payload[fieldName] = String(value ?? "").trim() === "" ? null : value;
+  }
+
+  payload.currency = payload.currency || "TRY";
+  payload.status = payload.status || "Draft";
+  payload.gross_premium = payload.gross_premium == null ? null : Number(payload.gross_premium || 0);
+  payload.net_premium = payload.net_premium == null ? null : Number(payload.net_premium || 0);
+  payload.tax_amount = payload.tax_amount == null ? null : Number(payload.tax_amount || 0);
+  payload.commission_amount = payload.commission_amount == null ? null : Number(payload.commission_amount || 0);
+
+  return payload;
+}
+
+function onQuickOfferManagedCreated({ recordName, openAfter }) {
+  const returnTarget = quickOfferOpenedFromIntent.value ? quickOfferReturnTo.value : "";
+  quickOfferOpenedFromIntent.value = false;
+  quickOfferReturnTo.value = "";
+  if (!openAfter && returnTarget) {
+    router.push(returnTarget).catch(() => {});
+    return;
+  }
+  if (openAfter && recordName) openOfferDetail(recordName);
 }
 
 function normalizeLane(status, convertedPolicy) {
@@ -1765,6 +1873,10 @@ function formatCurrency(value, currency) {
     currency: currency || "TRY",
     maximumFractionDigits: 2,
   }).format(Number(value || 0));
+}
+
+function formatCount(value) {
+  return Number(value || 0).toLocaleString(localeCode.value);
 }
 
 function formatDisplayDate(value) {

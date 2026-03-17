@@ -1,5 +1,5 @@
 <template>
-  <section class="space-y-4">
+  <section class="page-shell space-y-4">
     <article class="surface-card rounded-2xl p-5">
       <PageToolbar
         :title="t('title')"

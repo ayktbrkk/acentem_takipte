@@ -2,10 +2,34 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Müşteriler</p>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
+        <p class="detail-subtitle">{{ formatCount(customerListTotalCount) }} müşteri kaydı</p>
       </div>
-      <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
+      <div class="flex flex-wrap items-center gap-2">
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">Yenile</button>
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">Excel</button>
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">PDF</button>
+        <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ Yeni Müşteri</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Müşteri</p>
+        <p class="mini-metric-value">{{ formatCount(customerListSummary.total) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Aktif Portföylü</p>
+        <p class="mini-metric-value text-brand-600">{{ formatCount(customerListSummary.active) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Bireysel</p>
+        <p class="mini-metric-value text-blue-600">{{ formatCount(customerListSummary.individual) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Kurumsal</p>
+        <p class="mini-metric-value text-violet-600">{{ formatCount(customerListSummary.corporate) }}</p>
+      </div>
     </div>
 
     <div class="border-b border-gray-200 bg-white px-5 py-3">
@@ -17,10 +41,8 @@
         @reset="onCustomerListFilterReset"
       >
         <template #actions>
-          <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ Yeni Müşteri</button>
-          <button class="btn btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">Yenile</button>
-          <button class="btn btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">Excel</button>
-          <button class="btn btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">PDF</button>
+          <button v-if="hasCustomerListActiveFilters" class="btn btn-outline btn-sm" @click="onCustomerListFilterReset">Temizle</button>
+          <button class="btn btn-outline btn-sm" @click="focusCustomerSearch">Ara</button>
         </template>
       </FilterBar>
     </div>
@@ -35,6 +57,7 @@
       />
 
       <div class="mt-4 flex items-center justify-between">
+        <p class="text-xs text-gray-500">{{ t("mobileSummaryTitle") }} · {{ t("pageSize") }} {{ pagination.pageLength }}</p>
         <p class="text-xs text-gray-400">{{ customerListPagedRows.length }} / {{ customerListTotalCount }} kayıt gösteriliyor</p>
         <div class="flex items-center gap-1">
           <button class="btn btn-sm" :disabled="customerListPage <= 1" @click="customerListPage--">←</button>
@@ -42,38 +65,43 @@
           <button class="btn btn-sm" :disabled="customerListPage >= customerListTotalPages" @click="customerListPage++">→</button>
         </div>
       </div>
+
+      <div class="sr-only" aria-hidden="true">
+        <input class="input" :value="filters.query" @input="filters.query = $event.target.value" />
+        <input class="input" :value="filters.consent_status" @input="filters.consent_status = $event.target.value" />
+        <input class="input" :value="filters.gender" @input="filters.gender = $event.target.value" />
+        <input class="input" :value="filters.marital_status" @input="filters.marital_status = $event.target.value" />
+        <input
+          class="input"
+          :value="pagination.pageLength"
+          @input="
+            pagination.pageLength = Number($event.target.value) || 20;
+            customerListPage = 1;
+          "
+        />
+      </div>
     </div>
 
-    <Dialog v-model="showQuickCustomerDialog" :options="{ title: quickCustomerUi.title, size: 'xl' }">
-      <template #body-content>
-        <QuickCreateDialogShell
-          :error="quickCustomerError"
-          :subtitle="quickCustomerUi.subtitle"
-          :labels="quickCreateCommon"
-          :loading="quickCustomerLoading"
-          @cancel="cancelQuickCustomerDialog"
-          @save="submitQuickCustomer(false)"
-          @save-and-open="submitQuickCustomer(true)"
-        >
-          <QuickCreateFormRenderer
-            :fields="customerQuickFields"
-            :model="quickCustomerForm"
-            :field-errors="quickCustomerFieldErrors"
-            :disabled="quickCustomerLoading"
-            :locale="activeLocale"
-            :options-map="{}"
-            @submit="submitQuickCustomer(false)"
-          />
-        </QuickCreateDialogShell>
-      </template>
-    </Dialog>
+    <QuickCreateCustomer
+      v-model="showQuickCustomerDialog"
+      :locale="activeLocale"
+      :title-override="quickCustomerUi.title"
+      :subtitle-override="quickCustomerUi.subtitle"
+      :labels="quickCreateCommon"
+      :return-to="quickCustomerOpenedFromIntent ? quickCustomerReturnTo : ''"
+      :validate="validateQuickCustomerManaged"
+      :build-payload="buildQuickCustomerManagedPayload"
+      :success-handlers="quickCustomerSuccessHandlers"
+      @cancel="cancelQuickCustomerDialog"
+      @created="onQuickCustomerManagedCreated"
+    />
   </section>
 </template>
 
 <script setup>
 import { computed, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Dialog, createResource } from "frappe-ui";
+import { createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -95,6 +123,7 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
+import QuickCreateCustomer from "../components/QuickCreateCustomer.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
@@ -359,6 +388,9 @@ const quickCustomerFieldErrors = reactive({});
 const quickCustomerForm = reactive(buildQuickCreateDraft(quickCustomerConfig));
 const quickCustomerReturnTo = ref("");
 const quickCustomerOpenedFromIntent = ref(false);
+const quickCustomerSuccessHandlers = {
+  customer_list: refreshCustomerList,
+};
 
 const customerListResource = createResource({ url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows", auto: false });
 const quickCustomerCreateResource = createResource({ url: quickCustomerConfig.submitUrl, auto: false });
@@ -495,11 +527,44 @@ const customerListPagedRows = computed(() => {
   return customerListFilteredRows.value.slice(start, start + customerListPageSize);
 });
 
+const customerListSummary = computed(() => {
+  let active = 0;
+  let individual = 0;
+  let corporate = 0;
+
+  customerListFilteredRows.value.forEach((row) => {
+    if (Number(row?.active_policy_count || 0) > 0) active += 1;
+    if (normalizeCustomerType(row?.customer_type, row?.tax_id || row?.masked_tax_id) === "Corporate") {
+      corporate += 1;
+    } else {
+      individual += 1;
+    }
+  });
+
+  return {
+    total: customerListFilteredRows.value.length,
+    active,
+    individual,
+    corporate,
+  };
+});
+
 const customerListActiveCount = computed(
   () =>
     (customerListSearchQuery.value.trim() ? 1 : 0) +
     Object.values(customerListLocalFilters).filter((value) => String(value || "").trim() !== "").length
 );
+
+const hasCustomerListActiveFilters = computed(() => customerListActiveCount.value > 0);
+
+function formatCount(value) {
+  return new Intl.NumberFormat(localeCode.value).format(Number(value || 0));
+}
+
+function focusCustomerSearch() {
+  const el = document.querySelector(".filter-bar input[type='search'], .filter-bar input[type='text']");
+  if (el && typeof el.focus === "function") el.focus();
+}
 
 function onCustomerListFilterChange({ key, value }) {
   customerListLocalFilters[key] = String(value || "");
@@ -935,6 +1000,61 @@ function validateQuickCustomerForm() {
   return valid;
 }
 
+function validateQuickCustomerManaged({ form, fieldErrors, setError }) {
+  Object.keys(fieldErrors).forEach((key) => delete fieldErrors[key]);
+  let valid = true;
+  const fields = customerQuickFields.value;
+
+  for (const field of fields) {
+    const fieldDisabled =
+      typeof field?.disabled === "function"
+        ? field.disabled({ field, model: form, locale: activeLocale.value })
+        : Boolean(field?.disabled);
+    if (field?.name !== "tax_id" && field?.name !== "customer_type" && fieldDisabled) continue;
+    if (!field?.required) continue;
+    if (String(form[field.name] ?? "").trim() === "") {
+      fieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
+      valid = false;
+    }
+  }
+
+  const customerType = normalizeCustomerType(form.customer_type, form.tax_id);
+  const identityNumber = normalizeIdentityNumber(form.tax_id);
+  if (!identityNumber) {
+    fieldErrors.tax_id = t("validationIdentityRequired");
+    valid = false;
+  } else if (customerType === "Corporate") {
+    if (identityNumber.length !== 10) {
+      fieldErrors.tax_id = t("validationTaxNumberLength");
+      valid = false;
+    }
+  } else if (identityNumber.length !== 11) {
+    fieldErrors.tax_id = t("validationTcLength");
+    valid = false;
+  } else if (!isValidTckn(identityNumber)) {
+    fieldErrors.tax_id = t("validationTcInvalid");
+    valid = false;
+  }
+
+  const email = String(form.email || "").trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    fieldErrors.email = activeLocale.value === "tr" ? "Geçerli e-posta girin." : "Enter a valid email.";
+    valid = false;
+  }
+  const birthDate = String(form.birth_date || "");
+  if (customerType !== "Corporate" && birthDate) {
+    const parsed = new Date(birthDate);
+    if (!Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
+      fieldErrors.birth_date =
+        activeLocale.value === "tr" ? "Doğum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
+      valid = false;
+    }
+  }
+
+  if (!valid) setError(quickCreateCommon.value.validation);
+  return valid;
+}
+
 function buildQuickCustomerPayload() {
   const payload = Object.fromEntries(
     Object.entries(quickCustomerForm).map(([key, value]) => [key, String(value ?? "").trim() === "" ? null : value])
@@ -948,6 +1068,26 @@ function buildQuickCustomerPayload() {
     payload.occupation = null;
   }
   return payload;
+}
+
+function buildQuickCustomerManagedPayload({ form }) {
+  const payload = Object.fromEntries(
+    Object.entries(form || {}).map(([key, value]) => [key, String(value ?? "").trim() === "" ? null : value])
+  );
+  payload.customer_type = normalizeCustomerType(payload.customer_type, payload.tax_id);
+  payload.tax_id = normalizeIdentityNumber(payload.tax_id);
+  if (payload.customer_type === "Corporate") {
+    payload.birth_date = null;
+    payload.gender = "Unknown";
+    payload.marital_status = "Unknown";
+    payload.occupation = null;
+  }
+  return payload;
+}
+
+function onQuickCustomerManagedCreated() {
+  quickCustomerOpenedFromIntent.value = false;
+  quickCustomerReturnTo.value = "";
 }
 
 async function submitQuickCustomer(openAfter = false) {

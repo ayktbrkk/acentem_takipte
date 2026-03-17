@@ -1,35 +1,42 @@
 <template>
-  <Dialog v-model="open" :options="dialogOptions">
-    <template #body-content>
-      <QuickCreateDialogShell
-        :error="errorText"
-        :subtitle="uiSubtitle"
-        :loading="loading"
-        :save-disabled="saveDisabledComputed"
-        :show-save-and-open="showSaveAndOpen"
-        :labels="labelsResolved"
-        @cancel="onCancel"
-        @save="submit(false)"
-        @save-and-open="submit(true)"
-      >
-        <QuickCreateFormRenderer
-          :fields="fields"
-          :model="form"
-          :field-errors="fieldErrors"
-          :disabled="loading"
-          :locale="locale"
-          :options-map="optionsMap"
-          @submit="submit(false)"
-        />
-      </QuickCreateDialogShell>
-    </template>
-  </Dialog>
+  <div v-if="open" class="dialog-overlay" @click.self="onCancel">
+    <div :class="dialogShellClass">
+      <div class="dialog-header">
+        <h3 class="dialog-title">{{ uiTitle }}</h3>
+        <button class="btn btn-outline btn-sm" type="button" @click="onCancel">X</button>
+      </div>
+
+      <div class="dialog-body">
+        <QuickCreateDialogShell
+          :error="errorText"
+          :subtitle="uiSubtitle"
+          :loading="loading"
+          :save-disabled="saveDisabledComputed"
+          :show-save-and-open="showSaveAndOpen"
+          :labels="labelsResolved"
+          @cancel="onCancel"
+          @save="submit(false)"
+          @save-and-open="submit(true)"
+        >
+          <QuickCreateFormRenderer
+            :fields="fields"
+            :model="form"
+            :field-errors="fieldErrors"
+            :disabled="loading"
+            :locale="locale"
+            :options-map="optionsMap"
+            @submit="submit(false)"
+          />
+        </QuickCreateDialogShell>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { Dialog, createResource } from "frappe-ui";
+import { createResource } from "frappe-ui";
 
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../../config/quickCreateRegistry";
 import QuickCreateDialogShell from "./QuickCreateDialogShell.vue";
@@ -51,6 +58,8 @@ const props = defineProps({
   validate: { type: Function, default: null },
   buildPayload: { type: Function, default: null },
   beforeOpen: { type: Function, default: null },
+  itemId: { type: [String, Number], default: "" },
+  loadExistingData: { type: Function, default: null },
   beforeSubmit: { type: Function, default: null },
   afterSubmit: { type: Function, default: null },
   successHandlers: { type: Object, default: () => ({}) },
@@ -91,8 +100,23 @@ const labelsResolved = computed(() => ({
 
 const uiTitle = computed(() => getLocalizedText(props.titleOverride || config.value?.title, props.locale));
 const uiSubtitle = computed(() => getLocalizedText(props.subtitleOverride || config.value?.subtitle, props.locale));
-const dialogOptions = computed(() => ({ title: uiTitle.value, size: props.dialogSize }));
+const dialogShellClass = computed(() => {
+  const size = String(props.dialogSize || "").toLowerCase();
+  if (size === "sm") return "dialog-shell dialog-sm";
+  if (size === "md") return "dialog-shell dialog-md";
+  if (size === "lg") return "dialog-shell dialog-lg";
+  return "dialog-shell dialog-xl";
+});
 const saveDisabledComputed = computed(() => props.saveDisabled || loading.value);
+
+async function tryLoadExistingData() {
+  const id = String(props.itemId || "").trim();
+  if (!id || typeof props.loadExistingData !== "function") return;
+  const loaded = await props.loadExistingData(id, { form, resetForm });
+  if (loaded && typeof loaded === "object") {
+    Object.assign(form, loaded);
+  }
+}
 
 function resetFieldErrors() {
   Object.keys(fieldErrors).forEach((key) => delete fieldErrors[key]);
@@ -217,6 +241,7 @@ watch(
     if (!config.value) return;
     if (isOpen) {
       resetForm();
+      await tryLoadExistingData();
       if (typeof props.beforeOpen === "function") {
         await props.beforeOpen({ form, resetForm });
       }
@@ -228,6 +253,11 @@ watch(
   },
   { immediate: true }
 );
+
+onMounted(async () => {
+  if (!props.modelValue) return;
+  await tryLoadExistingData();
+});
 
 watch(
   () => [form.net_premium, form.commission_amount, form.tax_amount],

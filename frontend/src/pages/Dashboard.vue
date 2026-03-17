@@ -78,105 +78,135 @@
 
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Genel Gorunum</p>
-        <h1 class="text-xl font-medium text-gray-900">Pano</h1>
+        <h1 class="detail-title">Dashboard</h1>
+        <p class="detail-subtitle">Hos geldiniz. Sube: {{ dashboardBranchLabel }}</p>
       </div>
-      <div class="flex items-center gap-3">
-        <select
-          class="h-8 rounded-md border border-gray-200 px-3 text-sm text-gray-700 focus:border-brand-600 focus:outline-none"
+      <div class="flex gap-2">
+        <button class="btn btn-outline btn-sm" type="button" @click="reloadData">
+          Yenile
+        </button>
+        <button
+          v-if="showNewLeadAction"
+          class="btn btn-primary btn-sm"
+          type="button"
+          @click="resetLeadForm(); showLeadDialog = true"
         >
-          <option>{{ dashboardBranchLabel }}</option>
-        </select>
-        <select
-          v-model="selectedPeriod"
-          class="h-8 rounded-md border border-gray-200 px-3 text-sm text-gray-700 focus:border-brand-600 focus:outline-none"
-        >
-          <option value="month">Bu Ay</option>
-          <option value="quarter">Bu Ceyrek</option>
-          <option value="year">Bu Yil</option>
-        </select>
+          + Yeni Islem
+        </button>
       </div>
     </div>
 
-    <div class="flex flex-1 flex-col gap-5 overflow-auto px-1 pb-1">
-      <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <MetricCard
-          label="Aktif Police"
-          :value="formatNumber(week4Metrics.activePolicies)"
-          :change="week4Metrics.activePoliciesChange"
-          :change-label="dashboardComparisonTrendHint"
-          icon="📋"
-        />
-        <MetricCard
-          label="Secili Donem Prim"
-          :value="formatCurrency(week4Metrics.periodPremium)"
-          :change="week4Metrics.periodPremiumChange"
-          :change-label="dashboardComparisonTrendHint"
-          icon="₺"
-          variant="success"
-        />
-        <MetricCard
-          label="Bekleyen Yenileme"
-          :value="formatNumber(week4Metrics.pendingRenewals)"
-          :sub="'Bu hafta icinde'"
-          icon="🔔"
-          :variant="week4Metrics.pendingRenewals > 0 ? 'warn' : 'default'"
-        />
-        <MetricCard
-          label="Acik Hasar"
-          :value="formatNumber(week4Metrics.openClaims)"
-          :change="week4Metrics.openClaimsChange"
-          :change-label="dashboardComparisonTrendHint"
-          icon="⚠️"
-          :variant="week4Metrics.openClaims > 0 ? 'danger' : 'default'"
-        />
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Aktif Policeler</p>
+        <p class="mini-metric-value text-brand-600">{{ formatNumber(week4Metrics.activePolicies) }}</p>
       </div>
-
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div class="lg:col-span-2">
-          <TrendChart
-            title="Aylik Prim Trendi"
-            :labels="trendLabels"
-            :datasets="trendDatasets"
-            unit="₺"
-            @period-change="onTrendPeriodChange"
-          />
-        </div>
-
-        <DistributionChart
-          title="Brans Dagilimi"
-          type="bar"
-          :items="branchDistribution"
-          value-suffix=" police"
-        />
+      <div class="mini-metric">
+        <p class="mini-metric-label">Bekleyen Teklifler</p>
+        <p class="mini-metric-value text-amber-600">{{ formatNumber(dailyActionOffers.length) }}</p>
       </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Acik Hasarlar</p>
+        <p class="mini-metric-value text-red-600">{{ formatNumber(week4Metrics.openClaims) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Secili Donem Prim</p>
+        <p class="mini-metric-value text-green-600">{{ formatCurrency(week4Metrics.periodPremium) }}</p>
+      </div>
+    </div>
 
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div class="lg:col-span-2">
-          <RenewalWidget
-            :renewals="upcomingRenewals"
-            @row-click="(r) => openPolicyDetail(r.name)"
-            @view-all="openPage('/renewals')"
-          />
-        </div>
-
-        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div class="border-b border-gray-100 px-4 py-3">
-            <p class="text-sm font-medium text-gray-800">Son Aktiviteler</p>
-          </div>
-          <div class="p-4">
-            <div v-if="week4RecentActivities.length" class="space-y-3">
-              <div v-for="item in week4RecentActivities" :key="item.name" class="flex items-start gap-2">
-                <span class="mt-1 h-2 w-2 rounded-full" :class="item.highlight ? 'bg-brand-600' : 'bg-gray-300'" />
-                <div>
-                  <p class="text-sm text-gray-700">{{ item.text }}</p>
-                  <p class="text-xs text-gray-400">{{ item.time }}</p>
-                </div>
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="lg:col-span-2 space-y-4">
+        <DetailCard title="Son Aktiviteler">
+          <template #action>
+            <button class="btn btn-sm" type="button">Tumunu Gor</button>
+          </template>
+          <div v-if="!week4RecentActivities.length" class="card-empty">Henuz aktivite kaydi yok.</div>
+          <div v-else class="space-y-3">
+            <div v-for="item in week4RecentActivities" :key="item.name" class="timeline-item">
+              <div :class="['tl-dot', item.highlight && 'tl-dot-active']" />
+              <div>
+                <p class="tl-text">{{ item.text }}</p>
+                <p class="tl-time">{{ item.time }}</p>
               </div>
             </div>
-            <p v-else class="card-empty">Aktivite yok.</p>
           </div>
+        </DetailCard>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <DetailCard title="Aylik Prim Trendi">
+            <div class="chart-container">
+              <TrendChart
+                title="Aylik Prim Trendi"
+                :labels="trendLabels"
+                :datasets="trendDatasets"
+                unit="₺"
+                @period-change="onTrendPeriodChange"
+              />
+            </div>
+          </DetailCard>
+
+          <DetailCard title="Brans Dagilimi">
+            <div class="chart-container">
+              <DistributionChart
+                title="Brans Dagilimi"
+                type="bar"
+                :items="branchDistribution"
+                value-suffix=" police"
+              />
+            </div>
+          </DetailCard>
         </div>
+      </div>
+
+      <div class="space-y-4">
+        <DetailCard title="Hizli Islemler">
+          <div class="space-y-2">
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/policies')">Yeni Police</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/offers')">Yeni Teklif</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/customers')">Yeni Musteri</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/claims')">Hasar Bildirimi</button>
+          </div>
+        </DetailCard>
+
+        <DetailCard title="Bugun Yapilacaklar">
+          <template #action>
+            <span class="badge badge-blue">{{ followUpItems.length }}</span>
+          </template>
+          <div v-if="!followUpItems.length" class="card-empty">Bugun icin gorev yok.</div>
+          <div v-else class="space-y-2">
+            <div
+              v-for="item in pagedPreviewItems(followUpItems, 'dailyFollowUp').slice(0, 4)"
+              :key="`${item.source_type}-${item.source_name}`"
+              class="flex items-start gap-2 rounded-md p-2 hover:bg-gray-50"
+            >
+              <input type="checkbox" class="mt-1" />
+              <div class="flex-1">
+                <p class="text-sm text-gray-900">{{ followUpTitle(item) }}</p>
+                <p class="text-xs text-gray-500">{{ formatDate(item.follow_up_on || item.due_date) }}</p>
+              </div>
+            </div>
+          </div>
+        </DetailCard>
+
+        <DetailCard title="Yaklasan Yenilemeler">
+          <template #action>
+            <span class="badge badge-amber">{{ upcomingRenewals.length }}</span>
+          </template>
+          <div v-if="!upcomingRenewals.length" class="card-empty">30 gun icinde yenileme yok.</div>
+          <div v-else class="divide-y divide-gray-100">
+            <div
+              v-for="renewal in upcomingRenewals.slice(0, 5)"
+              :key="renewal.name"
+              class="py-2"
+            >
+              <p class="text-sm font-medium text-gray-900">{{ renewal.customer_name || renewal.customer || renewal.name }}</p>
+              <p class="text-xs text-gray-500">
+                {{ renewal.policy_branch || renewal.branch || '-' }} · {{ formatDate(renewal.due_date || renewal.renewal_date) }}
+              </p>
+            </div>
+          </div>
+        </DetailCard>
       </div>
     </div>
 
@@ -938,10 +968,9 @@ import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import PreviewPager from "../components/app-shell/PreviewPager.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
-import MetricCard from "../components/ui/MetricCard.vue";
+import DetailCard from "../components/ui/DetailCard.vue";
 import TrendChart from "../components/ui/TrendChart.vue";
 import DistributionChart from "../components/ui/DistributionChart.vue";
-import RenewalWidget from "../components/ui/RenewalWidget.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 

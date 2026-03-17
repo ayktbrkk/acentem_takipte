@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell">
+  <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
@@ -12,23 +12,12 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-sm" @click="router.push('/claims')">{{ t("back") }}</button>
+        <button class="btn btn-outline btn-sm" @click="router.push('/claims')">{{ t("back") }}</button>
         <button class="btn btn-primary btn-sm" type="button">{{ t("action") }}</button>
       </div>
     </div>
 
     <HeroStrip :cells="heroCells" />
-
-    <div class="nav-tabs-bar">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        :class="['nav-tab', activeTab === tab.key && 'is-active']"
-        @click="activeTab = tab.key"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
 
     <div class="detail-body">
       <div class="detail-main">
@@ -41,7 +30,17 @@
           <FieldGroup :fields="detailFields" :cols="2" />
         </DetailCard>
 
+        <DetailCard :title="t('policy')">
+          <div class="cursor-pointer rounded-lg bg-gray-50 p-3 hover:bg-gray-100" @click="openPolicy">
+            <p class="text-sm font-medium text-gray-900">{{ claim.policy || '-' }}</p>
+            <p class="mt-0.5 text-xs text-gray-400">{{ claim.branch || '-' }}</p>
+          </div>
+        </DetailCard>
+
         <DetailCard :title="t('documents')">
+          <template #action>
+            <button class="btn btn-sm" type="button" @click="openPolicy">Yükle</button>
+          </template>
           <p v-if="!documents.length" class="card-empty">{{ t("noDocuments") }}</p>
           <div v-else>
             <div v-for="doc in documents" :key="doc.name" class="timeline-item">
@@ -54,7 +53,33 @@
           </div>
         </DetailCard>
 
+        <DetailCard title="Ödeme Geçmişi">
+          <div v-if="!payments.length" class="card-empty">Ödeme kaydı bulunamadı.</div>
+          <table v-else class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="table-header">Tarih</th>
+                <th class="table-header">Referans</th>
+                <th class="table-header text-right">Tutar</th>
+                <th class="table-header">Durum</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr v-for="row in payments" :key="row.name">
+                <td class="table-cell">{{ formatDate(row.payment_date || row.creation) }}</td>
+                <td class="table-cell">{{ row.payment_no || row.name }}</td>
+                <td class="table-cell text-right">{{ formatCurrency(row.amount_try || row.amount || 0) }}</td>
+                <td class="table-cell">{{ row.status || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </DetailCard>
+
         <DetailCard :title="t('timeline')">
+          <div class="mb-4">
+            <p class="section-title">Notlar</p>
+            <p class="text-sm text-gray-700">{{ claim.rejection_reason || claim.notes || '-' }}</p>
+          </div>
           <div>
             <div class="timeline-item">
               <div class="tl-dot tl-dot-active" />
@@ -76,50 +101,23 @@
 
       <aside class="detail-sidebar">
         <div>
-          <p class="section-title">{{ t("policy") }}</p>
-          <div class="cursor-pointer rounded-lg bg-gray-50 p-3 hover:bg-gray-100" @click="openPolicy">
-            <p class="text-sm font-medium text-gray-900">{{ claim.policy || '-' }}</p>
-            <p class="mt-0.5 text-xs text-gray-400">{{ claim.branch || '-' }}</p>
-          </div>
+          <p class="section-title">İlgili Kişiler</p>
+          <FieldGroup :fields="peopleFields" :cols="1" />
         </div>
 
         <div class="divider" />
 
         <div>
-          <p class="section-title">{{ t("customer") }}</p>
-          <div class="mb-3 flex items-center gap-2.5">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-medium text-brand-600">
-              {{ initials(claim.customer) }}
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-900">{{ claim.customer || '-' }}</p>
-            </div>
-          </div>
-          <button class="btn btn-full btn-sm" @click="openCustomer">{{ t("customerRecord") }}</button>
+          <p class="section-title">Durum Bilgisi</p>
+          <FieldGroup :fields="statusFields" :cols="1" />
         </div>
 
         <div class="divider" />
 
         <div>
-          <p class="section-title">{{ t("summary") }}</p>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="mini-metric">
-              <p class="mini-metric-label">{{ t("approved") }}</p>
-              <p class="mini-metric-value">{{ formatCurrency(claim.approved_amount) }}</p>
-            </div>
-            <div class="mini-metric">
-              <p class="mini-metric-label">{{ t("paid") }}</p>
-              <p class="mini-metric-value">{{ formatCurrency(claim.paid_amount) }}</p>
-            </div>
-            <div class="mini-metric">
-              <p class="mini-metric-label">{{ t("remaining") }}</p>
-              <p class="mini-metric-value">{{ formatCurrency(remainingAmount) }}</p>
-            </div>
-            <div class="mini-metric">
-              <p class="mini-metric-label">{{ t("days") }}</p>
-              <p class="mini-metric-value">{{ remainingDaysDisplay }}</p>
-            </div>
-          </div>
+          <p class="section-title">Kayıt Meta</p>
+          <FieldGroup :fields="recordMetaFields" :cols="1" />
+          <button class="mt-3 btn btn-full btn-sm" @click="openCustomer">{{ t("customerRecord") }}</button>
         </div>
       </aside>
     </div>
@@ -139,15 +137,6 @@ import StepBar from "@/components/ui/StepBar.vue";
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || "");
 const router = useRouter();
-const activeTab = ref("genel");
-
-const tabs = [
-  { key: "genel", label: "Genel" },
-  { key: "detay", label: "Detaylar" },
-  { key: "belgeler", label: "Belgeler" },
-  { key: "odeme", label: "Odemeler" },
-  { key: "aktivite", label: "Aktivite" },
-];
 
 const copy = {
   tr: {
@@ -198,9 +187,11 @@ function t(key) {
 
 const claimResource = createResource({ url: "frappe.client.get", auto: false });
 const claimFileResource = createResource({ url: "frappe.client.get_list", auto: false });
+const claimPaymentsResource = createResource({ url: "frappe.client.get_list", auto: false });
 
 const claim = computed(() => claimResource.data || {});
 const documents = computed(() => (Array.isArray(claimFileResource.data) ? claimFileResource.data : []));
+const payments = computed(() => (Array.isArray(claimPaymentsResource.data) ? claimPaymentsResource.data : []));
 const claimStatus = computed(() => String(claim.value.claim_status || "Draft"));
 
 const remainingDays = computed(() => {
@@ -213,15 +204,10 @@ const remainingDaysDisplay = computed(() => (remainingDays.value == null || Numb
 const remainingAmount = computed(() => Number(claim.value.approved_amount || 0) - Number(claim.value.paid_amount || 0));
 
 const heroCells = computed(() => [
-  { label: "Musteri", value: claim.value.customer || "-" },
-  { label: "Police", value: claim.value.policy || "-" },
-  { label: "Hasar Tutari", value: formatCurrency(claim.value.approved_amount), variant: "lg" },
-  { label: "Hasar Tarihi", value: formatDate(claim.value.creation) },
-  {
-    label: "Kalan Gun",
-    value: remainingDaysDisplay.value,
-    variant: remainingDays.value != null && remainingDays.value < 7 ? "warn" : "default",
-  },
+  { label: "Dosya No", value: claim.value.claim_no || claim.value.name || "-", variant: "default" },
+  { label: "Hasar Tarihi", value: formatDate(claim.value.loss_date || claim.value.creation), variant: "default" },
+  { label: "Rezerv", value: formatCurrency(claim.value.reserve_amount || claim.value.approved_amount), variant: "lg" },
+  { label: "Ödenen", value: formatCurrency(claim.value.paid_amount), variant: "accent" },
 ]);
 
 const processFields = computed(() => [
@@ -238,24 +224,44 @@ const detailFields = computed(() => [
 ]);
 
 const claimSteps = computed(() => {
-  const raw = String(claim.value.claim_status || "").trim();
-  const stepMap = {
-    Open: 1,
-    "Under Review": 2,
-    Approved: 3,
-    Paid: 4,
-    Closed: 5,
-    Rejected: 5,
+  const status = String(claim.value.claim_status || "").toLowerCase();
+  const currentStepIs = (step) => {
+    if (step === "expertise") return ["under review", "expertise", "inspection"].includes(status);
+    if (step === "approval") return ["approved", "onay", "approval"].includes(status);
+    if (step === "payment") return ["paid", "payment", "closed"].includes(status);
+    return false;
   };
-  const current = stepMap[raw] || 1;
+
+  const expertiseCurrent = currentStepIs("expertise");
+  const approvalCurrent = currentStepIs("approval");
+  const paymentCurrent = currentStepIs("payment");
+
   return [
-    { label: "Bildirim", state: current > 1 ? "done" : current === 1 ? "current" : "pending" },
-    { label: "Inceleme", state: current > 2 ? "done" : current === 2 ? "current" : "pending" },
-    { label: "Onay", state: current > 3 ? "done" : current === 3 ? "current" : "pending" },
-    { label: "Odeme", state: current > 4 ? "done" : current === 4 ? "current" : "pending" },
-    { label: "Kapandi", state: current === 5 ? "current" : "pending" },
+    { label: "Bildirim", state: "done" },
+    { label: "Ekspertiz", state: expertiseCurrent ? "current" : "done" },
+    { label: "Onay", state: approvalCurrent ? "current" : paymentCurrent ? "done" : "pending" },
+    { label: "Ödeme", state: paymentCurrent ? "current" : "pending" },
   ];
 });
+
+const peopleFields = computed(() => [
+  { label: "Müşteri", value: claim.value.customer || "-" },
+  { label: "Eksper", value: claim.value.surveyor || claim.value.expert || "-" },
+]);
+
+const statusFields = computed(() => [
+  { label: "Durum", value: claim.value.claim_status || "-" },
+  { label: "Onaylanan", value: formatCurrency(claim.value.approved_amount) },
+  { label: "Ödenen", value: formatCurrency(claim.value.paid_amount) },
+  { label: "Kalan", value: formatCurrency(remainingAmount.value) },
+]);
+
+const recordMetaFields = computed(() => [
+  { label: "Oluşturan", value: claim.value.owner || "-" },
+  { label: "Oluşturulma", value: formatDate(claim.value.creation) },
+  { label: "Güncelleyen", value: claim.value.modified_by || "-" },
+  { label: "Güncelleme", value: formatDate(claim.value.modified) },
+]);
 
 function initials(nameValue = "") {
   return String(nameValue || "").trim().split(/\s+/).slice(0, 2).map((chunk) => chunk[0] || "").join("").toUpperCase() || "AT";
@@ -294,6 +300,15 @@ function reload() {
     limit_page_length: 20,
   };
   claimFileResource.reload();
+
+  claimPaymentsResource.params = {
+    doctype: "AT Payment",
+    fields: ["name", "payment_no", "payment_date", "amount", "amount_try", "status", "creation"],
+    filters: { claim: name.value },
+    order_by: "creation desc",
+    limit_page_length: 20,
+  };
+  claimPaymentsResource.reload();
 }
 
 onMounted(reload);

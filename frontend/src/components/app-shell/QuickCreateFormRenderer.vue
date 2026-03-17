@@ -14,7 +14,7 @@
             <VueSelect
               v-if="isRemoteSelect(field)"
               v-model="model[field.name]"
-              class="qc-remote-select qc-control"
+              :class="controlClass(field, 'qc-remote-select qc-control')"
               :is-disabled="isFieldDisabled(field)"
               :is-loading="Boolean(remoteLoadingMap[field.name])"
               :is-searchable="true"
@@ -52,7 +52,7 @@
             <select
               v-else
               v-model="model[field.name]"
-              class="input qc-control"
+              :class="controlClass(field, 'input qc-control form-input')"
               :disabled="isFieldDisabled(field)"
             >
               <option value="">{{ text(field.placeholder) || text(defaultSelectPlaceholder) }}</option>
@@ -77,7 +77,7 @@
           <textarea
             v-else-if="field.type === 'textarea'"
             v-model="model[field.name]"
-            class="input qc-textarea min-h-[90px]"
+            :class="controlClass(field, 'input qc-textarea min-h-[90px] form-input')"
             :rows="field.rows || 3"
             :placeholder="text(field.placeholder)"
             :disabled="isFieldDisabled(field)"
@@ -86,7 +86,7 @@
           <template v-else-if="field.type === 'autocomplete'">
             <input
               v-model="model[field.name]"
-              class="input qc-control"
+              :class="controlClass(field, 'input qc-control form-input')"
               type="text"
               :list="autocompleteListId(field)"
               :placeholder="text(field.placeholder)"
@@ -107,7 +107,7 @@
           <input
             v-else
             v-model="model[field.name]"
-            class="input qc-control"
+            :class="controlClass(field, 'input qc-control form-input')"
             :type="normalizeInputType(field.type)"
             :placeholder="text(field.placeholder)"
             :disabled="isFieldDisabled(field)"
@@ -117,7 +117,7 @@
             @keyup.enter="emit('submit')"
           />
 
-          <p v-if="fieldErrors?.[field.name]" class="mt-1 text-xs text-rose-600">
+          <p v-if="fieldErrors?.[field.name]" class="form-error">
             {{ fieldErrors[field.name] }}
           </p>
           <p v-else-if="fieldHelp(field)" class="mt-1 text-xs text-slate-500">
@@ -208,6 +208,14 @@ function hasRelatedCreateListener() {
 
 function fieldWrapClass(field) {
   return field?.fullWidth ? "md:col-span-2" : "";
+}
+
+function hasFieldError(field) {
+  return Boolean(props.fieldErrors?.[field?.name]);
+}
+
+function controlClass(field, baseClass) {
+  return [baseClass, hasFieldError(field) ? "error" : ""];
 }
 
 function normalizeInputType(type) {

@@ -1,160 +1,97 @@
 <template>
-  <section class="page-shell">
+  <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Satış → Teklifler</p>
+        <p class="detail-breadcrumb">Teklifler</p>
         <h1 class="detail-title">
-          {{ offer.name || name }}
+          {{ offer.offer_no || 'Teklif Detayı' }}
           <StatusBadge :status="uiOfferStatus" />
         </h1>
-        <p class="detail-subtitle">{{ offerHeaderSubtitle }}</p>
+        <div class="mt-1.5 flex items-center gap-2">
+          <span class="copy-tag">{{ offer.name || name }}</span>
+          <span v-if="offer.customer_name || offer.customer" class="text-sm text-gray-500">
+            {{ offer.customer_name || offer.customer }}
+          </span>
+        </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-sm" type="button" @click="goBack">{{ t('backList') }}</button>
-        <button v-if="isOfferConvertible" class="btn btn-primary btn-sm" type="button" @click="openConvertInOfferBoard">
-          {{ t('convertToPolicy') }}
-        </button>
+        <button class="btn btn-outline btn-sm" type="button" @click="goBack">Listeye Dön</button>
+        <button class="btn btn-outline btn-sm" type="button" @click="downloadPDF">PDF İndir</button>
+        <button class="btn btn-outline btn-sm" type="button" @click="sendEmail">Mail Gönder</button>
+        <button v-if="isOfferConvertible" class="btn btn-primary btn-sm" type="button" @click="convertToPolicy">Poliçeye Dönüştür</button>
+        <button v-else class="btn btn-primary btn-sm" type="button" @click="editOffer">Düzenle</button>
       </div>
     </div>
 
     <HeroStrip :cells="heroCells" />
 
-    <div class="nav-tabs-bar">
-      <button
-        v-for="tab in offerTabs"
-        :key="tab.value"
-        :class="['nav-tab', activeOfferTab === tab.value && 'is-active']"
-        type="button"
-        @click="activeOfferTab = tab.value"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
-
     <div class="detail-body">
-      <div class="detail-main">
-        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'premium'" :title="t('premiumTitle')">
-          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
-          <FieldGroup v-else :fields="premiumFields" :cols="2" />
-        </DetailCard>
-
-        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'related'" :title="t('conversionTitle')">
-          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
-          <template v-else>
-            <FieldGroup :fields="conversionFields" :cols="2" />
-            <div v-if="conversionLinkedCards.length" class="mt-4 grid gap-3 md:grid-cols-2">
-              <MetaListCard v-for="item in conversionLinkedCards" :key="item.key" :title="item.title" :subtitle="item.subtitle" :description="item.description" :meta="item.meta">
-                <template #trailing>
-                  <button class="btn btn-sm" type="button" @click="item.open()">{{ item.actionLabel }}</button>
-                </template>
-              </MetaListCard>
-            </div>
+      <div class="detail-main space-y-4">
+        <DetailCard title="Teminatlar">
+          <template #action>
+            <button class="btn btn-sm" type="button" @click="editOffer">Düzenle</button>
           </template>
+
+          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
+          <div v-else-if="!coverages.length" class="card-empty">Teminat bilgisi girilmemiş.</div>
+          <table v-else class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="table-header">Teminat</th>
+                <th class="table-header text-right">Limit</th>
+                <th class="table-header text-right">Prim</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr v-for="coverage in coverages" :key="coverage.name || coverage.coverage_name">
+                <td class="table-cell">{{ coverage.coverage_name || coverage.item_name || '-' }}</td>
+                <td class="table-cell text-right font-medium">{{ fmtMoney(coverage.limit || coverage.coverage_limit, offer.currency || 'TRY') }}</td>
+                <td class="table-cell text-right">{{ fmtMoney(coverage.premium || coverage.amount, offer.currency || 'TRY') }}</td>
+              </tr>
+            </tbody>
+          </table>
         </DetailCard>
 
-        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'conversion'" :title="t('relatedTitle')">
-          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
-          <div v-else class="grid gap-4 lg:grid-cols-2">
-            <div>
-              <p class="section-title">{{ t('relatedOffersTitle') }}</p>
-              <div v-if="relatedOffers.length" class="space-y-3">
-                <MetaListCard v-for="item in relatedOffers" :key="`offer-${item.name}`" :title="item.name" :description="fmtDate(item.offer_date)" :meta="relatedOfferMeta(item)">
-                  <template #trailing>
-                    <button class="btn btn-sm" type="button" @click="openOfferDetail(item.name)">{{ t('openOfferDetail') }}</button>
-                  </template>
-                </MetaListCard>
-              </div>
-              <div v-else class="card-empty">{{ t('noRelatedOffers') }}</div>
-            </div>
-            <div>
-              <p class="section-title">{{ t('relatedPoliciesTitle') }}</p>
-              <div v-if="relatedPolicies.length" class="space-y-3">
-                <MetaListCard v-for="item in relatedPolicies" :key="`policy-${item.name}`" :title="item.policy_no || item.name" :subtitle="item.name" :description="fmtDate(item.end_date)" :meta="relatedPolicyMeta(item)">
-                  <template #trailing>
-                    <button class="btn btn-sm" type="button" @click="openPolicyDetail(item.name)">{{ t('openPolicy') }}</button>
-                  </template>
-                </MetaListCard>
-              </div>
-              <div v-else class="card-empty">{{ t('noRelatedPolicies') }}</div>
-            </div>
-          </div>
-        </DetailCard>
+        <DetailCard title="Dökümanlar">
+          <template #action>
+            <button class="btn btn-sm" type="button" @click="editOffer">Yükle</button>
+          </template>
 
-        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'operations'" :title="t('opsPreviewTitle')">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
-          <div v-else class="grid gap-4 xl:grid-cols-2">
-            <div>
-              <p class="section-title">{{ t('notifDraftsTitle') }}</p>
-              <div v-if="offerNotificationDrafts.length" class="space-y-3">
-                <MetaListCard v-for="item in offerNotificationDrafts" :key="`draft-${item.name}`" :title="item.recipient || item.name" :subtitle="item.reference_name || item.name" :description="item.name || '-'" :meta="notificationPreviewMeta(item)">
-                  <template #trailing>
-                    <button class="btn btn-sm" type="button" @click="openCommunicationCenterForOffer(item)">{{ t('openCommunication') }}</button>
-                  </template>
-                </MetaListCard>
+          <div v-else-if="!documents.length" class="card-empty">Döküman yüklenmemiş.</div>
+          <div v-else class="divide-y divide-gray-100">
+            <div v-for="doc in documents" :key="doc.name || doc.file_url || doc.file_name" class="flex items-center justify-between py-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-900">{{ doc.file_name || doc.label || doc.name }}</span>
               </div>
-              <div v-else class="card-empty">{{ t('noNotifDrafts') }}</div>
-            </div>
-            <div>
-              <p class="section-title">{{ t('paymentsPreviewTitle') }}</p>
-              <div v-if="offerPayments.length" class="space-y-3">
-                <MetaListCard v-for="item in offerPayments" :key="`payment-${item.name}`" :title="item.payment_no || item.name" :subtitle="item.policy || item.customer || '-'" :description="fmtDate(item.payment_date)" :meta="offerPaymentMeta(item)">
-                  <template #trailing>
-                    <button class="btn btn-sm" type="button" @click="item.policy ? openPolicyDetail(item.policy) : openPaymentsBoard()">
-                      {{ item.policy ? t('openPolicy') : t('openPayments') }}
-                    </button>
-                  </template>
-                </MetaListCard>
-              </div>
-              <div v-else class="card-empty">{{ t('noPayments') }}</div>
+              <button class="btn btn-sm" type="button" @click="openDocument(doc)">İndir</button>
             </div>
           </div>
         </DetailCard>
 
-        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'activity'" :title="t('notesTitle')">
+        <DetailCard title="Aktiviteler">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
-          <p v-else class="whitespace-pre-wrap text-sm text-slate-700">{{ offer.notes || '-' }}</p>
-        </DetailCard>
-
-        <DetailCard v-if="activeOfferTab === 'overview' || activeOfferTab === 'notes'" :title="t('recordMetaTitle')">
-          <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
+          <div v-else-if="!activities.length" class="card-empty">Henüz aktivite kaydı yok.</div>
           <div v-else>
-            <FieldGroup :fields="offerMetaFields" :cols="2" />
-            <div class="mt-4">
-              <p class="section-title">{{ t('recordTimelineTitle') }}</p>
-              <div v-for="item in offerTimelineItems" :key="item.key" class="timeline-item">
-                <span class="tl-dot tl-dot-draft" />
-                <div class="min-w-0 flex-1">
-                  <p class="tl-text">{{ item.title }}</p>
-                  <p class="text-sm text-gray-500">{{ item.description }}</p>
-                  <p class="tl-time">{{ item.meta }}</p>
-                </div>
+            <div v-for="activity in activities" :key="activity.name || activity.key" class="timeline-item">
+              <div :class="['tl-dot', activity.is_important && 'tl-dot-active']" />
+              <div>
+                <p class="tl-text">{{ activity.description || activity.title || '-' }}</p>
+                <p class="tl-time">{{ fmtDate(activity.creation || activity.at) }} · {{ activity.owner || activity.actor || '-' }}</p>
               </div>
             </div>
           </div>
         </DetailCard>
       </div>
 
-      <div class="detail-sidebar">
+      <div class="detail-sidebar space-y-4">
         <div>
-          <p class="section-title">{{ t('offerInfoTitle') }}</p>
-          <div v-if="loading" class="field-value-muted">{{ t('loading') }}</div>
-          <FieldGroup v-else :fields="offerInfoFields" :cols="2" />
-        </div>
-
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t('conversionTitle') }}</p>
-          <div class="grid grid-cols-2 gap-2">
-            <div v-for="item in conversionMiniMetrics" :key="item.label" class="mini-metric">
-              <p class="mini-metric-label">{{ item.label }}</p>
-              <p class="mini-metric-value">{{ item.value }}</p>
+          <p class="section-title">Müşteri</p>
+          <div class="mb-3 flex items-center gap-3">
+            <div class="avatar avatar-md avatar-blue">{{ initials(offer.customer_name || offer.customer) }}</div>
+            <div>
+              <p class="text-sm font-medium text-gray-900">{{ offer.customer_name || offer.customer || '-' }}</p>
+              <button class="text-xs text-brand-600 hover:underline" type="button" @click="viewCustomer">Detayı Gör →</button>
             </div>
           </div>
         </div>
@@ -162,12 +99,15 @@
         <div class="divider" />
 
         <div>
-          <p class="section-title">Hızlı İşlemler</p>
-          <div class="space-y-2">
-            <button v-if="offer.customer" class="btn btn-full btn-sm" type="button" @click="openCustomer360(offer.customer)">{{ t('openCustomer360') }} →</button>
-            <button class="btn btn-full btn-sm" type="button" @click="openOfferWorkbench">{{ t('openOfferBoard') }}</button>
-            <button v-if="deskActionsEnabled()" class="btn btn-full btn-sm" type="button" @click="openOfferDesk">{{ t('openDesk') }}</button>
-          </div>
+          <p class="section-title">Teklif Detayları</p>
+          <FieldGroup :fields="offerFields" :cols="1" />
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">Kayıt Bilgileri</p>
+          <FieldGroup :fields="recordFields" :cols="1" />
         </div>
       </div>
     </div>
@@ -181,7 +121,6 @@ import { createResource } from "frappe-ui";
 
 import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
-import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import DetailCard from "../components/ui/DetailCard.vue";
@@ -522,10 +461,42 @@ const conversionLinkedCards = computed(() => {
 });
 const uiOfferStatus = computed(() => mapOfferStatusTone(offer.value.status));
 const heroCells = computed(() => [
-  { label: t("customer"), value: offer.value.customer || "-" },
-  { label: t("company"), value: offer.value.insurance_company || "-" },
-  { label: t("grossPremium"), value: fmtMoney(offer.value.gross_premium, offer.value.currency), variant: "lg" },
-  { label: t("validUntil"), value: fmtDate(offer.value.valid_until), variant: isOfferConvertible.value ? "accent" : "default" },
+  { label: "Şirket", value: offer.value.company_name || offer.value.insurance_company || "-", variant: "default" },
+  { label: "Branş", value: offer.value.branch || "-", variant: "default" },
+  { label: "Prim", value: fmtMoney(offer.value.premium || offer.value.gross_premium, offer.value.currency || "TRY"), variant: "lg" },
+  { label: "Geçerlilik", value: fmtDate(offer.value.valid_until), variant: "accent" },
+]);
+const coverages = computed(() => {
+  const payload = offerDetailPayload.value;
+  if (Array.isArray(payload.coverages)) return payload.coverages;
+  if (Array.isArray(payload.items)) return payload.items;
+  return [];
+});
+const documents = computed(() => {
+  const payload = offerDetailPayload.value;
+  if (Array.isArray(payload.documents)) return payload.documents;
+  if (Array.isArray(payload.attachments)) return payload.attachments;
+  return [];
+});
+const activities = computed(() => {
+  const payload = offerDetailPayload.value;
+  if (Array.isArray(payload.activity)) return payload.activity;
+  return [];
+});
+const offerFields = computed(() => [
+  { label: "Şirket", value: offer.value.company_name || offer.value.insurance_company || "-" },
+  { label: "Branş", value: offer.value.branch || "-" },
+  { label: "Başlangıç", value: fmtDate(offer.value.start_date) },
+  { label: "Bitiş", value: fmtDate(offer.value.end_date) },
+  { label: "Geçerlilik", value: fmtDate(offer.value.valid_until) },
+  { label: "Prim", value: fmtMoney(offer.value.premium || offer.value.gross_premium, offer.value.currency || "TRY") },
+  { label: "Komisyon", value: fmtMoney(offer.value.commission || offer.value.commission_amount, offer.value.currency || "TRY") },
+]);
+const recordFields = computed(() => [
+  { label: "Oluşturan", value: offer.value.owner || "-" },
+  { label: "Oluşturulma", value: fmtDateTime(offer.value.creation) },
+  { label: "Güncelleyen", value: offer.value.modified_by || "-" },
+  { label: "Güncelleme", value: fmtDateTime(offer.value.modified) },
 ]);
 const offerInfoFields = computed(() => offerInfoFacts.value.map((item) => ({ label: item.label, value: item.value })));
 const premiumFields = computed(() => premiumSummaryItems.value.map((item) => ({ label: item.label, value: item.value })));
@@ -586,9 +557,40 @@ function goBack() {
     router.push({ name: "offer-board" });
   });
 }
+function downloadPDF() {
+  if (!props.name) return;
+  const url = `/api/method/acentem_takipte.acentem_takipte.api.list_exports.download_export?screen=offer_detail&format=pdf&name=${encodeURIComponent(props.name)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+function sendEmail() {
+  openCommunicationCenterForOffer();
+}
+function convertToPolicy() {
+  openConvertInOfferBoard();
+}
+function editOffer() {
+  openOfferDesk();
+}
 function openCustomer360(name) {
   if (!name) return;
   router.push({ name: "customer-detail", params: { name } });
+}
+function viewCustomer() {
+  openCustomer360(offer.value.customer || offer.value.customer_name);
+}
+function initials(value) {
+  const words = String(value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  if (!words.length) return "-";
+  return words.map((word) => String(word[0] || "").toUpperCase()).join("");
+}
+function openDocument(doc) {
+  const fileUrl = String(doc?.file_url || doc?.url || "").trim();
+  if (!fileUrl) return;
+  window.open(fileUrl, "_blank", "noopener,noreferrer");
 }
 function openPolicyDetail(name) {
   if (!name) return;

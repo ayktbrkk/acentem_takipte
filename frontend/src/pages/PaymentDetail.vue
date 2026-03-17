@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell">
+  <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
@@ -12,23 +12,12 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-sm" @click="router.push('/payments')">{{ t("back") }}</button>
+        <button class="btn btn-outline btn-sm" @click="router.push('/payments')">{{ t("back") }}</button>
         <button class="btn btn-primary btn-sm" type="button">{{ t("approve") }}</button>
       </div>
     </div>
 
     <HeroStrip :cells="heroCells" />
-
-    <div class="nav-tabs-bar">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        :class="['nav-tab', activeTab === tab.key && 'is-active']"
-        @click="activeTab = tab.key"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
 
     <div class="detail-body">
       <div class="detail-main">
@@ -36,33 +25,46 @@
           <FieldGroup :fields="paymentFields" :cols="2" />
         </DetailCard>
 
-        <DetailCard v-if="installments.length" :title="t('installments')">
-          <div>
-            <div v-for="(inst, idx) in installments" :key="inst.name || idx" class="flex items-center gap-3 border-b border-gray-100 py-2.5 last:border-0">
-              <span class="w-6 text-xs text-gray-400">{{ idx + 1 }}.</span>
-              <div class="flex-1">
-                <p class="text-sm text-gray-900">{{ formatDate(inst.due_date) }}</p>
-              </div>
-              <StatusBadge domain="payment" :status="inst.status || 'Draft'" />
-              <p class="shrink-0 text-sm font-medium text-gray-900">{{ formatCurrency(inst.amount_try) }}</p>
-            </div>
+        <DetailCard :title="t('policy')">
+          <div class="cursor-pointer rounded-lg bg-gray-50 p-3 hover:bg-gray-100" @click="openPolicy">
+            <p class="text-sm font-medium text-gray-900">{{ payment.policy || '-' }}</p>
+            <p class="mt-0.5 text-xs text-gray-400">{{ payment.payment_direction || '-' }}</p>
           </div>
         </DetailCard>
 
         <DetailCard :title="t('history')">
-          <div>
-            <div class="timeline-item">
-              <div class="tl-dot tl-dot-active" />
-              <div>
-                <p class="tl-text">{{ t("updated") }}</p>
-                <p class="tl-time">{{ formatDate(payment.modified) }}</p>
-              </div>
-            </div>
-            <div class="timeline-item">
+          <div v-if="!installments.length" class="card-empty">Tahsilat kaydi bulunamadi.</div>
+          <table v-else class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="table-header">Tarih</th>
+                <th class="table-header">Referans</th>
+                <th class="table-header text-right">Tutar</th>
+                <th class="table-header">Durum</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr v-for="inst in installments" :key="inst.name">
+                <td class="table-cell">{{ formatDate(inst.due_date || inst.creation) }}</td>
+                <td class="table-cell">{{ inst.name }}</td>
+                <td class="table-cell text-right">{{ formatCurrency(inst.amount_try) }}</td>
+                <td class="table-cell">{{ inst.status || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </DetailCard>
+
+        <DetailCard title="Dekont/Fatura">
+          <template #action>
+            <button class="btn btn-sm" type="button" @click="openPolicy">Yukle</button>
+          </template>
+          <div v-if="!documents.length" class="card-empty">Dekont veya fatura yuklenmemis.</div>
+          <div v-else class="space-y-2">
+            <div v-for="doc in documents" :key="doc.name" class="timeline-item">
               <div class="tl-dot" />
               <div>
-                <p class="tl-text">{{ t("created") }}</p>
-                <p class="tl-time">{{ formatDate(payment.creation) }}</p>
+                <p class="tl-text">{{ doc.file_name || doc.name }}</p>
+                <p class="tl-time">{{ formatDate(doc.creation) }}</p>
               </div>
             </div>
           </div>
@@ -70,40 +72,6 @@
       </div>
 
       <aside class="detail-sidebar">
-        <div>
-          <p class="section-title">{{ t("summary") }}</p>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="mini-metric">
-              <p class="mini-metric-label">{{ t("total") }}</p>
-              <p class="mini-metric-value">{{ formatCurrency(payment.amount_try) }}</p>
-            </div>
-            <div class="mini-metric">
-              <p class="mini-metric-label">{{ t("paid") }}</p>
-              <p class="mini-metric-value">{{ formatCurrency(paidAmount) }}</p>
-            </div>
-            <div class="mini-metric">
-              <p class="mini-metric-label">{{ t("remaining") }}</p>
-              <p class="mini-metric-value">{{ formatCurrency(remainingAmount) }}</p>
-            </div>
-            <div class="mini-metric">
-              <p class="mini-metric-label">{{ t("count") }}</p>
-              <p class="mini-metric-value">{{ String(installments.length || "-") }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("policy") }}</p>
-          <div class="cursor-pointer rounded-lg bg-gray-50 p-3 hover:bg-gray-100" @click="openPolicy">
-            <p class="text-sm font-medium text-gray-900">{{ payment.policy || '-' }}</p>
-            <p class="mt-0.5 text-xs text-gray-400">{{ payment.payment_direction || '-' }}</p>
-          </div>
-        </div>
-
-        <div class="divider" />
-
         <div>
           <p class="section-title">{{ t("customer") }}</p>
           <div class="flex items-center gap-2.5">
@@ -113,13 +81,34 @@
             <p class="text-sm font-medium text-gray-900">{{ payment.customer || '-' }}</p>
           </div>
         </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">Odeme Detaylari</p>
+          <FieldGroup :fields="sidebarPaymentFields" :cols="1" />
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">Muhasebe Kodu</p>
+          <FieldGroup :fields="accountingFields" :cols="1" />
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">Kayit Meta</p>
+          <FieldGroup :fields="recordFields" :cols="1" />
+        </div>
       </aside>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import StatusBadge from "@/components/ui/StatusBadge.vue";
@@ -130,13 +119,6 @@ import FieldGroup from "@/components/ui/FieldGroup.vue";
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || "");
 const router = useRouter();
-const activeTab = ref("genel");
-
-const tabs = [
-  { key: "genel", label: "Genel" },
-  { key: "taksit", label: "Taksitler" },
-  { key: "gecmis", label: "Gecmis" },
-];
 
 const copy = {
   tr: {
@@ -181,9 +163,11 @@ function t(key) {
 
 const paymentResource = createResource({ url: "frappe.client.get", auto: false });
 const installmentResource = createResource({ url: "frappe.client.get_list", auto: false });
+const documentResource = createResource({ url: "frappe.client.get_list", auto: false });
 
 const payment = computed(() => paymentResource.data || {});
 const installments = computed(() => (Array.isArray(installmentResource.data) ? installmentResource.data : []));
+const documents = computed(() => (Array.isArray(documentResource.data) ? documentResource.data : []));
 
 const paidAmount = computed(() => installments.value.filter((inst) => String(inst.status || "").toLowerCase() === "paid").reduce((sum, inst) => sum + Number(inst.amount_try || 0), 0));
 const remainingAmount = computed(() => Number(payment.value.amount_try || 0) - paidAmount.value);
@@ -203,10 +187,10 @@ const isOverdue = computed(() => {
 });
 
 const heroCells = computed(() => [
-  { label: "Musteri", value: payment.value.customer || "-" },
-  { label: "Police", value: payment.value.policy || "-" },
-  { label: "Tutar", value: formatCurrency(payment.value.amount_try), variant: "lg" },
-  { label: "Vade", value: formatDate(payment.value.payment_date), variant: isOverdue.value ? "warn" : "default" },
+  { label: "Odeme No", value: payment.value.payment_no || payment.value.name || "-", variant: "default" },
+  { label: "Vade Tarihi", value: formatDate(payment.value.due_date || payment.value.payment_date), variant: "default" },
+  { label: "Tutar", value: formatCurrency(payment.value.amount || payment.value.amount_try), variant: "lg" },
+  { label: "Durum", value: paymentStatus.value, variant: "accent" },
 ]);
 
 const paymentFields = computed(() => [
@@ -215,6 +199,25 @@ const paymentFields = computed(() => [
   { label: "Vade", value: formatDate(payment.value.payment_date) },
   { label: "Odeme Tarihi", value: formatDate(payment.value.payment_date) },
   { label: "Aciklama", value: payment.value.payment_purpose || "-", span: 2 },
+]);
+
+const sidebarPaymentFields = computed(() => [
+  { label: "Toplam", value: formatCurrency(payment.value.amount || payment.value.amount_try) },
+  { label: "Odenen", value: formatCurrency(paidAmount.value) },
+  { label: "Kalan", value: formatCurrency(remainingAmount.value) },
+  { label: "Taksit", value: String(installments.value.length || "-") },
+]);
+
+const accountingFields = computed(() => [
+  { label: "Hesap Kodu", value: payment.value.account_code || payment.value.cost_center || "-" },
+  { label: "Muhasebe Durumu", value: payment.value.accounting_status || "-" },
+]);
+
+const recordFields = computed(() => [
+  { label: "Olusturan", value: payment.value.owner || "-" },
+  { label: "Olusturma", value: formatDate(payment.value.creation) },
+  { label: "Guncelleyen", value: payment.value.modified_by || "-" },
+  { label: "Guncelleme", value: formatDate(payment.value.modified) },
 ]);
 
 function initials(nameValue = "") {
@@ -249,6 +252,15 @@ function reload() {
     limit_page_length: 200,
   };
   installmentResource.reload();
+
+  documentResource.params = {
+    doctype: "File",
+    fields: ["name", "file_name", "creation"],
+    filters: { attached_to_doctype: "AT Payment", attached_to_name: name.value },
+    order_by: "creation desc",
+    limit_page_length: 50,
+  };
+  documentResource.reload();
 }
 
 onMounted(reload);

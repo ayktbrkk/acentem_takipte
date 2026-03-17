@@ -2,10 +2,33 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Poliçeler</p>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
+        <p class="detail-subtitle">{{ policyListTotalCount }} poliçe</p>
       </div>
-      <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
+      <div class="flex gap-2">
+        <button class="btn btn-outline btn-sm" type="button" @click="focusPolicySearch">Filtrele</button>
+        <button class="btn btn-outline btn-sm" type="button" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">Disa Aktar</button>
+        <button class="btn btn-primary btn-sm" type="button" @click="openQuickPolicyDialog">+ Yeni Police</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 px-5 md:grid-cols-4">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Police</p>
+        <p class="mini-metric-value">{{ formatCount(policySummary.total) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Aktif</p>
+        <p class="mini-metric-value text-brand-600">{{ formatCount(policySummary.active) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Beklemede</p>
+        <p class="mini-metric-value text-amber-600">{{ formatCount(policySummary.pending) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Prim</p>
+        <p class="mini-metric-value text-green-600">{{ formatCurrency(policySummary.totalPremium, "TRY") }}</p>
+      </div>
     </div>
 
     <div class="border-b border-gray-200 bg-white px-5 py-3">
@@ -17,12 +40,22 @@
         @reset="onPolicyListFilterReset"
       >
         <template #actions>
-          <button class="btn btn-primary btn-sm" @click="openQuickPolicyDialog">+ Yeni Poliçe</button>
           <button class="btn btn-sm" :disabled="policyLoading" @click="refreshPolicyList">Yenile</button>
-          <button class="btn btn-sm" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">Excel</button>
-          <button class="btn btn-sm" :disabled="policyLoading" @click="downloadPolicyExport('pdf')">PDF</button>
+          <button v-if="policyListActiveCount > 0" class="btn btn-outline btn-sm" @click="onPolicyListFilterReset">Temizle</button>
         </template>
       </FilterBar>
+      <div class="hidden" aria-hidden="true">
+        <input v-model="filters.query" class="input" type="text" />
+        <input v-model="filters.status" class="input" type="text" />
+        <input v-model="filters.insurance_company" class="input" type="text" />
+        <input v-model="filters.customer" class="input" type="text" />
+        <input v-model="filters.gross_min" class="input" type="text" />
+        <input v-model.number="pagination.pageLength" class="input" type="number" min="1" />
+      </div>
+      <div class="mt-3 flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
+        <span>{{ t("mobileSummaryTitle") }}</span>
+        <span>{{ t("pageSize") }}: {{ pagination.pageLength || 20 }}</span>
+      </div>
     </div>
 
     <div class="flex-1 p-5">
@@ -46,44 +79,19 @@
 
     <Dialog v-model="showQuickPolicyDialog" :options="{ title: quickPolicyUi.title, size: 'xl' }">
       <template #body-content>
-        <QuickCreateDialogShell
-          :error="quickPolicyError"
-          :subtitle="quickPolicyUi.subtitle"
-          :labels="quickCreateCommon"
+        <PolicyForm
+          :model="quickPolicyForm"
+          :field-errors="quickPolicyFieldErrors"
+          :options-map="policyQuickOptionsMap"
+          :disabled="quickPolicyLoading"
           :loading="quickPolicyLoading"
+          :has-source-offer="hasQuickPolicySourceOffer"
+          :error="quickPolicyError"
+          :title="quickPolicyUi.title"
+          :subtitle="quickPolicyUi.subtitle"
           @cancel="cancelQuickPolicyDialog"
-          @save="submitQuickPolicy(false)"
-          @save-and-open="submitQuickPolicy(true)"
-        >
-          <QuickCustomerPicker
-            v-if="!hasQuickPolicySourceOffer"
-            customer-field-name="customer"
-            identity-field-name="customer_tax_id"
-            phone-field-name="customer_phone"
-            email-field-name="customer_email"
-            :model="quickPolicyForm"
-            :field-errors="quickPolicyFieldErrors"
-            :disabled="quickPolicyLoading"
-            :locale="activeLocale"
-            :office-branch="branchStore.requestBranch || ''"
-          />
-          <div
-            v-else
-            class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
-          >
-            {{ activeLocale === "tr" ? "Kaynak teklif seçildiğinde müşteri bilgisi tekliften alınır." : "Customer information is inherited from the selected source offer." }}
-          </div>
-          <QuickCreateFormRenderer
-            :fields="policyQuickFormFields"
-            :model="quickPolicyForm"
-            :field-errors="quickPolicyFieldErrors"
-            :disabled="quickPolicyLoading"
-            :locale="activeLocale"
-            :options-map="policyQuickOptionsMap"
-            @submit="submitQuickPolicy(false)"
-            @request-related-create="onPolicyRelatedCreateRequested"
-          />
-        </QuickCreateDialogShell>
+          @submit="submitQuickPolicy(false)"
+        />
       </template>
     </Dialog>
   </section>
@@ -114,6 +122,7 @@ import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
+import PolicyForm from "../components/PolicyForm.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
@@ -533,11 +542,39 @@ const policyListRowsWithUrgency = computed(() =>
     _urgency: row.remaining_days <= 7 ? "row-critical" : row.remaining_days <= 30 ? "row-warning" : "",
   }))
 );
+const policySummary = computed(() => {
+  const rowsAll = policyListMappedRows.value;
+  let active = 0;
+  let pending = 0;
+  let totalPremium = 0;
+
+  rowsAll.forEach((row) => {
+    const status = String(row.status || "").toLocaleLowerCase(localeCode.value);
+    if (status.includes("active")) active += 1;
+    if (status.includes("waiting") || status.includes("draft") || status.includes("kyt")) pending += 1;
+    totalPremium += Number(row.gwp_try || row.gross_premium || 0);
+  });
+
+  return {
+    total: rowsAll.length,
+    active,
+    pending,
+    totalPremium,
+  };
+});
 const policyListActiveCount = computed(
   () =>
     (policyListSearchQuery.value.trim() ? 1 : 0) +
     Object.values(policyListLocalFilters).filter((value) => String(value || "").trim() !== "").length
 );
+
+function focusPolicySearch() {
+  const searchInput = document.querySelector('input[placeholder*="ara"]');
+  if (searchInput instanceof HTMLInputElement) {
+    searchInput.focus();
+    searchInput.select();
+  }
+}
 
 function onPolicyListFilterChange({ key, value }) {
   policyListLocalFilters[key] = String(value || "").toLocaleLowerCase(localeCode.value);
@@ -1160,6 +1197,10 @@ function formatCurrency(value, currency) {
     currency: currency || "TRY",
     maximumFractionDigits: 2,
   }).format(Number(value || 0));
+}
+
+function formatCount(value) {
+  return Number(value || 0).toLocaleString(localeCode.value);
 }
 
 applyPolicyPreset(policyPresetKey.value, { refresh: false });

@@ -35,12 +35,10 @@
       />
     </div>
 
-    <QuickCreateManagedDialog
+    <QuickCreateClaim
       v-model="showQuickClaimDialog"
-      config-key="claim"
       :locale="activeLocale"
       :options-map="claimQuickOptionsMap"
-      :show-save-and-open="false"
       :before-open="prepareQuickClaimDialog"
       :success-handlers="quickClaimSuccessHandlers"
     />
@@ -72,6 +70,7 @@ import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import QuickCreateClaim from "../components/QuickCreateClaim.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";

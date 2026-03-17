@@ -18,6 +18,9 @@ const ClaimDetail = () => import("../pages/ClaimDetail.vue");
 const PaymentsBoard = () => import("../pages/PaymentsBoard.vue");
 const PaymentDetail = () => import("../pages/PaymentDetail.vue");
 const RenewalsBoard = () => import("../pages/RenewalsBoard.vue");
+const RenewalTaskDetail = () => import("../pages/RenewalTaskDetail.vue");
+const ImportData = () => import("../pages/ImportData.vue");
+const ExportData = () => import("../pages/ExportData.vue");
 const CommunicationCenter = () => import("../pages/CommunicationCenter.vue");
 const ReconciliationWorkbench = () => import("../pages/ReconciliationWorkbench.vue");
 const Reports = () => import("../pages/Reports.vue");
@@ -166,6 +169,16 @@ const router = createRouter({
       },
     },
     {
+      path: "/renewals/:name",
+      name: "renewal-task-detail",
+      component: RenewalTaskDetail,
+      props: true,
+      meta: {
+        title: { tr: "Yenileme Detayı", en: "Renewal Detail" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
+      },
+    },
+    {
       path: "/communication",
       name: "communication-center",
       component: CommunicationCenter,
@@ -189,6 +202,24 @@ const router = createRouter({
       component: Reports,
       meta: {
         title: { tr: "Raporlar", en: "Reports" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
+      path: "/data-import",
+      name: "import-data",
+      component: ImportData,
+      meta: {
+        title: { tr: "Veri İçe Aktarma", en: "Data Import" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
+      path: "/data-export",
+      name: "export-data",
+      component: ExportData,
+      meta: {
+        title: { tr: "Veri Dışa Aktarma", en: "Data Export" },
         section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
