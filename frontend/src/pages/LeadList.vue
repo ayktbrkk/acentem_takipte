@@ -1,200 +1,59 @@
 <template>
-  <section class="space-y-4">
-    <div class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :show-refresh="true"
-        :busy="leadListResource.loading"
-        :refresh-label="t('refresh')"
-        @refresh="refreshLeadList"
-      >
-        <template #actions>
-          <div class="flex flex-wrap items-center gap-2">
-            <QuickCreateLauncher variant="primary" size="sm" :label="quickLeadUi.newLabel" @launch="openQuickLeadDialog" />
-            <ActionButton variant="secondary" size="sm" :disabled="leadListResource.loading" @click="refreshLeadList">
-              {{ t("refresh") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" :disabled="leadListResource.loading" @click="downloadLeadExport('xlsx')">
-              {{ t("exportXlsx") }}
-            </ActionButton>
-            <ActionButton variant="primary" size="sm" :disabled="leadListResource.loading" @click="downloadLeadExport('pdf')">
-              {{ t("exportPdf") }}
-            </ActionButton>
-          </div>
-        </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applyFilters"
-            @reset="resetFilters"
-          >
-            <input v-model.trim="filters.query" class="input" type="search" :placeholder="t('searchPlaceholder')" @keyup.enter="applyFilters" />
-
-            <select v-model="filters.status" class="input">
-              <option value="">{{ t('allStatuses') }}</option>
-              <option v-for="option in leadStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-            </select>
-
-            <select v-model="filters.sort" class="input">
-              <option v-for="option in sortOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-            </select>
-
-            <select v-model.number="pagination.pageLength" class="input">
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
-
-            <template #advanced>
-              <input v-model.trim="filters.branch" class="input" type="search" :placeholder="t('branchFilter')" @keyup.enter="applyFilters" />
-              <input v-model.trim="filters.sales_entity" class="input" type="search" :placeholder="t('salesEntityFilter')" @keyup.enter="applyFilters" />
-              <input v-model.trim="filters.insurance_company" class="input" type="search" :placeholder="t('companyFilter')" @keyup.enter="applyFilters" />
-
-              <select v-model="filters.conversion_state" class="input">
-                <option value="">{{ t('allConversionStates') }}</option>
-                <option v-for="option in conversionStateOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-              </select>
-
-              <select v-model="filters.stale_state" class="input">
-                <option value="">{{ t('allStaleStates') }}</option>
-                <option v-for="option in staleStateOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-              </select>
-
-              <input v-model="filters.estimated_min" class="input" type="number" min="0" step="0.01" :placeholder="t('estimatedMinFilter')" @keyup.enter="applyFilters" />
-              <input v-model="filters.estimated_max" class="input" type="number" min="0" step="0.01" :placeholder="t('estimatedMaxFilter')" @keyup.enter="applyFilters" />
-
-              <label class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                <input v-model="filters.has_customer" class="h-4 w-4" type="checkbox" />
-                <span>{{ t('hasCustomerOnly') }}</span>
-              </label>
-
-              <label class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                <input v-model="filters.can_convert_to_offer" class="h-4 w-4" type="checkbox" />
-                <span>{{ t('canConvertOnly') }}</span>
-              </label>
-            </template>
-
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Fırsatlar</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+      </div>
+      <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
     </div>
 
-    <DataTableShell
-      :loading="isInitialLoading"
-      :error="loadErrorText"
-      :empty="rows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template #header>
-        <div class="space-y-2">
-          <p
-            v-if="actionErrorText"
-            class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700"
-          >
-            {{ actionErrorText }}
-          </p>
-          <p
-            v-else-if="actionSuccessText && !lastConvertedOfferName"
-            class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700"
-          >
-            {{ actionSuccessText }}
-          </p>
-          <div v-if="lastConvertedOfferName" class="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-            <p class="text-xs font-medium text-emerald-700">{{ t('convertLeadSuccess') }}</p>
-            <ActionButton variant="link" size="xs" @click="openOfferDetail(lastConvertedOfferName)">{{ t('openOffer') }}</ActionButton>
-          </div>
-          <p class="text-sm text-slate-600">{{ t('showing') }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
-        </div>
-      </template>
+    <div class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        v-model:search="filters.query"
+        :filters="leadListFilterConfig"
+        :active-count="activeFilterCount"
+        @filter-change="onLeadListFilterChange"
+        @reset="onLeadListFilterReset"
+      >
+        <template #actions>
+          <button class="btn btn-primary btn-sm" @click="openQuickLeadDialog">+ Yeni Fırsat</button>
+          <button class="btn btn-sm" :disabled="leadListResource.loading" @click="refreshLeadList">Yenile</button>
+          <button class="btn btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('xlsx')">Excel</button>
+          <button class="btn btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('pdf')">PDF</button>
+        </template>
+      </FilterBar>
+    </div>
 
-      <template #default>
-        <div class="at-table-wrap">
-          <table class="at-table min-h-[460px]">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t('colLead') }}</th>
-                <th class="at-table-head-cell">{{ t('colDetails') }}</th>
-                <th class="at-table-head-cell">{{ t('colStatus') }}</th>
-                <th class="at-table-head-cell">{{ t('colConversion') }}</th>
-                <th class="at-table-head-cell">{{ t('colActions') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in rows" :key="row.name" class="at-table-row cursor-pointer" @click="openLeadDetail(row.name)">
-                <DataTableCell cell-class="min-w-[220px]">
-                  <TableEntityCell :title="leadDisplayName(row)" :facts="leadIdentityFacts(row)" />
-                </DataTableCell>
-                <TableFactsCell :items="leadDetailsFacts(row)" cell-class="min-w-[260px]" />
-                <DataTableCell cell-class="min-w-[148px]">
-                  <div class="space-y-2">
-                    <StatusBadge domain="lead" :status="row.status || 'Draft'" />
-                    <StatusBadge domain="lead_stale" :status="leadStaleState(row)" />
-                  </div>
-                </DataTableCell>
-                <DataTableCell cell-class="min-w-[240px]">
-                  <div class="space-y-2">
-                    <StatusBadge domain="lead_conversion" :status="leadConversionState(row)" />
-                    <MiniFactList :items="leadConversionFacts(row)" />
-                  </div>
-                </DataTableCell>
-                <DataTableCell @click.stop>
-                  <InlineActionRow>
-                    <ActionButton
-                      v-if="canConvertLead(row)"
-                      variant="primary"
-                      size="xs"
-                      :disabled="leadConvertResource.loading && convertingLeadName === row.name"
-                      @click.stop="convertLeadToOffer(row)"
-                    >
-                      {{
-                        leadConvertResource.loading && convertingLeadName === row.name
-                          ? t('converting')
-                          : t('convertToOffer')
-                      }}
-                    </ActionButton>
-                    <ActionButton v-if="row.customer" variant="link" size="xs" @click.stop="openCustomer360(row.customer)">{{ t('openCustomer360') }}</ActionButton>
-                    <ActionButton v-if="row.converted_policy" variant="link" size="xs" @click.stop="openPolicyDetail(row.converted_policy)">{{ t('openPolicy') }}</ActionButton>
-                    <ActionButton v-if="row.converted_offer" variant="link" size="xs" @click.stop="openOfferDetail(row.converted_offer)">{{ t('openOffer') }}</ActionButton>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
+    <div class="flex-1 p-5">
+      <div v-if="actionErrorText" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+        {{ actionErrorText }}
+      </div>
+      <div v-else-if="actionSuccessText && !lastConvertedOfferName" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+        {{ actionSuccessText }}
+      </div>
+      <div v-if="lastConvertedOfferName" class="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+        <p class="text-xs font-medium text-emerald-700">{{ t('convertLeadSuccess') }}</p>
+        <ActionButton variant="link" size="xs" @click="openOfferDetail(lastConvertedOfferName)">{{ t('openOffer') }}</ActionButton>
+      </div>
 
-      <template #footer>
-        <TablePagerFooter
-          :page="pagination.page"
-          :total-pages="totalPages"
-          :page-label="t('page')"
-          :previous-label="t('previous')"
-          :next-label="t('next')"
-          :prev-disabled="pagination.page <= 1 || leadListResource.loading"
-          :next-disabled="!hasNextPage || leadListResource.loading"
-          @previous="previousPage"
-          @next="nextPage"
-        />
-      </template>
-    </DataTableShell>
+      <ListTable
+        :columns="leadListColumns"
+        :rows="leadListRows"
+        :loading="isInitialLoading"
+        empty-message="Fırsat bulunamadı."
+        @row-click="(row) => openLeadDetail(row.name)"
+      />
+
+      <div class="mt-4 flex items-center justify-between">
+        <p class="text-xs text-gray-400">{{ leadListRows.length }} / {{ pagination.total }} kayıt gösteriliyor</p>
+        <div class="flex items-center gap-1">
+          <button class="btn btn-sm" :disabled="pagination.page <= 1 || leadListResource.loading" @click="previousPage">←</button>
+          <span class="px-2 text-xs text-gray-600">{{ pagination.page }}</span>
+          <button class="btn btn-sm" :disabled="!hasNextPage || leadListResource.loading" @click="nextPage">→</button>
+        </div>
+      </div>
+    </div>
 
     <Dialog
       v-model="showQuickLeadDialog"
@@ -256,6 +115,8 @@ import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import ListTable from "../components/ui/ListTable.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
@@ -664,6 +525,57 @@ const totalPages = computed(() => Math.max(1, Math.ceil((pagination.total || 0) 
 const hasNextPage = computed(() => pagination.page < totalPages.value);
 const startRow = computed(() => (pagination.total ? (pagination.page - 1) * pagination.pageLength + 1 : 0));
 const endRow = computed(() => (pagination.total ? Math.min(pagination.total, pagination.page * pagination.pageLength) : 0));
+
+const leadListFilterConfig = computed(() => [
+  {
+    key: "status",
+    label: "Durum",
+    options: leadStatusOptions.value.map((item) => ({ value: item.value, label: item.label })),
+  },
+  {
+    key: "branch",
+    label: "Branş",
+    options: [...new Set(rows.value.map((row) => String(row.branch || "").trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, localeCode.value))
+      .map((value) => ({ value, label: value })),
+  },
+]);
+
+const leadListRows = computed(() =>
+  rows.value.map((row) => ({
+    ...row,
+    name: row.name,
+    customer: row.customer || "-",
+    branch: row.branch || "-",
+    status: row.status || "Draft",
+    stale_state: leadStaleState(row),
+    conversion_state: leadConversionState(row),
+  }))
+);
+
+const leadListColumns = [
+  { key: "name", label: "Fırsat No", width: "160px", type: "mono" },
+  { key: "customer", label: "Müşteri", width: "220px" },
+  { key: "branch", label: "Branş", width: "160px" },
+  { key: "estimated_gross_premium", label: "Tahmini Brüt Prim", width: "120px", type: "amount", align: "right" },
+  { key: "status", label: "Durum", width: "100px", type: "status" },
+  { key: "stale_state", label: "Takip Durumu", width: "120px", type: "status" },
+  { key: "conversion_state", label: "Dönüşüm", width: "140px", type: "status" },
+];
+
+function onLeadListFilterChange({ key, value }) {
+  filters[key] = String(value || "");
+  pagination.page = 1;
+  applyFilters();
+}
+
+function onLeadListFilterReset() {
+  filters.query = "";
+  filters.status = "";
+  filters.branch = "";
+  pagination.page = 1;
+  applyFilters();
+}
 
 function leadDisplayName(row) {
   return `${String(row?.first_name || "").trim()} ${String(row?.last_name || "").trim()}`.trim() || row?.name || "-";

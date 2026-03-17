@@ -35,129 +35,30 @@
         empty-message="Teklif bulunamadı."
         @row-click="(row) => openOfferDetail(row.name)"
       />
+      <div class="mt-4 flex items-center justify-between">
+        <p class="text-xs text-gray-400">{{ pagedOfferRows.length }} / {{ offerListTotal }} kayıt gösteriliyor</p>
+        <div class="flex items-center gap-1">
+          <button class="btn btn-sm" :disabled="offerListPagination.page <= 1" @click="previousOfferPage">←</button>
+          <span class="px-2 text-xs text-gray-600">{{ offerListPagination.page }}</span>
+          <button class="btn btn-sm" :disabled="!offerListHasNextPage" @click="nextOfferPage">→</button>
+        </div>
+      </div>
     </div>
 
-    <div v-if="!isListView" class="surface-card rounded-2xl p-5">
-      <PageToolbar :title="t('title')" :subtitle="t('subtitle')" :busy="offersResource.loading">
-        <template #actions>
-          <div class="flex flex-wrap items-center gap-2">
-            <ActionButton :variant="isListView ? 'primary' : 'secondary'" size="sm" @click="setOfferViewMode('list')">
-              {{ t("viewList") }}
-            </ActionButton>
-            <ActionButton :variant="isListView ? 'secondary' : 'primary'" size="sm" @click="setOfferViewMode('board')">
-              {{ t("viewBoard") }}
-            </ActionButton>
-            <QuickCreateLauncher variant="primary" size="sm" :label="t('newOffer')" @launch="openQuickOfferDialog" />
-            <ActionButton variant="secondary" size="sm" @click="refreshOffers">
-              {{ t("refresh") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">
-              {{ t("exportXlsx") }}
-            </ActionButton>
-            <ActionButton variant="primary" size="sm" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('pdf')">
-              {{ t("exportPdf") }}
-            </ActionButton>
-          </div>
-        </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-if="isListView"
-            v-model="offerPresetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="offerActiveFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="offerPresetOptions"
-            :can-delete-preset="canDeleteOfferPreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onOfferPresetChange"
-            @preset-save="saveOfferPreset"
-            @preset-delete="deleteOfferPreset"
-            @apply="applyOfferListFilters"
-            @reset="resetOfferListFilters"
-          >
-            <input
-              v-model.trim="offerListFilters.query"
-              class="input"
-              type="search"
-              :placeholder="t('searchPlaceholder')"
-              @keyup.enter="applyOfferListFilters"
-            />
-
-            <select v-model="offerListFilters.insurance_company" class="input">
-              <option value="">{{ t("allCompanies") }}</option>
-              <option v-for="company in offerCompanies" :key="company" :value="company">
-                {{ company }}
-              </option>
-            </select>
-
-            <input
-              v-model="offerListFilters.valid_until"
-              class="input"
-              type="date"
-              :placeholder="t('validUntilFilter')"
-            />
-
-            <select v-model="offerListFilters.status" class="input">
-              <option value="">{{ t("allStatuses") }}</option>
-              <option v-for="status in offerStatusOptions" :key="status.value" :value="status.value">
-                {{ status.label }}
-              </option>
-            </select>
-
-            <select v-model="offerListFilters.sort" class="input">
-              <option v-for="option in offerSortOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-
-            <select v-model.number="offerListPagination.pageLength" class="input">
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
-
-            <template #advanced>
-              <select v-model="offerListFilters.branch" class="input">
-                <option value="">{{ t("allBranches") }}</option>
-                <option v-for="branch in branches" :key="branch.name" :value="branch.name">
-                  {{ branch.branch_name || branch.name }}
-                </option>
-              </select>
-              <label class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
-                <input v-model="offerListFilters.actionable_only" class="h-4 w-4" type="checkbox" />
-                <span>{{ t("actionableOnly") }}</span>
-              </label>
-              <input
-                v-model="offerListFilters.gross_min"
-                class="input"
-                type="number"
-                min="0"
-                step="0.01"
-                :placeholder="t('grossMinFilter')"
-                @keyup.enter="applyOfferListFilters"
-              />
-              <input
-                v-model="offerListFilters.gross_max"
-                class="input"
-                type="number"
-                min="0"
-                step="0.01"
-                :placeholder="t('grossMaxFilter')"
-                @keyup.enter="applyOfferListFilters"
-              />
-            </template>
-
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
-    </div>
-
-    <template v-if="!isListView">
+    <div v-if="!isListView" class="flex-1 p-5">
+      <div class="detail-topbar mb-4">
+        <div>
+          <p class="detail-breadcrumb">Sigorta Operasyonları → Teklif Panosu</p>
+          <h1 class="text-xl font-medium text-gray-900">{{ t("subtitle") }}</h1>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button class="btn btn-sm" @click="setOfferViewMode('list')">Liste</button>
+          <button class="btn btn-sm" @click="setOfferViewMode('board')">Pano</button>
+          <button class="btn btn-primary btn-sm" @click="openQuickOfferDialog">+ Yeni Teklif</button>
+          <button class="btn btn-sm" :disabled="offersResource.loading" @click="refreshOffers">Yenile</button>
+        </div>
+      </div>
+      
       <div v-if="offersResource.loading" class="surface-card rounded-2xl p-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
@@ -243,7 +144,7 @@
           </div>
         </article>
       </div>
-    </template>
+    </div>
 
     <Dialog v-model="showQuickOfferDialog" :options="{ title: t('quickOfferTitle'), size: 'xl' }">
       <template #body-content>
