@@ -3,9 +3,52 @@
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Fırsatlar</p>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
+        <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
-      <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
+        <button class="btn btn-outline btn-sm" type="button" @click="focusLeadSearch">Filtrele</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 px-5 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Fırsat</p>
+        <p class="mini-metric-value">{{ formatCount(pagination.total) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Bu Sayfa Açık</p>
+        <p class="mini-metric-value text-brand-600">{{ formatCount(leadPageSummary.open) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Takip Bekleyen</p>
+        <p class="mini-metric-value text-amber-600">{{ formatCount(leadPageSummary.followUp) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Teklife Çevrilebilir</p>
+        <p class="mini-metric-value text-blue-600">{{ formatCount(leadPageSummary.actionable) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Bu Sayfa Dönüşüm</p>
+        <p class="mini-metric-value text-green-600">{{ formatPercent(leadPageSummary.conversionRate) }}</p>
+      </div>
+    </div>
+
+    <div class="surface-card mx-5 rounded-2xl p-3">
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="option in leadVisibleStatusOptions"
+          :key="option.value || 'all'"
+          class="btn btn-sm"
+          :class="filters.status === option.value ? 'btn-primary' : 'btn-outline'"
+          type="button"
+          @click="applyLeadStatusFilter(option.value)"
+        >
+          {{ option.label }}
+          <span class="badge badge-gray">{{ formatCount(option.count) }}</span>
+        </button>
+      </div>
     </div>
 
     <div class="border-b border-gray-200 bg-white px-5 py-3">
@@ -26,7 +69,10 @@
     </div>
 
     <div class="flex-1 p-5">
-      <div v-if="actionErrorText" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+      <div v-if="loadErrorText" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+        {{ loadErrorText }}
+      </div>
+      <div v-else-if="actionErrorText" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
         {{ actionErrorText }}
       </div>
       <div v-else-if="actionSuccessText && !lastConvertedOfferName" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
@@ -525,6 +571,43 @@ const totalPages = computed(() => Math.max(1, Math.ceil((pagination.total || 0) 
 const hasNextPage = computed(() => pagination.page < totalPages.value);
 const startRow = computed(() => (pagination.total ? (pagination.page - 1) * pagination.pageLength + 1 : 0));
 const endRow = computed(() => (pagination.total ? Math.min(pagination.total, pagination.page * pagination.pageLength) : 0));
+const leadStatusCountMap = computed(() => {
+  const counts = { "": rows.value.length, Draft: 0, Open: 0, Replied: 0, Closed: 0 };
+  for (const row of rows.value) {
+    const status = String(row?.status || "Draft");
+    if (!(status in counts)) counts[status] = 0;
+    counts[status] += 1;
+  }
+  return counts;
+});
+const leadVisibleStatusOptions = computed(() => [
+  {
+    value: "",
+    label: activeLocale.value === "tr" ? "Tümü" : "All",
+    count: leadStatusCountMap.value[""] || 0,
+  },
+  ...leadStatusOptions.value.map((option) => ({
+    ...option,
+    count: leadStatusCountMap.value[option.value] || 0,
+  })),
+]);
+const leadPageSummary = computed(() => {
+  const summary = {
+    open: 0,
+    followUp: 0,
+    actionable: 0,
+    converted: 0,
+    conversionRate: 0,
+  };
+  for (const row of rows.value) {
+    if (String(row?.status || "") === "Open") summary.open += 1;
+    if (leadStaleState(row) !== "Fresh") summary.followUp += 1;
+    if (canConvertLead(row)) summary.actionable += 1;
+    if (row?.converted_offer || row?.converted_policy) summary.converted += 1;
+  }
+  summary.conversionRate = rows.value.length ? (summary.converted / rows.value.length) * 100 : 0;
+  return summary;
+});
 
 const leadListFilterConfig = computed(() => [
   {
@@ -538,6 +621,30 @@ const leadListFilterConfig = computed(() => [
     options: [...new Set(rows.value.map((row) => String(row.branch || "").trim()).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, localeCode.value))
       .map((value) => ({ value, label: value })),
+  },
+  {
+    key: "sales_entity",
+    label: "Satış Birimi",
+    options: [...new Set(rows.value.map((row) => String(row.sales_entity || "").trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, localeCode.value))
+      .map((value) => ({ value, label: value })),
+  },
+  {
+    key: "insurance_company",
+    label: "Sigorta Şirketi",
+    options: [...new Set(rows.value.map((row) => String(row.insurance_company || "").trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, localeCode.value))
+      .map((value) => ({ value, label: value })),
+  },
+  {
+    key: "conversion_state",
+    label: "Dönüşüm",
+    options: conversionStateOptions.value.map((item) => ({ value: item.value, label: item.label })),
+  },
+  {
+    key: "stale_state",
+    label: "Takip Durumu",
+    options: staleStateOptions.value.map((item) => ({ value: item.value, label: item.label })),
   },
 ]);
 
@@ -569,10 +676,20 @@ function onLeadListFilterChange({ key, value }) {
   applyFilters();
 }
 
+function applyLeadStatusFilter(value) {
+  filters.status = String(value || "");
+  pagination.page = 1;
+  applyFilters();
+}
+
 function onLeadListFilterReset() {
   filters.query = "";
   filters.status = "";
   filters.branch = "";
+  filters.sales_entity = "";
+  filters.insurance_company = "";
+  filters.conversion_state = "";
+  filters.stale_state = "";
   pagination.page = 1;
   applyFilters();
 }
@@ -589,6 +706,16 @@ function fmtCurrency(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "-";
   return new Intl.NumberFormat(localeCode.value, { style: "currency", currency: "TRY", maximumFractionDigits: 2 }).format(n);
+}
+function formatCount(value) {
+  return new Intl.NumberFormat(localeCode.value).format(Number(value || 0));
+}
+function formatPercent(value) {
+  return `%${new Intl.NumberFormat(localeCode.value, { maximumFractionDigits: 1 }).format(Number(value || 0))}`;
+}
+function focusLeadSearch() {
+  const searchInput = document.querySelector("input[type='search'], input[placeholder*='ara'], input[placeholder*='Search']");
+  if (searchInput instanceof HTMLElement) searchInput.focus();
 }
 function buildQueryOrFilters() {
   if (!filters.query) return null;

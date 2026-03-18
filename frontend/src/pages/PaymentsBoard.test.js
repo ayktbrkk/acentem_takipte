@@ -12,11 +12,13 @@ const resourceQueue = [];
 const routeState = reactive({
   query: {},
 });
+const routerPush = vi.fn();
 
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
+  useRouter: () => ({ push: routerPush }),
 }));
 
 vi.mock("frappe-ui", () => ({
@@ -215,10 +217,15 @@ describe("PaymentsBoard page store integration", () => {
     expect(paymentStore.filteredItems).toHaveLength(2);
     expect(paymentStore.inboundTotal).toBe(1000);
     expect(paymentStore.outboundTotal).toBe(400);
-    expect(wrapper.text()).toContain("Taksit: 3");
-    expect(wrapper.text()).toContain("Ödenen Taksit: 1/3");
-    expect(wrapper.text()).toContain("Geciken Taksit: 1");
-    expect(wrapper.text()).toContain("Sonraki Vade: 2026-04-01");
+    expect(wrapper.text()).toContain("Toplam Ödeme");
+    expect(wrapper.text()).toContain("Bekleyen");
+    expect(wrapper.text()).toContain("Tahsil Edildi");
+    expect(wrapper.text()).toContain("Gecikmiş");
+    expect(wrapper.text()).toContain("Tahsilat Kaydet");
+    expect(wrapper.text()).toContain("Dekont Ekle");
+    expect(wrapper.text()).toContain("Hatırlatma Gönder");
+    expect(wrapper.text()).toContain("Ödeme No");
+    expect(wrapper.text()).toContain("Müşteri");
 
     const inputs = wrapper.findAll(".input");
     await inputs[0].setValue("POL-001");

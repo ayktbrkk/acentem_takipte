@@ -196,6 +196,15 @@ function handleFileSelect(event) {
     return;
   }
 
+  const lowerName = String(file.name || "").toLowerCase();
+  if (lowerName.includes("muster") || lowerName.includes("customer")) {
+    selectedDataset.value = "customers";
+  } else if (lowerName.includes("teklif") || lowerName.includes("offer")) {
+    selectedDataset.value = "offers";
+  } else if (lowerName.includes("polic") || lowerName.includes("poli")) {
+    selectedDataset.value = "policies";
+  }
+
   fileName.value = file.name;
   importMessage.value = "";
 

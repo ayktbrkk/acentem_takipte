@@ -20,6 +20,7 @@ vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 vi.mock("frappe-ui", () => ({
@@ -193,7 +194,10 @@ describe("ReconciliationWorkbench page store integration", () => {
               source_name: "PAY-001",
               mismatch_type: "Amount",
               status: "Open",
-              accounting: { external_ref: "EXT-001" },
+              local_amount_try: 1000,
+              external_amount_try: 1250,
+              difference_try: 250,
+              accounting: { external_ref: "EXT-001", insurance_company: "Anadolu", policy: "POL-001" },
             },
             {
               name: "REC-002",
@@ -201,7 +205,10 @@ describe("ReconciliationWorkbench page store integration", () => {
               source_name: "CLM-002",
               mismatch_type: "Status",
               status: "Resolved",
-              accounting: { external_ref: "EXT-002" },
+              local_amount_try: 900,
+              external_amount_try: 600,
+              difference_try: -300,
+              accounting: { external_ref: "EXT-002", insurance_company: "Allianz" },
             },
           ],
         })),
@@ -295,10 +302,19 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(accountingStore.metrics.commission_accrual_amount_try).toBe(1500);
     expect(accountingStore.rows).toHaveLength(2);
     expect(accountingStore.sourceDoctypeOptions).toHaveLength(2);
-    expect(wrapper.text()).toContain("Geciken Tahsilat");
-    expect(wrapper.text()).toContain("PAY-9001");
-    expect(wrapper.text()).toContain("Komisyon Tahakkuk");
-    expect(wrapper.text()).toContain("P-100");
+    expect(wrapper.text()).toContain("Toplam Kay");
+    expect(wrapper.text()).toContain("Eslesti");
+    expect(wrapper.text()).toContain("Beklemede");
+    expect(wrapper.text()).toContain("Uyusmazlik");
+    expect(wrapper.text()).toContain("Toplam Tutar Farki");
+    expect(wrapper.text()).toContain("Mutabakat No");
+    expect(wrapper.text()).toContain("Sirket");
+    expect(wrapper.text()).toContain("Toplam Police");
+    expect(wrapper.text()).toContain("Sirket Bildirimi");
+    expect(wrapper.text()).toContain("REC-001");
+    expect(wrapper.text()).toContain("REC-002");
+    expect(wrapper.html()).toContain("text-green-600");
+    expect(wrapper.html()).toContain("text-red-600");
 
     const sourceQueryInput = wrapper.find(`input[placeholder="Kaynak kayıt / ref ara"]`);
     await sourceQueryInput.setValue("PAY-001");

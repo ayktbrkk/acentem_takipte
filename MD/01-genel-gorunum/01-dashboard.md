@@ -1,0 +1,21 @@
+# Genel Görünüm: Dashboard (Ana Sayfa)
+
+## Hedef Dosya
+`frontend/src/pages/Dashboard.vue`
+
+## Referans
+Önceki paketteki Week 1 Day 1 - Dashboard
+
+## Durum
+✅ **TAMAMLANDI** (önceki pakette)
+
+Bu dosya sadece referans için. Zaten uygulanmış olmalı.
+
+## Kontrol Listesi
+- [ ] `page-shell` wrapper var
+- [ ] `detail-topbar` var
+- [ ] Summary metrics `mini-metric` kullanıyor
+- [ ] DetailCard'lar düzgün
+- [ ] Responsive görünüm OK
+
+E�er eksikse, önceki paketteki prompt'u kullan.

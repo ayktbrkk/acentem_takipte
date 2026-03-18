@@ -10,6 +10,7 @@ import { useClaimStore } from "../stores/claim";
 
 const resourceQueue = [];
 const routeState = reactive({ query: {} });
+const routerPush = vi.fn();
 
 vi.mock("frappe-ui", () => ({
   createResource: () => {
@@ -68,6 +69,7 @@ vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
+  useRouter: () => ({ push: routerPush }),
 }));
 
 const ActionButtonStub = {
@@ -87,10 +89,12 @@ async function settleAsyncWork() {
   await Promise.resolve();
 }
 
+function findButtonByText(wrapper, text) {
+  return wrapper.findAll("button").find((button) => button.text().includes(text));
+}
+
 async function loadClaimRows(wrapper) {
-  const refreshButton = wrapper
-    .findAll(".action-button-stub")
-    .find((button) => button.text().includes("Yenile"));
+  const refreshButton = findButtonByText(wrapper, "Yenile");
 
   await refreshButton.trigger("click");
   await settleAsyncWork();
@@ -100,6 +104,7 @@ describe("ClaimsBoard page store integration", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
     routeState.query = {};
+    routerPush.mockReset();
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
@@ -295,9 +300,7 @@ describe("ClaimsBoard page store integration", () => {
     await loadClaimRows(wrapper);
     reloadMock.mockClear();
 
-    const underReviewButton = wrapper
-      .findAll(".action-button-stub")
-      .find((button) => button.text().includes("Incelemeye Al"));
+    const underReviewButton = findButtonByText(wrapper, "Incelemeye Al");
     await underReviewButton.trigger("click");
     await settleAsyncWork();
 
@@ -371,7 +374,7 @@ describe("ClaimsBoard page store integration", () => {
     await loadClaimRows(wrapper);
     reloadMock.mockClear();
 
-    const clearButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Takibi Temizle"));
+    const clearButton = findButtonByText(wrapper, "Takibi Temizle");
     await clearButton.trigger("click");
     await settleAsyncWork();
 
@@ -462,7 +465,7 @@ describe("ClaimsBoard page store integration", () => {
     await loadClaimRows(wrapper);
     reloadMock.mockClear();
 
-    const rejectButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Reddet"));
+    const rejectButton = findButtonByText(wrapper, "Reddet");
     await rejectButton.trigger("click");
     await settleAsyncWork();
 
@@ -533,7 +536,7 @@ describe("ClaimsBoard page store integration", () => {
 
     await loadClaimRows(wrapper);
 
-    const notificationsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Bildirimler"));
+    const notificationsButton = findButtonByText(wrapper, "Bildirimler");
     await notificationsButton.trigger("click");
 
     expect(window.location.assign).toHaveBeenCalledWith(
@@ -595,7 +598,7 @@ describe("ClaimsBoard page store integration", () => {
 
     await loadClaimRows(wrapper);
 
-    const documentsButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Dokümanlar"));
+    const documentsButton = findButtonByText(wrapper, "Dokümanlar");
     await documentsButton.trigger("click");
 
     expect(window.location.assign).toHaveBeenCalledWith("/at/files?attached_to_doctype=AT+Claim&attached_to_name=CLM-001");

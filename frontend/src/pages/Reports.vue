@@ -251,6 +251,13 @@ import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 
+const props = defineProps({
+  initialReportKey: {
+    type: String,
+    default: "policy_list",
+  },
+});
+
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const route = useRoute();
@@ -539,7 +546,7 @@ const reportFilterConfig = {
 };
 
 const filters = reactive({
-  reportKey: "policy_list",
+  reportKey: props.initialReportKey || "policy_list",
   fromDate: "",
   toDate: "",
   branch: "",

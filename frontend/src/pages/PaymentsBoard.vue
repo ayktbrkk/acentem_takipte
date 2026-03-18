@@ -1,174 +1,146 @@
-<template>
+﻿<template>
   <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Ödemeler</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <p class="detail-subtitle">{{ t("subtitle") }}</p>
+      </div>
+      <span class="text-sm text-gray-400">{{ formatCount(payments.length) }} kayıt</span>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+        <p class="mini-metric-value">{{ formatCount(paymentSummary.total) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryPending") }}</p>
+        <p class="mini-metric-value text-amber-600">{{ formatCount(paymentSummary.pending) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryCollected") }}</p>
+        <p class="mini-metric-value text-green-600">{{ formatCount(paymentSummary.collected) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryOverdue") }}</p>
+        <p class="mini-metric-value text-red-600">{{ formatCount(paymentSummary.overdue) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryTotalAmount") }}</p>
+        <p class="mini-metric-value text-slate-900">{{ formatCurrency(paymentSummary.totalAmount) }}</p>
+      </div>
+    </div>
+
     <article class="surface-card rounded-2xl p-5">
       <PageToolbar
-      :title="t('title')"
-      :subtitle="t('subtitle')"
-      :show-refresh="true"
-      :busy="paymentsResource.loading"
-      :refresh-label="t('refresh')"
-      @refresh="reloadPayments"
-    >
-      <template #actions>
-        <div class="flex flex-wrap items-center gap-2">
-          <QuickCreateLauncher
-            variant="primary"
-            size="sm"
-            :label="t('newPayment')"
-            @launch="showQuickPaymentDialog = true"
-          />
-          <ActionButton variant="secondary" size="sm" :disabled="paymentsResource.loading" @click="reloadPayments">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            :disabled="paymentsResource.loading"
-            @click="downloadPaymentExport('xlsx')"
+        :title="t('title')"
+        :subtitle="t('subtitle')"
+        :show-refresh="true"
+        :busy="paymentsResource.loading"
+        :refresh-label="t('refresh')"
+        @refresh="reloadPayments"
+      >
+        <template #actions>
+          <div class="flex flex-wrap items-center gap-2">
+            <QuickCreateLauncher
+              variant="primary"
+              size="sm"
+              :label="t('newPayment')"
+              @launch="showQuickPaymentDialog = true"
+            />
+            <ActionButton variant="secondary" size="sm" :disabled="paymentsResource.loading" @click="reloadPayments">
+              {{ t("refresh") }}
+            </ActionButton>
+            <ActionButton
+              variant="secondary"
+              size="sm"
+              :disabled="paymentsResource.loading"
+              @click="downloadPaymentExport('xlsx')"
+            >
+              {{ t("exportXlsx") }}
+            </ActionButton>
+            <ActionButton
+              variant="primary"
+              size="sm"
+              :disabled="paymentsResource.loading"
+              @click="downloadPaymentExport('pdf')"
+            >
+              {{ t("exportPdf") }}
+            </ActionButton>
+          </div>
+        </template>
+        <template #filters>
+          <WorkbenchFilterToolbar
+            v-model="presetKey"
+            :advanced-label="t('advancedFilters')"
+            :collapse-label="t('hideAdvancedFilters')"
+            :active-count="activeFilterCount"
+            :active-count-label="t('activeFilters')"
+            :preset-label="t('presetLabel')"
+            :preset-options="presetOptions"
+            :can-delete-preset="canDeletePreset"
+            :save-label="t('savePreset')"
+            :delete-label="t('deletePreset')"
+            :apply-label="t('applyFilters')"
+            :reset-label="t('clearFilters')"
+            @preset-change="onPresetChange"
+            @preset-save="savePreset"
+            @preset-delete="deletePreset"
+            @apply="applyPaymentFilters"
+            @reset="resetPaymentFilters"
           >
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            size="sm"
-            :disabled="paymentsResource.loading"
-            @click="downloadPaymentExport('pdf')"
-          >
-            {{ t("exportPdf") }}
-          </ActionButton>
-        </div>
-      </template>
-      <template #filters>
-        <WorkbenchFilterToolbar
-          v-model="presetKey"
-          :advanced-label="t('advancedFilters')"
-          :collapse-label="t('hideAdvancedFilters')"
-          :active-count="activeFilterCount"
-          :active-count-label="t('activeFilters')"
-          :preset-label="t('presetLabel')"
-          :preset-options="presetOptions"
-          :can-delete-preset="canDeletePreset"
-          :save-label="t('savePreset')"
-          :delete-label="t('deletePreset')"
-          :apply-label="t('applyFilters')"
-          :reset-label="t('clearFilters')"
-          @preset-change="onPresetChange"
-          @preset-save="savePreset"
-          @preset-delete="deletePreset"
-          @apply="applyPaymentFilters"
-          @reset="resetPaymentFilters"
-        >
-          <input
-            v-model.trim="filters.query"
-            class="input"
-            type="search"
-            :placeholder="t('searchPlaceholder')"
-            @keyup.enter="applyPaymentFilters"
-          />
-          <select v-model="filters.direction" class="input">
-            <option value="">{{ t("allDirections") }}</option>
-            <option value="Inbound">{{ t("inbound") }}</option>
-            <option value="Outbound">{{ t("outbound") }}</option>
-          </select>
-          <select v-model="filters.sort" class="input">
-            <option v-for="option in paymentSortOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <select v-model.number="filters.limit" class="input">
-            <option :value="24">24</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-          </select>
-
-          <template #advanced>
-            <input
-              v-model.trim="filters.customerQuery"
-              class="input"
-              type="search"
-              :placeholder="t('customerFilter')"
-              @keyup.enter="applyPaymentFilters"
-            />
-            <input
-              v-model.trim="filters.policyQuery"
-              class="input"
-              type="search"
-              :placeholder="t('policyFilter')"
-              @keyup.enter="applyPaymentFilters"
-            />
-            <input
-              v-model.trim="filters.purposeQuery"
-              class="input"
-              type="search"
-              :placeholder="t('purposeFilter')"
-              @keyup.enter="applyPaymentFilters"
-            />
-          </template>
-        </WorkbenchFilterToolbar>
-      </template>
+            <input v-model.trim="filters.query" class="input" type="search" :placeholder="t('searchPlaceholder')" @keyup.enter="applyPaymentFilters" />
+            <select v-model="filters.direction" class="input">
+              <option value="">{{ t("allDirections") }}</option>
+              <option value="Inbound">{{ t("inbound") }}</option>
+              <option value="Outbound">{{ t("outbound") }}</option>
+            </select>
+            <select v-model="filters.sort" class="input">
+              <option v-for="option in paymentSortOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
+            <select v-model.number="filters.limit" class="input">
+              <option :value="24">24</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+            </select>
+            <template #advanced>
+              <input v-model.trim="filters.customerQuery" class="input" type="search" :placeholder="t('customerFilter')" @keyup.enter="applyPaymentFilters" />
+              <input v-model.trim="filters.policyQuery" class="input" type="search" :placeholder="t('policyFilter')" @keyup.enter="applyPaymentFilters" />
+              <input v-model.trim="filters.purposeQuery" class="input" type="search" :placeholder="t('purposeFilter')" @keyup.enter="applyPaymentFilters" />
+            </template>
+          </WorkbenchFilterToolbar>
+        </template>
       </PageToolbar>
     </article>
 
-    <DocSummaryGrid v-if="showSummaryGrid" :items="paymentsSummaryItems" />
+    <div v-if="paymentsErrorText" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
+      <p>{{ paymentsErrorText }}</p>
+    </div>
 
     <article class="surface-card rounded-2xl p-5">
       <DataTableShell
-      :loading="paymentsResource.loading"
-      :error="paymentsErrorText"
-      :empty="payments.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('empty')"
-    >
-      <template #header>
-        <div class="text-xs text-slate-500">{{ t("showing") }} {{ payments.length }}</div>
-      </template>
-
-      <template #default>
-        <div class="overflow-auto">
-          <table class="at-table">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("payment") }}</th>
-                <th class="at-table-head-cell">{{ t("direction") }}</th>
-                <th class="at-table-head-cell">{{ t("amount") }}</th>
-                <th class="at-table-head-cell">{{ t("details") }}</th>
-                <th class="at-table-head-cell">{{ t("actions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="payment in payments" :key="payment.name" class="at-table-row">
-                <DataTableCell cell-class="min-w-[240px]">
-                  <TableEntityCell :title="payment.payment_no || payment.name" :facts="paymentIdentityFacts(payment)" />
-                </DataTableCell>
-                <DataTableCell>
-                  <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
-                </DataTableCell>
-                <DataTableCell>
-                  <FormattedCurrencyValue :value="payment.amount_try" :locale="localeCode" />
-                </DataTableCell>
-                <TableFactsCell :items="paymentDetailFacts(payment)" cell-class="min-w-[220px]" />
-                <DataTableCell>
-                  <InlineActionRow>
-                    <ActionButton variant="secondary" size="xs" @click="openPaymentDetail(payment)">
-                      {{ t("openPaymentDetail") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="payment.policy || payment.customer"
-                      variant="secondary"
-                      size="xs"
-                      @click="openRelatedRecord(payment)"
-                    >
-                      {{ t("openRelated") }}
-                    </ActionButton>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
+        :loading="paymentsResource.loading"
+        :error="paymentsErrorText"
+        :empty="payments.length === 0"
+        :loading-label="t('loading')"
+        :error-title="t('loadErrorTitle')"
+        :empty-title="t('emptyTitle')"
+        :empty-description="t('empty')"
+      >
+        <template #header>
+          <div class="text-xs text-slate-500">{{ t("showing") }} {{ payments.length }}</div>
+        </template>
+        <template #default>
+          <ListTable
+            :columns="paymentListColumns"
+            :rows="paymentsWithActions"
+            :loading="false"
+            :empty-message="t('empty')"
+            @row-click="openPaymentDetail"
+          />
+        </template>
       </DataTableShell>
     </article>
 
@@ -183,10 +155,9 @@
     />
   </section>
 </template>
-
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
@@ -194,16 +165,10 @@ import { useBranchStore } from "../stores/branch";
 import { usePaymentStore } from "../stores/payment";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
-import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
-import FormattedCurrencyValue from "../components/app-shell/FormattedCurrencyValue.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
-import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
+import ListTable from "../components/ui/ListTable.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { mutedFact, pushMutedFactIf, subtleFact } from "../utils/factItems";
@@ -211,8 +176,8 @@ import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
-    title: "Tahsilatlar",
-    subtitle: "Tahsilat ve ödeme hareketlerini takip edin",
+    title: "Ödemeler",
+    subtitle: "Tahsilat, bekleyen ödeme ve gecikmiş vadeleri izleyin",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -223,6 +188,17 @@ const copy = {
     emptyTitle: "Tahsilat Kaydı Yok",
     empty: "Kayıt bulunamadı.",
     showing: "Gösterilen kayıt",
+    summaryTotal: "Toplam Ödeme",
+    summaryPending: "Bekleyen",
+    summaryCollected: "Tahsil Edildi",
+    summaryOverdue: "Gecikmiş",
+    summaryTotalAmount: "Toplam Tutar",
+    paymentNo: "Ödeme No",
+    collected: "Tahsil Edilen",
+    remaining: "Kalan",
+    collectPayment: "Tahsilat Kaydet",
+    addReceipt: "Dekont Ekle",
+    sendReminder: "Hatırlatma Gönder",
     metricCount: "Kayıt Sayısı",
     metricInbound: "Tahsilat Toplami",
     metricOutbound: "Ödeme Toplamı",
@@ -269,7 +245,7 @@ const copy = {
   },
   en: {
     title: "Payments",
-    subtitle: "Track collection and payout transactions",
+    subtitle: "Track collection, pending payments, and overdue due dates",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -280,6 +256,17 @@ const copy = {
     emptyTitle: "No Payment Records",
     empty: "No records found.",
     showing: "Showing rows",
+    summaryTotal: "Total Payments",
+    summaryPending: "Pending",
+    summaryCollected: "Collected",
+    summaryOverdue: "Overdue",
+    summaryTotalAmount: "Total Amount",
+    paymentNo: "Payment No",
+    collected: "Collected",
+    remaining: "Remaining",
+    collectPayment: "Record Collection",
+    addReceipt: "Add Receipt",
+    sendReminder: "Send Reminder",
     metricCount: "Record Count",
     metricInbound: "Inbound Total",
     metricOutbound: "Outbound Total",
@@ -334,6 +321,7 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const paymentStore = usePaymentStore();
 const route = useRoute();
+const router = useRouter();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function buildOfficeBranchLookupFilters() {
@@ -441,12 +429,16 @@ const installmentSummaryByPayment = computed(() => {
       paid: 0,
       overdue: 0,
       nextDue: "",
+      paidAmount: 0,
     };
     current.total = Math.max(
       Number(current.total || 0),
       Number(installment.installment_count || installment.installment_no || 0)
     );
-    if (installment.status === "Paid") current.paid += 1;
+    if (installment.status === "Paid") {
+      current.paid += 1;
+      current.paidAmount += Number(installment.amount_try || 0);
+    }
     if (installment.status === "Overdue") current.overdue += 1;
     if (
       (installment.status === "Scheduled" || installment.status === "Overdue") &&
@@ -484,6 +476,32 @@ const paymentsErrorText = computed(() => {
   if (!err) return "";
   return err?.messages?.join(" ") || err?.message || t("loadError");
 });
+const paymentSnapshots = computed(() => payments.value.map((payment) => buildPaymentSnapshot(payment)));
+const paymentSummary = computed(() => {
+  const rows = paymentSnapshots.value;
+  return {
+    total: rows.length,
+    pending: rows.filter((row) => row.isPending).length,
+    collected: rows.filter((row) => row.isCollected).length,
+    overdue: rows.filter((row) => row.isOverdue).length,
+    totalAmount: rows.reduce((sum, row) => sum + Number(row.totalAmount || 0), 0),
+  };
+});
+const paymentListColumns = computed(() => [
+  { key: "payment_no", label: t("paymentNo"), width: "180px", type: "mono" },
+  { key: "customer", label: t("customer"), width: "220px" },
+  { key: "policy", label: t("policy"), width: "160px", type: "mono" },
+  { key: "due_date_label", label: t("dueDate"), width: "135px", type: "date" },
+  { key: "amount_label", label: t("amount"), width: "140px", type: "amount", align: "right" },
+  { key: "collected_amount_label", label: t("collected"), width: "150px", type: "amount", align: "right" },
+  { key: "remaining_amount_label", label: t("remaining"), width: "130px", type: "amount", align: "right" },
+  { key: "status", label: t("status"), width: "130px", type: "status", domain: "payment" },
+  { key: "_actions", label: t("actions"), width: "340px", type: "actions", align: "right" },
+]);
+const paymentsWithActions = computed(() => paymentSnapshots.value.map((row) => ({
+  ...row,
+  _actions: buildPaymentRowActions(row),
+})));
 const inboundTotal = computed(() => paymentStore.inboundTotal);
 const outboundTotal = computed(() => paymentStore.outboundTotal);
 const showSummaryGrid = computed(
@@ -504,19 +522,111 @@ function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
+function formatCount(value) {
+  return new Intl.NumberFormat(localeCode.value).format(Number(value || 0));
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat(localeCode.value, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function parseDateOnly(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function isPastDate(value) {
+  const date = parseDateOnly(value);
+  if (!date) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  return date < today;
+}
+
+function isDueSoon(value) {
+  const date = parseDateOnly(value);
+  if (!date) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((date.getTime() - today.getTime()) / 86400000);
+  return diffDays >= 0 && diffDays <= 7;
+}
+
+function buildPaymentStatus(payment, collectedAmount, remainingAmount, isOverdue) {
+  const rawStatus = String(payment?.status || "").trim();
+  if (rawStatus === "Cancelled") return rawStatus;
+  if (remainingAmount <= 0 && Number(payment?.amount_try || payment?.amount || 0) > 0) return "Paid";
+  if (isOverdue) return "Overdue";
+  if (collectedAmount > 0 && remainingAmount > 0) return "Partially Paid";
+  if (rawStatus) return rawStatus;
+  return "Outstanding";
+}
+
+function buildPaymentSnapshot(payment) {
+  const installmentSummary = installmentSummaryByPayment.value.get(payment?.name) || {};
+  const totalAmount = Number(payment?.amount_try || payment?.amount || 0);
+  const collectedAmount = Number(installmentSummary.paidAmount || 0);
+  const remainingAmount = Math.max(totalAmount - collectedAmount, 0);
+  const dueDate = String(payment?.due_date || payment?.payment_date || "").trim();
+  const isOverdue = Boolean(installmentSummary.overdue > 0) || (isPastDate(dueDate) && remainingAmount > 0);
+  const status = buildPaymentStatus(payment, collectedAmount, remainingAmount, isOverdue);
+  const isCollected = status === "Paid" || collectedAmount >= totalAmount;
+  const isPending = !isCollected && !isOverdue && status !== "Cancelled";
+
+  return {
+    ...payment,
+    status,
+    totalAmount,
+    collectedAmount,
+    remainingAmount,
+    due_date_label: formatDate(dueDate),
+    amount_label: formatCurrency(totalAmount),
+    collected_amount_label: formatCurrency(collectedAmount),
+    remaining_amount_label: formatCurrency(remainingAmount),
+    isOverdue,
+    isCollected,
+    isPending,
+    _urgency: isOverdue ? "row-critical" : remainingAmount > 0 && isDueSoon(dueDate) ? "row-warning" : "",
+  };
+}
+
+function buildPaymentRowActions(payment) {
+  return [
+    { key: "collect", label: t("collectPayment"), variant: "primary", onClick: () => openCollectPayment(payment) },
+    { key: "receipt", label: t("addReceipt"), variant: "secondary", onClick: () => addReceipt(payment) },
+    { key: "reminder", label: t("sendReminder"), variant: "secondary", onClick: () => sendReminder(payment) },
+  ];
+}
+
 function buildPaymentListParams() {
   const params = {
     doctype: "AT Payment",
     fields: [
       "name",
       "payment_no",
+      "status",
       "payment_direction",
       "payment_purpose",
+      "amount",
       "amount_try",
       "payment_date",
+      "due_date",
       "customer",
       "policy",
+      "reference_no",
       "installment_count",
+      "office_branch",
+      "sales_entity",
     ],
     order_by: filters.sort || "modified desc",
     limit_page_length: Number(filters.limit) || 24,
@@ -574,33 +684,25 @@ function downloadPaymentExport(format) {
     exportKey: "payments_board",
     title: t("title"),
     columns: [
-      t("payment"),
-      t("direction"),
-      t("amount"),
-      t("date"),
+      t("paymentNo"),
       t("customer"),
       t("policy"),
-      t("purpose"),
-      t("installments"),
-      t("overdueInstallments"),
-      t("nextInstallmentDue"),
+      t("dueDate"),
+      t("amount"),
+      t("collected"),
+      t("remaining"),
+      t("status"),
     ],
-    rows: payments.value.map((payment) => {
-      const installmentSummary = installmentSummaryByPayment.value.get(payment?.name) || {};
-      const installmentCount = Number(installmentSummary?.total || payment?.installment_count || 0);
-      return {
-        [t("payment")]: payment.payment_no || payment.name || "-",
-        [t("direction")]: payment.payment_direction === "Inbound" ? t("inbound") : payment.payment_direction === "Outbound" ? t("outbound") : "-",
-        [t("amount")]: formatCurrency(payment.amount_try),
-        [t("date")]: payment.payment_date || "-",
-        [t("customer")]: payment.customer || "-",
-        [t("policy")]: payment.policy || "-",
-        [t("purpose")]: payment.payment_purpose || "-",
-        [t("installments")]: installmentCount || "-",
-        [t("overdueInstallments")]: Number(installmentSummary?.overdue || 0) || "-",
-        [t("nextInstallmentDue")]: installmentSummary?.nextDue || "-",
-      };
-    }),
+    rows: paymentSnapshots.value.map((payment) => ({
+      [t("paymentNo")]: payment.payment_no || payment.name || "-",
+      [t("customer")]: payment.customer || "-",
+      [t("policy")]: payment.policy || "-",
+      [t("dueDate")]: payment.due_date_label || "-",
+      [t("amount")]: payment.amount_label || formatCurrency(payment.totalAmount),
+      [t("collected")]: payment.collected_amount_label || formatCurrency(payment.collectedAmount),
+      [t("remaining")]: payment.remaining_amount_label || formatCurrency(payment.remainingAmount),
+      [t("status")]: payment.status || "-",
+    })),
     filters: currentPaymentPresetPayload(),
     format,
   });
@@ -718,8 +820,39 @@ function openRelatedRecord(payment) {
 }
 
 function openPaymentDetail(payment) {
-  if (!payment?.name) return
-  router.push(`/payments/${encodeURIComponent(payment.name)}`)
+  if (!payment?.name) return;
+  router.push({ name: "payment-detail", params: { name: payment.name } });
+}
+
+function openCollectPayment(payment) {
+  if (!payment?.name) return;
+  router.push({
+    name: "payment-detail",
+    params: { name: payment.name },
+    query: { action: "collect" },
+  });
+}
+
+function addReceipt(payment) {
+  if (!payment?.name) return;
+  router.push({
+    name: "payment-detail",
+    params: { name: payment.name },
+    query: { action: "receipt" },
+  });
+}
+
+function sendReminder(payment) {
+  if (!payment?.name) return;
+  router.push({
+    name: "reminders-list",
+    query: {
+      sourceDoctype: "AT Payment",
+      sourceName: payment.name,
+      customer: payment.customer || "",
+      policy: payment.policy || "",
+    },
+  });
 }
 
 onMounted(() => {
@@ -777,3 +910,5 @@ watch(
   @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
 }
 </style>
+
+

@@ -23,8 +23,32 @@ const ImportData = () => import("../pages/ImportData.vue");
 const ExportData = () => import("../pages/ExportData.vue");
 const CommunicationCenter = () => import("../pages/CommunicationCenter.vue");
 const ReconciliationWorkbench = () => import("../pages/ReconciliationWorkbench.vue");
+const ReconciliationDetail = () => import("../pages/ReconciliationDetail.vue");
+const CommunicationHub = () => import("../pages/CommunicationHub.vue");
 const Reports = () => import("../pages/Reports.vue");
+const PremiumReport = () => import("../pages/PremiumReport.vue");
+const ClaimRatioReport = () => import("../pages/ClaimRatioReport.vue");
+const AgentPerformanceReport = () => import("../pages/AgentPerformanceReport.vue");
+const CustomerSegmentationReport = () => import("../pages/CustomerSegmentationReport.vue");
 const AuxWorkbench = () => import("../pages/AuxWorkbench.vue");
+const NotificationDraftsList = () => import("../pages/NotificationDraftsList.vue");
+const NotificationDraftDetail = () => import("../pages/NotificationDraftDetail.vue");
+const SentNotificationsList = () => import("../pages/SentNotificationsList.vue");
+const SentNotificationDetail = () => import("../pages/SentNotificationDetail.vue");
+const CompaniesList = () => import("../pages/CompaniesList.vue");
+const CompanyDetail = () => import("../pages/CompanyDetail.vue");
+const BranchesList = () => import("../pages/BranchesList.vue");
+const BranchDetail = () => import("../pages/BranchDetail.vue");
+const SalesEntitiesList = () => import("../pages/SalesEntitiesList.vue");
+const SalesEntityDetail = () => import("../pages/SalesEntityDetail.vue");
+const NotificationTemplatesList = () => import("../pages/NotificationTemplatesList.vue");
+const NotificationTemplateEditor = () => import("../pages/NotificationTemplateEditor.vue");
+const AccountingEntriesList = () => import("../pages/AccountingEntriesList.vue");
+const AccountingEntryDetail = () => import("../pages/AccountingEntryDetail.vue");
+const ReconciliationItemsList = () => import("../pages/ReconciliationItemsList.vue");
+const ReconciliationItemDetail = () => import("../pages/ReconciliationItemDetail.vue");
+const TasksList = () => import("../pages/TasksList.vue");
+const TaskDetail = () => import("../pages/TaskDetail.vue");
 const AuxRecordDetail = () => import("../pages/AuxRecordDetail.vue");
 
 const router = createRouter({
@@ -181,11 +205,15 @@ const router = createRouter({
     {
       path: "/communication",
       name: "communication-center",
-      component: CommunicationCenter,
+      component: CommunicationHub,
       meta: {
         title: { tr: "İletişim Merkezi", en: "Communication Center" },
         section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
+    },
+    {
+      path: "/communication-hub",
+      redirect: { name: "communication-center" },
     },
     {
       path: "/reconciliation",
@@ -197,11 +225,57 @@ const router = createRouter({
       },
     },
     {
+      path: "/reconciliation/:name",
+      name: "reconciliation-detail",
+      component: ReconciliationDetail,
+      props: true,
+      meta: {
+        title: { tr: "Mutabakat Detay", en: "Reconciliation Detail" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
       path: "/reports",
       name: "reports",
       component: Reports,
       meta: {
         title: { tr: "Raporlar", en: "Reports" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
+      path: "/reports/premium",
+      name: "premium-report",
+      component: PremiumReport,
+      meta: {
+        title: { tr: "Prim Raporu", en: "Premium Report" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
+      path: "/reports/claim-ratio",
+      name: "claim-ratio-report",
+      component: ClaimRatioReport,
+      meta: {
+        title: { tr: "Hasar/Prim Oranı", en: "Claim Ratio Report" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
+      path: "/reports/agent-performance",
+      name: "agent-performance-report",
+      component: AgentPerformanceReport,
+      meta: {
+        title: { tr: "Acente Performans Raporu", en: "Agent Performance Report" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
+      path: "/reports/customer-segmentation",
+      name: "customer-segmentation-report",
+      component: CustomerSegmentationReport,
+      meta: {
+        title: { tr: "Müşteri Segmentasyon Raporu", en: "Customer Segmentation Report" },
         section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
@@ -237,15 +311,53 @@ const router = createRouter({
       {
         path: def.listPath,
         name: def.listName,
-        component: AuxWorkbench,
-        props: { screenKey: def.key },
+        component: def.key === "tasks"
+          ? TasksList
+          : def.key === "notification-drafts"
+            ? NotificationDraftsList
+            : def.key === "notification-outbox"
+              ? SentNotificationsList
+              : def.key === "companies"
+                ? CompaniesList
+                : def.key === "branches"
+                  ? BranchesList
+                  : def.key === "sales-entities"
+                    ? SalesEntitiesList
+                    : def.key === "templates"
+                      ? NotificationTemplatesList
+                      : def.key === "accounting-entries"
+                        ? AccountingEntriesList
+                        : def.key === "reconciliation-items"
+                          ? ReconciliationItemsList
+            : AuxWorkbench,
+        props: ["tasks", "notification-drafts", "notification-outbox", "companies", "branches", "sales-entities", "templates", "accounting-entries", "reconciliation-items"].includes(def.key) ? false : { screenKey: def.key },
         meta: def.meta,
       },
       {
         path: def.detailPath,
         name: def.detailName,
-        component: AuxRecordDetail,
-        props: (route) => ({ screenKey: def.key, name: route.params.name }),
+        component: def.key === "tasks"
+          ? TaskDetail
+          : def.key === "notification-drafts"
+            ? NotificationDraftDetail
+            : def.key === "notification-outbox"
+              ? SentNotificationDetail
+              : def.key === "companies"
+                ? CompanyDetail
+                : def.key === "branches"
+                  ? BranchDetail
+                  : def.key === "sales-entities"
+                    ? SalesEntityDetail
+                    : def.key === "templates"
+                      ? NotificationTemplateEditor
+                      : def.key === "accounting-entries"
+                        ? AccountingEntryDetail
+                        : def.key === "reconciliation-items"
+                          ? ReconciliationItemDetail
+            : AuxRecordDetail,
+        props: def.key === "tasks" || def.key === "notification-drafts" || def.key === "notification-outbox" || def.key === "companies" || def.key === "branches" || def.key === "sales-entities" || def.key === "templates" || def.key === "accounting-entries" || def.key === "reconciliation-items"
+          ? (route) => ({ name: route.params.name })
+          : (route) => ({ screenKey: def.key, name: route.params.name }),
         meta: def.detailMeta,
       },
     ]),

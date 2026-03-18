@@ -101,84 +101,101 @@
 
     <DocSummaryGrid v-if="showSummaryGrid" :items="renewalSummaryItems" />
 
-    <DataTableShell
-      :loading="renewalsLoading"
-      :error="renewalsError"
-      :empty="!renewalsLoading && !renewalsError && renewals.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template #header>
-        <div class="text-xs text-slate-500">
-          {{ t("showing") }} {{ renewals.length }}
-        </div>
-      </template>
+    <div v-if="renewalsError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
+      <p>{{ renewalsError }}</p>
+    </div>
 
-      <div class="overflow-auto">
-        <table class="at-table">
-          <thead>
-            <tr class="at-table-head-row">
-              <th class="at-table-head-cell">{{ t("task") }}</th>
-              <th class="at-table-head-cell">{{ t("policy") }}</th>
-              <th class="at-table-head-cell">{{ t("status") }}</th>
-              <th class="at-table-head-cell">{{ lostReasonColumnLabel }}</th>
-              <th class="at-table-head-cell">{{ t("due") }}</th>
-              <th class="at-table-head-cell">{{ t("renewal") }}</th>
-              <th class="at-table-head-cell">{{ t("actions") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="task in renewals" :key="task.name" class="at-table-row">
-              <td class="at-table-cell font-medium text-slate-800">{{ task.name }}</td>
-              <td class="at-table-cell text-slate-700">{{ task.policy || "-" }}</td>
-              <td class="at-table-cell">
-                <StatusBadge domain="renewal" :status="task.status" />
-              </td>
-              <td class="at-table-cell text-slate-700">
-                <div class="flex flex-col gap-1">
-                  <span>{{ formatLostReason(task) }}</span>
-                  <span v-if="task.competitor_name" class="text-xs text-slate-500">{{ task.competitor_name }}</span>
-                </div>
-              </td>
-              <td class="at-table-cell text-slate-700">{{ formatDate(task.due_date) }}</td>
-              <td class="at-table-cell text-slate-700">{{ formatDate(task.renewal_date) }}</td>
-              <td class="at-table-cell">
-                <InlineActionRow>
-                  <ActionButton
-                    v-if="canMoveRenewalToStatus(task, 'In Progress')"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="renewalMutationLoading"
-                    @click="updateRenewalStatus(task, 'In Progress')"
-                  >
-                    {{ t("markInProgress") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canMoveRenewalToStatus(task, 'Done')"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="renewalMutationLoading"
-                    @click="updateRenewalStatus(task, 'Done')"
-                  >
-                    {{ t("markDone") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="task.policy"
-                    variant="secondary"
-                    size="xs"
-                    @click="openPolicy(task.policy)"
-                  >
-                    {{ t("openPolicy") }}
-                  </ActionButton>
-                </InlineActionRow>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <section class="kanban-board">
+      <header class="kanban-board-header">
+        <div>
+          <p class="section-title">{{ t("title") }}</p>
+          <p class="text-sm text-slate-500">{{ t("showing") }} {{ renewals.length }}</p>
+        </div>
+      </header>
+
+      <div v-if="renewalsLoading" class="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-sm text-slate-500">
+        {{ t("loading") }}
       </div>
-    </DataTableShell>
+
+      <div v-else class="kanban-grid">
+        <article v-for="column in boardColumns" :key="column.key" class="kanban-column">
+          <div class="kanban-column-header">
+            <div>
+              <p class="kanban-column-title">{{ column.label }}</p>
+              <p class="kanban-column-hint">{{ column.hint }}</p>
+            </div>
+            <span class="kanban-column-count">{{ column.cards.length }}</span>
+          </div>
+
+          <div class="kanban-column-body">
+            <div v-if="column.cards.length === 0" class="kanban-empty">{{ t("emptyColumn") }}</div>
+
+            <article
+              v-for="task in column.cards"
+              :key="task.name"
+              class="kanban-card"
+              role="button"
+              tabindex="0"
+              @click="openRenewalDetail(task)"
+              @keydown.enter.prevent="openRenewalDetail(task)"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-semibold text-slate-900">{{ task.customerLabel }}</p>
+                  <p class="mt-0.5 truncate text-xs text-slate-500">{{ task.branchLabel }} · {{ task.premiumLabel }}</p>
+                </div>
+                <div class="kanban-avatar">{{ task.avatarInitials }}</div>
+              </div>
+
+              <div class="mt-3 flex flex-wrap items-center gap-2">
+                <StatusBadge domain="renewal" :status="task.status" />
+                <span class="kanban-priority" :class="task.priorityTone">{{ task.priorityLabel }}</span>
+              </div>
+
+              <div class="mt-3 space-y-1 text-xs text-slate-500">
+                <p>{{ t("policy") }}: {{ task.policy || "-" }}</p>
+                <p>{{ t("due") }}: {{ formatDate(task.dueDate) }}</p>
+                <p>{{ t("renewal") }}: {{ formatDate(task.renewalDate) }}</p>
+                <p v-if="task.competitorName">{{ lostReasonColumnLabel }}: {{ task.competitorName }}</p>
+              </div>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <ActionButton variant="secondary" size="xs" :disabled="renewalMutationLoading" @click.stop="openRenewalDetail(task)">
+                  {{ t("openDetail") }}
+                </ActionButton>
+                <ActionButton
+                  v-if="canMoveRenewalToStatus(task, 'In Progress')"
+                  variant="secondary"
+                  size="xs"
+                  :disabled="renewalMutationLoading"
+                  @click.stop="updateRenewalStatus(task, 'In Progress')"
+                >
+                  {{ t("markInProgress") }}
+                </ActionButton>
+                <ActionButton
+                  v-if="canMoveRenewalToStatus(task, 'Done')"
+                  variant="secondary"
+                  size="xs"
+                  :disabled="renewalMutationLoading"
+                  @click.stop="updateRenewalStatus(task, 'Done')"
+                >
+                  {{ t("markDone") }}
+                </ActionButton>
+                <ActionButton
+                  v-if="task.policy"
+                  variant="secondary"
+                  size="xs"
+                  @click.stop="openPolicy(task.policy)"
+                >
+                  {{ t("openPolicy") }}
+                </ActionButton>
+              </div>
+            </article>
+          </div>
+        </article>
+      </div>
+    </section>
 
     <QuickCreateManagedDialog
       v-model="showQuickRenewalDialog"
@@ -195,16 +212,13 @@
 <script setup>
 import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
@@ -262,6 +276,28 @@ const copy = {
     dueScope7: "7 gün içinde",
     dueScope30: "30 gün içinde",
     dueScope60: "60 gün içinde",
+    openDetail: "Detaya Git",
+    columnNew: "Yeni (30+ gün)",
+    columnNewHint: "Henüz erken safhadaki yenilemeler",
+    columnNotified: "Bildirim Gönderildi",
+    columnNotifiedHint: "Müşteriye ilk temas yapıldı",
+    columnQuoted: "Teklif Hazırlandı",
+    columnQuotedHint: "Teklif veya ön hazırlık tamam",
+    columnDecision: "Müşteri Kararında",
+    columnDecisionHint: "Cevap beklenen ya da geciken kartlar",
+    columnDone: "Tamamlandı",
+    columnDoneHint: "Başarıyla kapanan ya da iptal edilen kartlar",
+    emptyColumn: "Bu kolonda kart yok",
+    branch: "Branş",
+    premium: "Prim",
+    priority: "Öncelik",
+    priorityLow: "Düşük",
+    priorityMedium: "Orta",
+    priorityHigh: "Yüksek",
+    priorityCritical: "Kritik",
+    priorityOverdue: "Gecikmiş",
+    priorityClosed: "Kapandı",
+    priorityUnknown: "Belirsiz",
   },
   en: {
     title: "Renewals",
@@ -311,6 +347,28 @@ const copy = {
     dueScope7: "Due in 7 days",
     dueScope30: "Due in 30 days",
     dueScope60: "Due in 60 days",
+    openDetail: "Open Detail",
+    columnNew: "New (30+ days)",
+    columnNewHint: "Renewals that are still far from due",
+    columnNotified: "Notification Sent",
+    columnNotifiedHint: "First customer touch has started",
+    columnQuoted: "Quote Ready",
+    columnQuotedHint: "Offer or preparation is complete",
+    columnDecision: "Customer Deciding",
+    columnDecisionHint: "Waiting on response or overdue follow-up",
+    columnDone: "Completed",
+    columnDoneHint: "Successfully closed or cancelled cards",
+    emptyColumn: "No cards in this column",
+    branch: "Branch",
+    premium: "Premium",
+    priority: "Priority",
+    priorityLow: "Low",
+    priorityMedium: "Medium",
+    priorityHigh: "High",
+    priorityCritical: "Critical",
+    priorityOverdue: "Overdue",
+    priorityClosed: "Closed",
+    priorityUnknown: "Unknown",
   },
 };
 
@@ -322,6 +380,7 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const renewalStore = useRenewalStore();
 const route = useRoute();
+const router = useRouter();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const resourceValue = (resource, fallback = null) => {
@@ -389,7 +448,7 @@ const renewalQuickPolicyResource = createResource({
   auto: true,
   params: {
     doctype: "AT Policy",
-    fields: ["name", "policy_no", "customer"],
+    fields: ["name", "policy_no", "customer", "branch", "office_branch", "gross_premium", "currency", "end_date", "sales_entity"],
     filters: buildOfficeBranchLookupFilters(),
     order_by: "end_date asc, modified desc",
     limit_page_length: 500,
@@ -406,6 +465,25 @@ const renewalQuickCustomerResource = createResource({
     limit_page_length: 500,
   },
 });
+
+const renewalPolicyLookupRows = computed(() => asArray(resourceValue(renewalQuickPolicyResource, [])));
+const renewalCustomerLookupRows = computed(() => asArray(resourceValue(renewalQuickCustomerResource, [])));
+const renewalPolicyLookupMap = computed(
+  () =>
+    new Map(
+      renewalPolicyLookupRows.value
+        .map((row) => [String(row?.name || row?.policy_no || "").trim(), row])
+        .filter(([key]) => Boolean(key)),
+    ),
+);
+const renewalCustomerLookupMap = computed(
+  () =>
+    new Map(
+      renewalCustomerLookupRows.value
+        .map((row) => [String(row?.name || row?.full_name || "").trim(), row])
+        .filter(([key]) => Boolean(key)),
+    ),
+);
 
 const renewalsRaw = computed(() => renewalStore.state.items || []);
 const renewalsLoading = computed(() => Boolean(unref(renewalsResource.loading)));
@@ -467,6 +545,42 @@ const renewalSummaryItems = computed(() => {
   ];
 });
 
+const renewalCards = computed(() => renewals.value.map((task) => buildRenewalBoardCard(task)));
+const boardColumns = computed(() => {
+  const columns = [
+    {
+      key: "new",
+      label: t("columnNew"),
+      hint: t("columnNewHint"),
+    },
+    {
+      key: "notified",
+      label: t("columnNotified"),
+      hint: t("columnNotifiedHint"),
+    },
+    {
+      key: "quoted",
+      label: t("columnQuoted"),
+      hint: t("columnQuotedHint"),
+    },
+    {
+      key: "decision",
+      label: t("columnDecision"),
+      hint: t("columnDecisionHint"),
+    },
+    {
+      key: "done",
+      label: t("columnDone"),
+      hint: t("columnDoneHint"),
+    },
+  ];
+
+  return columns.map((column) => ({
+    ...column,
+    cards: renewalCards.value.filter((task) => task.boardColumnKey === column.key),
+  }));
+});
+
 const renewalsError = computed(() => {
   return renewalStore.state.error || "";
 });
@@ -482,22 +596,24 @@ function downloadRenewalExport(format) {
     exportKey: "renewals_board",
     title: t("title"),
     columns: [
-      t("task"),
+      t("customer"),
       t("policy"),
+      t("branch"),
+      t("premium"),
       t("status"),
-      lostReasonColumnLabel.value,
-      t("competitor"),
+      t("priority"),
       t("due"),
       t("renewal"),
     ],
-    rows: renewals.value.map((task) => ({
-      [t("task")]: task.name || "-",
+    rows: renewalCards.value.map((task) => ({
+      [t("customer")]: task.customerLabel || "-",
       [t("policy")]: task.policy || "-",
+      [t("branch")]: task.branchLabel || "-",
+      [t("premium")]: task.premiumLabel || "-",
       [t("status")]: task.status || "-",
-      [lostReasonColumnLabel.value]: formatLostReason(task),
-      [t("competitor")]: task.competitor_name || "-",
-      [t("due")]: formatDate(task.due_date),
-      [t("renewal")]: formatDate(task.renewal_date),
+      [t("priority")]: task.priorityLabel || "-",
+      [t("due")]: formatDate(task.dueDate),
+      [t("renewal")]: formatDate(task.renewalDate),
     })),
     filters: currentRenewalPresetPayload(),
     format,
@@ -528,7 +644,12 @@ async function updateRenewalStatus(task, nextStatus) {
 
 function openPolicy(policyName) {
   if (!policyName) return;
-  window.location.assign(`/at/policies/${encodeURIComponent(policyName)}`);
+  router.push({ name: "policy-detail", params: { name: policyName } });
+}
+
+function openRenewalDetail(task) {
+  if (!task?.name) return;
+  router.push({ name: "renewal-task-detail", params: { name: task.name } });
 }
 
 function formatDate(value) {
@@ -538,6 +659,133 @@ function formatDate(value) {
   } catch {
     return value;
   }
+}
+
+function formatRenewalPremium(amount, currency) {
+  if (amount === null || amount === undefined || amount === "") return "-";
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount)) return String(amount);
+  try {
+    return new Intl.NumberFormat(localeCode.value, {
+      style: "currency",
+      currency: String(currency || "TRY").toUpperCase(),
+    }).format(numericAmount);
+  } catch {
+    const formattedAmount = new Intl.NumberFormat(localeCode.value).format(numericAmount);
+    return currency ? `${formattedAmount} ${currency}` : formattedAmount;
+  }
+}
+
+function getRenewalDaysUntilDue(value) {
+  const target = toStartOfDay(value);
+  if (!target) return null;
+  const today = toStartOfDay(new Date());
+  if (!today) return null;
+  return Math.ceil((target.getTime() - today.getTime()) / 86400000);
+}
+
+function buildInitials(value) {
+  const words = String(value || "")
+    .replace(/[@._-]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  const initials = words
+    .slice(0, 2)
+    .map((word) => word.charAt(0))
+    .join("")
+    .toUpperCase();
+  return initials || "-";
+}
+
+function getRenewalPriorityMeta(task, daysUntilDue) {
+  const status = String(task?.status || "").trim();
+  if (status === "Done" || status === "Cancelled") {
+    return {
+      label: t("priorityClosed"),
+      tone: "kanban-priority-neutral",
+    };
+  }
+  if (!Number.isFinite(daysUntilDue)) {
+    return {
+      label: t("priorityUnknown"),
+      tone: "kanban-priority-neutral",
+    };
+  }
+  if (daysUntilDue < 0) {
+    return {
+      label: t("priorityOverdue"),
+      tone: "kanban-priority-critical",
+    };
+  }
+  if (daysUntilDue <= 7) {
+    return {
+      label: t("priorityCritical"),
+      tone: "kanban-priority-critical",
+    };
+  }
+  if (daysUntilDue <= 15) {
+    return {
+      label: t("priorityHigh"),
+      tone: "kanban-priority-high",
+    };
+  }
+  if (daysUntilDue <= 30) {
+    return {
+      label: t("priorityMedium"),
+      tone: "kanban-priority-medium",
+    };
+  }
+  return {
+    label: t("priorityLow"),
+    tone: "kanban-priority-low",
+  };
+}
+
+function getRenewalBoardColumnKey(task, daysUntilDue) {
+  const status = String(task?.status || "Open").trim();
+  const dueDays = Number.isFinite(daysUntilDue) ? daysUntilDue : getRenewalDaysUntilDue(task?.due_date);
+  if (status === "Done" || status === "Cancelled") return "done";
+  if (status === "In Progress") {
+    if (!Number.isFinite(dueDays)) return "quoted";
+    if (dueDays <= 7) return "decision";
+    if (dueDays <= 15) return "quoted";
+    return "notified";
+  }
+  if (!Number.isFinite(dueDays)) return "new";
+  if (dueDays > 30) return "new";
+  if (dueDays > 15) return "notified";
+  if (dueDays > 0) return "quoted";
+  return "decision";
+}
+
+function buildRenewalBoardCard(task) {
+  const policy = renewalPolicyLookupMap.value.get(String(task?.policy || "").trim()) || null;
+  const customer = renewalCustomerLookupMap.value.get(String(task?.customer || "").trim()) || null;
+  const dueDate = task?.due_date || null;
+  const renewalDate = task?.renewal_date || null;
+  const daysUntilDue = getRenewalDaysUntilDue(dueDate);
+  const priority = getRenewalPriorityMeta(task, daysUntilDue);
+  const customerLabel = customer?.full_name || customer?.name || task?.customer || "-";
+  const branchLabel = policy?.branch || policy?.office_branch || task?.office_branch || "-";
+  const premiumSource = policy?.gross_premium ?? policy?.premium ?? task?.gross_premium ?? task?.amount;
+  const currency = policy?.currency || task?.currency || "TRY";
+  const assignedName = String(task?.assigned_to || "").trim();
+  const avatarSeed = assignedName || customerLabel;
+  const boardColumnKey = getRenewalBoardColumnKey(task, daysUntilDue);
+
+  return {
+    ...task,
+    customerLabel,
+    branchLabel,
+    premiumLabel: formatRenewalPremium(premiumSource, currency),
+    dueDate,
+    renewalDate,
+    daysUntilDue,
+    priorityLabel: priority.label,
+    priorityTone: priority.tone,
+    avatarInitials: buildInitials(avatarSeed),
+    boardColumnKey,
+  };
 }
 
 function isoDateOffset(days) {
@@ -573,7 +821,20 @@ function matchesDueScope(dueDate, scope) {
 function buildRenewalListParams() {
   const params = {
     doctype: "AT Renewal Task",
-    fields: ["name", "policy", "status", "lost_reason_code", "competitor_name", "due_date", "renewal_date"],
+    fields: [
+      "name",
+      "policy",
+      "customer",
+      "office_branch",
+      "policy_end_date",
+      "renewal_date",
+      "due_date",
+      "status",
+      "lost_reason_code",
+      "competitor_name",
+      "assigned_to",
+      "notes",
+    ],
     order_by: "due_date asc",
     limit_page_length: Number(filters.limit) || 40,
   };
@@ -708,7 +969,7 @@ watch(
     const officeFilters = buildOfficeBranchLookupFilters();
     renewalQuickPolicyResource.params = {
       doctype: "AT Policy",
-      fields: ["name", "policy_no", "customer"],
+      fields: ["name", "policy_no", "customer", "branch", "office_branch", "gross_premium", "currency", "end_date", "sales_entity"],
       filters: officeFilters,
       order_by: "end_date asc, modified desc",
       limit_page_length: 500,
@@ -738,5 +999,77 @@ watch(
 <style scoped>
 .input {
   @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
+}
+
+.kanban-board {
+  @apply rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur;
+}
+
+.kanban-board-header {
+  @apply mb-4 flex items-center justify-between gap-3;
+}
+
+.kanban-grid {
+  @apply grid gap-4 xl:grid-cols-5;
+}
+
+.kanban-column {
+  @apply flex min-h-[24rem] flex-col rounded-2xl border border-slate-200 bg-slate-50/80;
+}
+
+.kanban-column-header {
+  @apply flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-3;
+}
+
+.kanban-column-title {
+  @apply text-sm font-semibold text-slate-900;
+}
+
+.kanban-column-hint {
+  @apply mt-0.5 text-xs text-slate-500;
+}
+
+.kanban-column-count {
+  @apply inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-slate-900 px-2 text-xs font-semibold text-white;
+}
+
+.kanban-column-body {
+  @apply flex flex-1 flex-col gap-3 p-3;
+}
+
+.kanban-empty {
+  @apply rounded-2xl border border-dashed border-slate-300 bg-white px-3 py-6 text-center text-sm text-slate-500;
+}
+
+.kanban-card {
+  @apply cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500;
+}
+
+.kanban-avatar {
+  @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white;
+}
+
+.kanban-priority {
+  @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700;
+}
+
+.kanban-priority-neutral {
+  @apply bg-slate-100 text-slate-700;
+}
+
+.kanban-priority-low {
+  @apply bg-emerald-50 text-emerald-700;
+}
+
+.kanban-priority-medium {
+  @apply bg-amber-50 text-amber-700;
+}
+
+.kanban-priority-high {
+  @apply bg-orange-50 text-orange-700;
+}
+
+.kanban-priority-critical {
+  @apply bg-rose-50 text-rose-700;
 }
 </style>

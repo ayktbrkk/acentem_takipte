@@ -2,7 +2,7 @@
   <section class="page-shell">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Satış → Leadler</p>
+        <p class="detail-breadcrumb">Satış → Fırsatlar</p>
         <h1 class="detail-title">
           {{ leadDisplayTitle }}
           <StatusBadge :status="uiLeadStatus" />
@@ -12,8 +12,11 @@
       </div>
       <div class="flex items-center gap-2">
         <button class="btn btn-sm" type="button" @click="goBack">{{ t('backList') }}</button>
+        <button v-if="lead.customer" class="btn btn-outline btn-sm" type="button" @click="openCustomer360(lead.customer)">
+          {{ t('openCustomer360') }}
+        </button>
         <button v-if="canConvertLead(lead)" class="btn btn-primary btn-sm" type="button" :disabled="leadConvertResource.loading" @click="convertLeadToOffer">
-          {{ leadConvertResource.loading ? t('converting') : t('convertNow') }}
+          {{ leadConvertResource.loading ? t('converting') : t('createOffer') }}
         </button>
       </div>
     </div>
@@ -184,8 +187,8 @@ const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const copy = {
-  tr: {
-    overview: "Lead Detayi",
+    tr: {
+    overview: "Fırsat Detayı",
     openDesk: "Yönetim Ekranında Aç",
     backList: "Listeye Dön",
     loading: "Yükleniyor...",
@@ -220,7 +223,10 @@ const copy = {
     openPayments: "Ödemeler",
     openRenewals: "Yenilemeler",
     customer: "Müşteri",
+    phone: "Telefon",
+    taxId: "Kimlik / Vergi No",
     email: "E-posta",
+    officeBranch: "Ofis Şubesi",
     salesEntity: "Satış Birimi",
     company: "Sigorta Şirketi",
     branch: "Branş",
@@ -239,7 +245,7 @@ const copy = {
     accessView: "Kayıt Görüntülendi",
     accessEdit: "Kayıt Düzenlendi",
     accessExport: "Kayıt Dışa Aktarıldı",
-    convertNow: "Teklife Cevir",
+    createOffer: "Teklif Oluştur",
     converting: "Cevriliyor...",
     convertLeadSuccess: "Lead teklife donusturuldu.",
     convertLeadError: "Lead teklife cevrilemedi.",
@@ -253,7 +259,7 @@ const copy = {
     timelineEventPolicy: "Poliçeye donustu",
   },
   en: {
-    overview: "Lead Detail",
+    overview: "Opportunity Detail",
     openDesk: "Open Desk",
     backList: "Back to List",
     loading: "Loading...",
@@ -288,7 +294,10 @@ const copy = {
     openPayments: "Payments",
     openRenewals: "Renewals",
     customer: "Customer",
+    phone: "Phone",
+    taxId: "Identity / Tax Number",
     email: "Email",
+    officeBranch: "Office Branch",
     salesEntity: "Sales Entity",
     company: "Insurance Company",
     branch: "Branch",
@@ -307,7 +316,7 @@ const copy = {
     accessView: "Record Viewed",
     accessEdit: "Record Edited",
     accessExport: "Record Exported",
-    convertNow: "Convert to Offer",
+    createOffer: "Create Offer",
     converting: "Converting...",
     convertLeadSuccess: "Lead converted to offer.",
     convertLeadError: "Failed to convert lead to offer.",
@@ -403,7 +412,10 @@ const opsPreviewCount = computed(
 
 const leadInfoFacts = computed(() => [
   { key: "customer", label: t("customer"), value: lead.value.customer || "-" },
+  { key: "phone", label: t("phone"), value: lead.value.phone || "-" },
+  { key: "tax", label: t("taxId"), value: lead.value.tax_id || "-" },
   { key: "email", label: t("email"), value: lead.value.email || "-" },
+  { key: "office_branch", label: t("officeBranch"), value: lead.value.office_branch || "-" },
   { key: "sales", label: t("salesEntity"), value: lead.value.sales_entity || "-" },
   { key: "company", label: t("company"), value: lead.value.insurance_company || "-" },
   { key: "branch", label: t("branch"), value: lead.value.branch || "-" },
@@ -508,9 +520,13 @@ const uiLeadStatus = computed(() => mapLeadStatusTone(lead.value.status));
 const uiLeadStaleStatus = computed(() => mapLeadStaleTone(leadStaleState(lead.value)));
 const heroCells = computed(() => [
   { label: t("customer"), value: lead.value.customer || lead.value.email || "-" },
-  { label: t("salesEntity"), value: lead.value.sales_entity || "-" },
+  { label: t("officeBranch"), value: lead.value.office_branch || "-" },
   { label: t("estimatedGross"), value: fmtMoney(lead.value.estimated_gross_premium, "TRY"), variant: "lg" },
-  { label: t("status"), value: lead.value.status || "-", variant: canConvertLead(lead.value) ? "accent" : "default" },
+  {
+    label: t("convertedOffer"),
+    value: lead.value.converted_offer || t("noConversion"),
+    variant: canConvertLead(lead.value) ? "accent" : "default",
+  },
 ]);
 const leadInfoFields = computed(() => leadInfoFacts.value.map((item) => ({ label: item.label, value: item.value })));
 const leadConversionFields = computed(() => leadConversionFacts.value.map((item) => ({ label: item.label, value: item.value })));

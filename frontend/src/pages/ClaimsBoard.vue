@@ -4,8 +4,37 @@
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Hasarlar</p>
         <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
       <span class="text-sm text-gray-400">{{ claims.length }} kayıt</span>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+        <p class="mini-metric-value">{{ formatCount(claimSummary.total) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryOpen") }}</p>
+        <p class="mini-metric-value text-brand-600">{{ formatCount(claimSummary.open) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryApproved") }}</p>
+        <p class="mini-metric-value text-amber-600">{{ formatCount(claimSummary.approved) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryPaid") }}</p>
+        <p class="mini-metric-value text-green-600">{{ formatCount(claimSummary.paid) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("summaryReservePaid") }}</p>
+        <p class="mini-metric-value text-slate-900">{{ claimSummary.reserveVsPaid }}</p>
+      </div>
+    </div>
+
+    <div v-if="claimsErrorText" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
+      <p>{{ claimsErrorText }}</p>
     </div>
 
     <div class="border-b border-gray-200 bg-white px-5 py-3">
@@ -17,18 +46,18 @@
         @reset="onClaimsListFilterReset"
       >
         <template #actions>
-          <button class="btn btn-primary btn-sm" @click="showQuickClaimDialog = true">+ Yeni Hasar</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="reloadClaims">Yenile</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">Excel</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">PDF</button>
+          <button class="btn btn-primary btn-sm" @click="showQuickClaimDialog = true">+ {{ t("newClaim") }}</button>
+          <button class="btn btn-sm" :disabled="claimsLoading" @click="reloadClaims">{{ t("refresh") }}</button>
+          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">{{ t("exportXlsx") }}</button>
+          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">{{ t("exportPdf") }}</button>
         </template>
       </FilterBar>
     </div>
 
     <div class="flex-1 p-5">
       <ListTable
-        :columns="claimsListColumns"
-        :rows="claimsListRowsWithUrgency"
+        :columns="claimsTableColumns"
+        :rows="claimsListRowsWithActions"
         :loading="claimsLoading"
         empty-message="Hasar bulunamadı."
         @row-click="openClaimDetail"
@@ -85,6 +114,12 @@ const copy = {
   tr: {
     title: "Hasarlar",
     subtitle: "Hasar dosyaları ve ödeme durumunu izleyin",
+    recordCount: "kayit",
+    summaryTotal: "Toplam Hasar",
+    summaryOpen: "Acik",
+    summaryApproved: "Onayda",
+    summaryPaid: "Odendi",
+    summaryReservePaid: "Toplam Rezerv / Odeme",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -115,6 +150,8 @@ const copy = {
     notificationNone: "Bildirim Kaydı Yok",
     openNotifications: "Bildirimler",
     openDocuments: "Dokümanlar",
+    viewClaimFile: "Dosya Goruntule",
+    createPayment: "Odeme Yap",
     rejectReasonPrompt: "Red sebebini girin",
     openDesk: "Yönetim",
     openPolicy: "Poliçeyi Aç",
@@ -153,6 +190,12 @@ const copy = {
   en: {
     title: "Claims",
     subtitle: "Track claim files and payment status",
+    recordCount: "records",
+    summaryTotal: "Total Claims",
+    summaryOpen: "Open",
+    summaryApproved: "Approved",
+    summaryPaid: "Paid",
+    summaryReservePaid: "Reserve / Paid",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -183,6 +226,8 @@ const copy = {
     notificationNone: "No Notification Records",
     openNotifications: "Notifications",
     openDocuments: "Documents",
+    viewClaimFile: "View File",
+    createPayment: "Create Payment",
     rejectReasonPrompt: "Enter rejection reason",
     openDesk: "Desk",
     openPolicy: "Open Policy",
@@ -332,6 +377,19 @@ const showQuickClaimDialog = ref(false);
 const showOwnershipAssignmentDialog = ref(false);
 const selectedClaimForAssignment = ref(null);
 
+const claimsTableColumns = [
+  { key: "claim_no", label: "Hasar No", width: "140px", type: "mono" },
+  { key: "customer", label: "Musteri", width: "220px" },
+  { key: "policy", label: "Police No", width: "140px", type: "mono" },
+  { key: "incident_date_label", label: "Hasar Tarihi", width: "120px", type: "date" },
+  { key: "office_branch_label", label: "Sube", width: "120px" },
+  { key: "claim_type", label: "Hasar Tipi", width: "120px" },
+  { key: "reserve_amount_label", label: "Rezerv Tutar", width: "140px", type: "amount", align: "right" },
+  { key: "paid_amount_label", label: "Odenen", width: "140px", type: "amount", align: "right" },
+  { key: "claim_status", label: "Durum", width: "130px", type: "status", domain: "claim" },
+  { key: "_actions", label: "Actions", width: "280px", type: "actions", align: "right" },
+];
+
 const claimsListColumns = [
   { key: "claim_no", label: "Hasar No", width: "140px", type: "mono" },
   { key: "policy", label: "Poliçe", width: "140px", type: "mono" },
@@ -387,6 +445,31 @@ const claimsListRowsWithUrgency = computed(() =>
   }))
 );
 
+const claimSummary = computed(() => {
+  const rows = claimsListFilteredRows.value;
+  const reserveTotal = rows.reduce((sum, claim) => sum + Number(claim.estimated_amount || 0), 0);
+  const paidTotal = rows.reduce((sum, claim) => sum + Number(claim.paid_amount || 0), 0);
+  return {
+    total: rows.length,
+    open: rows.filter((claim) => String(claim.claim_status || "").trim() === "Open").length,
+    approved: rows.filter((claim) => String(claim.claim_status || "").trim() === "Approved").length,
+    paid: rows.filter((claim) => String(claim.claim_status || "").trim() === "Paid").length,
+    reserveVsPaid: `${formatCurrency(reserveTotal)} / ${formatCurrency(paidTotal)}`,
+  };
+});
+
+const claimsListRowsWithActions = computed(() =>
+  claimsListFilteredRows.value.map((claim) => ({
+    ...claim,
+    incident_date_label: formatDate(claim.incident_date),
+    office_branch_label: claim.office_branch || "-",
+    reserve_amount_label: formatCurrency(claim.estimated_amount || 0),
+    paid_amount_label: formatCurrency(claim.paid_amount || 0),
+    _urgency: claim.remaining_days <= 0 ? "row-critical" : claim.remaining_days <= 7 ? "row-warning" : "",
+    _actions: buildClaimRowActions(claim),
+  }))
+);
+
 const claimsListActiveCount = computed(
   () =>
     (claimsListSearchQuery.value.trim() ? 1 : 0) +
@@ -420,6 +503,59 @@ function matchAmountState(claim, amountState) {
   if (amountState === "approved_only") return approved > 0 && paid <= 0;
   if (amountState === "pending_payment") return approved > paid;
   return true;
+}
+
+function formatCurrency(value) {
+  const amount = Number(value || 0);
+  return new Intl.NumberFormat(localeCode.value, {
+    style: "currency",
+    currency: "TRY",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat(localeCode.value, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatCount(value) {
+  return new Intl.NumberFormat(localeCode.value).format(Number(value || 0));
+}
+
+function canOpenClaimPayment(claim) {
+  const status = String(claim?.claim_status || "").trim();
+  return status === "Approved" && Number(claim?.approved_amount || 0) > Number(claim?.paid_amount || 0);
+}
+
+function buildClaimRowActions(claim) {
+  return [
+    {
+      key: "file",
+      label: t("viewClaimFile"),
+      variant: "outline",
+      onClick: () => openClaimDetail(claim),
+    },
+    {
+      key: "documents",
+      label: t("openDocuments"),
+      variant: "outline",
+      onClick: () => openClaimDocuments(claim),
+    },
+    {
+      key: "payment",
+      label: t("createPayment"),
+      variant: "primary",
+      disabled: !canOpenClaimPayment(claim),
+      onClick: () => openClaimPayment(claim),
+    },
+  ];
 }
 
 function resourceValue(resource, fallback) {
@@ -479,10 +615,14 @@ function buildClaimListParams() {
       "policy",
       "customer",
       "claim_status",
+      "office_branch",
+      "claim_type",
       "assigned_expert",
       "rejection_reason",
       "appeal_status",
+      "incident_date",
       "next_follow_up_on",
+      "estimated_amount",
       "approved_amount",
       "paid_amount",
     ],
@@ -846,6 +986,15 @@ function openClaimDocuments(claim) {
     attached_to_name: claim.name,
   });
   window.location.assign(`/at/files?${query.toString()}`);
+}
+
+function openClaimPayment(claim) {
+  if (!canOpenClaimPayment(claim)) return;
+  const query = new URLSearchParams({
+    policy: claim?.policy || "",
+    query: claim?.claim_no || claim?.name || "",
+  });
+  window.location.assign(`/at/payments?${query.toString()}`);
 }
 
 function openClaimAssignment(claim) {

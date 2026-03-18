@@ -220,7 +220,7 @@
   }
 
   .btn.justify-start {
-    @apply justify-start;
+    justify-content: flex-start;
   }
 
   .form-shell {

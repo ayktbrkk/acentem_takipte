@@ -7,13 +7,17 @@
           {{ payment.payment_no || payment.name || name }}
           <StatusBadge domain="payment" :status="paymentStatus" />
         </h1>
-        <div class="mt-1.5 flex items-center gap-2">
+        <div class="mt-1.5 flex flex-wrap items-center gap-2">
           <span class="copy-tag">{{ payment.name || name }}</span>
+          <span class="copy-tag">{{ payment.payment_direction || "-" }}</span>
+          <span class="copy-tag">{{ payment.payment_purpose || "-" }}</span>
         </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" @click="router.push('/payments')">{{ t("back") }}</button>
-        <button class="btn btn-primary btn-sm" type="button">{{ t("approve") }}</button>
+      <div class="flex flex-wrap items-center gap-2">
+        <button class="btn btn-outline btn-sm" type="button" @click="backToList">{{ t("back") }}</button>
+        <button class="btn btn-sm" type="button" @click="collectPayment">{{ t("collectPayment") }}</button>
+        <button class="btn btn-sm" type="button" @click="addReceipt">{{ t("addReceipt") }}</button>
+        <button class="btn btn-primary btn-sm" type="button" @click="sendReminder">{{ t("sendReminder") }}</button>
       </div>
     </div>
 
@@ -25,40 +29,36 @@
           <FieldGroup :fields="paymentFields" :cols="2" />
         </DetailCard>
 
-        <DetailCard :title="t('policy')">
-          <div class="cursor-pointer rounded-lg bg-gray-50 p-3 hover:bg-gray-100" @click="openPolicy">
-            <p class="text-sm font-medium text-gray-900">{{ payment.policy || '-' }}</p>
-            <p class="mt-0.5 text-xs text-gray-400">{{ payment.payment_direction || '-' }}</p>
-          </div>
+        <DetailCard :title="t('financialSummary')">
+          <FieldGroup :fields="financialFields" :cols="2" />
         </DetailCard>
 
-        <DetailCard :title="t('history')">
-          <div v-if="!installments.length" class="card-empty">Tahsilat kaydi bulunamadi.</div>
+        <DetailCard :title="t('paymentPlan')">
+          <div v-if="installments.length === 0" class="card-empty">{{ t("noInstallments") }}</div>
           <table v-else class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="table-header">Tarih</th>
-                <th class="table-header">Referans</th>
-                <th class="table-header text-right">Tutar</th>
-                <th class="table-header">Durum</th>
+                <th class="table-header">{{ t("installmentNo") }}</th>
+                <th class="table-header">{{ t("dueDate") }}</th>
+                <th class="table-header">{{ t("paidOn") }}</th>
+                <th class="table-header text-right">{{ t("amount") }}</th>
+                <th class="table-header">{{ t("status") }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr v-for="inst in installments" :key="inst.name">
-                <td class="table-cell">{{ formatDate(inst.due_date || inst.creation) }}</td>
-                <td class="table-cell">{{ inst.name }}</td>
-                <td class="table-cell text-right">{{ formatCurrency(inst.amount_try) }}</td>
-                <td class="table-cell">{{ inst.status || '-' }}</td>
+              <tr v-for="row in installments" :key="row.name">
+                <td class="table-cell">{{ installmentLabel(row) }}</td>
+                <td class="table-cell">{{ formatDate(row.due_date) }}</td>
+                <td class="table-cell">{{ formatDate(row.paid_on) }}</td>
+                <td class="table-cell text-right">{{ formatCurrency(row.amount_try || row.amount) }}</td>
+                <td class="table-cell">{{ row.status || "-" }}</td>
               </tr>
             </tbody>
           </table>
         </DetailCard>
 
-        <DetailCard title="Dekont/Fatura">
-          <template #action>
-            <button class="btn btn-sm" type="button" @click="openPolicy">Yukle</button>
-          </template>
-          <div v-if="!documents.length" class="card-empty">Dekont veya fatura yuklenmemis.</div>
+        <DetailCard :title="t('documents')">
+          <div v-if="documents.length === 0" class="card-empty">{{ t("noDocuments") }}</div>
           <div v-else class="space-y-2">
             <div v-for="doc in documents" :key="doc.name" class="timeline-item">
               <div class="tl-dot" />
@@ -69,37 +69,50 @@
             </div>
           </div>
         </DetailCard>
+
+        <DetailCard :title="t('timeline')">
+          <div class="timeline-item">
+            <div class="tl-dot tl-dot-active" />
+            <div>
+              <p class="tl-text">{{ t("updated") }}</p>
+              <p class="tl-time">{{ formatDate(payment.modified) }}</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-dot" />
+            <div>
+              <p class="tl-text">{{ t("created") }}</p>
+              <p class="tl-time">{{ formatDate(payment.creation) }}</p>
+            </div>
+          </div>
+        </DetailCard>
       </div>
 
       <aside class="detail-sidebar">
         <div>
           <p class="section-title">{{ t("customer") }}</p>
-          <div class="flex items-center gap-2.5">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-medium text-brand-600">
-              {{ initials(payment.customer) }}
-            </div>
-            <p class="text-sm font-medium text-gray-900">{{ payment.customer || '-' }}</p>
-          </div>
+          <button
+            class="w-full rounded-lg border border-gray-200 bg-white p-3 text-left transition hover:border-brand-200 hover:bg-brand-50"
+            type="button"
+            :disabled="!payment.customer"
+            @click="openCustomer"
+          >
+            <p class="text-sm font-medium text-gray-900">{{ payment.customer || "-" }}</p>
+            <p class="mt-0.5 text-xs text-gray-400">{{ t("openCustomer") }}</p>
+          </button>
         </div>
 
         <div class="divider" />
 
         <div>
-          <p class="section-title">Odeme Detaylari</p>
-          <FieldGroup :fields="sidebarPaymentFields" :cols="1" />
+          <p class="section-title">{{ t("linkedRecords") }}</p>
+          <FieldGroup :fields="linkedFields" :cols="1" />
         </div>
 
         <div class="divider" />
 
         <div>
-          <p class="section-title">Muhasebe Kodu</p>
-          <FieldGroup :fields="accountingFields" :cols="1" />
-        </div>
-
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Kayit Meta</p>
+          <p class="section-title">{{ t("recordMeta") }}</p>
           <FieldGroup :fields="recordFields" :cols="1" />
         </div>
       </aside>
@@ -108,9 +121,10 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed, onMounted, unref } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
+
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
 import DetailCard from "@/components/ui/DetailCard.vue";
@@ -122,38 +136,98 @@ const router = useRouter();
 
 const copy = {
   tr: {
-    breadcrumb: "Operasyonlar / Odemeler",
-    back: "Listeye Don",
-    approve: "Odemeyi Onayla",
-    paymentInfo: "Odeme Bilgileri",
-    installments: "Taksit Plani",
-    history: "Odeme Gecmisi",
-    updated: "Guncellendi",
-    created: "Olusturuldu",
-    summary: "Odeme Ozeti",
-    total: "Toplam",
-    paid: "Odenen",
-    remaining: "Kalan",
-    count: "Taksit",
-    policy: "Ilgili Police",
-    customer: "Musteri",
+    breadcrumb: "Operasyonlar / Ödemeler",
+    back: "Listeye Dön",
+    collectPayment: "Tahsilat Kaydet",
+    addReceipt: "Dekont Ekle",
+    sendReminder: "Hatırlatma Gönder",
+    paymentInfo: "Ödeme Bilgileri",
+    financialSummary: "Finansal Özet",
+    paymentPlan: "Ödeme Planı",
+    documents: "Dekont / Fatura",
+    timeline: "Zaman Çizgisi",
+    customer: "Müşteri",
+    linkedRecords: "Bağlı Kayıtlar",
+    recordMeta: "Kayıt Meta",
+    noInstallments: "Taksit kaydı bulunamadı.",
+    noDocuments: "Dekont veya fatura yüklenmemiş.",
+    updated: "Güncellendi",
+    created: "Oluşturuldu",
+    paymentNo: "Ödeme No",
+    policy: "Poliçe",
+    claim: "Hasar",
+    officeBranch: "Şube",
+    salesEntity: "Satış Birimi",
+    direction: "Yön",
+    purpose: "Amaç",
+    status: "Durum",
+    paymentDate: "Ödeme Tarihi",
+    dueDate: "Vade Tarihi",
+    referenceNo: "Referans No",
+    notes: "Notlar",
+    amount: "Tutar",
+    amountTry: "TRY Tutar",
+    paidAmount: "Tahsil Edilen",
+    remainingAmount: "Kalan",
+    currency: "Para Birimi",
+    fxRate: "Kur",
+    fxDate: "Kur Tarihi",
+    installmentCount: "Taksit Sayısı",
+    installmentIntervalDays: "Taksit Aralığı",
+    installmentNo: "Taksit",
+    paidOn: "Tahsilat Tarihi",
+    owner: "Oluşturan",
+    modifiedBy: "Güncelleyen",
+    openCustomer: "Müşteri kaydını aç",
+    openPolicy: "Poliçe kaydını aç",
+    openClaim: "Hasar kaydını aç",
   },
   en: {
     breadcrumb: "Operations / Payments",
     back: "Back to list",
-    approve: "Approve Payment",
+    collectPayment: "Record Collection",
+    addReceipt: "Add Receipt",
+    sendReminder: "Send Reminder",
     paymentInfo: "Payment Info",
-    installments: "Installments",
-    history: "Payment History",
+    financialSummary: "Financial Summary",
+    paymentPlan: "Payment Plan",
+    documents: "Receipt / Invoice",
+    timeline: "Timeline",
+    customer: "Customer",
+    linkedRecords: "Linked Records",
+    recordMeta: "Record Meta",
+    noInstallments: "No installment records found.",
+    noDocuments: "No receipt or invoice uploaded.",
     updated: "Updated",
     created: "Created",
-    summary: "Payment Summary",
-    total: "Total",
-    paid: "Paid",
-    remaining: "Remaining",
-    count: "Installments",
-    policy: "Related Policy",
-    customer: "Customer",
+    paymentNo: "Payment No",
+    policy: "Policy",
+    claim: "Claim",
+    officeBranch: "Branch",
+    salesEntity: "Sales Entity",
+    direction: "Direction",
+    purpose: "Purpose",
+    status: "Status",
+    paymentDate: "Payment Date",
+    dueDate: "Due Date",
+    referenceNo: "Reference No",
+    notes: "Notes",
+    amount: "Amount",
+    amountTry: "TRY Amount",
+    paidAmount: "Collected",
+    remainingAmount: "Remaining",
+    currency: "Currency",
+    fxRate: "FX Rate",
+    fxDate: "FX Date",
+    installmentCount: "Installments",
+    installmentIntervalDays: "Installment Interval",
+    installmentNo: "Installment",
+    paidOn: "Collected On",
+    owner: "Owner",
+    modifiedBy: "Modified By",
+    openCustomer: "Open customer record",
+    openPolicy: "Open policy record",
+    openClaim: "Open claim record",
   },
 };
 
@@ -165,88 +239,163 @@ const paymentResource = createResource({ url: "frappe.client.get", auto: false }
 const installmentResource = createResource({ url: "frappe.client.get_list", auto: false });
 const documentResource = createResource({ url: "frappe.client.get_list", auto: false });
 
-const payment = computed(() => paymentResource.data || {});
-const installments = computed(() => (Array.isArray(installmentResource.data) ? installmentResource.data : []));
-const documents = computed(() => (Array.isArray(documentResource.data) ? documentResource.data : []));
+const payment = computed(() => unref(paymentResource.data) || {});
+const installments = computed(() => (Array.isArray(unref(installmentResource.data)) ? unref(installmentResource.data) : []));
+const documents = computed(() => (Array.isArray(unref(documentResource.data)) ? unref(documentResource.data) : []));
 
-const paidAmount = computed(() => installments.value.filter((inst) => String(inst.status || "").toLowerCase() === "paid").reduce((sum, inst) => sum + Number(inst.amount_try || 0), 0));
-const remainingAmount = computed(() => Number(payment.value.amount_try || 0) - paidAmount.value);
-
-const paymentStatus = computed(() => {
-  const raw = String(payment.value.status || payment.value.payment_status || "").trim();
-  if (raw) return raw;
-  return remainingAmount.value > 0 ? "Outstanding" : "Paid";
-});
+const amountValue = computed(() => Number(payment.value.amount_try ?? payment.value.amount ?? 0));
+const paidAmount = computed(() =>
+  installments.value
+    .filter((row) => String(row.status || "").toLowerCase() === "paid")
+    .reduce((sum, row) => sum + Number(row.amount_try ?? row.amount ?? 0), 0)
+);
+const remainingAmount = computed(() => Math.max(amountValue.value - paidAmount.value, 0));
 
 const isOverdue = computed(() => {
-  const due = String(payment.value.payment_date || "").trim();
-  if (!due) return false;
-  const dueTime = new Date(due).getTime();
-  if (Number.isNaN(dueTime)) return false;
-  return dueTime < Date.now() && remainingAmount.value > 0;
+  const due = parseDateOnly(payment.value.due_date);
+  return Boolean(due && due.getTime() < Date.now() && remainingAmount.value > 0);
+});
+
+const paymentStatus = computed(() => {
+  const raw = String(payment.value.status || "").trim();
+  if (raw) return raw;
+  if (remainingAmount.value <= 0) return "Paid";
+  return isOverdue.value ? "Overdue" : "Draft";
 });
 
 const heroCells = computed(() => [
-  { label: "Odeme No", value: payment.value.payment_no || payment.value.name || "-", variant: "default" },
-  { label: "Vade Tarihi", value: formatDate(payment.value.due_date || payment.value.payment_date), variant: "default" },
-  { label: "Tutar", value: formatCurrency(payment.value.amount || payment.value.amount_try), variant: "lg" },
-  { label: "Durum", value: paymentStatus.value, variant: "accent" },
+  { label: t("paymentNo"), value: payment.value.payment_no || payment.value.name || "-", variant: "default" },
+  { label: t("dueDate"), value: formatDate(payment.value.due_date || payment.value.payment_date), variant: "default" },
+  { label: t("amount"), value: formatCurrency(amountValue.value, payment.value.currency), variant: "lg" },
+  { label: t("status"), value: paymentStatus.value, variant: "accent" },
 ]);
 
 const paymentFields = computed(() => [
-  { label: "Odeme Turu", value: payment.value.payment_direction || "-" },
-  { label: "Tutar", value: formatCurrency(payment.value.amount_try), variant: "lg" },
-  { label: "Vade", value: formatDate(payment.value.payment_date) },
-  { label: "Odeme Tarihi", value: formatDate(payment.value.payment_date) },
-  { label: "Aciklama", value: payment.value.payment_purpose || "-", span: 2 },
+  { label: t("paymentNo"), value: payment.value.payment_no || payment.value.name || "-" },
+  { label: t("policy"), value: payment.value.policy || "-" },
+  { label: t("claim"), value: payment.value.claim || "-" },
+  { label: t("officeBranch"), value: payment.value.office_branch || "-" },
+  { label: t("salesEntity"), value: payment.value.sales_entity || "-" },
+  { label: t("direction"), value: payment.value.payment_direction || "-" },
+  { label: t("purpose"), value: payment.value.payment_purpose || "-" },
+  { label: t("referenceNo"), value: payment.value.reference_no || "-" },
+  { label: t("notes"), value: payment.value.notes || "-", span: 2 },
 ]);
 
-const sidebarPaymentFields = computed(() => [
-  { label: "Toplam", value: formatCurrency(payment.value.amount || payment.value.amount_try) },
-  { label: "Odenen", value: formatCurrency(paidAmount.value) },
-  { label: "Kalan", value: formatCurrency(remainingAmount.value) },
-  { label: "Taksit", value: String(installments.value.length || "-") },
+const financialFields = computed(() => [
+  { label: t("amount"), value: formatCurrency(payment.value.amount, payment.value.currency), variant: "lg" },
+  { label: t("amountTry"), value: formatCurrency(payment.value.amount_try ?? payment.value.amount, "TRY"), variant: "lg" },
+  { label: t("paidAmount"), value: formatCurrency(paidAmount.value, "TRY") },
+  { label: t("remainingAmount"), value: formatCurrency(remainingAmount.value, "TRY") },
+  { label: t("currency"), value: payment.value.currency || "-" },
+  { label: t("fxRate"), value: payment.value.fx_rate ? String(payment.value.fx_rate) : "-" },
+  { label: t("fxDate"), value: formatDate(payment.value.fx_date) },
+  { label: t("installmentCount"), value: String(payment.value.installment_count ?? installments.value.length ?? "-") },
+  { label: t("installmentIntervalDays"), value: payment.value.installment_interval_days ? `${payment.value.installment_interval_days} gün` : "-" },
+  { label: t("paymentDate"), value: formatDate(payment.value.payment_date) },
+  { label: t("dueDate"), value: formatDate(payment.value.due_date) },
+  { label: t("status"), value: paymentStatus.value },
 ]);
 
-const accountingFields = computed(() => [
-  { label: "Hesap Kodu", value: payment.value.account_code || payment.value.cost_center || "-" },
-  { label: "Muhasebe Durumu", value: payment.value.accounting_status || "-" },
+const linkedFields = computed(() => [
+  { label: t("customer"), value: payment.value.customer || "-" },
+  { label: t("policy"), value: payment.value.policy || "-" },
+  { label: t("claim"), value: payment.value.claim || "-" },
 ]);
 
 const recordFields = computed(() => [
-  { label: "Olusturan", value: payment.value.owner || "-" },
-  { label: "Olusturma", value: formatDate(payment.value.creation) },
-  { label: "Guncelleyen", value: payment.value.modified_by || "-" },
-  { label: "Guncelleme", value: formatDate(payment.value.modified) },
+  { label: t("owner"), value: payment.value.owner || "-" },
+  { label: t("modifiedBy"), value: payment.value.modified_by || "-" },
+  { label: t("updated"), value: formatDate(payment.value.modified) },
+  { label: t("created"), value: formatDate(payment.value.creation) },
 ]);
 
-function initials(nameValue = "") {
-  return String(nameValue || "").trim().split(/\s+/).slice(0, 2).map((chunk) => chunk[0] || "").join("").toUpperCase() || "AT";
+function installmentLabel(row) {
+  const installmentNo = row?.installment_no ?? "-";
+  const installmentCount = row?.installment_count ?? installments.value.length ?? "-";
+  return `${installmentNo}/${installmentCount}`;
 }
 
 function formatDate(value) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
+  const date = parseDateOnly(value);
+  if (!date) return "-";
   return new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
 }
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(Number(value || 0));
+function parseDateOnly(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function formatCurrency(value, currency = "TRY") {
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: String(currency || "TRY"),
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+}
+
+function backToList() {
+  router.push("/payments");
+}
+
+function collectPayment() {
+  router.push({
+    name: "reconciliation-workbench",
+    query: {
+      payment: payment.value.name || name.value,
+      mode: "collect",
+    },
+  });
+}
+
+function addReceipt() {
+  router.push({
+    name: "communication-center",
+    query: {
+      payment: payment.value.name || name.value,
+      mode: "receipt",
+    },
+  });
+}
+
+function sendReminder() {
+  router.push({
+    name: "communication-center",
+    query: {
+      payment: payment.value.name || name.value,
+      mode: "reminder",
+    },
+  });
+}
+
+function openCustomer() {
+  if (!payment.value.customer) return;
+  router.push({ name: "customer-detail", params: { name: payment.value.customer } });
 }
 
 function openPolicy() {
   if (!payment.value.policy) return;
-  router.push(`/policies/${payment.value.policy}`);
+  router.push({ name: "policy-detail", params: { name: payment.value.policy } });
+}
+
+function openClaim() {
+  if (!payment.value.claim) return;
+  router.push({ name: "claim-detail", params: { name: payment.value.claim } });
 }
 
 function reload() {
-  paymentResource.params = { doctype: "AT Payment", name: name.value };
+  paymentResource.params = {
+    doctype: "AT Payment",
+    name: name.value,
+  };
   paymentResource.reload();
 
   installmentResource.params = {
     doctype: "AT Payment Installment",
-    fields: ["name", "status", "due_date", "amount_try"],
+    fields: ["name", "installment_no", "installment_count", "status", "due_date", "paid_on", "amount", "amount_try"],
     filters: { payment: name.value },
     order_by: "due_date asc",
     limit_page_length: 200,

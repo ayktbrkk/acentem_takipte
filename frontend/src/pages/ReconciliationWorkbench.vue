@@ -177,30 +177,26 @@
       </template>
     </Dialog>
 
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-8">
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricOpen") }}</p>
-        <p class="at-metric-value !text-amber-700">{{ metrics.open || 0 }}</p>
+        <p class="at-metric-label">Toplam Kayit</p>
+        <p class="at-metric-value">{{ reconciliationSummary.total }}</p>
       </article>
       <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricResolved") }}</p>
-        <p class="at-metric-value !text-emerald-700">{{ metrics.resolved || 0 }}</p>
+        <p class="at-metric-label">Eslesti</p>
+        <p class="at-metric-value !text-emerald-700">{{ reconciliationSummary.matched }}</p>
       </article>
       <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricIgnored") }}</p>
-        <p class="at-metric-value">{{ metrics.ignored || 0 }}</p>
+        <p class="at-metric-label">Beklemede</p>
+        <p class="at-metric-value !text-amber-700">{{ reconciliationSummary.pending }}</p>
       </article>
       <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricFailed") }}</p>
-        <p class="at-metric-value !text-rose-700">{{ metrics.failed_entries || 0 }}</p>
+        <p class="at-metric-label">Uyusmazlik</p>
+        <p class="at-metric-value !text-rose-700">{{ reconciliationSummary.mismatch }}</p>
       </article>
       <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricOverdueCollections") }}</p>
-        <p class="at-metric-value !text-amber-700">{{ metrics.overdue_collections || 0 }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricOverdueAmount") }}</p>
-        <p class="at-metric-value !text-rose-700">{{ formatMoney(metrics.overdue_amount_try || 0) }}</p>
+        <p class="at-metric-label">Toplam Tutar Farki</p>
+        <p class="at-metric-value !text-sky-700">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
       </article>
       <article class="at-metric-card">
         <p class="at-metric-label">{{ t("metricCommissionAçcrual") }}</p>
@@ -266,63 +262,13 @@
       :empty-description="t('empty')"
     >
       <template #default>
-        <div class="overflow-auto">
-        <table class="at-table">
-          <thead>
-            <tr class="at-table-head-row">
-              <th class="at-table-head-cell">{{ t("source") }}</th>
-              <th class="at-table-head-cell">{{ t("type") }}</th>
-              <th class="at-table-head-cell">{{ t("status") }}</th>
-              <th class="at-table-head-cell">{{ t("localTry") }}</th>
-              <th class="at-table-head-cell">{{ t("externalTry") }}</th>
-              <th class="at-table-head-cell">{{ t("difference") }}</th>
-              <th class="at-table-head-cell">{{ t("actions") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in rows" :key="row.name" class="at-table-row">
-              <td class="at-table-cell">
-                <TableEntityCell
-                  :title="`${row.source_doctype} / ${row.source_name}`"
-                  :facts="sourceRowFacts(row)"
-                >
-                  <InlineActionRow v-if="canOpenSourcePanel(row)">
-                    <ActionButton variant="link" size="xs" trailing-icon=">" @click="openSourcePanel(row)">
-                      {{ sourcePanelLabel(row) }}
-                    </ActionButton>
-                  </InlineActionRow>
-                </TableEntityCell>
-              </td>
-              <TableFactsCell :items="mismatchTypeFacts(row)" />
-              <td class="at-table-cell">
-                <StatusBadge domain="reconciliation" :status="row.status" />
-              </td>
-              <td class="at-table-cell">
-                <FormattedCurrencyValue :value="row.local_amount_try" :locale="localeCode" :maximum-fraction-digits="2" />
-              </td>
-              <td class="at-table-cell">
-                <FormattedCurrencyValue :value="row.external_amount_try" :locale="localeCode" :maximum-fraction-digits="2" />
-              </td>
-              <td class="at-table-cell">
-                <FormattedCurrencyValue :value="row.difference_try" :locale="localeCode" :maximum-fraction-digits="2" />
-              </td>
-              <td class="at-table-cell">
-                <InlineActionRow>
-                  <ActionButton v-if="row.status === 'Open'" variant="secondary" size="xs" @click="openReconciliationActionDialog(row, 'Matched')">
-                    {{ t("resolve") }}
-                  </ActionButton>
-                  <ActionButton v-if="row.status === 'Open'" variant="secondary" size="xs" @click="openReconciliationActionDialog(row, 'Ignored')">
-                    {{ t("ignore") }}
-                  </ActionButton>
-                  <ActionButton variant="secondary" size="xs" @click="openReconciliationActionDialog(row, 'Note')">
-                    {{ t("addNote") }}
-                  </ActionButton>
-                </InlineActionRow>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <ListTable
+          :columns="reconciliationListColumns"
+          :rows="reconciliationListRows"
+          :loading="false"
+          :empty-message="t('empty')"
+          @row-click="handleReconciliationRowClick"
+        />
       </template>
     </DataTableShell>
 
@@ -368,7 +314,7 @@
 
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
@@ -384,6 +330,7 @@ import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
@@ -621,6 +568,7 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const accountingStore = useAccountingStore();
 const route = useRoute();
+const router = useRouter();
 
 function t(key) {
   const locale = unref(authStore.locale) || "en";
@@ -720,6 +668,47 @@ const mismatchOptions = computed(() => [
   { value: "Status", label: t("mismatchStatus") },
   { value: "Other", label: t("mismatchOther") },
 ]);
+const reconciliationSummary = computed(() => {
+  const list = rows.value || [];
+  return {
+    total: list.length,
+    matched: list.filter((row) => ["Resolved", "Matched"].includes(String(row?.status || ""))).length,
+    pending: list.filter((row) => String(row?.status || "") === "Open").length,
+    mismatch: list.filter((row) => Math.abs(Number(row?.difference_try || 0)) > 0).length,
+    totalDifference: list.reduce((sum, row) => sum + Math.abs(Number(row?.difference_try || 0)), 0),
+  };
+});
+const reconciliationListColumns = computed(() => [
+  { key: "reconciliationNo", label: "Mutabakat No", type: "mono" },
+  { key: "company", label: "Sirket" },
+  { key: "period", label: "Donem" },
+  { key: "totalPolicy", label: "Toplam Police", align: "center" },
+  { key: "totalPremium", label: "Toplam Prim", type: "amount", align: "right" },
+  { key: "companyStatement", label: "Sirket Bildirimi", type: "amount", align: "right" },
+  { key: "difference", label: "Fark", type: "amount", align: "right" },
+  { key: "status", label: "Durum", type: "status", domain: "reconciliation" },
+  { key: "_actions", label: "Actions", type: "actions", align: "right" },
+]);
+const reconciliationListRows = computed(() =>
+  rows.value.map((row) => {
+    const difference = Number(row?.difference_try || 0);
+    const accounting = row?.accounting || {};
+    return {
+      id: row?.name,
+      name: row?.name,
+      reconciliationNo: row?.name || "-",
+      company: accounting.insurance_company || row?.insurance_company || "-",
+      period: deriveReconciliationPeriod(row),
+      totalPolicy: accounting.policy ? "1" : "0",
+      totalPremium: formatMoney(row?.local_amount_try || 0),
+      companyStatement: formatMoney(row?.external_amount_try || 0),
+      difference: formatMoney(Math.abs(difference)),
+      difference_class: difference > 0 ? "text-green-600" : difference < 0 ? "text-red-600" : "text-gray-600",
+      status: normalizeReconciliationStatus(row?.status, difference),
+      _actions: buildReconciliationRowActions(row),
+    };
+  })
+);
 const showActionDialog = ref(false);
 const actionDialogMode = ref("Note");
 const actionDialogRow = ref(null);
@@ -1089,6 +1078,72 @@ function mismatchTypeFacts(row) {
   return [
     mutedFact("mismatchType", t("type"), mismatchTypeLabel(row?.mismatch_type)),
   ];
+}
+
+function normalizeReconciliationStatus(status, difference) {
+  const normalizedStatus = String(status || "");
+  if (normalizedStatus === "Resolved") return "Matched";
+  if (normalizedStatus === "Ignored") return "Cancelled";
+  if (normalizedStatus === "Open" && Math.abs(Number(difference || 0)) > 0) return "Mismatch";
+  if (normalizedStatus === "Open") return "Pending";
+  return normalizedStatus || "Pending";
+}
+
+function deriveReconciliationPeriod(row) {
+  const rawValue =
+    row?.resolved_on ||
+    row?.posting_date ||
+    row?.modified ||
+    row?.creation ||
+    row?.accounting?.posting_date ||
+    "";
+  const trimmedValue = String(rawValue || "").trim();
+  if (!trimmedValue) return "-";
+  const parsedDate = new Date(trimmedValue);
+  if (Number.isNaN(parsedDate.getTime())) return trimmedValue.slice(0, 7);
+  return new Intl.DateTimeFormat(localeCode.value, { month: "short", year: "numeric" }).format(parsedDate);
+}
+
+function buildReconciliationRowActions(row) {
+  const actions = [];
+  actions.push({
+    key: `${row?.name}-detail`,
+    label: "Detay",
+    variant: "primary",
+    onClick: () => openReconciliationDetail(row),
+  });
+  if (String(row?.status || "") === "Open") {
+    actions.push({
+      key: `${row?.name}-match`,
+      label: t("resolve"),
+      variant: "outline",
+      onClick: () => openReconciliationActionDialog(row, "Matched"),
+    });
+    actions.push({
+      key: `${row?.name}-ignore`,
+      label: t("ignore"),
+      variant: "outline",
+      onClick: () => openReconciliationActionDialog(row, "Ignored"),
+    });
+  }
+  actions.push({
+    key: `${row?.name}-note`,
+    label: t("addNote"),
+    variant: "outline",
+    onClick: () => openReconciliationActionDialog(row, "Note"),
+  });
+  return actions;
+}
+
+function handleReconciliationRowClick(row) {
+  if (!row?.name) return;
+  const sourceRow = rows.value.find((item) => item?.name === row.name);
+  if (sourceRow && canOpenSourcePanel(sourceRow)) openSourcePanel(sourceRow);
+}
+
+function openReconciliationDetail(row) {
+  if (!row?.name) return;
+  router.push({ name: "reconciliation-detail", params: { name: row.name } });
 }
 
 function formatMoney(value) {

@@ -59,11 +59,14 @@ const DOMAIN_MAP = {
     "Stale": "cancel",
   },
   claim: {
+    "Draft": "draft",
     "Open": "open",
+    "Under Review": "waiting",
     "Approved": "waiting",
     "Paid": "active",
     "Closed": "active",
     "Rejected": "cancel",
+    "Cancelled": "cancel",
   },
   renewal: {
     "Open": "open",

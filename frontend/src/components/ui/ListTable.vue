@@ -43,32 +43,49 @@
               'px-4 py-3',
               col.align === 'right' && 'text-right',
               col.align === 'center' && 'text-center',
+              resolveCellClass(col, row),
             ]"
           >
-            <StatusBadge v-if="col.type === 'status'" :status="row[col.key]" />
+            <StatusBadge v-if="col.type === 'status'" :status="row[col.key]" :domain="col.domain || null" />
 
             <span v-else-if="col.type === 'badge'" :class="['badge', `badge-${row[col.key + '_color'] ?? 'gray'}`]">
               {{ row[col.key] }}
             </span>
 
             <span v-else-if="col.type === 'mono'" class="font-mono text-xs text-gray-700">
-              {{ row[col.key] ?? '—' }}
+              {{ row[col.key] ?? '-' }}
             </span>
 
-            <span v-else-if="col.type === 'amount'" class="text-sm font-medium text-gray-900">
-              {{ row[col.key] ?? '—' }}
+            <span v-else-if="col.type === 'amount'" :class="['text-sm font-medium', row[`${col.key}_class`] || 'text-gray-900']">
+              {{ row[col.key] ?? '-' }}
             </span>
 
             <span v-else-if="col.type === 'urgency'" :class="urgencyClass(row[col.key])">
-              {{ row[col.key] != null ? `${row[col.key]} gün` : '—' }}
+              {{ row[col.key] != null ? `${row[col.key]} gun` : '-' }}
             </span>
 
             <span v-else-if="col.type === 'date'" class="text-sm text-gray-600">
-              {{ row[col.key] ?? '—' }}
+              {{ row[col.key] ?? '-' }}
             </span>
 
+            <div v-else-if="col.type === 'actions'" class="flex flex-wrap justify-end gap-2" @click.stop>
+              <button
+                v-for="action in row[col.key] || row._actions || []"
+                :key="action.key || action.label"
+                :class="[
+                  'btn btn-sm',
+                  action.variant === 'primary' ? 'btn-primary' : action.variant === 'outline' ? 'btn-outline' : '',
+                ]"
+                :disabled="Boolean(action.disabled)"
+                type="button"
+                @click.stop="action.onClick?.(row)"
+              >
+                {{ action.label }}
+              </button>
+            </div>
+
             <span v-else class="text-sm text-gray-900">
-              {{ row[col.key] ?? '—' }}
+              {{ row[col.key] ?? '-' }}
             </span>
           </td>
         </tr>
@@ -78,22 +95,27 @@
 </template>
 
 <script setup>
-import StatusBadge from '@/components/ui/StatusBadge.vue'
+import StatusBadge from "@/components/ui/StatusBadge.vue";
 
 defineProps({
   columns: { type: Array, required: true },
   rows: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
-  emptyMessage: { type: String, default: 'Kayıt bulunamadı.' },
-})
+  emptyMessage: { type: String, default: "Kayit bulunamadi." },
+});
 
-defineEmits(['row-click'])
+defineEmits(["row-click"]);
 
 function urgencyClass(days) {
-  if (days == null) return 'text-sm text-gray-400'
-  if (days <= 7) return 'urgency-critical'
-  if (days <= 30) return 'urgency-warning'
-  if (days <= 90) return 'urgency-normal'
-  return 'urgency-safe'
+  if (days == null) return "text-sm text-gray-400";
+  if (days <= 7) return "urgency-critical";
+  if (days <= 30) return "urgency-warning";
+  if (days <= 90) return "urgency-normal";
+  return "urgency-safe";
+}
+
+function resolveCellClass(col, row) {
+  if (typeof col?.cellClass === "function") return col.cellClass(row);
+  return col?.cellClass || "";
 }
 </script>

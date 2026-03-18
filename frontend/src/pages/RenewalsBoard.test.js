@@ -10,6 +10,7 @@ import { useRenewalStore } from "../stores/renewal";
 
 const resourceQueue = [];
 const routeState = reactive({ query: {} });
+const routerPush = vi.fn();
 
 vi.mock("frappe-ui", () => ({
   createResource: () => resourceQueue.shift() || {
@@ -40,11 +41,12 @@ vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
   useRoute: () => routeState,
+  useRouter: () => ({ push: routerPush }),
 }));
 
 const ActionButtonStub = {
   emits: ["click"],
-  template: `<button class="action-button-stub" @click="$emit('click')"><slot /></button>`,
+  template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
 
 const genericStub = {
@@ -55,6 +57,7 @@ describe("RenewalsBoard page store integration", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
     routeState.query = {};
+    routerPush.mockReset();
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();

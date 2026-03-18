@@ -109,7 +109,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, unref } from 'vue';
 import { createResource } from 'frappe-ui';
 import { useRouter } from 'vue-router';
 
@@ -128,10 +128,10 @@ const policyResource = createResource({ url: 'frappe.client.get', auto: false })
 const offersResource = createResource({ url: 'frappe.client.get_list', auto: false });
 const communicationsResource = createResource({ url: 'frappe.client.get_list', auto: false });
 
-const renewal = computed(() => renewalResource.data || {});
-const policy = computed(() => policyResource.data || null);
-const offers = computed(() => (Array.isArray(offersResource.data) ? offersResource.data : []));
-const communications = computed(() => (Array.isArray(communicationsResource.data) ? communicationsResource.data : []));
+const renewal = computed(() => unref(renewalResource.data) || {});
+const policy = computed(() => unref(policyResource.data) || null);
+const offers = computed(() => (Array.isArray(unref(offersResource.data)) ? unref(offersResource.data) : []));
+const communications = computed(() => (Array.isArray(unref(communicationsResource.data)) ? unref(communicationsResource.data) : []));
 
 const heroCells = computed(() => [
   { label: 'Police', value: renewal.value.policy || '-', variant: 'default' },

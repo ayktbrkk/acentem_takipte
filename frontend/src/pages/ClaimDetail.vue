@@ -13,7 +13,7 @@
       </div>
       <div class="flex items-center gap-2">
         <button class="btn btn-outline btn-sm" @click="router.push('/claims')">{{ t("back") }}</button>
-        <button class="btn btn-primary btn-sm" type="button">{{ t("action") }}</button>
+        <button class="btn btn-primary btn-sm" type="button" @click="openClaimDocuments">{{ t("documents") }}</button>
       </div>
     </div>
 
@@ -75,6 +75,10 @@
           </table>
         </DetailCard>
 
+        <DetailCard title="Ekspertiz Raporlari">
+          <FieldGroup :fields="expertiseFields" :cols="2" />
+        </DetailCard>
+
         <DetailCard :title="t('timeline')">
           <div class="mb-4">
             <p class="section-title">Notlar</p>
@@ -108,8 +112,15 @@
         <div class="divider" />
 
         <div>
-          <p class="section-title">Durum Bilgisi</p>
-          <FieldGroup :fields="statusFields" :cols="1" />
+          <p class="section-title">Rezerv Bilgileri</p>
+          <FieldGroup :fields="reserveFields" :cols="1" />
+        </div>
+
+        <div class="divider" />
+
+        <div>
+          <p class="section-title">Odeme Bilgileri</p>
+          <FieldGroup :fields="paymentFields" :cols="1" />
         </div>
 
         <div class="divider" />
@@ -205,22 +216,22 @@ const remainingAmount = computed(() => Number(claim.value.approved_amount || 0) 
 
 const heroCells = computed(() => [
   { label: "Dosya No", value: claim.value.claim_no || claim.value.name || "-", variant: "default" },
-  { label: "Hasar Tarihi", value: formatDate(claim.value.loss_date || claim.value.creation), variant: "default" },
-  { label: "Rezerv", value: formatCurrency(claim.value.reserve_amount || claim.value.approved_amount), variant: "lg" },
+  { label: "Hasar Tarihi", value: formatDate(claim.value.incident_date || claim.value.creation), variant: "default" },
+  { label: "Rezerv", value: formatCurrency(claim.value.estimated_amount || 0), variant: "lg" },
   { label: "Ödenen", value: formatCurrency(claim.value.paid_amount), variant: "accent" },
 ]);
 
 const processFields = computed(() => [
   { label: "Hasar No", value: claim.value.claim_no || claim.value.name || "-", variant: "mono" },
-  { label: "Hasar Tarihi", value: formatDate(claim.value.creation) },
-  { label: "Bildirim", value: formatDate(claim.value.next_follow_up_on) },
-  { label: "Tutar", value: formatCurrency(claim.value.approved_amount), variant: "lg" },
+  { label: "Hasar Tarihi", value: formatDate(claim.value.incident_date || claim.value.creation) },
+  { label: "Bildirim", value: formatDate(claim.value.reported_date || claim.value.creation) },
+  { label: "Tutar", value: formatCurrency(claim.value.estimated_amount || 0), variant: "lg" },
 ]);
 
 const detailFields = computed(() => [
   { label: "Hasar Turu", value: claim.value.claim_type || "-" },
-  { label: "Hasar Yeri", value: claim.value.claim_location || "-" },
-  { label: "Aciklama", value: claim.value.rejection_reason || "-", span: 2 },
+  { label: "Ofis Subesi", value: claim.value.office_branch || "-" },
+  { label: "Aciklama", value: claim.value.notes || claim.value.rejection_reason || "-", span: 2 },
 ]);
 
 const claimSteps = computed(() => {
@@ -246,7 +257,7 @@ const claimSteps = computed(() => {
 
 const peopleFields = computed(() => [
   { label: "Müşteri", value: claim.value.customer || "-" },
-  { label: "Eksper", value: claim.value.surveyor || claim.value.expert || "-" },
+  { label: "Eksper", value: claim.value.assigned_expert || claim.value.surveyor || claim.value.expert || "-" },
 ]);
 
 const statusFields = computed(() => [
@@ -254,6 +265,26 @@ const statusFields = computed(() => [
   { label: "Onaylanan", value: formatCurrency(claim.value.approved_amount) },
   { label: "Ödenen", value: formatCurrency(claim.value.paid_amount) },
   { label: "Kalan", value: formatCurrency(remainingAmount.value) },
+]);
+
+const reserveFields = computed(() => [
+  { label: "Durum", value: claim.value.claim_status || "-" },
+  { label: "Tahmini Rezerv", value: formatCurrency(claim.value.estimated_amount || 0) },
+  { label: "Onaylanan", value: formatCurrency(claim.value.approved_amount) },
+  { label: "Kalan Gun", value: remainingDaysDisplay.value },
+]);
+
+const paymentFields = computed(() => [
+  { label: "Odenen", value: formatCurrency(claim.value.paid_amount) },
+  { label: "Kalan", value: formatCurrency(remainingAmount.value) },
+  { label: "Sonraki Takip", value: formatDate(claim.value.next_follow_up_on) },
+  { label: "Itiraz", value: claim.value.appeal_status || "-" },
+]);
+
+const expertiseFields = computed(() => [
+  { label: "Eksper", value: claim.value.assigned_expert || "-" },
+  { label: "Inceleme", value: claim.value.claim_status || "-" },
+  { label: "Notlar", value: claim.value.notes || "-", span: 2 },
 ]);
 
 const recordMetaFields = computed(() => [
@@ -286,6 +317,15 @@ function openPolicy() {
 function openCustomer() {
   if (!claim.value.customer) return;
   router.push(`/customers/${claim.value.customer}`);
+}
+
+function openClaimDocuments() {
+  if (!claim.value.name && !name.value) return;
+  const query = new URLSearchParams({
+    attached_to_doctype: "AT Claim",
+    attached_to_name: claim.value.name || name.value,
+  });
+  window.location.assign(`/at/files?${query.toString()}`);
 }
 
 function reload() {
