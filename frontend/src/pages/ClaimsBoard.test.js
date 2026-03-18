@@ -215,20 +215,27 @@ describe("ClaimsBoard page store integration", () => {
 
     expect(claimStore.state.items).toHaveLength(2);
     expect(claimStore.filteredItems).toHaveLength(2);
-    expect(wrapper.text()).toContain("Atama: 1 / 1 acik / agent@example.com");
+    expect(wrapper.text()).toContain("Toplam Hasar");
+    expect(wrapper.text()).toContain("Dosya Goruntule");
+    expect(wrapper.text()).toContain("Dokümanlar");
+    expect(wrapper.text()).toContain("Odeme Yap");
 
-    const inputs = wrapper.findAll(".input");
-    await inputs[0].setValue("POL-001");
+    const searchInput = wrapper.find('input[type="text"]');
+    await searchInput.setValue("POL-001");
+    await settleAsyncWork();
 
-    expect(claimStore.state.filters.query).toBe("POL-001");
-    expect(claimStore.activeFilterCount).toBe(1);
+    expect(wrapper.text()).toContain("POL-001");
+    expect(wrapper.text()).not.toContain("POL-002");
   });
 
-  it("submits claim status mutation and reloads rows", async () => {
+  it("opens claim detail from row action", async () => {
     const reloadMock = vi.fn(async () => [
       { name: "CLM-001", claim_no: "H-001", policy: "POL-001", claim_status: "Open", approved_amount: 1000, paid_amount: 0 },
     ]);
     const submitMock = vi.fn(async () => ({ name: "CLM-001" }));
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { assign: vi.fn(), href: "" };
 
     resourceQueue.push(
       {
@@ -298,23 +305,15 @@ describe("ClaimsBoard page store integration", () => {
     });
 
     await loadClaimRows(wrapper);
-    reloadMock.mockClear();
+    const fileButton = findButtonByText(wrapper, "Dosya Goruntule");
+    await fileButton.trigger("click");
 
-    const underReviewButton = findButtonByText(wrapper, "Incelemeye Al");
-    await underReviewButton.trigger("click");
-    await settleAsyncWork();
-
-    expect(submitMock).toHaveBeenCalledWith({
-      doctype: "AT Claim",
-      name: "CLM-001",
-      data: {
-        claim_status: "Under Review",
-      },
-    });
-    expect(reloadMock).toHaveBeenCalledTimes(1);
+    expect(window.location.assign).toHaveBeenCalledWith("/at/claims/CLM-001");
+    expect(submitMock).not.toHaveBeenCalled();
+    window.location = originalLocation;
   });
 
-  it("clears claim follow-up date and reloads rows", async () => {
+  it("opens payment page for approved unpaid claim", async () => {
     const reloadMock = vi.fn(async () => [
       {
         name: "CLM-001",
@@ -325,8 +324,19 @@ describe("ClaimsBoard page store integration", () => {
         paid_amount: 0,
         next_follow_up_on: "2026-03-10",
       },
+      {
+        name: "CLM-002",
+        claim_no: "H-002",
+        policy: "POL-002",
+        claim_status: "Approved",
+        approved_amount: 1200,
+        paid_amount: 200,
+      },
     ]);
     const submitMock = vi.fn(async () => ({ name: "CLM-001" }));
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { assign: vi.fn(), href: "" };
 
     resourceQueue.push(
       {
@@ -372,28 +382,26 @@ describe("ClaimsBoard page store integration", () => {
     });
 
     await loadClaimRows(wrapper);
-    reloadMock.mockClear();
+    const paymentButtons = wrapper.findAll("button").filter((button) => button.text().includes("Odeme Yap"));
+    expect(paymentButtons).toHaveLength(2);
+    expect(paymentButtons[0].attributes("disabled")).toBeDefined();
+    expect(paymentButtons[1].attributes("disabled")).toBeUndefined();
 
-    const clearButton = findButtonByText(wrapper, "Takibi Temizle");
-    await clearButton.trigger("click");
-    await settleAsyncWork();
+    await paymentButtons[1].trigger("click");
 
-    expect(submitMock).toHaveBeenCalledWith({
-      doctype: "AT Claim",
-      name: "CLM-001",
-      data: {
-        next_follow_up_on: null,
-      },
-    });
-    expect(reloadMock).toHaveBeenCalledTimes(1);
+    expect(window.location.assign).toHaveBeenCalledWith("/at/payments?policy=POL-002&query=H-002");
+    expect(submitMock).not.toHaveBeenCalled();
+    window.location = originalLocation;
   });
 
-  it("submits rejected status with rejection reason", async () => {
+  it("does not navigate to payment page for ineligible claim", async () => {
     const reloadMock = vi.fn(async () => [
       { name: "CLM-001", claim_no: "H-001", policy: "POL-001", claim_status: "Open", approved_amount: 1000, paid_amount: 0 },
     ]);
     const submitMock = vi.fn(async () => ({ name: "CLM-001" }));
-    const promptMock = vi.spyOn(window, "prompt").mockReturnValue("Eksik evrak");
+    const originalLocation = window.location;
+    delete window.location;
+    window.location = { assign: vi.fn(), href: "" };
 
     resourceQueue.push(
       {
@@ -463,32 +471,20 @@ describe("ClaimsBoard page store integration", () => {
     });
 
     await loadClaimRows(wrapper);
-    reloadMock.mockClear();
 
-    const rejectButton = findButtonByText(wrapper, "Reddet");
-    await rejectButton.trigger("click");
-    await settleAsyncWork();
+    const paymentButton = findButtonByText(wrapper, "Odeme Yap");
+    expect(paymentButton.attributes("disabled")).toBeDefined();
+    await paymentButton.trigger("click");
 
-    expect(promptMock).toHaveBeenCalled();
-    expect(submitMock).toHaveBeenCalledWith({
-      doctype: "AT Claim",
-      name: "CLM-001",
-      data: {
-        claim_status: "Rejected",
-        rejection_reason: "Eksik evrak",
-        appeal_status: "",
-      },
-    });
-
-    promptMock.mockRestore();
+    expect(window.location.assign).not.toHaveBeenCalled();
+    expect(submitMock).not.toHaveBeenCalled();
+    window.location = originalLocation;
   });
 
-  it("opens communication center with return_to for claim notifications", async () => {
+  it("opens filtered files panel for claim documents", async () => {
     const originalLocation = window.location;
     delete window.location;
     window.location = { assign: vi.fn(), href: "" };
-    routeState.fullPath = "/at/claims?claim=CLM-001";
-
     resourceQueue.push(
       {
         data: ref([]),
@@ -536,17 +532,15 @@ describe("ClaimsBoard page store integration", () => {
 
     await loadClaimRows(wrapper);
 
-    const notificationsButton = findButtonByText(wrapper, "Bildirimler");
-    await notificationsButton.trigger("click");
+    const documentsButton = findButtonByText(wrapper, "Dokümanlar");
+    await documentsButton.trigger("click");
 
-    expect(window.location.assign).toHaveBeenCalledWith(
-      "/at/communication?reference_doctype=AT+Claim&reference_name=CLM-001&return_to=%2Fat%2Fclaims%3Fclaim%3DCLM-001"
-    );
+    expect(window.location.assign).toHaveBeenCalledWith("/at/files?attached_to_doctype=AT+Claim&attached_to_name=CLM-001");
 
     window.location = originalLocation;
   });
 
-  it("opens filtered files panel for claim documents", async () => {
+  it("opens documents for listed claim row", async () => {
     const originalLocation = window.location;
     delete window.location;
     window.location = { assign: vi.fn(), href: "" };
