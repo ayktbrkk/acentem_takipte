@@ -142,8 +142,8 @@ design-system-complete/
 - [x] Dashboard
 
 ### Satış ve Portföy
-- [ ] Fırsatlar - Liste
-- [ ] Fırsatlar - Detay
+- [x] Fırsatlar - Liste
+- [x] Fırsatlar - Detay
 - [x] Teklifler - Liste
 - [x] Teklifler - Detay
 - [x] Poliçeler - Liste
@@ -152,49 +152,49 @@ design-system-complete/
 - [x] Müşteriler - Detay
 
 ### Operasyonlar
-- [ ] Hasarlar - Liste
-- [ ] Hasarlar - Detay
-- [ ] Ödemeler - Liste
-- [ ] Ödemeler - Detay
-- [ ] Yenilemeler - Liste
-- [ ] Yenilemeler - Detay
-- [ ] Yenilemeler - Board
-- [ ] Mutabakat - Liste
-- [ ] Mutabakat - Detay
-- [ ] Raporlar
+- [x] Hasarlar - Liste
+- [x] Hasarlar - Detay
+- [x] Ödemeler - Liste
+- [x] Ödemeler - Detay
+- [x] Yenilemeler - Liste
+- [x] Yenilemeler - Detay
+- [x] Yenilemeler - Board
+- [x] Mutabakat - Liste
+- [x] Mutabakat - Detay
+- [x] Raporlar
 
 ### İletişim ve Takip
-- [ ] İletişim Merkezi
-- [ ] Görevler - Liste
-- [ ] Görevler - Detay
-- [ ] Bildirim Taslakları - Liste
-- [ ] Bildirim Taslakları - Detay
-- [ ] Giden Bildirimler - Liste
-- [ ] Giden Bildirimler - Detay
+- [x] İletişim Merkezi
+- [x] Görevler - Liste
+- [x] Görevler - Detay
+- [x] Bildirim Taslakları - Liste
+- [x] Bildirim Taslakları - Detay
+- [x] Giden Bildirimler - Liste
+- [x] Giden Bildirimler - Detay
 
 ### Ana Veriler
-- [ ] Sigorta Şirketleri - Liste
-- [ ] Sigorta Şirketleri - Detay
-- [ ] Branşlar - Liste
-- [ ] Branşlar - Detay
-- [ ] Satış Birimleri - Liste
-- [ ] Satış Birimleri - Detay
-- [ ] Bildirim Şablonları - Liste
-- [ ] Bildirim Şablonları - Editor
+- [x] Sigorta Şirketleri - Liste
+- [x] Sigorta Şirketleri - Detay
+- [x] Branşlar - Liste
+- [x] Branşlar - Detay
+- [x] Satış Birimleri - Liste
+- [x] Satış Birimleri - Detay
+- [x] Bildirim Şablonları - Liste
+- [x] Bildirim Şablonları - Editor
 
 ### Finans ve Kontrol
-- [ ] Muhasebe Kayıtları - Liste
-- [ ] Muhasebe Kayıtları - Detay
-- [ ] Mutabakat Kalemleri - Liste
-- [ ] Mutabakat Kalemleri - Detay
+- [x] Muhasebe Kayıtları - Liste
+- [x] Muhasebe Kayıtları - Detay
+- [x] Mutabakat Kalemleri - Liste
+- [x] Mutabakat Kalemleri - Detay
 
 ### Formlar ve Dialoglar
-- [ ] Quick Create (Tümü)
-- [ ] Edit Forms (Tümü)
-- [ ] Import/Export
+- [x] Quick Create (Tümü)
+- [x] Edit Forms (Tümü)
+- [x] Import/Export
 
 ### Final
-- [ ] Cleanup & Optimization
+- [x] Cleanup & Optimization
 
 ## 🚀 Hızlı Başlangıç
 

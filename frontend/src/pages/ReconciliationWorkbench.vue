@@ -1,5 +1,12 @@
 <template>
   <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <p class="detail-subtitle">{{ t("subtitle") }}</p>
+      </div>
+    </div>
+
     <article class="surface-card rounded-2xl p-5">
       <PageToolbar
         :title="t('title')"
@@ -179,11 +186,11 @@
 
     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <article class="at-metric-card">
-        <p class="at-metric-label">Toplam Kayit</p>
+        <p class="at-metric-label">Toplam Kayıt</p>
         <p class="at-metric-value">{{ reconciliationSummary.total }}</p>
       </article>
       <article class="at-metric-card">
-        <p class="at-metric-label">Eslesti</p>
+        <p class="at-metric-label">Eşleşti</p>
         <p class="at-metric-value !text-emerald-700">{{ reconciliationSummary.matched }}</p>
       </article>
       <article class="at-metric-card">
@@ -191,7 +198,7 @@
         <p class="at-metric-value !text-amber-700">{{ reconciliationSummary.pending }}</p>
       </article>
       <article class="at-metric-card">
-        <p class="at-metric-label">Uyusmazlik</p>
+        <p class="at-metric-label">Uyumsuzluk</p>
         <p class="at-metric-value !text-rose-700">{{ reconciliationSummary.mismatch }}</p>
       </article>
       <article class="at-metric-card">
@@ -199,11 +206,11 @@
         <p class="at-metric-value !text-sky-700">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
       </article>
       <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricCommissionAçcrual") }}</p>
+        <p class="at-metric-label">{{ t("metricCommissionAccrual") }}</p>
         <p class="at-metric-value !text-sky-700">{{ metrics.commission_accrual_count || 0 }}</p>
       </article>
       <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricCommissionAçcrualAmount") }}</p>
+        <p class="at-metric-label">{{ t("metricCommissionAccrualAmount") }}</p>
         <p class="at-metric-value !text-emerald-700">{{ formatMoney(metrics.commission_accrual_amount_try || 0) }}</p>
       </article>
     </div>
@@ -340,20 +347,20 @@ import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
-    title: "Mutabakat Masasi",
+    title: "Mutabakat Masası",
     subtitle: "Muhasebe uyumsuzluklarını izleyin, eşleştirin ve kapatın",
-    importStatement: "Ekstre Ice Aktar",
-    importStatementTitle: "Ekstre Ice Aktarma Önizlemesi",
-    importStatementSubtitle: "CSV icerigini yapistir, policy veya payment eslesmelerini onizle.",
+    importStatement: "Ekstre İçe Aktar",
+    importStatementTitle: "Ekstre İçe Aktarma Önizlemesi",
+    importStatementSubtitle: "CSV içeriğini yapıştır, poliçe veya ödeme eşleşmelerini önizle.",
     importStatementPlaceholder: "external_ref,policy_no,payment_no,customer,amount_try",
-    importStatementRows: "Eşleşenleri Ice Aktar",
-    importingStatement: "Ice Aktariliyor...",
-    importTotalRows: "Toplam Satir",
+    importStatementRows: "Eşleşenleri İçe Aktar",
+    importingStatement: "İçe Aktarılıyor...",
+    importTotalRows: "Toplam Satır",
     importMatchedRows: "Eşleşen",
-    importUnmatchedRows: "Eslesmeyen",
+    importUnmatchedRows: "Eşleşmeyen",
     importAmount: "Toplam Tutar",
     insuranceCompany: "Sigorta Şirketi",
-    delimiter: "Ayirac",
+    delimiter: "Ayıraç",
     policy: "Poliçe",
     payment: "Ödeme",
     sync: "Sync Çalıştır",
@@ -393,8 +400,8 @@ const copy = {
     metricFailed: "Başarısız Kayıt",
     metricOverdueCollections: "Geciken Tahsilat",
     metricOverdueAmount: "Geciken Tutar",
-    metricCommissionAçcrual: "Komisyon Tahakkuk",
-    metricCommissionAçcrualAmount: "Tahakkuk Tutarı",
+    metricCommissionAccrual: "Komisyon Tahakkuk",
+    metricCommissionAccrualAmount: "Tahakkuk Tutarı",
     collectionPreviewTitle: "Geciken Tahsilat Önizleme",
     emptyCollectionPreview: "Geciken tahsilat kaydı bulunamadı.",
     commissionPreviewTitle: "Komisyon Tahakkuk Önizleme",
@@ -403,7 +410,7 @@ const copy = {
     loadErrorTitle: "Mutabakat Verileri Yüklenemedi",
     loadError: "Mutabakat masası verileri yüklenirken bir hata oluştu.",
     permissionDeniedRead: "Mutabakat verilerini görmek için yetkiniz yok.",
-    permissionDeniedAction: "Bu mutabakat islemini yapmaya yetkiniz yok.",
+    permissionDeniedAction: "Bu mutabakat işlemini yapmaya yetkiniz yok.",
     emptyTitle: "Mutabakat Kaydı Yok",
     empty: "Gösterilecek mutabakat kaydı bulunamadı.",
     source: "Kaynak",
@@ -423,13 +430,13 @@ const copy = {
     noteLabel: "Açıklama",
     notePlaceholder: "Mutabakat notu / açıklama girin",
     currentNote: "Mevcut Not",
-    actionNoteTitle: "Mutabakat Açıklamasi",
+    actionNoteTitle: "Mutabakat Açıklaması",
     actionResolveTitle: "Mutabakat Çöz",
     actionIgnoreTitle: "Mutabakat Yoksay",
     actionNoteSubtitle: "Kayıt için açıklama notu güncelle",
     actionResolveSubtitle: "Kaydı not ile birlikte çözülmüş olarak işaretle",
     actionIgnoreSubtitle: "Kaydı not ile birlikte yoksayılmış olarak işaretle",
-    actionSaveNote: "Açıklamayi Kaydet",
+    actionSaveNote: "Açıklamayı Kaydet",
     actionSaveResolve: "Çöz ve Kaydet",
     actionSaveIgnore: "Yoksay ve Kaydet",
     actionFailed: "Mutabakat aksiyonu tamamlanamadı.",
@@ -448,7 +455,7 @@ const copy = {
     mismatchCurrency: "Para Birimi",
     mismatchMissingExternal: "Harici Kayıt Eksik",
     mismatchMissingLocal: "Yerel Kayıt Eksik",
-    mismatchStatus: "Durum Uyumsuzlugu",
+    mismatchStatus: "Durum Uyumsuzluğu",
     mismatchOther: "Diğer",
   },
   en: {
@@ -505,11 +512,11 @@ const copy = {
     metricFailed: "Failed Entries",
     metricOverdueCollections: "Overdue Collections",
     metricOverdueAmount: "Overdue Amount",
-    metricCommissionAçcrual: "Commission Açcruals",
-    metricCommissionAçcrualAmount: "Açcrual Amount",
+    metricCommissionAccrual: "Commission Accruals",
+    metricCommissionAccrualAmount: "Accrual Amount",
     collectionPreviewTitle: "Overdue Collection Preview",
     emptyCollectionPreview: "No overdue collection found.",
-    commissionPreviewTitle: "Commission Açcrual Preview",
+    commissionPreviewTitle: "Commission Accrual Preview",
     emptyCommissionPreview: "No commission accrual found.",
     loading: "Loading...",
     loadErrorTitle: "Failed to Load Reconciliation Data",
@@ -680,11 +687,11 @@ const reconciliationSummary = computed(() => {
 });
 const reconciliationListColumns = computed(() => [
   { key: "reconciliationNo", label: "Mutabakat No", type: "mono" },
-  { key: "company", label: "Sirket" },
-  { key: "period", label: "Donem" },
-  { key: "totalPolicy", label: "Toplam Police", align: "center" },
+  { key: "company", label: "Şirket" },
+  { key: "period", label: "Dönem" },
+  { key: "totalPolicy", label: "Toplam Poliçe", align: "center" },
   { key: "totalPremium", label: "Toplam Prim", type: "amount", align: "right" },
-  { key: "companyStatement", label: "Sirket Bildirimi", type: "amount", align: "right" },
+  { key: "companyStatement", label: "Şirket Bildirimi", type: "amount", align: "right" },
   { key: "difference", label: "Fark", type: "amount", align: "right" },
   { key: "status", label: "Durum", type: "status", domain: "reconciliation" },
   { key: "_actions", label: "Actions", type: "actions", align: "right" },

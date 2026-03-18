@@ -216,9 +216,9 @@ describe("ClaimsBoard page store integration", () => {
     expect(claimStore.state.items).toHaveLength(2);
     expect(claimStore.filteredItems).toHaveLength(2);
     expect(wrapper.text()).toContain("Toplam Hasar");
-    expect(wrapper.text()).toContain("Dosya Goruntule");
+    expect(wrapper.text()).toContain("Dosya Görüntüle");
     expect(wrapper.text()).toContain("Dokümanlar");
-    expect(wrapper.text()).toContain("Odeme Yap");
+    expect(wrapper.text()).toContain("Ödeme Yap");
 
     const searchInput = wrapper.find('input[type="text"]');
     await searchInput.setValue("POL-001");
@@ -305,7 +305,7 @@ describe("ClaimsBoard page store integration", () => {
     });
 
     await loadClaimRows(wrapper);
-    const fileButton = findButtonByText(wrapper, "Dosya Goruntule");
+    const fileButton = findButtonByText(wrapper, "Dosya Görüntüle");
     await fileButton.trigger("click");
 
     expect(window.location.assign).toHaveBeenCalledWith("/at/claims/CLM-001");
@@ -382,7 +382,7 @@ describe("ClaimsBoard page store integration", () => {
     });
 
     await loadClaimRows(wrapper);
-    const paymentButtons = wrapper.findAll("button").filter((button) => button.text().includes("Odeme Yap"));
+    const paymentButtons = wrapper.findAll("button").filter((button) => button.text().includes("Ödeme Yap"));
     expect(paymentButtons).toHaveLength(2);
     expect(paymentButtons[0].attributes("disabled")).toBeDefined();
     expect(paymentButtons[1].attributes("disabled")).toBeUndefined();
@@ -472,7 +472,7 @@ describe("ClaimsBoard page store integration", () => {
 
     await loadClaimRows(wrapper);
 
-    const paymentButton = findButtonByText(wrapper, "Odeme Yap");
+    const paymentButton = findButtonByText(wrapper, "Ödeme Yap");
     expect(paymentButton.attributes("disabled")).toBeDefined();
     await paymentButton.trigger("click");
 
