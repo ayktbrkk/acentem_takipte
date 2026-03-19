@@ -8,6 +8,29 @@
       <span class="text-sm text-gray-400">{{ claims.length }} kayıt</span>
     </div>
 
+    <div class="grid grid-cols-2 gap-3 px-5 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Hasar</p>
+        <p class="mini-metric-value">{{ claims.length }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Açık</p>
+        <p class="mini-metric-value text-blue-600">{{ claimSummary.open }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">İncelemede</p>
+        <p class="mini-metric-value text-amber-600">{{ claimSummary.underReview }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Onaylı</p>
+        <p class="mini-metric-value text-green-600">{{ claimSummary.approved }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Ödendi</p>
+        <p class="mini-metric-value text-brand-600">{{ claimSummary.paid }}</p>
+      </div>
+    </div>
+
     <div class="border-b border-gray-200 bg-white px-5 py-3">
       <FilterBar
         v-model:search="claimsListSearchQuery"
@@ -64,15 +87,12 @@ import { useBranchStore } from "../stores/branch";
 import { useClaimStore } from "../stores/claim";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import AmountPairSummary from "../components/app-shell/AmountPairSummary.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import QuickCreateClaim from "../components/QuickCreateClaim.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import ListTable from "../components/ui/ListTable.vue";
@@ -386,6 +406,21 @@ const claimsListRowsWithUrgency = computed(() =>
     _urgency: claim.remaining_days <= 0 ? "row-critical" : claim.remaining_days <= 7 ? "row-warning" : "",
   }))
 );
+
+const claimSummary = computed(() => {
+  let open = 0;
+  let underReview = 0;
+  let approved = 0;
+  let paid = 0;
+  claims.value.forEach((claim) => {
+    const status = String(claim.claim_status || "").trim();
+    if (status === "Open") open += 1;
+    if (status === "Under Review") underReview += 1;
+    if (status === "Approved") approved += 1;
+    if (status === "Paid") paid += 1;
+  });
+  return { open, underReview, approved, paid };
+});
 
 const claimsListActiveCount = computed(
   () =>

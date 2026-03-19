@@ -1,209 +1,149 @@
 <template>
   <section class="page-shell space-y-4">
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :show-refresh="true"
-        :busy="loading"
-        :refresh-label="t('refresh')"
-        @refresh="loadReport"
-      >
-        <template #actions>
-          <ActionButton variant="secondary" size="sm" :disabled="loading" @click="loadReport">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton variant="primary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
-            {{ t("exportPdf") }}
-          </ActionButton>
-        </template>
-
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="loadReport"
-            @reset="resetFilters"
-          >
-            <select v-model="filters.reportKey" class="input">
-              <option v-for="option in reportOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <input v-model="filters.fromDate" class="input" type="date" />
-            <input v-model="filters.toDate" class="input" type="date" />
-
-            <template #advanced>
-              <input
-                v-if="isFilterVisible('branch')"
-                v-model.trim="filters.branch"
-                class="input"
-                type="search"
-                :placeholder="t('branchFilter')"
-              />
-              <input
-                v-if="isFilterVisible('insuranceCompany')"
-                v-model.trim="filters.insuranceCompany"
-                class="input"
-                type="search"
-                :placeholder="t('companyFilter')"
-              />
-              <input
-                v-if="isFilterVisible('salesEntity')"
-                v-model.trim="filters.salesEntity"
-                class="input"
-                type="search"
-                :placeholder="t('salesEntityFilter')"
-              />
-              <input
-                v-if="isFilterVisible('status')"
-                v-model.trim="filters.status"
-                class="input"
-                type="search"
-                :placeholder="t('statusFilter')"
-              />
-            </template>
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
-    </article>
-
-    <article class="surface-card rounded-xl border border-sky-200 bg-sky-50/80 px-4 py-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="space-y-1">
-          <p class="text-sm font-medium text-sky-800">{{ activeReportLabel }}</p>
-          <p class="text-xs text-sky-700">{{ branchScopeLabel }}</p>
-        </div>
-        <div class="text-right">
-          <p class="text-xs text-sky-700">{{ t("totalRows") }}: {{ sortedRows.length }}</p>
-          <p v-if="exportLoading" class="text-[11px] text-sky-600">{{ t("exporting") }}</p>
-        </div>
+    <div class="detail-topbar">
+      <div>
+        <h1 class="detail-title">{{ t("title") }}</h1>
+        <p class="detail-subtitle">{{ activeReportLabel }} · {{ branchScopeLabel }}</p>
       </div>
-    </article>
+      <div class="flex gap-2">
+        <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="loadReport">{{ t("refresh") }}</button>
+        <button class="btn btn-outline btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">{{ t("exportXlsx") }}</button>
+        <button class="btn btn-primary btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('pdf')">{{ t("exportPdf") }}</button>
+      </div>
+    </div>
 
-    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <article
-        v-for="item in summaryItems"
-        :key="item.key"
-        class="surface-card rounded-2xl border border-slate-200 px-4 py-4"
-      >
-        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-          {{ item.label }}
-        </p>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">
-          {{ item.value }}
-        </p>
-      </article>
-    </section>
+    <div class="grid grid-cols-1 gap-4 px-5 md:grid-cols-4">
+      <div v-for="item in summaryItems" :key="item.key" class="mini-metric">
+        <p class="mini-metric-label">{{ item.label }}</p>
+        <p class="mini-metric-value">{{ item.value }}</p>
+      </div>
+    </div>
 
-    <section v-if="comparisonSummaryItems.length" class="space-y-3">
+    <section v-if="comparisonSummaryItems.length" class="space-y-3 px-5">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-semibold text-slate-900">{{ t("comparisonSummaryTitle") }}</h3>
         <span class="text-[11px] font-medium text-slate-500">{{ t("comparisonSummaryHint") }}</span>
       </div>
       <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <article
+        <div
           v-for="item in comparisonSummaryItems"
           :key="item.key"
-          class="surface-card rounded-2xl border border-slate-200 px-4 py-4"
+          class="mini-metric"
         >
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-            {{ item.label }}
-          </p>
-          <p class="mt-2 text-2xl font-semibold text-slate-900">
-            {{ item.value }}
-          </p>
+          <p class="mini-metric-label">{{ item.label }}</p>
+          <p class="mini-metric-value">{{ item.value }}</p>
           <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-rose-600'">
             {{ formatComparisonDelta(item.delta, item.previous) }}
           </p>
-        </article>
+        </div>
       </div>
     </section>
 
-    <DataTableShell
-      :loading="loading"
-      :error="error"
-      :empty="!loading && sortedRows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template #header>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between gap-3">
-            <h3 class="text-base font-semibold text-slate-900">{{ activeReportLabel }}</h3>
-            <span class="text-xs text-slate-500">{{ sortedRows.length }}</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-medium text-slate-500">{{ t("columns") }}</span>
-            <button
-              type="button"
-              class="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
-              @click="showAllColumns"
-            >
-              {{ t("showAllColumns") }}
-            </button>
-            <button
-              v-for="column in columns"
-              :key="`toggle-${column}`"
-              type="button"
-              class="rounded-full border px-2.5 py-1 text-xs font-medium transition"
-              :class="
-                isColumnVisible(column)
-                  ? 'border-sky-300 bg-sky-50 text-sky-700'
-                  : 'border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700'
-              "
-              @click="toggleColumn(column)"
-            >
-              {{ getColumnLabel(column) }}
-            </button>
-          </div>
-        </div>
-      </template>
+    <div class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        :filters="filterBarConfig"
+        :active-count="activeFilterCount"
+        @filter-change="onFilterBarChange"
+        @reset="resetFilters"
+      >
+        <template #actions>
+          <input v-model="filters.fromDate" class="h-8 rounded-md border border-gray-200 px-2 text-sm" type="date" />
+          <input v-model="filters.toDate" class="h-8 rounded-md border border-gray-200 px-2 text-sm" type="date" />
+          <input
+            v-if="isFilterVisible('branch')"
+            v-model.trim="filters.branch"
+            class="h-8 rounded-md border border-gray-200 px-2 text-sm"
+            type="search"
+            :placeholder="t('branchFilter')"
+          />
+          <input
+            v-if="isFilterVisible('insuranceCompany')"
+            v-model.trim="filters.insuranceCompany"
+            class="h-8 rounded-md border border-gray-200 px-2 text-sm"
+            type="search"
+            :placeholder="t('companyFilter')"
+          />
+          <input
+            v-if="isFilterVisible('salesEntity')"
+            v-model.trim="filters.salesEntity"
+            class="h-8 rounded-md border border-gray-200 px-2 text-sm"
+            type="search"
+            :placeholder="t('salesEntityFilter')"
+          />
+          <input
+            v-if="isFilterVisible('status')"
+            v-model.trim="filters.status"
+            class="h-8 rounded-md border border-gray-200 px-2 text-sm"
+            type="search"
+            :placeholder="t('statusFilter')"
+          />
+          <button class="btn btn-sm" type="button" @click="loadReport">{{ t("applyFilters") }}</button>
+        </template>
+      </FilterBar>
+    </div>
 
-      <div class="overflow-auto">
-        <table class="at-table">
-          <thead>
-            <tr class="at-table-head-row">
-              <th v-for="column in visibleColumns" :key="column" class="at-table-head-cell">
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1 text-left transition hover:text-slate-900"
-                  @click="toggleSort(column)"
-                >
-                  <span>{{ getColumnLabel(column) }}</span>
-                  <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, rowIndex) in sortedRows" :key="row.name || rowIndex" class="at-table-row">
-              <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
-                {{ formatCellValue(column, row[column]) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="flex-1 p-5">
+      <div v-if="error" class="mb-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {{ error }}
       </div>
-    </DataTableShell>
+
+      <div class="mb-3 space-y-2">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="text-base font-semibold text-slate-900">{{ activeReportLabel }}</h3>
+          <span class="text-xs text-slate-500">{{ sortedRows.length }} {{ t("totalRows") }}</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-medium text-slate-500">{{ t("columns") }}</span>
+          <button
+            type="button"
+            class="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
+            @click="showAllColumns"
+          >
+            {{ t("showAllColumns") }}
+          </button>
+          <button
+            v-for="column in columns"
+            :key="`toggle-${column}`"
+            type="button"
+            class="rounded-full border px-2.5 py-1 text-xs font-medium transition"
+            :class="
+              isColumnVisible(column)
+                ? 'border-sky-300 bg-sky-50 text-sky-700'
+                : 'border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700'
+            "
+            @click="toggleColumn(column)"
+          >
+            {{ getColumnLabel(column) }}
+          </button>
+        </div>
+        <div v-if="columns.length" class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-medium text-slate-500">{{ activeLocale === "tr" ? "Sırala" : "Sort" }}:</span>
+          <button
+            v-for="column in visibleColumns"
+            :key="`sort-${column}`"
+            type="button"
+            class="rounded-full border px-2.5 py-1 text-xs font-medium transition"
+            :class="
+              sortState.column === column
+                ? 'border-brand-400 bg-brand-50 text-brand-700'
+                : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+            "
+            @click="toggleSort(column)"
+          >
+            {{ getColumnLabel(column) }}&thinsp;{{ getSortIndicator(column) }}
+          </button>
+        </div>
+      </div>
+
+      <ListTable
+        :columns="listTableColumns"
+        :rows="listTableRows"
+        :loading="loading"
+        :empty-message="t('emptyDescription')"
+      />
+
+      <p v-if="exportLoading" class="mt-2 text-xs text-sky-600">{{ t("exporting") }}</p>
+    </div>
 
     <ScheduledReportsManager
       v-if="canManageScheduledReports"
@@ -223,15 +163,15 @@
           <h3 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h3>
           <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
         </div>
-        <ActionButton
-          variant="secondary"
-          size="sm"
+        <button
+          class="btn btn-outline btn-sm"
+          type="button"
           data-testid="run-segment-snapshot-job"
           :disabled="snapshotRunLoading"
           @click="runCustomerSegmentSnapshots"
         >
           {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
-        </ActionButton>
+        </button>
       </div>
     </article>
   </section>
@@ -242,10 +182,8 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, unref, watch } fro
 import { frappeRequest } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
+import ListTable from "../components/ui/ListTable.vue";
 import ScheduledReportsManager from "../components/reports/ScheduledReportsManager.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { useAuthStore } from "../stores/auth";
@@ -891,6 +829,37 @@ const percentFormatter = computed(() =>
   }),
 );
 
+const filterBarConfig = computed(() => [
+  {
+    key: "reportKey",
+    label: t("presetLabel"),
+    options: reportOptions.value,
+  },
+]);
+
+function onFilterBarChange({ key, value }) {
+  if (key === "reportKey") {
+    filters.reportKey = value;
+  }
+}
+
+const listTableColumns = computed(() =>
+  visibleColumns.value.map((col) => ({
+    key: col,
+    label: getColumnLabel(col),
+  })),
+);
+
+const listTableRows = computed(() =>
+  sortedRows.value.map((row, idx) => {
+    const formatted = { name: row.name ?? String(idx) };
+    for (const col of visibleColumns.value) {
+      formatted[col] = formatCellValue(col, row[col]);
+    }
+    return formatted;
+  }),
+);
+
 const { presetKey, presetOptions, canDeletePreset, applyPreset, onPresetChange, savePreset, deletePreset } =
   useCustomFilterPresets({
     screen: "reports",
@@ -1489,7 +1458,4 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
-}
 </style>

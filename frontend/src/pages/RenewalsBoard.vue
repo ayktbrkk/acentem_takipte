@@ -1,184 +1,65 @@
 <template>
   <section class="page-shell space-y-4">
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :busy="renewalsLoading"
-        :show-refresh="true"
-        :refresh-label="t('refresh')"
-        @refresh="reloadRenewals"
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Yenilemeler</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+      </div>
+      <span class="text-sm text-gray-400">{{ renewals.length }} kayıt</span>
+    </div>
+
+    <!-- summary cards from renewalSummaryItems (already exists in script) -->
+    <div class="grid grid-cols-2 gap-3 px-5 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("metricTotal") }}</p>
+        <p class="mini-metric-value">{{ renewalSummary.total }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("metricOpen") }}</p>
+        <p class="mini-metric-value text-amber-600">{{ renewalSummary.open }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("metricInProgress") }}</p>
+        <p class="mini-metric-value text-blue-600">{{ renewalSummary.inProgress }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("metricDone") }}</p>
+        <p class="mini-metric-value text-green-600">{{ renewalSummary.done }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">{{ t("metricCancelled") }}</p>
+        <p class="mini-metric-value text-gray-500">{{ renewalSummary.cancelled }}</p>
+      </div>
+    </div>
+
+    <!-- filter bar -->
+    <div class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        v-model:search="filters.query"
+        :filters="renewalListFilterConfig"
+        :active-count="renewalListActiveCount"
+        @filter-change="onRenewalFilterChange"
+        @reset="resetRenewalFilters"
       >
         <template #actions>
-          <div class="flex flex-wrap items-center gap-2">
-            <QuickCreateLauncher
-              variant="primary"
-              size="sm"
-              :label="t('newTask')"
-              @launch="showQuickRenewalDialog = true"
-            />
-            <ActionButton variant="secondary" size="sm" :disabled="renewalsLoading" @click="reloadRenewals">
-              {{ t("refresh") }}
-            </ActionButton>
-            <ActionButton
-              variant="secondary"
-              size="sm"
-              :disabled="renewalsLoading"
-              @click="downloadRenewalExport('xlsx')"
-            >
-              {{ t("exportXlsx") }}
-            </ActionButton>
-            <ActionButton
-              variant="primary"
-              size="sm"
-              :disabled="renewalsLoading"
-              @click="downloadRenewalExport('pdf')"
-            >
-              {{ t("exportPdf") }}
-            </ActionButton>
-          </div>
+          <button class="btn btn-primary btn-sm" @click="showQuickRenewalDialog = true">+ Yeni Görev</button>
+          <button class="btn btn-sm" :disabled="renewalsLoading" @click="reloadRenewals">Yenile</button>
+          <button class="btn btn-sm" :disabled="renewalsLoading" @click="downloadRenewalExport('xlsx')">Excel</button>
+          <button class="btn btn-sm" :disabled="renewalsLoading" @click="downloadRenewalExport('pdf')">PDF</button>
         </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applyRenewalFilters"
-            @reset="resetRenewalFilters"
-          >
-            <input
-              v-model.trim="filters.query"
-              class="input"
-              type="search"
-              :placeholder="t('searchPlaceholder')"
-              @keyup.enter="applyRenewalFilters"
-            />
-            <select v-model="filters.status" class="input">
-              <option value="">{{ t("allStatuses") }}</option>
-              <option v-for="option in renewalStatusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <select v-model.number="filters.limit" class="input">
-              <option :value="20">20</option>
-              <option :value="40">40</option>
-              <option :value="80">80</option>
-              <option :value="120">120</option>
-            </select>
+      </FilterBar>
+    </div>
 
-            <template #advanced>
-              <input
-                v-model.trim="filters.policyQuery"
-                class="input"
-                type="search"
-                :placeholder="t('policyFilter')"
-                @keyup.enter="applyRenewalFilters"
-              />
-              <select v-model="filters.dueScope" class="input">
-                <option value="">{{ t("allDueScopes") }}</option>
-                <option value="overdue">{{ t("dueScopeOverdue") }}</option>
-                <option value="7">{{ t("dueScope7") }}</option>
-                <option value="30">{{ t("dueScope30") }}</option>
-                <option value="60">{{ t("dueScope60") }}</option>
-              </select>
-            </template>
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
-    </article>
-
-    <DocSummaryGrid v-if="showSummaryGrid" :items="renewalSummaryItems" />
-
-    <DataTableShell
-      :loading="renewalsLoading"
-      :error="renewalsError"
-      :empty="!renewalsLoading && !renewalsError && renewals.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template #header>
-        <div class="text-xs text-slate-500">
-          {{ t("showing") }} {{ renewals.length }}
-        </div>
-      </template>
-
-      <div class="overflow-auto">
-        <table class="at-table">
-          <thead>
-            <tr class="at-table-head-row">
-              <th class="at-table-head-cell">{{ t("task") }}</th>
-              <th class="at-table-head-cell">{{ t("policy") }}</th>
-              <th class="at-table-head-cell">{{ t("status") }}</th>
-              <th class="at-table-head-cell">{{ lostReasonColumnLabel }}</th>
-              <th class="at-table-head-cell">{{ t("due") }}</th>
-              <th class="at-table-head-cell">{{ t("renewal") }}</th>
-              <th class="at-table-head-cell">{{ t("actions") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="task in renewals" :key="task.name" class="at-table-row">
-              <td class="at-table-cell font-medium text-slate-800">{{ task.name }}</td>
-              <td class="at-table-cell text-slate-700">{{ task.policy || "-" }}</td>
-              <td class="at-table-cell">
-                <StatusBadge domain="renewal" :status="task.status" />
-              </td>
-              <td class="at-table-cell text-slate-700">
-                <div class="flex flex-col gap-1">
-                  <span>{{ formatLostReason(task) }}</span>
-                  <span v-if="task.competitor_name" class="text-xs text-slate-500">{{ task.competitor_name }}</span>
-                </div>
-              </td>
-              <td class="at-table-cell text-slate-700">{{ formatDate(task.due_date) }}</td>
-              <td class="at-table-cell text-slate-700">{{ formatDate(task.renewal_date) }}</td>
-              <td class="at-table-cell">
-                <InlineActionRow>
-                  <ActionButton
-                    v-if="canMoveRenewalToStatus(task, 'In Progress')"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="renewalMutationLoading"
-                    @click="updateRenewalStatus(task, 'In Progress')"
-                  >
-                    {{ t("markInProgress") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canMoveRenewalToStatus(task, 'Done')"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="renewalMutationLoading"
-                    @click="updateRenewalStatus(task, 'Done')"
-                  >
-                    {{ t("markDone") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="task.policy"
-                    variant="secondary"
-                    size="xs"
-                    @click="openPolicy(task.policy)"
-                  >
-                    {{ t("openPolicy") }}
-                  </ActionButton>
-                </InlineActionRow>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </DataTableShell>
+    <!-- table -->
+    <div class="flex-1 p-5">
+      <ListTable
+        :columns="renewalListColumns"
+        :rows="renewalListRows"
+        :loading="renewalsLoading"
+        empty-message="Yenileme görevi bulunamadı."
+        @row-click="(row) => openRenewalDetail(row)"
+      />
+    </div>
 
     <QuickCreateManagedDialog
       v-model="showQuickRenewalDialog"
@@ -195,18 +76,13 @@
 <script setup>
 import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
+import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -322,6 +198,7 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const renewalStore = useRenewalStore();
 const route = useRoute();
+const router = useRouter();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const resourceValue = (resource, fallback = null) => {
@@ -470,6 +347,58 @@ const renewalSummaryItems = computed(() => {
 const renewalsError = computed(() => {
   return renewalStore.state.error || "";
 });
+
+const renewalSummary = computed(() => {
+  const summary = renewalStore.state.summary || {};
+  return {
+    total: summary.total || 0,
+    open: summary.open || 0,
+    inProgress: summary.inProgress || 0,
+    done: summary.done || 0,
+    cancelled: summary.cancelled || 0,
+  };
+});
+
+const renewalListFilterConfig = computed(() => [
+  {
+    key: "status",
+    label: t("status"),
+    options: renewalStatusOptions.value.map((o) => ({ value: o.value, label: o.label })),
+  },
+]);
+
+const renewalListActiveCount = computed(() =>
+  [filters.query, filters.status, filters.policyQuery, filters.dueScope]
+    .filter((v) => String(v ?? "").trim() !== "").length
+);
+
+const renewalListColumns = [
+  { key: "name", label: t("task"), width: "160px", type: "mono" },
+  { key: "policy", label: t("policy"), width: "180px" },
+  { key: "status", label: t("status"), width: "120px", type: "status" },
+  { key: "due_date", label: t("due"), width: "110px" },
+  { key: "renewal_date", label: t("renewal"), width: "110px" },
+  { key: "lost_reason", label: t("competitor"), width: "160px" },
+];
+
+const renewalListRows = computed(() =>
+  renewals.value.map((row) => ({
+    ...row,
+    policy: row.policy || "-",
+    due_date: formatDate(row.due_date),
+    renewal_date: formatDate(row.renewal_date),
+    lost_reason: row.lost_reason || (row.competitor_name ? row.competitor_name : "-"),
+  }))
+);
+
+function onRenewalFilterChange({ key, value }) {
+  filters[key] = String(value || "");
+  return reloadRenewals();
+}
+
+function openRenewalDetail(row) {
+  router.push(`/renewals/${encodeURIComponent(row.name)}`);
+}
 
 function reloadRenewals() {
   renewalsResource.params = buildRenewalListParams();

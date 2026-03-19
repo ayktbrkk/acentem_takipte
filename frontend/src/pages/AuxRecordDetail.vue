@@ -1,119 +1,121 @@
 <template>
-  <div class="space-y-6">
-    <DocHeaderCard :eyebrow="localize(config.labels?.list)" :title="recordTitle" :subtitle="recordSubtitle">
-      <template #actions>
-        <DetailActionRow>
-          <ActionButton variant="secondary" size="xs" @click="goBack">{{ t("backToList") }}</ActionButton>
-          <ActionButton
-            v-if="canOpenCommunicationContext"
-            variant="secondary"
-            size="xs"
-            @click="openCommunicationContext"
-          >
-            {{ t("openCommunication") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canSendDraftLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="sendDraftLifecycle"
-          >
-            {{ t("sendNow") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canRetryOutboxLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="retryOutboxLifecycle"
-          >
-            {{ t("retry") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canRequeueOutboxLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="requeueOutboxLifecycle"
-          >
-            {{ t("requeue") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canStartTaskLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markTaskLifecycle('In Progress')"
-          >
-            {{ t("startTask") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canBlockTaskLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markTaskLifecycle('Blocked')"
-          >
-            {{ t("blockTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCompleteTaskLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markTaskLifecycle('Done')"
-          >
-            {{ t("completeTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCancelTaskLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markTaskLifecycle('Cancelled')"
-          >
-            {{ t("cancelTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCompleteReminderLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markReminderLifecycle('Done')"
-          >
-            {{ t("completeTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCancelReminderLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markReminderLifecycle('Cancelled')"
-          >
-            {{ t("cancelTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canStartAssignmentLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markAssignmentLifecycle('In Progress')"
-          >
-            {{ t("startAssignment") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canBlockAssignmentLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markAssignmentLifecycle('Blocked')"
-          >
-            {{ t("blockAssignment") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCloseAssignmentLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markAssignmentLifecycle('Done')"
-          >
-            {{ t("closeAssignment") }}
-          </ActionButton>
-          <ActionButton v-if="quickEditConfig && canUseQuickEdit" variant="secondary" size="xs" @click="showQuickEditDialog = true">{{ t("quickEdit") }}</ActionButton>
-          <ActionButton v-if="panelConfig" variant="link" size="xs" trailing-icon=">" @click="openPanel">{{ t("panel") }}</ActionButton>
-          <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="xs" @click="openDesk">{{ t("openDesk") }}</ActionButton>
-        </DetailActionRow>
-      </template>
-    </DocHeaderCard>
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">{{ localize(config.labels?.list) }}</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ recordTitle }}</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <ActionButton variant="secondary" size="xs" @click="goBack">{{ t("backToList") }}</ActionButton>
+        <ActionButton
+          v-if="canOpenCommunicationContext"
+          variant="secondary"
+          size="xs"
+          @click="openCommunicationContext"
+        >
+          {{ t("openCommunication") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canSendDraftLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="sendDraftLifecycle"
+        >
+          {{ t("sendNow") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canRetryOutboxLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="retryOutboxLifecycle"
+        >
+          {{ t("retry") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canRequeueOutboxLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="requeueOutboxLifecycle"
+        >
+          {{ t("requeue") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canStartTaskLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markTaskLifecycle('In Progress')"
+        >
+          {{ t("startTask") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canBlockTaskLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markTaskLifecycle('Blocked')"
+        >
+          {{ t("blockTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCompleteTaskLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markTaskLifecycle('Done')"
+        >
+          {{ t("completeTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCancelTaskLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markTaskLifecycle('Cancelled')"
+        >
+          {{ t("cancelTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCompleteReminderLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markReminderLifecycle('Done')"
+        >
+          {{ t("completeTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCancelReminderLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markReminderLifecycle('Cancelled')"
+        >
+          {{ t("cancelTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canStartAssignmentLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markAssignmentLifecycle('In Progress')"
+        >
+          {{ t("startAssignment") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canBlockAssignmentLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markAssignmentLifecycle('Blocked')"
+        >
+          {{ t("blockAssignment") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCloseAssignmentLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markAssignmentLifecycle('Done')"
+        >
+          {{ t("closeAssignment") }}
+        </ActionButton>
+        <ActionButton v-if="quickEditConfig && canUseQuickEdit" variant="secondary" size="xs" @click="showQuickEditDialog = true">{{ t("quickEdit") }}</ActionButton>
+        <ActionButton v-if="panelConfig" variant="link" size="xs" trailing-icon=">" @click="openPanel">{{ t("panel") }}</ActionButton>
+        <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="xs" @click="openDesk">{{ t("openDesk") }}</ActionButton>
+      </div>
+    </div>
 
     <DataTableShell
       :loading="activeLoading && !doc"
@@ -210,7 +212,7 @@
       :success-handlers="quickEditSuccessHandlers"
       :labels="{ save: t('saveChanges'), cancel: t('cancel') }"
     />
-  </div>
+  </section>
 </template>
 
 <script setup>
@@ -224,8 +226,6 @@ import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { deskActionsEnabled } from "../utils/deskActions";
-import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
-import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
 import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
 import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";

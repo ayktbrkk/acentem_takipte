@@ -1,160 +1,101 @@
 <template>
   <section class="page-shell space-y-4">
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :show-refresh="true"
-        :busy="snapshotResource.loading || dispatching"
-        :refresh-label="t('refresh')"
-        @refresh="reloadSnapshot"
-      >
-        <template #actions>
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('quickSegment')"
-            @launch="showSegmentDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('quickCampaign')"
-            @launch="showCampaignDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('runCampaign')"
-            @launch="showCampaignRunDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('previewSegment')"
-            @launch="showSegmentPreviewDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('quickCallNote')"
-            @launch="showCallNoteDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('quickReminder')"
-            @launch="showReminderDialog = true"
-          />
-          <QuickCreateLauncher
-            v-if="canCreateQuickMessage"
-            variant="primary"
-            size="sm"
-            :label="t('quickMessage')"
-            @launch="showQuickMessageDialog = true"
-          />
-          <ActionButton
-            v-if="canReturnToContext"
-            variant="secondary"
-            size="sm"
-            @click="returnToContext"
-          >
-            {{ returnToLabel }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" @click="reloadSnapshot">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            :disabled="snapshotResource.loading"
-            @click="downloadCommunicationExport('xlsx')"
-          >
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            size="sm"
-            :disabled="snapshotResource.loading"
-            @click="downloadCommunicationExport('pdf')"
-          >
-            {{ t("exportPdf") }}
-          </ActionButton>
-          <ActionButton v-if="canRunDispatchCycle" variant="primary" size="sm" :disabled="dispatching" @click="runDispatchCycle">
-            {{ dispatching ? t("dispatching") : t("dispatch") }}
-          </ActionButton>
-        </template>
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Kontrol Merkezi → İletişim</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('quickSegment')"
+          @launch="showSegmentDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('quickCampaign')"
+          @launch="showCampaignDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('runCampaign')"
+          @launch="showCampaignRunDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('previewSegment')"
+          @launch="showSegmentPreviewDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('quickCallNote')"
+          @launch="showCallNoteDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('quickReminder')"
+          @launch="showReminderDialog = true"
+        />
+        <QuickCreateLauncher
+          v-if="canCreateQuickMessage"
+          variant="primary"
+          size="sm"
+          :label="t('quickMessage')"
+          @launch="showQuickMessageDialog = true"
+        />
+        <ActionButton
+          v-if="canReturnToContext"
+          variant="secondary"
+          size="sm"
+          @click="returnToContext"
+        >
+          {{ returnToLabel }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="reloadSnapshot">
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          :disabled="snapshotResource.loading"
+          @click="downloadCommunicationExport('xlsx')"
+        >
+          {{ t("exportXlsx") }}
+        </ActionButton>
+        <ActionButton
+          variant="primary"
+          size="sm"
+          :disabled="snapshotResource.loading"
+          @click="downloadCommunicationExport('pdf')"
+        >
+          {{ t("exportPdf") }}
+        </ActionButton>
+        <ActionButton v-if="canRunDispatchCycle" variant="primary" size="sm" :disabled="dispatching" @click="runDispatchCycle">
+          {{ dispatching ? t("dispatching") : t("dispatch") }}
+        </ActionButton>
+      </div>
+    </div>
 
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applySnapshotFilters"
-            @reset="resetSnapshotFilters"
-          >
-            <input
-              v-model.trim="filters.customer"
-              class="input"
-              type="search"
-              :placeholder="t('customerFilter')"
-              @keyup.enter="applySnapshotFilters"
-            />
-            <select v-model="filters.status" class="input">
-              <option value="">{{ t("allStatuses") }}</option>
-              <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <select v-model="filters.channel" class="input">
-              <option value="">{{ t("allChannels") }}</option>
-              <option v-for="option in channelOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-
-            <template #advanced>
-              <select v-model="filters.referenceDoctype" class="input">
-                <option value="">{{ t("allReferenceTypes") }}</option>
-                <option v-for="option in referenceDoctypeOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-              <input
-                v-model.trim="filters.referenceName"
-                class="input"
-                type="search"
-                :placeholder="t('referenceNameFilter')"
-                @keyup.enter="applySnapshotFilters"
-              />
-              <select v-model.number="filters.limit" class="input">
-                <option :value="20">20</option>
-                <option :value="50">50</option>
-                <option :value="100">100</option>
-              </select>
-            </template>
-
-            <template #actionsSuffix>
-              <ActionButton v-if="hasContextFilters" variant="link" size="xs" @click="clearContextFilters">
-                {{ t("clearContext") }}
-              </ActionButton>
-            </template>
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
-    </article>
+    <FilterBar
+      :search="filters.customer"
+      :filters="filterBarFilters"
+      :active-count="activeFilterCount"
+      @update:search="onSearchChange"
+      @filter-change="onFilterBarChange"
+      @reset="resetSnapshotFilters"
+    >
+      <template #actions>
+        <ActionButton v-if="hasContextFilters" variant="link" size="xs" @click="clearContextFilters">
+          {{ t("clearContext") }}
+        </ActionButton>
+      </template>
+    </FilterBar>
 
     <article
       v-if="hasContextFilters"
@@ -235,10 +176,12 @@
     </article>
 
     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      <article v-for="card in statusCards" :key="card.key" class="surface-card rounded-xl p-4">
-        <p class="text-xs uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-      </article>
+      <MetricCard
+        v-for="card in statusCards"
+        :key="card.key"
+        :label="card.label"
+        :value="card.value"
+      />
     </div>
 
     <article
@@ -257,21 +200,14 @@
       <p class="mt-1 text-sm">{{ operationError }}</p>
     </article>
 
-    <DataTableShell
-      :loading="snapshotResource.loading"
-      :empty="outboxItems.length === 0"
-      :loading-label="t('loading')"
-      :empty-title="t('emptyOutboxTitle')"
-      :empty-description="t('emptyOutbox')"
-    >
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-semibold text-slate-900">{{ t("outboxTitle") }}</h3>
-          <span class="text-xs text-slate-500">{{ outboxItems.length }}</span>
-        </div>
-      </template>
-      <template #default>
-        <div class="overflow-auto">
+    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+        <h3 class="text-base font-semibold text-slate-900">{{ t("outboxTitle") }}</h3>
+        <span class="text-xs text-slate-500">{{ outboxItems.length }}</span>
+      </div>
+      <div v-if="snapshotResource.loading" class="py-8 text-center text-sm text-slate-500">{{ t("loading") }}</div>
+      <div v-else-if="outboxItems.length === 0" class="py-8 text-center text-sm text-slate-400">{{ t("emptyOutbox") }}</div>
+      <div v-else class="overflow-auto">
           <table class="at-table">
             <thead>
               <tr class="at-table-head-row">
@@ -347,24 +283,17 @@
               </tr>
             </tbody>
           </table>
-        </div>
-      </template>
-    </DataTableShell>
+      </div>
+    </div>
 
-    <DataTableShell
-      :loading="snapshotResource.loading"
-      :empty="draftItems.length === 0"
-      :loading-label="t('loading')"
-      :empty-title="t('emptyDraftsTitle')"
-      :empty-description="t('emptyDrafts')"
-    >
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-semibold text-slate-900">{{ t("draftTitle") }}</h3>
-          <span class="text-xs text-slate-500">{{ draftItems.length }}</span>
-        </div>
-      </template>
-      <template #default>
+    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+        <h3 class="text-base font-semibold text-slate-900">{{ t("draftTitle") }}</h3>
+        <span class="text-xs text-slate-500">{{ draftItems.length }}</span>
+      </div>
+      <div v-if="snapshotResource.loading" class="py-8 text-center text-sm text-slate-500">{{ t("loading") }}</div>
+      <div v-else-if="draftItems.length === 0" class="py-8 text-center text-sm text-slate-400">{{ t("emptyDrafts") }}</div>
+      <div v-else class="p-4">
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <article
             v-for="draft in draftItems"
@@ -412,8 +341,8 @@
             </InlineActionRow>
           </article>
         </div>
-      </template>
-    </DataTableShell>
+      </div>
+    </div>
 
     <QuickCreateManagedDialog
       v-model="showSegmentDialog"
@@ -633,12 +562,11 @@ import { useBranchStore } from "../stores/branch";
 import { useCommunicationStore } from "../stores/communication";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
+import MetricCard from "../components/ui/MetricCard.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
@@ -1165,6 +1093,22 @@ const statusCards = computed(() =>
     value: item.value,
   }))
 );
+
+const filterBarFilters = computed(() => [
+  { key: "status", label: t("status"), options: statusOptions.value },
+  { key: "channel", label: t("channel"), options: channelOptions.value },
+]);
+
+function onSearchChange(value) {
+  filters.customer = value;
+  applySnapshotFilters();
+}
+
+function onFilterBarChange({ key, value }) {
+  if (key === "status") filters.status = value;
+  if (key === "channel") filters.channel = value;
+  applySnapshotFilters();
+}
 
 function buildParams() {
   return {

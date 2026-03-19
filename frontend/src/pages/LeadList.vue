@@ -8,6 +8,29 @@
       <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
     </div>
 
+    <div class="grid grid-cols-2 gap-3 px-5 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Fırsat</p>
+        <p class="mini-metric-value">{{ pagination.total }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Açık</p>
+        <p class="mini-metric-value text-blue-600">{{ leadSummary.open }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">İletişimde</p>
+        <p class="mini-metric-value text-amber-600">{{ leadSummary.replied }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Dönüştürüldü</p>
+        <p class="mini-metric-value text-green-600">{{ leadSummary.converted }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Dönüşüm Oranı</p>
+        <p class="mini-metric-value text-brand-600">{{ leadSummary.conversionRate }}%</p>
+      </div>
+    </div>
+
     <div class="border-b border-gray-200 bg-white px-5 py-3">
       <FilterBar
         v-model:search="filters.query"
@@ -102,10 +125,8 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
@@ -114,7 +135,6 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
@@ -552,6 +572,23 @@ const leadListRows = computed(() =>
     conversion_state: leadConversionState(row),
   }))
 );
+
+const leadSummary = computed(() => {
+  const all = leadListRows.value;
+  let open = 0;
+  let replied = 0;
+  let converted = 0;
+  all.forEach((row) => {
+    const status = String(row.status || "").trim();
+    if (status === "Open") open += 1;
+    if (status === "Replied") replied += 1;
+    const conv = String(row.conversion_state || "").trim();
+    if (conv === "offer" || conv === "policy" || conv === "any_converted") converted += 1;
+  });
+  const total = pagination.total || all.length;
+  const conversionRate = total > 0 ? ((converted / total) * 100).toFixed(1) : "0.0";
+  return { open, replied, converted, conversionRate };
+});
 
 const leadListColumns = [
   { key: "name", label: "Fırsat No", width: "160px", type: "mono" },

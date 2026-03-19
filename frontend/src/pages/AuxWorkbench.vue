@@ -1,393 +1,84 @@
 <template>
-  <div class="space-y-6">
-    <PageToolbar :title="label('list')" :subtitle="subtitleLabel" :show-refresh="true" :refresh-label="t('refresh')" :busy="isLoading" @refresh="refreshList">
-      <template #actions>
-        <div class="flex flex-wrap items-center gap-2">
-          <ActionButton
-            v-if="canExportSnapshotRows"
-            variant="secondary"
-            size="sm"
-            @click="exportSnapshotRows"
-          >
-            {{ t("exportCsv") }}
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            :disabled="isLoading"
-            @click="downloadAuxExport('xlsx')"
-          >
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            size="sm"
-            :disabled="isLoading"
-            @click="downloadAuxExport('pdf')"
-          >
-            {{ t("exportPdf") }}
-          </ActionButton>
-          <QuickCreateLauncher
-            v-if="auxQuickCreate && canLaunchAuxQuickCreate"
-            variant="primary"
-            size="sm"
-            :label="localize(auxQuickCreate.label) || t('newRecord')"
-            @launch="showAuxQuickCreateDialog = true"
-          />
-          <ActionButton
-            v-for="action in visibleToolbarActions"
-            :key="action.key || action.routeName || localize(action.label)"
-            :variant="action.variant || 'secondary'"
-            :size="action.size || 'sm'"
-            @click="runToolbarAction(action)"
-          >
-            {{ localize(action.label) || t("panel") }}
-          </ActionButton>
-        </div>
-      </template>
-      <template #filters>
-        <WorkbenchFilterToolbar
-          :model-value="presetKey"
-          :show-preset="true"
-          :advanced-label="t('advanced')"
-          :collapse-label="t('hideAdvanced')"
-          :active-count="activeFilterCount"
-          :active-count-label="t('activeFilters')"
-          :preset-label="t('preset')"
-          :preset-options="presetOptions"
-          :can-delete-preset="canDeletePreset"
-          :save-label="t('savePreset')"
-          :delete-label="t('deletePreset')"
-          :apply-label="t('apply')"
-          :reset-label="t('reset')"
-          :disabled="isLoading"
-          @update:modelValue="onPresetModelValue"
-          @presetChange="onPresetChange"
-          @presetSave="savePreset"
-          @presetDelete="deletePreset"
-          @apply="applyFilters"
-          @reset="resetFilters"
-        >
-          <input v-model.trim="draft.query" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" :placeholder="t('searchPlaceholder')" />
-
-          <template v-for="fd in quickFilterDefs" :key="'q-'+fd.key">
-            <component
-              :is="fd.type === 'select' ? 'select' : 'input'"
-              v-model="draft[fd.key]"
-              :type="fd.type === 'select' ? undefined : fd.type === 'number' ? 'number' : 'text'"
-              class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            >
-              <template v-if="fd.type === 'select'">
-                <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-                  {{ optionLabel(fd, opt) }}
-                </option>
-              </template>
-            </component>
-          </template>
-
-          <select v-model="draft.sort" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-            <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
-          <select v-model.number="draft.pageLength" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-            <option v-for="n in [10,20,50]" :key="n" :value="n">{{ n }}</option>
-          </select>
-
-          <template #advanced>
-            <template v-for="fd in advancedFilterDefs" :key="'a-'+fd.key">
-              <component
-                :is="fd.type === 'select' ? 'select' : 'input'"
-                v-model="draft[fd.key]"
-                :type="fd.type === 'select' ? undefined : fd.type === 'number' ? 'number' : 'text'"
-                class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                :placeholder="fieldLabel(fd.field)"
-              >
-                <template v-if="fd.type === 'select'">
-                  <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-                    {{ optionLabel(fd, opt) }}
-                  </option>
-                </template>
-              </component>
-            </template>
-          </template>
-        </WorkbenchFilterToolbar>
-      </template>
-    </PageToolbar>
-
-    <DataTableShell
-      :loading="isLoading && rows.length === 0"
-      :error="loadError.text"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty="!isLoading && !loadError.text && rows.length === 0"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template #header>
-        <div class="space-y-3">
-          <div
-            v-if="snapshotSummaryCards.length"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <article
-              v-for="card in snapshotSummaryCards"
-              :key="card.key"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-            </article>
-          </div>
-          <div
-            v-if="reminderSummaryCards.length"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <article
-              v-for="card in reminderSummaryCards"
-              :key="card.key"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-            </article>
-          </div>
-          <div
-            v-if="accessLogSummaryCards.length"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <article
-              v-for="card in accessLogSummaryCards"
-              :key="card.key"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-            </article>
-          </div>
-          <div
-            v-if="fileSummaryCards.length"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <article
-              v-for="card in fileSummaryCards"
-              :key="card.key"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-            </article>
-          </div>
-          <div
-            v-if="snapshotTrendRows.length"
-            class="grid gap-3 xl:grid-cols-3"
-          >
-            <article class="rounded-2xl border border-slate-200 bg-white px-4 py-3 xl:col-span-3">
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t("snapshotTrendTitle") }}</p>
-                  <p class="mt-1 text-xs text-slate-500">{{ t("snapshotTrendHint") }}</p>
-                </div>
-              </div>
-              <div class="mt-4 grid gap-3 md:grid-cols-3">
-                <article
-                  v-for="row in snapshotTrendRows"
-                  :key="row.snapshotDate"
-                  class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
-                >
-                  <p class="text-sm font-semibold text-slate-900">{{ row.snapshotDateLabel }}</p>
-                  <div class="mt-2 space-y-1 text-xs text-slate-600">
-                    <p>{{ t("totalSnapshots") }}: {{ row.total }}</p>
-                    <p>{{ t("averageScore") }}: {{ row.averageScore }}</p>
-                    <p>{{ t("highRiskSnapshots") }}: {{ row.highRisk }}</p>
-                  </div>
-                </article>
-              </div>
-            </article>
-          </div>
-          <p class="text-xs text-slate-500">{{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
-        </div>
-      </template>
-
-      <div class="at-table-wrap">
-        <table class="at-table w-full min-w-[980px]">
-          <thead>
-            <tr class="at-table-head-row">
-              <th class="at-table-head-cell">{{ t("record") }}</th>
-              <th class="at-table-head-cell">{{ t("details") }}</th>
-              <th class="at-table-head-cell">{{ t("status") }}</th>
-              <th class="at-table-head-cell">{{ t("info") }}</th>
-              <th class="at-table-head-cell">{{ t("actions") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="row in rows"
-              :key="row.name"
-              class="at-table-row cursor-pointer"
-              @click="openDetail(row)"
-            >
-              <DataTableCell>
-                <TableEntityCell :title="rowTitle(row)" :facts="factItems(row, config.primaryFields)">
-                  <p class="text-xs text-slate-500">{{ fieldLabel('modified') }}: {{ formatField(row.modified, 'modified') }}</p>
-                </TableEntityCell>
-              </DataTableCell>
-
-              <TableFactsCell :items="factItems(row, config.detailFields)" />
-
-              <DataTableCell>
-                <div class="flex flex-wrap items-center gap-2">
-                  <StatusBadge v-if="config.statusField && row[config.statusField] !== undefined && row[config.statusField] !== null && row[config.statusField] !== ''" :domain="config.statusType || 'policy'" :status="statusValue(row, config.statusField, config.statusType)" />
-                  <StatusBadge v-if="config.secondaryStatusField && row[config.secondaryStatusField]" :domain="config.secondaryStatusType || 'policy'" :status="statusValue(row, config.secondaryStatusField, config.secondaryStatusType)" />
-                  <span v-if="!config.statusField && !config.secondaryStatusField" class="text-xs text-slate-400">-</span>
-                </div>
-              </DataTableCell>
-
-              <TableFactsCell :items="factItems(row, config.metricFields)" />
-
-              <DataTableCell>
-                <InlineActionRow>
-                  <ActionButton
-                    v-if="canSendDraftNowRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="sendDraftNowRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("sendNow") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canRetryOutboxRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="retryOutboxRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("retry") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canRequeueOutboxRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="requeueOutboxRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("requeue") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canOpenCommunicationContextRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    @click.stop="openCommunicationContextRow(row)"
-                  >
-                    {{ t("openCommunication") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canStartTaskRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="startTaskRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("startTask") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canBlockTaskRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="blockTaskRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("blockTaskAction") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCompleteTaskRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="completeTaskRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCancelTaskRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="cancelTaskRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("cancelTaskAction") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCompleteReminderRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="completeReminderRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCancelReminderRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="cancelReminderRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("cancelTaskAction") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canStartOwnershipAssignmentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="startOwnershipAssignmentRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("startTask") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canBlockOwnershipAssignmentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="blockOwnershipAssignmentRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("blockTaskAction") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCompleteOwnershipAssignmentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="completeOwnershipAssignmentRow(row)"
-                  >
-                    {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
-                  </ActionButton>
-                  <ActionButton variant="secondary" size="xs" @click.stop="openDetail(row)">{{ t("openDetail") }}</ActionButton>
-                  <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="openPanel(row)">{{ t("panel") }}</ActionButton>
-                </InlineActionRow>
-              </DataTableCell>
-            </tr>
-          </tbody>
-        </table>
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">{{ subtitleLabel }}</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ label("list") }}</h1>
       </div>
+      <div class="flex items-center gap-2">
+        <button v-if="canExportSnapshotRows" class="btn btn-sm" @click="exportSnapshotRows">{{ t("exportCsv") }}</button>
+        <button class="btn btn-sm" :disabled="isLoading" @click="downloadAuxExport('xlsx')">{{ t("exportXlsx") }}</button>
+        <button class="btn btn-sm" :disabled="isLoading" @click="downloadAuxExport('pdf')">{{ t("exportPdf") }}</button>
+        <button v-if="auxQuickCreate && canLaunchAuxQuickCreate" class="btn btn-primary btn-sm" @click="showAuxQuickCreateDialog = true">{{ localize(auxQuickCreate.label) || t("newRecord") }}</button>
+        <button v-for="action in visibleToolbarActions" :key="action.key || action.routeName" :class="['btn', 'btn-sm', action.variant === 'primary' ? 'btn-primary' : '']" @click="runToolbarAction(action)">{{ localize(action.label) || t("panel") }}</button>
+      </div>
+    </div>
 
-      <template #footer>
-        <TablePagerFooter
-          :page="pagination.page"
-          :total-pages="totalPages"
-          :page-label="t('page')"
-          :previous-label="t('prev')"
-          :next-label="t('next')"
-          :prev-disabled="pagination.page <= 1 || isLoading"
-          :next-disabled="!hasNextPage || isLoading"
-          @previous="previousPage"
-          @next="nextPage"
-        />
-      </template>
-    </DataTableShell>
+    <div v-if="!isLoading && allSummaryCards.length" class="grid grid-cols-2 gap-3 px-5 md:grid-cols-4">
+      <div v-for="card in allSummaryCards" :key="card.key" class="mini-metric">
+        <p class="mini-metric-label">{{ card.label }}</p>
+        <p class="mini-metric-value">{{ card.value }}</p>
+      </div>
+    </div>
+
+    <div v-if="snapshotTrendRows.length" class="grid gap-3 px-5 xl:grid-cols-3">
+      <article class="rounded-2xl border border-slate-200 bg-white px-4 py-3 xl:col-span-3">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t("snapshotTrendTitle") }}</p>
+            <p class="mt-1 text-xs text-slate-500">{{ t("snapshotTrendHint") }}</p>
+          </div>
+        </div>
+        <div class="mt-4 grid gap-3 md:grid-cols-3">
+          <article
+            v-for="row in snapshotTrendRows"
+            :key="row.snapshotDate"
+            class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+          >
+            <p class="text-sm font-semibold text-slate-900">{{ row.snapshotDateLabel }}</p>
+            <div class="mt-2 space-y-1 text-xs text-slate-600">
+              <p>{{ t("totalSnapshots") }}: {{ row.total }}</p>
+              <p>{{ t("averageScore") }}: {{ row.averageScore }}</p>
+              <p>{{ t("highRiskSnapshots") }}: {{ row.highRisk }}</p>
+            </div>
+          </article>
+        </div>
+      </article>
+    </div>
+
+    <div class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        v-model:search="searchQuery"
+        :filters="auxFilterConfig"
+        :active-count="activeFilterCount"
+        @filter-change="onAuxFilterChange"
+        @reset="resetAuxFilters"
+      />
+    </div>
+
+    <div class="px-5">
+      <p v-if="loadError.text" class="mb-3 text-sm text-red-600">{{ t("loadErrorTitle") }}: {{ loadError.text }}</p>
+      <p class="mb-2 text-xs text-slate-500">{{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
+      <ListTable
+        :columns="auxListColumns"
+        :rows="auxListRows"
+        :loading="isLoading && rows.length === 0"
+        :empty-message="t('emptyTitle')"
+        @row-click="openDetail"
+      />
+      <TablePagerFooter
+        class="mt-3"
+        :page="pagination.page"
+        :total-pages="totalPages"
+        :page-label="t('page')"
+        :previous-label="t('prev')"
+        :next-label="t('next')"
+        :prev-disabled="pagination.page <= 1 || isLoading"
+        :next-disabled="!hasNextPage || isLoading"
+        @previous="previousPage"
+        @next="nextPage"
+      />
+    </div>
 
     <QuickCreateManagedDialog
       v-if="auxQuickCreate && canLaunchAuxQuickCreate"
@@ -400,7 +91,7 @@
       :after-submit="handleAuxQuickCreateAfterSubmit"
       :success-handlers="auxQuickCreateSuccessHandlers"
     />
-  </div>
+  </section>
 </template>
 
 <script setup>
@@ -422,17 +113,10 @@ import {
   writeFilterPresetKey,
   writeFilterPresetList,
 } from "../utils/filterPresetState";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
-import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
-import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
+import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { openTabularExport } from "../utils/listExport";
 
@@ -881,7 +565,21 @@ const fileSummaryCards = computed(() => {
   ];
 });
 
-const subtitleLabel = computed(() => localize(config.subtitle));
+const allSummaryCards = computed(() => {
+  const specific = [
+    ...snapshotSummaryCards.value,
+    ...reminderSummaryCards.value,
+    ...accessLogSummaryCards.value,
+    ...fileSummaryCards.value,
+  ];
+  if (specific.length) return specific;
+  if (rows.value.length > 0) {
+    return [{ key: "total", label: "Toplam Kayıt", value: String(rows.value.length), hint: "" }];
+  }
+  return [];
+});
+
+const subtitleLabel= computed(() => localize(config.subtitle));
 const quickFilterDefs = computed(() => (config.filterDefs || []).slice(0, 2));
 const advancedFilterDefs = computed(() => (config.filterDefs || []).slice(2));
 const sortOptions = computed(() =>
@@ -1735,6 +1433,55 @@ async function hydratePresetStateFromServer() {
   } catch {
     // local fallback
   }
+}
+
+const searchQuery = computed({
+  get: () => filters.query,
+  set: (v) => {
+    filters.query = String(v || "");
+    draft.query = filters.query;
+    pagination.page = 1;
+    refreshList();
+  },
+});
+
+const auxFilterConfig = computed(() =>
+  (config.filterDefs || []).map((fd) => ({
+    key: fd.key,
+    label: fieldLabel(fd.field),
+    options: (fd.options || [])
+      .filter((opt) => opt !== "")
+      .map((opt) => ({ value: String(opt), label: optionLabel(fd, opt) })),
+  }))
+);
+
+const auxListColumns = computed(() => {
+  const cols = [{ key: "_title", label: t("record") }];
+  if ((config.detailFields || []).length) cols.push({ key: "_details", label: t("details") });
+  if (config.statusField) cols.push({ key: config.statusField, label: t("status"), type: "status" });
+  if ((config.metricFields || []).length) cols.push({ key: "_metrics", label: t("info") });
+  return cols;
+});
+
+const auxListRows = computed(() =>
+  rows.value.map((row) => ({
+    ...row,
+    _title: rowTitle(row),
+    _details: factItems(row, config.detailFields).map((item) => `${item.label}: ${item.value}`).join(" · ") || "—",
+    _metrics: factItems(row, config.metricFields).map((item) => `${item.label}: ${item.value}`).join(" · ") || "—",
+  }))
+);
+
+function onAuxFilterChange({ key, value }) {
+  const v = String(value ?? "");
+  if (key in draft) draft[key] = v;
+  filters[key] = v;
+  pagination.page = 1;
+  refreshList();
+}
+
+function resetAuxFilters() {
+  resetFilters();
 }
 
 onMounted(() => {

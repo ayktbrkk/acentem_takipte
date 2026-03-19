@@ -1,176 +1,65 @@
 <template>
   <section class="page-shell space-y-4">
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-      :title="t('title')"
-      :subtitle="t('subtitle')"
-      :show-refresh="true"
-      :busy="paymentsResource.loading"
-      :refresh-label="t('refresh')"
-      @refresh="reloadPayments"
-    >
-      <template #actions>
-        <div class="flex flex-wrap items-center gap-2">
-          <QuickCreateLauncher
-            variant="primary"
-            size="sm"
-            :label="t('newPayment')"
-            @launch="showQuickPaymentDialog = true"
-          />
-          <ActionButton variant="secondary" size="sm" :disabled="paymentsResource.loading" @click="reloadPayments">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            :disabled="paymentsResource.loading"
-            @click="downloadPaymentExport('xlsx')"
-          >
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            size="sm"
-            :disabled="paymentsResource.loading"
-            @click="downloadPaymentExport('pdf')"
-          >
-            {{ t("exportPdf") }}
-          </ActionButton>
-        </div>
-      </template>
-      <template #filters>
-        <WorkbenchFilterToolbar
-          v-model="presetKey"
-          :advanced-label="t('advancedFilters')"
-          :collapse-label="t('hideAdvancedFilters')"
-          :active-count="activeFilterCount"
-          :active-count-label="t('activeFilters')"
-          :preset-label="t('presetLabel')"
-          :preset-options="presetOptions"
-          :can-delete-preset="canDeletePreset"
-          :save-label="t('savePreset')"
-          :delete-label="t('deletePreset')"
-          :apply-label="t('applyFilters')"
-          :reset-label="t('clearFilters')"
-          @preset-change="onPresetChange"
-          @preset-save="savePreset"
-          @preset-delete="deletePreset"
-          @apply="applyPaymentFilters"
-          @reset="resetPaymentFilters"
-        >
-          <input
-            v-model.trim="filters.query"
-            class="input"
-            type="search"
-            :placeholder="t('searchPlaceholder')"
-            @keyup.enter="applyPaymentFilters"
-          />
-          <select v-model="filters.direction" class="input">
-            <option value="">{{ t("allDirections") }}</option>
-            <option value="Inbound">{{ t("inbound") }}</option>
-            <option value="Outbound">{{ t("outbound") }}</option>
-          </select>
-          <select v-model="filters.sort" class="input">
-            <option v-for="option in paymentSortOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <select v-model.number="filters.limit" class="input">
-            <option :value="24">24</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-          </select>
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">Sigorta Operasyonları → Tahsilatlar</p>
+        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+      </div>
+      <span class="text-sm text-gray-400">{{ payments.length }} kayıt</span>
+    </div>
 
-          <template #advanced>
-            <input
-              v-model.trim="filters.customerQuery"
-              class="input"
-              type="search"
-              :placeholder="t('customerFilter')"
-              @keyup.enter="applyPaymentFilters"
-            />
-            <input
-              v-model.trim="filters.policyQuery"
-              class="input"
-              type="search"
-              :placeholder="t('policyFilter')"
-              @keyup.enter="applyPaymentFilters"
-            />
-            <input
-              v-model.trim="filters.purposeQuery"
-              class="input"
-              type="search"
-              :placeholder="t('purposeFilter')"
-              @keyup.enter="applyPaymentFilters"
-            />
-          </template>
-        </WorkbenchFilterToolbar>
-      </template>
-      </PageToolbar>
-    </article>
+    <!-- summary cards -->
+    <div class="grid grid-cols-2 gap-3 px-5 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Ödeme</p>
+        <p class="mini-metric-value">{{ payments.length }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Tahsilat</p>
+        <p class="mini-metric-value text-green-600">{{ paymentSummary.inboundCount }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Ödeme</p>
+        <p class="mini-metric-value text-amber-600">{{ paymentSummary.outboundCount }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Tahsilat Toplamı</p>
+        <p class="mini-metric-value text-green-600">{{ formatCurrency(inboundTotal) }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Net Akış</p>
+        <p class="mini-metric-value text-brand-600">{{ formatCurrency(inboundTotal - outboundTotal) }}</p>
+      </div>
+    </div>
 
-    <DocSummaryGrid v-if="showSummaryGrid" :items="paymentsSummaryItems" />
+    <!-- filter bar -->
+    <div class="border-b border-gray-200 bg-white px-5 py-3">
+      <FilterBar
+        v-model:search="filters.query"
+        :filters="paymentListFilterConfig"
+        :active-count="paymentListActiveCount"
+        @filter-change="onPaymentFilterChange"
+        @reset="resetPaymentFilters"
+      >
+        <template #actions>
+          <button class="btn btn-primary btn-sm" @click="showQuickPaymentDialog = true">+ Yeni Ödeme</button>
+          <button class="btn btn-sm" :disabled="paymentsResource.loading" @click="reloadPayments">Yenile</button>
+          <button class="btn btn-sm" :disabled="paymentsResource.loading" @click="downloadPaymentExport('xlsx')">Excel</button>
+          <button class="btn btn-sm" :disabled="paymentsResource.loading" @click="downloadPaymentExport('pdf')">PDF</button>
+        </template>
+      </FilterBar>
+    </div>
 
-    <article class="surface-card rounded-2xl p-5">
-      <DataTableShell
-      :loading="paymentsResource.loading"
-      :error="paymentsErrorText"
-      :empty="payments.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('empty')"
-    >
-      <template #header>
-        <div class="text-xs text-slate-500">{{ t("showing") }} {{ payments.length }}</div>
-      </template>
-
-      <template #default>
-        <div class="overflow-auto">
-          <table class="at-table">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("payment") }}</th>
-                <th class="at-table-head-cell">{{ t("direction") }}</th>
-                <th class="at-table-head-cell">{{ t("amount") }}</th>
-                <th class="at-table-head-cell">{{ t("details") }}</th>
-                <th class="at-table-head-cell">{{ t("actions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="payment in payments" :key="payment.name" class="at-table-row">
-                <DataTableCell cell-class="min-w-[240px]">
-                  <TableEntityCell :title="payment.payment_no || payment.name" :facts="paymentIdentityFacts(payment)" />
-                </DataTableCell>
-                <DataTableCell>
-                  <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
-                </DataTableCell>
-                <DataTableCell>
-                  <FormattedCurrencyValue :value="payment.amount_try" :locale="localeCode" />
-                </DataTableCell>
-                <TableFactsCell :items="paymentDetailFacts(payment)" cell-class="min-w-[220px]" />
-                <DataTableCell>
-                  <InlineActionRow>
-                    <ActionButton variant="secondary" size="xs" @click="openPaymentDetail(payment)">
-                      {{ t("openPaymentDetail") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="payment.policy || payment.customer"
-                      variant="secondary"
-                      size="xs"
-                      @click="openRelatedRecord(payment)"
-                    >
-                      {{ t("openRelated") }}
-                    </ActionButton>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-      </DataTableShell>
-    </article>
+    <!-- table -->
+    <div class="flex-1 p-5">
+      <ListTable
+        :columns="paymentListColumns"
+        :rows="paymentListRows"
+        :loading="paymentsResource.loading"
+        empty-message="Ödeme kaydı bulunamadı."
+        @row-click="(row) => openPaymentDetail(row)"
+      />
+    </div>
 
     <QuickCreateManagedDialog
       v-model="showQuickPaymentDialog"
@@ -186,25 +75,20 @@
 
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { usePaymentStore } from "../stores/payment";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
-import FormattedCurrencyValue from "../components/app-shell/FormattedCurrencyValue.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
+import ListTable from "../components/ui/ListTable.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { mutedFact, pushMutedFactIf, subtleFact } from "../utils/factItems";
 import { openTabularExport } from "../utils/listExport";
@@ -334,6 +218,7 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const paymentStore = usePaymentStore();
 const route = useRoute();
+const router = useRouter();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function buildOfficeBranchLookupFilters() {
@@ -721,6 +606,57 @@ function openPaymentDetail(payment) {
   if (!payment?.name) return
   router.push(`/payments/${encodeURIComponent(payment.name)}`)
 }
+
+const paymentListFilterConfig = computed(() => [
+  {
+    key: "direction",
+    label: "Yön",
+    options: [
+      { value: "Inbound", label: t("inbound") },
+      { value: "Outbound", label: t("outbound") },
+    ],
+  },
+]);
+
+const paymentListActiveCount = computed(() =>
+  [filters.query, filters.direction, filters.customerQuery, filters.policyQuery, filters.purposeQuery]
+    .filter((v) => String(v ?? "").trim() !== "").length
+);
+
+function onPaymentFilterChange({ key, value }) {
+  filters[key] = String(value || "");
+  return reloadPayments();
+}
+
+const paymentSummary = computed(() => {
+  let inboundCount = 0;
+  let outboundCount = 0;
+  payments.value.forEach((p) => {
+    if (p.payment_direction === "Inbound") inboundCount += 1;
+    else if (p.payment_direction === "Outbound") outboundCount += 1;
+  });
+  return { inboundCount, outboundCount };
+});
+
+const paymentListColumns = [
+  { key: "payment_no", label: "Ödeme No", width: "160px", type: "mono" },
+  { key: "payment_direction", label: "Yön", width: "110px", type: "status" },
+  { key: "amount_try", label: "Tutar", width: "130px", type: "amount", align: "right" },
+  { key: "payment_date", label: "Tarih", width: "110px" },
+  { key: "customer", label: "Müşteri", width: "200px" },
+  { key: "policy", label: "Poliçe", width: "160px" },
+  { key: "payment_purpose", label: "Amaç", width: "160px" },
+];
+
+const paymentListRows = computed(() =>
+  payments.value.map((row) => ({
+    ...row,
+    payment_no: row.payment_no || row.name,
+    customer: row.customer || "-",
+    policy: row.policy || "-",
+    payment_purpose: row.payment_purpose || "-",
+  }))
+);
 
 onMounted(() => {
   paymentStore.setLocaleCode(localeCode.value);
