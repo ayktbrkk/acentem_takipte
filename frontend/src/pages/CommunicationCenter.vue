@@ -9,8 +9,6 @@
 
     <article class="surface-card rounded-2xl p-5">
       <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
         :show-refresh="true"
         :busy="snapshotResource.loading || dispatching"
         :refresh-label="t('refresh')"

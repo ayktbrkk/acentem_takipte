@@ -1,6 +1,14 @@
 <template>
-  <div class="space-y-6">
-    <PageToolbar :title="label('list')" :subtitle="subtitleLabel" :show-refresh="true" :refresh-label="t('refresh')" :busy="isLoading" @refresh="refreshList">
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div>
+        <h1 class="text-xl font-medium text-gray-900">{{ label('list') }}</h1>
+        <p class="detail-subtitle">{{ subtitleLabel }}</p>
+      </div>
+    </div>
+
+    <article class="surface-card rounded-2xl p-5">
+    <PageToolbar :show-refresh="true" :refresh-label="t('refresh')" :busy="isLoading" @refresh="refreshList">
       <template #actions>
         <div class="flex flex-wrap items-center gap-2">
           <ActionButton
@@ -112,6 +120,7 @@
         </WorkbenchFilterToolbar>
       </template>
     </PageToolbar>
+    </article>
 
     <DataTableShell
       :loading="isLoading && rows.length === 0"
@@ -400,7 +409,7 @@
       :after-submit="handleAuxQuickCreateAfterSubmit"
       :success-handlers="auxQuickCreateSuccessHandlers"
     />
-  </div>
+  </section>
 </template>
 
 <script setup>

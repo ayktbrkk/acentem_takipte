@@ -8,14 +8,7 @@
     </div>
 
     <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :show-refresh="true"
-        :busy="loading"
-        :refresh-label="t('refresh')"
-        @refresh="loadReport"
-      >
+      <PageToolbar>
         <template #actions>
           <ActionButton variant="secondary" size="sm" :disabled="loading" @click="loadReport">
             {{ t("refresh") }}

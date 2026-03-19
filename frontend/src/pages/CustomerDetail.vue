@@ -864,7 +864,6 @@ import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
-import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
 import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
