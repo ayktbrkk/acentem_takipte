@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell space-y-4">
+  <section role="main" class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">{{ subtitleLabel }}</p>

@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell">
+  <section role="main" class="page-shell">
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Poliçeler</p>

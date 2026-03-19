@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell space-y-4">
+  <section role="main" class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">{{ localize(config.labels?.list) }}</p>
@@ -117,16 +117,22 @@
       </div>
     </div>
 
-    <DataTableShell
-      :loading="activeLoading && !doc"
-      :error="errorText"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty="isEmpty"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template v-if="doc">
+    <div class="flex-1 px-5 pb-5">
+      <!-- Loading -->
+      <div v-if="activeLoading && !doc" class="flex items-center justify-center py-16 text-sm text-slate-500">
+        <span class="animate-pulse">{{ t("loading") }}</span>
+      </div>
+      <!-- Error -->
+      <div v-else-if="errorText" class="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+        <p class="font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="mt-1">{{ errorText }}</p>
+      </div>
+      <!-- Empty -->
+      <div v-else-if="isEmpty" class="flex flex-col items-center justify-center py-16 text-sm text-slate-400">
+        <p class="font-medium text-slate-600">{{ t("emptyTitle") }}</p>
+        <p class="mt-1">{{ t("emptyDescription") }}</p>
+      </div>
+      <template v-else-if="doc">
         <DocSummaryGrid :items="summaryItems" />
 
         <div v-if="specialBadges.length" class="surface-card rounded-2xl p-5">
@@ -197,7 +203,7 @@
           </article>
         </div>
       </template>
-    </DataTableShell>
+    </div>
 
     <QuickCreateManagedDialog
       v-if="quickEditConfig && canUseQuickEdit"
@@ -228,7 +234,6 @@ import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { deskActionsEnabled } from "../utils/deskActions";
 import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
 import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";

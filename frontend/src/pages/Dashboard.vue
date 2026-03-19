@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell space-y-6">
+  <section role="main" class="page-shell space-y-6">
     <header class="dashboard-hero rounded-2xl p-6 text-white shadow-lg shadow-slate-900/20">
       <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div class="space-y-2">
