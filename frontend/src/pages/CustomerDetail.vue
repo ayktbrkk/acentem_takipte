@@ -67,56 +67,54 @@
           <FieldGroup :fields="recordFields" :cols="1" />
         </DetailCard>
 
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('insuredInfoCard')" :show-count="false">
-            <template #trailing>
-              <div class="flex flex-wrap items-center justify-end gap-2">
-                <span class="text-xs font-medium text-slate-500">
-                  {{ customerTaxIdDisplay }}
-                </span>
-                <ActionButton
-                  v-if="!profileEditMode"
-                  variant="secondary"
-                  size="xs"
-                  :disabled="customerLoading"
-                  @click="startProfileEdit"
-                >
-                  {{ t("editProfile") }}
+        <DetailCard :title="t('insuredInfoCard')">
+          <template #action>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <span class="text-xs font-medium text-slate-500">
+                {{ customerTaxIdDisplay }}
+              </span>
+              <ActionButton
+                v-if="!profileEditMode"
+                variant="secondary"
+                size="xs"
+                :disabled="customerLoading"
+                @click="startProfileEdit"
+              >
+                {{ t("editProfile") }}
+              </ActionButton>
+              <template v-else>
+                <ActionButton variant="secondary" size="xs" :disabled="customerProfileUpdateResource.loading" @click="cancelProfileEdit">
+                  {{ t("cancelEdit") }}
                 </ActionButton>
-                <template v-else>
-                  <ActionButton variant="secondary" size="xs" :disabled="customerProfileUpdateResource.loading" @click="cancelProfileEdit">
-                    {{ t("cancelEdit") }}
-                  </ActionButton>
-                  <ActionButton variant="primary" size="xs" :disabled="customerProfileUpdateResource.loading" @click="saveProfile">
-                    {{ customerProfileUpdateResource.loading ? t("saving") : t("saveProfile") }}
-                  </ActionButton>
-                </template>
-              </div>
-            </template>
-          </SectionCardHeader>
+                <ActionButton variant="primary" size="xs" :disabled="customerProfileUpdateResource.loading" @click="saveProfile">
+                  {{ customerProfileUpdateResource.loading ? t("saving") : t("saveProfile") }}
+                </ActionButton>
+              </template>
+            </div>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <template v-else>
-          <div
-            v-if="profileSaveError && !profileEditMode"
-            class="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700"
-          >
-            {{ profileSaveError }}
-          </div>
-          <div
-            v-if="profileSaveMessage && !profileEditMode"
-            class="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700"
-          >
-            {{ profileSaveMessage }}
-          </div>
-          <div v-if="!profileEditMode" class="space-y-3 text-sm">
-            <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                {{ t("fullName") }}
-              </p>
-              <p class="mt-0.5 text-sm font-semibold text-slate-900">
-                {{ customer.full_name || "-" }}
-              </p>
+            <div
+              v-if="profileSaveError && !profileEditMode"
+              class="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700"
+            >
+              {{ profileSaveError }}
             </div>
+            <div
+              v-if="profileSaveMessage && !profileEditMode"
+              class="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700"
+            >
+              {{ profileSaveMessage }}
+            </div>
+            <div v-if="!profileEditMode" class="space-y-3 text-sm">
+              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
+                  {{ t("fullName") }}
+                </p>
+                <p class="mt-0.5 text-sm font-semibold text-slate-900">
+                  {{ customer.full_name || "-" }}
+                </p>
+              </div>
 
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
@@ -209,19 +207,19 @@
               </div>
             </div>
           </div>
-          <div v-else class="space-y-3 text-sm">
-            <div v-if="profileSaveError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
-              {{ profileSaveError }}
-            </div>
-            <div v-else-if="profileSaveMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
-              {{ profileSaveMessage }}
-            </div>
+            <div v-else class="space-y-3 text-sm">
+              <div v-if="profileSaveError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+                {{ profileSaveError }}
+              </div>
+              <div v-else-if="profileSaveMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+                {{ profileSaveMessage }}
+              </div>
 
-            <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-              <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("fullName") }}</label>
-              <input v-model.trim="profileForm.full_name" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="text" />
-              <p v-if="profileFormErrors.full_name" class="mt-1 text-xs font-medium text-rose-700">{{ profileFormErrors.full_name }}</p>
-            </div>
+              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+                <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("fullName") }}</label>
+                <input v-model.trim="profileForm.full_name" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="text" />
+                <p v-if="profileFormErrors.full_name" class="mt-1 text-xs font-medium text-rose-700">{{ profileFormErrors.full_name }}</p>
+              </div>
 
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
@@ -297,17 +295,16 @@
             </div>
           </div>
           </template>
-        </article>
+        </DetailCard>
 
       </aside>
 
       <div class="detail-main space-y-4">
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('operationsTitle')"
         >
-          <SectionCardHeader :title="t('operationsTitle')" :show-count="false" />
-          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+          <div class="mt-1 grid gap-2 sm:grid-cols-2">
             <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
               {{ t("newOffer") }}
             </ActionButton>
@@ -344,13 +341,15 @@
               {{ t("openDesk") }}
             </ActionButton>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('activitiesTitle')"
         >
-          <SectionCardHeader :title="t('activitiesTitle')" :count="activityRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ activityRows.length }}</span>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="activityRows.length === 0" class="at-empty-block">
             {{ t("noActivity") }}
@@ -368,13 +367,15 @@
               <MiniFactList class="mt-2" :items="activityCardFacts(activity)" />
             </EntityPreviewCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('remindersTitle')"
         >
-          <SectionCardHeader :title="t('remindersTitle')" :count="reminderRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ reminderRows.length }}</span>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="reminderRows.length === 0" class="at-empty-block">
             {{ t("noReminder") }}
@@ -410,13 +411,15 @@
               <MiniFactList class="mt-2" :items="reminderCardFacts(reminder)" />
             </EntityPreviewCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('activePoliciesTitle')"
         >
-          <SectionCardHeader :title="t('activePoliciesTitle')" :count="activePolicies.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ activePolicies.length }}</span>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div
             v-else-if="activePolicies.length === 0"
@@ -442,13 +445,15 @@
               </template>
             </EntityPreviewCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('openOffersTitle')"
         >
-          <SectionCardHeader :title="t('openOffersTitle')" :count="openOffers.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ openOffers.length }}</span>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div
             v-else-if="openOffers.length === 0"
@@ -469,13 +474,15 @@
               <MiniFactList class="mt-2" :items="offerCardFacts(offer)" />
             </EntityPreviewCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('paymentSummaryTitle')"
         >
-          <SectionCardHeader :title="t('paymentSummaryTitle')" :count="paymentPreviewRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ paymentPreviewRows.length }}</span>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="paymentPreviewRows.length === 0" class="at-empty-block">
             {{ t("noPaymentHistory") }}
@@ -493,13 +500,15 @@
               <MiniFactList class="mt-2" :items="paymentCardFacts(payment)" />
             </EntityPreviewCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('claimsTitle')"
         >
-          <SectionCardHeader :title="t('claimsTitle')" :count="claimPreviewRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ claimPreviewRows.length }}</span>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="claimPreviewRows.length === 0" class="at-empty-block">
             {{ t("noClaims") }}
@@ -517,13 +526,15 @@
               <MiniFactList class="mt-2" :items="claimCardFacts(claim)" />
             </EntityPreviewCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('renewalsTitle')"
         >
-          <SectionCardHeader :title="t('renewalsTitle')" :count="renewalPreviewRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ renewalPreviewRows.length }}</span>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="renewalPreviewRows.length === 0" class="at-empty-block">
             {{ t("noUpcomingRenewal") }}
@@ -541,13 +552,12 @@
               <MiniFactList class="mt-2" :items="renewalCardFacts(renewal)" />
             </EntityPreviewCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('insightSummaryTitle')"
         >
-          <SectionCardHeader :title="t('insightSummaryTitle')" :show-count="false" />
           <div class="grid gap-3 md:grid-cols-3">
             <MetaListCard
               :title="t('segment')"
@@ -594,13 +604,15 @@
               :meta="customer360Insights.source_version || '-'"
             />
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('assignmentsTitle')"
         >
-          <SectionCardHeader :title="t('assignmentsTitle')" :count="ownershipAssignmentRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ ownershipAssignmentRows.length }}</span>
+          </template>
           <div v-if="ownershipAssignmentRows.length === 0" class="at-empty-block">
             {{ t("noAssignment") }}
           </div>
@@ -649,13 +661,15 @@
               <p class="mt-2 text-xs text-slate-500">{{ assignmentSummaryLabel(assignment) }}</p>
             </MetaListCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('crossSellTitle')"
         >
-          <SectionCardHeader :title="t('crossSellTitle')" :count="crossSellOpportunityRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ crossSellOpportunityRows.length }}</span>
+          </template>
           <div v-if="crossSellOpportunityRows.length === 0" class="at-empty-block">
             {{ t("noCrossSellOpportunity") }}
           </div>
@@ -668,13 +682,15 @@
               :meta="t('crossSellOpportunityMeta')"
             />
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('relatedCustomersTitle')"
         >
-          <SectionCardHeader :title="t('relatedCustomersTitle')" :count="relatedCustomerRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ relatedCustomerRows.length }}</span>
+          </template>
           <div v-if="relatedCustomerRows.length === 0" class="at-empty-block">
             {{ t("noRelatedCustomer") }}
           </div>
@@ -698,14 +714,13 @@
                 </template>
               </MetaListCard>
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('documentsTitle')"
         >
-          <SectionCardHeader :title="t('documentsTitle')" :show-count="false" />
-          <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <MetaListCard :label="t('totalDocuments')" :value="String(customerDocumentProfile.total_files || 0)" />
             <MetaListCard :label="t('pdfDocuments')" :value="String(customerDocumentProfile.pdf_count || 0)" />
             <MetaListCard :label="t('imageDocuments')" :value="String(customerDocumentProfile.image_count || 0)" />
@@ -713,13 +728,15 @@
             <MetaListCard :label="t('otherDocuments')" :value="String(customerDocumentProfile.other_count || 0)" />
             <MetaListCard :label="t('lastUpload')" :value="formatDate(customerDocumentProfile.last_uploaded_on)" />
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('insuredAssetsTitle')"
         >
-          <SectionCardHeader :title="t('insuredAssetsTitle')" :count="insuredAssetRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ insuredAssetRows.length }}</span>
+          </template>
           <div v-if="insuredAssetRows.length === 0" class="at-empty-block">
             {{ t("noInsuredAsset") }}
           </div>
@@ -746,13 +763,15 @@
                 </template>
               </EntityPreviewCard>
             </div>
-          </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('communicationSummaryTitle')"
         >
-          <SectionCardHeader :title="t('communicationSummaryTitle')" :count="communicationChannelRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ communicationChannelRows.length }}</span>
+          </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="communicationChannelRows.length === 0" class="at-empty-block">
             {{ t("noCommunicationSummary") }}
@@ -766,13 +785,15 @@
               :meta="String(channel.total)"
             />
           </div>
-        </article>
+        </DetailCard>
 
-        <article
+        <DetailCard
           v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
-          class="surface-card rounded-2xl p-5"
+          :title="t('timelineTitle')"
         >
-          <SectionCardHeader :title="t('timelineTitle')" :count="timelineRows.length" />
+          <template #action>
+            <span class="badge badge-blue">{{ timelineRows.length }}</span>
+          </template>
           <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div
             v-else-if="timelineRows.length === 0"
@@ -796,7 +817,7 @@
               </template>
             </MetaListCard>
           </ol>
-        </article>
+        </DetailCard>
       </div>
     </div>
     <QuickCreateManagedDialog
@@ -863,13 +884,10 @@ import { createResource } from "frappe-ui";
 import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
 import DetailCard from "../components/ui/DetailCard.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";

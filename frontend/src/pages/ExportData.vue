@@ -2,18 +2,18 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <h1 class="detail-title">Veri Disa Aktarma</h1>
-        <p class="detail-subtitle">Raporlama ve analiz icin sistem verilerini farkli formatlarda indirin.</p>
+        <h1 class="detail-title">Veri Dışa Aktarma</h1>
+        <p class="detail-subtitle">Raporlama ve analiz için sistem verilerini farklı formatlarda indirin.</p>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="resetForm">Sifirla</button>
+        <button class="btn btn-outline btn-sm" type="button" @click="resetForm">Sıfırla</button>
       </div>
     </div>
 
-    <DetailCard title="1. Veri Kumesi ve Format">
+    <DetailCard title="1. Veri Kümesi ve Format">
       <div class="grid gap-4 md:grid-cols-3">
         <div class="form-field">
-          <label class="form-label">Veri Kumesi</label>
+          <label class="form-label">Veri Kümesi</label>
           <select v-model="form.screen" class="form-input">
             <option v-for="option in screenOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
           </select>
@@ -29,7 +29,7 @@
         </div>
 
         <div class="form-field">
-          <label class="form-label">Dosya Adi</label>
+          <label class="form-label">Dosya Adı</label>
           <input v-model="form.filename" class="form-input" type="text" placeholder="ornek: policy_export" />
         </div>
       </div>
@@ -38,19 +38,19 @@
     <DetailCard title="2. Filtreler">
       <div class="grid gap-4 md:grid-cols-3">
         <div class="form-field">
-          <label class="form-label">Baslangic Tarihi</label>
+          <label class="form-label">Başlangıç Tarihi</label>
           <input v-model="form.startDate" class="form-input" type="date" />
         </div>
 
         <div class="form-field">
-          <label class="form-label">Bitis Tarihi</label>
+          <label class="form-label">Bitiş Tarihi</label>
           <input v-model="form.endDate" class="form-input" type="date" />
         </div>
 
         <div class="form-field">
           <label class="form-label">Durum</label>
           <select v-model="form.status" class="form-input">
-            <option value="">Tum Durumlar</option>
+            <option value="">Tüm Durumlar</option>
             <option value="Draft">Draft</option>
             <option value="Active">Active</option>
             <option value="Open">Open</option>
@@ -61,13 +61,13 @@
     </DetailCard>
 
     <DetailCard title="3. Son Islemler">
-      <div v-if="!historyRows.length" class="card-empty">Henuz export kaydi bulunmuyor.</div>
+      <div v-if="!historyRows.length" class="card-empty">Henüz dışa aktarma kaydı bulunmuyor.</div>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full text-sm">
           <thead>
             <tr>
               <th class="table-header">Tarih</th>
-              <th class="table-header">Veri Kumesi</th>
+              <th class="table-header">Veri Kümesi</th>
               <th class="table-header">Format</th>
               <th class="table-header">Dosya</th>
             </tr>
@@ -85,8 +85,8 @@
     </DetailCard>
 
     <div class="flex justify-end gap-2">
-      <button class="btn btn-outline" type="button" @click="cancel">Iptal</button>
-      <button class="btn btn-primary" type="button" @click="downloadExport">Disa Aktar</button>
+      <button class="btn btn-outline" type="button" @click="cancel">İptal</button>
+      <button class="btn btn-primary" type="button" @click="downloadExport">Dışa Aktar</button>
     </div>
 
     <p v-if="message" class="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
@@ -104,11 +104,11 @@ const router = useRouter();
 
 const screenOptions = [
   { value: "dashboard", label: "Dashboard" },
-  { value: "policy_list", label: "Policeler" },
+  { value: "policy_list", label: "Poliçeler" },
   { value: "offer_list", label: "Teklifler" },
-  { value: "customer_list", label: "Musteriler" },
+  { value: "customer_list", label: "Müşteriler" },
   { value: "claims_board", label: "Hasarlar" },
-  { value: "payments_board", label: "Odemeler" },
+  { value: "payments_board", label: "Ödemeler" },
   { value: "renewals_board", label: "Yenilemeler" },
 ];
 

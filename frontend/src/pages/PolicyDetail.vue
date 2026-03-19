@@ -147,21 +147,17 @@
         </template>
       </div>
 
-      <div class="detail-sidebar">
-        <div>
-          <p class="section-title">{{ t('premiumTitle') }}</p>
+      <div class="detail-sidebar space-y-4">
+        <DetailCard :title="t('premiumTitle')">
           <div class="grid grid-cols-2 gap-2">
             <div v-for="m in premiumMetrics" :key="m.label" class="mini-metric">
               <p class="mini-metric-label">{{ m.label }}</p>
               <p class="mini-metric-value">{{ m.value }}</p>
             </div>
           </div>
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t('customerTitle') }}</p>
+        <DetailCard :title="t('customerTitle')">
           <div v-if="customerLoading" class="field-value-muted">{{ t('loading') }}</div>
           <div v-else-if="customer" class="space-y-3">
             <div class="flex items-center gap-2.5">
@@ -176,19 +172,13 @@
             </button>
           </div>
           <div v-else class="field-value-muted">{{ t('emptyCustomer') }}</div>
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t('scheduleTitle') }}</p>
+        <DetailCard :title="t('scheduleTitle')">
           <FieldGroup :fields="dateFields" :cols="2" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t('assignmentsTitle') }}</p>
+        <DetailCard :title="t('assignmentsTitle')">
           <div v-if="assignments.length === 0" class="field-value-muted">{{ t('emptyAssignments') }}</div>
           <div v-else class="space-y-2">
             <MetaListCard
@@ -199,7 +189,7 @@
               :meta="assignment.status || '-'"
             />
           </div>
-        </div>
+        </DetailCard>
       </div>
     </div>
 

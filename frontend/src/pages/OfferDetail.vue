@@ -85,8 +85,7 @@
       </div>
 
       <div class="detail-sidebar space-y-4">
-        <div>
-          <p class="section-title">Müşteri</p>
+        <DetailCard title="Müşteri">
           <div class="mb-3 flex items-center gap-3">
             <div class="avatar avatar-md avatar-blue">{{ initials(offer.customer_name || offer.customer) }}</div>
             <div>
@@ -94,21 +93,15 @@
               <button class="text-xs text-brand-600 hover:underline" type="button" @click="viewCustomer">Detayı Gör →</button>
             </div>
           </div>
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Teklif Detayları</p>
+        <DetailCard title="Teklif Detayları">
           <FieldGroup :fields="offerFields" :cols="1" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Kayıt Bilgileri</p>
+        <DetailCard title="Kayıt Bilgileri">
           <FieldGroup :fields="recordFields" :cols="1" />
-        </div>
+        </DetailCard>
       </div>
     </div>
   </section>

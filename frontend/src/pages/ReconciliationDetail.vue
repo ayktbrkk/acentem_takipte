@@ -74,24 +74,17 @@
       </div>
 
       <aside class="detail-sidebar space-y-4">
-        <div>
-          <p class="section-title">{{ t("companyInfo") }}</p>
+        <DetailCard :title="t('companyInfo')">
           <FieldGroup :fields="companyFields" :cols="1" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("periodInfo") }}</p>
+        <DetailCard :title="t('periodInfo')">
           <FieldGroup :fields="periodFields" :cols="1" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("statusInfo") }}</p>
+        <DetailCard :title="t('statusInfo')">
           <FieldGroup :fields="statusFields" :cols="1" />
-        </div>
+        </DetailCard>
       </aside>
     </div>
   </section>
@@ -115,38 +108,38 @@ const router = useRouter();
 const copy = {
   tr: {
     breadcrumb: "Kontrol Merkezi / Mutabakat Detay",
-    back: "Listeye Don",
-    openWorkbench: "Mutabakat Masasi",
-    summary: "Ozet Bilgiler",
-    policyList: "Police Listesi",
-    unmatchedRecords: "Eslesmeyen Kayitlar",
-    notes: "Mutabakat Notlari",
-    timeline: "Gecmis",
-    companyInfo: "Sirket Bilgileri",
-    periodInfo: "Donem Bilgisi",
+    back: "Listeye Dön",
+    openWorkbench: "Mutabakat Masası",
+    summary: "Özet Bilgiler",
+    policyList: "Poliçe Listesi",
+    unmatchedRecords: "Eşleşmeyen Kayıtlar",
+    notes: "Mutabakat Notları",
+    timeline: "Geçmiş",
+    companyInfo: "Şirket Bilgileri",
+    periodInfo: "Dönem Bilgisi",
     statusInfo: "Durum",
-    noPolicyRows: "Bagli police kaydi bulunamadi.",
-    noUnmatchedRows: "Eslesmeyen kayit bulunamadi.",
-    noNotes: "Not veya detay bulunamadi.",
-    accountingEntry: "Muhasebe Kaydi",
+    noPolicyRows: "Bağlı poliçe kaydı bulunamadı.",
+    noUnmatchedRows: "Eşleşmeyen kayıt bulunamadı.",
+    noNotes: "Not veya detay bulunamadı.",
+    accountingEntry: "Muhasebe Kaydı",
     source: "Kaynak",
-    company: "Sirket",
-    policy: "Police",
-    customer: "Musteri",
+    company: "Şirket",
+    policy: "Poliçe",
+    customer: "Müşteri",
     sourceName: "Kaynak No",
     status: "Durum",
     difference: "Fark",
-    resolution: "Cozum",
+    resolution: "Çözüm",
     sourceDoctype: "Kaynak Tipi",
-    entryStatus: "Kayit Durumu",
+    entryStatus: "Kayıt Durumu",
     mismatchType: "Uyumsuzluk Tipi",
     localTry: "Yerel TRY",
     externalTry: "Harici TRY",
-    resolvedOn: "Cozum Tarihi",
-    resolvedBy: "Cozen",
-    resolvedAction: "Cozum Aksiyonu",
-    created: "Olusturuldu",
-    updated: "Guncellendi",
+    resolvedOn: "Çözüm Tarihi",
+    resolvedBy: "Çözen",
+    resolvedAction: "Çözüm Aksiyonu",
+    created: "Oluşturuldu",
+    updated: "Güncellendi",
     synced: "Son Sync",
     rawDetails: "Detay JSON",
   },
@@ -208,8 +201,8 @@ const periodLabel = computed(() => derivePeriodLabel(item.value, entry.value));
 
 const heroCells = computed(() => [
   { label: "Mutabakat No", value: item.value.name || name.value || "-", variant: "default" },
-  { label: "Sirket", value: entry.value.insurance_company || "-", variant: "default" },
-  { label: "Donem", value: periodLabel.value, variant: "lg" },
+  { label: "Şirket", value: entry.value.insurance_company || "-", variant: "default" },
+  { label: "Dönem", value: periodLabel.value, variant: "lg" },
   { label: "Fark", value: formatMoney(differenceValue.value), variant: differenceValue.value ? "warn" : "success" },
 ]);
 
@@ -279,7 +272,7 @@ const companyFields = computed(() => [
 ]);
 
 const periodFields = computed(() => [
-  { label: "Period", value: periodLabel.value },
+  { label: "Dönem", value: periodLabel.value },
   { label: t("created"), value: formatDateTime(item.value.creation) },
   { label: t("updated"), value: formatDateTime(item.value.modified) },
   { label: t("synced"), value: formatDateTime(entry.value.last_synced_on) },

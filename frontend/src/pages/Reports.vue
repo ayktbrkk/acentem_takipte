@@ -2,7 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
     </div>

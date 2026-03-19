@@ -8,13 +8,13 @@
       <div class="flex gap-2">
         <button class="btn btn-outline btn-sm" type="button" @click="focusPolicySearch">Filtrele</button>
         <button class="btn btn-outline btn-sm" type="button" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">Disa Aktar</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openQuickPolicyDialog">+ Yeni Police</button>
+        <button class="btn btn-primary btn-sm" type="button" @click="openQuickPolicyDialog">+ Yeni Poliçe</button>
       </div>
     </div>
 
     <div class="grid grid-cols-1 gap-4 px-5 md:grid-cols-4">
       <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Police</p>
+        <p class="mini-metric-label">Toplam Poliçe</p>
         <p class="mini-metric-value">{{ formatCount(policySummary.total) }}</p>
       </div>
       <div class="mini-metric">
@@ -31,7 +31,7 @@
       </div>
     </div>
 
-    <div class="border-b border-gray-200 bg-white px-5 py-3">
+    <div class="surface-card rounded-2xl p-4">
       <FilterBar
         v-model:search="policyListSearchQuery"
         :filters="policyListFilterConfig"
@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <div class="flex-1 p-5">
+    <div class="surface-card rounded-2xl p-5">
       <ListTable
         :columns="policyListColumns"
         :rows="policyListRowsWithUrgency"

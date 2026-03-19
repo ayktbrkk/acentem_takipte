@@ -3,7 +3,7 @@
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Ödemeler</p>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
       <span class="text-sm text-gray-400">{{ formatCount(payments.length) }} kayıt</span>
@@ -34,8 +34,6 @@
 
     <article class="surface-card rounded-2xl p-5">
       <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
         :show-refresh="true"
         :busy="paymentsResource.loading"
         :refresh-label="t('refresh')"
@@ -504,16 +502,6 @@ const paymentsWithActions = computed(() => paymentSnapshots.value.map((row) => (
 })));
 const inboundTotal = computed(() => paymentStore.inboundTotal);
 const outboundTotal = computed(() => paymentStore.outboundTotal);
-const showSummaryGrid = computed(
-  () => !paymentsResource.loading && !paymentsErrorText.value && payments.value.length > 0
-);
-const paymentsSummaryItems = computed(() => [
-  { key: "count", label: t("metricCount"), value: String(payments.value.length) },
-  { key: "inbound", label: t("metricInbound"), value: formatCurrency(inboundTotal.value), valueClass: "text-emerald-700" },
-  { key: "outbound", label: t("metricOutbound"), value: formatCurrency(outboundTotal.value), valueClass: "text-amber-700" },
-  { key: "net", label: t("metricNet"), value: formatCurrency(inboundTotal.value - outboundTotal.value) },
-]);
-
 function formatCurrency(value) {
   return new Intl.NumberFormat(localeCode.value, {
     style: "currency",

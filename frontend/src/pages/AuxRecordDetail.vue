@@ -1,119 +1,149 @@
 <template>
-  <div class="space-y-6">
-    <DocHeaderCard :eyebrow="localize(config.labels?.list)" :title="recordTitle" :subtitle="recordSubtitle">
-      <template #actions>
-        <DetailActionRow>
-          <ActionButton variant="secondary" size="xs" @click="goBack">{{ t("backToList") }}</ActionButton>
-          <ActionButton
-            v-if="canOpenCommunicationContext"
-            variant="secondary"
-            size="xs"
-            @click="openCommunicationContext"
+  <section class="page-shell space-y-4">
+    <div class="detail-topbar">
+      <div class="min-w-0">
+        <p class="detail-breadcrumb">{{ localize(config.labels?.list) }}</p>
+        <h1 class="detail-title">
+          {{ recordTitle }}
+          <StatusBadge
+            v-if="doc?.[config.statusField]"
+            :domain="config.statusType || 'policy'"
+            :status="String(doc?.[config.statusField])"
+          />
+          <StatusBadge
+            v-if="doc?.[config.secondaryStatusField]"
+            :domain="config.secondaryStatusType || 'policy'"
+            :status="String(doc?.[config.secondaryStatusField])"
+          />
+        </h1>
+        <p class="detail-subtitle">{{ recordSubtitle }}</p>
+        <div class="mt-1.5 flex flex-wrap items-center gap-2">
+          <button class="copy-tag" type="button" @click="copyRecordValue(doc?.name || '', 'recordNo')">
+            {{ copiedRecordKey === 'recordNo' ? t("copied") : (doc?.name || '-') }}
+          </button>
+          <button
+            v-if="doc?.[config.titleField]"
+            class="copy-tag"
+            type="button"
+            @click="copyRecordValue(String(doc?.[config.titleField] || ''), 'recordTitle')"
           >
-            {{ t("openCommunication") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canSendDraftLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="sendDraftLifecycle"
-          >
-            {{ t("sendNow") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canRetryOutboxLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="retryOutboxLifecycle"
-          >
-            {{ t("retry") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canRequeueOutboxLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="requeueOutboxLifecycle"
-          >
-            {{ t("requeue") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canStartTaskLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markTaskLifecycle('In Progress')"
-          >
-            {{ t("startTask") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canBlockTaskLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markTaskLifecycle('Blocked')"
-          >
-            {{ t("blockTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCompleteTaskLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markTaskLifecycle('Done')"
-          >
-            {{ t("completeTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCancelTaskLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markTaskLifecycle('Cancelled')"
-          >
-            {{ t("cancelTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCompleteReminderLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markReminderLifecycle('Done')"
-          >
-            {{ t("completeTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCancelReminderLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markReminderLifecycle('Cancelled')"
-          >
-            {{ t("cancelTaskAction") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canStartAssignmentLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markAssignmentLifecycle('In Progress')"
-          >
-            {{ t("startAssignment") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canBlockAssignmentLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markAssignmentLifecycle('Blocked')"
-          >
-            {{ t("blockAssignment") }}
-          </ActionButton>
-          <ActionButton
-            v-if="canCloseAssignmentLifecycle"
-            variant="secondary"
-            size="xs"
-            @click="markAssignmentLifecycle('Done')"
-          >
-            {{ t("closeAssignment") }}
-          </ActionButton>
-          <ActionButton v-if="quickEditConfig && canUseQuickEdit" variant="secondary" size="xs" @click="showQuickEditDialog = true">{{ t("quickEdit") }}</ActionButton>
-          <ActionButton v-if="panelConfig" variant="link" size="xs" trailing-icon=">" @click="openPanel">{{ t("panel") }}</ActionButton>
-          <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="xs" @click="openDesk">{{ t("openDesk") }}</ActionButton>
-        </DetailActionRow>
-      </template>
-    </DocHeaderCard>
+            {{ copiedRecordKey === 'recordTitle' ? t("copied") : (doc?.[config.titleField] || '-') }}
+          </button>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        <ActionButton variant="secondary" size="xs" @click="goBack">{{ t("backToList") }}</ActionButton>
+        <ActionButton
+          v-if="canOpenCommunicationContext"
+          variant="secondary"
+          size="xs"
+          @click="openCommunicationContext"
+        >
+          {{ t("openCommunication") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canSendDraftLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="sendDraftLifecycle"
+        >
+          {{ t("sendNow") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canRetryOutboxLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="retryOutboxLifecycle"
+        >
+          {{ t("retry") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canRequeueOutboxLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="requeueOutboxLifecycle"
+        >
+          {{ t("requeue") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canStartTaskLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markTaskLifecycle('In Progress')"
+        >
+          {{ t("startTask") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canBlockTaskLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markTaskLifecycle('Blocked')"
+        >
+          {{ t("blockTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCompleteTaskLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markTaskLifecycle('Done')"
+        >
+          {{ t("completeTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCancelTaskLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markTaskLifecycle('Cancelled')"
+        >
+          {{ t("cancelTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCompleteReminderLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markReminderLifecycle('Done')"
+        >
+          {{ t("completeTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCancelReminderLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markReminderLifecycle('Cancelled')"
+        >
+          {{ t("cancelTaskAction") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canStartAssignmentLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markAssignmentLifecycle('In Progress')"
+        >
+          {{ t("startAssignment") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canBlockAssignmentLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markAssignmentLifecycle('Blocked')"
+        >
+          {{ t("blockAssignment") }}
+        </ActionButton>
+        <ActionButton
+          v-if="canCloseAssignmentLifecycle"
+          variant="secondary"
+          size="xs"
+          @click="markAssignmentLifecycle('Done')"
+        >
+          {{ t("closeAssignment") }}
+        </ActionButton>
+        <ActionButton v-if="quickEditConfig && canUseQuickEdit" variant="secondary" size="xs" @click="showQuickEditDialog = true">{{ t("quickEdit") }}</ActionButton>
+        <ActionButton v-if="panelConfig" variant="link" size="xs" trailing-icon=">" @click="openPanel">{{ t("panel") }}</ActionButton>
+        <ActionButton v-if="deskActionsEnabled()" variant="secondary" size="xs" @click="openDesk">{{ t("openDesk") }}</ActionButton>
+      </div>
+    </div>
+
+    <HeroStrip :cells="summaryItems" />
 
     <DataTableShell
       :loading="activeLoading && !doc"
@@ -125,74 +155,74 @@
       :empty-description="t('emptyDescription')"
     >
       <template v-if="doc">
-        <DocSummaryGrid :items="summaryItems" />
+        <div class="detail-body">
+          <div class="detail-main space-y-4">
+            <div v-if="specialBadges.length" class="surface-card rounded-2xl p-5">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("stateSummary") }}</p>
+              <div class="mt-3 flex flex-wrap items-center gap-2">
+                <StatusBadge
+                  v-for="badge in specialBadges"
+                  :key="badge.key"
+                  :domain="badge.type"
+                  :status="badge.status"
+                />
+              </div>
+            </div>
 
-        <div v-if="specialBadges.length" class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('stateSummary')" :show-count="false" />
-          <div class="mt-3 flex flex-wrap items-center gap-2">
-            <StatusBadge
-              v-for="badge in specialBadges"
-              :key="badge.key"
-              :domain="badge.type"
-              :status="badge.status"
-            />
-          </div>
-        </div>
+            <article class="surface-card rounded-2xl p-4">
+              <DetailTabsBar v-model="activeDetailTab" :tabs="detailTabs" />
+            </article>
 
-        <article class="surface-card rounded-2xl p-4">
-          <DetailTabsBar v-model="activeDetailTab" :tabs="detailTabs" />
-        </article>
-
-        <div v-for="group in visibleGroups" :key="group.key" class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="group.title || groupTitle(group.key)" :show-count="false" />
-          <div class="mt-3">
-            <DocSummaryGrid :items="group.items || groupItems(group.fields)" />
-          </div>
-        </div>
-
-        <article v-if="activeDetailTab === 'related'" class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('relatedTitle')" :count="relatedRecordCards.length" />
-          <div v-if="relatedRecordCards.length" class="mt-3 grid gap-3 lg:grid-cols-2">
-            <MetaListCard
-              v-for="item in relatedRecordCards"
-              :key="item.key"
-              :title="item.title"
-              :subtitle="item.subtitle"
-              :description="item.description"
-              :meta="item.meta"
+            <DetailCard
+              v-for="group in visibleGroups"
+              :key="group.key"
+              :title="group.title || groupTitle(group.key)"
             >
-              <template #trailing>
-                <ActionButton v-if="item.open" variant="link" size="xs" @click="item.open()">{{ t("panel") }}</ActionButton>
-              </template>
-            </MetaListCard>
-          </div>
-          <div v-else class="mt-3 at-empty-block">{{ t("noRelatedRecords") }}</div>
-        </article>
+              <FieldGroup :fields="group.items || groupItems(group.fields)" :cols="group.cols || 2" />
+            </DetailCard>
 
-        <article v-if="activeDetailTab === 'activity'" class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('activityTitle')" :count="activityItems.length" />
-          <div v-if="activityItems.length" class="mt-3 space-y-3">
-            <MetaListCard
-              v-for="item in activityItems"
-              :key="item.key"
-              :title="item.title"
-              :description="item.description"
-              :meta="item.meta"
-            />
-          </div>
-          <div v-else class="mt-3 at-empty-block">{{ t("noActivity") }}</div>
-        </article>
+            <DetailCard v-if="activeDetailTab === 'related'" :title="t('relatedTitle')">
+              <div v-if="relatedRecordCards.length" class="grid gap-3 lg:grid-cols-2">
+                <MetaListCard
+                  v-for="item in relatedRecordCards"
+                  :key="item.key"
+                  :title="item.title"
+                  :subtitle="item.subtitle"
+                  :description="item.description"
+                  :meta="item.meta"
+                >
+                  <template #trailing>
+                    <ActionButton v-if="item.open" variant="link" size="xs" @click="item.open()">{{ t("panel") }}</ActionButton>
+                  </template>
+                </MetaListCard>
+              </div>
+              <div v-else class="at-empty-block">{{ t("noRelatedRecords") }}</div>
+            </DetailCard>
 
-        <div v-if="visibleTextBlocks.length" class="grid gap-4 lg:grid-cols-2">
-          <article
-            v-for="block in visibleTextBlocks"
-            :key="block.key || block.field"
-            class="surface-card rounded-2xl p-5"
-            :class="block.fullWidth ? 'lg:col-span-2' : ''"
-          >
-            <SectionCardHeader :title="block.title || fieldLabel(block.field)" :show-count="false" />
-            <pre class="mt-3 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">{{ block.value }}</pre>
-          </article>
+            <DetailCard v-if="activeDetailTab === 'activity'" :title="t('activityTitle')">
+              <div v-if="activityItems.length" class="space-y-3">
+                <MetaListCard
+                  v-for="item in activityItems"
+                  :key="item.key"
+                  :title="item.title"
+                  :description="item.description"
+                  :meta="item.meta"
+                />
+              </div>
+              <div v-else class="at-empty-block">{{ t("noActivity") }}</div>
+            </DetailCard>
+
+            <div v-if="visibleTextBlocks.length" class="grid gap-4 lg:grid-cols-2">
+              <DetailCard
+                v-for="block in visibleTextBlocks"
+                :key="block.key || block.field"
+                :title="block.title || fieldLabel(block.field)"
+                :class="block.fullWidth ? 'lg:col-span-2' : ''"
+              >
+                <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">{{ block.value }}</pre>
+              </DetailCard>
+            </div>
+          </div>
         </div>
       </template>
     </DataTableShell>
@@ -210,11 +240,11 @@
       :success-handlers="quickEditSuccessHandlers"
       :labels="{ save: t('saveChanges'), cancel: t('cancel') }"
     />
-  </div>
+  </section>
 </template>
 
 <script setup>
-import { computed, ref, unref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
@@ -224,15 +254,14 @@ import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { deskActionsEnabled } from "../utils/deskActions";
-import DocHeaderCard from "../components/app-shell/DocHeaderCard.vue";
-import DetailActionRow from "../components/app-shell/DetailActionRow.vue";
 import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
+import HeroStrip from "../components/ui/HeroStrip.vue";
+import DetailCard from "../components/ui/DetailCard.vue";
+import FieldGroup from "../components/ui/FieldGroup.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 
 const props = defineProps({
@@ -260,6 +289,8 @@ const copy = {
     panel: "Panel",
     saveChanges: "Değişiklikleri Kaydet",
     cancel: "Vazgeç",
+    copy: "Kopyala",
+    copied: "KopyalandÄ±",
     openCommunication: "İletişim Merkezi",
     sendNow: "Hemen Gönder",
     retry: "Tekrar Dene",
@@ -334,6 +365,8 @@ const copy = {
     panel: "Panel",
     saveChanges: "Save Changes",
     cancel: "Cancel",
+    copy: "Copy",
+    copied: "Copied",
     openCommunication: "Communication Center",
     sendNow: "Send Now",
     retry: "Retry",
@@ -426,6 +459,8 @@ const canUseQuickEdit = computed(() => {
   if (!registryKey) return false;
   return authStore.can(["quickEdit", registryKey]);
 });
+const copiedRecordKey = ref("");
+let copiedRecordTimer = null;
 
 const auxQuickCustomerResource = createResource({
   url: "frappe.client.get_list",
@@ -527,6 +562,40 @@ function resourceValue(resource, fallback) {
 function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
+
+async function copyRecordValue(value, key) {
+  const text = String(value || "").trim();
+  if (!text) return;
+
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "true");
+      textarea.style.position = "absolute";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+
+    copiedRecordKey.value = key;
+    if (copiedRecordTimer) clearTimeout(copiedRecordTimer);
+    copiedRecordTimer = window.setTimeout(() => {
+      copiedRecordKey.value = "";
+      copiedRecordTimer = null;
+    }, 1500);
+  } catch {
+    copiedRecordKey.value = "";
+  }
+}
+
+onBeforeUnmount(() => {
+  if (copiedRecordTimer) clearTimeout(copiedRecordTimer);
+});
 
 const quickEditOptionsMap = computed(() => ({
   customers: asArray(resourceValue(auxQuickCustomerResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),

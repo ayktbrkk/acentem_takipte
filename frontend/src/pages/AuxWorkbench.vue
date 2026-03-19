@@ -2,7 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ label('list') }}</h1>
+        <h1 class="detail-title">{{ label('list') }}</h1>
         <p class="detail-subtitle">{{ subtitleLabel }}</p>
       </div>
     </div>
@@ -122,6 +122,91 @@
     </PageToolbar>
     </article>
 
+    <div class="space-y-3">
+      <div
+        v-if="snapshotSummaryCards.length"
+        class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+      >
+        <article
+          v-for="card in snapshotSummaryCards"
+          :key="card.key"
+          class="mini-metric"
+        >
+          <p class="mini-metric-label">{{ card.label }}</p>
+          <p class="mini-metric-value">{{ card.value }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
+        </article>
+      </div>
+      <div
+        v-if="reminderSummaryCards.length"
+        class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+      >
+        <article
+          v-for="card in reminderSummaryCards"
+          :key="card.key"
+          class="mini-metric"
+        >
+          <p class="mini-metric-label">{{ card.label }}</p>
+          <p class="mini-metric-value">{{ card.value }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
+        </article>
+      </div>
+      <div
+        v-if="accessLogSummaryCards.length"
+        class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+      >
+        <article
+          v-for="card in accessLogSummaryCards"
+          :key="card.key"
+          class="mini-metric"
+        >
+          <p class="mini-metric-label">{{ card.label }}</p>
+          <p class="mini-metric-value">{{ card.value }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
+        </article>
+      </div>
+      <div
+        v-if="fileSummaryCards.length"
+        class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+      >
+        <article
+          v-for="card in fileSummaryCards"
+          :key="card.key"
+          class="mini-metric"
+        >
+          <p class="mini-metric-label">{{ card.label }}</p>
+          <p class="mini-metric-value">{{ card.value }}</p>
+          <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
+        </article>
+      </div>
+      <article
+        v-if="snapshotTrendRows.length"
+        class="surface-card rounded-2xl p-5"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("snapshotTrendTitle") }}</p>
+            <p class="text-sm text-slate-500">{{ t("snapshotTrendHint") }}</p>
+          </div>
+          <span class="text-xs text-slate-400">{{ t("showing") }} {{ snapshotTrendRows.length }}</span>
+        </div>
+        <div class="mt-4 grid gap-3 md:grid-cols-3">
+          <article
+            v-for="row in snapshotTrendRows"
+            :key="row.snapshotDate"
+            class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+          >
+            <p class="text-sm font-semibold text-slate-900">{{ row.snapshotDateLabel }}</p>
+            <div class="mt-2 space-y-1 text-xs text-slate-600">
+              <p>{{ t("totalSnapshots") }}: {{ row.total }}</p>
+              <p>{{ t("averageScore") }}: {{ row.averageScore }}</p>
+              <p>{{ t("highRiskSnapshots") }}: {{ row.highRisk }}</p>
+            </div>
+          </article>
+        </div>
+      </article>
+    </div>
+
     <DataTableShell
       :loading="isLoading && rows.length === 0"
       :error="loadError.text"
@@ -132,92 +217,7 @@
       :empty-description="t('emptyDescription')"
     >
       <template #header>
-        <div class="space-y-3">
-          <div
-            v-if="snapshotSummaryCards.length"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <article
-              v-for="card in snapshotSummaryCards"
-              :key="card.key"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-            </article>
-          </div>
-          <div
-            v-if="reminderSummaryCards.length"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <article
-              v-for="card in reminderSummaryCards"
-              :key="card.key"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-            </article>
-          </div>
-          <div
-            v-if="accessLogSummaryCards.length"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <article
-              v-for="card in accessLogSummaryCards"
-              :key="card.key"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-            </article>
-          </div>
-          <div
-            v-if="fileSummaryCards.length"
-            class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
-          >
-            <article
-              v-for="card in fileSummaryCards"
-              :key="card.key"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-              <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-            </article>
-          </div>
-          <div
-            v-if="snapshotTrendRows.length"
-            class="grid gap-3 xl:grid-cols-3"
-          >
-            <article class="rounded-2xl border border-slate-200 bg-white px-4 py-3 xl:col-span-3">
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ t("snapshotTrendTitle") }}</p>
-                  <p class="mt-1 text-xs text-slate-500">{{ t("snapshotTrendHint") }}</p>
-                </div>
-              </div>
-              <div class="mt-4 grid gap-3 md:grid-cols-3">
-                <article
-                  v-for="row in snapshotTrendRows"
-                  :key="row.snapshotDate"
-                  class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
-                >
-                  <p class="text-sm font-semibold text-slate-900">{{ row.snapshotDateLabel }}</p>
-                  <div class="mt-2 space-y-1 text-xs text-slate-600">
-                    <p>{{ t("totalSnapshots") }}: {{ row.total }}</p>
-                    <p>{{ t("averageScore") }}: {{ row.averageScore }}</p>
-                    <p>{{ t("highRiskSnapshots") }}: {{ row.highRisk }}</p>
-                  </div>
-                </article>
-              </div>
-            </article>
-          </div>
-          <p class="text-xs text-slate-500">{{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
-        </div>
+        <p class="text-xs text-slate-500">{{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
       </template>
 
       <div class="at-table-wrap">

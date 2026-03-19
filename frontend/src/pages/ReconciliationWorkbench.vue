@@ -2,7 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
     </div>
@@ -182,35 +182,27 @@
       </template>
     </Dialog>
 
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      <article class="at-metric-card">
-        <p class="at-metric-label">Toplam Kayıt</p>
-        <p class="at-metric-value">{{ reconciliationSummary.total }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">Eşleşti</p>
-        <p class="at-metric-value !text-emerald-700">{{ reconciliationSummary.matched }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">Beklemede</p>
-        <p class="at-metric-value !text-amber-700">{{ reconciliationSummary.pending }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">Uyumsuzluk</p>
-        <p class="at-metric-value !text-rose-700">{{ reconciliationSummary.mismatch }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">Toplam Tutar Farki</p>
-        <p class="at-metric-value !text-sky-700">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricCommissionAccrual") }}</p>
-        <p class="at-metric-value !text-sky-700">{{ metrics.commission_accrual_count || 0 }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricCommissionAccrualAmount") }}</p>
-        <p class="at-metric-value !text-emerald-700">{{ formatMoney(metrics.commission_accrual_amount_try || 0) }}</p>
-      </article>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Kayıt</p>
+        <p class="mini-metric-value">{{ reconciliationSummary.total }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Eşleşti</p>
+        <p class="mini-metric-value text-emerald-600">{{ reconciliationSummary.matched }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Beklemede</p>
+        <p class="mini-metric-value text-amber-600">{{ reconciliationSummary.pending }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Uyumsuzluk</p>
+        <p class="mini-metric-value text-rose-600">{{ reconciliationSummary.mismatch }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Tutar Farkı</p>
+        <p class="mini-metric-value text-sky-600">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
+      </div>
     </div>
 
     <article class="surface-card rounded-2xl p-5">
@@ -1166,9 +1158,8 @@ function formatMoney(value) {
 onMounted(() => {
   accountingStore.setLocaleCode(localeCode.value);
   applyPreset(presetKey.value, { refresh: false });
-  const appliedRouteFilters = applyRouteFilters();
-  if (String(presetKey.value || "default") !== "default") void reloadWorkbench();
-  else if (appliedRouteFilters) void reloadWorkbench();
+  applyRouteFilters();
+  void reloadWorkbench();
   void hydratePresetStateFromServer();
 });
 

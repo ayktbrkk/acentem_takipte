@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
@@ -81,7 +81,7 @@
 
         <DetailCard :title="t('timeline')">
           <div class="mb-4">
-            <p class="section-title">Notlar</p>
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Notlar</p>
             <p class="text-sm text-gray-700">{{ claim.rejection_reason || claim.notes || '-' }}</p>
           </div>
           <div>
@@ -103,33 +103,23 @@
         </DetailCard>
       </div>
 
-      <aside class="detail-sidebar">
-        <div>
-          <p class="section-title">İlgili Kişiler</p>
+      <aside class="detail-sidebar space-y-4">
+        <DetailCard title="İlgili Kişiler">
           <FieldGroup :fields="peopleFields" :cols="1" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Rezerv Bilgileri</p>
+        <DetailCard title="Rezerv Bilgileri">
           <FieldGroup :fields="reserveFields" :cols="1" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Odeme Bilgileri</p>
+        <DetailCard title="Ödeme Bilgileri">
           <FieldGroup :fields="paymentFields" :cols="1" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Kayıt Meta</p>
+        <DetailCard title="Kayıt Meta">
           <FieldGroup :fields="recordMetaFields" :cols="1" />
           <button class="mt-3 btn btn-full btn-sm" @click="openCustomer">{{ t("customerRecord") }}</button>
-        </div>
+        </DetailCard>
       </aside>
     </div>
   </section>
@@ -152,19 +142,19 @@ const router = useRouter();
 const copy = {
   tr: {
     breadcrumb: "Operasyonlar / Hasarlar",
-    back: "Listeye Don",
+    back: "Listeye Dön",
     action: "Islem Yap",
-    process: "Hasar Sureci",
-    details: "Hasar Detaylari",
+    process: "Hasar Süreci",
+    details: "Hasar Detayları",
     documents: "Belgeler",
     timeline: "Zaman Tuneli",
-    noDocuments: "Belge eklenmemis.",
-    updated: "Guncellendi",
-    created: "Olusturuldu",
-    policy: "Ilgili Police",
-    customer: "Musteri",
-    customerRecord: "Musteri Kaydi",
-    summary: "Hasar Ozeti",
+    noDocuments: "Belge eklenmemiş.",
+    updated: "Güncellendi",
+    created: "Oluşturuldu",
+    policy: "İlgili Poliçe",
+    customer: "Müşteri",
+    customerRecord: "Müşteri Kaydı",
+    summary: "Hasar Özeti",
     approved: "Onaylanan",
     paid: "Odenen",
     remaining: "Kalan",
@@ -229,9 +219,9 @@ const processFields = computed(() => [
 ]);
 
 const detailFields = computed(() => [
-  { label: "Hasar Turu", value: claim.value.claim_type || "-" },
-  { label: "Ofis Subesi", value: claim.value.office_branch || "-" },
-  { label: "Aciklama", value: claim.value.notes || claim.value.rejection_reason || "-", span: 2 },
+  { label: "Hasar Türü", value: claim.value.claim_type || "-" },
+  { label: "Ofis Şubesi", value: claim.value.office_branch || "-" },
+  { label: "Açıklama", value: claim.value.notes || claim.value.rejection_reason || "-", span: 2 },
 ]);
 
 const claimSteps = computed(() => {
@@ -251,7 +241,7 @@ const claimSteps = computed(() => {
     { label: "Bildirim", state: "done" },
     { label: "Ekspertiz", state: expertiseCurrent ? "current" : "done" },
     { label: "Onay", state: approvalCurrent ? "current" : paymentCurrent ? "done" : "pending" },
-    { label: "Ödeme", state: paymentCurrent ? "current" : "pending" },
+  { label: "Ödeme", state: paymentCurrent ? "current" : "pending" },
   ];
 });
 
@@ -271,19 +261,19 @@ const reserveFields = computed(() => [
   { label: "Durum", value: claim.value.claim_status || "-" },
   { label: "Tahmini Rezerv", value: formatCurrency(claim.value.estimated_amount || 0) },
   { label: "Onaylanan", value: formatCurrency(claim.value.approved_amount) },
-  { label: "Kalan Gun", value: remainingDaysDisplay.value },
+  { label: "Kalan Gün", value: remainingDaysDisplay.value },
 ]);
 
 const paymentFields = computed(() => [
-  { label: "Odenen", value: formatCurrency(claim.value.paid_amount) },
+  { label: "Ödenen", value: formatCurrency(claim.value.paid_amount) },
   { label: "Kalan", value: formatCurrency(remainingAmount.value) },
   { label: "Sonraki Takip", value: formatDate(claim.value.next_follow_up_on) },
-  { label: "Itiraz", value: claim.value.appeal_status || "-" },
+  { label: "İtiraz", value: claim.value.appeal_status || "-" },
 ]);
 
 const expertiseFields = computed(() => [
   { label: "Eksper", value: claim.value.assigned_expert || "-" },
-  { label: "Inceleme", value: claim.value.claim_status || "-" },
+  { label: "İnceleme", value: claim.value.claim_status || "-" },
   { label: "Notlar", value: claim.value.notes || "-", span: 2 },
 ]);
 
@@ -353,3 +343,4 @@ function reload() {
 
 onMounted(reload);
 </script>
+

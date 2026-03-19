@@ -2,8 +2,8 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <h1 class="detail-title">Veri Ice Aktarma</h1>
-        <p class="detail-subtitle">Excel/CSV dosyalarini eslestirerek toplu veri yukleyin.</p>
+        <h1 class="detail-title">Veri İçe Aktarma</h1>
+        <p class="detail-subtitle">Excel/CSV dosyalarını eşleştirerek toplu veri yükleyin.</p>
       </div>
       <div class="flex items-center gap-2">
         <button class="btn btn-outline btn-sm" type="button" @click="resetAll">Temizle</button>
@@ -13,28 +13,28 @@
     <DetailCard title="1. Dosya Sec">
       <div class="grid gap-4 md:grid-cols-2">
         <div class="form-field">
-          <label class="form-label">Veri Kumesi</label>
+          <label class="form-label">Veri Kümesi</label>
           <select v-model="selectedDataset" class="form-input">
             <option v-for="dataset in datasets" :key="dataset.key" :value="dataset.key">{{ dataset.label }}</option>
           </select>
         </div>
 
         <div class="form-field">
-          <label class="form-label">Excel Dosyasi</label>
+          <label class="form-label">Excel Dosyası</label>
           <input class="form-input" type="file" accept=".xlsx,.xls,.csv" @change="handleFileSelect" />
-          <p v-if="fileName" class="mt-1 text-xs text-gray-500">Secilen dosya: {{ fileName }}</p>
+          <p v-if="fileName" class="mt-1 text-xs text-gray-500">Seçilen dosya: {{ fileName }}</p>
         </div>
       </div>
     </DetailCard>
 
     <DetailCard title="2. Eslestirme">
-      <div v-if="!columns.length" class="card-empty">Dosya secildikten sonra kolonlar burada listelenir.</div>
+      <div v-if="!columns.length" class="card-empty">Dosya seçildikten sonra kolonlar burada listelenir.</div>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full text-sm">
           <thead>
             <tr>
               <th class="table-header">Excel Kolonu</th>
-              <th class="table-header">Sistem Alani</th>
+              <th class="table-header">Sistem Alanı</th>
             </tr>
           </thead>
           <tbody>
@@ -42,7 +42,7 @@
               <td class="table-cell">{{ col }}</td>
               <td class="table-cell">
                 <select v-model="columnMapping[col]" class="form-input">
-                  <option value="">-- Seciniz --</option>
+                  <option value="">-- Seçiniz --</option>
                   <option v-for="field in selectedFieldOptions" :key="field.value" :value="field.value">{{ field.label }}</option>
                 </select>
               </td>
@@ -52,8 +52,8 @@
       </div>
     </DetailCard>
 
-    <DetailCard title="3. Onizleme">
-      <div v-if="!previewRows.length" class="card-empty">Onizleme verisi bulunamadi.</div>
+    <DetailCard title="3. Önizleme">
+      <div v-if="!previewRows.length" class="card-empty">Önizleme verisi bulunamadı.</div>
       <div v-else class="overflow-x-auto">
         <table class="min-w-full text-sm">
           <thead>
@@ -76,8 +76,8 @@
     </DetailCard>
 
     <div class="flex justify-end gap-2">
-      <button class="btn btn-outline" type="button" @click="cancel">Iptal</button>
-      <button class="btn btn-primary" type="button" :disabled="!canImport" @click="importData">Ice Aktar</button>
+      <button class="btn btn-outline" type="button" @click="cancel">İptal</button>
+      <button class="btn btn-primary" type="button" :disabled="!canImport" @click="importData">İçe Aktar</button>
     </div>
   </section>
 </template>
@@ -92,12 +92,12 @@ const router = useRouter();
 const datasets = [
   {
     key: "policies",
-    label: "Policeler",
+    label: "Poliçeler",
     fields: [
-      { value: "policy_no", label: "Police No" },
-      { value: "customer", label: "Musteri" },
-      { value: "branch", label: "Brans" },
-      { value: "gross_premium", label: "Brut Prim" },
+      { value: "policy_no", label: "Poliçe No" },
+      { value: "customer", label: "Müşteri" },
+      { value: "branch", label: "Branş" },
+      { value: "gross_premium", label: "Brüt Prim" },
       { value: "status", label: "Durum" },
     ],
   },
@@ -106,21 +106,21 @@ const datasets = [
     label: "Teklifler",
     fields: [
       { value: "offer_no", label: "Teklif No" },
-      { value: "customer", label: "Musteri" },
-      { value: "insurance_company", label: "Sigorta Sirketi" },
-      { value: "gross_premium", label: "Brut Prim" },
+      { value: "customer", label: "Müşteri" },
+      { value: "insurance_company", label: "Sigorta Şirketi" },
+      { value: "gross_premium", label: "Brüt Prim" },
       { value: "status", label: "Durum" },
     ],
   },
   {
     key: "customers",
-    label: "Musteriler",
+    label: "Müşteriler",
     fields: [
       { value: "full_name", label: "Ad Soyad" },
       { value: "tax_id", label: "Kimlik/Vergi No" },
       { value: "mobile_phone", label: "Telefon" },
       { value: "email", label: "E-posta" },
-      { value: "customer_type", label: "Musteri Tipi" },
+      { value: "customer_type", label: "Müşteri Tipi" },
     ],
   },
 ];
@@ -227,12 +227,12 @@ function handleFileSelect(event) {
     return row;
   });
   applyParsedData(fallbackHeaders, fallbackRows);
-  importMessage.value = "XLS/XLSX onizleme tarayici tarafinda sinirli. Eslestirmeyi tamamlayip ice aktarma islemini baslatabilirsiniz.";
+  importMessage.value = "XLS/XLSX önizleme tarayıcı tarafında sınırlı. Eşleştirmeyi tamamlayıp içe aktarma işlemini başlatabilirsiniz.";
 }
 
 function importData() {
   if (!canImport.value) return;
-  importMessage.value = `${fileName.value} dosyasi icin ${mappedColumnCount.value} kolon eslestirildi. Ice aktarma kuyruga alindi.`;
+  importMessage.value = `${fileName.value} dosyası için ${mappedColumnCount.value} kolon eşleştirildi. İçe aktarma kuyruğa alındı.`;
 }
 
 function cancel() {

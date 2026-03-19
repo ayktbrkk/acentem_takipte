@@ -2,17 +2,22 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div v-for="item in renewalSummaryItems" :key="item.key" class="mini-metric">
+        <p class="mini-metric-label">{{ item.label }}</p>
+        <p class="mini-metric-value" :class="item.valueClass">{{ item.value }}</p>
       </div>
     </div>
 
     <article class="surface-card rounded-2xl p-5">
       <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :busy="renewalsLoading"
         :show-refresh="true"
+        :busy="renewalsLoading"
         :refresh-label="t('refresh')"
         @refresh="reloadRenewals"
       >
@@ -106,8 +111,6 @@
       </PageToolbar>
     </article>
 
-    <DocSummaryGrid v-if="showSummaryGrid" :items="renewalSummaryItems" />
-
     <div v-if="renewalsError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       <p class="font-medium">{{ t("loadErrorTitle") }}</p>
       <p>{{ renewalsError }}</p>
@@ -116,7 +119,7 @@
     <section class="kanban-board">
       <header class="kanban-board-header">
         <div>
-          <p class="section-title">{{ t("title") }}</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("title") }}</p>
           <p class="text-sm text-slate-500">{{ t("showing") }} {{ renewals.length }}</p>
         </div>
       </header>
@@ -222,7 +225,6 @@ import { createResource } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
 import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
@@ -528,9 +530,6 @@ const quickRenewalSuccessHandlers = {
     await reloadRenewals();
   },
 };
-const showSummaryGrid = computed(
-  () => !renewalStore.state.loading && !renewalsError.value && renewals.value.length > 0
-);
 const renewalSummaryItems = computed(() => {
   const summary = renewalStore.state.summary || {};
   return [

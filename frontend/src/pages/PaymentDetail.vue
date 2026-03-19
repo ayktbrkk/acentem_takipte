@@ -88,9 +88,8 @@
         </DetailCard>
       </div>
 
-      <aside class="detail-sidebar">
-        <div>
-          <p class="section-title">{{ t("customer") }}</p>
+      <aside class="detail-sidebar space-y-4">
+        <DetailCard :title="t('customer')">
           <button
             class="w-full rounded-lg border border-gray-200 bg-white p-3 text-left transition hover:border-brand-200 hover:bg-brand-50"
             type="button"
@@ -100,21 +99,15 @@
             <p class="text-sm font-medium text-gray-900">{{ payment.customer || "-" }}</p>
             <p class="mt-0.5 text-xs text-gray-400">{{ t("openCustomer") }}</p>
           </button>
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("linkedRecords") }}</p>
+        <DetailCard :title="t('linkedRecords')">
           <FieldGroup :fields="linkedFields" :cols="1" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("recordMeta") }}</p>
+        <DetailCard :title="t('recordMeta')">
           <FieldGroup :fields="recordFields" :cols="1" />
-        </div>
+        </DetailCard>
       </aside>
     </div>
   </section>

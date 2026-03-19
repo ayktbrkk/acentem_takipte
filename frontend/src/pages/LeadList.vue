@@ -51,7 +51,7 @@
       </div>
     </div>
 
-    <div class="border-b border-gray-200 bg-white px-5 py-3">
+    <div class="surface-card rounded-2xl p-4">
       <FilterBar
         v-model:search="filters.query"
         :filters="leadListFilterConfig"
@@ -68,7 +68,7 @@
       </FilterBar>
     </div>
 
-    <div class="flex-1 p-5">
+    <div class="surface-card rounded-2xl p-5">
       <div v-if="loadErrorText" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
         {{ loadErrorText }}
       </div>
@@ -239,8 +239,8 @@ const copy = {
     openCustomer360: "Müşteri 360",
     openPolicy: "Poliçe Detayını Aç",
     openOffer: "Teklif",
-    convertToOffer: "Teklife Cevir",
-    converting: "Cevriliyor...",
+    convertToOffer: "Teklife Çevir",
+    converting: "Çevriliyor...",
     convertLeadSuccess: "Fırsat teklife dönüştürüldü.",
     convertLeadError: "Fırsat teklife dönüştürülemedi. Eksik alanları kontrol edin.",
     presetDefault: "Standart",
@@ -250,7 +250,7 @@ const copy = {
     presetConvertedPolicy: "Poliçeye Dönüşenler",
     presetFollowUpQueue: "Takip Kuyrugu",
     presetWaitingLeads: "Bekleyen Fırsatlar",
-    presetConvertible: "Teklife Cevrilebilir",
+    presetConvertible: "Teklife Çevrilebilir",
     record: "Kayıt",
     modified: "Güncellendi",
     email: "E-posta",
@@ -261,10 +261,10 @@ const copy = {
     estimatedGross: "Tahmini Brüt",
     convertedOffer: "Dönüşen Teklif",
     convertedPolicy: "Dönüşen Poliçe",
-    noConversion: "Henuz donusum yok",
+    noConversion: "Henüz dönüşüm yok",
     nextAction: "Sonraki Aksiyon",
     missingFields: "Eksik Alanlar",
-    conversionActionConvert: "Teklife Cevir",
+    conversionActionConvert: "Teklife Çevir",
     conversionActionReview: "Bilgileri Tamamla",
     conversionActionClosed: "Kapalı Fırsat",
     sortModifiedDesc: "Son Güncellenen",

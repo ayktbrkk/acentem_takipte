@@ -3,7 +3,7 @@
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Hasarlar</p>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
       <span class="text-sm text-gray-400">{{ claims.length }} kayıt</span>
@@ -37,7 +37,7 @@
       <p>{{ claimsErrorText }}</p>
     </div>
 
-    <div class="border-b border-gray-200 bg-white px-5 py-3">
+    <div class="surface-card rounded-2xl p-4">
       <FilterBar
         v-model:search="claimsListSearchQuery"
         :filters="claimsListFilterConfig"
@@ -54,7 +54,7 @@
       </FilterBar>
     </div>
 
-    <div class="flex-1 p-5">
+    <div class="surface-card rounded-2xl p-5">
       <ListTable
         :columns="claimsTableColumns"
         :rows="claimsListRowsWithActions"
@@ -138,12 +138,12 @@ const copy = {
     recordId: "Kayıt",
     actions: "Aksiyon",
     newAssignment: "Atama",
-    markUnderReview: "Incelemeye Al",
+    markUnderReview: "İncelemeye Al",
     markApproved: "Onayla",
     markClosed: "Kapat",
     markRejected: "Reddet",
     clearFollowUp: "Takibi Temizle",
-    notificationDraft: "Bildirim Taslagi",
+    notificationDraft: "Bildirim Taslağı",
     notificationMissing: "Bildirim Akisi Yok",
     notificationQueue: "Bildirim Kuyrugu",
     notificationNone: "Bildirim Kaydı Yok",
@@ -1030,7 +1030,7 @@ onMounted(() => {
   claimStore.setLocaleCode(localeCode.value);
   syncClaimsRouteFilters({ refresh: false });
   applyPreset(presetKey.value, { refresh: false });
-  if (String(presetKey.value || "default") !== "default") void reloadClaims();
+  void reloadClaims();
   void hydratePresetStateFromServer();
 });
 

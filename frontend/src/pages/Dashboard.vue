@@ -1,53 +1,43 @@
 <template>
   <section class="page-shell space-y-6">
-    <header class="dashboard-hero rounded-2xl p-6 text-white shadow-lg shadow-slate-900/20">
-      <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div class="space-y-2">
-          <p class="at-hero-tag">
-            {{ t("heroTag") }}
-          </p>
-          <h2 class="at-hero-title">
-            {{ dashboardHeroTitle }}
-          </h2>
-          <p class="at-hero-subtitle">
-            {{ dashboardHeroSubtitle }}
-          </p>
-          <p class="at-hero-meta">
-            {{ t("rangeLabel") }}: {{ visibleRange }}
-          </p>
-        </div>
-
-        <ActionToolbarGroup>
-          <FilterChipButton
-            v-for="days in rangeOptions"
-            :key="days"
-            theme="hero"
-            :active="selectedRange === days"
-            @click="applyRange(days)"
-          >
-            {{ rangeLabel(days) }}
-          </FilterChipButton>
-
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            class="!border-white/30 !bg-white/10 !text-white hover:!bg-white/20"
-            @click="reloadData"
-          >
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            v-if="showNewLeadAction"
-            variant="secondary"
-            size="sm"
-            class="!border-white/30 !bg-white !text-slate-900 hover:!bg-slate-100"
-            @click="resetLeadForm(); showLeadDialog = true"
-          >
-            {{ t("newLead") }}
-          </ActionButton>
-        </ActionToolbarGroup>
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">{{ t("heroTag") }}</p>
+        <h1 class="detail-title">{{ dashboardHeroTitle }}</h1>
+        <p class="detail-subtitle">{{ dashboardHeroSubtitle }}</p>
+        <p class="detail-meta">{{ t("rangeLabel") }}: {{ visibleRange }}</p>
       </div>
-    </header>
+
+      <ActionToolbarGroup>
+        <FilterChipButton
+          v-for="days in rangeOptions"
+          :key="days"
+          theme="hero"
+          :active="selectedRange === days"
+          @click="applyRange(days)"
+        >
+          {{ rangeLabel(days) }}
+        </FilterChipButton>
+
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          class="!border-white/30 !bg-white/10 !text-white hover:!bg-white/20"
+          @click="reloadData"
+        >
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton
+          v-if="showNewLeadAction"
+          variant="secondary"
+          size="sm"
+          class="!border-white/30 !bg-white !text-slate-900 hover:!bg-slate-100"
+          @click="resetLeadForm(); showLeadDialog = true"
+        >
+          {{ t("newLead") }}
+        </ActionButton>
+      </ActionToolbarGroup>
+    </div>
 
     <div class="surface-card rounded-2xl p-2">
       <div class="flex gap-2 overflow-x-auto whitespace-nowrap px-1 py-1">
@@ -76,29 +66,9 @@
       {{ dashboardAccessMessage }}
     </div>
 
-    <div class="detail-topbar">
-      <div>
-        <h1 class="detail-title">Dashboard</h1>
-        <p class="detail-subtitle">Hos geldiniz. Sube: {{ dashboardBranchLabel }}</p>
-      </div>
-      <div class="flex gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="reloadData">
-          Yenile
-        </button>
-        <button
-          v-if="showNewLeadAction"
-          class="btn btn-primary btn-sm"
-          type="button"
-          @click="resetLeadForm(); showLeadDialog = true"
-        >
-          + Yeni Islem
-        </button>
-      </div>
-    </div>
-
     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
       <div class="mini-metric">
-        <p class="mini-metric-label">Aktif Policeler</p>
+        <p class="mini-metric-label">Aktif Poliçeler</p>
         <p class="mini-metric-value text-brand-600">{{ formatNumber(week4Metrics.activePolicies) }}</p>
       </div>
       <div class="mini-metric">
@@ -110,7 +80,7 @@
         <p class="mini-metric-value text-red-600">{{ formatNumber(week4Metrics.openClaims) }}</p>
       </div>
       <div class="mini-metric">
-        <p class="mini-metric-label">Secili Donem Prim</p>
+        <p class="mini-metric-label">Seçili Dönem Prim</p>
         <p class="mini-metric-value text-green-600">{{ formatCurrency(week4Metrics.periodPremium) }}</p>
       </div>
     </div>
@@ -121,7 +91,7 @@
           <template #action>
             <button class="btn btn-sm" type="button">Tumunu Gor</button>
           </template>
-          <div v-if="!week4RecentActivities.length" class="card-empty">Henuz aktivite kaydi yok.</div>
+          <div v-if="!week4RecentActivities.length" class="card-empty">Henüz aktivite kaydı yok.</div>
           <div v-else class="space-y-3">
             <div v-for="item in week4RecentActivities" :key="item.name" class="timeline-item">
               <div :class="['tl-dot', item.highlight && 'tl-dot-active']" />
@@ -146,10 +116,10 @@
             </div>
           </DetailCard>
 
-          <DetailCard title="Brans Dagilimi">
+        <DetailCard title="Branş Dağılımı">
             <div class="chart-container">
               <DistributionChart
-                title="Brans Dagilimi"
+                title="Branş Dağılımı"
                 type="bar"
                 :items="branchDistribution"
                 value-suffix=" police"
@@ -162,9 +132,9 @@
       <div class="space-y-4">
         <DetailCard title="Hizli Islemler">
           <div class="space-y-2">
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/policies')">Yeni Police</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/policies')">Yeni Poliçe</button>
             <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/offers')">Yeni Teklif</button>
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/customers')">Yeni Musteri</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/customers')">Yeni Müşteri</button>
             <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/claims')">Hasar Bildirimi</button>
           </div>
         </DetailCard>
@@ -1066,10 +1036,8 @@ const copy = {
     kpiClaim: "Açık Hasar",
     kpiReadyOffers: "Hazır Teklif",
     kpiReconciliationOpen: "Açık Mutabakat",
-    kpiReconciliationOpen: "Açık Mutabakat",
     kpiAvgRate: "Ort. Komisyon Oranı",
-    todaySnapshot: "Bugunluk gorunum",
-    renewalRetentionHint: "Yenilenen / kaybedilen kapanislar",
+    renewalRetentionHint: "Yenilenen / kaybedilen kapanışlar",
     monthlySnapshot: "Seçili aralik",
     ratioSnapshot: "Oransal performans",
     quickPolicy: "Poliçe Yönetimi",
@@ -1085,10 +1053,10 @@ const copy = {
     quickCommunication: "İletişim Merkezi",
     quickCommunicationDesc: "Bildirim kuyruğunu ve gönderimleri yönet",
     quickReconciliation: "Mutabakat",
-    quickReconciliationDesc: "Muhasebe farklarini eslestir ve kapat",
+    quickReconciliationDesc: "Muhasebe farklarını eşleştir ve kapat",
     recentPaymentsPreview: "Son Tahsilat / Ödeme Hareketleri",
     noPaymentPreview: "Tahsilat veya ödeme kaydı bulunamadı.",
-    reconciliationPreview: "Açık Mutabakat Farklari",
+    reconciliationPreview: "Açık Mutabakat Farkları",
     noReconciliationPreview: "Açık mutabakat kaydı bulunamadı.",
     mismatchRows: "Açık Kayıt",
     openDifference: "Toplam Fark",
@@ -1106,7 +1074,7 @@ const copy = {
     statusCompleted: "Tamamlandı",
     statusCancelled: "İptal",
     statusSent: "Gönderildi",
-    statusAçcepted: "Kabul Edildi",
+    statusAccepted: "Kabul Edildi",
     statusRejected: "Reddedildi",
     validationTaxNumberLength: "Vergi numarası 10 haneli olmalıdır.",
     validationTcLength: "TC kimlik numarası 11 haneli olmalıdır.",
@@ -1118,7 +1086,6 @@ const copy = {
     statusIpt: "IPT",
     topCompanies: "Öne Çıkan Sigorta Şirketleri",
     noTopCompanies: "Şirket bazlı üretim verisi bulunamadı.",
-    followUpSlaTitle: "Takip SLA",
     followUpSlaHint: "Geciken, bugün yapılması gereken ve yaklaşan takip kayıtlarını tek listede izleyin.",
     followUpOverdue: "Geciken",
     followUpToday: "Bugun",
@@ -1264,7 +1231,6 @@ const copy = {
     kpiClaim: "Open Claims",
     kpiReadyOffers: "Ready Offers",
     kpiReconciliationOpen: "Open Reconciliation",
-    kpiReconciliationOpen: "Open Reconciliation",
     kpiAvgRate: "Avg Commission Rate",
     todaySnapshot: "Current snapshot",
     renewalRetentionHint: "Renewed / lost closed outcomes",
@@ -1304,7 +1270,7 @@ const copy = {
     statusCompleted: "Done",
     statusCancelled: "Cancelled",
     statusSent: "Sent",
-    statusAçcepted: "Accepted",
+    statusAccepted: "Accepted",
     statusRejected: "Rejected",
     validationTaxNumberLength: "Tax number must be 10 digits.",
     validationTcLength: "T.R. identity number must be 11 digits.",
@@ -1316,7 +1282,6 @@ const copy = {
     statusIpt: "IPT",
     topCompanies: "Top Insurance Companies",
     noTopCompanies: "No company production data found.",
-    followUpSlaTitle: "Follow-up SLA",
     followUpSlaHint: "Review overdue, due today, and upcoming follow-up records in one list.",
     followUpOverdue: "Overdue",
     followUpToday: "Today",
@@ -2022,7 +1987,7 @@ const salesOfferStatusSummary = computed(() => {
   const labelMap = {
     Draft: t("draft"),
     Sent: t("statusSent"),
-    Accepted: t("statusAçcepted"),
+    Accepted: t("statusAccepted"),
     Rejected: t("statusRejected"),
     Converted: t("converted"),
   };

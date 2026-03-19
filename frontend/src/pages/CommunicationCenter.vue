@@ -2,7 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
     </div>
@@ -239,11 +239,11 @@
       </div>
     </article>
 
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      <article v-for="card in statusCards" :key="card.key" class="surface-card rounded-xl p-4">
-        <p class="text-xs uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-      </article>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div v-for="card in statusCards" :key="card.key" class="mini-metric">
+        <p class="mini-metric-label">{{ card.label }}</p>
+        <p class="mini-metric-value">{{ card.value }}</p>
+      </div>
     </div>
 
     <article
@@ -1657,9 +1657,10 @@ function hasRouteContextQuery() {
 }
 
 onMounted(() => {
-  if (hasRouteContextQuery()) return;
-  applyPreset(presetKey.value, { refresh: false });
-  if (String(presetKey.value || "default") !== "default") void reloadSnapshot();
+  if (!hasRouteContextQuery()) {
+    applyPreset(presetKey.value, { refresh: false });
+  }
+  void reloadSnapshot();
   void hydratePresetStateFromServer();
 });
 

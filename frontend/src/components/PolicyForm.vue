@@ -18,26 +18,26 @@
 
     <form class="space-y-6" @submit.prevent="onSubmit">
       <div v-if="currentStep === 1" class="form-section">
-        <h3 class="form-section-title">Musteri Bilgileri</h3>
+        <h3 class="form-section-title">Müşteri Bilgileri</h3>
         <div class="form-grid">
           <div v-if="!hasSourceOffer" class="form-field">
-            <label class="form-label">Musteri</label>
+            <label class="form-label">Müşteri</label>
             <select v-model="model.customer" class="form-input" :disabled="disabled">
-              <option value="">Secin...</option>
+              <option value="">Seçin...</option>
               <option v-for="row in customerOptions" :key="row.value" :value="row.value">{{ row.label }}</option>
             </select>
             <p v-if="fieldErrors.customer" class="text-xs text-red-600">{{ fieldErrors.customer }}</p>
           </div>
 
           <div v-if="!hasSourceOffer" class="form-field">
-            <label class="form-label">Yeni Musteri Adi</label>
+            <label class="form-label">Yeni Müşteri Adı</label>
             <input v-model="model.queryText" class="form-input" type="text" :disabled="disabled" />
           </div>
 
           <div v-if="!hasSourceOffer" class="form-field md:col-span-2">
             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
               <input v-model="model.createCustomerMode" type="checkbox" :disabled="disabled" />
-              Yeni musteri olustur
+              Yeni müşteri oluştur
             </label>
           </div>
 
@@ -60,7 +60,7 @@
           <div class="form-field md:col-span-2">
             <label class="form-label">Kaynak Teklif</label>
             <select v-model="model.source_offer" class="form-input" :disabled="disabled">
-              <option value="">Secin...</option>
+              <option value="">Seçin...</option>
               <option v-for="row in offerOptions" :key="row.value" :value="row.value">{{ row.label }}</option>
             </select>
           </div>
@@ -68,36 +68,36 @@
       </div>
 
       <div v-if="currentStep === 2" class="form-section">
-        <h3 class="form-section-title">Police Detaylari</h3>
+        <h3 class="form-section-title">Poliçe Detayları</h3>
         <div class="form-grid">
           <div class="form-field">
-            <label class="form-label required">Sigorta Sirketi</label>
+            <label class="form-label required">Sigorta Şirketi</label>
             <select v-model="model.insurance_company" class="form-input" :disabled="disabled || hasSourceOffer">
-              <option value="">Secin...</option>
+              <option value="">Seçin...</option>
               <option v-for="row in companyOptions" :key="row.value" :value="row.value">{{ row.label }}</option>
             </select>
             <p v-if="fieldErrors.insurance_company" class="text-xs text-red-600">{{ fieldErrors.insurance_company }}</p>
           </div>
 
           <div class="form-field">
-            <label class="form-label required">Brans</label>
+            <label class="form-label required">Branş</label>
             <select v-model="model.branch" class="form-input" :disabled="disabled || hasSourceOffer">
-              <option value="">Secin...</option>
+              <option value="">Seçin...</option>
               <option v-for="row in branchOptions" :key="row.value" :value="row.value">{{ row.label }}</option>
             </select>
             <p v-if="fieldErrors.branch" class="text-xs text-red-600">{{ fieldErrors.branch }}</p>
           </div>
 
           <div class="form-field">
-            <label class="form-label">Satis Temsilcisi</label>
+            <label class="form-label">Satış Temsilcisi</label>
             <select v-model="model.sales_entity" class="form-input" :disabled="disabled || hasSourceOffer">
-              <option value="">Secin...</option>
+              <option value="">Seçin...</option>
               <option v-for="row in salesEntityOptions" :key="row.value" :value="row.value">{{ row.label }}</option>
             </select>
           </div>
 
           <div class="form-field">
-            <label class="form-label">Police No</label>
+            <label class="form-label">Poliçe No</label>
             <input v-model="model.policy_no" class="form-input" type="text" :disabled="disabled" />
           </div>
 
@@ -122,11 +122,11 @@
         <h3 class="form-section-title">Teminat ve Primler</h3>
         <div class="form-grid">
           <div class="form-field">
-            <label class="form-label">Baslangic Tarihi</label>
+            <label class="form-label">Başlangıç Tarihi</label>
             <input v-model="model.start_date" class="form-input" type="date" :disabled="disabled" />
           </div>
           <div class="form-field">
-            <label class="form-label">Bitis Tarihi</label>
+            <label class="form-label">Bitiş Tarihi</label>
             <input v-model="model.end_date" class="form-input" type="date" :disabled="disabled" />
           </div>
           <div class="form-field">
@@ -135,7 +135,7 @@
           </div>
 
           <div class="form-field">
-            <label class="form-label required">Brut Prim</label>
+            <label class="form-label required">Brüt Prim</label>
             <input v-model="model.gross_premium" class="form-input" type="number" min="0" step="0.01" :disabled="disabled || hasSourceOffer" />
             <p v-if="fieldErrors.gross_premium" class="text-xs text-red-600">{{ fieldErrors.gross_premium }}</p>
           </div>
@@ -144,7 +144,7 @@
             <input v-model="model.net_premium" class="form-input" type="number" min="0" step="0.01" :disabled="disabled" />
           </div>
           <div class="form-field">
-            <label class="form-label">Vergi Tutari</label>
+            <label class="form-label">Vergi Tutarı</label>
             <input v-model="model.tax_amount" class="form-input" type="number" min="0" step="0.01" :disabled="disabled" />
           </div>
           <div class="form-field">
@@ -155,16 +155,16 @@
       </div>
 
       <div v-if="currentStep === 4" class="form-section">
-        <h3 class="form-section-title">Onizleme ve Notlar</h3>
+        <h3 class="form-section-title">Önizleme ve Notlar</h3>
         <div class="form-field">
           <label class="form-label">Notlar</label>
           <textarea v-model="model.notes" class="form-input" rows="4" :disabled="disabled" />
         </div>
         <div class="mt-4 grid grid-cols-1 gap-2 rounded-md bg-gray-50 p-3 text-sm text-gray-700">
-          <p><strong>Musteri:</strong> {{ model.customer || model.queryText || '-' }}</p>
-          <p><strong>Police:</strong> {{ model.policy_no || '-' }}</p>
-          <p><strong>Brans:</strong> {{ model.branch || '-' }}</p>
-          <p><strong>Brut Prim:</strong> {{ model.gross_premium || '-' }}</p>
+          <p><strong>Müşteri:</strong> {{ model.customer || model.queryText || '-' }}</p>
+          <p><strong>Poliçe:</strong> {{ model.policy_no || '-' }}</p>
+          <p><strong>Branş:</strong> {{ model.branch || '-' }}</p>
+          <p><strong>Brüt Prim:</strong> {{ model.gross_premium || '-' }}</p>
         </div>
       </div>
 
@@ -189,7 +189,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
   hasSourceOffer: { type: Boolean, default: false },
   error: { type: String, default: '' },
-  title: { type: String, default: 'Yeni Police' },
+  title: { type: String, default: 'Yeni Poliçe' },
   subtitle: { type: String, default: '' },
 });
 
@@ -198,14 +198,14 @@ const emit = defineEmits(['cancel', 'submit']);
 const currentStep = ref(1);
 const totalSteps = 4;
 
-const titleText = computed(() => props.title || 'Yeni Police');
-const subtitleText = computed(() => props.subtitle || 'Cok adimli hizli police formu');
+const titleText = computed(() => props.title || 'Yeni Poliçe');
+const subtitleText = computed(() => props.subtitle || 'Çok adımlı hızlı poliçe formu');
 
 const formSteps = computed(() => [
-  { label: 'Musteri', state: currentStep.value > 1 ? 'done' : 'current' },
-  { label: 'Police', state: currentStep.value > 2 ? 'done' : currentStep.value === 2 ? 'current' : 'pending' },
+  { label: 'Müşteri', state: currentStep.value > 1 ? 'done' : 'current' },
+  { label: 'Poliçe', state: currentStep.value > 2 ? 'done' : currentStep.value === 2 ? 'current' : 'pending' },
   { label: 'Teminat', state: currentStep.value > 3 ? 'done' : currentStep.value === 3 ? 'current' : 'pending' },
-  { label: 'Odeme', state: currentStep.value === 4 ? 'current' : 'pending' },
+  { label: 'Ödeme', state: currentStep.value === 4 ? 'current' : 'pending' },
 ]);
 
 const customerOptions = computed(() => props.optionsMap?.customers || []);

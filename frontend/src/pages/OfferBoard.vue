@@ -30,12 +30,12 @@
         <p class="mini-metric-value text-green-600">{{ formatCount(offerSummary.accepted) }}</p>
       </div>
       <div class="mini-metric">
-        <p class="mini-metric-label">Donusum Orani</p>
+        <p class="mini-metric-label">Dönüşüm Oranı</p>
         <p class="mini-metric-value text-brand-600">{{ offerConversionRate }}%</p>
       </div>
     </div>
 
-    <div v-if="isListView" class="border-b border-gray-200 bg-white px-5 py-3">
+    <div v-if="isListView" class="surface-card rounded-2xl p-4">
       <FilterBar
         v-model:search="offerListSearchQuery"
         :filters="offerListFilterConfig"
@@ -52,7 +52,7 @@
       </FilterBar>
     </div>
 
-    <div v-if="isListView" class="flex-1 p-5">
+    <div v-if="isListView" class="surface-card rounded-2xl p-5">
       <ListTable
         :columns="offerListColumns"
         :rows="offerListRowsWithUrgency"
@@ -70,11 +70,11 @@
       </div>
     </div>
 
-    <div v-if="!isListView" class="flex-1 p-5">
+    <div v-if="!isListView" class="surface-card rounded-2xl p-5">
       <div class="detail-topbar mb-4">
         <div>
           <p class="detail-breadcrumb">Sigorta Operasyonları → Teklif Panosu</p>
-          <h1 class="text-xl font-medium text-gray-900">{{ t("subtitle") }}</h1>
+          <h1 class="detail-title">{{ t("subtitle") }}</h1>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <button class="btn btn-sm" @click="setOfferViewMode('list')">Liste</button>
