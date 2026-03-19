@@ -14,9 +14,14 @@ git commit -m "feat: migrate all pages to design system pattern
 
 - AuxWorkbench.vue: full migration (detail-topbar, FilterBar, ListTable, mini-metric)
 - AuxRecordDetail.vue: replaced DocHeaderCard/DetailActionRow with detail-topbar
-- CustomerDetail.vue, ClaimsBoard.vue, LeadList.vue: removed stale old-pattern imports
-- PolicyList.vue, OfferBoard.vue, CustomerList.vue: removed stale old-pattern imports
-- All pages now consistently use page-shell + detail-topbar pattern
-- No old pattern components (DocHeaderCard, DetailActionRow, PageToolbar, WorkbenchFilterToolbar) remain in any page
+- CustomerDetail.vue, ClaimsBoard.vue, LeadList.vue: design system updates
+- PolicyList.vue, OfferBoard.vue, CustomerList.vue: design system updates
+- PaymentsBoard.vue, RenewalsBoard.vue, Reports.vue: full migration
+- ReconciliationWorkbench.vue, CommunicationCenter.vue: full migration
+- All pages now consistently use page-shell + detail-topbar + mini-metric pattern
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+
+echo.
+echo Running: git push
+git push origin copilot/worktree-2026-03-17T13-42-32
