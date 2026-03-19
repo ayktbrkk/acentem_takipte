@@ -1,4 +1,7 @@
 @echo off
+echo Fixing safe.directory...
+git config --global --add safe.directory "C:/Users/Aykut/Documents/GitHub/acentem_takipte.worktrees/copilot-worktree-2026-03-17T13-42-32"
+
 cd /d "C:\Users\Aykut\Documents\GitHub\acentem_takipte.worktrees\copilot-worktree-2026-03-17T13-42-32"
 
 echo Running: git add -A
