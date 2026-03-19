@@ -35,13 +35,13 @@
   {
    "fieldname": "asset_label",
    "fieldtype": "Data",
-   "label": "Varlik Basligi",
+   "label": "Varlık Başlığı",
    "reqd": 1
   },
   {
    "fieldname": "asset_identifier",
    "fieldtype": "Data",
-   "label": "Varlik Kimligi"
+   "label": "Varlık Kimliği"
   },
   {
    "fieldname": "notes",

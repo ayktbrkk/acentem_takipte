@@ -12,7 +12,7 @@
     {
       "fieldname": "activity_title",
       "fieldtype": "Data",
-      "label": "Aktivite Basligi",
+      "label": "Aktivite Başlığı",
       "reqd": 1,
       "in_list_view": 1
     },
@@ -67,7 +67,7 @@
     {
       "fieldname": "activity_at",
       "fieldtype": "Datetime",
-      "label": "Aktivite Zamani",
+      "label": "Aktivite Zamanı",
       "in_list_view": 1
     },
     {

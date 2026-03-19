@@ -145,87 +145,95 @@
 
     <HeroStrip :cells="summaryItems" />
 
-    <DataTableShell
-      :loading="activeLoading && !doc"
-      :error="errorText"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty="isEmpty"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template v-if="doc">
-        <div class="detail-body">
-          <div class="detail-main space-y-4">
-            <div v-if="specialBadges.length" class="surface-card rounded-2xl p-5">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("stateSummary") }}</p>
-              <div class="mt-3 flex flex-wrap items-center gap-2">
-                <StatusBadge
-                  v-for="badge in specialBadges"
-                  :key="badge.key"
-                  :domain="badge.type"
-                  :status="badge.status"
-                />
-              </div>
-            </div>
+    <div v-if="activeLoading && !doc" class="surface-card rounded-2xl p-5">
+      <div class="card-empty">{{ t("loading") }}</div>
+    </div>
 
-            <article class="surface-card rounded-2xl p-4">
-              <DetailTabsBar v-model="activeDetailTab" :tabs="detailTabs" />
-            </article>
+    <div v-else-if="errorText" class="surface-card rounded-2xl p-5">
+      <p class="text-sm font-semibold text-rose-600">{{ t("loadErrorTitle") }}</p>
+      <p class="mt-2 text-sm text-slate-600">{{ errorText }}</p>
+    </div>
 
-            <DetailCard
-              v-for="group in visibleGroups"
-              :key="group.key"
-              :title="group.title || groupTitle(group.key)"
+    <div v-else-if="isEmpty" class="surface-card rounded-2xl p-5">
+      <p class="card-empty">{{ t("emptyTitle") }}</p>
+      <p class="mt-2 text-sm text-slate-500">{{ t("emptyDescription") }}</p>
+    </div>
+
+    <div v-else class="detail-body">
+      <div class="detail-main space-y-4">
+        <article class="surface-card rounded-2xl p-4">
+          <DetailTabsBar v-model="activeDetailTab" :tabs="detailTabs" />
+        </article>
+
+        <DetailCard
+          v-for="group in visibleGroups"
+          :key="group.key"
+          :title="group.title || groupTitle(group.key)"
+        >
+          <FieldGroup :fields="group.items || groupItems(group.fields)" :cols="group.cols || 2" />
+        </DetailCard>
+
+        <DetailCard v-if="activeDetailTab === 'related'" :title="t('relatedTitle')">
+          <div v-if="relatedRecordCards.length" class="grid gap-3 lg:grid-cols-2">
+            <MetaListCard
+              v-for="item in relatedRecordCards"
+              :key="item.key"
+              :title="item.title"
+              :subtitle="item.subtitle"
+              :description="item.description"
+              :meta="item.meta"
             >
-              <FieldGroup :fields="group.items || groupItems(group.fields)" :cols="group.cols || 2" />
-            </DetailCard>
-
-            <DetailCard v-if="activeDetailTab === 'related'" :title="t('relatedTitle')">
-              <div v-if="relatedRecordCards.length" class="grid gap-3 lg:grid-cols-2">
-                <MetaListCard
-                  v-for="item in relatedRecordCards"
-                  :key="item.key"
-                  :title="item.title"
-                  :subtitle="item.subtitle"
-                  :description="item.description"
-                  :meta="item.meta"
-                >
-                  <template #trailing>
-                    <ActionButton v-if="item.open" variant="link" size="xs" @click="item.open()">{{ t("panel") }}</ActionButton>
-                  </template>
-                </MetaListCard>
-              </div>
-              <div v-else class="at-empty-block">{{ t("noRelatedRecords") }}</div>
-            </DetailCard>
-
-            <DetailCard v-if="activeDetailTab === 'activity'" :title="t('activityTitle')">
-              <div v-if="activityItems.length" class="space-y-3">
-                <MetaListCard
-                  v-for="item in activityItems"
-                  :key="item.key"
-                  :title="item.title"
-                  :description="item.description"
-                  :meta="item.meta"
-                />
-              </div>
-              <div v-else class="at-empty-block">{{ t("noActivity") }}</div>
-            </DetailCard>
-
-            <div v-if="visibleTextBlocks.length" class="grid gap-4 lg:grid-cols-2">
-              <DetailCard
-                v-for="block in visibleTextBlocks"
-                :key="block.key || block.field"
-                :title="block.title || fieldLabel(block.field)"
-                :class="block.fullWidth ? 'lg:col-span-2' : ''"
-              >
-                <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">{{ block.value }}</pre>
-              </DetailCard>
-            </div>
+              <template #trailing>
+                <ActionButton v-if="item.open" variant="link" size="xs" @click="item.open()">{{ t("panel") }}</ActionButton>
+              </template>
+            </MetaListCard>
           </div>
+          <div v-else class="at-empty-block">{{ t("noRelatedRecords") }}</div>
+        </DetailCard>
+
+        <DetailCard v-if="activeDetailTab === 'activity'" :title="t('activityTitle')">
+          <div v-if="activityItems.length" class="space-y-3">
+            <MetaListCard
+              v-for="item in activityItems"
+              :key="item.key"
+              :title="item.title"
+              :description="item.description"
+              :meta="item.meta"
+            />
+          </div>
+          <div v-else class="at-empty-block">{{ t("noActivity") }}</div>
+        </DetailCard>
+
+        <div v-if="visibleTextBlocks.length" class="grid gap-4 lg:grid-cols-2">
+          <DetailCard
+            v-for="block in visibleTextBlocks"
+            :key="block.key || block.field"
+            :title="block.title || fieldLabel(block.field)"
+            :class="block.fullWidth ? 'lg:col-span-2' : ''"
+          >
+            <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">{{ block.value }}</pre>
+          </DetailCard>
         </div>
-      </template>
-    </DataTableShell>
+      </div>
+
+      <div class="detail-sidebar space-y-4">
+        <DetailCard :title="t('stateSummary')">
+          <div v-if="specialBadges.length" class="flex flex-wrap gap-2">
+            <StatusBadge
+              v-for="badge in specialBadges"
+              :key="badge.key"
+              :domain="badge.type"
+              :status="badge.status"
+            />
+          </div>
+          <div v-else class="field-value-muted">{{ t("noDecisionContext") }}</div>
+        </DetailCard>
+
+        <DetailCard :title="recordTitle">
+          <FieldGroup :fields="summaryItems.slice(0, 4)" :cols="2" />
+        </DetailCard>
+      </div>
+    </div>
 
     <QuickCreateManagedDialog
       v-if="quickEditConfig && canUseQuickEdit"
@@ -255,7 +263,6 @@ import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { deskActionsEnabled } from "../utils/deskActions";
 import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
@@ -285,12 +292,12 @@ const copy = {
   tr: {
     backToList: "Listeye Dön",
     quickEdit: "Hızlı Düzenle",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranında Aç",
     panel: "Panel",
     saveChanges: "Değişiklikleri Kaydet",
     cancel: "Vazgeç",
     copy: "Kopyala",
-    copied: "KopyalandÄ±",
+    copied: "Kopyalandı",
     openCommunication: "İletişim Merkezi",
     sendNow: "Hemen Gönder",
     retry: "Tekrar Dene",

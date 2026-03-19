@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
 import { nextTick } from "vue";
 
 import ExportData from "./ExportData.vue";
 import ImportData from "./ImportData.vue";
+import { useAuthStore } from "../stores/auth";
 
 const routerPush = vi.fn();
+let pinia;
 
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
@@ -13,10 +16,10 @@ vi.mock("vue-router", () => ({
   useRouter: () => ({ push: routerPush }),
 }));
 
-const DetailCardStub = {
+const SectionPanelStub = {
   props: ["title"],
   template: `
-    <section class="detail-card-stub">
+    <section class="section-panel-stub">
       <h2>{{ title }}</h2>
       <slot />
     </section>
@@ -36,13 +39,18 @@ describe("Import and export pages", () => {
   beforeEach(() => {
     routerPush.mockReset();
     vi.stubGlobal("FileReader", FileReaderMock);
+    pinia = createPinia();
+    setActivePinia(pinia);
+    const authStore = useAuthStore();
+    authStore.setLocale("tr");
   });
 
   it("parses csv imports, enables import action, and returns to dashboard on cancel", async () => {
     const wrapper = mount(ImportData, {
       global: {
+        plugins: [pinia],
         stubs: {
-          DetailCard: DetailCardStub,
+          SectionPanel: SectionPanelStub,
         },
       },
     });
@@ -69,13 +77,13 @@ describe("Import and export pages", () => {
     await nextTick();
 
     const actionButtons = wrapper.findAll("button");
-    const importButton = actionButtons.find((button) => button.text() === "Ice Aktar");
-    const cancelButton = actionButtons.find((button) => button.text() === "Iptal");
+    const importButton = actionButtons.find((button) => button.text() === "İçe Aktar");
+    const cancelButton = actionButtons.find((button) => button.text() === "İptal");
 
     expect(importButton.element.disabled).toBe(false);
 
     await importButton.trigger("click");
-    expect(wrapper.text()).toContain("1 kolon eslestirildi");
+    expect(wrapper.text()).toContain("1 kolon eşleştirildi");
 
     await cancelButton.trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "dashboard" });
@@ -86,8 +94,9 @@ describe("Import and export pages", () => {
 
     const wrapper = mount(ExportData, {
       global: {
+        plugins: [pinia],
         stubs: {
-          DetailCard: DetailCardStub,
+          SectionPanel: SectionPanelStub,
         },
       },
     });
@@ -104,9 +113,9 @@ describe("Import and export pages", () => {
     await selects[2].setValue("Open");
 
     const buttons = wrapper.findAll("button");
-    const exportButton = buttons.find((button) => button.text() === "Disa Aktar");
-    const resetButton = buttons.find((button) => button.text() === "Sifirla");
-    const cancelButton = buttons.find((button) => button.text() === "Iptal");
+    const exportButton = buttons.find((button) => button.text() === "Dışa Aktar");
+    const resetButton = buttons.find((button) => button.text() === "Sıfırla");
+    const cancelButton = buttons.find((button) => button.text() === "İptal");
 
     await exportButton.trigger("click");
 
@@ -120,7 +129,7 @@ describe("Import and export pages", () => {
     expect(openSpy.mock.calls[0][0]).toContain("start_date=2026-03-01");
     expect(openSpy.mock.calls[0][0]).toContain("end_date=2026-03-31");
     expect(openSpy.mock.calls[0][0]).toContain("status=Open");
-    expect(wrapper.text()).toContain("Export islemi baslatildi.");
+    expect(wrapper.text()).toContain("Dışa aktarma işlemi başlatıldı.");
     expect(wrapper.text()).toContain("Hasarlar");
     expect(wrapper.text()).toContain("hasar_export");
 
@@ -133,5 +142,23 @@ describe("Import and export pages", () => {
     expect(routerPush).toHaveBeenCalledWith({ name: "dashboard" });
 
     openSpy.mockRestore();
+  });
+
+  it("renders the export page copy in English when locale changes", async () => {
+    const authStore = useAuthStore();
+    authStore.setLocale("en");
+
+    const wrapper = mount(ExportData, {
+      global: {
+        plugins: [pinia],
+        stubs: {
+          SectionPanel: SectionPanelStub,
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain("Data Export");
+    expect(wrapper.text()).toContain("Export");
+    expect(wrapper.text()).toContain("Recent Exports");
   });
 });

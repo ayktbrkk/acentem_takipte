@@ -191,9 +191,7 @@ describe("PaymentsBoard page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableShell: genericStub,
           DataTableCell: genericStub,
-          DocSummaryGrid: true,
           FormattedCurrencyValue: true,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,

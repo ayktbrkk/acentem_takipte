@@ -66,7 +66,6 @@ const storageState = new Map();
 
 const commonStubs = {
   ActionButton: actionButtonStub,
-  DataTableShell: genericStub,
   PageToolbar: genericStub,
   WorkbenchFilterToolbar: genericStub,
 };

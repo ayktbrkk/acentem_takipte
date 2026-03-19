@@ -2,7 +2,7 @@
 
 > Not: Bu dosya tarihsel kapanis ozeti olarak korunuyor. Guncel ve gercek uygulama plani icin `MD/UI-KONSOLIDASYON-YOL-HARITASI.md` dosyasini referans alin.
 
-Son guncelleme: 2026-03-19
+Son guncelleme: 2026-03-20
 
 ---
 
@@ -18,7 +18,7 @@ Son guncelleme: 2026-03-19
 | 6 | Unused imports temizligi (6 dosya) | Tamamlandi |
 | 7 | Console.log temizligi | Tamamlandi |
 | 8 | Dashboard hero sadelestirme ve detail-topbar hizasi | Tamamlandi |
-| 9 | CustomerDetail ilk card hizalamasi | Tamamlandi |
+| 9 | CustomerDetail SectionPanel hizalamasi | Tamamlandi |
 | 10 | LeadDetail sidebar ve operasyon kartlari hizalamasi | Tamamlandi |
 | 11 | OfferDetail sidebar hizalamasi | Tamamlandi |
 | 12 | PaymentDetail sidebar hizalamasi | Tamamlandi |
@@ -54,7 +54,7 @@ Kontrol edilmesi onerilen sayfalar:
 - `/at/aux/insurance-company` - Sigorta Sirketleri
 - `/at/aux/branch` - Branslar
 - `/dashboard` - hero/topbar hizasi
-- `/customers/:id` - CustomerDetail ilk kart hizasi
+- `/customers/:id` - CustomerDetail SectionPanel hizasi
 - `/leads/:id` - LeadDetail sidebar ve operasyon kartlari
 - `/offers/:id` - OfferDetail sidebar hizasi
 - `/payments/:id` - PaymentDetail sidebar hizasi
@@ -63,12 +63,16 @@ Kontrol edilmesi onerilen sayfalar:
 - `/reconciliation/:id` - ReconciliationDetail sidebar hizasi
 - `/renewals/:id` - RenewalTaskDetail sidebar hizasi
 
+### Authenticated Smoke
+- `E2E_USER` ve `E2E_PASSWORD` ortam degiskenleri olmadan browser tabanli authenticated smoke tamamlanamaz.
+- Anonim smoke ve unit/build dogrulandi; bu satir, sadece kimlik bilgisi saglandiginda kapatilacak kalan manuel adimi temsil ediyor.
+
 ---
 
 ## Notlar
 
 - Branch: `copilot/worktree-2026-03-17T13-42-32`
-- Design system pattern: `page-shell > detail-topbar > surface-card(PageToolbar) > mini-metric > FilterBar > ListTable`
+- Design system pattern: `page-shell > detail-topbar > surface-card(SectionPanel/PageToolbar) > mini-metric > FilterBar > ListTable`
 - AuxWorkbench tum aux ekranlarini (9+) tek component ile yonetiyor
 
 ---
@@ -93,6 +97,6 @@ Asagidaki sayfalar migrate edildi ama localhost'ta gorsel kontrol yapilmadi:
 ## Ozet
 
 - Tum liste/board sayfalari migrate edildi ve commit edildi
-- Bu seansta yapilanlar: Reports.vue bug fix, 6 dosyadan unused imports temizligi, Dashboard topbar sadelestirme, CustomerDetail ilk card hizalamasi, LeadDetail sidebar ve operasyon kartlari, OfferDetail/PaymentDetail/PolicyDetail sidebar hizalamasi, ClaimDetail/ReconciliationDetail/RenewalTaskDetail hizalamasi, CustomerList/LeadList/PolicyList kart hizalamasi, CommunicationCenter initial load fix, LeadDetail section-title cleanup, Dashboard duplicate topbar removal, Dashboard i18n duplicate key cleanup, LeadDetail copy polish
+- Bu seansta yapilanlar: Reports.vue bug fix, 6 dosyadan unused imports temizligi, Dashboard topbar sadelestirme, CustomerDetail SectionPanel hizalamasi, LeadDetail sidebar ve operasyon kartlari, OfferDetail/PaymentDetail/PolicyDetail sidebar hizalamasi, ClaimDetail/ReconciliationDetail/RenewalTaskDetail hizalamasi, CustomerList/LeadList/PolicyList kart hizalamasi, CommunicationCenter initial load fix, LeadDetail section-title cleanup, Dashboard duplicate topbar removal, Dashboard i18n duplicate key cleanup, LeadDetail copy polish
 - Bu turda ek olarak: PolicyForm, ImportData, ExportData, ClaimDetail, ReconciliationDetail, RenewalTaskDetail, LeadList ve LeadDetail icindeki bozuk TR metinler normalize edildi
 - Ek tarama ile Dashboard, PolicyList, OfferBoard ve ClaimsBoard icindeki kalan bariz TR typo metinleri de normalize edildi

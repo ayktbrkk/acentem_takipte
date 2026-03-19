@@ -324,7 +324,7 @@ export const AUX_WORKBENCH_CONFIGS = {
     filterDefs: [F("status", "status", "text", { mode: "like" }), F("needs_reconciliation", "needs_reconciliation", "select", { options: ["", "1", "0"] }), F("source_doctype", "source_doctype", "text", { mode: "like" })],
     presetDefs: [
       P("reconNeeded", L("Mutabakat Gereken", "Needs Reconciliation"), { needs_reconciliation: "1", sort: "difference_try desc" }),
-      P("policySource", L("Poliçe Kaynakli", "Policy Source"), { source_doctype: "AT Policy" }),
+      P("policySource", L("Poliçe Kaynaklı", "Policy Source"), { source_doctype: "AT Policy" }),
       P("highDifference", L("Yüksek Fark", "High Difference"), { sort: "difference_try desc" }),
     ],
     quickCreate: { registryKey: "accounting_entry", label: L("Yeni Muhasebe Kaydı", "New Accounting Entry"), showSaveAndOpen: true },
@@ -429,9 +429,9 @@ export const AUX_WORKBENCH_CONFIGS = {
     textFields: ["file_url"],
     filterDefs: [F("attached_to_doctype", "attached_to_doctype", "select", { options: ["", "AT Customer", "AT Policy", "AT Claim", "AT Campaign", "AT Notification Draft", "AT Notification Outbox"] }), F("attached_to_name", "attached_to_name", "text", { mode: "like" })],
     presetDefs: [
-      P("customers", L("Müşteri Dosyalari", "Customer Files"), { attached_to_doctype: "AT Customer", sort: "creation desc" }),
-      P("policies", L("Poliçe Dosyalari", "Policy Files"), { attached_to_doctype: "AT Policy", sort: "creation desc" }),
-      P("claims", L("Hasar Dosyalari", "Claim Files"), { attached_to_doctype: "AT Claim", sort: "creation desc" }),
+      P("customers", L("Müşteri Dosyaları", "Customer Files"), { attached_to_doctype: "AT Customer", sort: "creation desc" }),
+      P("policies", L("Poliçe Dosyaları", "Policy Files"), { attached_to_doctype: "AT Policy", sort: "creation desc" }),
+      P("claims", L("Hasar Dosyaları", "Claim Files"), { attached_to_doctype: "AT Claim", sort: "creation desc" }),
     ],
     sortOptions: ["creation desc", "modified desc", "file_name asc"],
     defaultSort: "creation desc",

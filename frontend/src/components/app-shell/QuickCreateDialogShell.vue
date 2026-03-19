@@ -9,17 +9,14 @@
       </div>
     </div>
 
-    <div
-      v-if="showFooter"
-      class="at-quick-create-shell__footer"
-    >
+    <div v-if="showFooter" class="at-quick-create-shell__footer">
       <button
         class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 disabled:opacity-60"
         type="button"
         :disabled="loading"
         @click="$emit('cancel')"
       >
-        {{ labels.cancel || "Vazgeç" }}
+        {{ labels.cancel || fallbackLabels.cancel }}
       </button>
       <button
         class="rounded-lg border border-brand-700 px-4 py-2 text-sm font-semibold text-brand-700 disabled:opacity-60"
@@ -27,7 +24,7 @@
         :disabled="loading || saveDisabled"
         @click="$emit('save')"
       >
-        {{ labels.save || "Kaydet" }}
+        {{ labels.save || fallbackLabels.save }}
       </button>
       <button
         v-if="showSaveAndOpen"
@@ -36,20 +33,23 @@
         :disabled="loading || saveAndOpenDisabled"
         @click="$emit('saveAndOpen')"
       >
-        {{ labels.saveAndOpen || "Kaydet ve Ac" }}
+        {{ labels.saveAndOpen || fallbackLabels.saveAndOpen }}
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from "vue";
+import { useAuthStore } from "../../stores/auth";
+
+const authStore = useAuthStore();
+
+const props = defineProps({
   error: { type: String, default: "" },
   subtitle: { type: String, default: "" },
-  labels: {
-    type: Object,
-    default: () => ({ cancel: "Vazgeç", save: "Kaydet", saveAndOpen: "Kaydet ve Aç" }),
-  },
+  locale: { type: String, default: "" },
+  labels: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
   saveDisabled: { type: Boolean, default: false },
   saveAndOpenDisabled: { type: Boolean, default: false },
@@ -58,4 +58,11 @@ defineProps({
 });
 
 defineEmits(["cancel", "save", "saveAndOpen"]);
+
+const resolvedLocale = computed(() => props.locale || authStore.locale || "tr");
+const fallbackLabels = computed(() =>
+  resolvedLocale.value === "tr"
+    ? { cancel: "Vazgeç", save: "Kaydet", saveAndOpen: "Kaydet ve Aç" }
+    : { cancel: "Cancel", save: "Save", saveAndOpen: "Save & Open" },
+);
 </script>

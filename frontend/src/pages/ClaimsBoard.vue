@@ -1,12 +1,29 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Hasarlar</p>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
-      <span class="text-sm text-gray-400">{{ claims.length }} kayıt</span>
+      <div class="flex flex-wrap items-center gap-2">
+        <QuickCreateLauncher
+          variant="primary"
+          size="sm"
+          :label="t('newClaim')"
+          @launch="showQuickClaimDialog = true"
+        />
+        <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="reloadClaims">
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">
+          {{ t("exportXlsx") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">
+          {{ t("exportPdf") }}
+        </ActionButton>
+        <span class="text-sm text-gray-400">{{ claims.length }} {{ t("recordCount") }}</span>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
@@ -37,7 +54,11 @@
       <p>{{ claimsErrorText }}</p>
     </div>
 
-    <div class="surface-card rounded-2xl p-4">
+    <SectionPanel
+      :title="t('filtersTitle')"
+      :count="`${claimsListActiveCount} ${t('activeFilters')}`"
+      panel-class="surface-card rounded-2xl p-4"
+    >
       <FilterBar
         v-model:search="claimsListSearchQuery"
         :filters="claimsListFilterConfig"
@@ -46,15 +67,17 @@
         @reset="onClaimsListFilterReset"
       >
         <template #actions>
-          <button class="btn btn-primary btn-sm" @click="showQuickClaimDialog = true">+ {{ t("newClaim") }}</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="reloadClaims">{{ t("refresh") }}</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">{{ t("exportXlsx") }}</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">{{ t("exportPdf") }}</button>
+          <button class="btn btn-outline btn-sm" @click="onClaimsListFilterReset">{{ t("clearFilters") }}</button>
+          <button class="btn btn-outline btn-sm" @click="focusClaimSearch">{{ t("searchPlaceholder") }}</button>
         </template>
       </FilterBar>
-    </div>
+    </SectionPanel>
 
-    <div class="surface-card rounded-2xl p-5">
+    <SectionPanel
+      :title="t('claimsTableTitle')"
+      :count="formatCount(claimsListRowsWithActions.length)"
+      panel-class="surface-card rounded-2xl p-5"
+    >
       <ListTable
         :columns="claimsTableColumns"
         :rows="claimsListRowsWithActions"
@@ -62,7 +85,7 @@
         empty-message="Hasar bulunamadı."
         @row-click="openClaimDetail"
       />
-    </div>
+    </SectionPanel>
 
     <QuickCreateClaim
       v-model="showQuickClaimDialog"
@@ -93,11 +116,11 @@ import { useBranchStore } from "../stores/branch";
 import { useClaimStore } from "../stores/claim";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import AmountPairSummary from "../components/app-shell/AmountPairSummary.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import QuickCreateClaim from "../components/QuickCreateClaim.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
@@ -144,20 +167,22 @@ const copy = {
     markRejected: "Reddet",
     clearFollowUp: "Takibi Temizle",
     notificationDraft: "Bildirim Taslağı",
-    notificationMissing: "Bildirim Akisi Yok",
-    notificationQueue: "Bildirim Kuyrugu",
+    notificationMissing: "Bildirim Akışı Yok",
+    notificationQueue: "Bildirim Kuyruğu",
     notificationNone: "Bildirim Kaydı Yok",
     openNotifications: "Bildirimler",
     openDocuments: "Dokümanlar",
     viewClaimFile: "Dosya Görüntüle",
     createPayment: "Ödeme Yap",
     rejectReasonPrompt: "Red sebebini girin",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranında Aç",
     openPolicy: "Poliçeyi Aç",
     openClaimDetail: "Hasar Detayı",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
+    filtersTitle: "Filtreler",
+    claimsTableTitle: "Hasar Listesi",
     presetLabel: "Filtre Şablonu",
     presetDefault: "Standart",
     savePreset: "Kaydet",
@@ -228,12 +253,14 @@ const copy = {
     viewClaimFile: "View File",
     createPayment: "Create Payment",
     rejectReasonPrompt: "Enter rejection reason",
-    openDesk: "Desk",
+    openDesk: "Open in Desk",
     openPolicy: "Open Policy",
     openClaimDetail: "Claim Detail",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
+    filtersTitle: "Filters",
+    claimsTableTitle: "Claims List",
     presetLabel: "Filter Preset",
     presetDefault: "Standard",
     savePreset: "Save",

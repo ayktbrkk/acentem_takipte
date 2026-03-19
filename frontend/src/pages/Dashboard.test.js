@@ -64,9 +64,19 @@ const ActionButtonStub = {
   template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
 
-const SectionCardHeaderStub = {
-  props: ["title", "count"],
-  template: `<div class="section-card-header-stub"><h3>{{ title }}</h3><span v-if="count != null">{{ count }}</span><slot name="trailing" /></div>`,
+const SectionPanelStub = {
+  props: ["title", "count", "meta", "showCount"],
+  template: `
+    <section class="section-panel-stub">
+      <div class="section-panel-header">
+        <h3>{{ title }}</h3>
+        <span v-if="meta">{{ meta }}</span>
+        <span v-else-if="showCount !== false && count != null">{{ count }}</span>
+        <slot name="trailing" />
+      </div>
+      <slot />
+    </section>
+  `,
 };
 
 const MetaListCardStub = {
@@ -253,7 +263,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -290,7 +300,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -326,7 +336,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -342,7 +352,7 @@ describe("Dashboard page store integration", () => {
 
     const text = wrapper.text();
     expect(text).toContain("Takip");
-    expect(text).toContain("Hasar Masasi");
+    expect(text).toContain("Hasar Masası");
     expect(text).toContain("Yenileme Panosu");
     expect(text).toContain("Merkezi");
   });
@@ -362,7 +372,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -407,7 +417,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -436,7 +446,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -467,7 +477,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -498,7 +508,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -535,7 +545,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,
@@ -572,7 +582,7 @@ describe("Dashboard page store integration", () => {
           EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: true,
-          SectionCardHeader: SectionCardHeaderStub,
+          SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
           ActionPreviewCard: genericStub,

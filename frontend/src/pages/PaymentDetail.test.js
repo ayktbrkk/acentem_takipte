@@ -39,12 +39,12 @@ const HeroStripStub = {
   `,
 };
 
-const DetailCardStub = {
+const SectionPanelStub = {
   props: ["title"],
   template: `
-    <section class="detail-card-stub">
+    <section class="section-panel-stub">
       <h2>{{ title }}</h2>
-      <slot name="action" />
+      <slot name="trailing" />
       <slot />
     </section>
   `,
@@ -153,7 +153,7 @@ describe("PaymentDetail page", () => {
         stubs: {
           StatusBadge: StatusBadgeStub,
           HeroStrip: HeroStripStub,
-          DetailCard: DetailCardStub,
+          SectionPanel: SectionPanelStub,
           FieldGroup: FieldGroupStub,
         },
       },

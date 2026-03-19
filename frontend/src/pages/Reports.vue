@@ -1,88 +1,83 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
+      <div class="flex flex-wrap gap-2">
+        <ActionButton variant="secondary" size="sm" :disabled="loading" @click="loadReport">
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
+          {{ t("exportXlsx") }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
+          {{ t("exportPdf") }}
+        </ActionButton>
+      </div>
     </div>
 
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar>
-        <template #actions>
-          <ActionButton variant="secondary" size="sm" :disabled="loading" @click="loadReport">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton variant="primary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
-            {{ t("exportPdf") }}
-          </ActionButton>
-        </template>
+    <SectionPanel :title="t('filtersTitle')" :count="activeFilterCount" panel-class="surface-card rounded-2xl p-5">
+      <WorkbenchFilterToolbar
+        v-model="presetKey"
+        :advanced-label="t('advancedFilters')"
+        :collapse-label="t('hideAdvancedFilters')"
+        :active-count="activeFilterCount"
+        :active-count-label="t('activeFilters')"
+        :preset-label="t('presetLabel')"
+        :preset-options="presetOptions"
+        :can-delete-preset="canDeletePreset"
+        :save-label="t('savePreset')"
+        :delete-label="t('deletePreset')"
+        :apply-label="t('applyFilters')"
+        :reset-label="t('clearFilters')"
+        @preset-change="onPresetChange"
+        @preset-save="savePreset"
+        @preset-delete="deletePreset"
+        @apply="loadReport"
+        @reset="resetFilters"
+      >
+        <select v-model="filters.reportKey" class="input">
+          <option v-for="option in reportOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <input v-model="filters.fromDate" class="input" type="date" />
+        <input v-model="filters.toDate" class="input" type="date" />
 
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="loadReport"
-            @reset="resetFilters"
-          >
-            <select v-model="filters.reportKey" class="input">
-              <option v-for="option in reportOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <input v-model="filters.fromDate" class="input" type="date" />
-            <input v-model="filters.toDate" class="input" type="date" />
-
-            <template #advanced>
-              <input
-                v-if="isFilterVisible('branch')"
-                v-model.trim="filters.branch"
-                class="input"
-                type="search"
-                :placeholder="t('branchFilter')"
-              />
-              <input
-                v-if="isFilterVisible('insuranceCompany')"
-                v-model.trim="filters.insuranceCompany"
-                class="input"
-                type="search"
-                :placeholder="t('companyFilter')"
-              />
-              <input
-                v-if="isFilterVisible('salesEntity')"
-                v-model.trim="filters.salesEntity"
-                class="input"
-                type="search"
-                :placeholder="t('salesEntityFilter')"
-              />
-              <input
-                v-if="isFilterVisible('status')"
-                v-model.trim="filters.status"
-                class="input"
-                type="search"
-                :placeholder="t('statusFilter')"
-              />
-            </template>
-          </WorkbenchFilterToolbar>
+        <template #advanced>
+          <input
+            v-if="isFilterVisible('branch')"
+            v-model.trim="filters.branch"
+            class="input"
+            type="search"
+            :placeholder="t('branchFilter')"
+          />
+          <input
+            v-if="isFilterVisible('insuranceCompany')"
+            v-model.trim="filters.insuranceCompany"
+            class="input"
+            type="search"
+            :placeholder="t('companyFilter')"
+          />
+          <input
+            v-if="isFilterVisible('salesEntity')"
+            v-model.trim="filters.salesEntity"
+            class="input"
+            type="search"
+            :placeholder="t('salesEntityFilter')"
+          />
+          <input
+            v-if="isFilterVisible('status')"
+            v-model.trim="filters.status"
+            class="input"
+            type="search"
+            :placeholder="t('statusFilter')"
+          />
         </template>
-      </PageToolbar>
-    </article>
+      </WorkbenchFilterToolbar>
+    </SectionPanel>
 
     <article class="surface-card rounded-xl border border-sky-200 bg-sky-50/80 px-4 py-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -136,74 +131,71 @@
       </div>
     </section>
 
-    <DataTableShell
-      :loading="loading"
-      :error="error"
-      :empty="!loading && sortedRows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
-    >
-      <template #header>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between gap-3">
-            <h3 class="text-base font-semibold text-slate-900">{{ activeReportLabel }}</h3>
-            <span class="text-xs text-slate-500">{{ sortedRows.length }}</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-medium text-slate-500">{{ t("columns") }}</span>
-            <button
-              type="button"
-              class="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
-              @click="showAllColumns"
-            >
-              {{ t("showAllColumns") }}
-            </button>
-            <button
-              v-for="column in columns"
-              :key="`toggle-${column}`"
-              type="button"
-              class="rounded-full border px-2.5 py-1 text-xs font-medium transition"
-              :class="
-                isColumnVisible(column)
-                  ? 'border-sky-300 bg-sky-50 text-sky-700'
-                  : 'border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700'
-              "
-              @click="toggleColumn(column)"
-            >
-              {{ getColumnLabel(column) }}
-            </button>
-          </div>
+    <SectionPanel :title="activeReportLabel" :count="sortedRows.length" panel-class="surface-card rounded-2xl p-5">
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        <span class="text-xs font-medium text-slate-500">{{ t("columns") }}</span>
+        <button
+          type="button"
+          class="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
+          @click="showAllColumns"
+        >
+          {{ t("showAllColumns") }}
+        </button>
+        <button
+          v-for="column in columns"
+          :key="`toggle-${column}`"
+          type="button"
+          class="rounded-full border px-2.5 py-1 text-xs font-medium transition"
+          :class="
+            isColumnVisible(column)
+              ? 'border-sky-300 bg-sky-50 text-sky-700'
+              : 'border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700'
+          "
+          @click="toggleColumn(column)"
+        >
+          {{ getColumnLabel(column) }}
+        </button>
+      </div>
+
+      <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+        {{ t("loading") }}
+      </div>
+      <div v-else-if="error" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700">
+        <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="mt-1 text-sm">{{ error }}</p>
+      </div>
+      <template v-else>
+        <div v-if="sortedRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
+        </div>
+
+        <div class="mt-4 overflow-auto">
+          <table class="at-table">
+            <thead>
+              <tr class="at-table-head-row">
+                <th v-for="column in visibleColumns" :key="column" class="at-table-head-cell">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 text-left transition hover:text-slate-900"
+                    @click="toggleSort(column)"
+                  >
+                    <span>{{ getColumnLabel(column) }}</span>
+                    <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, rowIndex) in sortedRows" :key="row.name || rowIndex" class="at-table-row">
+                <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
+                  {{ formatCellValue(column, row[column]) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </template>
-
-      <div class="overflow-auto">
-        <table class="at-table">
-          <thead>
-            <tr class="at-table-head-row">
-              <th v-for="column in visibleColumns" :key="column" class="at-table-head-cell">
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1 text-left transition hover:text-slate-900"
-                  @click="toggleSort(column)"
-                >
-                  <span>{{ getColumnLabel(column) }}</span>
-                  <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, rowIndex) in sortedRows" :key="row.name || rowIndex" class="at-table-row">
-              <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
-                {{ formatCellValue(column, row[column]) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </DataTableShell>
+    </SectionPanel>
 
     <ScheduledReportsManager
       v-if="canManageScheduledReports"
@@ -217,12 +209,14 @@
       @save="saveScheduledReport"
       @remove="removeScheduledReport"
     />
-    <article v-if="canManageScheduledReports" class="surface-card rounded-2xl p-5">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="space-y-1">
-          <h3 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h3>
-          <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
-        </div>
+    <SectionPanel
+      v-if="canManageScheduledReports"
+      :title="t('segmentSnapshotTitle')"
+      :meta="t('segmentSnapshotHint')"
+      :show-count="false"
+      panel-class="surface-card rounded-2xl p-5"
+    >
+      <div class="flex flex-wrap items-center justify-end gap-3">
         <ActionButton
           variant="secondary"
           size="sm"
@@ -233,7 +227,7 @@
           {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
         </ActionButton>
       </div>
-    </article>
+    </SectionPanel>
   </section>
 </template>
 
@@ -243,8 +237,8 @@ import { frappeRequest } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ScheduledReportsManager from "../components/reports/ScheduledReportsManager.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
@@ -272,6 +266,7 @@ const copy = {
     refresh: "Yenile",
     exportPdf: "PDF",
     exportXlsx: "Excel",
+    filtersTitle: "Filtreler",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
@@ -280,7 +275,7 @@ const copy = {
     deletePreset: "Sil",
     applyFilters: "Uygula",
     clearFilters: "Temizle",
-    branchFilter: "Sigorta bransi",
+    branchFilter: "Sigorta branşı",
     companyFilter: "Sigorta şirketi",
     salesEntityFilter: "Satış birimi",
     statusFilter: "Durum",
@@ -288,10 +283,10 @@ const copy = {
     loadErrorTitle: "Rapor Yüklenemedi",
     emptyTitle: "Kayıt bulunamadı",
     emptyDescription: "Seçili filtrelerle rapor verisi bulunamadı.",
-    totalRows: "Toplam Satir",
+    totalRows: "Toplam Satır",
     scopeAll: "Tüm şubeler",
     scopePrefix: "Ofis Şube",
-    exportError: "Rapor disa aktarma başarısız oldu.",
+    exportError: "Rapor dışa aktarma başarısız oldu.",
     exporting: "Dışa aktarılıyor...",
     summaryRows: "Kayıt Sayısı",
     summaryGrossPremium: "Brüt Prim",
@@ -307,7 +302,7 @@ const copy = {
     summarySuccessfulDeliveries: "Başarılı Gönderim",
     summaryOpenReconciliation: "Açık Mutabakat",
     summaryDifferenceAmount: "Fark Tutarı",
-    summaryResolvedItems: "Cozulen Kalem",
+    summaryResolvedItems: "Çözülen Kalem",
     summaryOpenClaims: "Açık Hasar",
     summaryRejectedClaims: "Reddedilen Hasar",
     summarySuccessfulNotifications: "Başarılı Bildirim",
@@ -319,9 +314,9 @@ const copy = {
     scheduledSaveError: "Zamanlanmış rapor kaydedilemedi.",
     scheduledDeleteError: "Zamanlanmış rapor silinemedi.",
     scheduledTitle: "Zamanlanmış Raporlar",
-    scheduledSubtitle: "Site konfigrasyonu ile tanimli rapor teslimleri",
+    scheduledSubtitle: "Site konfigürasyonu ile tanımlı rapor teslimleri",
     runScheduledReports: "Zamanlanmış Raporları Çalıştır",
-    scheduledEmpty: "Tanimli zamanlanmis rapor yok.",
+    scheduledEmpty: "Tanımlı zamanlanmış rapor yok.",
     scheduledRecipients: "Alıcılar",
     scheduledFilters: "Filtreler",
     scheduledFrequency: "Frekans",
@@ -332,7 +327,7 @@ const copy = {
     scheduledRunError: "Zamanlanmış raporlar tetiklenemedi.",
     scheduledLoadError: "Zamanlanmış raporlar yüklenemedi.",
     segmentSnapshotTitle: "Segment Snapshot'ları",
-    segmentSnapshotHint: "Müşteri segment skorlarini toplu olarak yeniler",
+    segmentSnapshotHint: "Müşteri segment skorlarını toplu olarak yeniler",
     runSegmentSnapshots: "Snapshot'ları Çalıştır",
     runningSegmentSnapshots: "Snapshot'lar Çalışıyor...",
     segmentSnapshotRunError: "Segment snapshot işi tetiklenemedi.",
@@ -343,6 +338,7 @@ const copy = {
     refresh: "Refresh",
     exportPdf: "PDF",
     exportXlsx: "Excel",
+    filtersTitle: "Filters",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",

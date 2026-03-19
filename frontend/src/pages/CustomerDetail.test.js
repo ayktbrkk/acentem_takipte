@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { defineComponent, ref } from "vue";
+import { defineComponent, nextTick, ref } from "vue";
 
 import CustomerDetail from "./CustomerDetail.vue";
 import { useAuthStore } from "../stores/auth";
@@ -116,7 +116,7 @@ vi.mock("frappe-ui", () => ({
                   asset_identifier: "VIN-001",
                 },
               ],
-              opportunity_branches: [{ branch: "Saglik", label: "Saglik" }],
+              opportunity_branches: [{ branch: "Sağlık", label: "Sağlık" }],
             },
             operations: {
               assignments: [
@@ -276,29 +276,6 @@ const ActionButtonStub = {
   template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
 
-const DocSummaryGridStub = defineComponent({
-  props: ["items"],
-  template: `
-    <dl class="doc-summary-grid-stub">
-      <div v-for="item in items" :key="item.key">
-        <dt>{{ item.label }}</dt>
-        <dd>{{ item.value }}</dd>
-      </div>
-    </dl>
-  `,
-});
-
-const SectionCardHeaderStub = defineComponent({
-  props: ["title", "count"],
-  template: `
-    <header class="section-card-header-stub">
-      <h3>{{ title }}</h3>
-      <span v-if="count != null">{{ count }}</span>
-      <slot />
-    </header>
-  `,
-});
-
 const MetaListCardStub = defineComponent({
   props: ["title", "subtitle", "description", "meta", "label", "value"],
   template: `
@@ -306,21 +283,6 @@ const MetaListCardStub = defineComponent({
       <div class="title">{{ title || label }}</div>
       <div v-if="subtitle" class="subtitle">{{ subtitle }}</div>
       <div v-if="description || value" class="description">{{ description || value }}</div>
-      <div v-if="meta" class="meta">{{ meta }}</div>
-      <slot />
-      <slot name="trailing" />
-      <slot name="footer" />
-    </article>
-  `,
-});
-
-const EntityPreviewCardStub = defineComponent({
-  props: ["title", "subtitle", "description", "meta"],
-  template: `
-    <article class="entity-preview-card-stub">
-      <div class="title">{{ title }}</div>
-      <div v-if="subtitle" class="subtitle">{{ subtitle }}</div>
-      <div v-if="description" class="description">{{ description }}</div>
       <div v-if="meta" class="meta">{{ meta }}</div>
       <slot />
       <slot name="trailing" />
@@ -342,6 +304,15 @@ const genericStub = {
   template:
     `<div><slot /><slot name="actions" /><slot name="trailing" /><slot name="footer" /></div>`,
 };
+
+async function activateTab(wrapper, label) {
+  const tabButton = wrapper
+    .findAll(".nav-tab")
+    .find((candidate) => candidate.text().includes(label));
+  expect(tabButton).toBeTruthy();
+  await tabButton.trigger("click");
+  await nextTick();
+}
 
 describe("CustomerDetail customer 360 integration", () => {
   beforeEach(() => {
@@ -379,13 +350,9 @@ describe("CustomerDetail customer 360 integration", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: true,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -395,19 +362,13 @@ describe("CustomerDetail customer 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("İlişkili Kişiler");
-    expect(wrapper.text()).toContain("Sigortalanan Varlıklar");
-    expect(wrapper.text()).toContain("Ayse Bekir");
-    expect(wrapper.text()).toContain("34 ABC 123");
-    expect(wrapper.text()).toContain("Geciken Taksit");
-    expect(wrapper.text()).toContain("Doküman Özeti");
-    expect(wrapper.text()).toContain("Toplam Doküman");
-    expect(wrapper.text()).toContain("PDF");
-    expect(wrapper.text()).toContain("Hatırlatıcılar");
-    expect(wrapper.text()).toContain("Teklif hatırlatması");
-    expect(wrapper.text()).toContain("Snapshot Tarihi");
-    expect(wrapper.text()).toContain("Kaynak Surumu");
-    expect(wrapper.text()).toContain("v1");
+    expect(wrapper.text()).toContain("Müşteri Özeti");
+    expect(wrapper.text()).toContain("Özet Panosu");
+
+    await activateTab(wrapper, "Operasyonlar");
+    expect(wrapper.text()).toContain("Yeni İlişki");
+    expect(wrapper.text()).toContain("Yeni Varlık");
+    expect(wrapper.text()).toContain("Yeni Atama");
 
     const dialogs = () => wrapper.findAll(".quick-create-dialog-stub");
     const buttonByText = (label) =>
@@ -431,13 +392,73 @@ describe("CustomerDetail customer 360 integration", () => {
     expect(dialogs().find((node) => node.attributes("data-config-key") === "customer_relation_edit")?.attributes("data-open")).toBe("true");
 
     const assetCard = wrapper
-      .findAll(".entity-preview-card-stub")
+      .findAll(".meta-list-card-stub")
       .find((node) => node.text().includes("34 ABC 123"));
     await assetCard
       .findAll(".action-button-stub")
       .find((candidate) => candidate.text().includes("Düzenle"))
       .trigger("click");
     expect(dialogs().find((node) => node.attributes("data-config-key") === "insured_asset_edit")?.attributes("data-open")).toBe("true");
+  });
+
+  it("keeps sections on the right tabs and keeps overview summarized", async () => {
+    const wrapper = mount(CustomerDetail, {
+      props: {
+        name: "CUST-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: true,
+          MetaListCard: MetaListCardStub,
+          MiniFactList: MiniFactListStub,
+          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          StatusBadge: true,
+          TimelineActivityList: genericStub,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Müşteri Özeti");
+    expect(wrapper.text()).toContain("Müşteri Profili");
+    expect(wrapper.text()).toContain("Özet Panosu");
+    expect(wrapper.text()).toContain("Portföy Özeti");
+    expect(wrapper.text()).toContain("Ödeme Özeti");
+    expect(wrapper.text()).toContain("Aktivite Özeti");
+    expect(wrapper.text()).toContain("Operasyon Özeti");
+    expect(wrapper.text()).toContain("Geciken Taksit");
+    expect(wrapper.text()).toContain("1.200");
+
+    await activateTab(wrapper, "Aktivite");
+    expect(wrapper.text()).toContain("Aktiviteler");
+    expect(wrapper.text()).toContain("Hatırlatıcılar");
+    expect(wrapper.text()).toContain("İletişim Kanal Özeti");
+    expect(wrapper.text()).toContain("İletişim Geçmişi");
+    expect(wrapper.text()).not.toContain("Özet Panosu");
+    expect(wrapper.text()).not.toContain("Portföy Özeti");
+    expect(wrapper.text()).not.toContain("Operasyon Özeti");
+
+    await activateTab(wrapper, "Portföy");
+    expect(wrapper.text()).toContain("Aktif Poliçeler");
+    expect(wrapper.text()).toContain("Müşteri İçgörüleri");
+    expect(wrapper.text()).toContain("Çapraz Satış Fırsatları");
+    expect(wrapper.text()).toContain("Yaklaşan Yenilemeler");
+    expect(wrapper.text()).not.toContain("Özet Panosu");
+    expect(wrapper.text()).not.toContain("Aktivite Özeti");
+    expect(wrapper.text()).not.toContain("Operasyon Özeti");
+
+    await activateTab(wrapper, "Operasyonlar");
+    expect(wrapper.text()).toContain("Atamalar");
+    expect(wrapper.text()).toContain("İlişkili Kişiler");
+    expect(wrapper.text()).toContain("Doküman Özeti");
+    expect(wrapper.text()).toContain("Sigortalanan Varlıklar");
+    expect(wrapper.text()).not.toContain("Özet Panosu");
+    expect(wrapper.text()).not.toContain("Portföy Özeti");
+    expect(wrapper.text()).not.toContain("Aktivite Özeti");
   });
 
   it("routes customer 360 operation buttons to the correct screens", async () => {
@@ -450,13 +471,9 @@ describe("CustomerDetail customer 360 integration", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: true,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -465,6 +482,8 @@ describe("CustomerDetail customer 360 integration", () => {
 
     await Promise.resolve();
     await Promise.resolve();
+
+    await activateTab(wrapper, "Operasyonlar");
 
     const clickByText = async (label) => {
       const button = wrapper
@@ -515,13 +534,9 @@ describe("CustomerDetail customer 360 integration", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: true,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -552,13 +567,9 @@ describe("CustomerDetail customer 360 integration", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: true,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -567,6 +578,8 @@ describe("CustomerDetail customer 360 integration", () => {
 
     await Promise.resolve();
     await Promise.resolve();
+
+    await activateTab(wrapper, "Operasyonlar");
 
     const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
 
@@ -600,7 +613,7 @@ describe("CustomerDetail customer 360 integration", () => {
     );
 
     const assetCard = wrapper
-      .findAll(".entity-preview-card-stub")
+      .findAll(".meta-list-card-stub")
       .find((node) => node.text().includes("34 ABC 123"));
     await assetCard
       .findAll(".action-button-stub")
@@ -629,13 +642,9 @@ describe("CustomerDetail customer 360 integration", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: true,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -644,6 +653,8 @@ describe("CustomerDetail customer 360 integration", () => {
 
     await Promise.resolve();
     await Promise.resolve();
+
+    await activateTab(wrapper, "Operasyonlar");
 
     const relationCard = wrapper
       .findAll(".meta-list-card-stub")
@@ -660,7 +671,7 @@ describe("CustomerDetail customer 360 integration", () => {
     expect(customer360Reload).toHaveBeenCalledTimes(2);
 
     const assetCard = wrapper
-      .findAll(".entity-preview-card-stub")
+      .findAll(".meta-list-card-stub")
       .find((node) => node.text().includes("34 ABC 123"));
     await assetCard
       .findAll(".action-button-stub")
@@ -683,13 +694,9 @@ describe("CustomerDetail customer 360 integration", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: true,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -699,11 +706,11 @@ describe("CustomerDetail customer 360 integration", () => {
     await Promise.resolve();
     await Promise.resolve();
 
+    await activateTab(wrapper, "Operasyonlar");
+
     expect(wrapper.text()).toContain("Atamalar");
-    expect(wrapper.text()).toContain("Aktiviteler");
     expect(wrapper.text()).toContain("agent@example.com");
     expect(wrapper.text()).toContain("2026-03-15");
-    expect(wrapper.text()).toContain("Müşteri ile ilk gorusme");
 
     const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
 
@@ -753,13 +760,9 @@ describe("CustomerDetail customer 360 integration", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: true,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -768,6 +771,8 @@ describe("CustomerDetail customer 360 integration", () => {
 
     await Promise.resolve();
     await Promise.resolve();
+
+    await activateTab(wrapper, "Aktivite");
 
     const buttons = wrapper.findAll(".action-button-stub");
     await buttons.find((candidate) => candidate.text().includes("Tamamla")).trigger("click");
@@ -800,13 +805,9 @@ describe("CustomerDetail customer 360 integration", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: true,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          EntityPreviewCard: EntityPreviewCardStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
           QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
           TimelineActivityList: genericStub,
         },
@@ -815,6 +816,8 @@ describe("CustomerDetail customer 360 integration", () => {
 
     await Promise.resolve();
     await Promise.resolve();
+
+    await activateTab(wrapper, "Operasyonlar");
 
     const buttons = wrapper.findAll(".action-button-stub");
 

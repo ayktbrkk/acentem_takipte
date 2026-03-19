@@ -1,9 +1,36 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <QuickCreateLauncher
+          variant="primary"
+          size="sm"
+          :label="t('newTask')"
+          @launch="showQuickRenewalDialog = true"
+        />
+        <ActionButton variant="secondary" size="sm" :disabled="renewalsLoading" @click="reloadRenewals">
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          :disabled="renewalsLoading"
+          @click="downloadRenewalExport('xlsx')"
+        >
+          {{ t("exportXlsx") }}
+        </ActionButton>
+        <ActionButton
+          variant="primary"
+          size="sm"
+          :disabled="renewalsLoading"
+          @click="downloadRenewalExport('pdf')"
+        >
+          {{ t("exportPdf") }}
+        </ActionButton>
       </div>
     </div>
 
@@ -15,100 +42,62 @@
     </div>
 
     <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :show-refresh="true"
-        :busy="renewalsLoading"
-        :refresh-label="t('refresh')"
-        @refresh="reloadRenewals"
+      <WorkbenchFilterToolbar
+        v-model="presetKey"
+        :advanced-label="t('advancedFilters')"
+        :collapse-label="t('hideAdvancedFilters')"
+        :active-count="activeFilterCount"
+        :active-count-label="t('activeFilters')"
+        :preset-label="t('presetLabel')"
+        :preset-options="presetOptions"
+        :can-delete-preset="canDeletePreset"
+        :save-label="t('savePreset')"
+        :delete-label="t('deletePreset')"
+        :apply-label="t('applyFilters')"
+        :reset-label="t('clearFilters')"
+        @preset-change="onPresetChange"
+        @preset-save="savePreset"
+        @preset-delete="deletePreset"
+        @apply="applyRenewalFilters"
+        @reset="resetRenewalFilters"
       >
-        <template #actions>
-          <div class="flex flex-wrap items-center gap-2">
-            <QuickCreateLauncher
-              variant="primary"
-              size="sm"
-              :label="t('newTask')"
-              @launch="showQuickRenewalDialog = true"
-            />
-            <ActionButton variant="secondary" size="sm" :disabled="renewalsLoading" @click="reloadRenewals">
-              {{ t("refresh") }}
-            </ActionButton>
-            <ActionButton
-              variant="secondary"
-              size="sm"
-              :disabled="renewalsLoading"
-              @click="downloadRenewalExport('xlsx')"
-            >
-              {{ t("exportXlsx") }}
-            </ActionButton>
-            <ActionButton
-              variant="primary"
-              size="sm"
-              :disabled="renewalsLoading"
-              @click="downloadRenewalExport('pdf')"
-            >
-              {{ t("exportPdf") }}
-            </ActionButton>
-          </div>
-        </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applyRenewalFilters"
-            @reset="resetRenewalFilters"
-          >
-            <input
-              v-model.trim="filters.query"
-              class="input"
-              type="search"
-              :placeholder="t('searchPlaceholder')"
-              @keyup.enter="applyRenewalFilters"
-            />
-            <select v-model="filters.status" class="input">
-              <option value="">{{ t("allStatuses") }}</option>
-              <option v-for="option in renewalStatusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <select v-model.number="filters.limit" class="input">
-              <option :value="20">20</option>
-              <option :value="40">40</option>
-              <option :value="80">80</option>
-              <option :value="120">120</option>
-            </select>
+        <input
+          v-model.trim="filters.query"
+          class="input"
+          type="search"
+          :placeholder="t('searchPlaceholder')"
+          @keyup.enter="applyRenewalFilters"
+        />
+        <select v-model="filters.status" class="input">
+          <option value="">{{ t("allStatuses") }}</option>
+          <option v-for="option in renewalStatusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <select v-model.number="filters.limit" class="input">
+          <option :value="20">20</option>
+          <option :value="40">40</option>
+          <option :value="80">80</option>
+          <option :value="120">120</option>
+        </select>
 
-            <template #advanced>
-              <input
-                v-model.trim="filters.policyQuery"
-                class="input"
-                type="search"
-                :placeholder="t('policyFilter')"
-                @keyup.enter="applyRenewalFilters"
-              />
-              <select v-model="filters.dueScope" class="input">
-                <option value="">{{ t("allDueScopes") }}</option>
-                <option value="overdue">{{ t("dueScopeOverdue") }}</option>
-                <option value="7">{{ t("dueScope7") }}</option>
-                <option value="30">{{ t("dueScope30") }}</option>
-                <option value="60">{{ t("dueScope60") }}</option>
-              </select>
-            </template>
-          </WorkbenchFilterToolbar>
+        <template #advanced>
+          <input
+            v-model.trim="filters.policyQuery"
+            class="input"
+            type="search"
+            :placeholder="t('policyFilter')"
+            @keyup.enter="applyRenewalFilters"
+          />
+          <select v-model="filters.dueScope" class="input">
+            <option value="">{{ t("allDueScopes") }}</option>
+            <option value="overdue">{{ t("dueScopeOverdue") }}</option>
+            <option value="7">{{ t("dueScope7") }}</option>
+            <option value="30">{{ t("dueScope30") }}</option>
+            <option value="60">{{ t("dueScope60") }}</option>
+          </select>
         </template>
-      </PageToolbar>
+      </WorkbenchFilterToolbar>
     </article>
 
     <div v-if="renewalsError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -225,7 +214,6 @@ import { createResource } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
@@ -257,7 +245,7 @@ const copy = {
     due: "Termin",
     renewal: "Yenileme",
     actions: "Aksiyon",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranında Aç",
     openPolicy: "Poliçeyi Aç",
     markInProgress: "Takibe Al",
     markDone: "Tamamla",
@@ -328,7 +316,7 @@ const copy = {
     due: "Due",
     renewal: "Renewal",
     actions: "Actions",
-    openDesk: "Desk",
+    openDesk: "Open in Desk",
     openPolicy: "Open Policy",
     markInProgress: "Start Follow-up",
     markDone: "Mark Done",
@@ -409,7 +397,7 @@ const renewalStatusOptions = computed(() =>
   ["Open", "In Progress", "Done", "Cancelled"].map((value) => ({ value, label: value }))
 );
 const lostReasonColumnLabel = computed(() =>
-  activeLocale.value === "tr" ? "Kayip Sonucu" : "Loss Outcome"
+  activeLocale.value === "tr" ? "Kayıp Sonucu" : "Loss Outcome"
 );
 const activeFilterCount = computed(() => {
   let count = 0;
@@ -916,7 +904,7 @@ function formatLostReason(task) {
     Competitor: { tr: "Rakip", en: "Competitor" },
     Service: { tr: "Hizmet", en: "Service" },
     "Customer Declined": { tr: "Müşteri Vazgeçti", en: "Customer Declined" },
-    "Coverage Mismatch": { tr: "Teminat Uyumsuzlugu", en: "Coverage Mismatch" },
+    "Coverage Mismatch": { tr: "Teminat Uyumsuzluğu", en: "Coverage Mismatch" },
     Other: { tr: "Diğer", en: "Other" },
   };
   return labels[rawReason]?.[activeLocale.value] || rawReason;

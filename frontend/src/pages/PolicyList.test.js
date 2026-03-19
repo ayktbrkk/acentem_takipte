@@ -132,7 +132,6 @@ describe("PolicyList page store integration", () => {
           ActionButton: true,
           DataTableCell: genericStub,
           StatusBadge: true,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: genericStub,

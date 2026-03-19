@@ -23,29 +23,29 @@
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
-        <DetailCard :title="t('summary')">
+        <SectionPanel :title="t('summary')">
           <FieldGroup :fields="summaryFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('policyList')">
+        <SectionPanel :title="t('policyList')">
           <ListTable
             :columns="policyColumns"
             :rows="policyRows"
             :loading="loading"
             :empty-message="t('noPolicyRows')"
           />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('unmatchedRecords')">
+        <SectionPanel :title="t('unmatchedRecords')">
           <ListTable
             :columns="unmatchedColumns"
             :rows="unmatchedRows"
             :loading="loading"
             :empty-message="t('noUnmatchedRows')"
           />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('notes')">
+        <SectionPanel :title="t('notes')">
           <div v-if="!item.notes && !detailsEntries.length" class="card-empty">{{ t("noNotes") }}</div>
           <div v-else class="space-y-4">
             <p v-if="item.notes" class="text-sm text-slate-700 whitespace-pre-line">{{ item.notes }}</p>
@@ -60,9 +60,9 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('timeline')">
+        <SectionPanel :title="t('timeline')">
           <div v-for="event in historyEntries" :key="event.label" class="timeline-item">
             <div :class="['tl-dot', event.active && 'tl-dot-active']" />
             <div>
@@ -70,21 +70,21 @@
               <p class="tl-time">{{ event.value }}</p>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
       <aside class="detail-sidebar space-y-4">
-        <DetailCard :title="t('companyInfo')">
+        <SectionPanel :title="t('companyInfo')">
           <FieldGroup :fields="companyFields" :cols="1" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('periodInfo')">
+        <SectionPanel :title="t('periodInfo')">
           <FieldGroup :fields="periodFields" :cols="1" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('statusInfo')">
+        <SectionPanel :title="t('statusInfo')">
           <FieldGroup :fields="statusFields" :cols="1" />
-        </DetailCard>
+        </SectionPanel>
       </aside>
     </div>
   </section>
@@ -97,7 +97,7 @@ import { useRouter } from "vue-router";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
-import DetailCard from "@/components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "@/components/ui/FieldGroup.vue";
 import ListTable from "@/components/ui/ListTable.vue";
 

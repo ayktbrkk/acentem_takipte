@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+import unicodedata
+
 import frappe
 from frappe import _
 
 from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
+
+
+def _fold_ascii(value: str | None) -> str:
+    return unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode("ascii").lower()
 
 
 def build_policy_360_payload(name: str) -> dict:
@@ -121,7 +127,7 @@ def _get_rows(doctype: str, **kwargs) -> list[dict]:
 
 
 def _build_product_profile(policy: dict) -> dict:
-    branch_value = str(policy.get("branch") or "").strip().lower()
+    branch_value = str(policy.get("branch") or "").strip()
     branch_label = str(policy.get("branch") or "").strip() or "-"
 
     product_family = "General"
@@ -155,7 +161,7 @@ def _build_product_profile(policy: dict) -> dict:
                 {"key": "usage_type", "label": "Usage Type", "value": policy.get("usage_type")},
             ]
         )
-    elif any(token in branch_value for token in ["saglik", "health", "tamamlayici"]):
+    elif any(_fold_ascii(token) in _fold_ascii(branch_value) for token in ["sağlık", "health", "tamamlayıcı"]):
         product_family = "Health"
         insured_subject = "Person"
         coverage_focus = "Health"

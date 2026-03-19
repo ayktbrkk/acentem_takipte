@@ -226,7 +226,7 @@ const copy = {
     openPolicy: "Poliçe Detayını Aç",
     openCommunication: "İletişim",
     openPayments: "Ödemeler",
-    openRenewals: "Yenilemeler",
+    openRenewals: "Yenileme Görevleri",
     customer: "Müşteri",
     phone: "Telefon",
     taxId: "Kimlik / Vergi No",

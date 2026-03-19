@@ -88,6 +88,21 @@ const ActionButtonStub = {
   template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
 
+const SectionPanelStub = {
+  props: ["title", "count", "meta", "showCount"],
+  template: `
+    <section class="section-panel-stub">
+      <div class="section-panel-header">
+        <h3>{{ title }}</h3>
+        <span v-if="meta">{{ meta }}</span>
+        <span v-else-if="showCount !== false && count != null">{{ count }}</span>
+        <slot name="trailing" />
+      </div>
+      <slot />
+    </section>
+  `,
+};
+
 const QuickCreateDialogShellStub = {
   emits: ["save", "cancel"],
   template: `
@@ -277,12 +292,11 @@ describe("ReconciliationWorkbench page store integration", () => {
         stubs: {
           Dialog: genericStub,
           ActionButton: ActionButtonStub,
-          DataTableShell: genericStub,
           FormattedCurrencyValue: true,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: QuickCreateDialogShellStub,
-          SectionCardHeader: genericStub,
+          SectionPanel: SectionPanelStub,
           TableFactsCell: true,
           WorkbenchFilterToolbar: genericStub,
           StatusBadge: true,
@@ -306,7 +320,7 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(wrapper.text()).toContain("Eşleşti");
     expect(wrapper.text()).toContain("Beklemede");
     expect(wrapper.text()).toContain("Uyumsuzluk");
-    expect(wrapper.text()).toContain("Toplam Tutar Farki");
+    expect(wrapper.text()).toContain("Toplam Tutar Farkı");
     expect(wrapper.text()).toContain("Mutabakat No");
     expect(wrapper.text()).toContain("Şirket");
     expect(wrapper.text()).toContain("Toplam Poliçe");
@@ -420,12 +434,11 @@ describe("ReconciliationWorkbench page store integration", () => {
         stubs: {
           Dialog: genericStub,
           ActionButton: ActionButtonStub,
-          DataTableShell: genericStub,
           FormattedCurrencyValue: true,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: QuickCreateDialogShellStub,
-          SectionCardHeader: genericStub,
+          SectionPanel: SectionPanelStub,
           TableFactsCell: true,
           WorkbenchFilterToolbar: genericStub,
           StatusBadge: true,
@@ -549,12 +562,11 @@ describe("ReconciliationWorkbench page store integration", () => {
         stubs: {
           Dialog: genericStub,
           ActionButton: ActionButtonStub,
-          DataTableShell: genericStub,
           FormattedCurrencyValue: true,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: QuickCreateDialogShellStub,
-          SectionCardHeader: genericStub,
+          SectionPanel: SectionPanelStub,
           TableFactsCell: true,
           WorkbenchFilterToolbar: genericStub,
           StatusBadge: true,
@@ -663,12 +675,11 @@ describe("ReconciliationWorkbench page store integration", () => {
         stubs: {
           Dialog: genericStub,
           ActionButton: ActionButtonStub,
-          DataTableShell: genericStub,
           FormattedCurrencyValue: true,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: QuickCreateDialogShellStub,
-          SectionCardHeader: genericStub,
+          SectionPanel: SectionPanelStub,
           TableFactsCell: true,
           WorkbenchFilterToolbar: genericStub,
           StatusBadge: true,

@@ -52,7 +52,7 @@ def test_build_provider_message_falls_back_to_template_values():
         channel="EMAIL",
         language="tr",
         provider_template_name=None,
-        subject="Email Baslik",
+        subject="Email Başlık",
         body_template="Genel",
         email_body_template="Email Govde",
     )
@@ -82,7 +82,7 @@ def test_build_provider_message_falls_back_to_template_values():
 
     message = build_provider_message_from_records(template_doc, draft_doc, outbox_doc)
 
-    assert message.subject == "Email Baslik"
+    assert message.subject == "Email Başlık"
     assert message.body == "Email Govde"
     assert message.recipient == "aykut@example.com"
     assert message.template_name is None

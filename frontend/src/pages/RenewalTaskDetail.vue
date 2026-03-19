@@ -30,18 +30,18 @@
 
     <HeroStrip :cells="heroCells" />
 
-    <DetailCard title="Yenileme Süreci">
+    <SectionPanel title="Yenileme Süreci" panel-class="surface-card rounded-2xl p-5">
       <StepBar :steps="renewalSteps" />
-    </DetailCard>
+    </SectionPanel>
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
-        <DetailCard title="Eski Poliçe Bilgileri">
+        <SectionPanel title="Eski Poliçe Bilgileri" panel-class="surface-card rounded-2xl p-5">
           <div v-if="!policy" class="card-empty">Poliçe bilgisi bulunamadı.</div>
           <FieldGroup v-else :fields="policyFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Yeni Teklifler">
+        <SectionPanel title="Yeni Teklifler" panel-class="surface-card rounded-2xl p-5">
           <div v-if="!offers.length" class="card-empty">Bu poliçe için teklif bulunamadı.</div>
           <div v-else class="space-y-3">
             <div
@@ -58,9 +58,9 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Müşteri İletişim Geçmişi">
+        <SectionPanel title="Müşteri İletişim Geçmişi" panel-class="surface-card rounded-2xl p-5">
           <div v-if="!communications.length" class="card-empty">İletişim kaydı bulunamadı.</div>
           <div v-else>
             <div v-for="item in communications" :key="item.name" class="timeline-item">
@@ -71,9 +71,9 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Hatırlatıcılar">
+        <SectionPanel title="Hatırlatıcılar" panel-class="surface-card rounded-2xl p-5">
           <div v-if="!reminders.length" class="card-empty">Hatırlatıcı kaydı bulunamadı.</div>
           <div v-else class="space-y-2">
             <div v-for="item in reminders" :key="item.label" class="rounded-md bg-gray-50 px-3 py-2">
@@ -81,21 +81,21 @@
               <p class="text-xs text-gray-500">{{ item.value }}</p>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
       <aside class="detail-sidebar space-y-4">
-        <DetailCard title="İlgili Kişiler">
+        <SectionPanel title="İlgili Kişiler" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="peopleFields" :cols="1" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Durum Bilgisi">
+        <SectionPanel title="Durum Bilgisi" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="statusFields" :cols="1" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Kayıt Meta">
+        <SectionPanel title="Kayıt Meta" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="recordFields" :cols="1" />
-        </DetailCard>
+        </SectionPanel>
       </aside>
     </div>
   </section>
@@ -108,9 +108,9 @@ import { useRouter } from 'vue-router';
 
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import HeroStrip from '@/components/ui/HeroStrip.vue';
-import DetailCard from '@/components/ui/DetailCard.vue';
 import FieldGroup from '@/components/ui/FieldGroup.vue';
 import StepBar from '@/components/ui/StepBar.vue';
+import SectionPanel from '../components/app-shell/SectionPanel.vue';
 
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || '');

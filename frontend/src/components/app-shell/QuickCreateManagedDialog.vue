@@ -3,7 +3,15 @@
     <div :class="dialogShellClass">
       <div class="dialog-header">
         <h3 class="dialog-title">{{ uiTitle }}</h3>
-        <button class="btn btn-outline btn-sm" type="button" @click="onCancel">X</button>
+        <button
+          class="btn btn-outline btn-sm"
+          type="button"
+          :aria-label="locale === 'tr' ? 'Kapat' : 'Close'"
+          :title="locale === 'tr' ? 'Kapat' : 'Close'"
+          @click="onCancel"
+        >
+          X
+        </button>
       </div>
 
       <div class="dialog-body">
@@ -95,7 +103,7 @@ const createResourceHandle = createResource({
 const labelsResolved = computed(() => ({
   cancel: props.labels.cancel || (props.locale === "tr" ? "Vazgeç" : "Cancel"),
   save: props.labels.save || (props.locale === "tr" ? "Kaydet" : "Save"),
-  saveAndOpen: props.labels.saveAndOpen || (props.locale === "tr" ? "Kaydet ve Ac" : "Save & Open"),
+  saveAndOpen: props.labels.saveAndOpen || (props.locale === "tr" ? "Kaydet ve Aç" : "Save & Open"),
 }));
 
 const uiTitle = computed(() => getLocalizedText(props.titleOverride || config.value?.title, props.locale));

@@ -5,7 +5,7 @@
         <p class="detail-breadcrumb">Sigorta Operasyonları → Poliçeler</p>
         <h1 class="detail-title">
           {{ policy.policy_no || policy.name || name }}
-           <StatusBadge :status="policy.status" domain="policy" />
+          <StatusBadge v-if="policy.status" :status="policy.status" domain="policy" />
         </h1>
         <p class="detail-subtitle">{{ `${policy.insurance_company || '-'} / ${policy.branch || '-'}` }}</p>
         <div class="mt-1.5 flex flex-wrap items-center gap-2">
@@ -40,16 +40,16 @@
     <div class="detail-body">
       <div class="detail-main">
         <template v-if="activeTab === 'summary'">
-          <DetailCard :title="t('lifecycleTitle')">
-            <template #action>
+          <SectionPanel :title="t('lifecycleTitle')">
+            <template #trailing>
               <span class="badge badge-blue">v{{ selectedSnapshot?.snapshot_version || '-' }}</span>
             </template>
             <StepBar :steps="lifecycleSteps" class="mb-4" />
             <FieldGroup :fields="lifecycleFields" :cols="4" />
-          </DetailCard>
+          </SectionPanel>
 
-          <DetailCard :title="t('timelineTitle')">
-            <template #action>
+          <SectionPanel :title="t('timelineTitle')">
+            <template #trailing>
               <button class="btn btn-sm" type="button" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</button>
             </template>
             <div v-if="timelineLoading" class="card-empty">{{ t("loading") }}</div>
@@ -64,14 +64,14 @@
                 </div>
               </div>
             </div>
-          </DetailCard>
+          </SectionPanel>
         </template>
 
         <template v-else-if="activeTab === 'premiums'">
-          <DetailCard :title="t('premiumTitle')">
+          <SectionPanel :title="t('premiumTitle')">
             <FieldGroup :fields="premiumFieldGroups" :cols="2" />
-          </DetailCard>
-          <DetailCard :title="t('payments')">
+          </SectionPanel>
+          <SectionPanel :title="t('payments')">
             <div v-if="paymentLoading" class="card-empty">{{ t("loading") }}</div>
             <div v-else-if="payments.length === 0" class="card-empty">{{ t("emptyPayments") }}</div>
             <div v-else class="space-y-3">
@@ -90,23 +90,23 @@
                 </p>
               </MetaListCard>
             </div>
-          </DetailCard>
+          </SectionPanel>
         </template>
 
         <template v-else-if="activeTab === 'coverages'">
-          <DetailCard :title="t('coverageContext')">
+          <SectionPanel :title="t('coverageContext')">
             <FieldGroup :fields="coverageFieldGroups" :cols="2" />
-          </DetailCard>
-          <DetailCard :title="t('productProfileTitle')">
+          </SectionPanel>
+          <SectionPanel :title="t('productProfileTitle')">
             <FieldGroup :fields="productProfileFieldGroups" :cols="2" />
-          </DetailCard>
-          <DetailCard :title="t('productReadinessTitle')">
+          </SectionPanel>
+          <SectionPanel :title="t('productReadinessTitle')">
             <FieldGroup :fields="productReadinessFieldGroups" :cols="3" />
-          </DetailCard>
+          </SectionPanel>
         </template>
 
         <template v-else-if="activeTab === 'endorsements'">
-          <DetailCard :title="t('endorsementTitle')">
+          <SectionPanel :title="t('endorsementTitle')">
             <div v-if="endorsementLoading" class="card-empty">{{ t("loading") }}</div>
             <div v-else-if="endorsements.length === 0" class="card-empty">{{ t("emptyEndorsement") }}</div>
             <div v-else class="space-y-3">
@@ -125,12 +125,12 @@
                 </template>
               </MetaListCard>
             </div>
-          </DetailCard>
+          </SectionPanel>
         </template>
 
         <template v-else>
-          <DetailCard :title="t('documents')">
-            <template #action>
+          <SectionPanel :title="t('documents')">
+            <template #trailing>
               <button class="btn btn-sm" type="button" @click="openPolicyDocuments">{{ t("open") }}</button>
             </template>
             <div v-if="fileLoading" class="card-empty">{{ t("loading") }}</div>
@@ -143,21 +143,21 @@
                 </template>
               </MetaListCard>
             </div>
-          </DetailCard>
+          </SectionPanel>
         </template>
       </div>
 
       <div class="detail-sidebar space-y-4">
-        <DetailCard :title="t('premiumTitle')">
+        <SectionPanel :title="t('premiumTitle')">
           <div class="grid grid-cols-2 gap-2">
             <div v-for="m in premiumMetrics" :key="m.label" class="mini-metric">
               <p class="mini-metric-label">{{ m.label }}</p>
               <p class="mini-metric-value">{{ m.value }}</p>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('customerTitle')">
+        <SectionPanel :title="t('customerTitle')">
           <div v-if="customerLoading" class="field-value-muted">{{ t('loading') }}</div>
           <div v-else-if="customer" class="space-y-3">
             <div class="flex items-center gap-2.5">
@@ -172,13 +172,13 @@
             </button>
           </div>
           <div v-else class="field-value-muted">{{ t('emptyCustomer') }}</div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('scheduleTitle')">
+        <SectionPanel :title="t('scheduleTitle')">
           <FieldGroup :fields="dateFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('assignmentsTitle')">
+        <SectionPanel :title="t('assignmentsTitle')">
           <div v-if="assignments.length === 0" class="field-value-muted">{{ t('emptyAssignments') }}</div>
           <div v-else class="space-y-2">
             <MetaListCard
@@ -189,7 +189,7 @@
               :meta="assignment.status || '-'"
             />
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
     </div>
 
@@ -222,7 +222,7 @@ import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
-import DetailCard from "../components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import StepBar from "../components/ui/StepBar.vue";
 
@@ -247,13 +247,13 @@ const labels = {
     productReadinessTitle: "Ürün Hazırlık Durumu",
     company: "Sigorta Şirketi", branch: "Branş", customer: "Müşteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
     productFamily: "Ürün Ailesi", insuredSubject: "Sigortalanan Konu", coverageFocus: "Kapsam Odağı",
-    readinessScore: "Hazırlik Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
-    missingProductFields: "Eksik Ürün Alanlari", noMissingProductField: "Eksik zorunlu alan bulunamadı.", missingFieldStatus: "Eksik",
-    endorsementTitle: "Zeyilname Gecmisi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.",
+    readinessScore: "Hazırlık Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
+    missingProductFields: "Eksik Ürün Alanları", noMissingProductField: "Eksik zorunlu alan bulunamadı.", missingFieldStatus: "Eksik",
+    endorsementTitle: "Zeyilname Geçmişi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.",
     totalDocuments: "Toplam Doküman", pdfDocuments: "PDF", imageDocuments: "Görsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diğer", lastUploadedOn: "Son Yükleme",
     notifications: "Bildirim Taslakları", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Aç",
     tabSummary: "Özet", tabPremiums: "Prim/Ödeme", tabCoverages: "Teminatlar", tabEndorsements: "Zeyilnameler", tabDocuments: "Dokümanlar",
-    typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Suresi doldu", noDate: "Tarih yok",
+    typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Süresi Doldu", noDate: "Tarih yok",
   },
   en: {
     overview: "Policy Detail", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
@@ -836,7 +836,7 @@ function policyStatusLabel(status) {
   if (status === "Active") return "Aktif";
   if (status === "KYT") return "KYT";
   if (status === "IPT" || status === "Cancelled") return "İptal";
-  if (status === "Expired") return "Suresi Doldu";
+  if (status === "Expired") return "Süresi Doldu";
   return status || "-";
 }
 
@@ -845,22 +845,22 @@ function paymentStatusLabel(status) {
   if (status === "Submitted") return "Gönderildi";
   if (status === "Draft") return "Taslak";
   if (status === "Cancelled") return "İptal";
-  if (status === "Paid") return "Odendi";
+  if (status === "Paid") return "Ödendi";
   return status || "-";
 }
 
 function installmentStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Scheduled") return "Planlandi";
+  if (status === "Scheduled") return "Planlandı";
   if (status === "Overdue") return "Gecikti";
-  if (status === "Paid") return "Odendi";
+  if (status === "Paid") return "Ödendi";
   if (status === "Cancelled") return "İptal";
   return status || "-";
 }
 
 function endorsementStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Applied") return "Uygulandi";
+  if (status === "Applied") return "Uygulandı";
   if (status === "Pending") return "Beklemede";
   if (status === "Cancelled") return "İptal";
   return status || "-";
@@ -869,7 +869,7 @@ function endorsementStatusLabel(status) {
 function notificationStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
   if (status === "Queued") return "Kuyrukta";
-  if (status === "Processing") return "Isleniyor";
+  if (status === "Processing") return "İşleniyor";
   if (status === "Sent") return "Gönderildi";
   if (status === "Failed") return "Başarısız";
   if (status === "Dead") return "Kalıcı Hata";

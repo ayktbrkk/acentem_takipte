@@ -1,111 +1,102 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
+      <div class="flex flex-wrap gap-2">
+        <ActionButton variant="secondary" size="sm" @click="openImportDialog">
+          {{ t("importStatement") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Matched')">
+          {{ bulkActionLoading ? t("bulkResolving") : t("bulkResolve") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Ignored')">
+          {{ bulkActionLoading ? t("bulkIgnoring") : t("bulkIgnore") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="syncing" @click="runSync">
+          {{ syncing ? t("syncing") : t("sync") }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" :disabled="reconciling" @click="runReconciliation">
+          {{ reconciling ? t("reconciling") : t("reconcile") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          :disabled="workbenchLoading"
+          @click="downloadReconciliationExport('xlsx')"
+        >
+          {{ t("exportXlsx") }}
+        </ActionButton>
+        <ActionButton
+          variant="primary"
+          size="sm"
+          :disabled="workbenchLoading"
+          @click="downloadReconciliationExport('pdf')"
+        >
+          {{ t("exportPdf") }}
+        </ActionButton>
+      </div>
     </div>
 
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :show-refresh="true"
-        :busy="workbenchLoading || syncing || reconciling"
-        :refresh-label="t('refresh')"
-        @refresh="reloadWorkbench"
+    <SectionPanel :title="t('filtersTitle')" :meta="t('subtitle')" :show-count="false">
+      <WorkbenchFilterToolbar
+        v-model="presetKey"
+        :advanced-label="t('advancedFilters')"
+        :collapse-label="t('hideAdvancedFilters')"
+        :active-count="activeFilterCount"
+        :active-count-label="t('activeFilters')"
+        :preset-label="t('presetLabel')"
+        :preset-options="presetOptions"
+        :can-delete-preset="canDeletePreset"
+        :save-label="t('savePreset')"
+        :delete-label="t('deletePreset')"
+        :apply-label="t('applyFilters')"
+        :reset-label="t('clearFilters')"
+        @preset-change="onPresetChange"
+        @preset-save="savePreset"
+        @preset-delete="deletePreset"
+        @apply="applyWorkbenchFilters"
+        @reset="resetWorkbenchFilters"
       >
-        <template #actions>
-          <ActionButton variant="secondary" size="sm" @click="openImportDialog">
-            {{ t("importStatement") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Matched')">
-            {{ bulkActionLoading ? t("bulkResolving") : t("bulkResolve") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Ignored')">
-            {{ bulkActionLoading ? t("bulkIgnoring") : t("bulkIgnore") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="syncing" @click="runSync">
-            {{ syncing ? t("syncing") : t("sync") }}
-          </ActionButton>
-          <ActionButton variant="primary" size="sm" :disabled="reconciling" @click="runReconciliation">
-            {{ reconciling ? t("reconciling") : t("reconcile") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            :disabled="workbenchLoading"
-            @click="downloadReconciliationExport('xlsx')"
-          >
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            size="sm"
-            :disabled="workbenchLoading"
-            @click="downloadReconciliationExport('pdf')"
-          >
-            {{ t("exportPdf") }}
-          </ActionButton>
+        <select v-model="filters.status" class="input">
+          <option value="Open">{{ t("statusOpen") }}</option>
+          <option value="Resolved">{{ t("statusResolved") }}</option>
+          <option value="Ignored">{{ t("statusIgnored") }}</option>
+          <option value="">{{ t("allStatuses") }}</option>
+        </select>
+        <select v-model="filters.mismatchType" class="input">
+          <option value="">{{ t("allTypes") }}</option>
+          <option v-for="option in mismatchOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <template #advanced>
+          <input
+            v-model.trim="filters.sourceQuery"
+            class="input"
+            type="search"
+            :placeholder="t('sourceSearchPlaceholder')"
+            @keyup.enter="applyWorkbenchFilters"
+          />
+          <select v-model="filters.sourceDoctype" class="input">
+            <option value="">{{ t("allSources") }}</option>
+            <option v-for="option in sourceDoctypeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <select v-model.number="filters.limit" class="input">
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
         </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applyWorkbenchFilters"
-            @reset="resetWorkbenchFilters"
-          >
-            <select v-model="filters.status" class="input">
-              <option value="Open">{{ t("statusOpen") }}</option>
-              <option value="Resolved">{{ t("statusResolved") }}</option>
-              <option value="Ignored">{{ t("statusIgnored") }}</option>
-              <option value="">{{ t("allStatuses") }}</option>
-            </select>
-            <select v-model="filters.mismatchType" class="input">
-              <option value="">{{ t("allTypes") }}</option>
-              <option v-for="option in mismatchOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <template #advanced>
-              <input
-                v-model.trim="filters.sourceQuery"
-                class="input"
-                type="search"
-                :placeholder="t('sourceSearchPlaceholder')"
-                @keyup.enter="applyWorkbenchFilters"
-              />
-              <select v-model="filters.sourceDoctype" class="input">
-                <option value="">{{ t("allSources") }}</option>
-                <option v-for="option in sourceDoctypeOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-              <select v-model.number="filters.limit" class="input">
-                <option :value="20">20</option>
-                <option :value="50">50</option>
-                <option :value="100">100</option>
-              </select>
-            </template>
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
-    </article>
+      </WorkbenchFilterToolbar>
+    </SectionPanel>
 
     <div v-if="operationError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
       {{ operationError }}
@@ -205,8 +196,7 @@
       </div>
     </div>
 
-    <article class="surface-card rounded-2xl p-5">
-      <SectionCardHeader :title="t('collectionPreviewTitle')" :count="collectionPreviewRows.length" />
+    <SectionPanel :title="t('collectionPreviewTitle')" :count="collectionPreviewRows.length">
       <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
       <div v-else-if="collectionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCollectionPreview") }}</div>
       <ul v-else class="space-y-2 text-sm">
@@ -225,10 +215,9 @@
           </template>
         </MetaListCard>
       </ul>
-    </article>
+    </SectionPanel>
 
-    <article class="surface-card rounded-2xl p-5">
-      <SectionCardHeader :title="t('commissionPreviewTitle')" :count="commissionPreviewRows.length" />
+    <SectionPanel :title="t('commissionPreviewTitle')" :count="commissionPreviewRows.length">
       <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
       <div v-else-if="commissionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCommissionPreview") }}</div>
       <ul v-else class="space-y-2 text-sm">
@@ -247,18 +236,24 @@
           </template>
         </MetaListCard>
       </ul>
-    </article>
+    </SectionPanel>
 
-    <DataTableShell
-      :loading="workbenchLoading"
-      :error="workbenchErrorText"
-      :empty="rows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('empty')"
-    >
-      <template #default>
+    <SectionPanel :title="t('reconciliationListTitle')" :meta="t('subtitle')" :show-count="false">
+      <template #trailing>
+        <p class="text-xs text-slate-500">{{ t("showing") }} {{ reconciliationListRows.length }} / {{ rows.length }}</p>
+      </template>
+
+      <div v-if="workbenchLoading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+        {{ t("loading") }}
+      </div>
+      <div v-else-if="workbenchErrorText" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700">
+        <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="mt-1 text-sm">{{ workbenchErrorText }}</p>
+      </div>
+      <div v-else-if="rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
+      </div>
+      <div v-else class="mt-4">
         <ListTable
           :columns="reconciliationListColumns"
           :rows="reconciliationListRows"
@@ -266,8 +261,8 @@
           :empty-message="t('empty')"
           @row-click="handleReconciliationRowClick"
         />
-      </template>
-    </DataTableShell>
+      </div>
+    </SectionPanel>
 
     <Dialog v-model="showActionDialog" :options="{ title: reconciliationActionDialogTitle, size: 'lg' }">
       <template #body-content>
@@ -319,14 +314,14 @@ import { useBranchStore } from "../stores/branch";
 import { useAccountingStore } from "../stores/accounting";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import FormattedCurrencyValue from "../components/app-shell/FormattedCurrencyValue.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
@@ -371,6 +366,7 @@ const copy = {
     statusIgnored: "Yoksayıldı",
     allStatuses: "Tüm durumlar",
     allTypes: "Tüm uyumsuzluk tipleri",
+    filtersTitle: "Filtreler",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
@@ -395,6 +391,7 @@ const copy = {
     collectionPreviewTitle: "Geciken Tahsilat Önizleme",
     emptyCollectionPreview: "Geciken tahsilat kaydı bulunamadı.",
     commissionPreviewTitle: "Komisyon Tahakkuk Önizleme",
+    reconciliationListTitle: "Mutabakat Listesi",
     emptyCommissionPreview: "Komisyon tahakkuk kaydı bulunamadı.",
     loading: "Yükleniyor...",
     loadErrorTitle: "Mutabakat Verileri Yüklenemedi",
@@ -483,6 +480,7 @@ const copy = {
     statusIgnored: "Ignored",
     allStatuses: "All statuses",
     allTypes: "All mismatch types",
+    filtersTitle: "Filters",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
@@ -507,6 +505,7 @@ const copy = {
     collectionPreviewTitle: "Overdue Collection Preview",
     emptyCollectionPreview: "No overdue collection found.",
     commissionPreviewTitle: "Commission Accrual Preview",
+    reconciliationListTitle: "Reconciliation List",
     emptyCommissionPreview: "No commission accrual found.",
     loading: "Loading...",
     loadErrorTitle: "Failed to Load Reconciliation Data",

@@ -27,8 +27,8 @@
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
-        <DetailCard title="Teminatlar">
-          <template #action>
+        <SectionPanel title="Teminatlar">
+          <template #trailing>
             <button class="btn btn-sm" type="button" @click="editOffer">Düzenle</button>
           </template>
 
@@ -50,10 +50,10 @@
               </tr>
             </tbody>
           </table>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Dökümanlar">
-          <template #action>
+        <SectionPanel title="Dökümanlar">
+          <template #trailing>
             <button class="btn btn-sm" type="button" @click="editOffer">Yükle</button>
           </template>
 
@@ -67,9 +67,9 @@
               <button class="btn btn-sm" type="button" @click="openDocument(doc)">İndir</button>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Aktiviteler">
+        <SectionPanel title="Aktiviteler">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
           <div v-else-if="!activities.length" class="card-empty">Henüz aktivite kaydı yok.</div>
           <div v-else>
@@ -81,11 +81,11 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
       <div class="detail-sidebar space-y-4">
-        <DetailCard title="Müşteri">
+        <SectionPanel title="Müşteri">
           <div class="mb-3 flex items-center gap-3">
             <div class="avatar avatar-md avatar-blue">{{ initials(offer.customer_name || offer.customer) }}</div>
             <div>
@@ -93,15 +93,15 @@
               <button class="text-xs text-brand-600 hover:underline" type="button" @click="viewCustomer">Detayı Gör →</button>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Teklif Detayları">
+        <SectionPanel title="Teklif Detayları">
           <FieldGroup :fields="offerFields" :cols="1" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Kayıt Bilgileri">
+        <SectionPanel title="Kayıt Bilgileri">
           <FieldGroup :fields="recordFields" :cols="1" />
-        </DetailCard>
+        </SectionPanel>
       </div>
     </div>
   </section>
@@ -116,7 +116,7 @@ import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
-import DetailCard from "../components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 
 const props = defineProps({
@@ -129,7 +129,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const copy = {
   tr: {
-    overview: "Teklif Detayi",
+    overview: "Teklif Detayı",
     openDesk: "Yönetim Ekranında Aç",
     backList: "Listeye Dön",
     loading: "Yükleniyor...",
@@ -147,7 +147,7 @@ const copy = {
     notifOutboxTitle: "Giden Bildirimler",
     paymentsPreviewTitle: "Ödeme Hareketleri",
     renewalsPreviewTitle: "Yenileme Görevleri",
-    noNotifDrafts: "Bildirim taslagi yok.",
+    noNotifDrafts: "Bildirim taslağı yok.",
     noNotifOutbox: "Giden bildirim yok.",
     noPayments: "Ödeme hareketi yok.",
     noRenewals: "Yenileme görevi yok.",
@@ -164,12 +164,12 @@ const copy = {
     openCustomer360: "Müşteri 360",
     openCommunication: "İletişim",
     openPayments: "Ödemeler",
-    openRenewals: "Yenilemeler",
-    openLead: "Lead Detayi",
-    openPolicy: "Poliçe Detayı",
-    openOfferDetail: "Teklif Detayi",
+    openRenewals: "Yenileme Görevleri",
+    openLead: "Lead Detayı",
+    openPolicy: "Poliçe Detayını Aç",
+    openOfferDetail: "Teklif Detayı",
     openOfferBoard: "Teklif Panosu",
-    convertToPolicy: "Poliçeye Cevir",
+    convertToPolicy: "Poliçeye Çevir",
     conversionHint: "Durum güncelleme ve poliçeye çevirme işlemleri teklif panosundan veya yönetim ekranından yapılabilir.",
     linkedSourceLeadTitle: "Kaynak Lead Özeti",
     linkedPolicyTitle: "Dönüşen Poliçe Özeti",
@@ -182,7 +182,7 @@ const copy = {
     status: "Durum",
     offerDate: "Teklif Tarihi",
     validUntil: "Geçerlilik",
-    currency: "Doviz",
+    currency: "Döviz",
     grossPremium: "Brüt Prim",
     netPremium: "Net Prim",
     taxAmount: "Vergi",
@@ -198,7 +198,7 @@ const copy = {
     timelineUpdated: "Teklif kaydı güncellendi",
     timelineOffered: "Teklif tarihi",
     timelineValidUntil: "Geçerlilik sonu",
-    timelineConverted: "Poliçeye donusum",
+    timelineConverted: "Poliçeye dönüşüm",
   },
   en: {
     overview: "Offer Detail",

@@ -21,7 +21,6 @@ const RenewalsBoard = () => import("../pages/RenewalsBoard.vue");
 const RenewalTaskDetail = () => import("../pages/RenewalTaskDetail.vue");
 const ImportData = () => import("../pages/ImportData.vue");
 const ExportData = () => import("../pages/ExportData.vue");
-const CommunicationCenter = () => import("../pages/CommunicationCenter.vue");
 const ReconciliationWorkbench = () => import("../pages/ReconciliationWorkbench.vue");
 const ReconciliationDetail = () => import("../pages/ReconciliationDetail.vue");
 const CommunicationHub = () => import("../pages/CommunicationHub.vue");

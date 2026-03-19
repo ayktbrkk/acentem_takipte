@@ -7,6 +7,9 @@
           {{ customer.full_name || name }}
           <StatusBadge domain="customer" :status="customerStatus" />
         </h1>
+        <p v-if="customerHeaderSubtitle" class="detail-subtitle">
+          {{ customerHeaderSubtitle }}
+        </p>
         <div class="mt-1.5 flex items-center gap-2">
           <span class="copy-tag">{{ customer.name || name || "-" }}</span>
           <span v-if="customerTaxIdDisplay !== '-'" class="copy-tag">
@@ -40,7 +43,7 @@
       </button>
     </div>
 
-    <DetailCard class="md:hidden" :title="t('mobileQuickActionsTitle')">
+    <SectionPanel class="md:hidden" :title="t('mobileQuickActionsTitle')">
       <div class="mt-1 grid grid-cols-2 gap-2">
         <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
           {{ t("newOffer") }}
@@ -55,24 +58,17 @@
           {{ t("newRelation") }}
         </ActionButton>
       </div>
-    </DetailCard>
+    </SectionPanel>
 
     <div class="detail-body at-detail-split-wide">
       <aside class="detail-sidebar at-detail-aside">
-        <DetailCard :title="t('contactCard')">
-          <FieldGroup :fields="contactFields" :cols="1" />
-        </DetailCard>
+        <SectionPanel :title="t('customerSnapshotTitle')" :meta="customerHeaderSubtitle || t('customerSnapshotHint')">
+          <FieldGroup :fields="customerHeaderSummaryItems" :cols="2" />
+        </SectionPanel>
 
-        <DetailCard :title="t('recordId')" class="mt-4">
-          <FieldGroup :fields="recordFields" :cols="1" />
-        </DetailCard>
-
-        <DetailCard :title="t('insuredInfoCard')">
-          <template #action>
+        <SectionPanel :title="t('customerProfileTitle')" :meta="customerPhoneDisplay">
+          <template #trailing>
             <div class="flex flex-wrap items-center justify-end gap-2">
-              <span class="text-xs font-medium text-slate-500">
-                {{ customerTaxIdDisplay }}
-              </span>
               <ActionButton
                 v-if="!profileEditMode"
                 variant="secondary"
@@ -92,6 +88,7 @@
               </template>
             </div>
           </template>
+
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <template v-else>
             <div
@@ -106,108 +103,12 @@
             >
               {{ profileSaveMessage }}
             </div>
-            <div v-if="!profileEditMode" class="space-y-3 text-sm">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("fullName") }}
-                </p>
-                <p class="mt-0.5 text-sm font-semibold text-slate-900">
-                  {{ customer.full_name || "-" }}
-                </p>
-              </div>
 
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("birthDate") }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ isCorporateCustomer ? "-" : formatDate(customer.birth_date) }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ customerTaxIdLabel }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ customerTaxIdDisplay }}</p>
-              </div>
+            <div v-if="!profileEditMode" class="space-y-3">
+              <FieldGroup :fields="profileViewFields" :cols="2" />
             </div>
 
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("gender") }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ isCorporateCustomer ? "-" : genderLabel }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("maritalStatus") }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ isCorporateCustomer ? "-" : maritalStatusLabel }}</p>
-              </div>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                {{ t("address") }}
-              </p>
-              <p class="mt-0.5 whitespace-pre-wrap text-sm text-slate-800">
-                {{ customer.address || "-" }}
-              </p>
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("mobilePhone") }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ customerPhoneDisplay }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("email") }}
-                </p>
-                <p class="mt-0.5 break-all text-sm text-slate-800">{{ customer.email || "-" }}</p>
-              </div>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                {{ t("occupation") }}
-              </p>
-              <p class="mt-0.5 text-sm text-slate-800">{{ isCorporateCustomer ? "-" : customer.occupation || "-" }}</p>
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("assignedAgent") }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ customer.assigned_agent || "-" }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("consentStatus") }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ consentStatusLabel }}</p>
-              </div>
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("recordId") }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ customer.name || name || "-" }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                  {{ t("customerFolder") }}
-                </p>
-                <p class="mt-0.5 text-sm text-slate-800">{{ customer.customer_folder || "-" }}</p>
-              </div>
-            </div>
-          </div>
-            <div v-else class="space-y-3 text-sm">
+            <div v-else class="space-y-3">
               <div v-if="profileSaveError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
                 {{ profileSaveError }}
               </div>
@@ -215,93 +116,105 @@
                 {{ profileSaveMessage }}
               </div>
 
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("fullName") }}</label>
-                <input v-model.trim="profileForm.full_name" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="text" />
-                <p v-if="profileFormErrors.full_name" class="mt-1 text-xs font-medium text-rose-700">{{ profileFormErrors.full_name }}</p>
-              </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("birthDate") }}</label>
-                <input v-model="profileForm.birth_date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="date" :disabled="isCorporateCustomer" />
-                <p v-if="profileFormErrors.birth_date" class="mt-1 text-xs font-medium text-rose-700">{{ profileFormErrors.birth_date }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ customerTaxIdLabel }}</p>
-                <p class="mt-1 text-sm text-slate-800">{{ customerTaxIdDisplay }}</p>
-              </div>
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("gender") }}</label>
-                <select v-model="profileForm.gender" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" :disabled="isCorporateCustomer">
-                  <option v-for="option in genderOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                </select>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("maritalStatus") }}</label>
-                <select v-model="profileForm.marital_status" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" :disabled="isCorporateCustomer">
-                  <option v-for="option in maritalStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-              <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("address") }}</label>
-              <textarea v-model.trim="profileForm.address" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("mobilePhone") }}</p>
-                <p class="mt-1 text-sm text-slate-800">{{ customerPhoneDisplay }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("email") }}</label>
-                <input v-model.trim="profileForm.email" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="email" />
-                <p v-if="profileFormErrors.email" class="mt-1 text-xs font-medium text-rose-700">{{ profileFormErrors.email }}</p>
+              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                <template v-for="field in profileEditFields" :key="field.key">
+                  <div
+                    v-if="field.type !== 'hidden'"
+                    :class="field.span ? 'sm:col-span-2' : ''"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5"
+                  >
+                    <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
+                      {{ field.label }}
+                    </label>
+                    <p v-if="field.type === 'static'" class="mt-1 text-sm text-slate-800">
+                      {{ field.value }}
+                    </p>
+                    <textarea
+                      v-else-if="field.type === 'textarea'"
+                      :value="profileForm[field.model]"
+                      :rows="field.rows || 3"
+                      class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      @input="setProfileField(field.model, $event.target.value)"
+                    />
+                    <select
+                      v-else-if="field.type === 'select'"
+                      :value="profileForm[field.model]"
+                      class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      :disabled="field.disabled"
+                      @change="setProfileField(field.model, $event.target.value)"
+                    >
+                      <option v-for="option in field.options" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </option>
+                    </select>
+                    <input
+                      v-else
+                      :value="profileForm[field.model]"
+                      class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      :disabled="field.disabled"
+                      :type="field.type"
+                      @input="setProfileField(field.model, $event.target.value)"
+                    />
+                    <p v-if="field.model && profileFormErrors[field.model]" class="mt-1 text-xs font-medium text-rose-700">
+                      {{ profileFormErrors[field.model] }}
+                    </p>
+                  </div>
+                </template>
               </div>
             </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-              <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("occupation") }}</label>
-              <input v-model.trim="profileForm.occupation" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" type="text" :disabled="isCorporateCustomer" />
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("assignedAgent") }}</p>
-                <p class="mt-1 text-sm text-slate-800">{{ customer.assigned_agent || "-" }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("consentStatus") }}</label>
-                <select v-model="profileForm.consent_status" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
-                  <option v-for="option in consentStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("recordId") }}</p>
-                <p class="mt-1 text-sm text-slate-800">{{ customer.name || name || "-" }}</p>
-              </div>
-              <div class="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("customerFolder") }}</p>
-                <p class="mt-1 text-sm text-slate-800">{{ customer.customer_folder || "-" }}</p>
-              </div>
-            </div>
-          </div>
           </template>
-        </DetailCard>
+        </SectionPanel>
 
       </aside>
 
       <div class="detail-main space-y-4">
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'overview'"
+          :title="t('overviewSummaryTitle')"
+          :meta="t('overviewSummaryHint')"
+        >
+          <div class="grid gap-3">
+            <MetaListCard
+              v-for="card in overviewSummaryCards"
+              :key="card.key"
+              clickable
+              :title="card.title"
+              :subtitle="card.subtitle"
+              @click="activeTab = card.tab"
+            >
+              <template #trailing>
+                <span class="badge badge-blue">{{ card.count }}</span>
+              </template>
+              <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <div
+                  v-for="fact in card.facts"
+                  :key="fact.key"
+                  class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2"
+                >
+                  <p class="text-[11px] uppercase tracking-wide text-slate-400">
+                    {{ fact.label }}
+                  </p>
+                  <p class="text-sm font-semibold text-slate-800">
+                    {{ fact.value }}
+                  </p>
+                </div>
+              </div>
+            </MetaListCard>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel
+          v-if="activeCustomerTab === 'overview'"
+          :title="t('insightSummaryTitle')"
+        >
+          <div class="space-y-3">
+            <FieldGroup :fields="insightSummaryFields" :cols="4" />
+            <FieldGroup :fields="insightContextFields" :cols="2" />
+          </div>
+        </SectionPanel>
+
+        <SectionPanel
+          v-if="activeCustomerTab === 'operations'"
           :title="t('operationsTitle')"
         >
           <div class="mt-1 grid gap-2 sm:grid-cols-2">
@@ -341,13 +254,13 @@
               {{ t("openDesk") }}
             </ActionButton>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'activity'"
           :title="t('activitiesTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ activityRows.length }}</span>
           </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -355,7 +268,7 @@
             {{ t("noActivity") }}
           </div>
           <div v-else class="grid gap-3 md:grid-cols-2">
-            <EntityPreviewCard
+            <MetaListCard
               v-for="activity in activityRows"
               :key="activity.name"
               :title="activity.activity_title || activity.activity_type || activity.name"
@@ -365,15 +278,15 @@
                 <StatusBadge domain="activity" :status="activity.status || 'Draft'" />
               </template>
               <MiniFactList class="mt-2" :items="activityCardFacts(activity)" />
-            </EntityPreviewCard>
+            </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'activity'"
           :title="t('remindersTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ reminderRows.length }}</span>
           </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -381,7 +294,7 @@
             {{ t("noReminder") }}
           </div>
           <div v-else class="grid gap-3 md:grid-cols-2">
-            <EntityPreviewCard
+            <MetaListCard
               v-for="reminder in reminderRows"
               :key="reminder.name"
               :title="reminder.reminder_title || reminder.name"
@@ -409,15 +322,15 @@
                 </div>
               </template>
               <MiniFactList class="mt-2" :items="reminderCardFacts(reminder)" />
-            </EntityPreviewCard>
+            </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'portfolio'"
           :title="t('activePoliciesTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ activePolicies.length }}</span>
           </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -428,7 +341,7 @@
             {{ t("noActivePolicy") }}
           </div>
           <div v-else class="grid gap-3 md:grid-cols-2">
-            <EntityPreviewCard
+            <MetaListCard
               v-for="policy in activePolicies"
               :key="policy.name"
               :title="policy.policy_no || policy.name"
@@ -443,15 +356,15 @@
                   {{ t("openPolicy") }}
                 </ActionButton>
               </template>
-            </EntityPreviewCard>
+            </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'portfolio'"
           :title="t('openOffersTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ openOffers.length }}</span>
           </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -462,7 +375,7 @@
             {{ t("noOpenOffer") }}
           </div>
           <div v-else class="grid gap-3 md:grid-cols-2 [&>*:nth-child(n+3)]:hidden md:[&>*:nth-child(n+3)]:block">
-            <EntityPreviewCard
+            <MetaListCard
               v-for="offer in openOffers"
               :key="offer.name"
               :title="offer.name"
@@ -472,15 +385,15 @@
                 <StatusBadge domain="offer" :status="normalizeStatus(offer.status)" />
               </template>
               <MiniFactList class="mt-2" :items="offerCardFacts(offer)" />
-            </EntityPreviewCard>
+            </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'portfolio'"
           :title="t('paymentSummaryTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ paymentPreviewRows.length }}</span>
           </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -488,7 +401,7 @@
             {{ t("noPaymentHistory") }}
           </div>
           <div v-else class="grid gap-3 md:grid-cols-2 [&>*:nth-child(n+3)]:hidden md:[&>*:nth-child(n+3)]:block">
-            <EntityPreviewCard
+            <MetaListCard
               v-for="payment in paymentPreviewRows"
               :key="payment.name"
               :title="payment.payment_no || payment.name"
@@ -498,15 +411,15 @@
                 <StatusBadge domain="payment" :status="payment.status || 'Draft'" />
               </template>
               <MiniFactList class="mt-2" :items="paymentCardFacts(payment)" />
-            </EntityPreviewCard>
+            </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'portfolio'"
           :title="t('claimsTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ claimPreviewRows.length }}</span>
           </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -514,7 +427,7 @@
             {{ t("noClaims") }}
           </div>
           <div v-else class="grid gap-3 md:grid-cols-2">
-            <EntityPreviewCard
+            <MetaListCard
               v-for="claim in claimPreviewRows"
               :key="claim.name"
               :title="claim.name"
@@ -524,15 +437,15 @@
                 <StatusBadge domain="claim" :status="claim.claim_status || 'Draft'" />
               </template>
               <MiniFactList class="mt-2" :items="claimCardFacts(claim)" />
-            </EntityPreviewCard>
+            </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'portfolio'"
           :title="t('renewalsTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ renewalPreviewRows.length }}</span>
           </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -540,7 +453,7 @@
             {{ t("noUpcomingRenewal") }}
           </div>
           <div v-else class="grid gap-3 md:grid-cols-2">
-            <EntityPreviewCard
+            <MetaListCard
               v-for="renewal in renewalPreviewRows"
               :key="renewal.name"
               :title="renewal.policy || renewal.name"
@@ -550,67 +463,25 @@
                 <StatusBadge domain="renewal" :status="renewal.status || 'Draft'" />
               </template>
               <MiniFactList class="mt-2" :items="renewalCardFacts(renewal)" />
-            </EntityPreviewCard>
+            </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'portfolio'"
           :title="t('insightSummaryTitle')"
         >
-          <div class="grid gap-3 md:grid-cols-3">
-            <MetaListCard
-              :title="t('segment')"
-              :description="t('segmentScore')"
-              :meta="customer360Insights.segment || '-'"
-            />
-            <MetaListCard
-              :title="t('score')"
-              :description="t('customerValueScore')"
-              :meta="String(customer360Insights.score ?? '-')"
-            />
-            <MetaListCard
-              :title="t('claimRisk')"
-              :description="t('claimRiskHint')"
-              :meta="customer360Insights.claim_risk || '-'"
-            />
-            <MetaListCard
-              :title="t('valueBand')"
-              :description="t('valueBandHint')"
-              :meta="valueBandLabel"
-            />
+          <div class="space-y-3">
+            <FieldGroup :fields="insightSummaryFields" :cols="4" />
+            <FieldGroup :fields="insightContextFields" :cols="2" />
           </div>
-          <div class="mt-3 grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              :title="t('portfolioStrengths')"
-              :description="t('strengthSignalsHint')"
-              :meta="insightStrengthRows.join(' / ') || t('noStrengthSignal')"
-            />
-            <MetaListCard
-              :title="t('portfolioRisks')"
-              :description="t('riskSignalsHint')"
-              :meta="insightRiskRows.join(' / ') || t('noRiskSignal')"
-            />
-          </div>
-          <div class="mt-3 grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              :title="t('snapshotDate')"
-              :description="t('segmentSnapshotHint')"
-              :meta="formatDate(customer360Insights.snapshot_date)"
-            />
-            <MetaListCard
-              :title="t('sourceVersion')"
-              :description="t('segmentSourceVersionHint')"
-              :meta="customer360Insights.source_version || '-'"
-            />
-          </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'operations'"
           :title="t('assignmentsTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ ownershipAssignmentRows.length }}</span>
           </template>
           <div v-if="ownershipAssignmentRows.length === 0" class="at-empty-block">
@@ -661,34 +532,29 @@
               <p class="mt-2 text-xs text-slate-500">{{ assignmentSummaryLabel(assignment) }}</p>
             </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'portfolio'"
           :title="t('crossSellTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ crossSellOpportunityRows.length }}</span>
           </template>
           <div v-if="crossSellOpportunityRows.length === 0" class="at-empty-block">
             {{ t("noCrossSellOpportunity") }}
           </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="item in crossSellOpportunityRows"
-              :key="item.branch"
-              :title="item.branch"
-              :description="t('crossSellOpportunityHint')"
-              :meta="t('crossSellOpportunityMeta')"
-            />
+          <div v-else class="space-y-3">
+            <FieldGroup :fields="crossSellSummaryFields" :cols="2" />
+            <FieldGroup :fields="crossSellOpportunityFields" :cols="3" />
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'operations'"
           :title="t('relatedCustomersTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ relatedCustomerRows.length }}</span>
           </template>
           <div v-if="relatedCustomerRows.length === 0" class="at-empty-block">
@@ -714,62 +580,60 @@
                 </template>
               </MetaListCard>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'operations'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'operations'"
           :title="t('documentsTitle')"
         >
-          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <MetaListCard :label="t('totalDocuments')" :value="String(customerDocumentProfile.total_files || 0)" />
-            <MetaListCard :label="t('pdfDocuments')" :value="String(customerDocumentProfile.pdf_count || 0)" />
-            <MetaListCard :label="t('imageDocuments')" :value="String(customerDocumentProfile.image_count || 0)" />
-            <MetaListCard :label="t('spreadsheetDocuments')" :value="String(customerDocumentProfile.spreadsheet_count || 0)" />
-            <MetaListCard :label="t('otherDocuments')" :value="String(customerDocumentProfile.other_count || 0)" />
-            <MetaListCard :label="t('lastUpload')" :value="formatDate(customerDocumentProfile.last_uploaded_on)" />
+          <template #trailing>
+            <span class="badge badge-blue">{{ customerDocumentProfile.total_files || 0 }}</span>
+          </template>
+          <div class="space-y-3">
+            <FieldGroup :fields="documentSummaryFields" :cols="3" />
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'portfolio'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'operations'"
           :title="t('insuredAssetsTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ insuredAssetRows.length }}</span>
           </template>
           <div v-if="insuredAssetRows.length === 0" class="at-empty-block">
             {{ t("noInsuredAsset") }}
           </div>
           <div v-else class="grid gap-3 md:grid-cols-2">
-            <EntityPreviewCard
+            <MetaListCard
               v-for="asset in insuredAssetRows"
               :key="asset.policy"
               :title="asset.asset_label || asset.policy_no || asset.policy"
               :subtitle="asset.insurance_company || '-'"
-              >
-                <template #trailing>
-                  <StatusBadge domain="policy" :status="asset.status || 'Draft'" />
-                </template>
-                <MiniFactList class="mt-2" :items="insuredAssetFacts(asset)" />
-                <template #footer>
-                  <div class="flex items-center gap-2">
-                    <ActionButton variant="secondary" size="xs" @click="openEditInsuredAsset(asset)">
-                      {{ t("edit") }}
-                    </ActionButton>
-                    <ActionButton variant="secondary" size="xs" @click="deleteInsuredAsset(asset)">
-                      {{ t("delete") }}
-                    </ActionButton>
-                  </div>
-                </template>
-              </EntityPreviewCard>
-            </div>
-        </DetailCard>
+            >
+              <template #trailing>
+                <StatusBadge domain="policy" :status="asset.status || 'Draft'" />
+              </template>
+              <MiniFactList class="mt-2" :items="insuredAssetFacts(asset)" />
+              <template #footer>
+                <div class="flex items-center gap-2">
+                  <ActionButton variant="secondary" size="xs" @click="openEditInsuredAsset(asset)">
+                    {{ t("edit") }}
+                  </ActionButton>
+                  <ActionButton variant="secondary" size="xs" @click="deleteInsuredAsset(asset)">
+                    {{ t("delete") }}
+                  </ActionButton>
+                </div>
+              </template>
+            </MetaListCard>
+          </div>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'activity'"
           :title="t('communicationSummaryTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ communicationChannelRows.length }}</span>
           </template>
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -785,13 +649,13 @@
               :meta="String(channel.total)"
             />
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard
-          v-if="activeCustomerTab === 'overview' || activeCustomerTab === 'activity'"
+        <SectionPanel
+          v-if="activeCustomerTab === 'activity'"
           :title="t('timelineTitle')"
         >
-          <template #action>
+          <template #trailing>
             <span class="badge badge-blue">{{ timelineRows.length }}</span>
           </template>
           <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -817,7 +681,7 @@
               </template>
             </MetaListCard>
           </ol>
-        </DetailCard>
+        </SectionPanel>
       </div>
     </div>
     <QuickCreateManagedDialog
@@ -884,11 +748,10 @@ import { createResource } from "frappe-ui";
 import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import DetailCard from "../components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
@@ -930,14 +793,12 @@ const copy = {
     validationEmailInvalid: "Geçerli bir e-posta girin.",
     validationBirthDateFuture: "Doğum tarihi bugünden ileri olamaz.",
     loading: "Yükleniyor...",
-    contactCard: "Müşteri İletişim Karti",
-    insuredInfoCard: "Sigortali Bilgileri",
     fullName: "Ad Soyad",
     birthDate: "Doğum Tarihi",
     gender: "Cinsiyet",
     maritalStatus: "Medeni Durumu",
     occupation: "Meslek",
-    riskCard: "Risk Özet",
+    riskCard: "Risk Özeti",
     taxId: "Kimlik / Vergi No",
     nationalId: "TC Kimlik No",
     taxNumber: "Vergi No",
@@ -951,6 +812,29 @@ const copy = {
     address: "Adres",
     assignedAgent: "Temsilci",
     consentStatus: "İzin Durumu",
+    customerSnapshotTitle: "Müşteri Özeti",
+    customerSnapshotHint: "İletişim ve portföy sinyalleri",
+    customerProfileTitle: "Müşteri Profili",
+    overviewSummaryTitle: "Özet Panosu",
+    overviewSummaryHint: "En önemli sinyaller ve kısa yollar",
+    portfolioOverviewTitle: "Portföy Özeti",
+    paymentOverviewTitle: "Ödeme Özeti",
+    activityOverviewTitle: "Aktivite Özeti",
+    operationsOverviewTitle: "Operasyon Özeti",
+    portfolioOverviewActiveLabel: "Aktif",
+    portfolioOverviewOfferLabel: "Teklif",
+    portfolioOverviewRenewalLabel: "Yenileme",
+    portfolioOverviewClaimLabel: "Hasar",
+    paymentOverviewCountLabel: "Tahsilat",
+    paymentOverviewOverdueLabel: "Geciken Taksit",
+    paymentOverviewOverdueAmountLabel: "Gecikme Tutarı",
+    activityOverviewCountLabel: "Aktivite",
+    activityOverviewReminderLabel: "Hatırlatıcı",
+    activityOverviewChannelLabel: "Kanal",
+    operationsOverviewRelationLabel: "Kişi",
+    operationsOverviewAssetLabel: "Varlık",
+    operationsOverviewAssignmentLabel: "Atama",
+    operationsOverviewDocumentLabel: "Doküman",
     genderUnknown: "Bilinmiyor",
     genderMale: "Erkek",
     genderFemale: "Kadın",
@@ -971,22 +855,22 @@ const copy = {
     score: "Skor",
     customerValueScore: "Müşteri değer puanı",
     claimRisk: "Hasar Riski",
-    claimRiskHint: "Açil risk seviyesi",
+    claimRiskHint: "Açık risk seviyesi",
     segmentScore: "Portföy segmenti",
-    valueBand: "Deger Bandı",
+    valueBand: "Değer Bandı",
     valueBandHint: "Portföy prim seviyesine göre değer sınıfı",
     portfolioStrengths: "Güçlü Sinyaller",
     portfolioRisks: "Risk Sinyalleri",
-    strengthSignalsHint: "Müşteri portfoyunu guclendiren faktorler",
-    riskSignalsHint: "Takip gerektiren risk baskilari",
+    strengthSignalsHint: "Müşteri portföyünü güçlendiren faktörler",
+    riskSignalsHint: "Takip gerektiren risk baskıları",
     noStrengthSignal: "Belirgin pozitif sinyal bulunamadı.",
     noRiskSignal: "Belirgin risk sinyali bulunamadı.",
     snapshotDate: "Snapshot Tarihi",
-    sourceVersion: "Kaynak Surumu",
-    segmentSnapshotHint: "Segment görünümü son hesaplanan gune aittir",
+    sourceVersion: "Kaynak Sürümü",
+    segmentSnapshotHint: "Segment görünümü son hesaplanan güne aittir",
     segmentSourceVersionHint: "Skor kuralı sürümü",
-    valueBandHighValue: "Yüksek Deger",
-    valueBandMidValue: "Orta Deger",
+    valueBandHighValue: "Yüksek Değer",
+    valueBandMidValue: "Orta Değer",
     valueBandStandard: "Standart",
     insightSignalMultiPolicy: "Çoklu aktif poliçe portföyü",
     insightSignalActivePortfolio: "Aktif poliçe portföyü",
@@ -995,7 +879,7 @@ const copy = {
     insightSignalCleanClaims: "Temiz hasar görünümü",
     insightSignalRenewalPipeline: "Yaklaşan yenileme fırsatı",
     insightRiskClaimPressure: "Hasar baskısı yüksek",
-    insightRiskCollectionRisk: "Tahsilat riski yuksek",
+    insightRiskCollectionRisk: "Tahsilat riski yüksek",
     insightRiskOverduePayment: "Geciken tahsilat var",
     insightRiskCancellationHistory: "İptal geçmişi dikkat gerektiriyor",
     activePoliciesTitle: "Aktif Poliçeler",
@@ -1011,15 +895,17 @@ const copy = {
     renewalsTitle: "Yaklaşan Yenilemeler",
     noUpcomingRenewal: "Yaklaşan yenileme bulunamadı.",
     dueDate: "Vade",
-    lostReason: "Kayip Sebebi",
+    lostReason: "Kayıp Sebebi",
     communicationSummaryTitle: "İletişim Kanal Özeti",
     noCommunicationSummary: "İletişim özeti bulunamadı.",
     communicationChannelCount: "Kanal toplam kaydı",
-    insightSummaryTitle: "Müşteri Icgoruleri",
+    insightSummaryTitle: "Müşteri İçgörüleri",
     crossSellTitle: "Çapraz Satış Fırsatları",
     noCrossSellOpportunity: "Ek çapraz satış fırsatı bulunamadı.",
     crossSellOpportunityHint: "Eksik ürün/branş fırsatı",
     crossSellOpportunityMeta: "Aksiyon önerisi",
+    crossSellOpportunityCount: "Fırsat Sayısı",
+    crossSellOpportunityBranches: "Önerilen Branşlar",
     relatedCustomersTitle: "İlişkili Kişiler",
     noRelatedCustomer: "İlişkili kişi kaydı bulunamadı.",
     sameHousehold: "Aynı hane",
@@ -1061,7 +947,7 @@ const copy = {
     tabPortfolio: "Portföy",
     tabActivity: "Aktivite",
     tabOperations: "Operasyonlar",
-    timelineTitle: "İletişim Gecmisi",
+    timelineTitle: "İletişim Geçmişi",
     noTimeline: "Zaman tüneli kaydı bulunamadı.",
     typeCommunication: "Arama/İletişim",
     typeNote: "Not",
@@ -1090,8 +976,6 @@ const copy = {
     validationEmailInvalid: "Enter a valid email address.",
     validationBirthDateFuture: "Birth Date cannot be in the future.",
     loading: "Loading...",
-    contactCard: "Customer Contact Card",
-    insuredInfoCard: "Insured Details",
     fullName: "Full Name",
     birthDate: "Birth Date",
     gender: "Gender",
@@ -1111,6 +995,29 @@ const copy = {
     address: "Address",
     assignedAgent: "Assigned Agent",
     consentStatus: "Consent Status",
+    customerSnapshotTitle: "Customer Snapshot",
+    customerSnapshotHint: "Contact and portfolio signals",
+    customerProfileTitle: "Customer Profile",
+    overviewSummaryTitle: "Overview Dashboard",
+    overviewSummaryHint: "Top signals and quick paths",
+    portfolioOverviewTitle: "Portfolio Summary",
+    paymentOverviewTitle: "Payment Summary",
+    activityOverviewTitle: "Activity Summary",
+    operationsOverviewTitle: "Operations Summary",
+    portfolioOverviewActiveLabel: "Active",
+    portfolioOverviewOfferLabel: "Offer",
+    portfolioOverviewRenewalLabel: "Renewal",
+    portfolioOverviewClaimLabel: "Claim",
+    paymentOverviewCountLabel: "Payments",
+    paymentOverviewOverdueLabel: "Overdue Installment",
+    paymentOverviewOverdueAmountLabel: "Overdue Amount",
+    activityOverviewCountLabel: "Activity",
+    activityOverviewReminderLabel: "Reminder",
+    activityOverviewChannelLabel: "Channel",
+    operationsOverviewRelationLabel: "Contact",
+    operationsOverviewAssetLabel: "Asset",
+    operationsOverviewAssignmentLabel: "Assignment",
+    operationsOverviewDocumentLabel: "Document",
     genderUnknown: "Unknown",
     genderMale: "Male",
     genderFemale: "Female",
@@ -1180,6 +1087,8 @@ const copy = {
     noCrossSellOpportunity: "No additional cross-sell opportunity found.",
     crossSellOpportunityHint: "Missing product/branch opportunity",
     crossSellOpportunityMeta: "Recommended action",
+    crossSellOpportunityCount: "Opportunity Count",
+    crossSellOpportunityBranches: "Suggested Branches",
     relatedCustomersTitle: "Related Customers",
     noRelatedCustomer: "No related customer records found.",
     sameHousehold: "Same household",
@@ -1314,12 +1223,12 @@ const customerStatus = computed(() => (Number(customer.value.enabled) === 1 ? "a
 const heroCells = computed(() => [
   {
     label: t("customerType"),
-    value: customer.value?.customer_type || (isCorporateCustomer.value ? t("customerTypeCorporate") : t("customerTypeIndividual")) || "-",
+    value: customerTypeLabel.value,
     variant: "default",
   },
   {
-    label: customerTaxIdLabel.value,
-    value: customerTaxIdDisplay.value || "-",
+    label: t("valueBand"),
+    value: valueBandLabel.value || "-",
     variant: "default",
   },
   {
@@ -1334,23 +1243,11 @@ const heroCells = computed(() => [
   },
 ]);
 
-const contactFields = computed(() => [
-  { label: t("mobilePhone"), value: customerPhoneDisplay.value || "-", variant: "default" },
-  { label: t("email"), value: customer.value?.email || "-", variant: "default" },
-  { label: t("address"), value: customer.value?.address || "-", variant: "muted" },
-]);
-
-const recordFields = computed(() => [
-  { label: t("recordId"), value: customer.value?.name || name || "-", variant: "mono" },
-  { label: t("customerFolder"), value: customer.value?.customer_folder || "-", variant: "muted" },
-  { label: t("assignedAgent"), value: customer.value?.assigned_agent || "-", variant: "default" },
-]);
-
 const tabs = computed(() => [
   { key: "overview", label: t("tabOverview") },
   { key: "portfolio", label: t("tabPortfolio"), count: activePolicies.value?.length },
   { key: "activity", label: t("tabActivity"), count: activityRows.value?.length },
-  { key: "operations", label: t("tabOperations"), count: openOffers.value?.length },
+  { key: "operations", label: t("tabOperations"), count: ownershipAssignmentRows.value?.length },
 ]);
 
 const activeTab = computed({
@@ -1405,6 +1302,8 @@ const openOffers = computed(() =>
   offers.value.filter((offer) => !["Rejected", "Converted"].includes(String(offer.status || "")))
 );
 const paymentPreviewRows = computed(() => payments.value.slice(0, 6));
+const paymentOverdueInstallmentCount = computed(() => Number(customer360Summary.value.overdue_installment_count || 0));
+const paymentOverdueInstallmentAmount = computed(() => Number(customer360Summary.value.overdue_installment_amount || 0));
 const paymentInstallmentsByPayment = computed(() => {
   const map = new Map();
   for (const row of paymentInstallments.value) {
@@ -1484,21 +1383,217 @@ const riskSummaryItems = computed(() => [
 ]);
 const customerHeaderSummaryItems = computed(() => [
   {
-    key: "recordId",
-    label: t("recordId"),
-    value: customer.value.name || props.name || "-",
-  },
-  {
     key: "customerType",
     label: t("customerType"),
     value: customerTypeLabel.value,
   },
-  {
-    key: "taxId",
-    label: customerTaxIdLabel.value,
-    value: customer.value.tax_id || customer.value.masked_tax_id || "-",
-  },
   ...riskSummaryItems.value,
+]);
+const overviewSummaryCards = computed(() => {
+  const firstPolicy = activePolicies.value[0];
+  const firstPayment = paymentPreviewRows.value[0];
+  const firstActivity = activityRows.value[0];
+  const firstRelation = relatedCustomerRows.value[0];
+  const firstAsset = insuredAssetRows.value[0];
+  const firstAssignment = ownershipAssignmentRows.value[0];
+  const totalOperations =
+    relatedCustomerRows.value.length +
+    insuredAssetRows.value.length +
+    ownershipAssignmentRows.value.length +
+    Number(customerDocumentProfile.value.total_files || 0);
+
+  return [
+    {
+      key: "portfolio",
+      tab: "portfolio",
+      title: t("portfolioOverviewTitle"),
+      subtitle: firstPolicy
+        ? [firstPolicy.policy_no || firstPolicy.name, firstPolicy.branch].filter(Boolean).join(" / ")
+        : t("noActivePolicy"),
+      count: String(activePolicies.value.length || 0),
+      facts: [
+        { key: "activePolicyCount", label: t("portfolioOverviewActiveLabel"), value: String(activePolicies.value.length || 0) },
+        { key: "openOfferCount", label: t("portfolioOverviewOfferLabel"), value: String(openOffers.value.length || 0) },
+        { key: "renewals", label: t("portfolioOverviewRenewalLabel"), value: String(renewals.value.length || 0) },
+        { key: "claims", label: t("portfolioOverviewClaimLabel"), value: String(claims.value.length || 0) },
+      ],
+    },
+    {
+      key: "payment",
+      tab: "portfolio",
+      title: t("paymentOverviewTitle"),
+      subtitle: firstPayment
+        ? [formatDate(firstPayment.payment_date), formatCurrency(firstPayment.amount_try, "TRY")].filter(Boolean).join(" / ")
+        : t("noPaymentHistory"),
+      count: String(payments.value.length || 0),
+      facts: [
+        { key: "paymentRows", label: t("paymentOverviewCountLabel"), value: String(payments.value.length || 0) },
+        {
+          key: "overdueInstallments",
+          label: t("paymentOverviewOverdueLabel"),
+          value: String(paymentOverdueInstallmentCount.value),
+        },
+        {
+          key: "overdueAmount",
+          label: t("paymentOverviewOverdueAmountLabel"),
+          value: formatCurrency(paymentOverdueInstallmentAmount.value, "TRY"),
+        },
+      ],
+    },
+    {
+      key: "activity",
+      tab: "activity",
+      title: t("activityOverviewTitle"),
+      subtitle: firstActivity
+        ? [firstActivity.activity_title || firstActivity.activity_type || firstActivity.name, formatDateTime(firstActivity.activity_at)].filter(Boolean).join(" / ")
+        : t("noActivity"),
+      count: String(
+        asArray(customer360Payload.value?.operations?.activities || []).length +
+          asArray(customer360Payload.value?.operations?.reminders || []).length
+      ),
+      facts: [
+        { key: "activities", label: t("activityOverviewCountLabel"), value: String(activityRows.value.length || 0) },
+        { key: "reminders", label: t("activityOverviewReminderLabel"), value: String(reminderRows.value.length || 0) },
+        { key: "channels", label: t("activityOverviewChannelLabel"), value: String(communicationChannelRows.value.length || 0) },
+      ],
+    },
+    {
+      key: "operations",
+      tab: "operations",
+      title: t("operationsOverviewTitle"),
+      subtitle: firstRelation
+        ? [firstRelation.customer_name || firstRelation.related_customer || firstRelation.name, firstAsset?.asset_identifier || firstAssignment?.assigned_to].filter(Boolean).join(" / ")
+        : t("noRelatedCustomer"),
+      count: String(totalOperations),
+      facts: [
+        { key: "relations", label: t("operationsOverviewRelationLabel"), value: String(relatedCustomerRows.value.length || 0) },
+        { key: "assets", label: t("operationsOverviewAssetLabel"), value: String(insuredAssetRows.value.length || 0) },
+        { key: "assignments", label: t("operationsOverviewAssignmentLabel"), value: String(ownershipAssignmentRows.value.length || 0) },
+        { key: "documents", label: t("operationsOverviewDocumentLabel"), value: String(customerDocumentProfile.value.total_files || 0) },
+      ],
+    },
+  ];
+});
+const insightSummaryFields = computed(() => [
+  {
+    key: "segment",
+    label: t("segmentScore"),
+    value: customer360Insights.value.segment || "-",
+    variant: "default",
+  },
+  {
+    key: "score",
+    label: t("score"),
+    value: String(customer360Insights.value.score ?? "-"),
+    variant: "lg",
+  },
+  {
+    key: "claimRisk",
+    label: t("claimRisk"),
+    value: customer360Insights.value.claim_risk || "-",
+    variant: "default",
+  },
+  {
+    key: "valueBand",
+    label: t("valueBand"),
+    value: valueBandLabel.value || "-",
+    variant: "accent",
+  },
+]);
+const insightContextFields = computed(() => [
+  {
+    key: "strengths",
+    label: t("portfolioStrengths"),
+    variant: "badges",
+    badges: insightStrengthRows.value.length
+      ? insightStrengthRows.value.map((label) => ({ label, color: "green" }))
+      : [{ label: t("noStrengthSignal"), color: "gray" }],
+  },
+  {
+    key: "risks",
+    label: t("portfolioRisks"),
+    variant: "badges",
+    badges: insightRiskRows.value.length
+      ? insightRiskRows.value.map((label) => ({ label, color: "red" }))
+      : [{ label: t("noRiskSignal"), color: "gray" }],
+  },
+  {
+    key: "snapshotDate",
+    label: t("snapshotDate"),
+    value: formatDate(customer360Insights.value.snapshot_date),
+    variant: "default",
+  },
+  {
+    key: "sourceVersion",
+    label: t("sourceVersion"),
+    value: customer360Insights.value.source_version || "-",
+    variant: "default",
+  },
+]);
+const crossSellSummaryFields = computed(() => [
+  {
+    key: "opportunityCount",
+    label: t("crossSellOpportunityCount"),
+    value: String(crossSellOpportunityRows.value.length || 0),
+    variant: "lg",
+  },
+  {
+    key: "portfolioBranches",
+    label: t("crossSellOpportunityBranches"),
+    variant: "badges",
+    badges: crossSellOpportunityRows.value.length
+      ? crossSellOpportunityRows.value.map((item) => ({
+          label: String(item.label || item.branch || "-"),
+          color: "blue",
+        }))
+      : [{ label: t("noCrossSellOpportunity"), color: "gray" }],
+  },
+]);
+const crossSellOpportunityFields = computed(() =>
+  crossSellOpportunityRows.value.map((item, index) => ({
+    key: `${item.branch || item.label || "branch"}:${index}`,
+    label: String(item.label || item.branch || "-"),
+    value: t("crossSellOpportunityMeta"),
+    variant: "default",
+  }))
+);
+const documentSummaryFields = computed(() => [
+  {
+    key: "totalDocuments",
+    label: t("totalDocuments"),
+    value: String(customerDocumentProfile.value.total_files || 0),
+    variant: "lg",
+  },
+  {
+    key: "pdfDocuments",
+    label: t("pdfDocuments"),
+    value: String(customerDocumentProfile.value.pdf_count || 0),
+    variant: "default",
+  },
+  {
+    key: "imageDocuments",
+    label: t("imageDocuments"),
+    value: String(customerDocumentProfile.value.image_count || 0),
+    variant: "default",
+  },
+  {
+    key: "spreadsheetDocuments",
+    label: t("spreadsheetDocuments"),
+    value: String(customerDocumentProfile.value.spreadsheet_count || 0),
+    variant: "default",
+  },
+  {
+    key: "otherDocuments",
+    label: t("otherDocuments"),
+    value: String(customerDocumentProfile.value.other_count || 0),
+    variant: "default",
+  },
+  {
+    key: "lastUpload",
+    label: t("lastUpload"),
+    value: formatDate(customerDocumentProfile.value.last_uploaded_on),
+    variant: "default",
+  },
 ]);
 const customerTypeValue = computed(() => normalizeCustomerType(customer.value.customer_type, customer.value.tax_id));
 const isCorporateCustomer = computed(() => customerTypeValue.value === "Corporate");
@@ -1547,6 +1642,32 @@ const consentStatusOptions = computed(() => [
   { value: "Granted", label: t("consentGranted") },
   { value: "Revoked", label: t("consentRevoked") },
 ]);
+const profileViewFields = computed(() => [
+  { key: "full_name", label: t("fullName"), value: customer.value.full_name || "-", variant: "lg", span: 2 },
+  { key: "birth_date", label: t("birthDate"), value: isCorporateCustomer.value ? "-" : formatDate(customer.value.birth_date), variant: "default" },
+  { key: "gender", label: t("gender"), value: isCorporateCustomer.value ? "-" : genderLabel.value, variant: "default" },
+  { key: "marital_status", label: t("maritalStatus"), value: isCorporateCustomer.value ? "-" : maritalStatusLabel.value, variant: "default" },
+  { key: "address", label: t("address"), value: customer.value.address || "-", variant: "muted", span: 2 },
+  { key: "mobile_phone", label: t("mobilePhone"), value: customerPhoneDisplay.value, variant: "default" },
+  { key: "email", label: t("email"), value: customer.value.email || "-", variant: "default" },
+  { key: "occupation", label: t("occupation"), value: isCorporateCustomer.value ? "-" : customer.value.occupation || "-", variant: "default" },
+  { key: "assigned_agent", label: t("assignedAgent"), value: customer.value.assigned_agent || "-", variant: "default" },
+  { key: "consent_status", label: t("consentStatus"), value: consentStatusLabel.value, variant: "default" },
+  { key: "customer_folder", label: t("customerFolder"), value: customer.value.customer_folder || "-", variant: "default" },
+]);
+const profileEditFields = computed(() => [
+  { key: "full_name", label: t("fullName"), model: "full_name", type: "text", span: 2 },
+  { key: "birth_date", label: t("birthDate"), model: "birth_date", type: "date", disabled: isCorporateCustomer.value },
+  { key: "gender", label: t("gender"), model: "gender", type: "select", options: genderOptions.value, disabled: isCorporateCustomer.value },
+  { key: "marital_status", label: t("maritalStatus"), model: "marital_status", type: "select", options: maritalStatusOptions.value, disabled: isCorporateCustomer.value },
+  { key: "address", label: t("address"), model: "address", type: "textarea", span: 2, rows: 3 },
+  { key: "mobile_phone", label: t("mobilePhone"), type: "static", value: customerPhoneDisplay.value },
+  { key: "email", label: t("email"), model: "email", type: "email" },
+  { key: "occupation", label: t("occupation"), model: "occupation", type: "text", disabled: isCorporateCustomer.value },
+  { key: "assigned_agent", label: t("assignedAgent"), type: "static", value: customer.value.assigned_agent || "-" },
+  { key: "consent_status", label: t("consentStatus"), model: "consent_status", type: "select", options: consentStatusOptions.value },
+  { key: "customer_folder", label: t("customerFolder"), type: "static", value: customer.value.customer_folder || "-" },
+]);
 
 function normalizeIdentityNumber(value) {
   return String(value || "").replace(/\D+/g, "");
@@ -1556,6 +1677,11 @@ function normalizeCustomerType(value, identityNumber = "") {
   const normalized = String(value || "").trim();
   if (normalized === "Individual" || normalized === "Corporate") return normalized;
   return normalizeIdentityNumber(identityNumber).length === 10 ? "Corporate" : "Individual";
+}
+
+function setProfileField(fieldName, value) {
+  if (!fieldName) return;
+  profileForm[fieldName] = String(value ?? "").trim();
 }
 
 const timelineRows = computed(() =>

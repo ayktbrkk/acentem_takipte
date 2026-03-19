@@ -39,12 +39,12 @@ const HeroStripStub = {
   `,
 };
 
-const DetailCardStub = {
+const SectionPanelStub = {
   props: ["title"],
   template: `
-    <section class="detail-card-stub">
+    <section class="section-panel-stub">
       <h2>{{ title }}</h2>
-      <slot name="action" />
+      <slot name="trailing" />
       <slot />
     </section>
   `,
@@ -164,7 +164,7 @@ describe("ReconciliationDetail page", () => {
         stubs: {
           StatusBadge: StatusBadgeStub,
           HeroStrip: HeroStripStub,
-          DetailCard: DetailCardStub,
+          SectionPanel: SectionPanelStub,
           FieldGroup: FieldGroupStub,
           ListTable: ListTableStub,
         },
@@ -183,10 +183,10 @@ describe("ReconciliationDetail page", () => {
     expect(wrapper.text()).toContain("matched_by");
     expect(wrapper.text()).toContain("AT Policy POL-001 Mismatch");
     expect(wrapper.text()).toContain("AT Policy POL-002 Matched");
-    expect(wrapper.text()).toContain("Eslesmeyen Kayitlar");
+    expect(wrapper.text()).toContain("Eşleşmeyen Kayıtlar");
 
     const buttons = wrapper.findAll("button");
-    await buttons.find((button) => button.text() === "Listeye Don").trigger("click");
+    await buttons.find((button) => button.text() === "Listeye Dön").trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "reconciliation-workbench" });
   });
 });

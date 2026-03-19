@@ -91,7 +91,6 @@ const actionButtonStub = {
 const commonStubs = {
   PageToolbar: passthroughStub,
   WorkbenchFilterToolbar: passthroughStub,
-  DataTableShell: passthroughStub,
   DataTableCell: simpleStub,
   TableEntityCell: tableEntityCellStub,
   TableFactsCell: tableFactsCellStub,
@@ -531,7 +530,7 @@ describe("AuxWorkbench reminders", () => {
     const taskRows = [
       {
         name: "TASK-001",
-        task_title: "Yenileme kontrolu",
+        task_title: "Yenileme kontrolü",
         task_type: "Renewal",
         source_doctype: "AT Policy",
         source_name: "POL-001",

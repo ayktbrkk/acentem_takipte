@@ -105,7 +105,6 @@ describe("CustomerList page store integration", () => {
           Dialog: true,
           ActionButton: true,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           MiniFactList: true,
           PageToolbar: genericStub,

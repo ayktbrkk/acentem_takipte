@@ -74,9 +74,9 @@ const createResourceHandle = createResource({
 const resolvedTitle = computed(() => getLocalizedText(props.titleOverride || config?.title, props.locale));
 const resolvedSubtitle = computed(() => getLocalizedText(props.subtitleOverride || config?.subtitle, props.locale));
 const resolvedLabels = computed(() => ({
-  cancel: props.labels.cancel || (props.locale === "tr" ? "Iptal" : "Cancel"),
-  save: props.labels.save || (props.locale === "tr" ? "Olustur" : "Create"),
-  saveAndOpen: props.labels.saveAndOpen || (props.locale === "tr" ? "Olustur ve Ac" : "Create & Open"),
+  cancel: props.labels.cancel || (props.locale === "tr" ? "İptal" : "Cancel"),
+  save: props.labels.save || (props.locale === "tr" ? "Oluştur" : "Create"),
+  saveAndOpen: props.labels.saveAndOpen || (props.locale === "tr" ? "Oluştur ve Aç" : "Create & Open"),
 }));
 const saveDisabledComputed = computed(() => props.saveDisabled || loading.value);
 
@@ -124,7 +124,7 @@ function validateRequired() {
     }
   }
   if (!valid) {
-    errorText.value = props.locale === "tr" ? "Lutfen gerekli alanlari doldurun." : "Please fill required fields.";
+    errorText.value = props.locale === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.";
   }
   return valid;
 }
@@ -156,7 +156,7 @@ async function submit(openAfter = false) {
     }
     if (!openAfter && props.returnTo) await router.push(props.returnTo).catch(() => {});
   } catch (error) {
-    errorText.value = error?.messages?.join(" ") || error?.message || (props.locale === "tr" ? "Kayit olusturma basarisiz oldu." : "Create failed.");
+    errorText.value = error?.messages?.join(" ") || error?.message || (props.locale === "tr" ? "Kayıt oluşturma başarısız oldu." : "Create failed.");
     emit("error", error);
   } finally {
     loading.value = false;

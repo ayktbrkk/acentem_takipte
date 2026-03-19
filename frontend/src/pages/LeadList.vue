@@ -1,14 +1,18 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Fırsatlar</p>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
+      <div class="flex flex-wrap items-center gap-2">
+        <button class="btn btn-primary btn-sm" type="button" @click="openQuickLeadDialog">+ Yeni Fırsat</button>
         <button class="btn btn-outline btn-sm" type="button" @click="focusLeadSearch">Filtrele</button>
+        <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="refreshLeadList">Yenile</button>
+        <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('xlsx')">Excel</button>
+        <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('pdf')">PDF</button>
+        <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
       </div>
     </div>
 
@@ -35,7 +39,7 @@
       </div>
     </div>
 
-    <div class="surface-card mx-5 rounded-2xl p-3">
+    <div class="surface-card rounded-2xl p-3">
       <div class="flex flex-wrap gap-2">
         <button
           v-for="option in leadVisibleStatusOptions"
@@ -60,10 +64,8 @@
         @reset="onLeadListFilterReset"
       >
         <template #actions>
-          <button class="btn btn-primary btn-sm" @click="openQuickLeadDialog">+ Yeni Fırsat</button>
-          <button class="btn btn-sm" :disabled="leadListResource.loading" @click="refreshLeadList">Yenile</button>
-          <button class="btn btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('xlsx')">Excel</button>
-          <button class="btn btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('pdf')">PDF</button>
+          <button v-if="hasLeadActiveFilters" class="btn btn-outline btn-sm" @click="onLeadListFilterReset">Temizle</button>
+          <button class="btn btn-outline btn-sm" @click="focusLeadSearch">Ara</button>
         </template>
       </FilterBar>
     </div>
@@ -148,7 +150,6 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
@@ -235,7 +236,7 @@ const copy = {
     colStatus: "Durum",
     colConversion: "Dönüşüm",
     colActions: "Aksiyon",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranında Aç",
     openCustomer360: "Müşteri 360",
     openPolicy: "Poliçe Detayını Aç",
     openOffer: "Teklif",
@@ -248,7 +249,7 @@ const copy = {
     presetHighPotential: "Yüksek Potansiyel",
     presetUnconverted: "Dönüşmeyenler",
     presetConvertedPolicy: "Poliçeye Dönüşenler",
-    presetFollowUpQueue: "Takip Kuyrugu",
+    presetFollowUpQueue: "Takip Kuyruğu",
     presetWaitingLeads: "Bekleyen Fırsatlar",
     presetConvertible: "Teklife Çevrilebilir",
     record: "Kayıt",
@@ -507,7 +508,7 @@ const quickCreateCommon = computed(() => ({
   cancel: activeLocale.value === "tr" ? "Vazgeç" : "Cancel",
   save: activeLocale.value === "tr" ? "Kaydet" : "Save",
   saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Aç" : "Save & Open",
-  validation: activeLocale.value === "tr" ? "Lütfen gerekli alanlari doldurun." : "Please fill required fields.",
+  validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.",
   failed: activeLocale.value === "tr" ? "Hızlı kayıt oluşturulamadı." : "Quick create failed.",
 }));
 const isInitialLoading = computed(() => leadListResource.loading && rows.value.length === 0);

@@ -207,7 +207,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -268,7 +267,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -331,7 +329,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -389,7 +386,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -480,7 +476,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -571,7 +566,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -623,7 +617,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -675,7 +668,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -727,7 +719,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -779,7 +770,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -831,7 +821,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -883,7 +872,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -935,7 +923,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -971,7 +958,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -1007,7 +993,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -1044,7 +1029,6 @@ describe("CommunicationCenter page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           DataTableCell: genericStub,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,

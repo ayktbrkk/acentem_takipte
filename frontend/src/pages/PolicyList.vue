@@ -7,7 +7,7 @@
       </div>
       <div class="flex gap-2">
         <button class="btn btn-outline btn-sm" type="button" @click="focusPolicySearch">Filtrele</button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">Disa Aktar</button>
+        <button class="btn btn-outline btn-sm" type="button" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">Dışa Aktar</button>
         <button class="btn btn-primary btn-sm" type="button" @click="openQuickPolicyDialog">+ Yeni Poliçe</button>
       </div>
     </div>
@@ -108,7 +108,6 @@ import { usePolicyStore } from "../stores/policy";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
@@ -164,7 +163,7 @@ const copy = {
     presetLabel: "Filtre Şablonu",
     presetDefault: "Standart",
     presetActive: "Aktif Poliçeler",
-    presetExpiring30: "30 Gun Icinde Bitecek",
+    presetExpiring30: "30 Gün İçinde Bitecek",
     presetHighPremium: "Yüksek Prim",
     savePreset: "Kaydet",
     deletePreset: "Sil",
@@ -449,7 +448,7 @@ const quickCreateCommon = computed(() => ({
   cancel: activeLocale.value === "tr" ? "Vazgeç" : "Cancel",
   save: activeLocale.value === "tr" ? "Kaydet" : "Save",
   saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Aç" : "Save & Open",
-  validation: activeLocale.value === "tr" ? "Lütfen gerekli alanlari doldurun." : "Please fill required fields.",
+  validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.",
   failed: activeLocale.value === "tr" ? "Hızlı poliçe oluşturma başarısız oldu." : "Quick policy create failed.",
 }));
 const policyListError = ref("");
