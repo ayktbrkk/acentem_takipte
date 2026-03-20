@@ -1,14 +1,13 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="resetForm">{{ t("reset") }}</button>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    breadcrumb="Veri Yönetimi → Dışa Aktarma"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :show-record-count="false"
+  >
+    <template #actions>
+      <button class="btn btn-outline btn-sm" type="button" @click="resetForm">{{ t("reset") }}</button>
+    </template>
 
     <SectionPanel :title="t('step1Title')" panel-class="surface-card rounded-2xl p-5">
       <div class="grid gap-4 md:grid-cols-3">
@@ -92,17 +91,20 @@
     <p v-if="message" class="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
       {{ message }}
     </p>
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
 import { computed, reactive, ref, unref } from "vue";
 import { useRouter } from "vue-router";
+import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 
 const router = useRouter();
-const authStore = useAuthStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
 
 const copy = {
   tr: {

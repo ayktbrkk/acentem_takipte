@@ -1,63 +1,63 @@
-﻿<template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Ödemeler</p>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <QuickCreateLauncher
-          variant="primary"
-          size="sm"
-          :label="t('newPayment')"
-          @launch="showQuickPaymentDialog = true"
-        />
-        <ActionButton variant="secondary" size="sm" :disabled="paymentsLoading" @click="reloadPayments">
-          {{ t("refresh") }}
-        </ActionButton>
-        <ActionButton
-          variant="secondary"
-          size="sm"
-          :disabled="paymentsLoading"
-          @click="downloadPaymentExport('xlsx')"
-        >
-          {{ t("exportXlsx") }}
-        </ActionButton>
-        <ActionButton
-          variant="primary"
-          size="sm"
-          :disabled="paymentsLoading"
-          @click="downloadPaymentExport('pdf')"
-        >
-          {{ t("exportPdf") }}
-        </ActionButton>
-        <span class="text-sm text-gray-400">{{ formatCount(payments.length) }} kayıt</span>
-      </div>
-    </div>
+<template>
+  <WorkbenchPageLayout
+    breadcrumb="Sigorta Operasyonları → Ödemeler"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(payments.length)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <QuickCreateLauncher
+        variant="primary"
+        size="sm"
+        :label="t('newPayment')"
+        @launch="showQuickPaymentDialog = true"
+      />
+      <ActionButton variant="secondary" size="sm" :disabled="paymentsLoading" @click="reloadPayments">
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton
+        variant="secondary"
+        size="sm"
+        :disabled="paymentsLoading"
+        @click="downloadPaymentExport('xlsx')"
+      >
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton
+        variant="primary"
+        size="sm"
+        :disabled="paymentsLoading"
+        @click="downloadPaymentExport('pdf')"
+      >
+        {{ t("exportPdf") }}
+      </ActionButton>
+    </template>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-        <p class="mini-metric-value">{{ formatCount(paymentSummary.total) }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ formatCount(paymentSummary.total) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryPending") }}</p>
+          <p class="mini-metric-value text-amber-600">{{ formatCount(paymentSummary.pending) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryCollected") }}</p>
+          <p class="mini-metric-value text-green-600">{{ formatCount(paymentSummary.collected) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryOverdue") }}</p>
+          <p class="mini-metric-value text-amber-700">{{ formatCount(paymentSummary.overdue) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotalAmount") }}</p>
+          <p class="mini-metric-value text-slate-900">{{ formatCurrency(paymentSummary.totalAmount) }}</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryPending") }}</p>
-        <p class="mini-metric-value text-amber-600">{{ formatCount(paymentSummary.pending) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryCollected") }}</p>
-        <p class="mini-metric-value text-green-600">{{ formatCount(paymentSummary.collected) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryOverdue") }}</p>
-        <p class="mini-metric-value text-red-600">{{ formatCount(paymentSummary.overdue) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryTotalAmount") }}</p>
-        <p class="mini-metric-value text-slate-900">{{ formatCurrency(paymentSummary.totalAmount) }}</p>
-      </div>
-    </div>
+    </template>
 
     <article class="surface-card rounded-2xl p-5">
       <WorkbenchFilterToolbar
@@ -101,10 +101,10 @@
       </WorkbenchFilterToolbar>
     </article>
 
-    <div v-if="paymentsErrorText" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
-      <p>{{ paymentsErrorText }}</p>
-    </div>
+    <article v-if="paymentsErrorText" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ paymentsErrorText }}</p>
+    </article>
 
     <article class="surface-card rounded-2xl p-5">
       <div class="flex items-center justify-between gap-3">
@@ -116,10 +116,10 @@
       <div v-if="paymentsLoading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
-      <div v-else-if="paymentsErrorText" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700">
-        <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="mt-1 text-sm">{{ paymentsErrorText }}</p>
-      </div>
+      <article v-else-if="paymentsErrorText" class="qc-error-banner mt-4">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ paymentsErrorText }}</p>
+      </article>
       <div v-else-if="payments.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
       </div>
@@ -139,23 +139,26 @@
       config-key="payment"
       :locale="activeLocale"
       :options-map="paymentQuickOptionsMap"
+      :eyebrow="quickPaymentEyebrow"
       :show-save-and-open="false"
       :before-open="prepareQuickPaymentDialog"
       :success-handlers="quickPaymentSuccessHandlers"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
+import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { usePaymentStore } from "../stores/payment";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import EmptyState from "../components/app-shell/EmptyState.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
@@ -167,6 +170,7 @@ const copy = {
   tr: {
     title: "Ödemeler",
     subtitle: "Tahsilat, bekleyen ödeme ve gecikmiş vadeleri izleyin",
+    recordCount: "kayıt",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -201,9 +205,9 @@ const copy = {
     policy: "Poliçe",
     purpose: "Amaç",
     recordId: "Kayıt",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     openRelated: "İlişkili Kaydı Aç",
-    openPaymentDetail: "Ödeme Detayı",
+    openPaymentDetail: "Ödeme Kaydını Aç",
     actions: "Aksiyon",
     inbound: "Tahsilat",
     outbound: "Ödeme",
@@ -235,6 +239,7 @@ const copy = {
   en: {
     title: "Payments",
     subtitle: "Track collection, pending payments, and overdue due dates",
+    recordCount: "records",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -269,9 +274,9 @@ const copy = {
     policy: "Policy",
     purpose: "Purpose",
     recordId: "Record",
-    openDesk: "Open in Desk",
+    openDesk: "Open Desk",
     openRelated: "Open Related",
-    openPaymentDetail: "Payment Detail",
+    openPaymentDetail: "Open Payment Record",
     actions: "Actions",
     inbound: "Inbound",
     outbound: "Outbound",
@@ -306,9 +311,10 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
-const paymentStore = usePaymentStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
+const paymentStore = usePaymentStore(appPinia);
 const route = useRoute();
 const router = useRouter();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
@@ -456,6 +462,7 @@ const paymentQuickOptionsMap = computed(() => ({
   })),
   salesEntities: asArray(resourceValue(paymentQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
 }));
+const quickPaymentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Ödeme" : "Quick Payment"));
 const quickPaymentSuccessHandlers = {
   payment_list: async () => {
     await reloadPayments();

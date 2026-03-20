@@ -1,45 +1,47 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <QuickCreateLauncher
-          variant="primary"
-          size="sm"
-          :label="t('newTask')"
-          @launch="showQuickRenewalDialog = true"
-        />
-        <ActionButton variant="secondary" size="sm" :disabled="renewalsLoading" @click="reloadRenewals">
-          {{ t("refresh") }}
-        </ActionButton>
-        <ActionButton
-          variant="secondary"
-          size="sm"
-          :disabled="renewalsLoading"
-          @click="downloadRenewalExport('xlsx')"
-        >
-          {{ t("exportXlsx") }}
-        </ActionButton>
-        <ActionButton
-          variant="primary"
-          size="sm"
-          :disabled="renewalsLoading"
-          @click="downloadRenewalExport('pdf')"
-        >
-          {{ t("exportPdf") }}
-        </ActionButton>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    breadcrumb="Sigorta Operasyonları → Yenilemeler"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(renewals.length)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <QuickCreateLauncher
+        variant="primary"
+        size="sm"
+        :label="t('newTask')"
+        @launch="showQuickRenewalDialog = true"
+      />
+      <ActionButton variant="secondary" size="sm" :disabled="renewalsLoading" @click="reloadRenewals">
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton
+        variant="secondary"
+        size="sm"
+        :disabled="renewalsLoading"
+        @click="downloadRenewalExport('xlsx')"
+      >
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton
+        variant="primary"
+        size="sm"
+        :disabled="renewalsLoading"
+        @click="downloadRenewalExport('pdf')"
+      >
+        {{ t("exportPdf") }}
+      </ActionButton>
+    </template>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
-      <div v-for="item in renewalSummaryItems" :key="item.key" class="mini-metric">
-        <p class="mini-metric-label">{{ item.label }}</p>
-        <p class="mini-metric-value" :class="item.valueClass">{{ item.value }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div v-for="item in renewalSummaryItems" :key="item.key" class="mini-metric">
+          <p class="mini-metric-label">{{ item.label }}</p>
+          <p class="mini-metric-value" :class="item.valueClass">{{ item.value }}</p>
+        </div>
       </div>
-    </div>
+    </template>
 
     <article class="surface-card rounded-2xl p-5">
       <WorkbenchFilterToolbar
@@ -100,10 +102,10 @@
       </WorkbenchFilterToolbar>
     </article>
 
-    <div v-if="renewalsError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
-      <p>{{ renewalsError }}</p>
-    </div>
+    <article v-if="renewalsError" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ renewalsError }}</p>
+    </article>
 
     <section class="kanban-board">
       <header class="kanban-board-header">
@@ -201,11 +203,12 @@
       config-key="renewal_task"
       :locale="activeLocale"
       :options-map="renewalQuickOptionsMap"
+      :eyebrow="quickRenewalEyebrow"
       :show-save-and-open="false"
       :before-open="prepareQuickRenewalDialog"
       :success-handlers="quickRenewalSuccessHandlers"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -213,8 +216,10 @@ import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
+import { getAppPinia } from "../pinia";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
@@ -228,6 +233,7 @@ const copy = {
   tr: {
     title: "Yenilemeler",
     subtitle: "Bitişe yakın poliçeler ve takip görevleri",
+    recordCount: "kayıt",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -245,7 +251,7 @@ const copy = {
     due: "Termin",
     renewal: "Yenileme",
     actions: "Aksiyon",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     openPolicy: "Poliçeyi Aç",
     markInProgress: "Takibe Al",
     markDone: "Tamamla",
@@ -273,7 +279,7 @@ const copy = {
     dueScope7: "7 gün içinde",
     dueScope30: "30 gün içinde",
     dueScope60: "60 gün içinde",
-    openDetail: "Detaya Git",
+    openDetail: "Yenileme Kaydını Aç",
     columnNew: "Yeni (30+ gün)",
     columnNewHint: "Henüz erken safhadaki yenilemeler",
     columnNotified: "Bildirim Gönderildi",
@@ -299,6 +305,7 @@ const copy = {
   en: {
     title: "Renewals",
     subtitle: "Near-expiry policies and follow-up tasks",
+    recordCount: "records",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -316,7 +323,7 @@ const copy = {
     due: "Due",
     renewal: "Renewal",
     actions: "Actions",
-    openDesk: "Open in Desk",
+    openDesk: "Open Desk",
     openPolicy: "Open Policy",
     markInProgress: "Start Follow-up",
     markDone: "Mark Done",
@@ -344,7 +351,7 @@ const copy = {
     dueScope7: "Due in 7 days",
     dueScope30: "Due in 30 days",
     dueScope60: "Due in 60 days",
-    openDetail: "Open Detail",
+    openDetail: "Open Renewal Record",
     columnNew: "New (30+ days)",
     columnNewHint: "Renewals that are still far from due",
     columnNotified: "Notification Sent",
@@ -373,9 +380,10 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
-const renewalStore = useRenewalStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
+const renewalStore = useRenewalStore(appPinia);
 const route = useRoute();
 const router = useRouter();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
@@ -513,6 +521,7 @@ const renewalQuickOptionsMap = computed(() => ({
     label: row.full_name || row.name,
   })),
 }));
+const quickRenewalEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Yenileme" : "Quick Renewal"));
 const quickRenewalSuccessHandlers = {
   renewal_list: async () => {
     await reloadRenewals();
@@ -534,7 +543,7 @@ const renewalSummaryItems = computed(() => {
       key: "cancelled",
       label: t("metricCancelled"),
       value: String(summary.cancelled || 0),
-      valueClass: "text-rose-700",
+      valueClass: "text-slate-700",
     },
   ];
 });
@@ -653,6 +662,10 @@ function formatDate(value) {
   } catch {
     return value;
   }
+}
+
+function formatCount(value) {
+  return new Intl.NumberFormat(localeCode.value).format(Number(value || 0));
 }
 
 function formatRenewalPremium(amount, currency) {
@@ -1064,6 +1077,6 @@ watch(
 }
 
 .kanban-priority-critical {
-  @apply bg-rose-50 text-rose-700;
+  @apply bg-amber-50 text-amber-700;
 }
 </style>

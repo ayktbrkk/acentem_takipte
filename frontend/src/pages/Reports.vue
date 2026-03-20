@@ -2,6 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
+        <p class="detail-breadcrumb">Kontrol Merkezi / Raporlar</p>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
@@ -15,10 +16,54 @@
         <ActionButton variant="primary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
           {{ t("exportPdf") }}
         </ActionButton>
+        <span class="text-sm text-slate-400">{{ sortedRows.length }} {{ t("recordCount") }}</span>
       </div>
     </div>
 
-    <SectionPanel :title="t('filtersTitle')" :count="activeFilterCount" panel-class="surface-card rounded-2xl p-5">
+    <section class="w-full grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <article
+        v-for="item in summaryItems"
+        :key="item.key"
+        class="mini-metric shadow-sm"
+      >
+        <p class="mini-metric-label">
+          {{ item.label }}
+        </p>
+        <p class="mini-metric-value">
+          {{ item.value }}
+        </p>
+      </article>
+    </section>
+
+    <section v-if="comparisonSummaryItems.length" class="space-y-3">
+      <div class="flex items-center justify-between gap-3">
+        <h3 class="text-sm font-semibold text-slate-900">{{ t("comparisonSummaryTitle") }}</h3>
+        <span class="text-[11px] font-medium text-slate-500">{{ t("comparisonSummaryHint") }}</span>
+      </div>
+      <div class="w-full grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <article
+          v-for="item in comparisonSummaryItems"
+          :key="item.key"
+          class="mini-metric shadow-sm"
+        >
+          <p class="mini-metric-label">
+            {{ item.label }}
+          </p>
+          <p class="mini-metric-value">
+            {{ item.value }}
+          </p>
+          <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-amber-700'">
+            {{ formatComparisonDelta(item.delta, item.previous) }}
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <SectionPanel
+      :title="t('filtersTitle')"
+      :count="`${activeFilterCount} ${t('activeFilters')}`"
+      panel-class="surface-card rounded-2xl p-4"
+    >
       <WorkbenchFilterToolbar
         v-model="presetKey"
         :advanced-label="t('advancedFilters')"
@@ -79,90 +124,95 @@
       </WorkbenchFilterToolbar>
     </SectionPanel>
 
-    <article class="surface-card rounded-xl border border-sky-200 bg-sky-50/80 px-4 py-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="space-y-1">
-          <p class="text-sm font-medium text-sky-800">{{ activeReportLabel }}</p>
-          <p class="text-xs text-sky-700">{{ branchScopeLabel }}</p>
+    <SectionPanel
+      :title="activeReportLabel"
+      :count="sortedRows.length"
+      :meta="branchScopeLabel"
+      panel-class="surface-card rounded-2xl p-5"
+    >
+      <div class="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
+        <span v-if="exportLoading">{{ t("exporting") }}</span>
+      </div>
+
+      <div class="mt-4 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
+          <div class="space-y-1">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("columns") }}</p>
+            <p class="text-xs text-slate-500">{{ t("columnHint") }}</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">
+              {{ columnsSummaryLabel }}
+            </span>
+            <button
+              type="button"
+              class="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-900"
+              @click="showAllColumns"
+            >
+              {{ t("showAllColumns") }}
+            </button>
+          </div>
         </div>
-        <div class="text-right">
-          <p class="text-xs text-sky-700">{{ t("totalRows") }}: {{ sortedRows.length }}</p>
-          <p v-if="exportLoading" class="text-[11px] text-sky-600">{{ t("exporting") }}</p>
+
+        <div
+          class="mt-4 grid gap-3"
+          :class="hiddenColumns.length ? 'xl:grid-cols-2' : 'xl:grid-cols-1'"
+        >
+          <div class="rounded-2xl border border-sky-100 bg-sky-50/60 p-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="space-y-1">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">{{ t("selectedColumns") }}</p>
+                <p class="text-xs text-sky-700/80">{{ t("columnHint") }}</p>
+              </div>
+              <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-sky-700 shadow-sm">
+                {{ visibleColumns.length }}
+              </span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                v-for="column in visibleColumns"
+                :key="`visible-${column}`"
+                type="button"
+                class="report-chip report-chip--active rounded-full"
+                @click="toggleColumn(column)"
+              >
+                <span class="report-chip__dot" />
+                {{ getColumnLabel(column) }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="hiddenColumns.length" class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="space-y-1">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("hiddenColumns") }}</p>
+                <p class="text-xs text-slate-500">{{ t("showAllColumns") }} ile geri açılabilir.</p>
+              </div>
+              <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm">
+                {{ hiddenColumns.length }}
+              </span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                v-for="column in hiddenColumns"
+                :key="`hidden-${column}`"
+                type="button"
+                class="report-chip report-chip--hidden rounded-full"
+                @click="toggleColumn(column)"
+              >
+                {{ getColumnLabel(column) }}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </article>
-
-    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <article
-        v-for="item in summaryItems"
-        :key="item.key"
-        class="surface-card rounded-2xl border border-slate-200 px-4 py-4"
-      >
-        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-          {{ item.label }}
-        </p>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">
-          {{ item.value }}
-        </p>
-      </article>
-    </section>
-
-    <section v-if="comparisonSummaryItems.length" class="space-y-3">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-slate-900">{{ t("comparisonSummaryTitle") }}</h3>
-        <span class="text-[11px] font-medium text-slate-500">{{ t("comparisonSummaryHint") }}</span>
-      </div>
-      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <article
-          v-for="item in comparisonSummaryItems"
-          :key="item.key"
-          class="surface-card rounded-2xl border border-slate-200 px-4 py-4"
-        >
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-            {{ item.label }}
-          </p>
-          <p class="mt-2 text-2xl font-semibold text-slate-900">
-            {{ item.value }}
-          </p>
-          <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-rose-600'">
-            {{ formatComparisonDelta(item.delta, item.previous) }}
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <SectionPanel :title="activeReportLabel" :count="sortedRows.length" panel-class="surface-card rounded-2xl p-5">
-      <div class="mt-4 flex flex-wrap items-center gap-2">
-        <span class="text-xs font-medium text-slate-500">{{ t("columns") }}</span>
-        <button
-          type="button"
-          class="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
-          @click="showAllColumns"
-        >
-          {{ t("showAllColumns") }}
-        </button>
-        <button
-          v-for="column in columns"
-          :key="`toggle-${column}`"
-          type="button"
-          class="rounded-full border px-2.5 py-1 text-xs font-medium transition"
-          :class="
-            isColumnVisible(column)
-              ? 'border-sky-300 bg-sky-50 text-sky-700'
-              : 'border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700'
-          "
-          @click="toggleColumn(column)"
-        >
-          {{ getColumnLabel(column) }}
-        </button>
       </div>
 
       <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
-      <div v-else-if="error" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700">
-        <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="mt-1 text-sm">{{ error }}</p>
+      <div v-else-if="error" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ error }}</p>
       </div>
       <template v-else>
         <div v-if="sortedRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -190,33 +240,36 @@
                 <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
                   {{ formatCellValue(column, row[column]) }}
                 </td>
-              </tr>
-            </tbody>
-          </table>
+                </tr>
+              </tbody>
+            </table>
         </div>
       </template>
     </SectionPanel>
 
-    <ScheduledReportsManager
-      v-if="canManageScheduledReports"
-      :items="scheduledReports"
-      :loading="scheduledLoading"
-      :running="scheduledRunLoading"
-      :locale="activeLocale"
-      :report-catalog="reportCatalog"
-      :active-office-branch="branchStore.requestBranch"
-      @run="runScheduledReports"
-      @save="saveScheduledReport"
-      @remove="removeScheduledReport"
-    />
     <SectionPanel
       v-if="canManageScheduledReports"
-      :title="t('segmentSnapshotTitle')"
-      :meta="t('segmentSnapshotHint')"
-      :show-count="false"
-      panel-class="surface-card rounded-2xl p-5"
+      :title="t('scheduledTitle')"
+      :meta="t('scheduledEmpty')"
+      :count="scheduledReports.length"
+      panel-class="surface-card rounded-2xl p-5 space-y-4"
     >
-      <div class="flex flex-wrap items-center justify-end gap-3">
+      <ScheduledReportsManager
+        :items="scheduledReports"
+        :loading="scheduledLoading"
+        :running="scheduledRunLoading"
+        :locale="activeLocale"
+        :report-catalog="reportCatalog"
+        :active-office-branch="branchStore.requestBranch"
+        @run="runScheduledReports"
+        @save="saveScheduledReport"
+        @remove="removeScheduledReport"
+      />
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+        <div class="space-y-1">
+          <h4 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h4>
+          <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
+        </div>
         <ActionButton
           variant="secondary"
           size="sm"
@@ -238,10 +291,11 @@ import { useRoute, useRouter } from "vue-router";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import EmptyState from "../components/app-shell/EmptyState.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ScheduledReportsManager from "../components/reports/ScheduledReportsManager.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
+import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 
@@ -252,8 +306,9 @@ const props = defineProps({
   },
 });
 
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
 const route = useRoute();
 const router = useRouter();
 const REPORT_LOAD_DEBOUNCE_MS = 300;
@@ -266,6 +321,7 @@ const copy = {
     refresh: "Yenile",
     exportPdf: "PDF",
     exportXlsx: "Excel",
+    recordCount: "kayıt",
     filtersTitle: "Filtreler",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
@@ -309,6 +365,9 @@ const copy = {
     comparisonSummaryTitle: "Dönem Kıyaslaması",
     comparisonSummaryHint: "Seçili aralık, önceki eşit periyot ile karşılaştırılır.",
     columns: "Kolonlar",
+    columnHint: "Seçili kolonlar tabloyu kurar, gizli kolonlar tek dokunuşla açılır.",
+    selectedColumns: "Seçili Kolonlar",
+    hiddenColumns: "Gizli Kolonlar",
     showAllColumns: "Tümünü Göster",
     viewStateError: "Rapor görünümü kaydedilemedi.",
     scheduledSaveError: "Zamanlanmış rapor kaydedilemedi.",
@@ -338,6 +397,7 @@ const copy = {
     refresh: "Refresh",
     exportPdf: "PDF",
     exportXlsx: "Excel",
+    recordCount: "records",
     filtersTitle: "Filters",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
@@ -381,6 +441,9 @@ const copy = {
     comparisonSummaryTitle: "Period Comparison",
     comparisonSummaryHint: "Selected range is compared with the previous equal period",
     columns: "Columns",
+    columnHint: "Selected columns define the table, hidden columns can be restored with one tap.",
+    selectedColumns: "Selected Columns",
+    hiddenColumns: "Hidden Columns",
     showAllColumns: "Show All",
     viewStateError: "Failed to save report view.",
     scheduledSaveError: "Failed to save scheduled report.",
@@ -474,6 +537,9 @@ const columnLabels = {
   status: { tr: "Durum", en: "Status" },
   claim_status: { tr: "Hasar Durumu", en: "Claim Status" },
   assigned_to: { tr: "Atanan Kişi", en: "Assigned To" },
+    issue_date: { tr: "Tanzim Tarihi", en: "Issue Date" },
+  start_date: { tr: "Başlangıç Tarihi", en: "Start Date" },
+  end_date: { tr: "Bitiş Tarihi", en: "End Date" },
   renewal_date: { tr: "Yenileme Tarihi", en: "Renewal Date" },
   due_date: { tr: "Vade Tarihi", en: "Due Date" },
   gross_premium: { tr: "Brüt Prim", en: "Gross Premium" },
@@ -622,6 +688,9 @@ const visibleColumns = computed(() => {
   }
   return columns.value.filter((column) => visibleColumnKeys.value.includes(column));
 });
+
+const hiddenColumns = computed(() => columns.value.filter((column) => !visibleColumns.value.includes(column)));
+const columnsSummaryLabel = computed(() => `${visibleColumns.value.length}/${columns.value.length}`);
 
 const sortedRows = computed(() => {
   if (!sortState.column || !sortState.direction) {

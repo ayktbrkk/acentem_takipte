@@ -1,58 +1,58 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Hasarlar</p>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <QuickCreateLauncher
-          variant="primary"
-          size="sm"
-          :label="t('newClaim')"
-          @launch="showQuickClaimDialog = true"
-        />
-        <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="reloadClaims">
-          {{ t("refresh") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">
-          {{ t("exportXlsx") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">
-          {{ t("exportPdf") }}
-        </ActionButton>
-        <span class="text-sm text-gray-400">{{ claims.length }} {{ t("recordCount") }}</span>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    breadcrumb="Sigorta Operasyonları → Hasarlar"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(claims.length)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <QuickCreateLauncher
+        variant="primary"
+        size="sm"
+        :label="t('newClaim')"
+        @launch="showQuickClaimDialog = true"
+      />
+      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="reloadClaims">
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">
+        {{ t("exportPdf") }}
+      </ActionButton>
+    </template>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-        <p class="mini-metric-value">{{ formatCount(claimSummary.total) }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ formatCount(claimSummary.total) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryOpen") }}</p>
+          <p class="mini-metric-value text-brand-600">{{ formatCount(claimSummary.open) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryApproved") }}</p>
+          <p class="mini-metric-value text-amber-600">{{ formatCount(claimSummary.approved) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryPaid") }}</p>
+          <p class="mini-metric-value text-green-600">{{ formatCount(claimSummary.paid) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryReservePaid") }}</p>
+          <p class="mini-metric-value text-slate-900">{{ claimSummary.reserveVsPaid }}</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryOpen") }}</p>
-        <p class="mini-metric-value text-brand-600">{{ formatCount(claimSummary.open) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryApproved") }}</p>
-        <p class="mini-metric-value text-amber-600">{{ formatCount(claimSummary.approved) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryPaid") }}</p>
-        <p class="mini-metric-value text-green-600">{{ formatCount(claimSummary.paid) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryReservePaid") }}</p>
-        <p class="mini-metric-value text-slate-900">{{ claimSummary.reserveVsPaid }}</p>
-      </div>
-    </div>
+    </template>
 
-    <div v-if="claimsErrorText" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
-      <p>{{ claimsErrorText }}</p>
-    </div>
+    <article v-if="claimsErrorText" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ claimsErrorText }}</p>
+    </article>
 
     <SectionPanel
       :title="t('filtersTitle')"
@@ -99,11 +99,12 @@
       config-key="ownership_assignment"
       :locale="activeLocale"
       :options-map="claimQuickOptionsMap"
+      :eyebrow="ownershipAssignmentEyebrow"
       :show-save-and-open="false"
       :before-open="prepareOwnershipAssignmentDialog"
       :success-handlers="ownershipAssignmentSuccessHandlers"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -120,6 +121,7 @@ import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import QuickCreateClaim from "../components/QuickCreateClaim.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
@@ -128,7 +130,9 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
+import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
+import { getAppPinia } from "../pinia";
 import { subtleFact } from "../utils/factItems";
 import { openTabularExport } from "../utils/listExport";
 
@@ -175,9 +179,9 @@ const copy = {
     viewClaimFile: "Dosya Görüntüle",
     createPayment: "Ödeme Yap",
     rejectReasonPrompt: "Red sebebini girin",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     openPolicy: "Poliçeyi Aç",
-    openClaimDetail: "Hasar Detayı",
+    openClaimDetail: "Hasar Kaydını Aç",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
@@ -253,9 +257,9 @@ const copy = {
     viewClaimFile: "View File",
     createPayment: "Create Payment",
     rejectReasonPrompt: "Enter rejection reason",
-    openDesk: "Open in Desk",
+    openDesk: "Open Desk",
     openPolicy: "Open Policy",
-    openClaimDetail: "Claim Detail",
+    openClaimDetail: "Open Claim Record",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
@@ -295,11 +299,17 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
-const claimStore = useClaimStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
+const claimStore = useClaimStore(appPinia);
 const route = useRoute();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
+const ownershipAssignmentEyebrow = computed(
+  () =>
+    getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) ||
+    (activeLocale.value === "tr" ? "Hızlı Atama" : "Quick Assignment")
+);
 
 function buildOfficeBranchLookupFilters() {
   const officeBranch = branchStore.requestBranch || "";

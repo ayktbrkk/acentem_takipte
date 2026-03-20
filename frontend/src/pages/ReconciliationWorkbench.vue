@@ -2,6 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
+        <p class="detail-breadcrumb">Kontrol Merkezi / Mutabakat</p>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
@@ -40,10 +41,11 @@
         >
           {{ t("exportPdf") }}
         </ActionButton>
+        <span class="text-sm text-slate-400">{{ rows.length }} {{ t("recordCount") }}</span>
       </div>
     </div>
 
-    <SectionPanel :title="t('filtersTitle')" :meta="t('subtitle')" :show-count="false">
+    <SectionPanel :title="t('filtersTitle')" :count="`${activeFilterCount} ${t('activeFilters')}`" :meta="t('subtitle')">
       <WorkbenchFilterToolbar
         v-model="presetKey"
         :advanced-label="t('advancedFilters')"
@@ -98,14 +100,15 @@
       </WorkbenchFilterToolbar>
     </SectionPanel>
 
-    <div v-if="operationError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-      {{ operationError }}
+    <div v-if="operationError" class="qc-error-banner" role="alert" aria-live="polite">
+      <p class="qc-error-banner__text">{{ operationError }}</p>
     </div>
 
     <Dialog v-model="showImportDialog" :options="{ title: t('importStatementTitle'), size: 'xl' }">
       <template #body-content>
         <QuickCreateDialogShell
           :error="importError"
+          :eyebrow="importDialogEyebrow"
           :subtitle="t('importStatementSubtitle')"
           :loading="importLoading"
           :show-save-and-open="false"
@@ -173,7 +176,7 @@
       </template>
     </Dialog>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+    <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
       <div class="mini-metric">
         <p class="mini-metric-label">Toplam Kayıt</p>
         <p class="mini-metric-value">{{ reconciliationSummary.total }}</p>
@@ -188,7 +191,7 @@
       </div>
       <div class="mini-metric">
         <p class="mini-metric-label">Uyumsuzluk</p>
-        <p class="mini-metric-value text-rose-600">{{ reconciliationSummary.mismatch }}</p>
+        <p class="mini-metric-value text-amber-700">{{ reconciliationSummary.mismatch }}</p>
       </div>
       <div class="mini-metric">
         <p class="mini-metric-label">Toplam Tutar Farkı</p>
@@ -238,7 +241,7 @@
       </ul>
     </SectionPanel>
 
-    <SectionPanel :title="t('reconciliationListTitle')" :meta="t('subtitle')" :show-count="false">
+    <SectionPanel :title="t('reconciliationListTitle')" :count="reconciliationListRows.length" :meta="t('subtitle')">
       <template #trailing>
         <p class="text-xs text-slate-500">{{ t("showing") }} {{ reconciliationListRows.length }} / {{ rows.length }}</p>
       </template>
@@ -246,9 +249,9 @@
       <div v-if="workbenchLoading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
-      <div v-else-if="workbenchErrorText" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700">
-        <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="mt-1 text-sm">{{ workbenchErrorText }}</p>
+      <div v-else-if="workbenchErrorText" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ workbenchErrorText }}</p>
       </div>
       <div v-else-if="rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
@@ -268,6 +271,7 @@
       <template #body-content>
         <QuickCreateDialogShell
           :error="actionDialogError"
+          :eyebrow="actionDialogEyebrow"
           :subtitle="reconciliationActionDialogSubtitle"
           :loading="actionDialogLoading"
           :show-save-and-open="false"
@@ -309,6 +313,7 @@ import { computed, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
+import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useAccountingStore } from "../stores/accounting";
@@ -334,6 +339,7 @@ const copy = {
   tr: {
     title: "Mutabakat Masası",
     subtitle: "Muhasebe uyumsuzluklarını izleyin, eşleştirin ve kapatın",
+    recordCount: "kayıt",
     importStatement: "Ekstre İçe Aktar",
     importStatementTitle: "Ekstre İçe Aktarma Önizlemesi",
     importStatementSubtitle: "CSV içeriğini yapıştır, poliçe veya ödeme eşleşmelerini önizle.",
@@ -448,6 +454,7 @@ const copy = {
   en: {
     title: "Reconciliation Workbench",
     subtitle: "Track, match and close accounting mismatches",
+    recordCount: "records",
     importStatement: "Import Statement",
     importStatementTitle: "Statement Import Preview",
     importStatementSubtitle: "Paste CSV content and preview policy or payment matches.",
@@ -560,11 +567,14 @@ const copy = {
     mismatchOther: "Other",
   },
 };
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
 const accountingStore = useAccountingStore();
 const route = useRoute();
 const router = useRouter();
+const importDialogEyebrow = computed(() => (unref(authStore.locale) === "tr" ? "Ekstre Önizleme" : "Statement Preview"));
+const actionDialogEyebrow = computed(() => (unref(authStore.locale) === "tr" ? "Mutabakat Aksiyonu" : "Reconciliation Action"));
 
 function t(key) {
   const locale = unref(authStore.locale) || "en";
@@ -699,7 +709,7 @@ const reconciliationListRows = computed(() =>
       totalPremium: formatMoney(row?.local_amount_try || 0),
       companyStatement: formatMoney(row?.external_amount_try || 0),
       difference: formatMoney(Math.abs(difference)),
-      difference_class: difference > 0 ? "text-green-600" : difference < 0 ? "text-red-600" : "text-gray-600",
+      difference_class: difference > 0 ? "text-green-600" : difference < 0 ? "text-amber-700" : "text-gray-600",
       status: normalizeReconciliationStatus(row?.status, difference),
       _actions: buildReconciliationRowActions(row),
     };
@@ -712,7 +722,7 @@ const actionDialogNotes = ref("");
 const actionDialogLoading = ref(false);
 const actionDialogError = ref("");
 const actionDialogLabels = computed(() => ({
-  cancel: unref(authStore.locale) === "tr" ? "Vazgeç" : "Cancel",
+  cancel: unref(authStore.locale) === "tr" ? "İptal" : "Cancel",
   save:
     actionDialogMode.value === "Matched"
       ? t("actionSaveResolve")
@@ -731,7 +741,7 @@ const reconciliationActionDialogSubtitle = computed(() => {
   return t("actionNoteSubtitle");
 });
 const importDialogLabels = computed(() => ({
-  cancel: unref(authStore.locale) === "tr" ? "Vazgeç" : "Cancel",
+  cancel: unref(authStore.locale) === "tr" ? "İptal" : "Cancel",
   save: unref(authStore.locale) === "tr" ? "Önizleme Oluştur" : "Build Preview",
 }));
 
@@ -1104,7 +1114,7 @@ function buildReconciliationRowActions(row) {
   const actions = [];
   actions.push({
     key: `${row?.name}-detail`,
-    label: "Detay",
+    label: "Kayıt Detayı",
     variant: "primary",
     onClick: () => openReconciliationDetail(row),
   });
