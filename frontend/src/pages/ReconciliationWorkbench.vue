@@ -45,6 +45,33 @@
       </div>
     </div>
 
+    <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Kayıt</p>
+        <p class="mini-metric-value">{{ reconciliationSummary.total }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Eşleşti</p>
+        <p class="mini-metric-value text-emerald-600">{{ reconciliationSummary.matched }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Beklemede</p>
+        <p class="mini-metric-value text-amber-600">{{ reconciliationSummary.pending }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Uyumsuzluk</p>
+        <p class="mini-metric-value text-amber-700">{{ reconciliationSummary.mismatch }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Tutar Farkı</p>
+        <p class="mini-metric-value text-sky-600">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
+      </div>
+    </div>
+
+    <div v-if="operationError" class="qc-error-banner" role="alert" aria-live="polite">
+      <p class="qc-error-banner__text">{{ operationError }}</p>
+    </div>
+
     <SectionPanel :title="t('filtersTitle')" :count="`${activeFilterCount} ${t('activeFilters')}`" :meta="t('subtitle')">
       <WorkbenchFilterToolbar
         v-model="presetKey"
@@ -99,10 +126,6 @@
         </template>
       </WorkbenchFilterToolbar>
     </SectionPanel>
-
-    <div v-if="operationError" class="qc-error-banner" role="alert" aria-live="polite">
-      <p class="qc-error-banner__text">{{ operationError }}</p>
-    </div>
 
     <Dialog v-model="showImportDialog" :options="{ title: t('importStatementTitle'), size: 'xl' }">
       <template #body-content>
@@ -175,29 +198,6 @@
         </QuickCreateDialogShell>
       </template>
     </Dialog>
-
-    <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Kayıt</p>
-        <p class="mini-metric-value">{{ reconciliationSummary.total }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Eşleşti</p>
-        <p class="mini-metric-value text-emerald-600">{{ reconciliationSummary.matched }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Beklemede</p>
-        <p class="mini-metric-value text-amber-600">{{ reconciliationSummary.pending }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Uyumsuzluk</p>
-        <p class="mini-metric-value text-amber-700">{{ reconciliationSummary.mismatch }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Tutar Farkı</p>
-        <p class="mini-metric-value text-sky-600">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
-      </div>
-    </div>
 
     <SectionPanel :title="t('collectionPreviewTitle')" :count="collectionPreviewRows.length">
       <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>

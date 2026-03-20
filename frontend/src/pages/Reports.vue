@@ -24,12 +24,13 @@
       <article
         v-for="item in summaryItems"
         :key="item.key"
-        class="mini-metric shadow-sm"
+        class="mini-metric shadow-sm border border-slate-200 bg-white/95"
+        :class="item.cardClass"
       >
         <p class="mini-metric-label">
           {{ item.label }}
         </p>
-        <p class="mini-metric-value">
+        <p class="mini-metric-value" :class="item.valueClass">
           {{ item.value }}
         </p>
       </article>
@@ -44,12 +45,13 @@
         <article
           v-for="item in comparisonSummaryItems"
           :key="item.key"
-          class="mini-metric shadow-sm"
+          class="mini-metric shadow-sm border border-slate-200 bg-white/95"
+          :class="item.cardClass"
         >
           <p class="mini-metric-label">
             {{ item.label }}
           </p>
-          <p class="mini-metric-value">
+          <p class="mini-metric-value" :class="item.valueClass">
             {{ item.value }}
           </p>
           <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-amber-700'">
@@ -692,6 +694,35 @@ const visibleColumns = computed(() => {
 const hiddenColumns = computed(() => columns.value.filter((column) => !visibleColumns.value.includes(column)));
 const columnsSummaryLabel = computed(() => `${visibleColumns.value.length}/${columns.value.length}`);
 
+const metricToneClasses = {
+  rows: "text-slate-900",
+  gross_premium: "text-sky-700",
+  commission: "text-emerald-700",
+  paid_amount: "text-amber-700",
+  active_policies: "text-emerald-700",
+  conversion_rate: "text-sky-700",
+  open_renewals: "text-amber-700",
+  loyal_customers: "text-slate-900",
+  claim_customers: "text-amber-700",
+  matched_customers: "text-emerald-700",
+  created_drafts: "text-sky-700",
+  successful_deliveries: "text-emerald-700",
+  open_reconciliation: "text-amber-700",
+  difference_amount: "text-sky-700",
+  resolved_items: "text-emerald-700",
+  open_claims: "text-amber-700",
+  rejected_claims: "text-amber-700",
+  successful_notifications: "text-emerald-700",
+};
+const buildMetricItem = (key, label, value, extra = {}) => ({
+  key,
+  label,
+  value,
+  valueClass: metricToneClasses[key] || "text-slate-900",
+  cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm",
+  ...extra,
+});
+
 const sortedRows = computed(() => {
   if (!sortState.column || !sortState.direction) {
     return rows.value;
@@ -729,160 +760,74 @@ const summaryItems = computed(() => {
 
   if (filters.reportKey === "agent_performance") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "gross_premium",
-        label: t("summaryGrossPremium"),
-        value: numberFormatter.value.format(numericTotal(["total_gross_premium"])),
-      },
-      {
-        key: "commission",
-        label: t("summaryCommission"),
-        value: numberFormatter.value.format(numericTotal(["total_commission"])),
-      },
-      {
-        key: "conversion_rate",
-        label: t("summaryAvgConversionRate"),
-        value: `%${percentFormatter.value.format(avgNumeric("offer_conversion_rate"))}`,
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
+      buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["total_commission"]))),
+      buildMetricItem("conversion_rate", t("summaryAvgConversionRate"), `%${percentFormatter.value.format(avgNumeric("offer_conversion_rate"))}`),
     ];
   }
 
   if (filters.reportKey === "customer_segmentation") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "total_premium",
-        label: t("summaryGrossPremium"),
-        value: numberFormatter.value.format(numericTotal(["total_premium"])),
-      },
-      {
-        key: "active_policies",
-        label: t("summaryActivePolicies"),
-        value: numberFormatter.value.format(numericTotal(["active_policy_count"])),
-      },
-      {
-        key: "claim_customers",
-        label: t("summaryClaimCustomers"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => String(row?.claim_history_segment || "") === "HAS_CLAIM").length,
-        ),
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_premium"]))),
+      buildMetricItem("active_policies", t("summaryActivePolicies"), numberFormatter.value.format(numericTotal(["active_policy_count"]))),
+      buildMetricItem(
+        "claim_customers",
+        t("summaryClaimCustomers"),
+        numberFormatter.value.format(rows.value.filter((row) => String(row?.claim_history_segment || "") === "HAS_CLAIM").length),
+      ),
     ];
   }
 
   if (filters.reportKey === "communication_operations") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "matched_customers",
-        label: t("summaryMatchedCustomers"),
-        value: numberFormatter.value.format(numericTotal(["matched_customer_count"])),
-      },
-      {
-        key: "created_drafts",
-        label: t("summaryCreatedDrafts"),
-        value: numberFormatter.value.format(numericTotal(["sent_count"])),
-      },
-      {
-        key: "successful_deliveries",
-        label: t("summarySuccessfulDeliveries"),
-        value: numberFormatter.value.format(numericTotal(["sent_outbox_count"])),
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem("matched_customers", t("summaryMatchedCustomers"), numberFormatter.value.format(numericTotal(["matched_customer_count"]))),
+      buildMetricItem("created_drafts", t("summaryCreatedDrafts"), numberFormatter.value.format(numericTotal(["sent_count"]))),
+      buildMetricItem("successful_deliveries", t("summarySuccessfulDeliveries"), numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
     ];
   }
 
   if (filters.reportKey === "reconciliation_operations") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "open_reconciliation",
-        label: t("summaryOpenReconciliation"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => String(row?.status || "") === "Open").length,
-        ),
-      },
-      {
-        key: "difference_amount",
-        label: t("summaryDifferenceAmount"),
-        value: numberFormatter.value.format(numericTotal(["difference_try"])),
-      },
-      {
-        key: "resolved_items",
-        label: t("summaryResolvedItems"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length,
-        ),
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem(
+        "open_reconciliation",
+        t("summaryOpenReconciliation"),
+        numberFormatter.value.format(rows.value.filter((row) => String(row?.status || "") === "Open").length),
+      ),
+      buildMetricItem("difference_amount", t("summaryDifferenceAmount"), numberFormatter.value.format(numericTotal(["difference_try"]))),
+      buildMetricItem(
+        "resolved_items",
+        t("summaryResolvedItems"),
+        numberFormatter.value.format(rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length),
+      ),
     ];
   }
 
   if (filters.reportKey === "claims_operations") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "open_claims",
-        label: t("summaryOpenClaims"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length,
-        ),
-      },
-      {
-        key: "rejected_claims",
-        label: t("summaryRejectedClaims"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length,
-        ),
-      },
-      {
-        key: "successful_notifications",
-        label: t("summarySuccessfulNotifications"),
-        value: numberFormatter.value.format(numericTotal(["sent_outbox_count"])),
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem(
+        "open_claims",
+        t("summaryOpenClaims"),
+        numberFormatter.value.format(rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length),
+      ),
+      buildMetricItem(
+        "rejected_claims",
+        t("summaryRejectedClaims"),
+        numberFormatter.value.format(rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length),
+      ),
+      buildMetricItem("successful_notifications", t("summarySuccessfulNotifications"), numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
     ];
   }
 
   return [
-    {
-      key: "rows",
-      label: t("summaryRows"),
-      value: numberFormatter.value.format(rows.value.length),
-    },
-    {
-      key: "gross_premium",
-      label: t("summaryGrossPremium"),
-      value: numberFormatter.value.format(numericTotal(["gross_premium", "total_gross_premium", "total_premium"])),
-    },
-    {
-      key: "commission",
-      label: t("summaryCommission"),
-      value: numberFormatter.value.format(numericTotal(["commission_amount", "total_commission"])),
-    },
-    {
-      key: "paid_amount",
-      label: t("summaryPaidAmount"),
-      value: numberFormatter.value.format(numericTotal(["paid_amount", "approved_amount"])),
-    },
+    buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+    buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["gross_premium", "total_gross_premium", "total_premium"]))),
+    buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["commission_amount", "total_commission"]))),
+    buildMetricItem("paid_amount", t("summaryPaidAmount"), numberFormatter.value.format(numericTotal(["paid_amount", "approved_amount"]))),
   ];
 });
 
@@ -911,9 +856,9 @@ const comparisonSummaryItems = computed(() => {
     const currentDeliveries = numericTotal(["sent_outbox_count"]);
     const previousDeliveries = numericTotalFromRows(comparisonRows.value, ["sent_outbox_count"]);
     return [
-      { key: "cmp_matched", label: t("summaryMatchedCustomers"), value: numberFormatter.value.format(currentMatched), previous: previousMatched, delta: currentMatched - previousMatched },
-      { key: "cmp_drafts", label: t("summaryCreatedDrafts"), value: numberFormatter.value.format(currentDrafts), previous: previousDrafts, delta: currentDrafts - previousDrafts },
-      { key: "cmp_deliveries", label: t("summarySuccessfulDeliveries"), value: numberFormatter.value.format(currentDeliveries), previous: previousDeliveries, delta: currentDeliveries - previousDeliveries },
+      { key: "cmp_matched", label: t("summaryMatchedCustomers"), value: numberFormatter.value.format(currentMatched), previous: previousMatched, delta: currentMatched - previousMatched, valueClass: metricToneClasses.matched_customers, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_drafts", label: t("summaryCreatedDrafts"), value: numberFormatter.value.format(currentDrafts), previous: previousDrafts, delta: currentDrafts - previousDrafts, valueClass: metricToneClasses.created_drafts, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_deliveries", label: t("summarySuccessfulDeliveries"), value: numberFormatter.value.format(currentDeliveries), previous: previousDeliveries, delta: currentDeliveries - previousDeliveries, valueClass: metricToneClasses.successful_deliveries, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
     ];
   }
 
@@ -925,9 +870,9 @@ const comparisonSummaryItems = computed(() => {
     const currentResolved = rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length;
     const previousResolved = comparisonRows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length;
     return [
-      { key: "cmp_open", label: t("summaryOpenReconciliation"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen },
-      { key: "cmp_difference", label: t("summaryDifferenceAmount"), value: numberFormatter.value.format(currentDiff), previous: previousDiff, delta: currentDiff - previousDiff },
-      { key: "cmp_resolved", label: t("summaryResolvedItems"), value: numberFormatter.value.format(currentResolved), previous: previousResolved, delta: currentResolved - previousResolved },
+      { key: "cmp_open", label: t("summaryOpenReconciliation"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen, valueClass: metricToneClasses.open_reconciliation, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_difference", label: t("summaryDifferenceAmount"), value: numberFormatter.value.format(currentDiff), previous: previousDiff, delta: currentDiff - previousDiff, valueClass: metricToneClasses.difference_amount, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_resolved", label: t("summaryResolvedItems"), value: numberFormatter.value.format(currentResolved), previous: previousResolved, delta: currentResolved - previousResolved, valueClass: metricToneClasses.resolved_items, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
     ];
   }
 
@@ -939,9 +884,9 @@ const comparisonSummaryItems = computed(() => {
     const currentNotifications = numericTotal(["sent_outbox_count"]);
     const previousNotifications = numericTotalFromRows(comparisonRows.value, ["sent_outbox_count"]);
     return [
-      { key: "cmp_claim_open", label: t("summaryOpenClaims"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen },
-      { key: "cmp_claim_rejected", label: t("summaryRejectedClaims"), value: numberFormatter.value.format(currentRejected), previous: previousRejected, delta: currentRejected - previousRejected },
-      { key: "cmp_claim_notifications", label: t("summarySuccessfulNotifications"), value: numberFormatter.value.format(currentNotifications), previous: previousNotifications, delta: currentNotifications - previousNotifications },
+      { key: "cmp_claim_open", label: t("summaryOpenClaims"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen, valueClass: metricToneClasses.open_claims, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_claim_rejected", label: t("summaryRejectedClaims"), value: numberFormatter.value.format(currentRejected), previous: previousRejected, delta: currentRejected - previousRejected, valueClass: metricToneClasses.rejected_claims, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_claim_notifications", label: t("summarySuccessfulNotifications"), value: numberFormatter.value.format(currentNotifications), previous: previousNotifications, delta: currentNotifications - previousNotifications, valueClass: metricToneClasses.successful_notifications, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
     ];
   }
 
