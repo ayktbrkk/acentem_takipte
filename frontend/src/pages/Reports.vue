@@ -251,7 +251,6 @@
       :title="t('scheduledTitle')"
       :meta="t('scheduledEmpty')"
       :count="scheduledReports.length"
-      panel-class="surface-card rounded-2xl p-5 space-y-4"
     >
       <ScheduledReportsManager
         :items="scheduledReports"
