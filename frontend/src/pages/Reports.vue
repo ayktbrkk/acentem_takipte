@@ -263,18 +263,18 @@
         @save="saveScheduledReport"
         @remove="removeScheduledReport"
       />
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+      <div class="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
         <div class="space-y-1">
           <h4 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h4>
           <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
         </div>
         <button
-        class="btn btn-sm"
-        type="button"
-        data-testid="run-segment-snapshot-job"
-        :disabled="snapshotRunLoading"
-        @click="runCustomerSegmentSnapshots"
->
+          class="btn btn-sm"
+          type="button"
+          data-testid="run-segment-snapshot-job"
+          :disabled="snapshotRunLoading"
+          @click="runCustomerSegmentSnapshots"
+        >
           {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
         </button>
       </div>
