@@ -2,11 +2,16 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Kontrol Merkezi / Raporlar</p>
+        <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
+        <div class="mt-1.5 flex flex-wrap items-center gap-2">
+          <span class="copy-tag">{{ activeReportLabel }}</span>
+          <span class="copy-tag">{{ branchScopeLabel }}</span>
+          <span v-if="activeFilterCount" class="copy-tag">{{ activeFilterCount }} {{ t("activeFilters") }}</span>
+        </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="loadReport">
           {{ t("refresh") }}
         </button>
@@ -19,266 +24,261 @@
       </div>
     </div>
 
-    <section class="w-full grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <article
-        v-for="item in summaryItems"
-        :key="item.key"
-        class="mini-metric shadow-sm border border-slate-200 bg-white/95"
-        :class="item.cardClass"
-      >
-        <p class="mini-metric-label">
-          {{ item.label }}
-        </p>
-        <p class="mini-metric-value" :class="item.valueClass">
-          {{ item.value }}
-        </p>
-      </article>
-    </section>
+    <HeroStrip :cells="heroSummaryCells" />
 
-    <section v-if="comparisonSummaryItems.length" class="space-y-3">
-      <div class="flex items-center justify-between gap-3">
-        <h3 class="text-sm font-semibold text-slate-900">{{ t("comparisonSummaryTitle") }}</h3>
-        <span class="text-[11px] font-medium text-slate-500">{{ t("comparisonSummaryHint") }}</span>
-      </div>
-      <div class="w-full grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <article
-          v-for="item in comparisonSummaryItems"
-          :key="item.key"
-          class="mini-metric shadow-sm border border-slate-200 bg-white/95"
-          :class="item.cardClass"
+    <div class="detail-body">
+      <div class="detail-main">
+        <SectionPanel
+          v-if="comparisonSummaryItems.length"
+          :title="t('comparisonSummaryTitle')"
+          :meta="t('comparisonSummaryHint')"
+          :count="comparisonSummaryItems.length"
         >
-          <p class="mini-metric-label">
-            {{ item.label }}
-          </p>
-          <p class="mini-metric-value" :class="item.valueClass">
-            {{ item.value }}
-          </p>
-          <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-amber-700'">
-            {{ formatComparisonDelta(item.delta, item.previous) }}
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <SectionPanel
-      :title="t('filtersTitle')"
-      :count="`${activeFilterCount} ${t('activeFilters')}`"
-    >
-      <WorkbenchFilterToolbar
-        v-model="presetKey"
-        :advanced-label="t('advancedFilters')"
-        :collapse-label="t('hideAdvancedFilters')"
-        :active-count="activeFilterCount"
-        :active-count-label="t('activeFilters')"
-        :preset-label="t('presetLabel')"
-        :preset-options="presetOptions"
-        :can-delete-preset="canDeletePreset"
-        :save-label="t('savePreset')"
-        :delete-label="t('deletePreset')"
-        :apply-label="t('applyFilters')"
-        :reset-label="t('clearFilters')"
-        @preset-change="onPresetChange"
-        @preset-save="savePreset"
-        @preset-delete="deletePreset"
-        @apply="loadReport"
-        @reset="resetFilters"
-      >
-        <select v-model="filters.reportKey" class="input">
-          <option v-for="option in reportOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        <input v-model="filters.fromDate" class="input" type="date" />
-        <input v-model="filters.toDate" class="input" type="date" />
-
-        <template #advanced>
-          <input
-            v-if="isFilterVisible('branch')"
-            v-model.trim="filters.branch"
-            class="input"
-            type="search"
-            :placeholder="t('branchFilter')"
-          />
-          <input
-            v-if="isFilterVisible('insuranceCompany')"
-            v-model.trim="filters.insuranceCompany"
-            class="input"
-            type="search"
-            :placeholder="t('companyFilter')"
-          />
-          <input
-            v-if="isFilterVisible('salesEntity')"
-            v-model.trim="filters.salesEntity"
-            class="input"
-            type="search"
-            :placeholder="t('salesEntityFilter')"
-          />
-          <input
-            v-if="isFilterVisible('status')"
-            v-model.trim="filters.status"
-            class="input"
-            type="search"
-            :placeholder="t('statusFilter')"
-          />
-        </template>
-      </WorkbenchFilterToolbar>
-    </SectionPanel>
-
-    <SectionPanel
-      :title="activeReportLabel"
-      :count="sortedRows.length"
-      :meta="branchScopeLabel"
-    >
-      <div class="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
-        <span v-if="exportLoading">{{ t("exporting") }}</span>
-      </div>
-
-      <div class="mt-4 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
-          <div class="space-y-1">
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("columns") }}</p>
-            <p class="text-xs text-slate-500">{{ t("columnHint") }}</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">
-              {{ columnsSummaryLabel }}
-            </span>
-            <button
-              type="button"
-              class="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-900"
-              @click="showAllColumns"
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <article
+              v-for="item in comparisonSummaryItems"
+              :key="item.key"
+              class="mini-metric shadow-sm border border-slate-200 bg-white/95"
+              :class="item.cardClass"
             >
-              {{ t("showAllColumns") }}
+              <p class="mini-metric-label">
+                {{ item.label }}
+              </p>
+              <p class="mini-metric-value" :class="item.valueClass">
+                {{ item.value }}
+              </p>
+              <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-amber-700'">
+                {{ formatComparisonDelta(item.delta, item.previous) }}
+              </p>
+            </article>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel
+          :title="activeReportLabel"
+          :count="sortedRows.length"
+          :meta="branchScopeLabel"
+        >
+          <div class="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
+            <span>{{ t("columns") }}: {{ columnsSummaryLabel }}</span>
+            <span v-if="exportLoading">{{ t("exporting") }}</span>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
+            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
+              <div class="space-y-1">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("columns") }}</p>
+                <p class="text-xs text-slate-500">{{ t("columnHint") }}</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">
+                  {{ columnsSummaryLabel }}
+                </span>
+                <button
+                  type="button"
+                  class="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-900"
+                  @click="showAllColumns"
+                >
+                  {{ t("showAllColumns") }}
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="mt-4 grid gap-3"
+              :class="hiddenColumns.length ? 'xl:grid-cols-2' : 'xl:grid-cols-1'"
+            >
+              <div class="rounded-2xl border border-sky-100 bg-sky-50/60 p-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">{{ t("selectedColumns") }}</p>
+                    <p class="text-xs text-sky-700/80">{{ t("columnHint") }}</p>
+                  </div>
+                  <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-sky-700 shadow-sm">
+                    {{ visibleColumns.length }}
+                  </span>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button
+                    v-for="column in visibleColumns"
+                    :key="`visible-${column}`"
+                    type="button"
+                    class="report-chip report-chip--active rounded-full"
+                    @click="toggleColumn(column)"
+                  >
+                    <span class="report-chip__dot" />
+                    {{ getColumnLabel(column) }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="hiddenColumns.length" class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="space-y-1">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("hiddenColumns") }}</p>
+                    <p class="text-xs text-slate-500">{{ t("showAllColumns") }} ile geri açılabilir.</p>
+                  </div>
+                  <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm">
+                    {{ hiddenColumns.length }}
+                  </span>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button
+                    v-for="column in hiddenColumns"
+                    :key="`hidden-${column}`"
+                    type="button"
+                    class="report-chip report-chip--hidden rounded-full"
+                    @click="toggleColumn(column)"
+                  >
+                    {{ getColumnLabel(column) }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+            {{ t("loading") }}
+          </div>
+          <div v-else-if="error" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
+            <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+            <p class="qc-error-banner__text mt-1">{{ error }}</p>
+          </div>
+          <template v-else>
+            <div v-if="sortedRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
+            </div>
+
+            <div class="mt-4 overflow-auto">
+              <table class="at-table">
+                <thead>
+                  <tr class="at-table-head-row">
+                    <th v-for="column in visibleColumns" :key="column" class="at-table-head-cell">
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-1 text-left transition hover:text-slate-900"
+                        @click="toggleSort(column)"
+                      >
+                        <span>{{ getColumnLabel(column) }}</span>
+                        <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, rowIndex) in sortedRows" :key="row.name || rowIndex" class="at-table-row">
+                    <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
+                      {{ formatCellValue(column, row[column]) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
+        </SectionPanel>
+      </div>
+
+      <aside class="detail-sidebar space-y-4">
+        <SectionPanel
+          :title="t('filtersTitle')"
+          :count="`${activeFilterCount} ${t('activeFilters')}`"
+          :meta="activeReportLabel"
+        >
+          <WorkbenchFilterToolbar
+            v-model="presetKey"
+            :advanced-label="t('advancedFilters')"
+            :collapse-label="t('hideAdvancedFilters')"
+            :active-count="activeFilterCount"
+            :active-count-label="t('activeFilters')"
+            :preset-label="t('presetLabel')"
+            :preset-options="presetOptions"
+            :can-delete-preset="canDeletePreset"
+            :save-label="t('savePreset')"
+            :delete-label="t('deletePreset')"
+            :apply-label="t('applyFilters')"
+            :reset-label="t('clearFilters')"
+            @preset-change="onPresetChange"
+            @preset-save="savePreset"
+            @preset-delete="deletePreset"
+            @apply="loadReport"
+            @reset="resetFilters"
+          >
+            <select v-model="filters.reportKey" class="input">
+              <option v-for="option in reportOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+            <input v-model="filters.fromDate" class="input" type="date" />
+            <input v-model="filters.toDate" class="input" type="date" />
+
+            <template #advanced>
+              <input
+                v-if="isFilterVisible('branch')"
+                v-model.trim="filters.branch"
+                class="input"
+                type="search"
+                :placeholder="t('branchFilter')"
+              />
+              <input
+                v-if="isFilterVisible('insuranceCompany')"
+                v-model.trim="filters.insuranceCompany"
+                class="input"
+                type="search"
+                :placeholder="t('companyFilter')"
+              />
+              <input
+                v-if="isFilterVisible('salesEntity')"
+                v-model.trim="filters.salesEntity"
+                class="input"
+                type="search"
+                :placeholder="t('salesEntityFilter')"
+              />
+              <input
+                v-if="isFilterVisible('status')"
+                v-model.trim="filters.status"
+                class="input"
+                type="search"
+                :placeholder="t('statusFilter')"
+              />
+            </template>
+          </WorkbenchFilterToolbar>
+        </SectionPanel>
+
+        <SectionPanel
+          v-if="canManageScheduledReports"
+          :title="t('scheduledTitle')"
+          :meta="t('scheduledSubtitle')"
+          :count="scheduledReports.length"
+        >
+          <ScheduledReportsManager
+            :items="scheduledReports"
+            :loading="scheduledLoading"
+            :running="scheduledRunLoading"
+            :locale="activeLocale"
+            :report-catalog="reportCatalog"
+            :active-office-branch="branchStore.requestBranch"
+            @run="runScheduledReports"
+            @save="saveScheduledReport"
+            @remove="removeScheduledReport"
+          />
+          <div class="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
+            <div class="space-y-1">
+              <h4 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h4>
+              <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
+            </div>
+            <button
+              class="btn btn-sm"
+              type="button"
+              data-testid="run-segment-snapshot-job"
+              :disabled="snapshotRunLoading"
+              @click="runCustomerSegmentSnapshots"
+            >
+              {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
             </button>
           </div>
-        </div>
-
-        <div
-          class="mt-4 grid gap-3"
-          :class="hiddenColumns.length ? 'xl:grid-cols-2' : 'xl:grid-cols-1'"
-        >
-          <div class="rounded-2xl border border-sky-100 bg-sky-50/60 p-3">
-            <div class="flex items-center justify-between gap-2">
-              <div class="space-y-1">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">{{ t("selectedColumns") }}</p>
-                <p class="text-xs text-sky-700/80">{{ t("columnHint") }}</p>
-              </div>
-              <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-sky-700 shadow-sm">
-                {{ visibleColumns.length }}
-              </span>
-            </div>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button
-                v-for="column in visibleColumns"
-                :key="`visible-${column}`"
-                type="button"
-                class="report-chip report-chip--active rounded-full"
-                @click="toggleColumn(column)"
-              >
-                <span class="report-chip__dot" />
-                {{ getColumnLabel(column) }}
-              </button>
-            </div>
-          </div>
-
-          <div v-if="hiddenColumns.length" class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
-            <div class="flex items-center justify-between gap-2">
-              <div class="space-y-1">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("hiddenColumns") }}</p>
-                <p class="text-xs text-slate-500">{{ t("showAllColumns") }} ile geri açılabilir.</p>
-              </div>
-              <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm">
-                {{ hiddenColumns.length }}
-              </span>
-            </div>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button
-                v-for="column in hiddenColumns"
-                :key="`hidden-${column}`"
-                type="button"
-                class="report-chip report-chip--hidden rounded-full"
-                @click="toggleColumn(column)"
-              >
-                {{ getColumnLabel(column) }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-        {{ t("loading") }}
-      </div>
-      <div v-else-if="error" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
-        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="qc-error-banner__text mt-1">{{ error }}</p>
-      </div>
-      <template v-else>
-        <div v-if="sortedRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-          <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
-        </div>
-
-        <div class="mt-4 overflow-auto">
-          <table class="at-table">
-            <thead>
-              <tr class="at-table-head-row">
-                <th v-for="column in visibleColumns" :key="column" class="at-table-head-cell">
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1 text-left transition hover:text-slate-900"
-                    @click="toggleSort(column)"
-                  >
-                    <span>{{ getColumnLabel(column) }}</span>
-                    <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
-                  </button>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(row, rowIndex) in sortedRows" :key="row.name || rowIndex" class="at-table-row">
-                <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
-                  {{ formatCellValue(column, row[column]) }}
-                </td>
-                </tr>
-              </tbody>
-            </table>
-        </div>
-      </template>
-    </SectionPanel>
-
-    <SectionPanel
-      v-if="canManageScheduledReports"
-      :title="t('scheduledTitle')"
-      :meta="t('scheduledEmpty')"
-      :count="scheduledReports.length"
-    >
-      <ScheduledReportsManager
-        :items="scheduledReports"
-        :loading="scheduledLoading"
-        :running="scheduledRunLoading"
-        :locale="activeLocale"
-        :report-catalog="reportCatalog"
-        :active-office-branch="branchStore.requestBranch"
-        @run="runScheduledReports"
-        @save="saveScheduledReport"
-        @remove="removeScheduledReport"
-      />
-      <div class="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
-        <div class="space-y-1">
-          <h4 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h4>
-          <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
-        </div>
-        <button
-          class="btn btn-sm"
-          type="button"
-          data-testid="run-segment-snapshot-job"
-          :disabled="snapshotRunLoading"
-          @click="runCustomerSegmentSnapshots"
-        >
-          {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
-        </button>
-      </div>
-    </SectionPanel>
+        </SectionPanel>
+      </aside>
+    </div>
   </section>
 </template>
 
@@ -291,6 +291,7 @@ import EmptyState from "../components/app-shell/EmptyState.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ScheduledReportsManager from "../components/reports/ScheduledReportsManager.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
+import HeroStrip from "@/components/ui/HeroStrip.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
@@ -313,6 +314,7 @@ let reportLoadTimer = null;
 
 const copy = {
   tr: {
+    breadcrumb: "Kontrol Merkezi / Raporlar",
     title: "Raporlar",
     subtitle: "Şube duyarlı raporlama ve dışa aktarma merkezi",
     refresh: "Yenile",
@@ -389,6 +391,7 @@ const copy = {
     segmentSnapshotRunError: "Segment snapshot işi tetiklenemedi.",
   },
   en: {
+    breadcrumb: "Control Center / Reports",
     title: "Reports",
     subtitle: "Branch-aware BI and export hub",
     refresh: "Refresh",
@@ -689,6 +692,15 @@ const visibleColumns = computed(() => {
 const hiddenColumns = computed(() => columns.value.filter((column) => !visibleColumns.value.includes(column)));
 const columnsSummaryLabel = computed(() => `${visibleColumns.value.length}/${columns.value.length}`);
 
+const heroSummaryCells = computed(() =>
+  summaryItems.value.map((item, index) => ({
+    label: item.label,
+    value: item.value,
+    sub: index === 0 ? branchScopeLabel.value : undefined,
+    variant: getHeroVariant(item.key, index),
+  })),
+);
+
 const metricToneClasses = {
   rows: "text-slate-900",
   gross_premium: "text-sky-700",
@@ -717,6 +729,26 @@ const buildMetricItem = (key, label, value, extra = {}) => ({
   cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm",
   ...extra,
 });
+
+function getHeroVariant(key, index) {
+  if (index === 0) {
+    return "lg";
+  }
+
+  if (["gross_premium", "difference_amount", "conversion_rate", "created_drafts"].includes(key)) {
+    return "accent";
+  }
+
+  if (["commission", "active_policies", "matched_customers", "successful_deliveries", "resolved_items", "successful_notifications"].includes(key)) {
+    return "success";
+  }
+
+  if (["paid_amount", "open_renewals", "claim_customers", "open_reconciliation", "open_claims", "rejected_claims"].includes(key)) {
+    return "warn";
+  }
+
+  return "default";
+}
 
 const sortedRows = computed(() => {
   if (!sortState.column || !sortState.direction) {
