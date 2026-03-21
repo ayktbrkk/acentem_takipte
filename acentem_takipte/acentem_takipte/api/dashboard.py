@@ -161,11 +161,13 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
         build_lead_where_fn=_build_lead_where,
         build_policy_where_fn=_build_policy_where,
         build_payment_where_fn=_build_payment_where,
+        build_payment_collection_where_fn=_build_payment_collection_where,
         get_offer_preview_rows_fn=_get_offer_preview_rows,
         get_lead_preview_rows_fn=_get_lead_preview_rows,
         get_policy_preview_rows_fn=_get_policy_preview_rows,
         get_top_companies_rows_fn=_get_top_companies_rows,
         get_renewal_task_preview_rows_fn=_get_renewal_task_preview_rows,
+        get_offer_waiting_renewal_summary_fn=_get_offer_waiting_renewal_summary,
         get_payment_preview_rows_fn=_get_payment_preview_rows,
         get_reconciliation_open_rows_preview_fn=_get_reconciliation_open_rows_preview,
         monthly_commission_trend_fn=_monthly_commission_trend,
@@ -1782,6 +1784,7 @@ def _get_payment_preview_rows(
     office_branch: str | None = None,
     allowed_customers: list[str] | None = None,
     limit: int,
+    order_by: str = "modified desc",
 ) -> list[dict]:
     if where_clause:
         return frappe.db.sql(
@@ -1790,13 +1793,16 @@ def _get_payment_preview_rows(
                 name,
                 payment_no,
                 payment_direction,
+                payment_purpose,
+                status,
                 payment_date,
+                due_date,
                 amount_try,
                 customer,
                 policy
             from `tabAT Payment`
             where {where_clause}
-            order by modified desc
+            order by {order_by}
             limit %(limit)s
             """,
             values={**(values or {}), "limit": max(cint(limit), 1)},
@@ -1816,12 +1822,15 @@ def _get_payment_preview_rows(
             "name",
             "payment_no",
             "payment_direction",
+            "payment_purpose",
+            "status",
             "payment_date",
+            "due_date",
             "amount_try",
             "customer",
             "policy",
         ],
-        order_by="modified desc",
+        order_by=order_by,
         limit_page_length=max(cint(limit), 1),
     )
 
@@ -1849,11 +1858,74 @@ def _get_renewal_task_preview_rows(
 
     return frappe.get_list(
         "AT Renewal Task",
-        fields=["name", "policy", "status", "due_date", "renewal_date"],
+        fields=["name", "policy", "status", "due_date", "renewal_date", "customer", "assigned_to", "outcome_record"],
         filters=filters,
         order_by="due_date asc",
         limit_page_length=max(cint(limit), 1),
     )
+
+
+def _get_offer_waiting_renewal_summary(
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+    limit: int = 20,
+) -> dict:
+    conditions = ["rt.status in ('Open', 'In Progress')", "(rt.outcome_record is null or ifnull(ro.offer, '') = '')"]
+    values: dict[str, object] = {"limit": max(cint(limit), 1)}
+
+    if office_branch:
+        conditions.append("rt.office_branch = %(office_branch)s")
+        values["office_branch"] = office_branch
+    if branch or allowed_customers is not None:
+        policy_names = _get_scoped_policy_names(
+            branch=branch,
+            office_branch=None,
+            allowed_customers=allowed_customers,
+        )
+        conditions.append("rt.policy in %(policies)s")
+        values["policies"] = tuple(policy_names or ["__none__"])
+    elif allowed_customers is not None:
+        conditions.append("rt.customer in %(customers)s")
+        values["customers"] = tuple(allowed_customers or ["__none__"])
+
+    where_clause = " and ".join(["1=1", *conditions])
+    count_row = frappe.db.sql(
+        f"""
+        select count(rt.name) as total
+        from `tabAT Renewal Task` rt
+        left join `tabAT Renewal Outcome` ro on ro.name = rt.outcome_record
+        where {where_clause}
+        """,
+        values=values,
+        as_dict=True,
+    )
+    rows = frappe.db.sql(
+        f"""
+        select
+            rt.name,
+            rt.policy,
+            rt.customer,
+            rt.status,
+            rt.due_date,
+            rt.renewal_date,
+            rt.assigned_to,
+            rt.outcome_record
+        from `tabAT Renewal Task` rt
+        left join `tabAT Renewal Outcome` ro on ro.name = rt.outcome_record
+        where {where_clause}
+        order by rt.due_date asc, rt.modified desc
+        limit %(limit)s
+        """,
+        values=values,
+        as_dict=True,
+    )
+    total = cint((count_row[0] or {}).get("total") if count_row else 0)
+    return {
+        "count": total,
+        "rows": rows,
+    }
 
 
 def _build_policy_where(
@@ -1948,6 +2020,40 @@ def _build_payment_where(
         values["customers"] = tuple(allowed_customers)
 
     return " and ".join(conditions), values
+
+
+def _build_payment_collection_where(
+    *,
+    anchor_date: str | None,
+    due_state: str,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
+) -> tuple[str, dict]:
+    conditions = [
+        "status = 'Draft'",
+        "payment_direction = 'Inbound'",
+        "payment_purpose = 'Premium Collection'",
+        "due_date is not null",
+    ]
+    values: dict[str, object] = {"anchor_date": getdate(anchor_date or nowdate())}
+
+    if due_state == "due_today":
+        conditions.append("due_date = %(anchor_date)s")
+    else:
+        conditions.append("due_date < %(anchor_date)s")
+
+    if branch:
+        conditions.append("policy in (select name from `tabAT Policy` where branch = %(branch)s)")
+        values["branch"] = branch
+    if office_branch:
+        conditions.append("office_branch = %(office_branch)s")
+        values["office_branch"] = office_branch
+    if allowed_customers is not None:
+        conditions.append("customer in %(customers)s")
+        values["customers"] = tuple(allowed_customers or ["__none__"])
+
+    return " and ".join(["1=1", *conditions]), values
 
 
 def _build_claim_where(

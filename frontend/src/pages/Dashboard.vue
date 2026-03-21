@@ -445,34 +445,65 @@
     </div>
 
     <div v-if="isCollectionsTab" class="grid gap-4 xl:grid-cols-3">
-      <SectionPanel :title="t('recentPaymentsPreview')" :count="formatNumber(collectionPayments.length)" panel-class="surface-card rounded-2xl p-5 xl:col-span-2">
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="collectionPayments.length === 0" class="at-empty-block">{{ t("noPaymentPreview") }}</div>
-        <ul v-else class="space-y-3">
-          <EntityPreviewCard
-            v-for="payment in pagedPreviewItems(collectionPayments, 'collectionsPayments')"
-            :key="payment.name"
-            :title="payment.payment_no || payment.name"
-            clickable
-            @click="openPaymentItem(payment)"
-          >
-            <template #trailing>
-              <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
-            </template>
-            <MiniFactList :items="dashboardPaymentFacts(payment)" />
-            <p class="mt-1 text-xs text-slate-600">{{ formatCurrency(payment.amount_try) }}</p>
-          </EntityPreviewCard>
-        </ul>
-        <PreviewPager
-          v-if="collectionPayments.length > 0"
-          :current-page="previewResolvedPage('collectionsPayments', collectionPayments)"
-          :total-pages="previewPageCount(collectionPayments)"
-          :show-view-all="shouldShowViewAll(collectionPayments)"
-          :view-all-label="t('viewAllItems')"
-          @change-page="setPreviewPage('collectionsPayments', $event, collectionPayments)"
-          @view-all="openPreviewList('payments')"
-        />
-      </SectionPanel>
+      <div class="space-y-4 xl:col-span-2">
+        <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)" panel-class="surface-card rounded-2xl p-5">
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="dueTodayCollectionPayments.length === 0" class="at-empty-block">{{ t("noTodayCollections") }}</div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="payment in pagedPreviewItems(dueTodayCollectionPayments, 'collectionsDueToday')"
+              :key="payment.name"
+              :title="payment.payment_no || payment.name"
+              clickable
+              @click="openPaymentItem(payment)"
+            >
+              <template #trailing>
+                <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
+              </template>
+              <MiniFactList :items="dashboardPaymentFacts(payment)" />
+              <p class="mt-1 text-xs text-slate-600">{{ formatCurrency(payment.amount_try) }}</p>
+            </EntityPreviewCard>
+          </ul>
+          <PreviewPager
+            v-if="dueTodayCollectionPayments.length > 0"
+            :current-page="previewResolvedPage('collectionsDueToday', dueTodayCollectionPayments)"
+            :total-pages="previewPageCount(dueTodayCollectionPayments)"
+            :show-view-all="shouldShowViewAll(dueTodayCollectionPayments)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('collectionsDueToday', $event, dueTodayCollectionPayments)"
+            @view-all="openPreviewList('payments')"
+          />
+        </SectionPanel>
+
+        <SectionPanel :title="t('overdueCollectionsTitle')" :count="formatNumber(overdueCollectionPayments.length)" panel-class="surface-card rounded-2xl p-5">
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="overdueCollectionPayments.length === 0" class="at-empty-block">{{ t("noOverdueCollections") }}</div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="payment in pagedPreviewItems(overdueCollectionPayments, 'collectionsOverdue')"
+              :key="payment.name"
+              :title="payment.payment_no || payment.name"
+              clickable
+              @click="openPaymentItem(payment)"
+            >
+              <template #trailing>
+                <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
+              </template>
+              <MiniFactList :items="dashboardPaymentFacts(payment)" />
+              <p class="mt-1 text-xs text-slate-600">{{ formatCurrency(payment.amount_try) }}</p>
+            </EntityPreviewCard>
+          </ul>
+          <PreviewPager
+            v-if="overdueCollectionPayments.length > 0"
+            :current-page="previewResolvedPage('collectionsOverdue', overdueCollectionPayments)"
+            :total-pages="previewPageCount(overdueCollectionPayments)"
+            :show-view-all="shouldShowViewAll(overdueCollectionPayments)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('collectionsOverdue', $event, overdueCollectionPayments)"
+            @view-all="openPreviewList('payments')"
+          />
+        </SectionPanel>
+      </div>
 
       <div class="space-y-4">
         <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)">
@@ -519,6 +550,33 @@
 
     <div v-if="isRenewalsTab" class="grid gap-4 xl:grid-cols-3">
       <div class="space-y-4 xl:col-span-2">
+        <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)">
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="offerWaitingRenewals.length === 0" class="at-empty-block">{{ t("noOfferWaitingRenewals") }}</div>
+          <ul v-else class="space-y-3">
+            <MetaListCard
+              v-for="task in pagedPreviewItems(offerWaitingRenewals, 'renewalsOfferWaiting')"
+              :key="task.name"
+              :title="task.policy || '-'"
+              clickable
+              @click="openRenewalTaskItem(task)"
+            >
+              <template #trailing>
+                <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
+              </template>
+              <MiniFactList :items="renewalTaskFactsDetailed(task)" />
+            </MetaListCard>
+          </ul>
+          <PreviewPager
+            v-if="offerWaitingRenewals.length > 0"
+            :current-page="previewResolvedPage('renewalsOfferWaiting', offerWaitingRenewals)"
+            :total-pages="previewPageCount(offerWaitingRenewals)"
+            :show-view-all="shouldShowViewAll(offerWaitingRenewals)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('renewalsOfferWaiting', $event, offerWaitingRenewals)"
+            @view-all="openPreviewList('renewals')"
+          />
+        </SectionPanel>
 
         <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -1013,11 +1071,16 @@ const copy = {
     kpiPolicy: "Toplam Poliçe",
     kpiRenewal: "Bekleyen Yenileme",
     kpiRenewalRetention: "Yenileme Tutma Oranı",
+    kpiRenewalOfferWaiting: "Teklif Bekleyen Yenileme",
     kpiCollect: "Tahsilat (TRY)",
     kpiPayout: "Ödeme (TRY)",
     kpiClaim: "Açık Hasar",
     kpiReadyOffers: "Hazır Teklif",
     kpiReconciliationOpen: "Açık Mutabakat",
+    kpiCollectionDueTodayCount: "Bugün Vadesi Gelen Tahsilat",
+    kpiCollectionDueTodayAmount: "Bugün Tahsilat Tutarı",
+    kpiCollectionOverdueCount: "Gecikmiş Tahsilat",
+    kpiCollectionOverdueAmount: "Gecikmiş Tutar",
     kpiAvgRate: "Ort. Komisyon Oranı",
     renewalRetentionHint: "Yenilenen / kaybedilen kapanışlar",
     monthlySnapshot: "Seçili aralik",
@@ -1038,6 +1101,10 @@ const copy = {
     quickReconciliationDesc: "Muhasebe farklarını eşleştir ve kapat",
     recentPaymentsPreview: "Son Tahsilat / Ödeme Hareketleri",
     noPaymentPreview: "Tahsilat veya ödeme kaydı bulunamadı.",
+    todayCollectionsTitle: "Bugün Vadesi Gelen Tahsilatlar",
+    noTodayCollections: "Bugün vadesi gelen tahsilat kaydı bulunamadı.",
+    overdueCollectionsTitle: "Gecikmiş Tahsilatlar",
+    noOverdueCollections: "Gecikmiş tahsilat kaydı bulunamadı.",
     reconciliationPreview: "Açık Mutabakat Farkları",
     noReconciliationPreview: "Açık mutabakat kaydı bulunamadı.",
     mismatchRows: "Açık Kayıt",
@@ -1047,6 +1114,8 @@ const copy = {
     policyLabel: "Poliçe",
     reconciliationType: "Uyumsuzluk",
     difference: "Fark",
+    offerWaitingRenewalsTitle: "Teklif Bekleyen Yenilemeler",
+    noOfferWaitingRenewals: "Teklif bekleyen yenileme kaydı bulunamadı.",
     renewalStatusOverviewTitle: "Yenileme Durum Özeti",
     noRenewalStatus: "Durum özeti oluşturulacak yenileme kaydı yok.",
     dashboardPermissionDenied: "Bu pano verisini görmek için yetkiniz yok.",
@@ -1221,11 +1290,16 @@ const copy = {
     kpiPolicy: "Total Policies",
     kpiRenewal: "Pending Renewals",
     kpiRenewalRetention: "Renewal Retention Rate",
+    kpiRenewalOfferWaiting: "Renewals Waiting For Offer",
     kpiCollect: "Collections (TRY)",
     kpiPayout: "Payouts (TRY)",
     kpiClaim: "Open Claims",
     kpiReadyOffers: "Ready Offers",
     kpiReconciliationOpen: "Open Reconciliation",
+    kpiCollectionDueTodayCount: "Due Today Collections",
+    kpiCollectionDueTodayAmount: "Due Today Amount",
+    kpiCollectionOverdueCount: "Overdue Collections",
+    kpiCollectionOverdueAmount: "Overdue Amount",
     kpiAvgRate: "Avg Commission Rate",
     todaySnapshot: "Current snapshot",
     renewalRetentionHint: "Renewed / lost closed outcomes",
@@ -1247,6 +1321,10 @@ const copy = {
     quickReconciliationDesc: "Match and close accounting differences",
     recentPaymentsPreview: "Recent Collection / Payout Activity",
     noPaymentPreview: "No collection or payout records found.",
+    todayCollectionsTitle: "Collections Due Today",
+    noTodayCollections: "No collections are due today.",
+    overdueCollectionsTitle: "Overdue Collections",
+    noOverdueCollections: "No overdue collections found.",
     reconciliationPreview: "Open Reconciliation Differences",
     noReconciliationPreview: "No open reconciliation items found.",
     mismatchRows: "Open Rows",
@@ -1256,6 +1334,8 @@ const copy = {
     policyLabel: "Policy",
     reconciliationType: "Mismatch",
     difference: "Difference",
+    offerWaitingRenewalsTitle: "Renewals Waiting For Offer",
+    noOfferWaitingRenewals: "No renewals are waiting for an offer.",
     renewalStatusOverviewTitle: "Renewal Status Summary",
     noRenewalStatus: "No renewal rows available for a status summary.",
     dashboardPermissionDenied: "You do not have permission to access dashboard data.",
@@ -1361,7 +1441,7 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
-const rangeOptions = [1, 7, 30, 90];
+const rangeOptions = [1, 7, 15, 30];
 const selectedRange = computed({
   get: () => dashboardStore.state.range || 30,
   set: (value) => dashboardStore.setRange(value),
@@ -1492,25 +1572,6 @@ const offerListResource = createResource({
   auto: false,
 });
 
-const paymentPreviewResource = createResource({
-  url: "frappe.client.get_list",
-  params: {
-    doctype: "AT Payment",
-    fields: [
-      "name",
-      "payment_no",
-      "payment_direction",
-      "payment_date",
-      "amount_try",
-      "customer",
-      "policy",
-    ],
-    order_by: "modified desc",
-    limit_page_length: 8,
-  },
-  auto: true,
-});
-
 const reconciliationPreviewResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
   params: {
@@ -1557,17 +1618,20 @@ const recentOffers = computed(() =>
     ? asArray(dashboardTabPreviews.value.offers)
     : asArray(offerListResource.data)
 );
-const collectionPayments = computed(() =>
-  asArray(dashboardTabPreviews.value.payments).length
-    ? asArray(dashboardTabPreviews.value.payments)
-    : asArray(paymentPreviewResource.data)
-);
+const dueTodayCollectionPayments = computed(() => asArray(dashboardTabPreviews.value.due_today_payments));
+const overdueCollectionPayments = computed(() => asArray(dashboardTabPreviews.value.overdue_payments));
+const offerWaitingRenewals = computed(() => asArray(dashboardTabPreviews.value.offer_waiting_renewals));
 const reconciliationPreviewData = computed(() => unref(reconciliationPreviewResource.data) || {});
 const reconciliationPreviewRows = computed(() =>
   asArray(dashboardTabPreviews.value.reconciliation_rows).length
     ? asArray(dashboardTabPreviews.value.reconciliation_rows)
     : asArray(reconciliationPreviewData.value.rows)
 );
+const dueTodayCollectionCount = computed(() => Number(dashboardTabMetrics.value?.due_today_collection_count || 0));
+const dueTodayCollectionAmount = computed(() => Number(dashboardTabMetrics.value?.due_today_collection_amount_try || 0));
+const overdueCollectionCount = computed(() => Number(dashboardTabMetrics.value?.overdue_collection_count || 0));
+const overdueCollectionAmount = computed(() => Number(dashboardTabMetrics.value?.overdue_collection_amount_try || 0));
+const offerWaitingRenewalCount = computed(() => Number(dashboardTabMetrics.value?.offer_waiting_count || 0));
 const reconciliationPreviewMetrics = computed(() => ({
   ...(reconciliationPreviewData.value.metrics || {}),
   ...(dashboardTabMetrics.value?.reconciliation_open_count != null
@@ -1766,8 +1830,11 @@ const previewPages = reactive({
   dailyActionOffers: 1,
   dailyRenewalAlerts: 1,
   dailyTopCompanies: 1,
+  collectionsDueToday: 1,
+  collectionsOverdue: 1,
   collectionsPayments: 1,
   collectionsReconciliation: 1,
+  renewalsOfferWaiting: 1,
   renewalsQueue: 1,
   salesLeads: 1,
   salesOffers: 1,
@@ -1805,9 +1872,6 @@ function shouldShowViewAll(items) {
 }
 
 const renewalBucketCounts = computed(() => dashboardStore.renewalBucketCounts || { overdue: 0, due7: 0, due30: 0 });
-const renewalRetentionSummary = computed(
-  () => dashboardStore.renewalRetentionSummary || { renewed: 0, lost: 0, cancelled: 0, rate: 0 }
-);
 const followUpPayload = computed(() => unref(followUpResource.data) || {});
 const followUpSummary = computed(() => followUpPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
 const followUpItems = computed(() => (Array.isArray(followUpPayload.value.items) ? followUpPayload.value.items : []));
@@ -1875,30 +1939,29 @@ function buildStaticQuickStatCard({ key, title, value, icon, hint = t("todaySnap
 }
 
 const collectionQuickStatCards = computed(() => [
-  buildQuickStatCard({
-    key: "quick-collect",
-    title: t("kpiCollect"),
-    value: formatCurrency(dashboardCards.value.collected_try),
-    current: dashboardCards.value.collected_try,
-    previous: previousDashboardCards.value.collected_try,
-    icon: "arrow-down-circle",
+  buildStaticQuickStatCard({
+    key: "quick-collect-due-today-count",
+    title: t("kpiCollectionDueTodayCount"),
+    value: formatNumber(dueTodayCollectionCount.value),
+    icon: "calendar-days",
   }),
-  buildQuickStatCard({
-    key: "quick-payout",
-    title: t("kpiPayout"),
-    value: formatCurrency(dashboardCards.value.payout_try),
-    current: dashboardCards.value.payout_try,
-    previous: previousDashboardCards.value.payout_try,
-    icon: "arrow-up-circle",
-    reverseTrend: true,
+  buildStaticQuickStatCard({
+    key: "quick-collect-due-today-amount",
+    title: t("kpiCollectionDueTodayAmount"),
+    value: formatCurrency(dueTodayCollectionAmount.value),
+    icon: "banknote",
   }),
-  buildQuickStatCard({
-    key: "quick-net",
-    title: t("openDifference"),
-    value: formatCurrency((dashboardCards.value.collected_try || 0) - (dashboardCards.value.payout_try || 0)),
-    current: Number(dashboardCards.value.collected_try || 0) - Number(dashboardCards.value.payout_try || 0),
-    previous: Number(previousDashboardCards.value.collected_try || 0) - Number(previousDashboardCards.value.payout_try || 0),
-    icon: "activity",
+  buildStaticQuickStatCard({
+    key: "quick-collect-overdue-count",
+    title: t("kpiCollectionOverdueCount"),
+    value: formatNumber(overdueCollectionCount.value),
+    icon: "alert-triangle",
+  }),
+  buildStaticQuickStatCard({
+    key: "quick-collect-overdue-amount",
+    title: t("kpiCollectionOverdueAmount"),
+    value: formatCurrency(overdueCollectionAmount.value),
+    icon: "wallet",
   }),
   buildStaticQuickStatCard({
     key: "quick-reco-open",
@@ -1911,11 +1974,10 @@ const collectionQuickStatCards = computed(() => [
 const renewalQuickStatCards = computed(() => [
   quickStatCards.value.find((card) => card.key === "quick-renewal"),
   buildStaticQuickStatCard({
-    key: "quick-renewal-retention",
-    title: t("kpiRenewalRetention"),
-    value: formatPercent(renewalRetentionSummary.value.rate),
-    icon: "repeat",
-    hint: `${t("renewalRetentionHint")} - ${formatNumber(renewalRetentionSummary.value.renewed)} / ${formatNumber(renewalRetentionSummary.value.lost)}`,
+    key: "quick-renewal-offer-waiting",
+    title: t("kpiRenewalOfferWaiting"),
+    value: formatNumber(offerWaitingRenewalCount.value),
+    icon: "file-clock",
   }),
   buildStaticQuickStatCard({
     key: "quick-renewal-overdue",
@@ -2350,9 +2412,9 @@ function renewalAlertFacts(task) {
 function dashboardPaymentFacts(payment) {
   return [
     {
-      key: "paymentDate",
-      label: t("paymentDate"),
-      value: formatDate(payment?.payment_date),
+      key: "dueDate",
+      label: t("dueDate"),
+      value: formatDate(payment?.due_date || payment?.payment_date),
       valueClass: "text-xs text-slate-500",
     },
     {
@@ -2584,10 +2646,6 @@ function recentOfferFacts(offer) {
       valueClass: "text-xs text-slate-500",
     },
   ];
-}
-
-function formatPercent(value) {
-  return `${new Intl.NumberFormat(localeCode.value, { maximumFractionDigits: 2 }).format(Number(value || 0))}%`;
 }
 
 function formatDaysToDue(dateValue) {

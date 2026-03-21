@@ -17,11 +17,13 @@ def build_dashboard_tab_sections(
     build_lead_where_fn,
     build_policy_where_fn,
     build_payment_where_fn,
+    build_payment_collection_where_fn,
     get_offer_preview_rows_fn,
     get_lead_preview_rows_fn,
     get_policy_preview_rows_fn,
     get_top_companies_rows_fn,
     get_renewal_task_preview_rows_fn,
+    get_offer_waiting_renewal_summary_fn,
     get_payment_preview_rows_fn,
     get_reconciliation_open_rows_preview_fn,
     monthly_commission_trend_fn,
@@ -85,6 +87,21 @@ def build_dashboard_tab_sections(
         scope = build_payment_where_fn(
             from_date=from_date,
             to_date=to_date,
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+        )
+        scope_cache[cache_key] = scope
+        return scope
+
+    def get_payment_collection_scope(due_state: str) -> tuple[str, dict]:
+        cache_key = ("payment_collection", due_state)
+        cached = scope_cache.get(cache_key)
+        if cached:
+            return cached
+        scope = build_payment_collection_where_fn(
+            anchor_date=to_date,
+            due_state=due_state,
             branch=branch,
             office_branch=office_branch,
             allowed_customers=allowed_customers,
@@ -191,11 +208,18 @@ def build_dashboard_tab_sections(
             office_branch=office_branch,
             allowed_customers=allowed_customers,
         )
+        offer_waiting = get_offer_waiting_renewal_summary_fn(
+            branch=branch,
+            office_branch=office_branch,
+            allowed_customers=allowed_customers,
+            limit=20,
+        )
         metrics.update(
             {
                 "renewal_overdue_count": cint(renewal_payload["buckets"].get("overdue") or 0),
                 "renewal_due7_count": cint(renewal_payload["buckets"].get("due7") or 0),
                 "renewal_due30_count": cint(renewal_payload["buckets"].get("due30") or 0),
+                "offer_waiting_count": cint(offer_waiting.get("count") or 0),
             }
         )
         series["renewal_status"] = renewal_payload["status_rows"]
@@ -208,9 +232,12 @@ def build_dashboard_tab_sections(
             statuses=["Open", "In Progress"],
             limit=20,
         )
+        previews["offer_waiting_renewals"] = offer_waiting.get("rows") or []
 
     if tab_key in {"daily", "collections"}:
         payment_where, payment_values = get_payment_scope()
+        due_today_where, due_today_values = get_payment_collection_scope("due_today")
+        overdue_where, overdue_values = get_payment_collection_scope("overdue")
         payment_status_rows = frappe.db.sql(
             f"""
             select status, count(name) as total
@@ -234,6 +261,26 @@ def build_dashboard_tab_sections(
             values=payment_values,
             as_dict=True,
         )
+        due_today_summary_rows = frappe.db.sql(
+            f"""
+            select count(name) as total_count, ifnull(sum(amount_try), 0) as total_amount_try
+            from `tabAT Payment`
+            where {due_today_where}
+            """,
+            values=due_today_values,
+            as_dict=True,
+        )
+        overdue_summary_rows = frappe.db.sql(
+            f"""
+            select count(name) as total_count, ifnull(sum(amount_try), 0) as total_amount_try
+            from `tabAT Payment`
+            where {overdue_where}
+            """,
+            values=overdue_values,
+            as_dict=True,
+        )
+        due_today_summary = due_today_summary_rows[0] if due_today_summary_rows else {}
+        overdue_summary = overdue_summary_rows[0] if overdue_summary_rows else {}
         reco_open = reconciliation_open_summary_fn(
             branch=branch,
             office_branch=office_branch,
@@ -241,12 +288,28 @@ def build_dashboard_tab_sections(
         )
         metrics.update(
             {
+                "due_today_collection_count": cint(due_today_summary.get("total_count") or 0),
+                "due_today_collection_amount_try": flt(due_today_summary.get("total_amount_try") or 0),
+                "overdue_collection_count": cint(overdue_summary.get("total_count") or 0),
+                "overdue_collection_amount_try": flt(overdue_summary.get("total_amount_try") or 0),
                 "reconciliation_open_count": cint(reco_open.get("open_count") or 0),
                 "reconciliation_open_difference_try": flt(reco_open.get("open_difference_try") or 0),
             }
         )
         series["payment_status"] = payment_status_rows
         series["payment_direction"] = payment_direction_rows
+        previews["due_today_payments"] = get_payment_preview_rows_fn(
+            where_clause=due_today_where,
+            values=due_today_values,
+            limit=20,
+            order_by="due_date asc, modified desc",
+        )
+        previews["overdue_payments"] = get_payment_preview_rows_fn(
+            where_clause=overdue_where,
+            values=overdue_values,
+            limit=20,
+            order_by="due_date asc, modified desc",
+        )
         previews["payments"] = get_payment_preview_rows_fn(
             where_clause=payment_where,
             values=payment_values,

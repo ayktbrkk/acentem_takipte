@@ -125,6 +125,8 @@ class DashboardWave4BuilderTests(unittest.TestCase):
                 {"payment_direction": "Incoming", "total": 5, "paid_amount_try": 1000},
                 {"payment_direction": "Outgoing", "total": 1, "paid_amount_try": 100},
             ],
+            [{"total_count": 2, "total_amount_try": 450}],
+            [{"total_count": 3, "total_amount_try": 900}],
         ]
 
         def fake_sql(query, values=None, as_dict=False):
@@ -145,11 +147,13 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             build_lead_where_fn=lambda **kwargs: ("1=1", kwargs),
             build_policy_where_fn=lambda **kwargs: ("1=1", kwargs),
             build_payment_where_fn=lambda **kwargs: ("1=1", kwargs),
+            build_payment_collection_where_fn=lambda **kwargs: ("1=1", kwargs),
             get_offer_preview_rows_fn=lambda **kwargs: [{"name": "OFF-1"}],
             get_lead_preview_rows_fn=lambda **kwargs: [{"name": "LEAD-1"}],
             get_policy_preview_rows_fn=lambda **kwargs: [{"name": "POL-1"}],
             get_top_companies_rows_fn=lambda **kwargs: [{"company_name": "Acme"}],
             get_renewal_task_preview_rows_fn=lambda **kwargs: [{"name": "REN-1"}],
+            get_offer_waiting_renewal_summary_fn=lambda **kwargs: {"count": 2, "rows": [{"name": "REN-WAIT-1"}]},
             get_payment_preview_rows_fn=lambda **kwargs: [{"name": "PAY-1"}],
             get_reconciliation_open_rows_preview_fn=lambda **kwargs: [{"name": "REC-1"}],
             monthly_commission_trend_fn=lambda **kwargs: [{"month": "2026-02", "commission_try": 321}],
@@ -167,6 +171,11 @@ class DashboardWave4BuilderTests(unittest.TestCase):
         self.assertAlmostEqual(metrics["offer_acceptance_rate"], 25.0)
         self.assertAlmostEqual(metrics["offer_conversion_rate"], 40.0)
         self.assertEqual(metrics["renewal_overdue_count"], 1)
+        self.assertEqual(metrics["offer_waiting_count"], 2)
+        self.assertEqual(metrics["due_today_collection_count"], 2)
+        self.assertEqual(metrics["overdue_collection_count"], 3)
+        self.assertAlmostEqual(metrics["due_today_collection_amount_try"], 450.0)
+        self.assertAlmostEqual(metrics["overdue_collection_amount_try"], 900.0)
         self.assertEqual(metrics["reconciliation_open_count"], 5)
 
         self.assertIn("offer_status", payload["series"])
@@ -176,7 +185,10 @@ class DashboardWave4BuilderTests(unittest.TestCase):
 
         self.assertIn("action_offers", payload["previews"])
         self.assertIn("renewal_tasks", payload["previews"])
+        self.assertIn("offer_waiting_renewals", payload["previews"])
         self.assertIn("payments", payload["previews"])
+        self.assertIn("due_today_payments", payload["previews"])
+        self.assertIn("overdue_payments", payload["previews"])
         self.assertIn("reconciliation_rows", payload["previews"])
         self.assertNotIn("offers", payload["previews"])
         self.assertFalse(responses)

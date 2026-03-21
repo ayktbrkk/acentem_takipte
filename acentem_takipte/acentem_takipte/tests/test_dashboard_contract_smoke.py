@@ -58,19 +58,65 @@ class TestDashboardContractSmoke(unittest.TestCase):
             "buckets": {"overdue": 0, "due7": 1, "due30": 0},
         }
         preview_rows = [{"name": "RT-0001", "status": "Open"}]
+        offer_waiting = {"count": 1, "rows": [{"name": "RT-0002", "status": "Open"}]}
 
         with patch.object(dashboard_api, "_allowed_customers_for_user", return_value=(["CUST-0001"], meta)):
             with patch.object(dashboard_api, "_dashboard_cards_summary", side_effect=[cards, compare_cards]):
                 with patch.object(dashboard_api, "_renewal_status_and_buckets", return_value=renewal_payload):
                     with patch.object(dashboard_api, "_get_renewal_task_preview_rows", return_value=preview_rows):
-                        payload = dashboard_api.get_dashboard_tab_payload(tab="renewals", filters={})
+                        with patch.object(dashboard_api, "_get_offer_waiting_renewal_summary", return_value=offer_waiting):
+                            payload = dashboard_api.get_dashboard_tab_payload(tab="renewals", filters={})
 
         self.assertEqual(set(payload.keys()), {"tab", "cards", "compare_cards", "metrics", "series", "previews", "meta"})
         self.assertEqual(payload["tab"], "renewals")
         self.assertIn("renewal_status", payload["series"])
         self.assertIn("renewal_buckets", payload["series"])
+        self.assertIn("offer_waiting_count", payload["metrics"])
         self.assertIn("renewal_tasks", payload["previews"])
+        self.assertIn("offer_waiting_renewals", payload["previews"])
         self.assertEqual(payload["meta"], meta)
+
+    def test_get_dashboard_tab_payload_collections_contract_smoke(self):
+        cards = dashboard_api._empty_dashboard_payload().get("cards", {}).copy()
+        compare_cards = cards.copy()
+        meta = {"access_scope": "global", "scope_reason": "privileged_role"}
+
+        with patch.object(dashboard_api, "_allowed_customers_for_user", return_value=(None, meta)):
+            with patch.object(dashboard_api, "_dashboard_cards_summary", side_effect=[cards, compare_cards]):
+                with patch.object(dashboard_api, "_build_payment_where", return_value=("1=1", {})):
+                    with patch.object(
+                        dashboard_api,
+                        "_build_payment_collection_where",
+                        side_effect=[("1=1", {}), ("1=1", {})],
+                    ):
+                        with patch.object(dashboard_api, "_get_payment_preview_rows", return_value=[{"name": "PAY-0001"}]):
+                            with patch.object(dashboard_api, "_get_reconciliation_open_rows_preview", return_value=[{"name": "REC-0001"}]):
+                                with patch.object(
+                                    dashboard_api,
+                                    "_reconciliation_open_summary",
+                                    return_value={"open_count": 2, "open_difference_try": 150},
+                                ):
+                                    with patch.object(
+                                        dashboard_api.frappe.db,
+                                        "sql",
+                                        side_effect=[
+                                            [{"status": "Draft", "total": 3}],
+                                            [{"payment_direction": "Inbound", "total": 3, "paid_amount_try": 0}],
+                                            [{"total_count": 1, "total_amount_try": 100}],
+                                            [{"total_count": 2, "total_amount_try": 250}],
+                                        ],
+                                    ):
+                                        payload = dashboard_api.get_dashboard_tab_payload(tab="collections", filters={})
+
+        self.assertEqual(payload["tab"], "collections")
+        self.assertIn("due_today_collection_count", payload["metrics"])
+        self.assertIn("overdue_collection_count", payload["metrics"])
+        self.assertIn("due_today_collection_amount_try", payload["metrics"])
+        self.assertIn("overdue_collection_amount_try", payload["metrics"])
+        self.assertIn("due_today_payments", payload["previews"])
+        self.assertIn("overdue_payments", payload["previews"])
+        self.assertIn("payments", payload["previews"])
+        self.assertIn("reconciliation_rows", payload["previews"])
 
     def test_get_customer_workbench_rows_response_contract_smoke(self):
         parsed_filters = {
