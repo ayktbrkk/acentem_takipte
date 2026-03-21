@@ -110,6 +110,8 @@ const copy = {
     breadcrumb: "Kontrol Merkezi / Mutabakat Detayı",
     back: "Listeye Dön",
     openWorkbench: "Mutabakat Masası",
+    reconciliationNo: "Mutabakat No",
+    period: "Dönem",
     summary: "Özet Bilgiler",
     policyList: "Poliçe Listesi",
     unmatchedRecords: "Eşleşmeyen Kayıtlar",
@@ -147,6 +149,8 @@ const copy = {
     breadcrumb: "Control Center / Reconciliation Details",
     back: "Back to list",
     openWorkbench: "Reconciliation Workbench",
+    reconciliationNo: "Reconciliation No",
+    period: "Period",
     summary: "Summary",
     policyList: "Policy List",
     unmatchedRecords: "Unmatched Records",
@@ -200,9 +204,9 @@ const statusLabel = computed(() => normalizeReconciliationStatus(item.value.stat
 const periodLabel = computed(() => derivePeriodLabel(item.value, entry.value));
 
 const heroCells = computed(() => [
-  { label: "Mutabakat No", value: item.value.name || name.value || "-", variant: "default" },
-  { label: "Şirket", value: entry.value.insurance_company || "-", variant: "default" },
-  { label: "Dönem", value: periodLabel.value, variant: "lg" },
+  { label: t("reconciliationNo"), value: item.value.name || name.value || "-", variant: "default" },
+  { label: t("company"), value: entry.value.insurance_company || "-", variant: "default" },
+  { label: t("period"), value: periodLabel.value, variant: "lg" },
   { label: "Fark", value: formatMoney(differenceValue.value), variant: differenceValue.value ? "warn" : "success" },
 ]);
 
@@ -272,7 +276,7 @@ const companyFields = computed(() => [
 ]);
 
 const periodFields = computed(() => [
-  { label: "Dönem", value: periodLabel.value },
+  { label: t("period"), value: periodLabel.value },
   { label: t("created"), value: formatDateTime(item.value.creation) },
   { label: t("updated"), value: formatDateTime(item.value.modified) },
   { label: t("synced"), value: formatDateTime(entry.value.last_synced_on) },

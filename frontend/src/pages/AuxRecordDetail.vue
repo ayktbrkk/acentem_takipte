@@ -165,15 +165,15 @@
           <DetailTabsBar v-model="activeDetailTab" :tabs="detailTabs" />
         </article>
 
-        <DetailCard
+        <SectionPanel
           v-for="group in visibleGroups"
           :key="group.key"
           :title="group.title || groupTitle(group.key)"
         >
           <FieldGroup :fields="group.items || groupItems(group.fields)" :cols="group.cols || 2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard v-if="activeDetailTab === 'related'" :title="t('relatedTitle')">
+        <SectionPanel v-if="activeDetailTab === 'related'" :title="t('relatedTitle')">
           <div v-if="relatedRecordCards.length" class="grid gap-3 lg:grid-cols-2">
             <MetaListCard
               v-for="item in relatedRecordCards"
@@ -189,9 +189,9 @@
             </MetaListCard>
           </div>
           <div v-else class="at-empty-block">{{ t("noRelatedRecords") }}</div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard v-if="activeDetailTab === 'activity'" :title="t('activityTitle')">
+        <SectionPanel v-if="activeDetailTab === 'activity'" :title="t('activityTitle')">
           <div v-if="activityItems.length" class="space-y-3">
             <MetaListCard
               v-for="item in activityItems"
@@ -202,22 +202,22 @@
             />
           </div>
           <div v-else class="at-empty-block">{{ t("noActivity") }}</div>
-        </DetailCard>
+        </SectionPanel>
 
         <div v-if="visibleTextBlocks.length" class="grid gap-4 lg:grid-cols-2">
-          <DetailCard
+          <SectionPanel
             v-for="block in visibleTextBlocks"
             :key="block.key || block.field"
             :title="block.title || fieldLabel(block.field)"
             :class="block.fullWidth ? 'lg:col-span-2' : ''"
           >
             <pre class="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">{{ block.value }}</pre>
-          </DetailCard>
+          </SectionPanel>
         </div>
       </div>
 
       <div class="detail-sidebar space-y-4">
-        <DetailCard :title="t('stateSummary')">
+        <SectionPanel :title="t('stateSummary')">
           <div v-if="specialBadges.length" class="flex flex-wrap gap-2">
             <StatusBadge
               v-for="badge in specialBadges"
@@ -227,11 +227,11 @@
             />
           </div>
           <div v-else class="field-value-muted">{{ t("noDecisionContext") }}</div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="recordTitle">
+        <SectionPanel :title="recordTitle">
           <FieldGroup :fields="summaryItems.slice(0, 4)" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
       </div>
     </div>
 
@@ -267,8 +267,8 @@ import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
-import DetailCard from "../components/ui/DetailCard.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 
