@@ -113,6 +113,7 @@ export const quickCreateRegistry = {
       customer_tax_id: "",
       customer_phone: "",
       customer_email: "",
+      customer_birth_date: "",
       sales_entity: "",
       insurance_company: "",
       branch: "",
@@ -219,18 +220,41 @@ export const quickCreateRegistry = {
         name: "status",
         type: "select",
         label: i18nLabel("Durum", "Status"),
+        required: ({ model }) => !hasValue(model?.source_offer),
         disabled: ({ model }) => hasValue(model?.source_offer),
-        options: [option("Active", "Aktif", "Active")],
+        options: [
+          option("Active", "Aktif", "Active"),
+          option("KYT", "KYT", "KYT"),
+          option("IPT", "IPT", "IPT"),
+        ],
       },
       {
         name: "issue_date",
         type: "date",
         label: i18nLabel("Tanzim Tarihi", "Issue Date"),
+        required: ({ model }) => !hasValue(model?.source_offer),
         disabled: ({ model }) => hasValue(model?.source_offer),
       },
-      { name: "start_date", type: "date", label: i18nLabel("Başlangıç", "Start Date") },
-      { name: "end_date", type: "date", label: i18nLabel("Bitiş", "End Date") },
-      { name: "currency", type: "select", label: i18nLabel("Döviz", "Currency"), options: [option("TRY", "TRY", "TRY"), option("USD", "USD", "USD"), option("EUR", "EUR", "EUR")] },
+      {
+        name: "start_date",
+        type: "date",
+        label: i18nLabel("Başlangıç", "Start Date"),
+        required: ({ model }) => !hasValue(model?.source_offer),
+      },
+      {
+        name: "end_date",
+        type: "date",
+        label: i18nLabel("Bitiş", "End Date"),
+        required: ({ model }) => !hasValue(model?.source_offer),
+      },
+      {
+        name: "currency",
+        type: "select",
+        label: i18nLabel("Döviz", "Currency"),
+        required: ({ model }) => !hasValue(model?.source_offer),
+        disabled: ({ model }) => hasValue(model?.source_offer),
+        options: [option("TRY", "TRY", "TRY"), option("USD", "USD", "USD"), option("EUR", "EUR", "EUR")],
+      },
       {
         name: "gross_premium",
         type: "number",
@@ -391,7 +415,7 @@ export const quickCreateRegistry = {
       { name: "claim_no", type: "text", label: i18nLabel("Hasar No", "Claim Number") },
       { name: "claim_type", type: "select", label: i18nLabel("Hasar Türü", "Claim Type"), options: [
         option("Damage", "Hasar", "Damage"),
-        option("Health", "Saglik", "Health"),
+        option("Health", "Sağlık", "Health"),
         option("Theft", "Hirsizlik", "Theft"),
         option("Liability", "Sorumluluk", "Liability"),
         option("Other", "Diğer", "Other"),
@@ -399,8 +423,8 @@ export const quickCreateRegistry = {
       { name: "claim_status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Draft", "Taslak", "Draft"),
         option("Open", "Açık", "Open"),
-        option("Under Review", "Inceleme", "Under Review"),
-        option("Approved", "Onaylandi", "Approved"),
+        option("Under Review", "İnceleme", "Under Review"),
+        option("Approved", "Onaylandı", "Approved"),
         option("Rejected", "Reddedildi", "Rejected"),
       ] },
       { name: "incident_date", type: "date", label: i18nLabel("Hasar Tarihi", "Incident Date"), required: true },
@@ -440,8 +464,8 @@ export const quickCreateRegistry = {
         option("Inbound", "Tahsilat", "Inbound"),
         option("Outbound", "Ödeme", "Outbound"),
       ] },
-      { name: "payment_purpose", type: "select", label: i18nLabel("Amac", "Purpose"), options: [
-        option("Premium Collection", "Prim Tahsilati", "Premium Collection"),
+      { name: "payment_purpose", type: "select", label: i18nLabel("Amaç", "Purpose"), options: [
+        option("Premium Collection", "Prim Tahsilatı", "Premium Collection"),
         option("Commission Payout", "Komisyon Ödemesi", "Commission Payout"),
         option("Claim Payout", "Hasar Ödemesi", "Claim Payout"),
         option("Other", "Diğer", "Other"),
@@ -452,13 +476,13 @@ export const quickCreateRegistry = {
       { name: "sales_entity", type: "select", label: i18nLabel("Satış Birimi", "Sales Entity"), optionsSource: "salesEntities" },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Draft", "Taslak", "Draft"),
-        option("Paid", "Odendi", "Paid"),
+        option("Paid", "Ödendi", "Paid"),
         option("Cancelled", "İptal", "Cancelled"),
       ] },
       { name: "payment_date", type: "date", label: i18nLabel("Tarih", "Payment Date"), required: true },
       { name: "due_date", type: "date", label: i18nLabel("Vade", "Due Date") },
-      { name: "installment_count", type: "number", label: i18nLabel("Taksit Sayisi", "Installment Count"), min: 1, step: "1" },
-      { name: "installment_interval_days", type: "number", label: i18nLabel("Taksit Araligi (Gun)", "Installment Interval (Days)"), min: 1, step: "1" },
+      { name: "installment_count", type: "number", label: i18nLabel("Taksit Sayısı", "Installment Count"), min: 1, step: "1" },
+      { name: "installment_interval_days", type: "number", label: i18nLabel("Taksit Aralığı (Gün)", "Installment Interval (Days)"), min: 1, step: "1" },
       { name: "currency", type: "select", label: i18nLabel("Döviz", "Currency"), options: [option("TRY", "TRY", "TRY"), option("USD", "USD", "USD"), option("EUR", "EUR", "EUR")] },
       { name: "amount", type: "number", label: i18nLabel("Tutar", "Amount"), required: true, min: 0.01, step: "0.01" },
       { name: "reference_no", type: "text", label: i18nLabel("Dış Referans", "External Reference") },
@@ -496,16 +520,16 @@ export const quickCreateRegistry = {
         option("Done", "Tamamlandı", "Done"),
         option("Cancelled", "İptal", "Cancelled"),
       ] },
-      { name: "lost_reason_code", type: "select", label: i18nLabel("Kayip Sebebi", "Lost Reason"), options: [
-        option("", "Bos Birak", "Blank"),
+      { name: "lost_reason_code", type: "select", label: i18nLabel("Kayıp Sebebi", "Lost Reason"), options: [
+        option("", "Boş Bırak", "Blank"),
         option("Price", "Fiyat", "Price"),
         option("Competitor", "Rakip", "Competitor"),
         option("Service", "Hizmet", "Service"),
         option("Customer Declined", "Müşteri Vazgeçti", "Customer Declined"),
-        option("Coverage Mismatch", "Teminat Uyumsuzlugu", "Coverage Mismatch"),
+        option("Coverage Mismatch", "Teminat Uyumsuzluğu", "Coverage Mismatch"),
         option("Other", "Diğer", "Other"),
       ] },
-      { name: "competitor_name", type: "text", label: i18nLabel("Rakip Adi", "Competitor Name"), fullWidth: true },
+      { name: "competitor_name", type: "text", label: i18nLabel("Rakip Adı", "Competitor Name"), fullWidth: true },
       { name: "assigned_to", type: "text", label: i18nLabel("Atanan Kişi (User)", "Assigned To (User)") },
       { name: "auto_created", type: "checkbox", label: i18nLabel("Otomatik Oluşturuldu", "Auto Created") },
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
@@ -564,15 +588,15 @@ export const quickCreateRegistry = {
       { name: "asset_type", type: "select", label: i18nLabel("Varlık Turu", "Asset Type"), options: [
         option("Vehicle", "Araç", "Vehicle"),
         option("Home", "Konut", "Home"),
-        option("Health Person", "Saglik Kişi", "Health Person"),
-        option("Workplace", "Isyeri", "Workplace"),
+        option("Health Person", "Sağlık Kişisi", "Health Person"),
+        option("Workplace", "İşyeri", "Workplace"),
         option("Travel", "Seyahat", "Travel"),
         option("Boat", "Tekne", "Boat"),
-        option("Farm", "Tarim", "Farm"),
+        option("Farm", "Tarım", "Farm"),
         option("Other", "Diğer", "Other"),
       ] },
-      { name: "asset_label", type: "text", label: i18nLabel("Varlık Basligi", "Asset Label"), required: true, fullWidth: true },
-      { name: "asset_identifier", type: "text", label: i18nLabel("Varlık Kimligi", "Asset Identifier"), fullWidth: true },
+      { name: "asset_label", type: "text", label: i18nLabel("Varlık Başlığı", "Asset Label"), required: true, fullWidth: true },
+      { name: "asset_identifier", type: "text", label: i18nLabel("Varlık Kimliği", "Asset Identifier"), fullWidth: true },
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
     ],
   },
@@ -611,14 +635,14 @@ export const quickCreateRegistry = {
         option("Outbound", "Giden", "Outbound"),
       ] },
       { name: "call_status", type: "select", label: i18nLabel("Arama Durumu", "Call Status"), options: [
-        option("Planned", "Planlandi", "Planned"),
+        option("Planned", "Planlandı", "Planned"),
         option("Completed", "Tamamlandı", "Completed"),
-        option("Missed", "Kacirildi", "Missed"),
+        option("Missed", "Kaçırıldı", "Missed"),
         option("No Answer", "Ulaşılamadı", "No Answer"),
         option("Cancelled", "İptal", "Cancelled"),
       ] },
       { name: "call_outcome", type: "text", label: i18nLabel("Arama Sonucu", "Call Outcome"), fullWidth: true },
-      { name: "note_at", type: "datetime", label: i18nLabel("Not Zamani", "Note At"), required: true },
+      { name: "note_at", type: "datetime", label: i18nLabel("Not Zamanı", "Note At"), required: true },
       { name: "next_follow_up_on", type: "date", label: i18nLabel("Sonraki Takip", "Next Follow Up") },
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
     ],
@@ -640,13 +664,13 @@ export const quickCreateRegistry = {
       notes: "",
     },
     fields: [
-      { name: "segment_name", type: "text", label: i18nLabel("Segment Adi", "Segment Name"), required: true, fullWidth: true },
+      { name: "segment_name", type: "text", label: i18nLabel("Segment Adı", "Segment Name"), required: true, fullWidth: true },
       { name: "segment_type", type: "select", label: i18nLabel("Segment Türü", "Segment Type"), options: [
         option("Static", "Statik", "Static"),
         option("Dynamic", "Dinamik", "Dynamic"),
         option("Operational", "Operasyonel", "Operational"),
       ] },
-      { name: "channel_focus", type: "select", label: i18nLabel("Kanal Odagi", "Channel Focus"), options: [
+      { name: "channel_focus", type: "select", label: i18nLabel("Kanal Odağı", "Channel Focus"), options: [
         option("WHATSAPP", "WhatsApp", "WhatsApp"),
         option("SMS", "SMS", "SMS"),
         option("Email", "E-posta", "Email"),
@@ -679,7 +703,7 @@ export const quickCreateRegistry = {
       notes: "",
     },
     fields: [
-      { name: "campaign_name", type: "text", label: i18nLabel("Kampanya Adi", "Campaign Name"), required: true, fullWidth: true },
+      { name: "campaign_name", type: "text", label: i18nLabel("Kampanya Adı", "Campaign Name"), required: true, fullWidth: true },
       { name: "segment", type: "select", label: i18nLabel("Segment", "Segment"), optionsSource: "segments", required: true },
       { name: "template", type: "select", label: i18nLabel("Şablon", "Template"), optionsSource: "notificationTemplates" },
       { name: "channel", type: "select", label: i18nLabel("Kanal", "Channel"), options: [
@@ -690,7 +714,7 @@ export const quickCreateRegistry = {
       ] },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Draft", "Taslak", "Draft"),
-        option("Planned", "Planlandi", "Planned"),
+        option("Planned", "Planlandı", "Planned"),
         option("Running", "Çalışıyor", "Running"),
         option("Completed", "Tamamlandı", "Completed"),
         option("Cancelled", "İptal", "Cancelled"),
@@ -701,7 +725,7 @@ export const quickCreateRegistry = {
   },
   notification_draft: {
     key: "notification_draft",
-    title: i18nLabel("Hızlı Bildirim Taslagi", "Quick Notification Draft"),
+    title: i18nLabel("Hızlı Bildirim Taslağı", "Quick Notification Draft"),
     subtitle: i18nLabel("Şablon tabanlı bildirim taslağı oluştur", "Create a template-based notification draft"),
     submitUrl: "acentem_takipte.acentem_takipte.api.communication.create_quick_notification_draft",
     resultKey: "draft",
@@ -831,7 +855,7 @@ export const quickCreateRegistry = {
       { name: "branch_name", type: "text", label: i18nLabel("Branş Adı", "Branch Name"), required: true, fullWidth: true },
       { name: "branch_code", type: "text", label: i18nLabel("Branş Kodu", "Branch Code") },
       { name: "insurance_company", type: "select", label: i18nLabel("Sigorta Şirketi", "Insurance Company"), optionsSource: "insuranceCompanies" },
-      { name: "is_active", type: "checkbox", label: i18nLabel("Aktif", "Active"), checkboxLabel: i18nLabel("Aktif brans", "Active branch") },
+      { name: "is_active", type: "checkbox", label: i18nLabel("Aktif", "Active"), checkboxLabel: i18nLabel("Aktif branş", "Active branch") },
     ],
   },
   sales_entity_master: {
@@ -1013,11 +1037,11 @@ export const quickCreateRegistry = {
       { name: "customer", type: "select", label: i18nLabel("Müşteri", "Customer"), optionsSource: "customers" },
       { name: "policy", type: "select", label: i18nLabel("Poliçe", "Policy"), optionsSource: "policies" },
       { name: "assigned_to", type: "text", label: i18nLabel("Atanan Kullanıcı", "Assigned User"), required: true },
-      { name: "assignment_role", type: "select", label: i18nLabel("Atama Rolu", "Assignment Role"), options: [
+      { name: "assignment_role", type: "select", label: i18nLabel("Atama Rolü", "Assignment Role"), options: [
         option("Owner", "Sahip", "Owner"),
         option("Assignee", "Sorumlu", "Assignee"),
-        option("Reviewer", "Gozden Geciren", "Reviewer"),
-        option("Follower", "Takipci", "Follower"),
+        option("Reviewer", "Gözden Geçiren", "Reviewer"),
+        option("Follower", "Takipçi", "Follower"),
       ] },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Open", "Açık", "Open"),
@@ -1068,7 +1092,7 @@ export const quickCreateRegistry = {
         option("Collection", "Tahsilat", "Collection"),
         option("Claim", "Hasar", "Claim"),
         option("Renewal", "Yenileme", "Renewal"),
-        option("Review", "Inceleme", "Review"),
+        option("Review", "İnceleme", "Review"),
         option("Other", "Diğer", "Other"),
       ] },
       { name: "source_doctype", type: "select", label: i18nLabel("Kaynak Tipi", "Source Type"), options: [
@@ -1125,7 +1149,7 @@ export const quickCreateRegistry = {
       notes: "",
     },
     fields: [
-      { name: "activity_title", type: "text", label: i18nLabel("Aktivite Basligi", "Activity Title"), required: true },
+      { name: "activity_title", type: "text", label: i18nLabel("Aktivite Başlığı", "Activity Title"), required: true },
       { name: "activity_type", type: "select", label: i18nLabel("Aktivite Tipi", "Activity Type"), options: [
         option("Call", "Arama", "Call"),
         option("Visit", "Ziyaret", "Visit"),
@@ -1134,7 +1158,7 @@ export const quickCreateRegistry = {
         option("Renewal Update", "Yenileme Güncelleme", "Renewal Update"),
         option("Collection", "Tahsilat", "Collection"),
         option("Campaign", "Kampanya", "Campaign"),
-        option("Review", "Inceleme", "Review"),
+        option("Review", "İnceleme", "Review"),
         option("Other", "Diğer", "Other"),
       ] },
       { name: "source_doctype", type: "select", label: i18nLabel("Kaynak Tipi", "Source Type"), options: [
@@ -1149,7 +1173,7 @@ export const quickCreateRegistry = {
       { name: "policy", type: "select", label: i18nLabel("Poliçe", "Policy"), optionsSource: "policies" },
       { name: "claim", type: "text", label: i18nLabel("Hasar", "Claim") },
       { name: "assigned_to", type: "text", label: i18nLabel("Atanan Kullanıcı", "Assigned User") },
-      { name: "activity_at", type: "datetime-local", label: i18nLabel("Aktivite Zamani", "Activity Time") },
+      { name: "activity_at", type: "datetime-local", label: i18nLabel("Aktivite Zamanı", "Activity Time") },
       { name: "status", type: "select", label: i18nLabel("Durum", "Status"), options: [
         option("Logged", "Kaydedildi", "Logged"),
         option("Shared", "Paylaşıldı", "Shared"),
@@ -1180,7 +1204,7 @@ export const quickCreateRegistry = {
       notes: "",
     },
     fields: [
-      { name: "reminder_title", type: "text", label: i18nLabel("Hatırlatıcı Basligi", "Reminder Title"), required: true },
+      { name: "reminder_title", type: "text", label: i18nLabel("Hatırlatıcı Başlığı", "Reminder Title"), required: true },
       { name: "source_doctype", type: "select", label: i18nLabel("Kaynak Tipi", "Source Type"), options: [
         option("AT Customer", "Müşteri", "Customer"),
         option("AT Policy", "Poliçe", "Policy"),
@@ -1207,7 +1231,7 @@ export const quickCreateRegistry = {
         option("High", "Yüksek", "High"),
         option("Critical", "Kritik", "Critical"),
       ] },
-      { name: "remind_at", type: "datetime-local", label: i18nLabel("Hatırlatma Zamani", "Reminder Time"), required: true },
+      { name: "remind_at", type: "datetime-local", label: i18nLabel("Hatırlatma Zamanı", "Reminder Time"), required: true },
       { name: "notes", type: "textarea", label: i18nLabel("Not", "Notes"), rows: 3, fullWidth: true },
     ],
   },
@@ -1233,7 +1257,7 @@ addQuickEditVariant(
   "customer_relation_edit",
   "Müşteri İlişkisini Düzenle",
   "Edit Customer Relation",
-  "İlişki alanlarini güncelle",
+  "İlişki alanlarını güncelle",
   "Update relation fields"
 );
 addQuickEditVariant(
@@ -1241,7 +1265,7 @@ addQuickEditVariant(
   "insured_asset_edit",
   "Sigortalanan Varlığı Düzenle",
   "Edit Insured Asset",
-  "Varlık alanlarini güncelle",
+  "Varlık alanlarını güncelle",
   "Update insured asset fields"
 );
 addQuickEditVariant(
@@ -1273,7 +1297,7 @@ addQuickEditVariant(
   "call_note_edit",
   "Arama Notunu Düzenle",
   "Edit Call Note",
-  "Arama notu alanlarini güncelle",
+  "Arama notu alanlarını güncelle",
   "Update call note fields"
 );
 addQuickEditVariant(
@@ -1281,7 +1305,7 @@ addQuickEditVariant(
   "segment_edit",
   "Segmenti Düzenle",
   "Edit Segment",
-  "Segment alanlarini güncelle",
+  "Segment alanlarını güncelle",
   "Update segment fields"
 );
 addQuickEditVariant(
@@ -1289,7 +1313,7 @@ addQuickEditVariant(
   "campaign_edit",
   "Kampanyayı Düzenle",
   "Edit Campaign",
-  "Kampanya alanlarini güncelle",
+  "Kampanya alanlarını güncelle",
   "Update campaign fields"
 );
 addQuickEditVariant(
@@ -1297,7 +1321,7 @@ addQuickEditVariant(
   "ownership_assignment_edit",
   "Atamayı Düzenle",
   "Edit Assignment",
-  "Atama alanlarini güncelle",
+  "Atama alanlarını güncelle",
   "Update assignment fields"
 );
 addQuickEditVariant(
@@ -1305,7 +1329,7 @@ addQuickEditVariant(
   "task_edit",
   "Görevi Düzenle",
   "Edit Task",
-  "Görev alanlarini güncelle",
+  "Görev alanlarını güncelle",
   "Update task fields"
 );
 addQuickEditVariant(
@@ -1313,7 +1337,7 @@ addQuickEditVariant(
   "activity_edit",
   "Aktiviteyi Düzenle",
   "Edit Activity",
-  "Aktivite alanlarini güncelle",
+  "Aktivite alanlarını güncelle",
   "Update activity fields"
 );
 addQuickEditVariant(
@@ -1321,7 +1345,7 @@ addQuickEditVariant(
   "reminder_edit",
   "Hatırlatıcıyı Düzenle",
   "Edit Reminder",
-  "Hatırlatıcı alanlarini güncelle",
+  "Hatırlatıcı alanlarını güncelle",
   "Update reminder fields"
 );
 addQuickEditVariant(
@@ -1329,7 +1353,7 @@ addQuickEditVariant(
   "notification_template_master_edit",
   "Bildirim Şablonunu Düzenle",
   "Edit Notification Template",
-  "Şablon alanlarini güncelle",
+  "Şablon alanlarını güncelle",
   "Update notification template fields"
 );
 addQuickEditVariant(
@@ -1337,7 +1361,7 @@ addQuickEditVariant(
   "accounting_entry_edit",
   "Muhasebe Kaydını Düzenle",
   "Edit Accounting Entry",
-  "Muhasebe ve mutabakat alanlarini güncelle",
+  "Muhasebe ve mutabakat alanlarını güncelle",
   "Update accounting and reconciliation fields"
 );
 addQuickEditVariant(

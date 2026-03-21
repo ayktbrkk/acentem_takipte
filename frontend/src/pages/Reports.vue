@@ -2,238 +2,283 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <p class="detail-breadcrumb">Kontrol Merkezi / Raporlar</p>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="loadReport">
+          {{ t("refresh") }}
+        </button>
+        <button class="btn btn-outline btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
+          {{ t("exportXlsx") }}
+        </button>
+        <button class="btn btn-primary btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
+          {{ t("exportPdf") }}
+        </button>
       </div>
     </div>
 
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar>
-        <template #actions>
-          <ActionButton variant="secondary" size="sm" :disabled="loading" @click="loadReport">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton variant="primary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
-            {{ t("exportPdf") }}
-          </ActionButton>
-        </template>
-
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="loadReport"
-            @reset="resetFilters"
-          >
-            <select v-model="filters.reportKey" class="input">
-              <option v-for="option in reportOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <input v-model="filters.fromDate" class="input" type="date" />
-            <input v-model="filters.toDate" class="input" type="date" />
-
-            <template #advanced>
-              <input
-                v-if="isFilterVisible('branch')"
-                v-model.trim="filters.branch"
-                class="input"
-                type="search"
-                :placeholder="t('branchFilter')"
-              />
-              <input
-                v-if="isFilterVisible('insuranceCompany')"
-                v-model.trim="filters.insuranceCompany"
-                class="input"
-                type="search"
-                :placeholder="t('companyFilter')"
-              />
-              <input
-                v-if="isFilterVisible('salesEntity')"
-                v-model.trim="filters.salesEntity"
-                class="input"
-                type="search"
-                :placeholder="t('salesEntityFilter')"
-              />
-              <input
-                v-if="isFilterVisible('status')"
-                v-model.trim="filters.status"
-                class="input"
-                type="search"
-                :placeholder="t('statusFilter')"
-              />
-            </template>
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
-    </article>
-
-    <article class="surface-card rounded-xl border border-sky-200 bg-sky-50/80 px-4 py-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="space-y-1">
-          <p class="text-sm font-medium text-sky-800">{{ activeReportLabel }}</p>
-          <p class="text-xs text-sky-700">{{ branchScopeLabel }}</p>
-        </div>
-        <div class="text-right">
-          <p class="text-xs text-sky-700">{{ t("totalRows") }}: {{ sortedRows.length }}</p>
-          <p v-if="exportLoading" class="text-[11px] text-sky-600">{{ t("exporting") }}</p>
-        </div>
-      </div>
-    </article>
-
-    <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="w-full grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <article
         v-for="item in summaryItems"
         :key="item.key"
-        class="surface-card rounded-2xl border border-slate-200 px-4 py-4"
+        class="mini-metric shadow-sm border border-slate-200 bg-white/95"
+        :class="item.cardClass"
       >
-        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p class="mini-metric-label">
           {{ item.label }}
         </p>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">
+        <p class="mini-metric-value" :class="item.valueClass">
           {{ item.value }}
         </p>
       </article>
     </section>
 
     <section v-if="comparisonSummaryItems.length" class="space-y-3">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-3">
         <h3 class="text-sm font-semibold text-slate-900">{{ t("comparisonSummaryTitle") }}</h3>
         <span class="text-[11px] font-medium text-slate-500">{{ t("comparisonSummaryHint") }}</span>
       </div>
-      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div class="w-full grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <article
           v-for="item in comparisonSummaryItems"
           :key="item.key"
-          class="surface-card rounded-2xl border border-slate-200 px-4 py-4"
+          class="mini-metric shadow-sm border border-slate-200 bg-white/95"
+          :class="item.cardClass"
         >
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          <p class="mini-metric-label">
             {{ item.label }}
           </p>
-          <p class="mt-2 text-2xl font-semibold text-slate-900">
+          <p class="mini-metric-value" :class="item.valueClass">
             {{ item.value }}
           </p>
-          <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-rose-600'">
+          <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-amber-700'">
             {{ formatComparisonDelta(item.delta, item.previous) }}
           </p>
         </article>
       </div>
     </section>
 
-    <DataTableShell
-      :loading="loading"
-      :error="error"
-      :empty="!loading && sortedRows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
+    <SectionPanel
+      :title="t('filtersTitle')"
+      :count="`${activeFilterCount} ${t('activeFilters')}`"
     >
-      <template #header>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between gap-3">
-            <h3 class="text-base font-semibold text-slate-900">{{ activeReportLabel }}</h3>
-            <span class="text-xs text-slate-500">{{ sortedRows.length }}</span>
+      <WorkbenchFilterToolbar
+        v-model="presetKey"
+        :advanced-label="t('advancedFilters')"
+        :collapse-label="t('hideAdvancedFilters')"
+        :active-count="activeFilterCount"
+        :active-count-label="t('activeFilters')"
+        :preset-label="t('presetLabel')"
+        :preset-options="presetOptions"
+        :can-delete-preset="canDeletePreset"
+        :save-label="t('savePreset')"
+        :delete-label="t('deletePreset')"
+        :apply-label="t('applyFilters')"
+        :reset-label="t('clearFilters')"
+        @preset-change="onPresetChange"
+        @preset-save="savePreset"
+        @preset-delete="deletePreset"
+        @apply="loadReport"
+        @reset="resetFilters"
+      >
+        <select v-model="filters.reportKey" class="input">
+          <option v-for="option in reportOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <input v-model="filters.fromDate" class="input" type="date" />
+        <input v-model="filters.toDate" class="input" type="date" />
+
+        <template #advanced>
+          <input
+            v-if="isFilterVisible('branch')"
+            v-model.trim="filters.branch"
+            class="input"
+            type="search"
+            :placeholder="t('branchFilter')"
+          />
+          <input
+            v-if="isFilterVisible('insuranceCompany')"
+            v-model.trim="filters.insuranceCompany"
+            class="input"
+            type="search"
+            :placeholder="t('companyFilter')"
+          />
+          <input
+            v-if="isFilterVisible('salesEntity')"
+            v-model.trim="filters.salesEntity"
+            class="input"
+            type="search"
+            :placeholder="t('salesEntityFilter')"
+          />
+          <input
+            v-if="isFilterVisible('status')"
+            v-model.trim="filters.status"
+            class="input"
+            type="search"
+            :placeholder="t('statusFilter')"
+          />
+        </template>
+      </WorkbenchFilterToolbar>
+    </SectionPanel>
+
+    <SectionPanel
+      :title="activeReportLabel"
+      :count="sortedRows.length"
+      :meta="branchScopeLabel"
+    >
+      <div class="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
+        <span v-if="exportLoading">{{ t("exporting") }}</span>
+      </div>
+
+      <div class="mt-4 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
+          <div class="space-y-1">
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("columns") }}</p>
+            <p class="text-xs text-slate-500">{{ t("columnHint") }}</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-medium text-slate-500">{{ t("columns") }}</span>
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">
+              {{ columnsSummaryLabel }}
+            </span>
             <button
               type="button"
-              class="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
+              class="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-900"
               @click="showAllColumns"
             >
               {{ t("showAllColumns") }}
             </button>
-            <button
-              v-for="column in columns"
-              :key="`toggle-${column}`"
-              type="button"
-              class="rounded-full border px-2.5 py-1 text-xs font-medium transition"
-              :class="
-                isColumnVisible(column)
-                  ? 'border-sky-300 bg-sky-50 text-sky-700'
-                  : 'border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700'
-              "
-              @click="toggleColumn(column)"
-            >
-              {{ getColumnLabel(column) }}
-            </button>
           </div>
         </div>
-      </template>
 
-      <div class="overflow-auto">
-        <table class="at-table">
-          <thead>
-            <tr class="at-table-head-row">
-              <th v-for="column in visibleColumns" :key="column" class="at-table-head-cell">
-                <button
-                  type="button"
-                  class="inline-flex items-center gap-1 text-left transition hover:text-slate-900"
-                  @click="toggleSort(column)"
-                >
-                  <span>{{ getColumnLabel(column) }}</span>
-                  <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, rowIndex) in sortedRows" :key="row.name || rowIndex" class="at-table-row">
-              <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
-                {{ formatCellValue(column, row[column]) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div
+          class="mt-4 grid gap-3"
+          :class="hiddenColumns.length ? 'xl:grid-cols-2' : 'xl:grid-cols-1'"
+        >
+          <div class="rounded-2xl border border-sky-100 bg-sky-50/60 p-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="space-y-1">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">{{ t("selectedColumns") }}</p>
+                <p class="text-xs text-sky-700/80">{{ t("columnHint") }}</p>
+              </div>
+              <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-sky-700 shadow-sm">
+                {{ visibleColumns.length }}
+              </span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                v-for="column in visibleColumns"
+                :key="`visible-${column}`"
+                type="button"
+                class="report-chip report-chip--active rounded-full"
+                @click="toggleColumn(column)"
+              >
+                <span class="report-chip__dot" />
+                {{ getColumnLabel(column) }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="hiddenColumns.length" class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="space-y-1">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("hiddenColumns") }}</p>
+                <p class="text-xs text-slate-500">{{ t("showAllColumns") }} ile geri açılabilir.</p>
+              </div>
+              <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm">
+                {{ hiddenColumns.length }}
+              </span>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                v-for="column in hiddenColumns"
+                :key="`hidden-${column}`"
+                type="button"
+                class="report-chip report-chip--hidden rounded-full"
+                @click="toggleColumn(column)"
+              >
+                {{ getColumnLabel(column) }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </DataTableShell>
 
-    <ScheduledReportsManager
+      <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+        {{ t("loading") }}
+      </div>
+      <div v-else-if="error" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ error }}</p>
+      </div>
+      <template v-else>
+        <div v-if="sortedRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
+        </div>
+
+        <div class="mt-4 overflow-auto">
+          <table class="at-table">
+            <thead>
+              <tr class="at-table-head-row">
+                <th v-for="column in visibleColumns" :key="column" class="at-table-head-cell">
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 text-left transition hover:text-slate-900"
+                    @click="toggleSort(column)"
+                  >
+                    <span>{{ getColumnLabel(column) }}</span>
+                    <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, rowIndex) in sortedRows" :key="row.name || rowIndex" class="at-table-row">
+                <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
+                  {{ formatCellValue(column, row[column]) }}
+                </td>
+                </tr>
+              </tbody>
+            </table>
+        </div>
+      </template>
+    </SectionPanel>
+
+    <SectionPanel
       v-if="canManageScheduledReports"
-      :items="scheduledReports"
-      :loading="scheduledLoading"
-      :running="scheduledRunLoading"
-      :locale="activeLocale"
-      :report-catalog="reportCatalog"
-      :active-office-branch="branchStore.requestBranch"
-      @run="runScheduledReports"
-      @save="saveScheduledReport"
-      @remove="removeScheduledReport"
-    />
-    <article v-if="canManageScheduledReports" class="surface-card rounded-2xl p-5">
-      <div class="flex flex-wrap items-center justify-between gap-3">
+      :title="t('scheduledTitle')"
+      :meta="t('scheduledEmpty')"
+      :count="scheduledReports.length"
+    >
+      <ScheduledReportsManager
+        :items="scheduledReports"
+        :loading="scheduledLoading"
+        :running="scheduledRunLoading"
+        :locale="activeLocale"
+        :report-catalog="reportCatalog"
+        :active-office-branch="branchStore.requestBranch"
+        @run="runScheduledReports"
+        @save="saveScheduledReport"
+        @remove="removeScheduledReport"
+      />
+      <div class="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
         <div class="space-y-1">
-          <h3 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h3>
+          <h4 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h4>
           <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
         </div>
-        <ActionButton
-          variant="secondary"
-          size="sm"
+        <button
+          class="btn btn-sm"
+          type="button"
           data-testid="run-segment-snapshot-job"
           :disabled="snapshotRunLoading"
           @click="runCustomerSegmentSnapshots"
         >
           {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
-        </ActionButton>
+        </button>
       </div>
-    </article>
+    </SectionPanel>
   </section>
 </template>
 
@@ -242,12 +287,12 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, unref, watch } fro
 import { frappeRequest } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ScheduledReportsManager from "../components/reports/ScheduledReportsManager.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
+import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 
@@ -258,8 +303,9 @@ const props = defineProps({
   },
 });
 
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
 const route = useRoute();
 const router = useRouter();
 const REPORT_LOAD_DEBOUNCE_MS = 300;
@@ -272,6 +318,8 @@ const copy = {
     refresh: "Yenile",
     exportPdf: "PDF",
     exportXlsx: "Excel",
+    recordCount: "kayıt",
+    filtersTitle: "Filtreler",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
@@ -280,7 +328,7 @@ const copy = {
     deletePreset: "Sil",
     applyFilters: "Uygula",
     clearFilters: "Temizle",
-    branchFilter: "Sigorta bransi",
+    branchFilter: "Sigorta branşı",
     companyFilter: "Sigorta şirketi",
     salesEntityFilter: "Satış birimi",
     statusFilter: "Durum",
@@ -288,10 +336,10 @@ const copy = {
     loadErrorTitle: "Rapor Yüklenemedi",
     emptyTitle: "Kayıt bulunamadı",
     emptyDescription: "Seçili filtrelerle rapor verisi bulunamadı.",
-    totalRows: "Toplam Satir",
+    totalRows: "Toplam Satır",
     scopeAll: "Tüm şubeler",
     scopePrefix: "Ofis Şube",
-    exportError: "Rapor disa aktarma başarısız oldu.",
+    exportError: "Rapor dışa aktarma başarısız oldu.",
     exporting: "Dışa aktarılıyor...",
     summaryRows: "Kayıt Sayısı",
     summaryGrossPremium: "Brüt Prim",
@@ -307,21 +355,24 @@ const copy = {
     summarySuccessfulDeliveries: "Başarılı Gönderim",
     summaryOpenReconciliation: "Açık Mutabakat",
     summaryDifferenceAmount: "Fark Tutarı",
-    summaryResolvedItems: "Cozulen Kalem",
+    summaryResolvedItems: "Çözülen Kalem",
     summaryOpenClaims: "Açık Hasar",
     summaryRejectedClaims: "Reddedilen Hasar",
     summarySuccessfulNotifications: "Başarılı Bildirim",
     comparisonSummaryTitle: "Dönem Kıyaslaması",
     comparisonSummaryHint: "Seçili aralık, önceki eşit periyot ile karşılaştırılır.",
     columns: "Kolonlar",
+    columnHint: "Seçili kolonlar tabloyu kurar, gizli kolonlar tek dokunuşla açılır.",
+    selectedColumns: "Seçili Kolonlar",
+    hiddenColumns: "Gizli Kolonlar",
     showAllColumns: "Tümünü Göster",
     viewStateError: "Rapor görünümü kaydedilemedi.",
     scheduledSaveError: "Zamanlanmış rapor kaydedilemedi.",
     scheduledDeleteError: "Zamanlanmış rapor silinemedi.",
     scheduledTitle: "Zamanlanmış Raporlar",
-    scheduledSubtitle: "Site konfigrasyonu ile tanimli rapor teslimleri",
+    scheduledSubtitle: "Site konfigürasyonu ile tanımlı rapor teslimleri",
     runScheduledReports: "Zamanlanmış Raporları Çalıştır",
-    scheduledEmpty: "Tanimli zamanlanmis rapor yok.",
+    scheduledEmpty: "Tanımlı zamanlanmış rapor yok.",
     scheduledRecipients: "Alıcılar",
     scheduledFilters: "Filtreler",
     scheduledFrequency: "Frekans",
@@ -332,7 +383,7 @@ const copy = {
     scheduledRunError: "Zamanlanmış raporlar tetiklenemedi.",
     scheduledLoadError: "Zamanlanmış raporlar yüklenemedi.",
     segmentSnapshotTitle: "Segment Snapshot'ları",
-    segmentSnapshotHint: "Müşteri segment skorlarini toplu olarak yeniler",
+    segmentSnapshotHint: "Müşteri segment skorlarını toplu olarak yeniler",
     runSegmentSnapshots: "Snapshot'ları Çalıştır",
     runningSegmentSnapshots: "Snapshot'lar Çalışıyor...",
     segmentSnapshotRunError: "Segment snapshot işi tetiklenemedi.",
@@ -343,6 +394,8 @@ const copy = {
     refresh: "Refresh",
     exportPdf: "PDF",
     exportXlsx: "Excel",
+    recordCount: "records",
+    filtersTitle: "Filters",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
@@ -385,6 +438,9 @@ const copy = {
     comparisonSummaryTitle: "Period Comparison",
     comparisonSummaryHint: "Selected range is compared with the previous equal period",
     columns: "Columns",
+    columnHint: "Selected columns define the table, hidden columns can be restored with one tap.",
+    selectedColumns: "Selected Columns",
+    hiddenColumns: "Hidden Columns",
     showAllColumns: "Show All",
     viewStateError: "Failed to save report view.",
     scheduledSaveError: "Failed to save scheduled report.",
@@ -478,6 +534,9 @@ const columnLabels = {
   status: { tr: "Durum", en: "Status" },
   claim_status: { tr: "Hasar Durumu", en: "Claim Status" },
   assigned_to: { tr: "Atanan Kişi", en: "Assigned To" },
+    issue_date: { tr: "Tanzim Tarihi", en: "Issue Date" },
+  start_date: { tr: "Başlangıç Tarihi", en: "Start Date" },
+  end_date: { tr: "Bitiş Tarihi", en: "End Date" },
   renewal_date: { tr: "Yenileme Tarihi", en: "Renewal Date" },
   due_date: { tr: "Vade Tarihi", en: "Due Date" },
   gross_premium: { tr: "Brüt Prim", en: "Gross Premium" },
@@ -627,6 +686,38 @@ const visibleColumns = computed(() => {
   return columns.value.filter((column) => visibleColumnKeys.value.includes(column));
 });
 
+const hiddenColumns = computed(() => columns.value.filter((column) => !visibleColumns.value.includes(column)));
+const columnsSummaryLabel = computed(() => `${visibleColumns.value.length}/${columns.value.length}`);
+
+const metricToneClasses = {
+  rows: "text-slate-900",
+  gross_premium: "text-sky-700",
+  commission: "text-emerald-700",
+  paid_amount: "text-amber-700",
+  active_policies: "text-emerald-700",
+  conversion_rate: "text-sky-700",
+  open_renewals: "text-amber-700",
+  loyal_customers: "text-slate-900",
+  claim_customers: "text-amber-700",
+  matched_customers: "text-emerald-700",
+  created_drafts: "text-sky-700",
+  successful_deliveries: "text-emerald-700",
+  open_reconciliation: "text-amber-700",
+  difference_amount: "text-sky-700",
+  resolved_items: "text-emerald-700",
+  open_claims: "text-amber-700",
+  rejected_claims: "text-amber-700",
+  successful_notifications: "text-emerald-700",
+};
+const buildMetricItem = (key, label, value, extra = {}) => ({
+  key,
+  label,
+  value,
+  valueClass: metricToneClasses[key] || "text-slate-900",
+  cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm",
+  ...extra,
+});
+
 const sortedRows = computed(() => {
   if (!sortState.column || !sortState.direction) {
     return rows.value;
@@ -664,160 +755,74 @@ const summaryItems = computed(() => {
 
   if (filters.reportKey === "agent_performance") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "gross_premium",
-        label: t("summaryGrossPremium"),
-        value: numberFormatter.value.format(numericTotal(["total_gross_premium"])),
-      },
-      {
-        key: "commission",
-        label: t("summaryCommission"),
-        value: numberFormatter.value.format(numericTotal(["total_commission"])),
-      },
-      {
-        key: "conversion_rate",
-        label: t("summaryAvgConversionRate"),
-        value: `%${percentFormatter.value.format(avgNumeric("offer_conversion_rate"))}`,
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
+      buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["total_commission"]))),
+      buildMetricItem("conversion_rate", t("summaryAvgConversionRate"), `%${percentFormatter.value.format(avgNumeric("offer_conversion_rate"))}`),
     ];
   }
 
   if (filters.reportKey === "customer_segmentation") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "total_premium",
-        label: t("summaryGrossPremium"),
-        value: numberFormatter.value.format(numericTotal(["total_premium"])),
-      },
-      {
-        key: "active_policies",
-        label: t("summaryActivePolicies"),
-        value: numberFormatter.value.format(numericTotal(["active_policy_count"])),
-      },
-      {
-        key: "claim_customers",
-        label: t("summaryClaimCustomers"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => String(row?.claim_history_segment || "") === "HAS_CLAIM").length,
-        ),
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_premium"]))),
+      buildMetricItem("active_policies", t("summaryActivePolicies"), numberFormatter.value.format(numericTotal(["active_policy_count"]))),
+      buildMetricItem(
+        "claim_customers",
+        t("summaryClaimCustomers"),
+        numberFormatter.value.format(rows.value.filter((row) => String(row?.claim_history_segment || "") === "HAS_CLAIM").length),
+      ),
     ];
   }
 
   if (filters.reportKey === "communication_operations") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "matched_customers",
-        label: t("summaryMatchedCustomers"),
-        value: numberFormatter.value.format(numericTotal(["matched_customer_count"])),
-      },
-      {
-        key: "created_drafts",
-        label: t("summaryCreatedDrafts"),
-        value: numberFormatter.value.format(numericTotal(["sent_count"])),
-      },
-      {
-        key: "successful_deliveries",
-        label: t("summarySuccessfulDeliveries"),
-        value: numberFormatter.value.format(numericTotal(["sent_outbox_count"])),
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem("matched_customers", t("summaryMatchedCustomers"), numberFormatter.value.format(numericTotal(["matched_customer_count"]))),
+      buildMetricItem("created_drafts", t("summaryCreatedDrafts"), numberFormatter.value.format(numericTotal(["sent_count"]))),
+      buildMetricItem("successful_deliveries", t("summarySuccessfulDeliveries"), numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
     ];
   }
 
   if (filters.reportKey === "reconciliation_operations") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "open_reconciliation",
-        label: t("summaryOpenReconciliation"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => String(row?.status || "") === "Open").length,
-        ),
-      },
-      {
-        key: "difference_amount",
-        label: t("summaryDifferenceAmount"),
-        value: numberFormatter.value.format(numericTotal(["difference_try"])),
-      },
-      {
-        key: "resolved_items",
-        label: t("summaryResolvedItems"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length,
-        ),
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem(
+        "open_reconciliation",
+        t("summaryOpenReconciliation"),
+        numberFormatter.value.format(rows.value.filter((row) => String(row?.status || "") === "Open").length),
+      ),
+      buildMetricItem("difference_amount", t("summaryDifferenceAmount"), numberFormatter.value.format(numericTotal(["difference_try"]))),
+      buildMetricItem(
+        "resolved_items",
+        t("summaryResolvedItems"),
+        numberFormatter.value.format(rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length),
+      ),
     ];
   }
 
   if (filters.reportKey === "claims_operations") {
     return [
-      {
-        key: "rows",
-        label: t("summaryRows"),
-        value: numberFormatter.value.format(rows.value.length),
-      },
-      {
-        key: "open_claims",
-        label: t("summaryOpenClaims"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length,
-        ),
-      },
-      {
-        key: "rejected_claims",
-        label: t("summaryRejectedClaims"),
-        value: numberFormatter.value.format(
-          rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length,
-        ),
-      },
-      {
-        key: "successful_notifications",
-        label: t("summarySuccessfulNotifications"),
-        value: numberFormatter.value.format(numericTotal(["sent_outbox_count"])),
-      },
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem(
+        "open_claims",
+        t("summaryOpenClaims"),
+        numberFormatter.value.format(rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length),
+      ),
+      buildMetricItem(
+        "rejected_claims",
+        t("summaryRejectedClaims"),
+        numberFormatter.value.format(rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length),
+      ),
+      buildMetricItem("successful_notifications", t("summarySuccessfulNotifications"), numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
     ];
   }
 
   return [
-    {
-      key: "rows",
-      label: t("summaryRows"),
-      value: numberFormatter.value.format(rows.value.length),
-    },
-    {
-      key: "gross_premium",
-      label: t("summaryGrossPremium"),
-      value: numberFormatter.value.format(numericTotal(["gross_premium", "total_gross_premium", "total_premium"])),
-    },
-    {
-      key: "commission",
-      label: t("summaryCommission"),
-      value: numberFormatter.value.format(numericTotal(["commission_amount", "total_commission"])),
-    },
-    {
-      key: "paid_amount",
-      label: t("summaryPaidAmount"),
-      value: numberFormatter.value.format(numericTotal(["paid_amount", "approved_amount"])),
-    },
+    buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+    buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["gross_premium", "total_gross_premium", "total_premium"]))),
+    buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["commission_amount", "total_commission"]))),
+    buildMetricItem("paid_amount", t("summaryPaidAmount"), numberFormatter.value.format(numericTotal(["paid_amount", "approved_amount"]))),
   ];
 });
 
@@ -846,9 +851,9 @@ const comparisonSummaryItems = computed(() => {
     const currentDeliveries = numericTotal(["sent_outbox_count"]);
     const previousDeliveries = numericTotalFromRows(comparisonRows.value, ["sent_outbox_count"]);
     return [
-      { key: "cmp_matched", label: t("summaryMatchedCustomers"), value: numberFormatter.value.format(currentMatched), previous: previousMatched, delta: currentMatched - previousMatched },
-      { key: "cmp_drafts", label: t("summaryCreatedDrafts"), value: numberFormatter.value.format(currentDrafts), previous: previousDrafts, delta: currentDrafts - previousDrafts },
-      { key: "cmp_deliveries", label: t("summarySuccessfulDeliveries"), value: numberFormatter.value.format(currentDeliveries), previous: previousDeliveries, delta: currentDeliveries - previousDeliveries },
+      { key: "cmp_matched", label: t("summaryMatchedCustomers"), value: numberFormatter.value.format(currentMatched), previous: previousMatched, delta: currentMatched - previousMatched, valueClass: metricToneClasses.matched_customers, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_drafts", label: t("summaryCreatedDrafts"), value: numberFormatter.value.format(currentDrafts), previous: previousDrafts, delta: currentDrafts - previousDrafts, valueClass: metricToneClasses.created_drafts, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_deliveries", label: t("summarySuccessfulDeliveries"), value: numberFormatter.value.format(currentDeliveries), previous: previousDeliveries, delta: currentDeliveries - previousDeliveries, valueClass: metricToneClasses.successful_deliveries, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
     ];
   }
 
@@ -860,9 +865,9 @@ const comparisonSummaryItems = computed(() => {
     const currentResolved = rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length;
     const previousResolved = comparisonRows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length;
     return [
-      { key: "cmp_open", label: t("summaryOpenReconciliation"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen },
-      { key: "cmp_difference", label: t("summaryDifferenceAmount"), value: numberFormatter.value.format(currentDiff), previous: previousDiff, delta: currentDiff - previousDiff },
-      { key: "cmp_resolved", label: t("summaryResolvedItems"), value: numberFormatter.value.format(currentResolved), previous: previousResolved, delta: currentResolved - previousResolved },
+      { key: "cmp_open", label: t("summaryOpenReconciliation"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen, valueClass: metricToneClasses.open_reconciliation, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_difference", label: t("summaryDifferenceAmount"), value: numberFormatter.value.format(currentDiff), previous: previousDiff, delta: currentDiff - previousDiff, valueClass: metricToneClasses.difference_amount, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_resolved", label: t("summaryResolvedItems"), value: numberFormatter.value.format(currentResolved), previous: previousResolved, delta: currentResolved - previousResolved, valueClass: metricToneClasses.resolved_items, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
     ];
   }
 
@@ -874,9 +879,9 @@ const comparisonSummaryItems = computed(() => {
     const currentNotifications = numericTotal(["sent_outbox_count"]);
     const previousNotifications = numericTotalFromRows(comparisonRows.value, ["sent_outbox_count"]);
     return [
-      { key: "cmp_claim_open", label: t("summaryOpenClaims"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen },
-      { key: "cmp_claim_rejected", label: t("summaryRejectedClaims"), value: numberFormatter.value.format(currentRejected), previous: previousRejected, delta: currentRejected - previousRejected },
-      { key: "cmp_claim_notifications", label: t("summarySuccessfulNotifications"), value: numberFormatter.value.format(currentNotifications), previous: previousNotifications, delta: currentNotifications - previousNotifications },
+      { key: "cmp_claim_open", label: t("summaryOpenClaims"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen, valueClass: metricToneClasses.open_claims, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_claim_rejected", label: t("summaryRejectedClaims"), value: numberFormatter.value.format(currentRejected), previous: previousRejected, delta: currentRejected - previousRejected, valueClass: metricToneClasses.rejected_claims, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+      { key: "cmp_claim_notifications", label: t("summarySuccessfulNotifications"), value: numberFormatter.value.format(currentNotifications), previous: previousNotifications, delta: currentNotifications - previousNotifications, valueClass: metricToneClasses.successful_notifications, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
     ];
   }
 

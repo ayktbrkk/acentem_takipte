@@ -1,138 +1,129 @@
-﻿<template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Ödemeler</p>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <span class="text-sm text-gray-400">{{ formatCount(payments.length) }} kayıt</span>
-    </div>
+<template>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(payments.length)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <QuickCreateLauncher
+        variant="primary"
+        size="sm"
+        :label="t('newPayment')"
+        @launch="showQuickPaymentDialog = true"
+      />
+      <ActionButton variant="secondary" size="sm" :disabled="paymentsLoading" @click="reloadPayments">
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton
+        variant="secondary"
+        size="sm"
+        :disabled="paymentsLoading"
+        @click="downloadPaymentExport('xlsx')"
+      >
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton
+        variant="primary"
+        size="sm"
+        :disabled="paymentsLoading"
+        @click="downloadPaymentExport('pdf')"
+      >
+        {{ t("exportPdf") }}
+      </ActionButton>
+    </template>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-        <p class="mini-metric-value">{{ formatCount(paymentSummary.total) }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ formatCount(paymentSummary.total) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryPending") }}</p>
+          <p class="mini-metric-value text-amber-600">{{ formatCount(paymentSummary.pending) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryCollected") }}</p>
+          <p class="mini-metric-value text-green-600">{{ formatCount(paymentSummary.collected) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryOverdue") }}</p>
+          <p class="mini-metric-value text-amber-700">{{ formatCount(paymentSummary.overdue) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotalAmount") }}</p>
+          <p class="mini-metric-value text-slate-900">{{ formatCurrency(paymentSummary.totalAmount) }}</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryPending") }}</p>
-        <p class="mini-metric-value text-amber-600">{{ formatCount(paymentSummary.pending) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryCollected") }}</p>
-        <p class="mini-metric-value text-green-600">{{ formatCount(paymentSummary.collected) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryOverdue") }}</p>
-        <p class="mini-metric-value text-red-600">{{ formatCount(paymentSummary.overdue) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryTotalAmount") }}</p>
-        <p class="mini-metric-value text-slate-900">{{ formatCurrency(paymentSummary.totalAmount) }}</p>
-      </div>
-    </div>
+    </template>
 
     <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :show-refresh="true"
-        :busy="paymentsResource.loading"
-        :refresh-label="t('refresh')"
-        @refresh="reloadPayments"
+      <WorkbenchFilterToolbar
+        v-model="presetKey"
+        :advanced-label="t('advancedFilters')"
+        :collapse-label="t('hideAdvancedFilters')"
+        :active-count="activeFilterCount"
+        :active-count-label="t('activeFilters')"
+        :preset-label="t('presetLabel')"
+        :preset-options="presetOptions"
+        :can-delete-preset="canDeletePreset"
+        :save-label="t('savePreset')"
+        :delete-label="t('deletePreset')"
+        :apply-label="t('applyFilters')"
+        :reset-label="t('clearFilters')"
+        @preset-change="onPresetChange"
+        @preset-save="savePreset"
+        @preset-delete="deletePreset"
+        @apply="applyPaymentFilters"
+        @reset="resetPaymentFilters"
       >
-        <template #actions>
-          <div class="flex flex-wrap items-center gap-2">
-            <QuickCreateLauncher
-              variant="primary"
-              size="sm"
-              :label="t('newPayment')"
-              @launch="showQuickPaymentDialog = true"
-            />
-            <ActionButton variant="secondary" size="sm" :disabled="paymentsResource.loading" @click="reloadPayments">
-              {{ t("refresh") }}
-            </ActionButton>
-            <ActionButton
-              variant="secondary"
-              size="sm"
-              :disabled="paymentsResource.loading"
-              @click="downloadPaymentExport('xlsx')"
-            >
-              {{ t("exportXlsx") }}
-            </ActionButton>
-            <ActionButton
-              variant="primary"
-              size="sm"
-              :disabled="paymentsResource.loading"
-              @click="downloadPaymentExport('pdf')"
-            >
-              {{ t("exportPdf") }}
-            </ActionButton>
-          </div>
+        <input v-model.trim="filters.query" class="input" type="search" :placeholder="t('searchPlaceholder')" @keyup.enter="applyPaymentFilters" />
+        <select v-model="filters.direction" class="input">
+          <option value="">{{ t("allDirections") }}</option>
+          <option value="Inbound">{{ t("inbound") }}</option>
+          <option value="Outbound">{{ t("outbound") }}</option>
+        </select>
+        <select v-model="filters.sort" class="input">
+          <option v-for="option in paymentSortOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+        </select>
+        <select v-model.number="filters.limit" class="input">
+          <option :value="24">24</option>
+          <option :value="50">50</option>
+          <option :value="100">100</option>
+        </select>
+        <template #advanced>
+          <input v-model.trim="filters.customerQuery" class="input" type="search" :placeholder="t('customerFilter')" @keyup.enter="applyPaymentFilters" />
+          <input v-model.trim="filters.policyQuery" class="input" type="search" :placeholder="t('policyFilter')" @keyup.enter="applyPaymentFilters" />
+          <input v-model.trim="filters.purposeQuery" class="input" type="search" :placeholder="t('purposeFilter')" @keyup.enter="applyPaymentFilters" />
         </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applyPaymentFilters"
-            @reset="resetPaymentFilters"
-          >
-            <input v-model.trim="filters.query" class="input" type="search" :placeholder="t('searchPlaceholder')" @keyup.enter="applyPaymentFilters" />
-            <select v-model="filters.direction" class="input">
-              <option value="">{{ t("allDirections") }}</option>
-              <option value="Inbound">{{ t("inbound") }}</option>
-              <option value="Outbound">{{ t("outbound") }}</option>
-            </select>
-            <select v-model="filters.sort" class="input">
-              <option v-for="option in paymentSortOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-            </select>
-            <select v-model.number="filters.limit" class="input">
-              <option :value="24">24</option>
-              <option :value="50">50</option>
-              <option :value="100">100</option>
-            </select>
-            <template #advanced>
-              <input v-model.trim="filters.customerQuery" class="input" type="search" :placeholder="t('customerFilter')" @keyup.enter="applyPaymentFilters" />
-              <input v-model.trim="filters.policyQuery" class="input" type="search" :placeholder="t('policyFilter')" @keyup.enter="applyPaymentFilters" />
-              <input v-model.trim="filters.purposeQuery" class="input" type="search" :placeholder="t('purposeFilter')" @keyup.enter="applyPaymentFilters" />
-            </template>
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
+      </WorkbenchFilterToolbar>
     </article>
 
-    <div v-if="paymentsErrorText" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
-      <p>{{ paymentsErrorText }}</p>
-    </div>
+    <article v-if="paymentsErrorText" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ paymentsErrorText }}</p>
+    </article>
 
     <article class="surface-card rounded-2xl p-5">
-      <DataTableShell
-        :loading="paymentsResource.loading"
-        :error="paymentsErrorText"
-        :empty="payments.length === 0"
-        :loading-label="t('loading')"
-        :error-title="t('loadErrorTitle')"
-        :empty-title="t('emptyTitle')"
-        :empty-description="t('empty')"
-      >
-        <template #header>
-          <div class="text-xs text-slate-500">{{ t("showing") }} {{ payments.length }}</div>
-        </template>
-        <template #default>
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-semibold text-slate-900">{{ t("title") }}</h3>
+          <p class="text-xs text-slate-500">{{ t("showing") }} {{ payments.length }}</p>
+        </div>
+      </div>
+      <div v-if="paymentsLoading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+        {{ t("loading") }}
+      </div>
+      <article v-else-if="paymentsErrorText" class="qc-error-banner mt-4">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ paymentsErrorText }}</p>
+      </article>
+      <div v-else-if="payments.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
+      </div>
+      <div v-else class="mt-4">
           <ListTable
             :columns="paymentListColumns"
             :rows="paymentsWithActions"
@@ -140,8 +131,7 @@
             :empty-message="t('empty')"
             @row-click="openPaymentDetail"
           />
-        </template>
-      </DataTableShell>
+      </div>
     </article>
 
     <QuickCreateManagedDialog
@@ -149,24 +139,26 @@
       config-key="payment"
       :locale="activeLocale"
       :options-map="paymentQuickOptionsMap"
+      :eyebrow="quickPaymentEyebrow"
       :show-save-and-open="false"
       :before-open="prepareQuickPaymentDialog"
       :success-handlers="quickPaymentSuccessHandlers"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
+import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { usePaymentStore } from "../stores/payment";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
@@ -176,8 +168,10 @@ import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Ödemeler",
     title: "Ödemeler",
     subtitle: "Tahsilat, bekleyen ödeme ve gecikmiş vadeleri izleyin",
+    recordCount: "kayıt",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -200,9 +194,9 @@ const copy = {
     addReceipt: "Dekont Ekle",
     sendReminder: "Hatırlatma Gönder",
     metricCount: "Kayıt Sayısı",
-    metricInbound: "Tahsilat Toplami",
+    metricInbound: "Tahsilat Toplamı",
     metricOutbound: "Ödeme Toplamı",
-    metricNet: "Net Akis",
+    metricNet: "Net Akış",
     payment: "Ödeme",
     direction: "Yön",
     amount: "Tutar",
@@ -210,11 +204,11 @@ const copy = {
     date: "Tarih",
     customer: "Müşteri",
     policy: "Poliçe",
-    purpose: "Amac",
+    purpose: "Amaç",
     recordId: "Kayıt",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranını Aç",
     openRelated: "İlişkili Kaydı Aç",
-    openPaymentDetail: "Ödeme Detayı",
+    openPaymentDetail: "Ödeme Kaydını Aç",
     actions: "Aksiyon",
     inbound: "Tahsilat",
     outbound: "Ödeme",
@@ -233,7 +227,7 @@ const copy = {
     allDirections: "Tüm yönler",
     customerFilter: "Müşteri (içerir)",
     policyFilter: "Poliçe (içerir)",
-    purposeFilter: "Amac (içerir)",
+    purposeFilter: "Amaç (içerir)",
     sortModifiedDesc: "Son Güncellenen",
     sortPaymentDateDesc: "Tarih (Yeni -> Eski)",
     sortPaymentDateAsc: "Tarih (Eski -> Yeni)",
@@ -244,8 +238,10 @@ const copy = {
     paidInstallments: "Ödenen Taksit",
   },
   en: {
+    breadcrumb: "Insurance Operations → Payments",
     title: "Payments",
     subtitle: "Track collection, pending payments, and overdue due dates",
+    recordCount: "records",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -280,9 +276,9 @@ const copy = {
     policy: "Policy",
     purpose: "Purpose",
     recordId: "Record",
-    openDesk: "Desk",
+    openDesk: "Open Desk",
     openRelated: "Open Related",
-    openPaymentDetail: "Payment Detail",
+    openPaymentDetail: "Open Payment Record",
     actions: "Actions",
     inbound: "Inbound",
     outbound: "Outbound",
@@ -317,9 +313,10 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
-const paymentStore = usePaymentStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
+const paymentStore = usePaymentStore(appPinia);
 const route = useRoute();
 const router = useRouter();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
@@ -364,6 +361,8 @@ const paymentsResource = createResource({
   params: buildPaymentListParams(),
   auto: true,
 });
+const paymentsLoading = computed(() => Boolean(unref(paymentsResource.loading)));
+const paymentsResourceError = computed(() => unref(paymentsResource.error));
 const paymentInstallmentResource = createResource({
   url: "frappe.client.get_list",
   params: buildPaymentInstallmentListParams(),
@@ -465,6 +464,7 @@ const paymentQuickOptionsMap = computed(() => ({
   })),
   salesEntities: asArray(resourceValue(paymentQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
 }));
+const quickPaymentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Ödeme" : "Quick Payment"));
 const quickPaymentSuccessHandlers = {
   payment_list: async () => {
     await reloadPayments();
@@ -472,7 +472,7 @@ const quickPaymentSuccessHandlers = {
 };
 const paymentsErrorText = computed(() => {
   if (paymentStore.state.error) return paymentStore.state.error;
-  const err = paymentsResource.error;
+  const err = paymentsResourceError.value;
   if (!err) return "";
   return err?.messages?.join(" ") || err?.message || t("loadError");
 });
@@ -504,16 +504,6 @@ const paymentsWithActions = computed(() => paymentSnapshots.value.map((row) => (
 })));
 const inboundTotal = computed(() => paymentStore.inboundTotal);
 const outboundTotal = computed(() => paymentStore.outboundTotal);
-const showSummaryGrid = computed(
-  () => !paymentsResource.loading && !paymentsErrorText.value && payments.value.length > 0
-);
-const paymentsSummaryItems = computed(() => [
-  { key: "count", label: t("metricCount"), value: String(payments.value.length) },
-  { key: "inbound", label: t("metricInbound"), value: formatCurrency(inboundTotal.value), valueClass: "text-emerald-700" },
-  { key: "outbound", label: t("metricOutbound"), value: formatCurrency(outboundTotal.value), valueClass: "text-amber-700" },
-  { key: "net", label: t("metricNet"), value: formatCurrency(inboundTotal.value - outboundTotal.value) },
-]);
-
 function formatCurrency(value) {
   return new Intl.NumberFormat(localeCode.value, {
     style: "currency",

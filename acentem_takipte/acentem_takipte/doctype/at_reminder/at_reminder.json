@@ -22,7 +22,7 @@
   {
    "fieldname": "reminder_title",
    "fieldtype": "Data",
-   "label": "Hatırlatıcı Basligi",
+   "label": "Hatırlatıcı Başlığı",
    "reqd": 1
   },
   {

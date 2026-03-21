@@ -1,43 +1,64 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Hasarlar</p>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <span class="text-sm text-gray-400">{{ claims.length }} kayıt</span>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(claims.length)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <QuickCreateLauncher
+        variant="primary"
+        size="sm"
+        :label="t('newClaim')"
+        @launch="showQuickClaimDialog = true"
+      />
+      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="reloadClaims">
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">
+        {{ t("exportPdf") }}
+      </ActionButton>
+    </template>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-        <p class="mini-metric-value">{{ formatCount(claimSummary.total) }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ formatCount(claimSummary.total) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryOpen") }}</p>
+          <p class="mini-metric-value text-brand-600">{{ formatCount(claimSummary.open) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryApproved") }}</p>
+          <p class="mini-metric-value text-amber-600">{{ formatCount(claimSummary.approved) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryPaid") }}</p>
+          <p class="mini-metric-value text-green-600">{{ formatCount(claimSummary.paid) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryReservePaid") }}</p>
+          <p class="mini-metric-value text-slate-900">{{ claimSummary.reserveVsPaid }}</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryOpen") }}</p>
-        <p class="mini-metric-value text-brand-600">{{ formatCount(claimSummary.open) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryApproved") }}</p>
-        <p class="mini-metric-value text-amber-600">{{ formatCount(claimSummary.approved) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryPaid") }}</p>
-        <p class="mini-metric-value text-green-600">{{ formatCount(claimSummary.paid) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">{{ t("summaryReservePaid") }}</p>
-        <p class="mini-metric-value text-slate-900">{{ claimSummary.reserveVsPaid }}</p>
-      </div>
-    </div>
+    </template>
 
-    <div v-if="claimsErrorText" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
-      <p>{{ claimsErrorText }}</p>
-    </div>
+    <article v-if="claimsErrorText" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ claimsErrorText }}</p>
+    </article>
 
-    <div class="border-b border-gray-200 bg-white px-5 py-3">
+    <SectionPanel
+      :title="t('filtersTitle')"
+      :count="`${claimsListActiveCount} ${t('activeFilters')}`"
+      panel-class="surface-card rounded-2xl p-4"
+    >
       <FilterBar
         v-model:search="claimsListSearchQuery"
         :filters="claimsListFilterConfig"
@@ -46,15 +67,17 @@
         @reset="onClaimsListFilterReset"
       >
         <template #actions>
-          <button class="btn btn-primary btn-sm" @click="showQuickClaimDialog = true">+ {{ t("newClaim") }}</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="reloadClaims">{{ t("refresh") }}</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">{{ t("exportXlsx") }}</button>
-          <button class="btn btn-sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">{{ t("exportPdf") }}</button>
+          <button class="btn btn-outline btn-sm" @click="onClaimsListFilterReset">{{ t("clearFilters") }}</button>
+          <button class="btn btn-outline btn-sm" @click="focusClaimSearch">{{ t("searchPlaceholder") }}</button>
         </template>
       </FilterBar>
-    </div>
+    </SectionPanel>
 
-    <div class="flex-1 p-5">
+    <SectionPanel
+      :title="t('claimsTableTitle')"
+      :count="formatCount(claimsListRowsWithActions.length)"
+      panel-class="surface-card rounded-2xl p-5"
+    >
       <ListTable
         :columns="claimsTableColumns"
         :rows="claimsListRowsWithActions"
@@ -62,7 +85,7 @@
         empty-message="Hasar bulunamadı."
         @row-click="openClaimDetail"
       />
-    </div>
+    </SectionPanel>
 
     <QuickCreateClaim
       v-model="showQuickClaimDialog"
@@ -76,11 +99,12 @@
       config-key="ownership_assignment"
       :locale="activeLocale"
       :options-map="claimQuickOptionsMap"
+      :eyebrow="ownershipAssignmentEyebrow"
       :show-save-and-open="false"
       :before-open="prepareOwnershipAssignmentDialog"
       :success-handlers="ownershipAssignmentSuccessHandlers"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -93,11 +117,12 @@ import { useBranchStore } from "../stores/branch";
 import { useClaimStore } from "../stores/claim";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import AmountPairSummary from "../components/app-shell/AmountPairSummary.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import QuickCreateClaim from "../components/QuickCreateClaim.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
@@ -105,12 +130,15 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
+import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
+import { getAppPinia } from "../pinia";
 import { subtleFact } from "../utils/factItems";
 import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Hasarlar",
     title: "Hasarlar",
     subtitle: "Hasar dosyaları ve ödeme durumunu izleyin",
     recordCount: "kayıt",
@@ -138,26 +166,28 @@ const copy = {
     recordId: "Kayıt",
     actions: "Aksiyon",
     newAssignment: "Atama",
-    markUnderReview: "Incelemeye Al",
+    markUnderReview: "İncelemeye Al",
     markApproved: "Onayla",
     markClosed: "Kapat",
     markRejected: "Reddet",
     clearFollowUp: "Takibi Temizle",
-    notificationDraft: "Bildirim Taslagi",
-    notificationMissing: "Bildirim Akisi Yok",
-    notificationQueue: "Bildirim Kuyrugu",
+    notificationDraft: "Bildirim Taslağı",
+    notificationMissing: "Bildirim Akışı Yok",
+    notificationQueue: "Bildirim Kuyruğu",
     notificationNone: "Bildirim Kaydı Yok",
     openNotifications: "Bildirimler",
     openDocuments: "Dokümanlar",
     viewClaimFile: "Dosya Görüntüle",
     createPayment: "Ödeme Yap",
     rejectReasonPrompt: "Red sebebini girin",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranını Aç",
     openPolicy: "Poliçeyi Aç",
-    openClaimDetail: "Hasar Detayı",
+    openClaimDetail: "Hasar Kaydını Aç",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
+    filtersTitle: "Filtreler",
+    claimsTableTitle: "Hasar Listesi",
     presetLabel: "Filtre Şablonu",
     presetDefault: "Standart",
     savePreset: "Kaydet",
@@ -187,6 +217,7 @@ const copy = {
     assignmentOpenCount: "açık",
   },
   en: {
+    breadcrumb: "Insurance Operations → Claims",
     title: "Claims",
     subtitle: "Track claim files and payment status",
     recordCount: "records",
@@ -228,12 +259,14 @@ const copy = {
     viewClaimFile: "View File",
     createPayment: "Create Payment",
     rejectReasonPrompt: "Enter rejection reason",
-    openDesk: "Desk",
+    openDesk: "Open Desk",
     openPolicy: "Open Policy",
-    openClaimDetail: "Claim Detail",
+    openClaimDetail: "Open Claim Record",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
+    filtersTitle: "Filters",
+    claimsTableTitle: "Claims List",
     presetLabel: "Filter Preset",
     presetDefault: "Standard",
     savePreset: "Save",
@@ -268,11 +301,17 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
-const claimStore = useClaimStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
+const claimStore = useClaimStore(appPinia);
 const route = useRoute();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
+const ownershipAssignmentEyebrow = computed(
+  () =>
+    getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) ||
+    (activeLocale.value === "tr" ? "Hızlı Atama" : "Quick Assignment")
+);
 
 function buildOfficeBranchLookupFilters() {
   const officeBranch = branchStore.requestBranch || "";
@@ -1030,7 +1069,7 @@ onMounted(() => {
   claimStore.setLocaleCode(localeCode.value);
   syncClaimsRouteFilters({ refresh: false });
   applyPreset(presetKey.value, { refresh: false });
-  if (String(presetKey.value || "default") !== "default") void reloadClaims();
+  void reloadClaims();
   void hydratePresetStateFromServer();
 });
 

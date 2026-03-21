@@ -1,31 +1,49 @@
 <template>
   <div v-if="modelValue" class="dialog-overlay" @click.self="close">
-    <div class="dialog-shell dialog-md">
-      <div class="dialog-header">
-        <h3 class="dialog-title">{{ resolvedTitle }}</h3>
-        <button class="btn btn-outline btn-sm" type="button" @click="close">X</button>
-      </div>
-
-      <form class="dialog-body" @submit.prevent="submit(false)">
-        <p v-if="resolvedSubtitle" class="mb-4 text-xs text-gray-500">{{ resolvedSubtitle }}</p>
-        <QuickCreateFormRenderer
-          :fields="fields"
-          :model="form"
-          :field-errors="fieldErrors"
-          :disabled="loading"
-          :locale="locale"
-          :options-map="optionsMap"
-          @submit="submit(false)"
-        />
-        <div v-if="errorText" class="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {{ errorText }}
+    <div class="dialog-shell dialog-md qc-managed-dialog-shell">
+      <div class="qc-managed-dialog__header">
+        <div class="qc-managed-dialog__headline">
+          <p class="qc-managed-dialog__eyebrow">{{ resolvedEyebrow }}</p>
+          <h3 class="qc-managed-dialog__title">{{ resolvedTitle }}</h3>
+          <p v-if="resolvedSubtitle" class="qc-managed-dialog__subtitle">{{ resolvedSubtitle }}</p>
         </div>
-      </form>
-
-      <div class="dialog-footer">
-        <button type="button" class="btn btn-outline" :disabled="loading" @click="close">{{ resolvedLabels.cancel }}</button>
-        <button type="button" class="btn btn-primary" :disabled="loading || saveDisabledComputed" @click="submit(false)">{{ resolvedLabels.save }}</button>
+        <button
+          class="qc-managed-dialog__close"
+          type="button"
+          :aria-label="locale === 'tr' ? 'Kapat' : 'Close'"
+          :title="locale === 'tr' ? 'Kapat' : 'Close'"
+          @click="close"
+        >
+          <span aria-hidden="true">×</span>
+          <span class="sr-only">{{ locale === 'tr' ? 'Kapat' : 'Close' }}</span>
+        </button>
       </div>
+
+      <form class="qc-managed-dialog__body" @submit.prevent="submit(false)">
+        <QuickCreateDialogShell
+          :error="errorText"
+          :show-eyebrow="false"
+          :show-subtitle="false"
+          :eyebrow="resolvedEyebrow"
+          :subtitle="resolvedSubtitle"
+          :loading="loading"
+          :save-disabled="saveDisabledComputed"
+          :show-save-and-open="false"
+          :labels="resolvedLabels"
+          @cancel="close"
+          @save="submit(false)"
+        >
+          <QuickCreateFormRenderer
+            :fields="fields"
+            :model="form"
+            :field-errors="fieldErrors"
+            :disabled="loading"
+            :locale="locale"
+            :options-map="optionsMap"
+            @submit="submit(false)"
+          />
+        </QuickCreateDialogShell>
+      </form>
     </div>
   </div>
 </template>
@@ -35,7 +53,9 @@ import { computed, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
+import QuickCreateDialogShell from "./app-shell/QuickCreateDialogShell.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
+import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 
 const props = defineProps({
@@ -71,11 +91,9 @@ const createResourceHandle = createResource({
 });
 
 const resolvedTitle = computed(() => getLocalizedText(props.titleOverride || config?.title, props.locale));
+const resolvedEyebrow = computed(() => getQuickCreateEyebrow("claim", props.locale));
 const resolvedSubtitle = computed(() => getLocalizedText(props.subtitleOverride || config?.subtitle, props.locale));
-const resolvedLabels = computed(() => ({
-  cancel: props.labels.cancel || (props.locale === "tr" ? "Iptal" : "Cancel"),
-  save: props.labels.save || (props.locale === "tr" ? "Olustur" : "Create"),
-}));
+const resolvedLabels = computed(() => ({ ...getQuickCreateLabels("claim", props.locale), ...props.labels }));
 const saveDisabledComputed = computed(() => props.saveDisabled || loading.value);
 
 function resetFieldErrors() {
@@ -122,7 +140,7 @@ function validateRequired() {
     }
   }
   if (!valid) {
-    errorText.value = props.locale === "tr" ? "Lutfen gerekli alanlari doldurun." : "Please fill required fields.";
+    errorText.value = props.locale === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.";
   }
   return valid;
 }
@@ -154,7 +172,7 @@ async function submit(openAfter = false) {
     }
     if (!openAfter && props.returnTo) await router.push(props.returnTo).catch(() => {});
   } catch (error) {
-    errorText.value = error?.messages?.join(" ") || error?.message || (props.locale === "tr" ? "Kayit olusturma basarisiz oldu." : "Create failed.");
+    errorText.value = error?.messages?.join(" ") || error?.message || (props.locale === "tr" ? "Kayıt oluşturma başarısız oldu." : "Create failed.");
     emit("error", error);
   } finally {
     loading.value = false;

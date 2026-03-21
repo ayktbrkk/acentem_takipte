@@ -49,10 +49,12 @@
                 </template>
               </MetaListCard>
             </div>
-            <p v-if="actionErrorText" class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{{ actionErrorText }}</p>
-            <p v-else-if="actionSuccessText || lastConvertedOfferName" class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
-              {{ actionSuccessText || t('convertLeadSuccess') }}
-            </p>
+            <div v-if="actionErrorText" class="mt-3 qc-error-banner" role="alert" aria-live="polite">
+              <p class="qc-error-banner__text">{{ actionErrorText }}</p>
+            </div>
+            <div v-else-if="actionSuccessText || lastConvertedOfferName" class="mt-3 qc-success-banner" aria-live="polite">
+              <p class="qc-success-banner__text">{{ actionSuccessText || t('convertLeadSuccess') }}</p>
+            </div>
           </template>
         </DetailCard>
 
@@ -61,7 +63,7 @@
           <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <div v-else class="grid gap-4 lg:grid-cols-2">
             <div>
-              <p class="section-title">{{ t('recentOffersTitle') }}</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('recentOffersTitle') }}</p>
               <div v-if="relatedOffers.length" class="space-y-3">
                 <MetaListCard v-for="item in relatedOffers" :key="`offer-${item.name}`" :title="item.name" :description="fmtDate(item.offer_date)" :meta="relatedOfferMeta(item)">
                   <template #trailing>
@@ -72,7 +74,7 @@
               <div v-else class="card-empty">{{ t('noRelatedOffers') }}</div>
             </div>
             <div>
-              <p class="section-title">{{ t('recentPoliciesTitle') }}</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('recentPoliciesTitle') }}</p>
               <div v-if="relatedPolicies.length" class="space-y-3">
                 <MetaListCard v-for="item in relatedPolicies" :key="`policy-${item.name}`" :title="item.policy_no || item.name" :subtitle="item.name" :description="fmtDate(item.end_date)" :meta="relatedPolicyMeta(item)">
                   <template #trailing>
@@ -88,9 +90,9 @@
         <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'operations'" :title="t('opsPreviewTitle')">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
           <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
-          <div v-else class="grid gap-4 xl:grid-cols-2">
+          <div v-else class="grid gap-4 xl:grid-cols-3">
             <div>
-              <p class="section-title">{{ t('notifDraftsTitle') }}</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('notifDraftsTitle') }}</p>
               <div v-if="leadNotificationDrafts.length" class="space-y-3">
                 <MetaListCard v-for="item in leadNotificationDrafts" :key="`draft-${item.name}`" :title="item.recipient || item.name" :subtitle="item.reference_name || item.name" :description="item.name || '-'" :meta="notificationPreviewMeta(item)">
                   <template #trailing>
@@ -101,7 +103,18 @@
               <div v-else class="card-empty">{{ t('noNotifDrafts') }}</div>
             </div>
             <div>
-              <p class="section-title">{{ t('paymentsPreviewTitle') }}</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('notifOutboxTitle') }}</p>
+              <div v-if="leadNotificationOutbox.length" class="space-y-3">
+                <MetaListCard v-for="item in leadNotificationOutbox" :key="`outbox-${item.name}`" :title="item.recipient || item.name" :subtitle="item.reference_name || item.name" :description="item.name || '-'" :meta="notificationPreviewMeta(item)">
+                  <template #trailing>
+                    <button class="btn btn-sm" type="button" @click="openCommunicationCenterForLead(item)">{{ t('openCommunication') }}</button>
+                  </template>
+                </MetaListCard>
+              </div>
+              <div v-else class="card-empty">{{ t('noNotifOutbox') }}</div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('paymentsPreviewTitle') }}</p>
               <div v-if="leadPayments.length" class="space-y-3">
                 <MetaListCard v-for="item in leadPayments" :key="`payment-${item.name}`" :title="item.payment_no || item.name" :subtitle="item.policy || item.customer || '-'" :description="fmtDate(item.payment_date)" :meta="leadPaymentMeta(item)">
                   <template #trailing>
@@ -122,7 +135,7 @@
           <div v-else>
             <FieldGroup :fields="leadMetaFields" :cols="2" />
             <div class="mt-4">
-              <p class="section-title">{{ t('activityTimelineTitle') }}</p>
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('activityTimelineTitle') }}</p>
               <div v-for="item in leadActivityItems" :key="item.key" class="timeline-item">
                 <span class="tl-dot tl-dot-blue" />
                 <div class="min-w-0 flex-1">
@@ -137,29 +150,23 @@
       </div>
 
       <div class="detail-sidebar">
-        <div>
-          <p class="section-title">{{ t('leadInfoTitle') }}</p>
+        <DetailCard :title="t('leadInfoTitle')">
           <div v-if="loading" class="field-value-muted">{{ t('loading') }}</div>
           <FieldGroup v-else :fields="leadInfoFields" :cols="2" />
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t('notes') }}</p>
+        <DetailCard :title="t('notes')">
           <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ lead.notes || '-' }}</p>
-        </div>
+        </DetailCard>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Hızlı İşlemler</p>
+        <DetailCard title="Hızlı İşlemler">
           <div class="space-y-2">
             <button v-if="lead.customer" class="btn btn-full btn-sm" type="button" @click="openCustomer360(lead.customer)">{{ t('openCustomer360') }} →</button>
             <button v-if="lead.converted_offer" class="btn btn-full btn-sm" type="button" @click="openOfferDetail(lead.converted_offer)">{{ t('openOffer') }}</button>
+            <button v-if="leadRenewals.length" class="btn btn-full btn-sm" type="button" @click="openRenewalsBoard">{{ t('openRenewals') }}</button>
             <button v-if="deskActionsEnabled()" class="btn btn-full btn-sm" type="button" @click="openDeskLead">{{ t('openDesk') }}</button>
           </div>
-        </div>
+        </DetailCard>
       </div>
     </div>
   </section>
@@ -189,7 +196,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 const copy = {
     tr: {
     overview: "Fırsat Detayı",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     backList: "Listeye Dön",
     loading: "Yükleniyor...",
     loadError: "Fırsat detayı yüklenemedi.",
@@ -205,23 +212,23 @@ const copy = {
     notifOutboxTitle: "Giden Bildirimler",
     paymentsPreviewTitle: "Ödeme Hareketleri",
     renewalsPreviewTitle: "Yenileme Görevleri",
-    noNotifDrafts: "Bildirim taslagi yok.",
+    noNotifDrafts: "Bildirim taslağı yok.",
     noNotifOutbox: "Giden bildirim yok.",
     noPayments: "Ödeme hareketi yok.",
     noRenewals: "Yenileme görevi yok.",
-    timelineMetaTitle: "Kayıt Zamanlari",
-    activityTimelineTitle: "Aktivite Özet",
+    timelineMetaTitle: "Kayıt Zamanları",
+    activityTimelineTitle: "Aktivite Özeti",
     tabOverview: "Genel",
     tabConversion: "Dönüşüm",
     tabRelated: "İlişkili",
     tabOperations: "Operasyon",
     tabActivity: "Aktivite",
-    openCustomer360: "Müşteri 360",
-    openOffer: "Teklif Detayi",
-    openPolicy: "Poliçe Detayını Aç",
-    openCommunication: "İletişim",
-    openPayments: "Ödemeler",
-    openRenewals: "Yenilemeler",
+    openCustomer360: "Müşteri Detayını Aç",
+    openOffer: "Teklif Detayını Aç",
+    openPolicy: "Poliçeyi Aç",
+    openCommunication: "İletişim Merkezini Aç",
+    openPayments: "Ödemeleri Aç",
+    openRenewals: "Yenileme Görevlerini Aç",
     customer: "Müşteri",
     phone: "Telefon",
     taxId: "Kimlik / Vergi No",
@@ -234,32 +241,32 @@ const copy = {
     notes: "Notlar",
     convertedOffer: "Dönüşen Teklif",
     convertedPolicy: "Dönüşen Poliçe",
-    noConversion: "Henuz donusum yok",
+    noConversion: "Henüz dönüşüm yok",
     nextAction: "Sonraki Aksiyon",
     missingFields: "Eksik Alanlar",
-    conversionActionConvert: "Teklife Cevir",
+    conversionActionConvert: "Teklife Çevir",
     conversionActionReview: "Bilgileri Tamamla",
-    conversionActionClosed: "Kapali Lead",
+    conversionActionClosed: "Kapalı Lead",
     linkedOfferTitle: "Dönüşen Teklif Özeti",
     linkedPolicyTitle: "Dönüşen Poliçe Özeti",
     accessView: "Kayıt Görüntülendi",
     accessEdit: "Kayıt Düzenlendi",
     accessExport: "Kayıt Dışa Aktarıldı",
     createOffer: "Teklif Oluştur",
-    converting: "Cevriliyor...",
-    convertLeadSuccess: "Lead teklife donusturuldu.",
-    convertLeadError: "Lead teklife cevrilemedi.",
+    converting: "Çevriliyor...",
+    convertLeadSuccess: "Lead teklife dönüştürüldü.",
+    convertLeadError: "Lead teklife çevrilemedi.",
     status: "Durum",
     stale: "Takip Durumu",
     createdAt: "Oluşturuldu",
     modifiedAt: "Güncellendi",
     timelineEventCreated: "Lead oluşturuldu",
     timelineEventUpdated: "Lead güncellendi",
-    timelineEventOffer: "Teklife donustu",
-    timelineEventPolicy: "Poliçeye donustu",
+    timelineEventOffer: "Teklife dönüştü",
+    timelineEventPolicy: "Poliçeye dönüştü",
   },
   en: {
-    overview: "Opportunity Detail",
+    overview: "Opportunity Details",
     openDesk: "Open Desk",
     backList: "Back to List",
     loading: "Loading...",
@@ -287,12 +294,12 @@ const copy = {
     tabRelated: "Related",
     tabOperations: "Operations",
     tabActivity: "Activity",
-    openCustomer360: "Customer 360",
-    openOffer: "Offer Detail",
-    openPolicy: "Policy Detail",
-    openCommunication: "Communication",
-    openPayments: "Payments",
-    openRenewals: "Renewals",
+    openCustomer360: "Open Customer Details",
+    openOffer: "Open Offer Details",
+    openPolicy: "Open Policy",
+    openCommunication: "Open Communication Center",
+    openPayments: "Open Payments",
+    openRenewals: "Open Renewals",
     customer: "Customer",
     phone: "Phone",
     taxId: "Identity / Tax Number",
@@ -514,8 +521,6 @@ const linkedConversionCards = computed(() => {
   return cards;
 });
 
-async function loadLeadRelatedRecords() {
-  const customer = String(lead.value.customer || "").trim();
 const uiLeadStatus = computed(() => mapLeadStatusTone(lead.value.status));
 const uiLeadStaleStatus = computed(() => mapLeadStaleTone(leadStaleState(lead.value)));
 const heroCells = computed(() => [
@@ -536,6 +541,9 @@ const leadMetaFields = computed(() => [
   { label: t("status"), value: lead.value.status || "-" },
   { label: t("stale"), value: leadStaleLabel(leadStaleState(lead.value)) },
 ]);
+
+async function loadLeadRelatedRecords() {
+  const customer = String(lead.value.customer || "").trim();
   if (!customer) return;
   await Promise.allSettled([
     leadRelatedOffersResource.reload({

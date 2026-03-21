@@ -25,15 +25,15 @@
 
     <div class="detail-body">
       <div class="detail-main">
-        <DetailCard :title="t('paymentInfo')">
+        <SectionPanel :title="t('paymentInfo')">
           <FieldGroup :fields="paymentFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('financialSummary')">
+        <SectionPanel :title="t('financialSummary')">
           <FieldGroup :fields="financialFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('paymentPlan')">
+        <SectionPanel :title="t('paymentPlan')">
           <div v-if="installments.length === 0" class="card-empty">{{ t("noInstallments") }}</div>
           <table v-else class="min-w-full">
             <thead class="bg-gray-50">
@@ -55,9 +55,9 @@
               </tr>
             </tbody>
           </table>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('documents')">
+        <SectionPanel :title="t('documents')">
           <div v-if="documents.length === 0" class="card-empty">{{ t("noDocuments") }}</div>
           <div v-else class="space-y-2">
             <div v-for="doc in documents" :key="doc.name" class="timeline-item">
@@ -68,9 +68,9 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('timeline')">
+        <SectionPanel :title="t('timeline')">
           <div class="timeline-item">
             <div class="tl-dot tl-dot-active" />
             <div>
@@ -85,12 +85,11 @@
               <p class="tl-time">{{ formatDate(payment.creation) }}</p>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
-      <aside class="detail-sidebar">
-        <div>
-          <p class="section-title">{{ t("customer") }}</p>
+      <aside class="detail-sidebar space-y-4">
+        <SectionPanel :title="t('customer')">
           <button
             class="w-full rounded-lg border border-gray-200 bg-white p-3 text-left transition hover:border-brand-200 hover:bg-brand-50"
             type="button"
@@ -100,21 +99,15 @@
             <p class="text-sm font-medium text-gray-900">{{ payment.customer || "-" }}</p>
             <p class="mt-0.5 text-xs text-gray-400">{{ t("openCustomer") }}</p>
           </button>
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("linkedRecords") }}</p>
+        <SectionPanel :title="t('linkedRecords')">
           <FieldGroup :fields="linkedFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("recordMeta") }}</p>
+        <SectionPanel :title="t('recordMeta')">
           <FieldGroup :fields="recordFields" :cols="1" />
-        </div>
+        </SectionPanel>
       </aside>
     </div>
   </section>
@@ -127,7 +120,7 @@ import { useRouter } from "vue-router";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
-import DetailCard from "@/components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "@/components/ui/FieldGroup.vue";
 
 const props = defineProps({ name: { type: String, required: true } });
@@ -179,7 +172,7 @@ const copy = {
     owner: "Oluşturan",
     modifiedBy: "Güncelleyen",
     openCustomer: "Müşteri kaydını aç",
-    openPolicy: "Poliçe kaydını aç",
+    openPolicy: "Poliçeyi Aç",
     openClaim: "Hasar kaydını aç",
   },
   en: {
@@ -226,7 +219,7 @@ const copy = {
     owner: "Owner",
     modifiedBy: "Modified By",
     openCustomer: "Open customer record",
-    openPolicy: "Open policy record",
+    openPolicy: "Open Policy",
     openClaim: "Open claim record",
   },
 };

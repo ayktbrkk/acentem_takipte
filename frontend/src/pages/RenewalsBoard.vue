@@ -1,122 +1,116 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(renewals.length)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <QuickCreateLauncher
+        variant="primary"
+        size="sm"
+        :label="t('newTask')"
+        @launch="showQuickRenewalDialog = true"
+      />
+      <ActionButton variant="secondary" size="sm" :disabled="renewalsLoading" @click="reloadRenewals">
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton
+        variant="secondary"
+        size="sm"
+        :disabled="renewalsLoading"
+        @click="downloadRenewalExport('xlsx')"
+      >
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton
+        variant="primary"
+        size="sm"
+        :disabled="renewalsLoading"
+        @click="downloadRenewalExport('pdf')"
+      >
+        {{ t("exportPdf") }}
+      </ActionButton>
+    </template>
+
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div v-for="item in renewalSummaryItems" :key="item.key" class="mini-metric">
+          <p class="mini-metric-label">{{ item.label }}</p>
+          <p class="mini-metric-value" :class="item.valueClass">{{ item.value }}</p>
+        </div>
       </div>
-    </div>
+    </template>
 
     <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :title="t('title')"
-        :subtitle="t('subtitle')"
-        :busy="renewalsLoading"
-        :show-refresh="true"
-        :refresh-label="t('refresh')"
-        @refresh="reloadRenewals"
+      <WorkbenchFilterToolbar
+        v-model="presetKey"
+        :advanced-label="t('advancedFilters')"
+        :collapse-label="t('hideAdvancedFilters')"
+        :active-count="activeFilterCount"
+        :active-count-label="t('activeFilters')"
+        :preset-label="t('presetLabel')"
+        :preset-options="presetOptions"
+        :can-delete-preset="canDeletePreset"
+        :save-label="t('savePreset')"
+        :delete-label="t('deletePreset')"
+        :apply-label="t('applyFilters')"
+        :reset-label="t('clearFilters')"
+        @preset-change="onPresetChange"
+        @preset-save="savePreset"
+        @preset-delete="deletePreset"
+        @apply="applyRenewalFilters"
+        @reset="resetRenewalFilters"
       >
-        <template #actions>
-          <div class="flex flex-wrap items-center gap-2">
-            <QuickCreateLauncher
-              variant="primary"
-              size="sm"
-              :label="t('newTask')"
-              @launch="showQuickRenewalDialog = true"
-            />
-            <ActionButton variant="secondary" size="sm" :disabled="renewalsLoading" @click="reloadRenewals">
-              {{ t("refresh") }}
-            </ActionButton>
-            <ActionButton
-              variant="secondary"
-              size="sm"
-              :disabled="renewalsLoading"
-              @click="downloadRenewalExport('xlsx')"
-            >
-              {{ t("exportXlsx") }}
-            </ActionButton>
-            <ActionButton
-              variant="primary"
-              size="sm"
-              :disabled="renewalsLoading"
-              @click="downloadRenewalExport('pdf')"
-            >
-              {{ t("exportPdf") }}
-            </ActionButton>
-          </div>
-        </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applyRenewalFilters"
-            @reset="resetRenewalFilters"
-          >
-            <input
-              v-model.trim="filters.query"
-              class="input"
-              type="search"
-              :placeholder="t('searchPlaceholder')"
-              @keyup.enter="applyRenewalFilters"
-            />
-            <select v-model="filters.status" class="input">
-              <option value="">{{ t("allStatuses") }}</option>
-              <option v-for="option in renewalStatusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <select v-model.number="filters.limit" class="input">
-              <option :value="20">20</option>
-              <option :value="40">40</option>
-              <option :value="80">80</option>
-              <option :value="120">120</option>
-            </select>
+        <input
+          v-model.trim="filters.query"
+          class="input"
+          type="search"
+          :placeholder="t('searchPlaceholder')"
+          @keyup.enter="applyRenewalFilters"
+        />
+        <select v-model="filters.status" class="input">
+          <option value="">{{ t("allStatuses") }}</option>
+          <option v-for="option in renewalStatusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <select v-model.number="filters.limit" class="input">
+          <option :value="20">20</option>
+          <option :value="40">40</option>
+          <option :value="80">80</option>
+          <option :value="120">120</option>
+        </select>
 
-            <template #advanced>
-              <input
-                v-model.trim="filters.policyQuery"
-                class="input"
-                type="search"
-                :placeholder="t('policyFilter')"
-                @keyup.enter="applyRenewalFilters"
-              />
-              <select v-model="filters.dueScope" class="input">
-                <option value="">{{ t("allDueScopes") }}</option>
-                <option value="overdue">{{ t("dueScopeOverdue") }}</option>
-                <option value="7">{{ t("dueScope7") }}</option>
-                <option value="30">{{ t("dueScope30") }}</option>
-                <option value="60">{{ t("dueScope60") }}</option>
-              </select>
-            </template>
-          </WorkbenchFilterToolbar>
+        <template #advanced>
+          <input
+            v-model.trim="filters.policyQuery"
+            class="input"
+            type="search"
+            :placeholder="t('policyFilter')"
+            @keyup.enter="applyRenewalFilters"
+          />
+          <select v-model="filters.dueScope" class="input">
+            <option value="">{{ t("allDueScopes") }}</option>
+            <option value="overdue">{{ t("dueScopeOverdue") }}</option>
+            <option value="7">{{ t("dueScope7") }}</option>
+            <option value="30">{{ t("dueScope30") }}</option>
+            <option value="60">{{ t("dueScope60") }}</option>
+          </select>
         </template>
-      </PageToolbar>
+      </WorkbenchFilterToolbar>
     </article>
 
-    <DocSummaryGrid v-if="showSummaryGrid" :items="renewalSummaryItems" />
-
-    <div v-if="renewalsError" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      <p class="font-medium">{{ t("loadErrorTitle") }}</p>
-      <p>{{ renewalsError }}</p>
-    </div>
+    <article v-if="renewalsError" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ renewalsError }}</p>
+    </article>
 
     <section class="kanban-board">
       <header class="kanban-board-header">
         <div>
-          <p class="section-title">{{ t("title") }}</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("title") }}</p>
           <p class="text-sm text-slate-500">{{ t("showing") }} {{ renewals.length }}</p>
         </div>
       </header>
@@ -209,11 +203,12 @@
       config-key="renewal_task"
       :locale="activeLocale"
       :options-map="renewalQuickOptionsMap"
+      :eyebrow="quickRenewalEyebrow"
       :show-save-and-open="false"
       :before-open="prepareQuickRenewalDialog"
       :success-handlers="quickRenewalSuccessHandlers"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -221,10 +216,10 @@ import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
+import { getAppPinia } from "../pinia";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DocSummaryGrid from "../components/app-shell/DocSummaryGrid.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
@@ -236,8 +231,10 @@ import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Yenilemeler",
     title: "Yenilemeler",
     subtitle: "Bitişe yakın poliçeler ve takip görevleri",
+    recordCount: "kayıt",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -255,7 +252,7 @@ const copy = {
     due: "Termin",
     renewal: "Yenileme",
     actions: "Aksiyon",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranını Aç",
     openPolicy: "Poliçeyi Aç",
     markInProgress: "Takibe Al",
     markDone: "Tamamla",
@@ -283,7 +280,7 @@ const copy = {
     dueScope7: "7 gün içinde",
     dueScope30: "30 gün içinde",
     dueScope60: "60 gün içinde",
-    openDetail: "Detaya Git",
+    openDetail: "Yenileme Kaydını Aç",
     columnNew: "Yeni (30+ gün)",
     columnNewHint: "Henüz erken safhadaki yenilemeler",
     columnNotified: "Bildirim Gönderildi",
@@ -307,8 +304,10 @@ const copy = {
     priorityUnknown: "Belirsiz",
   },
   en: {
+    breadcrumb: "Insurance Operations → Renewals",
     title: "Renewals",
     subtitle: "Near-expiry policies and follow-up tasks",
+    recordCount: "records",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -326,7 +325,7 @@ const copy = {
     due: "Due",
     renewal: "Renewal",
     actions: "Actions",
-    openDesk: "Desk",
+    openDesk: "Open Desk",
     openPolicy: "Open Policy",
     markInProgress: "Start Follow-up",
     markDone: "Mark Done",
@@ -354,7 +353,7 @@ const copy = {
     dueScope7: "Due in 7 days",
     dueScope30: "Due in 30 days",
     dueScope60: "Due in 60 days",
-    openDetail: "Open Detail",
+    openDetail: "Open Renewal Record",
     columnNew: "New (30+ days)",
     columnNewHint: "Renewals that are still far from due",
     columnNotified: "Notification Sent",
@@ -383,9 +382,10 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
-const renewalStore = useRenewalStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
+const renewalStore = useRenewalStore(appPinia);
 const route = useRoute();
 const router = useRouter();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
@@ -407,7 +407,7 @@ const renewalStatusOptions = computed(() =>
   ["Open", "In Progress", "Done", "Cancelled"].map((value) => ({ value, label: value }))
 );
 const lostReasonColumnLabel = computed(() =>
-  activeLocale.value === "tr" ? "Kayip Sonucu" : "Loss Outcome"
+  activeLocale.value === "tr" ? "Kayıp Sonucu" : "Loss Outcome"
 );
 const activeFilterCount = computed(() => {
   let count = 0;
@@ -523,14 +523,12 @@ const renewalQuickOptionsMap = computed(() => ({
     label: row.full_name || row.name,
   })),
 }));
+const quickRenewalEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Yenileme" : "Quick Renewal"));
 const quickRenewalSuccessHandlers = {
   renewal_list: async () => {
     await reloadRenewals();
   },
 };
-const showSummaryGrid = computed(
-  () => !renewalStore.state.loading && !renewalsError.value && renewals.value.length > 0
-);
 const renewalSummaryItems = computed(() => {
   const summary = renewalStore.state.summary || {};
   return [
@@ -547,7 +545,7 @@ const renewalSummaryItems = computed(() => {
       key: "cancelled",
       label: t("metricCancelled"),
       value: String(summary.cancelled || 0),
-      valueClass: "text-rose-700",
+      valueClass: "text-slate-700",
     },
   ];
 });
@@ -666,6 +664,10 @@ function formatDate(value) {
   } catch {
     return value;
   }
+}
+
+function formatCount(value) {
+  return new Intl.NumberFormat(localeCode.value).format(Number(value || 0));
 }
 
 function formatRenewalPremium(amount, currency) {
@@ -917,7 +919,7 @@ function formatLostReason(task) {
     Competitor: { tr: "Rakip", en: "Competitor" },
     Service: { tr: "Hizmet", en: "Service" },
     "Customer Declined": { tr: "Müşteri Vazgeçti", en: "Customer Declined" },
-    "Coverage Mismatch": { tr: "Teminat Uyumsuzlugu", en: "Coverage Mismatch" },
+    "Coverage Mismatch": { tr: "Teminat Uyumsuzluğu", en: "Coverage Mismatch" },
     Other: { tr: "Diğer", en: "Other" },
   };
   return labels[rawReason]?.[activeLocale.value] || rawReason;
@@ -1077,6 +1079,6 @@ watch(
 }
 
 .kanban-priority-critical {
-  @apply bg-rose-50 text-rose-700;
+  @apply bg-amber-50 text-amber-700;
 }
 </style>

@@ -1,53 +1,43 @@
 <template>
   <section class="page-shell space-y-6">
-    <header class="dashboard-hero rounded-2xl p-6 text-white shadow-lg shadow-slate-900/20">
-      <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div class="space-y-2">
-          <p class="at-hero-tag">
-            {{ t("heroTag") }}
-          </p>
-          <h2 class="at-hero-title">
-            {{ dashboardHeroTitle }}
-          </h2>
-          <p class="at-hero-subtitle">
-            {{ dashboardHeroSubtitle }}
-          </p>
-          <p class="at-hero-meta">
-            {{ t("rangeLabel") }}: {{ visibleRange }}
-          </p>
-        </div>
-
-        <ActionToolbarGroup>
-          <FilterChipButton
-            v-for="days in rangeOptions"
-            :key="days"
-            theme="hero"
-            :active="selectedRange === days"
-            @click="applyRange(days)"
-          >
-            {{ rangeLabel(days) }}
-          </FilterChipButton>
-
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            class="!border-white/30 !bg-white/10 !text-white hover:!bg-white/20"
-            @click="reloadData"
-          >
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            v-if="showNewLeadAction"
-            variant="secondary"
-            size="sm"
-            class="!border-white/30 !bg-white !text-slate-900 hover:!bg-slate-100"
-            @click="resetLeadForm(); showLeadDialog = true"
-          >
-            {{ t("newLead") }}
-          </ActionButton>
-        </ActionToolbarGroup>
+    <div class="detail-topbar">
+      <div>
+        <p class="detail-breadcrumb">{{ t("heroTag") }}</p>
+        <h1 class="detail-title">{{ dashboardHeroTitle }}</h1>
+        <p class="detail-subtitle">{{ dashboardHeroSubtitle }}</p>
+        <p class="detail-meta">{{ t("rangeLabel") }}: {{ visibleRange }}</p>
       </div>
-    </header>
+
+      <ActionToolbarGroup>
+        <FilterChipButton
+          v-for="days in rangeOptions"
+          :key="days"
+          theme="hero"
+          :active="selectedRange === days"
+          @click="applyRange(days)"
+        >
+          {{ rangeLabel(days) }}
+        </FilterChipButton>
+
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          class="!border-white/30 !bg-white/10 !text-white hover:!bg-white/20"
+          @click="reloadData"
+        >
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton
+          v-if="showNewLeadAction"
+          variant="secondary"
+          size="sm"
+          class="!border-white/30 !bg-white !text-slate-900 hover:!bg-slate-100"
+          @click="resetLeadForm(); showLeadDialog = true"
+        >
+          {{ t("newLead") }}
+        </ActionButton>
+      </ActionToolbarGroup>
+    </div>
 
     <div class="surface-card rounded-2xl p-2">
       <div class="flex gap-2 overflow-x-auto whitespace-nowrap px-1 py-1">
@@ -66,39 +56,18 @@
 
     <div
       v-if="dashboardAccessMessage"
-      class="rounded-xl border px-4 py-3 text-sm"
-      :class="
-        dashboardAccessMessageKind === 'permission'
-          ? 'border-rose-200 bg-rose-50 text-rose-700'
-          : 'border-amber-200 bg-amber-50 text-amber-800'
-      "
+      :class="dashboardAccessMessageKind === 'permission' ? 'qc-error-banner' : 'qc-warning-banner'"
+      role="alert"
+      aria-live="polite"
     >
-      {{ dashboardAccessMessage }}
-    </div>
-
-    <div class="detail-topbar">
-      <div>
-        <h1 class="detail-title">Dashboard</h1>
-        <p class="detail-subtitle">Hos geldiniz. Sube: {{ dashboardBranchLabel }}</p>
-      </div>
-      <div class="flex gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="reloadData">
-          Yenile
-        </button>
-        <button
-          v-if="showNewLeadAction"
-          class="btn btn-primary btn-sm"
-          type="button"
-          @click="resetLeadForm(); showLeadDialog = true"
-        >
-          + Yeni Islem
-        </button>
-      </div>
+      <p :class="dashboardAccessMessageKind === 'permission' ? 'qc-error-banner__text' : 'qc-warning-banner__text'">
+        {{ dashboardAccessMessage }}
+      </p>
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
       <div class="mini-metric">
-        <p class="mini-metric-label">Aktif Policeler</p>
+        <p class="mini-metric-label">Aktif Poliçeler</p>
         <p class="mini-metric-value text-brand-600">{{ formatNumber(week4Metrics.activePolicies) }}</p>
       </div>
       <div class="mini-metric">
@@ -106,22 +75,22 @@
         <p class="mini-metric-value text-amber-600">{{ formatNumber(dailyActionOffers.length) }}</p>
       </div>
       <div class="mini-metric">
-        <p class="mini-metric-label">Acik Hasarlar</p>
-        <p class="mini-metric-value text-red-600">{{ formatNumber(week4Metrics.openClaims) }}</p>
+        <p class="mini-metric-label">Açık Hasarlar</p>
+        <p class="mini-metric-value text-amber-700">{{ formatNumber(week4Metrics.openClaims) }}</p>
       </div>
       <div class="mini-metric">
-        <p class="mini-metric-label">Secili Donem Prim</p>
+        <p class="mini-metric-label">Seçili Dönem Prim</p>
         <p class="mini-metric-value text-green-600">{{ formatCurrency(week4Metrics.periodPremium) }}</p>
       </div>
     </div>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2 space-y-4">
-        <DetailCard title="Son Aktiviteler">
+        <DetailCard :title="t('recentActivitiesTitle')">
           <template #action>
-            <button class="btn btn-sm" type="button">Tumunu Gor</button>
+            <button class="btn btn-sm" type="button">{{ t("viewAllItems") }}</button>
           </template>
-          <div v-if="!week4RecentActivities.length" class="card-empty">Henuz aktivite kaydi yok.</div>
+          <div v-if="!week4RecentActivities.length" class="card-empty">{{ t("recentActivitiesEmpty") }}</div>
           <div v-else class="space-y-3">
             <div v-for="item in week4RecentActivities" :key="item.name" class="timeline-item">
               <div :class="['tl-dot', item.highlight && 'tl-dot-active']" />
@@ -134,10 +103,10 @@
         </DetailCard>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <DetailCard title="Aylik Prim Trendi">
+          <DetailCard :title="t('monthlyPremiumTrendTitle')">
             <div class="chart-container">
               <TrendChart
-                title="Aylik Prim Trendi"
+                :title="t('monthlyPremiumTrendTitle')"
                 :labels="trendLabels"
                 :datasets="trendDatasets"
                 unit="₺"
@@ -146,13 +115,13 @@
             </div>
           </DetailCard>
 
-          <DetailCard title="Brans Dagilimi">
+          <DetailCard :title="t('branchDistributionTitle')">
             <div class="chart-container">
               <DistributionChart
-                title="Brans Dagilimi"
+                :title="t('branchDistributionTitle')"
                 type="bar"
                 :items="branchDistribution"
-                value-suffix=" police"
+                :value-suffix="t('policySuffix')"
               />
             </div>
           </DetailCard>
@@ -160,20 +129,20 @@
       </div>
 
       <div class="space-y-4">
-        <DetailCard title="Hizli Islemler">
+        <DetailCard :title="t('quickActions')">
           <div class="space-y-2">
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/policies')">Yeni Police</button>
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/offers')">Yeni Teklif</button>
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/customers')">Yeni Musteri</button>
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/claims')">Hasar Bildirimi</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/policies')">{{ t("quickPolicyAction") }}</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/offers')">{{ t("quickOfferAction") }}</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/customers')">{{ t("quickCustomerAction") }}</button>
+            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/claims')">{{ t("quickClaimAction") }}</button>
           </div>
         </DetailCard>
 
-        <DetailCard title="Bugun Yapilacaklar">
+        <DetailCard :title="t('todayTasksTitle')">
           <template #action>
             <span class="badge badge-blue">{{ followUpItems.length }}</span>
           </template>
-          <div v-if="!followUpItems.length" class="card-empty">Bugun icin gorev yok.</div>
+          <div v-if="!followUpItems.length" class="card-empty">{{ t("todayTasksEmpty") }}</div>
           <div v-else class="space-y-2">
             <div
               v-for="item in pagedPreviewItems(followUpItems, 'dailyFollowUp').slice(0, 4)"
@@ -189,11 +158,11 @@
           </div>
         </DetailCard>
 
-        <DetailCard title="Yaklasan Yenilemeler">
+        <DetailCard :title="t('upcomingRenewalsTitle')">
           <template #action>
             <span class="badge badge-amber">{{ upcomingRenewals.length }}</span>
           </template>
-          <div v-if="!upcomingRenewals.length" class="card-empty">30 gun icinde yenileme yok.</div>
+          <div v-if="!upcomingRenewals.length" class="card-empty">{{ t("upcomingRenewalsEmpty") }}</div>
           <div v-else class="divide-y divide-gray-100">
             <div
               v-for="renewal in upcomingRenewals.slice(0, 5)"
@@ -224,12 +193,7 @@
     </div>
 
     <div v-if="showAnalyticsRow" class="grid gap-4 xl:grid-cols-3">
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('leadPipeline')" :show-count="false">
-          <template #trailing>
-            <span class="text-xs font-medium text-slate-500">{{ t("liveData") }}</span>
-          </template>
-        </SectionCardHeader>
+      <SectionPanel :title="t('leadPipeline')" :show-count="false" :meta="t('liveData')">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">
           {{ t("loading") }}
         </div>
@@ -243,14 +207,9 @@
             :bar-class="item.colorClass"
           />
         </div>
-      </article>
+      </SectionPanel>
 
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('offerStatusOverviewTitle')" :show-count="false">
-          <template #trailing>
-            <span class="text-xs font-medium text-slate-500">{{ t("liveData") }}</span>
-          </template>
-        </SectionCardHeader>
+      <SectionPanel :title="t('offerStatusOverviewTitle')" :show-count="false" :meta="t('liveData')">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">
           {{ t("loading") }}
         </div>
@@ -267,14 +226,9 @@
             :bar-class="item.colorClass"
           />
         </div>
-      </article>
+      </SectionPanel>
 
-      <article class="surface-card rounded-2xl p-5">
-        <SectionCardHeader :title="t('commissionTrend')" :show-count="false">
-          <template #trailing>
-            <span class="text-xs text-slate-500">{{ t("lastMonths") }}</span>
-          </template>
-        </SectionCardHeader>
+      <SectionPanel :title="t('commissionTrend')" :show-count="false" :meta="t('lastMonths')">
         <div
           v-if="commissionTrend.length === 0"
           class="at-empty-block text-center"
@@ -290,26 +244,25 @@
             :ratio="trendRatio(entry.total_commission)"
           />
         </div>
-      </article>
+      </SectionPanel>
     </div>
 
     <div v-if="isDailyTab" class="grid gap-4 xl:grid-cols-3">
       <div class="space-y-4">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('followUpSlaTitle')" :count="formatNumber(followUpItems.length)" />
+        <SectionPanel :title="t('followUpSlaTitle')" :count="formatNumber(followUpItems.length)">
           <p class="mb-3 text-xs text-slate-500">{{ t("followUpSlaHint") }}</p>
           <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else class="space-y-3">
             <div class="grid grid-cols-3 gap-2">
-              <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("followUpOverdue") }}</p>
-                <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(followUpSummary.overdue) }}</p>
+              <div class="qc-warning-card">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("followUpOverdue") }}</p>
+                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.overdue) }}</p>
               </div>
-              <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <div class="qc-warning-card">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("followUpToday") }}</p>
                 <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.due_today) }}</p>
               </div>
-              <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+              <div class="qc-warning-card">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("followUpSoon") }}</p>
                 <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(followUpSummary.due_soon) }}</p>
               </div>
@@ -346,10 +299,9 @@
               </ActionButton>
             </div>
           </div>
-        </article>
+        </SectionPanel>
 
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('actionOfferQueueTitle')" :count="formatNumber(dailyActionOffers.length)" />
+        <SectionPanel :title="t('actionOfferQueueTitle')" :count="formatNumber(dailyActionOffers.length)">
           <p class="mb-3 text-xs text-slate-500">{{ t("actionOfferQueueHint") }}</p>
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="dailyActionOffers.length === 0" class="at-empty-block">{{ t("noActionOfferQueue") }}</div>
@@ -377,12 +329,11 @@
             @change-page="setPreviewPage('dailyActionOffers', $event, dailyActionOffers)"
             @view-all="openPreviewList('offers')"
           />
-        </article>
+        </SectionPanel>
       </div>
 
       <div class="space-y-4">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)" />
+        <SectionPanel :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
             {{ t("loading") }}
           </div>
@@ -417,10 +368,9 @@
             @change-page="setPreviewPage('dailyPolicies', $event, displayRecentPolicies)"
             @view-all="openPreviewList('policies')"
           />
-        </article>
+        </SectionPanel>
 
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length" />
+        <SectionPanel :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length">
           <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
@@ -449,12 +399,11 @@
             @change-page="setPreviewPage('dailyRenewalAlerts', $event, displayRenewalAlertItems)"
             @view-all="openPreviewList('renewals')"
           />
-        </article>
+        </SectionPanel>
       </div>
 
       <div class="space-y-4">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('quickActions')" :show-count="false" />
+        <SectionPanel :title="t('quickActions')" :show-count="false">
           <div class="space-y-2">
             <ActionPreviewCard
               v-for="action in visibleQuickActions"
@@ -464,10 +413,9 @@
               @click="openPage(action.to)"
             />
           </div>
-        </article>
+        </SectionPanel>
 
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('topCompanies')" :count="formatNumber(displayTopCompanies.length)" />
+        <SectionPanel :title="t('topCompanies')" :count="formatNumber(displayTopCompanies.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
             {{ t("loading") }}
           </div>
@@ -492,13 +440,12 @@
             @change-page="setPreviewPage('dailyTopCompanies', $event, displayTopCompanies)"
             @view-all="openPreviewList('companies')"
           />
-        </article>
+        </SectionPanel>
       </div>
     </div>
 
     <div v-if="isCollectionsTab" class="grid gap-4 xl:grid-cols-3">
-      <article class="surface-card rounded-2xl p-5 xl:col-span-2">
-        <SectionCardHeader :title="t('recentPaymentsPreview')" :count="formatNumber(collectionPayments.length)" />
+      <SectionPanel :title="t('recentPaymentsPreview')" :count="formatNumber(collectionPayments.length)" panel-class="surface-card rounded-2xl p-5 xl:col-span-2">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <div v-else-if="collectionPayments.length === 0" class="at-empty-block">{{ t("noPaymentPreview") }}</div>
         <ul v-else class="space-y-3">
@@ -525,11 +472,10 @@
           @change-page="setPreviewPage('collectionsPayments', $event, collectionPayments)"
           @view-all="openPreviewList('payments')"
         />
-      </article>
+      </SectionPanel>
 
       <div class="space-y-4">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)" />
+        <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="reconciliationPreviewRows.length === 0" class="at-empty-block">{{ t("noReconciliationPreview") }}</div>
           <div v-else class="space-y-3">
@@ -567,15 +513,14 @@
               @view-all="openPreviewList('reconciliation')"
             />
           </div>
-        </article>
+        </SectionPanel>
       </div>
     </div>
 
     <div v-if="isRenewalsTab" class="grid gap-4 xl:grid-cols-3">
       <div class="space-y-4 xl:col-span-2">
 
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" />
+        <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
           <ul v-else class="space-y-3">
@@ -601,12 +546,11 @@
             @change-page="setPreviewPage('renewalsQueue', $event, displayRenewalTasks)"
             @view-all="openPreviewList('renewals')"
           />
-        </article>
+        </SectionPanel>
       </div>
 
       <div class="space-y-4">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('renewalStatusOverviewTitle')" :show-count="false" />
+        <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="renewalStatusSummary.length === 0" class="at-empty-block">{{ t("noRenewalStatus") }}</div>
           <div v-else class="space-y-3">
@@ -619,16 +563,13 @@
               :bar-class="item.colorClass"
             />
           </div>
-        </article>
+        </SectionPanel>
       </div>
     </div>
 
     <div v-if="isSalesTab" class="grid gap-4 xl:grid-cols-3">
       <div class="space-y-4">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)">
-          </SectionCardHeader>
-
+        <SectionPanel :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
             {{ t("loading") }}
           </div>
@@ -662,16 +603,14 @@
             @change-page="setPreviewPage('salesLeads', $event, displayRecentLeads)"
             @view-all="openPreviewList('leads')"
           />
-        </article>
+        </SectionPanel>
       </div>
 
       <div class="space-y-4">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('offerPipeline')" :show-count="false">
+        <SectionPanel :title="t('offerPipeline')" :show-count="false">
             <template #trailing>
               <span class="text-xs text-slate-500">{{ formatNumber(displayReadyOfferCount) }}</span>
             </template>
-          </SectionCardHeader>
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
             {{ t("loading") }}
           </div>
@@ -705,25 +644,24 @@
             @change-page="setPreviewPage('salesOffers', $event, displayRecentOffers)"
             @view-all="openPreviewList('offers')"
           />
-        </article>
+        </SectionPanel>
       </div>
 
       <div class="space-y-4">
-        <article class="surface-card rounded-2xl p-5">
-          <SectionCardHeader :title="t('myTasksTitle')" :count="formatNumber(myTaskItems.length)" />
+          <SectionPanel :title="t('myTasksTitle')" :count="formatNumber(myTaskItems.length)">
           <p class="mb-3 text-xs text-slate-500">{{ t("myTasksHint") }}</p>
           <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else class="space-y-3">
             <div class="grid grid-cols-3 gap-2">
-              <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("taskOverdue") }}</p>
-                <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(myTaskSummary.overdue) }}</p>
+              <div class="qc-warning-card">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskOverdue") }}</p>
+                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.overdue) }}</p>
               </div>
-              <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <div class="qc-warning-card">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskToday") }}</p>
                 <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
               </div>
-              <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+              <div class="qc-warning-card">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("taskSoon") }}</p>
                 <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
               </div>
@@ -772,12 +710,11 @@
               <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'tasks-list' })">
                 {{ t("openTasksAction") }}
               </ActionButton>
-              </div>
             </div>
-          </article>
+          </div>
+          </SectionPanel>
 
-          <article class="surface-card rounded-2xl p-5">
-            <SectionCardHeader :title="t('myActivitiesTitle')" :count="formatNumber(myActivityItems.length)" />
+          <SectionPanel :title="t('myActivitiesTitle')" :count="formatNumber(myActivityItems.length)">
             <p class="mb-3 text-xs text-slate-500">{{ t("myActivitiesHint") }}</p>
             <div v-if="myActivitiesLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
             <div v-else class="space-y-3">
@@ -829,23 +766,22 @@
                 </ActionButton>
               </div>
             </div>
-          </article>
+          </SectionPanel>
 
-          <article class="surface-card rounded-2xl p-5">
-            <SectionCardHeader :title="t('myRemindersTitle')" :count="formatNumber(myReminderItems.length)" />
+          <SectionPanel :title="t('myRemindersTitle')" :count="formatNumber(myReminderItems.length)">
             <p class="mb-3 text-xs text-slate-500">{{ t("myRemindersHint") }}</p>
             <div v-if="myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
             <div v-else class="space-y-3">
               <div class="grid grid-cols-3 gap-2">
-                <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("reminderOverdue") }}</p>
-                  <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(myReminderSummary.overdue) }}</p>
+                <div class="qc-warning-card">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("reminderOverdue") }}</p>
+                  <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myReminderSummary.overdue) }}</p>
                 </div>
-                <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <div class="qc-warning-card">
                   <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("reminderToday") }}</p>
                   <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myReminderSummary.due_today) }}</p>
                 </div>
-                <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+                <div class="qc-warning-card">
                   <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("reminderSoon") }}</p>
                   <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myReminderSummary.due_soon) }}</p>
                 </div>
@@ -890,7 +826,7 @@
                 </ActionButton>
               </div>
             </div>
-          </article>
+          </SectionPanel>
         </div>
       </div>
 
@@ -898,13 +834,13 @@
 
     <Dialog
       v-model="showLeadDialog"
-      :options="{ title: activeLocale === 'tr' ? 'Hızlı Fırsat Oluştur' : 'Quick Opportunity', size: 'xl' }"
+      :options="{ title: quickLeadDialogTitle, size: 'xl' }"
     >
       <template #body-content>
         <div class="grid gap-3 p-4">
-          <p v-if="leadDialogError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {{ leadDialogError }}
-          </p>
+          <div v-if="leadDialogError" class="qc-error-banner" role="alert" aria-live="polite">
+            <p class="qc-error-banner__text">{{ leadDialogError }}</p>
+          </div>
           <QuickCustomerPicker
             :model="newLead"
             :field-errors="leadDialogFieldErrors"
@@ -964,7 +900,7 @@ import TrendMetricRow from "../components/app-shell/TrendMetricRow.vue";
 import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
-import SectionCardHeader from "../components/app-shell/SectionCardHeader.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import PreviewPager from "../components/app-shell/PreviewPager.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
@@ -972,6 +908,7 @@ import DetailCard from "../components/ui/DetailCard.vue";
 import TrendChart from "../components/ui/TrendChart.vue";
 import DistributionChart from "../components/ui/DistributionChart.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
+import { getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 
 const router = useRouter();
@@ -980,6 +917,8 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const dashboardStore = useDashboardStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
+const quickLeadConfig = getQuickCreateConfig("lead");
+const quickLeadDialogTitle = computed(() => getLocalizedText(quickLeadConfig?.title, activeLocale.value));
 function normalizeResourcePayload(payload) {
   return payload?.message || payload || {};
 }
@@ -1005,10 +944,10 @@ const copy = {
     tabSales: "Satış",
     tabCollections: "Tahsilat",
     tabRenewals: "Yenileme",
-    rangeLabel: "Tarih araligi",
+    rangeLabel: "Tarih aralığı",
     refresh: "Yenile",
     newLead: "Yeni Fırsat Ekle",
-    leadPipeline: "Fırsat Sureci",
+    leadPipeline: "Fırsat Süreci",
     offerStatusOverviewTitle: "Teklif Durum Dağılımı",
     liveData: "Canlı veri",
     loading: "Yükleniyor...",
@@ -1017,6 +956,15 @@ const copy = {
     noTrendData: "Trend verisi bulunamadı.",
     noOfferStatus: "Teklif durum verisi bulunamadı.",
     recentLeads: "Güncel Fırsat Kartları",
+    recentActivitiesTitle: "Son Aktiviteler",
+    recentActivitiesEmpty: "Henüz aktivite kaydı yok.",
+    monthlyPremiumTrendTitle: "Aylık Prim Trendi",
+    branchDistributionTitle: "Branş Dağılımı",
+    policySuffix: " poliçe",
+    todayTasksTitle: "Bugün Yapılacaklar",
+    todayTasksEmpty: "Bugün için görev yok.",
+    upcomingRenewalsTitle: "Yaklaşan Yenilemeler",
+    upcomingRenewalsEmpty: "30 gün içinde yenileme yok.",
     cardView: "Kart Görünümü",
     noLead: "Fırsat kaydı bulunamadı.",
     estPremium: "Tahmini Brüt Prim",
@@ -1031,13 +979,17 @@ const copy = {
     status: "Durum",
     renewalAlertTitle: "Yakın Yenileme Uyarıları",
     renewalAlertHint: "Önümüzdeki 30 gün içinde sona erecek poliçeleri izleyin.",
-    noRenewalAlert: "Bugun kritik yenileme bulunmuyor.",
+    noRenewalAlert: "Bugün kritik yenileme bulunmuyor.",
     trendAgainstPrevious: "önceki döneme göre",
     trendAgainstPreviousPeriod: "önceki aynı süreye göre",
     trendAgainstPreviousMonth: "geçen aya göre",
     trendAgainstPreviousYear: "geçen yıla göre",
     trendAgainstCustomPeriod: "karşılaştırma dönemine göre",
-    quickActions: "Hızlı Aksiyonlar",
+    quickActions: "Hızlı İşlemler",
+    quickPolicyAction: "Yeni Poliçe",
+    quickOfferAction: "Yeni Teklif",
+    quickCustomerAction: "Yeni Müşteri",
+    quickClaimAction: "Hasar Bildirimi",
     firstName: "Ad",
     lastName: "Soyad",
     phone: "Telefon",
@@ -1050,7 +1002,7 @@ const copy = {
     email: "E-posta",
     estPremiumInput: "Tahmini brut prim",
     note: "Not",
-    cancel: "Vazgeç",
+    cancel: "İptal",
     save: "Kaydet",
     draft: "Taslak",
     open: "Açık",
@@ -1066,17 +1018,15 @@ const copy = {
     kpiClaim: "Açık Hasar",
     kpiReadyOffers: "Hazır Teklif",
     kpiReconciliationOpen: "Açık Mutabakat",
-    kpiReconciliationOpen: "Açık Mutabakat",
     kpiAvgRate: "Ort. Komisyon Oranı",
-    todaySnapshot: "Bugunluk gorunum",
-    renewalRetentionHint: "Yenilenen / kaybedilen kapanislar",
+    renewalRetentionHint: "Yenilenen / kaybedilen kapanışlar",
     monthlySnapshot: "Seçili aralik",
     ratioSnapshot: "Oransal performans",
     quickPolicy: "Poliçe Yönetimi",
     quickPolicyDesc: "Poliçeleri listele ve versiyonlari izle",
     quickOffer: "Teklif Panosu",
     quickOfferDesc: "Teklifleri poliçe sürecine hazırla",
-    quickClaim: "Hasar Masasi",
+    quickClaim: "Hasar Panosu",
     quickClaimDesc: "Hasar dosyalarını ve ödemeleri yönet",
     quickPayment: "Ödeme Operasyonları",
     quickPaymentDesc: "Tahsilat ve payout hareketlerini takip et",
@@ -1085,10 +1035,10 @@ const copy = {
     quickCommunication: "İletişim Merkezi",
     quickCommunicationDesc: "Bildirim kuyruğunu ve gönderimleri yönet",
     quickReconciliation: "Mutabakat",
-    quickReconciliationDesc: "Muhasebe farklarini eslestir ve kapat",
+    quickReconciliationDesc: "Muhasebe farklarını eşleştir ve kapat",
     recentPaymentsPreview: "Son Tahsilat / Ödeme Hareketleri",
     noPaymentPreview: "Tahsilat veya ödeme kaydı bulunamadı.",
-    reconciliationPreview: "Açık Mutabakat Farklari",
+    reconciliationPreview: "Açık Mutabakat Farkları",
     noReconciliationPreview: "Açık mutabakat kaydı bulunamadı.",
     mismatchRows: "Açık Kayıt",
     openDifference: "Toplam Fark",
@@ -1106,7 +1056,7 @@ const copy = {
     statusCompleted: "Tamamlandı",
     statusCancelled: "İptal",
     statusSent: "Gönderildi",
-    statusAçcepted: "Kabul Edildi",
+    statusAccepted: "Kabul Edildi",
     statusRejected: "Reddedildi",
     validationTaxNumberLength: "Vergi numarası 10 haneli olmalıdır.",
     validationTcLength: "TC kimlik numarası 11 haneli olmalıdır.",
@@ -1118,24 +1068,23 @@ const copy = {
     statusIpt: "IPT",
     topCompanies: "Öne Çıkan Sigorta Şirketleri",
     noTopCompanies: "Şirket bazlı üretim verisi bulunamadı.",
-    followUpSlaTitle: "Takip SLA",
     followUpSlaHint: "Geciken, bugün yapılması gereken ve yaklaşan takip kayıtlarını tek listede izleyin.",
     followUpOverdue: "Geciken",
-    followUpToday: "Bugun",
-    followUpSoon: "7 Gun",
+    followUpToday: "Bugün",
+    followUpSoon: "7 Gün",
     noFollowUpItems: "Takip gerektiren kayıt yok.",
     followUpTypeClaim: "Hasar",
     followUpTypeRenewal: "Yenileme",
     followUpTypeAssignment: "Atama",
     followUpTypeCallNote: "Arama Notu",
     followUpDeltaOverdue: "Gecikme",
-    followUpDeltaToday: "Bugun",
-    followUpDeltaDays: "gun",
+    followUpDeltaToday: "Bugün",
+    followUpDeltaDays: "gün",
     followUpDate: "Takip",
     followUpAssignee: "Sorumlu",
     openItem: "Aç",
     viewAllItems: "Tümünü Gör",
-    followUpClaimsAction: "Hasar Masasi",
+    followUpClaimsAction: "Hasar Panosu",
     followUpRenewalsAction: "Yenileme Panosu",
     followUpCommunicationAction: "İletişim Merkezi",
     myTasksTitle: "Benim Görevlerim",
@@ -1154,17 +1103,17 @@ const copy = {
     activityAt: "Aktivite Tarihi",
     openActivitiesAction: "Aktivite Listesi",
     taskOverdue: "Geciken",
-    taskToday: "Bugun",
-    taskSoon: "7 Gun",
+    taskToday: "Bugün",
+    taskSoon: "7 Gün",
     reminderOverdue: "Geciken",
-    reminderToday: "Bugun",
-    reminderSoon: "7 Gun",
+    reminderToday: "Bugün",
+    reminderSoon: "7 Gün",
     taskType: "Tip",
     taskAssignee: "Atanan",
     startTaskAction: "Takibe Al",
     blockTaskAction: "Bloke Et",
     completeTaskAction: "Tamamla",
-    cancelTaskAction: "İptal Et",
+    cancelTaskAction: "İptal",
     openTasksAction: "Görev Listesi",
     openRemindersAction: "Hatırlatıcı Listesi",
     policyCount: "Poliçe Adedi",
@@ -1215,6 +1164,15 @@ const copy = {
     noTrendData: "No trend data found.",
     noOfferStatus: "No offer status data found.",
     recentLeads: "Recent Lead Cards",
+    recentActivitiesTitle: "Recent Activities",
+    recentActivitiesEmpty: "No activity records yet.",
+    monthlyPremiumTrendTitle: "Monthly Premium Trend",
+    branchDistributionTitle: "Branch Distribution",
+    policySuffix: " policies",
+    todayTasksTitle: "Today's Tasks",
+    todayTasksEmpty: "No tasks for today.",
+    upcomingRenewalsTitle: "Upcoming Renewals",
+    upcomingRenewalsEmpty: "No renewals due within 30 days.",
     cardView: "Card View",
     noLead: "No lead record found.",
     estPremium: "Estimated Gross Premium",
@@ -1236,6 +1194,10 @@ const copy = {
     trendAgainstPreviousYear: "vs previous year",
     trendAgainstCustomPeriod: "vs comparison period",
     quickActions: "Quick Actions",
+    quickPolicyAction: "New Policy",
+    quickOfferAction: "New Offer",
+    quickCustomerAction: "New Customer",
+    quickClaimAction: "Report Claim",
     firstName: "First Name",
     lastName: "Last Name",
     phone: "Phone",
@@ -1264,7 +1226,6 @@ const copy = {
     kpiClaim: "Open Claims",
     kpiReadyOffers: "Ready Offers",
     kpiReconciliationOpen: "Open Reconciliation",
-    kpiReconciliationOpen: "Open Reconciliation",
     kpiAvgRate: "Avg Commission Rate",
     todaySnapshot: "Current snapshot",
     renewalRetentionHint: "Renewed / lost closed outcomes",
@@ -1274,7 +1235,7 @@ const copy = {
     quickPolicyDesc: "List policies and monitor versions",
     quickOffer: "Offer Board",
     quickOfferDesc: "Prepare offers for policy conversion",
-    quickClaim: "Claim Desk",
+    quickClaim: "Claims Board",
     quickClaimDesc: "Manage claim files and payouts",
     quickPayment: "Payment Operations",
     quickPaymentDesc: "Track collections and payouts",
@@ -1304,7 +1265,7 @@ const copy = {
     statusCompleted: "Done",
     statusCancelled: "Cancelled",
     statusSent: "Sent",
-    statusAçcepted: "Accepted",
+    statusAccepted: "Accepted",
     statusRejected: "Rejected",
     validationTaxNumberLength: "Tax number must be 10 digits.",
     validationTcLength: "T.R. identity number must be 11 digits.",
@@ -1316,7 +1277,6 @@ const copy = {
     statusIpt: "IPT",
     topCompanies: "Top Insurance Companies",
     noTopCompanies: "No company production data found.",
-    followUpSlaTitle: "Follow-up SLA",
     followUpSlaHint: "Review overdue, due today, and upcoming follow-up records in one list.",
     followUpOverdue: "Overdue",
     followUpToday: "Today",
@@ -1333,7 +1293,7 @@ const copy = {
     followUpAssignee: "Assignee",
     openItem: "Open",
     viewAllItems: "View All",
-    followUpClaimsAction: "Claims Desk",
+    followUpClaimsAction: "Claims Board",
     followUpRenewalsAction: "Renewals Board",
     followUpCommunicationAction: "Communication Center",
     myTasksTitle: "My Tasks",
@@ -2016,13 +1976,13 @@ const salesOfferStatusSummary = computed(() => {
     Draft: "bg-amber-500",
     Sent: "bg-sky-500",
     Accepted: "bg-emerald-500",
-    Rejected: "bg-rose-500",
+    Rejected: "bg-amber-500",
     Converted: "bg-indigo-500",
   };
   const labelMap = {
     Draft: t("draft"),
     Sent: t("statusSent"),
-    Accepted: t("statusAçcepted"),
+    Accepted: t("statusAccepted"),
     Rejected: t("statusRejected"),
     Converted: t("converted"),
   };
@@ -2072,7 +2032,7 @@ const policyStatusSummary = computed(() => {
       label: t("statusIpt"),
       value: map.IPT?.total || 0,
       gwp: map.IPT?.gwp || 0,
-      colorClass: "bg-rose-400",
+      colorClass: "bg-amber-400",
     },
   ].map((entry) => ({
     ...entry,
@@ -2122,7 +2082,7 @@ const renewalStatusSummary = computed(() => {
       { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-amber-500" },
       { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-sky-500" },
       { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-emerald-500" },
-      { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-rose-400" },
+      { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-slate-400" },
     ]
       .filter((row) => row.value > 0 || isRenewalsTab.value)
       .map((row) => ({
@@ -2146,7 +2106,7 @@ const renewalStatusSummary = computed(() => {
     { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-amber-500" },
     { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-sky-500" },
     { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-emerald-500" },
-    { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-rose-400" },
+    { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-slate-400" },
   ]
     .filter((row) => row.value > 0 || isRenewalsTab.value)
     .map((row) => ({
@@ -2288,7 +2248,7 @@ function buildTrend(currentValue, previousValue, reverseTrend = false) {
   if (!previous && current) {
     return {
       text: "+100%",
-      className: reverseTrend ? "text-rose-600" : "text-emerald-600",
+      className: reverseTrend ? "text-amber-700" : "text-emerald-600",
     };
   }
 
@@ -2298,7 +2258,7 @@ function buildTrend(currentValue, previousValue, reverseTrend = false) {
   const sign = rounded > 0 ? "+" : "";
   return {
     text: `${sign}${new Intl.NumberFormat(localeCode.value, { maximumFractionDigits: 1 }).format(rounded)}%`,
-    className: positive ? "text-emerald-600" : "text-rose-600",
+    className: positive ? "text-emerald-600" : "text-amber-700",
   };
 }
 

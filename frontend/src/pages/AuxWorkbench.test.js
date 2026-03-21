@@ -91,7 +91,6 @@ const actionButtonStub = {
 const commonStubs = {
   PageToolbar: passthroughStub,
   WorkbenchFilterToolbar: passthroughStub,
-  DataTableShell: passthroughStub,
   DataTableCell: simpleStub,
   TableEntityCell: tableEntityCellStub,
   TableFactsCell: tableFactsCellStub,
@@ -368,7 +367,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.find("tbody tr").findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.find("tbody tr").findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -444,7 +443,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledTimes(1);
@@ -511,7 +510,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -531,7 +530,7 @@ describe("AuxWorkbench reminders", () => {
     const taskRows = [
       {
         name: "TASK-001",
-        task_title: "Yenileme kontrolu",
+        task_title: "Yenileme kontrolü",
         task_type: "Renewal",
         source_doctype: "AT Policy",
         source_name: "POL-001",
@@ -586,7 +585,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -661,7 +660,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({

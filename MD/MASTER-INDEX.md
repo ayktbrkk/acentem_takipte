@@ -41,16 +41,16 @@
 ## 5️⃣ Ana Veriler (3 gün)
 - `05-ana-veriler/01-sigorta-sirketleri-list.md` ✅ TAMAMLANDI
 - `05-ana-veriler/02-sigorta-sirketleri-detail.md` ✅ TAMAMLANDI
-- `05-ana-veriler/03-branslar-list.md` ✅ TAMAMLANDI
-- `05-ana-veriler/04-branslar-detail.md` ✅ TAMAMLANDI
+- `05-ana-veriler/03-branşlar-list.md` ✅ TAMAMLANDI
+- `05-ana-veriler/04-branşlar-detail.md` ✅ TAMAMLANDI
 - `05-ana-veriler/05-satis-birimleri-list.md` ✅ TAMAMLANDI
 - `05-ana-veriler/06-satis-birimleri-detail.md` ✅ TAMAMLANDI
-- `05-ana-veriler/07-bildirim-sablonlari-list.md` ✅ TAMAMLANDI
-- `05-ana-veriler/08-bildirim-sablonlari-editor.md` ✅ TAMAMLANDI
+- `05-ana-veriler/07-bildirim-şablonları-list.md` ✅ TAMAMLANDI
+- `05-ana-veriler/08-bildirim-şablonları-editor.md` ✅ TAMAMLANDI
 
 ## 6️⃣ Finans ve Kontrol (2 gün)
-- `06-finans-kontrol/01-muhasebe-kayitlari-list.md` ✅ TAMAMLANDI
-- `06-finans-kontrol/02-muhasebe-kayitlari-detail.md` ✅ TAMAMLANDI
+- `06-finans-kontrol/01-muhasebe-kayıtları-list.md` ✅ TAMAMLANDI
+- `06-finans-kontrol/02-muhasebe-kayıtları-detail.md` ✅ TAMAMLANDI
 - `06-finans-kontrol/03-mutabakat-kalemleri-list.md` ✅ TAMAMLANDI
 - `06-finans-kontrol/04-mutabakat-kalemleri-detail.md` ✅ TAMAMLANDI
 
@@ -58,6 +58,7 @@
 - `07-formlar-dialoglar/01-quick-create-all.md` (Toplu) ✅ TAMAMLANDI
 - `07-formlar-dialoglar/02-edit-forms-all.md` (Toplu) ✅ TAMAMLANDI
 - `07-formlar-dialoglar/03-import-export.md` ✅ TAMAMLANDI
+- `07-formlar-dialoglar/04-hizli-ekranlar-yol-haritasi.md` (Yeni hizli ekran dili yol haritasi)
 
 ## 8️⃣ Final Cleanup (1 gün)
 - `08-final-cleanup/01-cleanup-optimization.md` ✅ TAMAMLANDI
@@ -119,7 +120,7 @@ Tüm prompt'lar bu komponentleri kullanır:
 
 ### UI Komponentleri
 - `StatusBadge` - Durum badge'leri
-- `DetailCard` - İçerik kartları
+- `SectionPanel` - İçerik kartları
 - `HeroStrip` - Üst özet strip
 - `FieldGroup` - Alan grupları
 - `StepBar` - Süreç adımları

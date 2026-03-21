@@ -3,6 +3,7 @@
     <h3 class="text-base font-semibold text-slate-900">{{ title }}</h3>
     <slot v-if="$slots.trailing" name="trailing" />
     <span v-else-if="showCount" class="text-xs text-slate-500">{{ count }}</span>
+    <span v-else-if="meta" class="text-xs font-medium text-slate-500">{{ meta }}</span>
   </div>
 </template>
 
@@ -10,6 +11,7 @@
 defineProps({
   title: { type: String, default: "" },
   count: { type: [String, Number], default: "" },
+  meta: { type: String, default: "" },
   showCount: { type: Boolean, default: true },
 });
 </script>

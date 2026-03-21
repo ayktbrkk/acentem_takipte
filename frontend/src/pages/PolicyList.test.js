@@ -18,6 +18,7 @@ const routeState = reactive({
 
 const routerPush = vi.fn();
 const routerReplace = vi.fn();
+const createdResources = [];
 
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
@@ -35,6 +36,7 @@ vi.mock("frappe-ui", () => ({
     template: `<div class="dialog-stub"><slot name="body-content" /></div>`,
   },
   createResource: (config = {}) => {
+    createdResources.push(config);
     const url = String(config?.url || "");
 
     if (url === "frappe.client.get_list" && config?.auto === false) {
@@ -104,6 +106,7 @@ describe("PolicyList page store integration", () => {
   beforeEach(() => {
     routerPush.mockReset();
     routerReplace.mockReset();
+    createdResources.length = 0;
     routeState.query = {};
     setActivePinia(createPinia());
 
@@ -132,7 +135,6 @@ describe("PolicyList page store integration", () => {
           ActionButton: true,
           DataTableCell: genericStub,
           StatusBadge: true,
-          DataTableShell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateDialogShell: genericStub,
@@ -164,5 +166,33 @@ describe("PolicyList page store integration", () => {
     expect(policyStore.state.filters.query).toBe("TR-001");
     expect(policyStore.state.pagination.pageLength).toBe(50);
     expect(wrapper.text()).toContain("50");
+  });
+
+  it("loads only convertible offers for the quick policy source offer picker", async () => {
+    mount(PolicyList, {
+      global: {
+        stubs: {
+          Dialog: true,
+          ActionButton: true,
+          DataTableCell: genericStub,
+          StatusBadge: true,
+          InlineActionRow: genericStub,
+          PageToolbar: genericStub,
+          QuickCreateDialogShell: genericStub,
+          QuickCreateFormRenderer: true,
+          QuickCreateLauncher: true,
+          TableEntityCell: true,
+          TableFactsCell: true,
+          TablePagerFooter: genericStub,
+          WorkbenchFilterToolbar: genericStub,
+        },
+      },
+    });
+
+    const offerResource = createdResources.find(
+      (resource) => resource?.url === "frappe.client.get_list" && resource?.params?.doctype === "AT Offer"
+    );
+
+    expect(offerResource?.params?.filters).toEqual({ status: ["in", ["Sent", "Accepted"]] });
   });
 });

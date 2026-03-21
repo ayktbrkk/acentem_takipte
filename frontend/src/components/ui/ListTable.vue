@@ -101,7 +101,7 @@ defineProps({
   columns: { type: Array, required: true },
   rows: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
-  emptyMessage: { type: String, default: "Kayit bulunamadi." },
+  emptyMessage: { type: String, default: "Kayıt bulunamadı." },
 });
 
 defineEmits(["row-click"]);

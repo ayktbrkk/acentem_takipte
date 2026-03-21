@@ -18,7 +18,7 @@
     </p>
 
     <div v-if="change !== null && change !== undefined" class="flex items-center gap-1">
-      <span class="text-xs font-medium" :class="change >= 0 ? 'text-green-600' : 'text-red-500'">
+      <span class="text-xs font-medium" :class="change >= 0 ? 'text-green-600' : 'text-amber-700'">
         {{ change >= 0 ? '↑' : '↓' }}
         {{ Math.abs(change) }}%
       </span>
@@ -48,7 +48,7 @@ const valueClass = computed(
       default: 'text-gray-900',
       warn: 'text-amber-600',
       success: 'text-green-700',
-      danger: 'text-red-600',
+      danger: 'text-amber-700',
     }[props.variant] ?? 'text-gray-900')
 )
 
@@ -58,7 +58,7 @@ const iconBgClass = computed(
       default: 'bg-brand-50 text-brand-600',
       warn: 'bg-amber-50 text-amber-600',
       success: 'bg-green-50 text-green-700',
-      danger: 'bg-red-50 text-red-600',
+      danger: 'bg-amber-50 text-amber-700',
     }[props.variant] ?? 'bg-brand-50 text-brand-600')
 )
 </script>

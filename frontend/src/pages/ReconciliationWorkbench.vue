@@ -1,120 +1,137 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <p class="detail-breadcrumb">Kontrol Merkezi / Mutabakat</p>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <ActionButton variant="secondary" size="sm" @click="openImportDialog">
+          {{ t("importStatement") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Matched')">
+          {{ bulkActionLoading ? t("bulkResolving") : t("bulkResolve") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Ignored')">
+          {{ bulkActionLoading ? t("bulkIgnoring") : t("bulkIgnore") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :disabled="syncing" @click="runSync">
+          {{ syncing ? t("syncing") : t("sync") }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" :disabled="reconciling" @click="runReconciliation">
+          {{ reconciling ? t("reconciling") : t("reconcile") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          :disabled="workbenchLoading"
+          @click="downloadReconciliationExport('xlsx')"
+        >
+          {{ t("exportXlsx") }}
+        </ActionButton>
+        <ActionButton
+          variant="primary"
+          size="sm"
+          :disabled="workbenchLoading"
+          @click="downloadReconciliationExport('pdf')"
+        >
+          {{ t("exportPdf") }}
+        </ActionButton>
+        <span class="text-sm text-slate-400">{{ rows.length }} {{ t("recordCount") }}</span>
       </div>
     </div>
 
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :show-refresh="true"
-        :busy="workbenchLoading || syncing || reconciling"
-        :refresh-label="t('refresh')"
-        @refresh="reloadWorkbench"
-      >
-        <template #actions>
-          <ActionButton variant="secondary" size="sm" @click="openImportDialog">
-            {{ t("importStatement") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Matched')">
-            {{ bulkActionLoading ? t("bulkResolving") : t("bulkResolve") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Ignored')">
-            {{ bulkActionLoading ? t("bulkIgnoring") : t("bulkIgnore") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="syncing" @click="runSync">
-            {{ syncing ? t("syncing") : t("sync") }}
-          </ActionButton>
-          <ActionButton variant="primary" size="sm" :disabled="reconciling" @click="runReconciliation">
-            {{ reconciling ? t("reconciling") : t("reconcile") }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            :disabled="workbenchLoading"
-            @click="downloadReconciliationExport('xlsx')"
-          >
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            size="sm"
-            :disabled="workbenchLoading"
-            @click="downloadReconciliationExport('pdf')"
-          >
-            {{ t("exportPdf") }}
-          </ActionButton>
-        </template>
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applyWorkbenchFilters"
-            @reset="resetWorkbenchFilters"
-          >
-            <select v-model="filters.status" class="input">
-              <option value="Open">{{ t("statusOpen") }}</option>
-              <option value="Resolved">{{ t("statusResolved") }}</option>
-              <option value="Ignored">{{ t("statusIgnored") }}</option>
-              <option value="">{{ t("allStatuses") }}</option>
-            </select>
-            <select v-model="filters.mismatchType" class="input">
-              <option value="">{{ t("allTypes") }}</option>
-              <option v-for="option in mismatchOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <template #advanced>
-              <input
-                v-model.trim="filters.sourceQuery"
-                class="input"
-                type="search"
-                :placeholder="t('sourceSearchPlaceholder')"
-                @keyup.enter="applyWorkbenchFilters"
-              />
-              <select v-model="filters.sourceDoctype" class="input">
-                <option value="">{{ t("allSources") }}</option>
-                <option v-for="option in sourceDoctypeOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-              <select v-model.number="filters.limit" class="input">
-                <option :value="20">20</option>
-                <option :value="50">50</option>
-                <option :value="100">100</option>
-              </select>
-            </template>
-          </WorkbenchFilterToolbar>
-        </template>
-      </PageToolbar>
-    </article>
-
-    <div v-if="operationError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-      {{ operationError }}
+    <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Kayıt</p>
+        <p class="mini-metric-value">{{ reconciliationSummary.total }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Eşleşti</p>
+        <p class="mini-metric-value text-emerald-600">{{ reconciliationSummary.matched }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Beklemede</p>
+        <p class="mini-metric-value text-amber-600">{{ reconciliationSummary.pending }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Uyumsuzluk</p>
+        <p class="mini-metric-value text-amber-700">{{ reconciliationSummary.mismatch }}</p>
+      </div>
+      <div class="mini-metric">
+        <p class="mini-metric-label">Toplam Tutar Farkı</p>
+        <p class="mini-metric-value text-sky-600">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
+      </div>
     </div>
+
+    <div v-if="operationError" class="qc-error-banner" role="alert" aria-live="polite">
+      <p class="qc-error-banner__text">{{ operationError }}</p>
+    </div>
+
+    <SectionPanel :title="t('filtersTitle')" :count="`${activeFilterCount} ${t('activeFilters')}`" :meta="t('subtitle')">
+      <WorkbenchFilterToolbar
+        v-model="presetKey"
+        :advanced-label="t('advancedFilters')"
+        :collapse-label="t('hideAdvancedFilters')"
+        :active-count="activeFilterCount"
+        :active-count-label="t('activeFilters')"
+        :preset-label="t('presetLabel')"
+        :preset-options="presetOptions"
+        :can-delete-preset="canDeletePreset"
+        :save-label="t('savePreset')"
+        :delete-label="t('deletePreset')"
+        :apply-label="t('applyFilters')"
+        :reset-label="t('clearFilters')"
+        @preset-change="onPresetChange"
+        @preset-save="savePreset"
+        @preset-delete="deletePreset"
+        @apply="applyWorkbenchFilters"
+        @reset="resetWorkbenchFilters"
+      >
+        <select v-model="filters.status" class="input">
+          <option value="Open">{{ t("statusOpen") }}</option>
+          <option value="Resolved">{{ t("statusResolved") }}</option>
+          <option value="Ignored">{{ t("statusIgnored") }}</option>
+          <option value="">{{ t("allStatuses") }}</option>
+        </select>
+        <select v-model="filters.mismatchType" class="input">
+          <option value="">{{ t("allTypes") }}</option>
+          <option v-for="option in mismatchOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <template #advanced>
+          <input
+            v-model.trim="filters.sourceQuery"
+            class="input"
+            type="search"
+            :placeholder="t('sourceSearchPlaceholder')"
+            @keyup.enter="applyWorkbenchFilters"
+          />
+          <select v-model="filters.sourceDoctype" class="input">
+            <option value="">{{ t("allSources") }}</option>
+            <option v-for="option in sourceDoctypeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <select v-model.number="filters.limit" class="input">
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+        </template>
+      </WorkbenchFilterToolbar>
+    </SectionPanel>
 
     <Dialog v-model="showImportDialog" :options="{ title: t('importStatementTitle'), size: 'xl' }">
       <template #body-content>
         <QuickCreateDialogShell
           :error="importError"
+          :eyebrow="importDialogEyebrow"
           :subtitle="t('importStatementSubtitle')"
           :loading="importLoading"
           :show-save-and-open="false"
@@ -182,39 +199,7 @@
       </template>
     </Dialog>
 
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      <article class="at-metric-card">
-        <p class="at-metric-label">Toplam Kayıt</p>
-        <p class="at-metric-value">{{ reconciliationSummary.total }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">Eşleşti</p>
-        <p class="at-metric-value !text-emerald-700">{{ reconciliationSummary.matched }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">Beklemede</p>
-        <p class="at-metric-value !text-amber-700">{{ reconciliationSummary.pending }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">Uyumsuzluk</p>
-        <p class="at-metric-value !text-rose-700">{{ reconciliationSummary.mismatch }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">Toplam Tutar Farki</p>
-        <p class="at-metric-value !text-sky-700">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricCommissionAccrual") }}</p>
-        <p class="at-metric-value !text-sky-700">{{ metrics.commission_accrual_count || 0 }}</p>
-      </article>
-      <article class="at-metric-card">
-        <p class="at-metric-label">{{ t("metricCommissionAccrualAmount") }}</p>
-        <p class="at-metric-value !text-emerald-700">{{ formatMoney(metrics.commission_accrual_amount_try || 0) }}</p>
-      </article>
-    </div>
-
-    <article class="surface-card rounded-2xl p-5">
-      <SectionCardHeader :title="t('collectionPreviewTitle')" :count="collectionPreviewRows.length" />
+    <SectionPanel :title="t('collectionPreviewTitle')" :count="collectionPreviewRows.length">
       <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
       <div v-else-if="collectionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCollectionPreview") }}</div>
       <ul v-else class="space-y-2 text-sm">
@@ -233,10 +218,9 @@
           </template>
         </MetaListCard>
       </ul>
-    </article>
+    </SectionPanel>
 
-    <article class="surface-card rounded-2xl p-5">
-      <SectionCardHeader :title="t('commissionPreviewTitle')" :count="commissionPreviewRows.length" />
+    <SectionPanel :title="t('commissionPreviewTitle')" :count="commissionPreviewRows.length">
       <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
       <div v-else-if="commissionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCommissionPreview") }}</div>
       <ul v-else class="space-y-2 text-sm">
@@ -255,18 +239,24 @@
           </template>
         </MetaListCard>
       </ul>
-    </article>
+    </SectionPanel>
 
-    <DataTableShell
-      :loading="workbenchLoading"
-      :error="workbenchErrorText"
-      :empty="rows.length === 0"
-      :loading-label="t('loading')"
-      :error-title="t('loadErrorTitle')"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('empty')"
-    >
-      <template #default>
+    <SectionPanel :title="t('reconciliationListTitle')" :count="reconciliationListRows.length" :meta="t('subtitle')">
+      <template #trailing>
+        <p class="text-xs text-slate-500">{{ t("showing") }} {{ reconciliationListRows.length }} / {{ rows.length }}</p>
+      </template>
+
+      <div v-if="workbenchLoading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+        {{ t("loading") }}
+      </div>
+      <div v-else-if="workbenchErrorText" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ workbenchErrorText }}</p>
+      </div>
+      <div v-else-if="rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
+      </div>
+      <div v-else class="mt-4">
         <ListTable
           :columns="reconciliationListColumns"
           :rows="reconciliationListRows"
@@ -274,13 +264,14 @@
           :empty-message="t('empty')"
           @row-click="handleReconciliationRowClick"
         />
-      </template>
-    </DataTableShell>
+      </div>
+    </SectionPanel>
 
     <Dialog v-model="showActionDialog" :options="{ title: reconciliationActionDialogTitle, size: 'lg' }">
       <template #body-content>
         <QuickCreateDialogShell
           :error="actionDialogError"
+          :eyebrow="actionDialogEyebrow"
           :subtitle="reconciliationActionDialogSubtitle"
           :loading="actionDialogLoading"
           :show-save-and-open="false"
@@ -322,19 +313,20 @@ import { computed, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
+import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useAccountingStore } from "../stores/accounting";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import FormattedCurrencyValue from "../components/app-shell/FormattedCurrencyValue.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
@@ -347,6 +339,7 @@ const copy = {
   tr: {
     title: "Mutabakat Masası",
     subtitle: "Muhasebe uyumsuzluklarını izleyin, eşleştirin ve kapatın",
+    recordCount: "kayıt",
     importStatement: "Ekstre İçe Aktar",
     importStatementTitle: "Ekstre İçe Aktarma Önizlemesi",
     importStatementSubtitle: "CSV içeriğini yapıştır, poliçe veya ödeme eşleşmelerini önizle.",
@@ -379,6 +372,7 @@ const copy = {
     statusIgnored: "Yoksayıldı",
     allStatuses: "Tüm durumlar",
     allTypes: "Tüm uyumsuzluk tipleri",
+    filtersTitle: "Filtreler",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
@@ -403,6 +397,7 @@ const copy = {
     collectionPreviewTitle: "Geciken Tahsilat Önizleme",
     emptyCollectionPreview: "Geciken tahsilat kaydı bulunamadı.",
     commissionPreviewTitle: "Komisyon Tahakkuk Önizleme",
+    reconciliationListTitle: "Mutabakat Listesi",
     emptyCommissionPreview: "Komisyon tahakkuk kaydı bulunamadı.",
     loading: "Yükleniyor...",
     loadErrorTitle: "Mutabakat Verileri Yüklenemedi",
@@ -459,6 +454,7 @@ const copy = {
   en: {
     title: "Reconciliation Workbench",
     subtitle: "Track, match and close accounting mismatches",
+    recordCount: "records",
     importStatement: "Import Statement",
     importStatementTitle: "Statement Import Preview",
     importStatementSubtitle: "Paste CSV content and preview policy or payment matches.",
@@ -491,6 +487,7 @@ const copy = {
     statusIgnored: "Ignored",
     allStatuses: "All statuses",
     allTypes: "All mismatch types",
+    filtersTitle: "Filters",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
@@ -515,6 +512,7 @@ const copy = {
     collectionPreviewTitle: "Overdue Collection Preview",
     emptyCollectionPreview: "No overdue collection found.",
     commissionPreviewTitle: "Commission Accrual Preview",
+    reconciliationListTitle: "Reconciliation List",
     emptyCommissionPreview: "No commission accrual found.",
     loading: "Loading...",
     loadErrorTitle: "Failed to Load Reconciliation Data",
@@ -569,11 +567,14 @@ const copy = {
     mismatchOther: "Other",
   },
 };
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
+const appPinia = getAppPinia();
+const authStore = useAuthStore(appPinia);
+const branchStore = useBranchStore(appPinia);
 const accountingStore = useAccountingStore();
 const route = useRoute();
 const router = useRouter();
+const importDialogEyebrow = computed(() => (unref(authStore.locale) === "tr" ? "Ekstre Önizleme" : "Statement Preview"));
+const actionDialogEyebrow = computed(() => (unref(authStore.locale) === "tr" ? "Mutabakat Aksiyonu" : "Reconciliation Action"));
 
 function t(key) {
   const locale = unref(authStore.locale) || "en";
@@ -708,7 +709,7 @@ const reconciliationListRows = computed(() =>
       totalPremium: formatMoney(row?.local_amount_try || 0),
       companyStatement: formatMoney(row?.external_amount_try || 0),
       difference: formatMoney(Math.abs(difference)),
-      difference_class: difference > 0 ? "text-green-600" : difference < 0 ? "text-red-600" : "text-gray-600",
+      difference_class: difference > 0 ? "text-green-600" : difference < 0 ? "text-amber-700" : "text-gray-600",
       status: normalizeReconciliationStatus(row?.status, difference),
       _actions: buildReconciliationRowActions(row),
     };
@@ -721,7 +722,7 @@ const actionDialogNotes = ref("");
 const actionDialogLoading = ref(false);
 const actionDialogError = ref("");
 const actionDialogLabels = computed(() => ({
-  cancel: unref(authStore.locale) === "tr" ? "Vazgeç" : "Cancel",
+  cancel: unref(authStore.locale) === "tr" ? "İptal" : "Cancel",
   save:
     actionDialogMode.value === "Matched"
       ? t("actionSaveResolve")
@@ -740,7 +741,7 @@ const reconciliationActionDialogSubtitle = computed(() => {
   return t("actionNoteSubtitle");
 });
 const importDialogLabels = computed(() => ({
-  cancel: unref(authStore.locale) === "tr" ? "Vazgeç" : "Cancel",
+  cancel: unref(authStore.locale) === "tr" ? "İptal" : "Cancel",
   save: unref(authStore.locale) === "tr" ? "Önizleme Oluştur" : "Build Preview",
 }));
 
@@ -1113,7 +1114,7 @@ function buildReconciliationRowActions(row) {
   const actions = [];
   actions.push({
     key: `${row?.name}-detail`,
-    label: "Detay",
+    label: "Kayıt Detayı",
     variant: "primary",
     onClick: () => openReconciliationDetail(row),
   });
@@ -1166,9 +1167,8 @@ function formatMoney(value) {
 onMounted(() => {
   accountingStore.setLocaleCode(localeCode.value);
   applyPreset(presetKey.value, { refresh: false });
-  const appliedRouteFilters = applyRouteFilters();
-  if (String(presetKey.value || "default") !== "default") void reloadWorkbench();
-  else if (appliedRouteFilters) void reloadWorkbench();
+  applyRouteFilters();
+  void reloadWorkbench();
   void hydratePresetStateFromServer();
 });
 

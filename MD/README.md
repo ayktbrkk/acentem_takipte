@@ -79,15 +79,15 @@ design-system-complete/
 ├── 05-ana-veriler/
 │   ├── 01-sigorta-sirketleri-list.md
 │   ├── 02-sigorta-sirketleri-detail.md
-│   ├── 03-branslar-list.md
-│   ├── 04-branslar-detail.md
+│   ├── 03-branşlar-list.md
+│   ├── 04-branşlar-detail.md
 │   ├── 05-satis-birimleri-list.md
 │   ├── 06-satis-birimleri-detail.md
-│   ├── 07-bildirim-sablonlari-list.md
-│   └── 08-bildirim-sablonlari-editor.md
+│   ├── 07-bildirim-şablonları-list.md
+│   └── 08-bildirim-şablonları-editor.md
 ├── 06-finans-kontrol/
-│   ├── 01-muhasebe-kayitlari-list.md
-│   ├── 02-muhasebe-kayitlari-detail.md
+│   ├── 01-muhasebe-kayıtları-list.md
+│   ├── 02-muhasebe-kayıtları-detail.md
 │   ├── 03-mutabakat-kalemleri-list.md
 │   └── 04-mutabakat-kalemleri-detail.md
 ├── 07-formlar-dialoglar/

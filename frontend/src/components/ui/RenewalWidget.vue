@@ -1,11 +1,11 @@
 <template>
   <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
     <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-      <p class="text-sm font-medium text-gray-800">Yaklasan Yenilemeler</p>
+      <p class="text-sm font-medium text-gray-800">Yaklaşan Yenilemeler</p>
       <span class="badge badge-amber">{{ renewals.length }} bekliyor</span>
     </div>
 
-    <div v-if="!renewals.length" class="card-empty">Yaklasan yenileme yok.</div>
+    <div v-if="!renewals.length" class="card-empty">Yaklaşan yenileme yok.</div>
 
     <div v-else>
       <div
@@ -36,7 +36,7 @@
 
     <div class="border-t border-gray-100 px-4 py-2.5">
       <button class="text-xs font-medium text-brand-600 transition-colors hover:text-brand-700" @click="$emit('view-all')">
-        Tumunu gor ->
+        Tümünü Gör ->
       </button>
     </div>
   </div>
@@ -60,13 +60,13 @@ function initials(name = '') {
 }
 
 function avatarClass(days) {
-  if (days <= 7) return 'bg-red-50 text-red-600'
+  if (days <= 7) return 'bg-amber-50 text-amber-700'
   if (days <= 30) return 'bg-amber-50 text-amber-600'
   return 'bg-brand-50 text-brand-600'
 }
 
 function urgencyBadgeClass(days) {
-  if (days <= 7) return 'bg-red-50 text-red-600'
+  if (days <= 7) return 'bg-amber-50 text-amber-700'
   if (days <= 30) return 'bg-amber-50 text-amber-600'
   return 'bg-gray-100 text-gray-600'
 }

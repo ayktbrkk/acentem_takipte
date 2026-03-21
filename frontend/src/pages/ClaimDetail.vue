@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
@@ -21,25 +21,25 @@
 
     <div class="detail-body">
       <div class="detail-main">
-        <DetailCard :title="t('process')">
+        <SectionPanel :title="t('process')">
           <StepBar :steps="claimSteps" class="mb-4" />
           <FieldGroup :fields="processFields" :cols="4" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('details')">
+        <SectionPanel :title="t('details')">
           <FieldGroup :fields="detailFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('policy')">
+        <SectionPanel :title="t('policy')">
           <div class="cursor-pointer rounded-lg bg-gray-50 p-3 hover:bg-gray-100" @click="openPolicy">
             <p class="text-sm font-medium text-gray-900">{{ claim.policy || '-' }}</p>
             <p class="mt-0.5 text-xs text-gray-400">{{ claim.branch || '-' }}</p>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('documents')">
-          <template #action>
-            <button class="btn btn-sm" type="button" @click="openPolicy">Yükle</button>
+        <SectionPanel :title="t('documents')">
+          <template #trailing>
+            <button class="btn btn-sm" type="button" @click="openClaimDocuments">{{ t("openDocuments") }}</button>
           </template>
           <p v-if="!documents.length" class="card-empty">{{ t("noDocuments") }}</p>
           <div v-else>
@@ -51,9 +51,9 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Ödeme Geçmişi">
+        <SectionPanel title="Ödeme Geçmişi">
           <div v-if="!payments.length" class="card-empty">Ödeme kaydı bulunamadı.</div>
           <table v-else class="min-w-full">
             <thead class="bg-gray-50">
@@ -73,15 +73,15 @@
               </tr>
             </tbody>
           </table>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Ekspertiz Raporlari">
+        <SectionPanel title="Ekspertiz Raporlari">
           <FieldGroup :fields="expertiseFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('timeline')">
+        <SectionPanel :title="t('timeline')">
           <div class="mb-4">
-            <p class="section-title">Notlar</p>
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Notlar</p>
             <p class="text-sm text-gray-700">{{ claim.rejection_reason || claim.notes || '-' }}</p>
           </div>
           <div>
@@ -100,48 +100,38 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
-      <aside class="detail-sidebar">
-        <div>
-          <p class="section-title">İlgili Kişiler</p>
+      <aside class="detail-sidebar space-y-4">
+        <SectionPanel title="İlgili Kişiler">
           <FieldGroup :fields="peopleFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Rezerv Bilgileri</p>
+        <SectionPanel title="Rezerv Bilgileri">
           <FieldGroup :fields="reserveFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Odeme Bilgileri</p>
+        <SectionPanel title="Ödeme Bilgileri">
           <FieldGroup :fields="paymentFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Kayıt Meta</p>
+        <SectionPanel title="Kayıt Meta">
           <FieldGroup :fields="recordMetaFields" :cols="1" />
           <button class="mt-3 btn btn-full btn-sm" @click="openCustomer">{{ t("customerRecord") }}</button>
-        </div>
+        </SectionPanel>
       </aside>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
-import DetailCard from "@/components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "@/components/ui/FieldGroup.vue";
 import StepBar from "@/components/ui/StepBar.vue";
 
@@ -152,23 +142,24 @@ const router = useRouter();
 const copy = {
   tr: {
     breadcrumb: "Operasyonlar / Hasarlar",
-    back: "Listeye Don",
+    back: "Listeye Dön",
     action: "Islem Yap",
-    process: "Hasar Sureci",
-    details: "Hasar Detaylari",
+    process: "Hasar Süreci",
+    details: "Hasar Detayları",
     documents: "Belgeler",
+    openDocuments: "Belgeleri Aç",
     timeline: "Zaman Tuneli",
-    noDocuments: "Belge eklenmemis.",
-    updated: "Guncellendi",
-    created: "Olusturuldu",
-    policy: "Ilgili Police",
-    customer: "Musteri",
-    customerRecord: "Musteri Kaydi",
-    summary: "Hasar Ozeti",
+    noDocuments: "Belge eklenmemiş.",
+    updated: "Güncellendi",
+    created: "Oluşturuldu",
+    policy: "İlgili Poliçe",
+    customer: "Müşteri",
+    customerRecord: "Müşteri Kaydı",
+    summary: "Hasar Özeti",
     approved: "Onaylanan",
-    paid: "Odenen",
+    paid: "Ödenen",
     remaining: "Kalan",
-    days: "Kalan Gun",
+    days: "Kalan Gün",
   },
   en: {
     breadcrumb: "Operations / Claims",
@@ -177,6 +168,7 @@ const copy = {
     process: "Claim Process",
     details: "Claim Details",
     documents: "Documents",
+    openDocuments: "Open Documents",
     timeline: "Timeline",
     noDocuments: "No documents.",
     updated: "Updated",
@@ -200,9 +192,9 @@ const claimResource = createResource({ url: "frappe.client.get", auto: false });
 const claimFileResource = createResource({ url: "frappe.client.get_list", auto: false });
 const claimPaymentsResource = createResource({ url: "frappe.client.get_list", auto: false });
 
-const claim = computed(() => claimResource.data || {});
-const documents = computed(() => (Array.isArray(claimFileResource.data) ? claimFileResource.data : []));
-const payments = computed(() => (Array.isArray(claimPaymentsResource.data) ? claimPaymentsResource.data : []));
+const claim = computed(() => unref(claimResource.data) || {});
+const documents = computed(() => (Array.isArray(unref(claimFileResource.data)) ? unref(claimFileResource.data) : []));
+const payments = computed(() => (Array.isArray(unref(claimPaymentsResource.data)) ? unref(claimPaymentsResource.data) : []));
 const claimStatus = computed(() => String(claim.value.claim_status || "Draft"));
 
 const remainingDays = computed(() => {
@@ -229,9 +221,9 @@ const processFields = computed(() => [
 ]);
 
 const detailFields = computed(() => [
-  { label: "Hasar Turu", value: claim.value.claim_type || "-" },
-  { label: "Ofis Subesi", value: claim.value.office_branch || "-" },
-  { label: "Aciklama", value: claim.value.notes || claim.value.rejection_reason || "-", span: 2 },
+  { label: "Hasar Türü", value: claim.value.claim_type || "-" },
+  { label: "Ofis Şubesi", value: claim.value.office_branch || "-" },
+  { label: "Açıklama", value: claim.value.notes || claim.value.rejection_reason || "-", span: 2 },
 ]);
 
 const claimSteps = computed(() => {
@@ -251,7 +243,7 @@ const claimSteps = computed(() => {
     { label: "Bildirim", state: "done" },
     { label: "Ekspertiz", state: expertiseCurrent ? "current" : "done" },
     { label: "Onay", state: approvalCurrent ? "current" : paymentCurrent ? "done" : "pending" },
-    { label: "Ödeme", state: paymentCurrent ? "current" : "pending" },
+  { label: "Ödeme", state: paymentCurrent ? "current" : "pending" },
   ];
 });
 
@@ -271,19 +263,19 @@ const reserveFields = computed(() => [
   { label: "Durum", value: claim.value.claim_status || "-" },
   { label: "Tahmini Rezerv", value: formatCurrency(claim.value.estimated_amount || 0) },
   { label: "Onaylanan", value: formatCurrency(claim.value.approved_amount) },
-  { label: "Kalan Gun", value: remainingDaysDisplay.value },
+  { label: "Kalan Gün", value: remainingDaysDisplay.value },
 ]);
 
 const paymentFields = computed(() => [
-  { label: "Odenen", value: formatCurrency(claim.value.paid_amount) },
+  { label: "Ödenen", value: formatCurrency(claim.value.paid_amount) },
   { label: "Kalan", value: formatCurrency(remainingAmount.value) },
   { label: "Sonraki Takip", value: formatDate(claim.value.next_follow_up_on) },
-  { label: "Itiraz", value: claim.value.appeal_status || "-" },
+  { label: "İtiraz", value: claim.value.appeal_status || "-" },
 ]);
 
 const expertiseFields = computed(() => [
   { label: "Eksper", value: claim.value.assigned_expert || "-" },
-  { label: "Inceleme", value: claim.value.claim_status || "-" },
+  { label: "İnceleme", value: claim.value.claim_status || "-" },
   { label: "Notlar", value: claim.value.notes || "-", span: 2 },
 ]);
 
@@ -353,3 +345,4 @@ function reload() {
 
 onMounted(reload);
 </script>
+

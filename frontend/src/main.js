@@ -1,9 +1,10 @@
 import { createApp } from "vue";
-import { createPinia } from "pinia";
+import { setActivePinia } from "pinia";
 import { FrappeUI, frappeRequest, setConfig } from "frappe-ui";
 
 import App from "./App.vue";
 import router from "./router";
+import { getAppPinia, setAppPinia } from "./pinia";
 import { hydrateSessionState } from "./state/session";
 import { useBranchStore } from "./stores/branch";
 import "./style.css";
@@ -115,7 +116,9 @@ if (mountTarget) {
     await hydrateSessionState();
 
     const app = createApp(App);
-    const pinia = createPinia();
+    const pinia = getAppPinia();
+    setAppPinia(pinia);
+    setActivePinia(pinia);
     app.use(pinia);
     app.use(FrappeUI);
     app.use(router);
@@ -125,6 +128,7 @@ if (mountTarget) {
     router.afterEach((to) => {
       branchStore.syncFromRoute(to);
     });
+    setActivePinia(pinia);
     app.mount(mountTarget);
   };
 

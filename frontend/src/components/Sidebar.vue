@@ -268,7 +268,7 @@ const navSections = computed(() => [
     items: [
       { key: "claims", label: t("claims"), to: "/claims", short: "CL", badgeClass: "text-amber-700" },
       { key: "payments", label: t("payments"), to: "/payments", short: "PM", badgeClass: "text-indigo-700" },
-      { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", badgeClass: "text-rose-700" },
+      { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", badgeClass: "text-amber-700" },
       { key: "reconciliation", label: t("reconciliation"), to: "/reconciliation", short: "RC", badgeClass: "text-cyan-700" },
       { key: "reports", label: t("reports"), to: "/reports", short: "RP", badgeClass: "text-sky-700" },
       { key: "data-import", label: t("dataImport"), to: "/data-import", short: "IM", badgeClass: "text-emerald-700" },

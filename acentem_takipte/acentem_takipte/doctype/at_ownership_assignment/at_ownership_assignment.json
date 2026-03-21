@@ -57,7 +57,7 @@
    "default": "Owner",
    "fieldname": "assignment_role",
    "fieldtype": "Select",
-   "label": "Atama Rolu",
+   "label": "Atama Rolü",
    "options": "\nOwner\nAssignee\nReviewer\nFollower",
    "reqd": 1
   },

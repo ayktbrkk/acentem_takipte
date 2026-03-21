@@ -27,8 +27,8 @@
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
-        <DetailCard title="Teminatlar">
-          <template #action>
+        <SectionPanel title="Teminatlar">
+          <template #trailing>
             <button class="btn btn-sm" type="button" @click="editOffer">Düzenle</button>
           </template>
 
@@ -50,11 +50,11 @@
               </tr>
             </tbody>
           </table>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Dökümanlar">
-          <template #action>
-            <button class="btn btn-sm" type="button" @click="editOffer">Yükle</button>
+        <SectionPanel title="Dökümanlar">
+          <template #trailing>
+            <button class="btn btn-sm" type="button" @click="editOffer">{{ t("edit") }}</button>
           </template>
 
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
@@ -67,9 +67,9 @@
               <button class="btn btn-sm" type="button" @click="openDocument(doc)">İndir</button>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Aktiviteler">
+        <SectionPanel title="Aktiviteler">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
           <div v-else-if="!activities.length" class="card-empty">Henüz aktivite kaydı yok.</div>
           <div v-else>
@@ -81,12 +81,11 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
       <div class="detail-sidebar space-y-4">
-        <div>
-          <p class="section-title">Müşteri</p>
+        <SectionPanel title="Müşteri">
           <div class="mb-3 flex items-center gap-3">
             <div class="avatar avatar-md avatar-blue">{{ initials(offer.customer_name || offer.customer) }}</div>
             <div>
@@ -94,21 +93,15 @@
               <button class="text-xs text-brand-600 hover:underline" type="button" @click="viewCustomer">Detayı Gör →</button>
             </div>
           </div>
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Teklif Detayları</p>
+        <SectionPanel title="Teklif Detayları">
           <FieldGroup :fields="offerFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Kayıt Bilgileri</p>
+        <SectionPanel title="Kayıt Bilgileri">
           <FieldGroup :fields="recordFields" :cols="1" />
-        </div>
+        </SectionPanel>
       </div>
     </div>
   </section>
@@ -123,7 +116,7 @@ import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
-import DetailCard from "../components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 
 const props = defineProps({
@@ -136,8 +129,8 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const copy = {
   tr: {
-    overview: "Teklif Detayi",
-    openDesk: "Yönetim Ekranında Aç",
+    overview: "Teklif Detayı",
+    openDesk: "Yönetim Ekranını Aç",
     backList: "Listeye Dön",
     loading: "Yükleniyor...",
     loadError: "Teklif detayı yüklenemedi.",
@@ -154,7 +147,7 @@ const copy = {
     notifOutboxTitle: "Giden Bildirimler",
     paymentsPreviewTitle: "Ödeme Hareketleri",
     renewalsPreviewTitle: "Yenileme Görevleri",
-    noNotifDrafts: "Bildirim taslagi yok.",
+    noNotifDrafts: "Bildirim taslağı yok.",
     noNotifOutbox: "Giden bildirim yok.",
     noPayments: "Ödeme hareketi yok.",
     noRenewals: "Yenileme görevi yok.",
@@ -168,15 +161,15 @@ const copy = {
     tabOperations: "Operasyon",
     tabNotes: "Notlar",
     tabActivity: "Aktivite",
-    openCustomer360: "Müşteri 360",
-    openCommunication: "İletişim",
-    openPayments: "Ödemeler",
-    openRenewals: "Yenilemeler",
-    openLead: "Lead Detayi",
-    openPolicy: "Poliçe Detayı",
-    openOfferDetail: "Teklif Detayi",
-    openOfferBoard: "Teklif Panosu",
-    convertToPolicy: "Poliçeye Cevir",
+    openCustomer360: "Müşteri Detayını Aç",
+    openCommunication: "İletişim Merkezini Aç",
+    openPayments: "Ödemeleri Aç",
+    openRenewals: "Yenileme Görevlerini Aç",
+    openLead: "Lead Detayını Aç",
+    openPolicy: "Poliçeyi Aç",
+    openOfferDetail: "Teklif Detayını Aç",
+    openOfferBoard: "Teklif Panosunu Aç",
+    convertToPolicy: "Poliçeye Çevir",
     conversionHint: "Durum güncelleme ve poliçeye çevirme işlemleri teklif panosundan veya yönetim ekranından yapılabilir.",
     linkedSourceLeadTitle: "Kaynak Lead Özeti",
     linkedPolicyTitle: "Dönüşen Poliçe Özeti",
@@ -189,7 +182,7 @@ const copy = {
     status: "Durum",
     offerDate: "Teklif Tarihi",
     validUntil: "Geçerlilik",
-    currency: "Doviz",
+    currency: "Döviz",
     grossPremium: "Brüt Prim",
     netPremium: "Net Prim",
     taxAmount: "Vergi",
@@ -205,10 +198,10 @@ const copy = {
     timelineUpdated: "Teklif kaydı güncellendi",
     timelineOffered: "Teklif tarihi",
     timelineValidUntil: "Geçerlilik sonu",
-    timelineConverted: "Poliçeye donusum",
+    timelineConverted: "Poliçeye dönüşüm",
   },
   en: {
-    overview: "Offer Detail",
+    overview: "Offer Details",
     openDesk: "Open Desk",
     backList: "Back to List",
     loading: "Loading...",
@@ -240,14 +233,14 @@ const copy = {
     tabOperations: "Operations",
     tabNotes: "Notes",
     tabActivity: "Activity",
-    openCustomer360: "Customer 360",
-    openCommunication: "Communication",
-    openPayments: "Payments",
-    openRenewals: "Renewals",
-    openLead: "Lead Detail",
-    openPolicy: "Policy Detail",
-    openOfferDetail: "Offer Detail",
-    openOfferBoard: "Offer Board",
+    openCustomer360: "Open Customer Details",
+    openCommunication: "Open Communication Center",
+    openPayments: "Open Payments",
+    openRenewals: "Open Renewals",
+    openLead: "Open Lead Details",
+    openPolicy: "Open Policy",
+    openOfferDetail: "Open Offer Details",
+    openOfferBoard: "Open Offer Board",
     convertToPolicy: "Convert to Policy",
     conversionHint: "Status updates and policy conversion can be managed from the offer board or desk form.",
     linkedSourceLeadTitle: "Source Lead Snapshot",

@@ -62,7 +62,7 @@ vi.mock("frappe-ui", () => ({
               ? {
                   message: {
                     name: "TASK-001",
-                    task_title: "Poliçe yenileme kontrolu",
+                    task_title: "Poliçe yenileme kontrolü",
                     task_type: "Renewal",
                     source_doctype: "AT Policy",
                     source_name: "POL-001",
@@ -73,7 +73,7 @@ vi.mock("frappe-ui", () => ({
                     status: "Open",
                     priority: "High",
                     due_date: "2026-03-18",
-                    notes: "Yenileme öncesi teklif kontrolu",
+                    notes: "Yenileme öncesi teklif kontrolü",
                     modified: "2026-03-09T10:00:00Z",
                     owner: "Administrator",
                   },
@@ -270,29 +270,6 @@ const DetailTabsBarStub = defineComponent({
   `,
 });
 
-const DocSummaryGridStub = defineComponent({
-  props: ["items"],
-  template: `
-    <dl class="doc-summary-grid-stub">
-      <div v-for="item in items" :key="item.key">
-        <dt>{{ item.label }}</dt>
-        <dd>{{ item.value }}</dd>
-      </div>
-    </dl>
-  `,
-});
-
-const SectionCardHeaderStub = defineComponent({
-  props: ["title", "count"],
-  template: `
-    <header class="section-card-header-stub">
-      <h3>{{ title }}</h3>
-      <span v-if="count != null">{{ count }}</span>
-      <slot />
-    </header>
-  `,
-});
-
 const genericStub = {
   template: `<div><slot /><slot name="actions" /><slot name="trailing" /><slot name="footer" /></div>`,
 };
@@ -336,12 +313,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -369,12 +342,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -405,12 +374,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -444,12 +409,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -500,12 +461,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -543,7 +500,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("İptal Et")).trigger("click");
+    await buttons.find((node) => node.text().includes("İptal")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Task",
       name: "TASK-001",
@@ -564,12 +521,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -589,7 +542,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("İptal Et")).trigger("click");
+    await buttons.find((node) => node.text().includes("İptal")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",
@@ -610,12 +563,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -644,12 +593,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -680,12 +625,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -721,12 +662,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -762,12 +699,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -784,7 +717,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       query: {
         reference_doctype: "AT Task",
         reference_name: "TASK-001",
-        reference_label: "Poliçe yenileme kontrolu",
+        reference_label: "Poliçe yenileme kontrolü",
         return_to: "/at/aux-records/tasks/TASK-001",
       },
     });
@@ -803,12 +736,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -842,12 +771,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },
@@ -876,12 +801,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
           ActionButton: ActionButtonStub,
           DetailActionRow: genericStub,
           DetailTabsBar: DetailTabsBarStub,
-          DocHeaderCard: genericStub,
-          DocSummaryGrid: DocSummaryGridStub,
-          DataTableShell: genericStub,
           MetaListCard: genericStub,
           QuickCreateManagedDialog: true,
-          SectionCardHeader: SectionCardHeaderStub,
           StatusBadge: true,
         },
       },

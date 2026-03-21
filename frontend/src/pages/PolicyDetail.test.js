@@ -247,18 +247,6 @@ const QuickCreateManagedDialogStub = {
 const genericStub = {
   template: `<div><slot /><slot name="actions" /><slot name="trailing" /><slot name="footer" /></div>`,
 };
-const SectionCardHeaderStub = {
-  props: ["title", "count"],
-  template: `<div class="section-card-header-stub">{{ title }}<span v-if="count !== undefined"> {{ count }}</span><slot /><slot name="trailing" /></div>`,
-};
-const DocSummaryGridStub = {
-  props: ["items"],
-  template: `
-    <div class="doc-summary-grid-stub">
-      <div v-for="item in items || []" :key="item.key">{{ item.label }}: {{ item.value }}</div>
-    </div>
-  `,
-};
 const MetaListCardStub = {
   props: ["title", "subtitle", "description", "meta"],
   template: `
@@ -273,15 +261,25 @@ const MetaListCardStub = {
     </div>
   `,
 };
+const SectionPanelStub = {
+  props: ["title", "count", "meta", "showCount"],
+  template: `
+    <section class="section-panel-stub">
+      <div class="section-panel-header">
+        <h2>{{ title }}</h2>
+        <slot name="trailing" />
+      </div>
+      <slot />
+    </section>
+  `,
+};
 const commonStubs = {
   ActionButton: ActionButtonStub,
   DetailActionRow: genericStub,
   DetailTabsBar: DetailTabsBarStub,
-  DocHeaderCard: genericStub,
-  DocSummaryGrid: DocSummaryGridStub,
   MetaListCard: MetaListCardStub,
+  SectionPanel: SectionPanelStub,
   QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-  SectionCardHeader: SectionCardHeaderStub,
   StatusBadge: true,
 };
 
@@ -355,7 +353,7 @@ describe("PolicyDetail policy 360 integration", () => {
 
     expect(wrapper.text()).toContain("Poliçe Yaşam Döngüsü");
     expect(wrapper.text()).toContain("Prim Bilgileri");
-    expect(wrapper.text()).toContain("Müşteri Kartı");
+    expect(wrapper.text()).toContain("Müşteri Detayı");
     expect(wrapper.text()).toContain("Vade Tarihleri");
     expect(wrapper.text()).toContain("Atamalar");
   });
@@ -382,7 +380,7 @@ describe("PolicyDetail policy 360 integration", () => {
     await clickByText("Listeye Dön");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "policy-list" });
 
-    await clickByText("Müşteri 360");
+    await clickByText("Müşteri Detaylarını Aç");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "customer-detail", params: { name: "CUST-001" } });
   });
 

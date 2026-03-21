@@ -1,165 +1,155 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <h1 class="text-xl font-medium text-gray-900">{{ t("title") }}</h1>
+        <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('quickSegment')"
+          @launch="showSegmentDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('quickCampaign')"
+          @launch="showCampaignDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('runCampaign')"
+          @launch="showCampaignRunDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('previewSegment')"
+          @launch="showSegmentPreviewDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('quickCallNote')"
+          @launch="showCallNoteDialog = true"
+        />
+        <QuickCreateLauncher
+          variant="secondary"
+          size="sm"
+          :label="t('quickReminder')"
+          @launch="showReminderDialog = true"
+        />
+        <QuickCreateLauncher
+          v-if="canCreateQuickMessage"
+          variant="primary"
+          size="sm"
+          :label="t('quickMessage')"
+          @launch="showQuickMessageDialog = true"
+        />
+        <ActionButton
+          v-if="canReturnToContext"
+          variant="secondary"
+          size="sm"
+          @click="returnToContext"
+        >
+          {{ returnToLabel }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="reloadSnapshot">
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          :disabled="snapshotResource.loading"
+          @click="downloadCommunicationExport('xlsx')"
+        >
+          {{ t("exportXlsx") }}
+        </ActionButton>
+        <ActionButton
+          variant="primary"
+          size="sm"
+          :disabled="snapshotResource.loading"
+          @click="downloadCommunicationExport('pdf')"
+        >
+          {{ t("exportPdf") }}
+        </ActionButton>
+        <ActionButton v-if="canRunDispatchCycle" variant="primary" size="sm" :disabled="dispatching" @click="runDispatchCycle">
+          {{ dispatching ? t("dispatching") : t("dispatch") }}
+        </ActionButton>
       </div>
     </div>
 
-    <article class="surface-card rounded-2xl p-5">
-      <PageToolbar
-        :show-refresh="true"
-        :busy="snapshotResource.loading || dispatching"
-        :refresh-label="t('refresh')"
-        @refresh="reloadSnapshot"
+    <SectionPanel :title="t('filtersTitle')" :count="activeFilterCount" panel-class="surface-card rounded-2xl p-5">
+      <WorkbenchFilterToolbar
+        v-model="presetKey"
+        :advanced-label="t('advancedFilters')"
+        :collapse-label="t('hideAdvancedFilters')"
+        :active-count="activeFilterCount"
+        :active-count-label="t('activeFilters')"
+        :preset-label="t('presetLabel')"
+        :preset-options="presetOptions"
+        :can-delete-preset="canDeletePreset"
+        :save-label="t('savePreset')"
+        :delete-label="t('deletePreset')"
+        :apply-label="t('applyFilters')"
+        :reset-label="t('clearFilters')"
+        @preset-change="onPresetChange"
+        @preset-save="savePreset"
+        @preset-delete="deletePreset"
+        @apply="applySnapshotFilters"
+        @reset="resetSnapshotFilters"
       >
-        <template #actions>
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('quickSegment')"
-            @launch="showSegmentDialog = true"
+        <input
+          v-model.trim="filters.customer"
+          class="input"
+          type="search"
+          :placeholder="t('customerFilter')"
+          @keyup.enter="applySnapshotFilters"
+        />
+        <select v-model="filters.status" class="input">
+          <option value="">{{ t("allStatuses") }}</option>
+          <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <select v-model="filters.channel" class="input">
+          <option value="">{{ t("allChannels") }}</option>
+          <option v-for="option in channelOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+
+        <template #advanced>
+          <select v-model="filters.referenceDoctype" class="input">
+            <option value="">{{ t("allReferenceTypes") }}</option>
+            <option v-for="option in referenceDoctypeOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <input
+            v-model.trim="filters.referenceName"
+            class="input"
+            type="search"
+            :placeholder="t('referenceNameFilter')"
+            @keyup.enter="applySnapshotFilters"
           />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('quickCampaign')"
-            @launch="showCampaignDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('runCampaign')"
-            @launch="showCampaignRunDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('previewSegment')"
-            @launch="showSegmentPreviewDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('quickCallNote')"
-            @launch="showCallNoteDialog = true"
-          />
-          <QuickCreateLauncher
-            variant="secondary"
-            size="sm"
-            :label="t('quickReminder')"
-            @launch="showReminderDialog = true"
-          />
-          <QuickCreateLauncher
-            v-if="canCreateQuickMessage"
-            variant="primary"
-            size="sm"
-            :label="t('quickMessage')"
-            @launch="showQuickMessageDialog = true"
-          />
-          <ActionButton
-            v-if="canReturnToContext"
-            variant="secondary"
-            size="sm"
-            @click="returnToContext"
-          >
-            {{ returnToLabel }}
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" @click="reloadSnapshot">
-            {{ t("refresh") }}
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="sm"
-            :disabled="snapshotResource.loading"
-            @click="downloadCommunicationExport('xlsx')"
-          >
-            {{ t("exportXlsx") }}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            size="sm"
-            :disabled="snapshotResource.loading"
-            @click="downloadCommunicationExport('pdf')"
-          >
-            {{ t("exportPdf") }}
-          </ActionButton>
-          <ActionButton v-if="canRunDispatchCycle" variant="primary" size="sm" :disabled="dispatching" @click="runDispatchCycle">
-            {{ dispatching ? t("dispatching") : t("dispatch") }}
-          </ActionButton>
+          <select v-model.number="filters.limit" class="input">
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
         </template>
 
-        <template #filters>
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="applySnapshotFilters"
-            @reset="resetSnapshotFilters"
-          >
-            <input
-              v-model.trim="filters.customer"
-              class="input"
-              type="search"
-              :placeholder="t('customerFilter')"
-              @keyup.enter="applySnapshotFilters"
-            />
-            <select v-model="filters.status" class="input">
-              <option value="">{{ t("allStatuses") }}</option>
-              <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <select v-model="filters.channel" class="input">
-              <option value="">{{ t("allChannels") }}</option>
-              <option v-for="option in channelOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-
-            <template #advanced>
-              <select v-model="filters.referenceDoctype" class="input">
-                <option value="">{{ t("allReferenceTypes") }}</option>
-                <option v-for="option in referenceDoctypeOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </select>
-              <input
-                v-model.trim="filters.referenceName"
-                class="input"
-                type="search"
-                :placeholder="t('referenceNameFilter')"
-                @keyup.enter="applySnapshotFilters"
-              />
-              <select v-model.number="filters.limit" class="input">
-                <option :value="20">20</option>
-                <option :value="50">50</option>
-                <option :value="100">100</option>
-              </select>
-            </template>
-
-            <template #actionsSuffix>
-              <ActionButton v-if="hasContextFilters" variant="link" size="xs" @click="clearContextFilters">
-                {{ t("clearContext") }}
-              </ActionButton>
-            </template>
-          </WorkbenchFilterToolbar>
+        <template #actionsSuffix>
+          <ActionButton v-if="hasContextFilters" variant="link" size="xs" @click="clearContextFilters">
+            {{ t("clearContext") }}
+          </ActionButton>
         </template>
-      </PageToolbar>
-    </article>
+      </WorkbenchFilterToolbar>
+    </SectionPanel>
 
     <article
       v-if="hasContextFilters"
@@ -239,192 +229,171 @@
       </div>
     </article>
 
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-      <article v-for="card in statusCards" :key="card.key" class="surface-card rounded-xl p-4">
-        <p class="text-xs uppercase tracking-wide text-slate-500">{{ card.label }}</p>
-        <p class="mt-2 text-2xl font-semibold text-slate-900">{{ card.value }}</p>
-      </article>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div v-for="card in statusCards" :key="card.key" class="mini-metric">
+        <p class="mini-metric-label">{{ card.label }}</p>
+        <p class="mini-metric-value">{{ card.value }}</p>
+      </div>
     </div>
 
-    <article
-      v-if="snapshotErrorMessage"
-      class="surface-card rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700"
-    >
-      <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
-      <p class="mt-1 text-sm">{{ snapshotErrorMessage }}</p>
+    <article v-if="snapshotErrorMessage" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ snapshotErrorMessage }}</p>
     </article>
 
-    <article
-      v-if="operationError"
-      class="surface-card rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700"
-    >
-      <p class="text-sm font-semibold">{{ t("actions") }}</p>
-      <p class="mt-1 text-sm">{{ operationError }}</p>
+    <article v-if="operationError" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("actions") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ operationError }}</p>
     </article>
 
-    <DataTableShell
-      :loading="snapshotResource.loading"
-      :empty="outboxItems.length === 0"
-      :loading-label="t('loading')"
-      :empty-title="t('emptyOutboxTitle')"
-      :empty-description="t('emptyOutbox')"
-    >
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-semibold text-slate-900">{{ t("outboxTitle") }}</h3>
-          <span class="text-xs text-slate-500">{{ outboxItems.length }}</span>
-        </div>
-      </template>
-      <template #default>
-        <div class="overflow-auto">
-          <table class="at-table">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("recipient") }}</th>
-                <th class="at-table-head-cell">{{ t("channel") }}</th>
-                <th class="at-table-head-cell">{{ t("status") }}</th>
-                <th class="at-table-head-cell">{{ t("attempts") }}</th>
-                <th class="at-table-head-cell">{{ t("nextRetry") }}</th>
-                <th class="at-table-head-cell">{{ t("actions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in outboxItems" :key="row.name" class="at-table-row">
-                <DataTableCell cell-class="min-w-[280px]">
-                  <p class="font-medium text-slate-800">{{ row.recipient || "-" }}</p>
-                  <p class="text-xs text-slate-500">{{ row.name }}</p>
-                  <div v-if="row.reference_doctype || row.reference_name" class="mt-1 flex flex-wrap items-center gap-1">
-                    <span
-                      v-if="row.reference_doctype"
-                      class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
-                    >
-                      {{ referenceTypeLabel(row.reference_doctype) }}
-                    </span>
-                    <span v-if="row.reference_name" class="text-xs text-slate-500">{{ row.reference_name }}</span>
-                  </div>
-                </DataTableCell>
-                <DataTableCell>
-                  <StatusBadge v-if="row.channel" domain="notification_channel" :status="row.channel" />
-                  <span v-else class="text-slate-700">-</span>
-                </DataTableCell>
-                <DataTableCell cell-class="min-w-[220px]">
-                  <StatusBadge v-if="row.status" domain="notification_status" :status="row.status" />
-                  <span v-else class="text-slate-700">-</span>
-                  <p v-if="row.error_message" class="mt-1 max-w-[320px] truncate text-xs text-rose-600">
-                    {{ row.error_message }}
-                  </p>
-                </DataTableCell>
-                <DataTableCell>
-                  <span class="text-slate-700">{{ row.attempt_count || 0 }}/{{ row.max_attempts || 0 }}</span>
-                </DataTableCell>
-                <DataTableCell>
-                  <span class="text-xs text-slate-600">{{ row.next_retry_on || "-" }}</span>
-                </DataTableCell>
-                <DataTableCell cell-class="min-w-[240px]">
-                  <InlineActionRow>
-                    <ActionButton
-                      v-if="canRetryOutboxRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      @click="retryOutbox(row.name)"
-                    >
-                      {{ t("retry") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canSendDraftFromOutboxRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      @click="sendDraftNow(row.draft)"
-                    >
-                      {{ t("sendNow") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canOpenPanel(row)"
-                      variant="link"
-                      size="xs"
-                      trailing-icon=">"
-                      @click="openPanel(row)"
-                    >
-                      {{ panelActionLabel(row) }}
-                    </ActionButton>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-    </DataTableShell>
+    <SectionPanel :title="t('outboxTitle')" :count="outboxItems.length" panel-class="surface-card rounded-2xl p-5">
+      <div v-if="snapshotResource.loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+        {{ t("loading") }}
+      </div>
+      <div v-else-if="outboxItems.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <EmptyState :title="t('emptyOutboxTitle')" :description="t('emptyOutbox')" />
+      </div>
+      <div v-else class="mt-4 overflow-auto">
+        <table class="at-table">
+          <thead>
+            <tr class="at-table-head-row">
+              <th class="at-table-head-cell">{{ t("recipient") }}</th>
+              <th class="at-table-head-cell">{{ t("channel") }}</th>
+              <th class="at-table-head-cell">{{ t("status") }}</th>
+              <th class="at-table-head-cell">{{ t("attempts") }}</th>
+              <th class="at-table-head-cell">{{ t("nextRetry") }}</th>
+              <th class="at-table-head-cell">{{ t("actions") }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in outboxItems" :key="row.name" class="at-table-row">
+              <DataTableCell cell-class="min-w-[280px]">
+                <p class="font-medium text-slate-800">{{ row.recipient || "-" }}</p>
+                <p class="text-xs text-slate-500">{{ row.name }}</p>
+                <div v-if="row.reference_doctype || row.reference_name" class="mt-1 flex flex-wrap items-center gap-1">
+                  <span
+                    v-if="row.reference_doctype"
+                    class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
+                  >
+                    {{ referenceTypeLabel(row.reference_doctype) }}
+                  </span>
+                  <span v-if="row.reference_name" class="text-xs text-slate-500">{{ row.reference_name }}</span>
+                </div>
+              </DataTableCell>
+              <DataTableCell>
+                <StatusBadge v-if="row.channel" domain="notification_channel" :status="row.channel" />
+                <span v-else class="text-slate-700">-</span>
+              </DataTableCell>
+              <DataTableCell cell-class="min-w-[220px]">
+                <StatusBadge v-if="row.status" domain="notification_status" :status="row.status" />
+                <span v-else class="text-slate-700">-</span>
+                <p v-if="row.error_message" class="mt-1 max-w-[320px] truncate qc-inline-error">
+                  {{ row.error_message }}
+                </p>
+              </DataTableCell>
+              <DataTableCell>
+                <span class="text-slate-700">{{ row.attempt_count || 0 }}/{{ row.max_attempts || 0 }}</span>
+              </DataTableCell>
+              <DataTableCell>
+                <span class="text-xs text-slate-600">{{ row.next_retry_on || "-" }}</span>
+              </DataTableCell>
+              <DataTableCell cell-class="min-w-[240px]">
+                <InlineActionRow>
+                  <ActionButton
+                    v-if="canRetryOutboxRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    @click="retryOutbox(row.name)"
+                  >
+                    {{ t("retry") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canSendDraftFromOutboxRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    @click="sendDraftNow(row.draft)"
+                  >
+                    {{ t("sendNow") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canOpenPanel(row)"
+                    variant="link"
+                    size="xs"
+                    trailing-icon=">"
+                    @click="openPanel(row)"
+                  >
+                    {{ panelActionLabel(row) }}
+                  </ActionButton>
+                </InlineActionRow>
+              </DataTableCell>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </SectionPanel>
 
-    <DataTableShell
-      :loading="snapshotResource.loading"
-      :empty="draftItems.length === 0"
-      :loading-label="t('loading')"
-      :empty-title="t('emptyDraftsTitle')"
-      :empty-description="t('emptyDrafts')"
-    >
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-semibold text-slate-900">{{ t("draftTitle") }}</h3>
-          <span class="text-xs text-slate-500">{{ draftItems.length }}</span>
-        </div>
-      </template>
-      <template #default>
-        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <article
-            v-for="draft in draftItems"
-            :key="draft.name"
-            class="rounded-xl border border-slate-200 bg-slate-50/80 p-4"
-          >
-            <div class="flex items-start justify-between gap-2">
-              <p class="text-sm font-semibold text-slate-900">{{ draft.event_key }}</p>
-              <StatusBadge v-if="draft.status" domain="notification_status" :status="draft.status" />
-            </div>
-            <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
-              <StatusBadge v-if="draft.channel" domain="notification_channel" :status="draft.channel" />
-              <span>{{ draft.recipient || "-" }}</span>
-            </div>
-            <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
-              <span
-                v-if="draft.reference_doctype"
-                class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
-              >
-                {{ referenceTypeLabel(draft.reference_doctype) }}
-              </span>
-              <span v-if="draft.reference_name">{{ draft.reference_name }}</span>
-            </div>
-            <p v-if="draft.error_message" class="mt-2 max-h-10 overflow-hidden text-xs text-rose-600">
-              {{ draft.error_message }}
-            </p>
-            <InlineActionRow class="mt-3">
-              <ActionButton
-                v-if="canSendDraftCard(draft)"
-                variant="secondary"
-                size="xs"
-                @click="sendDraftNow(draft.name)"
-              >
-                {{ t("sendNow") }}
-              </ActionButton>
-              <ActionButton
-                v-if="canOpenPanel(draft)"
-                variant="link"
-                size="xs"
-                trailing-icon=">"
-                @click="openPanel(draft)"
-              >
-                {{ panelActionLabel(draft) }}
-              </ActionButton>
-            </InlineActionRow>
-          </article>
-        </div>
-      </template>
-    </DataTableShell>
+    <SectionPanel :title="t('draftTitle')" :count="draftItems.length" panel-class="surface-card rounded-2xl p-5">
+      <div v-if="snapshotResource.loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+        {{ t("loading") }}
+      </div>
+      <div v-else-if="draftItems.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <EmptyState :title="t('emptyDraftsTitle')" :description="t('emptyDrafts')" />
+      </div>
+      <div v-else class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <article
+          v-for="draft in draftItems"
+          :key="draft.name"
+          class="rounded-xl border border-slate-200 bg-slate-50/80 p-4"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <p class="text-sm font-semibold text-slate-900">{{ draft.event_key }}</p>
+            <StatusBadge v-if="draft.status" domain="notification_status" :status="draft.status" />
+          </div>
+          <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
+            <StatusBadge v-if="draft.channel" domain="notification_channel" :status="draft.channel" />
+            <span>{{ draft.recipient || "-" }}</span>
+          </div>
+          <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
+            <span
+              v-if="draft.reference_doctype"
+              class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
+            >
+              {{ referenceTypeLabel(draft.reference_doctype) }}
+            </span>
+            <span v-if="draft.reference_name">{{ draft.reference_name }}</span>
+          </div>
+          <p v-if="draft.error_message" class="mt-2 max-h-10 overflow-hidden qc-inline-error">
+            {{ draft.error_message }}
+          </p>
+          <InlineActionRow class="mt-3">
+            <ActionButton
+              v-if="canSendDraftCard(draft)"
+              variant="secondary"
+              size="xs"
+              @click="sendDraftNow(draft.name)"
+            >
+              {{ t("sendNow") }}
+            </ActionButton>
+            <ActionButton
+              v-if="canOpenPanel(draft)"
+              variant="link"
+              size="xs"
+              trailing-icon=">"
+              @click="openPanel(draft)"
+            >
+              {{ panelActionLabel(draft) }}
+            </ActionButton>
+          </InlineActionRow>
+        </article>
+      </div>
+    </SectionPanel>
 
     <QuickCreateManagedDialog
       v-model="showSegmentDialog"
       config-key="segment"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickSegmentEyebrow"
       :title-override="t('quickSegment')"
       :subtitle-override="t('quickSegmentSubtitle')"
       :show-save-and-open="false"
@@ -436,6 +405,7 @@
       config-key="campaign"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickCampaignEyebrow"
       :title-override="t('quickCampaign')"
       :subtitle-override="t('quickCampaignSubtitle')"
       :show-save-and-open="false"
@@ -469,11 +439,8 @@
             </ActionButton>
           </div>
 
-          <article
-            v-if="campaignRunError"
-            class="surface-card rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-700"
-          >
-            {{ campaignRunError }}
+          <article v-if="campaignRunError" class="qc-error-banner">
+            <p class="qc-error-banner__text">{{ campaignRunError }}</p>
           </article>
 
           <article
@@ -526,11 +493,8 @@
             </ActionButton>
           </div>
 
-          <article
-            v-if="segmentPreviewError"
-            class="surface-card rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-700"
-          >
-            {{ segmentPreviewError }}
+          <article v-if="segmentPreviewError" class="qc-error-banner">
+            <p class="qc-error-banner__text">{{ segmentPreviewError }}</p>
           </article>
 
           <article
@@ -591,6 +555,7 @@
       config-key="call_note"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickCallNoteEyebrow"
       :title-override="t('quickCallNote')"
       :subtitle-override="t('quickCallNoteSubtitle')"
       :show-save-and-open="false"
@@ -603,6 +568,7 @@
       config-key="reminder"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickReminderEyebrow"
       :title-override="t('quickReminder')"
       :subtitle-override="t('quickReminderSubtitle')"
       :show-save-and-open="false"
@@ -616,6 +582,7 @@
       config-key="communication_message"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickMessageEyebrow"
       :title-override="t('quickMessage')"
       :subtitle-override="t('quickMessageSubtitle')"
       :labels="quickMessageDialogLabels"
@@ -638,9 +605,9 @@ import { useBranchStore } from "../stores/branch";
 import { useCommunicationStore } from "../stores/communication";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import PageToolbar from "../components/app-shell/PageToolbar.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
@@ -662,13 +629,13 @@ const copy = {
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
-    dispatch: "Dagitimi Çalıştır",
+    dispatch: "Dağıtımı Çalıştır",
     dispatching: "Çalışıyor...",
     runCampaign: "Kampanyayı Çalıştır",
     campaignRunTitle: "Kampanya Çalıştır",
     selectCampaign: "Kampanya seçin",
     previewSegment: "Segment Önizleme",
-    segmentPreviewTitle: "Segment Uye Önizleme",
+    segmentPreviewTitle: "Segment Üye Önizleme",
     selectSegment: "Segment seçin",
     quickSegment: "Segment",
     quickSegmentSubtitle: "Hedef müşteri segmenti oluştur",
@@ -678,16 +645,17 @@ const copy = {
     quickCallNoteSubtitle: "Telefon görüşmesini not olarak kaydet",
     quickReminder: "Hatırlatıcı",
     quickReminderSubtitle: "Müşteri veya kayıt için zaman bazlı hatırlatıcı ekle",
-    startAssignmentContext: "Atamayi İşleme Al",
-    blockAssignmentContext: "Atamayi Bloke Et",
-    closeAssignmentContext: "Atamayi Kapat",
+    startAssignmentContext: "Atamayı İşleme Al",
+    blockAssignmentContext: "Atamayı Bloke Et",
+    closeAssignmentContext: "Atamayı Kapat",
     clearCallFollowUpContext: "Arama Takibini Temizle",
-    completeReminderContext: "Hatırlatıcıyi Tamamla",
-    cancelReminderContext: "Hatırlatıcıyi İptal Et",
+    completeReminderContext: "Hatırlatıcıyı Tamamla",
+    cancelReminderContext: "İptal",
     quickMessage: "Hızlı İletişim",
     quickMessageSubtitle: "Taslak kaydet veya seçili kanal ile hemen gönder",
     saveDraft: "Taslak Kaydet",
     sendImmediately: "Hemen Gönder",
+    filtersTitle: "Filtreler",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
@@ -712,8 +680,8 @@ const copy = {
     draftTitle: "Bildirim Taslakları",
     loading: "Yükleniyor...",
     loadErrorTitle: "İletişim Verileri Yüklenemedi",
-    permissionDeniedRead: "İletişim verilerini gormek icin yetkiniz yok.",
-    permissionDeniedAction: "Bu iletisim islemini yapmaya yetkiniz yok.",
+    permissionDeniedRead: "İletişim verilerini görmek için yetkiniz yok.",
+    permissionDeniedAction: "Bu iletişim işlemini yapmaya yetkiniz yok.",
     emptyOutbox: "Gönderim kuyruğu kaydı bulunamadı.",
     emptyOutboxTitle: "Kuyruk Kaydı Yok",
     emptyDrafts: "Taslak kaydı bulunamadı.",
@@ -798,6 +766,7 @@ const copy = {
     quickMessageSubtitle: "Save as draft or send immediately",
     saveDraft: "Save Draft",
     sendImmediately: "Send Now",
+    filtersTitle: "Filters",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
@@ -1126,6 +1095,11 @@ const communicationQuickOptionsMap = computed(() => ({
     label: `${row.campaign_name || row.name}${row.channel ? ` - ${channelLabel(row.channel)}` : ""}`,
   })),
 }));
+const quickSegmentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Segment" : "Quick Segment"));
+const quickCampaignEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Kampanya" : "Quick Campaign"));
+const quickCallNoteEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Arama Notu" : "Quick Call Note"));
+const quickReminderEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Hatırlatıcı" : "Quick Reminder"));
+const quickMessageEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Mesaj" : "Quick Message"));
 const canCreateQuickMessage = computed(() => authStore.can(["quickCreate", "communication_message"]));
 const canSendDraftNowAction = computed(() => authStore.can(["actions", "communication", "sendDraftNow"]));
 const canRetryOutboxAction = computed(() => authStore.can(["actions", "communication", "retryOutbox"]));
@@ -1215,9 +1189,9 @@ function setCommunicationFilterStateFromPayload(payload) {
 function statusClass(status) {
   if (status === "Sent") return "bg-emerald-100 text-emerald-700";
   if (status === "Queued") return "bg-sky-100 text-sky-700";
-  if (status === "Processing") return "bg-indigo-100 text-indigo-700";
+  if (status === "Processing") return "bg-sky-100 text-sky-700";
   if (status === "Failed") return "bg-amber-100 text-amber-700";
-  if (status === "Dead") return "bg-rose-100 text-rose-700";
+  if (status === "Dead") return "bg-slate-100 text-slate-700";
   return "bg-slate-200 text-slate-700";
 }
 
@@ -1657,9 +1631,10 @@ function hasRouteContextQuery() {
 }
 
 onMounted(() => {
-  if (hasRouteContextQuery()) return;
-  applyPreset(presetKey.value, { refresh: false });
-  if (String(presetKey.value || "default") !== "default") void reloadSnapshot();
+  if (!hasRouteContextQuery()) {
+    applyPreset(presetKey.value, { refresh: false });
+  }
+  void reloadSnapshot();
   void hydratePresetStateFromServer();
 });
 

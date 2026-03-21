@@ -97,7 +97,7 @@
           </button>
           <button
             type="button"
-            class="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:border-rose-400 hover:text-rose-900"
+            class="qc-danger-button rounded-xl px-3 py-2 text-sm font-medium"
             :disabled="loading || running"
             @click="askRemove(item)"
           >
@@ -216,9 +216,9 @@
         </div>
       </div>
 
-      <p v-if="formError" class="text-sm text-rose-600">
-        {{ formError }}
-      </p>
+      <div v-if="formError" class="qc-error-banner" role="alert" aria-live="polite">
+        <p class="qc-error-banner__text">{{ formError }}</p>
+      </div>
 
       <div class="flex flex-wrap justify-end gap-2">
         <button
@@ -327,13 +327,13 @@ const copy = {
     recipientsPlaceholder: "ops@example.com, manager@example.com",
     recipientsError: "En az bir alıcı girilmelidir.",
     recipientsInvalid: "Geçersiz alıcı adresi: {{value}}",
-    frequencyError: "Geçerli frekans secilmelidir.",
+    frequencyError: "Geçerli frekans seçilmelidir.",
     weekdayError: "Haftalık rapor için 0-6 arasında hafta günü girin (0=Pazar, 6=Cumartesi).",
     dayOfMonthError: "Aylık rapor için 1-31 arasında ay günü girin.",
     limitError: "Limit en az 1 olmalıdır.",
-    reportKeyError: "Rapor secilmelidir.",
+    reportKeyError: "Rapor seçilmelidir.",
     formatError: "Geçerli format seçilmelidir.",
-    deliveryChannelError: "Teslim kanali gecersiz.",
+    deliveryChannelError: "Teslim kanalı geçersiz.",
     filterPrefix: "Filtre: ",
     removeConfirm: "Bu zamanlanmış rapor kaydını silmek istediğinize emin misiniz?",
   },

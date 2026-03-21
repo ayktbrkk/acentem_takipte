@@ -23,29 +23,29 @@
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
-        <DetailCard :title="t('summary')">
+        <SectionPanel :title="t('summary')">
           <FieldGroup :fields="summaryFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('policyList')">
+        <SectionPanel :title="t('policyList')">
           <ListTable
             :columns="policyColumns"
             :rows="policyRows"
             :loading="loading"
             :empty-message="t('noPolicyRows')"
           />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('unmatchedRecords')">
+        <SectionPanel :title="t('unmatchedRecords')">
           <ListTable
             :columns="unmatchedColumns"
             :rows="unmatchedRows"
             :loading="loading"
             :empty-message="t('noUnmatchedRows')"
           />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('notes')">
+        <SectionPanel :title="t('notes')">
           <div v-if="!item.notes && !detailsEntries.length" class="card-empty">{{ t("noNotes") }}</div>
           <div v-else class="space-y-4">
             <p v-if="item.notes" class="text-sm text-slate-700 whitespace-pre-line">{{ item.notes }}</p>
@@ -60,9 +60,9 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('timeline')">
+        <SectionPanel :title="t('timeline')">
           <div v-for="event in historyEntries" :key="event.label" class="timeline-item">
             <div :class="['tl-dot', event.active && 'tl-dot-active']" />
             <div>
@@ -70,28 +70,21 @@
               <p class="tl-time">{{ event.value }}</p>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
       <aside class="detail-sidebar space-y-4">
-        <div>
-          <p class="section-title">{{ t("companyInfo") }}</p>
+        <SectionPanel :title="t('companyInfo')">
           <FieldGroup :fields="companyFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("periodInfo") }}</p>
+        <SectionPanel :title="t('periodInfo')">
           <FieldGroup :fields="periodFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t("statusInfo") }}</p>
+        <SectionPanel :title="t('statusInfo')">
           <FieldGroup :fields="statusFields" :cols="1" />
-        </div>
+        </SectionPanel>
       </aside>
     </div>
   </section>
@@ -104,7 +97,7 @@ import { useRouter } from "vue-router";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
-import DetailCard from "@/components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "@/components/ui/FieldGroup.vue";
 import ListTable from "@/components/ui/ListTable.vue";
 
@@ -114,44 +107,44 @@ const router = useRouter();
 
 const copy = {
   tr: {
-    breadcrumb: "Kontrol Merkezi / Mutabakat Detay",
-    back: "Listeye Don",
-    openWorkbench: "Mutabakat Masasi",
-    summary: "Ozet Bilgiler",
-    policyList: "Police Listesi",
-    unmatchedRecords: "Eslesmeyen Kayitlar",
-    notes: "Mutabakat Notlari",
-    timeline: "Gecmis",
-    companyInfo: "Sirket Bilgileri",
-    periodInfo: "Donem Bilgisi",
+    breadcrumb: "Kontrol Merkezi / Mutabakat Detayı",
+    back: "Listeye Dön",
+    openWorkbench: "Mutabakat Masası",
+    summary: "Özet Bilgiler",
+    policyList: "Poliçe Listesi",
+    unmatchedRecords: "Eşleşmeyen Kayıtlar",
+    notes: "Mutabakat Notları",
+    timeline: "Geçmiş",
+    companyInfo: "Şirket Bilgileri",
+    periodInfo: "Dönem Bilgisi",
     statusInfo: "Durum",
-    noPolicyRows: "Bagli police kaydi bulunamadi.",
-    noUnmatchedRows: "Eslesmeyen kayit bulunamadi.",
-    noNotes: "Not veya detay bulunamadi.",
-    accountingEntry: "Muhasebe Kaydi",
+    noPolicyRows: "Bağlı poliçe kaydı bulunamadı.",
+    noUnmatchedRows: "Eşleşmeyen kayıt bulunamadı.",
+    noNotes: "Not veya detay bulunamadı.",
+    accountingEntry: "Muhasebe Kaydı",
     source: "Kaynak",
-    company: "Sirket",
-    policy: "Police",
-    customer: "Musteri",
+    company: "Şirket",
+    policy: "Poliçe",
+    customer: "Müşteri",
     sourceName: "Kaynak No",
     status: "Durum",
     difference: "Fark",
-    resolution: "Cozum",
+    resolution: "Çözüm",
     sourceDoctype: "Kaynak Tipi",
-    entryStatus: "Kayit Durumu",
+    entryStatus: "Kayıt Durumu",
     mismatchType: "Uyumsuzluk Tipi",
     localTry: "Yerel TRY",
     externalTry: "Harici TRY",
-    resolvedOn: "Cozum Tarihi",
-    resolvedBy: "Cozen",
-    resolvedAction: "Cozum Aksiyonu",
-    created: "Olusturuldu",
-    updated: "Guncellendi",
+    resolvedOn: "Çözüm Tarihi",
+    resolvedBy: "Çözen",
+    resolvedAction: "Çözüm Aksiyonu",
+    created: "Oluşturuldu",
+    updated: "Güncellendi",
     synced: "Son Sync",
-    rawDetails: "Detay JSON",
+    rawDetails: "Ham JSON",
   },
   en: {
-    breadcrumb: "Control Center / Reconciliation Detail",
+    breadcrumb: "Control Center / Reconciliation Details",
     back: "Back to list",
     openWorkbench: "Reconciliation Workbench",
     summary: "Summary",
@@ -185,7 +178,7 @@ const copy = {
     created: "Created",
     updated: "Updated",
     synced: "Last Sync",
-    rawDetails: "Details JSON",
+    rawDetails: "Raw JSON",
   },
 };
 
@@ -208,8 +201,8 @@ const periodLabel = computed(() => derivePeriodLabel(item.value, entry.value));
 
 const heroCells = computed(() => [
   { label: "Mutabakat No", value: item.value.name || name.value || "-", variant: "default" },
-  { label: "Sirket", value: entry.value.insurance_company || "-", variant: "default" },
-  { label: "Donem", value: periodLabel.value, variant: "lg" },
+  { label: "Şirket", value: entry.value.insurance_company || "-", variant: "default" },
+  { label: "Dönem", value: periodLabel.value, variant: "lg" },
   { label: "Fark", value: formatMoney(differenceValue.value), variant: differenceValue.value ? "warn" : "success" },
 ]);
 
@@ -279,7 +272,7 @@ const companyFields = computed(() => [
 ]);
 
 const periodFields = computed(() => [
-  { label: "Period", value: periodLabel.value },
+  { label: "Dönem", value: periodLabel.value },
   { label: t("created"), value: formatDateTime(item.value.creation) },
   { label: t("updated"), value: formatDateTime(item.value.modified) },
   { label: t("synced"), value: formatDateTime(entry.value.last_synced_on) },

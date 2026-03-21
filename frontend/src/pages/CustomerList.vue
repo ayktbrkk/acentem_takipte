@@ -1,15 +1,15 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ formatCount(customerListTotalCount) }} müşteri kaydı</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">Yenile</button>
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">Excel</button>
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">PDF</button>
-        <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ Yeni Müşteri</button>
+        <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ {{ t('newCustomer') }}</button>
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">{{ t('refresh') }}</button>
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">{{ t('exportXlsx') }}</button>
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">{{ t('exportPdf') }}</button>
       </div>
     </div>
 
@@ -32,7 +32,7 @@
       </div>
     </div>
 
-    <div class="border-b border-gray-200 bg-white px-5 py-3">
+    <div class="surface-card rounded-2xl p-4">
       <FilterBar
         v-model:search="customerListSearchQuery"
         :filters="customerListFilterConfig"
@@ -47,7 +47,7 @@
       </FilterBar>
     </div>
 
-    <div class="flex-1 p-5">
+    <div class="surface-card rounded-2xl p-5">
       <ListTable
         :columns="customerListColumns"
         :rows="customerListPagedRows"
@@ -108,7 +108,6 @@ import { useBranchStore } from "../stores/branch";
 import { useCustomerStore } from "../stores/customer";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
@@ -121,6 +120,7 @@ import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import QuickCreateCustomer from "../components/QuickCreateCustomer.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
+import { getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { openListExport } from "../utils/listExport";
@@ -143,6 +143,7 @@ const customerStore = useCustomerStore();
 
 const copy = {
   tr: {
+    newCustomer: "Yeni Müşteri",
     title: "Müşteri Yönetimi",
     subtitle: "Müşteri çalışma ekranı: filtre, şablon ve 360 erişim",
     refresh: "Yenile",
@@ -195,7 +196,7 @@ const copy = {
     next: "Sonraki",
     open360: "360 Aç",
     newOffer: "Yeni Teklif",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranını Aç",
     colCustomer: "Müşteri",
     colContact: "İletişim",
     colProfile: "Profil",
@@ -253,6 +254,7 @@ const copy = {
     validationTcInvalid: "Geçerli bir TC kimlik numarası girin.",
   },
   en: {
+    newCustomer: "New Customer",
     title: "Customer Workbench",
     subtitle: "Customer workspace with filters, presets, and 360 access",
     refresh: "Refresh",
@@ -305,7 +307,7 @@ const copy = {
     next: "Next",
     open360: "Open 360",
     newOffer: "New Offer",
-    openDesk: "Desk",
+    openDesk: "Open Desk",
     colCustomer: "Customer",
     colContact: "Contact",
     colProfile: "Profile",
@@ -411,10 +413,8 @@ const quickCustomerUi = computed(() => ({
   newLabel: activeLocale.value === "tr" ? "Yeni Müşteri" : "New Customer",
 }));
 const quickCreateCommon = computed(() => ({
-  cancel: activeLocale.value === "tr" ? "Vazgeç" : "Cancel",
-  save: activeLocale.value === "tr" ? "Kaydet" : "Save",
-  saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Aç" : "Save & Open",
-  validation: activeLocale.value === "tr" ? "Lütfen gerekli alanlari ve formatlari kontrol edin." : "Please check required fields and formats.",
+  ...getQuickCreateLabels("create", activeLocale.value),
+  validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları ve formatları kontrol edin." : "Please check required fields and formats.",
   failed: activeLocale.value === "tr" ? "Hızlı müşteri oluşturma başarısız oldu." : "Quick customer create failed.",
 }));
 const quickCustomerType = computed(() => normalizeCustomerType(quickCustomerForm.customer_type, quickCustomerForm.tax_id));

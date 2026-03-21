@@ -11,7 +11,7 @@ def test_assert_delete_permission_uses_shared_mutation_helper():
     with patch.object(quick_create_api, "assert_mutation_access") as mutation_access:
         quick_create_api._assert_delete_permission("AT Customer Relation", _("Delete denied"))
 
-    mutation_access.assert_called_önce_with(
+    mutation_access.assert_called_once_with(
         action="api.quick_create.delete_at_customer_relation",
         roles=("System Manager", "Manager", "Agent", "Accountant"),
         doctype_permissions=("AT Customer Relation",),
@@ -40,7 +40,7 @@ def test_create_quick_customer_relation_uses_service_payload():
                             notes="Aile iliskisi",
                         )
 
-    service_mock.assert_called_önce_with(
+    service_mock.assert_called_once_with(
         {
             "doctype": "AT Customer Relation",
             "customer": "CUST-001",
@@ -51,6 +51,42 @@ def test_create_quick_customer_relation_uses_service_payload():
         }
     )
     assert result == {"customer_relation": "REL-0001"}
+
+
+def test_create_quick_policy_uses_offer_conversion_service():
+    with patch.object(quick_create_api, "_assert_create_permission"):
+        with patch.object(quick_create_api, "_normalize_link", side_effect=lambda doctype, value, required=False: value):
+            with patch.object(
+                quick_create_api,
+                "convert_offer_to_policy",
+                return_value={"policy": "POL-0001", "message": "Offer converted to Policy successfully."},
+            ) as convert_mock:
+                result = quick_create_api.create_quick_policy(
+                    customer="CUST-001",
+                    customer_full_name="Test Customer",
+                    customer_type="Individual",
+                    customer_tax_id="12345678901",
+                    customer_phone="05551234567",
+                    customer_email="customer@example.com",
+                    sales_entity="SE-001",
+                    insurance_company="IC-001",
+                    branch="BR-001",
+                    source_offer="OFF-001",
+                    start_date="2026-03-01",
+                    end_date="2026-03-31",
+                    policy_no="POL-0001",
+                )
+
+    convert_mock.assert_called_once_with(
+        offer_name="OFF-001",
+        start_date="2026-03-01",
+        end_date="2026-03-31",
+        commission_amount=None,
+        tax_amount=None,
+        net_premium=None,
+        policy_no="POL-0001",
+    )
+    assert result == {"policy": "POL-0001", "message": "Offer converted to Policy successfully."}
 
 
 def test_create_quick_insured_asset_uses_service_payload():
@@ -72,7 +108,7 @@ def test_create_quick_insured_asset_uses_service_payload():
                             notes="Ikincil arac",
                         )
 
-    service_mock.assert_called_önce_with(
+    service_mock.assert_called_once_with(
         {
             "doctype": "AT Insured Asset",
             "customer": "CUST-001",
@@ -90,28 +126,29 @@ def test_create_quick_call_note_uses_service_payload():
     with patch.object(quick_create_api, "_assert_create_permission"):
         with patch.object(quick_create_api, "_resolve_office_branch", return_value="IST"):
             with patch.object(quick_create_api, "_normalize_link", side_effect=lambda doctype, value, required=False: value):
-                with patch.object(quick_create_api, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
-                    with patch.object(quick_create_api, "normalize_note_text", return_value="Müşteriyle görüşüldü"):
-                        with patch.object(
-                            quick_create_api,
-                            "create_call_note_service",
-                            return_value={"call_note": "AT-CALL-2026-00001"},
-                        ) as service_mock:
-                            result = quick_create_api.create_quick_call_note(
-                                customer="CUST-001",
-                                policy="POL-001",
-                                claim="CLM-001",
-                                office_branch="IST",
-                                channel="Phone Call",
-                                direction="Outbound",
-                                call_status="Completed",
-                                call_outcome="Bilgi verildi",
-                                note_at="2026-03-09 10:30:00",
-                                next_follow_up_on="2026-03-12",
-                                notes="Müşteriyle görüşüldü",
-                            )
+                with patch.object(quick_create_api, "_normalize_datetime", side_effect=lambda value: value):
+                    with patch.object(quick_create_api, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
+                        with patch.object(quick_create_api, "normalize_note_text", return_value="Müşteriyle görüşüldü"):
+                            with patch.object(
+                                quick_create_api,
+                                "create_call_note_service",
+                                return_value={"call_note": "AT-CALL-2026-00001"},
+                            ) as service_mock:
+                                result = quick_create_api.create_quick_call_note(
+                                    customer="CUST-001",
+                                    policy="POL-001",
+                                    claim="CLM-001",
+                                    office_branch="IST",
+                                    channel="Phone Call",
+                                    direction="Outbound",
+                                    call_status="Completed",
+                                    call_outcome="Bilgi verildi",
+                                    note_at="2026-03-09 10:30:00",
+                                    next_follow_up_on="2026-03-12",
+                                    notes="Müşteriyle görüşüldü",
+                                )
 
-    service_mock.assert_called_önce_with(
+    service_mock.assert_called_once_with(
         {
             "doctype": "AT Call Note",
             "customer": "CUST-001",
@@ -150,7 +187,7 @@ def test_create_quick_segment_uses_service_payload():
                             notes="Yenileme odaklı",
                         )
 
-    service_mock.assert_called_önce_with(
+    service_mock.assert_called_once_with(
         {
             "doctype": "AT Segment",
             "segment_name": "Yenileme Riski",
@@ -187,7 +224,7 @@ def test_create_quick_campaign_uses_service_payload():
                                 notes="WhatsApp cikisi",
                             )
 
-    service_mock.assert_called_önce_with(
+    service_mock.assert_called_once_with(
         {
             "doctype": "AT Campaign",
             "campaign_name": "Mart Yenileme Hatırlatma",
@@ -227,7 +264,7 @@ def test_create_quick_ownership_assignment_uses_service_payload():
                                 notes="Yenileme owner atamasi",
                             )
 
-    service_mock.assert_called_önce_with(
+    service_mock.assert_called_once_with(
         {
             "doctype": "AT Ownership Assignment",
             "source_doctype": "AT Customer",
@@ -260,12 +297,12 @@ def test_delete_quick_aux_record_checks_delete_permission_and_calls_service():
             ) as service_mock:
                 result = quick_create_api.delete_quick_aux_record("AT Customer Relation", "REL-001")
 
-    delete_permission_mock.assert_called_önce_with(
+    delete_permission_mock.assert_called_once_with(
         "AT Customer Relation",
         "You do not have permission to delete this record.",
     )
-    fake_doc.check_permission.assert_called_önce_with("delete")
-    service_mock.assert_called_önce_with(fake_doc)
+    fake_doc.check_permission.assert_called_once_with("delete")
+    service_mock.assert_called_once_with(fake_doc)
     assert result == {"record": "REL-001", "doctype": "AT Customer Relation", "deleted": True}
 
 
@@ -295,7 +332,7 @@ def test_create_quick_payment_normalizes_installment_fields_and_uses_service_pay
                                     office_branch="IST",
                                 )
 
-    service_mock.assert_called_önce_with(
+    service_mock.assert_called_once_with(
         {
             "doctype": "AT Payment",
             "customer": "CUST-001",
@@ -341,7 +378,7 @@ def test_create_quick_payment_clamps_invalid_installment_fields():
                                     office_branch="IST",
                                 )
 
-    service_mock.assert_called_önce()
+    service_mock.assert_called_once()
     payload = service_mock.call_args.args[0]
     assert payload["installment_count"] == 1
     assert payload["installment_interval_days"] == 1

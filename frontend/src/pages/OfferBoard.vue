@@ -1,14 +1,17 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar" v-if="isListView">
+    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="detail-title">Teklifler</h1>
-        <p class="detail-subtitle">{{ offerListTotal }} teklif</p>
+        <p class="detail-subtitle">{{ isListView ? offerListTotal : offers.length }} teklif</p>
       </div>
-      <div class="flex gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="focusOfferSearch">Filtrele</button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">Disa Aktar</button>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn btn-sm" :class="isListView ? 'btn-primary' : 'btn-outline'" type="button" @click="setOfferViewMode('list')">Liste</button>
+        <button class="btn btn-sm" :class="!isListView ? 'btn-primary' : 'btn-outline'" type="button" @click="setOfferViewMode('board')">Pano</button>
         <button class="btn btn-primary btn-sm" type="button" @click="openQuickOfferDialog">+ Yeni Teklif</button>
+        <button class="btn btn-outline btn-sm" type="button" :disabled="offersResource.loading || offerListResource.loading" @click="refreshOffers">Yenile</button>
+        <button v-if="isListView" class="btn btn-outline btn-sm" type="button" @click="focusOfferSearch">Filtrele</button>
+        <button class="btn btn-outline btn-sm" type="button" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">Dışa Aktar</button>
       </div>
     </div>
 
@@ -22,7 +25,7 @@
         <p class="mini-metric-value text-gray-600">{{ formatCount(offerSummary.draft) }}</p>
       </div>
       <div class="mini-metric">
-        <p class="mini-metric-label">Gonderildi</p>
+        <p class="mini-metric-label">Gönderildi</p>
         <p class="mini-metric-value text-blue-600">{{ formatCount(offerSummary.sent) }}</p>
       </div>
       <div class="mini-metric">
@@ -30,12 +33,12 @@
         <p class="mini-metric-value text-green-600">{{ formatCount(offerSummary.accepted) }}</p>
       </div>
       <div class="mini-metric">
-        <p class="mini-metric-label">Donusum Orani</p>
+        <p class="mini-metric-label">Dönüşüm Oranı</p>
         <p class="mini-metric-value text-brand-600">{{ offerConversionRate }}%</p>
       </div>
     </div>
 
-    <div v-if="isListView" class="border-b border-gray-200 bg-white px-5 py-3">
+    <div v-if="isListView" class="surface-card rounded-2xl p-4">
       <FilterBar
         v-model:search="offerListSearchQuery"
         :filters="offerListFilterConfig"
@@ -52,7 +55,7 @@
       </FilterBar>
     </div>
 
-    <div v-if="isListView" class="flex-1 p-5">
+    <div v-if="isListView" class="surface-card rounded-2xl p-5">
       <ListTable
         :columns="offerListColumns"
         :rows="offerListRowsWithUrgency"
@@ -70,30 +73,14 @@
       </div>
     </div>
 
-    <div v-if="!isListView" class="flex-1 p-5">
-      <div class="detail-topbar mb-4">
-        <div>
-          <p class="detail-breadcrumb">Sigorta Operasyonları → Teklif Panosu</p>
-          <h1 class="text-xl font-medium text-gray-900">{{ t("subtitle") }}</h1>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <button class="btn btn-sm" @click="setOfferViewMode('list')">Liste</button>
-          <button class="btn btn-sm" @click="setOfferViewMode('board')">Pano</button>
-          <button class="btn btn-primary btn-sm" @click="openQuickOfferDialog">+ Yeni Teklif</button>
-          <button class="btn btn-sm" :disabled="offersResource.loading" @click="refreshOffers">Yenile</button>
-        </div>
-      </div>
-      
+    <div v-if="!isListView" class="surface-card rounded-2xl p-5">
       <div v-if="offersResource.loading" class="surface-card rounded-2xl p-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
-      <div
-        v-else-if="offersLoadErrorText"
-        class="surface-card rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700"
-      >
-        <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="mt-1 text-sm">{{ offersLoadErrorText }}</p>
-      </div>
+      <article v-else-if="offersLoadErrorText" class="qc-error-banner">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ offersLoadErrorText }}</p>
+      </article>
       <div v-else-if="offers.length === 0" class="surface-card rounded-2xl p-5">
         <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
       </div>
@@ -188,7 +175,7 @@
 
     <Dialog v-model="showConvertDialog" :options="{ title: t('convertDialogTitle'), size: 'xl' }">
       <template #body-content>
-        <QuickCreateDialogShell :error="convertError" :show-footer="false">
+        <QuickCreateDialogShell :error="convertError" :eyebrow="convertDialogEyebrow" :show-footer="false">
           <p class="text-sm text-slate-600">
             {{ t("selectedOffer") }}: <strong class="text-slate-900">{{ selectedOffer?.name || "-" }}</strong>
           </p>
@@ -253,7 +240,6 @@ import { useBranchStore } from "../stores/branch";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import DataTableShell from "../components/app-shell/DataTableShell.vue";
 import EmptyState from "../components/app-shell/EmptyState.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
@@ -288,6 +274,7 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
+const convertDialogEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Dönüştürme" : "Quick Conversion"));
 
 function buildOfficeBranchLookupFilters() {
   const officeBranch = branchStore.requestBranch || "";
@@ -313,7 +300,7 @@ const copy = {
     notesField: "Notlar",
     createQuickOffer: "Teklifi Oluştur",
     createQuickOfferAndOpen: "Kaydet ve Aç",
-    quickCreateValidationFailed: "Lütfen gerekli alanlari kontrol edin.",
+    quickCreateValidationFailed: "Lütfen gerekli alanları kontrol edin.",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -329,7 +316,7 @@ const copy = {
     presetDefault: "Standart",
     presetActionable: "Aksiyon Bekleyenler",
     presetConverted: "Poliçeye Dönüşenler",
-    presetExpiring7: "7 Gun Icerisinde Geçerlilik",
+    presetExpiring7: "7 Gün İçerisinde Geçerlilik",
     savePreset: "Kaydet",
     deletePreset: "Sil",
     savePresetPrompt: "Filtre şablonu adı",
@@ -354,38 +341,38 @@ const copy = {
     netPremiumShort: "Net Prim",
     commissionShort: "Komisyon",
     recordId: "Kayıt",
-    openDesk: "Yönetim",
+    openDesk: "Yönetim Ekranını Aç",
     sortModifiedDesc: "Son Güncellenen",
     sortValidUntilAsc: "Geçerlilik (Yakın)",
     sortValidUntilDesc: "Geçerlilik (Uzak)",
     sortGrossDesc: "Brüt Prim (Yüksek)",
-    stage: "Asama",
+    stage: "Aşama",
     loading: "Yükleniyor...",
     loadErrorTitle: "Teklifler Yüklenemedi",
     loadError: "Teklif panosu verileri yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
     emptyTitle: "Teklif Bulunamadı",
     empty: "Teklif kaydı bulunamadı.",
     emptyLane: "Bu asamada teklif yok.",
-    customerName: "Müşteri Adi",
+    customerName: "Müşteri Adı",
     premiumAmount: "Prim Tutarı",
     company: "Sigorta Şirketi",
     draftLane: "Taslak",
     sentLane: "Müşteriye Gönderildi",
     acceptedLane: "Kabul Edildi",
     convertedLane: "Poliçeye Dönüştü",
-    convert: "Poliçeye Cevir",
-    openPolicy: "Poliçe Detayını Aç",
+    convert: "Poliçeye Çevir",
+    openPolicy: "Poliçeyi Aç",
     convertDialogTitle: "Teklif -> Poliçe",
     selectedOffer: "Seçili Teklif",
     netPremium: "Net Prim",
     taxAmount: "Vergi Tutarı",
     commissionAmount: "Komisyon Tutarı",
     policyNo: "Sigorta Şirketi Poliçe No (Opsiyonel)",
-    cancel: "Vazgeç",
+    cancel: "İptal",
     createPolicy: "Poliçe Oluştur",
     statusDraft: "Taslak",
     statusSent: "Gönderildi",
-    statusAçcepted: "Kabul Edildi",
+    statusAccepted: "Kabul Edildi",
     statusConverted: "Dönüştü",
     statusRejected: "Reddedildi",
     customerSearchFailed: "Müşteri araması başarısız oldu.",
@@ -452,7 +439,7 @@ const copy = {
     netPremiumShort: "Net Premium",
     commissionShort: "Commission",
     recordId: "Record",
-    openDesk: "Desk",
+    openDesk: "Open Desk",
     sortModifiedDesc: "Last Modified",
     sortValidUntilAsc: "Valid Until (Soonest)",
     sortValidUntilDesc: "Valid Until (Latest)",
@@ -472,7 +459,7 @@ const copy = {
     acceptedLane: "Accepted",
     convertedLane: "Converted to Policy",
     convert: "Convert to Policy",
-    openPolicy: "Open Policy Detail",
+    openPolicy: "Open Policy",
     convertDialogTitle: "Offer -> Policy",
     selectedOffer: "Selected offer",
     netPremium: "Net Premium",
@@ -483,7 +470,7 @@ const copy = {
     createPolicy: "Create Policy",
     statusDraft: "Draft",
     statusSent: "Sent",
-    statusAçcepted: "Accepted",
+    statusAccepted: "Accepted",
     statusConverted: "Converted",
     statusRejected: "Rejected",
     customerSearchFailed: "Customer search failed.",
@@ -715,7 +702,7 @@ const offerCompanies = computed(() =>
 const offerStatusOptions = computed(() => [
   { value: "Draft", label: t("statusDraft") },
   { value: "Sent", label: t("statusSent") },
-  { value: "Accepted", label: t("statusAçcepted") },
+  { value: "Accepted", label: t("statusAccepted") },
   { value: "Converted", label: t("statusConverted") },
   { value: "Rejected", label: t("statusRejected") },
 ]);

@@ -45,7 +45,6 @@ jobs:
       run: npm run build
 
   smoke-e2e:
-    if: ${{ vars.E2E_BASE_URL != '' && secrets.E2E_USER != '' && secrets.E2E_PASSWORD != '' }}
     runs-on: ubuntu-latest
     needs: quality
     defaults:
@@ -65,12 +64,104 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Check E2E credentials
+      id: smoke_gate
+      shell: bash
+      env:
+        E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+        E2E_USER: ${{ secrets.E2E_USER }}
+        E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      run: |
+        if [ -z "${E2E_BASE_URL:-}" ] || [ -z "${E2E_USER:-}" ] || [ -z "${E2E_PASSWORD:-}" ]; then
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+          echo "E2E credentials/base URL are not configured; smoke-e2e will be skipped." >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Install Playwright browsers
+      if: steps.smoke_gate.outputs.skip != 'true'
       run: npx playwright install --with-deps chromium
 
     - name: Run smoke E2E
+      if: steps.smoke_gate.outputs.skip != 'true'
       env:
         E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
         E2E_USER: ${{ secrets.E2E_USER }}
         E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
       run: npm run e2e:smoke:ci
+
+  site-map-kpi:
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Check E2E credentials
+      id: site_map_gate
+      shell: bash
+      env:
+        E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+        E2E_USER: ${{ secrets.E2E_USER }}
+        E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      run: |
+        if [ -z "${E2E_BASE_URL:-}" ] || [ -z "${E2E_USER:-}" ] || [ -z "${E2E_PASSWORD:-}" ]; then
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+          echo "E2E credentials/base URL are not configured; site-map-kpi will be skipped." >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Install Playwright browsers
+      if: steps.site_map_gate.outputs.skip != 'true'
+      run: npx playwright install --with-deps chromium
+
+    - name: Run site-map E2E + KPI gate (warn profile)
+      if: steps.site_map_gate.outputs.skip != 'true'
+      env:
+        E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+        E2E_USER: ${{ secrets.E2E_USER }}
+        E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      run: npm run e2e:site-map:ci:warn
+
+    - name: Upload site-map artifacts
+      if: always() && steps.site_map_gate.outputs.skip != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: site-map-kpi-artifacts
+        path: |
+          frontend/test-results/site-haritasi-summary.json
+          frontend/test-results/site-haritasi-kpi.txt
+          frontend/playwright-report
+          frontend/test-results
+        if-no-files-found: ignore
+
+    - name: Append site-map KPI summary
+      if: always()
+      shell: bash
+      run: |
+        {
+          echo "## Site Map KPI"
+          echo ""
+          if [ -f test-results/site-haritasi-kpi.txt ]; then
+            echo "- \\`$(cat test-results/site-haritasi-kpi.txt)\\`"
+          else
+            echo "- KPI file not found: \\`test-results/site-haritasi-kpi.txt\\`"
+          fi
+          echo "- Summary JSON: \\`test-results/site-haritasi-summary.json\\`"
+        } >> "$GITHUB_STEP_SUMMARY"

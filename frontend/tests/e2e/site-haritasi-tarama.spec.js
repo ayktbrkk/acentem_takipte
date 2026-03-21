@@ -1,15 +1,15 @@
 /**
  * site-haritasi-tarama.spec.js
- * ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
- * Acentem Takipte ÔÇö Tam Site Haritas─▒ Tarama Testi
+ * ─────────────────────────────────────────────────────────────────
+ * Acentem Takipte — Tam Site Haritası Tarama Testi
  *
- * Hedef   : T├╝m liste/board, detay, aux ve rapor sayfalar─▒n─▒ ziyaret et;
- *           g├Ârsel tutarl─▒l─▒k (page-shell, detail-title, nav-tabs-bar),
- *           console hatalar─▒ ve eksik i├ğerik kontrol├╝ yap.
- *           Her sayfan─▒n screenshotunu kaydet.
+ * Hedef   : Tüm liste/board, detay, aux ve rapor sayfalarını ziyaret et;
+ *           görsel tutarlılık (page-shell, detail-title, nav-tabs-bar),
+ *           console hataları ve eksik içerik kontrolü yap.
+ *           Her sayfanın screenshotunu kaydet.
  *
- * Kullan─▒m: E2E_USER=Administrator E2E_PASSWORD=admin npx playwright test site-haritasi-tarama.spec.js --headed
- * ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+ * Kullanım: E2E_USER=Administrator E2E_PASSWORD=admin npx playwright test site-haritasi-tarama.spec.js --headed
+ * ─────────────────────────────────────────────────────────────────
  */
 
 import { expect, test } from "@playwright/test";
@@ -97,9 +97,9 @@ function recordConsoleMetrics({ label, url, appErrors, externalErrors }) {
   }
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-// Yard─▒mc─▒: ─░lk kayd─▒n ad─▒n─▒ API'den al
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ──────────────────────────────────────────────────────────────────
+// Yardımcı: İlk kaydın adını API'den al
+// ──────────────────────────────────────────────────────────────────
 async function getFirstRecord(page, doctype) {
   try {
     const resp = await page.request.post("/api/method/frappe.client.get_list", {
@@ -118,9 +118,9 @@ async function getFirstRecord(page, doctype) {
   }
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-// Yard─▒mc─▒: Sayfaya git, temel kontrolleri yap, screenshot al
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ──────────────────────────────────────────────────────────────────
+// Yardımcı: Sayfaya git, temel kontrolleri yap, screenshot al
+// ──────────────────────────────────────────────────────────────────
 async function visitPage(page, url, label) {
   const consoleErrors = [];
   const onConsoleError = (msg) => {
@@ -132,22 +132,22 @@ async function visitPage(page, url, label) {
     page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 })
   );
 
-  // page-shell varl─▒─ş─▒ (liste + detail sayfalar─▒)
+  // page-shell varlığı (liste + detail sayfaları)
   const hasPageShell = await page.locator(".page-shell").first().isVisible().catch(() => false);
 
-  // Sayfa ba┼şl─▒─ş─▒ / i├ğerik varl─▒─ş─▒
+  // Sayfa başlığı / içerik varlığı
   const hasHeading = await page
     .locator("h1, h2, .detail-title, .at-hero-title, .page-title")
     .first()
     .isVisible()
     .catch(() => false);
 
-  // Sayfa 404 veya hata m─▒?
+  // Sayfa 404 veya hata mı?
   const bodyText = await page.locator("body").innerText().catch(() => "");
-  const is404 = /404|not found|sayfa bulunamad─▒/i.test(bodyText);
+  const is404 = /404|not found|sayfa bulunamadı/i.test(bodyText);
 
   // Screenshot
-  const screenshotName = label.replace(/[^a-zA-Z0-9─ş├╝┼ş├Â├ğ─▒─░─Ş├£┼Ş├û├ç_-]/g, "_");
+  const screenshotName = label.replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ_-]/g, "_");
   await page.screenshot({
     path: `test-results/screenshots/${screenshotName}.png`,
     fullPage: false,
@@ -172,15 +172,15 @@ async function visitPage(page, url, label) {
     consoleErrors: consoleErrors.slice(0, 5),
     externalConsoleErrors: externalErrors.slice(0, 5),
     appConsoleErrors: appErrors.slice(0, 5),
-    status: is404 ? "ÔØî 404" : !hasHeading ? "ÔÜá´©Å Bo┼ş" : !hasPageShell ? "ÔÜá´©Å page-shell eksik" : "Ô£à OK",
+    status: is404 ? "❌ 404" : !hasHeading ? "⚠️ Boş" : !hasPageShell ? "⚠️ page-shell eksik" : "✅ OK",
   };
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-// Ad─▒m 1.1 ÔÇö Kimlik Do─şrulama
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-test.describe("Ad─▒m 1.1 ÔÇö Kimlik Do─şrulama", () => {
-  test("Administrator olarak giri┼ş yap─▒labilmeli", async ({ page }) => {
+// ──────────────────────────────────────────────────────────────────
+// Adım 1.1 — Kimlik Doğrulama
+// ──────────────────────────────────────────────────────────────────
+test.describe("Adım 1.1 — Kimlik Doğrulama", () => {
+  test("Administrator olarak giriş yapılabilmeli", async ({ page }) => {
     const authenticated = await ensureAuthenticated(page);
     expect(authenticated).toBe(true);
 
@@ -189,14 +189,14 @@ test.describe("Ad─▒m 1.1 ÔÇö Kimlik Do─şrulama", () => {
     expect(resp.ok()).toBeTruthy();
     expect(payload?.message).not.toBe("Guest");
 
-    console.log(`Ô£à Giri┼ş ba┼şar─▒l─▒: ${payload?.message}`);
+    console.log(`✅ Giriş başarılı: ${payload?.message}`);
   });
 });
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-// Ad─▒m 1.2 ÔÇö 14 Ana Liste ve Board Sayfas─▒
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-test.describe("Ad─▒m 1.2 ÔÇö 14 Ana Liste ve Board Sayfas─▒", () => {
+// ──────────────────────────────────────────────────────────────────
+// Adım 1.2 — 14 Ana Liste ve Board Sayfası
+// ──────────────────────────────────────────────────────────────────
+test.describe("Adım 1.2 — 14 Ana Liste ve Board Sayfası", () => {
   const LIST_PAGES = [
     { url: "/at/", label: "Dashboard_Pano" },
     { url: "/at/leads", label: "Firsat_Yonetimi" },
@@ -215,7 +215,7 @@ test.describe("Ad─▒m 1.2 ÔÇö 14 Ana Liste ve Board Sayfas─▒", () => {
   ];
 
   for (const pg of LIST_PAGES) {
-    test(`${pg.label} sayfas─▒ y├╝klenmeli`, async ({ page }) => {
+    test(`${pg.label} sayfası yüklenmeli`, async ({ page }) => {
       await ensureAuthenticated(page);
       const result = await visitPage(page, pg.url, pg.label);
 
@@ -225,19 +225,19 @@ test.describe("Ad─▒m 1.2 ÔÇö 14 Ana Liste ve Board Sayfas─▒", () => {
           (result.externalConsoleErrors.length ? ` | EXT CONSOLE ERR: ${result.externalConsoleErrors.join(" | ")}` : "")
       );
 
-      expect(result.is404, `${pg.label} 404 d├Ând├╝`).toBe(false);
-      expect(result.hasHeading, `${pg.label} sayfas─▒nda ba┼şl─▒k bulunamad─▒`).toBe(true);
-      expect(result.appConsoleErrors, `${pg.label} sayfas─▒nda uygulama console hatas─▒ var`).toEqual([]);
+      expect(result.is404, `${pg.label} 404 döndü`).toBe(false);
+      expect(result.hasHeading, `${pg.label} sayfasında başlık bulunamadı`).toBe(true);
+      expect(result.appConsoleErrors, `${pg.label} sayfasında uygulama console hatası var`).toEqual([]);
     });
   }
 });
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-// Ad─▒m 1.3 ÔÇö 17 Detay Sayfas─▒ (Ana + Aux)
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-test.describe("Ad─▒m 1.3 ÔÇö 17 Detay Sayfas─▒", () => {
+// ──────────────────────────────────────────────────────────────────
+// Adım 1.3 — 17 Detay Sayfası (Ana + Aux)
+// ──────────────────────────────────────────────────────────────────
+test.describe("Adım 1.3 — 17 Detay Sayfası", () => {
   const DETAIL_CONFIGS = [
-    // Ana detay sayfalar─▒
+    // Ana detay sayfaları
     { doctype: "AT Lead", routePrefix: "/at/leads", label: "Lead_Detay" },
     { doctype: "AT Offer", routePrefix: "/at/offers", label: "Teklif_Detay" },
     { doctype: "AT Policy", routePrefix: "/at/policies", label: "Police_Detay" },
@@ -246,7 +246,7 @@ test.describe("Ad─▒m 1.3 ÔÇö 17 Detay Sayfas─▒", () => {
     { doctype: "AT Payment", routePrefix: "/at/payments", label: "Odeme_Detay" },
     { doctype: "AT Renewal Task", routePrefix: "/at/renewals", label: "Yenileme_Detay" },
     { doctype: "AT Reconciliation Item", routePrefix: "/at/reconciliation", label: "Mutabakat_Detay" },
-    // Aux detay sayfalar─▒
+    // Aux detay sayfaları
     { doctype: "AT Renewal Task", routePrefix: "/at/tasks", label: "Aux_Gorev_Detay" },
     { doctype: "AT Notification Draft", routePrefix: "/at/notification-drafts", label: "Aux_Bildirim_Taslak_Detay" },
     { doctype: "AT Notification Outbox", routePrefix: "/at/notification-outbox", label: "Aux_Giden_Bildirim_Detay" },
@@ -254,18 +254,18 @@ test.describe("Ad─▒m 1.3 ÔÇö 17 Detay Sayfas─▒", () => {
     { doctype: "AT Branch", routePrefix: "/at/branches", label: "Aux_Brans_Detay" },
     { doctype: "AT Sales Entity", routePrefix: "/at/sales-entities", label: "Aux_Satis_Birimi_Detay" },
     { doctype: "AT Notification Template", routePrefix: "/at/notification-templates", label: "Aux_Bildirim_Sablon_Detay" },
-    { doctype: "AT Accounting Entry", routePrefix: "/at/accounting-entries", label: "Aux_Muhasebe_Kayd─▒_Detay" },
+    { doctype: "AT Accounting Entry", routePrefix: "/at/accounting-entries", label: "Aux_Muhasebe_Kaydı_Detay" },
     { doctype: "AT Reconciliation Item", routePrefix: "/at/reconciliation-items", label: "Aux_Mutabakat_Kalemi_Detay" },
   ];
 
   for (const cfg of DETAIL_CONFIGS) {
-    test(`${cfg.label} detay sayfas─▒ y├╝klenmeli`, async ({ page }) => {
+    test(`${cfg.label} detay sayfası yüklenmeli`, async ({ page }) => {
       await ensureAuthenticated(page);
       const name = await getFirstRecord(page, cfg.doctype);
 
       if (!name) {
-        console.log(`ÔÜá´©Å ATLANDI | ${cfg.label} | ${cfg.doctype} kayd─▒ bulunamad─▒`);
-        test.skip(true, `${cfg.doctype} kayd─▒ yok, detay sayfas─▒ atland─▒.`);
+        console.log(`⚠️ ATLANDI | ${cfg.label} | ${cfg.doctype} kaydı bulunamadı`);
+        test.skip(true, `${cfg.doctype} kaydı yok, detay sayfası atlandı.`);
         return;
       }
 
@@ -278,22 +278,22 @@ test.describe("Ad─▒m 1.3 ÔÇö 17 Detay Sayfas─▒", () => {
           (result.externalConsoleErrors.length ? ` | EXT CONSOLE ERR: ${result.externalConsoleErrors.join(" | ")}` : "")
       );
 
-      expect(result.is404, `${cfg.label} 404 d├Ând├╝`).toBe(false);
-      expect(result.hasHeading, `${cfg.label} sayfas─▒nda ba┼şl─▒k bulunamad─▒`).toBe(true);
-      expect(result.appConsoleErrors, `${cfg.label} sayfas─▒nda uygulama console hatas─▒ var`).toEqual([]);
+      expect(result.is404, `${cfg.label} 404 döndü`).toBe(false);
+      expect(result.hasHeading, `${cfg.label} sayfasında başlık bulunamadı`).toBe(true);
+      expect(result.appConsoleErrors, `${cfg.label} sayfasında uygulama console hatası var`).toEqual([]);
     });
   }
 });
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-// Ad─▒m 1.3b ÔÇö H─▒zl─▒ Ekranlar (QuickCreate Dialog)
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-test.describe("Ad─▒m 1.3b ÔÇö H─▒zl─▒ Ekranlar (QuickCreate Dialog)", () => {
+// ──────────────────────────────────────────────────────────────────
+// Adım 1.3b — Hızlı Ekranlar (QuickCreate Dialog)
+// ──────────────────────────────────────────────────────────────────
+test.describe("Adım 1.3b — Hızlı Ekranlar (QuickCreate Dialog)", () => {
   /**
-   * Her QuickCreate dialog'u i├ğin:
+   * Her QuickCreate dialog'u için:
    * - Tetikleyen sayfaya git
-   * - "Yeni" / "+" butonunu bul ve t─▒kla
-   * - Dialog'un a├ğ─▒ld─▒─ş─▒n─▒ do─şrula
+   * - "Yeni" / "+" butonunu bul ve tıkla
+   * - Dialog'un açıldığını doğrula
    * - Screenshot al
    * - ESC ile kapat
    */
@@ -301,7 +301,7 @@ test.describe("Ad─▒m 1.3b ÔÇö H─▒zl─▒ Ekranlar (QuickCreate Dialo
     {
       label: "QC_Musteri_Olustur",
       triggerUrl: "/at/customers",
-      // M├╝┼şteri listesindeki "Yeni M├╝┼şteri" butonu
+      // Müşteri listesindeki "Yeni Müşteri" butonu
       btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
       dialogSelector: ".at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
@@ -332,7 +332,7 @@ test.describe("Ad─▒m 1.3b ÔÇö H─▒zl─▒ Ekranlar (QuickCreate Dialo
   ];
 
   for (const qc of QUICK_CREATE_PAGES) {
-    test(`${qc.label} dialog a├ğ─▒lmal─▒`, async ({ page }) => {
+    test(`${qc.label} dialog açılmalı`, async ({ page }) => {
       await ensureAuthenticated(page);
       const consoleErrors = [];
       const onConsoleError = (msg) => {
@@ -344,18 +344,18 @@ test.describe("Ad─▒m 1.3b ÔÇö H─▒zl─▒ Ekranlar (QuickCreate Dialo
         page.goto(qc.triggerUrl, { waitUntil: "domcontentloaded", timeout: 30_000 })
       );
 
-      // Butona bul ve t─▒kla
+      // Butona bul ve tıkla
       const btn = page.locator(qc.btnSelector).first();
       const btnVisible = await btn.isVisible().catch(() => false);
 
       if (!btnVisible) {
-        console.log(`ÔÜá´©Å BUTON YOK | ${qc.label} | Tetikleyici buton bulunamad─▒`);
+        console.log(`⚠️ BUTON YOK | ${qc.label} | Tetikleyici buton bulunamadı`);
         // screenshot al yine de
         await page.screenshot({
           path: `test-results/screenshots/${qc.label}_no_btn.png`,
           fullPage: false,
         }).catch(() => {});
-        expect(btnVisible, `${qc.label} i├ğin tetikleyici buton bulunamad─▒`).toBe(true);
+        expect(btnVisible, `${qc.label} için tetikleyici buton bulunamadı`).toBe(true);
       }
 
       await btn.click();
@@ -379,7 +379,7 @@ test.describe("Ad─▒m 1.3b ÔÇö H─▒zl─▒ Ekranlar (QuickCreate Dialo
       }).catch(() => {});
 
       console.log(
-        `${dialogVisible ? "Ô£à" : "ÔØî"} | ${qc.label} | dialog:${dialogVisible}` +
+        `${dialogVisible ? "✅" : "❌"} | ${qc.label} | dialog:${dialogVisible}` +
           (appErrors.length ? ` | APP CONSOLE ERR: ${appErrors.join(" | ")}` : "") +
           (externalErrors.length ? ` | EXT CONSOLE ERR: ${externalErrors.join(" | ")}` : "")
       );
@@ -388,8 +388,8 @@ test.describe("Ad─▒m 1.3b ÔÇö H─▒zl─▒ Ekranlar (QuickCreate Dialo
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
 
-      expect(dialogVisible, `${qc.label} dialog a├ğ─▒lmad─▒`).toBe(true);
-      expect(appErrors, `${qc.label} dialog ak─▒┼ş─▒nda uygulama console hatas─▒ var`).toEqual([]);
+      expect(dialogVisible, `${qc.label} dialog açılmadı`).toBe(true);
+      expect(appErrors, `${qc.label} dialog akışında uygulama console hatası var`).toEqual([]);
     });
   }
 });
@@ -421,10 +421,10 @@ test.afterAll(() => {
   }
 });
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-// Ad─▒m 1.4 ÔÇö 12 Yard─▒mc─▒ ve Rapor Sayfas─▒
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-test.describe("Ad─▒m 1.4 ÔÇö 12 Yard─▒mc─▒ ve Rapor Sayfas─▒", () => {
+// ──────────────────────────────────────────────────────────────────
+// Adım 1.4 — 12 Yardımcı ve Rapor Sayfası
+// ──────────────────────────────────────────────────────────────────
+test.describe("Adım 1.4 — 12 Yardımcı ve Rapor Sayfası", () => {
   const AUX_PAGES = [
     { url: "/at/reports/premium", label: "Rapor_Prim" },
     { url: "/at/reports/claim-ratio", label: "Rapor_Hasar_Prim_Orani" },
@@ -441,7 +441,7 @@ test.describe("Ad─▒m 1.4 ÔÇö 12 Yard─▒mc─▒ ve Rapor Sayfas─▒"
   ];
 
   for (const pg of AUX_PAGES) {
-    test(`${pg.label} sayfas─▒ y├╝klenmeli`, async ({ page }) => {
+    test(`${pg.label} sayfası yüklenmeli`, async ({ page }) => {
       await ensureAuthenticated(page);
       const result = await visitPage(page, pg.url, pg.label);
 
@@ -451,9 +451,9 @@ test.describe("Ad─▒m 1.4 ÔÇö 12 Yard─▒mc─▒ ve Rapor Sayfas─▒"
           (result.externalConsoleErrors.length ? ` | EXT CONSOLE ERR: ${result.externalConsoleErrors.join(" | ")}` : "")
       );
 
-      expect(result.is404, `${pg.label} 404 d├Ând├╝`).toBe(false);
-      expect(result.hasHeading, `${pg.label} sayfas─▒nda ba┼şl─▒k bulunamad─▒`).toBe(true);
-      expect(result.appConsoleErrors, `${pg.label} sayfas─▒nda uygulama console hatas─▒ var`).toEqual([]);
+      expect(result.is404, `${pg.label} 404 döndü`).toBe(false);
+      expect(result.hasHeading, `${pg.label} sayfasında başlık bulunamadı`).toBe(true);
+      expect(result.appConsoleErrors, `${pg.label} sayfasında uygulama console hatası var`).toEqual([]);
     });
   }
 });

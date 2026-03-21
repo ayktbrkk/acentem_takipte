@@ -39,10 +39,10 @@ const HeroStripStub = {
   `,
 };
 
-const DetailCardStub = {
+const SectionPanelStub = {
   props: ["title"],
   template: `
-    <section class="detail-card-stub">
+    <section class="section-panel-stub">
       <h2>{{ title }}</h2>
       <slot />
     </section>
@@ -135,7 +135,7 @@ describe("RenewalTaskDetail page", () => {
         stubs: {
           StatusBadge: StatusBadgeStub,
           HeroStrip: HeroStripStub,
-          DetailCard: DetailCardStub,
+          SectionPanel: SectionPanelStub,
           FieldGroup: FieldGroupStub,
           StepBar: StepBarStub,
         },
@@ -145,21 +145,21 @@ describe("RenewalTaskDetail page", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Yenileme Sureci");
-    expect(wrapper.text()).toContain("Eski Police Bilgileri");
+    expect(wrapper.text()).toContain("Yenileme Süreci");
+    expect(wrapper.text()).toContain("Eski Poliçe Bilgileri");
     expect(wrapper.text()).toContain("Yeni Teklifler");
-    expect(wrapper.text()).toContain("Musteri Iletisim Gecmisi");
-    expect(wrapper.text()).toContain("Hatirlaticilar");
+    expect(wrapper.text()).toContain("Müşteri İletişim Geçmişi");
+    expect(wrapper.text()).toContain("Hatırlatıcılar");
     expect(wrapper.text()).toContain("POL-001");
     expect(wrapper.text()).toContain("P-100");
     expect(wrapper.text()).toContain("OFF-001");
     expect(wrapper.text()).toContain("Arama");
 
     const buttons = wrapper.findAll("button");
-    await buttons.find((button) => button.text().includes("Listeye Don")).trigger("click");
+    await buttons.find((button) => button.text().includes("Listeye Dön")).trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "renewals-board" });
 
-    await buttons.find((button) => button.text().includes("Policeyi Ac")).trigger("click");
+    await buttons.find((button) => button.text().includes("Poliçeyi Aç")).trigger("click");
     expect(routerPush).toHaveBeenCalledWith({
       name: "policy-detail",
       params: { name: "POL-001" },

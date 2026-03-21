@@ -195,7 +195,6 @@ describe("ClaimsBoard page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           AmountPairSummary: true,
-          DataTableShell: genericStub,
           DataTableCell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
@@ -290,7 +289,6 @@ describe("ClaimsBoard page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           AmountPairSummary: true,
-          DataTableShell: genericStub,
           DataTableCell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
@@ -367,7 +365,6 @@ describe("ClaimsBoard page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           AmountPairSummary: true,
-          DataTableShell: genericStub,
           DataTableCell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
@@ -456,7 +453,6 @@ describe("ClaimsBoard page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           AmountPairSummary: true,
-          DataTableShell: genericStub,
           DataTableCell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
@@ -516,7 +512,6 @@ describe("ClaimsBoard page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           AmountPairSummary: true,
-          DataTableShell: genericStub,
           DataTableCell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
@@ -576,7 +571,6 @@ describe("ClaimsBoard page store integration", () => {
         stubs: {
           ActionButton: ActionButtonStub,
           AmountPairSummary: true,
-          DataTableShell: genericStub,
           DataTableCell: genericStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,

@@ -1,11 +1,11 @@
 <template>
-  <section class="page-shell">
+  <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Poliçeler</p>
         <h1 class="detail-title">
           {{ policy.policy_no || policy.name || name }}
-           <StatusBadge :status="policy.status" domain="policy" />
+          <StatusBadge v-if="policy.status" :status="policy.status" domain="policy" />
         </h1>
         <p class="detail-subtitle">{{ `${policy.insurance_company || '-'} / ${policy.branch || '-'}` }}</p>
         <div class="mt-1.5 flex flex-wrap items-center gap-2">
@@ -18,8 +18,12 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-sm" type="button" @click="goBack">{{ t("backList") }}</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</button>
+        <ActionButton variant="secondary" size="sm" type="button" @click="goBack">
+          {{ t("backList") }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" type="button" @click="openQuickOwnershipAssignment">
+          {{ t("newAssignment") }}
+        </ActionButton>
       </div>
     </div>
 
@@ -40,17 +44,19 @@
     <div class="detail-body">
       <div class="detail-main">
         <template v-if="activeTab === 'summary'">
-          <DetailCard :title="t('lifecycleTitle')">
-            <template #action>
+          <SectionPanel :title="t('lifecycleTitle')">
+            <template #trailing>
               <span class="badge badge-blue">v{{ selectedSnapshot?.snapshot_version || '-' }}</span>
             </template>
             <StepBar :steps="lifecycleSteps" class="mb-4" />
             <FieldGroup :fields="lifecycleFields" :cols="4" />
-          </DetailCard>
+          </SectionPanel>
 
-          <DetailCard :title="t('timelineTitle')">
-            <template #action>
-              <button class="btn btn-sm" type="button" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</button>
+          <SectionPanel :title="t('timelineTitle')">
+            <template #trailing>
+              <ActionButton variant="secondary" size="sm" type="button" @click="openQuickOwnershipAssignment">
+                {{ t("newAssignment") }}
+              </ActionButton>
             </template>
             <div v-if="timelineLoading" class="card-empty">{{ t("loading") }}</div>
             <div v-else-if="timelineItems.length === 0" class="card-empty">{{ t("emptyTimeline") }}</div>
@@ -64,14 +70,14 @@
                 </div>
               </div>
             </div>
-          </DetailCard>
+          </SectionPanel>
         </template>
 
         <template v-else-if="activeTab === 'premiums'">
-          <DetailCard :title="t('premiumTitle')">
+          <SectionPanel :title="t('premiumTitle')">
             <FieldGroup :fields="premiumFieldGroups" :cols="2" />
-          </DetailCard>
-          <DetailCard :title="t('payments')">
+          </SectionPanel>
+          <SectionPanel :title="t('payments')">
             <div v-if="paymentLoading" class="card-empty">{{ t("loading") }}</div>
             <div v-else-if="payments.length === 0" class="card-empty">{{ t("emptyPayments") }}</div>
             <div v-else class="space-y-3">
@@ -90,23 +96,23 @@
                 </p>
               </MetaListCard>
             </div>
-          </DetailCard>
+          </SectionPanel>
         </template>
 
         <template v-else-if="activeTab === 'coverages'">
-          <DetailCard :title="t('coverageContext')">
+          <SectionPanel :title="t('coverageContext')">
             <FieldGroup :fields="coverageFieldGroups" :cols="2" />
-          </DetailCard>
-          <DetailCard :title="t('productProfileTitle')">
+          </SectionPanel>
+          <SectionPanel :title="t('productProfileTitle')">
             <FieldGroup :fields="productProfileFieldGroups" :cols="2" />
-          </DetailCard>
-          <DetailCard :title="t('productReadinessTitle')">
+          </SectionPanel>
+          <SectionPanel :title="t('productReadinessTitle')">
             <FieldGroup :fields="productReadinessFieldGroups" :cols="3" />
-          </DetailCard>
+          </SectionPanel>
         </template>
 
         <template v-else-if="activeTab === 'endorsements'">
-          <DetailCard :title="t('endorsementTitle')">
+          <SectionPanel :title="t('endorsementTitle')">
             <div v-if="endorsementLoading" class="card-empty">{{ t("loading") }}</div>
             <div v-else-if="endorsements.length === 0" class="card-empty">{{ t("emptyEndorsement") }}</div>
             <div v-else class="space-y-3">
@@ -125,12 +131,12 @@
                 </template>
               </MetaListCard>
             </div>
-          </DetailCard>
+          </SectionPanel>
         </template>
 
         <template v-else>
-          <DetailCard :title="t('documents')">
-            <template #action>
+          <SectionPanel :title="t('documents')">
+            <template #trailing>
               <button class="btn btn-sm" type="button" @click="openPolicyDocuments">{{ t("open") }}</button>
             </template>
             <div v-if="fileLoading" class="card-empty">{{ t("loading") }}</div>
@@ -143,25 +149,21 @@
                 </template>
               </MetaListCard>
             </div>
-          </DetailCard>
+          </SectionPanel>
         </template>
       </div>
 
-      <div class="detail-sidebar">
-        <div>
-          <p class="section-title">{{ t('premiumTitle') }}</p>
+      <div class="detail-sidebar space-y-4">
+        <SectionPanel :title="t('premiumTitle')">
           <div class="grid grid-cols-2 gap-2">
             <div v-for="m in premiumMetrics" :key="m.label" class="mini-metric">
               <p class="mini-metric-label">{{ m.label }}</p>
               <p class="mini-metric-value">{{ m.value }}</p>
             </div>
           </div>
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t('customerTitle') }}</p>
+        <SectionPanel :title="t('customerTitle')">
           <div v-if="customerLoading" class="field-value-muted">{{ t('loading') }}</div>
           <div v-else-if="customer" class="space-y-3">
             <div class="flex items-center gap-2.5">
@@ -176,19 +178,13 @@
             </button>
           </div>
           <div v-else class="field-value-muted">{{ t('emptyCustomer') }}</div>
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t('scheduleTitle') }}</p>
+        <SectionPanel :title="t('scheduleTitle')">
           <FieldGroup :fields="dateFields" :cols="2" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">{{ t('assignmentsTitle') }}</p>
+        <SectionPanel :title="t('assignmentsTitle')">
           <div v-if="assignments.length === 0" class="field-value-muted">{{ t('emptyAssignments') }}</div>
           <div v-else class="space-y-2">
             <MetaListCard
@@ -199,7 +195,7 @@
               :meta="assignment.status || '-'"
             />
           </div>
-        </div>
+        </SectionPanel>
       </div>
     </div>
 
@@ -207,6 +203,7 @@
       v-model="showOwnershipAssignmentDialog"
       config-key="ownership_assignment"
       :locale="activeLocale"
+      :eyebrow="ownershipAssignmentEyebrow"
       :options-map="policyQuickOptionsMap"
       :before-open="prepareOwnershipAssignmentDialog"
       :success-handlers="ownershipAssignmentSuccessHandlers"
@@ -215,6 +212,7 @@
       v-model="showOwnershipAssignmentEditDialog"
       config-key="ownership_assignment_edit"
       :locale="activeLocale"
+      :eyebrow="ownershipAssignmentEditEyebrow"
       :options-map="policyQuickOptionsMap"
       :before-open="prepareOwnershipAssignmentEditDialog"
       :success-handlers="ownershipAssignmentSuccessHandlers"
@@ -228,51 +226,55 @@ import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { deskActionsEnabled } from "../utils/deskActions";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
-import DetailCard from "../components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import StepBar from "../components/ui/StepBar.vue";
+import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
 
 const props = defineProps({ name: { type: String, default: "" } });
 const router = useRouter();
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
+const ownershipAssignmentEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Hızlı Atama" : "Quick Assignment"));
+const ownershipAssignmentEditEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("ownership_assignment_edit")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Atamayı Düzenle" : "Edit Assignment"));
 
 const labels = {
   tr: {
-    overview: "Poliçe Detayı", openDesk: "Yönetim Ekranında Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
+    overview: "Poliçe Detayı", openDesk: "Yönetim Ekranını Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
     recordNo: "Kayıt No", carrierPolicyNo: "Şirket Poliçe No",
     copy: "Kopyala", copied: "Kopyalandı", notAssigned: "Henüz atanmadı",
     mobileQuickActionsTitle: "Hızlı İşlemler",
     timelineTitle: "Zaman Tüneli", emptyTimeline: "Bu poliçede zaman tüneli kaydı yok.", lifecycleTitle: "Poliçe Yaşam Döngüsü",
-    emptyLifecycle: "Anlık görüntü kaydı yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Müşteri Kartı",
-    emptyCustomer: "Müşteri kaydı yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Müşteri 360",
+    emptyLifecycle: "Anlık görüntü kaydı yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Müşteri Detayı",
+    emptyCustomer: "Müşteri kaydı yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Müşteri Detaylarını Aç",
     scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Başlangıç", end: "Bitiş", remaining: "Kalan Gün",
     net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brüt Prim", commissionRate: "Komisyon Oranı", gwpTry: "GWP TRY",
-    payments: "Ödemeler", emptyPayments: "Ödeme kaydı yok.", installmentsTitle: "Taksit Planı", emptyInstallments: "Taksit kaydı yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydı yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydı yok.", remindersTitle: "Hatırlatıcılar", emptyReminders: "Hatırlatıcı kaydı yok.", reminderAt: "Hatırlatma", reminderPriority: "Öncelik", markDone: "Tamamla", cancelReminder: "İptal Et", installmentNo: "Taksit", paidOn: "Ödeme Tarihi", coverageContext: "Poliçe Kapsam Bilgileri", snapshotSummary: "Anlık Görüntü Özeti", newAssignment: "Yeni Atama", edit: "Düzenle", delete: "Sil", deleteAssignmentConfirm: "Bu atama kaydı silinsin mi?", startAssignment: "İşleme Al", blockAssignment: "Bloke Et", closeAssignment: "Kapat",
+    payments: "Ödemeler", emptyPayments: "Ödeme kaydı yok.", installmentsTitle: "Taksit Planı", emptyInstallments: "Taksit kaydı yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydı yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydı yok.", remindersTitle: "Hatırlatıcılar", emptyReminders: "Hatırlatıcı kaydı yok.", reminderAt: "Hatırlatma", reminderPriority: "Öncelik", markDone: "Tamamla", cancelReminder: "İptal", installmentNo: "Taksit", paidOn: "Ödeme Tarihi", coverageContext: "Poliçe Kapsam Bilgileri", snapshotSummary: "Anlık Görüntü Özeti", newAssignment: "Yeni Atama", edit: "Düzenle", delete: "Sil", deleteAssignmentConfirm: "Bu atama kaydı silinsin mi?", startAssignment: "İşleme Al", blockAssignment: "Bloke Et", closeAssignment: "Kapat",
     productProfileTitle: "Ürün Profili",
     productReadinessTitle: "Ürün Hazırlık Durumu",
     company: "Sigorta Şirketi", branch: "Branş", customer: "Müşteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
     productFamily: "Ürün Ailesi", insuredSubject: "Sigortalanan Konu", coverageFocus: "Kapsam Odağı",
-    readinessScore: "Hazırlik Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
-    missingProductFields: "Eksik Ürün Alanlari", noMissingProductField: "Eksik zorunlu alan bulunamadı.", missingFieldStatus: "Eksik",
-    endorsementTitle: "Zeyilname Gecmisi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.",
+    readinessScore: "Hazırlık Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
+    missingProductFields: "Eksik Ürün Alanları", noMissingProductField: "Eksik zorunlu alan bulunamadı.", missingFieldStatus: "Eksik",
+    endorsementTitle: "Zeyilname Geçmişi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.",
     totalDocuments: "Toplam Doküman", pdfDocuments: "PDF", imageDocuments: "Görsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diğer", lastUploadedOn: "Son Yükleme",
     notifications: "Bildirim Taslakları", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Aç",
     tabSummary: "Özet", tabPremiums: "Prim/Ödeme", tabCoverages: "Teminatlar", tabEndorsements: "Zeyilnameler", tabDocuments: "Dokümanlar",
-    typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Suresi doldu", noDate: "Tarih yok",
+    typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Süresi Doldu", noDate: "Tarih yok",
   },
   en: {
-    overview: "Policy Detail", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
+    overview: "Policy Details", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
     recordNo: "Record No", carrierPolicyNo: "Carrier Policy No",
     copy: "Copy", copied: "Copied", notAssigned: "Not assigned yet",
     mobileQuickActionsTitle: "Quick Actions",
     timelineTitle: "Timeline", emptyTimeline: "No timeline activity.", lifecycleTitle: "Policy Lifecycle",
-    emptyLifecycle: "No snapshot records.", premiumTitle: "Premium Details", customerTitle: "Customer Card",
-    emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Customer 360",
+    emptyLifecycle: "No snapshot records.", premiumTitle: "Premium Details", customerTitle: "Customer Details",
+    emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Open Customer Details",
     scheduleTitle: "Schedule", issue: "Issue Date", start: "Start Date", end: "End Date", remaining: "Days Remaining",
     net: "Net Premium", tax: "Tax", commission: "Commission", gross: "Gross Premium", commissionRate: "Commission Rate", gwpTry: "GWP TRY",
     payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", activitiesTitle: "Activities", emptyActivities: "No activities found.", remindersTitle: "Reminders", emptyReminders: "No reminders found.", reminderAt: "Reminder At", reminderPriority: "Priority", markDone: "Mark Done", cancelReminder: "Cancel", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit", delete: "Delete", deleteAssignmentConfirm: "Delete this assignment record?", startAssignment: "Start", blockAssignment: "Block", closeAssignment: "Close",
@@ -421,7 +423,7 @@ const remainingDays = computed(() => {
 });
 const carrierPolicyDisplayValue = computed(() => policy.value.policy_no || t("notAssigned"));
 const remainingLabel = computed(() => (remainingDays.value == null ? t("noDate") : remainingDays.value < 0 ? t("expired") : String(remainingDays.value)));
-const remainingClass = computed(() => (remainingDays.value == null ? "text-slate-500" : remainingDays.value < 0 ? "text-rose-600" : remainingDays.value <= 30 ? "text-amber-600" : "text-emerald-600"));
+const remainingClass = computed(() => (remainingDays.value == null ? "text-slate-500" : remainingDays.value < 0 ? "text-amber-700" : remainingDays.value <= 30 ? "text-amber-600" : "text-emerald-600"));
 const headerSummaryItems = computed(() => [
   {
     key: "status",
@@ -839,14 +841,14 @@ async function deleteOwnershipAssignment(assignment) {
   });
   await load();
 }
-const endorsementStatusClass = (s) => (s === "Applied" ? "text-emerald-700" : s === "Cancelled" ? "text-rose-700" : "text-slate-700");
+const endorsementStatusClass = (s) => (s === "Applied" ? "text-emerald-700" : s === "Cancelled" ? "text-slate-700" : "text-slate-700");
 
 function policyStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
   if (status === "Active") return "Aktif";
   if (status === "KYT") return "KYT";
   if (status === "IPT" || status === "Cancelled") return "İptal";
-  if (status === "Expired") return "Suresi Doldu";
+  if (status === "Expired") return "Süresi Doldu";
   return status || "-";
 }
 
@@ -855,22 +857,22 @@ function paymentStatusLabel(status) {
   if (status === "Submitted") return "Gönderildi";
   if (status === "Draft") return "Taslak";
   if (status === "Cancelled") return "İptal";
-  if (status === "Paid") return "Odendi";
+  if (status === "Paid") return "Ödendi";
   return status || "-";
 }
 
 function installmentStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Scheduled") return "Planlandi";
+  if (status === "Scheduled") return "Planlandı";
   if (status === "Overdue") return "Gecikti";
-  if (status === "Paid") return "Odendi";
+  if (status === "Paid") return "Ödendi";
   if (status === "Cancelled") return "İptal";
   return status || "-";
 }
 
 function endorsementStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Applied") return "Uygulandi";
+  if (status === "Applied") return "Uygulandı";
   if (status === "Pending") return "Beklemede";
   if (status === "Cancelled") return "İptal";
   return status || "-";
@@ -879,7 +881,7 @@ function endorsementStatusLabel(status) {
 function notificationStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";
   if (status === "Queued") return "Kuyrukta";
-  if (status === "Processing") return "Isleniyor";
+  if (status === "Processing") return "İşleniyor";
   if (status === "Sent") return "Gönderildi";
   if (status === "Failed") return "Başarısız";
   if (status === "Dead") return "Kalıcı Hata";

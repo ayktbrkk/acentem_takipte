@@ -1,14 +1,30 @@
 <template>
   <div v-if="open" class="dialog-overlay" @click.self="onCancel">
     <div :class="dialogShellClass">
-      <div class="dialog-header">
-        <h3 class="dialog-title">{{ uiTitle }}</h3>
-        <button class="btn btn-outline btn-sm" type="button" @click="onCancel">X</button>
+      <div class="qc-managed-dialog__header">
+        <div class="qc-managed-dialog__headline">
+          <p class="qc-managed-dialog__eyebrow">{{ resolvedEyebrow }}</p>
+          <h3 class="qc-managed-dialog__title">{{ uiTitle }}</h3>
+          <p v-if="uiSubtitle" class="qc-managed-dialog__subtitle">{{ uiSubtitle }}</p>
+        </div>
+        <button
+          class="qc-managed-dialog__close"
+          type="button"
+          :aria-label="locale === 'tr' ? 'Kapat' : 'Close'"
+          :title="locale === 'tr' ? 'Kapat' : 'Close'"
+          @click="onCancel"
+        >
+          <span aria-hidden="true">×</span>
+          <span class="sr-only">{{ locale === 'tr' ? 'Kapat' : 'Close' }}</span>
+        </button>
       </div>
 
-      <div class="dialog-body">
+      <form class="qc-managed-dialog__body" @submit.prevent="submit(false)">
         <QuickCreateDialogShell
           :error="errorText"
+          :show-eyebrow="false"
+          :show-subtitle="false"
+          :eyebrow="resolvedEyebrow"
           :subtitle="uiSubtitle"
           :loading="loading"
           :save-disabled="saveDisabledComputed"
@@ -28,7 +44,7 @@
             @submit="submit(false)"
           />
         </QuickCreateDialogShell>
-      </div>
+      </form>
     </div>
   </div>
 </template>
@@ -41,6 +57,7 @@ import { createResource } from "frappe-ui";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../../config/quickCreateRegistry";
 import QuickCreateDialogShell from "./QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "./QuickCreateFormRenderer.vue";
+import { getQuickCreateEyebrow, getQuickCreateLabels } from "../../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../../utils/quickCreateSuccess";
 
 const props = defineProps({
@@ -51,6 +68,7 @@ const props = defineProps({
   saveDisabled: { type: Boolean, default: false },
   showSaveAndOpen: { type: Boolean, default: true },
   dialogSize: { type: String, default: "xl" },
+  eyebrow: { type: String, default: "" },
   titleOverride: { type: [String, Object], default: "" },
   subtitleOverride: { type: [String, Object], default: "" },
   labels: { type: Object, default: () => ({}) },
@@ -92,20 +110,17 @@ const createResourceHandle = createResource({
   auto: false,
 });
 
-const labelsResolved = computed(() => ({
-  cancel: props.labels.cancel || (props.locale === "tr" ? "Vazgeç" : "Cancel"),
-  save: props.labels.save || (props.locale === "tr" ? "Kaydet" : "Save"),
-  saveAndOpen: props.labels.saveAndOpen || (props.locale === "tr" ? "Kaydet ve Ac" : "Save & Open"),
-}));
+const labelsResolved = computed(() => ({ ...getQuickCreateLabels("manage", props.locale), ...props.labels }));
 
 const uiTitle = computed(() => getLocalizedText(props.titleOverride || config.value?.title, props.locale));
+const resolvedEyebrow = computed(() => props.eyebrow || getQuickCreateEyebrow("managed", props.locale));
 const uiSubtitle = computed(() => getLocalizedText(props.subtitleOverride || config.value?.subtitle, props.locale));
 const dialogShellClass = computed(() => {
   const size = String(props.dialogSize || "").toLowerCase();
-  if (size === "sm") return "dialog-shell dialog-sm";
-  if (size === "md") return "dialog-shell dialog-md";
-  if (size === "lg") return "dialog-shell dialog-lg";
-  return "dialog-shell dialog-xl";
+  if (size === "sm") return "dialog-shell dialog-sm qc-managed-dialog-shell";
+  if (size === "md") return "dialog-shell dialog-md qc-managed-dialog-shell";
+  if (size === "lg") return "dialog-shell dialog-lg qc-managed-dialog-shell";
+  return "dialog-shell dialog-xl qc-managed-dialog-shell";
 });
 const saveDisabledComputed = computed(() => props.saveDisabled || loading.value);
 

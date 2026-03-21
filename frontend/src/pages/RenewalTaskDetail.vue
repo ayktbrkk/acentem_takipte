@@ -23,26 +23,26 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="goBack">Listeye Don</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openPolicy">Policeyi Ac</button>
+        <button class="btn btn-outline btn-sm" type="button" @click="goBack">Listeye Dön</button>
+        <button class="btn btn-primary btn-sm" type="button" @click="openPolicy">Poliçeyi Aç</button>
       </div>
     </div>
 
     <HeroStrip :cells="heroCells" />
 
-    <DetailCard title="Yenileme Sureci">
+    <SectionPanel :title="t('renewalProcess')" panel-class="surface-card rounded-2xl p-5">
       <StepBar :steps="renewalSteps" />
-    </DetailCard>
+    </SectionPanel>
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
-        <DetailCard title="Eski Police Bilgileri">
-          <div v-if="!policy" class="card-empty">Police bilgisi bulunamadi.</div>
+        <SectionPanel :title="t('previousPolicy')" panel-class="surface-card rounded-2xl p-5">
+          <div v-if="!policy" class="card-empty">Poliçe bilgisi bulunamadı.</div>
           <FieldGroup v-else :fields="policyFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Yeni Teklifler">
-          <div v-if="!offers.length" class="card-empty">Bu police icin teklif bulunamadi.</div>
+        <SectionPanel :title="t('newOffers')" panel-class="surface-card rounded-2xl p-5">
+          <div v-if="!offers.length" class="card-empty">Bu poliçe için teklif bulunamadı.</div>
           <div v-else class="space-y-3">
             <div
               v-for="offer in offers"
@@ -54,14 +54,14 @@
                   <p class="text-sm font-medium text-gray-900">{{ offer.name }}</p>
                   <p class="text-xs text-gray-500">{{ formatDate(offer.offer_date) }} · {{ offer.status || '-' }}</p>
                 </div>
-                <button class="btn btn-sm" type="button" @click="openOffer(offer.name)">Detay</button>
+                <button class="btn btn-sm" type="button" @click="openOffer(offer.name)">Teklif Detayını Aç</button>
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Musteri Iletisim Gecmisi">
-          <div v-if="!communications.length" class="card-empty">Iletisim kaydi bulunamadi.</div>
+        <SectionPanel :title="t('communicationHistory')" panel-class="surface-card rounded-2xl p-5">
+          <div v-if="!communications.length" class="card-empty">İletişim kaydı bulunamadı.</div>
           <div v-else>
             <div v-for="item in communications" :key="item.name" class="timeline-item">
               <div class="tl-dot" />
@@ -71,38 +71,31 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Hatirlaticilar">
-          <div v-if="!reminders.length" class="card-empty">Hatirlatici kaydi bulunamadi.</div>
+        <SectionPanel :title="t('reminders')" panel-class="surface-card rounded-2xl p-5">
+          <div v-if="!reminders.length" class="card-empty">Hatırlatıcı kaydı bulunamadı.</div>
           <div v-else class="space-y-2">
             <div v-for="item in reminders" :key="item.label" class="rounded-md bg-gray-50 px-3 py-2">
               <p class="text-sm font-medium text-gray-900">{{ item.label }}</p>
               <p class="text-xs text-gray-500">{{ item.value }}</p>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
       <aside class="detail-sidebar space-y-4">
-        <div>
-          <p class="section-title">Ilgili Kisiler</p>
+        <SectionPanel :title="t('people')" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="peopleFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Durum Bilgisi</p>
+        <SectionPanel :title="t('statusInfo')" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="statusFields" :cols="1" />
-        </div>
+        </SectionPanel>
 
-        <div class="divider" />
-
-        <div>
-          <p class="section-title">Kayit Meta</p>
+        <SectionPanel :title="t('recordMeta')" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="recordFields" :cols="1" />
-        </div>
+        </SectionPanel>
       </aside>
     </div>
   </section>
@@ -115,9 +108,41 @@ import { useRouter } from 'vue-router';
 
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import HeroStrip from '@/components/ui/HeroStrip.vue';
-import DetailCard from '@/components/ui/DetailCard.vue';
 import FieldGroup from '@/components/ui/FieldGroup.vue';
 import StepBar from '@/components/ui/StepBar.vue';
+import SectionPanel from '../components/app-shell/SectionPanel.vue';
+import { getAppPinia } from '../pinia';
+import { useAuthStore } from '../stores/auth';
+
+const _appPinia = getAppPinia();
+const _authStore = useAuthStore(_appPinia);
+const activeLocale = computed(() => _authStore.locale || 'tr');
+
+const copy = {
+  tr: {
+    renewalProcess: 'Yenileme Süreci',
+    previousPolicy: 'Eski Poliçe Bilgileri',
+    newOffers: 'Yeni Teklifler',
+    communicationHistory: 'Müşteri İletişim Geçmişi',
+    reminders: 'Hatırlatıcılar',
+    people: 'İlgili Kişiler',
+    statusInfo: 'Durum Bilgisi',
+    recordMeta: 'Kayıt Meta',
+  },
+  en: {
+    renewalProcess: 'Renewal Process',
+    previousPolicy: 'Previous Policy',
+    newOffers: 'New Offers',
+    communicationHistory: 'Communication History',
+    reminders: 'Reminders',
+    people: 'People',
+    statusInfo: 'Status',
+    recordMeta: 'Record Info',
+  },
+};
+function t(key) {
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
+}
 
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || '');
@@ -134,7 +159,7 @@ const offers = computed(() => (Array.isArray(unref(offersResource.data)) ? unref
 const communications = computed(() => (Array.isArray(unref(communicationsResource.data)) ? unref(communicationsResource.data) : []));
 
 const heroCells = computed(() => [
-  { label: 'Police', value: renewal.value.policy || '-', variant: 'default' },
+  { label: 'Poliçe', value: renewal.value.policy || '-', variant: 'default' },
   { label: 'Vade', value: formatDate(renewal.value.due_date), variant: 'default' },
   { label: 'Yenileme Tarihi', value: formatDate(renewal.value.renewal_date), variant: 'lg' },
   { label: 'Durum', value: renewal.value.status || '-', variant: 'accent' },
@@ -166,14 +191,14 @@ const renewalSteps = computed(() => [
   { label: 'Bildirim', state: getStepStatus('notified') },
   { label: 'Teklif', state: getStepStatus('offer_sent') },
   { label: 'Karar', state: getStepStatus('decision') },
-  { label: 'Police', state: getStepStatus('renewed') },
+  { label: 'Poliçe', state: getStepStatus('renewed') },
 ]);
 
 const policyFields = computed(() => [
-  { label: 'Police No', value: policy.value?.policy_no || policy.value?.name || renewal.value.policy || '-' },
-  { label: 'Musteri', value: policy.value?.customer || '-' },
-  { label: 'Brans', value: policy.value?.branch || '-' },
-  { label: 'Bitis', value: formatDate(policy.value?.end_date) },
+  { label: 'Poliçe No', value: policy.value?.policy_no || policy.value?.name || renewal.value.policy || '-' },
+  { label: 'Müşteri', value: policy.value?.customer || '-' },
+  { label: 'Branş', value: policy.value?.branch || '-' },
+  { label: 'Bitiş', value: formatDate(policy.value?.end_date) },
   { label: 'Durum', value: policy.value?.status || '-' },
 ]);
 
@@ -181,30 +206,30 @@ const reminders = computed(() => {
   const rows = [];
   if (renewal.value.due_date) rows.push({ label: 'Son Tarih', value: formatDate(renewal.value.due_date) });
   if (renewal.value.renewal_date) rows.push({ label: 'Yenileme Tarihi', value: formatDate(renewal.value.renewal_date) });
-  if (renewal.value.next_contact_date) rows.push({ label: 'Sonraki Iletisim', value: formatDate(renewal.value.next_contact_date) });
+  if (renewal.value.next_contact_date) rows.push({ label: 'Sonraki İletişim', value: formatDate(renewal.value.next_contact_date) });
   return rows;
 });
 
 const peopleFields = computed(() => [
-  { label: 'Musteri', value: policy.value?.customer || '-' },
+  { label: 'Müşteri', value: policy.value?.customer || '-' },
   { label: 'Temsilci', value: renewal.value.assigned_to || '-' },
 ]);
 
 const statusFields = computed(() => [
   { label: 'Durum', value: renewal.value.status || '-' },
-  { label: 'Oncelik', value: priorityLabel(renewal.value.priority) },
-  { label: 'Lost Reason', value: renewal.value.lost_reason_code || '-' },
+  { label: 'Öncelik', value: priorityLabel(renewal.value.priority) },
+  { label: 'Kayıp Nedeni', value: renewal.value.lost_reason_code || '-' },
 ]);
 
 const recordFields = computed(() => [
-  { label: 'Olusturan', value: renewal.value.owner || '-' },
-  { label: 'Olusturma', value: formatDate(renewal.value.creation) },
-  { label: 'Guncelleyen', value: renewal.value.modified_by || '-' },
-  { label: 'Guncelleme', value: formatDate(renewal.value.modified) },
+  { label: 'Oluşturan', value: renewal.value.owner || '-' },
+  { label: 'Oluşturma', value: formatDate(renewal.value.creation) },
+  { label: 'Güncelleyen', value: renewal.value.modified_by || '-' },
+  { label: 'Güncelleme', value: formatDate(renewal.value.modified) },
 ]);
 
 function priorityLabel(value) {
-  const map = { high: 'Yuksek', medium: 'Orta', low: 'Dusuk' };
+  const map = { high: 'Yüksek', medium: 'Orta', low: 'Düşük' };
   return map[String(value || '').toLowerCase()] || '-';
 }
 

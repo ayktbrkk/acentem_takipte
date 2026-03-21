@@ -110,8 +110,6 @@ describe("RenewalsBoard page store integration", () => {
       global: {
         stubs: {
           ActionButton: true,
-          DataTableShell: genericStub,
-          DocSummaryGrid: true,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -167,8 +165,6 @@ describe("RenewalsBoard page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableShell: genericStub,
-          DocSummaryGrid: true,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,

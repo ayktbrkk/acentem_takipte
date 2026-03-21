@@ -126,6 +126,30 @@
     @apply inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-200 bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-500 transition-colors hover:border-gray-400;
   }
 
+  .qc-accent-label {
+    @apply text-xs font-semibold uppercase tracking-[0.22em] text-brand-700;
+  }
+
+  .qc-selection-banner {
+    @apply flex items-center justify-between rounded-md border border-brand-200 bg-brand-50/70 px-3 py-2 text-xs text-brand-800;
+  }
+
+  .qc-selection-banner__clear {
+    @apply ml-2 shrink-0 font-semibold text-brand-700 hover:text-brand-900;
+  }
+
+  .qc-card-soft {
+    @apply rounded-xl border border-slate-200 bg-white p-4;
+  }
+
+  .qc-summary-shell {
+    @apply grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700;
+  }
+
+  .qc-summary-card {
+    @apply rounded-lg border border-slate-200 bg-white p-3;
+  }
+
   .status-badge {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
@@ -215,6 +239,38 @@
     @apply text-base font-medium text-gray-900;
   }
 
+  .report-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150;
+  }
+
+  .report-chip--active {
+    @apply border-sky-200 bg-white text-sky-700 shadow-sm;
+  }
+
+  .report-chip--active:hover {
+    @apply border-sky-300 bg-sky-50 text-sky-800;
+    transform: translateY(-1px);
+  }
+
+  .report-chip--hidden {
+    @apply border-slate-200 bg-white text-slate-600 shadow-sm;
+  }
+
+  .report-chip--hidden:hover {
+    @apply border-sky-200 text-slate-900;
+    transform: translateY(-1px);
+  }
+
+  .report-chip__dot {
+    @apply h-1.5 w-1.5 rounded-full bg-sky-500;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+  }
+
+  .report-chip--hidden .report-chip__dot {
+    @apply bg-sky-500;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+  }
+
   .chart-container {
     @apply relative h-64 md:h-80;
   }
@@ -253,7 +309,7 @@
 
   .form-label.required::after {
     content: "*";
-    @apply ml-1 text-red-500;
+    @apply ml-1 text-amber-500;
   }
 
   .form-input {
@@ -261,11 +317,11 @@
   }
 
   .form-input.error {
-    @apply border-red-300 focus:border-red-500 focus:ring-red-500;
+    @apply border-amber-300 focus:border-amber-500 focus:ring-amber-500;
   }
 
   .form-error {
-    @apply mt-1 text-sm text-red-600;
+    @apply mt-1 text-sm text-amber-700;
   }
 
   .form-footer {
@@ -281,23 +337,27 @@
   }
 
   .step-item.done {
-    @apply text-green-700;
+    @apply text-brand-600;
   }
 
   .step-item.current {
-    @apply font-medium text-brand-600;
+    @apply font-semibold text-brand-700;
   }
 
   .step-circle {
-    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] border-current text-[10px] font-medium;
+    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-current bg-white text-[10px] font-medium leading-none;
   }
 
   .step-item.done .step-circle {
-    @apply border-green-700 bg-green-700 text-white;
+    @apply border-brand-600 bg-white text-brand-600;
   }
 
   .step-item.current .step-circle {
-    @apply border-brand-600 bg-brand-600 text-white;
+    @apply border-brand-700 bg-white text-brand-700;
+  }
+
+  .step-item.pending .step-circle {
+    @apply border-gray-300 bg-white text-gray-400;
   }
 
   .step-line {
@@ -305,7 +365,7 @@
   }
 
   .step-line.done {
-    @apply bg-green-700;
+    @apply bg-brand-600;
   }
 
   .timeline-item {
@@ -361,7 +421,7 @@
   }
 
   .urgency-critical {
-    @apply text-red-600 font-medium;
+    @apply font-semibold text-slate-800;
   }
 
   .urgency-warning {
@@ -377,7 +437,7 @@
   }
 
   .row-critical {
-    @apply bg-red-50 hover:bg-red-100;
+    @apply bg-slate-50 ring-1 ring-inset ring-slate-200 hover:bg-slate-100;
   }
 
   .row-warning {
