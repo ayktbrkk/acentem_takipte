@@ -116,7 +116,7 @@
                 <div class="flex items-center justify-between gap-2">
                   <div class="space-y-1">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("hiddenColumns") }}</p>
-                    <p class="text-xs text-slate-500">{{ t("showAllColumns") }} ile geri açılabilir.</p>
+                    <p class="text-xs text-slate-500">{{ t("hiddenColumnsHint") }}</p>
                   </div>
                   <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm">
                     {{ hiddenColumns.length }}
@@ -182,7 +182,7 @@
         <SectionPanel
           :title="t('filtersTitle')"
           :count="`${activeFilterCount} ${t('activeFilters')}`"
-          :meta="activeReportLabel"
+          :meta="branchScopeLabel"
         >
           <WorkbenchFilterToolbar
             v-model="presetKey"
@@ -367,6 +367,7 @@ const copy = {
     columnHint: "Seçili kolonlar tabloyu kurar, gizli kolonlar tek dokunuşla açılır.",
     selectedColumns: "Seçili Kolonlar",
     hiddenColumns: "Gizli Kolonlar",
+    hiddenColumnsHint: "Gizli kolonlar tek dokunuşla tekrar görünür yapılabilir.",
     showAllColumns: "Tümünü Göster",
     viewStateError: "Rapor görünümü kaydedilemedi.",
     scheduledSaveError: "Zamanlanmış rapor kaydedilemedi.",
@@ -444,6 +445,7 @@ const copy = {
     columnHint: "Selected columns define the table, hidden columns can be restored with one tap.",
     selectedColumns: "Selected Columns",
     hiddenColumns: "Hidden Columns",
+    hiddenColumnsHint: "Hidden columns can be restored with a single tap.",
     showAllColumns: "Show All",
     viewStateError: "Failed to save report view.",
     scheduledSaveError: "Failed to save scheduled report.",
