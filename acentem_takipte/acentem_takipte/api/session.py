@@ -34,6 +34,28 @@ DESK_HOME_ROLES = {"System Manager", "Administrator"}
 SPA_HOME_ROLES = {"Manager", "Agent", "Accountant"}
 
 
+def _coerce_realtime_port(value) -> int | None:
+    try:
+        port = int(value)
+    except (TypeError, ValueError):
+        return None
+
+    if 1 <= port <= 65535:
+        return port
+    return None
+
+
+def _build_realtime_config() -> dict[str, int | bool | None]:
+    site_config = frappe.get_site_config() or {}
+    enabled = bool(site_config.get("at_realtime_enabled"))
+    port = _coerce_realtime_port(site_config.get("at_realtime_port") or 9000)
+
+    return {
+        "enabled": bool(enabled and port),
+        "port": port if enabled and port else None,
+    }
+
+
 def _has_permission(doctype: str, ptype: str) -> bool:
     try:
         return bool(frappe.has_permission(doctype, ptype))
@@ -141,6 +163,7 @@ def get_session_context() -> dict:
         "default_office_branch": default_office_branch,
         "can_access_all_office_branches": can_access_all_office_branches,
         "capabilities": _build_session_capabilities(),
+        "realtime": _build_realtime_config(),
         "roles": interface["roles"],
         "preferred_home": interface["preferred_home"],
         "interface_mode": interface["interface_mode"],
@@ -180,6 +203,7 @@ def set_session_locale(locale: str | None = None) -> dict:
         "default_office_branch": default_office_branch,
         "can_access_all_office_branches": can_access_all_office_branches,
         "capabilities": _build_session_capabilities(),
+        "realtime": _build_realtime_config(),
         "roles": interface["roles"],
         "preferred_home": interface["preferred_home"],
         "interface_mode": interface["interface_mode"],

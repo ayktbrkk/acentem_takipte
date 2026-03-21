@@ -3,6 +3,7 @@ from frappe.utils import now
 
 from acentem_takipte.acentem_takipte.api.session import (
     _build_session_capabilities,
+    _build_realtime_config,
     _resolve_session_interface,
     resolve_current_user,
 )
@@ -13,6 +14,7 @@ from acentem_takipte.acentem_takipte.utils.assets import ensure_site_asset_symli
 def get_context(context):
     context.no_cache = 1
     context.full_width = True
+    frappe.local.response["http_status_code"] = 200
     if frappe.session.user == "Guest":
         frappe.local.flags.redirect_location = "/login?redirect-to=/at"
         raise frappe.Redirect
@@ -41,6 +43,7 @@ def get_context(context):
             frappe.db.get_value("User", current_user, "language") or frappe.local.lang or "tr"
         ).split("-")[0],
         "capabilities": _build_session_capabilities(),
+        "realtime": _build_realtime_config(),
         "roles": interface["roles"],
         "preferred_home": interface["preferred_home"],
         "interface_mode": interface["interface_mode"],

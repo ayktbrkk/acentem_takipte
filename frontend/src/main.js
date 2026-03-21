@@ -43,6 +43,25 @@ function getMethodName(url) {
   return String(url || "").replace(/^\/api\/method\//, "");
 }
 
+function readRealtimeConfig() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const boot = window.AT_SESSION_BOOT || window.__AT_SESSION__ || {};
+  const realtime = boot.realtime;
+  if (!realtime || typeof realtime !== "object" || realtime.enabled !== true) {
+    return false;
+  }
+
+  const port = Number.parseInt(realtime.port, 10);
+  if (Number.isInteger(port) && port > 0) {
+    return { port };
+  }
+
+  return false;
+}
+
 const DASHBOARD_READ_ONLY_METHODS = new Set([
   "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
   "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
@@ -117,10 +136,11 @@ if (mountTarget) {
 
     const app = createApp(App);
     const pinia = getAppPinia();
+    const realtimeConfig = readRealtimeConfig();
     setAppPinia(pinia);
     setActivePinia(pinia);
     app.use(pinia);
-    app.use(FrappeUI);
+    app.use(FrappeUI, { socketio: realtimeConfig });
     app.use(router);
     const branchStore = useBranchStore(pinia);
     branchStore.hydrateFromSession();

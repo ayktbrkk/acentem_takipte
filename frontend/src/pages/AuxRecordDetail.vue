@@ -447,6 +447,8 @@ function t(key) { return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 function localize(v) { return typeof v === "string" ? v : v?.[activeLocale.value] || v?.en || v?.tr || ""; }
 
 const resource = createResource({ url: "frappe.client.get", auto: false });
+const resolvedDoctype = ref(config.doctype);
+const activeDoctype = computed(() => resolvedDoctype.value || config.doctype);
 const activeResource = computed(() => resource);
 const activeLoading = computed(() => Boolean(unref(activeResource.value?.loading)));
 const doc = computed(() => {
@@ -619,14 +621,14 @@ const quickEditSuccessHandlers = {
     await reloadDetail();
   },
 };
-const isDraftDetail = computed(() => config.doctype === "AT Notification Draft");
-const isOutboxDetail = computed(() => config.doctype === "AT Notification Outbox");
+const isDraftDetail = computed(() => activeDoctype.value === "AT Notification Draft");
+const isOutboxDetail = computed(() => activeDoctype.value === "AT Notification Outbox");
 const canOpenCommunicationContext = computed(
   () => (isDraftDetail.value || isOutboxDetail.value || isReminderDetail.value || isTaskDetail.value || isOwnershipAssignmentDetail.value) && Boolean(doc.value?.name)
 );
-const isTaskDetail = computed(() => config.doctype === "AT Task");
-const isReminderDetail = computed(() => config.doctype === "AT Reminder");
-const isOwnershipAssignmentDetail = computed(() => config.doctype === "AT Ownership Assignment");
+const isTaskDetail = computed(() => ["AT Task", "AT Renewal Task"].includes(activeDoctype.value));
+const isReminderDetail = computed(() => activeDoctype.value === "AT Reminder");
+const isOwnershipAssignmentDetail = computed(() => activeDoctype.value === "AT Ownership Assignment");
 const draftLifecycleStatus = computed(() => String(doc.value?.status || "").trim());
 const canSendDraftLifecycle = computed(() => isDraftDetail.value && Boolean(doc.value?.name) && draftLifecycleStatus.value !== "Sent");
 const outboxLifecycleStatus = computed(() => String(doc.value?.status || "").trim());
@@ -1442,7 +1444,7 @@ async function buildQuickEditPayload({ form }) {
     data[field.name] = value;
   }
   return {
-    doctype: config.doctype,
+    doctype: activeDoctype.value,
     name: props.name,
     data,
   };
@@ -1479,7 +1481,7 @@ async function requeueOutboxLifecycle() {
 async function markTaskLifecycle(status) {
   if (!isTaskDetail.value || !doc.value?.name || !String(status || "").trim()) return;
   await auxMutationResource.submit({
-    doctype: "AT Task",
+    doctype: activeDoctype.value,
     name: doc.value.name,
     data: {
       status,
@@ -1512,8 +1514,48 @@ async function markAssignmentLifecycle(status) {
   await reloadDetail();
 }
 
+function getDetailDoctypeCandidates() {
+  const baseDoctype = String(config.doctype || "").trim();
+  if (!baseDoctype) return [];
+  if (props.screenKey !== "tasks") return [baseDoctype];
+
+  const fallbackDoctype = "AT Renewal Task";
+  if (/^AT-REN-/i.test(String(props.name || "").trim())) {
+    return [fallbackDoctype, baseDoctype].filter((value, index, list) => value && list.indexOf(value) === index);
+  }
+
+  return [baseDoctype, fallbackDoctype].filter((value, index, list) => value && list.indexOf(value) === index);
+}
+
+function isNotFoundError(error) {
+  const message = [error?.message, error?.messages?.join?.(" "), error?.exc_type]
+    .filter(Boolean)
+    .join(" ");
+  return error?.httpStatus === 404 || /404|not found|does not exist/i.test(message);
+}
+
+async function loadDetailRecord() {
+  const candidates = getDetailDoctypeCandidates();
+  let lastError = null;
+
+  for (const doctype of candidates) {
+    try {
+      const result = await resource.reload({ doctype, name: props.name });
+      resolvedDoctype.value = doctype;
+      return result;
+    } catch (error) {
+      lastError = error;
+      if (!isNotFoundError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 function reloadDetail() {
-  const detailPromise = resource.reload({ doctype: config.doctype, name: props.name });
+  const detailPromise = loadDetailRecord();
   if (config.doctype !== "AT Campaign") return detailPromise;
   campaignDraftsResource.params = {
     ...campaignDraftsResource.params,
@@ -1544,7 +1586,7 @@ function openCommunicationContext() {
   router.push({
     name: "communication-center",
     query: {
-      reference_doctype: config.doctype,
+      reference_doctype: activeDoctype.value,
       reference_name: doc.value.name,
       reference_label: recordTitle.value || doc.value.name,
       return_to: route.fullPath || route.path,
@@ -1552,7 +1594,7 @@ function openCommunicationContext() {
   });
 }
 function openDesk() {
-  navigateToSameOriginPath(`/app/Form/${encodeURIComponent(config.doctype)}/${encodeURIComponent(props.name)}`);
+  navigateToSameOriginPath(`/app/Form/${encodeURIComponent(activeDoctype.value)}/${encodeURIComponent(props.name)}`);
 }
 function openPanel() {
   if (!panelConfig.value?.url) return;

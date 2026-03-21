@@ -56,6 +56,18 @@ function normalizeCapabilities(raw) {
   return next;
 }
 
+function normalizeRealtime(raw) {
+  if (!raw || typeof raw !== "object") {
+    return { enabled: false, port: null };
+  }
+
+  const port = Number.parseInt(raw.port, 10);
+  return {
+    enabled: Boolean(raw.enabled) && Number.isInteger(port) && port > 0,
+    port: Number.isInteger(port) && port > 0 ? port : null,
+  };
+}
+
 function readBootSession() {
   if (typeof window === "undefined") {
     return {};
@@ -83,6 +95,7 @@ function readBootSession() {
     can_access_all_office_branches: serverBoot.can_access_all_office_branches || false,
     locale: serverBoot.locale || frappeBoot.lang || null,
     capabilities: serverBoot.capabilities || null,
+    realtime: serverBoot.realtime || null,
     roles: serverBoot.roles || [],
     preferred_home: serverBoot.preferred_home || null,
     interface_mode: serverBoot.interface_mode || null,
@@ -144,6 +157,7 @@ export const sessionState = reactive({
   canAccessAllOfficeBranches: Boolean(boot.can_access_all_office_branches),
   locale: normalizeLocale(readStoredLocale() || boot.locale || "tr"),
   capabilities: normalizeCapabilities(boot.capabilities),
+  realtime: normalizeRealtime(boot.realtime),
   roles: cloneStringList(boot.roles),
   preferredHome: boot.preferred_home || "/at",
   interfaceMode: boot.interface_mode || "spa",
@@ -215,6 +229,9 @@ function applySessionContext(data, loggedUser) {
   }
   if (Object.prototype.hasOwnProperty.call(data, "capabilities")) {
     sessionState.capabilities = normalizeCapabilities(data.capabilities);
+  }
+  if (Object.prototype.hasOwnProperty.call(data, "realtime")) {
+    sessionState.realtime = normalizeRealtime(data.realtime);
   }
 }
 

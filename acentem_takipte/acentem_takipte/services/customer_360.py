@@ -18,6 +18,24 @@ OPEN_CLAIM_STATUSES = {"Open", "Under Review", "Approved"}
 OPEN_RENEWAL_STATUSES = {"Open", "In Progress"}
 
 
+def _safe_get_list(doctype: str, *, fields: list[str], filters: dict[str, Any], order_by: str, limit_page_length: int) -> list[dict[str, Any]]:
+    try:
+        return frappe.get_list(
+            doctype,
+            fields=fields,
+            filters=filters,
+            order_by=order_by,
+            limit_page_length=limit_page_length,
+        )
+    except frappe.DataError:
+        frappe.logger("acentem_takipte").warning(
+            "customer_360.%s_query_failed",
+            doctype,
+            exc_info=True,
+        )
+        return []
+
+
 def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool = False) -> dict[str, Any]:
     customer = frappe.get_doc("AT Customer", customer_name)
     today = getdate(nowdate())
@@ -230,7 +248,7 @@ def _serialize_customer(customer, *, can_view_sensitive: bool) -> dict[str, Any]
 def _get_communications(customer_name: str) -> list[dict[str, Any]]:
     if not frappe.db.exists("DocType", "Communication"):
         return []
-    return frappe.get_list(
+    return _safe_get_list(
         "Communication",
         fields=[
             "name",
@@ -250,7 +268,7 @@ def _get_communications(customer_name: str) -> list[dict[str, Any]]:
 def _get_comments(customer_name: str) -> list[dict[str, Any]]:
     if not frappe.db.exists("DocType", "Comment"):
         return []
-    return frappe.get_list(
+    return _safe_get_list(
         "Comment",
         fields=["name", "comment_by", "content", "creation", "reference_doctype", "reference_name"],
         filters={"reference_doctype": "AT Customer", "reference_name": customer_name},

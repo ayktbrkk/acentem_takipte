@@ -19,6 +19,28 @@ Important:
 - Frontend build artifacts are generated during build/deployment and are not committed to the repository.
 - `/at` injects the latest Vite assets dynamically from the manifest in `acentem_takipte/www/at.py`.
 
+## Optional Realtime Socket.IO
+
+`/at` now treats Socket.IO as an explicit deployment feature, not a frontend default.
+
+Site config keys:
+- `at_realtime_enabled`: `true` or `false`
+- `at_realtime_port`: optional integer, defaults to `9000` when realtime is enabled
+
+Example `site_config.json` fragment:
+
+```json
+{
+   "at_realtime_enabled": true,
+   "at_realtime_port": 9000
+}
+```
+
+Behavior:
+- if `at_realtime_enabled` is falsy, `/at` mounts without Socket.IO
+- if it is truthy, `/at` passes the configured port to `frappe-ui`
+- after changing these values, rebuild frontend assets and clear cache so `/at` boots with the new session payload and latest bundle
+
 ## Deploy (Bench, Typical Linux)
 
 From your bench:
@@ -90,5 +112,17 @@ Checks:
    - `/assets/acentem_takipte/frontend/assets/main-*.css`
 3. Rebuild and restart:
    - `npm ci && npm run build` (in `frontend/`)
+   - `bench --site <site> clear-cache`
+   - `bench restart`
+
+### `/at` shows `ERR_CONNECTION_REFUSED` for `localhost:9000/socket.io`
+
+Checks:
+1. Confirm the served frontend bundle is current:
+   - rebuild with `npm run build` in `frontend/`
+2. Confirm `site_config.json` matches your intent:
+   - if you do not run a Socket.IO service, keep `at_realtime_enabled` unset or `false`
+   - if you do run one, verify `at_realtime_port`
+3. Clear cache / restart after backend config changes:
    - `bench --site <site> clear-cache`
    - `bench restart`

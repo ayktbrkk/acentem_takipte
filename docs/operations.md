@@ -80,3 +80,14 @@ Quick CI example (GitHub Actions style):
 
 Strict nightly example:
 - `npm --prefix frontend run e2e:site-map:ci:strict`
+
+## Realtime Toggle
+
+Current behavior:
+- `/at` only initializes Socket.IO when site config explicitly enables it.
+- Session boot payload carries realtime settings to the Vue app.
+
+Operator guidance:
+- leave realtime disabled unless the deployment actually exposes a working Socket.IO endpoint
+- if you enable it, keep `at_realtime_port` aligned with the deployed Socket.IO service
+- after changing realtime settings, rebuild frontend assets and clear cache before trusting `/at` validation results

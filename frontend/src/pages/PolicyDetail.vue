@@ -2,7 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Poliçeler</p>
+        <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
         <h1 class="detail-title">
           {{ policy.policy_no || policy.name || name }}
           <StatusBadge v-if="policy.status" :status="policy.status" domain="policy" />
@@ -245,7 +245,7 @@ const ownershipAssignmentEditEyebrow = computed(() => getLocalizedText(getQuickC
 
 const labels = {
   tr: {
-    overview: "Poliçe Detayı", openDesk: "Yönetim Ekranını Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
+    breadcrumb: "Sigorta Operasyonları → Poliçeler", overview: "Poliçe Detayı", openDesk: "Yönetim Ekranını Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
     recordNo: "Kayıt No", carrierPolicyNo: "Şirket Poliçe No",
     copy: "Kopyala", copied: "Kopyalandı", notAssigned: "Henüz atanmadı",
     mobileQuickActionsTitle: "Hızlı İşlemler",
@@ -268,7 +268,7 @@ const labels = {
     typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Süresi Doldu", noDate: "Tarih yok",
   },
   en: {
-    overview: "Policy Details", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
+    breadcrumb: "Insurance Operations -> Policies", overview: "Policy Details", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
     recordNo: "Record No", carrierPolicyNo: "Carrier Policy No",
     copy: "Copy", copied: "Copied", notAssigned: "Not assigned yet",
     mobileQuickActionsTitle: "Quick Actions",

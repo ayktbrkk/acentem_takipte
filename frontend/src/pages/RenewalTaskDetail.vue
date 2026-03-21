@@ -2,7 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Yenilemeler</p>
+        <p class="detail-breadcrumb">{{ t('breadcrumb') }}</p>
         <h1 class="detail-title">
           {{ renewal.name || name }}
           <StatusBadge domain="renewal" :status="renewal.status || 'Open'" />
@@ -23,8 +23,8 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="goBack">Listeye Dön</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openPolicy">Poliçeyi Aç</button>
+        <button class="btn btn-outline btn-sm" type="button" @click="goBack">{{ t('backList') }}</button>
+        <button class="btn btn-primary btn-sm" type="button" @click="openPolicy">{{ t('openPolicy') }}</button>
       </div>
     </div>
 
@@ -66,8 +66,8 @@
             <div v-for="item in communications" :key="item.name" class="timeline-item">
               <div class="tl-dot" />
               <div>
-                <p class="tl-text">{{ item.subject || item.channel || '-' }}</p>
-                <p class="tl-time">{{ formatDate(item.creation) }} · {{ item.owner || '-' }}</p>
+                <p class="tl-text">{{ item.call_outcome || item.channel || '-' }}</p>
+                <p class="tl-time">{{ formatDate(item.note_at) }} · {{ item.owner || '-' }}</p>
               </div>
             </div>
           </div>
@@ -120,6 +120,9 @@ const activeLocale = computed(() => _authStore.locale || 'tr');
 
 const copy = {
   tr: {
+    breadcrumb: 'Yenilemeler',
+    backList: 'Listeye Dön',
+    openPolicy: 'Poliçeyi Aç',
     renewalProcess: 'Yenileme Süreci',
     previousPolicy: 'Eski Poliçe Bilgileri',
     newOffers: 'Yeni Teklifler',
@@ -130,6 +133,9 @@ const copy = {
     recordMeta: 'Kayıt Meta',
   },
   en: {
+    breadcrumb: 'Renewals',
+    backList: 'Back to List',
+    openPolicy: 'Open Policy',
     renewalProcess: 'Renewal Process',
     previousPolicy: 'Previous Policy',
     newOffers: 'New Offers',
@@ -149,12 +155,16 @@ const name = computed(() => props.name || '');
 const router = useRouter();
 
 const renewalResource = createResource({ url: 'frappe.client.get', auto: false });
-const policyResource = createResource({ url: 'frappe.client.get', auto: false });
+const policyResource = createResource({ url: 'frappe.client.get_list', auto: false });
 const offersResource = createResource({ url: 'frappe.client.get_list', auto: false });
 const communicationsResource = createResource({ url: 'frappe.client.get_list', auto: false });
 
 const renewal = computed(() => unref(renewalResource.data) || {});
-const policy = computed(() => unref(policyResource.data) || null);
+const policy = computed(() => {
+  const value = unref(policyResource.data);
+  if (Array.isArray(value)) return value[0] || null;
+  return value || null;
+});
 const offers = computed(() => (Array.isArray(unref(offersResource.data)) ? unref(offersResource.data) : []));
 const communications = computed(() => (Array.isArray(unref(communicationsResource.data)) ? unref(communicationsResource.data) : []));
 
@@ -260,26 +270,44 @@ async function reload() {
 
   if (renewal.value.policy) {
     await Promise.allSettled([
-      policyResource.reload({ doctype: 'AT Policy', name: renewal.value.policy }),
-      offersResource.reload({
-        doctype: 'AT Offer',
-        fields: ['name', 'status', 'offer_date'],
-        filters: { policy: renewal.value.policy },
-        order_by: 'modified desc',
-        limit_page_length: 20,
+      policyResource.reload({
+        doctype: 'AT Policy',
+        fields: ['name', 'policy_no', 'customer', 'branch', 'end_date', 'status'],
+        filters: { name: renewal.value.policy },
+        limit_page_length: 1,
       }),
     ]);
   }
 
-  await communicationsResource.reload({
-    doctype: 'AT Communication Log',
-    fields: ['name', 'subject', 'channel', 'creation', 'owner'],
-    filters: [['reference_name', '=', name.value]],
-    order_by: 'creation desc',
-    limit_page_length: 20,
-  }).catch(() => {
+  if (renewal.value.customer) {
+    await offersResource.reload({
+      doctype: 'AT Offer',
+      fields: ['name', 'status', 'offer_date'],
+      filters: { customer: renewal.value.customer },
+      order_by: 'modified desc',
+      limit_page_length: 20,
+    }).catch(() => {
+      offersResource.setData([]);
+    });
+  } else {
+    offersResource.setData([]);
+  }
+
+  if (renewal.value.policy || renewal.value.customer) {
+    await communicationsResource.reload({
+      doctype: 'AT Call Note',
+      fields: ['name', 'call_outcome', 'channel', 'note_at', 'owner'],
+      filters: renewal.value.policy
+        ? { policy: renewal.value.policy }
+        : { customer: renewal.value.customer },
+      order_by: 'note_at desc',
+      limit_page_length: 20,
+    }).catch(() => {
+      communicationsResource.setData([]);
+    });
+  } else {
     communicationsResource.setData([]);
-  });
+  }
 }
 
 onMounted(reload);

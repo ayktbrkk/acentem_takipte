@@ -29,12 +29,22 @@ Kullanilan test: [frontend/tests/e2e/site-haritasi-tarama.spec.js](frontend/test
 ### 2.3 Belirlenen Kritik Konsol Hatalari
 
 - App-level kritik hata (`_s`, `reading 'length'`) bu kosuda yakalanmadi.
-- Harici servis baglantilarinda `net::ERR_CONNECTION_REFUSED` loglari devam ediyor.
-- Son kosu ozet metriği: `visitedPages=48`, `appErrorCount=0`, `externalErrorCount=144` (kaynak: `frontend/test-results/site-haritasi-summary.json`).
-- KPI kirilimi (son kosu): `refused=138`, `http404=4`, `http417=2`, `other_external=0` (kaynak: `frontend/test-results/site-haritasi-kpi.txt`).
+- Harici servis baglantilarinda gorulen `net::ERR_CONNECTION_REFUSED` sinyali frontend rebuild sonrasi kapatildi.
+- Son kosu ozet metriği: `visitedPages=48`, `appErrorCount=0`, `externalErrorCount=0` (kaynak: `frontend/test-results/site-haritasi-summary.json`).
+- KPI kirilimi (son kosu): `refused=0`, `http404=0`, `http417=0`, `other_external=0` (kaynak: `frontend/test-results/site-haritasi-kpi.txt`).
+- Ara debug kosulari, residual `ERR_CONNECTION_REFUSED` sinyalinin uygulama kodundan degil eski buildden servis edilen `localhost:9000/socket.io` bundle davranisindan geldigini gosterdI.
+- `frontend/src/main.js` icindeki `FrappeUI` kurulumu artik session boot payload'indan gelen runtime realtime ayarini okuyor; varsayilan durumda Socket.IO kapali, `site_config` ile acikca etkinlestirilirse ilgili porta baglaniyor.
+- `frontend/src/style.css` icindeki Google Fonts importu kaldirildi; runtime artik harici font istegi atmiyor.
+- Kod tarafinda yapilan son duzeltmeler:
+   - `RenewalTaskDetail` icindeki gecersiz `AT Communication Log` istegi `AT Call Note` filtresine tasindi.
+   - `RenewalTaskDetail` icindeki `AT Call Note` sorgusu, izinli olmayan `reference_doctype/reference_name` yerine dogru `policy/customer` alanlari uzerinden filtrelenecek sekilde duzeltildi.
+   - `AuxRecordDetail` icindeki task detail yuklemesi ve lifecycle islemleri `AT Renewal Task` ile uyumlu hale getirildi; `/at/tasks/AT-REN-*` acilislarindaki 404 sinyali kapatildi.
+   - `customer_360` servisindeki ikincil `Communication` ve `Comment` sorgulari `DataError` durumunda guvenli bicimde bos listeye dusecek sekilde sertlestirildi; boylece aralikli customer detail `417` sinyali elimine edildi.
+   - `www/at.py` icinde SPA deep-link istekleri icin HTTP 200 zorlamasi eklendi; bunun kesin etkisi backend web sureci yeniden yuklendikten sonra tekrar dogrulanmali.
+   - `frontend` bundle'i yeniden uretildi ve `/at` route'unun guncel Vite manifesti ile servis etmesi dogrulandi.
 - Not: workflow dosyasindaki bazi `context access might be invalid` uyarilari editor statik analizinden geliyor; CI runtime davranisini bloke etmiyor.
 
-Not: Harici servis loglari test sinyalini kirletiyor; testte app-error ve external-error ayrimi yapilmasi gerekir.
+Not: Harici servis loglari artik bu kosuda test sinyalini kirletmiyor; app-error ve external-error ayrimi yine de korunmali.
 
 ## 3) Frontend Kod Denetimi
 
@@ -158,4 +168,5 @@ Kapanis durumu:
 - Faz A-D kapsami tamamlandi.
 - Kalan adim "yeni is" degil, operasyonel izleme:
    - `external` threshold degerlerini ortam bazli kalibre etmek (warn/strict).
+   - backend web surecini yeniden yukleyip `www/at.py` status-code duzeltmesini tekrar dogrulamak.
    - 1-2 kosu daha alip metrik trendini sabitlemek.

@@ -24,6 +24,7 @@ class TestSessionInterfaceRouting(IntegrationTestCase):
     def test_agent_session_context_prefers_spa(self):
         with patch.object(session_api, "resolve_current_user", return_value="agent@example.com"):
             with patch.object(session_api, "_build_session_capabilities", return_value={}):
+                with patch.object(session_api.frappe, "get_site_config", return_value={}):
                 with patch.object(session_api.frappe, "get_roles", return_value=["Agent"]):
                     with patch.object(
                         session_api.frappe.db,
@@ -48,6 +49,7 @@ class TestSessionInterfaceRouting(IntegrationTestCase):
     def test_system_manager_session_context_prefers_desk(self):
         with patch.object(session_api, "resolve_current_user", return_value="manager@example.com"):
             with patch.object(session_api, "_build_session_capabilities", return_value={}):
+                with patch.object(session_api.frappe, "get_site_config", return_value={}):
                 with patch.object(session_api.frappe, "get_roles", return_value=["System Manager"]):
                     with patch.object(
                         session_api.frappe.db,
