@@ -353,7 +353,7 @@ describe("PolicyDetail policy 360 integration", () => {
 
     expect(wrapper.text()).toContain("Poliçe Yaşam Döngüsü");
     expect(wrapper.text()).toContain("Prim Bilgileri");
-    expect(wrapper.text()).toContain("Müşteri Kartı");
+    expect(wrapper.text()).toContain("Müşteri Detayı");
     expect(wrapper.text()).toContain("Vade Tarihleri");
     expect(wrapper.text()).toContain("Atamalar");
   });
@@ -380,7 +380,7 @@ describe("PolicyDetail policy 360 integration", () => {
     await clickByText("Listeye Dön");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "policy-list" });
 
-    await clickByText("Müşteri 360");
+    await clickByText("Müşteri Detaylarını Aç");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "customer-detail", params: { name: "CUST-001" } });
   });
 

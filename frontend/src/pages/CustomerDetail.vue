@@ -91,17 +91,11 @@
 
           <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <template v-else>
-            <div
-              v-if="profileSaveError && !profileEditMode"
-              class="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700"
-            >
-              {{ profileSaveError }}
+            <div v-if="profileSaveError && !profileEditMode" class="mb-3 qc-error-banner" role="alert" aria-live="polite">
+              <p class="qc-error-banner__text">{{ profileSaveError }}</p>
             </div>
-            <div
-              v-if="profileSaveMessage && !profileEditMode"
-              class="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700"
-            >
-              {{ profileSaveMessage }}
+            <div v-if="profileSaveMessage && !profileEditMode" class="mb-3 qc-success-banner" aria-live="polite">
+              <p class="qc-success-banner__text">{{ profileSaveMessage }}</p>
             </div>
 
             <div v-if="!profileEditMode" class="space-y-3">
@@ -109,11 +103,11 @@
             </div>
 
             <div v-else class="space-y-3">
-              <div v-if="profileSaveError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
-                {{ profileSaveError }}
+              <div v-if="profileSaveError" class="qc-error-banner" role="alert" aria-live="polite">
+                <p class="qc-error-banner__text">{{ profileSaveError }}</p>
               </div>
-              <div v-else-if="profileSaveMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
-                {{ profileSaveMessage }}
+              <div v-else-if="profileSaveMessage" class="qc-success-banner" aria-live="polite">
+                <p class="qc-success-banner__text">{{ profileSaveMessage }}</p>
               </div>
 
               <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
@@ -155,7 +149,7 @@
                       :type="field.type"
                       @input="setProfileField(field.model, $event.target.value)"
                     />
-                    <p v-if="field.model && profileFormErrors[field.model]" class="mt-1 text-xs font-medium text-rose-700">
+                    <p v-if="field.model && profileFormErrors[field.model]" class="mt-1 qc-inline-error">
                       {{ profileFormErrors[field.model] }}
                     </p>
                   </div>
@@ -688,6 +682,7 @@
       v-model="showCustomerRelationDialog"
       config-key="customer_relation"
       :locale="activeLocale"
+      :eyebrow="customerRelationEyebrow"
       :options-map="customer360QuickOptionsMap"
       :before-open="prepareCustomerRelationDialog"
       :success-handlers="customer360QuickSuccessHandlers"
@@ -697,6 +692,7 @@
       v-model="showInsuredAssetDialog"
       config-key="insured_asset"
       :locale="activeLocale"
+      :eyebrow="insuredAssetEyebrow"
       :options-map="customer360QuickOptionsMap"
       :before-open="prepareInsuredAssetDialog"
       :success-handlers="customer360QuickSuccessHandlers"
@@ -706,6 +702,7 @@
       v-model="showCustomerRelationEditDialog"
       config-key="customer_relation_edit"
       :locale="activeLocale"
+      :eyebrow="customerRelationEditEyebrow"
       :options-map="customer360QuickOptionsMap"
       :before-open="prepareCustomerRelationEditDialog"
       :success-handlers="customer360QuickSuccessHandlers"
@@ -715,6 +712,7 @@
       v-model="showInsuredAssetEditDialog"
       config-key="insured_asset_edit"
       :locale="activeLocale"
+      :eyebrow="insuredAssetEditEyebrow"
       :options-map="customer360QuickOptionsMap"
       :before-open="prepareInsuredAssetEditDialog"
       :success-handlers="customer360QuickSuccessHandlers"
@@ -724,6 +722,7 @@
       v-model="showOwnershipAssignmentDialog"
       config-key="ownership_assignment"
       :locale="activeLocale"
+      :eyebrow="ownershipAssignmentEyebrow"
       :options-map="customer360QuickOptionsMap"
       :before-open="prepareOwnershipAssignmentDialog"
       :success-handlers="customer360QuickSuccessHandlers"
@@ -733,6 +732,7 @@
       v-model="showOwnershipAssignmentEditDialog"
       config-key="ownership_assignment_edit"
       :locale="activeLocale"
+      :eyebrow="ownershipAssignmentEditEyebrow"
       :options-map="customer360QuickOptionsMap"
       :before-open="prepareOwnershipAssignmentEditDialog"
       :success-handlers="customer360QuickSuccessHandlers"
@@ -756,6 +756,7 @@ import FieldGroup from "../components/ui/FieldGroup.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
+import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
 
 const props = defineProps({
   name: {
@@ -768,11 +769,17 @@ const router = useRouter();
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const activeCustomerTab = ref("overview");
+const customerRelationEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("customer_relation")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Yeni İlişki" : "New Relation"));
+const insuredAssetEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("insured_asset")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Yeni Varlık" : "New Asset"));
+const customerRelationEditEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("customer_relation_edit")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "İlişkiyi Düzenle" : "Edit Relation"));
+const insuredAssetEditEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("insured_asset_edit")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Varlığı Düzenle" : "Edit Asset"));
+const ownershipAssignmentEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Yeni Atama" : "New Assignment"));
+const ownershipAssignmentEditEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("ownership_assignment_edit")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Atamayı Düzenle" : "Edit Assignment"));
 
 const copy = {
   tr: {
-    overview: "Müşteri 360",
-    openDesk: "Yönetim Ekranında Aç",
+    overview: "Müşteri Detayı",
+    openDesk: "Yönetim Ekranını Aç",
     newOffer: "Yeni Teklif",
     communication: "İletişim",
     newRelation: "Yeni İlişki",
@@ -784,7 +791,7 @@ const copy = {
     deleteAssetConfirm: "Bu varlık kaydı silinsin mi?",
     deleteAssignmentConfirm: "Bu atama kaydı silinsin mi?",
     editProfile: "Düzenle",
-    cancelEdit: "Vazgeç",
+    cancelEdit: "İptal",
     saveProfile: "Kaydet",
     saving: "Kaydediliyor...",
     saveProfileError: "Müşteri bilgileri kaydedilemedi. Lütfen tekrar deneyin.",
@@ -919,7 +926,7 @@ const copy = {
     reminderAt: "Hatırlatma",
     reminderPriority: "Öncelik",
     markDone: "Tamamla",
-    cancelReminder: "İptal Et",
+    cancelReminder: "İptal",
     startAssignment: "İşleme Al",
     blockAssignment: "Bloke Et",
     closeAssignment: "Kapat",
@@ -928,7 +935,7 @@ const copy = {
     assetIdentifier: "Varlık Kimliği",
     policyBranch: "Branş",
     endDate: "Bitiş",
-    openPolicy: "Poliçe Detayı",
+    openPolicy: "Poliçeyi Aç",
     openOffersTitle: "Açık Teklifler",
     noOpenOffer: "Açık teklif bulunamadı.",
     validUntil: "Geçerlilik",
@@ -954,7 +961,7 @@ const copy = {
     typeLead: "Lead Notu",
   },
   en: {
-    overview: "Customer 360",
+    overview: "Customer Details",
     openDesk: "Open Desk",
     newOffer: "New Offer",
     communication: "Communication",
@@ -1111,7 +1118,7 @@ const copy = {
     assetIdentifier: "Asset Identifier",
     policyBranch: "Branch",
     endDate: "End Date",
-    openPolicy: "Policy Detail",
+    openPolicy: "Open Policy",
     openOffersTitle: "Open Offers",
     noOpenOffer: "No open offers found.",
     validUntil: "Valid Until",
@@ -2246,7 +2253,7 @@ function paymentCardFacts(payment) {
       key: "overdueInstallments",
       label: t("overdueInstallments"),
       value: String(overdueInstallmentCount),
-      valueClass: overdueInstallmentCount > 0 ? "text-sm font-semibold text-rose-700" : "text-sm text-slate-700",
+      valueClass: overdueInstallmentCount > 0 ? "text-sm font-semibold text-amber-700" : "text-sm text-slate-700",
     },
   ];
 }

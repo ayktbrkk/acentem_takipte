@@ -175,7 +175,7 @@ describe("ReconciliationDetail page", () => {
     await Promise.resolve();
     await nextTick();
 
-    expect(wrapper.text()).toContain("Mutabakat Detay");
+    expect(wrapper.text()).toContain("Mutabakat Detayı");
     expect(wrapper.text()).toContain("REC-001");
     expect(wrapper.text()).toContain("Anadolu");
     expect(wrapper.text()).toContain("POL-001");

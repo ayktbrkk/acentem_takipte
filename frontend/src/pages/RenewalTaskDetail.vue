@@ -30,18 +30,18 @@
 
     <HeroStrip :cells="heroCells" />
 
-    <SectionPanel title="Yenileme Süreci" panel-class="surface-card rounded-2xl p-5">
+    <SectionPanel :title="t('renewalProcess')" panel-class="surface-card rounded-2xl p-5">
       <StepBar :steps="renewalSteps" />
     </SectionPanel>
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
-        <SectionPanel title="Eski Poliçe Bilgileri" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('previousPolicy')" panel-class="surface-card rounded-2xl p-5">
           <div v-if="!policy" class="card-empty">Poliçe bilgisi bulunamadı.</div>
           <FieldGroup v-else :fields="policyFields" :cols="2" />
         </SectionPanel>
 
-        <SectionPanel title="Yeni Teklifler" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('newOffers')" panel-class="surface-card rounded-2xl p-5">
           <div v-if="!offers.length" class="card-empty">Bu poliçe için teklif bulunamadı.</div>
           <div v-else class="space-y-3">
             <div
@@ -54,13 +54,13 @@
                   <p class="text-sm font-medium text-gray-900">{{ offer.name }}</p>
                   <p class="text-xs text-gray-500">{{ formatDate(offer.offer_date) }} · {{ offer.status || '-' }}</p>
                 </div>
-                <button class="btn btn-sm" type="button" @click="openOffer(offer.name)">Detay</button>
+                <button class="btn btn-sm" type="button" @click="openOffer(offer.name)">Teklif Detayını Aç</button>
               </div>
             </div>
           </div>
         </SectionPanel>
 
-        <SectionPanel title="Müşteri İletişim Geçmişi" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('communicationHistory')" panel-class="surface-card rounded-2xl p-5">
           <div v-if="!communications.length" class="card-empty">İletişim kaydı bulunamadı.</div>
           <div v-else>
             <div v-for="item in communications" :key="item.name" class="timeline-item">
@@ -73,7 +73,7 @@
           </div>
         </SectionPanel>
 
-        <SectionPanel title="Hatırlatıcılar" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('reminders')" panel-class="surface-card rounded-2xl p-5">
           <div v-if="!reminders.length" class="card-empty">Hatırlatıcı kaydı bulunamadı.</div>
           <div v-else class="space-y-2">
             <div v-for="item in reminders" :key="item.label" class="rounded-md bg-gray-50 px-3 py-2">
@@ -85,15 +85,15 @@
       </div>
 
       <aside class="detail-sidebar space-y-4">
-        <SectionPanel title="İlgili Kişiler" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('people')" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="peopleFields" :cols="1" />
         </SectionPanel>
 
-        <SectionPanel title="Durum Bilgisi" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('statusInfo')" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="statusFields" :cols="1" />
         </SectionPanel>
 
-        <SectionPanel title="Kayıt Meta" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('recordMeta')" panel-class="surface-card rounded-2xl p-5">
           <FieldGroup :fields="recordFields" :cols="1" />
         </SectionPanel>
       </aside>
@@ -111,6 +111,38 @@ import HeroStrip from '@/components/ui/HeroStrip.vue';
 import FieldGroup from '@/components/ui/FieldGroup.vue';
 import StepBar from '@/components/ui/StepBar.vue';
 import SectionPanel from '../components/app-shell/SectionPanel.vue';
+import { getAppPinia } from '../pinia';
+import { useAuthStore } from '../stores/auth';
+
+const _appPinia = getAppPinia();
+const _authStore = useAuthStore(_appPinia);
+const activeLocale = computed(() => _authStore.locale || 'tr');
+
+const copy = {
+  tr: {
+    renewalProcess: 'Yenileme Süreci',
+    previousPolicy: 'Eski Poliçe Bilgileri',
+    newOffers: 'Yeni Teklifler',
+    communicationHistory: 'Müşteri İletişim Geçmişi',
+    reminders: 'Hatırlatıcılar',
+    people: 'İlgili Kişiler',
+    statusInfo: 'Durum Bilgisi',
+    recordMeta: 'Kayıt Meta',
+  },
+  en: {
+    renewalProcess: 'Renewal Process',
+    previousPolicy: 'Previous Policy',
+    newOffers: 'New Offers',
+    communicationHistory: 'Communication History',
+    reminders: 'Reminders',
+    people: 'People',
+    statusInfo: 'Status',
+    recordMeta: 'Record Info',
+  },
+};
+function t(key) {
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
+}
 
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || '');

@@ -1,12 +1,15 @@
 import { createPinia, getActivePinia, setActivePinia } from "pinia";
 
-let appPinia = null;
+// Keep a single Pinia instance available even before app.mount(),
+// so early useStore() calls cannot hit an undefined active pinia.
+let appPinia = createPinia();
+setActivePinia(appPinia);
 
 export function setAppPinia(pinia) {
-  appPinia = pinia;
-  if (pinia) {
-    setActivePinia(pinia);
+  if (pinia && pinia !== appPinia) {
+    appPinia = pinia;
   }
+  setActivePinia(appPinia);
   return appPinia;
 }
 
@@ -17,11 +20,11 @@ export function getAppPinia() {
 
   const activePinia = getActivePinia();
   if (activePinia) {
-    return activePinia;
+    appPinia = activePinia;
+    return appPinia;
   }
 
-  const fallbackPinia = createPinia();
-  setActivePinia(fallbackPinia);
-  appPinia = fallbackPinia;
+  appPinia = createPinia();
+  setActivePinia(appPinia);
   return appPinia;
 }

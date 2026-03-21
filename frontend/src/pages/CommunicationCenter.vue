@@ -236,20 +236,14 @@
       </div>
     </div>
 
-    <article
-      v-if="snapshotErrorMessage"
-      class="surface-card rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700"
-    >
-      <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
-      <p class="mt-1 text-sm">{{ snapshotErrorMessage }}</p>
+    <article v-if="snapshotErrorMessage" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ snapshotErrorMessage }}</p>
     </article>
 
-    <article
-      v-if="operationError"
-      class="surface-card rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700"
-    >
-      <p class="text-sm font-semibold">{{ t("actions") }}</p>
-      <p class="mt-1 text-sm">{{ operationError }}</p>
+    <article v-if="operationError" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("actions") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ operationError }}</p>
     </article>
 
     <SectionPanel :title="t('outboxTitle')" :count="outboxItems.length" panel-class="surface-card rounded-2xl p-5">
@@ -293,7 +287,7 @@
               <DataTableCell cell-class="min-w-[220px]">
                 <StatusBadge v-if="row.status" domain="notification_status" :status="row.status" />
                 <span v-else class="text-slate-700">-</span>
-                <p v-if="row.error_message" class="mt-1 max-w-[320px] truncate text-xs text-rose-600">
+                <p v-if="row.error_message" class="mt-1 max-w-[320px] truncate qc-inline-error">
                   {{ row.error_message }}
                 </p>
               </DataTableCell>
@@ -368,7 +362,7 @@
             </span>
             <span v-if="draft.reference_name">{{ draft.reference_name }}</span>
           </div>
-          <p v-if="draft.error_message" class="mt-2 max-h-10 overflow-hidden text-xs text-rose-600">
+          <p v-if="draft.error_message" class="mt-2 max-h-10 overflow-hidden qc-inline-error">
             {{ draft.error_message }}
           </p>
           <InlineActionRow class="mt-3">
@@ -399,6 +393,7 @@
       config-key="segment"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickSegmentEyebrow"
       :title-override="t('quickSegment')"
       :subtitle-override="t('quickSegmentSubtitle')"
       :show-save-and-open="false"
@@ -410,6 +405,7 @@
       config-key="campaign"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickCampaignEyebrow"
       :title-override="t('quickCampaign')"
       :subtitle-override="t('quickCampaignSubtitle')"
       :show-save-and-open="false"
@@ -443,11 +439,8 @@
             </ActionButton>
           </div>
 
-          <article
-            v-if="campaignRunError"
-            class="surface-card rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-700"
-          >
-            {{ campaignRunError }}
+          <article v-if="campaignRunError" class="qc-error-banner">
+            <p class="qc-error-banner__text">{{ campaignRunError }}</p>
           </article>
 
           <article
@@ -500,11 +493,8 @@
             </ActionButton>
           </div>
 
-          <article
-            v-if="segmentPreviewError"
-            class="surface-card rounded-xl border border-rose-200 bg-rose-50/80 p-4 text-sm text-rose-700"
-          >
-            {{ segmentPreviewError }}
+          <article v-if="segmentPreviewError" class="qc-error-banner">
+            <p class="qc-error-banner__text">{{ segmentPreviewError }}</p>
           </article>
 
           <article
@@ -565,6 +555,7 @@
       config-key="call_note"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickCallNoteEyebrow"
       :title-override="t('quickCallNote')"
       :subtitle-override="t('quickCallNoteSubtitle')"
       :show-save-and-open="false"
@@ -577,6 +568,7 @@
       config-key="reminder"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickReminderEyebrow"
       :title-override="t('quickReminder')"
       :subtitle-override="t('quickReminderSubtitle')"
       :show-save-and-open="false"
@@ -590,6 +582,7 @@
       config-key="communication_message"
       :locale="activeLocale"
       :options-map="communicationQuickOptionsMap"
+      :eyebrow="quickMessageEyebrow"
       :title-override="t('quickMessage')"
       :subtitle-override="t('quickMessageSubtitle')"
       :labels="quickMessageDialogLabels"
@@ -636,13 +629,13 @@ const copy = {
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
-    dispatch: "Dagitimi Çalıştır",
+    dispatch: "Dağıtımı Çalıştır",
     dispatching: "Çalışıyor...",
     runCampaign: "Kampanyayı Çalıştır",
     campaignRunTitle: "Kampanya Çalıştır",
     selectCampaign: "Kampanya seçin",
     previewSegment: "Segment Önizleme",
-    segmentPreviewTitle: "Segment Uye Önizleme",
+    segmentPreviewTitle: "Segment Üye Önizleme",
     selectSegment: "Segment seçin",
     quickSegment: "Segment",
     quickSegmentSubtitle: "Hedef müşteri segmenti oluştur",
@@ -652,12 +645,12 @@ const copy = {
     quickCallNoteSubtitle: "Telefon görüşmesini not olarak kaydet",
     quickReminder: "Hatırlatıcı",
     quickReminderSubtitle: "Müşteri veya kayıt için zaman bazlı hatırlatıcı ekle",
-    startAssignmentContext: "Atamayi İşleme Al",
-    blockAssignmentContext: "Atamayi Bloke Et",
-    closeAssignmentContext: "Atamayi Kapat",
+    startAssignmentContext: "Atamayı İşleme Al",
+    blockAssignmentContext: "Atamayı Bloke Et",
+    closeAssignmentContext: "Atamayı Kapat",
     clearCallFollowUpContext: "Arama Takibini Temizle",
-    completeReminderContext: "Hatırlatıcıyi Tamamla",
-    cancelReminderContext: "Hatırlatıcıyi İptal Et",
+    completeReminderContext: "Hatırlatıcıyı Tamamla",
+    cancelReminderContext: "İptal",
     quickMessage: "Hızlı İletişim",
     quickMessageSubtitle: "Taslak kaydet veya seçili kanal ile hemen gönder",
     saveDraft: "Taslak Kaydet",
@@ -1102,6 +1095,11 @@ const communicationQuickOptionsMap = computed(() => ({
     label: `${row.campaign_name || row.name}${row.channel ? ` - ${channelLabel(row.channel)}` : ""}`,
   })),
 }));
+const quickSegmentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Segment" : "Quick Segment"));
+const quickCampaignEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Kampanya" : "Quick Campaign"));
+const quickCallNoteEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Arama Notu" : "Quick Call Note"));
+const quickReminderEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Hatırlatıcı" : "Quick Reminder"));
+const quickMessageEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Mesaj" : "Quick Message"));
 const canCreateQuickMessage = computed(() => authStore.can(["quickCreate", "communication_message"]));
 const canSendDraftNowAction = computed(() => authStore.can(["actions", "communication", "sendDraftNow"]));
 const canRetryOutboxAction = computed(() => authStore.can(["actions", "communication", "retryOutbox"]));
@@ -1191,9 +1189,9 @@ function setCommunicationFilterStateFromPayload(payload) {
 function statusClass(status) {
   if (status === "Sent") return "bg-emerald-100 text-emerald-700";
   if (status === "Queued") return "bg-sky-100 text-sky-700";
-  if (status === "Processing") return "bg-indigo-100 text-indigo-700";
+  if (status === "Processing") return "bg-sky-100 text-sky-700";
   if (status === "Failed") return "bg-amber-100 text-amber-700";
-  if (status === "Dead") return "bg-rose-100 text-rose-700";
+  if (status === "Dead") return "bg-slate-100 text-slate-700";
   return "bg-slate-200 text-slate-700";
 }
 

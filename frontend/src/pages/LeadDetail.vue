@@ -49,10 +49,12 @@
                 </template>
               </MetaListCard>
             </div>
-            <p v-if="actionErrorText" class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{{ actionErrorText }}</p>
-            <p v-else-if="actionSuccessText || lastConvertedOfferName" class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
-              {{ actionSuccessText || t('convertLeadSuccess') }}
-            </p>
+            <div v-if="actionErrorText" class="mt-3 qc-error-banner" role="alert" aria-live="polite">
+              <p class="qc-error-banner__text">{{ actionErrorText }}</p>
+            </div>
+            <div v-else-if="actionSuccessText || lastConvertedOfferName" class="mt-3 qc-success-banner" aria-live="polite">
+              <p class="qc-success-banner__text">{{ actionSuccessText || t('convertLeadSuccess') }}</p>
+            </div>
           </template>
         </DetailCard>
 
@@ -194,7 +196,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 const copy = {
     tr: {
     overview: "Fırsat Detayı",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     backList: "Listeye Dön",
     loading: "Yükleniyor...",
     loadError: "Fırsat detayı yüklenemedi.",
@@ -221,12 +223,12 @@ const copy = {
     tabRelated: "İlişkili",
     tabOperations: "Operasyon",
     tabActivity: "Aktivite",
-    openCustomer360: "Müşteri 360",
-    openOffer: "Teklif Detayı",
-    openPolicy: "Poliçe Detayını Aç",
-    openCommunication: "İletişim",
-    openPayments: "Ödemeler",
-    openRenewals: "Yenileme Görevleri",
+    openCustomer360: "Müşteri Detayını Aç",
+    openOffer: "Teklif Detayını Aç",
+    openPolicy: "Poliçeyi Aç",
+    openCommunication: "İletişim Merkezini Aç",
+    openPayments: "Ödemeleri Aç",
+    openRenewals: "Yenileme Görevlerini Aç",
     customer: "Müşteri",
     phone: "Telefon",
     taxId: "Kimlik / Vergi No",
@@ -264,7 +266,7 @@ const copy = {
     timelineEventPolicy: "Poliçeye dönüştü",
   },
   en: {
-    overview: "Opportunity Detail",
+    overview: "Opportunity Details",
     openDesk: "Open Desk",
     backList: "Back to List",
     loading: "Loading...",
@@ -292,12 +294,12 @@ const copy = {
     tabRelated: "Related",
     tabOperations: "Operations",
     tabActivity: "Activity",
-    openCustomer360: "Customer 360",
-    openOffer: "Offer Detail",
-    openPolicy: "Policy Detail",
-    openCommunication: "Communication",
-    openPayments: "Payments",
-    openRenewals: "Renewals",
+    openCustomer360: "Open Customer Details",
+    openOffer: "Open Offer Details",
+    openPolicy: "Open Policy",
+    openCommunication: "Open Communication Center",
+    openPayments: "Open Payments",
+    openRenewals: "Open Renewals",
     customer: "Customer",
     phone: "Phone",
     taxId: "Identity / Tax Number",
@@ -519,8 +521,6 @@ const linkedConversionCards = computed(() => {
   return cards;
 });
 
-async function loadLeadRelatedRecords() {
-  const customer = String(lead.value.customer || "").trim();
 const uiLeadStatus = computed(() => mapLeadStatusTone(lead.value.status));
 const uiLeadStaleStatus = computed(() => mapLeadStaleTone(leadStaleState(lead.value)));
 const heroCells = computed(() => [
@@ -541,6 +541,9 @@ const leadMetaFields = computed(() => [
   { label: t("status"), value: lead.value.status || "-" },
   { label: t("stale"), value: leadStaleLabel(leadStaleState(lead.value)) },
 ]);
+
+async function loadLeadRelatedRecords() {
+  const customer = String(lead.value.customer || "").trim();
   if (!customer) return;
   await Promise.allSettled([
     leadRelatedOffersResource.reload({

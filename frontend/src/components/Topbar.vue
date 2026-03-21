@@ -96,7 +96,7 @@ const copy = {
     allBranches: "All Branches",
     account: "My Account",
     logout: "Logout",
-    desk: "Go to Desk",
+    desk: "Open Desk",
   },
 };
 

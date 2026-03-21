@@ -71,17 +71,17 @@
     </div>
 
     <div class="surface-card rounded-2xl p-5">
-      <div v-if="loadErrorText" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
-        {{ loadErrorText }}
+      <div v-if="loadErrorText" class="qc-error-banner mb-4">
+        <p class="qc-error-banner__text">{{ loadErrorText }}</p>
       </div>
-      <div v-else-if="actionErrorText" class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
-        {{ actionErrorText }}
+      <div v-else-if="actionErrorText" class="qc-error-banner mb-4">
+        <p class="qc-error-banner__text">{{ actionErrorText }}</p>
       </div>
-      <div v-else-if="actionSuccessText && !lastConvertedOfferName" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
-        {{ actionSuccessText }}
+      <div v-else-if="actionSuccessText && !lastConvertedOfferName" class="qc-success-banner mb-4">
+        <p class="qc-success-banner__text">{{ actionSuccessText }}</p>
       </div>
-      <div v-if="lastConvertedOfferName" class="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-        <p class="text-xs font-medium text-emerald-700">{{ t('convertLeadSuccess') }}</p>
+      <div v-if="lastConvertedOfferName" class="qc-success-banner mb-4 flex flex-wrap items-center gap-2">
+        <p class="qc-success-banner__text">{{ t('convertLeadSuccess') }}</p>
         <ActionButton variant="link" size="xs" @click="openOfferDetail(lastConvertedOfferName)">{{ t('openOffer') }}</ActionButton>
       </div>
 
@@ -105,11 +105,12 @@
 
     <Dialog
       v-model="showQuickLeadDialog"
-      :options="{ title: activeLocale === 'tr' ? 'Hızlı Fırsat Oluştur' : 'Quick Opportunity', size: 'xl' }"
+      :options="{ title: quickLeadUi.title, size: 'xl' }"
     >
       <template #body-content>
         <QuickCreateDialogShell
           :error="quickLeadError"
+          :eyebrow="quickLeadUi.eyebrow"
           :subtitle="quickLeadUi.subtitle"
           :labels="quickCreateCommon"
           :loading="quickLeadLoading"
@@ -164,6 +165,7 @@ import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolb
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
+import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { openListExport } from "../utils/listExport";
@@ -236,9 +238,9 @@ const copy = {
     colStatus: "Durum",
     colConversion: "Dönüşüm",
     colActions: "Aksiyon",
-    openDesk: "Yönetim Ekranında Aç",
-    openCustomer360: "Müşteri 360",
-    openPolicy: "Poliçe Detayını Aç",
+    openDesk: "Yönetim Ekranını Aç",
+    openCustomer360: "Müşteri Detayını Aç",
+    openPolicy: "Poliçeyi Aç",
     openOffer: "Teklif",
     convertToOffer: "Teklife Çevir",
     converting: "Çevriliyor...",
@@ -332,9 +334,9 @@ const copy = {
     colStatus: "Status",
     colConversion: "Conversion",
     colActions: "Actions",
-    openDesk: "Desk",
-    openCustomer360: "Customer 360",
-    openPolicy: "Policy Detail",
+    openDesk: "Open Desk",
+    openCustomer360: "Open Customer Details",
+    openPolicy: "Open Policy",
     openOffer: "Offer",
     convertToOffer: "Convert to Offer",
     converting: "Converting...",
@@ -500,14 +502,13 @@ const leadQuickOptionsMap = computed(() => ({
   customers: (leadQuickCustomerResource.data || []).map((row) => ({ value: row.name, label: row.full_name || row.name })),
 }));
 const quickLeadUi = computed(() => ({
+  eyebrow: getQuickCreateEyebrow("lead", activeLocale.value),
   title: getLocalizedText(quickLeadConfig?.title, activeLocale.value),
   subtitle: getLocalizedText(quickLeadConfig?.subtitle, activeLocale.value),
   newLabel: activeLocale.value === "tr" ? "Yeni Fırsat" : "New Lead",
 }));
 const quickCreateCommon = computed(() => ({
-  cancel: activeLocale.value === "tr" ? "Vazgeç" : "Cancel",
-  save: activeLocale.value === "tr" ? "Kaydet" : "Save",
-  saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Aç" : "Save & Open",
+  ...getQuickCreateLabels("create", activeLocale.value),
   validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.",
   failed: activeLocale.value === "tr" ? "Hızlı kayıt oluşturulamadı." : "Quick create failed.",
 }));

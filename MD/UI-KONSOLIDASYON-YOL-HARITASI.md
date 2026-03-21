@@ -462,7 +462,7 @@ Ozel not:
 
 ## Faz 5 - TR/EN Copy ve I18n Sertlestirme
 
-Durum: acik
+Durum: tamamlandi
 
 Amac:
 - gorsel birlikteligi dil seviyesinde de tamamlamak
@@ -487,9 +487,16 @@ Kabul kriteri:
 - hicbir ekran sadece TR dusunulmus gibi hissettirmemeli
 - EN locale’da da buton hiyerarsisi ve label uzunluklari tasimi yapmamali
 
+Tamamlananlar:
+- `ClaimsBoard.vue`, `PaymentsBoard.vue`, `RenewalsBoard.vue`, `ImportData.vue`, `ExportData.vue` breadcrumb alanlari locale tabanli hale getirildi.
+- `CustomerList.vue` ust aksiyonlari (`new`, `refresh`, `export`) copy katmanina tasindi.
+- `RenewalTaskDetail.vue` panel basliklari copy katmanina tasindi ve TR/EN eslesmesi eklendi.
+- `ImportData.vue` ve `CommunicationCenter.vue` renk sapmalari ortak `sky` paletine cekildi.
+- Build ve E2E tarama seti tekrar calistirilarak regresyon gozlenmedi.
+
 ## Faz 6 - Dialog/Form/Editor Son Tur
 
-Durum: acik
+Durum: kismen dogrulandi
 
 Amac:
 - ana sayfalarla acilan dialog ve editorlerin de ayni ailede oldugunu garantilemek
@@ -505,6 +512,12 @@ Yapilacaklar:
 - primary button metinleri
 - cancel/save yerlesimi
 - validation/error sunumu
+
+Tamamlananlar (bu tur):
+- `QuickCreateDialogShell.vue` footer aksiyon hiyerarsisi guclendirildi: `saveAndOpen` yokken `Kaydet/Save` birincil (dolu) buton olarak sunuluyor.
+- `QuickCreateManagedDialog.vue`, `QuickCreateCustomer.vue`, `QuickCreateOffer.vue`, `QuickCreateClaim.vue` kapatma butonlari `PolicyForm.vue` ile ayni erisilebilir ikon + `sr-only` kalibina cekildi.
+- `PolicyForm.vue` footer aksiyonlari hizalandi: `Iptal` her adimda gorunur hale getirildi, adim gecisleri ve kaydetme butonlari ortak bir disabled/loading kuralina baglandi, loading sirasinda `Kaydediliyor.../Saving...` metni eklendi.
+- `src/config/quickCreateCoverage.test.js` hedefli unit testi tekrar calistirildi ve gecerli bulundu.
 
 ## Faz 7 - Verification ve Finish
 
@@ -552,12 +565,12 @@ Durum: tamamlandi.
 - communication
 - aux list screens
 - aux detail screens
-Durum: kismen dogrulandi. Anonim smoke calisti; authenticated akislari dogrulamak icin `E2E_USER` / `E2E_PASSWORD` gerekiyor.
+Durum: tamamlandi. Authenticated Playwright taramasi `tests/e2e/site-haritasi-tarama.spec.js` ile tekrar kosuldu ve 49/49 passed sonucu alindi.
 
 6. Locale smoke test
 - TR
 - EN
-Durum: kod seviyesinde ve unit seviyesinde hizalama yapildi; browser locale smoke icin authenticated ortam gerekiyor.
+Durum: tamamlandi. Authenticated ortamda `tests/e2e/locale-smoke.spec.js` kosuldu ve TR/EN topbar + quick-create locale gecisi dogrulandi (1/1 passed).
 
 ## Dosya Bazli Oncelik Listesi / File-by-File Priority
 

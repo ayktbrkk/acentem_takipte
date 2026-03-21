@@ -1,6 +1,6 @@
 <template>
   <WorkbenchPageLayout
-    breadcrumb="Sigorta Operasyonları → Hasarlar"
+    :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
     :record-count="formatCount(claims.length)"
@@ -138,6 +138,7 @@ import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Hasarlar",
     title: "Hasarlar",
     subtitle: "Hasar dosyaları ve ödeme durumunu izleyin",
     recordCount: "kayıt",
@@ -216,6 +217,7 @@ const copy = {
     assignmentOpenCount: "açık",
   },
   en: {
+    breadcrumb: "Insurance Operations → Claims",
     title: "Claims",
     subtitle: "Track claim files and payment status",
     recordCount: "records",

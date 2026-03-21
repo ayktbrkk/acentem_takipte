@@ -1,6 +1,6 @@
 <template>
   <WorkbenchPageLayout
-    breadcrumb="Veri Yönetimi → İçe Aktarma"
+    :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
     :show-record-count="false"
@@ -69,7 +69,7 @@
           </tbody>
         </table>
       </div>
-      <p v-if="importMessage" class="mt-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+      <p v-if="importMessage" class="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-700">
         {{ importMessage }}
       </p>
     </SectionPanel>
@@ -95,6 +95,7 @@ const authStore = useAuthStore(appPinia);
 
 const copy = {
   tr: {
+    breadcrumb: "Veri Yönetimi → İçe Aktarma",
     title: "Veri İçe Aktarma",
     subtitle: "Excel/CSV dosyalarını eşleştirerek toplu veri yükleyin.",
     clear: "Temizle",
@@ -136,6 +137,7 @@ const copy = {
     csvPolicyHint: ["polic", "poli"],
   },
   en: {
+    breadcrumb: "Data Management → Import",
     title: "Data Import",
     subtitle: "Bulk-load data by matching Excel/CSV columns.",
     clear: "Clear",

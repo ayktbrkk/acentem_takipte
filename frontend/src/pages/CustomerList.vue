@@ -6,10 +6,10 @@
         <p class="detail-subtitle">{{ formatCount(customerListTotalCount) }} müşteri kaydı</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ Yeni Müşteri</button>
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">Yenile</button>
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">Excel</button>
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">PDF</button>
+        <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ {{ t('newCustomer') }}</button>
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">{{ t('refresh') }}</button>
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">{{ t('exportXlsx') }}</button>
+        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">{{ t('exportPdf') }}</button>
       </div>
     </div>
 
@@ -120,6 +120,7 @@ import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import QuickCreateCustomer from "../components/QuickCreateCustomer.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
+import { getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { openListExport } from "../utils/listExport";
@@ -142,6 +143,7 @@ const customerStore = useCustomerStore();
 
 const copy = {
   tr: {
+    newCustomer: "Yeni Müşteri",
     title: "Müşteri Yönetimi",
     subtitle: "Müşteri çalışma ekranı: filtre, şablon ve 360 erişim",
     refresh: "Yenile",
@@ -194,7 +196,7 @@ const copy = {
     next: "Sonraki",
     open360: "360 Aç",
     newOffer: "Yeni Teklif",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     colCustomer: "Müşteri",
     colContact: "İletişim",
     colProfile: "Profil",
@@ -252,6 +254,7 @@ const copy = {
     validationTcInvalid: "Geçerli bir TC kimlik numarası girin.",
   },
   en: {
+    newCustomer: "New Customer",
     title: "Customer Workbench",
     subtitle: "Customer workspace with filters, presets, and 360 access",
     refresh: "Refresh",
@@ -304,7 +307,7 @@ const copy = {
     next: "Next",
     open360: "Open 360",
     newOffer: "New Offer",
-    openDesk: "Desk",
+    openDesk: "Open Desk",
     colCustomer: "Customer",
     colContact: "Contact",
     colProfile: "Profile",
@@ -410,9 +413,7 @@ const quickCustomerUi = computed(() => ({
   newLabel: activeLocale.value === "tr" ? "Yeni Müşteri" : "New Customer",
 }));
 const quickCreateCommon = computed(() => ({
-  cancel: activeLocale.value === "tr" ? "Vazgeç" : "Cancel",
-  save: activeLocale.value === "tr" ? "Kaydet" : "Save",
-  saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Aç" : "Save & Open",
+  ...getQuickCreateLabels("create", activeLocale.value),
   validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları ve formatları kontrol edin." : "Please check required fields and formats.",
   failed: activeLocale.value === "tr" ? "Hızlı müşteri oluşturma başarısız oldu." : "Quick customer create failed.",
 }));

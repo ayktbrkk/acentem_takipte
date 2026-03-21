@@ -56,14 +56,13 @@
 
     <div
       v-if="dashboardAccessMessage"
-      class="rounded-xl border px-4 py-3 text-sm"
-      :class="
-        dashboardAccessMessageKind === 'permission'
-          ? 'border-rose-200 bg-rose-50 text-rose-700'
-          : 'border-amber-200 bg-amber-50 text-amber-800'
-      "
+      :class="dashboardAccessMessageKind === 'permission' ? 'qc-error-banner' : 'qc-warning-banner'"
+      role="alert"
+      aria-live="polite"
     >
-      {{ dashboardAccessMessage }}
+      <p :class="dashboardAccessMessageKind === 'permission' ? 'qc-error-banner__text' : 'qc-warning-banner__text'">
+        {{ dashboardAccessMessage }}
+      </p>
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -77,7 +76,7 @@
       </div>
       <div class="mini-metric">
         <p class="mini-metric-label">Açık Hasarlar</p>
-        <p class="mini-metric-value text-red-600">{{ formatNumber(week4Metrics.openClaims) }}</p>
+        <p class="mini-metric-value text-amber-700">{{ formatNumber(week4Metrics.openClaims) }}</p>
       </div>
       <div class="mini-metric">
         <p class="mini-metric-label">Seçili Dönem Prim</p>
@@ -255,15 +254,15 @@
           <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else class="space-y-3">
             <div class="grid grid-cols-3 gap-2">
-              <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("followUpOverdue") }}</p>
-                <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(followUpSummary.overdue) }}</p>
+              <div class="qc-warning-card">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("followUpOverdue") }}</p>
+                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.overdue) }}</p>
               </div>
-              <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <div class="qc-warning-card">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("followUpToday") }}</p>
                 <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.due_today) }}</p>
               </div>
-              <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+              <div class="qc-warning-card">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("followUpSoon") }}</p>
                 <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(followUpSummary.due_soon) }}</p>
               </div>
@@ -654,15 +653,15 @@
           <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else class="space-y-3">
             <div class="grid grid-cols-3 gap-2">
-              <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("taskOverdue") }}</p>
-                <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(myTaskSummary.overdue) }}</p>
+              <div class="qc-warning-card">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskOverdue") }}</p>
+                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.overdue) }}</p>
               </div>
-              <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <div class="qc-warning-card">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskToday") }}</p>
                 <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
               </div>
-              <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+              <div class="qc-warning-card">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("taskSoon") }}</p>
                 <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
               </div>
@@ -774,15 +773,15 @@
             <div v-if="myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
             <div v-else class="space-y-3">
               <div class="grid grid-cols-3 gap-2">
-                <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">{{ t("reminderOverdue") }}</p>
-                  <p class="mt-1 text-lg font-semibold text-rose-700">{{ formatNumber(myReminderSummary.overdue) }}</p>
+                <div class="qc-warning-card">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("reminderOverdue") }}</p>
+                  <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myReminderSummary.overdue) }}</p>
                 </div>
-                <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <div class="qc-warning-card">
                   <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("reminderToday") }}</p>
                   <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myReminderSummary.due_today) }}</p>
                 </div>
-                <div class="rounded-xl border border-sky-200 bg-sky-50 p-3">
+                <div class="qc-warning-card">
                   <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("reminderSoon") }}</p>
                   <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myReminderSummary.due_soon) }}</p>
                 </div>
@@ -835,13 +834,13 @@
 
     <Dialog
       v-model="showLeadDialog"
-      :options="{ title: activeLocale === 'tr' ? 'Hızlı Fırsat Oluştur' : 'Quick Opportunity', size: 'xl' }"
+      :options="{ title: quickLeadDialogTitle, size: 'xl' }"
     >
       <template #body-content>
         <div class="grid gap-3 p-4">
-          <p v-if="leadDialogError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {{ leadDialogError }}
-          </p>
+          <div v-if="leadDialogError" class="qc-error-banner" role="alert" aria-live="polite">
+            <p class="qc-error-banner__text">{{ leadDialogError }}</p>
+          </div>
           <QuickCustomerPicker
             :model="newLead"
             :field-errors="leadDialogFieldErrors"
@@ -909,6 +908,7 @@ import DetailCard from "../components/ui/DetailCard.vue";
 import TrendChart from "../components/ui/TrendChart.vue";
 import DistributionChart from "../components/ui/DistributionChart.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
+import { getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 
 const router = useRouter();
@@ -917,6 +917,8 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const dashboardStore = useDashboardStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
+const quickLeadConfig = getQuickCreateConfig("lead");
+const quickLeadDialogTitle = computed(() => getLocalizedText(quickLeadConfig?.title, activeLocale.value));
 function normalizeResourcePayload(payload) {
   return payload?.message || payload || {};
 }
@@ -1000,7 +1002,7 @@ const copy = {
     email: "E-posta",
     estPremiumInput: "Tahmini brut prim",
     note: "Not",
-    cancel: "Vazgeç",
+    cancel: "İptal",
     save: "Kaydet",
     draft: "Taslak",
     open: "Açık",
@@ -1024,7 +1026,7 @@ const copy = {
     quickPolicyDesc: "Poliçeleri listele ve versiyonlari izle",
     quickOffer: "Teklif Panosu",
     quickOfferDesc: "Teklifleri poliçe sürecine hazırla",
-    quickClaim: "Hasar Masası",
+    quickClaim: "Hasar Panosu",
     quickClaimDesc: "Hasar dosyalarını ve ödemeleri yönet",
     quickPayment: "Ödeme Operasyonları",
     quickPaymentDesc: "Tahsilat ve payout hareketlerini takip et",
@@ -1082,7 +1084,7 @@ const copy = {
     followUpAssignee: "Sorumlu",
     openItem: "Aç",
     viewAllItems: "Tümünü Gör",
-    followUpClaimsAction: "Hasar Masası",
+    followUpClaimsAction: "Hasar Panosu",
     followUpRenewalsAction: "Yenileme Panosu",
     followUpCommunicationAction: "İletişim Merkezi",
     myTasksTitle: "Benim Görevlerim",
@@ -1111,7 +1113,7 @@ const copy = {
     startTaskAction: "Takibe Al",
     blockTaskAction: "Bloke Et",
     completeTaskAction: "Tamamla",
-    cancelTaskAction: "İptal Et",
+    cancelTaskAction: "İptal",
     openTasksAction: "Görev Listesi",
     openRemindersAction: "Hatırlatıcı Listesi",
     policyCount: "Poliçe Adedi",
@@ -1233,7 +1235,7 @@ const copy = {
     quickPolicyDesc: "List policies and monitor versions",
     quickOffer: "Offer Board",
     quickOfferDesc: "Prepare offers for policy conversion",
-    quickClaim: "Claim Desk",
+    quickClaim: "Claims Board",
     quickClaimDesc: "Manage claim files and payouts",
     quickPayment: "Payment Operations",
     quickPaymentDesc: "Track collections and payouts",
@@ -1291,7 +1293,7 @@ const copy = {
     followUpAssignee: "Assignee",
     openItem: "Open",
     viewAllItems: "View All",
-    followUpClaimsAction: "Claims Desk",
+    followUpClaimsAction: "Claims Board",
     followUpRenewalsAction: "Renewals Board",
     followUpCommunicationAction: "Communication Center",
     myTasksTitle: "My Tasks",
@@ -1974,7 +1976,7 @@ const salesOfferStatusSummary = computed(() => {
     Draft: "bg-amber-500",
     Sent: "bg-sky-500",
     Accepted: "bg-emerald-500",
-    Rejected: "bg-rose-500",
+    Rejected: "bg-amber-500",
     Converted: "bg-indigo-500",
   };
   const labelMap = {
@@ -2030,7 +2032,7 @@ const policyStatusSummary = computed(() => {
       label: t("statusIpt"),
       value: map.IPT?.total || 0,
       gwp: map.IPT?.gwp || 0,
-      colorClass: "bg-rose-400",
+      colorClass: "bg-amber-400",
     },
   ].map((entry) => ({
     ...entry,
@@ -2080,7 +2082,7 @@ const renewalStatusSummary = computed(() => {
       { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-amber-500" },
       { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-sky-500" },
       { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-emerald-500" },
-      { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-rose-400" },
+      { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-slate-400" },
     ]
       .filter((row) => row.value > 0 || isRenewalsTab.value)
       .map((row) => ({
@@ -2104,7 +2106,7 @@ const renewalStatusSummary = computed(() => {
     { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-amber-500" },
     { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-sky-500" },
     { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-emerald-500" },
-    { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-rose-400" },
+    { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-slate-400" },
   ]
     .filter((row) => row.value > 0 || isRenewalsTab.value)
     .map((row) => ({
@@ -2246,7 +2248,7 @@ function buildTrend(currentValue, previousValue, reverseTrend = false) {
   if (!previous && current) {
     return {
       text: "+100%",
-      className: reverseTrend ? "text-rose-600" : "text-emerald-600",
+      className: reverseTrend ? "text-amber-700" : "text-emerald-600",
     };
   }
 
@@ -2256,7 +2258,7 @@ function buildTrend(currentValue, previousValue, reverseTrend = false) {
   const sign = rounded > 0 ? "+" : "";
   return {
     text: `${sign}${new Intl.NumberFormat(localeCode.value, { maximumFractionDigits: 1 }).format(rounded)}%`,
-    className: positive ? "text-emerald-600" : "text-rose-600",
+    className: positive ? "text-emerald-600" : "text-amber-700",
   };
 }
 

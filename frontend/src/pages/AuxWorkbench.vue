@@ -206,10 +206,10 @@
       <div v-if="isLoading && rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
-      <div v-else-if="loadError.text" class="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700">
-        <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="mt-1 text-sm">{{ loadError.text }}</p>
-      </div>
+      <article v-else-if="loadError.text" class="qc-error-banner mt-4">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ loadError.text }}</p>
+      </article>
       <div v-else-if="rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
       </div>
@@ -399,6 +399,7 @@
       :config-key="auxQuickCreate.registryKey"
       :locale="activeLocale"
       :options-map="auxQuickOptionsMap"
+      :eyebrow="auxQuickCreateEyebrow"
       :show-save-and-open="auxQuickCreate.showSaveAndOpen !== false"
       :before-open="prepareAuxQuickCreateDialog"
       :after-submit="handleAuxQuickCreateAfterSubmit"
@@ -524,17 +525,17 @@ const copy = {
     attachedPoliciesHint: "AT Policy kayıtlarına ekli dosyalar",
     attachedClaimsHint: "AT Claim kayıtlarına ekli dosyalar",
     newRecord: "Yeni Kayıt",
-    openDetail: "Detay",
-    openDesk: "Yönetim Ekranında Aç",
+    openDetail: "Kayıt Detayını Aç",
+    openDesk: "Yönetim Ekranını Aç",
     panel: "Panel",
-    openCommunication: "İletişim Merkezi",
+    openCommunication: "İletişim Merkezini Aç",
     sendNow: "Hemen Gönder",
     retry: "Tekrar Dene",
     requeue: "Kuyruğa Al",
     startTask: "Takibe Al",
     blockTaskAction: "Bloke Et",
     completeTaskAction: "Tamamla",
-    cancelTaskAction: "İptal Et",
+    cancelTaskAction: "İptal",
     running: "Çalışıyor...",
     page: "Sayfa",
     prev: "Önceki",
@@ -610,8 +611,8 @@ const copy = {
     attachedPoliciesHint: "Files attached to AT Policy records",
     attachedClaimsHint: "Files attached to AT Claim records",
     newRecord: "New Record",
-    openDetail: "Detail",
-    openDesk: "Desk",
+    openDetail: "Open Record Details",
+    openDesk: "Open Desk",
     panel: "Panel",
     openCommunication: "Communication Center",
     sendNow: "Send Now",
@@ -768,6 +769,7 @@ const reminderRows = computed(() => (config.key === "reminders" ? rows.value : [
 const canExportSnapshotRows = computed(() => config.key === "customer-segment-snapshots" && snapshotRows.value.length > 0);
 const isLoading = computed(() => Boolean(unref(listResource.loading) || unref(countResource.loading)));
 const auxQuickCreate = computed(() => config.quickCreate || null);
+const auxQuickCreateEyebrow = computed(() => localize(auxQuickCreate.value?.label) || t("newRecord"));
 const canLaunchAuxQuickCreate = computed(() => {
   const registryKey = auxQuickCreate.value?.registryKey;
   if (!registryKey) return false;
@@ -1025,8 +1027,8 @@ const AUX_FIELD_LABELS = {
     en: { name: "Record", source_doctype: "Source DocType", source_name: "Source Record", policy: "Policy", customer: "Customer", local_amount_try: "Local Amount (TRY)", external_amount_try: "External Amount (TRY)", difference_try: "Difference (TRY)", local_amount: "Local Amount", external_amount: "External Amount", status: "Status", entry_type: "Entry Type", insurance_company: "Insurance Company", external_ref: "External Reference", needs_reconciliation: "Needs Reconciliation", last_synced_on: "Last Synced", sync_attempt_count: "Sync Attempts", payload_json: "Payload (JSON)", error_message: "Error Message", currency: "Currency", accounting_entry: "Accounting Entry", owner: "Owner", modified: "Modified" },
   },
   "reconciliation-items": {
-    tr: { name: "Kayıt", accounting_entry: "Muhasebe Kaydı", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kaydı", mismatch_type: "Uyumsuzluk Tipi", difference_try: "Fark (TRY)", local_amount_try: "Yerel Tutar (TRY)", external_amount_try: "Harici Tutar (TRY)", resolution_action: "Çözüm İşlemi", resolved_by: "Çözen Kullanıcı", resolved_on: "Çözüm Tarihi", unique_key: "Benzersiz Anahtar", notes: "Notlar", details_json: "Detay JSON", status: "Durum", owner: "Kayıt Sahibi", modified: "Güncellendi" },
-    en: { name: "Record", accounting_entry: "Accounting Entry", source_doctype: "Source DocType", source_name: "Source Record", mismatch_type: "Mismatch Type", difference_try: "Difference (TRY)", local_amount_try: "Local Amount (TRY)", external_amount_try: "External Amount (TRY)", resolution_action: "Resolution Action", resolved_by: "Resolved By", resolved_on: "Resolved On", unique_key: "Unique Key", notes: "Notes", details_json: "Details JSON", status: "Status", owner: "Owner", modified: "Modified" },
+    tr: { name: "Kayıt", accounting_entry: "Muhasebe Kaydı", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kaydı", mismatch_type: "Uyumsuzluk Tipi", difference_try: "Fark (TRY)", local_amount_try: "Yerel Tutar (TRY)", external_amount_try: "Harici Tutar (TRY)", resolution_action: "Çözüm İşlemi", resolved_by: "Çözen Kullanıcı", resolved_on: "Çözüm Tarihi", unique_key: "Benzersiz Anahtar", notes: "Notlar", details_json: "Ham JSON", status: "Durum", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", accounting_entry: "Accounting Entry", source_doctype: "Source DocType", source_name: "Source Record", mismatch_type: "Mismatch Type", difference_try: "Difference (TRY)", local_amount_try: "Local Amount (TRY)", external_amount_try: "External Amount (TRY)", resolution_action: "Resolution Action", resolved_by: "Resolved By", resolved_on: "Resolved On", unique_key: "Unique Key", notes: "Notes", details_json: "Raw JSON", status: "Status", owner: "Owner", modified: "Modified" },
   },
 };
 

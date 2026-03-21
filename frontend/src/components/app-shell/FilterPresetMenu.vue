@@ -23,7 +23,7 @@
       </button>
       <button
         v-if="showDelete"
-        class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+        class="qc-danger-button"
         :disabled="disabled || !canDelete"
         type="button"
         @click="$emit('delete')"

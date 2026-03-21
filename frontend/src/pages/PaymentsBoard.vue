@@ -1,6 +1,6 @@
 <template>
   <WorkbenchPageLayout
-    breadcrumb="Sigorta Operasyonları → Ödemeler"
+    :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
     :record-count="formatCount(payments.length)"
@@ -168,6 +168,7 @@ import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Ödemeler",
     title: "Ödemeler",
     subtitle: "Tahsilat, bekleyen ödeme ve gecikmiş vadeleri izleyin",
     recordCount: "kayıt",
@@ -237,6 +238,7 @@ const copy = {
     paidInstallments: "Ödenen Taksit",
   },
   en: {
+    breadcrumb: "Insurance Operations → Payments",
     title: "Payments",
     subtitle: "Track collection, pending payments, and overdue due dates",
     recordCount: "records",

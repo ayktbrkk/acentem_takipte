@@ -500,7 +500,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("İptal Et")).trigger("click");
+    await buttons.find((node) => node.text().includes("İptal")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Task",
       name: "TASK-001",
@@ -542,7 +542,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("İptal Et")).trigger("click");
+    await buttons.find((node) => node.text().includes("İptal")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",

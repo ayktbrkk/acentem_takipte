@@ -54,7 +54,7 @@
 
         <SectionPanel title="Dökümanlar">
           <template #trailing>
-            <button class="btn btn-sm" type="button" @click="editOffer">Yükle</button>
+            <button class="btn btn-sm" type="button" @click="editOffer">{{ t("edit") }}</button>
           </template>
 
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
@@ -130,7 +130,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 const copy = {
   tr: {
     overview: "Teklif Detayı",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     backList: "Listeye Dön",
     loading: "Yükleniyor...",
     loadError: "Teklif detayı yüklenemedi.",
@@ -161,14 +161,14 @@ const copy = {
     tabOperations: "Operasyon",
     tabNotes: "Notlar",
     tabActivity: "Aktivite",
-    openCustomer360: "Müşteri 360",
-    openCommunication: "İletişim",
-    openPayments: "Ödemeler",
-    openRenewals: "Yenileme Görevleri",
-    openLead: "Lead Detayı",
-    openPolicy: "Poliçe Detayını Aç",
-    openOfferDetail: "Teklif Detayı",
-    openOfferBoard: "Teklif Panosu",
+    openCustomer360: "Müşteri Detayını Aç",
+    openCommunication: "İletişim Merkezini Aç",
+    openPayments: "Ödemeleri Aç",
+    openRenewals: "Yenileme Görevlerini Aç",
+    openLead: "Lead Detayını Aç",
+    openPolicy: "Poliçeyi Aç",
+    openOfferDetail: "Teklif Detayını Aç",
+    openOfferBoard: "Teklif Panosunu Aç",
     convertToPolicy: "Poliçeye Çevir",
     conversionHint: "Durum güncelleme ve poliçeye çevirme işlemleri teklif panosundan veya yönetim ekranından yapılabilir.",
     linkedSourceLeadTitle: "Kaynak Lead Özeti",
@@ -201,7 +201,7 @@ const copy = {
     timelineConverted: "Poliçeye dönüşüm",
   },
   en: {
-    overview: "Offer Detail",
+    overview: "Offer Details",
     openDesk: "Open Desk",
     backList: "Back to List",
     loading: "Loading...",
@@ -233,14 +233,14 @@ const copy = {
     tabOperations: "Operations",
     tabNotes: "Notes",
     tabActivity: "Activity",
-    openCustomer360: "Customer 360",
-    openCommunication: "Communication",
-    openPayments: "Payments",
-    openRenewals: "Renewals",
-    openLead: "Lead Detail",
-    openPolicy: "Policy Detail",
-    openOfferDetail: "Offer Detail",
-    openOfferBoard: "Offer Board",
+    openCustomer360: "Open Customer Details",
+    openCommunication: "Open Communication Center",
+    openPayments: "Open Payments",
+    openRenewals: "Open Renewals",
+    openLead: "Open Lead Details",
+    openPolicy: "Open Policy",
+    openOfferDetail: "Open Offer Details",
+    openOfferBoard: "Open Offer Board",
     convertToPolicy: "Convert to Policy",
     conversionHint: "Status updates and policy conversion can be managed from the offer board or desk form.",
     linkedSourceLeadTitle: "Source Lead Snapshot",

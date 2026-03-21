@@ -60,13 +60,13 @@ function initials(name = '') {
 }
 
 function avatarClass(days) {
-  if (days <= 7) return 'bg-red-50 text-red-600'
+  if (days <= 7) return 'bg-amber-50 text-amber-700'
   if (days <= 30) return 'bg-amber-50 text-amber-600'
   return 'bg-brand-50 text-brand-600'
 }
 
 function urgencyBadgeClass(days) {
-  if (days <= 7) return 'bg-red-50 text-red-600'
+  if (days <= 7) return 'bg-amber-50 text-amber-700'
   if (days <= 30) return 'bg-amber-50 text-amber-600'
   return 'bg-gray-100 text-gray-600'
 }

@@ -784,7 +784,7 @@ describe("CustomerDetail customer 360 integration", () => {
       },
     });
 
-    await buttons.find((candidate) => candidate.text().includes("İptal Et")).trigger("click");
+    await buttons.find((candidate) => candidate.text().includes("İptal")).trigger("click");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",

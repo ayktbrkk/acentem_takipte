@@ -149,10 +149,10 @@
       <div class="card-empty">{{ t("loading") }}</div>
     </div>
 
-    <div v-else-if="errorText" class="surface-card rounded-2xl p-5">
-      <p class="text-sm font-semibold text-rose-600">{{ t("loadErrorTitle") }}</p>
-      <p class="mt-2 text-sm text-slate-600">{{ errorText }}</p>
-    </div>
+    <article v-else-if="errorText" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ errorText }}</p>
+    </article>
 
     <div v-else-if="isEmpty" class="surface-card rounded-2xl p-5">
       <p class="card-empty">{{ t("emptyTitle") }}</p>
@@ -241,6 +241,7 @@
       :config-key="quickEditConfig.registryKey"
       :locale="activeLocale"
       :options-map="quickEditOptionsMap"
+      :eyebrow="quickEditEyebrow"
       :show-save-and-open="false"
       :before-open="prepareQuickEditDialog"
       :build-payload="buildQuickEditPayload"
@@ -292,20 +293,20 @@ const copy = {
   tr: {
     backToList: "Listeye Dön",
     quickEdit: "Hızlı Düzenle",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     panel: "Panel",
     saveChanges: "Değişiklikleri Kaydet",
-    cancel: "Vazgeç",
+    cancel: "İptal",
     copy: "Kopyala",
     copied: "Kopyalandı",
-    openCommunication: "İletişim Merkezi",
+    openCommunication: "İletişim Merkezini Aç",
     sendNow: "Hemen Gönder",
     retry: "Tekrar Dene",
     requeue: "Kuyruğa Al",
     startTask: "Takibe Al",
     blockTaskAction: "Bloke Et",
     completeTaskAction: "Tamamla",
-    cancelTaskAction: "İptal Et",
+    cancelTaskAction: "İptal",
     loading: "Kayıt yükleniyor...",
     loadErrorTitle: "Kayıt Yüklenemedi",
     emptyTitle: "Kayıt bulunamadı",
@@ -368,13 +369,13 @@ const copy = {
   en: {
     backToList: "Back to List",
     quickEdit: "Quick Edit",
-    openDesk: "Desk",
+    openDesk: "Open Desk",
     panel: "Panel",
     saveChanges: "Save Changes",
     cancel: "Cancel",
     copy: "Copy",
     copied: "Copied",
-    openCommunication: "Communication Center",
+    openCommunication: "Open Communication Center",
     sendNow: "Send Now",
     retry: "Retry",
     requeue: "Requeue",
@@ -461,6 +462,7 @@ const isEmpty = computed(() => !activeLoading.value && !doc.value && !errorText.
 const showQuickEditDialog = ref(false);
 const activeDetailTab = ref("overview");
 const quickEditConfig = computed(() => config.quickEdit || null);
+const quickEditEyebrow = computed(() => localize(quickEditConfig.value?.label) || t("quickEdit"));
 const canUseQuickEdit = computed(() => {
   const registryKey = quickEditConfig.value?.registryKey;
   if (!registryKey) return false;
@@ -763,7 +765,7 @@ const AUX_DETAIL_FIELD_LABELS = {
       resolved_on: "Resolved On",
       needs_reconciliation: "Needs Reconciliation",
       notes: "Notes",
-      details_json: "Details",
+      details_json: "Raw JSON",
       unique_key: "Unique Key",
       local_amount_try: "Local Amount (TRY)",
       external_amount_try: "External Amount (TRY)",

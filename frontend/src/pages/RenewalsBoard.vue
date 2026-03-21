@@ -1,6 +1,6 @@
 <template>
   <WorkbenchPageLayout
-    breadcrumb="Sigorta Operasyonları → Yenilemeler"
+    :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
     :record-count="formatCount(renewals.length)"
@@ -231,6 +231,7 @@ import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Yenilemeler",
     title: "Yenilemeler",
     subtitle: "Bitişe yakın poliçeler ve takip görevleri",
     recordCount: "kayıt",
@@ -303,6 +304,7 @@ const copy = {
     priorityUnknown: "Belirsiz",
   },
   en: {
+    breadcrumb: "Insurance Operations → Renewals",
     title: "Renewals",
     subtitle: "Near-expiry policies and follow-up tasks",
     recordCount: "records",

@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-3">
-    <div v-if="locked" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+    <div v-if="locked" class="rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2 text-sm text-brand-800">
       {{ text(lockedMessage) }}
     </div>
 
@@ -8,7 +8,7 @@
       <div class="space-y-2">
         <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
           {{ text(customerLabel) }}
-          <span class="text-rose-500">*</span>
+          <span class="text-amber-500">*</span>
         </label>
 
         <input
@@ -44,10 +44,10 @@
           {{ text(noResultsText) }}
         </p>
 
-        <p v-if="customerErrorText" class="text-xs text-rose-600">
+        <p v-if="customerErrorText" class="qc-inline-error">
           {{ customerErrorText }}
         </p>
-        <p v-else-if="fieldErrors?.customer" class="text-xs text-rose-600">
+        <p v-else-if="fieldErrors?.customer" class="qc-inline-error">
           {{ fieldErrors.customer }}
         </p>
 
@@ -61,15 +61,12 @@
           {{ createActionText }}
         </button>
 
-        <div
-          v-if="selectedCustomerOption?.value"
-          class="flex items-center justify-between rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs"
-        >
-          <span class="truncate text-emerald-800">
+        <div v-if="selectedCustomerOption?.value" class="qc-selection-banner">
+          <span class="truncate font-medium">
             {{ text(selectedCustomerLabel) }}: {{ selectedCustomerOption.label || selectedCustomerOption.value }}
           </span>
           <button
-            class="ml-2 shrink-0 font-semibold text-emerald-700 hover:text-emerald-900"
+            class="qc-selection-banner__clear"
             type="button"
             :disabled="disabled"
             @click="clearSelectedCustomer"
@@ -80,16 +77,16 @@
       </div>
 
       <div v-if="showInlineFields" class="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div>
+        <div class="md:col-span-2">
           <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             {{ text(customerTypeLabel) }}
-            <span class="text-rose-500">*</span>
+            <span class="text-amber-500">*</span>
           </label>
           <select v-model="model[customerTypeFieldName]" class="input qc-control" :disabled="disabled">
             <option value="Individual">{{ text(individualLabel) }}</option>
             <option value="Corporate">{{ text(corporateLabel) }}</option>
           </select>
-          <p v-if="fieldErrors?.[customerTypeFieldName]" class="mt-1 text-xs text-rose-600">
+          <p v-if="fieldErrors?.[customerTypeFieldName]" class="mt-1 qc-inline-error">
             {{ fieldErrors[customerTypeFieldName] }}
           </p>
         </div>
@@ -97,7 +94,7 @@
         <div>
           <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             {{ identityLabel }}
-            <span class="text-rose-500">*</span>
+            <span class="text-amber-500">*</span>
           </label>
           <input
             v-model="model[identityFieldName]"
@@ -106,7 +103,7 @@
             inputmode="numeric"
             :disabled="disabled"
           />
-          <p v-if="fieldErrors?.[identityFieldName]" class="mt-1 text-xs text-rose-600">
+          <p v-if="fieldErrors?.[identityFieldName]" class="mt-1 qc-inline-error">
             {{ fieldErrors[identityFieldName] }}
           </p>
           <p v-else class="mt-1 text-xs text-slate-500">
@@ -116,10 +113,26 @@
 
         <div>
           <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {{ text(birthDateLabel) }}
+          </label>
+          <input
+            v-model="model[birthDateFieldName]"
+            class="input qc-control"
+            type="date"
+            :disabled="disabled || isBirthDateLocked"
+            :readonly="isBirthDateLocked"
+          />
+          <p v-if="fieldErrors?.[birthDateFieldName]" class="mt-1 qc-inline-error">
+            {{ fieldErrors[birthDateFieldName] }}
+          </p>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             {{ text(phoneLabel) }}
           </label>
           <input v-model="model[phoneFieldName]" class="input qc-control" type="text" :disabled="disabled" />
-          <p v-if="fieldErrors?.[phoneFieldName]" class="mt-1 text-xs text-rose-600">
+          <p v-if="fieldErrors?.[phoneFieldName]" class="mt-1 qc-inline-error">
             {{ fieldErrors[phoneFieldName] }}
           </p>
         </div>
@@ -129,7 +142,7 @@
             {{ text(emailLabel) }}
           </label>
           <input v-model="model[emailFieldName]" class="input qc-control" type="email" :disabled="disabled" />
-          <p v-if="fieldErrors?.[emailFieldName]" class="mt-1 text-xs text-rose-600">
+          <p v-if="fieldErrors?.[emailFieldName]" class="mt-1 qc-inline-error">
             {{ fieldErrors[emailFieldName] }}
           </p>
         </div>
@@ -139,7 +152,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount } from "vue";
+import { computed, onBeforeUnmount, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import { normalizeCustomerType } from "../../utils/customerIdentity";
@@ -164,6 +177,7 @@ const props = defineProps({
   selectedOptionFieldName: { type: String, default: "customerOption" },
   createModeFieldName: { type: String, default: "createCustomerMode" },
   customerTypeFieldName: { type: String, default: "customer_type" },
+  birthDateFieldName: { type: String, default: "birth_date" },
   identityFieldName: { type: String, default: "tax_id" },
   phoneFieldName: { type: String, default: "phone" },
   emailFieldName: { type: String, default: "email" },
@@ -256,6 +270,7 @@ const showCreateAction = computed(() => {
 const showInlineFields = computed(() => {
   return !props.locked && !selectedCustomerOption.value?.value && createMode.value;
 });
+const isBirthDateLocked = computed(() => customerType.value === "Corporate");
 const identityLabel = computed(() =>
   customerType.value === "Corporate"
     ? text({ tr: "Vergi No", en: "Tax Number" })
@@ -281,6 +296,7 @@ const createActionText = computed(() => {
 const selectedCustomerLabel = { tr: "Seçili müşteri", en: "Selected customer" };
 const clearSelectionLabel = { tr: "Temizle", en: "Clear" };
 const customerTypeLabel = { tr: "Müşteri Tipi", en: "Customer Type" };
+const birthDateLabel = { tr: "Doğum Tarihi", en: "Birth Date" };
 const individualLabel = { tr: "Bireysel", en: "Individual" };
 const corporateLabel = { tr: "Kurumsal", en: "Corporate" };
 const phoneLabel = { tr: "Telefon", en: "Phone" };
@@ -366,6 +382,16 @@ function enableCreateMode() {
   props.model[props.createModeFieldName] = true;
   resetSearchResults();
 }
+
+watch(
+  customerType,
+  (nextType) => {
+    if (nextType === "Corporate") {
+      props.model[props.birthDateFieldName] = "";
+    }
+  },
+  { immediate: true }
+);
 
 onBeforeUnmount(() => {
   clearPendingSearch();

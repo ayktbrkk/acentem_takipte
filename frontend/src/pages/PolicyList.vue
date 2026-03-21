@@ -80,13 +80,16 @@
     <Dialog v-model="showQuickPolicyDialog" :options="{ title: quickPolicyUi.title, size: 'xl' }">
       <template #body-content>
         <PolicyForm
+          :key="quickPolicyDialogKey"
           :model="quickPolicyForm"
           :field-errors="quickPolicyFieldErrors"
           :options-map="policyQuickOptionsMap"
           :disabled="quickPolicyLoading"
           :loading="quickPolicyLoading"
           :has-source-offer="hasQuickPolicySourceOffer"
+          :office-branch="branchStore.requestBranch || ''"
           :error="quickPolicyError"
+          :eyebrow="quickPolicyUi.eyebrow"
           :title="quickPolicyUi.title"
           :subtitle="quickPolicyUi.subtitle"
           @cancel="cancelQuickPolicyDialog"
@@ -109,7 +112,6 @@ import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
@@ -119,6 +121,7 @@ import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import PolicyForm from "../components/PolicyForm.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
+import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { openListExport } from "../utils/listExport";
@@ -182,7 +185,7 @@ const copy = {
     empty: "Filtrelere uygun poliçe kaydı bulunamadı.",
     loadErrorTitle: "Liste Yüklenemedi",
     loadError: "Poliçe listesi yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     page: "Sayfa",
     previous: "Önceki",
     next: "Sonraki",
@@ -239,7 +242,7 @@ const copy = {
     empty: "No policy records found for current filters.",
     loadErrorTitle: "Failed to Load List",
     loadError: "An error occurred while loading policies. Please try again.",
-    openDesk: "Desk",
+    openDesk: "Open Desk",
     page: "Page",
     previous: "Previous",
     next: "Next",
@@ -316,6 +319,7 @@ const policyPresetOptions = computed(() => [
 const canDeletePolicyPreset = computed(() => isCustomFilterPresetValue(policyPresetKey.value));
 const quickPolicyConfig = getQuickCreateConfig("policy");
 const showQuickPolicyDialog = ref(false);
+const quickPolicyDialogKey = ref(0);
 const quickPolicyLoading = ref(false);
 const quickPolicyError = ref("");
 const quickPolicyFieldErrors = reactive({});
@@ -365,7 +369,7 @@ const policyQuickCustomerResource = createResource({
   auto: true,
   params: {
     doctype: "AT Customer",
-    fields: ["name", "full_name"],
+    fields: ["name", "full_name", "customer_type", "tax_id", "birth_date", "phone", "email"],
     filters: buildOfficeBranchLookupFilters(),
     order_by: "modified desc",
     limit_page_length: QUICK_OPTION_LIMIT,
@@ -377,6 +381,7 @@ const policyQuickOfferResource = createResource({
   params: {
     doctype: "AT Offer",
     fields: ["name", "customer", "offer_date", "status"],
+    filters: { status: ["in", ["Sent", "Accepted"]] },
     order_by: "modified desc",
     limit_page_length: QUICK_OPTION_LIMIT,
   },
@@ -429,26 +434,54 @@ const policyQuickFormFields = computed(() =>
   )
 );
 const hasQuickPolicySourceOffer = computed(() => String(quickPolicyForm.source_offer || "").trim() !== "");
+const policyQuickCustomerOptions = computed(() =>
+  asArray(resourceValue(policyQuickCustomerResource, [])).map((row) => ({
+    value: row.name,
+    label: row.full_name || row.name,
+    description: row.tax_id || "",
+    customer_type: row.customer_type || "",
+    tax_id: row.tax_id || "",
+    birth_date: row.birth_date || "",
+    phone: row.phone || "",
+    email: row.email || "",
+  }))
+);
+const policyQuickCustomerLookup = computed(() => {
+  const lookup = new Map();
+  for (const row of policyQuickCustomerOptions.value) {
+    lookup.set(String(row.value || "").trim(), row);
+  }
+  return lookup;
+});
 const policyQuickOptionsMap = computed(() => ({
-  customers: asArray(resourceValue(policyQuickCustomerResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+  customers: policyQuickCustomerOptions.value,
   salesEntities: asArray(resourceValue(policyQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
   insuranceCompanies: companies.value.map((row) => ({ value: row.name, label: row.company_name || row.name })),
   branches: asArray(resourceValue(policyQuickBranchResource, [])).map((row) => ({ value: row.name, label: row.branch_name || row.name })),
   offers: asArray(resourceValue(policyQuickOfferResource, [])).map((row) => ({
     value: row.name,
-    label: `${row.name}${row.customer ? ` - ${row.customer}` : ""}`,
+    label: `${row.name}${row.customer ? ` - ${row.customer}` : ""}${row.status ? ` (${row.status})` : ""}`,
   })),
 }));
+const policyQuickAllowedStatuses = new Set(["Active", "KYT", "IPT"]);
+const policyQuickAllowedOfferNames = computed(() => new Set(policyQuickOptionsMap.value.offers.map((option) => String(option.value || "").trim()).filter(Boolean)));
 const quickPolicyUi = computed(() => ({
   title: getLocalizedText(quickPolicyConfig?.title, activeLocale.value),
   subtitle: getLocalizedText(quickPolicyConfig?.subtitle, activeLocale.value),
+  eyebrow: getQuickCreateEyebrow("policy", activeLocale.value),
   newLabel: activeLocale.value === "tr" ? "Yeni Poliçe" : "New Policy",
 }));
 const quickCreateCommon = computed(() => ({
-  cancel: activeLocale.value === "tr" ? "Vazgeç" : "Cancel",
-  save: activeLocale.value === "tr" ? "Kaydet" : "Save",
-  saveAndOpen: activeLocale.value === "tr" ? "Kaydet ve Aç" : "Save & Open",
+  ...getQuickCreateLabels("create", activeLocale.value),
   validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.",
+  issueDateAfterStartDate:
+    activeLocale.value === "tr"
+      ? "Tanzim tarihi başlangıç tarihinden sonra olamaz."
+      : "Issue date cannot be later than start date.",
+  startDateAfterEndDate:
+    activeLocale.value === "tr"
+      ? "Başlangıç tarihi bitiş tarihinden sonra olamaz."
+      : "Start date cannot be later than end date.",
   failed: activeLocale.value === "tr" ? "Hızlı poliçe oluşturma başarısız oldu." : "Quick policy create failed.",
 }));
 const policyListError = ref("");
@@ -913,6 +946,13 @@ function clearQuickPolicyFieldErrors() {
   Object.keys(quickPolicyFieldErrors).forEach((key) => delete quickPolicyFieldErrors[key]);
 }
 
+function parseDateOnly(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return null;
+  const date = new Date(`${trimmed}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function resetQuickPolicyForm() {
   Object.assign(quickPolicyForm, {
     queryText: "",
@@ -926,6 +966,7 @@ function resetQuickPolicyForm() {
 
 function openQuickPolicyDialog({ fromIntent = false, returnTo = "" } = {}) {
   resetQuickPolicyForm();
+  quickPolicyDialogKey.value += 1;
   quickPolicyOpenedFromIntent.value = !!fromIntent;
   quickPolicyReturnTo.value = returnTo || "";
   showQuickPolicyDialog.value = true;
@@ -944,11 +985,57 @@ function cancelQuickPolicyDialog() {
   quickPolicyReturnTo.value = "";
 }
 
+function syncQuickPolicyCustomerSelection() {
+  if (hasQuickPolicySourceOffer.value) return;
+  const customerName = String(quickPolicyForm.customer || "").trim();
+  const selectedCustomer = customerName ? policyQuickCustomerLookup.value.get(customerName) : null;
+
+  if (selectedCustomer) {
+    const selectedCustomerType = normalizeCustomerType(
+      selectedCustomer.customer_type || quickPolicyForm.customer_type,
+      selectedCustomer.tax_id || quickPolicyForm.customer_tax_id
+    );
+    quickPolicyForm.customer_full_name = String(selectedCustomer.label || customerName).trim() || customerName;
+    quickPolicyForm.queryText = quickPolicyForm.customer_full_name;
+    quickPolicyForm.customer_type = selectedCustomerType;
+    quickPolicyForm.customer_tax_id = selectedCustomer.tax_id || quickPolicyForm.customer_tax_id;
+    quickPolicyForm.customer_birth_date = selectedCustomerType === "Corporate" ? "" : String(selectedCustomer.birth_date || "").trim();
+    quickPolicyForm.customer_phone = selectedCustomer.phone || quickPolicyForm.customer_phone;
+    quickPolicyForm.customer_email = selectedCustomer.email || quickPolicyForm.customer_email;
+    quickPolicyForm.createCustomerMode = false;
+    return;
+  }
+
+  if (!quickPolicyForm.createCustomerMode) {
+    quickPolicyForm.customer_type = "Individual";
+    quickPolicyForm.customer_tax_id = "";
+    quickPolicyForm.customer_phone = "";
+    quickPolicyForm.customer_email = "";
+    quickPolicyForm.customer_birth_date = "";
+  }
+}
+
 function validateQuickPolicyForm() {
   clearQuickPolicyFieldErrors();
   quickPolicyError.value = "";
   let valid = true;
   const hasSourceOffer = hasQuickPolicySourceOffer.value;
+  const statusValue = String(quickPolicyForm.status || "").trim();
+  if (!hasSourceOffer && statusValue && !policyQuickAllowedStatuses.has(statusValue)) {
+    quickPolicyFieldErrors.status =
+      activeLocale.value === "tr"
+        ? "Geçersiz durum seçimi."
+        : "Unsupported status selection.";
+    valid = false;
+  }
+  const selectedSourceOffer = String(quickPolicyForm.source_offer || "").trim();
+  if (hasSourceOffer && selectedSourceOffer && !policyQuickAllowedOfferNames.value.has(selectedSourceOffer)) {
+    quickPolicyFieldErrors.source_offer =
+      activeLocale.value === "tr"
+        ? "Seçili teklif bulunamadı."
+        : "Selected source offer was not found.";
+    valid = false;
+  }
   for (const field of policyQuickFormFields.value) {
     if (!isFieldRequired(field)) continue;
     if (String(quickPolicyForm[field.name] ?? "").trim() === "") {
@@ -958,14 +1045,14 @@ function validateQuickPolicyForm() {
   }
   if (!hasSourceOffer && !String(quickPolicyForm.customer || "").trim()) {
     const shouldCreateCustomer = Boolean(quickPolicyForm.createCustomerMode);
-    const customerName = String(quickPolicyForm.queryText || "").trim();
+    const customerName = String(quickPolicyForm.customer_full_name || quickPolicyForm.queryText || "").trim();
     const identityNumber = normalizeIdentityNumber(quickPolicyForm.customer_tax_id);
     const customerType = normalizeCustomerType(quickPolicyForm.customer_type, identityNumber);
     if (!shouldCreateCustomer) {
       quickPolicyFieldErrors.customer =
         activeLocale.value === "tr"
           ? "Bir müşteri seçin veya yeni müşteri ekleyin."
-          : "Select a customer or add a new customer.";
+        : "Select a customer or add a new customer.";
       valid = false;
     } else if (!customerName) {
       quickPolicyFieldErrors.customer =
@@ -997,8 +1084,32 @@ function validateQuickPolicyForm() {
           : "Enter a valid Turkish national ID number.";
       valid = false;
     }
+    const birthDateValue = String(quickPolicyForm.customer_birth_date || "").trim();
+    if (shouldCreateCustomer && customerType !== "Corporate" && birthDateValue) {
+      const birthDate = new Date(`${birthDateValue}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (Number.isNaN(birthDate.getTime()) || birthDate > today) {
+        quickPolicyFieldErrors.customer_birth_date =
+          activeLocale.value === "tr" ? "Doğum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
+        valid = false;
+      }
+    }
   }
   if (!valid) {
+    quickPolicyError.value = quickCreateCommon.value.validation;
+    return false;
+  }
+  const issueDate = parseDateOnly(quickPolicyForm.issue_date);
+  const startDate = parseDateOnly(quickPolicyForm.start_date);
+  const endDate = parseDateOnly(quickPolicyForm.end_date);
+  if (issueDate && startDate && issueDate > startDate) {
+    quickPolicyFieldErrors.issue_date = quickCreateCommon.value.issueDateAfterStartDate;
+    quickPolicyError.value = quickCreateCommon.value.validation;
+    return false;
+  }
+  if (startDate && endDate && startDate > endDate) {
+    quickPolicyFieldErrors.end_date = quickCreateCommon.value.startDateAfterEndDate;
     quickPolicyError.value = quickCreateCommon.value.validation;
     return false;
   }
@@ -1019,19 +1130,28 @@ function buildQuickPolicyPayload() {
   const selectedCustomer = String(quickPolicyForm.customer || "").trim();
   const shouldCreateCustomer = !hasSourceOffer && !selectedCustomer && Boolean(quickPolicyForm.createCustomerMode);
   const identityNumber = normalizeIdentityNumber(quickPolicyForm.customer_tax_id);
+  const customerType = normalizeCustomerType(quickPolicyForm.customer_type, identityNumber);
+  const customerBirthDate = String(quickPolicyForm.customer_birth_date || "").trim();
+  const statusValue = String(quickPolicyForm.status || "").trim();
+  const normalizedStatus = hasSourceOffer
+    ? null
+    : policyQuickAllowedStatuses.has(statusValue)
+      ? statusValue
+      : "Active";
   return {
     customer: hasSourceOffer ? null : selectedCustomer || null,
-    customer_full_name: shouldCreateCustomer ? String(quickPolicyForm.queryText || "").trim() || null : null,
-    customer_type: shouldCreateCustomer ? normalizeCustomerType(quickPolicyForm.customer_type, identityNumber) : null,
+    customer_full_name: shouldCreateCustomer ? String(quickPolicyForm.customer_full_name || quickPolicyForm.queryText || "").trim() || null : null,
+    customer_type: shouldCreateCustomer ? customerType : null,
     customer_tax_id: shouldCreateCustomer ? identityNumber || null : null,
     customer_phone: shouldCreateCustomer ? quickPolicyForm.customer_phone || null : null,
     customer_email: shouldCreateCustomer ? quickPolicyForm.customer_email || null : null,
+    customer_birth_date: shouldCreateCustomer && customerType !== "Corporate" && customerBirthDate ? customerBirthDate : null,
     sales_entity: hasSourceOffer ? null : quickPolicyForm.sales_entity || null,
     insurance_company: hasSourceOffer ? null : quickPolicyForm.insurance_company || null,
     branch: hasSourceOffer ? null : quickPolicyForm.branch || null,
     policy_no: quickPolicyForm.policy_no || null,
     source_offer: quickPolicyForm.source_offer || null,
-    status: hasSourceOffer ? null : quickPolicyForm.status || "Active",
+    status: normalizedStatus,
     issue_date: hasSourceOffer ? null : quickPolicyForm.issue_date || null,
     start_date: quickPolicyForm.start_date || null,
     end_date: quickPolicyForm.end_date || null,
@@ -1040,10 +1160,22 @@ function buildQuickPolicyPayload() {
       hasSourceOffer || quickPolicyForm.gross_premium === ""
         ? null
         : Number(quickPolicyForm.gross_premium || 0),
-    net_premium: quickPolicyForm.net_premium === "" ? null : Number(quickPolicyForm.net_premium || 0),
-    tax_amount: quickPolicyForm.tax_amount === "" ? null : Number(quickPolicyForm.tax_amount || 0),
+    net_premium: hasSourceOffer
+      ? null
+      : quickPolicyForm.net_premium === ""
+        ? null
+        : Number(quickPolicyForm.net_premium || 0),
+    tax_amount: hasSourceOffer
+      ? null
+      : quickPolicyForm.tax_amount === ""
+        ? null
+        : Number(quickPolicyForm.tax_amount || 0),
     commission_amount:
-      quickPolicyForm.commission_amount === "" ? null : Number(quickPolicyForm.commission_amount || 0),
+      hasSourceOffer
+        ? null
+        : quickPolicyForm.commission_amount === ""
+          ? null
+          : Number(quickPolicyForm.commission_amount || 0),
     notes: quickPolicyForm.notes || null,
   };
 }
@@ -1081,10 +1213,15 @@ function applyQuickPolicyPrefills(prefills = {}) {
   for (const field of policyQuickFields.value) {
     const fieldName = String(field?.name || "").trim();
     if (!fieldName || !(fieldName in prefills)) continue;
-    quickPolicyForm[fieldName] = String(prefills[fieldName] ?? "").trim();
+    const prefillValue = String(prefills[fieldName] ?? "").trim();
+    if (fieldName === "status" && prefillValue && !policyQuickAllowedStatuses.has(prefillValue)) {
+      quickPolicyForm[fieldName] = "Active";
+      continue;
+    }
+    quickPolicyForm[fieldName] = prefillValue;
   }
   const customerName = String(prefills.customer || "").trim();
-  const customerLabel = String(prefills.customer_label || customerName || prefills.queryText || "").trim();
+  const customerLabel = String(prefills.customer_label || customerName || prefills.customer_full_name || prefills.queryText || "").trim();
   if (customerName) {
     quickPolicyForm.customer = customerName;
     quickPolicyForm.customerOption = {
@@ -1092,7 +1229,10 @@ function applyQuickPolicyPrefills(prefills = {}) {
       label: customerLabel || customerName,
     };
   }
-  if (customerLabel) quickPolicyForm.queryText = customerLabel;
+  if (customerLabel) {
+    quickPolicyForm.customer_full_name = customerLabel;
+    quickPolicyForm.queryText = customerLabel;
+  }
   if ("createCustomerMode" in prefills) {
     quickPolicyForm.createCustomerMode = String(prefills.createCustomerMode || "") === "1";
   }
@@ -1105,13 +1245,22 @@ function buildPolicyQuickReturnTo() {
     if (!fieldName) continue;
     const value = String(quickPolicyForm[fieldName] ?? "").trim();
     if (!value) continue;
+    if (fieldName === "status" && !policyQuickAllowedStatuses.has(value)) {
+      prefills[fieldName] = "Active";
+      continue;
+    }
     prefills[fieldName] = value;
   }
   const customerName = String(quickPolicyForm.customer || "").trim();
-  const customerLabel = String(quickPolicyForm.queryText || quickPolicyForm?.customerOption?.label || "").trim();
+  const customerLabel = String(
+    quickPolicyForm.customer_full_name || quickPolicyForm.queryText || quickPolicyForm?.customerOption?.label || ""
+  ).trim();
   if (customerName) prefills.customer = customerName;
   if (customerLabel) prefills.customer_label = customerLabel;
-  if (!customerName && customerLabel) prefills.queryText = customerLabel;
+  if (!customerName && customerLabel) {
+    prefills.customer_full_name = customerLabel;
+    prefills.queryText = customerLabel;
+  }
   if (quickPolicyForm.createCustomerMode) prefills.createCustomerMode = "1";
   return router.resolve({
     name: "policy-list",
@@ -1216,13 +1365,22 @@ watch(
   }
 );
 watch(
+  () => [quickPolicyForm.customer, quickPolicyForm.createCustomerMode, hasQuickPolicySourceOffer.value, policyQuickCustomerOptions.value.length],
+  () => {
+    syncQuickPolicyCustomerSelection();
+  },
+  { immediate: true }
+);
+watch(
   () => quickPolicyForm.source_offer,
   (value) => {
     if (!String(value || "").trim()) return;
     quickPolicyForm.customer = "";
+    quickPolicyForm.customer_full_name = "";
     quickPolicyForm.queryText = "";
     quickPolicyForm.customerOption = null;
     quickPolicyForm.createCustomerMode = false;
+    quickPolicyForm.customer_birth_date = "";
   }
 );
 void hydratePolicyPresetStateFromServer();

@@ -352,7 +352,7 @@ describe("Dashboard page store integration", () => {
 
     const text = wrapper.text();
     expect(text).toContain("Takip");
-    expect(text).toContain("Hasar Masası");
+    expect(text).toContain("Hasar Panosu");
     expect(text).toContain("Yenileme Panosu");
     expect(text).toContain("Merkezi");
   });

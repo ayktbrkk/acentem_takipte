@@ -107,7 +107,7 @@ const router = useRouter();
 
 const copy = {
   tr: {
-    breadcrumb: "Kontrol Merkezi / Mutabakat Detay",
+    breadcrumb: "Kontrol Merkezi / Mutabakat Detayı",
     back: "Listeye Dön",
     openWorkbench: "Mutabakat Masası",
     summary: "Özet Bilgiler",
@@ -141,10 +141,10 @@ const copy = {
     created: "Oluşturuldu",
     updated: "Güncellendi",
     synced: "Son Sync",
-    rawDetails: "Detay JSON",
+    rawDetails: "Ham JSON",
   },
   en: {
-    breadcrumb: "Control Center / Reconciliation Detail",
+    breadcrumb: "Control Center / Reconciliation Details",
     back: "Back to list",
     openWorkbench: "Reconciliation Workbench",
     summary: "Summary",
@@ -178,7 +178,7 @@ const copy = {
     created: "Created",
     updated: "Updated",
     synced: "Last Sync",
-    rawDetails: "Details JSON",
+    rawDetails: "Raw JSON",
   },
 };
 

@@ -58,6 +58,7 @@
 - `07-formlar-dialoglar/01-quick-create-all.md` (Toplu) ✅ TAMAMLANDI
 - `07-formlar-dialoglar/02-edit-forms-all.md` (Toplu) ✅ TAMAMLANDI
 - `07-formlar-dialoglar/03-import-export.md` ✅ TAMAMLANDI
+- `07-formlar-dialoglar/04-hizli-ekranlar-yol-haritasi.md` (Yeni hizli ekran dili yol haritasi)
 
 ## 8️⃣ Final Cleanup (1 gün)
 - `08-final-cleanup/01-cleanup-optimization.md` ✅ TAMAMLANDI

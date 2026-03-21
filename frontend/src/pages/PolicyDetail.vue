@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell">
+  <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">Sigorta Operasyonları → Poliçeler</p>
@@ -18,8 +18,12 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-sm" type="button" @click="goBack">{{ t("backList") }}</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</button>
+        <ActionButton variant="secondary" size="sm" type="button" @click="goBack">
+          {{ t("backList") }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" type="button" @click="openQuickOwnershipAssignment">
+          {{ t("newAssignment") }}
+        </ActionButton>
       </div>
     </div>
 
@@ -50,7 +54,9 @@
 
           <SectionPanel :title="t('timelineTitle')">
             <template #trailing>
-              <button class="btn btn-sm" type="button" @click="openQuickOwnershipAssignment">{{ t("newAssignment") }}</button>
+              <ActionButton variant="secondary" size="sm" type="button" @click="openQuickOwnershipAssignment">
+                {{ t("newAssignment") }}
+              </ActionButton>
             </template>
             <div v-if="timelineLoading" class="card-empty">{{ t("loading") }}</div>
             <div v-else-if="timelineItems.length === 0" class="card-empty">{{ t("emptyTimeline") }}</div>
@@ -197,6 +203,7 @@
       v-model="showOwnershipAssignmentDialog"
       config-key="ownership_assignment"
       :locale="activeLocale"
+      :eyebrow="ownershipAssignmentEyebrow"
       :options-map="policyQuickOptionsMap"
       :before-open="prepareOwnershipAssignmentDialog"
       :success-handlers="ownershipAssignmentSuccessHandlers"
@@ -205,6 +212,7 @@
       v-model="showOwnershipAssignmentEditDialog"
       config-key="ownership_assignment_edit"
       :locale="activeLocale"
+      :eyebrow="ownershipAssignmentEditEyebrow"
       :options-map="policyQuickOptionsMap"
       :before-open="prepareOwnershipAssignmentEditDialog"
       :success-handlers="ownershipAssignmentSuccessHandlers"
@@ -218,6 +226,7 @@ import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { deskActionsEnabled } from "../utils/deskActions";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
@@ -225,24 +234,27 @@ import HeroStrip from "../components/ui/HeroStrip.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import StepBar from "../components/ui/StepBar.vue";
+import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
 
 const props = defineProps({ name: { type: String, default: "" } });
 const router = useRouter();
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
+const ownershipAssignmentEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Hızlı Atama" : "Quick Assignment"));
+const ownershipAssignmentEditEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("ownership_assignment_edit")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Atamayı Düzenle" : "Edit Assignment"));
 
 const labels = {
   tr: {
-    overview: "Poliçe Detayı", openDesk: "Yönetim Ekranında Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
+    overview: "Poliçe Detayı", openDesk: "Yönetim Ekranını Aç", backList: "Listeye Dön", loading: "Yükleniyor...",
     recordNo: "Kayıt No", carrierPolicyNo: "Şirket Poliçe No",
     copy: "Kopyala", copied: "Kopyalandı", notAssigned: "Henüz atanmadı",
     mobileQuickActionsTitle: "Hızlı İşlemler",
     timelineTitle: "Zaman Tüneli", emptyTimeline: "Bu poliçede zaman tüneli kaydı yok.", lifecycleTitle: "Poliçe Yaşam Döngüsü",
-    emptyLifecycle: "Anlık görüntü kaydı yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Müşteri Kartı",
-    emptyCustomer: "Müşteri kaydı yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Müşteri 360",
+    emptyLifecycle: "Anlık görüntü kaydı yok.", premiumTitle: "Prim Bilgileri", customerTitle: "Müşteri Detayı",
+    emptyCustomer: "Müşteri kaydı yok.", taxId: "TC/VKN", phone: "Telefon", address: "Adres", customer360: "Müşteri Detaylarını Aç",
     scheduleTitle: "Vade Tarihleri", issue: "Tanzim", start: "Başlangıç", end: "Bitiş", remaining: "Kalan Gün",
     net: "Net Prim", tax: "Vergi", commission: "Komisyon", gross: "Brüt Prim", commissionRate: "Komisyon Oranı", gwpTry: "GWP TRY",
-    payments: "Ödemeler", emptyPayments: "Ödeme kaydı yok.", installmentsTitle: "Taksit Planı", emptyInstallments: "Taksit kaydı yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydı yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydı yok.", remindersTitle: "Hatırlatıcılar", emptyReminders: "Hatırlatıcı kaydı yok.", reminderAt: "Hatırlatma", reminderPriority: "Öncelik", markDone: "Tamamla", cancelReminder: "İptal Et", installmentNo: "Taksit", paidOn: "Ödeme Tarihi", coverageContext: "Poliçe Kapsam Bilgileri", snapshotSummary: "Anlık Görüntü Özeti", newAssignment: "Yeni Atama", edit: "Düzenle", delete: "Sil", deleteAssignmentConfirm: "Bu atama kaydı silinsin mi?", startAssignment: "İşleme Al", blockAssignment: "Bloke Et", closeAssignment: "Kapat",
+    payments: "Ödemeler", emptyPayments: "Ödeme kaydı yok.", installmentsTitle: "Taksit Planı", emptyInstallments: "Taksit kaydı yok.", assignmentsTitle: "Atamalar", emptyAssignments: "Atama kaydı yok.", activitiesTitle: "Aktiviteler", emptyActivities: "Aktivite kaydı yok.", remindersTitle: "Hatırlatıcılar", emptyReminders: "Hatırlatıcı kaydı yok.", reminderAt: "Hatırlatma", reminderPriority: "Öncelik", markDone: "Tamamla", cancelReminder: "İptal", installmentNo: "Taksit", paidOn: "Ödeme Tarihi", coverageContext: "Poliçe Kapsam Bilgileri", snapshotSummary: "Anlık Görüntü Özeti", newAssignment: "Yeni Atama", edit: "Düzenle", delete: "Sil", deleteAssignmentConfirm: "Bu atama kaydı silinsin mi?", startAssignment: "İşleme Al", blockAssignment: "Bloke Et", closeAssignment: "Kapat",
     productProfileTitle: "Ürün Profili",
     productReadinessTitle: "Ürün Hazırlık Durumu",
     company: "Sigorta Şirketi", branch: "Branş", customer: "Müşteri", status: "Durum", currency: "Para Birimi", fxRate: "Kur", fxDate: "Kur Tarihi",
@@ -256,13 +268,13 @@ const labels = {
     typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Süresi Doldu", noDate: "Tarih yok",
   },
   en: {
-    overview: "Policy Detail", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
+    overview: "Policy Details", openDesk: "Open Desk", backList: "Back to List", loading: "Loading...",
     recordNo: "Record No", carrierPolicyNo: "Carrier Policy No",
     copy: "Copy", copied: "Copied", notAssigned: "Not assigned yet",
     mobileQuickActionsTitle: "Quick Actions",
     timelineTitle: "Timeline", emptyTimeline: "No timeline activity.", lifecycleTitle: "Policy Lifecycle",
-    emptyLifecycle: "No snapshot records.", premiumTitle: "Premium Details", customerTitle: "Customer Card",
-    emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Customer 360",
+    emptyLifecycle: "No snapshot records.", premiumTitle: "Premium Details", customerTitle: "Customer Details",
+    emptyCustomer: "Customer not found.", taxId: "Tax ID", phone: "Phone", address: "Address", customer360: "Open Customer Details",
     scheduleTitle: "Schedule", issue: "Issue Date", start: "Start Date", end: "End Date", remaining: "Days Remaining",
     net: "Net Premium", tax: "Tax", commission: "Commission", gross: "Gross Premium", commissionRate: "Commission Rate", gwpTry: "GWP TRY",
     payments: "Payments", emptyPayments: "No payments.", installmentsTitle: "Installment Schedule", emptyInstallments: "No installment records.", assignmentsTitle: "Assignments", emptyAssignments: "No assignments.", activitiesTitle: "Activities", emptyActivities: "No activities found.", remindersTitle: "Reminders", emptyReminders: "No reminders found.", reminderAt: "Reminder At", reminderPriority: "Priority", markDone: "Mark Done", cancelReminder: "Cancel", installmentNo: "Installment", paidOn: "Paid On", coverageContext: "Policy Coverage Context", snapshotSummary: "Snapshot Summary", newAssignment: "New Assignment", edit: "Edit", delete: "Delete", deleteAssignmentConfirm: "Delete this assignment record?", startAssignment: "Start", blockAssignment: "Block", closeAssignment: "Close",
@@ -411,7 +423,7 @@ const remainingDays = computed(() => {
 });
 const carrierPolicyDisplayValue = computed(() => policy.value.policy_no || t("notAssigned"));
 const remainingLabel = computed(() => (remainingDays.value == null ? t("noDate") : remainingDays.value < 0 ? t("expired") : String(remainingDays.value)));
-const remainingClass = computed(() => (remainingDays.value == null ? "text-slate-500" : remainingDays.value < 0 ? "text-rose-600" : remainingDays.value <= 30 ? "text-amber-600" : "text-emerald-600"));
+const remainingClass = computed(() => (remainingDays.value == null ? "text-slate-500" : remainingDays.value < 0 ? "text-amber-700" : remainingDays.value <= 30 ? "text-amber-600" : "text-emerald-600"));
 const headerSummaryItems = computed(() => [
   {
     key: "status",
@@ -829,7 +841,7 @@ async function deleteOwnershipAssignment(assignment) {
   });
   await load();
 }
-const endorsementStatusClass = (s) => (s === "Applied" ? "text-emerald-700" : s === "Cancelled" ? "text-rose-700" : "text-slate-700");
+const endorsementStatusClass = (s) => (s === "Applied" ? "text-emerald-700" : s === "Cancelled" ? "text-slate-700" : "text-slate-700");
 
 function policyStatusLabel(status) {
   if (activeLocale.value !== "tr") return status || "-";

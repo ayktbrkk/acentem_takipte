@@ -7,7 +7,7 @@
         <template v-else>
           <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             {{ fieldLabel(field) }}
-            <span v-if="isFieldRequired(field)" class="text-rose-500">*</span>
+            <span v-if="isFieldRequired(field)" class="text-amber-500">*</span>
           </label>
 
           <template v-if="field.type === 'select'">

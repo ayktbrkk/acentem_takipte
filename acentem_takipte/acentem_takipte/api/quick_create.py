@@ -1,5 +1,7 @@
 ﻿from __future__ import annotations
 
+from datetime import date, datetime
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, getdate, nowdate
@@ -114,7 +116,7 @@ def create_quick_lead(
         part for part in [(first_name or "").strip(), (last_name or "").strip()] if part
     ).strip()
     resolved_first_name, resolved_last_name = _split_full_name(full_name)
-    auto_customer, _ = resolve_or_create_quick_customer(
+    auto_customer, customer_created = resolve_or_create_quick_customer(
         customer=normalized_customer,
         full_name=full_name,
         customer_type=normalize_customer_type(customer_type, tax_id),
@@ -153,6 +155,7 @@ def create_quick_policy(
     customer_tax_id: str | None = None,
     customer_phone: str | None = None,
     customer_email: str | None = None,
+    customer_birth_date: str | None = None,
     sales_entity: str | None = None,
     insurance_company: str | None = None,
     branch: str | None = None,
@@ -185,18 +188,22 @@ def create_quick_policy(
             policy_no=policy_no,
         )
 
-    issue = getdate(issue_date) if issue_date else getdate(nowdate())
-    start = getdate(start_date) if start_date else issue
-    end = getdate(end_date) if end_date else add_days(start, 365)
+    today = _normalize_date(nowdate())
+    issue = _normalize_date(issue_date) or today
+    start = _normalize_date(start_date) or issue
+    end = _normalize_date(end_date) or add_days(start, 365)
     resolved_office_branch = _resolve_office_branch(office_branch, customer=customer)
-    resolved_customer, _ = resolve_or_create_quick_customer(
+    normalized_customer_type = normalize_customer_type(customer_type, customer_tax_id)
+    normalized_birth_date = _normalize_date(customer_birth_date) if customer_birth_date else None
+    resolved_customer, customer_created = resolve_or_create_quick_customer(
         customer=customer,
         full_name=customer_full_name,
-        customer_type=normalize_customer_type(customer_type, customer_tax_id),
+        customer_type=normalized_customer_type,
         tax_id=customer_tax_id,
         phone=customer_phone,
         email=customer_email,
         office_branch=resolved_office_branch,
+        birth_date=normalized_birth_date if normalized_customer_type != "Corporate" else None,
         require_customer=True,
     )
 
@@ -241,9 +248,9 @@ def create_quick_claim(
 ) -> dict[str, str]:
     _assert_create_permission("AT Claim", _("You do not have permission to create claims."))
 
-    today = getdate(nowdate())
-    incident = getdate(incident_date) if incident_date else today
-    reported = getdate(reported_date) if reported_date else today
+    today = _normalize_date(nowdate())
+    incident = _normalize_date(incident_date) or today
+    reported = _normalize_date(reported_date) or today
 
     payload = {
         "doctype": "AT Claim",
@@ -288,13 +295,16 @@ def create_quick_payment(
     notes: str | None = None,
 ) -> dict[str, str]:
     _assert_create_permission("AT Payment", _("You do not have permission to create payments."))
+    today = _normalize_date(nowdate())
+    normalized_customer = _normalize_link("AT Customer", customer, required=True)
+    normalized_policy = _normalize_link("AT Policy", policy)
 
     payload = {
         "doctype": "AT Payment",
-        "customer": _normalize_link("AT Customer", customer, required=True),
+        "customer": normalized_customer,
         "policy": normalized_policy,
         "claim": _normalize_link("AT Claim", claim),
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
         "payment_direction": _normalize_option(payment_direction, {"Inbound", "Outbound"}, default="Inbound"),
         "payment_purpose": _normalize_option(
@@ -303,8 +313,8 @@ def create_quick_payment(
             default="Premium Collection",
         ),
         "status": _normalize_option(status, set(ATPaymentStatus.VALID), default=ATPaymentStatus.DRAFT),
-        "payment_date": getdate(payment_date) if payment_date else getdate(nowdate()),
-        "due_date": getdate(due_date) if due_date else None,
+        "payment_date": _normalize_date(payment_date) or today,
+        "due_date": _normalize_date(due_date) if due_date else None,
         "installment_count": max(cint(installment_count or 1), 1),
         "installment_interval_days": max(cint(installment_interval_days or 30), 1),
         "currency": ((currency or "TRY").strip() or "TRY").upper(),
@@ -332,15 +342,17 @@ def create_quick_renewal_task(
 ) -> dict[str, str]:
     _assert_create_permission("AT Renewal Task", _("You do not have permission to create renewal tasks."))
 
-    today = getdate(nowdate())
-    renewal = getdate(renewal_date) if renewal_date else add_days(today, 30)
-    due = getdate(due_date) if due_date else add_days(renewal, -15)
+    today = _normalize_date(nowdate())
+    renewal = _normalize_date(renewal_date) or add_days(today, 30)
+    due = _normalize_date(due_date) or add_days(renewal, -15)
+    normalized_policy = _normalize_link("AT Policy", policy, required=True)
+    normalized_customer = _normalize_link("AT Customer", customer, required=True)
 
     payload = {
         "doctype": "AT Renewal Task",
-        "policy": _normalize_link("AT Policy", policy, required=True),
-        "customer": _normalize_link("AT Customer", customer, required=True),
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "policy": normalized_policy,
+        "customer": normalized_customer,
+        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
         "renewal_date": renewal,
         "due_date": due,
         "status": _normalize_option(status, set(ATRenewalTaskStatus.VALID), default=ATRenewalTaskStatus.OPEN),
@@ -396,9 +408,11 @@ def create_quick_insured_asset(
 ) -> dict[str, str]:
     _assert_create_permission("AT Insured Asset", _("You do not have permission to create insured assets."))
 
+    normalized_customer = _normalize_link("AT Customer", customer, required=True)
+    normalized_policy = _normalize_link("AT Policy", policy)
     payload = {
         "doctype": "AT Insured Asset",
-        "customer": _normalize_link("AT Customer", customer, required=True),
+        "customer": normalized_customer,
         "policy": normalized_policy,
         "asset_type": _normalize_option(
             asset_type,
@@ -428,18 +442,20 @@ def create_quick_call_note(
 ) -> dict[str, str]:
     _assert_create_permission("AT Call Note", _("You do not have permission to create call notes."))
 
+    normalized_customer = _normalize_link("AT Customer", customer, required=True)
+    normalized_policy = _normalize_link("AT Policy", policy)
     payload = {
         "doctype": "AT Call Note",
-        "customer": _normalize_link("AT Customer", customer, required=True),
+        "customer": normalized_customer,
         "policy": normalized_policy,
         "claim": _normalize_link("AT Claim", claim),
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
         "channel": _normalize_option(channel, {"Phone Call", "WhatsApp Call", "Video Call", "Other"}, default="Phone Call"),
         "direction": _normalize_option(direction, {"Inbound", "Outbound"}, default="Outbound"),
         "call_status": _normalize_option(call_status, {"Planned", "Completed", "Missed", "No Answer", "Cancelled"}, default="Completed"),
         "call_outcome": (call_outcome or "").strip() or None,
-        "note_at": note_at or frappe.utils.now_datetime(),
-        "next_follow_up_on": getdate(next_follow_up_on) if next_follow_up_on else None,
+        "note_at": _normalize_datetime(note_at) or frappe.utils.now_datetime(),
+        "next_follow_up_on": _normalize_date(next_follow_up_on) if next_follow_up_on else None,
         "notes": normalize_note_text(notes),
     }
     return create_call_note_service(payload)
@@ -491,7 +507,7 @@ def create_quick_campaign(
         "channel": _normalize_option(channel, {"WHATSAPP", "SMS", "Email", "Phone Call"}, default="WHATSAPP"),
         "office_branch": _resolve_office_branch(office_branch),
         "status": _normalize_option(status, {"Draft", "Planned", "Running", "Completed", "Cancelled"}, default="Draft"),
-        "scheduled_for": frappe.utils.get_datetime(scheduled_for) if scheduled_for else None,
+        "scheduled_for": _normalize_datetime(scheduled_for) if scheduled_for else None,
         "notes": normalize_note_text(notes),
     }
     return create_campaign_service(payload)
@@ -521,6 +537,8 @@ def create_quick_ownership_assignment(
     normalized_source_name = (source_name or "").strip() or None
     if normalized_source_doctype and normalized_source_name and not frappe.db.exists(normalized_source_doctype, normalized_source_name):
         frappe.throw(_("Linked source record was not found"))
+    normalized_customer = _normalize_link("AT Customer", customer)
+    normalized_policy = _normalize_link("AT Policy", policy)
 
     payload = {
         "doctype": "AT Ownership Assignment",
@@ -528,12 +546,12 @@ def create_quick_ownership_assignment(
         "source_name": normalized_source_name,
         "customer": normalized_customer,
         "policy": normalized_policy,
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
         "assigned_to": _normalize_link("User", assigned_to, required=True),
         "assignment_role": _normalize_option(assignment_role, {"Owner", "Assignee", "Reviewer", "Follower"}, default="Owner"),
         "status": _normalize_option(status, {"Open", "In Progress", "Blocked", "Done", "Cancelled"}, default="Open"),
         "priority": _normalize_option(priority, {"Low", "Normal", "High", "Critical"}, default="Normal"),
-        "due_date": getdate(due_date) if due_date else None,
+        "due_date": _normalize_date(due_date) if due_date else None,
         "notes": normalize_note_text(notes),
     }
     return create_ownership_assignment_service(payload)
@@ -566,6 +584,10 @@ def create_quick_task(
     normalized_source_name = (source_name or "").strip() or None
     if normalized_source_doctype and normalized_source_name and not frappe.db.exists(normalized_source_doctype, normalized_source_name):
         frappe.throw(_("Linked source record was not found"))
+    normalized_customer = _normalize_link("AT Customer", customer)
+    normalized_policy = _normalize_link("AT Policy", policy)
+    normalized_claim = _normalize_link("AT Claim", claim)
+    normalized_assigned_to = _normalize_link("User", assigned_to, required=True)
 
     payload = {
         "doctype": "AT Task",
@@ -575,13 +597,13 @@ def create_quick_task(
         "source_name": normalized_source_name,
         "customer": normalized_customer,
         "policy": normalized_policy,
-        "claim": _normalize_link("AT Claim", claim),
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
-        "assigned_to": _normalize_link("User", assigned_to, required=True),
+        "claim": normalized_claim,
+        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
+        "assigned_to": normalized_assigned_to,
         "status": _normalize_option(status, {"Open", "In Progress", "Blocked", "Done", "Cancelled"}, default="Open"),
         "priority": _normalize_option(priority, {"Low", "Normal", "High", "Critical"}, default="Normal"),
-        "due_date": getdate(due_date) if due_date else None,
-        "reminder_at": frappe.utils.get_datetime(reminder_at) if reminder_at else None,
+        "due_date": _normalize_date(due_date) if due_date else None,
+        "reminder_at": _normalize_datetime(reminder_at) if reminder_at else None,
         "notes": normalize_note_text(notes),
     }
     return create_task_service(payload)
@@ -604,6 +626,10 @@ def create_quick_activity(
 ) -> dict[str, str]:
     _assert_create_permission("AT Activity", _("You do not have permission to create activities."))
 
+    normalized_customer = _normalize_link("AT Customer", customer)
+    normalized_policy = _normalize_link("AT Policy", policy)
+    normalized_claim = _normalize_link("AT Claim", claim)
+    normalized_assigned_to = _normalize_link("User", assigned_to)
     payload = {
         "doctype": "AT Activity",
         "activity_title": (activity_title or "").strip(),
@@ -614,12 +640,12 @@ def create_quick_activity(
         ),
         "source_doctype": _normalize_doctype_or_blank(source_doctype),
         "source_name": _normalize_source_name(source_doctype, source_name),
-        "customer": _normalize_link("AT Customer", customer) if (customer or "").strip() else None,
-        "policy": _normalize_link("AT Policy", policy) if (policy or "").strip() else None,
-        "claim": _normalize_link("AT Claim", claim) if (claim or "").strip() else None,
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
-        "assigned_to": _normalize_link("User", assigned_to) if (assigned_to or "").strip() else None,
-        "activity_at": frappe.utils.get_datetime(activity_at) if activity_at else frappe.utils.now_datetime(),
+        "customer": normalized_customer,
+        "policy": normalized_policy,
+        "claim": normalized_claim,
+        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
+        "assigned_to": normalized_assigned_to,
+        "activity_at": _normalize_datetime(activity_at) or frappe.utils.now_datetime(),
         "status": _normalize_option(status, {"Logged", "Shared", "Archived"}, default="Logged"),
         "notes": normalize_note_text(notes),
     }
@@ -651,6 +677,9 @@ def create_quick_reminder(
     normalized_source_name = (source_name or "").strip() or None
     if normalized_source_doctype and normalized_source_name and not frappe.db.exists(normalized_source_doctype, normalized_source_name):
         frappe.throw(_("Linked source record was not found"))
+    normalized_customer = _normalize_link("AT Customer", customer)
+    normalized_policy = _normalize_link("AT Policy", policy)
+    normalized_claim = _normalize_link("AT Claim", claim)
 
     payload = {
         "doctype": "AT Reminder",
@@ -659,12 +688,12 @@ def create_quick_reminder(
         "source_name": normalized_source_name,
         "customer": normalized_customer,
         "policy": normalized_policy,
-        "claim": _normalize_link("AT Claim", claim),
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "claim": normalized_claim,
+        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
         "assigned_to": _normalize_link("User", assigned_to, required=True),
         "status": _normalize_option(status, {"Open", "Done", "Cancelled"}, default="Open"),
         "priority": _normalize_option(priority, {"Low", "Normal", "High", "Critical"}, default="Normal"),
-        "remind_at": frappe.utils.get_datetime(remind_at) if remind_at else frappe.utils.now_datetime(),
+        "remind_at": _normalize_datetime(remind_at) or frappe.utils.now_datetime(),
         "notes": normalize_note_text(notes),
     }
     return create_reminder_service(payload)
@@ -1212,6 +1241,44 @@ def _normalize_link(doctype: str, value: str | None, *, required: bool = False) 
     return normalized
 
 
+def _normalize_date(value: str | date | None, *, default: date | None = None) -> date | None:
+    if value is None or value == "":
+        return default
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+
+    normalized = str(value).strip()
+    if not normalized:
+        return default
+
+    try:
+        parsed = getdate(normalized)
+    except Exception:
+        frappe.throw(_("Invalid date value: {0}").format(normalized))
+    if not parsed:
+        frappe.throw(_("Invalid date value: {0}").format(normalized))
+    return parsed
+
+
+def _normalize_datetime(value: str | datetime | None, *, default: datetime | None = None) -> datetime | None:
+    if value is None or value == "":
+        return default
+    if isinstance(value, datetime):
+        return value
+
+    normalized = str(value).strip()
+    if not normalized:
+        return default
+
+    try:
+        parsed = frappe.utils.get_datetime(normalized)
+    except Exception:
+        frappe.throw(_("Invalid datetime value: {0}").format(normalized))
+    if not parsed:
+        frappe.throw(_("Invalid datetime value: {0}").format(normalized))
+    return parsed
+
+
 def _resolve_office_branch(
     office_branch: str | None = None,
     *,
@@ -1601,17 +1668,29 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         if field in {"status"} and doc.doctype == "AT Reminder":
             setattr(doc, field, _normalize_option(value, {"Open", "Done", "Cancelled"}, default="Open"))
             continue
+        if field in {"note_at"} and doc.doctype == "AT Call Note":
+            setattr(doc, field, _normalize_datetime(value) if value else None)
+            continue
+        if field in {"next_follow_up_on"} and doc.doctype in {"AT Call Note", "AT Claim"}:
+            setattr(doc, field, _normalize_date(value) if value else None)
+            continue
         if field in {"due_date"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, getdate(value) if value else None)
+            setattr(doc, field, _normalize_date(value) if value else None)
             continue
         if field in {"due_date"} and doc.doctype == "AT Task":
-            setattr(doc, field, getdate(value) if value else None)
+            setattr(doc, field, _normalize_date(value) if value else None)
             continue
         if field in {"reminder_at"} and doc.doctype == "AT Task":
-            setattr(doc, field, frappe.utils.get_datetime(value) if value else None)
+            setattr(doc, field, _normalize_datetime(value) if value else None)
             continue
         if field in {"remind_at"} and doc.doctype == "AT Reminder":
-            setattr(doc, field, frappe.utils.get_datetime(value) if value else None)
+            setattr(doc, field, _normalize_datetime(value) if value else None)
+            continue
+        if field in {"activity_at"} and doc.doctype == "AT Activity":
+            setattr(doc, field, _normalize_datetime(value) if value else None)
+            continue
+        if field in {"scheduled_for"} and doc.doctype == "AT Campaign":
+            setattr(doc, field, _normalize_datetime(value) if value else None)
             continue
         if field in {"source_doctype"}:
             setattr(doc, field, _normalize_doctype_or_blank(value))
@@ -1676,7 +1755,3 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         if field in {"currency"}:
             setattr(doc, field, ((value or "TRY").strip() or "TRY").upper())
             continue
-        if field in {"scheduled_for"}:
-            setattr(doc, field, frappe.utils.get_datetime(value) if value else None)
-            continue
-

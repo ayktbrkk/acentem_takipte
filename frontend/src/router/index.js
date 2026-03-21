@@ -93,7 +93,7 @@ const router = createRouter({
       component: LeadDetail,
       props: true,
       meta: {
-        title: { tr: "Fırsat Detayı", en: "Lead Detail" },
+        title: { tr: "Fırsat Detayı", en: "Lead Details" },
         section: { tr: "Satış ve Portföy", en: "Sales & Portfolio" },
       },
     },
@@ -112,7 +112,7 @@ const router = createRouter({
       component: OfferDetail,
       props: true,
       meta: {
-        title: { tr: "Teklif Detayı", en: "Offer Detail" },
+        title: { tr: "Teklif Detayı", en: "Offer Details" },
         section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
@@ -131,7 +131,7 @@ const router = createRouter({
       component: PolicyDetail,
       props: true,
       meta: {
-        title: { tr: "Poliçe Detayı", en: "Policy Detail" },
+        title: { tr: "Poliçe Detayı", en: "Policy Details" },
         section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
@@ -149,7 +149,7 @@ const router = createRouter({
       name: "claims-board",
       component: ClaimsBoard,
       meta: {
-        title: { tr: "Hasar Masası", en: "Claims Desk" },
+        title: { tr: "Hasar Panosu", en: "Claims Board" },
         section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
@@ -159,7 +159,7 @@ const router = createRouter({
       component: ClaimDetail,
       props: true,
       meta: {
-        title: { tr: "Hasar Detayı", en: "Claim Detail" },
+        title: { tr: "Hasar Detayı", en: "Claim Details" },
         section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
@@ -178,7 +178,7 @@ const router = createRouter({
       component: PaymentDetail,
       props: true,
       meta: {
-        title: { tr: "Ödeme Detayı", en: "Payment Detail" },
+        title: { tr: "Ödeme Detayı", en: "Payment Details" },
         section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
@@ -197,7 +197,7 @@ const router = createRouter({
       component: RenewalTaskDetail,
       props: true,
       meta: {
-        title: { tr: "Yenileme Detayı", en: "Renewal Detail" },
+        title: { tr: "Yenileme Detayı", en: "Renewal Details" },
         section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
@@ -229,7 +229,7 @@ const router = createRouter({
       component: ReconciliationDetail,
       props: true,
       meta: {
-        title: { tr: "Mutabakat Detay", en: "Reconciliation Detail" },
+        title: { tr: "Mutabakat Detayı", en: "Reconciliation Details" },
         section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
@@ -302,7 +302,7 @@ const router = createRouter({
       component: CustomerDetail,
       props: true,
       meta: {
-        title: { tr: "Müşteri Detayı", en: "Customer Detail" },
+        title: { tr: "Müşteri Detayı", en: "Customer Details" },
         section: { tr: "Müşteri", en: "Customer" },
       },
     },

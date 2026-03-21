@@ -39,7 +39,7 @@
 
         <SectionPanel :title="t('documents')">
           <template #trailing>
-            <button class="btn btn-sm" type="button" @click="openPolicy">Yükle</button>
+            <button class="btn btn-sm" type="button" @click="openClaimDocuments">{{ t("openDocuments") }}</button>
           </template>
           <p v-if="!documents.length" class="card-empty">{{ t("noDocuments") }}</p>
           <div v-else>
@@ -147,6 +147,7 @@ const copy = {
     process: "Hasar Süreci",
     details: "Hasar Detayları",
     documents: "Belgeler",
+    openDocuments: "Belgeleri Aç",
     timeline: "Zaman Tuneli",
     noDocuments: "Belge eklenmemiş.",
     updated: "Güncellendi",
@@ -167,6 +168,7 @@ const copy = {
     process: "Claim Process",
     details: "Claim Details",
     documents: "Documents",
+    openDocuments: "Open Documents",
     timeline: "Timeline",
     noDocuments: "No documents.",
     updated: "Updated",

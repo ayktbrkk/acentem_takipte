@@ -172,7 +172,7 @@ const copy = {
     owner: "Oluşturan",
     modifiedBy: "Güncelleyen",
     openCustomer: "Müşteri kaydını aç",
-    openPolicy: "Poliçe kaydını aç",
+    openPolicy: "Poliçeyi Aç",
     openClaim: "Hasar kaydını aç",
   },
   en: {
@@ -219,7 +219,7 @@ const copy = {
     owner: "Owner",
     modifiedBy: "Modified By",
     openCustomer: "Open customer record",
-    openPolicy: "Open policy record",
+    openPolicy: "Open Policy",
     openClaim: "Open claim record",
   },
 };

@@ -367,7 +367,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.find("tbody tr").findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.find("tbody tr").findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -443,7 +443,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledTimes(1);
@@ -510,7 +510,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -585,7 +585,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({
@@ -660,7 +660,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
+    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith({

@@ -1,6 +1,6 @@
 <template>
   <WorkbenchPageLayout
-    breadcrumb="Veri Yönetimi → Dışa Aktarma"
+    :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
     :show-record-count="false"
@@ -108,6 +108,7 @@ const authStore = useAuthStore(appPinia);
 
 const copy = {
   tr: {
+    breadcrumb: "Veri Yönetimi → Dışa Aktarma",
     title: "Veri Dışa Aktarma",
     subtitle: "Raporlama ve analiz için sistem verilerini farklı formatlarda indirin.",
     reset: "Sıfırla",
@@ -147,6 +148,7 @@ const copy = {
     screenNoLabel: "Kayıt",
   },
   en: {
+    breadcrumb: "Data Management → Export",
     title: "Data Export",
     subtitle: "Download system data in different formats for reporting and analysis.",
     reset: "Reset",

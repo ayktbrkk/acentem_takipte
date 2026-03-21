@@ -628,7 +628,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayi Kapat"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayı Kapat"));
     await button.trigger("click");
 
     expect(auxSubmit).toHaveBeenCalledWith({
@@ -679,7 +679,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayi İşleme Al"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayı İşleme Al"));
     await button.trigger("click");
 
     expect(auxSubmit).toHaveBeenCalledWith({
@@ -730,7 +730,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayi Bloke Et"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Atamayı Bloke Et"));
     await button.trigger("click");
 
     expect(auxSubmit).toHaveBeenCalledWith({
@@ -832,7 +832,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatırlatıcıyi Tamamla"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatırlatıcıyı Tamamla"));
     await button.trigger("click");
 
     expect(auxSubmit).toHaveBeenCalledWith({
@@ -883,7 +883,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Hatırlatıcıyi İptal Et"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("İptal"));
     await button.trigger("click");
 
     expect(auxSubmit).toHaveBeenCalledWith({

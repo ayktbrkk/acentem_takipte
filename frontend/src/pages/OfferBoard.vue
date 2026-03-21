@@ -77,13 +77,10 @@
       <div v-if="offersResource.loading" class="surface-card rounded-2xl p-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
-      <div
-        v-else-if="offersLoadErrorText"
-        class="surface-card rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-rose-700"
-      >
-        <p class="text-sm font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="mt-1 text-sm">{{ offersLoadErrorText }}</p>
-      </div>
+      <article v-else-if="offersLoadErrorText" class="qc-error-banner">
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ offersLoadErrorText }}</p>
+      </article>
       <div v-else-if="offers.length === 0" class="surface-card rounded-2xl p-5">
         <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
       </div>
@@ -178,7 +175,7 @@
 
     <Dialog v-model="showConvertDialog" :options="{ title: t('convertDialogTitle'), size: 'xl' }">
       <template #body-content>
-        <QuickCreateDialogShell :error="convertError" :show-footer="false">
+        <QuickCreateDialogShell :error="convertError" :eyebrow="convertDialogEyebrow" :show-footer="false">
           <p class="text-sm text-slate-600">
             {{ t("selectedOffer") }}: <strong class="text-slate-900">{{ selectedOffer?.name || "-" }}</strong>
           </p>
@@ -277,6 +274,7 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
+const convertDialogEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Dönüştürme" : "Quick Conversion"));
 
 function buildOfficeBranchLookupFilters() {
   const officeBranch = branchStore.requestBranch || "";
@@ -343,7 +341,7 @@ const copy = {
     netPremiumShort: "Net Prim",
     commissionShort: "Komisyon",
     recordId: "Kayıt",
-    openDesk: "Yönetim Ekranında Aç",
+    openDesk: "Yönetim Ekranını Aç",
     sortModifiedDesc: "Son Güncellenen",
     sortValidUntilAsc: "Geçerlilik (Yakın)",
     sortValidUntilDesc: "Geçerlilik (Uzak)",
@@ -363,14 +361,14 @@ const copy = {
     acceptedLane: "Kabul Edildi",
     convertedLane: "Poliçeye Dönüştü",
     convert: "Poliçeye Çevir",
-    openPolicy: "Poliçe Detayını Aç",
+    openPolicy: "Poliçeyi Aç",
     convertDialogTitle: "Teklif -> Poliçe",
     selectedOffer: "Seçili Teklif",
     netPremium: "Net Prim",
     taxAmount: "Vergi Tutarı",
     commissionAmount: "Komisyon Tutarı",
     policyNo: "Sigorta Şirketi Poliçe No (Opsiyonel)",
-    cancel: "Vazgeç",
+    cancel: "İptal",
     createPolicy: "Poliçe Oluştur",
     statusDraft: "Taslak",
     statusSent: "Gönderildi",
@@ -441,7 +439,7 @@ const copy = {
     netPremiumShort: "Net Premium",
     commissionShort: "Commission",
     recordId: "Record",
-    openDesk: "Open in Desk",
+    openDesk: "Open Desk",
     sortModifiedDesc: "Last Modified",
     sortValidUntilAsc: "Valid Until (Soonest)",
     sortValidUntilDesc: "Valid Until (Latest)",
@@ -461,7 +459,7 @@ const copy = {
     acceptedLane: "Accepted",
     convertedLane: "Converted to Policy",
     convert: "Convert to Policy",
-    openPolicy: "Open Policy Detail",
+    openPolicy: "Open Policy",
     convertDialogTitle: "Offer -> Policy",
     selectedOffer: "Selected offer",
     netPremium: "Net Premium",

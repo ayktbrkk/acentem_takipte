@@ -328,7 +328,7 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(wrapper.text()).toContain("REC-001");
     expect(wrapper.text()).toContain("REC-002");
     expect(wrapper.html()).toContain("text-green-600");
-    expect(wrapper.html()).toContain("text-red-600");
+    expect(wrapper.html()).toContain("text-amber-700");
 
     const sourceQueryInput = wrapper.find(`input[placeholder="Kaynak kayıt / ref ara"]`);
     await sourceQueryInput.setValue("PAY-001");
