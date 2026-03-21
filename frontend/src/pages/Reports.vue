@@ -268,15 +268,15 @@
           <h4 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h4>
           <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
         </div>
-        <ActionButton
-          variant="secondary"
-          size="sm"
-          data-testid="run-segment-snapshot-job"
-          :disabled="snapshotRunLoading"
-          @click="runCustomerSegmentSnapshots"
-        >
+        <button
+        class="btn btn-sm"
+        type="button"
+        data-testid="run-segment-snapshot-job"
+        :disabled="snapshotRunLoading"
+        @click="runCustomerSegmentSnapshots"
+>
           {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
-        </ActionButton>
+        </button>
       </div>
     </SectionPanel>
   </section>
@@ -287,7 +287,6 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, unref, watch } fro
 import { frappeRequest } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
-import ActionButton from "../components/app-shell/ActionButton.vue";
 import EmptyState from "../components/app-shell/EmptyState.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ScheduledReportsManager from "../components/reports/ScheduledReportsManager.vue";
