@@ -46,3 +46,37 @@ Current behavior (verifiable in repo):
 Recommended improvement:
 - Standardize job summary logs across all scheduled jobs (start, end, duration, scanned/created/skipped counts),
   and document where operators should look for these logs in your Bench / deployment environment.
+
+## Frontend E2E KPI Gate
+
+Current behavior (verifiable in repo):
+- The site-map Playwright scan emits structured outputs:
+  - `frontend/test-results/site-haritasi-summary.json`
+  - `frontend/test-results/site-haritasi-kpi.txt`
+- KPI gate script: `frontend/scripts/e2e/validate-site-haritasi-kpi.mjs`
+  - always fails when `app_errors > 0`
+  - supports optional external thresholds (warn/fail)
+
+Recommended invocation style:
+- Run commands from repository root with npm prefix to avoid cwd drift:
+  - `npm --prefix frontend run e2e:site-map`
+  - `npm --prefix frontend run e2e:site-map:kpi`
+  - `npm --prefix frontend run e2e:site-map:ci`
+- If you are already in `frontend/`, run scripts without prefix:
+  - `npm run e2e:site-map:kpi`
+
+Profile variants:
+- Warning profile: `npm --prefix frontend run e2e:site-map:kpi:warn`
+- Strict profile: `npm --prefix frontend run e2e:site-map:kpi:strict`
+
+Optional threshold controls:
+- CLI: `--external-warn=<n>`, `--external-max=<n>`
+- ENV: `SITE_HARITASI_EXTERNAL_WARN`, `SITE_HARITASI_EXTERNAL_MAX`
+
+Quick CI example (GitHub Actions style):
+- `npm --prefix frontend ci`
+- `npm --prefix frontend run e2e:site-map`
+- `npm --prefix frontend run e2e:site-map:kpi:warn`
+
+Strict nightly example:
+- `npm --prefix frontend run e2e:site-map:ci:strict`
