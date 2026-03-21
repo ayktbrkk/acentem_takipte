@@ -2,7 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">{{ t("overview") }}</p>
+        <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
         <h1 class="detail-title">
           {{ customer.full_name || name }}
           <StatusBadge domain="customer" :status="customerStatus" />
@@ -10,16 +10,20 @@
         <p v-if="customerHeaderSubtitle" class="detail-subtitle">
           {{ customerHeaderSubtitle }}
         </p>
-        <div class="mt-1.5 flex items-center gap-2">
+        <div class="mt-1.5 flex flex-wrap items-center gap-2">
           <span class="copy-tag">{{ customer.name || name || "-" }}</span>
           <span v-if="customerTaxIdDisplay !== '-'" class="copy-tag">
             {{ customerTaxIdLabel }}: {{ customerTaxIdDisplay }}
           </span>
+          <span class="copy-tag">{{ customerTypeLabel }}</span>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <ActionButton variant="secondary" size="sm" @click="router.push('/customers')">
-          {{ t("tabOverview") }}
+          {{ t("backList") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
+          {{ t("communication") }}
         </ActionButton>
         <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
           {{ t("newOffer") }}
@@ -778,7 +782,9 @@ const ownershipAssignmentEditEyebrow = computed(() => getLocalizedText(getQuickC
 
 const copy = {
   tr: {
+    breadcrumb: "Operasyonlar / Müşteriler",
     overview: "Müşteri Detayı",
+    backList: "Listeye Dön",
     openDesk: "Yönetim Ekranını Aç",
     newOffer: "Yeni Teklif",
     communication: "İletişim",
@@ -961,7 +967,9 @@ const copy = {
     typeLead: "Lead Notu",
   },
   en: {
+    breadcrumb: "Operations / Customers",
     overview: "Customer Details",
+    backList: "Back to List",
     openDesk: "Open Desk",
     newOffer: "New Offer",
     communication: "Communication",
