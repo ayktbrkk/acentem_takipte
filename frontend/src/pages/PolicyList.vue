@@ -1,37 +1,48 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ policyListTotalCount }} poliçe</p>
-      </div>
-      <div class="flex gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="focusPolicySearch">Filtrele</button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">Dışa Aktar</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openQuickPolicyDialog">+ Yeni Poliçe</button>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(policyListTotalCount)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <button class="btn btn-outline btn-sm" type="button" @click="focusPolicySearch">{{ t("focusFilters") }}</button>
+      <button class="btn btn-outline btn-sm" type="button" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">{{ t("exportXlsx") }}</button>
+      <button class="btn btn-primary btn-sm" type="button" @click="openQuickPolicyDialog">{{ t("newPolicy") }}</button>
+    </template>
 
-    <div class="grid grid-cols-1 gap-4 px-5 md:grid-cols-4">
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Poliçe</p>
-        <p class="mini-metric-value">{{ formatCount(policySummary.total) }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ formatCount(policySummary.total) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryActive") }}</p>
+          <p class="mini-metric-value text-brand-600">{{ formatCount(policySummary.active) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryPending") }}</p>
+          <p class="mini-metric-value text-amber-600">{{ formatCount(policySummary.pending) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotalPremium") }}</p>
+          <p class="mini-metric-value text-green-600">{{ formatCurrency(policySummary.totalPremium, "TRY") }}</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Aktif</p>
-        <p class="mini-metric-value text-brand-600">{{ formatCount(policySummary.active) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Beklemede</p>
-        <p class="mini-metric-value text-amber-600">{{ formatCount(policySummary.pending) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Prim</p>
-        <p class="mini-metric-value text-green-600">{{ formatCurrency(policySummary.totalPremium, "TRY") }}</p>
-      </div>
-    </div>
+    </template>
 
-    <div class="surface-card rounded-2xl p-4">
+    <article v-if="policyListError" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ policyListError }}</p>
+    </article>
+
+    <SectionPanel
+      :title="t('filtersTitle')"
+      :count="`${policyListActiveCount} ${t('activeFilters')}`"
+      panel-class="surface-card rounded-2xl p-4"
+    >
       <FilterBar
         v-model:search="policyListSearchQuery"
         :filters="policyListFilterConfig"
@@ -40,8 +51,8 @@
         @reset="onPolicyListFilterReset"
       >
         <template #actions>
-          <button class="btn btn-sm" :disabled="policyLoading" @click="refreshPolicyList">Yenile</button>
-          <button v-if="policyListActiveCount > 0" class="btn btn-outline btn-sm" @click="onPolicyListFilterReset">Temizle</button>
+          <button class="btn btn-sm" :disabled="policyLoading" @click="refreshPolicyList">{{ t("refresh") }}</button>
+          <button v-if="policyListActiveCount > 0" class="btn btn-outline btn-sm" @click="onPolicyListFilterReset">{{ t("clearFilters") }}</button>
         </template>
       </FilterBar>
       <div class="hidden" aria-hidden="true">
@@ -56,26 +67,30 @@
         <span>{{ t("mobileSummaryTitle") }}</span>
         <span>{{ t("pageSize") }}: {{ pagination.pageLength || 20 }}</span>
       </div>
-    </div>
+    </SectionPanel>
 
-    <div class="surface-card rounded-2xl p-5">
+    <SectionPanel
+      :title="t('policyTableTitle')"
+      :count="formatCount(policyListTotalCount)"
+      panel-class="surface-card rounded-2xl p-5"
+    >
       <ListTable
         :columns="policyListColumns"
         :rows="policyListRowsWithUrgency"
         :loading="policyLoading"
-        empty-message="Poliçe bulunamadı."
+        :empty-message="t('empty')"
         @row-click="(row) => openPolicyDetail(row.name)"
       />
 
       <div class="mt-4 flex items-center justify-between">
-        <p class="text-xs text-gray-400">{{ policyListPagedRows.length }} / {{ policyListTotalCount }} kayıt gösteriliyor</p>
+        <p class="text-xs text-gray-400">{{ policyListPagedRows.length }} / {{ policyListTotalCount }} {{ t("showingRecords") }}</p>
         <div class="flex items-center gap-1">
           <button class="btn btn-sm" :disabled="policyListPage <= 1" @click="policyListPage--">←</button>
           <span class="px-2 text-xs text-gray-600">{{ policyListPage }}</span>
           <button class="btn btn-sm" :disabled="policyListPage >= policyListTotalPages" @click="policyListPage++">→</button>
         </div>
       </div>
-    </div>
+    </SectionPanel>
 
     <Dialog v-model="showQuickPolicyDialog" :options="{ title: quickPolicyUi.title, size: 'xl' }">
       <template #body-content>
@@ -97,7 +112,7 @@
         />
       </template>
     </Dialog>
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -108,15 +123,13 @@ import { Dialog, createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { usePolicyStore } from "../stores/policy";
-import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
-import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import PolicyForm from "../components/PolicyForm.vue";
@@ -151,11 +164,21 @@ function buildOfficeBranchLookupFilters() {
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Poliçeler",
     title: "Poliçe Yönetimi",
     subtitle: "Poliçe listesini filtreleyin, sıralayın ve sayfalayın",
+    recordCount: "kayıt",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
+    newPolicy: "+ Yeni Poliçe",
+    focusFilters: "Filtrele",
+    filtersTitle: "Filtreler",
+    policyTableTitle: "Poliçe Listesi",
+    summaryTotal: "Toplam Poliçe",
+    summaryActive: "Aktif",
+    summaryPending: "Beklemede",
+    summaryTotalPremium: "Toplam Prim",
     allCompanies: "Tüm Sigorta Şirketleri",
     searchPlaceholder: "Poliçe / Müşteri / Kayıt ara",
     endDateFilter: "Bitiş Tarihi",
@@ -176,6 +199,7 @@ const copy = {
     clearFilters: "Filtreleri Temizle",
     mobileSummaryTitle: "Liste Özeti",
     pageSize: "Sayfa Boyutu",
+    showingRecords: "kayıt gösteriliyor",
     customerFilter: "Müşteri (içerir)",
     grossMinFilter: "Min Brüt Prim",
     grossMaxFilter: "Max Brüt Prim",
@@ -208,11 +232,21 @@ const copy = {
     sortGrossDesc: "Brüt Prim (Yüksek)",
   },
   en: {
+    breadcrumb: "Insurance Operations → Policies",
     title: "Policy Workbench",
     subtitle: "Filter, sort, and paginate the policy list",
+    recordCount: "records",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
+    newPolicy: "+ New Policy",
+    focusFilters: "Focus Filters",
+    filtersTitle: "Filters",
+    policyTableTitle: "Policy List",
+    summaryTotal: "Total Policies",
+    summaryActive: "Active",
+    summaryPending: "Pending",
+    summaryTotalPremium: "Total Premium",
     allCompanies: "All Insurance Companies",
     searchPlaceholder: "Search policy / customer / record",
     endDateFilter: "End Date",
@@ -233,6 +267,7 @@ const copy = {
     clearFilters: "Clear Filters",
     mobileSummaryTitle: "List Summary",
     pageSize: "Page Size",
+    showingRecords: "records shown",
     customerFilter: "Customer (contains)",
     grossMinFilter: "Min Gross Premium",
     grossMaxFilter: "Max Gross Premium",
