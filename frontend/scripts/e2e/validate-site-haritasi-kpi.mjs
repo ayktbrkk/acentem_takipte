@@ -54,6 +54,8 @@ function main() {
     `SITE_HARITASI_KPI visited=${visited} app_errors=${appErrors} external_errors=${externalErrors} ` +
     `refused=${refused} http404=${http404} http417=${http417} other_external=${otherExternal}`;
 
+  const kpiPath = path.join(path.dirname(summaryPath), "site-haritasi-kpi.txt");
+  fs.writeFileSync(kpiPath, `${kpiLine}\n`, "utf8");
   console.log(kpiLine);
 
   if (appErrors > 0) {
