@@ -1,86 +1,86 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <QuickCreateLauncher
-          variant="secondary"
-          size="sm"
-          :label="t('quickSegment')"
-          @launch="showSegmentDialog = true"
-        />
-        <QuickCreateLauncher
-          variant="secondary"
-          size="sm"
-          :label="t('quickCampaign')"
-          @launch="showCampaignDialog = true"
-        />
-        <QuickCreateLauncher
-          variant="secondary"
-          size="sm"
-          :label="t('runCampaign')"
-          @launch="showCampaignRunDialog = true"
-        />
-        <QuickCreateLauncher
-          variant="secondary"
-          size="sm"
-          :label="t('previewSegment')"
-          @launch="showSegmentPreviewDialog = true"
-        />
-        <QuickCreateLauncher
-          variant="secondary"
-          size="sm"
-          :label="t('quickCallNote')"
-          @launch="showCallNoteDialog = true"
-        />
-        <QuickCreateLauncher
-          variant="secondary"
-          size="sm"
-          :label="t('quickReminder')"
-          @launch="showReminderDialog = true"
-        />
-        <QuickCreateLauncher
-          v-if="canCreateQuickMessage"
-          variant="primary"
-          size="sm"
-          :label="t('quickMessage')"
-          @launch="showQuickMessageDialog = true"
-        />
-        <ActionButton
-          v-if="canReturnToContext"
-          variant="secondary"
-          size="sm"
-          @click="returnToContext"
-        >
-          {{ returnToLabel }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="reloadSnapshot">
-          {{ t("refresh") }}
-        </ActionButton>
-        <ActionButton
-          variant="secondary"
-          size="sm"
-          :disabled="snapshotResource.loading"
-          @click="downloadCommunicationExport('xlsx')"
-        >
-          {{ t("exportXlsx") }}
-        </ActionButton>
-        <ActionButton
-          variant="primary"
-          size="sm"
-          :disabled="snapshotResource.loading"
-          @click="downloadCommunicationExport('pdf')"
-        >
-          {{ t("exportPdf") }}
-        </ActionButton>
-        <ActionButton v-if="canRunDispatchCycle" variant="primary" size="sm" :disabled="dispatching" @click="runDispatchCycle">
-          {{ dispatching ? t("dispatching") : t("dispatch") }}
-        </ActionButton>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="outboxItems.length + draftItems.length"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <QuickCreateLauncher
+        variant="secondary"
+        size="sm"
+        :label="t('quickSegment')"
+        @launch="showSegmentDialog = true"
+      />
+      <QuickCreateLauncher
+        variant="secondary"
+        size="sm"
+        :label="t('quickCampaign')"
+        @launch="showCampaignDialog = true"
+      />
+      <QuickCreateLauncher
+        variant="secondary"
+        size="sm"
+        :label="t('runCampaign')"
+        @launch="showCampaignRunDialog = true"
+      />
+      <QuickCreateLauncher
+        variant="secondary"
+        size="sm"
+        :label="t('previewSegment')"
+        @launch="showSegmentPreviewDialog = true"
+      />
+      <QuickCreateLauncher
+        variant="secondary"
+        size="sm"
+        :label="t('quickCallNote')"
+        @launch="showCallNoteDialog = true"
+      />
+      <QuickCreateLauncher
+        variant="secondary"
+        size="sm"
+        :label="t('quickReminder')"
+        @launch="showReminderDialog = true"
+      />
+      <QuickCreateLauncher
+        v-if="canCreateQuickMessage"
+        variant="primary"
+        size="sm"
+        :label="t('quickMessage')"
+        @launch="showQuickMessageDialog = true"
+      />
+      <ActionButton
+        v-if="canReturnToContext"
+        variant="secondary"
+        size="sm"
+        @click="returnToContext"
+      >
+        {{ returnToLabel }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="reloadSnapshot">
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton
+        variant="secondary"
+        size="sm"
+        :disabled="snapshotResource.loading"
+        @click="downloadCommunicationExport('xlsx')"
+      >
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton
+        variant="primary"
+        size="sm"
+        :disabled="snapshotResource.loading"
+        @click="downloadCommunicationExport('pdf')"
+      >
+        {{ t("exportPdf") }}
+      </ActionButton>
+      <ActionButton v-if="canRunDispatchCycle" variant="primary" size="sm" :disabled="dispatching" @click="runDispatchCycle">
+        {{ dispatching ? t("dispatching") : t("dispatch") }}
+      </ActionButton>
+    </template>
 
     <SectionPanel :title="t('filtersTitle')" :count="activeFilterCount" panel-class="surface-card rounded-2xl p-5">
       <WorkbenchFilterToolbar
@@ -229,12 +229,14 @@
       </div>
     </article>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
-      <div v-for="card in statusCards" :key="card.key" class="mini-metric">
-        <p class="mini-metric-label">{{ card.label }}</p>
-        <p class="mini-metric-value">{{ card.value }}</p>
+    <template #metrics>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div v-for="card in statusCards" :key="card.key" class="mini-metric">
+          <p class="mini-metric-label">{{ card.label }}</p>
+          <p class="mini-metric-value">{{ card.value }}</p>
+        </div>
       </div>
-    </div>
+    </template>
 
     <article v-if="snapshotErrorMessage" class="qc-error-banner">
       <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
@@ -591,7 +593,7 @@
       :build-payload="buildQuickMessagePayload"
       :success-handlers="quickMessageSuccessHandlers"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -610,6 +612,7 @@ import EmptyState from "../components/app-shell/EmptyState.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
@@ -624,6 +627,8 @@ const communicationStore = useCommunicationStore();
 
 const copy = {
   tr: {
+    breadcrumb: "Kontrol Merkezi → İletişim",
+    recordCount: "kayıt",
     title: "İletişim Merkezi",
     subtitle: "Bildirim kuyruğu, dağıtım ve yeniden deneme operasyonları",
     refresh: "Yenile",
@@ -735,6 +740,8 @@ const copy = {
     renewalWindow: "Yenileme Penceresi",
   },
   en: {
+    breadcrumb: "Control Center → Communication",
+    recordCount: "records",
     title: "Communication Center",
     subtitle: "Notification queue, dispatch and retry operations",
     refresh: "Refresh",

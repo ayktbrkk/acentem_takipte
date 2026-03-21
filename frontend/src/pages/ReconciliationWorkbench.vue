@@ -1,72 +1,72 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <p class="detail-breadcrumb">Kontrol Merkezi / Mutabakat</p>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <ActionButton variant="secondary" size="sm" @click="openImportDialog">
-          {{ t("importStatement") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Matched')">
-          {{ bulkActionLoading ? t("bulkResolving") : t("bulkResolve") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Ignored')">
-          {{ bulkActionLoading ? t("bulkIgnoring") : t("bulkIgnore") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" :disabled="syncing" @click="runSync">
-          {{ syncing ? t("syncing") : t("sync") }}
-        </ActionButton>
-        <ActionButton variant="primary" size="sm" :disabled="reconciling" @click="runReconciliation">
-          {{ reconciling ? t("reconciling") : t("reconcile") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
-          {{ t("refresh") }}
-        </ActionButton>
-        <ActionButton
-          variant="secondary"
-          size="sm"
-          :disabled="workbenchLoading"
-          @click="downloadReconciliationExport('xlsx')"
-        >
-          {{ t("exportXlsx") }}
-        </ActionButton>
-        <ActionButton
-          variant="primary"
-          size="sm"
-          :disabled="workbenchLoading"
-          @click="downloadReconciliationExport('pdf')"
-        >
-          {{ t("exportPdf") }}
-        </ActionButton>
-        <span class="text-sm text-slate-400">{{ rows.length }} {{ t("recordCount") }}</span>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="rows.length"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="openImportDialog">
+        {{ t("importStatement") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Matched')">
+        {{ bulkActionLoading ? t("bulkResolving") : t("bulkResolve") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Ignored')">
+        {{ bulkActionLoading ? t("bulkIgnoring") : t("bulkIgnore") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="syncing" @click="runSync">
+        {{ syncing ? t("syncing") : t("sync") }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" :disabled="reconciling" @click="runReconciliation">
+        {{ reconciling ? t("reconciling") : t("reconcile") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton
+        variant="secondary"
+        size="sm"
+        :disabled="workbenchLoading"
+        @click="downloadReconciliationExport('xlsx')"
+      >
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton
+        variant="primary"
+        size="sm"
+        :disabled="workbenchLoading"
+        @click="downloadReconciliationExport('pdf')"
+      >
+        {{ t("exportPdf") }}
+      </ActionButton>
+    </template>
 
-    <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Kayıt</p>
-        <p class="mini-metric-value">{{ reconciliationSummary.total }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ reconciliationSummary.total }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryMatched") }}</p>
+          <p class="mini-metric-value text-emerald-600">{{ reconciliationSummary.matched }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryPending") }}</p>
+          <p class="mini-metric-value text-amber-600">{{ reconciliationSummary.pending }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryMismatch") }}</p>
+          <p class="mini-metric-value text-amber-700">{{ reconciliationSummary.mismatch }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryDifference") }}</p>
+          <p class="mini-metric-value text-sky-600">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Eşleşti</p>
-        <p class="mini-metric-value text-emerald-600">{{ reconciliationSummary.matched }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Beklemede</p>
-        <p class="mini-metric-value text-amber-600">{{ reconciliationSummary.pending }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Uyumsuzluk</p>
-        <p class="mini-metric-value text-amber-700">{{ reconciliationSummary.mismatch }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Tutar Farkı</p>
-        <p class="mini-metric-value text-sky-600">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
-      </div>
-    </div>
+    </template>
 
     <div v-if="operationError" class="qc-error-banner" role="alert" aria-live="polite">
       <p class="qc-error-banner__text">{{ operationError }}</p>
@@ -305,7 +305,7 @@
         </QuickCreateDialogShell>
       </template>
     </Dialog>
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -325,6 +325,7 @@ import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import EmptyState from "../components/app-shell/EmptyState.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ListTable from "../components/ui/ListTable.vue";
@@ -337,9 +338,15 @@ import { openTabularExport } from "../utils/listExport";
 
 const copy = {
   tr: {
+    breadcrumb: "Kontrol Merkezi → Mutabakat",
     title: "Mutabakat Masası",
     subtitle: "Muhasebe uyumsuzluklarını izleyin, eşleştirin ve kapatın",
     recordCount: "kayıt",
+    summaryTotal: "Toplam Kayıt",
+    summaryMatched: "Eşleşti",
+    summaryPending: "Beklemede",
+    summaryMismatch: "Uyumsuzluk",
+    summaryDifference: "Toplam Tutar Farkı",
     importStatement: "Ekstre İçe Aktar",
     importStatementTitle: "Ekstre İçe Aktarma Önizlemesi",
     importStatementSubtitle: "CSV içeriğini yapıştır, poliçe veya ödeme eşleşmelerini önizle.",
@@ -452,9 +459,15 @@ const copy = {
     mismatchOther: "Diğer",
   },
   en: {
+    breadcrumb: "Control Center → Reconciliation",
     title: "Reconciliation Workbench",
     subtitle: "Track, match and close accounting mismatches",
     recordCount: "records",
+    summaryTotal: "Total Records",
+    summaryMatched: "Matched",
+    summaryPending: "Pending",
+    summaryMismatch: "Mismatch",
+    summaryDifference: "Total Difference",
     importStatement: "Import Statement",
     importStatementTitle: "Statement Import Preview",
     importStatementSubtitle: "Paste CSV content and preview policy or payment matches.",
