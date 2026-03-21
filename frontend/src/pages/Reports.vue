@@ -1,22 +1,21 @@
 <template>
   <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div class="detail-topbar">
       <div>
         <p class="detail-breadcrumb">Kontrol Merkezi / Raporlar</p>
         <h1 class="detail-title">{{ t("title") }}</h1>
         <p class="detail-subtitle">{{ t("subtitle") }}</p>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <ActionButton variant="secondary" size="sm" :disabled="loading" @click="loadReport">
+      <div class="flex items-center gap-2">
+        <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="loadReport">
           {{ t("refresh") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
+        </button>
+        <button class="btn btn-outline btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
           {{ t("exportXlsx") }}
-        </ActionButton>
-        <ActionButton variant="primary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
+        </button>
+        <button class="btn btn-primary btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
           {{ t("exportPdf") }}
-        </ActionButton>
-        <span class="text-sm text-slate-400">{{ sortedRows.length }} {{ t("recordCount") }}</span>
+        </button>
       </div>
     </div>
 
@@ -64,7 +63,6 @@
     <SectionPanel
       :title="t('filtersTitle')"
       :count="`${activeFilterCount} ${t('activeFilters')}`"
-      panel-class="surface-card rounded-2xl p-4"
     >
       <WorkbenchFilterToolbar
         v-model="presetKey"
@@ -130,7 +128,6 @@
       :title="activeReportLabel"
       :count="sortedRows.length"
       :meta="branchScopeLabel"
-      panel-class="surface-card rounded-2xl p-5"
     >
       <div class="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
         <span v-if="exportLoading">{{ t("exporting") }}</span>
