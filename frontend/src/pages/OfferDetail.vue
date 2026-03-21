@@ -2,24 +2,24 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Teklifler</p>
+        <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
         <h1 class="detail-title">
-          {{ offer.offer_no || 'Teklif Detayı' }}
+          {{ offer.offer_no || t("overview") }}
           <StatusBadge :status="uiOfferStatus" />
         </h1>
-        <div class="mt-1.5 flex items-center gap-2">
+        <p v-if="offerHeaderSubtitle" class="detail-subtitle">{{ offerHeaderSubtitle }}</p>
+        <div class="mt-1.5 flex flex-wrap items-center gap-2">
           <span class="copy-tag">{{ offer.name || name }}</span>
-          <span v-if="offer.customer_name || offer.customer" class="text-sm text-gray-500">
-            {{ offer.customer_name || offer.customer }}
-          </span>
+          <span v-if="offer.customer_name || offer.customer" class="copy-tag">{{ offer.customer_name || offer.customer }}</span>
+          <span v-if="offer.branch" class="copy-tag">{{ offer.branch }}</span>
         </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="goBack">Listeye Dön</button>
-        <button class="btn btn-outline btn-sm" type="button" @click="downloadPDF">PDF İndir</button>
-        <button class="btn btn-outline btn-sm" type="button" @click="sendEmail">Mail Gönder</button>
-        <button v-if="isOfferConvertible" class="btn btn-primary btn-sm" type="button" @click="convertToPolicy">Poliçeye Dönüştür</button>
-        <button v-else class="btn btn-primary btn-sm" type="button" @click="editOffer">Düzenle</button>
+      <div class="flex flex-wrap items-center gap-2">
+        <button class="btn btn-outline btn-sm" type="button" @click="goBack">{{ t("backList") }}</button>
+        <button class="btn btn-outline btn-sm" type="button" @click="downloadPDF">{{ t("downloadPdf") }}</button>
+        <button class="btn btn-outline btn-sm" type="button" @click="sendEmail">{{ t("sendEmail") }}</button>
+        <button v-if="isOfferConvertible" class="btn btn-primary btn-sm" type="button" @click="convertToPolicy">{{ t("convertToPolicy") }}</button>
+        <button v-else class="btn btn-primary btn-sm" type="button" @click="editOffer">{{ t("edit") }}</button>
       </div>
     </div>
 
@@ -27,19 +27,19 @@
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
-        <SectionPanel title="Teminatlar">
+        <SectionPanel :title="t('coverageTitle')">
           <template #trailing>
-            <button class="btn btn-sm" type="button" @click="editOffer">Düzenle</button>
+            <button class="btn btn-sm" type="button" @click="editOffer">{{ t("edit") }}</button>
           </template>
 
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="!coverages.length" class="card-empty">Teminat bilgisi girilmemiş.</div>
+          <div v-else-if="!coverages.length" class="card-empty">{{ t("emptyCoverages") }}</div>
           <table v-else class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="table-header">Teminat</th>
-                <th class="table-header text-right">Limit</th>
-                <th class="table-header text-right">Prim</th>
+                <th class="table-header">{{ t("coverageColumn") }}</th>
+                <th class="table-header text-right">{{ t("limitColumn") }}</th>
+                <th class="table-header text-right">{{ t("premiumColumn") }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -52,26 +52,26 @@
           </table>
         </SectionPanel>
 
-        <SectionPanel title="Dökümanlar">
+        <SectionPanel :title="t('documentsTitle')">
           <template #trailing>
             <button class="btn btn-sm" type="button" @click="editOffer">{{ t("edit") }}</button>
           </template>
 
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="!documents.length" class="card-empty">Döküman yüklenmemiş.</div>
+          <div v-else-if="!documents.length" class="card-empty">{{ t("emptyDocuments") }}</div>
           <div v-else class="divide-y divide-gray-100">
             <div v-for="doc in documents" :key="doc.name || doc.file_url || doc.file_name" class="flex items-center justify-between py-2.5">
               <div class="flex items-center gap-2">
                 <span class="text-sm text-gray-900">{{ doc.file_name || doc.label || doc.name }}</span>
               </div>
-              <button class="btn btn-sm" type="button" @click="openDocument(doc)">İndir</button>
+              <button class="btn btn-sm" type="button" @click="openDocument(doc)">{{ t("downloadDocument") }}</button>
             </div>
           </div>
         </SectionPanel>
 
-        <SectionPanel title="Aktiviteler">
+        <SectionPanel :title="t('activitiesTitle')">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
-          <div v-else-if="!activities.length" class="card-empty">Henüz aktivite kaydı yok.</div>
+          <div v-else-if="!activities.length" class="card-empty">{{ t("emptyActivities") }}</div>
           <div v-else>
             <div v-for="activity in activities" :key="activity.name || activity.key" class="timeline-item">
               <div :class="['tl-dot', activity.is_important && 'tl-dot-active']" />
@@ -84,25 +84,25 @@
         </SectionPanel>
       </div>
 
-      <div class="detail-sidebar space-y-4">
-        <SectionPanel title="Müşteri">
+      <aside class="detail-sidebar space-y-4">
+        <SectionPanel :title="t('customerPanelTitle')">
           <div class="mb-3 flex items-center gap-3">
             <div class="avatar avatar-md avatar-blue">{{ initials(offer.customer_name || offer.customer) }}</div>
             <div>
               <p class="text-sm font-medium text-gray-900">{{ offer.customer_name || offer.customer || '-' }}</p>
-              <button class="text-xs text-brand-600 hover:underline" type="button" @click="viewCustomer">Detayı Gör →</button>
+              <button class="text-xs text-brand-600 hover:underline" type="button" @click="viewCustomer">{{ t("openCustomer360") }} →</button>
             </div>
           </div>
         </SectionPanel>
 
-        <SectionPanel title="Teklif Detayları">
+        <SectionPanel :title="t('offerInfoTitle')">
           <FieldGroup :fields="offerFields" :cols="1" />
         </SectionPanel>
 
-        <SectionPanel title="Kayıt Bilgileri">
+        <SectionPanel :title="t('recordMetaTitle')">
           <FieldGroup :fields="recordFields" :cols="1" />
         </SectionPanel>
-      </div>
+      </aside>
     </div>
   </section>
 </template>
@@ -129,11 +129,26 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const copy = {
   tr: {
+    breadcrumb: "Satış → Teklifler",
     overview: "Teklif Detayı",
     openDesk: "Yönetim Ekranını Aç",
     backList: "Listeye Dön",
+    downloadPdf: "PDF İndir",
+    sendEmail: "Mail Gönder",
+    edit: "Düzenle",
     loading: "Yükleniyor...",
     loadError: "Teklif detayı yüklenemedi.",
+    coverageTitle: "Teminatlar",
+    coverageColumn: "Teminat",
+    limitColumn: "Limit",
+    premiumColumn: "Prim",
+    emptyCoverages: "Teminat bilgisi girilmemiş.",
+    documentsTitle: "Dökümanlar",
+    emptyDocuments: "Döküman yüklenmemiş.",
+    downloadDocument: "İndir",
+    activitiesTitle: "Aktiviteler",
+    emptyActivities: "Henüz aktivite kaydı yok.",
+    customerPanelTitle: "Müşteri",
     offerInfoTitle: "Teklif Bilgileri",
     premiumTitle: "Prim Bilgileri",
     conversionTitle: "Dönüşüm",
@@ -201,11 +216,26 @@ const copy = {
     timelineConverted: "Poliçeye dönüşüm",
   },
   en: {
+    breadcrumb: "Sales → Offers",
     overview: "Offer Details",
     openDesk: "Open Desk",
     backList: "Back to List",
+    downloadPdf: "Download PDF",
+    sendEmail: "Send Email",
+    edit: "Edit",
     loading: "Loading...",
     loadError: "Failed to load offer detail.",
+    coverageTitle: "Coverages",
+    coverageColumn: "Coverage",
+    limitColumn: "Limit",
+    premiumColumn: "Premium",
+    emptyCoverages: "No coverage details entered.",
+    documentsTitle: "Documents",
+    emptyDocuments: "No documents uploaded.",
+    downloadDocument: "Download",
+    activitiesTitle: "Activities",
+    emptyActivities: "No activity records yet.",
+    customerPanelTitle: "Customer",
     offerInfoTitle: "Offer Information",
     premiumTitle: "Premium Details",
     conversionTitle: "Conversion",

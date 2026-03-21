@@ -1,17 +1,22 @@
 <template>
-  <section class="page-shell">
+  <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">Satış → Fırsatlar</p>
+        <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
         <h1 class="detail-title">
           {{ leadDisplayTitle }}
           <StatusBadge :status="uiLeadStatus" />
           <StatusBadge :status="uiLeadStaleStatus" />
         </h1>
         <p class="detail-subtitle">{{ leadHeaderSubtitle }}</p>
+        <div class="mt-1.5 flex flex-wrap items-center gap-2">
+          <span class="copy-tag">{{ lead.name || name }}</span>
+          <span v-if="lead.customer" class="copy-tag">{{ lead.customer }}</span>
+          <span v-if="lead.branch" class="copy-tag">{{ lead.branch }}</span>
+        </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button class="btn btn-sm" type="button" @click="goBack">{{ t('backList') }}</button>
+      <div class="flex flex-wrap items-center gap-2">
+        <button class="btn btn-outline btn-sm" type="button" @click="goBack">{{ t('backList') }}</button>
         <button v-if="lead.customer" class="btn btn-outline btn-sm" type="button" @click="openCustomer360(lead.customer)">
           {{ t('openCustomer360') }}
         </button>
@@ -37,7 +42,7 @@
 
     <div class="detail-body">
       <div class="detail-main">
-        <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'related'" :title="t('conversionTitle')">
+        <SectionPanel v-if="activeLeadTab === 'overview' || activeLeadTab === 'related'" :title="t('conversionTitle')">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
           <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <template v-else>
@@ -56,9 +61,9 @@
               <p class="qc-success-banner__text">{{ actionSuccessText || t('convertLeadSuccess') }}</p>
             </div>
           </template>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'conversion'" :title="t('relatedTitle')">
+        <SectionPanel v-if="activeLeadTab === 'overview' || activeLeadTab === 'conversion'" :title="t('relatedTitle')">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
           <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <div v-else class="grid gap-4 lg:grid-cols-2">
@@ -85,9 +90,9 @@
               <div v-else class="card-empty">{{ t('noRelatedPolicies') }}</div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'operations'" :title="t('opsPreviewTitle')">
+        <SectionPanel v-if="activeLeadTab === 'overview' || activeLeadTab === 'operations'" :title="t('opsPreviewTitle')">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
           <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <div v-else class="grid gap-4 xl:grid-cols-3">
@@ -127,9 +132,9 @@
               <div v-else class="card-empty">{{ t('noPayments') }}</div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard v-if="activeLeadTab === 'overview' || activeLeadTab === 'activity'" :title="t('timelineMetaTitle')">
+        <SectionPanel v-if="activeLeadTab === 'overview' || activeLeadTab === 'activity'" :title="t('timelineMetaTitle')">
           <div v-if="loading" class="card-empty">{{ t('loading') }}</div>
           <div v-else-if="loadErrorText" class="card-empty">{{ loadErrorText }}</div>
           <div v-else>
@@ -146,28 +151,28 @@
               </div>
             </div>
           </div>
-        </DetailCard>
+        </SectionPanel>
       </div>
 
-      <div class="detail-sidebar">
-        <DetailCard :title="t('leadInfoTitle')">
+      <aside class="detail-sidebar space-y-4">
+        <SectionPanel :title="t('leadInfoTitle')">
           <div v-if="loading" class="field-value-muted">{{ t('loading') }}</div>
           <FieldGroup v-else :fields="leadInfoFields" :cols="2" />
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard :title="t('notes')">
+        <SectionPanel :title="t('notes')">
           <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ lead.notes || '-' }}</p>
-        </DetailCard>
+        </SectionPanel>
 
-        <DetailCard title="Hızlı İşlemler">
+        <SectionPanel :title="t('quickActionsTitle')">
           <div class="space-y-2">
             <button v-if="lead.customer" class="btn btn-full btn-sm" type="button" @click="openCustomer360(lead.customer)">{{ t('openCustomer360') }} →</button>
             <button v-if="lead.converted_offer" class="btn btn-full btn-sm" type="button" @click="openOfferDetail(lead.converted_offer)">{{ t('openOffer') }}</button>
             <button v-if="leadRenewals.length" class="btn btn-full btn-sm" type="button" @click="openRenewalsBoard">{{ t('openRenewals') }}</button>
             <button v-if="deskActionsEnabled()" class="btn btn-full btn-sm" type="button" @click="openDeskLead">{{ t('openDesk') }}</button>
           </div>
-        </DetailCard>
-      </div>
+        </SectionPanel>
+      </aside>
     </div>
   </section>
 </template>
@@ -182,7 +187,7 @@ import { useAuthStore } from "../stores/auth";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
-import DetailCard from "../components/ui/DetailCard.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 
 const props = defineProps({
@@ -195,6 +200,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const copy = {
     tr: {
+    breadcrumb: "Satış → Fırsatlar",
     overview: "Fırsat Detayı",
     openDesk: "Yönetim Ekranını Aç",
     backList: "Listeye Dön",
@@ -218,6 +224,7 @@ const copy = {
     noRenewals: "Yenileme görevi yok.",
     timelineMetaTitle: "Kayıt Zamanları",
     activityTimelineTitle: "Aktivite Özeti",
+    quickActionsTitle: "Hızlı İşlemler",
     tabOverview: "Genel",
     tabConversion: "Dönüşüm",
     tabRelated: "İlişkili",
@@ -266,6 +273,7 @@ const copy = {
     timelineEventPolicy: "Poliçeye dönüştü",
   },
   en: {
+    breadcrumb: "Sales → Leads",
     overview: "Opportunity Details",
     openDesk: "Open Desk",
     backList: "Back to List",
@@ -289,6 +297,7 @@ const copy = {
     noRenewals: "No renewal tasks.",
     timelineMetaTitle: "Record Timestamps",
     activityTimelineTitle: "Activity Summary",
+    quickActionsTitle: "Quick Actions",
     tabOverview: "Overview",
     tabConversion: "Conversion",
     tabRelated: "Related",
