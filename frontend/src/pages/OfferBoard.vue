@@ -1,44 +1,46 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <h1 class="detail-title">Teklifler</h1>
-        <p class="detail-subtitle">{{ isListView ? offerListTotal : offers.length }} teklif</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <button class="btn btn-sm" :class="isListView ? 'btn-primary' : 'btn-outline'" type="button" @click="setOfferViewMode('list')">Liste</button>
-        <button class="btn btn-sm" :class="!isListView ? 'btn-primary' : 'btn-outline'" type="button" @click="setOfferViewMode('board')">Pano</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openQuickOfferDialog">+ Yeni Teklif</button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="offersResource.loading || offerListResource.loading" @click="refreshOffers">Yenile</button>
-        <button v-if="isListView" class="btn btn-outline btn-sm" type="button" @click="focusOfferSearch">Filtrele</button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">Dışa Aktar</button>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(isListView ? offerListTotal : offers.length)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <button class="btn btn-sm" :class="isListView ? 'btn-primary' : 'btn-outline'" type="button" @click="setOfferViewMode('list')">{{ t("viewList") }}</button>
+      <button class="btn btn-sm" :class="!isListView ? 'btn-primary' : 'btn-outline'" type="button" @click="setOfferViewMode('board')">{{ t("viewBoard") }}</button>
+      <button class="btn btn-primary btn-sm" type="button" @click="openQuickOfferDialog">+ {{ t("newOffer") }}</button>
+      <button class="btn btn-outline btn-sm" type="button" :disabled="offersResource.loading || offerListResource.loading" @click="refreshOffers">{{ t("refresh") }}</button>
+      <button v-if="isListView" class="btn btn-outline btn-sm" type="button" @click="focusOfferSearch">{{ t("focusFilters") }}</button>
+      <button class="btn btn-outline btn-sm" type="button" :disabled="offersResource.loading || offerListResource.loading" @click="downloadOfferExport('xlsx')">{{ t("exportXlsx") }}</button>
+    </template>
 
-    <div v-if="isListView" class="grid grid-cols-1 gap-4 px-5 md:grid-cols-5">
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Teklif</p>
-        <p class="mini-metric-value">{{ formatCount(offerSummary.total) }}</p>
+    <template #metrics>
+      <div v-if="isListView" class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ formatCount(offerSummary.total) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryDraft") }}</p>
+          <p class="mini-metric-value text-gray-600">{{ formatCount(offerSummary.draft) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summarySent") }}</p>
+          <p class="mini-metric-value text-blue-600">{{ formatCount(offerSummary.sent) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryAccepted") }}</p>
+          <p class="mini-metric-value text-green-600">{{ formatCount(offerSummary.accepted) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryConversion") }}</p>
+          <p class="mini-metric-value text-brand-600">{{ offerConversionRate }}%</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Taslak</p>
-        <p class="mini-metric-value text-gray-600">{{ formatCount(offerSummary.draft) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Gönderildi</p>
-        <p class="mini-metric-value text-blue-600">{{ formatCount(offerSummary.sent) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Kabul Edildi</p>
-        <p class="mini-metric-value text-green-600">{{ formatCount(offerSummary.accepted) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Dönüşüm Oranı</p>
-        <p class="mini-metric-value text-brand-600">{{ offerConversionRate }}%</p>
-      </div>
-    </div>
+    </template>
 
-    <div v-if="isListView" class="surface-card rounded-2xl p-4">
+    <SectionPanel v-if="isListView" :title="t('filtersTitle')" :count="`${offerListFilterBarActiveCount} ${t('activeFilters')}`" panel-class="surface-card rounded-2xl p-4">
       <FilterBar
         v-model:search="offerListSearchQuery"
         :filters="offerListFilterConfig"
@@ -47,33 +49,33 @@
         @reset="onOfferListFilterBarReset"
       >
         <template #actions>
-          <button class="btn btn-sm" @click="setOfferViewMode('list')">Liste</button>
-          <button class="btn btn-sm" @click="setOfferViewMode('board')">Pano</button>
-          <button class="btn btn-sm" :disabled="offersResource.loading || offerListResource.loading" @click="refreshOffers">Yenile</button>
-          <button v-if="offerListFilterBarActiveCount > 0" class="btn btn-outline btn-sm" @click="onOfferListFilterBarReset">Temizle</button>
+          <button class="btn btn-sm" @click="setOfferViewMode('list')">{{ t("viewList") }}</button>
+          <button class="btn btn-sm" @click="setOfferViewMode('board')">{{ t("viewBoard") }}</button>
+          <button class="btn btn-sm" :disabled="offersResource.loading || offerListResource.loading" @click="refreshOffers">{{ t("refresh") }}</button>
+          <button v-if="offerListFilterBarActiveCount > 0" class="btn btn-outline btn-sm" @click="onOfferListFilterBarReset">{{ t("clearFilters") }}</button>
         </template>
       </FilterBar>
-    </div>
+    </SectionPanel>
 
-    <div v-if="isListView" class="surface-card rounded-2xl p-5">
+    <SectionPanel v-if="isListView" :title="t('offerTableTitle')" :count="formatCount(offerListTotal)" panel-class="surface-card rounded-2xl p-5">
       <ListTable
         :columns="offerListColumns"
         :rows="offerListRowsWithUrgency"
         :loading="isOfferListInitialLoading"
-        empty-message="Teklif bulunamadı."
+        :empty-message="t('empty')"
         @row-click="(row) => openOfferDetail(row.name)"
       />
       <div class="mt-4 flex items-center justify-between">
-        <p class="text-xs text-gray-400">{{ pagedOfferRows.length }} / {{ offerListTotal }} kayıt gösteriliyor</p>
+        <p class="text-xs text-gray-400">{{ pagedOfferRows.length }} / {{ offerListTotal }} {{ t("showingRecords") }}</p>
         <div class="flex items-center gap-1">
           <button class="btn btn-sm" :disabled="offerListPagination.page <= 1" @click="previousOfferPage">←</button>
           <span class="px-2 text-xs text-gray-600">{{ offerListPagination.page }}</span>
           <button class="btn btn-sm" :disabled="!offerListHasNextPage" @click="nextOfferPage">→</button>
         </div>
       </div>
-    </div>
+    </SectionPanel>
 
-    <div v-if="!isListView" class="surface-card rounded-2xl p-5">
+    <SectionPanel v-if="!isListView" :title="t('pipelineTitle')" :count="formatCount(offers.length)" panel-class="surface-card rounded-2xl p-5">
       <div v-if="offersResource.loading" class="surface-card rounded-2xl p-6 text-sm text-slate-500">
         {{ t("loading") }}
       </div>
@@ -156,7 +158,7 @@
           </div>
         </article>
       </div>
-    </div>
+    </SectionPanel>
 
     <QuickCreateOffer
       v-model="showQuickOfferDialog"
@@ -227,7 +229,7 @@
         </button>
       </template>
     </Dialog>
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -245,11 +247,10 @@ import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
-import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import QuickCreateOffer from "../components/QuickCreateOffer.vue";
@@ -283,8 +284,19 @@ function buildOfficeBranchLookupFilters() {
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Teklifler",
+    recordCount: "kayıt",
     title: "Teklif Panosu",
     subtitle: "Tekliflerinizi kanban görünümünde yönetin",
+    focusFilters: "Filtrele",
+    filtersTitle: "Filtreler",
+    offerTableTitle: "Teklif Listesi",
+    pipelineTitle: "Teklif Panosu",
+    summaryTotal: "Toplam Teklif",
+    summaryDraft: "Taslak",
+    summarySent: "Gönderildi",
+    summaryAccepted: "Kabul Edildi",
+    summaryConversion: "Dönüşüm Oranı",
     viewList: "Liste",
     viewBoard: "Pano",
     newOffer: "Yeni Teklif",
@@ -326,6 +338,7 @@ const copy = {
     grossMinFilter: "Min Brüt Prim",
     grossMaxFilter: "Max Brüt Prim",
     actionableOnly: "Sadece Aksiyon Bekleyen",
+    showingRecords: "kayıt gösteriliyor",
     showing: "Gösterilen",
     page: "Sayfa",
     previous: "Önceki",
@@ -381,8 +394,19 @@ const copy = {
     conversionFailed: "Teklif poliçeye dönüştürülemedi.",
   },
   en: {
+    breadcrumb: "Insurance Operations → Offers",
+    recordCount: "records",
     title: "Offer Board",
     subtitle: "Manage your offers in a Kanban view",
+    focusFilters: "Focus Filters",
+    filtersTitle: "Filters",
+    offerTableTitle: "Offer List",
+    pipelineTitle: "Offer Pipeline",
+    summaryTotal: "Total Offers",
+    summaryDraft: "Draft",
+    summarySent: "Sent",
+    summaryAccepted: "Accepted",
+    summaryConversion: "Conversion Rate",
     viewList: "List",
     viewBoard: "Board",
     newOffer: "New Offer",
@@ -424,6 +448,7 @@ const copy = {
     grossMinFilter: "Min Gross Premium",
     grossMaxFilter: "Max Gross Premium",
     actionableOnly: "Action Waiting Only",
+    showingRecords: "records shown",
     showing: "Showing",
     page: "Page",
     previous: "Previous",

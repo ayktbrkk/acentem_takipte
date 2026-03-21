@@ -1,45 +1,45 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <p class="detail-breadcrumb">Sigorta Operasyonları → Fırsatlar</p>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button class="btn btn-primary btn-sm" type="button" @click="openQuickLeadDialog">+ Yeni Fırsat</button>
-        <button class="btn btn-outline btn-sm" type="button" @click="focusLeadSearch">Filtrele</button>
-        <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="refreshLeadList">Yenile</button>
-        <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('xlsx')">Excel</button>
-        <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('pdf')">PDF</button>
-        <span class="text-sm text-gray-400">{{ pagination.total }} kayıt</span>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(pagination.total)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <button class="btn btn-primary btn-sm" type="button" @click="openQuickLeadDialog">{{ t("newLead") }}</button>
+      <button class="btn btn-outline btn-sm" type="button" @click="focusLeadSearch">{{ t("focusFilters") }}</button>
+      <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="refreshLeadList">{{ t("refresh") }}</button>
+      <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('xlsx')">{{ t("exportXlsx") }}</button>
+      <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('pdf')">{{ t("exportPdf") }}</button>
+    </template>
 
-    <div class="grid grid-cols-1 gap-4 px-5 md:grid-cols-5">
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Fırsat</p>
-        <p class="mini-metric-value">{{ formatCount(pagination.total) }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ formatCount(pagination.total) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryOpen") }}</p>
+          <p class="mini-metric-value text-brand-600">{{ formatCount(leadPageSummary.open) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryFollowUp") }}</p>
+          <p class="mini-metric-value text-amber-600">{{ formatCount(leadPageSummary.followUp) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryActionable") }}</p>
+          <p class="mini-metric-value text-blue-600">{{ formatCount(leadPageSummary.actionable) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryConversion") }}</p>
+          <p class="mini-metric-value text-green-600">{{ formatPercent(leadPageSummary.conversionRate) }}</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Bu Sayfa Açık</p>
-        <p class="mini-metric-value text-brand-600">{{ formatCount(leadPageSummary.open) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Takip Bekleyen</p>
-        <p class="mini-metric-value text-amber-600">{{ formatCount(leadPageSummary.followUp) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Teklife Çevrilebilir</p>
-        <p class="mini-metric-value text-blue-600">{{ formatCount(leadPageSummary.actionable) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Bu Sayfa Dönüşüm</p>
-        <p class="mini-metric-value text-green-600">{{ formatPercent(leadPageSummary.conversionRate) }}</p>
-      </div>
-    </div>
+    </template>
 
-    <div class="surface-card rounded-2xl p-3">
+    <SectionPanel :title="t('statusFiltersTitle')" :count="leadVisibleStatusOptions.length" panel-class="surface-card rounded-2xl p-3">
       <div class="flex flex-wrap gap-2">
         <button
           v-for="option in leadVisibleStatusOptions"
@@ -53,9 +53,9 @@
           <span class="badge badge-gray">{{ formatCount(option.count) }}</span>
         </button>
       </div>
-    </div>
+    </SectionPanel>
 
-    <div class="surface-card rounded-2xl p-4">
+    <SectionPanel :title="t('filtersTitle')" :count="`${activeFilterCount} ${t('activeFilters')}`" panel-class="surface-card rounded-2xl p-4">
       <FilterBar
         v-model:search="filters.query"
         :filters="leadListFilterConfig"
@@ -64,15 +64,16 @@
         @reset="onLeadListFilterReset"
       >
         <template #actions>
-          <button v-if="hasLeadActiveFilters" class="btn btn-outline btn-sm" @click="onLeadListFilterReset">Temizle</button>
-          <button class="btn btn-outline btn-sm" @click="focusLeadSearch">Ara</button>
+          <button v-if="hasLeadActiveFilters" class="btn btn-outline btn-sm" @click="onLeadListFilterReset">{{ t("clearFilters") }}</button>
+          <button class="btn btn-outline btn-sm" @click="focusLeadSearch">{{ t("searchAction") }}</button>
         </template>
       </FilterBar>
-    </div>
+    </SectionPanel>
 
-    <div class="surface-card rounded-2xl p-5">
+    <SectionPanel :title="t('leadTableTitle')" :count="formatCount(pagination.total)" panel-class="surface-card rounded-2xl p-5">
       <div v-if="loadErrorText" class="qc-error-banner mb-4">
-        <p class="qc-error-banner__text">{{ loadErrorText }}</p>
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ loadErrorText }}</p>
       </div>
       <div v-else-if="actionErrorText" class="qc-error-banner mb-4">
         <p class="qc-error-banner__text">{{ actionErrorText }}</p>
@@ -89,19 +90,19 @@
         :columns="leadListColumns"
         :rows="leadListRows"
         :loading="isInitialLoading"
-        empty-message="Fırsat bulunamadı."
+        :empty-message="t('emptyDescription')"
         @row-click="(row) => openLeadDetail(row.name)"
       />
 
       <div class="mt-4 flex items-center justify-between">
-        <p class="text-xs text-gray-400">{{ leadListRows.length }} / {{ pagination.total }} kayıt gösteriliyor</p>
+        <p class="text-xs text-gray-400">{{ leadListRows.length }} / {{ pagination.total }} {{ t("showingRecords") }}</p>
         <div class="flex items-center gap-1">
           <button class="btn btn-sm" :disabled="pagination.page <= 1 || leadListResource.loading" @click="previousPage">←</button>
           <span class="px-2 text-xs text-gray-600">{{ pagination.page }}</span>
           <button class="btn btn-sm" :disabled="!hasNextPage || leadListResource.loading" @click="nextPage">→</button>
         </div>
       </div>
-    </div>
+    </SectionPanel>
 
     <Dialog
       v-model="showQuickLeadDialog"
@@ -139,7 +140,7 @@
         </QuickCreateDialogShell>
       </template>
     </Dialog>
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -156,12 +157,11 @@ import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
-import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
@@ -198,11 +198,24 @@ function buildOfficeBranchLookupFilters() {
 }
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Fırsatlar",
+    recordCount: "kayıt",
     title: "Fırsat Yönetimi",
     subtitle: "Fırsat çalışma ekranı: filtre, şablon ve dönüşüm takibi",
+    newLead: "+ Yeni Fırsat",
+    focusFilters: "Filtrele",
+    filtersTitle: "Filtreler",
+    statusFiltersTitle: "Durum Kısayolları",
+    leadTableTitle: "Fırsat Listesi",
+    summaryTotal: "Toplam Fırsat",
+    summaryOpen: "Bu Sayfa Açık",
+    summaryFollowUp: "Takip Bekleyen",
+    summaryActionable: "Teklife Çevrilebilir",
+    summaryConversion: "Bu Sayfa Dönüşüm",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
+    searchAction: "Ara",
     searchPlaceholder: "Fırsat / e-posta / müşteri / kayıt ara",
     allStatuses: "Tüm Durumlar",
     allConversionStates: "Tüm Dönüşüm Durumları",
@@ -229,6 +242,7 @@ const copy = {
     loadError: "Fırsat listesi yüklenirken hata oluştu. Lütfen tekrar deneyin.",
     emptyTitle: "Fırsat Bulunamadı",
     emptyDescription: "Filtrelere uygun fırsat kaydı bulunamadı.",
+    showingRecords: "kayıt gösteriliyor",
     showing: "Gösterilen",
     page: "Sayfa",
     previous: "Önceki",
@@ -294,11 +308,24 @@ const copy = {
     validationTcInvalid: "Geçerli bir TC kimlik numarası girin.",
   },
   en: {
+    breadcrumb: "Insurance Operations → Leads",
+    recordCount: "records",
     title: "Lead Workbench",
     subtitle: "Lead workspace with filters, presets, and conversion tracking",
+    newLead: "+ New Lead",
+    focusFilters: "Focus Filters",
+    filtersTitle: "Filters",
+    statusFiltersTitle: "Status Shortcuts",
+    leadTableTitle: "Lead List",
+    summaryTotal: "Total Leads",
+    summaryOpen: "Open On Page",
+    summaryFollowUp: "Need Follow-up",
+    summaryActionable: "Convertible",
+    summaryConversion: "Page Conversion",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
+    searchAction: "Search",
     searchPlaceholder: "Search lead / email / customer / record",
     allStatuses: "All Statuses",
     allConversionStates: "All Conversion States",
@@ -325,6 +352,7 @@ const copy = {
     loadError: "An error occurred while loading leads. Please try again.",
     emptyTitle: "No Leads Found",
     emptyDescription: "No lead records found for current filters.",
+    showingRecords: "records shown",
     showing: "Showing",
     page: "Page",
     previous: "Previous",

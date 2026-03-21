@@ -1,38 +1,49 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ formatCount(customerListTotalCount) }} müşteri kaydı</p>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ {{ t('newCustomer') }}</button>
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">{{ t('refresh') }}</button>
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">{{ t('exportXlsx') }}</button>
-        <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">{{ t('exportPdf') }}</button>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="formatCount(customerListTotalCount)"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <button class="btn btn-primary btn-sm" @click="openQuickCustomerDialog">+ {{ t('newCustomer') }}</button>
+      <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="refreshCustomerList">{{ t('refresh') }}</button>
+      <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('xlsx')">{{ t('exportXlsx') }}</button>
+      <button class="btn btn-outline btn-sm" :disabled="customerListLoading" @click="downloadCustomerExport('pdf')">{{ t('exportPdf') }}</button>
+    </template>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-      <div class="mini-metric">
-        <p class="mini-metric-label">Toplam Müşteri</p>
-        <p class="mini-metric-value">{{ formatCount(customerListSummary.total) }}</p>
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
+          <p class="mini-metric-value">{{ formatCount(customerListSummary.total) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryActive") }}</p>
+          <p class="mini-metric-value text-brand-600">{{ formatCount(customerListSummary.active) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryIndividual") }}</p>
+          <p class="mini-metric-value text-blue-600">{{ formatCount(customerListSummary.individual) }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("summaryCorporate") }}</p>
+          <p class="mini-metric-value text-violet-600">{{ formatCount(customerListSummary.corporate) }}</p>
+        </div>
       </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Aktif Portföylü</p>
-        <p class="mini-metric-value text-brand-600">{{ formatCount(customerListSummary.active) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Bireysel</p>
-        <p class="mini-metric-value text-blue-600">{{ formatCount(customerListSummary.individual) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Kurumsal</p>
-        <p class="mini-metric-value text-violet-600">{{ formatCount(customerListSummary.corporate) }}</p>
-      </div>
-    </div>
+    </template>
 
-    <div class="surface-card rounded-2xl p-4">
+    <article v-if="loadErrorText" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ loadErrorText }}</p>
+    </article>
+
+    <SectionPanel
+      :title="t('filtersTitle')"
+      :count="`${customerListActiveCount} ${t('activeFilters')}`"
+      panel-class="surface-card rounded-2xl p-4"
+    >
       <FilterBar
         v-model:search="customerListSearchQuery"
         :filters="customerListFilterConfig"
@@ -41,24 +52,28 @@
         @reset="onCustomerListFilterReset"
       >
         <template #actions>
-          <button v-if="hasCustomerListActiveFilters" class="btn btn-outline btn-sm" @click="onCustomerListFilterReset">Temizle</button>
-          <button class="btn btn-outline btn-sm" @click="focusCustomerSearch">Ara</button>
+          <button v-if="hasCustomerListActiveFilters" class="btn btn-outline btn-sm" @click="onCustomerListFilterReset">{{ t("clearFilters") }}</button>
+          <button class="btn btn-outline btn-sm" @click="focusCustomerSearch">{{ t("searchAction") }}</button>
         </template>
       </FilterBar>
-    </div>
+    </SectionPanel>
 
-    <div class="surface-card rounded-2xl p-5">
+    <SectionPanel
+      :title="t('customerTableTitle')"
+      :count="formatCount(customerListTotalCount)"
+      panel-class="surface-card rounded-2xl p-5"
+    >
       <ListTable
         :columns="customerListColumns"
         :rows="customerListPagedRows"
         :loading="isInitialLoading"
-        empty-message="Müşteri bulunamadı."
+        :empty-message="t('emptyDescription')"
         @row-click="(row) => openCustomer360(row.name)"
       />
 
       <div class="mt-4 flex items-center justify-between">
         <p class="text-xs text-gray-500">{{ t("mobileSummaryTitle") }} · {{ t("pageSize") }} {{ pagination.pageLength }}</p>
-        <p class="text-xs text-gray-400">{{ customerListPagedRows.length }} / {{ customerListTotalCount }} kayıt gösteriliyor</p>
+        <p class="text-xs text-gray-400">{{ customerListPagedRows.length }} / {{ customerListTotalCount }} {{ t("showingRecords") }}</p>
         <div class="flex items-center gap-1">
           <button class="btn btn-sm" :disabled="customerListPage <= 1" @click="customerListPage--">←</button>
           <span class="px-2 text-xs text-gray-600">{{ customerListPage }}</span>
@@ -80,7 +95,7 @@
           "
         />
       </div>
-    </div>
+    </SectionPanel>
 
     <QuickCreateCustomer
       v-model="showQuickCustomerDialog"
@@ -95,7 +110,7 @@
       @cancel="cancelQuickCustomerDialog"
       @created="onQuickCustomerManagedCreated"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -106,15 +121,13 @@ import { createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useCustomerStore } from "../stores/customer";
-import ActionButton from "../components/app-shell/ActionButton.vue";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
-import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
@@ -143,12 +156,21 @@ const customerStore = useCustomerStore();
 
 const copy = {
   tr: {
+    breadcrumb: "Sigorta Operasyonları → Müşteriler",
+    recordCount: "kayıt",
     newCustomer: "Yeni Müşteri",
     title: "Müşteri Yönetimi",
     subtitle: "Müşteri çalışma ekranı: filtre, şablon ve 360 erişim",
+    filtersTitle: "Filtreler",
+    customerTableTitle: "Müşteri Listesi",
+    summaryTotal: "Toplam Müşteri",
+    summaryActive: "Aktif Portföylü",
+    summaryIndividual: "Bireysel",
+    summaryCorporate: "Kurumsal",
     refresh: "Yenile",
     exportXlsx: "Excel",
     exportPdf: "PDF",
+    searchAction: "Ara",
     searchPlaceholder: "Müşteri / TC-VKN / telefon / e-posta ara",
     allConsentStatuses: "Tüm İzin Durumları",
     allGenders: "Tüm Cinsiyetler",
@@ -179,6 +201,7 @@ const copy = {
     clearFilters: "Filtreleri Temizle",
     mobileSummaryTitle: "Liste Özeti",
     pageSize: "Sayfa Boyutu",
+    showingRecords: "kayıt gösteriliyor",
     assignedAgentFilter: "Temsilci (içerir)",
     occupationFilter: "Meslek (içerir)",
     hasPhoneOnly: "Sadece telefonu olanlar",
@@ -254,12 +277,21 @@ const copy = {
     validationTcInvalid: "Geçerli bir TC kimlik numarası girin.",
   },
   en: {
+    breadcrumb: "Insurance Operations → Customers",
+    recordCount: "records",
     newCustomer: "New Customer",
     title: "Customer Workbench",
     subtitle: "Customer workspace with filters, presets, and 360 access",
+    filtersTitle: "Filters",
+    customerTableTitle: "Customer List",
+    summaryTotal: "Total Customers",
+    summaryActive: "With Active Portfolio",
+    summaryIndividual: "Individual",
+    summaryCorporate: "Corporate",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
+    searchAction: "Search",
     searchPlaceholder: "Search customer / tax id / phone / email",
     allConsentStatuses: "All Consent Statuses",
     allGenders: "All Genders",
@@ -290,6 +322,7 @@ const copy = {
     clearFilters: "Clear Filters",
     mobileSummaryTitle: "List Summary",
     pageSize: "Page Size",
+    showingRecords: "records shown",
     assignedAgentFilter: "Assigned Agent (contains)",
     occupationFilter: "Occupation (contains)",
     hasPhoneOnly: "Only with phone",
