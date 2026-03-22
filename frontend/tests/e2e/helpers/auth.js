@@ -3,8 +3,14 @@ import { test } from "@playwright/test";
 export async function ensureAuthenticated(page, options = {}) {
   const userEnvKey = options.userEnvKey || "E2E_USER";
   const passwordEnvKey = options.passwordEnvKey || "E2E_PASSWORD";
-  const loginUser = process.env[userEnvKey];
-  const loginPassword = process.env[passwordEnvKey];
+  const envUser = process.env[userEnvKey];
+  const envPassword = process.env[passwordEnvKey];
+  const baseURL = String(process.env.E2E_BASE_URL || "http://localhost:8080");
+  const allowLocalFallback =
+    /localhost|127\.0\.0\.1/i.test(baseURL) &&
+    !["0", "false", "False", "FALSE"].includes(String(process.env.E2E_ALLOW_LOCAL_FALLBACK || "1"));
+  const loginUser = envUser || (allowLocalFallback ? "Administrator" : "");
+  const loginPassword = envPassword || (allowLocalFallback ? "admin" : "");
   const hasCredentials = Boolean(loginUser && loginPassword);
 
   if (hasCredentials) {
@@ -44,7 +50,7 @@ export async function ensureAuthenticated(page, options = {}) {
 
   test.skip(
     stillGuest,
-    `Authenticated session required. Set ${userEnvKey}/${passwordEnvKey}.`
+    `Authenticated session required. Set ${userEnvKey}/${passwordEnvKey} or enable localhost fallback credentials.`
   );
   return !stillGuest;
 }
