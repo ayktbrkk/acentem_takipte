@@ -65,120 +65,6 @@
       </p>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-      <div class="mini-metric">
-        <p class="mini-metric-label">Aktif Poliçeler</p>
-        <p class="mini-metric-value text-brand-600">{{ formatNumber(week4Metrics.activePolicies) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Bekleyen Teklifler</p>
-        <p class="mini-metric-value text-amber-600">{{ formatNumber(dailyActionOffers.length) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Açık Hasarlar</p>
-        <p class="mini-metric-value text-amber-700">{{ formatNumber(week4Metrics.openClaims) }}</p>
-      </div>
-      <div class="mini-metric">
-        <p class="mini-metric-label">Seçili Dönem Prim</p>
-        <p class="mini-metric-value text-green-600">{{ formatCurrency(week4Metrics.periodPremium) }}</p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div class="lg:col-span-2 space-y-4">
-        <DetailCard :title="t('recentActivitiesTitle')">
-          <template #action>
-            <button class="btn btn-sm" type="button">{{ t("viewAllItems") }}</button>
-          </template>
-          <div v-if="!week4RecentActivities.length" class="card-empty">{{ t("recentActivitiesEmpty") }}</div>
-          <div v-else class="space-y-3">
-            <div v-for="item in week4RecentActivities" :key="item.name" class="timeline-item">
-              <div :class="['tl-dot', item.highlight && 'tl-dot-active']" />
-              <div>
-                <p class="tl-text">{{ item.text }}</p>
-                <p class="tl-time">{{ item.time }}</p>
-              </div>
-            </div>
-          </div>
-        </DetailCard>
-
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <DetailCard :title="t('monthlyPremiumTrendTitle')">
-            <div class="chart-container">
-              <TrendChart
-                :title="t('monthlyPremiumTrendTitle')"
-                :labels="trendLabels"
-                :datasets="trendDatasets"
-                unit="₺"
-                @period-change="onTrendPeriodChange"
-              />
-            </div>
-          </DetailCard>
-
-          <DetailCard :title="t('branchDistributionTitle')">
-            <div class="chart-container">
-              <DistributionChart
-                :title="t('branchDistributionTitle')"
-                type="bar"
-                :items="branchDistribution"
-                :value-suffix="t('policySuffix')"
-              />
-            </div>
-          </DetailCard>
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <DetailCard :title="t('quickActions')">
-          <div class="space-y-2">
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/policies')">{{ t("quickPolicyAction") }}</button>
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/offers')">{{ t("quickOfferAction") }}</button>
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/customers')">{{ t("quickCustomerAction") }}</button>
-            <button class="w-full btn btn-outline justify-start" type="button" @click="openPage('/claims')">{{ t("quickClaimAction") }}</button>
-          </div>
-        </DetailCard>
-
-        <DetailCard :title="t('todayTasksTitle')">
-          <template #action>
-            <span class="badge badge-blue">{{ followUpItems.length }}</span>
-          </template>
-          <div v-if="!followUpItems.length" class="card-empty">{{ t("todayTasksEmpty") }}</div>
-          <div v-else class="space-y-2">
-            <div
-              v-for="item in pagedPreviewItems(followUpItems, 'dailyFollowUp').slice(0, 4)"
-              :key="`${item.source_type}-${item.source_name}`"
-              class="flex items-start gap-2 rounded-md p-2 hover:bg-gray-50"
-            >
-              <input type="checkbox" class="mt-1" />
-              <div class="flex-1">
-                <p class="text-sm text-gray-900">{{ followUpTitle(item) }}</p>
-                <p class="text-xs text-gray-500">{{ formatDate(item.follow_up_on || item.due_date) }}</p>
-              </div>
-            </div>
-          </div>
-        </DetailCard>
-
-        <DetailCard :title="t('upcomingRenewalsTitle')">
-          <template #action>
-            <span class="badge badge-amber">{{ upcomingRenewals.length }}</span>
-          </template>
-          <div v-if="!upcomingRenewals.length" class="card-empty">{{ t("upcomingRenewalsEmpty") }}</div>
-          <div v-else class="divide-y divide-gray-100">
-            <div
-              v-for="renewal in upcomingRenewals.slice(0, 5)"
-              :key="renewal.name"
-              class="py-2"
-            >
-              <p class="text-sm font-medium text-gray-900">{{ renewal.customer_name || renewal.customer || renewal.name }}</p>
-              <p class="text-xs text-gray-500">
-                {{ renewal.policy_branch || renewal.branch || '-' }} · {{ formatDate(renewal.due_date || renewal.renewal_date) }}
-              </p>
-            </div>
-          </div>
-        </DetailCard>
-      </div>
-    </div>
-
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <DashboardStatCard
         v-for="card in visibleQuickStatCards"
@@ -249,7 +135,7 @@
 
     <div v-if="isDailyTab" class="grid gap-4 xl:grid-cols-3">
       <div class="space-y-4">
-        <SectionPanel :title="t('followUpSlaTitle')" :count="formatNumber(followUpItems.length)">
+        <SectionPanel :title="t('followUpSlaTitle')" :count="formatNumber(prioritizedFollowUpItems.length)">
           <p class="mb-3 text-xs text-slate-500">{{ t("followUpSlaHint") }}</p>
           <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else class="space-y-3">
@@ -267,9 +153,9 @@
                 <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(followUpSummary.due_soon) }}</p>
               </div>
             </div>
-            <ul v-if="followUpItems.length > 0" class="space-y-2">
+            <ul v-if="prioritizedFollowUpItems.length > 0" class="space-y-2">
               <MetaListCard
-                v-for="item in pagedPreviewItems(followUpItems, 'dailyFollowUp')"
+                v-for="item in pagedPreviewItems(prioritizedFollowUpItems, 'dailyFollowUp')"
                 :key="`${item.source_type}-${item.source_name}`"
                 :title="followUpTitle(item)"
                 :description="followUpDescription(item)"
@@ -282,57 +168,167 @@
             </ul>
             <div v-else class="at-empty-block text-sm">{{ t("noFollowUpItems") }}</div>
             <PreviewPager
-              v-if="followUpItems.length > 0"
-              :current-page="previewResolvedPage('dailyFollowUp', followUpItems)"
-              :total-pages="previewPageCount(followUpItems)"
-              @change-page="setPreviewPage('dailyFollowUp', $event, followUpItems)"
+              v-if="prioritizedFollowUpItems.length > 0"
+              :current-page="previewResolvedPage('dailyFollowUp', prioritizedFollowUpItems)"
+              :total-pages="previewPageCount(prioritizedFollowUpItems)"
+              :show-view-all="shouldShowViewAll(prioritizedFollowUpItems)"
+              :view-all-label="t('viewAllItems')"
+              @change-page="setPreviewPage('dailyFollowUp', $event, prioritizedFollowUpItems)"
+              @view-all="openPreviewList('communication')"
             />
-            <div class="flex flex-wrap gap-2 pt-2">
-              <ActionButton variant="secondary" size="sm" @click="openPage('/claims')">
-                {{ t("followUpClaimsAction") }}
-              </ActionButton>
-              <ActionButton variant="secondary" size="sm" @click="openPage('/renewals')">
-                {{ t("followUpRenewalsAction") }}
-              </ActionButton>
-              <ActionButton variant="secondary" size="sm" @click="openPage('/communication')">
-                {{ t("followUpCommunicationAction") }}
-              </ActionButton>
-            </div>
           </div>
         </SectionPanel>
 
-        <SectionPanel :title="t('actionOfferQueueTitle')" :count="formatNumber(dailyActionOffers.length)">
-          <p class="mb-3 text-xs text-slate-500">{{ t("actionOfferQueueHint") }}</p>
-          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="dailyActionOffers.length === 0" class="at-empty-block">{{ t("noActionOfferQueue") }}</div>
-          <ul v-else class="space-y-3">
-            <EntityPreviewCard
-              v-for="offer in pagedPreviewItems(dailyActionOffers, 'dailyActionOffers')"
-              :key="offer.name"
-              :title="offer.name"
-              clickable
-              @click="openOfferItem(offer)"
-            >
-              <template #trailing>
-                <StatusBadge domain="offer" :status="offer.status" />
-              </template>
-              <MiniFactList :items="recentOfferFacts(offer)" />
-              <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
-            </EntityPreviewCard>
-          </ul>
-          <PreviewPager
-            v-if="dailyActionOffers.length > 0"
-            :current-page="previewResolvedPage('dailyActionOffers', dailyActionOffers)"
-            :total-pages="previewPageCount(dailyActionOffers)"
-            :show-view-all="shouldShowViewAll(dailyActionOffers)"
-            :view-all-label="t('viewAllItems')"
-            @change-page="setPreviewPage('dailyActionOffers', $event, dailyActionOffers)"
-            @view-all="openPreviewList('offers')"
-          />
+        <SectionPanel :title="t('todayTasksTitle')" :count="formatNumber(priorityTaskItems.length)">
+          <p class="mb-3 text-xs text-slate-500">{{ t("myTasksHint") }}</p>
+          <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else class="space-y-3">
+            <div class="grid grid-cols-3 gap-2">
+              <div class="qc-warning-card">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskOverdue") }}</p>
+                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.overdue) }}</p>
+              </div>
+              <div class="qc-warning-card">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskToday") }}</p>
+                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
+              </div>
+              <div class="qc-warning-card">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("taskSoon") }}</p>
+                <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
+              </div>
+            </div>
+            <ul v-if="priorityTaskItems.length > 0" class="space-y-2">
+              <MetaListCard
+                v-for="task in pagedPreviewItems(priorityTaskItems, 'dailyTasks')"
+                :key="task.name"
+                :title="task.task_title || task.name || '-'"
+                :description="task.status || '-'"
+                description-class="mt-2 text-xs font-semibold text-slate-600"
+                clickable
+                @click="openTaskItem(task)"
+              >
+                <MiniFactList :items="taskFacts(task)" />
+              </MetaListCard>
+            </ul>
+            <div v-else class="at-empty-block text-sm">{{ t("noMyTasks") }}</div>
+            <PreviewPager
+              v-if="priorityTaskItems.length > 0"
+              :current-page="previewResolvedPage('dailyTasks', priorityTaskItems)"
+              :total-pages="previewPageCount(priorityTaskItems)"
+              :show-view-all="shouldShowViewAll(priorityTaskItems)"
+              :view-all-label="t('viewAllItems')"
+              @change-page="setPreviewPage('dailyTasks', $event, priorityTaskItems)"
+              @view-all="openPreviewList('tasks')"
+            />
+          </div>
         </SectionPanel>
       </div>
 
       <div class="space-y-4">
+        <SectionPanel :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length">
+          <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
+            <MetaListCard
+              v-for="task in pagedPreviewItems(displayRenewalAlertItems, 'dailyRenewalAlerts')"
+              :key="task.name"
+              :title="task.policy || '-'"
+              :description="formatDaysToDue(task.due_date)"
+              description-class="mt-2 text-xs font-semibold text-amber-700"
+              clickable
+              @click="openRenewalTaskItem(task)"
+            >
+              <template #trailing>
+                <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
+              </template>
+              <MiniFactList :items="renewalAlertFacts(task)" />
+            </MetaListCard>
+          </ul>
+          <div v-else class="at-empty-block text-sm">{{ t("noRenewalAlert") }}</div>
+          <PreviewPager
+            v-if="displayRenewalAlertItems.length > 0"
+            :current-page="previewResolvedPage('dailyRenewalAlerts', displayRenewalAlertItems)"
+            :total-pages="previewPageCount(displayRenewalAlertItems)"
+            :show-view-all="shouldShowViewAll(displayRenewalAlertItems)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('dailyRenewalAlerts', $event, displayRenewalAlertItems)"
+            @view-all="openPreviewList('renewals')"
+          />
+        </SectionPanel>
+
+        <SectionPanel :title="t('quickActions')" :show-count="false">
+          <div class="space-y-2">
+            <ActionPreviewCard
+              v-for="action in visibleQuickActions"
+              :key="action.key"
+              :title="action.label"
+              :description="action.description"
+              @click="openPage(action.to)"
+            />
+          </div>
+        </SectionPanel>
+      </div>
+
+      <div class="space-y-4">
+        <SectionPanel :title="t('recentActivitiesTitle')" :count="formatNumber(recentActivityItems.length)">
+          <div v-if="myActivitiesLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="recentActivityItems.length === 0" class="at-empty-block">{{ t("recentActivitiesEmpty") }}</div>
+          <ul v-else class="space-y-2">
+            <MetaListCard
+              v-for="activity in pagedPreviewItems(recentActivityItems, 'dailyActivities')"
+              :key="activity.name"
+              :title="activity.activity_title || activity.activity_type || activity.name || '-'"
+              :description="activity.status || '-'"
+              description-class="mt-2 text-xs font-semibold text-slate-600"
+              clickable
+              @click="openActivityItem(activity)"
+            >
+              <MiniFactList :items="activityFacts(activity)" />
+            </MetaListCard>
+          </ul>
+          <PreviewPager
+            v-if="recentActivityItems.length > 0"
+            :current-page="previewResolvedPage('dailyActivities', recentActivityItems)"
+            :total-pages="previewPageCount(recentActivityItems)"
+            :show-view-all="shouldShowViewAll(recentActivityItems)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('dailyActivities', $event, recentActivityItems)"
+            @view-all="openPreviewList('activities')"
+          />
+        </SectionPanel>
+
+        <SectionPanel :title="t('openClaimsTitle')" :count="formatNumber(openClaimsPreviewRows.length)">
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">
+            {{ t("loading") }}
+          </div>
+          <div v-else-if="openClaimsPreviewRows.length === 0" class="at-empty-block">
+            {{ t("noOpenClaims") }}
+          </div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="claim in pagedPreviewItems(openClaimsPreviewRows, 'dailyClaims')"
+              :key="claim.name"
+              :title="claim.claim_no || claim.name"
+              clickable
+              @click="openClaimItem(claim)"
+            >
+              <template #trailing>
+                <StatusBadge domain="claim" :status="claim.claim_status" />
+              </template>
+              <MiniFactList :items="claimFacts(claim)" />
+            </EntityPreviewCard>
+          </ul>
+          <PreviewPager
+            v-if="openClaimsPreviewRows.length > 0"
+            :current-page="previewResolvedPage('dailyClaims', openClaimsPreviewRows)"
+            :total-pages="previewPageCount(openClaimsPreviewRows)"
+            :show-view-all="shouldShowViewAll(openClaimsPreviewRows)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('dailyClaims', $event, openClaimsPreviewRows)"
+            @view-all="openPreviewList('claims')"
+          />
+        </SectionPanel>
+
         <SectionPanel :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
             {{ t("loading") }}
@@ -367,78 +363,6 @@
             :view-all-label="t('viewAllItems')"
             @change-page="setPreviewPage('dailyPolicies', $event, displayRecentPolicies)"
             @view-all="openPreviewList('policies')"
-          />
-        </SectionPanel>
-
-        <SectionPanel :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length">
-          <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
-          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
-            <MetaListCard
-              v-for="task in pagedPreviewItems(displayRenewalAlertItems, 'dailyRenewalAlerts')"
-              :key="task.name"
-              :title="task.policy || '-'"
-              :description="formatDaysToDue(task.due_date)"
-              description-class="mt-2 text-xs font-semibold text-amber-700"
-              clickable
-              @click="openRenewalTaskItem(task)"
-            >
-              <template #trailing>
-                <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
-              </template>
-              <MiniFactList :items="renewalAlertFacts(task)" />
-            </MetaListCard>
-          </ul>
-          <div v-else class="at-empty-block text-sm">{{ t("noRenewalAlert") }}</div>
-          <PreviewPager
-            v-if="displayRenewalAlertItems.length > 0"
-            :current-page="previewResolvedPage('dailyRenewalAlerts', displayRenewalAlertItems)"
-            :total-pages="previewPageCount(displayRenewalAlertItems)"
-            :show-view-all="shouldShowViewAll(displayRenewalAlertItems)"
-            :view-all-label="t('viewAllItems')"
-            @change-page="setPreviewPage('dailyRenewalAlerts', $event, displayRenewalAlertItems)"
-            @view-all="openPreviewList('renewals')"
-          />
-        </SectionPanel>
-      </div>
-
-      <div class="space-y-4">
-        <SectionPanel :title="t('quickActions')" :show-count="false">
-          <div class="space-y-2">
-            <ActionPreviewCard
-              v-for="action in visibleQuickActions"
-              :key="action.key"
-              :title="action.label"
-              :description="action.description"
-              @click="openPage(action.to)"
-            />
-          </div>
-        </SectionPanel>
-
-        <SectionPanel :title="t('topCompanies')" :count="formatNumber(displayTopCompanies.length)">
-          <div v-if="dashboardLoading" class="text-sm text-slate-500">
-            {{ t("loading") }}
-          </div>
-          <div v-else-if="displayTopCompanies.length === 0" class="at-empty-block">
-            {{ t("noTopCompanies") }}
-          </div>
-          <ul v-else class="space-y-3">
-            <MetaListCard
-              v-for="company in pagedPreviewItems(displayTopCompanies, 'dailyTopCompanies')"
-              :key="company.insurance_company"
-              :title="company.company_name || '-'"
-            >
-              <MiniFactList :items="topCompanyFacts(company)" />
-            </MetaListCard>
-          </ul>
-          <PreviewPager
-            v-if="displayTopCompanies.length > 0"
-            :current-page="previewResolvedPage('dailyTopCompanies', displayTopCompanies)"
-            :total-pages="previewPageCount(displayTopCompanies)"
-            :show-view-all="shouldShowViewAll(displayTopCompanies)"
-            :view-all-label="t('viewAllItems')"
-            @change-page="setPreviewPage('dailyTopCompanies', $event, displayTopCompanies)"
-            @view-all="openPreviewList('companies')"
           />
         </SectionPanel>
       </div>
@@ -506,6 +430,77 @@
       </div>
 
       <div class="space-y-4">
+        <SectionPanel :title="t('collectionsPerformanceTitle')" :show-count="false">
+          <p class="mb-3 text-xs text-slate-500">{{ t("collectionsPerformanceHint") }}</p>
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div
+            v-else-if="collectionPaymentStatusSummary.length === 0 && collectionPaymentDirectionSummary.length === 0"
+            class="at-empty-block"
+          >
+            {{ t("noCollectionPerformance") }}
+          </div>
+          <div v-else class="space-y-4">
+            <div>
+              <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("paymentStatusBreakdownTitle") }}</p>
+              <div v-if="collectionPaymentStatusSummary.length === 0" class="at-empty-block text-sm">{{ t("noCollectionPerformance") }}</div>
+              <div v-else class="space-y-2">
+                <ProgressMetricRow
+                  v-for="item in collectionPaymentStatusSummary"
+                  :key="item.key"
+                  :label="item.label"
+                  :value="formatNumber(item.value)"
+                  :ratio="item.ratio"
+                  :bar-class="item.colorClass"
+                />
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("paymentDirectionBreakdownTitle") }}</p>
+              <div v-if="collectionPaymentDirectionSummary.length === 0" class="at-empty-block text-sm">{{ t("noCollectionPerformance") }}</div>
+              <div v-else class="space-y-2">
+                <ProgressMetricRow
+                  v-for="item in collectionPaymentDirectionSummary"
+                  :key="item.key"
+                  :label="item.label"
+                  :value="formatNumber(item.value)"
+                  :ratio="item.ratio"
+                  :bar-class="item.colorClass"
+                  :meta="`${t('paymentPaidAmount')}: ${formatCurrency(item.paidAmount)}`"
+                />
+              </div>
+            </div>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel :title="t('collectionsRiskTitle')" :count="formatNumber(collectionRiskRows.length)">
+          <p class="mb-3 text-xs text-slate-500">{{ t("collectionsRiskHint") }}</p>
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="collectionRiskRows.length === 0" class="at-empty-block">{{ t("noCollectionsRisk") }}</div>
+          <ul v-else class="space-y-2">
+            <MetaListCard
+              v-for="row in pagedPreviewItems(collectionRiskRows, 'collectionsRisk')"
+              :key="row.key"
+              :title="row.title"
+              :description="row.description"
+              description-class="mt-2 text-xs font-semibold text-slate-600"
+              clickable
+              @click="openCollectionRiskItem(row)"
+            >
+              <MiniFactList :items="collectionRiskFacts(row)" />
+            </MetaListCard>
+          </ul>
+          <PreviewPager
+            v-if="collectionRiskRows.length > 0"
+            :current-page="previewResolvedPage('collectionsRisk', collectionRiskRows)"
+            :total-pages="previewPageCount(collectionRiskRows)"
+            :show-view-all="shouldShowViewAll(collectionRiskRows)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('collectionsRisk', $event, collectionRiskRows)"
+            @view-all="openPreviewList('payments')"
+          />
+        </SectionPanel>
+
         <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
           <div v-else-if="reconciliationPreviewRows.length === 0" class="at-empty-block">{{ t("noReconciliationPreview") }}</div>
@@ -622,19 +617,146 @@
             />
           </div>
         </SectionPanel>
+
+        <SectionPanel :title="t('renewalOutcomeTitle')" :show-count="false">
+          <p class="mb-3 text-xs text-slate-500">{{ t("renewalOutcomeHint") }}</p>
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="renewalOutcomeSummary.length === 0" class="at-empty-block">{{ t("noRenewalOutcome") }}</div>
+          <div v-else class="space-y-3">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("kpiRenewalRetention") }}</p>
+              <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(renewalRetentionRate) }}%</p>
+            </div>
+            <ProgressMetricRow
+              v-for="item in renewalOutcomeSummary"
+              :key="item.key"
+              :label="item.label"
+              :value="formatNumber(item.value)"
+              :ratio="item.ratio"
+              :bar-class="item.colorClass"
+            />
+          </div>
+        </SectionPanel>
+
+        <SectionPanel :title="t('linkedPoliciesTitle')" :count="formatNumber(renewalLinkedPolicies.length)">
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="renewalLinkedPolicies.length === 0" class="at-empty-block">{{ t("noLinkedPolicies") }}</div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="policy in pagedPreviewItems(renewalLinkedPolicies, 'renewalsPolicies')"
+              :key="policy.name"
+              :title="policy.policy_no || policy.name"
+              clickable
+              @click="openPolicyItem(policy)"
+            >
+              <template #trailing>
+                <StatusBadge domain="policy" :status="policy.status" />
+              </template>
+              <MiniFactList :items="recentPolicyFacts(policy)" />
+              <p class="mt-1 text-xs text-slate-600">
+                {{ formatCurrencyBy(policy.gross_premium, policy.currency || "TRY") }}
+                /
+                {{ formatCurrencyBy(policy.commission_amount || policy.commission, policy.currency || "TRY") }}
+              </p>
+            </EntityPreviewCard>
+          </ul>
+          <PreviewPager
+            v-if="renewalLinkedPolicies.length > 0"
+            :current-page="previewResolvedPage('renewalsPolicies', renewalLinkedPolicies)"
+            :total-pages="previewPageCount(renewalLinkedPolicies)"
+            :show-view-all="shouldShowViewAll(renewalLinkedPolicies)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('renewalsPolicies', $event, renewalLinkedPolicies)"
+            @view-all="openPreviewList('policies')"
+          />
+        </SectionPanel>
       </div>
     </div>
 
     <div v-if="isSalesTab" class="grid gap-4 xl:grid-cols-3">
       <div class="space-y-4">
+        <SectionPanel :title="t('offerPipeline')" :count="formatNumber(salesPipelineOffers.length)">
+          <p class="mb-3 text-xs text-slate-500">{{ t("salesPipelineHint") }}</p>
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">
+            {{ t("loading") }}
+          </div>
+          <div v-else-if="salesPipelineOffers.length === 0" class="at-empty-block">{{ t("noOffer") }}</div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="offer in pagedPreviewItems(salesPipelineOffers, 'salesOffers')"
+              :key="offer.name"
+              :title="offer.name"
+              clickable
+              @click="openOfferItem(offer)"
+            >
+              <template #trailing>
+                <StatusBadge domain="offer" :status="offer.status" />
+              </template>
+              <MiniFactList :items="recentOfferFacts(offer)" />
+              <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
+            </EntityPreviewCard>
+          </ul>
+          <PreviewPager
+            v-if="salesPipelineOffers.length > 0"
+            :current-page="previewResolvedPage('salesOffers', salesPipelineOffers)"
+            :total-pages="previewPageCount(salesPipelineOffers)"
+            :show-view-all="shouldShowViewAll(salesPipelineOffers)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('salesOffers', $event, salesPipelineOffers)"
+            @view-all="openPreviewList('offers')"
+          />
+        </SectionPanel>
+      </div>
+
+      <div class="space-y-4">
+        <SectionPanel :title="t('convertedOffersTitle')" :count="formatNumber(convertedSalesOffers.length)">
+          <div v-if="dashboardLoading" class="text-sm text-slate-500">
+            {{ t("loading") }}
+          </div>
+          <div v-else-if="convertedSalesOffers.length === 0" class="at-empty-block">{{ t("noConvertedOffers") }}</div>
+          <ul v-else class="space-y-3">
+            <EntityPreviewCard
+              v-for="offer in pagedPreviewItems(convertedSalesOffers, 'salesConvertedOffers')"
+              :key="offer.name"
+              :title="offer.name"
+              clickable
+              @click="openOfferItem(offer)"
+            >
+              <template #trailing>
+                <ActionButton
+                  v-if="offer.converted_policy"
+                  variant="ghost"
+                  size="sm"
+                  @click.stop="openConvertedPolicyItem(offer)"
+                >
+                  {{ t("openPolicyAction") }}
+                </ActionButton>
+              </template>
+              <MiniFactList :items="recentOfferFacts(offer)" />
+              <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
+              <p v-if="offer.converted_policy" class="mt-1 text-xs font-semibold text-emerald-600">
+                {{ t("converted") }}: {{ offer.converted_policy }}
+              </p>
+            </EntityPreviewCard>
+          </ul>
+          <PreviewPager
+            v-if="convertedSalesOffers.length > 0"
+            :current-page="previewResolvedPage('salesConvertedOffers', convertedSalesOffers)"
+            :total-pages="previewPageCount(convertedSalesOffers)"
+            :show-view-all="shouldShowViewAll(convertedSalesOffers)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('salesConvertedOffers', $event, convertedSalesOffers)"
+            @view-all="openPreviewList('offers')"
+          />
+        </SectionPanel>
+      </div>
+
+      <div class="space-y-4">
         <SectionPanel :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
             {{ t("loading") }}
           </div>
-          <div
-            v-else-if="displayRecentLeads.length === 0"
-            class="at-empty-block text-center"
-          >
+          <div v-else-if="displayRecentLeads.length === 0" class="at-empty-block text-center">
             {{ t("noLead") }}
           </div>
           <ul v-else class="space-y-3">
@@ -662,230 +784,72 @@
             @view-all="openPreviewList('leads')"
           />
         </SectionPanel>
-      </div>
 
-      <div class="space-y-4">
-        <SectionPanel :title="t('offerPipeline')" :show-count="false">
-            <template #trailing>
-              <span class="text-xs text-slate-500">{{ formatNumber(displayReadyOfferCount) }}</span>
-            </template>
+        <SectionPanel :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)">
           <div v-if="dashboardLoading" class="text-sm text-slate-500">
             {{ t("loading") }}
           </div>
-          <div v-else-if="displayRecentOffers.length === 0" class="at-empty-block">
-            {{ t("noOffer") }}
+          <div v-else-if="displayRecentPolicies.length === 0" class="at-empty-block">
+            {{ t("noPolicy") }}
           </div>
           <ul v-else class="space-y-3">
             <EntityPreviewCard
-              v-for="offer in pagedPreviewItems(displayRecentOffers, 'salesOffers')"
-              :key="offer.name"
-              :title="offer.name"
+              v-for="policy in pagedPreviewItems(displayRecentPolicies, 'salesPolicies')"
+              :key="policy.name"
+              :title="policy.policy_no || policy.name"
               clickable
-              @click="openOfferItem(offer)"
+              @click="openPolicyItem(policy)"
             >
               <template #trailing>
-                <StatusBadge domain="offer" :status="offer.status" />
+                <StatusBadge domain="policy" :status="policy.status" />
               </template>
-              <MiniFactList :items="recentOfferFacts(offer)" />
-              <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
-              <p v-if="offer.converted_policy" class="mt-1 text-xs font-semibold text-emerald-600">
-                {{ t("converted") }}: {{ offer.converted_policy }}
+              <MiniFactList :items="recentPolicyFacts(policy)" />
+              <p class="mt-1 text-xs text-slate-600">
+                {{ formatCurrencyBy(policy.gross_premium, policy.currency || "TRY") }}
+                /
+                {{ formatCurrencyBy(policy.commission_amount || policy.commission, policy.currency || "TRY") }}
               </p>
             </EntityPreviewCard>
           </ul>
           <PreviewPager
-            v-if="displayRecentOffers.length > 0"
-            :current-page="previewResolvedPage('salesOffers', displayRecentOffers)"
-            :total-pages="previewPageCount(displayRecentOffers)"
-            :show-view-all="shouldShowViewAll(displayRecentOffers)"
+            v-if="displayRecentPolicies.length > 0"
+            :current-page="previewResolvedPage('salesPolicies', displayRecentPolicies)"
+            :total-pages="previewPageCount(displayRecentPolicies)"
+            :show-view-all="shouldShowViewAll(displayRecentPolicies)"
             :view-all-label="t('viewAllItems')"
-            @change-page="setPreviewPage('salesOffers', $event, displayRecentOffers)"
-            @view-all="openPreviewList('offers')"
+            @change-page="setPreviewPage('salesPolicies', $event, displayRecentPolicies)"
+            @view-all="openPreviewList('policies')"
+          />
+        </SectionPanel>
+
+        <SectionPanel :title="t('salesCandidateActionTitle')" :count="formatNumber(salesCandidateActions.length)">
+          <p class="mb-3 text-xs text-slate-500">{{ t("salesCandidateActionHint") }}</p>
+          <div v-if="myTasksLoading || myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+          <div v-else-if="salesCandidateActions.length === 0" class="at-empty-block">{{ t("noSalesCandidateAction") }}</div>
+          <ul v-else class="space-y-2">
+            <MetaListCard
+              v-for="action in pagedPreviewItems(salesCandidateActions, 'salesActions')"
+              :key="`${action.kind}-${action.name}`"
+              :title="salesActionTitle(action)"
+              :description="salesActionDescription(action)"
+              description-class="mt-2 text-xs font-semibold text-slate-600"
+              clickable
+              @click="openSalesActionItem(action)"
+            >
+              <MiniFactList :items="salesActionFacts(action)" />
+            </MetaListCard>
+          </ul>
+          <PreviewPager
+            v-if="salesCandidateActions.length > 0"
+            :current-page="previewResolvedPage('salesActions', salesCandidateActions)"
+            :total-pages="previewPageCount(salesCandidateActions)"
+            :show-view-all="shouldShowViewAll(salesCandidateActions)"
+            :view-all-label="t('viewAllItems')"
+            @change-page="setPreviewPage('salesActions', $event, salesCandidateActions)"
+            @view-all="openSalesActionList()"
           />
         </SectionPanel>
       </div>
-
-      <div class="space-y-4">
-          <SectionPanel :title="t('myTasksTitle')" :count="formatNumber(myTaskItems.length)">
-          <p class="mb-3 text-xs text-slate-500">{{ t("myTasksHint") }}</p>
-          <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else class="space-y-3">
-            <div class="grid grid-cols-3 gap-2">
-              <div class="qc-warning-card">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskOverdue") }}</p>
-                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.overdue) }}</p>
-              </div>
-              <div class="qc-warning-card">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskToday") }}</p>
-                <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
-              </div>
-              <div class="qc-warning-card">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("taskSoon") }}</p>
-                <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
-              </div>
-            </div>
-            <ul v-if="myTaskItems.length > 0" class="space-y-2">
-                <MetaListCard
-                  v-for="task in pagedPreviewItems(myTaskItems, 'salesTasks')"
-                  :key="task.name"
-                  :title="task.task_title || task.name || '-'"
-                  :description="task.status || '-'"
-                  description-class="mt-2 text-xs font-semibold text-slate-600"
-                  clickable
-                  @click="openTaskItem(task)"
-                >
-                  <template #trailing>
-                  <ActionButton v-if="canStartTask(task)" variant="ghost" size="sm" @click.stop="startTask(task)">
-                    {{ t("startTaskAction") }}
-                  </ActionButton>
-                  <ActionButton v-if="canBlockTask(task)" variant="ghost" size="sm" @click.stop="blockTask(task)">
-                    {{ t("blockTaskAction") }}
-                  </ActionButton>
-                  <ActionButton v-if="canCompleteTask(task)" variant="ghost" size="sm" @click.stop="completeTask(task)">
-                    {{ t("completeTaskAction") }}
-                  </ActionButton>
-                  <ActionButton v-if="canCancelTask(task)" variant="ghost" size="sm" @click.stop="cancelTask(task)">
-                    {{ t("cancelTaskAction") }}
-                  </ActionButton>
-                  <ActionButton variant="ghost" size="sm" @click.stop="openTaskItem(task)">
-                    {{ t("openItem") }}
-                  </ActionButton>
-                  </template>
-                <MiniFactList :items="taskFacts(task)" />
-              </MetaListCard>
-            </ul>
-            <div v-else class="at-empty-block text-sm">{{ t("noMyTasks") }}</div>
-            <PreviewPager
-              v-if="myTaskItems.length > 0"
-              :current-page="previewResolvedPage('salesTasks', myTaskItems)"
-              :total-pages="previewPageCount(myTaskItems)"
-              :show-view-all="shouldShowViewAll(myTaskItems)"
-              :view-all-label="t('viewAllItems')"
-              @change-page="setPreviewPage('salesTasks', $event, myTaskItems)"
-              @view-all="openPreviewList('tasks')"
-            />
-            <div class="flex flex-wrap gap-2 pt-2">
-              <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'tasks-list' })">
-                {{ t("openTasksAction") }}
-              </ActionButton>
-            </div>
-          </div>
-          </SectionPanel>
-
-          <SectionPanel :title="t('myActivitiesTitle')" :count="formatNumber(myActivityItems.length)">
-            <p class="mb-3 text-xs text-slate-500">{{ t("myActivitiesHint") }}</p>
-            <div v-if="myActivitiesLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-            <div v-else class="space-y-3">
-              <div class="grid grid-cols-3 gap-2">
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activityLogged") }}</p>
-                  <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(myActivitySummary.logged) }}</p>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activityShared") }}</p>
-                  <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(myActivitySummary.shared) }}</p>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("activityArchived") }}</p>
-                  <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(myActivitySummary.archived) }}</p>
-                </div>
-              </div>
-              <ul v-if="myActivityItems.length > 0" class="space-y-2">
-                <MetaListCard
-                  v-for="activity in pagedPreviewItems(myActivityItems, 'salesActivities')"
-                  :key="activity.name"
-                  :title="activity.activity_title || activity.activity_type || activity.name || '-'"
-                  :description="activity.status || '-'"
-                  description-class="mt-2 text-xs font-semibold text-slate-600"
-                  clickable
-                  @click="openActivityItem(activity)"
-                >
-                  <template #trailing>
-                    <ActionButton variant="ghost" size="sm" @click.stop="openActivityItem(activity)">
-                      {{ t("openItem") }}
-                    </ActionButton>
-                  </template>
-                  <MiniFactList :items="activityFacts(activity)" />
-                </MetaListCard>
-              </ul>
-              <div v-else class="at-empty-block text-sm">{{ t("noMyActivities") }}</div>
-              <PreviewPager
-                v-if="myActivityItems.length > 0"
-                :current-page="previewResolvedPage('salesActivities', myActivityItems)"
-                :total-pages="previewPageCount(myActivityItems)"
-                :show-view-all="shouldShowViewAll(myActivityItems)"
-                :view-all-label="t('viewAllItems')"
-                @change-page="setPreviewPage('salesActivities', $event, myActivityItems)"
-                @view-all="openPreviewList('activities')"
-              />
-              <div class="flex flex-wrap gap-2 pt-2">
-                <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'activities-list' })">
-                  {{ t("openActivitiesAction") }}
-                </ActionButton>
-              </div>
-            </div>
-          </SectionPanel>
-
-          <SectionPanel :title="t('myRemindersTitle')" :count="formatNumber(myReminderItems.length)">
-            <p class="mb-3 text-xs text-slate-500">{{ t("myRemindersHint") }}</p>
-            <div v-if="myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-            <div v-else class="space-y-3">
-              <div class="grid grid-cols-3 gap-2">
-                <div class="qc-warning-card">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("reminderOverdue") }}</p>
-                  <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myReminderSummary.overdue) }}</p>
-                </div>
-                <div class="qc-warning-card">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("reminderToday") }}</p>
-                  <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myReminderSummary.due_today) }}</p>
-                </div>
-                <div class="qc-warning-card">
-                  <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("reminderSoon") }}</p>
-                  <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myReminderSummary.due_soon) }}</p>
-                </div>
-              </div>
-              <ul v-if="myReminderItems.length > 0" class="space-y-2">
-                <MetaListCard
-                  v-for="reminder in pagedPreviewItems(myReminderItems, 'salesReminders')"
-                  :key="reminder.name"
-                  :title="reminder.reminder_title || reminder.name || '-'"
-                  :description="reminder.status || '-'"
-                  description-class="mt-2 text-xs font-semibold text-slate-600"
-                  clickable
-                  @click="openReminderItem(reminder)"
-                >
-                  <template #trailing>
-                    <ActionButton v-if="canCompleteReminder(reminder)" variant="ghost" size="sm" @click.stop="completeReminder(reminder)">
-                      {{ t("completeTaskAction") }}
-                    </ActionButton>
-                    <ActionButton v-if="canCancelReminder(reminder)" variant="ghost" size="sm" @click.stop="cancelReminder(reminder)">
-                      {{ t("cancelTaskAction") }}
-                    </ActionButton>
-                    <ActionButton variant="ghost" size="sm" @click.stop="openReminderItem(reminder)">
-                      {{ t("openItem") }}
-                    </ActionButton>
-                  </template>
-                  <MiniFactList :items="reminderFacts(reminder)" />
-                </MetaListCard>
-              </ul>
-              <div v-else class="at-empty-block text-sm">{{ t("noMyReminders") }}</div>
-              <PreviewPager
-                v-if="myReminderItems.length > 0"
-                :current-page="previewResolvedPage('salesReminders', myReminderItems)"
-                :total-pages="previewPageCount(myReminderItems)"
-                :show-view-all="shouldShowViewAll(myReminderItems)"
-                :view-all-label="t('viewAllItems')"
-                @change-page="setPreviewPage('salesReminders', $event, myReminderItems)"
-                @view-all="openPreviewList('reminders')"
-              />
-              <div class="flex flex-wrap gap-2 pt-2">
-                <ActionButton variant="secondary" size="sm" @click="router.push({ name: 'reminders-list' })">
-                  {{ t("openRemindersAction") }}
-                </ActionButton>
-              </div>
-            </div>
-          </SectionPanel>
-        </div>
       </div>
 
 
@@ -962,9 +926,6 @@ import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import PreviewPager from "../components/app-shell/PreviewPager.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
-import DetailCard from "../components/ui/DetailCard.vue";
-import TrendChart from "../components/ui/TrendChart.vue";
-import DistributionChart from "../components/ui/DistributionChart.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
@@ -1014,8 +975,17 @@ const copy = {
     noTrendData: "Trend verisi bulunamadı.",
     noOfferStatus: "Teklif durum verisi bulunamadı.",
     recentLeads: "Güncel Fırsat Kartları",
+    salesCandidateActionTitle: "Müşteri Aday Aksiyonu",
+    salesCandidateActionHint: "Fırsat ve teklif kaynaklı açık görevleri ile hatırlatıcıları tek listede izleyin.",
+    noSalesCandidateAction: "Fırsat veya teklif kaynaklı açık aksiyon bulunamadı.",
+    salesActionTask: "Görev",
+    salesActionReminder: "Hatırlatıcı",
+    salesActionLead: "Fırsat",
+    salesActionOffer: "Teklif",
     recentActivitiesTitle: "Son Aktiviteler",
     recentActivitiesEmpty: "Henüz aktivite kaydı yok.",
+    openClaimsTitle: "Açık Hasarlar",
+    noOpenClaims: "Açık hasar kaydı bulunamadı.",
     monthlyPremiumTrendTitle: "Aylık Prim Trendi",
     branchDistributionTitle: "Branş Dağılımı",
     policySuffix: " poliçe",
@@ -1082,6 +1052,12 @@ const copy = {
     kpiCollectionOverdueCount: "Gecikmiş Tahsilat",
     kpiCollectionOverdueAmount: "Gecikmiş Tutar",
     kpiAvgRate: "Ort. Komisyon Oranı",
+    kpiFollowUpOverdue: "Geciken Takip",
+    kpiFollowUpToday: "Bugün Takip",
+    kpiTaskOverdue: "Geciken Görev",
+    kpiTaskToday: "Bugün Görev",
+    kpiAcceptedOffers: "Kabul Edilen Teklif",
+    kpiConvertedOffers: "Poliçeye Dönüşen Teklif",
     renewalRetentionHint: "Yenilenen / kaybedilen kapanışlar",
     monthlySnapshot: "Seçili aralik",
     ratioSnapshot: "Oransal performans",
@@ -1105,6 +1081,22 @@ const copy = {
     noTodayCollections: "Bugün vadesi gelen tahsilat kaydı bulunamadı.",
     overdueCollectionsTitle: "Gecikmiş Tahsilatlar",
     noOverdueCollections: "Gecikmiş tahsilat kaydı bulunamadı.",
+    collectionsPerformanceTitle: "Tahsilat Performansı",
+    collectionsPerformanceHint: "Ödeme durumları ve tahsilat yönlerine göre dağılımı canlı izleyin.",
+    noCollectionPerformance: "Tahsilat performans özeti için veri bulunamadı.",
+    paymentStatusBreakdownTitle: "Duruma Göre Ödemeler",
+    paymentDirectionBreakdownTitle: "Yöne Göre Ödemeler",
+    paymentPaidAmount: "Ödenen Tutar",
+    collectionsRiskTitle: "Riskli Müşteriler / Poliçeler",
+    collectionsRiskHint: "Gecikmiş ve vadesi yaklaşan ödemelerden en riskli kayıtları önceliklendirin.",
+    noCollectionsRisk: "Riskli müşteri veya poliçe kaydı bulunamadı.",
+    riskScore: "Risk Skoru",
+    overdueCount: "Gecikmiş",
+    dueTodayCount: "Bugün Vade",
+    riskOverdueAmount: "Gecikmiş Tutar",
+    riskLevelHigh: "Yüksek Risk",
+    riskLevelMedium: "Orta Risk",
+    riskLevelLow: "Düşük Risk",
     reconciliationPreview: "Açık Mutabakat Farkları",
     noReconciliationPreview: "Açık mutabakat kaydı bulunamadı.",
     mismatchRows: "Açık Kayıt",
@@ -1118,15 +1110,26 @@ const copy = {
     noOfferWaitingRenewals: "Teklif bekleyen yenileme kaydı bulunamadı.",
     renewalStatusOverviewTitle: "Yenileme Durum Özeti",
     noRenewalStatus: "Durum özeti oluşturulacak yenileme kaydı yok.",
+    renewalOutcomeTitle: "Dönüşüm / Ödeme Sonucu",
+    renewalOutcomeHint: "Yenilenen, kaybedilen ve iptal edilen sonuçları toplu izleyin.",
+    noRenewalOutcome: "Sonuç özeti için kapanmış yenileme kaydı bulunamadı.",
+    outcomeRenewed: "Yenilenen",
+    outcomeLost: "Kaybedilen",
+    outcomeCancelled: "İptal",
+    linkedPoliciesTitle: "Bağlı Poliçeler",
+    noLinkedPolicies: "Yenilemeyle bağlı poliçe kaydı bulunamadı.",
     dashboardPermissionDenied: "Bu pano verisini görmek için yetkiniz yok.",
     dashboardScopeNoAssignments: "Size atanmış müşteri bulunmadığı için pano verisi gösterilemiyor.",
     dashboardScopeRestrictedEmpty: "Mevcut veri kapsaminda pano verisi bulunamadı.",
     statusInProgress: "Devam Ediyor",
     statusCompleted: "Tamamlandı",
     statusCancelled: "İptal",
+    statusPaid: "Ödendi",
     statusSent: "Gönderildi",
     statusAccepted: "Kabul Edildi",
     statusRejected: "Reddedildi",
+    paymentDirectionInbound: "Tahsilat",
+    paymentDirectionOutbound: "Ödeme",
     validationTaxNumberLength: "Vergi numarası 10 haneli olmalıdır.",
     validationTcLength: "TC kimlik numarası 11 haneli olmalıdır.",
     validationTcInvalid: "Geçerli bir TC kimlik numarası girin.",
@@ -1194,8 +1197,12 @@ const copy = {
     noPolicy: "Poliçe kaydı bulunamadı.",
     issueDate: "Tanzim",
     offerPipeline: "Teklif Süreci",
+    salesPipelineHint: "Taslak, gönderilmiş ve kabul aşamasındaki teklifleri satış kuyruğu olarak izleyin.",
     readyOffers: "Hazır Teklifler",
     noOffer: "Teklif kaydı bulunamadı.",
+    convertedOffersTitle: "Dönüşen Teklifler",
+    noConvertedOffers: "Poliçeye dönüşen teklif kaydı bulunamadı.",
+    openPolicyAction: "Poliçeyi Aç",
     validUntil: "Geçerlilik",
     converted: "Dönüştü",
     leadPipeline: "Fırsat Süreci",
@@ -1233,8 +1240,17 @@ const copy = {
     noTrendData: "No trend data found.",
     noOfferStatus: "No offer status data found.",
     recentLeads: "Recent Lead Cards",
+    salesCandidateActionTitle: "Prospect Action Queue",
+    salesCandidateActionHint: "Review open tasks and reminders tied to leads and offers in one list.",
+    noSalesCandidateAction: "No open lead or offer actions were found.",
+    salesActionTask: "Task",
+    salesActionReminder: "Reminder",
+    salesActionLead: "Lead",
+    salesActionOffer: "Offer",
     recentActivitiesTitle: "Recent Activities",
     recentActivitiesEmpty: "No activity records yet.",
+    openClaimsTitle: "Open Claims",
+    noOpenClaims: "No open claim records found.",
     monthlyPremiumTrendTitle: "Monthly Premium Trend",
     branchDistributionTitle: "Branch Distribution",
     policySuffix: " policies",
@@ -1301,6 +1317,12 @@ const copy = {
     kpiCollectionOverdueCount: "Overdue Collections",
     kpiCollectionOverdueAmount: "Overdue Amount",
     kpiAvgRate: "Avg Commission Rate",
+    kpiFollowUpOverdue: "Overdue Follow-ups",
+    kpiFollowUpToday: "Follow-ups Due Today",
+    kpiTaskOverdue: "Overdue Tasks",
+    kpiTaskToday: "Tasks Due Today",
+    kpiAcceptedOffers: "Accepted Offers",
+    kpiConvertedOffers: "Converted Offers",
     todaySnapshot: "Current snapshot",
     renewalRetentionHint: "Renewed / lost closed outcomes",
     monthlySnapshot: "Selected range",
@@ -1325,6 +1347,22 @@ const copy = {
     noTodayCollections: "No collections are due today.",
     overdueCollectionsTitle: "Overdue Collections",
     noOverdueCollections: "No overdue collections found.",
+    collectionsPerformanceTitle: "Collection Performance",
+    collectionsPerformanceHint: "Track the live breakdown by payment status and direction.",
+    noCollectionPerformance: "No data found for the collection performance summary.",
+    paymentStatusBreakdownTitle: "Payments By Status",
+    paymentDirectionBreakdownTitle: "Payments By Direction",
+    paymentPaidAmount: "Paid Amount",
+    collectionsRiskTitle: "Risky Customers / Policies",
+    collectionsRiskHint: "Prioritize the riskiest records from overdue and due-today payments.",
+    noCollectionsRisk: "No risky customer or policy records were found.",
+    riskScore: "Risk Score",
+    overdueCount: "Overdue",
+    dueTodayCount: "Due Today",
+    riskOverdueAmount: "Overdue Amount",
+    riskLevelHigh: "High Risk",
+    riskLevelMedium: "Medium Risk",
+    riskLevelLow: "Low Risk",
     reconciliationPreview: "Open Reconciliation Differences",
     noReconciliationPreview: "No open reconciliation items found.",
     mismatchRows: "Open Rows",
@@ -1338,15 +1376,26 @@ const copy = {
     noOfferWaitingRenewals: "No renewals are waiting for an offer.",
     renewalStatusOverviewTitle: "Renewal Status Summary",
     noRenewalStatus: "No renewal rows available for a status summary.",
+    renewalOutcomeTitle: "Conversion / Payment Outcome",
+    renewalOutcomeHint: "Track renewed, lost, and cancelled outcomes in one summary.",
+    noRenewalOutcome: "No closed renewal outcomes are available for summary.",
+    outcomeRenewed: "Renewed",
+    outcomeLost: "Lost",
+    outcomeCancelled: "Cancelled",
+    linkedPoliciesTitle: "Linked Policies",
+    noLinkedPolicies: "No policies linked to renewals were found.",
     dashboardPermissionDenied: "You do not have permission to access dashboard data.",
     dashboardScopeNoAssignments: "No customers are assigned to you, so dashboard data is not available.",
     dashboardScopeRestrictedEmpty: "No dashboard data is available for your current scope.",
     statusInProgress: "In Progress",
     statusCompleted: "Done",
     statusCancelled: "Cancelled",
+    statusPaid: "Paid",
     statusSent: "Sent",
     statusAccepted: "Accepted",
     statusRejected: "Rejected",
+    paymentDirectionInbound: "Inbound",
+    paymentDirectionOutbound: "Outbound",
     validationTaxNumberLength: "Tax number must be 10 digits.",
     validationTcLength: "T.R. identity number must be 11 digits.",
     validationTcInvalid: "Enter a valid T.R. identity number.",
@@ -1414,8 +1463,12 @@ const copy = {
     noPolicy: "No policy records found.",
     issueDate: "Issue Date",
     offerPipeline: "Offer Pipeline",
+    salesPipelineHint: "Track draft, sent and accepted offers as the active sales queue.",
     readyOffers: "Ready Offers",
     noOffer: "No offer records found.",
+    convertedOffersTitle: "Converted Offers",
+    noConvertedOffers: "No converted offers found.",
+    openPolicyAction: "Open Policy",
     validUntil: "Valid Until",
     converted: "Converted",
     kpiGwp: "Total Gross Premium",
@@ -1446,7 +1499,6 @@ const selectedRange = computed({
   get: () => dashboardStore.state.range || 30,
   set: (value) => dashboardStore.setRange(value),
 });
-const selectedPeriod = ref("month");
 const showLeadDialog = ref(false);
 const isSubmitting = ref(false);
 const leadDialogError = ref("");
@@ -1572,6 +1624,17 @@ const offerListResource = createResource({
   auto: false,
 });
 
+const claimListResource = createResource({
+  url: "frappe.client.get_list",
+  params: {
+    doctype: "AT Claim",
+    fields: ["name", "claim_no", "customer", "policy", "claim_status", "approved_amount", "paid_amount", "modified"],
+    order_by: "modified desc",
+    limit_page_length: 12,
+  },
+  auto: true,
+});
+
 const reconciliationPreviewResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
   params: {
@@ -1618,6 +1681,11 @@ const recentOffers = computed(() =>
     ? asArray(dashboardTabPreviews.value.offers)
     : asArray(offerListResource.data)
 );
+const openClaimsPreviewRows = computed(() =>
+  asArray(unref(claimListResource.data))
+    .filter((claim) => ["Open", "Under Review", "Approved"].includes(String(claim?.claim_status || "")))
+    .slice(0, 12)
+);
 const dueTodayCollectionPayments = computed(() => asArray(dashboardTabPreviews.value.due_today_payments));
 const overdueCollectionPayments = computed(() => asArray(dashboardTabPreviews.value.overdue_payments));
 const offerWaitingRenewals = computed(() => asArray(dashboardTabPreviews.value.offer_waiting_renewals));
@@ -1663,67 +1731,6 @@ const commissionTrend = computed(() =>
   asArray(dashboardTabSeries.value.commission_trend).length
     ? asArray(dashboardTabSeries.value.commission_trend)
     : asArray(dashboardData.value.commission_trend)
-);
-const week4Metrics = computed(() => {
-  const cards = dashboardCards.value || {};
-  const previous = previousDashboardCards.value || {};
-  return {
-    activePolicies: Number(cards.total_policies || 0),
-    activePoliciesChange: trendPercent(cards.total_policies, previous.total_policies),
-    periodPremium: Number(cards.total_gwp_try || 0),
-    periodPremiumChange: trendPercent(cards.total_gwp_try, previous.total_gwp_try),
-    pendingRenewals: Number(cards.pending_renewals || 0),
-    openClaims: Number(cards.open_claims || cards.open_claim_count || cards.open_claim || 0),
-    openClaimsChange: trendPercent(
-      cards.open_claims || cards.open_claim_count || cards.open_claim,
-      previous.open_claims || previous.open_claim_count || previous.open_claim
-    ),
-  };
-});
-const trendLabels = computed(() => commissionTrend.value.map((entry) => formatMonthKey(entry.month_key || entry.month || "")));
-const trendDatasets = computed(() => {
-  const current = commissionTrend.value.map((entry) => Number(entry.total_commission || entry.total || 0));
-  const previous = current.map((value) => Math.max(0, Math.round(value * 0.9)));
-  return [
-    { label: "Bu Yil", data: current },
-    { label: "Gecen Yil", data: previous, secondary: true },
-  ];
-});
-const branchDistribution = computed(() => {
-  const rows = policyStatusSummary.value || [];
-  const total = rows.reduce((sum, row) => sum + Number(row.value || 0), 0);
-  const palette = ["#1B5DB8", "#0F7E6B", "#BA7517", "#7F77DD", "#D85A30"];
-  return rows.slice(0, 5).map((row, i) => ({
-    label: row.label,
-    value: Number(row.value || 0),
-    pct: total ? Math.round((Number(row.value || 0) / total) * 100) : 0,
-    color: palette[i] || "#9CA3AF",
-  }));
-});
-const upcomingRenewals = computed(() =>
-  (renewalAlertItems.value || [])
-    .map((item) => {
-      const remainingDays = week4DaysUntil(item.due_date || item.renewal_date || item.end_date);
-      return {
-        name: item.policy || item.name,
-        customer: item.customer || item.customer_name || item.policyholder || item.policy || "-",
-        branch: item.branch || item.line_of_business || "-",
-        end_date: item.due_date || item.renewal_date || item.end_date || "-",
-        remaining_days: remainingDays,
-        premium: formatCurrencyBy(item.gross_premium || item.premium || 0, item.currency || "TRY"),
-      };
-    })
-    .filter((item) => item.remaining_days <= 30)
-    .sort((a, b) => a.remaining_days - b.remaining_days)
-    .slice(0, 8)
-);
-const week4RecentActivities = computed(() =>
-  (myActivityItems.value || []).slice(0, 6).map((item) => ({
-    name: item.name || `${item.reference_doctype || "ACT"}-${item.reference_name || Math.random()}`,
-    text: item.subject || item.activity_type || item.description || item.notes || t("myActivitiesHint"),
-    time: formatDate(item.modified || item.creation || item.activity_date || ""),
-    highlight: Boolean(item.is_important || item.priority === "High"),
-  }))
 );
 const policyStatusRows = computed(() => asArray(dashboardData.value.policy_status));
 const topCompanies = computed(() =>
@@ -1810,9 +1817,66 @@ const displayRecentLeads = computed(() => leads.value);
 const displayTopCompanies = computed(() => topCompanies.value);
 const displayRecentPolicies = computed(() => recentPolicies.value);
 const displayRecentOffers = computed(() => recentOffers.value);
-const displayReadyOfferCount = computed(
-  () => displayRecentOffers.value.filter((offer) => ["Sent", "Accepted"].includes(offer.status) && !offer.converted_policy).length
+const prioritizedFollowUpItems = computed(() =>
+  followUpItems.value
+    .slice()
+    .sort((left, right) => Number(left?.days_delta ?? 999) - Number(right?.days_delta ?? 999))
 );
+const priorityTaskItems = computed(() =>
+  myTaskItems.value
+    .filter((task) => !["Done", "Completed", "Cancelled"].includes(String(task?.status || "")))
+    .slice()
+    .sort((left, right) => compareDueDateAsc(left?.due_date, right?.due_date))
+);
+const salesPipelineOffers = computed(() =>
+  displayRecentOffers.value.filter((offer) => {
+    const status = String(offer?.status || "");
+    return !offer?.converted_policy && ["Draft", "Sent", "Accepted"].includes(status);
+  })
+);
+const convertedSalesOffers = computed(() =>
+  displayRecentOffers.value.filter((offer) => Boolean(offer?.converted_policy) || String(offer?.status || "") === "Converted")
+);
+const salesCandidateTaskActions = computed(() =>
+  myTaskItems.value
+    .filter((task) => isSalesActionSource(task?.source_doctype))
+    .map((task) => ({ ...task, kind: "task", action_date: task?.due_date || null }))
+);
+const salesCandidateReminderActions = computed(() =>
+  myReminderItems.value
+    .filter((reminder) => isSalesActionSource(reminder?.source_doctype))
+    .map((reminder) => ({ ...reminder, kind: "reminder", action_date: reminder?.remind_at || null }))
+);
+const salesCandidateActions = computed(() =>
+  [...salesCandidateTaskActions.value, ...salesCandidateReminderActions.value]
+    .slice()
+    .sort((left, right) => compareDueDateAsc(left?.action_date, right?.action_date))
+);
+const recentActivityItems = computed(() =>
+  myActivityItems.value
+    .slice()
+    .sort((left, right) => compareDateDesc(left?.activity_at || left?.modified || left?.creation, right?.activity_at || right?.modified || right?.creation))
+);
+const renewalLinkedPolicies = computed(() => {
+  const linkedKeys = new Set(
+    activeRenewalTasks.value
+      .map((task) => normalizeLookupValue(task?.policy))
+      .filter(Boolean)
+  );
+
+  if (!linkedKeys.size) return [];
+
+  return displayRecentPolicies.value.filter((policy) => {
+    const policyName = normalizeLookupValue(policy?.name);
+    const policyNumber = normalizeLookupValue(policy?.policy_no);
+    return linkedKeys.has(policyName) || linkedKeys.has(policyNumber);
+  });
+});
+const displayReadyOfferCount = computed(
+  () => readyOfferCount.value
+);
+const acceptedOfferCount = computed(() => Number(dashboardTabMetrics.value?.accepted_offer_count || 0));
+const convertedOfferCount = computed(() => Number(dashboardTabMetrics.value?.converted_offer_count || 0));
 const reconciliationPreviewOpenDifference = computed(() => {
   if (dashboardTabMetrics.value?.reconciliation_open_difference_try != null) {
     return Number(dashboardTabMetrics.value.reconciliation_open_difference_try || 0);
@@ -1826,6 +1890,9 @@ const dailyActionOffers = computed(() =>
 
 const previewPages = reactive({
   dailyFollowUp: 1,
+  dailyActivities: 1,
+  dailyTasks: 1,
+  dailyClaims: 1,
   dailyPolicies: 1,
   dailyActionOffers: 1,
   dailyRenewalAlerts: 1,
@@ -1833,11 +1900,16 @@ const previewPages = reactive({
   collectionsDueToday: 1,
   collectionsOverdue: 1,
   collectionsPayments: 1,
+  collectionsRisk: 1,
   collectionsReconciliation: 1,
+  renewalsPolicies: 1,
   renewalsOfferWaiting: 1,
   renewalsQueue: 1,
   salesLeads: 1,
   salesOffers: 1,
+  salesConvertedOffers: 1,
+  salesPolicies: 1,
+  salesActions: 1,
   salesTasks: 1,
   salesActivities: 1,
   salesReminders: 1,
@@ -1963,12 +2035,6 @@ const collectionQuickStatCards = computed(() => [
     value: formatCurrency(overdueCollectionAmount.value),
     icon: "wallet",
   }),
-  buildStaticQuickStatCard({
-    key: "quick-reco-open",
-    title: t("kpiReconciliationOpen"),
-    value: formatNumber(reconciliationPreviewMetrics.value.open || 0),
-    icon: "git-merge",
-  }),
 ]);
 
 const renewalQuickStatCards = computed(() => [
@@ -1991,19 +2057,69 @@ const renewalQuickStatCards = computed(() => [
     value: formatNumber(renewalBucketCounts.value.due7),
     icon: "clock",
   }),
-  buildStaticQuickStatCard({
-    key: "quick-renewal-due30",
-    title: t("kpiRenewalDue30"),
-    value: formatNumber(renewalBucketCounts.value.due30),
-    icon: "calendar",
-  }),
 ].filter(Boolean));
+
+const operationsQuickStatCards = computed(() => [
+  buildStaticQuickStatCard({
+    key: "quick-follow-up-overdue",
+    title: t("kpiFollowUpOverdue"),
+    value: formatNumber(followUpSummary.value.overdue),
+    icon: "alert-triangle",
+  }),
+  buildStaticQuickStatCard({
+    key: "quick-follow-up-today",
+    title: t("kpiFollowUpToday"),
+    value: formatNumber(followUpSummary.value.due_today),
+    icon: "calendar-days",
+  }),
+  buildStaticQuickStatCard({
+    key: "quick-task-overdue",
+    title: t("kpiTaskOverdue"),
+    value: formatNumber(myTaskSummary.value.overdue),
+    icon: "briefcase",
+  }),
+  buildStaticQuickStatCard({
+    key: "quick-task-today",
+    title: t("kpiTaskToday"),
+    value: formatNumber(myTaskSummary.value.due_today),
+    icon: "list-todo",
+  }),
+]);
+
+const salesQuickStatCards = computed(() => [
+  buildStaticQuickStatCard({
+    key: "quick-sales-ready-offers",
+    title: t("kpiReadyOffers"),
+    value: formatNumber(readyOfferCount.value),
+    icon: "send",
+  }),
+  buildStaticQuickStatCard({
+    key: "quick-sales-accepted-offers",
+    title: t("kpiAcceptedOffers"),
+    value: formatNumber(acceptedOfferCount.value),
+    icon: "badge-check",
+  }),
+  buildStaticQuickStatCard({
+    key: "quick-sales-converted-offers",
+    title: t("kpiConvertedOffers"),
+    value: formatNumber(convertedOfferCount.value),
+    icon: "repeat",
+  }),
+  buildQuickStatCard({
+    key: "quick-sales-gwp",
+    title: t("kpiGwp"),
+    value: formatCurrency(dashboardCards.value.total_gwp_try),
+    current: dashboardCards.value.total_gwp_try,
+    previous: previousDashboardCards.value.total_gwp_try,
+    icon: "bar-chart-2",
+  }),
+]);
 
 const visibleQuickStatCards = computed(() => {
   if (isCollectionsTab.value) return collectionQuickStatCards.value;
   if (isRenewalsTab.value) return renewalQuickStatCards.value;
-  if (isDailyTab.value) return quickStatCards.value;
-  if (isSalesTab.value) return quickStatCards.value.slice(0, 3);
+  if (isDailyTab.value) return operationsQuickStatCards.value;
+  if (isSalesTab.value) return salesQuickStatCards.value;
   return quickStatCards.value;
 });
 
@@ -2114,17 +2230,6 @@ function trendPercent(currentValue, previousValue) {
   return Number((((current - previous) / Math.abs(previous)) * 100).toFixed(1));
 }
 
-function week4DaysUntil(dateValue) {
-  const target = new Date(dateValue || "");
-  if (Number.isNaN(target.getTime())) return 999;
-  return Math.ceil((target.getTime() - Date.now()) / 86400000);
-}
-
-function onTrendPeriodChange(period) {
-  selectedPeriod.value = period;
-  reloadData();
-}
-
 const renewalStatusSummary = computed(() => {
   const serverRows = Array.isArray(dashboardTabSeries.value?.renewal_status) ? dashboardTabSeries.value.renewal_status : null;
   if (serverRows) {
@@ -2175,6 +2280,139 @@ const renewalStatusSummary = computed(() => {
       ...row,
       ratio: row.value ? Math.max(6, Math.round((row.value / total) * 100)) : 0,
     }));
+});
+
+const collectionPaymentStatusSummary = computed(() => {
+  const rows = Array.isArray(dashboardTabSeries.value?.payment_status) ? dashboardTabSeries.value.payment_status : [];
+  const totalsByStatus = {};
+  for (const row of rows) {
+    totalsByStatus[String(row?.status || "")] = Number(row?.total || 0);
+  }
+  const total = Object.values(totalsByStatus).reduce((sum, value) => sum + Number(value || 0), 0) || 1;
+  const order = ["Draft", "Paid", "Cancelled"];
+  const colorMap = {
+    Draft: "bg-amber-500",
+    Paid: "bg-emerald-500",
+    Cancelled: "bg-slate-400",
+  };
+  return order
+    .map((status) => ({
+      key: status,
+      label: paymentStatusLabel(status),
+      value: Number(totalsByStatus[status] || 0),
+      colorClass: colorMap[status] || "bg-slate-400",
+    }))
+    .filter((row) => row.value > 0)
+    .map((row) => ({
+      ...row,
+      ratio: row.value ? Math.max(6, Math.round((row.value / total) * 100)) : 0,
+    }));
+});
+
+const collectionPaymentDirectionSummary = computed(() => {
+  const rows = Array.isArray(dashboardTabSeries.value?.payment_direction) ? dashboardTabSeries.value.payment_direction : [];
+  const map = {};
+  for (const row of rows) {
+    const key = String(row?.payment_direction || "");
+    map[key] = {
+      total: Number(row?.total || 0),
+      paidAmount: Number(row?.paid_amount_try || 0),
+    };
+  }
+  const totalRows = Object.values(map).reduce((sum, item) => sum + Number(item?.total || 0), 0) || 1;
+  const order = ["Inbound", "Outbound"];
+  const colorMap = {
+    Inbound: "bg-sky-500",
+    Outbound: "bg-fuchsia-500",
+  };
+  return order
+    .map((direction) => ({
+      key: direction,
+      label: paymentDirectionLabel(direction),
+      value: Number(map[direction]?.total || 0),
+      paidAmount: Number(map[direction]?.paidAmount || 0),
+      colorClass: colorMap[direction] || "bg-slate-400",
+    }))
+    .filter((row) => row.value > 0)
+    .map((row) => ({
+      ...row,
+      ratio: row.value ? Math.max(6, Math.round((row.value / totalRows) * 100)) : 0,
+    }));
+});
+
+const collectionRiskRows = computed(() => {
+  const grouped = new Map();
+  const pushPayment = (payment, bucket) => {
+    const customer = cstr(payment?.customer);
+    const policy = cstr(payment?.policy);
+    const key = `${customer}::${policy}`;
+    const current = grouped.get(key) || {
+      key,
+      customer,
+      policy,
+      overdueCount: 0,
+      dueTodayCount: 0,
+      overdueAmount: 0,
+    };
+    if (bucket === "overdue") {
+      current.overdueCount += 1;
+      current.overdueAmount += Number(payment?.amount_try || 0);
+    } else {
+      current.dueTodayCount += 1;
+    }
+    grouped.set(key, current);
+  };
+
+  for (const payment of overdueCollectionPayments.value) pushPayment(payment, "overdue");
+  for (const payment of dueTodayCollectionPayments.value) pushPayment(payment, "due_today");
+
+  return Array.from(grouped.values())
+    .map((row) => {
+      const score = row.overdueCount * 3 + row.dueTodayCount + Math.min(4, Math.ceil(row.overdueAmount / 5000));
+      return {
+        ...row,
+        score,
+        title: row.policy || row.customer || "-",
+        description: `${riskLevelLabel(score)} · ${row.customer || row.policy || "-"}`,
+      };
+    })
+    .filter((row) => row.score > 0)
+    .sort((left, right) => {
+      if (right.score !== left.score) return right.score - left.score;
+      if (right.overdueAmount !== left.overdueAmount) return right.overdueAmount - left.overdueAmount;
+      return right.overdueCount - left.overdueCount;
+    });
+});
+
+const renewalRetentionRate = computed(() => Number(dashboardTabSeries.value?.renewal_retention?.rate || 0));
+
+const renewalOutcomeSummary = computed(() => {
+  const retention = dashboardTabSeries.value?.renewal_retention || {};
+  const rows = [
+    {
+      key: "renewed",
+      label: t("outcomeRenewed"),
+      value: Number(retention?.renewed || 0),
+      colorClass: "bg-emerald-500",
+    },
+    {
+      key: "lost",
+      label: t("outcomeLost"),
+      value: Number(retention?.lost || 0),
+      colorClass: "bg-amber-500",
+    },
+    {
+      key: "cancelled",
+      label: t("outcomeCancelled"),
+      value: Number(retention?.cancelled || 0),
+      colorClass: "bg-slate-400",
+    },
+  ].filter((row) => row.value > 0);
+  const total = rows.reduce((sum, row) => sum + row.value, 0) || 1;
+  return rows.map((row) => ({
+    ...row,
+    ratio: row.value ? Math.max(6, Math.round((row.value / total) * 100)) : 0,
+  }));
 });
 
 const quickActions = computed(() => [
@@ -2516,6 +2754,14 @@ function activityFacts(activity) {
   ];
 }
 
+function claimFacts(claim) {
+  return [
+    { label: t("customer"), value: claim?.customer || "-" },
+    { label: t("policyLabel"), value: claim?.policy || "-" },
+    { label: t("status"), value: claim?.claim_status || "-" },
+  ];
+}
+
 function reminderFacts(reminder) {
   return [
     { label: t("customer"), value: reminder?.customer || "-" },
@@ -2526,14 +2772,108 @@ function reminderFacts(reminder) {
   ].filter((item) => item.value && item.value !== "-");
 }
 
+function salesActionFacts(action) {
+  const actionDateLabel = action?.kind === "reminder" ? t("date") : t("dueDate");
+  return [
+    { label: t("taskType"), value: action?.kind === "reminder" ? t("salesActionReminder") : (action?.task_type || t("salesActionTask")) },
+    { label: t("source"), value: salesActionSourceLabel(action?.source_doctype) },
+    { label: actionDateLabel, value: formatDate(action?.action_date) },
+  ].filter((item) => item.value && item.value !== "-");
+}
+
+function salesActionTitle(action) {
+  return action?.task_title || action?.reminder_title || action?.source_name || action?.name || "-";
+}
+
+function salesActionDescription(action) {
+  const actionType = action?.kind === "reminder" ? t("salesActionReminder") : t("salesActionTask");
+  const sourceLabel = salesActionSourceLabel(action?.source_doctype);
+  const sourceName = action?.source_name || "-";
+  return `${actionType} · ${sourceLabel} · ${sourceName}`;
+}
+
+function salesActionSourceLabel(sourceDoctype) {
+  const source = cstr(sourceDoctype);
+  if (source === "AT Lead") return t("salesActionLead");
+  if (source === "AT Offer") return t("salesActionOffer");
+  return sourceDoctype || "-";
+}
+
+function paymentStatusLabel(status) {
+  const normalized = cstr(status);
+  if (normalized === "Draft") return t("draft");
+  if (normalized === "Paid") return t("statusPaid");
+  if (normalized === "Cancelled") return t("statusCancelled");
+  if (normalized === "Open") return t("open");
+  return normalized || "-";
+}
+
+function paymentDirectionLabel(direction) {
+  const normalized = cstr(direction);
+  if (normalized === "Inbound") return t("paymentDirectionInbound");
+  if (normalized === "Outbound") return t("paymentDirectionOutbound");
+  return normalized || "-";
+}
+
+function riskLevelLabel(score) {
+  const numericScore = Number(score || 0);
+  if (numericScore >= 6) return t("riskLevelHigh");
+  if (numericScore >= 3) return t("riskLevelMedium");
+  return t("riskLevelLow");
+}
+
+function collectionRiskFacts(row) {
+  return [
+    { label: t("riskScore"), value: formatNumber(row?.score || 0) },
+    { label: t("overdueCount"), value: formatNumber(row?.overdueCount || 0) },
+    { label: t("dueTodayCount"), value: formatNumber(row?.dueTodayCount || 0) },
+    { label: t("riskOverdueAmount"), value: formatCurrency(row?.overdueAmount || 0) },
+  ];
+}
+
+function openCollectionRiskItem(row) {
+  const queryValue = cstr(row?.policy) || cstr(row?.customer);
+  if (!queryValue) {
+    openPreviewList("payments");
+    return;
+  }
+  router.push({ name: "payments-board", query: { query: queryValue } });
+}
+
+function isSalesActionSource(sourceDoctype) {
+  const source = cstr(sourceDoctype);
+  return source === "AT Lead" || source === "AT Offer";
+}
+
 function openActivityItem(activity) {
   if (!activity?.name) return;
   router.push({ name: "activities-detail", params: { name: activity.name } });
 }
 
+function openClaimItem(claim) {
+  if (!claim?.name) return;
+  router.push({ name: "claim-detail", params: { name: claim.name } });
+}
+
 function openReminderItem(reminder) {
   if (!reminder?.name) return;
   router.push({ name: "reminders-detail", params: { name: reminder.name } });
+}
+
+function openSalesActionItem(action) {
+  if (action?.kind === "reminder") {
+    openReminderItem(action);
+    return;
+  }
+  openTaskItem(action);
+}
+
+function openSalesActionList() {
+  if (salesCandidateTaskActions.value.length >= salesCandidateReminderActions.value.length) {
+    openPreviewList("tasks");
+    return;
+  }
+  openPreviewList("reminders");
 }
 
 function canCompleteReminder(reminder) {
@@ -2666,6 +3006,26 @@ function daysUntil(dateValue) {
   return Math.round((due.getTime() - today.getTime()) / 86400000);
 }
 
+function compareDueDateAsc(leftDate, rightDate) {
+  const leftDays = daysUntil(leftDate);
+  const rightDays = daysUntil(rightDate);
+  const safeLeft = leftDays == null ? Number.POSITIVE_INFINITY : leftDays;
+  const safeRight = rightDays == null ? Number.POSITIVE_INFINITY : rightDays;
+  return safeLeft - safeRight;
+}
+
+function compareDateDesc(leftDate, rightDate) {
+  const leftTime = new Date(leftDate || 0).getTime();
+  const rightTime = new Date(rightDate || 0).getTime();
+  const safeLeft = Number.isFinite(leftTime) ? leftTime : 0;
+  const safeRight = Number.isFinite(rightTime) ? rightTime : 0;
+  return safeRight - safeLeft;
+}
+
+function normalizeLookupValue(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
 function trendRatio(value) {
   const numericValue = Number(value || 0);
   if (numericValue <= 0) return 0;
@@ -2696,6 +3056,7 @@ function triggerDashboardReload({ includeKpis = true, immediate = false } = {}) 
     followUpResource.reload();
     myActivitiesResource.params = withOfficeBranchFilter({ filters: {} });
     myActivitiesResource.reload();
+    claimListResource.reload();
     myRemindersResource.params = withOfficeBranchFilter({ filters: {} });
     myRemindersResource.reload();
     myTasksResource.params = withOfficeBranchFilter({ filters: {} });
@@ -2751,6 +3112,12 @@ function openOfferItem(offer) {
   router.push({ name: "offer-detail", params: { name: offer.name } });
 }
 
+function openConvertedPolicyItem(offer) {
+  const policyName = String(offer?.converted_policy || "").trim();
+  if (!policyName) return;
+  router.push({ name: "policy-detail", params: { name: policyName } });
+}
+
 function openPolicyItem(policy) {
   if (!policy?.name) return;
   router.push({ name: "policy-detail", params: { name: policy.name } });
@@ -2795,6 +3162,9 @@ function openPreviewList(target) {
       return;
     case "payments":
       openPage("/payments");
+      return;
+    case "claims":
+      openPage("/claims");
       return;
     case "reconciliation":
       openPage("/reconciliation-items");

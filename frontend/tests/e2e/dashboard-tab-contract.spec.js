@@ -46,9 +46,24 @@ function getMessagePayload(payload) {
   return payload?.message || {};
 }
 
+async function expectMetricCardCount(page, count) {
+  await expect(page.locator(".at-metric-card")).toHaveCount(count);
+}
+
 test.describe("dashboard tab contract", () => {
-  test("collections and renewals expose live backend contract and visible sections", async ({ page }) => {
+  test("operations, sales, collections and renewals expose live sections and dashboard contracts", async ({ page }) => {
     await ensureAuthenticated(page);
+
+    const { response: salesResponse, payload: salesPayload } = await getDashboardTabPayload(page, "sales", 7);
+    const salesMessage = getMessagePayload(salesPayload);
+    expect(salesResponse.ok()).toBeTruthy();
+    expect(salesMessage.tab).toBe("sales");
+    expect(salesMessage.metrics).toMatchObject({
+      ready_offer_count: expect.any(Number),
+      accepted_offer_count: expect.any(Number),
+      converted_offer_count: expect.any(Number),
+    });
+    expect(Array.isArray(salesMessage.previews?.offers)).toBeTruthy();
 
     const { response: collectionsResponse, payload: collectionsPayload } = await getDashboardTabPayload(page, "collections", 7);
     const collectionsMessage = getMessagePayload(collectionsPayload);
@@ -74,13 +89,34 @@ test.describe("dashboard tab contract", () => {
 
     await page.goto("/at/");
 
+    await expect(page.getByRole("heading", { name: /Öncelikli Takipler|Priority Follow-ups/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Bugün Yapılacaklar|Today's Tasks/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Son Aktiviteler|Recent Activities/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Açık Hasarlar|Open Claims/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Son Poliçeler|Recent Policies/i })).toBeVisible();
+    await expectMetricCardCount(page, 4);
+
+    await page.getByRole("button", { name: /^Satış$|^Sales$/i }).click();
+    await expect(page.getByRole("heading", { name: /Güncel Fırsat Kartları|Recent Lead Cards/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Teklif Süreci|Offer Pipeline/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Dönüşen Teklifler|Converted Offers/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Son Poliçeler|Recent Policies/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Müşteri Aday Aksiyonu|Prospect Action Queue/i })).toBeVisible();
+    await expectMetricCardCount(page, 4);
+
     await page.getByRole("button", { name: /^Tahsilat$|^Collections$/i }).click();
-    await expect(page.getByText(/Bugün Vadesi Gelen Tahsilatlar|Collections Due Today/i)).toBeVisible();
-    await expect(page.getByText(/Gecikmiş Tahsilatlar|Overdue Collections/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Bugün Vadesi Gelen Tahsilatlar|Collections Due Today/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Gecikmiş Tahsilatlar|Overdue Collections/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Tahsilat Performansı|Collection Performance/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Riskli Müşteriler \/ Poliçeler|Risky Customers \/ Policies/i })).toBeVisible();
+    await expectMetricCardCount(page, 4);
 
     await page.getByRole("button", { name: /^Yenileme$|^Renewals$/i }).click();
-    await expect(page.getByText(/Teklif Bekleyen Yenilemeler|Renewals Waiting For Offer/i)).toBeVisible();
-    await expect(page.getByText(/Yenileme Takip Listesi|Renewal Follow-up List/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Teklif Bekleyen Yenilemeler|Renewals Waiting For Offer/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Yenileme Takip Listesi|Renewal Follow-up List/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Dönüşüm \/ Ödeme Sonucu|Conversion \/ Payment Outcome/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Bağlı Poliçeler|Linked Policies/i })).toBeVisible();
+    await expectMetricCardCount(page, 4);
   });
 
   test("collections and offer-waiting cards drill into the correct workbenches", async ({ page }) => {
@@ -136,5 +172,130 @@ test.describe("dashboard tab contract", () => {
 
     const renewalUrl = new URL(page.url());
     expect(renewalUrl.searchParams.get("task")).toBe(String(renewal.name));
+  });
+
+  test("sales converted offer card exposes policy drill-down when live data exists", async ({ page }) => {
+    await ensureAuthenticated(page);
+
+    const { payload: salesPayload } = await getDashboardTabPayload(page, "sales", 15);
+    const salesMessage = getMessagePayload(salesPayload);
+    const convertedOffers = Array.isArray(salesMessage.previews?.offers)
+      ? salesMessage.previews.offers.filter((offer) => Boolean(offer?.converted_policy) || String(offer?.status || "") === "Converted")
+      : [];
+    const offer = convertedOffers[0] || null;
+
+    test.skip(!offer?.converted_policy, "Canli ortamda policy drill-down icin donusen teklif kaydi yok.");
+
+    await page.goto("/at/");
+    await page.getByRole("button", { name: /^Satış$|^Sales$/i }).click();
+
+    const convertedPanel = page.locator("article").filter({ hasText: /Dönüşen Teklifler|Converted Offers/i }).first();
+    const offerCard = convertedPanel.locator('[role="button"]').filter({ hasText: String(offer.name) }).first();
+    await expect(offerCard).toBeVisible();
+    await offerCard.getByRole("button", { name: /Poliçeyi Aç|Open Policy/i }).click();
+    await expect(page).toHaveURL(new RegExp(`/at/policies/${offer.converted_policy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`));
+  });
+
+  test("operations open claim card drills into claim detail when live data exists", async ({ page }) => {
+    await ensureAuthenticated(page);
+
+    const response = await page.request.post("/api/method/frappe.client.get_list", {
+      form: {
+        doctype: "AT Claim",
+        fields: JSON.stringify(["name", "claim_no", "claim_status"]),
+        order_by: "modified desc",
+        limit_page_length: 8,
+      },
+    });
+    const payload = response.ok() ? await response.json().catch(() => null) : null;
+    const rows = Array.isArray(payload?.message) ? payload.message : [];
+    const openClaim = rows.find((claim) => ["Open", "Under Review", "Approved"].includes(String(claim?.claim_status || ""))) || null;
+
+    test.skip(!openClaim?.name, "Canli ortamda claim drill-down icin acik hasar kaydi yok.");
+
+    await page.goto("/at/");
+    const claimsPanel = page.locator("article").filter({ hasText: /Açık Hasarlar|Open Claims/i }).first();
+    const claimCard = claimsPanel.locator('[role="button"]').filter({ hasText: String(openClaim.claim_no || openClaim.name) }).first();
+    await expect(claimCard).toBeVisible();
+    await claimCard.click();
+    await expect(page).toHaveURL(new RegExp(`/at/claims/${openClaim.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`));
+  });
+
+  test("operations recent policy card drills into policy detail when live data exists", async ({ page }) => {
+    await ensureAuthenticated(page);
+
+    const { payload: operationsPayload } = await getDashboardTabPayload(page, "daily", 15);
+    const operationsMessage = getMessagePayload(operationsPayload);
+    const policies = Array.isArray(operationsMessage.previews?.policies) ? operationsMessage.previews.policies : [];
+    const policy = policies[0] || null;
+
+    test.skip(!policy?.name, "Canli ortamda operasyon policy drill-down icin policy preview kaydi yok.");
+
+    await page.goto("/at/");
+    const policiesPanel = page.locator("article").filter({ hasText: /Son Poliçeler|Recent Policies/i }).first();
+    const policyCard = policiesPanel.locator('[role="button"]').filter({ hasText: String(policy.policy_no || policy.name) }).first();
+    await expect(policyCard).toBeVisible();
+    await policyCard.click();
+    await expect(page).toHaveURL(new RegExp(`/at/policies/${policy.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`));
+  });
+
+  test("sales candidate action card opens task or reminder detail when live data exists", async ({ page }) => {
+    await ensureAuthenticated(page);
+
+    await page.goto("/at/");
+    await page.getByRole("button", { name: /^Satış$|^Sales$/i }).click();
+
+    const actionPanel = page.locator("article").filter({ hasText: /Müşteri Aday Aksiyonu|Prospect Action Queue/i }).first();
+    const emptyState = actionPanel.locator(".at-empty-block");
+    if ((await emptyState.count()) > 0) {
+      return;
+    }
+
+    const actionCard = actionPanel.locator("ul").locator('[role="button"]').first();
+    await expect(actionCard).toBeVisible();
+    await actionCard.click();
+    await expect(page).toHaveURL(/\/at\/(?:tasks|reminders)\/[^/?#]+$/);
+  });
+
+  test("collections risky row opens payments board when live data exists", async ({ page }) => {
+    await ensureAuthenticated(page);
+
+    await page.goto("/at/");
+    await page.getByRole("button", { name: /^Tahsilat$|^Collections$/i }).click();
+
+    const riskPanel = page.locator("article").filter({ hasText: /Riskli Müşteriler \/ Poliçeler|Risky Customers \/ Policies/i }).first();
+    const emptyState = riskPanel.locator(".at-empty-block");
+    if ((await emptyState.count()) > 0) {
+      return;
+    }
+
+    const riskCard = riskPanel.locator("ul").locator('[role="button"]').first();
+    await expect(riskCard).toBeVisible();
+    await riskCard.click();
+    await expect(page).toHaveURL(/\/at\/payments(?:\?|$)/);
+  });
+
+  test("dashboard tabs remain usable on mobile viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await ensureAuthenticated(page);
+
+    await expect(page.locator(".detail-topbar")).toBeVisible();
+    await expect(page.locator(".at-tab-chip").first()).toBeVisible();
+    await expectMetricCardCount(page, 4);
+
+    await page.getByRole("button", { name: /^Satış$|^Sales$/i }).click();
+    await expect(page.getByRole("heading", { name: /Teklif Süreci|Offer Pipeline/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Müşteri Aday Aksiyonu|Prospect Action Queue/i })).toBeVisible();
+
+    await page.getByRole("button", { name: /^Tahsilat$|^Collections$/i }).click();
+    await expect(page.getByRole("heading", { name: /Bugün Vadesi Gelen Tahsilatlar|Collections Due Today/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Tahsilat Performansı|Collection Performance/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Riskli Müşteriler \/ Poliçeler|Risky Customers \/ Policies/i })).toBeVisible();
+
+    await page.getByRole("button", { name: /^Yenileme$|^Renewals$/i }).click();
+    await expect(page.getByRole("heading", { name: /Teklif Bekleyen Yenilemeler|Renewals Waiting For Offer/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Dönüşüm \/ Ödeme Sonucu|Conversion \/ Payment Outcome/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Bağlı Poliçeler|Linked Policies/i })).toBeVisible();
+    await expectMetricCardCount(page, 4);
   });
 });
