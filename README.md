@@ -188,6 +188,30 @@ Operational docs:
 - Deployment notes: `docs/deploy.md`
 - Scheduler/job notes: `docs/ops/jobs.md` (entry point: `docs/operations.md`)
 
+## Quality Gates and E2E Notes
+
+The repository CI policy for frontend quality is:
+
+- Node.js 20
+- `npm ci`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test:unit`
+- `npm run build`
+
+If smoke E2E credentials are configured in CI, smoke jobs run as an additional gate.
+
+For local Playwright runs, authenticated suites use this order for credentials:
+
+1. `E2E_USER` and `E2E_PASSWORD` if provided.
+2. On localhost only, fallback to `Administrator` / `admin`.
+
+You can disable localhost fallback explicitly with:
+
+```bash
+E2E_ALLOW_LOCAL_FALLBACK=0 npm --prefix frontend run e2e -- tests/e2e/dashboard-tab-contract.spec.js
+```
+
 ## Project Status
 
 This project is under active development. Existing modules are already substantial, but the repository should still be treated as evolving software. Data model details, operational flows, and frontend screens may continue to change as the product matures.
