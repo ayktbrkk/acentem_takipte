@@ -3,10 +3,10 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_customers as customer_queries
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_leads as lead_queries
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import security as dashboard_security
+from acentem_takipte.api import dashboard as dashboard_api
+from acentem_takipte.api.dashboard_v2 import queries_customers as customer_queries
+from acentem_takipte.api.dashboard_v2 import queries_leads as lead_queries
+from acentem_takipte.api.dashboard_v2 import security as dashboard_security
 
 
 class TestDashboardContractSmoke(unittest.TestCase):

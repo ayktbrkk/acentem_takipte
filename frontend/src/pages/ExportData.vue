@@ -235,7 +235,7 @@ function buildExportUrl() {
   if (form.endDate) params.set("end_date", form.endDate);
   if (form.status) params.set("status", form.status);
 
-  return `/api/method/acentem_takipte.acentem_takipte.api.list_exports.download_export?${params.toString()}`;
+  return `/api/method/acentem_takipte.api.list_exports.download_export?${params.toString()}`;
 }
 
 function addHistory() {

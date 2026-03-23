@@ -6,8 +6,8 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, nowdate
 
-from acentem_takipte.acentem_takipte.api import accounting as accounting_api
-from acentem_takipte.acentem_takipte.accounting import (
+from acentem_takipte.api import accounting as accounting_api
+from acentem_takipte.accounting import (
     resolve_reconciliation_item,
     run_reconciliation,
     sync_accounting_entry,

@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.services import reporting
+from acentem_takipte.services import reporting
 
 
 def test_normalize_report_filters_applies_normalized_office_branch(monkeypatch):
@@ -24,6 +24,14 @@ def test_normalize_report_filters_ignores_nullish_strings(monkeypatch):
     assert "branch" not in filters
     assert "status" not in filters
     assert filters["sales_entity"] == "SE-1"
+
+
+def test_normalize_report_filters_keeps_granularity(monkeypatch):
+    monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: None)
+
+    filters = reporting.normalize_report_filters({"granularity": " monthly "})
+
+    assert filters["granularity"] == "monthly"
 
 
 def test_build_policy_report_filters_keeps_office_branch_and_date_range(monkeypatch):
@@ -212,3 +220,15 @@ def test_get_claims_operations_report_rows_passes_claim_filters(monkeypatch):
     assert captured["values"]["status"] == "Rejected"
     assert "assigned_expert" in captured["query"]
     assert "sent_outbox_count" in captured["query"]
+
+
+def test_get_policy_list_report_rows_uses_grouped_query_for_granularity(monkeypatch):
+    monkeypatch.setattr(
+        reporting,
+        "_get_policy_list_grouped_rows",
+        lambda normalized_filters, granularity, limit=500: [{"period": "2026-03", "policy_count": 3}],
+    )
+
+    rows = reporting.get_policy_list_report_rows({"granularity": "monthly"}, limit=250)
+
+    assert rows == [{"period": "2026-03", "policy_count": 3}]

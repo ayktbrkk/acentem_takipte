@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.api import branches as branches_api
+from acentem_takipte.api import branches as branches_api
 
 
 def test_get_office_branches_returns_normalized_selected_branch(monkeypatch):

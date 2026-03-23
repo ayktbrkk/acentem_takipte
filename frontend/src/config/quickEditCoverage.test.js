@@ -14,7 +14,7 @@ describe("quick edit coverage", () => {
 
       expect(editConfig).toBeTruthy();
       expect(editConfig.key).toBe(config.quickEdit.registryKey);
-      expect(editConfig.submitUrl).toBe("acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record");
+      expect(editConfig.submitUrl).toBe("acentem_takipte.api.quick_create.update_quick_aux_record");
       expect(editConfig.openRouteName).toBe("");
       expect(editConfig.successRefreshTargets).toEqual(["aux_detail"]);
       expect(Array.isArray(editConfig.fields)).toBe(true);

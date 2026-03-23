@@ -5,7 +5,7 @@ from typing import Any
 import frappe
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.utils.logging import redact_payload
+from acentem_takipte.utils.logging import redact_payload
 
 
 def assert_authenticated(message: str = "Authentication required") -> str:
@@ -72,5 +72,5 @@ def audit_admin_action(action: str, details: dict[str, Any] | None = None) -> No
         "ip": getattr(frappe.local, "request_ip", None),
         "details": details or {},
     }
-    frappe.logger("acentem_takipte.acentem_takipte.security").info("AT admin action: %s", redact_payload(payload))
+    frappe.logger("acentem_takipte.security").info("AT admin action: %s", redact_payload(payload))
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.doctype.at_notification_template.at_notification_template import (
+from acentem_takipte.doctype.at_notification_template.at_notification_template import (
     render_notification_template,
 )
 

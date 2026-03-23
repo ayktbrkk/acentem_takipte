@@ -1165,23 +1165,23 @@ const customerDetailTabs = computed(() => [
 ]);
 
 const customer360Resource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_360_payload",
+  url: "acentem_takipte.api.dashboard.get_customer_360_payload",
   auto: false,
 });
 const customerProfileUpdateResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.update_customer_profile",
+  url: "acentem_takipte.api.dashboard.update_customer_profile",
   auto: false,
 });
 const customerRelationDeleteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
+  url: "acentem_takipte.api.quick_create.delete_quick_aux_record",
   auto: false,
 });
 const insuredAssetDeleteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
+  url: "acentem_takipte.api.quick_create.delete_quick_aux_record",
   auto: false,
 });
 const reminderUpdateResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 

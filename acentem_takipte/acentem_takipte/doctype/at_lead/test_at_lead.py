@@ -5,8 +5,8 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.doctype.at_lead import at_lead as at_lead_api
-from acentem_takipte.acentem_takipte.doctype.at_lead.at_lead import convert_to_offer
+from acentem_takipte.doctype.at_lead import at_lead as at_lead_api
+from acentem_takipte.doctype.at_lead.at_lead import convert_to_offer
 
 
 class TestATLead(IntegrationTestCase):

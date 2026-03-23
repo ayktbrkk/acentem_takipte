@@ -59,7 +59,7 @@ test.describe("Acentem Takipte smoke", () => {
     expect(isLoginHeadingVisible || atRouteRedirectedToLogin).toBeTruthy();
 
     const sessionContextResponse = await page.request.get(
-      "/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context"
+      "/api/method/acentem_takipte.api.session.get_session_context"
     );
     const sessionContextText = await sessionContextResponse.text().catch(() => "");
     let sessionContextPayload = null;
@@ -97,13 +97,13 @@ test.describe("Acentem Takipte smoke", () => {
     await ensureAuthenticated(page);
 
     const sessionContextResponse = await page.request.get(
-      "/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context"
+      "/api/method/acentem_takipte.api.session.get_session_context"
     );
     const policyResponse = await page.request.get(
-      "/api/method/acentem_takipte.acentem_takipte.api.reports.get_policy_list_report"
+      "/api/method/acentem_takipte.api.reports.get_policy_list_report"
     );
     const scheduledResponse = await page.request.get(
-      "/api/method/acentem_takipte.acentem_takipte.api.reports.get_scheduled_report_configs"
+      "/api/method/acentem_takipte.api.reports.get_scheduled_report_configs"
     );
 
     const sessionPayload = await readMethodPayload(sessionContextResponse);
@@ -144,7 +144,7 @@ test.describe("Acentem Takipte smoke", () => {
     await ensureAuthenticated(page);
 
     const sessionContextResponse = await page.request.get(
-      "/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context"
+      "/api/method/acentem_takipte.api.session.get_session_context"
     );
     const sessionPayload = await readMethodPayload(sessionContextResponse);
     const userRoles = (Array.isArray(sessionPayload?.message?.roles) ? sessionPayload.message.roles : []).map(
@@ -156,7 +156,7 @@ test.describe("Acentem Takipte smoke", () => {
 
     const snapshotResponse = await callPostMethod(
       page,
-      "acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+      "acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
       { limit: 250 }
     );
 
@@ -165,7 +165,7 @@ test.describe("Acentem Takipte smoke", () => {
       expect(snapshotResponse.payload?.message?.queued).toBeTruthy();
       expect(snapshotResponse.payload?.message?.queue).toBe("long");
       expect(snapshotResponse.payload?.message?.method).toBe(
-        "acentem_takipte.acentem_takipte.tasks._run_customer_segment_snapshot_logic"
+        "acentem_takipte.tasks._run_customer_segment_snapshot_logic"
       );
     } else {
       expect(snapshotResponse.ok).toBeFalsy();
@@ -183,7 +183,7 @@ test.describe("Acentem Takipte smoke", () => {
     await ensureAuthenticated(page);
 
     const response = await page.request.get(
-      "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job"
+      "/api/method/acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job"
     );
     const text = await response.text().catch(() => "");
     let payload = null;

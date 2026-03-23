@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.utils.statuses import ATClaimStatus
+from acentem_takipte.utils.statuses import ATClaimStatus
 
 
 CLAIM_STATUS_TEMPLATE_KEYS = {

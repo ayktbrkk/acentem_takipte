@@ -4,8 +4,8 @@ from typing import Any
 
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte import tasks as task_jobs
-from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
+from acentem_takipte import tasks as task_jobs
+from acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
 
 
 def dispatch_admin_job(action_key: str, **kwargs) -> dict[str, Any]:

@@ -7,10 +7,10 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, date_diff, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
-from acentem_takipte.acentem_takipte.renewal.reminders import resolve_stage_for_days
-from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key, build_renewal_task_payload
-from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyStatus, ATRenewalTaskStatus
+from acentem_takipte.notifications import create_notification_drafts
+from acentem_takipte.renewal.reminders import resolve_stage_for_days
+from acentem_takipte.services.renewals import build_renewal_stage_key, build_renewal_task_payload
+from acentem_takipte.utils.statuses import ATPolicyStatus, ATRenewalTaskStatus
 
 
 @dataclass(frozen=True)

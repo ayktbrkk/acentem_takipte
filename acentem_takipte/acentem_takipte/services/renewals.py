@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from acentem_takipte.acentem_takipte.renewal.reminders import build_dedupe_key, resolve_stage_for_days
+from acentem_takipte.renewal.reminders import build_dedupe_key, resolve_stage_for_days
 
 
 @dataclass(frozen=True)

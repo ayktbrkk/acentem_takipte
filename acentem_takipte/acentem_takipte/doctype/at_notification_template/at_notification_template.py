@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.api.security import assert_authenticated
+from acentem_takipte.api.security import assert_authenticated
 
 RENDER_TEMPLATE_MAX_CONTEXT_BYTES = 8 * 1024
 RENDER_TEMPLATE_RATE_LIMIT_WINDOW_SECONDS = 60

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import security as security_api
+from acentem_takipte.api import security as security_api
 
 
 class TestSecurityHelpers(IntegrationTestCase):

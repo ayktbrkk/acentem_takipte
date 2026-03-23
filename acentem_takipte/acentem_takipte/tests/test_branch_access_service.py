@@ -1,6 +1,6 @@
 import pytest
 
-from acentem_takipte.acentem_takipte.services import branches as branch_service
+from acentem_takipte.services import branches as branch_service
 
 
 def test_normalize_requested_office_branch_keeps_requested_branch_for_all_access_user(monkeypatch):

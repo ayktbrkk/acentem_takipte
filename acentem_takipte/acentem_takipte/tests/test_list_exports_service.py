@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.services import list_exports
+from acentem_takipte.services import list_exports
 
 
 def test_collect_dashboard_rows_paginates_until_total():

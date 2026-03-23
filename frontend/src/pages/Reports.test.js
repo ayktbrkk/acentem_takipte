@@ -12,6 +12,7 @@ const routeState = reactive({
 });
 
 const routerReplace = vi.fn();
+const routerPush = vi.fn();
 const frappeRequestMock = vi.fn();
 
 vi.mock("vue-router", () => ({
@@ -20,6 +21,7 @@ vi.mock("vue-router", () => ({
   useRoute: () => routeState,
   useRouter: () => ({
     replace: routerReplace,
+    push: routerPush,
   }),
 }));
 
@@ -84,6 +86,7 @@ describe("Reports page communication operations report", () => {
     vi.useFakeTimers();
     routeState.query = {};
     routerReplace.mockReset();
+    routerPush.mockReset();
     frappeRequestMock.mockReset();
     setActivePinia(createPinia());
 
@@ -340,7 +343,7 @@ describe("Reports page communication operations report", () => {
 
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+        url: "/api/method/acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
         method: "POST",
         params: expect.objectContaining({ limit: 250 }),
       }),
@@ -350,10 +353,10 @@ describe("Reports page communication operations report", () => {
   it("syncs report view state from route query for visible columns", async () => {
     routeState.query = {
       report: "policy_list",
-      report_cols: "customer,policy",
+      report_cols: "customer_full_name,policy",
     };
 
-    frappeRequestMock.mockResolvedValue({ message: { columns: ["customer", "policy", "office_branch"], rows: [] } });
+    frappeRequestMock.mockResolvedValue({ message: { columns: ["customer_full_name", "policy", "office_branch"], rows: [] } });
 
     const wrapper = mount(Reports, {
       global: {
@@ -401,6 +404,69 @@ describe("Reports page communication operations report", () => {
     );
   });
 
+  it("applies date presets and loads report with date range", async () => {
+    frappeRequestMock.mockResolvedValue({ message: { columns: ["period_label", "policy_count"], rows: [] } });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ...commonStubs,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await settleReport();
+
+    // Policy list report should have date preset buttons and date input fields
+    const dateInputs = wrapper.findAll("input[type=\"date\"]");
+    expect(dateInputs.length).toBeGreaterThanOrEqual(2); // from_date and to_date
+
+    // Set date range manually
+    await dateInputs[0].setValue("2024-01-01");
+    await dateInputs[1].setValue("2024-01-31");
+    await settleReport();
+
+    const reportCalls = frappeRequestMock.mock.calls
+      .map(([request]) => request)
+      .filter((request) => request.url?.includes("get_policy_list_report"));
+
+    expect(reportCalls.length).toBeGreaterThan(0);
+    const latestFilters = String(reportCalls[reportCalls.length - 1].params?.filters || "");
+    // Verify that date range filters are being sent to the API
+    expect(latestFilters).toContain('"from_date":"2024-01-01"');
+    expect(latestFilters).toContain('"to_date":"2024-01-31"');
+  });
+
+  it("navigates to policy detail when a policy row is clicked", async () => {
+    frappeRequestMock.mockResolvedValue({
+      message: {
+        columns: ["name", "policy_no", "customer"],
+        rows: [{ name: "POL-0001", policy_no: "C-001", customer: "Acme" }],
+      },
+    });
+
+    const wrapper = mount(Reports, {
+      global: {
+        stubs: {
+          ...commonStubs,
+          ScheduledReportsManager: true,
+        },
+      },
+    });
+
+    await settleReport();
+
+    const row = wrapper.find("tbody tr");
+    expect(row.exists()).toBe(true);
+    await row.trigger("click");
+
+    expect(routerPush).toHaveBeenCalledWith({
+      name: "policy-detail",
+      params: { name: "POL-0001" },
+    });
+  });
+
   it("runs scheduled reports and updates configs via manager actions", async () => {
     const authStore = useAuthStore();
     authStore.applyContext({
@@ -432,7 +498,7 @@ describe("Reports page communication operations report", () => {
     await wrapper.find('[data-testid="scheduled-run"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
+        url: "/api/method/acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
         method: "POST",
         params: expect.objectContaining({ frequency: "daily", limit: 10 }),
       }),
@@ -441,7 +507,7 @@ describe("Reports page communication operations report", () => {
     await wrapper.find('[data-testid="scheduled-save"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_scheduled_report_config",
+        url: "/api/method/acentem_takipte.api.reports.save_scheduled_report_config",
         method: "POST",
         params: expect.objectContaining({
           index: "",
@@ -453,7 +519,7 @@ describe("Reports page communication operations report", () => {
     await wrapper.find('[data-testid="scheduled-remove"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.remove_scheduled_report_config",
+        url: "/api/method/acentem_takipte.api.reports.remove_scheduled_report_config",
         method: "POST",
         params: expect.objectContaining({ index: "0" }),
       }),

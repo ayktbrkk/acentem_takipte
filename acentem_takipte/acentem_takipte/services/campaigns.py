@@ -4,10 +4,10 @@ import frappe
 from frappe import _
 from frappe.utils import cint, now_datetime
 
-from acentem_takipte.acentem_takipte import communication as communication_logic
-from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
-from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
-from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus
+from acentem_takipte import communication as communication_logic
+from acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
+from acentem_takipte.services.segments import build_segment_membership_preview
+from acentem_takipte.utils.statuses import ATNotificationDraftStatus
 
 
 def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, object]:

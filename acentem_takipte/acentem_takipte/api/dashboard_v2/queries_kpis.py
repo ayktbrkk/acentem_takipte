@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.query_builder.functions import Count
 from frappe.utils import add_days, getdate
-from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
+from acentem_takipte.utils.commissions import commission_sql_expr
 
 
 def build_dashboard_kpis_payload(

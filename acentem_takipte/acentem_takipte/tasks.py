@@ -5,22 +5,22 @@ from typing import Any
 import frappe
 from frappe.utils import add_days, cint, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.communication import (
+from acentem_takipte.communication import (
     process_notification_queue,
     queue_notification_drafts,
 )
-from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
-from acentem_takipte.acentem_takipte.renewal.pipeline import (
+from acentem_takipte.notifications import create_notification_drafts
+from acentem_takipte.renewal.pipeline import (
     run_renewal_task_creation,
     run_stale_renewal_task_remediation,
 )
-from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
-from acentem_takipte.acentem_takipte.services.campaigns import execute_due_campaigns
-from acentem_takipte.acentem_takipte.services.customer_segments import refresh_due_customer_segment_snapshots
-from acentem_takipte.acentem_takipte.services.payments import build_payment_reminder_payload
-from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_scheduled_reports
-from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
-from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
+from acentem_takipte.services.renewals import build_renewal_stage_key
+from acentem_takipte.services.campaigns import execute_due_campaigns
+from acentem_takipte.services.customer_segments import refresh_due_customer_segment_snapshots
+from acentem_takipte.services.payments import build_payment_reminder_payload
+from acentem_takipte.services.scheduled_reports import dispatch_scheduled_reports
+from acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.utils.statuses import ATPaymentStatus
 
 RENEWAL_LOOKAHEAD_DAYS = 90
 MAX_POLICIES_PER_RUN = 2000
@@ -51,14 +51,14 @@ def _queued_response(*, job: Any, queue: str, method: str, limit: int | None = N
 
 def create_renewal_tasks() -> dict[str, Any]:
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.tasks._create_renewal_tasks_logic",
+        "acentem_takipte.tasks._create_renewal_tasks_logic",
         queue="long",
         timeout=1500,
     )
     return _queued_response(
         job=job,
         queue="long",
-        method="acentem_takipte.acentem_takipte.tasks._create_renewal_tasks_logic",
+        method="acentem_takipte.tasks._create_renewal_tasks_logic",
     )
 
 def _create_renewal_tasks_logic() -> dict[str, int]:
@@ -76,7 +76,7 @@ def run_renewal_task_job() -> dict[str, Any]:
 def run_stale_renewal_task_job(limit: int = 500) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.tasks._run_stale_renewal_task_logic",
+        "acentem_takipte.tasks._run_stale_renewal_task_logic",
         limit=safe_limit,
         queue="long",
         timeout=1500,
@@ -84,7 +84,7 @@ def run_stale_renewal_task_job(limit: int = 500) -> dict[str, Any]:
     return _queued_response(
         job=job,
         queue="long",
-        method="acentem_takipte.acentem_takipte.tasks._run_stale_renewal_task_logic",
+        method="acentem_takipte.tasks._run_stale_renewal_task_logic",
         limit=safe_limit,
     )
 
@@ -99,7 +99,7 @@ def _run_stale_renewal_task_logic(limit: int = 500) -> dict[str, int]:
 def run_notification_queue_job(limit: int = 120) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.tasks._run_notification_queue_logic",
+        "acentem_takipte.tasks._run_notification_queue_logic",
         limit=safe_limit,
         queue="default",
         timeout=600,
@@ -107,7 +107,7 @@ def run_notification_queue_job(limit: int = 120) -> dict[str, Any]:
     return _queued_response(
         job=job,
         queue="default",
-        method="acentem_takipte.acentem_takipte.tasks._run_notification_queue_logic",
+        method="acentem_takipte.tasks._run_notification_queue_logic",
         limit=safe_limit,
     )
 
@@ -115,7 +115,7 @@ def run_notification_queue_job(limit: int = 120) -> dict[str, Any]:
 def run_payment_due_job(limit: int = 250) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.tasks._run_payment_due_logic",
+        "acentem_takipte.tasks._run_payment_due_logic",
         limit=safe_limit,
         queue="default",
         timeout=600,
@@ -123,7 +123,7 @@ def run_payment_due_job(limit: int = 250) -> dict[str, Any]:
     return _queued_response(
         job=job,
         queue="default",
-        method="acentem_takipte.acentem_takipte.tasks._run_payment_due_logic",
+        method="acentem_takipte.tasks._run_payment_due_logic",
         limit=safe_limit,
     )
 
@@ -132,7 +132,7 @@ def run_scheduled_reports_job(frequency: str = "daily", limit: int = 10) -> dict
     safe_limit = max(cint(limit), 1)
     safe_frequency = str(frequency or "daily").strip().lower() or "daily"
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.tasks._run_scheduled_reports_logic",
+        "acentem_takipte.tasks._run_scheduled_reports_logic",
         frequency=safe_frequency,
         limit=safe_limit,
         queue="long",
@@ -141,7 +141,7 @@ def run_scheduled_reports_job(frequency: str = "daily", limit: int = 10) -> dict
     return _queued_response(
         job=job,
         queue="long",
-        method="acentem_takipte.acentem_takipte.tasks._run_scheduled_reports_logic",
+        method="acentem_takipte.tasks._run_scheduled_reports_logic",
         limit=safe_limit,
     )
 
@@ -150,7 +150,7 @@ def run_due_campaigns_job(limit: int = 25, member_limit: int = 200) -> dict[str,
     safe_limit = max(cint(limit), 1)
     safe_member_limit = max(cint(member_limit), 1)
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.tasks._run_due_campaigns_logic",
+        "acentem_takipte.tasks._run_due_campaigns_logic",
         limit=safe_limit,
         member_limit=safe_member_limit,
         queue="long",
@@ -159,7 +159,7 @@ def run_due_campaigns_job(limit: int = 25, member_limit: int = 200) -> dict[str,
     return _queued_response(
         job=job,
         queue="long",
-        method="acentem_takipte.acentem_takipte.tasks._run_due_campaigns_logic",
+        method="acentem_takipte.tasks._run_due_campaigns_logic",
         limit=safe_limit,
     )
 
@@ -167,7 +167,7 @@ def run_due_campaigns_job(limit: int = 25, member_limit: int = 200) -> dict[str,
 def run_customer_segment_snapshot_job(limit: int = 250) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.tasks._run_customer_segment_snapshot_logic",
+        "acentem_takipte.tasks._run_customer_segment_snapshot_logic",
         limit=safe_limit,
         queue="long",
         timeout=1500,
@@ -175,7 +175,7 @@ def run_customer_segment_snapshot_job(limit: int = 250) -> dict[str, Any]:
     return _queued_response(
         job=job,
         queue="long",
-        method="acentem_takipte.acentem_takipte.tasks._run_customer_segment_snapshot_logic",
+        method="acentem_takipte.tasks._run_customer_segment_snapshot_logic",
         limit=safe_limit,
     )
 
@@ -291,7 +291,7 @@ def _enqueue_outbox_dispatch_jobs(outbox_names: list[str]) -> dict[str, int]:
             continue
         try:
             frappe.enqueue(
-                "acentem_takipte.acentem_takipte.communication.dispatch_notification_outbox",
+                "acentem_takipte.communication.dispatch_notification_outbox",
                 outbox_name=normalized_name,
                 queue="default",
                 timeout=600,
@@ -310,7 +310,7 @@ def _enqueue_outbox_dispatch_jobs(outbox_names: list[str]) -> dict[str, int]:
 def run_accounting_sync_job(limit: int = 250) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.accounting.sync_accounting_entries",
+        "acentem_takipte.accounting.sync_accounting_entries",
         limit=safe_limit,
         queue="long",
         timeout=1500,
@@ -318,7 +318,7 @@ def run_accounting_sync_job(limit: int = 250) -> dict[str, Any]:
     return _queued_response(
         job=job,
         queue="long",
-        method="acentem_takipte.acentem_takipte.accounting.sync_accounting_entries",
+        method="acentem_takipte.accounting.sync_accounting_entries",
         limit=safe_limit,
     )
 
@@ -326,7 +326,7 @@ def run_accounting_sync_job(limit: int = 250) -> dict[str, Any]:
 def run_accounting_reconciliation_job(limit: int = 400) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.accounting.run_reconciliation",
+        "acentem_takipte.accounting.run_reconciliation",
         limit=safe_limit,
         queue="long",
         timeout=1500,
@@ -334,7 +334,7 @@ def run_accounting_reconciliation_job(limit: int = 400) -> dict[str, Any]:
     return _queued_response(
         job=job,
         queue="long",
-        method="acentem_takipte.acentem_takipte.accounting.run_reconciliation",
+        method="acentem_takipte.accounting.run_reconciliation",
         limit=safe_limit,
     )
 
@@ -361,6 +361,6 @@ def _payment_notification_exists_today(payment_name: str, business_date) -> bool
 
 
 def _load_existing_renewal_keys(policy_names: list[str]) -> set[str]:
-    from acentem_takipte.acentem_takipte.renewal.service import load_existing_renewal_keys as load_existing_renewal_keys_service
+    from acentem_takipte.renewal.service import load_existing_renewal_keys as load_existing_renewal_keys_service
 
     return load_existing_renewal_keys_service(policy_names)

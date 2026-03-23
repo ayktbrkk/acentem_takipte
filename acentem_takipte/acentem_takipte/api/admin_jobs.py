@@ -7,10 +7,10 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.api.security import assert_authenticated
-from acentem_takipte.acentem_takipte.api.mutation_access import assert_role_based_write_access
-from acentem_takipte.acentem_takipte.services.admin_jobs import dispatch_admin_job
-from acentem_takipte.acentem_takipte.utils.permissions import build_doctype_permission_map
+from acentem_takipte.api.security import assert_authenticated
+from acentem_takipte.api.mutation_access import assert_role_based_write_access
+from acentem_takipte.services.admin_jobs import dispatch_admin_job
+from acentem_takipte.utils.permissions import build_doctype_permission_map
 
 ADMIN_JOB_ROLES = ("System Manager", "Manager", "Accountant")
 ADMIN_JOB_RATE_LIMIT_WINDOW_SECONDS = 60

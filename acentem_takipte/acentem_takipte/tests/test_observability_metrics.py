@@ -7,7 +7,7 @@ from frappe.tests import IntegrationTestCase
 from acentem_takipte.acentem_takipte import accounting as accounting_logic
 from acentem_takipte.acentem_takipte import communication as communication_logic
 from acentem_takipte.acentem_takipte import tasks as task_jobs
-from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.utils.metrics import build_metric_event
 
 
 class TestObservabilityMetrics(IntegrationTestCase):

@@ -61,7 +61,7 @@ def import_statement_preview_rows(
     delimiter: str = ",",
     limit: int = 200,
 ) -> dict[str, Any]:
-    from acentem_takipte.acentem_takipte.accounting import (
+    from acentem_takipte.accounting import (
         _close_open_items,
         _evaluate_mismatch,
         _get_or_create_entry,
@@ -69,7 +69,7 @@ def import_statement_preview_rows(
         _upsert_open_item,
         build_accounting_payload,
     )
-    from acentem_takipte.acentem_takipte.utils.statuses import ATAccountingEntryStatus
+    from acentem_takipte.utils.statuses import ATAccountingEntryStatus
 
     preview = build_statement_import_preview(
         csv_text=csv_text,

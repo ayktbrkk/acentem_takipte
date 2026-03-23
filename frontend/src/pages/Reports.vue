@@ -1,82 +1,178 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
-        <h1 class="detail-title">{{ t("title") }}</h1>
-        <p class="detail-subtitle">{{ t("subtitle") }}</p>
-        <div class="mt-1.5 flex flex-wrap items-center gap-2">
-          <span class="copy-tag">{{ activeReportLabel }}</span>
-          <span class="copy-tag">{{ branchScopeLabel }}</span>
-          <span v-if="activeFilterCount" class="copy-tag">{{ activeFilterCount }} {{ t("activeFilters") }}</span>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="t('title')"
+    :subtitle="t('subtitle')"
+    :record-count="summaryItems.length ? `${sortedRows.length}` : '0'"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <button class="btn btn-outline btn-sm" type="button" @click="focusFilters">
+        {{ t("focusFilters") }}
+      </button>
+      <button class="btn btn-outline btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
+        {{ t("exportXlsx") }}
+      </button>
+      <button class="btn btn-primary btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
+        {{ t("exportPdf") }}
+      </button>
+    </template>
+
+    <template #metrics>
+      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div
+          v-for="item in heroSummaryCells"
+          :key="item.label"
+          class="mini-metric"
+        >
+          <p class="mini-metric-label">
+            {{ item.label }}
+          </p>
+          <p class="mini-metric-value" :class="item.valueClass">
+            {{ item.value }}
+          </p>
         </div>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="loadReport">
-          {{ t("refresh") }}
-        </button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
-          {{ t("exportXlsx") }}
-        </button>
-        <button class="btn btn-primary btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
-          {{ t("exportPdf") }}
-        </button>
-      </div>
-    </div>
+    </template>
 
-    <HeroStrip :cells="heroSummaryCells" />
+    <SectionPanel
+      ref="filtersSectionRef"
+      :title="t('filtersTitle')"
+      :count="`${activeFilterCount} ${t('activeFilters')}`"
+      :meta="branchScopeLabel"
+      panel-class="surface-card rounded-2xl p-4"
+    >
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <select v-model="filters.reportKey" class="report-filter-control min-w-[180px]">
+            <option v-for="option in reportOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
 
-    <div class="detail-body">
-      <div class="detail-main">
-        <SectionPanel
-          v-if="comparisonSummaryItems.length"
-          :title="t('comparisonSummaryTitle')"
-          :meta="t('comparisonSummaryHint')"
-          :count="comparisonSummaryItems.length"
-        >
-          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <article
-              v-for="item in comparisonSummaryItems"
-              :key="item.key"
-              class="mini-metric shadow-sm border border-slate-200 bg-white/95"
-              :class="item.cardClass"
-            >
-              <p class="mini-metric-label">
-                {{ item.label }}
-              </p>
-              <p class="mini-metric-value" :class="item.valueClass">
-                {{ item.value }}
-              </p>
-              <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-amber-700'">
-                {{ formatComparisonDelta(item.delta, item.previous) }}
-              </p>
-            </article>
+          <select
+            v-if="filters.reportKey === 'policy_list'"
+            :value="activePreset"
+            class="report-filter-control min-w-[210px]"
+            @change="applyDatePreset($event.target.value)"
+          >
+            <option value="">{{ t("dateRangeLabel") }}</option>
+            <option v-for="preset in datePresets" :key="preset.value" :value="preset.value">
+              {{ preset.label }}
+            </option>
+          </select>
+
+          <div class="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-1.5 py-1">
+            <input
+              v-model="filters.fromDate"
+              class="report-filter-control report-filter-control--date"
+              type="date"
+              :placeholder="t('dateFrom')"
+              :title="t('dateFrom')"
+            />
+            <span class="text-xs text-gray-400">-</span>
+            <input
+              v-model="filters.toDate"
+              class="report-filter-control report-filter-control--date"
+              type="date"
+              :placeholder="t('dateTo')"
+              :title="t('dateTo')"
+            />
           </div>
-        </SectionPanel>
+        </div>
 
-        <SectionPanel
+        <div class="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-2">
+          <button
+            type="button"
+            class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
+            @click="reportsAdvancedOpen = !reportsAdvancedOpen"
+          >
+            {{ reportsAdvancedOpen ? t('hideAdvancedFilters') : t('advancedFilters') }}
+          </button>
+
+          <span
+            v-if="activeFilterCount > 0"
+            class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500"
+          >
+            {{ activeFilterCount }} {{ t('activeFilters') }}
+          </span>
+
+          <div class="ml-auto flex flex-wrap items-center gap-2">
+            <FilterPresetMenu
+              :model-value="presetModelValue"
+              :label="t('presetLabel')"
+              :options="presetOptionsList"
+              :can-delete="canDeletePresetFlag"
+              :show-save="true"
+              :show-delete="true"
+              :disabled="loading"
+              :save-label="t('savePreset')"
+              :delete-label="t('deletePreset')"
+              @update:model-value="presetKey = $event"
+              @change="onPresetChange"
+              @save="savePreset"
+              @delete="deletePreset"
+            />
+            <button class="btn btn-sm" type="button" :disabled="loading" @click="loadReport">{{ t('refresh') }}</button>
+            <button class="btn btn-sm" type="button" :disabled="loading" @click="loadReport">{{ t('applyFilters') }}</button>
+            <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="resetFilters">{{ t('clearFilters') }}</button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="reportsAdvancedOpen" class="mt-3 rounded-lg border border-gray-200 bg-gray-50/50 p-3">
+        <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+          <label
+            v-for="field in visibleAdvancedFilters"
+            :key="field.key"
+            class="flex flex-col gap-1"
+          >
+            <span class="text-xs font-medium text-gray-600">{{ field.label }}</span>
+            <input
+              v-model.trim="filters[field.modelKey]"
+              class="report-filter-control"
+              type="search"
+              :placeholder="field.label"
+              :list="`advanced-${field.key}-options`"
+            />
+            <datalist :id="`advanced-${field.key}-options`">
+              <option
+                v-for="option in getAdvancedFilterOptions(field.key)"
+                :key="`${field.key}-${option}`"
+                :value="option"
+              />
+            </datalist>
+          </label>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
+        <span>{{ t("listSummaryTitle") }}</span>
+        <span>{{ t("columns") }}: {{ columnsSummaryLabel }}</span>
+      </div>
+    </SectionPanel>
+
+    <SectionPanel
           :title="activeReportLabel"
           :count="sortedRows.length"
           :meta="branchScopeLabel"
+          panel-class="surface-card rounded-2xl p-5"
         >
           <div class="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
             <span>{{ t("columns") }}: {{ columnsSummaryLabel }}</span>
             <span v-if="exportLoading">{{ t("exporting") }}</span>
           </div>
 
-          <div class="mt-4 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
-            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
-              <div class="space-y-1">
-                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("columns") }}</p>
-                <p class="text-xs text-slate-500">{{ t("columnHint") }}</p>
-              </div>
+          <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
+              <p class="text-xs text-slate-600">{{ t("columnHint") }}</p>
               <div class="flex flex-wrap items-center gap-2">
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500 shadow-sm">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500">
                   {{ columnsSummaryLabel }}
                 </span>
                 <button
                   type="button"
-                  class="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-900"
+                  class="btn btn-outline btn-xs"
                   @click="showAllColumns"
                 >
                   {{ t("showAllColumns") }}
@@ -84,55 +180,25 @@
               </div>
             </div>
 
-            <div
-              class="mt-4 grid gap-3"
-              :class="hiddenColumns.length ? 'xl:grid-cols-2' : 'xl:grid-cols-1'"
-            >
-              <div class="rounded-2xl border border-sky-100 bg-sky-50/60 p-3">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700">{{ t("selectedColumns") }}</p>
-                    <p class="text-xs text-sky-700/80">{{ t("columnHint") }}</p>
-                  </div>
-                  <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-sky-700 shadow-sm">
-                    {{ visibleColumns.length }}
-                  </span>
-                </div>
-                <div class="mt-3 flex flex-wrap gap-2">
-                  <button
-                    v-for="column in visibleColumns"
-                    :key="`visible-${column}`"
-                    type="button"
-                    class="report-chip report-chip--active rounded-full"
-                    @click="toggleColumn(column)"
-                  >
-                    <span class="report-chip__dot" />
-                    {{ getColumnLabel(column) }}
-                  </button>
-                </div>
+            <div class="mt-3 rounded-xl border border-slate-200 bg-white/90 p-3">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{{ t("columns") }}</p>
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                  {{ columnsSummaryLabel }}
+                </span>
               </div>
-
-              <div v-if="hiddenColumns.length" class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="space-y-1">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{{ t("hiddenColumns") }}</p>
-                    <p class="text-xs text-slate-500">{{ t("hiddenColumnsHint") }}</p>
-                  </div>
-                  <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm">
-                    {{ hiddenColumns.length }}
-                  </span>
-                </div>
-                <div class="mt-3 flex flex-wrap gap-2">
-                  <button
-                    v-for="column in hiddenColumns"
-                    :key="`hidden-${column}`"
-                    type="button"
-                    class="report-chip report-chip--hidden rounded-full"
-                    @click="toggleColumn(column)"
-                  >
-                    {{ getColumnLabel(column) }}
-                  </button>
-                </div>
+              <div class="mt-2 max-h-40 overflow-y-auto flex flex-wrap gap-2">
+                <button
+                  v-for="column in columns"
+                  :key="`all-${column}`"
+                  type="button"
+                  :class="isColumnVisible(column)
+                    ? 'inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 transition hover:bg-sky-100'
+                    : 'inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100'"
+                  @click="toggleColumn(column)"
+                >
+                  {{ getColumnLabel(column) }}
+                </button>
               </div>
             </div>
           </div>
@@ -149,101 +215,77 @@
               <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
             </div>
 
-            <div class="mt-4 overflow-auto">
-              <table class="at-table">
+            <div class="mt-4 overflow-hidden rounded-lg border border-gray-200">
+              <div class="overflow-auto">
+              <table class="w-full border-collapse">
                 <thead>
-                  <tr class="at-table-head-row">
-                    <th v-for="column in visibleColumns" :key="column" class="at-table-head-cell">
+                  <tr class="border-b border-gray-200 bg-gray-50">
+                    <th
+                      v-for="column in visibleColumns"
+                      :key="column"
+                      class="px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-wider text-gray-400"
+                    >
                       <button
                         type="button"
-                        class="inline-flex items-center gap-1 text-left transition hover:text-slate-900"
+                        class="inline-flex w-full items-center justify-between gap-2 text-left text-[10.5px] font-semibold uppercase tracking-wider text-gray-400 transition-colors hover:text-gray-600"
                         @click="toggleSort(column)"
                       >
                         <span>{{ getColumnLabel(column) }}</span>
-                        <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
+                        <span class="text-[10px] text-gray-400">{{ getSortIndicator(column) }}</span>
                       </button>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(row, rowIndex) in sortedRows" :key="row.name || rowIndex" class="at-table-row">
-                    <td v-for="column in visibleColumns" :key="column" class="at-table-cell text-sm text-slate-700">
+                  <tr
+                    v-for="(row, rowIndex) in sortedRows"
+                    :key="row.name || rowIndex"
+                    class="border-b border-gray-100 transition-colors duration-100 last:border-0"
+                    :class="isRowClickable(row) ? 'cursor-pointer hover:bg-gray-50' : ''"
+                    @click="onRowClick(row)"
+                  >
+                    <td v-for="column in visibleColumns" :key="column" class="px-4 py-3 text-sm text-gray-900">
                       {{ formatCellValue(column, row[column]) }}
                     </td>
                   </tr>
                 </tbody>
               </table>
+              </div>
+
+              <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3">
+                <p class="text-xs text-gray-400">{{ sortedRows.length }} / {{ sortedRows.length }} {{ t("showingRecords") }}</p>
+              </div>
             </div>
           </template>
         </SectionPanel>
-      </div>
 
-      <aside class="detail-sidebar space-y-4">
-        <SectionPanel
-          :title="t('filtersTitle')"
-          :count="`${activeFilterCount} ${t('activeFilters')}`"
-          :meta="branchScopeLabel"
-        >
-          <WorkbenchFilterToolbar
-            v-model="presetKey"
-            :advanced-label="t('advancedFilters')"
-            :collapse-label="t('hideAdvancedFilters')"
-            :active-count="activeFilterCount"
-            :active-count-label="t('activeFilters')"
-            :preset-label="t('presetLabel')"
-            :preset-options="presetOptions"
-            :can-delete-preset="canDeletePreset"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
-            :apply-label="t('applyFilters')"
-            :reset-label="t('clearFilters')"
-            @preset-change="onPresetChange"
-            @preset-save="savePreset"
-            @preset-delete="deletePreset"
-            @apply="loadReport"
-            @reset="resetFilters"
+      <SectionPanel
+        v-if="comparisonSummaryItems.length"
+        :title="t('comparisonSummaryTitle')"
+        :meta="t('comparisonSummaryHint')"
+        :count="comparisonSummaryItems.length"
+      >
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <article
+            v-for="item in comparisonSummaryItems"
+            :key="item.key"
+            class="mini-metric shadow-sm border border-slate-200 bg-white/95"
+            :class="item.cardClass"
           >
-            <select v-model="filters.reportKey" class="input">
-              <option v-for="option in reportOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <input v-model="filters.fromDate" class="input" type="date" />
-            <input v-model="filters.toDate" class="input" type="date" />
+            <p class="mini-metric-label">
+              {{ item.label }}
+            </p>
+            <p class="mini-metric-value" :class="item.valueClass">
+              {{ item.value }}
+            </p>
+            <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-amber-700'">
+              {{ formatComparisonDelta(item.delta, item.previous) }}
+            </p>
+          </article>
+        </div>
+      </SectionPanel>
 
-            <template #advanced>
-              <input
-                v-if="isFilterVisible('branch')"
-                v-model.trim="filters.branch"
-                class="input"
-                type="search"
-                :placeholder="t('branchFilter')"
-              />
-              <input
-                v-if="isFilterVisible('insuranceCompany')"
-                v-model.trim="filters.insuranceCompany"
-                class="input"
-                type="search"
-                :placeholder="t('companyFilter')"
-              />
-              <input
-                v-if="isFilterVisible('salesEntity')"
-                v-model.trim="filters.salesEntity"
-                class="input"
-                type="search"
-                :placeholder="t('salesEntityFilter')"
-              />
-              <input
-                v-if="isFilterVisible('status')"
-                v-model.trim="filters.status"
-                class="input"
-                type="search"
-                :placeholder="t('statusFilter')"
-              />
-            </template>
-          </WorkbenchFilterToolbar>
-        </SectionPanel>
-
+      <div class="space-y-4">
         <SectionPanel
           v-if="canManageScheduledReports"
           :title="t('scheduledTitle')"
@@ -277,9 +319,8 @@
             </button>
           </div>
         </SectionPanel>
-      </aside>
-    </div>
-  </section>
+      </div>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -288,10 +329,10 @@ import { frappeRequest } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
 import EmptyState from "../components/app-shell/EmptyState.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import ScheduledReportsManager from "../components/reports/ScheduledReportsManager.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import HeroStrip from "@/components/ui/HeroStrip.vue";
+import FilterPresetMenu from "../components/app-shell/FilterPresetMenu.vue";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
@@ -320,8 +361,11 @@ const copy = {
     refresh: "Yenile",
     exportPdf: "PDF",
     exportXlsx: "Excel",
+    focusFilters: "Filtrele",
     recordCount: "kayıt",
     filtersTitle: "Filtreler",
+    listSummaryTitle: "Liste Özeti",
+    showingRecords: "kayıt gösteriliyor",
     advancedFilters: "Gelişmiş Filtreler",
     hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
@@ -332,6 +376,8 @@ const copy = {
     clearFilters: "Temizle",
     branchFilter: "Sigorta branşı",
     companyFilter: "Sigorta şirketi",
+    policyNoFilter: "Sigorta Şirketi Poliçe No",
+    customerTaxIdFilter: "TC/VKN",
     salesEntityFilter: "Satış birimi",
     statusFilter: "Durum",
     loading: "Rapor yükleniyor...",
@@ -390,6 +436,20 @@ const copy = {
     runSegmentSnapshots: "Snapshot'ları Çalıştır",
     runningSegmentSnapshots: "Snapshot'lar Çalışıyor...",
     segmentSnapshotRunError: "Segment snapshot işi tetiklenemedi.",
+    granularityLabel: "Rapor Granülaritesi",
+    granularityDaily: "Günlük",
+    granularityMonthly: "Aylık",
+    granularityYearly: "Yıllık",
+    granularityPlaceholder: "-- Granülariteyi seçin --",
+    dateRangeLabel: "Tarih Aralığı Seçin",
+    datePresetToday: "Bugün",
+    datePresetThisMonth: "Bu Ay",
+    datePresetThisYear: "Bu Yıl",
+    datePresetYesterday: "Dün",
+    datePresetLastMonth: "Geçen Ay",
+    datePresetLastYear: "Geçen Yıl",
+    dateFrom: "Başlangıç Tarihi",
+    dateTo: "Bitiş Tarihi",
   },
   en: {
     breadcrumb: "Control Center / Reports",
@@ -398,8 +458,11 @@ const copy = {
     refresh: "Refresh",
     exportPdf: "PDF",
     exportXlsx: "Excel",
+    focusFilters: "Filter",
     recordCount: "records",
     filtersTitle: "Filters",
+    listSummaryTitle: "List Summary",
+    showingRecords: "records shown",
     advancedFilters: "Advanced Filters",
     hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
@@ -410,6 +473,8 @@ const copy = {
     clearFilters: "Clear",
     branchFilter: "Insurance branch",
     companyFilter: "Insurance company",
+    policyNoFilter: "Carrier Policy Number",
+    customerTaxIdFilter: "Tax ID",
     salesEntityFilter: "Sales entity",
     statusFilter: "Status",
     loading: "Loading report...",
@@ -468,6 +533,20 @@ const copy = {
     runSegmentSnapshots: "Run Snapshots",
     runningSegmentSnapshots: "Snapshots Running...",
     segmentSnapshotRunError: "Failed to trigger segment snapshot job.",
+    granularityLabel: "Report Granularity",
+    granularityDaily: "Daily",
+    granularityMonthly: "Monthly",
+    granularityYearly: "Yearly",
+    granularityPlaceholder: "-- Select granularity --",
+    dateRangeLabel: "Select Date Range",
+    datePresetToday: "Today",
+    datePresetThisMonth: "This Month",
+    datePresetThisYear: "This Year",
+    datePresetYesterday: "Yesterday",
+    datePresetLastMonth: "Last Month",
+    datePresetLastYear: "Last Year",
+    dateFrom: "Start Date",
+    dateTo: "End Date",
   },
 };
 
@@ -481,65 +560,70 @@ const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-U
 const reportCatalog = {
   policy_list: {
     label: { tr: "Poliçe Listesi", en: "Policy List" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_policy_list_report",
+    readMethod: "acentem_takipte.api.reports.get_policy_list_report",
+    exportMethod: "acentem_takipte.api.reports.export_policy_list_report",
   },
   payment_status: {
     label: { tr: "Tahsilat Durumu", en: "Payment Status" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_payment_status_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_payment_status_report",
+    readMethod: "acentem_takipte.api.reports.get_payment_status_report",
+    exportMethod: "acentem_takipte.api.reports.export_payment_status_report",
   },
   renewal_performance: {
     label: { tr: "Yenileme Performansı", en: "Renewal Performance" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_renewal_performance_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_renewal_performance_report",
+    readMethod: "acentem_takipte.api.reports.get_renewal_performance_report",
+    exportMethod: "acentem_takipte.api.reports.export_renewal_performance_report",
   },
   claim_loss_ratio: {
     label: { tr: "Hasar/Prim Oranı", en: "Claim Loss Ratio" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claim_loss_ratio_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claim_loss_ratio_report",
+    readMethod: "acentem_takipte.api.reports.get_claim_loss_ratio_report",
+    exportMethod: "acentem_takipte.api.reports.export_claim_loss_ratio_report",
   },
   agent_performance: {
     label: { tr: "Acente Üretim Karnesi", en: "Agency Performance Scorecard" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_agent_performance_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_agent_performance_report",
+    readMethod: "acentem_takipte.api.reports.get_agent_performance_report",
+    exportMethod: "acentem_takipte.api.reports.export_agent_performance_report",
   },
   customer_segmentation: {
     label: { tr: "Müşteri Segmentasyonu", en: "Customer Segmentation" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_customer_segmentation_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_customer_segmentation_report",
+    readMethod: "acentem_takipte.api.reports.get_customer_segmentation_report",
+    exportMethod: "acentem_takipte.api.reports.export_customer_segmentation_report",
   },
   communication_operations: {
     label: { tr: "İletişim Operasyonları", en: "Communication Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_communication_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_communication_operations_report",
+    readMethod: "acentem_takipte.api.reports.get_communication_operations_report",
+    exportMethod: "acentem_takipte.api.reports.export_communication_operations_report",
   },
   reconciliation_operations: {
     label: { tr: "Mutabakat Operasyonları", en: "Reconciliation Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_reconciliation_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_reconciliation_operations_report",
+    readMethod: "acentem_takipte.api.reports.get_reconciliation_operations_report",
+    exportMethod: "acentem_takipte.api.reports.export_reconciliation_operations_report",
   },
   claims_operations: {
     label: { tr: "Hasar Operasyonları", en: "Claims Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claims_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claims_operations_report",
+    readMethod: "acentem_takipte.api.reports.get_claims_operations_report",
+    exportMethod: "acentem_takipte.api.reports.export_claims_operations_report",
   },
 };
 
 const columnLabels = {
   name: { tr: "Kayıt No", en: "Record Number" },
   customer: { tr: "Müşteri", en: "Customer" },
+  customer_full_name: { tr: "Müşteri Ad Soyad", en: "Customer Full Name" },
+  customer_tax_id: { tr: "TC/VKN", en: "Tax ID" },
   policy: { tr: "Poliçe", en: "Policy" },
   policy_no: { tr: "Sigorta Şirketi Poliçe No", en: "Carrier Policy Number" },
   office_branch: { tr: "Ofis Şube", en: "Office Branch" },
   branch: { tr: "Sigorta Branşı", en: "Insurance Branch" },
   insurance_company: { tr: "Sigorta Şirketi", en: "Insurance Company" },
   sales_entity: { tr: "Satış Birimi", en: "Sales Entity" },
+  sales_entity_full_name: { tr: "Satış Birimi Ad Soyad", en: "Sales Entity Full Name" },
   assigned_agent: { tr: "Atanan Temsilci", en: "Assigned Agent" },
   status: { tr: "Durum", en: "Status" },
   claim_status: { tr: "Hasar Durumu", en: "Claim Status" },
   assigned_to: { tr: "Atanan Kişi", en: "Assigned To" },
-    issue_date: { tr: "Tanzim Tarihi", en: "Issue Date" },
+  issue_date: { tr: "Tanzim Tarihi", en: "Issue Date" },
+  period: { tr: "Dönem", en: "Period" },
+  period_label: { tr: "Dönem Etiketi", en: "Period Label" },
   start_date: { tr: "Başlangıç Tarihi", en: "Start Date" },
   end_date: { tr: "Bitiş Tarihi", en: "End Date" },
   renewal_date: { tr: "Yenileme Tarihi", en: "Renewal Date" },
@@ -598,7 +682,7 @@ const columnLabels = {
 };
 
 const reportFilterConfig = {
-  policy_list: ["branch", "insuranceCompany", "status"],
+  policy_list: ["branch", "insuranceCompany", "policyNo", "customerTaxId", "status"],
   payment_status: ["branch", "insuranceCompany", "status"],
   renewal_performance: ["branch", "salesEntity", "status"],
   claim_loss_ratio: ["branch", "insuranceCompany", "status"],
@@ -615,6 +699,8 @@ const filters = reactive({
   toDate: "",
   branch: "",
   insuranceCompany: "",
+  policyNo: "",
+  customerTaxId: "",
   salesEntity: "",
   status: "",
 });
@@ -624,6 +710,9 @@ const exportLoading = ref(false);
 const scheduledLoading = ref(false);
 const scheduledRunLoading = ref(false);
 const snapshotRunLoading = ref(false);
+const filtersSectionRef = ref(null);
+const reportsAdvancedOpen = ref(false);
+const activePreset = ref(""); // Seçili tarih aralığı preset'i
 const error = ref("");
 const columns = ref([]);
 const rows = ref([]);
@@ -666,10 +755,34 @@ const activeFilterCount = computed(() => {
   if (filters.toDate) count += 1;
   if (visibleFilters.value.has("branch") && filters.branch) count += 1;
   if (visibleFilters.value.has("insuranceCompany") && filters.insuranceCompany) count += 1;
+  if (visibleFilters.value.has("policyNo") && filters.policyNo) count += 1;
+  if (visibleFilters.value.has("customerTaxId") && filters.customerTaxId) count += 1;
   if (visibleFilters.value.has("salesEntity") && filters.salesEntity) count += 1;
   if (visibleFilters.value.has("status") && filters.status) count += 1;
   return count;
 });
+
+const datePresets = computed(() => [
+  { value: "today", label: t("datePresetToday") },
+  { value: "this_month", label: t("datePresetThisMonth") },
+  { value: "this_year", label: t("datePresetThisYear") },
+  { value: "yesterday", label: t("datePresetYesterday") },
+  { value: "last_month", label: t("datePresetLastMonth") },
+  { value: "last_year", label: t("datePresetLastYear") },
+]);
+
+const advancedFilterDefinitions = computed(() => [
+  { key: "branch", modelKey: "branch", label: t("branchFilter") },
+  { key: "insuranceCompany", modelKey: "insuranceCompany", label: t("companyFilter") },
+  { key: "policyNo", modelKey: "policyNo", label: t("policyNoFilter") },
+  { key: "customerTaxId", modelKey: "customerTaxId", label: t("customerTaxIdFilter") },
+  { key: "salesEntity", modelKey: "salesEntity", label: t("salesEntityFilter") },
+  { key: "status", modelKey: "status", label: t("statusFilter") },
+]);
+
+const visibleAdvancedFilters = computed(() =>
+  advancedFilterDefinitions.value.filter((item) => isFilterVisible(item.key)),
+);
 
 const numberFormatter = computed(() =>
   new Intl.NumberFormat(localeCode.value, {
@@ -704,24 +817,24 @@ const heroSummaryCells = computed(() =>
 );
 
 const metricToneClasses = {
-  rows: "text-slate-900",
-  gross_premium: "text-sky-700",
-  commission: "text-emerald-700",
-  paid_amount: "text-amber-700",
-  active_policies: "text-emerald-700",
-  conversion_rate: "text-sky-700",
-  open_renewals: "text-amber-700",
-  loyal_customers: "text-slate-900",
-  claim_customers: "text-amber-700",
-  matched_customers: "text-emerald-700",
-  created_drafts: "text-sky-700",
-  successful_deliveries: "text-emerald-700",
-  open_reconciliation: "text-amber-700",
-  difference_amount: "text-sky-700",
-  resolved_items: "text-emerald-700",
-  open_claims: "text-amber-700",
-  rejected_claims: "text-amber-700",
-  successful_notifications: "text-emerald-700",
+  rows: "text-gray-900",
+  gross_premium: "text-brand-600",
+  commission: "text-green-600",
+  paid_amount: "text-amber-600",
+  active_policies: "text-green-600",
+  conversion_rate: "text-brand-600",
+  open_renewals: "text-amber-600",
+  loyal_customers: "text-gray-900",
+  claim_customers: "text-amber-600",
+  matched_customers: "text-green-600",
+  created_drafts: "text-brand-600",
+  successful_deliveries: "text-green-600",
+  open_reconciliation: "text-amber-600",
+  difference_amount: "text-brand-600",
+  resolved_items: "text-green-600",
+  open_claims: "text-amber-600",
+  rejected_claims: "text-amber-600",
+  successful_notifications: "text-green-600",
 };
 const buildMetricItem = (key, label, value, extra = {}) => ({
   key,
@@ -786,6 +899,15 @@ const summaryItems = computed(() => {
     }, 0);
     return total / rows.value.length;
   };
+
+  if (filters.reportKey === "policy_list" && filters.granularity) {
+    return [
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(numericTotal(["policy_count"]))),
+      buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
+      buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["total_commission"]))),
+      buildMetricItem("paid_amount", t("summaryPaidAmount"), numberFormatter.value.format(0)),
+    ];
+  }
 
   if (filters.reportKey === "agent_performance") {
     return [
@@ -951,6 +1073,7 @@ const { presetKey, presetOptions, canDeletePreset, applyPreset, onPresetChange, 
       insuranceCompany: filters.insuranceCompany,
       salesEntity: filters.salesEntity,
       status: filters.status,
+      granularity: filters.granularity,
     }),
     setFilterStateFromPayload: (payload) => {
       filters.reportKey = String(payload?.reportKey || "policy_list");
@@ -960,6 +1083,7 @@ const { presetKey, presetOptions, canDeletePreset, applyPreset, onPresetChange, 
       filters.insuranceCompany = String(payload?.insuranceCompany || "");
       filters.salesEntity = String(payload?.salesEntity || "");
       filters.status = String(payload?.status || "");
+      filters.granularity = String(payload?.granularity || "");
     },
     resetFilterState: () => {
       filters.reportKey = "policy_list";
@@ -969,10 +1093,93 @@ const { presetKey, presetOptions, canDeletePreset, applyPreset, onPresetChange, 
       filters.insuranceCompany = "";
       filters.salesEntity = "";
       filters.status = "";
+      filters.granularity = "";
     },
     refresh: () => loadReport(),
     getSortLocale: () => localeCode.value,
   });
+
+const presetModelValue = computed(() => String(unref(presetKey) || "default"));
+const presetOptionsList = computed(() => {
+  const value = unref(presetOptions);
+  return Array.isArray(value) ? value : [];
+});
+const canDeletePresetFlag = computed(() => Boolean(unref(canDeletePreset)));
+
+function formatDateForInput(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getDateRangeForPreset(preset) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (preset === "today") {
+    return {
+      fromDate: formatDateForInput(today),
+      toDate: formatDateForInput(today),
+    };
+  }
+
+  if (preset === "this_month") {
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0);
+    return {
+      fromDate: formatDateForInput(monthStart),
+      toDate: formatDateForInput(monthEnd),
+    };
+  }
+
+  if (preset === "this_year") {
+    const year = today.getFullYear();
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd = new Date(year, 11, 31);
+    return {
+      fromDate: formatDateForInput(yearStart),
+      toDate: formatDateForInput(yearEnd),
+    };
+  }
+
+  if (preset === "yesterday") {
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return {
+      fromDate: formatDateForInput(yesterday),
+      toDate: formatDateForInput(yesterday),
+    };
+  }
+
+  if (preset === "last_month") {
+    const year = today.getFullYear();
+    const month = today.getMonth() - 1;
+    const lastMonthStart = new Date(year, month, 1);
+    const lastMonthEnd = new Date(year, month + 1, 0);
+    return {
+      fromDate: formatDateForInput(lastMonthStart),
+      toDate: formatDateForInput(lastMonthEnd),
+    };
+  }
+
+  if (preset === "last_year") {
+    const lastYear = today.getFullYear() - 1;
+    const yearStart = new Date(lastYear, 0, 1);
+    const yearEnd = new Date(lastYear, 11, 31);
+    return {
+      fromDate: formatDateForInput(yearStart),
+      toDate: formatDateForInput(yearEnd),
+    };
+  }
+
+  return { fromDate: "", toDate: "" };
+}
 
 function buildFiltersPayload() {
   return {
@@ -980,6 +1187,8 @@ function buildFiltersPayload() {
     to_date: filters.toDate || null,
     branch: visibleFilters.value.has("branch") ? filters.branch || null : null,
     insurance_company: visibleFilters.value.has("insuranceCompany") ? filters.insuranceCompany || null : null,
+    policy_no: visibleFilters.value.has("policyNo") ? filters.policyNo || null : null,
+    customer_tax_id: visibleFilters.value.has("customerTaxId") ? filters.customerTaxId || null : null,
     sales_entity: visibleFilters.value.has("salesEntity") ? filters.salesEntity || null : null,
     status: visibleFilters.value.has("status") ? filters.status || null : null,
     office_branch: branchStore.requestBranch || null,
@@ -1024,6 +1233,34 @@ function isFilterVisible(key) {
   return visibleFilters.value.has(key);
 }
 
+function getAdvancedFilterOptions(key) {
+  const keyMap = {
+    branch: ["branch"],
+    insuranceCompany: ["insurance_company", "insuranceCompany"],
+    policyNo: ["policy_no"],
+    customerTaxId: ["customer_tax_id", "tax_id"],
+    salesEntity: ["sales_entity", "salesEntity"],
+    status: ["status", "claim_status"],
+  };
+
+  const sourceKeys = keyMap[key] || [key];
+  const options = new Set();
+
+  for (const row of rows.value || []) {
+    for (const sourceKey of sourceKeys) {
+      const raw = row?.[sourceKey];
+      const value = typeof raw === "string" ? raw.trim() : String(raw || "").trim();
+      if (value) {
+        options.add(value);
+      }
+    }
+  }
+
+  return [...options]
+    .sort((a, b) => a.localeCompare(b, localeCode.value))
+    .slice(0, 80);
+}
+
 function getColumnLabel(column) {
   const entry = columnLabels[column];
   if (entry) {
@@ -1037,6 +1274,46 @@ function getColumnLabel(column) {
 
 function isDateLikeValue(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function getReportRowRoute(row) {
+  if (!row || typeof row !== "object") {
+    return null;
+  }
+
+  if (filters.reportKey === "policy_list" && row.name) {
+    return { name: "policy-detail", params: { name: row.name } };
+  }
+
+  if (filters.reportKey === "payment_status" && row.name) {
+    return { name: "payment-detail", params: { name: row.name } };
+  }
+
+  if (filters.reportKey === "renewal_performance" && row.name) {
+    return { name: "renewal-task-detail", params: { name: row.name } };
+  }
+
+  if (filters.reportKey === "claims_operations" && row.name) {
+    return { name: "claim-detail", params: { name: row.name } };
+  }
+
+  if (filters.reportKey === "agent_performance" && row.sales_entity) {
+    return { name: "policy-list", query: { sales_entity: row.sales_entity } };
+  }
+
+  return null;
+}
+
+function isRowClickable(row) {
+  return Boolean(getReportRowRoute(row));
+}
+
+function onRowClick(row) {
+  const targetRoute = getReportRowRoute(row);
+  if (!targetRoute) {
+    return;
+  }
+  void router.push(targetRoute);
 }
 
 function formatCellValue(column, value) {
@@ -1113,6 +1390,12 @@ function clearHiddenFilters() {
   if (!visibleFilters.value.has("insuranceCompany")) {
     filters.insuranceCompany = "";
   }
+  if (!visibleFilters.value.has("policyNo")) {
+    filters.policyNo = "";
+  }
+  if (!visibleFilters.value.has("customerTaxId")) {
+    filters.customerTaxId = "";
+  }
   if (!visibleFilters.value.has("salesEntity")) {
     filters.salesEntity = "";
   }
@@ -1149,10 +1432,32 @@ function getSafeLocalStorage() {
   return typeof storage.getItem === "function" && typeof storage.setItem === "function" ? storage : null;
 }
 
+// Column renames between releases — maps old key → new key per report
+const COLUMN_MIGRATIONS = {
+  policy_list: {
+    customer: "customer_full_name",
+    sales_entity: "sales_entity_full_name",
+  },
+};
+
+function migrateColumnKeys(reportKey, keys) {
+  const renames = COLUMN_MIGRATIONS[reportKey];
+  if (!renames || !keys.length) return keys;
+  const migrated = keys.map((k) => renames[k] ?? k);
+  // Insert customer_tax_id right after customer_full_name when customer was present
+  if (keys.includes("customer") && !migrated.includes("customer_tax_id")) {
+    const insertAt = migrated.indexOf("customer_full_name");
+    if (insertAt !== -1) migrated.splice(insertAt + 1, 0, "customer_tax_id");
+    else migrated.push("customer_tax_id");
+  }
+  return migrated;
+}
+
 function applyViewState(payload = {}) {
-  const columnKeys = Array.isArray(payload?.visibleColumnKeys)
+  const rawKeys = Array.isArray(payload?.visibleColumnKeys)
     ? payload.visibleColumnKeys.filter((item) => typeof item === "string" && item)
     : [];
+  const columnKeys = migrateColumnKeys(filters.reportKey, rawKeys);
 
   pendingVisibleColumnKeys.value = [...columnKeys];
   visibleColumnKeys.value = columnKeys.length
@@ -1323,7 +1628,7 @@ async function loadScheduledReports() {
   scheduledLoading.value = true;
   try {
     const payload = await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.get_scheduled_report_configs",
+      url: "/api/method/acentem_takipte.api.reports.get_scheduled_report_configs",
       method: "GET",
     });
     const message = payload?.message || payload || {};
@@ -1340,7 +1645,7 @@ async function runScheduledReports() {
   scheduledRunLoading.value = true;
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
+      url: "/api/method/acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
       method: "POST",
       params: {
         frequency: "daily",
@@ -1359,7 +1664,7 @@ async function runCustomerSegmentSnapshots() {
   snapshotRunLoading.value = true;
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+      url: "/api/method/acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
       method: "POST",
       params: {
         limit: 250,
@@ -1375,7 +1680,7 @@ async function runCustomerSegmentSnapshots() {
 async function saveScheduledReport({ index, config }) {
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_scheduled_report_config",
+      url: "/api/method/acentem_takipte.api.reports.save_scheduled_report_config",
       method: "POST",
       params: {
         index: index || "",
@@ -1391,7 +1696,7 @@ async function saveScheduledReport({ index, config }) {
 async function removeScheduledReport(index) {
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.remove_scheduled_report_config",
+      url: "/api/method/acentem_takipte.api.reports.remove_scheduled_report_config",
       method: "POST",
       params: { index },
     });
@@ -1427,6 +1732,13 @@ function toggleColumn(column) {
 
 function showAllColumns() {
   visibleColumnKeys.value = [...columns.value];
+}
+
+function focusFilters() {
+  const root = filtersSectionRef.value?.$el || filtersSectionRef.value;
+  if (root && typeof root.scrollIntoView === "function") {
+    root.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 function toggleSort(column) {
@@ -1468,6 +1780,36 @@ watch(
     persistReportKeyToRoute();
     syncViewStateFromStorage();
     persistViewStateToRoute();
+    scheduleReportLoad();
+  },
+);
+
+function applyDatePreset(preset) {
+  activePreset.value = String(preset || "");
+  if (!activePreset.value) {
+    return;
+  }
+  const dateRange = getDateRangeForPreset(preset);
+  filters.fromDate = dateRange.fromDate;
+  filters.toDate = dateRange.toDate;
+  scheduleReportLoad();
+}
+
+function isActivePresetRange() {
+  if (!activePreset.value) {
+    return false;
+  }
+  const range = getDateRangeForPreset(activePreset.value);
+  return filters.fromDate === range.fromDate && filters.toDate === range.toDate;
+}
+
+watch(
+  [() => filters.fromDate, () => filters.toDate],
+  () => {
+    // Kullanıcı manuel tarih değiştirirse preset seçimini temizle
+    if (!isActivePresetRange()) {
+      activePreset.value = "";
+    }
     scheduleReportLoad();
   },
 );
@@ -1537,5 +1879,13 @@ onBeforeUnmount(() => {
 <style scoped>
 .input {
   @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
+}
+
+.report-filter-control {
+  @apply h-8 appearance-none rounded-md border border-gray-200 bg-white px-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-brand-600 focus:outline-none;
+}
+
+.report-filter-control--date {
+  @apply w-[142px] border-transparent px-2;
 }
 </style>

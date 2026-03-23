@@ -1,5 +1,5 @@
-from acentem_takipte.acentem_takipte.services import report_registry
-from acentem_takipte.acentem_takipte.services.report_registry import get_report_definition
+from acentem_takipte.services import report_registry
+from acentem_takipte.services.report_registry import get_report_definition
 
 
 def test_agent_performance_report_definition_includes_scorecard_columns():
@@ -88,3 +88,36 @@ def test_build_report_payload_keeps_positive_string_limit(monkeypatch):
 
     assert captured["limit"] == 25
     assert payload["total"] == 1
+
+
+def test_build_report_payload_uses_granularity_columns_for_policy_list(monkeypatch):
+    monkeypatch.setattr(report_registry, "normalize_report_filters", lambda filters=None: {"granularity": "monthly"})
+    monkeypatch.setitem(
+        report_registry.REPORT_DEFINITIONS,
+        "policy_list",
+        {
+            **report_registry.REPORT_DEFINITIONS["policy_list"],
+            "rows_fn": lambda filters, limit: [{"period": "2026-03"}],
+        },
+    )
+
+    payload = report_registry.build_report_payload("policy_list", filters={"granularity": "monthly"}, limit=50)
+
+    assert payload["columns"] == ["period", "period_label", "policy_count", "total_gross_premium", "total_commission"]
+
+
+def test_build_report_payload_keeps_default_columns_when_no_granularity(monkeypatch):
+    monkeypatch.setattr(report_registry, "normalize_report_filters", lambda filters=None: {})
+    monkeypatch.setitem(
+        report_registry.REPORT_DEFINITIONS,
+        "policy_list",
+        {
+            **report_registry.REPORT_DEFINITIONS["policy_list"],
+            "rows_fn": lambda filters, limit: [{"name": "POL-001"}],
+        },
+    )
+
+    payload = report_registry.build_report_payload("policy_list", filters={}, limit=50)
+
+    assert "name" in payload["columns"]
+    assert "policy_no" in payload["columns"]

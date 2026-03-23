@@ -4,9 +4,9 @@ from typing import Any
 
 import frappe
 
-from acentem_takipte.acentem_takipte.notifications_catalog import is_valid_template_key
-from acentem_takipte.acentem_takipte.services.notifications import build_notification_draft_payloads
-from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.notifications_catalog import is_valid_template_key
+from acentem_takipte.services.notifications import build_notification_draft_payloads
+from acentem_takipte.utils.logging import log_redacted_error
 
 def create_notification_drafts(
     *,
@@ -120,7 +120,7 @@ def _get_customer_payload(customer: str | None) -> dict[str, Any]:
 
 def _enqueue_draft_safe(draft_name: str) -> None:
     try:
-        from acentem_takipte.acentem_takipte.communication import enqueue_notification_draft
+        from acentem_takipte.communication import enqueue_notification_draft
 
         enqueue_notification_draft(draft_name)
     except Exception:

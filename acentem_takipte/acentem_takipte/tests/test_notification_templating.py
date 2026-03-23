@@ -4,7 +4,7 @@ import types
 
 import pytest
 
-from acentem_takipte.acentem_takipte.notifications_templateing import (
+from acentem_takipte.notifications_templateing import (
     parse_template_components,
     resolve_body_template,
     resolve_subject_template,

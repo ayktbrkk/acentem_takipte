@@ -8,12 +8,12 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from acentem_takipte.acentem_takipte import tasks as task_jobs
-from acentem_takipte.acentem_takipte.api import admin_jobs as admin_jobs_api
-from acentem_takipte.acentem_takipte.api import communication as communication_api
-from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
-from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
-from acentem_takipte.acentem_takipte.api import session as session_api
-from acentem_takipte.acentem_takipte.doctype.at_policy_endorsement import (
+from acentem_takipte.api import admin_jobs as admin_jobs_api
+from acentem_takipte.api import communication as communication_api
+from acentem_takipte.api import dashboard as dashboard_api
+from acentem_takipte.api import quick_create as quick_create_api
+from acentem_takipte.api import session as session_api
+from acentem_takipte.doctype.at_policy_endorsement import (
     at_policy_endorsement as endorsement_api,
 )
 
@@ -204,7 +204,7 @@ class TestApiHardeningContracts(IntegrationTestCase):
             "queued": True,
             "job": "job-999",
             "queue": "long",
-            "method": "acentem_takipte.acentem_takipte.accounting.sync_accounting_entries",
+            "method": "acentem_takipte.accounting.sync_accounting_entries",
             "limit": 1,
         }
         with patch.object(admin_jobs_api, "_assert_admin_job_access") as access_mock:
@@ -218,7 +218,7 @@ class TestApiHardeningContracts(IntegrationTestCase):
     def test_admin_jobs_api_run_customer_segment_snapshot_job_limits_input_and_checks_access(self):
         expected = {
             "queued": True,
-            "method": "acentem_takipte.acentem_takipte.tasks._run_customer_segment_snapshot_logic",
+            "method": "acentem_takipte.tasks._run_customer_segment_snapshot_logic",
             "queue": "long",
             "limit": 1,
         }

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.doctype import branch_permissions
-from acentem_takipte.acentem_takipte.doctype.at_customer import at_customer
+from acentem_takipte.doctype import branch_permissions
+from acentem_takipte.doctype.at_customer import at_customer
 
 
 def test_build_office_branch_permission_query_returns_empty_for_all_access_user(monkeypatch):

@@ -5,7 +5,7 @@ from typing import Any
 import frappe
 from frappe.utils import add_days, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
+from acentem_takipte.services.branches import normalize_requested_office_branch
 
 
 def build_my_tasks_payload(*, office_branch: str | None = None, assigned_to: str | None = None, limit: int = 12) -> dict[str, Any]:

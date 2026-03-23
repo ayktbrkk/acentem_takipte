@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import frappe
 
-from acentem_takipte.acentem_takipte.doctype.at_claim.at_claim import ATClaim
+from acentem_takipte.doctype.at_claim.at_claim import ATClaim
 
 
 class TestATClaimOperationalFields(unittest.TestCase):
@@ -25,32 +25,32 @@ class TestATClaimOperationalFields(unittest.TestCase):
         payload.update(overrides)
         return ATClaim(payload)
 
-    @patch("acentem_takipte.acentem_takipte.doctype.at_claim.at_claim._get_paid_amount_totals", return_value={"paid_amount": 0, "paid_amount_try": 0})
-    @patch("acentem_takipte.acentem_takipte.doctype.at_claim.at_claim.frappe.db.exists", return_value=False)
+    @patch("acentem_takipte.doctype.at_claim.at_claim._get_paid_amount_totals", return_value={"paid_amount": 0, "paid_amount_try": 0})
+    @patch("acentem_takipte.doctype.at_claim.at_claim.frappe.db.exists", return_value=False)
     def test_rejected_claim_requires_rejection_reason(self, _exists, _paid_totals):
         doc = self._build_doc(claim_status="Rejected", rejection_reason="")
 
         with self.assertRaises(frappe.ValidationError):
             doc.validate()
 
-    @patch("acentem_takipte.acentem_takipte.doctype.at_claim.at_claim._get_paid_amount_totals", return_value={"paid_amount": 0, "paid_amount_try": 0})
-    @patch("acentem_takipte.acentem_takipte.doctype.at_claim.at_claim.frappe.db.exists", return_value=False)
+    @patch("acentem_takipte.doctype.at_claim.at_claim._get_paid_amount_totals", return_value={"paid_amount": 0, "paid_amount_try": 0})
+    @patch("acentem_takipte.doctype.at_claim.at_claim.frappe.db.exists", return_value=False)
     def test_appeal_status_is_only_allowed_for_rejected_claims(self, _exists, _paid_totals):
         doc = self._build_doc(claim_status="Under Review", appeal_status="Appeal Pending")
 
         with self.assertRaises(frappe.ValidationError):
             doc.validate()
 
-    @patch("acentem_takipte.acentem_takipte.doctype.at_claim.at_claim._get_paid_amount_totals", return_value={"paid_amount": 0, "paid_amount_try": 0})
-    @patch("acentem_takipte.acentem_takipte.doctype.at_claim.at_claim.frappe.db.exists", return_value=False)
+    @patch("acentem_takipte.doctype.at_claim.at_claim._get_paid_amount_totals", return_value={"paid_amount": 0, "paid_amount_try": 0})
+    @patch("acentem_takipte.doctype.at_claim.at_claim.frappe.db.exists", return_value=False)
     def test_follow_up_date_cannot_be_earlier_than_reported_date(self, _exists, _paid_totals):
         doc = self._build_doc(next_follow_up_on="2026-03-01")
 
         with self.assertRaises(frappe.ValidationError):
             doc.validate()
 
-    @patch("acentem_takipte.acentem_takipte.doctype.at_claim.at_claim._get_paid_amount_totals", return_value={"paid_amount": 0, "paid_amount_try": 0})
-    @patch("acentem_takipte.acentem_takipte.doctype.at_claim.at_claim.frappe.db.exists", return_value=False)
+    @patch("acentem_takipte.doctype.at_claim.at_claim._get_paid_amount_totals", return_value={"paid_amount": 0, "paid_amount_try": 0})
+    @patch("acentem_takipte.doctype.at_claim.at_claim.frappe.db.exists", return_value=False)
     def test_rejected_claim_accepts_operational_fields(self, _exists, _paid_totals):
         doc = self._build_doc(
             claim_status="Rejected",

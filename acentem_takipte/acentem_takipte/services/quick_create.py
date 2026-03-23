@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import frappe
 from frappe.utils import flt, getdate, nowdate
-from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
+from acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
 
 
 def _insert_doc(payload: dict, result_key: str) -> dict[str, str]:

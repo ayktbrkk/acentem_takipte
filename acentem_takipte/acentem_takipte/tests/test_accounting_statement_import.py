@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.services import accounting_statement_import
+from acentem_takipte.services import accounting_statement_import
 
 
 def test_build_statement_import_preview_matches_policy_and_payment_rows():
@@ -138,7 +138,7 @@ def test_import_statement_preview_rows_imports_only_matched_rows():
     }
 
     with patch.object(accounting_statement_import, "build_statement_import_preview", return_value=preview_payload):
-        with patch("acentem_takipte.acentem_takipte.accounting.build_accounting_payload", return_value={
+        with patch("acentem_takipte.accounting.build_accounting_payload", return_value={
             "entry_type": "Payment",
             "policy": "POL-001",
             "customer": "CUST-001",
@@ -148,11 +148,11 @@ def test_import_statement_preview_rows_imports_only_matched_rows():
             "local_amount": 1500,
             "local_amount_try": 1500,
         }):
-            with patch("acentem_takipte.acentem_takipte.accounting._get_or_create_entry", return_value=entry):
-                with patch("acentem_takipte.acentem_takipte.accounting._evaluate_mismatch", return_value=("Amount", {"reason": "amount_mismatch"})):
-                    with patch("acentem_takipte.acentem_takipte.accounting._close_open_items") as close_items:
-                        with patch("acentem_takipte.acentem_takipte.accounting._upsert_open_item") as upsert_item:
-                            with patch("acentem_takipte.acentem_takipte.accounting._set_entry_reconciliation_flag") as reconcile_flag:
+            with patch("acentem_takipte.accounting._get_or_create_entry", return_value=entry):
+                with patch("acentem_takipte.accounting._evaluate_mismatch", return_value=("Amount", {"reason": "amount_mismatch"})):
+                    with patch("acentem_takipte.accounting._close_open_items") as close_items:
+                        with patch("acentem_takipte.accounting._upsert_open_item") as upsert_item:
+                            with patch("acentem_takipte.accounting._set_entry_reconciliation_flag") as reconcile_flag:
                                 result = accounting_statement_import.import_statement_preview_rows(csv_text="x")
 
     assert result == {

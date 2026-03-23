@@ -1,4 +1,4 @@
-from acentem_takipte.acentem_takipte.api import reports
+from acentem_takipte.api import reports
 
 
 def test_get_claims_operations_report_enforces_auth_and_builds_payload(monkeypatch):

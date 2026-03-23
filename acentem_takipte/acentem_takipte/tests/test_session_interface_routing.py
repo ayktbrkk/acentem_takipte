@@ -5,7 +5,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import session as session_api
+from acentem_takipte.api import session as session_api
 
 
 def _fake_user_get_value(expected_user: str, field_values: dict[str, str | None]):

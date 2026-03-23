@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from acentem_takipte.acentem_takipte.services.renewals import build_renewal_task_payload
+from acentem_takipte.services.renewals import build_renewal_task_payload
 
 
 def test_build_renewal_task_payload_returns_stage_aware_payload():

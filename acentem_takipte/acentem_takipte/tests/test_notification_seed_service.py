@@ -3,7 +3,7 @@ from __future__ import annotations
 import types
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.notification_seed_service import upsert_default_notification_templates
+from acentem_takipte.notification_seed_service import upsert_default_notification_templates
 
 
 def test_upsert_default_notification_templates_creates_missing_templates():
@@ -17,9 +17,9 @@ def test_upsert_default_notification_templates_creates_missing_templates():
             inserted.append(self.payload)
             return self
 
-    with patch("acentem_takipte.acentem_takipte.notification_seed_service.frappe.db.get_value", return_value=None):
+    with patch("acentem_takipte.notification_seed_service.frappe.db.get_value", return_value=None):
         with patch(
-            "acentem_takipte.acentem_takipte.notification_seed_service.frappe.get_doc",
+            "acentem_takipte.notification_seed_service.frappe.get_doc",
             side_effect=lambda payload, name=None: FakeInsertDoc(payload) if isinstance(payload, dict) else None,
         ):
             result = upsert_default_notification_templates()
@@ -48,8 +48,8 @@ def test_upsert_default_notification_templates_updates_existing_templates():
             raise AssertionError("Create path should not be used in update-only test")
         return FakeExistingDoc()
 
-    with patch("acentem_takipte.acentem_takipte.notification_seed_service.frappe.db.get_value", return_value="TPL-0001"):
-        with patch("acentem_takipte.acentem_takipte.notification_seed_service.frappe.get_doc", side_effect=fake_get_doc):
+    with patch("acentem_takipte.notification_seed_service.frappe.db.get_value", return_value="TPL-0001"):
+        with patch("acentem_takipte.notification_seed_service.frappe.get_doc", side_effect=fake_get_doc):
             result = upsert_default_notification_templates()
 
     assert result["created"] == 0

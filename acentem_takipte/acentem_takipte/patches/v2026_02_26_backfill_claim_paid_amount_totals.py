@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import frappe
 
-from acentem_takipte.acentem_takipte.doctype.at_claim.at_claim import _get_paid_amount_totals
+from acentem_takipte.doctype.at_claim.at_claim import _get_paid_amount_totals
 
 
 def execute():

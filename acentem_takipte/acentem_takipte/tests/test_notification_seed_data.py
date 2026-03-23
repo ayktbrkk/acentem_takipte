@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.notification_seed_data import DEFAULT_NOTIFICATION_TEMPLATES
+from acentem_takipte.notification_seed_data import DEFAULT_NOTIFICATION_TEMPLATES
 
 
 def test_default_notification_templates_include_whatsapp_flows():

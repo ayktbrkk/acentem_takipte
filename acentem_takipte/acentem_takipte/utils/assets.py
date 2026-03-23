@@ -75,26 +75,32 @@ def ensure_site_asset_symlink() -> bool:
         return False
 
     try:
-        site_assets_root = Path(frappe.get_site_path("assets"))
-        site_assets_root.mkdir(parents=True, exist_ok=True)
-        app_asset_link = site_assets_root / APP_NAME
+        site_root = Path(frappe.get_site_path())
+        asset_roots = [site_root.parent / "assets", site_root / "assets"]
         resolved_public_root = public_root.resolve()
+        changed = False
 
-        if app_asset_link.is_symlink():
-            try:
-                if app_asset_link.resolve() == resolved_public_root:
-                    return False
-            except OSError:
-                pass
+        for asset_root in asset_roots:
+            asset_root.mkdir(parents=True, exist_ok=True)
+            app_asset_link = asset_root / APP_NAME
 
-        if app_asset_link.exists() and not app_asset_link.is_symlink():
-            return False
+            if app_asset_link.is_symlink():
+                try:
+                    if app_asset_link.resolve() == resolved_public_root:
+                        continue
+                except OSError:
+                    pass
 
-        if app_asset_link.exists() or app_asset_link.is_symlink():
-            app_asset_link.unlink()
+            if app_asset_link.exists() and not app_asset_link.is_symlink():
+                continue
 
-        app_asset_link.symlink_to(resolved_public_root, target_is_directory=True)
-        return True
+            if app_asset_link.exists() or app_asset_link.is_symlink():
+                app_asset_link.unlink()
+
+            app_asset_link.symlink_to(resolved_public_root, target_is_directory=True)
+            changed = True
+
+        return changed
     except Exception:
         try:
             frappe.log_error(frappe.get_traceback(), "AT Asset Symlink Ensure Error")

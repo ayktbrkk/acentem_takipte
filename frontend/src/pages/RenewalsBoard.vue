@@ -446,7 +446,7 @@ const renewalsResource = createResource({
   auto: true,
 });
 const renewalMutationResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 

@@ -16,7 +16,7 @@ def reset_and_seed_demo_data(
     """Reset AT module demo/test data and seed fresh sample data.
 
     Example:
-        bench --site localhost execute acentem_takipte.acentem_takipte.dev_seed.reset_and_seed_demo_data \
+        bench --site localhost execute acentem_takipte.dev_seed.reset_and_seed_demo_data \
           --args "[5, 1, 1, 'Demo%', 0]"
     """
     # Security guard: prevent accidental execution in production

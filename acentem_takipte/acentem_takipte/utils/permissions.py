@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Sequence
 
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.api.security import (
     assert_authenticated,
     assert_doctype_permission,
     assert_post_request,

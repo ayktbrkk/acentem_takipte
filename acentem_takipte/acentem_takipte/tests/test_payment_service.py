@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from acentem_takipte.acentem_takipte.services.payments import build_payment_reminder_payload
+from acentem_takipte.services.payments import build_payment_reminder_payload
 
 
 def test_build_payment_reminder_payload_returns_due_stage_payload():

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api.quick_create import create_quick_activity
+from acentem_takipte.api.quick_create import create_quick_activity
 
 
 def test_create_quick_activity_normalizes_payload_and_uses_service():
-    with patch("acentem_takipte.acentem_takipte.api.quick_create._assert_create_permission") as permission_mock:
-        with patch("acentem_takipte.acentem_takipte.api.quick_create.create_activity_service", return_value={"activity": "ACT-0001"}) as service_mock:
-            with patch("acentem_takipte.acentem_takipte.api.quick_create.frappe.db.exists", return_value=True):
+    with patch("acentem_takipte.api.quick_create._assert_create_permission") as permission_mock:
+        with patch("acentem_takipte.api.quick_create.create_activity_service", return_value={"activity": "ACT-0001"}) as service_mock:
+            with patch("acentem_takipte.api.quick_create.frappe.db.exists", return_value=True):
                 result = create_quick_activity(
                     activity_title=" Claim reviewed ",
                     activity_type="Review",

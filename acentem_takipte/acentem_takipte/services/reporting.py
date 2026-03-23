@@ -4,8 +4,8 @@ from typing import Any
 
 import frappe
 
-from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
-from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
+from acentem_takipte.services.branches import normalize_requested_office_branch
+from acentem_takipte.utils.commissions import commission_sql_expr
 
 
 def normalize_report_filters(filters: dict[str, Any] | str | None = None) -> dict[str, Any]:
@@ -18,6 +18,9 @@ def normalize_report_filters(filters: dict[str, Any] | str | None = None) -> dic
         "status": _as_text(payload.get("status")),
         "insurance_company": _as_text(payload.get("insurance_company")),
         "sales_entity": _as_text(payload.get("sales_entity")),
+        "policy_no": _as_text(payload.get("policy_no")),
+        "customer_tax_id": _as_text(payload.get("customer_tax_id")),
+        "granularity": _as_text(payload.get("granularity")),
     }
     return {key: value for key, value in normalized.items() if value not in {None, ""}}
 
@@ -84,27 +87,162 @@ def _policy_names_for_branch(branch: str | None) -> list[str]:
 
 
 def get_policy_list_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
-    return frappe.get_all(
-        "AT Policy",
-        fields=[
-            "name",
-            "policy_no",
-            "customer",
-            "sales_entity",
-            "insurance_company",
-            "branch",
-            "office_branch",
-            "status",
-            "issue_date",
-            "start_date",
-            "end_date",
-            "gross_premium",
-            "commission_amount",
-        ],
-        filters=build_policy_report_filters(filters),
-        order_by="issue_date desc, modified desc",
-        limit_page_length=max(int(limit or 500), 1),
-    )
+    normalized_filters = normalize_report_filters(filters) if filters else {}
+    granularity = normalized_filters.get("granularity", "")
+
+    if granularity in ("daily", "monthly", "yearly"):
+        # Return grouped data by time period
+        return _get_policy_list_grouped_rows(normalized_filters, granularity, limit)
+
+    # Default: return individual policy rows with linked customer/sales names
+    where_parts = ["1=1"]
+    params: list[Any] = []
+
+    if normalized_filters.get("branch"):
+        where_parts.append("p.branch = %s")
+        params.append(normalized_filters["branch"])
+
+    if normalized_filters.get("office_branch"):
+        where_parts.append("p.office_branch = %s")
+        params.append(normalized_filters["office_branch"])
+
+    if normalized_filters.get("status"):
+        where_parts.append("p.status = %s")
+        params.append(normalized_filters["status"])
+
+    if normalized_filters.get("insurance_company"):
+        where_parts.append("p.insurance_company = %s")
+        params.append(normalized_filters["insurance_company"])
+
+    if normalized_filters.get("sales_entity"):
+        where_parts.append("p.sales_entity = %s")
+        params.append(normalized_filters["sales_entity"])
+
+    if normalized_filters.get("policy_no"):
+        where_parts.append("p.policy_no LIKE %s")
+        params.append(f"%{normalized_filters['policy_no']}%")
+
+    if normalized_filters.get("customer_tax_id"):
+        where_parts.append("c.tax_id LIKE %s")
+        params.append(f"%{normalized_filters['customer_tax_id']}%")
+
+    if normalized_filters.get("from_date"):
+        where_parts.append("p.issue_date >= %s")
+        params.append(normalized_filters["from_date"])
+
+    if normalized_filters.get("to_date"):
+        where_parts.append("p.issue_date <= %s")
+        params.append(normalized_filters["to_date"])
+
+    where_clause = " AND ".join(where_parts)
+
+    sql = f"""
+        SELECT
+            p.name,
+            p.policy_no,
+            p.customer,
+            COALESCE(c.full_name, p.customer) AS customer_full_name,
+            COALESCE(c.tax_id, '') AS customer_tax_id,
+            p.sales_entity,
+            COALESCE(se.full_name, p.sales_entity) AS sales_entity_full_name,
+            p.insurance_company,
+            p.branch,
+            p.office_branch,
+            p.status,
+            p.issue_date,
+            p.start_date,
+            p.end_date,
+            p.gross_premium,
+            p.commission_amount
+        FROM `tabAT Policy` p
+        LEFT JOIN `tabAT Customer` c ON c.name = p.customer
+        LEFT JOIN `tabAT Sales Entity` se ON se.name = p.sales_entity
+        WHERE {where_clause}
+        ORDER BY p.issue_date DESC, p.modified DESC
+        LIMIT {max(int(limit or 500), 1)}
+    """
+
+    return frappe.db.sql(sql, params, as_dict=True)
+
+
+def _get_policy_list_grouped_rows(
+    normalized_filters: dict[str, Any], 
+    granularity: str,
+    limit: int = 500
+) -> list[dict[str, Any]]:
+    """Get policy list data grouped by date period (daily, monthly, yearly)."""
+    
+    # Determine SQL date format and label format
+    if granularity == "daily":
+        date_format = "%Y-%m-%d"
+        label_format = "%d.%m.%Y"
+    elif granularity == "monthly":
+        date_format = "%Y-%m"
+        label_format = "%m.%Y"
+    else:  # yearly
+        date_format = "%Y"
+        label_format = "%Y"
+    
+    # Build WHERE clause filters
+    where_parts = ["1=1"]
+    params = []
+    
+    if normalized_filters.get("branch"):
+        where_parts.append("`tabAT Policy`.branch = %s")
+        params.append(normalized_filters["branch"])
+    
+    if normalized_filters.get("office_branch"):
+        where_parts.append("`tabAT Policy`.office_branch = %s")
+        params.append(normalized_filters["office_branch"])
+    
+    if normalized_filters.get("status"):
+        where_parts.append("`tabAT Policy`.status = %s")
+        params.append(normalized_filters["status"])
+    
+    if normalized_filters.get("insurance_company"):
+        where_parts.append("`tabAT Policy`.insurance_company = %s")
+        params.append(normalized_filters["insurance_company"])
+    
+    if normalized_filters.get("sales_entity"):
+        where_parts.append("`tabAT Policy`.sales_entity = %s")
+        params.append(normalized_filters["sales_entity"])
+
+    if normalized_filters.get("policy_no"):
+        where_parts.append("`tabAT Policy`.policy_no LIKE %s")
+        params.append(f"%{normalized_filters['policy_no']}%")
+
+    if normalized_filters.get("customer_tax_id"):
+        where_parts.append("customer.tax_id LIKE %s")
+        params.append(f"%{normalized_filters['customer_tax_id']}%")
+    
+    # Date range filters
+    if normalized_filters.get("from_date"):
+        where_parts.append("`tabAT Policy`.issue_date >= %s")
+        params.append(normalized_filters["from_date"])
+    
+    if normalized_filters.get("to_date"):
+        where_parts.append("`tabAT Policy`.issue_date <= %s")
+        params.append(normalized_filters["to_date"])
+    
+    where_clause = " AND ".join(where_parts)
+    
+    # Build and execute query
+    sql = f"""
+        SELECT
+            DATE_FORMAT(`tabAT Policy`.issue_date, '{date_format}') AS period,
+            DATE_FORMAT(`tabAT Policy`.issue_date, '{label_format}') AS period_label,
+            COUNT(*) AS policy_count,
+            SUM(`tabAT Policy`.gross_premium) AS total_gross_premium,
+            SUM(`tabAT Policy`.commission_amount) AS total_commission
+        FROM `tabAT Policy`
+        LEFT JOIN `tabAT Customer` customer ON customer.name = `tabAT Policy`.customer
+        WHERE {where_clause}
+        GROUP BY DATE_FORMAT(`tabAT Policy`.issue_date, '{date_format}')
+        ORDER BY period DESC
+        LIMIT {max(int(limit or 500), 1)}
+    """
+    
+    return frappe.db.sql(sql, params, as_dict=True)
 
 
 def get_payment_status_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:

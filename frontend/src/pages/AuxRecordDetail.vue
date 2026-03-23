@@ -527,7 +527,7 @@ const auxQuickAccountingEntryResource = createResource({
   },
 });
 const auxMutationResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 const campaignDraftsResource = createResource({
@@ -553,15 +553,15 @@ const campaignOutboxResource = createResource({
   },
 });
 const sendDraftNowResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
+  url: "acentem_takipte.api.communication.send_draft_now",
   auto: false,
 });
 const retryOutboxResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
+  url: "acentem_takipte.api.communication.retry_outbox_item",
   auto: false,
 });
 const requeueOutboxResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
+  url: "acentem_takipte.api.communication.requeue_outbox_item",
   auto: false,
 });
 

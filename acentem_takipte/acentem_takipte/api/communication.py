@@ -4,21 +4,21 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.api.security import (
     assert_authenticated,
     assert_doctype_permission,
     assert_doc_permission,
 )
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.services.branches import (
     assert_office_branch_access,
     get_default_office_branch,
     normalize_requested_office_branch,
 )
-from acentem_takipte.acentem_takipte.services.campaigns import execute_campaign as execute_campaign_service
-from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
-from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus
-from acentem_takipte.acentem_takipte import communication as communication_logic
-from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
+from acentem_takipte.services.campaigns import execute_campaign as execute_campaign_service
+from acentem_takipte.services.segments import build_segment_membership_preview
+from acentem_takipte.utils.statuses import ATNotificationDraftStatus
+from acentem_takipte import communication as communication_logic
+from acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
 
 
 COMMUNICATION_ADMIN_ROLES = ("System Manager", "Manager", "Accountant")

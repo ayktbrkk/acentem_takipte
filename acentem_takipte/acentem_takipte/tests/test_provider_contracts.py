@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.providers.base import ProviderAdapter, ProviderMessage, ProviderResult
+from acentem_takipte.providers.base import ProviderAdapter, ProviderMessage, ProviderResult
 
 
 class FakeWhatsAppProvider(ProviderAdapter):

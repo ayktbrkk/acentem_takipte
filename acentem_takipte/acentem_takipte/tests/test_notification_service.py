@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import frappe
 
-from acentem_takipte.acentem_takipte.services.notifications import build_notification_draft_payloads
+from acentem_takipte.services.notifications import build_notification_draft_payloads
 
 
 def test_build_notification_draft_payloads_renders_channel_specific_payload():

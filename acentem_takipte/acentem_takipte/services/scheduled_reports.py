@@ -6,21 +6,21 @@ from typing import Any
 import frappe
 from frappe.utils import cint, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.communication import enqueue_notification_draft
-from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+from acentem_takipte.communication import enqueue_notification_draft
+from acentem_takipte.services.export_payload_utils import (
     coerce_export_format,
     coerce_filters,
     coerce_string_list,
 )
-from acentem_takipte.acentem_takipte.services.report_exports import (
+from acentem_takipte.services.report_exports import (
     build_report_filename,
     build_report_title,
     render_report_pdf,
     render_report_xlsx,
 )
-from acentem_takipte.acentem_takipte.services.report_registry import REPORT_DEFINITIONS, build_report_payload
-from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
-from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.services.report_registry import REPORT_DEFINITIONS, build_report_payload
+from acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.utils.metrics import build_metric_event
 
 
 def load_scheduled_report_configs() -> list[dict[str, Any]]:

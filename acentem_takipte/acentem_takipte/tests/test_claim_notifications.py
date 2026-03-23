@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.claims.notifications import resolve_claim_status_template_key
+from acentem_takipte.claims.notifications import resolve_claim_status_template_key
 
 
 def test_resolve_claim_status_template_key_maps_known_statuses():

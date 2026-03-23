@@ -20,7 +20,7 @@
         <button class="btn btn-outline btn-sm" type="button" :disabled="isLoading" @click="downloadAuxExport('xlsx')">
           {{ t('exportXlsx') }}
         </button>
-        <button class="btn btn-primary btn-sm" type="button" :disabled="isLoading" @click="downloadAuxExport('pdf')">
+        <button class="btn btn-outline btn-sm" type="button" :disabled="isLoading" @click="downloadAuxExport('pdf')">
           {{ t('exportPdf') }}
         </button>
         <QuickCreateLauncher
@@ -42,10 +42,10 @@
     </template>
 
     <template #metrics>
-      <div class="space-y-3">
+      <div class="space-y-4">
         <div
           v-if="snapshotSummaryCards.length"
-          class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          class="grid grid-cols-1 gap-4 md:grid-cols-4"
         >
           <article
             v-for="card in snapshotSummaryCards"
@@ -59,7 +59,7 @@
         </div>
         <div
           v-if="reminderSummaryCards.length"
-          class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          class="grid grid-cols-1 gap-4 md:grid-cols-4"
         >
           <article
             v-for="card in reminderSummaryCards"
@@ -73,7 +73,7 @@
         </div>
         <div
           v-if="accessLogSummaryCards.length"
-          class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          class="grid grid-cols-1 gap-4 md:grid-cols-4"
         >
           <article
             v-for="card in accessLogSummaryCards"
@@ -87,7 +87,7 @@
         </div>
         <div
           v-if="fileSummaryCards.length"
-          class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+          class="grid grid-cols-1 gap-4 md:grid-cols-4"
         >
           <article
             v-for="card in fileSummaryCards"
@@ -664,27 +664,27 @@ const rowActionBusyName = ref("");
 const listResource = createResource({ url: "frappe.client.get_list", auto: false });
 const countResource = createResource({ url: "frappe.client.get_count", auto: false });
 const presetServerReadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
+  url: "acentem_takipte.api.filter_presets.get_filter_preset_state",
   auto: false,
 });
 const presetServerWriteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
+  url: "acentem_takipte.api.filter_presets.set_filter_preset_state",
   auto: false,
 });
 const sendDraftNowRowResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
+  url: "acentem_takipte.api.communication.send_draft_now",
   auto: false,
 });
 const retryOutboxRowResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
+  url: "acentem_takipte.api.communication.retry_outbox_item",
   auto: false,
 });
 const requeueOutboxRowResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
+  url: "acentem_takipte.api.communication.requeue_outbox_item",
   auto: false,
 });
 const taskRowMutationResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 const auxQuickCustomerResource = createResource({

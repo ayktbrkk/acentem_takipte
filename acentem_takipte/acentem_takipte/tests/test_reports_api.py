@@ -1,6 +1,6 @@
 import pytest
 
-from acentem_takipte.acentem_takipte.api import reports
+from acentem_takipte.api import reports
 
 
 @pytest.mark.parametrize(

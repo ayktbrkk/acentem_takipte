@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from acentem_takipte.acentem_takipte.api import quick_create
+from acentem_takipte.api import quick_create
 
 
 def test_resolve_office_branch_validates_explicit_branch_access(monkeypatch):

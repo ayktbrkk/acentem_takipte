@@ -63,14 +63,14 @@ function readRealtimeConfig() {
 }
 
 const DASHBOARD_READ_ONLY_METHODS = new Set([
-  "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
-  "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
-  "acentem_takipte.acentem_takipte.api.dashboard.get_customer_list",
-  "acentem_takipte.acentem_takipte.api.dashboard.get_customer_portfolio_summary_map",
-  "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows",
-  "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows",
-  "acentem_takipte.acentem_takipte.api.dashboard.get_lead_detail_payload",
-  "acentem_takipte.acentem_takipte.api.dashboard.get_offer_detail_payload",
+  "acentem_takipte.api.dashboard.get_dashboard_kpis",
+  "acentem_takipte.api.dashboard.get_dashboard_tab_payload",
+  "acentem_takipte.api.dashboard.get_customer_list",
+  "acentem_takipte.api.dashboard.get_customer_portfolio_summary_map",
+  "acentem_takipte.api.dashboard.get_customer_workbench_rows",
+  "acentem_takipte.api.dashboard.get_lead_workbench_rows",
+  "acentem_takipte.api.dashboard.get_lead_detail_payload",
+  "acentem_takipte.api.dashboard.get_offer_detail_payload",
 ]);
 
 function isDashboardReadOnlyMethod(url) {
@@ -85,15 +85,15 @@ function isReadOnlyMethod(url) {
     methodName === "frappe.client.get_value" ||
     methodName === "frappe.client.count" ||
     methodName === "frappe.client.get_count" ||
-    methodName === "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state" ||
+    methodName === "acentem_takipte.api.filter_presets.get_filter_preset_state" ||
     isDashboardReadOnlyMethod(methodName) ||
-    methodName === "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot" ||
-    methodName === "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report" ||
-    methodName === "acentem_takipte.acentem_takipte.api.reports.get_payment_status_report" ||
-    methodName === "acentem_takipte.acentem_takipte.api.reports.get_renewal_performance_report" ||
-    methodName === "acentem_takipte.acentem_takipte.api.reports.get_claim_loss_ratio_report" ||
-    methodName === "acentem_takipte.acentem_takipte.api.reports.get_agent_performance_report" ||
-    methodName === "acentem_takipte.acentem_takipte.api.reports.get_customer_segmentation_report"
+    methodName === "acentem_takipte.api.communication.get_queue_snapshot" ||
+    methodName === "acentem_takipte.api.reports.get_policy_list_report" ||
+    methodName === "acentem_takipte.api.reports.get_payment_status_report" ||
+    methodName === "acentem_takipte.api.reports.get_renewal_performance_report" ||
+    methodName === "acentem_takipte.api.reports.get_claim_loss_ratio_report" ||
+    methodName === "acentem_takipte.api.reports.get_agent_performance_report" ||
+    methodName === "acentem_takipte.api.reports.get_customer_segmentation_report"
   );
 }
 
@@ -127,11 +127,48 @@ function appResourceFetcher(options = {}) {
   return frappeRequest(requestOptions);
 }
 
+async function ensureHighlightJsCompatibility() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  try {
+    const highlightModule = await import("highlight.js/lib/core");
+    const hljs = highlightModule?.default || highlightModule;
+
+    if (!hljs || typeof hljs.highlightAll !== "function") {
+      return;
+    }
+
+    const runHighlightAll = () => {
+      hljs.highlightAll();
+    };
+
+    if (typeof hljs.initHighlighting === "function") {
+      hljs.initHighlighting = runHighlightAll;
+    }
+
+    if (typeof hljs.initHighlightingOnLoad === "function") {
+      hljs.initHighlightingOnLoad = () => {
+        if (document.readyState === "loading") {
+          window.addEventListener("DOMContentLoaded", runHighlightAll, { once: true });
+          return;
+        }
+
+        runHighlightAll();
+      };
+    }
+  } catch {
+    // No-op: highlight.js is optional in routes that do not render the editor.
+  }
+}
+
 setConfig("resourceFetcher", appResourceFetcher);
 
 const mountTarget = document.querySelector("#app");
 if (mountTarget) {
   const mountApp = async () => {
+    await ensureHighlightJsCompatibility();
     await hydrateSessionState();
 
     const app = createApp(App);

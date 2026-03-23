@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import admin_jobs
+from acentem_takipte.api import admin_jobs
 
 
 class TestAdminJobPaymentDueAccess(IntegrationTestCase):

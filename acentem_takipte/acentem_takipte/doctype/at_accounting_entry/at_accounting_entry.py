@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from frappe.model.document import Document
 from frappe.utils import flt
-from acentem_takipte.acentem_takipte.utils.statuses import ATAccountingEntryStatus
+from acentem_takipte.utils.statuses import ATAccountingEntryStatus
 
 RECONCILIATION_TOLERANCE = 0.01
 

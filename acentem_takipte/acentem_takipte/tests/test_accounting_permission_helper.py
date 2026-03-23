@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api import accounting as accounting_api
+from acentem_takipte.api import accounting as accounting_api
 
 
 def test_accounting_mutation_access_uses_shared_mutation_helper():

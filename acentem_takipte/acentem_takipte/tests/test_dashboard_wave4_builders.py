@@ -61,10 +61,10 @@ class DashboardWave4BuilderTests(unittest.TestCase):
         for name in [
             "frappe",
             "frappe.utils",
-            "acentem_takipte.acentem_takipte.api.dashboard_v2.queries_kpis",
-            "acentem_takipte.acentem_takipte.api.dashboard_v2.tab_payload",
-            "acentem_takipte.acentem_takipte.api.dashboard_v2.details_lead",
-            "acentem_takipte.acentem_takipte.api.dashboard_v2.details_offer",
+            "acentem_takipte.api.dashboard_v2.queries_kpis",
+            "acentem_takipte.api.dashboard_v2.tab_payload",
+            "acentem_takipte.api.dashboard_v2.details_lead",
+            "acentem_takipte.api.dashboard_v2.details_offer",
         ]:
             sys.modules.pop(name, None)
 
@@ -80,7 +80,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return responses.pop(0)
 
         _install_frappe_stub(sql_impl=fake_sql)
-        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.queries_kpis")
+        mod = _reload("acentem_takipte.api.dashboard_v2.queries_kpis")
 
         payload = mod.build_dashboard_kpis_payload(
             from_date="2026-02-01",
@@ -134,7 +134,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return responses.pop(0)
 
         _install_frappe_stub(sql_impl=fake_sql)
-        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.tab_payload")
+        mod = _reload("acentem_takipte.api.dashboard_v2.tab_payload")
 
         payload = mod.build_dashboard_tab_sections(
             tab_key="daily",
@@ -205,7 +205,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return []
 
         _install_frappe_stub(get_all_impl=fake_get_all)
-        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.details_lead")
+        mod = _reload("acentem_takipte.api.dashboard_v2.details_lead")
 
         captured = {}
 
@@ -257,7 +257,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return []
 
         _install_frappe_stub(get_all_impl=fake_get_all)
-        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.details_offer")
+        mod = _reload("acentem_takipte.api.dashboard_v2.details_offer")
 
         captured = {}
 

@@ -300,6 +300,11 @@ function Clear-FrappeCaches {
     Invoke-Compose -Args @("exec", "-T", "backend", "bash", "-lc", "bench --site $Site clear-cache && bench --site $Site clear-website-cache") | Out-Host
 }
 
+function Ensure-DockerAssetLinks {
+    Write-Host "Ensuring Docker asset links..."
+    & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "ensure_docker_asset_links.ps1")
+}
+
 function Build-FrontendHost {
     if ($SkipBuild) {
         Write-Host "Skipping frontend build."
@@ -326,6 +331,7 @@ function Invoke-FullDevSync {
     Write-Host "=== Full Sync ($Reason) ==="
     Build-FrontendHost
     Restart-DevServices -IncludeFrontend -IncludeWorkers:$IncludeWorkers
+    Ensure-DockerAssetLinks
     Clear-FrappeCaches
     Write-AssetInfoAndHttpChecks
     Write-Host ""
@@ -340,6 +346,7 @@ function Invoke-BackendOnlySync {
     Write-Host ""
     Write-Host "=== Backend Sync ($Reason) ==="
     Restart-DevServices -IncludeWorkers -IncludeFrontend:$false
+    Ensure-DockerAssetLinks
     Clear-FrappeCaches
     if (-not $SkipHttpCheck) {
         Write-Host "HTTP check /at (auth may redirect)..."

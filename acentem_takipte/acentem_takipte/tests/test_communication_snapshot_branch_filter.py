@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.api import communication
+from acentem_takipte.api import communication
 
 
 def test_get_queue_snapshot_applies_normalized_office_branch(monkeypatch):

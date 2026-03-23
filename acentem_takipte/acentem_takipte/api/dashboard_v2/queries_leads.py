@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2.constants import (
+from acentem_takipte.api.dashboard_v2.constants import (
     LEAD_WORKBENCH_BASE_FIELDS,
     LEAD_WORKBENCH_DERIVED_SORT_SEED_FIELDS,
 )

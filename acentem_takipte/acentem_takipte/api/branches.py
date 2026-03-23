@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import frappe
 
-from acentem_takipte.acentem_takipte.api.security import assert_authenticated
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.api.security import assert_authenticated
+from acentem_takipte.services.branches import (
     assert_office_branch_access,
     get_default_office_branch,
     get_user_office_branches,

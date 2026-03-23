@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.api import dashboard
+from acentem_takipte.api import dashboard
 
 
 def test_customer_workbench_rows_apply_office_branch_filter(monkeypatch):

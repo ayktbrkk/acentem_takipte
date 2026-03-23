@@ -5,11 +5,11 @@ from hashlib import sha256
 
 import frappe
 from frappe.utils import cint, flt, now_datetime
-from acentem_takipte.acentem_takipte.utils.commissions import resolve_commission_amount
-from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
-from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
-from acentem_takipte.acentem_takipte.utils.notes import normalize_note_text
-from acentem_takipte.acentem_takipte.utils.statuses import (
+from acentem_takipte.utils.commissions import resolve_commission_amount
+from acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.utils.notes import normalize_note_text
+from acentem_takipte.utils.statuses import (
     ATAccountingEntryStatus,
     ATReconciliationItemStatus,
 )
@@ -37,7 +37,7 @@ def _enqueue_accounting_sync_doc(source_doctype: str, source_name: str) -> bool:
     cache.set_value(cache_key, 1, expires_in_sec=DOC_EVENT_SYNC_DEBOUNCE_SEC)
     try:
         frappe.enqueue(
-            "acentem_takipte.acentem_takipte.accounting._run_accounting_sync_doc_event",
+            "acentem_takipte.accounting._run_accounting_sync_doc_event",
             source_doctype=source_doctype,
             source_name=source_name,
             queue="default",

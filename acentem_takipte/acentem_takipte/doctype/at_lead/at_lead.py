@@ -4,8 +4,8 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt, nowdate, validate_email_address
-from acentem_takipte.acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus
+from acentem_takipte.api.security import (
     assert_authenticated,
     assert_doc_permission,
     assert_doctype_permission,

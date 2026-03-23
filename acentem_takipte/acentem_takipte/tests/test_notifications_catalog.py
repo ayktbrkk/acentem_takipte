@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.notifications_catalog import get_template_keys_for_event, is_valid_template_key
+from acentem_takipte.notifications_catalog import get_template_keys_for_event, is_valid_template_key
 
 
 def test_get_template_keys_for_event_returns_expected_payment_templates():

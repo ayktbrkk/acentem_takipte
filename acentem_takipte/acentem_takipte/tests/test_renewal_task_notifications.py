@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.doctype.at_renewal_task.at_renewal_task import ATRenewalTask
+from acentem_takipte.doctype.at_renewal_task.at_renewal_task import ATRenewalTask
 
 
 class TestRenewalTaskNotifications(IntegrationTestCase):
@@ -37,7 +37,7 @@ class TestRenewalTaskNotifications(IntegrationTestCase):
         )
 
         with patch(
-            "acentem_takipte.acentem_takipte.doctype.at_renewal_task.at_renewal_task.create_notification_drafts"
+            "acentem_takipte.doctype.at_renewal_task.at_renewal_task.create_notification_drafts"
         ) as create_drafts:
             doc.after_insert()
 

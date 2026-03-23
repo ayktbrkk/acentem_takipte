@@ -167,7 +167,7 @@ const REMOTE_SEARCH_MIN_CHARS = 2;
 const REMOTE_SCROLL_THRESHOLD = 20;
 const REMOTE_DEFAULT_PAGE_SIZE = 5;
 const REMOTE_MAX_PAGE_SIZE = 50;
-const REMOTE_SEARCH_METHOD = "acentem_takipte.acentem_takipte.api.quick_create.search_quick_options";
+const REMOTE_SEARCH_METHOD = "acentem_takipte.api.quick_create.search_quick_options";
 
 function text(value) {
   return getLocalizedText(value, props.locale);

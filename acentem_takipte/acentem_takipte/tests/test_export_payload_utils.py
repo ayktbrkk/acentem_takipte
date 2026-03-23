@@ -1,4 +1,4 @@
-from acentem_takipte.acentem_takipte.services import export_payload_utils
+from acentem_takipte.services import export_payload_utils
 
 
 def test_coerce_columns_deduplicates_and_trims():

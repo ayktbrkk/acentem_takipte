@@ -4,21 +4,21 @@ from frappe.utils import add_days, now_datetime, nowdate
 
 import frappe
 
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.api.security import (
     assert_authenticated,
     assert_doctype_permission,
     assert_non_production_or_feature_flag,
     assert_roles,
     audit_admin_action,
 )
-from acentem_takipte.acentem_takipte.doctype.at_lead.at_lead import convert_to_offer
-from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import convert_to_policy
-from acentem_takipte.acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement import (
+from acentem_takipte.doctype.at_lead.at_lead import convert_to_offer
+from acentem_takipte.doctype.at_offer.at_offer import convert_to_policy
+from acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement import (
     apply_endorsement,
 )
-from acentem_takipte.acentem_takipte.api.dashboard import get_dashboard_kpis
-from acentem_takipte.acentem_takipte.tasks import run_renewal_task_job
-from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
+from acentem_takipte.api.dashboard import get_dashboard_kpis
+from acentem_takipte.tasks import run_renewal_task_job
+from acentem_takipte.utils.permissions import assert_mutation_access
 
 SMOKE_ADMIN_ROLES = ("System Manager",)
 SMOKE_MUTATION_DOCTYPES = (

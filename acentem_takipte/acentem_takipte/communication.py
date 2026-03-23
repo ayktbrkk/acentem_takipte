@@ -7,12 +7,12 @@ from dataclasses import dataclass
 
 import frappe
 from frappe.utils import add_to_date, cint, cstr, now_datetime
-from acentem_takipte.acentem_takipte.notification_dispatch import build_provider_message_from_records
-from acentem_takipte.acentem_takipte.providers.router import get_provider_adapter
-from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus, ATNotificationOutboxStatus
-from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error, redact_payload
-from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
-from acentem_takipte.acentem_takipte.utils.network_security import normalize_whatsapp_api_url, safe_urlopen
+from acentem_takipte.notification_dispatch import build_provider_message_from_records
+from acentem_takipte.providers.router import get_provider_adapter
+from acentem_takipte.utils.statuses import ATNotificationDraftStatus, ATNotificationOutboxStatus
+from acentem_takipte.utils.logging import log_redacted_error, redact_payload
+from acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.utils.network_security import normalize_whatsapp_api_url, safe_urlopen
 
 DEFAULT_RETRY_MINUTES = 5
 DEFAULT_MAX_ATTEMPTS = 3

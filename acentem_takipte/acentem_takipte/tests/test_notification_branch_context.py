@@ -2,7 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from acentem_takipte.acentem_takipte import notifications
-from acentem_takipte.acentem_takipte.services.notifications import build_notification_draft_payloads
+from acentem_takipte.services.notifications import build_notification_draft_payloads
 
 
 def test_get_customer_payload_includes_office_branch(monkeypatch):

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api import communication as communication_api
+from acentem_takipte.api import communication as communication_api
 
 
 def test_dispatch_mutation_access_uses_shared_mutation_helper():

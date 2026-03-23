@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import date, datetime
 
@@ -6,15 +6,15 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.api.security import (
     assert_authenticated,
     assert_doctype_permission,
 )
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.services.branches import (
     assert_office_branch_access,
     get_default_office_branch,
 )
-from acentem_takipte.acentem_takipte.services.quick_create import (
+from acentem_takipte.services.quick_create import (
     create_campaign as create_campaign_service,
     create_call_note as create_call_note_service,
     create_claim as create_claim_service,
@@ -33,12 +33,12 @@ from acentem_takipte.acentem_takipte.services.quick_create import (
     delete_aux_record as delete_aux_record_service,
     update_aux_record as update_aux_record_service,
 )
-from acentem_takipte.acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
-from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import convert_to_policy as convert_offer_to_policy
-from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import normalize_customer_type
-from acentem_takipte.acentem_takipte.utils.notes import normalize_note_text
-from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
-from acentem_takipte.acentem_takipte.utils.statuses import (
+from acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
+from acentem_takipte.doctype.at_offer.at_offer import convert_to_policy as convert_offer_to_policy
+from acentem_takipte.doctype.at_customer.at_customer import normalize_customer_type
+from acentem_takipte.utils.notes import normalize_note_text
+from acentem_takipte.utils.permissions import assert_mutation_access
+from acentem_takipte.utils.statuses import (
     ATAccountingEntryStatus,
     ATClaimStatus,
     ATLeadStatus,

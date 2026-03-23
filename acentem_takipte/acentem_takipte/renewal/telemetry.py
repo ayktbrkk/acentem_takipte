@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import frappe
 
-from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.utils.metrics import build_metric_event
 
 
 def log_renewal_job_summary(summary: dict[str, int]) -> None:

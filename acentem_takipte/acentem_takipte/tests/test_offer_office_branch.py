@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.doctype.at_offer import at_offer as offer_module
+from acentem_takipte.doctype.at_offer import at_offer as offer_module
 
 
 def test_resolve_offer_office_branch_prefers_explicit_value(monkeypatch):

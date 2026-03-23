@@ -4,14 +4,14 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate
-from acentem_takipte.acentem_takipte.renewal.pipeline import queue_renewal_task_notification
-from acentem_takipte.acentem_takipte.renewal.service import (
+from acentem_takipte.renewal.pipeline import queue_renewal_task_notification
+from acentem_takipte.renewal.service import (
     assert_renewal_status_transition,
     build_task_unique_key,
     normalize_renewal_status,
     sync_renewal_outcome,
 )
-from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.utils.logging import log_redacted_error
 
 
 class ATRenewalTask(Document):

@@ -5,8 +5,8 @@ from typing import Any
 import frappe
 from frappe.utils import cint, flt, nowdate
 
-from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
-from acentem_takipte.acentem_takipte.utils.statuses import ATAccountingEntryStatus, ATReconciliationItemStatus
+from acentem_takipte.services.branches import normalize_requested_office_branch
+from acentem_takipte.utils.statuses import ATAccountingEntryStatus, ATReconciliationItemStatus
 
 
 def build_reconciliation_workbench(

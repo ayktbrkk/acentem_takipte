@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, now_datetime
-from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationOutboxStatus
+from acentem_takipte.utils.statuses import ATNotificationOutboxStatus
 
 
 class ATNotificationOutbox(Document):

@@ -31,13 +31,13 @@ def test_run_scheduled_reports_logic_enqueues_queued_outboxes(monkeypatch):
 
     assert enqueued == [
         {
-            "method": "acentem_takipte.acentem_takipte.communication.dispatch_notification_outbox",
+            "method": "acentem_takipte.communication.dispatch_notification_outbox",
             "outbox_name": "OUT-1",
             "queue": "default",
             "timeout": 600,
         },
         {
-            "method": "acentem_takipte.acentem_takipte.communication.dispatch_notification_outbox",
+            "method": "acentem_takipte.communication.dispatch_notification_outbox",
             "outbox_name": "OUT-2",
             "queue": "default",
             "timeout": 600,
@@ -67,7 +67,7 @@ def test_enqueue_outbox_dispatch_jobs_tracks_failures(monkeypatch):
 
     assert calls == [
         {
-            "method": "acentem_takipte.acentem_takipte.communication.dispatch_notification_outbox",
+            "method": "acentem_takipte.communication.dispatch_notification_outbox",
             "outbox_name": "OUT-1",
             "queue": "default",
             "timeout": 600,

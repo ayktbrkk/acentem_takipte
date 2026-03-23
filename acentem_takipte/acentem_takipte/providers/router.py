@@ -4,8 +4,8 @@ from typing import Optional
 
 import frappe
 
-from acentem_takipte.acentem_takipte.providers.base import ProviderAdapter
-from acentem_takipte.acentem_takipte.providers.whatsapp_meta import MetaWhatsAppAdapter
+from acentem_takipte.providers.base import ProviderAdapter
+from acentem_takipte.providers.whatsapp_meta import MetaWhatsAppAdapter
 
 
 DEFAULT_CHANNEL_PROVIDERS = {

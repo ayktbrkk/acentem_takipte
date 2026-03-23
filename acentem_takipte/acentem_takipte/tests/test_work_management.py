@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api.quick_create import create_quick_task
-from acentem_takipte.acentem_takipte.services.work_management import build_my_tasks_payload
+from acentem_takipte.api.quick_create import create_quick_task
+from acentem_takipte.services.work_management import build_my_tasks_payload
 
 
 def test_build_my_tasks_payload_summarizes_due_buckets():
@@ -13,8 +13,8 @@ def test_build_my_tasks_payload_summarizes_due_buckets():
         {"name": "TASK-3", "task_title": "Visit branch", "due_date": "2026-03-12", "status": "Open"},
         {"name": "TASK-4", "task_title": "No due date", "due_date": None, "status": "Open"},
     ]
-    with patch("acentem_takipte.acentem_takipte.services.work_management.frappe.get_list", return_value=rows):
-        with patch("acentem_takipte.acentem_takipte.services.work_management.frappe.session.user", "agent@example.com"):
+    with patch("acentem_takipte.services.work_management.frappe.get_list", return_value=rows):
+        with patch("acentem_takipte.services.work_management.frappe.session.user", "agent@example.com"):
             payload = build_my_tasks_payload(limit=10)
 
     assert payload["summary"] == {"total": 3, "overdue": 1, "due_today": 1, "due_soon": 1}
@@ -22,9 +22,9 @@ def test_build_my_tasks_payload_summarizes_due_buckets():
 
 
 def test_create_quick_task_normalizes_payload_and_uses_service():
-    with patch("acentem_takipte.acentem_takipte.api.quick_create._assert_create_permission") as permission_mock:
-        with patch("acentem_takipte.acentem_takipte.api.quick_create.create_task_service", return_value={"task": "TASK-0001"}) as service_mock:
-            with patch("acentem_takipte.acentem_takipte.api.quick_create.frappe.db.exists", return_value=True):
+    with patch("acentem_takipte.api.quick_create._assert_create_permission") as permission_mock:
+        with patch("acentem_takipte.api.quick_create.create_task_service", return_value={"task": "TASK-0001"}) as service_mock:
+            with patch("acentem_takipte.api.quick_create.frappe.db.exists", return_value=True):
                 result = create_quick_task(
                     task_title=" Call customer ",
                     task_type="Call",

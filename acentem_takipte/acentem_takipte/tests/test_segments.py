@@ -3,8 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api import communication as communication_api
-from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
+from acentem_takipte.api import communication as communication_api
+from acentem_takipte.services.segments import build_segment_membership_preview
 
 
 def test_build_segment_membership_preview_filters_customers_from_criteria():
@@ -18,9 +18,9 @@ def test_build_segment_membership_preview_filters_customers_from_criteria():
         criteria_json='{"min_active_policy_count":1,"has_overdue_installment":true,"renewal_window_days":30}',
     )
 
-    with patch("acentem_takipte.acentem_takipte.services.segments.frappe.get_doc", return_value=segment):
+    with patch("acentem_takipte.services.segments.frappe.get_doc", return_value=segment):
         with patch(
-            "acentem_takipte.acentem_takipte.services.segments.frappe.get_all",
+            "acentem_takipte.services.segments.frappe.get_all",
             side_effect=[
                 [
                     {
@@ -43,7 +43,7 @@ def test_build_segment_membership_preview_filters_customers_from_criteria():
             ],
         ):
             with patch(
-                "acentem_takipte.acentem_takipte.services.segments.frappe.db.sql",
+                "acentem_takipte.services.segments.frappe.db.sql",
                 return_value=[
                     SimpleNamespace(customer="CUST-001", total=2),
                     SimpleNamespace(customer="CUST-002", total=1),

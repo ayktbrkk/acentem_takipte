@@ -4,7 +4,7 @@ from typing import Callable
 
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.services.reporting import (
+from acentem_takipte.services.reporting import (
     get_communication_operations_report_rows,
     get_agent_performance_report_rows,
     get_claim_loss_ratio_report_rows,
@@ -26,8 +26,9 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
         "columns": [
             "name",
             "policy_no",
-            "customer",
-            "sales_entity",
+            "customer_full_name",
+            "customer_tax_id",
+            "sales_entity_full_name",
             "insurance_company",
             "branch",
             "office_branch",
@@ -37,6 +38,13 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "end_date",
             "gross_premium",
             "commission_amount",
+        ],
+        "granularity_columns": [
+            "period",
+            "period_label",
+            "policy_count",
+            "total_gross_premium",
+            "total_commission",
         ],
         "rows_fn": get_policy_list_report_rows,
     },
@@ -211,11 +219,16 @@ def get_report_definition(report_key: str) -> dict[str, object]:
 def build_report_payload(report_key: str, filters: dict | None = None, limit: int = 500) -> dict:
     definition = get_report_definition(report_key)
     normalized_filters = normalize_report_filters(filters)
+    columns = list(definition["columns"])
+
+    if report_key == "policy_list" and normalized_filters.get("granularity"):
+        columns = list(definition.get("granularity_columns") or columns)
+
     rows_fn: ReportRowsFn = definition["rows_fn"]  # type: ignore[assignment]
     rows = rows_fn(normalized_filters, limit=max(cint(limit), 1))
     return {
         "report_key": report_key,
-        "columns": list(definition["columns"]),
+        "columns": columns,
         "rows": rows,
         "filters": normalized_filters,
         "total": len(rows),

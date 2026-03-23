@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import ATPolicy
+from acentem_takipte.doctype.at_policy.at_policy import ATPolicy
 
 
 class TestPolicyNotifications(IntegrationTestCase):
@@ -30,15 +30,15 @@ class TestPolicyNotifications(IntegrationTestCase):
         )
 
         with patch(
-            "acentem_takipte.acentem_takipte.doctype.at_policy.at_policy.create_policy_snapshot"
+            "acentem_takipte.doctype.at_policy.at_policy.create_policy_snapshot"
         ) as create_snapshot:
             create_snapshot.return_value = type("Snapshot", (), {"snapshot_version": 1})()
             with patch.object(doc, "db_set"):
                 with patch(
-                    "acentem_takipte.acentem_takipte.doctype.at_policy.at_policy.create_notification_drafts"
+                    "acentem_takipte.doctype.at_policy.at_policy.create_notification_drafts"
                 ) as create_drafts:
                     with patch(
-                        "acentem_takipte.acentem_takipte.doctype.at_policy.at_policy.attach_policy_pdf_to_customer_folder"
+                        "acentem_takipte.doctype.at_policy.at_policy.attach_policy_pdf_to_customer_folder"
                     ):
                         doc.after_insert()
 

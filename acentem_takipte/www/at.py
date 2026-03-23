@@ -1,14 +1,14 @@
 import frappe
 from frappe.utils import now
 
-from acentem_takipte.acentem_takipte.api.session import (
+from acentem_takipte.api.session import (
     _build_session_capabilities,
     _build_realtime_config,
     _resolve_session_interface,
     resolve_current_user,
 )
-from acentem_takipte.acentem_takipte.setup_utils import ensure_core_setup_once, ensure_user_default_role
-from acentem_takipte.acentem_takipte.utils.assets import ensure_site_asset_symlink, get_asset_includes
+from acentem_takipte.setup_utils import ensure_core_setup_once, ensure_user_default_role
+from acentem_takipte.utils.assets import ensure_site_asset_symlink, get_asset_includes
 
 
 def get_context(context):

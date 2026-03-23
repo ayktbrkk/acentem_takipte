@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api import branches as branch_api
+from acentem_takipte.api import branches as branch_api
 
 
 def test_get_office_branches_returns_branch_access_payload():

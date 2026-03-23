@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
+from acentem_takipte.utils.permissions import assert_mutation_access
 
 
 def assert_role_based_write_access(

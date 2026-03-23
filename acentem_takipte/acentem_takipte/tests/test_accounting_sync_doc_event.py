@@ -43,7 +43,7 @@ def test_sync_doc_event_enqueues_once_per_doc(monkeypatch):
 
     assert enqueued == [
         {
-            "method": "acentem_takipte.acentem_takipte.accounting._run_accounting_sync_doc_event",
+            "method": "acentem_takipte.accounting._run_accounting_sync_doc_event",
             "source_doctype": "AT Policy",
             "source_name": "POL-001",
             "queue": "default",

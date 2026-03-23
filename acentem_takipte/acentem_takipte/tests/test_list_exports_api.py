@@ -1,6 +1,6 @@
 import pytest
 
-from acentem_takipte.acentem_takipte.api import list_exports
+from acentem_takipte.api import list_exports
 
 
 def test_get_screen_export_payload_enforces_auth_and_permission(monkeypatch):

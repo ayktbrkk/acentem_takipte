@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from acentem_takipte.acentem_takipte.notifications_templateing import (
+from acentem_takipte.notifications_templateing import (
     parse_template_components,
     resolve_body_template,
     resolve_subject_template,
 )
-from acentem_takipte.acentem_takipte.providers.base import ProviderMessage
+from acentem_takipte.providers.base import ProviderMessage
 
 
 def build_provider_message_from_records(template_doc: Any, draft_doc: Any, outbox_doc: Any) -> ProviderMessage:

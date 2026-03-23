@@ -4,27 +4,27 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import constants as dashboard_constants
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import details_lead as dashboard_lead_detail_builder
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import details_offer as dashboard_offer_detail_builder
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import filters as dashboard_filters
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_customers as dashboard_customer_queries
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_kpis as dashboard_kpi_queries
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_leads as dashboard_lead_queries
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import security as dashboard_security
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import serializers as dashboard_serializers
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import tab_payload as dashboard_tab_sections
-from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import has_sensitive_access
-from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
-from acentem_takipte.acentem_takipte.services.customer_360 import build_customer_360_payload
-from acentem_takipte.acentem_takipte.services.follow_up_sla import build_follow_up_sla_payload
-from acentem_takipte.acentem_takipte.services.work_management import (
+from acentem_takipte.api.dashboard_v2 import constants as dashboard_constants
+from acentem_takipte.api.dashboard_v2 import details_lead as dashboard_lead_detail_builder
+from acentem_takipte.api.dashboard_v2 import details_offer as dashboard_offer_detail_builder
+from acentem_takipte.api.dashboard_v2 import filters as dashboard_filters
+from acentem_takipte.api.dashboard_v2 import queries_customers as dashboard_customer_queries
+from acentem_takipte.api.dashboard_v2 import queries_kpis as dashboard_kpi_queries
+from acentem_takipte.api.dashboard_v2 import queries_leads as dashboard_lead_queries
+from acentem_takipte.api.dashboard_v2 import security as dashboard_security
+from acentem_takipte.api.dashboard_v2 import serializers as dashboard_serializers
+from acentem_takipte.api.dashboard_v2 import tab_payload as dashboard_tab_sections
+from acentem_takipte.doctype.at_customer.at_customer import has_sensitive_access
+from acentem_takipte.services.branches import normalize_requested_office_branch
+from acentem_takipte.services.customer_360 import build_customer_360_payload
+from acentem_takipte.services.follow_up_sla import build_follow_up_sla_payload
+from acentem_takipte.services.work_management import (
     build_my_activities_payload,
     build_my_reminders_payload,
     build_my_tasks_payload,
 )
-from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
-from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.utils.commissions import commission_sql_expr
+from acentem_takipte.utils.logging import log_redacted_error
 
 CUSTOMER_PROFILE_EDIT_FIELDS = {
     "full_name",
@@ -286,7 +286,7 @@ def get_policy_360_payload(name: str) -> dict:
     policy = frappe.get_doc("AT Policy", policy_name)
     policy.check_permission("read")
 
-    from acentem_takipte.acentem_takipte.services.policy_360 import build_policy_360_payload
+    from acentem_takipte.services.policy_360 import build_policy_360_payload
 
     return build_policy_360_payload(policy_name)
 

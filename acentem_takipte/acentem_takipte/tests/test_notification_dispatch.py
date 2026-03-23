@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import types
 
-from acentem_takipte.acentem_takipte.notification_dispatch import build_provider_message_from_records
+from acentem_takipte.notification_dispatch import build_provider_message_from_records
 
 
 def test_build_provider_message_prefers_draft_values():

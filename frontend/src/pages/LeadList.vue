@@ -480,10 +480,10 @@ const quickLeadReturnTo = ref("");
 const quickLeadOpenedFromIntent = ref(false);
 const QUICK_OPTION_LIMIT = 2000;
 
-const leadListResource = createResource({ url: "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows", auto: false });
+const leadListResource = createResource({ url: "acentem_takipte.api.dashboard.get_lead_workbench_rows", auto: false });
 const quickLeadCreateResource = createResource({ url: quickLeadConfig.submitUrl, auto: false });
 const leadConvertResource = createResource({
-  url: "acentem_takipte.acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
+  url: "acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
   auto: false,
 });
 const leadQuickBranchResource = createResource({
@@ -512,8 +512,8 @@ const leadQuickCustomerResource = createResource({
     limit_page_length: QUICK_OPTION_LIMIT,
   },
 });
-const presetServerReadResource = createResource({ url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state", auto: false });
-const presetServerWriteResource = createResource({ url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state", auto: false });
+const presetServerReadResource = createResource({ url: "acentem_takipte.api.filter_presets.get_filter_preset_state", auto: false });
+const presetServerWriteResource = createResource({ url: "acentem_takipte.api.filter_presets.set_filter_preset_state", auto: false });
 
 const rows = computed(() => leadListResource.data?.rows || []);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));

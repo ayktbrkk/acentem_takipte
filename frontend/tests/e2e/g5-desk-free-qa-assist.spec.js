@@ -41,7 +41,7 @@ async function readSessionContext(page) {
   }
 
   const result = await page.evaluate(async () => {
-    const response = await fetch("/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context", {
+    const response = await fetch("/api/method/acentem_takipte.api.session.get_session_context", {
       credentials: "include",
       headers: { Açcept: "application/json" },
     });
@@ -289,22 +289,22 @@ test.describe.serial("G5 desk-free QA assist (restricted role)", () => {
 
     const checks = [
       {
-        method: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
+        method: "acentem_takipte.api.communication.run_dispatch_cycle",
         params: {},
         requiresCapabilityAwareRuntime: true,
       },
       {
-        method: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
+        method: "acentem_takipte.api.communication.retry_outbox_item",
         params: { outbox_name: "NONEXISTENT-OUTBOX" },
         requiresCapabilityAwareRuntime: true,
       },
       {
-        method: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_accounting_entry",
+        method: "acentem_takipte.api.quick_create.create_quick_accounting_entry",
         params: { source_doctype: "AT Policy", source_name: "NONEXISTENT-POLICY" },
         requiresCapabilityAwareRuntime: false,
       },
       {
-        method: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+        method: "acentem_takipte.api.quick_create.update_quick_aux_record",
         params: { doctype: "AT Accounting Entry", name: "NONEXISTENT-ENTRY", data: "{}" },
         requiresCapabilityAwareRuntime: false,
       },

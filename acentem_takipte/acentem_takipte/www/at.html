@@ -1,0 +1,40 @@
+{% extends "templates/web.html" %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block page_footer %}{% endblock %}
+
+{% block page_content %}
+<style>
+  .at-webapp-breakout {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .at-webapp-breakout #app {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+</style>
+
+<div class="at-webapp-breakout">
+  <div id="app"></div>
+</div>
+
+<script>
+  window.AT_SESSION_BOOT = {{ at_session | tojson }};
+  window["__AT_SESSION__"] = window.AT_SESSION_BOOT;
+</script>
+
+{% for css_path in at_css_includes %}
+<link rel="stylesheet" href="{{ css_path }}">
+{% endfor %}
+
+{% for js_path in at_js_includes %}
+<script type="module" src="{{ js_path }}"></script>
+{% endfor %}
+{% endblock %}

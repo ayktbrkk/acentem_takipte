@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import frappe
 
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.services.branches import (
     get_allowed_office_branch_names,
     user_can_access_all_office_branches,
 )

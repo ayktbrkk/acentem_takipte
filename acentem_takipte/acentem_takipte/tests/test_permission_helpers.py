@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
+from acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
 
 
 def test_build_doctype_permission_map_normalizes_to_tuples():
@@ -16,11 +16,11 @@ def test_build_doctype_permission_map_normalizes_to_tuples():
 
 
 def test_assert_mutation_access_runs_common_security_contract():
-    with patch("acentem_takipte.acentem_takipte.utils.permissions.assert_authenticated", return_value="manager@example.com") as assert_authenticated_mock:
-        with patch("acentem_takipte.acentem_takipte.utils.permissions.assert_post_request") as assert_post_request_mock:
-            with patch("acentem_takipte.acentem_takipte.utils.permissions.assert_roles") as assert_roles_mock:
-                with patch("acentem_takipte.acentem_takipte.utils.permissions.assert_doctype_permission") as assert_doctype_permission_mock:
-                    with patch("acentem_takipte.acentem_takipte.utils.permissions.audit_admin_action") as audit_mock:
+    with patch("acentem_takipte.utils.permissions.assert_authenticated", return_value="manager@example.com") as assert_authenticated_mock:
+        with patch("acentem_takipte.utils.permissions.assert_post_request") as assert_post_request_mock:
+            with patch("acentem_takipte.utils.permissions.assert_roles") as assert_roles_mock:
+                with patch("acentem_takipte.utils.permissions.assert_doctype_permission") as assert_doctype_permission_mock:
+                    with patch("acentem_takipte.utils.permissions.audit_admin_action") as audit_mock:
                         user = assert_mutation_access(
                             action="api.admin_jobs.run_payment_due_job",
                             roles=("System Manager", "Manager"),

@@ -7,18 +7,18 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate, now_datetime
 
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.api.security import (
     assert_authenticated,
     assert_doc_permission,
     assert_post_request,
     audit_admin_action,
 )
-from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import (
+from acentem_takipte.doctype.at_policy.at_policy import (
     create_policy_snapshot,
     serialize_policy_snapshot,
 )
-from acentem_takipte.acentem_takipte.utils.commissions import sync_legacy_commission_fields
-from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyEndorsementStatus
+from acentem_takipte.utils.commissions import sync_legacy_commission_fields
+from acentem_takipte.utils.statuses import ATPolicyEndorsementStatus
 
 ALLOWED_ENDORSEMENT_FIELDS = {
     "insurance_company",

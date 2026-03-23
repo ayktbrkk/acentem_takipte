@@ -4,12 +4,12 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt, getdate, nowdate
-from acentem_takipte.acentem_takipte.services.branches import get_default_office_branch
-from acentem_takipte.acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
-from acentem_takipte.acentem_takipte.utils.commissions import resolve_commission_amount
-from acentem_takipte.acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus, ATPolicyStatus
-from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.services.branches import get_default_office_branch
+from acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
+from acentem_takipte.utils.commissions import resolve_commission_amount
+from acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus, ATPolicyStatus
+from acentem_takipte.utils.financials import normalize_financial_amounts
+from acentem_takipte.api.security import (
     assert_authenticated,
     assert_doc_permission,
     assert_doctype_permission,

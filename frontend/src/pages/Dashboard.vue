@@ -1522,35 +1522,35 @@ const newLead = reactive({
 });
 
 const kpiResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
+  url: "acentem_takipte.api.dashboard.get_dashboard_kpis",
   params: buildKpiParams(),
   auto: false,
 });
 
 const followUpResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_follow_up_sla_payload",
+  url: "acentem_takipte.api.dashboard.get_follow_up_sla_payload",
   params: withOfficeBranchFilter({ filters: {} }),
   auto: true,
 });
 
 const myTasksResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_tasks_payload",
+  url: "acentem_takipte.api.dashboard.get_my_tasks_payload",
   params: withOfficeBranchFilter({ filters: {} }),
   auto: true,
 });
 const myActivitiesResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_activities_payload",
+  url: "acentem_takipte.api.dashboard.get_my_activities_payload",
   params: withOfficeBranchFilter({ filters: {} }),
   auto: true,
 });
 const myRemindersResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_reminders_payload",
+  url: "acentem_takipte.api.dashboard.get_my_reminders_payload",
   params: withOfficeBranchFilter({ filters: {} }),
   auto: true,
 });
 
 const myTaskMutationResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 
@@ -1636,7 +1636,7 @@ const claimListResource = createResource({
 });
 
 const reconciliationPreviewResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
+  url: "acentem_takipte.api.accounting.get_reconciliation_workbench",
   params: {
     status: "Open",
     mismatch_type: null,
@@ -1646,13 +1646,13 @@ const reconciliationPreviewResource = createResource({
 });
 
 const dashboardTabPayloadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
+  url: "acentem_takipte.api.dashboard.get_dashboard_tab_payload",
   params: buildTabPayloadParams("daily"),
   auto: true,
 });
 
 const createLeadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_lead",
+  url: "acentem_takipte.api.quick_create.create_quick_lead",
 });
 
 const localeCode = computed(() => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"));

@@ -4,7 +4,7 @@ from typing import Any
 
 import frappe
 
-from acentem_takipte.acentem_takipte.notification_seed_data import DEFAULT_NOTIFICATION_TEMPLATES
+from acentem_takipte.notification_seed_data import DEFAULT_NOTIFICATION_TEMPLATES
 
 
 def upsert_default_notification_templates() -> dict[str, int]:

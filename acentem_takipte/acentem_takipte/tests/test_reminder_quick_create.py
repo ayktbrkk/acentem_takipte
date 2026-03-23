@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api.quick_create import create_quick_reminder
+from acentem_takipte.api.quick_create import create_quick_reminder
 
 
 def test_create_quick_reminder_normalizes_payload():
     with (
-        patch("acentem_takipte.acentem_takipte.api.quick_create._assert_create_permission") as assert_permission,
-        patch("acentem_takipte.acentem_takipte.api.quick_create.create_reminder_service", return_value={"reminder": "REM-0001"}) as create_service,
-        patch("acentem_takipte.acentem_takipte.api.quick_create.frappe.db.exists", return_value=True),
+        patch("acentem_takipte.api.quick_create._assert_create_permission") as assert_permission,
+        patch("acentem_takipte.api.quick_create.create_reminder_service", return_value={"reminder": "REM-0001"}) as create_service,
+        patch("acentem_takipte.api.quick_create.frappe.db.exists", return_value=True),
     ):
         result = create_quick_reminder(
             reminder_title="  Follow up quote  ",

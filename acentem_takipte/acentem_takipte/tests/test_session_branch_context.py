@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import session as session_api
+from acentem_takipte.api import session as session_api
 
 
 class TestSessionBranchContext(IntegrationTestCase):

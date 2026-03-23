@@ -29,7 +29,7 @@ function buildFilters(days) {
 
 async function getDashboardTabPayload(page, tab, days = 7) {
   const response = await page.request.get(
-    "/api/method/acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
+    "/api/method/acentem_takipte.api.dashboard.get_dashboard_tab_payload",
     {
       params: {
         tab,

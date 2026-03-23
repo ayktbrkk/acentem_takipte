@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-from acentem_takipte.acentem_takipte.services import scheduled_reports
+from acentem_takipte.services import scheduled_reports
 
 
 def test_is_schedule_due_handles_daily_weekly_monthly():

@@ -5,7 +5,7 @@ import unicodedata
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
+from acentem_takipte.services.document_center import build_document_profile
 
 
 def _fold_ascii(value: str | None) -> str:

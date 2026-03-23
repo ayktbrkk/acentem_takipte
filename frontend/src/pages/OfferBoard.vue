@@ -558,7 +558,7 @@ const offersResource = createResource({
 });
 
 const convertResource = createResource({
-  url: "acentem_takipte.acentem_takipte.doctype.at_offer.at_offer.convert_to_policy",
+  url: "acentem_takipte.doctype.at_offer.at_offer.convert_to_policy",
 });
 const updateOfferStatusResource = createResource({
   url: "frappe.client.set_value",
@@ -602,7 +602,7 @@ const customerSearchResource = createResource({
   auto: false,
 });
 const createQuickOfferResource = createResource({
-  url: "acentem_takipte.acentem_takipte.doctype.at_offer.at_offer.create_quick_offer",
+  url: "acentem_takipte.doctype.at_offer.at_offer.create_quick_offer",
 });
 const offerLookupResource = createResource({
   url: "frappe.client.get",
@@ -623,11 +623,11 @@ const offerListCountResource = createResource({
   auto: false,
 });
 const offerPresetServerReadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
+  url: "acentem_takipte.api.filter_presets.get_filter_preset_state",
   auto: false,
 });
 const offerPresetServerWriteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
+  url: "acentem_takipte.api.filter_presets.set_filter_preset_state",
   auto: false,
 });
 

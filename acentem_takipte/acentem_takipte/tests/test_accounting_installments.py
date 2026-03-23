@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.doctype.at_payment.at_payment import ATPayment
-from acentem_takipte.acentem_takipte.services import accounting_runtime
+from acentem_takipte.doctype.at_payment.at_payment import ATPayment
+from acentem_takipte.services import accounting_runtime
 
 
 def test_sync_installment_schedule_creates_equal_installments(monkeypatch):
@@ -34,13 +34,13 @@ def test_sync_installment_schedule_creates_equal_installments(monkeypatch):
         notes="Taksitli tahsilat",
     )
 
-    monkeypatch.setattr("acentem_takipte.acentem_takipte.doctype.at_payment.at_payment.nowdate", lambda: "2026-03-09")
+    monkeypatch.setattr("acentem_takipte.doctype.at_payment.at_payment.nowdate", lambda: "2026-03-09")
     monkeypatch.setattr(
-        "acentem_takipte.acentem_takipte.doctype.at_payment.at_payment.frappe.db.delete",
+        "acentem_takipte.doctype.at_payment.at_payment.frappe.db.delete",
         lambda doctype, filters=None: deleted.append((doctype, filters)),
     )
     monkeypatch.setattr(
-        "acentem_takipte.acentem_takipte.doctype.at_payment.at_payment.frappe.get_doc",
+        "acentem_takipte.doctype.at_payment.at_payment.frappe.get_doc",
         lambda payload: FakeInstallmentDoc(payload),
     )
 
