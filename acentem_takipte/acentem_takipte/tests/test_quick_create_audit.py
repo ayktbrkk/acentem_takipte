@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from acentem_takipte.services import quick_create
+from acentem_takipte.acentem_takipte.services import quick_create
 
 
 def test_insert_doc_logs_create_audit_event():
@@ -63,3 +63,4 @@ def test_delete_aux_record_logs_delete_audit_event():
         decision_context="quick_aux_delete",
     )
     assert result == {"record": "AT-CALL-0001", "doctype": "AT Call Note", "deleted": True}
+

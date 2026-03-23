@@ -5,11 +5,11 @@ from typing import Any
 import frappe
 from frappe.utils import flt, getdate, nowdate
 
-from acentem_takipte.services.customer_segments import (
+from acentem_takipte.acentem_takipte.services.customer_segments import (
     build_customer_segment_snapshot_payload,
     upsert_customer_segment_snapshot,
 )
-from acentem_takipte.services.document_center import build_document_profile
+from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
 
 
 OPEN_OFFER_STATUSES = {"Draft", "Sent", "Accepted", "Negotiation"}
@@ -485,3 +485,4 @@ def _build_cross_sell_payload(customer_name: str, policies: list[dict[str, Any]]
         "has_cross_sell_opportunity": bool(opportunity_branches),
         "customer": customer_name,
     }
+

@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from acentem_takipte.doctype.at_customer.at_customer import (
+from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     normalize_customer_type,
     normalize_identity_number,
 )
@@ -64,3 +64,4 @@ def resolve_or_create_quick_customer(
     )
     customer_doc.insert(ignore_permissions=True)
     return customer_doc.name, True
+

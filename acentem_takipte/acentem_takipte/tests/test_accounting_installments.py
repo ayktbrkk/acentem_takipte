@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.doctype.at_payment.at_payment import ATPayment
-from acentem_takipte.services import accounting_runtime
+from acentem_takipte.acentem_takipte.doctype.at_payment.at_payment import ATPayment
+from acentem_takipte.acentem_takipte.services import accounting_runtime
 
 
 def test_sync_installment_schedule_creates_equal_installments(monkeypatch):
@@ -117,3 +117,4 @@ def test_get_overdue_collection_rows_falls_back_to_payment_model(monkeypatch):
 
     assert calls == ["AT Payment Installment", "AT Payment"]
     assert rows[0]["payment_no"] == "PAY-0009"
+

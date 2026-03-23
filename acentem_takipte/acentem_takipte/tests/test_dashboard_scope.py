@@ -5,7 +5,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.api import dashboard as dashboard_api
+from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
 
 
 class TestDashboardScope(IntegrationTestCase):
@@ -115,4 +115,5 @@ class TestDashboardScope(IntegrationTestCase):
         self.assertEqual(captured["filters"]["assigned_agent"], "agent.scope@example.com")
         self.assertEqual(captured["filters"]["office_branch"], ["in", ["ANK"]])
         self.assertEqual(meta.get("scope_reason"), "agent_assignment")
+
 

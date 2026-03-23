@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.services.branches import (
     get_allowed_office_branch_names,
     user_can_access_all_office_branches,
 )
@@ -148,3 +148,4 @@ def allowed_customers_for_user(include_meta: bool = False):
 
 def get_dashboard_endpoint_permission_policy() -> dict:
     return DASHBOARD_ENDPOINT_PERMISSION_POLICY.copy()
+

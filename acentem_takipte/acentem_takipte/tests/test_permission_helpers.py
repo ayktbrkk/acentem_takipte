@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
+from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
 
 
 def test_build_doctype_permission_map_normalizes_to_tuples():
@@ -49,3 +49,4 @@ def test_assert_mutation_access_runs_common_security_contract():
         "You do not have permission to perform this action for AT Notification Draft.",
     )
     audit_mock.assert_called_once_with("api.admin_jobs.run_payment_due_job", {"limit": 5})
+

@@ -8,10 +8,10 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import add_days, flt, getdate, now_datetime, nowdate
-from acentem_takipte.notifications import create_notification_drafts
-from acentem_takipte.policy_documents import attach_policy_pdf_to_customer_folder
-from acentem_takipte.utils.financials import normalize_financial_amounts
-from acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
+from acentem_takipte.acentem_takipte.policy_documents import attach_policy_pdf_to_customer_folder
+from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
 POLICY_SNAPSHOT_FIELDS = [
     "name",
@@ -286,3 +286,4 @@ def _next_snapshot_version(policy_name: str) -> int:
         policy_name,
     )[0][0]
     return (int(current) if current else 0) + 1
+

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from frappe import _
 
-from acentem_takipte.api import quick_create as quick_create_api
+from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
 
 
 def test_assert_delete_permission_uses_shared_mutation_helper():
@@ -382,3 +382,4 @@ def test_create_quick_payment_clamps_invalid_installment_fields():
     payload = service_mock.call_args.args[0]
     assert payload["installment_count"] == 1
     assert payload["installment_interval_days"] == 1
+

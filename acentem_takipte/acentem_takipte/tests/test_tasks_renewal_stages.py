@@ -4,9 +4,7 @@ from unittest.mock import patch
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte import tasks as task_jobs
-
-
+import acentem_takipte.acentem_takipte.tasks as task_jobs
 class TestRenewalTaskStages(IntegrationTestCase):
     # ------------------------------------------------------------------
     # build_renewal_stage_key – pure-unit, no mocking needed
@@ -52,3 +50,6 @@ class TestRenewalTaskStages(IntegrationTestCase):
 
         self.assertEqual(summary["created"], 0)
         self.assertEqual(summary["skipped_invalid"], 1)
+
+
+

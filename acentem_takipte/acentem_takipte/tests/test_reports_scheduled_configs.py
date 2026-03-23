@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from acentem_takipte.api import reports
-from acentem_takipte.services import scheduled_reports
+from acentem_takipte.acentem_takipte.api import reports
+from acentem_takipte.acentem_takipte.services import scheduled_reports
 
 
 def test_get_scheduled_report_configs_returns_summary(monkeypatch):
@@ -330,3 +330,4 @@ def test_load_scheduled_report_configs_sanitizes_runtime_fields(monkeypatch):
     assert payload[0]["day_of_month"] == 1
     assert payload[0]["last_status"] == "sent"
     assert payload[0]["last_summary"] == {"sent": 1}
+

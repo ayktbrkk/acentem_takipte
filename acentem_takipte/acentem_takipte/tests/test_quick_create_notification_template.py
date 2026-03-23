@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from acentem_takipte.api import quick_create as quick_create_api
+from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
 
 
 def test_create_quick_notification_template_supports_whatsapp_fields():
@@ -55,3 +55,4 @@ def test_apply_aux_edit_payload_updates_whatsapp_template_fields():
     assert doc.provider_template_name == "claim_status_paid"
     assert doc.provider_template_category == "UTILITY"
     assert doc.whatsapp_body_template == "Ödeme tamamlandi"
+

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.api import dashboard
+from acentem_takipte.acentem_takipte.api import dashboard
 
 
 def test_customer_workbench_rows_apply_office_branch_filter(monkeypatch):
@@ -97,3 +97,4 @@ def test_lead_workbench_rows_apply_office_branch_filter(monkeypatch):
     dashboard.get_lead_workbench_rows(filters={"office_branch": "BR-2"})
 
     assert captured["query_filters"]["office_branch"] == "BR-DEFAULT"
+

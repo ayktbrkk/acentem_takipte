@@ -1,4 +1,4 @@
-from acentem_takipte.api import reports
+from acentem_takipte.acentem_takipte.api import reports
 
 
 def test_get_reconciliation_operations_report_enforces_auth_and_builds_payload(monkeypatch):
@@ -30,3 +30,4 @@ def test_get_reconciliation_operations_report_enforces_auth_and_builds_payload(m
         ("auth", None),
         ("perm", "AT Reconciliation Item", "read"),
     ]
+

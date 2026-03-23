@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from acentem_takipte.services import admin_jobs
-from acentem_takipte.services import customer_segments
+from acentem_takipte.acentem_takipte.services import admin_jobs
+from acentem_takipte.acentem_takipte.services import customer_segments
 
 
 def test_build_customer_segment_snapshot_payload_produces_expected_band_and_signals():
@@ -118,3 +118,4 @@ def test_dispatch_admin_job_runs_customer_segment_snapshot_job(monkeypatch):
     assert audit_calls[0][0] == ("DocType", "AT Customer Segment Snapshot")
     assert audit_calls[0][1]["action"] == "Run"
     assert payload == {"queued": True, "limit": 120}
+

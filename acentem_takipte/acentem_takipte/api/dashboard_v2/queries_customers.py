@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.utils import cint
 
-from acentem_takipte.api.dashboard_v2.constants import (
+from acentem_takipte.acentem_takipte.api.dashboard_v2.constants import (
     CUSTOMER_WORKBENCH_BASE_FIELDS,
     CUSTOMER_WORKBENCH_DERIVED_SORT_SEED_FIELDS,
 )
@@ -73,3 +73,4 @@ def count_customer_workbench_rows(*, query_filters: dict, or_filters=None) -> in
     }
     rows = frappe.get_list(**count_kwargs)
     return cint((rows[0] or {}).get("total") if rows else 0)
+

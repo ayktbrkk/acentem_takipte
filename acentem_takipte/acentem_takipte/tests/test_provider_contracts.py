@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.providers.base import ProviderAdapter, ProviderMessage, ProviderResult
+from acentem_takipte.acentem_takipte.providers.base import ProviderAdapter, ProviderMessage, ProviderResult
 
 
 class FakeWhatsAppProvider(ProviderAdapter):
@@ -46,3 +46,4 @@ class TestProviderContracts(IntegrationTestCase):
         self.assertTrue(result.ok)
         self.assertEqual(result.provider, "fake_whatsapp")
         self.assertEqual(result.message_id, "msg:905321234567")
+

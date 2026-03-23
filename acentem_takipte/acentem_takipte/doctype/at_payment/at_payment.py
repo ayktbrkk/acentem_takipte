@@ -5,9 +5,9 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import add_days, flt, getdate, nowdate
-from acentem_takipte.utils.statuses import ATPaymentStatus
+from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
 
-from acentem_takipte.doctype.at_policy.at_policy import fetch_tcmb_rate
+from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import fetch_tcmb_rate
 
 
 class ATPayment(Document):
@@ -182,3 +182,4 @@ class ATPayment(Document):
                     "notes": self.notes,
                 }
             ).insert(ignore_permissions=True)
+

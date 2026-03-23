@@ -1,8 +1,8 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from acentem_takipte.acentem_takipte import notifications
-from acentem_takipte.services.notifications import build_notification_draft_payloads
+import acentem_takipte.acentem_takipte.notifications
+from acentem_takipte.acentem_takipte.services.notifications import build_notification_draft_payloads
 
 
 def test_get_customer_payload_includes_office_branch(monkeypatch):
@@ -79,3 +79,6 @@ def test_build_notification_draft_payloads_falls_back_to_context_office_branch()
     )
 
     assert payloads[0]["office_branch"] == "Izmir"
+
+
+

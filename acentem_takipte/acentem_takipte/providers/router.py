@@ -4,8 +4,8 @@ from typing import Optional
 
 import frappe
 
-from acentem_takipte.providers.base import ProviderAdapter
-from acentem_takipte.providers.whatsapp_meta import MetaWhatsAppAdapter
+from acentem_takipte.acentem_takipte.providers.base import ProviderAdapter
+from acentem_takipte.acentem_takipte.providers.whatsapp_meta import MetaWhatsAppAdapter
 
 
 DEFAULT_CHANNEL_PROVIDERS = {
@@ -37,3 +37,4 @@ def get_provider_adapter(channel: str, explicit_provider: Optional[str] = None) 
         return MetaWhatsAppAdapter()
 
     raise frappe.ValidationError(f"Unsupported provider '{provider_name}' for channel '{channel}'")
+

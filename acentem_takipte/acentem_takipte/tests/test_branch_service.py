@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import frappe
 
-from acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.services.branches import (
     get_default_office_branch,
     get_user_office_branches,
     user_can_access_all_office_branches,
@@ -37,3 +37,4 @@ def test_get_default_office_branch_prefers_default_flag():
         ],
     ):
         assert get_default_office_branch("agent@example.com") == "BR-2"
+

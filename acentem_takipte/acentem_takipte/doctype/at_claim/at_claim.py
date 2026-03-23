@@ -5,10 +5,10 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import flt, getdate
-from acentem_takipte.claims.notifications import resolve_claim_status_template_key
-from acentem_takipte.notifications import create_notification_drafts
-from acentem_takipte.utils.logging import log_redacted_error
-from acentem_takipte.utils.statuses import ATClaimStatus
+from acentem_takipte.acentem_takipte.claims.notifications import resolve_claim_status_template_key
+from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.acentem_takipte.utils.statuses import ATClaimStatus
 
 
 class ATClaim(Document):
@@ -148,3 +148,4 @@ def _get_paid_amount_totals(claim_name: str, claim_currency: str | None = None) 
         "paid_amount": flt(paid_amount),
         "paid_amount_try": flt(paid_amount_try),
     }
+

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from frappe.tests import UnitTestCase
 
-from acentem_takipte.utils.network_security import (
+from acentem_takipte.acentem_takipte.utils.network_security import (
     normalize_outbound_url,
     normalize_whatsapp_api_url,
     safe_urlopen,
@@ -38,3 +38,4 @@ class TestNetworkSecurity(UnitTestCase):
             )
 
         urlopen_mock.assert_called_once_with("http://127.0.0.1:8080/api/test", timeout=5)
+

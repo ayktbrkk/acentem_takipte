@@ -3,8 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from acentem_takipte.api import communication as communication_api
-from acentem_takipte.services import campaigns as campaigns_service
+from acentem_takipte.acentem_takipte.api import communication as communication_api
+from acentem_takipte.acentem_takipte.services import campaigns as campaigns_service
 
 
 def test_execute_campaign_creates_drafts_for_matched_customers():
@@ -105,3 +105,4 @@ def test_execute_due_campaigns_runs_due_planned_campaigns():
     assert payload["created"] == 2
     assert payload["skipped"] == 3
     assert len(payload["campaigns"]) == 2
+

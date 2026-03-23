@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte import accounting
-
-
+import acentem_takipte.acentem_takipte.accounting
 class _FakeCache:
     def __init__(self):
         self.store = {}
@@ -91,3 +89,6 @@ def test_run_accounting_sync_doc_event_releases_debounce_key(monkeypatch):
 
     assert result == {"status": "Synced", "entry": "POL-001"}
     assert cache.store == {}
+
+
+

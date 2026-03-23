@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import unittest
 
-from acentem_takipte.api.dashboard_v2 import filters as dashboard_filters
-from acentem_takipte.api.dashboard_v2 import serializers as dashboard_serializers
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import filters as dashboard_filters
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import serializers as dashboard_serializers
 
 
 class TestDashboardCustomerWorkbenchHelpers(unittest.TestCase):
@@ -179,3 +179,4 @@ class TestDashboardCustomerWorkbenchHelpers(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

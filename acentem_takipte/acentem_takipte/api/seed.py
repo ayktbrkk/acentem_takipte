@@ -4,15 +4,15 @@ from typing import Any
 
 import frappe
 from frappe.utils import add_days, cint, date_diff, flt, getdate, nowdate
-from acentem_takipte.api.security import (
+from acentem_takipte.acentem_takipte.api.security import (
     assert_doctype_permission,
     assert_non_production_or_feature_flag,
 )
-from acentem_takipte.renewal.reminders import resolve_stage_for_days
-from acentem_takipte.notification_seed_service import upsert_default_notification_templates
-from acentem_takipte.services.renewals import build_renewal_stage_key
-from acentem_takipte.tasks import build_renewal_key
-from acentem_takipte.utils.permissions import assert_mutation_access
+from acentem_takipte.acentem_takipte.renewal.reminders import resolve_stage_for_days
+from acentem_takipte.acentem_takipte.notification_seed_service import upsert_default_notification_templates
+from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
+from acentem_takipte.acentem_takipte.tasks import build_renewal_key
+from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
 
 DEMO_SEED_ADMIN_ROLES = ("System Manager",)
 SEED_CREATE_DOCTYPES = (
@@ -639,3 +639,4 @@ def _make_valid_tckn(seed: str | int) -> str:
     tenth = ((sum(digits[0:9:2]) * 7) - sum(digits[1:8:2])) % 10
     eleventh = (sum(digits) + tenth) % 10
     return f"{raw}{tenth}{eleventh}"
+

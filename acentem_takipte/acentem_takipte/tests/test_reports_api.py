@@ -1,6 +1,6 @@
 import pytest
 
-from acentem_takipte.api import reports
+from acentem_takipte.acentem_takipte.api import reports
 
 
 @pytest.mark.parametrize(
@@ -416,3 +416,4 @@ def test_remove_scheduled_report_config_coerces_remaining(monkeypatch):
     payload = reports.remove_scheduled_report_config(index=2)
 
     assert payload == {"ok": True, "remaining": 0}
+

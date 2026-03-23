@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.api.versioning import (
+from acentem_takipte.acentem_takipte.api.versioning import (
     build_version_meta,
     build_versioned_method_path,
     normalize_api_version,
@@ -34,3 +34,4 @@ class TestApiVersioning(IntegrationTestCase):
         self.assertTrue(meta["deprecated"])
         self.assertEqual(meta["successor"], "v2")
         self.assertEqual(meta["sunset"], "2026-12-31")
+

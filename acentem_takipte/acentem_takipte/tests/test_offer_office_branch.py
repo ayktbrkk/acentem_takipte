@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.doctype.at_offer import at_offer as offer_module
+from acentem_takipte.acentem_takipte.doctype.at_offer import at_offer as offer_module
 
 
 def test_resolve_offer_office_branch_prefers_explicit_value(monkeypatch):
@@ -31,3 +31,4 @@ def test_resolve_offer_office_branch_falls_back_to_default(monkeypatch):
     customer = SimpleNamespace(office_branch=None)
 
     assert offer_module._resolve_offer_office_branch(None, customer) == "DEFAULT"
+

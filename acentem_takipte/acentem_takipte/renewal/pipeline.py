@@ -3,14 +3,14 @@ from __future__ import annotations
 from frappe.exceptions import DuplicateEntryError
 from frappe.utils import getdate, nowdate
 
-from acentem_takipte.renewal.service import (
+from acentem_takipte.acentem_takipte.renewal.service import (
     create_renewal_notification_draft,
     create_renewal_task_doc,
     get_renewal_candidates,
     load_existing_renewal_keys,
     remediate_stale_renewal_tasks,
 )
-from acentem_takipte.renewal.telemetry import (
+from acentem_takipte.acentem_takipte.renewal.telemetry import (
     log_renewal_job_summary,
     log_renewal_remediation_summary,
 )
@@ -70,3 +70,4 @@ def run_stale_renewal_task_remediation(*, business_date=None, limit: int = 500) 
     summary = remediate_stale_renewal_tasks(business_date=business_date, limit=limit)
     log_renewal_remediation_summary(summary)
     return summary
+

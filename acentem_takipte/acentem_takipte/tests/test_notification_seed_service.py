@@ -3,7 +3,7 @@ from __future__ import annotations
 import types
 from unittest.mock import patch
 
-from acentem_takipte.notification_seed_service import upsert_default_notification_templates
+from acentem_takipte.acentem_takipte.notification_seed_service import upsert_default_notification_templates
 
 
 def test_upsert_default_notification_templates_creates_missing_templates():
@@ -56,3 +56,4 @@ def test_upsert_default_notification_templates_updates_existing_templates():
     assert result["updated"] == result["total"]
     assert updated_docs
     assert "template_key" in updated_docs[0]
+

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import frappe
 
-from acentem_takipte.doctype.at_claim.at_claim import _get_paid_amount_totals
+from acentem_takipte.acentem_takipte.doctype.at_claim.at_claim import _get_paid_amount_totals
 
 
 def execute():
@@ -11,4 +11,5 @@ def execute():
         totals = _get_paid_amount_totals(row.name, row.currency)
         frappe.db.set_value("AT Claim", row.name, "paid_amount", totals["paid_amount"], update_modified=False)
         frappe.db.set_value("AT Claim", row.name, "paid_amount_try", totals["paid_amount_try"], update_modified=False)
+
 

@@ -5,7 +5,7 @@ from typing import Any
 from frappe.utils import cint
 
 from acentem_takipte import tasks as task_jobs
-from acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
+from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
 
 
 def dispatch_admin_job(action_key: str, **kwargs) -> dict[str, Any]:
@@ -72,3 +72,4 @@ def _log_admin_job_run(reference_doctype: str, reference_name: str, action_key: 
         action_summary=f"Admin job executed: {action_key}",
         decision_context="admin_job_dispatch",
     )
+

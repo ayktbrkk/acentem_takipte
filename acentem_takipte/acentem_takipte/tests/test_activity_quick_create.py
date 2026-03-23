@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.api.quick_create import create_quick_activity
+from acentem_takipte.acentem_takipte.api.quick_create import create_quick_activity
 
 
 def test_create_quick_activity_normalizes_payload_and_uses_service():
@@ -36,3 +36,4 @@ def test_create_quick_activity_normalizes_payload_and_uses_service():
     assert payload["status"] == "Logged"
     assert payload["notes"] == "Follow-up completed"
     assert result == {"activity": "ACT-0001"}
+

@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte import accounting as accounting_logic
-from acentem_takipte.acentem_takipte import communication as communication_logic
-from acentem_takipte.acentem_takipte import tasks as task_jobs
-from acentem_takipte.utils.metrics import build_metric_event
+import acentem_takipte.acentem_takipte.accounting as accounting_logic
+import acentem_takipte.acentem_takipte.communication as communication_logic
+import acentem_takipte.acentem_takipte.tasks as task_jobs
+from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 
 
 class TestObservabilityMetrics(IntegrationTestCase):
@@ -48,3 +48,6 @@ class TestObservabilityMetrics(IntegrationTestCase):
         self.assertEqual(result["synced"], 0)
         payload = logger_mock.return_value.info.call_args.args[1]
         self.assertEqual(payload["metric"], "accounting.sync")
+
+
+

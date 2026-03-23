@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.api import quick_create
+from acentem_takipte.acentem_takipte.api import quick_create
 
 
 def test_resolve_office_branch_prefers_explicit(monkeypatch):
@@ -57,3 +57,4 @@ def test_resolve_office_branch_uses_default_when_links_do_not_resolve(monkeypatc
     resolved = quick_create._resolve_office_branch()
 
     assert resolved == "BR-DEFAULT"
+

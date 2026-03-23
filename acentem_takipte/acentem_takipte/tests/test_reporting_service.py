@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.services import reporting
+from acentem_takipte.acentem_takipte.services import reporting
 
 
 def test_normalize_report_filters_applies_normalized_office_branch(monkeypatch):
@@ -232,3 +232,4 @@ def test_get_policy_list_report_rows_uses_grouped_query_for_granularity(monkeypa
     rows = reporting.get_policy_list_report_rows({"granularity": "monthly"}, limit=250)
 
     assert rows == [{"period": "2026-03", "policy_count": 3}]
+

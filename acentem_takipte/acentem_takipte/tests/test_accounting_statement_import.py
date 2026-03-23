@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from acentem_takipte.services import accounting_statement_import
+from acentem_takipte.acentem_takipte.services import accounting_statement_import
 
 
 def test_build_statement_import_preview_matches_policy_and_payment_rows():
@@ -167,3 +167,4 @@ def test_import_statement_preview_rows_imports_only_matched_rows():
     close_items.assert_called_önce_with("ACC-001", keep_mismatch_type="Amount")
     upsert_item.assert_called_önce()
     reconcile_flag.assert_called_önce_with("ACC-001", True)
+

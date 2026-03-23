@@ -5,9 +5,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte import notifications
-
-
+import acentem_takipte.acentem_takipte.notifications
 class TestNotificationTemplateSelection(IntegrationTestCase):
     def test_create_notification_drafts_filters_by_template_key(self):
         templates = [
@@ -77,3 +75,6 @@ class TestNotificationTemplateSelection(IntegrationTestCase):
             notifications._resolve_body_template_for_channel(template, "WHATSAPP"),
             "WhatsApp Govde",
         )
+
+
+

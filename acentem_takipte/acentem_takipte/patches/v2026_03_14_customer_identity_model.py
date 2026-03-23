@@ -4,7 +4,7 @@ import frappe
 from frappe.model.naming import make_autoname
 from frappe.model.rename_doc import rename_doc
 
-from acentem_takipte.doctype.at_customer.at_customer import (
+from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     infer_customer_type_from_tax_id,
     normalize_customer_type,
     normalize_identity_number,
@@ -71,3 +71,4 @@ def _next_customer_name() -> str:
         candidate = make_autoname("AT-CUST-.YYYY.-.######")
         if not frappe.db.exists("AT Customer", candidate):
             return candidate
+

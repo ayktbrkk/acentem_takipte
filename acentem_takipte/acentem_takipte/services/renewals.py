@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from acentem_takipte.renewal.reminders import build_dedupe_key, resolve_stage_for_days
+from acentem_takipte.acentem_takipte.renewal.reminders import build_dedupe_key, resolve_stage_for_days
 
 
 @dataclass(frozen=True)
@@ -58,3 +58,4 @@ def build_renewal_task_payload(
         unique_key=build_renewal_stage_key(policy_name, customer, stage.code, business_date),
         stage_code=stage.code,
     )
+

@@ -3,8 +3,8 @@ from __future__ import annotations
 import types
 from unittest.mock import patch
 
-from acentem_takipte.communication import _default_provider_for_channel, _send_outbox_notification
-from acentem_takipte.providers.base import ProviderResult
+from acentem_takipte.acentem_takipte.communication import _default_provider_for_channel, _send_outbox_notification
+from acentem_takipte.acentem_takipte.providers.base import ProviderResult
 
 
 def test_default_provider_for_channel_returns_meta_for_whatsapp():
@@ -80,3 +80,4 @@ def test_send_outbox_notification_uses_provider_adapter_for_whatsapp():
     assert result.provider == "meta_whatsapp"
     assert result.message_id == "wamid.123"
     assert result.provider_payload is not None
+

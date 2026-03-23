@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.api.quick_create import create_quick_reminder
+from acentem_takipte.acentem_takipte.api.quick_create import create_quick_reminder
 
 
 def test_create_quick_reminder_normalizes_payload():
@@ -35,3 +35,4 @@ def test_create_quick_reminder_normalizes_payload():
     assert payload["status"] == "Open"
     assert payload["priority"] == "High"
     assert payload["notes"] == "Call after lunch"
+

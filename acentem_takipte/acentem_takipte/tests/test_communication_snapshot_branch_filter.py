@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.api import communication
+from acentem_takipte.acentem_takipte.api import communication
 
 
 def test_get_queue_snapshot_applies_normalized_office_branch(monkeypatch):
@@ -28,3 +28,4 @@ def test_get_queue_snapshot_applies_normalized_office_branch(monkeypatch):
     assert get_list_calls[1][0] == "AT Notification Draft"
     assert get_list_calls[1][1]["filters"]["office_branch"] == "Istanbul"
     assert sql_calls[0][1]["office_branch"] == "Istanbul"
+

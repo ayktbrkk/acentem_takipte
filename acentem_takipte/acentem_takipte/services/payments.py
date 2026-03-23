@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from acentem_takipte.payments.reminders import build_payment_dedupe_key, resolve_payment_stage
+from acentem_takipte.acentem_takipte.payments.reminders import build_payment_dedupe_key, resolve_payment_stage
 
 
 @dataclass(frozen=True)
@@ -34,3 +34,4 @@ def build_payment_reminder_payload(*, payment_name: str, customer: str, policy: 
         template_key=stage.template_key,
         dedupe_key=build_payment_dedupe_key(payment_name, stage.code, str(business_date)),
     )
+

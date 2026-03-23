@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.api import accounting as accounting_api
+from acentem_takipte.acentem_takipte.api import accounting as accounting_api
 
 
 def test_get_reconciliation_workbench_normalizes_office_branch(monkeypatch):
@@ -28,3 +28,4 @@ def test_get_reconciliation_workbench_normalizes_office_branch(monkeypatch):
     assert payload["rows"] == []
     assert captured["filters"][0][0] == "AT Accounting Entry"
     assert captured["filters"][0][1]["office_branch"] == "ANK"
+

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte import tasks
-
-
+import acentem_takipte.acentem_takipte.tasks
 def test_run_scheduled_reports_logic_enqueues_queued_outboxes(monkeypatch):
     monkeypatch.setattr(
         tasks,
@@ -74,3 +72,6 @@ def test_enqueue_outbox_dispatch_jobs_tracks_failures(monkeypatch):
         }
     ]
     assert summary == {"queued": 1, "failed": 1, "skipped": 1}
+
+
+

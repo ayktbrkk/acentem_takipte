@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.api import communication
+from acentem_takipte.acentem_takipte.api import communication
 
 
 def test_create_quick_notification_draft_uses_customer_office_branch(monkeypatch):
@@ -100,3 +100,4 @@ def test_create_quick_notification_draft_checks_customer_and_reference_permissio
 
     assert ("AT Customer", "CUST-003", "read") in calls
     assert ("AT Policy", "POL-003", "read") in calls
+

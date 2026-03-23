@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.api import admin_jobs
+from acentem_takipte.acentem_takipte.api import admin_jobs
 
 
 def test_run_scheduled_reports_job_uses_admin_access(monkeypatch):
@@ -49,3 +49,4 @@ def test_run_customer_segment_snapshot_job_uses_admin_access(monkeypatch):
     assert calls == [
         ("api.admin_jobs.run_customer_segment_snapshot_job", {"limit": 120}),
     ]
+

@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
-from acentem_takipte.utils.statuses import ATReconciliationItemStatus
+from acentem_takipte.acentem_takipte.utils.statuses import ATReconciliationItemStatus
 
 
 class ATReconciliationItem(Document):
@@ -30,4 +30,5 @@ class ATReconciliationItem(Document):
         else:
             self.resolved_by = None
             self.resolved_on = None
+
 

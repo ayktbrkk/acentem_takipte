@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-from acentem_takipte.services import scheduled_reports
+from acentem_takipte.acentem_takipte.services import scheduled_reports
 
 
 def test_is_schedule_due_handles_daily_weekly_monthly():
@@ -323,3 +323,4 @@ def test_dispatch_scheduled_reports_passes_locale_to_xlsx_renderer(monkeypatch):
     scheduled_reports.dispatch_scheduled_reports(frequency="daily", limit=5, business_date="2026-03-06")
 
     assert captured["locale"] == "en-US"
+

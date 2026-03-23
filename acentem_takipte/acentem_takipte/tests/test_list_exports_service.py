@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.services import list_exports
+from acentem_takipte.acentem_takipte.services import list_exports
 
 
 def test_collect_dashboard_rows_paginates_until_total():
@@ -379,3 +379,4 @@ def test_build_tabular_payload_export_response_accepts_mapping_rows(monkeypatch)
 
     assert calls[0]["columns"] == ["Task", "Due"]
     assert calls[0]["rows"] == [{"Task": "RT-0001", "Due": "2026-03-11"}]
+

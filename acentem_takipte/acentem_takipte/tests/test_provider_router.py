@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 import frappe
 
-from acentem_takipte.providers.base import ProviderMessage
-from acentem_takipte.providers.router import get_provider_adapter, resolve_provider_name
-from acentem_takipte.providers.whatsapp_meta import MetaWhatsAppAdapter
+from acentem_takipte.acentem_takipte.providers.base import ProviderMessage
+from acentem_takipte.acentem_takipte.providers.router import get_provider_adapter, resolve_provider_name
+from acentem_takipte.acentem_takipte.providers.whatsapp_meta import MetaWhatsAppAdapter
 
 
 def test_resolve_provider_name_uses_default_channel_mapping():
@@ -69,3 +69,4 @@ def test_meta_adapter_send_returns_provider_message_id():
     assert result.provider == "meta_whatsapp"
     assert result.provider_message_id == "wamid.123"
     post_request.assert_called_once()
+

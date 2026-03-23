@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.utils.statuses import ATClaimStatus
+from acentem_takipte.acentem_takipte.utils.statuses import ATClaimStatus
 
 
 CLAIM_STATUS_TEMPLATE_KEYS = {
@@ -15,3 +15,4 @@ CLAIM_STATUS_TEMPLATE_KEYS = {
 
 def resolve_claim_status_template_key(claim_status: str | None) -> str | None:
     return CLAIM_STATUS_TEMPLATE_KEYS.get(str(claim_status or "").strip())
+

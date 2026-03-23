@@ -1,6 +1,4 @@
-from acentem_takipte.acentem_takipte import accounting as accounting_module
-
-
+import acentem_takipte.acentem_takipte.accounting as accounting_module
 class _DocStub:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -50,3 +48,6 @@ def test_build_claim_payload_falls_back_to_policy_office_branch(monkeypatch):
     payload = accounting_module._build_claim_payload(claim)
 
     assert payload["office_branch"] == "IST-HQ"
+
+
+

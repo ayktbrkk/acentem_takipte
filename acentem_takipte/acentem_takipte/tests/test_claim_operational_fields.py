@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import frappe
 
-from acentem_takipte.doctype.at_claim.at_claim import ATClaim
+from acentem_takipte.acentem_takipte.doctype.at_claim.at_claim import ATClaim
 
 
 class TestATClaimOperationalFields(unittest.TestCase):
@@ -67,3 +67,4 @@ class TestATClaimOperationalFields(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

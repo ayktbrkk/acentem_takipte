@@ -1,6 +1,6 @@
 import pytest
 
-from acentem_takipte.services import branches as branch_service
+from acentem_takipte.acentem_takipte.services import branches as branch_service
 
 
 def test_normalize_requested_office_branch_keeps_requested_branch_for_all_access_user(monkeypatch):
@@ -36,3 +36,4 @@ def test_assert_office_branch_access_raises_for_disallowed_branch(monkeypatch):
 
     with pytest.raises(Exception):
         branch_service.assert_office_branch_access("IST-HQ", user="agent@example.com")
+

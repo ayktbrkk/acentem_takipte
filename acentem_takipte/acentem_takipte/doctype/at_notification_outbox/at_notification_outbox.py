@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, now_datetime
-from acentem_takipte.utils.statuses import ATNotificationOutboxStatus
+from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationOutboxStatus
 
 
 class ATNotificationOutbox(Document):
@@ -20,4 +20,5 @@ class ATNotificationOutbox(Document):
 
         if self.status in {ATNotificationOutboxStatus.QUEUED, ATNotificationOutboxStatus.FAILED} and not self.next_retry_on:
             self.next_retry_on = now_datetime()
+
 

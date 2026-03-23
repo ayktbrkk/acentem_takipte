@@ -8,13 +8,13 @@ from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import getdate, nowdate
 
-from acentem_takipte.doctype.at_access_log.at_access_log import log_access
-from acentem_takipte.doctype.branch_permissions import (
+from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_access
+from acentem_takipte.acentem_takipte.doctype.branch_permissions import (
     build_office_branch_permission_query,
     has_office_branch_permission,
 )
-from acentem_takipte.services.branches import user_can_access_all_office_branches
-from acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.acentem_takipte.services.branches import user_can_access_all_office_branches
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
 SENSITIVE_ROLES = {"System Manager", "Manager", "Accountant"}
 CUSTOMER_TYPES = {"Individual", "Corporate"}
@@ -242,3 +242,4 @@ def mask_phone(value: str | None) -> str:
 
 def _can_access_all_customers(user: str) -> bool:
     return user_can_access_all_office_branches(user)
+

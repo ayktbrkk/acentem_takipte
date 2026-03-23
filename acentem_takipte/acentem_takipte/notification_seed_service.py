@@ -4,7 +4,7 @@ from typing import Any
 
 import frappe
 
-from acentem_takipte.notification_seed_data import DEFAULT_NOTIFICATION_TEMPLATES
+from acentem_takipte.acentem_takipte.notification_seed_data import DEFAULT_NOTIFICATION_TEMPLATES
 
 
 def upsert_default_notification_templates() -> dict[str, int]:
@@ -32,3 +32,4 @@ def upsert_default_notification_templates() -> dict[str, int]:
 def _apply_payload(doc: Any, payload: dict[str, Any]) -> None:
     for key, value in payload.items():
         doc.set(key, value)
+

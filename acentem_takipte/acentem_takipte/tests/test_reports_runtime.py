@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.services import reports_runtime
+from acentem_takipte.acentem_takipte.services import reports_runtime
 
 
 def test_normalize_export_format_accepts_pdf_and_defaults_to_xlsx():
@@ -357,3 +357,4 @@ def test_build_tabular_download_response_uses_trimmed_export_key_fallback(monkey
     )
 
     assert captured["title"] == "policy_list"
+

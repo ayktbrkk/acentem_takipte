@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from acentem_takipte.renewal.reminders import (
+from acentem_takipte.acentem_takipte.renewal.reminders import (
     build_dedupe_key,
     build_template_keys,
     get_reminder_stages,
@@ -47,3 +47,4 @@ def test_build_template_keys_maps_stage_sequence():
         "renewal_reminder_15",
         "renewal_reminder_7",
     ]
+

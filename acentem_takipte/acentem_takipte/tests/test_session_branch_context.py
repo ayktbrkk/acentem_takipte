@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.api import session as session_api
+from acentem_takipte.acentem_takipte.api import session as session_api
 
 
 class TestSessionBranchContext(IntegrationTestCase):
@@ -40,3 +40,4 @@ class TestSessionBranchContext(IntegrationTestCase):
                                             payload = session_api.get_session_context()
 
         self.assertEqual(payload["realtime"], {"enabled": True, "port": 9100})
+

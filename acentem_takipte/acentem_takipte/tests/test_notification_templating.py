@@ -4,7 +4,7 @@ import types
 
 import pytest
 
-from acentem_takipte.notifications_templateing import (
+from acentem_takipte.acentem_takipte.notifications_templateing import (
     parse_template_components,
     resolve_body_template,
     resolve_subject_template,
@@ -52,3 +52,4 @@ def test_parse_template_components_returns_list():
 def test_parse_template_components_rejects_non_list_json():
     with pytest.raises(ValueError):
         parse_template_components('{"type":"body"}')
+

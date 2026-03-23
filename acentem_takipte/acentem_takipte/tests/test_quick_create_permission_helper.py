@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from frappe import _
 
-from acentem_takipte.api import quick_create as quick_create_api
+from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
 
 
 def test_assert_create_permission_uses_shared_mutation_helper():
@@ -35,3 +35,4 @@ def test_assert_write_permission_uses_shared_mutation_helper():
         role_message="Write denied",
         post_message="Only POST requests are allowed for quick create/update operations.",
     )
+

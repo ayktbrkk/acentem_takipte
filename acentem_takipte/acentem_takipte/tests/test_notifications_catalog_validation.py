@@ -5,9 +5,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte import notifications
-
-
+import acentem_takipte.acentem_takipte.notifications
 class TestNotificationCatalogValidation(IntegrationTestCase):
     def test_create_notification_drafts_rejects_invalid_template_key_for_event(self):
         with patch.object(notifications.frappe, "get_all", return_value=[]):
@@ -21,3 +19,6 @@ class TestNotificationCatalogValidation(IntegrationTestCase):
                     context={},
                     enqueue=False,
                 )
+
+
+

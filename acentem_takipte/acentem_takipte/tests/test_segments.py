@@ -3,8 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from acentem_takipte.api import communication as communication_api
-from acentem_takipte.services.segments import build_segment_membership_preview
+from acentem_takipte.acentem_takipte.api import communication as communication_api
+from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
 
 
 def test_build_segment_membership_preview_filters_customers_from_criteria():
@@ -84,3 +84,4 @@ def test_preview_segment_members_uses_permission_chain_and_service():
     doc_perm_mock.assert_called_once_with("AT Segment", "AT-SEG-2026-00001", "read")
     preview_mock.assert_called_once_with("AT-SEG-2026-00001", limit=25)
     assert payload == {"summary": {"matched_count": 3}, "customers": []}
+

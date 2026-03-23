@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.api import branches as branch_api
+from acentem_takipte.acentem_takipte.api import branches as branch_api
 
 
 def test_get_office_branches_returns_branch_access_payload():
@@ -19,3 +19,4 @@ def test_get_office_branches_returns_branch_access_payload():
     assert payload["default_office_branch"] == "BR-1"
     assert payload["can_access_all"] is False
     assert payload["branches"][0]["name"] == "BR-1"
+

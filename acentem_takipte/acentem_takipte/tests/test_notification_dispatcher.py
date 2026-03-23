@@ -5,9 +5,9 @@ from unittest.mock import patch
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.api import communication as communication_api
-from acentem_takipte.communication import process_notification_queue
-from acentem_takipte.notifications import create_notification_drafts
+from acentem_takipte.acentem_takipte.api import communication as communication_api
+from acentem_takipte.acentem_takipte.communication import process_notification_queue
+from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
 
 
 class TestNotificationDispatcher(IntegrationTestCase):
@@ -172,3 +172,4 @@ def _random_tax_id() -> str:
     tenth = ((sum(digits[0:9:2]) * 7) - sum(digits[1:8:2])) % 10
     eleventh = (sum(digits) + tenth) % 10
     return f"{raw}{tenth}{eleventh}"
+

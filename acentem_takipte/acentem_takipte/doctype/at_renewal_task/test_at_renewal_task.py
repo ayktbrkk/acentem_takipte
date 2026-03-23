@@ -6,11 +6,11 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, nowdate
 
-from acentem_takipte.api import dashboard as dashboard_api
-from acentem_takipte.patches.v2026_02_26_renewal_status_completed_to_done import (
+from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
+from acentem_takipte.acentem_takipte.patches.v2026_02_26_renewal_status_completed_to_done import (
     execute as run_renewal_status_completed_to_done_patch,
 )
-from acentem_takipte.tasks import RENEWAL_LOOKAHEAD_DAYS, build_renewal_key, create_renewal_tasks
+from acentem_takipte.acentem_takipte.tasks import RENEWAL_LOOKAHEAD_DAYS, build_renewal_key, create_renewal_tasks
 
 
 class TestATRenewalTask(IntegrationTestCase):
@@ -200,3 +200,4 @@ def _random_tax_id() -> str:
     if len(digits) >= 11:
         return digits[:11]
     return (digits + "98765432109")[:11]
+

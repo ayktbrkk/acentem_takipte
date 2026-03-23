@@ -2,8 +2,8 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 
-from acentem_takipte.services import report_exports
-from acentem_takipte.services.report_exports import build_export_filename, build_report_title
+from acentem_takipte.acentem_takipte.services import report_exports
+from acentem_takipte.acentem_takipte.services.report_exports import build_export_filename, build_report_title
 
 
 def test_build_report_title_includes_extended_report_catalog():
@@ -145,3 +145,4 @@ def test_render_tabular_xlsx_accepts_mapping_rows():
 
     assert sheet["A6"].value == "A"
     assert sheet["B6"].value == 3
+

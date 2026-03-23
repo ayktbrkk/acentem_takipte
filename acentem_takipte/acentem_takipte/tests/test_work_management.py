@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.api.quick_create import create_quick_task
-from acentem_takipte.services.work_management import build_my_tasks_payload
+from acentem_takipte.acentem_takipte.api.quick_create import create_quick_task
+from acentem_takipte.acentem_takipte.services.work_management import build_my_tasks_payload
 
 
 def test_build_my_tasks_payload_summarizes_due_buckets():
@@ -49,3 +49,4 @@ def test_create_quick_task_normalizes_payload_and_uses_service():
     assert payload["priority"] == "High"
     assert payload["notes"] == "Needs callback"
     assert result == {"task": "TASK-0001"}
+

@@ -1,5 +1,5 @@
-from acentem_takipte.services import report_registry
-from acentem_takipte.services.report_registry import get_report_definition
+from acentem_takipte.acentem_takipte.services import report_registry
+from acentem_takipte.acentem_takipte.services.report_registry import get_report_definition
 
 
 def test_agent_performance_report_definition_includes_scorecard_columns():
@@ -121,3 +121,4 @@ def test_build_report_payload_keeps_default_columns_when_no_granularity(monkeypa
 
     assert "name" in payload["columns"]
     assert "policy_no" in payload["columns"]
+

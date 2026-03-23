@@ -5,9 +5,7 @@ from unittest.mock import patch
 
 from frappe.tests import IntegrationTestCase
 
-from acentem_takipte.acentem_takipte import tasks as task_jobs
-
-
+import acentem_takipte.acentem_takipte.tasks as task_jobs
 class TestPaymentDueTasks(IntegrationTestCase):
     def test_run_payment_due_logic_creates_notification_for_due_stage(self):
         payment = types.SimpleNamespace(
@@ -44,3 +42,6 @@ class TestPaymentDueTasks(IntegrationTestCase):
         self.assertEqual(summary["created"], 0)
         self.assertEqual(summary["skipped_duplicate"], 1)
         create_drafts.assert_not_called()
+
+
+

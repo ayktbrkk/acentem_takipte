@@ -4,9 +4,9 @@ from typing import Dict
 
 import frappe
 
-from acentem_takipte.providers.base import ProviderAdapter, ProviderMessage, ProviderResult
-from acentem_takipte.utils.logging import log_redacted_error, redact_payload
-from acentem_takipte.utils.network_security import normalize_whatsapp_api_url
+from acentem_takipte.acentem_takipte.providers.base import ProviderAdapter, ProviderMessage, ProviderResult
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error, redact_payload
+from acentem_takipte.acentem_takipte.utils.network_security import normalize_whatsapp_api_url
 
 
 class MetaWhatsAppAdapter(ProviderAdapter):
@@ -111,3 +111,4 @@ class MetaWhatsAppAdapter(ProviderAdapter):
             error_message=None,
             response_payload=response,
         )
+

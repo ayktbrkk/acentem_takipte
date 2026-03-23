@@ -6,8 +6,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from acentem_takipte.api.security import assert_authenticated, assert_doctype_permission, assert_post_request, assert_roles
-from acentem_takipte.services.export_payload_utils import (
+from acentem_takipte.acentem_takipte.api.security import assert_authenticated, assert_doctype_permission, assert_post_request, assert_roles
+from acentem_takipte.acentem_takipte.services.export_payload_utils import (
     coerce_columns,
     coerce_download_payload,
     coerce_filters,
@@ -15,8 +15,8 @@ from acentem_takipte.services.export_payload_utils import (
     coerce_string_list,
     normalize_export_key,
 )
-from acentem_takipte.services.report_registry import get_report_definition
-from acentem_takipte.services.reports_runtime import (
+from acentem_takipte.acentem_takipte.services.report_registry import get_report_definition
+from acentem_takipte.acentem_takipte.services.reports_runtime import (
     build_report_download_response,
     build_safe_report_payload,
     get_scheduled_report_config_summary,
@@ -266,3 +266,4 @@ def _coerce_string_list(value: Any) -> list[str]:
 
 def _coerce_content_type(value: Any, filename: str) -> str:
     return coerce_download_payload({"filename": filename, "content_type": value})["content_type"]
+
