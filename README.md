@@ -103,14 +103,14 @@ bench get-app https://github.com/ayktbrkk/acentem_takipte.git
 ### 2. Install the app on your site
 
 ```bash
-bench --site your-site.local install-app acentem_takipte
-bench --site your-site.local migrate
+bench install-app acentem_takipte
+bench migrate
 ```
 
 ### 3. Build the frontend workspace
 
 ```bash
-cd /opt/frappe-bench/apps/acentem_takipte/frontend
+cd frappe-bench/apps/acentem_takipte/frontend
 npm ci
 npm run build
 ```
@@ -120,7 +120,7 @@ The build writes fresh assets into `acentem_takipte/public/frontend/`, and `/at`
 ### 4. Clear cache and restart services
 
 ```bash
-cd /opt/frappe-bench
+cd frappe-bench
 bench --site your-site.local clear-cache
 bench restart
 ```
