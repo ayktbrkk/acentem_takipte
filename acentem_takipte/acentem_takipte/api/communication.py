@@ -17,7 +17,7 @@ from acentem_takipte.acentem_takipte.services.branches import (
 from acentem_takipte.acentem_takipte.services.campaigns import execute_campaign as execute_campaign_service
 from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
 from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus
-from acentem_takipte import communication as communication_logic
+from acentem_takipte.acentem_takipte import communication as communication_logic
 from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
 
 
