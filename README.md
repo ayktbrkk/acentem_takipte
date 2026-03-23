@@ -91,6 +91,14 @@ Before installing the app, make sure you have:
 
 This repository assumes Bench manages the Frappe runtime and most framework dependencies.
 
+Important: install and verify the Frappe Framework / Bench environment first. `acentem_takipte` is an app that runs inside an existing Frappe site; it is not a standalone installer and should not be used before Bench and Frappe are already working.
+
+Official installation references:
+
+- Frappe Framework: https://docs.frappe.io/framework
+- Bench / Installation: https://docs.frappe.io/framework/user/en/installation
+- Bench repository: https://github.com/frappe/bench
+
 ## Installation
 
 ### 1. Get the app into your Bench
@@ -103,8 +111,7 @@ bench get-app https://github.com/ayktbrkk/acentem_takipte.git
 ### 2. Install the app on your site
 
 ```bash
-bench install-app acentem_takipte
-bench migrate
+bench --site your-site.local install-app acentem_takipte
 ```
 
 ### 3. Build the frontend workspace
@@ -117,15 +124,40 @@ npm run build
 
 The build writes fresh assets into `acentem_takipte/public/frontend/`, and `/at` serves them from the latest Vite manifest at runtime.
 
-### 4. Clear cache and restart services
+### 4. Run site migrations and clear cache
 
 ```bash
 cd frappe-bench
 bench --site your-site.local clear-cache
-bench restart
+bench --site your-site.local migrate
+bench --site your-site.local clear-cache
 ```
 
-### 5. Optional production setup
+If you run `migrate` before the frontend build, the app can install successfully while `/at` still renders as an empty page because the Vite manifest and built assets are missing.
+
+### 5. Troubleshooting first install
+
+If the install partially succeeded earlier and you see a duplicate `Module Def` error, retry with force:
+
+```bash
+bench --site your-site.local install-app acentem_takipte --force
+bench --site your-site.local migrate
+bench --site your-site.local clear-cache
+```
+
+If `/at` opens but shows no content:
+
+```bash
+cd frappe-bench/apps/acentem_takipte/frontend
+npm ci
+npm run build
+
+cd ../../..
+bench --site your-site.local migrate
+bench --site your-site.local clear-cache
+```
+
+### 6. Optional production setup
 
 If you are preparing a production Bench:
 
