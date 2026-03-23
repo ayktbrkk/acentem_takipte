@@ -16,8 +16,13 @@ acentem_takipte/public/frontend/
 .plan/
 .vscode/
 .playwright-cli/
+.pytest_cache/
+.roo/
+.agents/
 
 .env
 .venv/
+env/
 lint-out.txt
 test-out.txt
+test-results/

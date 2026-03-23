@@ -171,7 +171,8 @@ acentem_takipte/
   public/frontend/           Generated frontend build output (not committed) served by Frappe
   www/                       Web route entry for /at
 frontend/                    Vue application source, unit tests, Playwright tests
-scripts/                     Development and operational helper scripts
+scripts/                     Optional benchmark and seed helpers
+.github/workflows/           CI workflows for lint, tests, build, and optional E2E gates
 ```
 
 ## Development Notes
@@ -183,10 +184,8 @@ Even though this README is product-focused, a few implementation details are use
 - the `/at` route injects the latest built Vite assets dynamically
 - scheduler hooks are defined in the Frappe app and power recurring operational jobs
 - `requirements.txt` intentionally stays minimal because the Bench environment provides Frappe itself
-
-Operational docs:
-- Deployment notes: `docs/deploy.md`
-- Scheduler/job notes: `docs/ops/jobs.md` (entry point: `docs/operations.md`)
+- CI workflows are kept in `.github/workflows/`
+- benchmark and seed helpers under `scripts/` are optional and not required for installation
 
 ## Quality Gates and E2E Notes
 
