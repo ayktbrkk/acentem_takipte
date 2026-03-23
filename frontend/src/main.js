@@ -165,6 +165,21 @@ async function ensureHighlightJsCompatibility() {
 
 setConfig("resourceFetcher", appResourceFetcher);
 
+function renderBootstrapError(target, error) {
+  if (!target) {
+    return;
+  }
+
+  console.error("Acentem Takipte bootstrap failed", error);
+  target.innerHTML = `
+    <div style="max-width:48rem;margin:2rem auto;padding:1rem 1.25rem;border:1px solid #f5c2c7;border-radius:.75rem;background:#fff5f5;color:#842029;">
+      <h2 style="margin:0 0 .5rem;font-size:1.125rem;font-weight:700;">Acentem Takipte yuklenemedi</h2>
+      <p style="margin:0 0 .5rem;">/at sayfasi baslatilirken bir istemci hatasi olustu.</p>
+      <p style="margin:0;">Tarayici konsolunu kontrol edin. Gerekirse frontend build'ini yenileyip cache temizleyin.</p>
+    </div>
+  `;
+}
+
 const mountTarget = document.querySelector("#app");
 if (mountTarget) {
   const mountApp = async () => {
@@ -189,5 +204,7 @@ if (mountTarget) {
     app.mount(mountTarget);
   };
 
-  mountApp();
+  mountApp().catch((error) => {
+    renderBootstrapError(mountTarget, error);
+  });
 }

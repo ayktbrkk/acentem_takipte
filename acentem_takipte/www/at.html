@@ -19,10 +19,42 @@
     margin: 0;
     padding: 0;
   }
+
+  .at-bootstrap-alert {
+    max-width: 48rem;
+    margin: 2rem auto;
+    padding: 1rem 1.25rem;
+    border: 1px solid #f5c2c7;
+    border-radius: 0.75rem;
+    background: #fff5f5;
+    color: #842029;
+  }
+
+  .at-bootstrap-alert h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+
+  .at-bootstrap-alert p {
+    margin: 0 0 0.5rem;
+  }
+
+  .at-bootstrap-alert p:last-child {
+    margin-bottom: 0;
+  }
 </style>
 
 <div class="at-webapp-breakout">
-  <div id="app"></div>
+  <div id="app">
+    {% if not at_js_includes %}
+    <div class="at-bootstrap-alert">
+      <h2>Acentem Takipte frontend assets bulunamadi</h2>
+      <p>/at sayfasi yuklenemedi cunku Vite build ciktisi okunamiyor.</p>
+      <p>Cozum: <strong>frontend</strong> klasorunde <strong>npm run build</strong> calistirin, sonra <strong>bench --site mysite.localhost clear-cache</strong> uygulayin.</p>
+    </div>
+    {% endif %}
+  </div>
 </div>
 
 <script>
