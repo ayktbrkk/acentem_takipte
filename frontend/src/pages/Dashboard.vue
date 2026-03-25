@@ -2504,6 +2504,7 @@ function withOfficeBranchFilter(params) {
     return params;
   }
   const next = { ...(params || {}) };
+  next.office_branch = officeBranch;
   const filters = { ...(next.filters || {}) };
   filters.office_branch = officeBranch;
   next.filters = filters;
