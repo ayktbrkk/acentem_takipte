@@ -753,6 +753,7 @@ const auxQuickAccountingEntryResource = createResource({
 
 const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
   "AT Renewal Task",
+  "AT Task",
   "AT Accounting Entry",
   "AT Notification Draft",
   "AT Notification Outbox",
