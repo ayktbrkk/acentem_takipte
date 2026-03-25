@@ -3061,6 +3061,7 @@ function triggerDashboardReload({ includeKpis = true, immediate = false } = {}) 
     followUpResource.reload();
     myActivitiesResource.params = withOfficeBranchFilter({ filters: {} });
     myActivitiesResource.reload();
+    claimListResource.params = buildClaimListParams();
     claimListResource.reload();
     myRemindersResource.params = withOfficeBranchFilter({ filters: {} });
     myRemindersResource.reload();
