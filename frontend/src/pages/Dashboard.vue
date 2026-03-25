@@ -1626,14 +1626,18 @@ const offerListResource = createResource({
 
 const claimListResource = createResource({
   url: "frappe.client.get_list",
-  params: {
+  params: buildClaimListParams(),
+  auto: true,
+});
+
+function buildClaimListParams() {
+  return withOfficeBranchFilter({
     doctype: "AT Claim",
     fields: ["name", "claim_no", "customer", "policy", "claim_status", "approved_amount", "paid_amount", "modified"],
     order_by: "modified desc",
     limit_page_length: 12,
-  },
-  auto: true,
-});
+  });
+}
 
 const reconciliationPreviewResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
