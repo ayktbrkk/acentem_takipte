@@ -157,12 +157,15 @@ const copy = {
     offers: "Teklifler",
     policies: "Poliçeler",
     customers: "Müşteriler",
+    customerSearch: "Müşteri Ara",
     claims: "Hasarlar",
     payments: "Ödemeler",
     renewals: "Yenilemeler",
     reconciliation: "Mutabakat",
     communication: "İletişim Merkezi",
     reports: "Raporlar",
+    breakGlassRequest: "Acil Erisim Talebi",
+    breakGlassApprovals: "Acil Erisim Onaylari",
     dataImport: "Veri İçe Aktarma",
     dataExport: "Veri Dışa Aktarma",
     tasks: "Görevler",
@@ -196,12 +199,15 @@ const copy = {
     offers: "Offers",
     policies: "Policies",
     customers: "Customers",
+    customerSearch: "Search Customers",
     claims: "Claims",
     payments: "Payments",
     renewals: "Renewals",
     reconciliation: "Reconciliation",
     communication: "Communication Center",
     reports: "Reports",
+    breakGlassRequest: "Break-Glass Request",
+    breakGlassApprovals: "Break-Glass Approvals",
     dataImport: "Data Import",
     dataExport: "Data Export",
     tasks: "Tasks",
@@ -232,6 +238,7 @@ const userInitials = computed(() => {
   return parts.slice(0, 2).map((part) => String(part[0] || "")).join("").toUpperCase();
 });
 const branchLabel = computed(() => String(branchStore.requestBranch || authStore.defaultOfficeBranch || "-").trim() || "-");
+const isSystemManager = computed(() => Boolean(authStore.isDeskUser));
 
 function toggleSidebarCollapsedDesktop() {
   uiStore.toggleSidebarCollapsed();
@@ -261,6 +268,7 @@ const navSections = computed(() => [
       { key: "offers", label: t("offers"), to: "/offers", short: "OF", badgeClass: "text-teal-700" },
       { key: "policies", label: t("policies"), to: "/policies", short: "PL", badgeClass: "text-sky-700" },
       { key: "customers", label: t("customers"), to: "/customers", short: "CU", badgeClass: "text-cyan-700" },
+      { key: "customer-search", label: t("customerSearch"), to: "/customer-search", short: "CS", badgeClass: "text-teal-700" },
     ],
   },
   {
@@ -296,6 +304,10 @@ const navSections = computed(() => [
   {
     title: t("sectionFinance"),
     items: [
+      { key: "break-glass-request", label: t("breakGlassRequest"), to: "/break-glass", short: "BG", badgeClass: "text-rose-700" },
+      ...(isSystemManager.value
+        ? [{ key: "break-glass-approvals", label: t("breakGlassApprovals"), to: "/break-glass/approvals", short: "BA", badgeClass: "text-rose-700" }]
+        : []),
       { key: "accounting-entries", label: t("accountingEntries"), to: "/accounting-entries", short: "AC", badgeClass: "text-slate-700" },
       { key: "reconciliation-items", label: t("reconciliationItems"), to: "/reconciliation-items", short: "RI", badgeClass: "text-cyan-700" },
     ],

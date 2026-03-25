@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from typing import Any
 
 import frappe
@@ -32,16 +34,54 @@ from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
 
 def build_safe_report_payload(report_key: str, filters: dict | None, limit: int) -> dict[str, Any]:
+    from acentem_takipte.acentem_takipte.services.branches import get_scope_hash
+
+    safe_key = normalize_export_key(report_key)
+    coerced_filters = _coerce_filters(filters)
+    normalized_limit = max(cint(limit), 1)
+
+    user = _safe_session_user()
+    cache_key: str | None = None
+    if user and user != "Guest":
+        scope_hash = get_scope_hash(user)
+        filters_digest = hashlib.sha256(
+            json.dumps(coerced_filters, sort_keys=True, default=str).encode()
+        ).hexdigest()[:12]
+        cache_key = f"at_report::{safe_key}::{user}::{scope_hash}::{filters_digest}::{normalized_limit}"
+        cached = frappe.cache().get_value(cache_key)
+        if cached is not None:
+            return cached
+
     try:
-        normalized_limit = max(cint(limit), 1)
-        return build_report_payload(normalize_export_key(report_key), filters=_coerce_filters(filters), limit=normalized_limit)
+        result = build_report_payload(safe_key, filters=coerced_filters, limit=normalized_limit)
     except Exception:
         log_redacted_error(
             "Report payload build failed",
-            details={"report_key": str(report_key or "").strip(), "filters": _coerce_filters(filters), "limit": max(cint(limit), 1)},
+            details={"report_key": str(report_key or "").strip(), "filters": coerced_filters, "limit": normalized_limit},
         )
-        frappe.throw(_("Report cannot be loaded. Please try again later."))
-    return {}
+        frappe.throw(_safe_translate("Report cannot be loaded. Please try again later."))
+        return {}
+
+    if cache_key:
+        ttl = int((frappe.get_site_config() or {}).get("at_report_cache_ttl", 600))
+        frappe.cache().set_value(cache_key, result, expires_in_sec=ttl)
+
+    return result
+
+
+def _safe_session_user() -> str:
+    """Return session user safely when frappe local proxies are unbound in tests."""
+    try:
+        return str(getattr(frappe.session, "user", "") or "").strip()
+    except RuntimeError:
+        return ""
+
+
+def _safe_translate(message: str) -> str:
+    try:
+        return _(message)
+    except Exception:
+        return message
 
 
 def build_report_download_response(

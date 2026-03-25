@@ -12,6 +12,7 @@ const LeadList = () => import("../pages/LeadList.vue");
 const LeadDetail = () => import("../pages/LeadDetail.vue");
 const CustomerList = () => import("../pages/CustomerList.vue");
 const CustomerDetail = () => import("../pages/CustomerDetail.vue");
+const CustomerSearchPage = () => import("../pages/CustomerSearchPage.vue");
 const OfferDetail = () => import("../pages/OfferDetail.vue");
 const ClaimsBoard = () => import("../pages/ClaimsBoard.vue");
 const ClaimDetail = () => import("../pages/ClaimDetail.vue");
@@ -49,6 +50,8 @@ const ReconciliationItemDetail = () => import("../pages/ReconciliationItemDetail
 const TasksList = () => import("../pages/TasksList.vue");
 const TaskDetail = () => import("../pages/TaskDetail.vue");
 const AuxRecordDetail = () => import("../pages/AuxRecordDetail.vue");
+const BreakGlassRequest = () => import("../pages/BreakGlassRequest.vue");
+const BreakGlassApprovals = () => import("../pages/BreakGlassApprovals.vue");
 
 const router = createRouter({
   history: createWebHistory("/at/"),
@@ -145,6 +148,15 @@ const router = createRouter({
       },
     },
     {
+      path: "/customer-search",
+      name: "customer-search",
+      component: CustomerSearchPage,
+      meta: {
+        title: { tr: "Müşteri Ara", en: "Customer Search" },
+        section: { tr: "Satış ve Portföy", en: "Sales & Portfolio" },
+      },
+    },
+    {
       path: "/claims",
       name: "claims-board",
       component: ClaimsBoard,
@@ -213,6 +225,25 @@ const router = createRouter({
     {
       path: "/communication-hub",
       redirect: { name: "communication-center" },
+    },
+    {
+      path: "/break-glass",
+      name: "break-glass-request",
+      component: BreakGlassRequest,
+      meta: {
+        title: { tr: "Acil Erisim Talebi", en: "Break-Glass Request" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+      },
+    },
+    {
+      path: "/break-glass/approvals",
+      name: "break-glass-approvals",
+      component: BreakGlassApprovals,
+      meta: {
+        title: { tr: "Acil Erisim Onaylari", en: "Break-Glass Approvals" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
+        requiresBreakGlassManager: true,
+      },
     },
     {
       path: "/reconciliation",
@@ -364,15 +395,11 @@ const router = createRouter({
 });
 
 export function getDeskRedirectTarget(preferredHome, interfaceMode, userId, roles = []) {
-  const normalizedRoles = new Set(
-    (roles || [])
-      .map((role) => String(role || "").trim().toLowerCase())
-      .filter(Boolean),
-  );
+  const normalizedRoles = normalizeRoles(roles);
   const normalizedUserId = String(userId || "").trim().toLowerCase();
   const isAdminByUserId = normalizedUserId === "administrator";
   const isRoleDataPresent = normalizedRoles.size > 0;
-  const isSystemRole = normalizedRoles.has("system manager") || normalizedRoles.has("administrator");
+  const isSystemRole = hasSystemManagerRole(roles);
 
   const isDeskOnlyUser =
     String(interfaceMode || "") === "desk"
@@ -390,7 +417,24 @@ export function getDeskRedirectTarget(preferredHome, interfaceMode, userId, role
   return null;
 }
 
+function normalizeRoles(roles = []) {
+  return new Set(
+    (roles || [])
+      .map((role) => String(role || "").trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+export function hasSystemManagerRole(roles = []) {
+  const normalizedRoles = normalizeRoles(roles);
+  return normalizedRoles.has("system manager") || normalizedRoles.has("administrator");
+}
+
 router.beforeEach((to) => {
+  if (to.meta?.requiresBreakGlassManager && !hasSystemManagerRole(sessionState.roles)) {
+    return { name: "break-glass-request" };
+  }
+
   const target = getDeskRedirectTarget(
     sessionState.preferredHome,
     sessionState.interfaceMode,
@@ -399,6 +443,7 @@ router.beforeEach((to) => {
   );
   if (!target) {
     if (
+      !sessionState.canAccessAllOfficeBranches &&
       sessionState.defaultOfficeBranch &&
       !to.query?.[OFFICE_BRANCH_QUERY_KEY]
     ) {

@@ -8,6 +8,8 @@
   "policy",
   "customer",
   "office_branch",
+  "origin_office_branch",
+  "current_office_branch",
   "outcome_status",
   "lost_reason_code",
   "competitor_name",
@@ -44,6 +46,20 @@
    "fieldtype": "Link",
    "label": "Office Branch",
    "options": "AT Office Branch"
+  },
+  {
+   "fieldname": "origin_office_branch",
+   "fieldtype": "Link",
+   "label": "Origin Office Branch",
+   "options": "AT Office Branch",
+   "description": "Branch at creation time (historical, for permission queries per kanon branch model)"
+  },
+  {
+   "fieldname": "current_office_branch",
+   "fieldtype": "Link",
+   "label": "Current Office Branch",
+   "options": "AT Office Branch",
+   "description": "Current branch (for operational tasks and transfer flows per kanon branch model)"
   },
   {
    "default": "Cancelled",

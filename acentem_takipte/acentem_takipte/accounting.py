@@ -136,6 +136,7 @@ def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool 
         entry.policy = payload.get("policy")
         entry.customer = payload.get("customer")
         entry.office_branch = payload.get("office_branch")
+        entry.sales_entity = payload.get("sales_entity")
         entry.insurance_company = payload.get("insurance_company")
         entry.currency = payload.get("currency") or "TRY"
         entry.local_amount = payload.get("local_amount") or 0
@@ -270,6 +271,7 @@ def _build_policy_payload(policy_name: str) -> dict:
         "policy": policy.name,
         "customer": policy.customer,
         "office_branch": policy.office_branch,
+        "sales_entity": policy.sales_entity,
         "insurance_company": policy.insurance_company,
         "currency": cstr(policy.currency or "TRY").upper(),
         "local_amount": local_amount,
@@ -305,6 +307,7 @@ def _build_payment_payload(payment_name: str) -> dict:
         "policy": payment.policy,
         "customer": payment.customer,
         "office_branch": payment.office_branch or frappe.db.get_value("AT Policy", payment.policy, "office_branch"),
+        "sales_entity": payment.sales_entity or frappe.db.get_value("AT Policy", payment.policy, "sales_entity"),
         "insurance_company": policy_company,
         "currency": cstr(payment.currency or "TRY").upper(),
         "local_amount": local_amount,
@@ -336,6 +339,7 @@ def _build_claim_payload(claim_name: str) -> dict:
         "policy": claim.policy,
         "customer": claim.customer,
         "office_branch": claim.office_branch or frappe.db.get_value("AT Policy", claim.policy, "office_branch"),
+        "sales_entity": frappe.db.get_value("AT Policy", claim.policy, "sales_entity") if claim.policy else None,
         "insurance_company": _policy_company(claim.policy),
         "currency": currency,
         "local_amount": amount,
@@ -412,6 +416,7 @@ def _get_or_create_entry(source_doctype: str, source_name: str):
             "source_name": source_name,
             "entry_type": ENTRY_TYPE_MAP[source_doctype],
             "office_branch": None,
+            "sales_entity": None,
             "status": ATAccountingEntryStatus.DRAFT,
         }
     )

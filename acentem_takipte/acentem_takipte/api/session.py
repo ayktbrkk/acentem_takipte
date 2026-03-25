@@ -147,6 +147,13 @@ def get_session_context() -> dict:
     if user == "Guest":
         frappe.throw("Authentication required")
 
+    try:
+        from acentem_takipte.acentem_takipte.services.cache_precomputation import get_cached_user_scope
+
+        get_cached_user_scope(user=user, use_precomputed=True)
+    except Exception:
+        pass
+
     full_name = frappe.db.get_value("User", user, "full_name") or user
     language = (frappe.db.get_value("User", user, "language") or frappe.local.lang or "tr")
     interface = _resolve_session_interface(user)

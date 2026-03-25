@@ -321,6 +321,32 @@ def after_migrate():
     ensure_core_setup()
 
 
+def precompute_user_scope_on_session_creation(login_manager=None):
+    user = getattr(frappe.session, "user", None) or getattr(login_manager, "user", None)
+    if not user or user == "Guest":
+        return
+
+    try:
+        from acentem_takipte.acentem_takipte.services.cache_precomputation import precompute_user_scope
+
+        precompute_user_scope(user=user)
+    except Exception as exc:
+        frappe.logger().warning("Failed to precompute scope during session creation for %s: %s", user, exc)
+
+
+def invalidate_user_scope_on_logout(login_manager=None):
+    user = getattr(frappe.session, "user", None) or getattr(login_manager, "user", None)
+    if not user or user == "Guest":
+        return
+
+    try:
+        from acentem_takipte.acentem_takipte.services.cache_precomputation import invalidate_user_scope_cache
+
+        invalidate_user_scope_cache(user=user)
+    except Exception as exc:
+        frappe.logger().warning("Failed to invalidate scope cache during logout for %s: %s", user, exc)
+
+
 def ensure_core_setup_önce():
     cache = frappe.cache()
     if cache.get_value(CORE_SETUP_CACHE_KEY):

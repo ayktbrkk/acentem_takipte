@@ -307,7 +307,7 @@ const showOwnershipAssignmentEditDialog = ref(false);
 const editingOwnershipAssignment = ref(null);
 
 const policy360Resource = createResource({
-  url: "acentem_takipte.api.dashboard.get_policy_360_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_policy_360_payload",
   auto: false,
 });
 const policyR = createResource({ url: "frappe.client.get", auto: false });
@@ -322,11 +322,11 @@ const notificationR = createResource({ url: "frappe.client.get_list", auto: fals
 const policyQuickCustomerResource = createResource({ url: "frappe.client.get_list", auto: false });
 const policyQuickPolicyResource = createResource({ url: "frappe.client.get_list", auto: false });
 const reminderUpdateResource = createResource({
-  url: "acentem_takipte.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 const assignmentDeleteResource = createResource({
-  url: "acentem_takipte.api.quick_create.delete_quick_aux_record",
+  url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
   auto: false,
 });
 
@@ -983,3 +983,4 @@ async function prepareOwnershipAssignmentEditDialog({ resetForm }) {
   });
 }
 </script>
+

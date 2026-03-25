@@ -560,48 +560,48 @@ const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-U
 const reportCatalog = {
   policy_list: {
     label: { tr: "Poliçe Listesi", en: "Policy List" },
-    readMethod: "acentem_takipte.api.reports.get_policy_list_report",
-    exportMethod: "acentem_takipte.api.reports.export_policy_list_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_policy_list_report",
   },
   payment_status: {
     label: { tr: "Tahsilat Durumu", en: "Payment Status" },
-    readMethod: "acentem_takipte.api.reports.get_payment_status_report",
-    exportMethod: "acentem_takipte.api.reports.export_payment_status_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_payment_status_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_payment_status_report",
   },
   renewal_performance: {
     label: { tr: "Yenileme Performansı", en: "Renewal Performance" },
-    readMethod: "acentem_takipte.api.reports.get_renewal_performance_report",
-    exportMethod: "acentem_takipte.api.reports.export_renewal_performance_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_renewal_performance_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_renewal_performance_report",
   },
   claim_loss_ratio: {
     label: { tr: "Hasar/Prim Oranı", en: "Claim Loss Ratio" },
-    readMethod: "acentem_takipte.api.reports.get_claim_loss_ratio_report",
-    exportMethod: "acentem_takipte.api.reports.export_claim_loss_ratio_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claim_loss_ratio_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claim_loss_ratio_report",
   },
   agent_performance: {
     label: { tr: "Acente Üretim Karnesi", en: "Agency Performance Scorecard" },
-    readMethod: "acentem_takipte.api.reports.get_agent_performance_report",
-    exportMethod: "acentem_takipte.api.reports.export_agent_performance_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_agent_performance_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_agent_performance_report",
   },
   customer_segmentation: {
     label: { tr: "Müşteri Segmentasyonu", en: "Customer Segmentation" },
-    readMethod: "acentem_takipte.api.reports.get_customer_segmentation_report",
-    exportMethod: "acentem_takipte.api.reports.export_customer_segmentation_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_customer_segmentation_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_customer_segmentation_report",
   },
   communication_operations: {
     label: { tr: "İletişim Operasyonları", en: "Communication Operations" },
-    readMethod: "acentem_takipte.api.reports.get_communication_operations_report",
-    exportMethod: "acentem_takipte.api.reports.export_communication_operations_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_communication_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_communication_operations_report",
   },
   reconciliation_operations: {
     label: { tr: "Mutabakat Operasyonları", en: "Reconciliation Operations" },
-    readMethod: "acentem_takipte.api.reports.get_reconciliation_operations_report",
-    exportMethod: "acentem_takipte.api.reports.export_reconciliation_operations_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_reconciliation_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_reconciliation_operations_report",
   },
   claims_operations: {
     label: { tr: "Hasar Operasyonları", en: "Claims Operations" },
-    readMethod: "acentem_takipte.api.reports.get_claims_operations_report",
-    exportMethod: "acentem_takipte.api.reports.export_claims_operations_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claims_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claims_operations_report",
   },
 };
 
@@ -1628,7 +1628,7 @@ async function loadScheduledReports() {
   scheduledLoading.value = true;
   try {
     const payload = await frappeRequest({
-      url: "/api/method/acentem_takipte.api.reports.get_scheduled_report_configs",
+      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.get_scheduled_report_configs",
       method: "GET",
     });
     const message = payload?.message || payload || {};
@@ -1645,7 +1645,7 @@ async function runScheduledReports() {
   scheduledRunLoading.value = true;
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
+      url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
       method: "POST",
       params: {
         frequency: "daily",
@@ -1664,7 +1664,7 @@ async function runCustomerSegmentSnapshots() {
   snapshotRunLoading.value = true;
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+      url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
       method: "POST",
       params: {
         limit: 250,
@@ -1680,7 +1680,7 @@ async function runCustomerSegmentSnapshots() {
 async function saveScheduledReport({ index, config }) {
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.api.reports.save_scheduled_report_config",
+      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_scheduled_report_config",
       method: "POST",
       params: {
         index: index || "",
@@ -1696,7 +1696,7 @@ async function saveScheduledReport({ index, config }) {
 async function removeScheduledReport(index) {
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.api.reports.remove_scheduled_report_config",
+      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.remove_scheduled_report_config",
       method: "POST",
       params: { index },
     });
@@ -1889,3 +1889,4 @@ onBeforeUnmount(() => {
   @apply w-[142px] border-transparent px-2;
 }
 </style>
+

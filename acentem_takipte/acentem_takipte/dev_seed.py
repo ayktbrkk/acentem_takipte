@@ -35,7 +35,7 @@ def reset_and_seed_demo_data(
     if count < 1:
         raise ValueError("count must be >= 1")
 
-    script_path = Path(__file__).resolve().parents[1] / "scripts" / "reset_and_seed_at_data.py"
+    script_path = Path(__file__).resolve().parents[2] / "scripts" / "reset_and_seed_at_data.py"
     namespace = runpy.run_path(
         str(script_path),
         init_globals={
@@ -127,7 +127,16 @@ def inspect_at_seed_snapshot():
         ),
         "customers": frappe.get_all(
             "AT Customer",
-            fields=["name", "full_name", "gender", "marital_status", "occupation", "email"],
+            fields=[
+                "name",
+                "full_name",
+                "office_branch",
+                "birth_date",
+                "gender",
+                "marital_status",
+                "occupation",
+                "email",
+            ],
             order_by="creation asc",
             limit_page_length=10,
         ),
@@ -136,8 +145,11 @@ def inspect_at_seed_snapshot():
             fields=[
                 "name",
                 "customer",
+                "office_branch",
                 "insurance_company",
                 "branch",
+                "offer_date",
+                "valid_until",
                 "status",
                 "gross_premium",
                 "converted_policy",
@@ -151,10 +163,16 @@ def inspect_at_seed_snapshot():
                 "name",
                 "policy_no",
                 "customer",
+                "office_branch",
                 "insurance_company",
                 "branch",
+                "issue_date",
+                "start_date",
                 "status",
                 "end_date",
+                "source_offer",
+                "fx_rate",
+                "fx_date",
                 "gross_premium",
             ],
             order_by="creation asc",

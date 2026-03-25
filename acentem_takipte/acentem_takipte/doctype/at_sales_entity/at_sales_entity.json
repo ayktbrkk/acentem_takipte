@@ -6,7 +6,10 @@
  "field_order": [
   "entity_type",
   "full_name",
-  "parent_entity"
+  "office_branch",
+  "parent_entity",
+  "is_active",
+  "is_pool"
  ],
  "fields": [
   {
@@ -22,11 +25,30 @@
    "label": "Full Name",
    "reqd": 1
   },
+    {
+     "fieldname": "office_branch",
+     "fieldtype": "Link",
+     "label": "Office Branch",
+     "options": "AT Office Branch",
+     "reqd": 1
+  },
   {
    "fieldname": "parent_entity",
    "fieldtype": "Link",
    "label": "Parent Entity",
    "options": "AT Sales Entity"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_pool",
+   "fieldtype": "Check",
+   "label": "Is Pool"
   }
  ],
  "index_web_pages_for_search": 1,

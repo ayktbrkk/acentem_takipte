@@ -8,6 +8,9 @@ from acentem_takipte.acentem_takipte.services.branches import (
     get_allowed_office_branch_names,
     user_can_access_all_office_branches,
 )
+from acentem_takipte.acentem_takipte.services.sales_entities import (
+    get_allowed_sales_entity_names,
+)
 
 BOOTSTRAP_DASHBOARD_FALLBACK_FLAG = "at_dashboard_allow_bootstrap_global_fallback"
 
@@ -141,6 +144,57 @@ def allowed_customers_for_user(include_meta: bool = False):
         return _result([], "empty", "non_system_user")
 
     if fallback_enabled:
+        return _result(None, "global", "bootstrap_fallback_enabled")
+
+    frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)
+
+
+def allowed_sales_entities_for_user(user: str | None = None, include_meta: bool = False):
+    """
+    Get sales entities accessible by user, considering their role and assigned sales entities.
+
+    Returns:
+        - None if user has global access (Manager, Accountant, Administrator)
+        - list of sales entity names if user has restricted access (Agent)
+        - [] (empty list) if user has no access assigned
+
+    With include_meta=True:
+        Returns (allowed_sales_entities, metadata_dict)
+    """
+    def _result(allowed_sales_entities: list[str] | None, access_scope: str, scope_reason: str):
+        meta = {"access_scope": access_scope, "scope_reason": scope_reason}
+        if include_meta:
+            return allowed_sales_entities, meta
+        return allowed_sales_entities
+
+    if user is None:
+        user = frappe.session.user
+
+    if user == "Administrator":
+        return _result(None, "global", "administrator")
+    if user == "Guest":
+        frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)
+
+    roles = set(frappe.get_roles(user))
+    
+    # Global access roles
+    if {"System Manager", "Manager", "Accountant"}.intersection(roles):
+        return _result(None, "global", "privileged_role")
+
+    # Agent role: restricted to assigned sales entities
+    if "Agent" in roles:
+        allowed_sales_entities = sorted(get_allowed_sales_entity_names(user=user)) or []
+        if allowed_sales_entities:
+            return _result(allowed_sales_entities, "scoped", "agent_sales_entity_assignment")
+        return _result([], "empty", "agent_sales_entity_unassigned")
+
+    # Non-system users
+    user_type = frappe.db.get_value("User", user, "user_type")
+    if user_type and user_type != "System User":
+        return _result([], "empty", "non_system_user")
+
+    # Fall back to global access if bootstrap flag enabled
+    if dashboard_bootstrap_global_fallback_enabled():
         return _result(None, "global", "bootstrap_fallback_enabled")
 
     frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)

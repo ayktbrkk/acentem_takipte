@@ -8,6 +8,8 @@
   "policy",
   "customer",
   "office_branch",
+  "origin_office_branch",
+  "current_office_branch",
   "assigned_expert",
   "claim_type",
   "claim_status",
@@ -49,6 +51,20 @@
    "fieldtype": "Link",
    "label": "Office Branch",
    "options": "AT Office Branch"
+  },
+  {
+   "fieldname": "origin_office_branch",
+   "fieldtype": "Link",
+   "label": "Origin Office Branch",
+   "options": "AT Office Branch",
+   "description": "Kayıt anındaki ofis şubesi - tarihsel rapor ve muhasebe tutarlılığı için kullanılır."
+  },
+  {
+   "fieldname": "current_office_branch",
+   "fieldtype": "Link",
+   "label": "Current Office Branch",
+   "options": "AT Office Branch",
+   "description": "Güncel ofis şubesi - operasyonel iş listeleri ve transfer/devir akışları için kullanılır."
   },
   {
    "fieldname": "assigned_expert",

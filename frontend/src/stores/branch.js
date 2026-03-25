@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 
 import { OFFICE_BRANCH_QUERY_KEY } from "../router";
 import { sessionState } from "../state/session";
+import { buildOfficeBranchOptions } from "../utils/officeBranchTree";
 
 export const useBranchStore = defineStore("branch", () => {
   const items = ref([]);
@@ -11,13 +12,7 @@ export const useBranchStore = defineStore("branch", () => {
   const error = ref("");
   const canAccessAll = ref(false);
 
-  const options = computed(() => items.value.map((item) => ({
-    value: item.name,
-    label: item.office_branch_name || item.name,
-    code: item.office_branch_code || "",
-    city: item.city || "",
-    isDefault: Boolean(item.is_default),
-  })));
+  const options = computed(() => buildOfficeBranchOptions(items.value, { locale: sessionState.locale }));
   const defaultBranch = computed(() => {
     const defaultName = sessionState.defaultOfficeBranch || null;
     if (defaultName) {

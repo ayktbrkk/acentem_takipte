@@ -610,33 +610,33 @@ const statementImportLimit = ref(100);
 const statementImportPreview = ref({ rows: [], summary: {} });
 
 const workbenchResource = createResource({
-  url: "acentem_takipte.api.accounting.get_reconciliation_workbench",
+  url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
   params: buildParams(),
   auto: true,
 });
 
 const syncResource = createResource({
-  url: "acentem_takipte.api.accounting.run_sync",
+  url: "acentem_takipte.acentem_takipte.api.accounting.run_sync",
 });
 
 const runReconciliationResource = createResource({
-  url: "acentem_takipte.api.accounting.run_reconciliation_job",
+  url: "acentem_takipte.acentem_takipte.api.accounting.run_reconciliation_job",
 });
 const bulkResolveResource = createResource({
-  url: "acentem_takipte.api.accounting.bulk_resolve_items",
+  url: "acentem_takipte.acentem_takipte.api.accounting.bulk_resolve_items",
 });
 
 const resolveResource = createResource({
-  url: "acentem_takipte.api.accounting.resolve_item",
+  url: "acentem_takipte.acentem_takipte.api.accounting.resolve_item",
 });
 const setValueResource = createResource({
   url: "frappe.client.set_value",
 });
 const previewStatementImportResource = createResource({
-  url: "acentem_takipte.api.accounting.preview_statement_import",
+  url: "acentem_takipte.acentem_takipte.api.accounting.preview_statement_import",
 });
 const importStatementPreviewResource = createResource({
-  url: "acentem_takipte.api.accounting.import_statement_preview",
+  url: "acentem_takipte.acentem_takipte.api.accounting.import_statement_preview",
 });
 
 const workbenchData = computed(() => accountingStore.state.workbench || {});
@@ -1207,3 +1207,4 @@ watch(
   @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
 }
 </style>
+

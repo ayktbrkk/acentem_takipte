@@ -15,6 +15,7 @@ from acentem_takipte.acentem_takipte.services.export_payload_utils import (
     coerce_string_list,
     normalize_export_key,
 )
+from acentem_takipte.acentem_takipte.services.report_isolation import apply_scope_filters_to_report
 from acentem_takipte.acentem_takipte.services.report_registry import get_report_definition
 from acentem_takipte.acentem_takipte.services.reports_runtime import (
     build_report_download_response,
@@ -29,10 +30,19 @@ def _get_report_payload(report_key: str, filters: dict | None = None, limit: int
     safe_report_key = normalize_export_key(report_key)
     assert_authenticated()
     assert_doctype_permission(str(get_report_definition(safe_report_key)["permission_doctype"]), "read")
-    return _coerce_report_payload(
-        build_safe_report_payload(safe_report_key, filters=_coerce_filters(filters), limit=max(cint(limit), 1)),
+    
+    # Apply user's scope filters (branch + sales_entity) to report
+    scoped_filters = apply_scope_filters_to_report(
         safe_report_key,
-        _coerce_filters(filters),
+        filters=_coerce_filters(filters),
+        auto_add_branch_filter=True,
+        auto_add_sales_entity_filter=True,
+    )
+    
+    return _coerce_report_payload(
+        build_safe_report_payload(safe_report_key, filters=scoped_filters, limit=max(cint(limit), 1)),
+        safe_report_key,
+        scoped_filters,
     )
 
 

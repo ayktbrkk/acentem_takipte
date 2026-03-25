@@ -165,7 +165,7 @@ def test_build_download_response_ignores_invalid_payload_shapes(monkeypatch):
     )
 
     assert response["filename"] == "report.xlsx"
-    assert captured["columns"] == []
+    assert captured["columns"] == ["name"]
     assert captured["rows"] == []
     assert captured["filters"] == {}
 

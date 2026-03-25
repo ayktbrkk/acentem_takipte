@@ -6,6 +6,7 @@
  "field_order": [
   "office_branch_name",
   "office_branch_code",
+  "is_head_office",
   "parent_office_branch",
   "city",
   "manager_user",
@@ -24,6 +25,12 @@
    "fieldtype": "Data",
    "label": "Office Branch Code",
    "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_head_office",
+   "fieldtype": "Check",
+   "label": "Is Head Office"
   },
   {
    "fieldname": "parent_office_branch",
@@ -50,9 +57,11 @@
   }
  ],
  "index_web_pages_for_search": 1,
+ "is_tree": 1,
  "links": [],
  "module": "Acentem Takipte",
  "name": "AT Office Branch",
+ "nsm_parent_field": "parent_office_branch",
  "permissions": [
   {
    "create": 1,

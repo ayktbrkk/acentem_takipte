@@ -310,7 +310,7 @@ function t(key) {
 
 const offerResource = createResource({ url: "frappe.client.get", auto: false });
 const offerDetailPayloadResource = createResource({
-  url: "acentem_takipte.api.dashboard.get_offer_detail_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_offer_detail_payload",
   auto: false,
 });
 const relatedOffersResource = createResource({ url: "frappe.client.get_list", auto: false });
@@ -582,7 +582,7 @@ function goBack() {
 }
 function downloadPDF() {
   if (!props.name) return;
-  const url = `/api/method/acentem_takipte.api.list_exports.download_export?screen=offer_detail&format=pdf&name=${encodeURIComponent(props.name)}`;
+  const url = `/api/method/acentem_takipte.acentem_takipte.api.list_exports.download_export?screen=offer_detail&format=pdf&name=${encodeURIComponent(props.name)}`;
   window.open(url, "_blank", "noopener,noreferrer");
 }
 function sendEmail() {
@@ -736,3 +736,4 @@ watch(
   { immediate: true }
 );
 </script>
+

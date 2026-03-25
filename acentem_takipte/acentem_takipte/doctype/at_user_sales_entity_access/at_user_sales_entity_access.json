@@ -1,0 +1,77 @@
+{
+ "actions": [],
+ "autoname": "prompt",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "sales_entity",
+  "scope_mode",
+  "is_default",
+  "is_active",
+  "valid_until"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sales_entity",
+   "fieldtype": "Link",
+   "label": "Sales Entity",
+   "options": "AT Sales Entity",
+   "reqd": 1
+  },
+  {
+   "default": "self_only",
+   "fieldname": "scope_mode",
+   "fieldtype": "Select",
+   "label": "Scope Mode",
+   "options": "self_only\nself_and_descendants",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Is Default"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "valid_until",
+   "fieldtype": "Date",
+   "label": "Valid Until"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT User Sales Entity Access",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -700,6 +700,9 @@ def get_reconciliation_operations_report_rows(filters: dict[str, Any] | None = N
     if normalized.get("office_branch"):
         conditions.append("ae.office_branch = %(office_branch)s")
         values["office_branch"] = normalized["office_branch"]
+    if normalized.get("sales_entity"):
+        conditions.append("ae.sales_entity = %(sales_entity)s")
+        values["sales_entity"] = normalized["sales_entity"]
     if normalized.get("status"):
         conditions.append("ri.status = %(status)s")
         values["status"] = normalized["status"]
@@ -724,6 +727,7 @@ def get_reconciliation_operations_report_rows(filters: dict[str, Any] | None = N
             ae.source_name,
             ae.policy,
             ae.customer,
+            ae.sales_entity,
             ri.status,
             ri.mismatch_type,
             ifnull(ri.difference_try, 0) as difference_try,

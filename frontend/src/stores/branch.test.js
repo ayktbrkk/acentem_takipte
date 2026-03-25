@@ -49,4 +49,19 @@ describe("branch store", () => {
 
     expect(store.selected).toBe("BR-2");
   });
+
+  it("builds tree-aware branch option labels", () => {
+    sessionState.officeBranches = [
+      { name: "HQ", office_branch_name: "AT Sigorta", is_head_office: 1, is_default: 1 },
+      { name: "SUB", office_branch_name: "Ankara", parent_office_branch: "HQ", is_default: 0 },
+    ];
+    sessionState.defaultOfficeBranch = "HQ";
+    sessionState.locale = "tr";
+
+    const store = useBranchStore();
+    store.hydrateFromSession();
+
+    expect(store.options.map((row) => row.label)).toEqual(["AT Sigorta [Merkez]", "  - Ankara"]);
+  });
 });
+

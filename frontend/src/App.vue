@@ -1,5 +1,26 @@
 <template>
   <div class="app-shell min-h-screen w-full">
+    <div
+      v-if="scopeRefreshNotice"
+      class="fixed right-4 top-4 z-50 flex max-w-sm items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 shadow"
+      role="alert"
+      aria-live="assertive"
+    >
+      <span class="flex-1">{{ scopeRefreshNotice }}</span>
+      <button
+        class="shrink-0 rounded bg-amber-600 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+        @click="confirmScopeRefresh"
+      >
+        Yenile
+      </button>
+      <button
+        class="shrink-0 text-amber-700 hover:text-amber-900 focus:outline-none"
+        aria-label="Kapat"
+        @click="dismissScopeNotice"
+      >
+        &times;
+      </button>
+    </div>
     <div class="flex min-h-screen w-full">
       <Sidebar :mobile-open="uiStore.sidebarOpen" @close="uiStore.closeSidebar" @navigate="uiStore.closeSidebar" />
       <div class="at-shell-content flex min-w-0 flex-1 flex-col overflow-x-hidden">
@@ -18,14 +39,59 @@
 </template>
 
 <script setup>
-import { watch } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import Sidebar from "./components/Sidebar.vue";
 import Topbar from "./components/Topbar.vue";
+import { sessionState } from "./state/session";
 import { useUiStore } from "./stores/ui";
 
 const uiStore = useUiStore();
 const route = useRoute();
+const scopeRefreshNotice = ref("");
+
+let scopeChangeHandler = null;
+
+// - No auto-reload: if the user has an unsaved form open, a forced reload would
+//   discard their work. Instead we show a persistent notice and let the user
+//   decide when it is safe to reload.
+function handleScopeChanged(payload) {
+  const targetUser = String(payload?.user || "").trim();
+  if (targetUser && sessionState.userId && targetUser !== sessionState.userId) {
+    return;
+  }
+  scopeRefreshNotice.value = "Erisim yetkileriniz guncellendi. Guncel yetkilerle devam etmek icin sayfayi yenileyin.";
+}
+
+function confirmScopeRefresh() {
+  scopeRefreshNotice.value = "";
+  window.location.reload();
+}
+
+function dismissScopeNotice() {
+  scopeRefreshNotice.value = "";
+}
+
+function bindScopeRealtimeListener() {
+  const realtime = window?.frappe?.realtime;
+  if (!realtime || typeof realtime.on !== "function") {
+    return;
+  }
+
+  scopeChangeHandler = (payload) => {
+    handleScopeChanged(payload || {});
+  };
+  realtime.on("at_scope_changed", scopeChangeHandler);
+}
+
+function unbindScopeRealtimeListener() {
+  const realtime = window?.frappe?.realtime;
+  if (!realtime || typeof realtime.off !== "function" || !scopeChangeHandler) {
+    return;
+  }
+  realtime.off("at_scope_changed", scopeChangeHandler);
+  scopeChangeHandler = null;
+}
 
 watch(
   () => route.fullPath,
@@ -34,4 +100,12 @@ watch(
     uiStore.closeSidebar();
   }
 );
+
+onMounted(() => {
+  bindScopeRealtimeListener();
+});
+
+onBeforeUnmount(() => {
+  unbindScopeRealtimeListener();
+});
 </script>

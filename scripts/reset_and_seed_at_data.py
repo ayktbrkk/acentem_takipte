@@ -5,6 +5,24 @@ import frappe
 from frappe.utils import add_days, now_datetime, nowdate
 
 
+def _insert_named(doc_dict):
+    """Insert a Frappe document with an explicitly-set name, bypassing autoname.
+
+    Some doctypes use a broken ``format:`` autoname (e.g. ``format:AT-SEG-.YYYY.-.#####``)
+    where the tokens are not in ``{braces}`` so Frappe's _format_autoname returns the
+    literal string every time.  Frappe's set_new_name() resets ``doc.name = None`` for
+    all non-prompt autonaming, so we must hold ``frappe.flags.in_import = True`` to
+    prevent that reset and preserve the explicit name we supply.
+    """
+    doc = frappe.get_doc(doc_dict)
+    prev = frappe.flags.in_import
+    frappe.flags.in_import = True
+    try:
+        return doc.insert(ignore_permissions=True)
+    finally:
+        frappe.flags.in_import = prev
+
+
 SEED_COUNT = int(globals().get("SEED_COUNT", 5) or 5)
 PRESERVE_TEMPLATES = bool(int(globals().get("PRESERVE_TEMPLATES", 1)))
 ONLY_IF_NAME_LIKE = globals().get("ONLY_IF_NAME_LIKE", "Demo%")
@@ -19,16 +37,30 @@ PURGE_ORDER = [
     "AT Accounting Entry",
     "AT Policy Endorsement",
     "AT Policy Snapshot",
+    "AT Renewal Outcome",
     "AT Renewal Task",
+    "AT Payment Installment",
     "AT Payment",
+    "AT Campaign",
+    "AT Ownership Assignment",
+    "AT Task",
+    "AT Reminder",
+    "AT Activity",
+    "AT Call Note",
     "AT Claim",
     "AT Offer",
     "AT Lead",
+    "AT Insured Asset",
+    "AT Customer Segment Snapshot",
+    "AT Customer Relation",
     "AT Policy",
     "AT Customer",
     "AT Branch",
     "AT Sales Entity",
     "AT Insurance Company",
+    "AT User Branch Access",
+    "AT Segment",
+    "AT Office Branch",
 ]
 
 PURGE_SAFETY_RULES = [
@@ -48,16 +80,16 @@ TR_COMPANY_SEEDS = [
 ]
 
 TR_BRANCH_SEEDS = [
-    {"branch_name": "Doga Sigorta - Trafik", "branch_code": "DOGA-TRF", "company_idx": 0},
-    {"branch_name": "Quick Sigorta - Kasko", "branch_code": "QCK-KSK", "company_idx": 1},
-    {"branch_name": "Sompo Sigorta - Konut", "branch_code": "SMP-KNT", "company_idx": 2},
-    {"branch_name": "Hepiyi Sigorta - Trafik", "branch_code": "HPY-TRF", "company_idx": 3},
-    {"branch_name": "Anadolu Sigorta - DASK", "branch_code": "AND-DSK", "company_idx": 4},
+    {"branch_name": "Trafik", "branch_code": "TRF", "company_idx": 0},
+    {"branch_name": "Kasko", "branch_code": "KSK", "company_idx": 1},
+    {"branch_name": "Konut", "branch_code": "KNT", "company_idx": 2},
+    {"branch_name": "Tamamlayici Saglik", "branch_code": "TSS", "company_idx": 3},
+    {"branch_name": "DASK", "branch_code": "DSK", "company_idx": 4},
 ]
 
 TR_CUSTOMER_SEEDS = [
     {
-        "tax_id": "90000000101",
+        "tax_id": "17845329616",
         "full_name": "Yunus Emre Erdogan",
         "birth_date": "1990-06-24",
         "gender": "Male",
@@ -69,7 +101,7 @@ TR_CUSTOMER_SEEDS = [
         "consent_status": "Granted",
     },
     {
-        "tax_id": "90000000102",
+        "tax_id": "24361582708",
         "full_name": "Ayse Nur Demir",
         "birth_date": "1988-11-12",
         "gender": "Female",
@@ -81,7 +113,7 @@ TR_CUSTOMER_SEEDS = [
         "consent_status": "Granted",
     },
     {
-        "tax_id": "90000000103",
+        "tax_id": "35927148368",
         "full_name": "Mehmet Ali Kaya",
         "birth_date": "1985-03-09",
         "gender": "Male",
@@ -93,7 +125,7 @@ TR_CUSTOMER_SEEDS = [
         "consent_status": "Unknown",
     },
     {
-        "tax_id": "90000000104",
+        "tax_id": "41683495202",
         "full_name": "Elif Su Acar",
         "birth_date": "1994-08-17",
         "gender": "Female",
@@ -105,7 +137,7 @@ TR_CUSTOMER_SEEDS = [
         "consent_status": "Granted",
     },
     {
-        "tax_id": "90000000105",
+        "tax_id": "58249613772",
         "full_name": "Murat Can Yildiz",
         "birth_date": "1979-01-30",
         "gender": "Male",
@@ -258,6 +290,48 @@ def seed():
         )
     created["AT Insurance Company"] = [d.name for d in companies]
 
+    office_branches = []
+    office_branch_specs = [
+        {"office_branch_name": "AT Sigorta", "office_branch_code": "AT-MRK", "city": "Istanbul"},
+    ]
+    for spec in office_branch_specs:
+        office_branches.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT Office Branch",
+                    "office_branch_name": spec["office_branch_name"],
+                    "office_branch_code": spec["office_branch_code"],
+                    "is_head_office": 1,
+                    "city": spec["city"],
+                    "is_active": 1,
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT Office Branch"] = [d.name for d in office_branches]
+
+    segments = []
+    segment_specs = [
+        {"segment_name": "Trafik Yenileme - Istanbul", "segment_type": "Dynamic", "channel_focus": "WHATSAPP", "status": "Active"},
+        {"segment_name": "Kasko Kampanya", "segment_type": "Static", "channel_focus": "SMS", "status": "Active"},
+        {"segment_name": "Konut VIP Musteri", "segment_type": "Dynamic", "channel_focus": "Email", "status": "Active"},
+        {"segment_name": "Saglik Yenileme", "segment_type": "Operational", "channel_focus": "Phone Call", "status": "Draft"},
+        {"segment_name": "DASK Hatirlatma", "segment_type": "Static", "channel_focus": "WHATSAPP", "status": "Active"},
+    ]
+    for i, spec in enumerate(segment_specs):
+        segments.append(
+            _insert_named(
+                {
+                    "doctype": "AT Segment",
+                    "name": f"AT-SEG-{now_dt.year}-{i + 1:05d}",
+                    "segment_name": spec["segment_name"],
+                    "segment_type": spec["segment_type"],
+                    "channel_focus": spec["channel_focus"],
+                    "status": spec["status"],
+                }
+            )
+        )
+    created["AT Segment"] = [d.name for d in segments]
+
     branches = []
     for i in range(seed_n):
         branch_seed = TR_BRANCH_SEEDS[i]
@@ -275,34 +349,21 @@ def seed():
     created["AT Branch"] = [d.name for d in branches]
 
     sales_entities = []
-    root_entity = frappe.get_doc(
-        {
-            "doctype": "AT Sales Entity",
-            "entity_type": "Agency",
-            "full_name": "Acentem Takipte Merkez Acente",
-        }
-    ).insert(ignore_permissions=True)
-    sales_entities.append(root_entity)
-    sales_entity_names = [
-        ("Representative", "Kadikoy Temsilcilik"),
-        ("Representative", "Ankara Cankaya Temsilcilik"),
-        ("Sub-Account", "Izmir Kurumsal Hesap"),
-        ("Representative", "Bursa Nilufer Temsilcilik"),
-        ("Sub-Account", "Adana Seyhan Kurumsal Hesap"),
-        ("Representative", "Antalya Merkez Temsilcilik"),
-        ("Representative", "Konya Merkez Temsilcilik"),
-        ("Sub-Account", "Trabzon Karadeniz Kurumsal"),
-        ("Representative", "Ankara Yenimahalle Temsilcilik"),
+    sales_entity_specs = [
+        ("Agency", "AT Sigorta"),
+        ("Agency", "Buyukkaya Sigorta"),
+        ("Representative", "Havva Karagoz"),
+        ("Agency", "Koalay Sigorta"),
+        ("Agency", "Erturk Sigorta"),
     ]
-    for i in range(1, seed_n):
-        ent_type, ent_name = sales_entity_names[(i - 1) % len(sales_entity_names)]
+    for ent_type, ent_name in sales_entity_specs:
         sales_entities.append(
             frappe.get_doc(
                 {
                     "doctype": "AT Sales Entity",
                     "entity_type": ent_type,
                     "full_name": ent_name,
-                    "parent_entity": root_entity.name,
+                    "office_branch": office_branches[0].name,
                 }
             ).insert(ignore_permissions=True)
         )
@@ -315,6 +376,7 @@ def seed():
             frappe.get_doc(
                 {
                     "doctype": "AT Customer",
+                    "customer_type": "Individual",
                     "tax_id": customer_seed["tax_id"],
                     "full_name": customer_seed["full_name"],
                     "birth_date": customer_seed["birth_date"],
@@ -324,6 +386,7 @@ def seed():
                     "phone": customer_seed["phone"],
                     "email": customer_seed["email"],
                     "address": customer_seed["address"],
+                    "office_branch": office_branches[i % len(office_branches)].name,
                     "assigned_agent": actor_user if actor_user != "Administrator" else None,
                     "consent_status": customer_seed["consent_status"],
                 }
@@ -350,9 +413,12 @@ def seed():
                     "doctype": "AT Lead",
                     "first_name": first_name,
                     "last_name": last_name,
+                    "phone": customers[i].phone,
+                    "tax_id": customers[i].tax_id,
                     "email": customers[i].email,
                     "status": lead_statuses[i],
                     "customer": customers[i].name,
+                    "office_branch": office_branches[i % len(office_branches)].name,
                     "sales_entity": sales_entities[i].name,
                     "insurance_company": branches[i].insurance_company,
                     "branch": branches[i].name,
@@ -380,6 +446,7 @@ def seed():
                     "doctype": "AT Offer",
                     "source_lead": leads[i].name,
                     "customer": customers[i].name,
+                    "office_branch": office_branches[i % len(office_branches)].name,
                     "sales_entity": sales_entities[i].name,
                     "insurance_company": branches[i].insurance_company,
                     "branch": branches[i].name,
@@ -400,7 +467,7 @@ def seed():
     policies = []
     policy_statuses = ["Active", "KYT", "Active", "IPT", "Active"]
     policy_start_offsets = [-330, -210, -60, -400, -15]
-    policy_line_prefix = ["TRF", "KSK", "KNT", "TRF", "DSK"]
+    policy_line_prefix = ["TRF", "KSK", "KNT", "TSAG", "DSK"]
     policy_net = [17100, 23800, 6100, 12400, 2100]
     policy_tax = [855, 1190, 610, 620, 210]
     policy_comm = [1368, 1904, 732, 868, 252]
@@ -415,20 +482,25 @@ def seed():
             {
                 "doctype": "AT Policy",
                 "customer": customers[i].name,
+                "office_branch": office_branches[i % len(office_branches)].name,
                 "sales_entity": sales_entities[i].name,
                 "insurance_company": branches[i].insurance_company,
                 "branch": branches[i].name,
                 "policy_no": f"{policy_line_prefix[i]}-{now_dt.year}-{i + 1:06d}",
+                "source_offer": offers[i].name,
                 "status": policy_statuses[i],
                 "issue_date": add_days(start_date, -2),
                 "start_date": start_date,
                 "end_date": end_date,
                 "currency": "TRY",
+                "fx_rate": 1,
+                "fx_date": add_days(start_date, -2),
                 "net_premium": net_premium,
                 "tax_amount": tax_amount,
                 "commission_amount": commission_amount,
                 "commission": commission_amount,
                 "gross_premium": gross_premium,
+                "notes": f"{customers[i].full_name} - {TR_BRANCH_SEEDS[i]['branch_name']} polisi",
             }
         ).insert(ignore_permissions=True)
         policies.append(policy)
@@ -480,8 +552,11 @@ def seed():
                     "doctype": "AT Claim",
                     "policy": policies[i].name,
                     "customer": customers[i].name,
+                    "office_branch": office_branches[i % len(office_branches)].name,
+                    "assigned_expert": actor_user if actor_user != "Administrator" else None,
                     "claim_type": claim_types[i],
                     "claim_status": claim_statuses[i],
+                    "next_follow_up_on": add_days(today, 5 + i),
                     "incident_date": add_days(today, -(10 + i)),
                     "reported_date": add_days(today, -(8 + i)),
                     "currency": "TRY",
@@ -549,13 +624,18 @@ def seed():
             "customer": spec["customer"],
             "policy": spec.get("policy"),
             "claim": spec.get("claim"),
+            "office_branch": office_branches[i % len(office_branches)].name,
             "sales_entity": sales_entities[i].name,
             "payment_direction": spec["payment_direction"],
             "payment_purpose": spec["payment_purpose"],
             "status": spec["status"],
             "payment_date": add_days(today, -i),
             "due_date": spec["due_date"],
+            "installment_count": 1,
+            "installment_interval_days": 30,
             "currency": "TRY",
+            "fx_rate": 1,
+            "fx_date": add_days(today, -i),
             "amount": spec["amount"],
             "reference_no": f"TRPAY-{now_dt.year}-{i + 1:03d}",
             "notes": f"{spec['payment_purpose']} - {customers[i].full_name}",
@@ -564,7 +644,8 @@ def seed():
     created["AT Payment"] = [d.name for d in payments]
 
     renewal_tasks = []
-    renewal_statuses = ["Open", "In Progress", "Done", "Cancelled", "Open"]
+    renewal_statuses = ["Done", "Cancelled", "Done", "Cancelled", "Done"]
+    renewal_lost_reasons = [None, "Price", None, None, None]
     for i in range(seed_n):
         renewal_date = add_days(policies[i].end_date, -15)
         due_date = add_days(renewal_date, -7)
@@ -574,10 +655,12 @@ def seed():
                     "doctype": "AT Renewal Task",
                     "policy": policies[i].name,
                     "customer": customers[i].name,
+                    "office_branch": office_branches[i % len(office_branches)].name,
                     "policy_end_date": policies[i].end_date,
                     "renewal_date": renewal_date,
                     "due_date": due_date,
                     "status": renewal_statuses[i],
+                    "lost_reason_code": renewal_lost_reasons[i],
                     "assigned_to": actor_user if actor_user != "Administrator" else None,
                     "auto_created": 1 if i % 2 == 0 else 0,
                     "notes": f"{customers[i].full_name} yenileme takibi",
@@ -585,6 +668,294 @@ def seed():
             ).insert(ignore_permissions=True)
         )
     created["AT Renewal Task"] = [d.name for d in renewal_tasks]
+
+    insured_assets = []
+    asset_specs = [
+        {"asset_type": "Vehicle", "asset_label": "Toyota Corolla 2021", "asset_identifier": "34ABC1234"},
+        {"asset_type": "Vehicle", "asset_label": "Honda Civic 2019", "asset_identifier": "06XYZ5678"},
+        {"asset_type": "Home", "asset_label": "Konak Yolboyu Apt. D:7", "asset_identifier": "IZM-170-043-001"},
+        {"asset_type": "Health Person", "asset_label": "Bireysel Saglik Sigortasi", "asset_identifier": ""},
+        {"asset_type": "Home", "asset_label": "Seyhan Karatas Cad. D:12", "asset_identifier": "ADA-022-011-005"},
+    ]
+    for i in range(seed_n):
+        spec = asset_specs[i]
+        insured_assets.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT Insured Asset",
+                    "customer": customers[i].name,
+                    "policy": policies[i].name,
+                    "asset_type": spec["asset_type"],
+                    "asset_label": spec["asset_label"],
+                    "asset_identifier": spec["asset_identifier"],
+                    "notes": f"{customers[i].full_name} - {spec['asset_label']}",
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT Insured Asset"] = [d.name for d in insured_assets]
+
+    call_notes = []
+    call_specs = [
+        {"direction": "Outbound", "call_status": "Completed", "call_outcome": "Teklif gonderildi", "channel": "Phone Call"},
+        {"direction": "Inbound", "call_status": "Completed", "call_outcome": "Bilgi talep etti", "channel": "Phone Call"},
+        {"direction": "Outbound", "call_status": "No Answer", "call_outcome": "", "channel": "Phone Call"},
+        {"direction": "Outbound", "call_status": "Completed", "call_outcome": "Yenileme onaylandi", "channel": "WhatsApp Call"},
+        {"direction": "Inbound", "call_status": "Missed", "call_outcome": "", "channel": "Phone Call"},
+    ]
+    for i in range(seed_n):
+        spec = call_specs[i]
+        call_notes.append(
+            _insert_named(
+                {
+                    "doctype": "AT Call Note",
+                    "name": f"AT-CALL-{now_dt.year}-{i + 1:05d}",
+                    "customer": customers[i].name,
+                    "policy": policies[i].name,
+                    "channel": spec["channel"],
+                    "direction": spec["direction"],
+                    "call_status": spec["call_status"],
+                    "call_outcome": spec["call_outcome"],
+                    "note_at": now_dt,
+                    "next_follow_up_on": add_days(today, 7 + i),
+                    "notes": f"{customers[i].full_name} gorusme notu",
+                }
+            )
+        )
+    created["AT Call Note"] = [d.name for d in call_notes]
+
+    activities = []
+    activity_specs = [
+        {"activity_type": "Call", "activity_title": "Teklif Telefonu"},
+        {"activity_type": "Note", "activity_title": "Police Notu Eklendi"},
+        {"activity_type": "Claim Update", "activity_title": "Hasar Durumu Guncellendi"},
+        {"activity_type": "Renewal Update", "activity_title": "Yenileme Takibi"},
+        {"activity_type": "Collection", "activity_title": "Prim Tahsilat Notu"},
+    ]
+    for i in range(seed_n):
+        spec = activity_specs[i]
+        activities.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT Activity",
+                    "activity_title": spec["activity_title"],
+                    "activity_type": spec["activity_type"],
+                    "source_doctype": "AT Policy",
+                    "source_name": policies[i].name,
+                    "customer": customers[i].name,
+                    "policy": policies[i].name,
+                    "activity_at": now_dt,
+                    "status": "Logged",
+                    "notes": f"{customers[i].full_name} aktivite kaydi",
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT Activity"] = [d.name for d in activities]
+
+    customer_relations = []
+    relation_specs = [
+        (0, 1, "Spouse", 1),
+        (2, 3, "Sibling", 0),
+        (0, 2, "Other", 0),
+        (1, 3, "Household", 1),
+        (3, 4, "Child", 1),
+    ]
+    for ci, ri, rel_type, is_household in relation_specs:
+        customer_relations.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT Customer Relation",
+                    "customer": customers[ci].name,
+                    "related_customer": customers[ri].name,
+                    "relation_type": rel_type,
+                    "is_household": is_household,
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT Customer Relation"] = [d.name for d in customer_relations]
+
+    segment_snapshots = []
+    snapshot_value_bands = ["High", "Medium", "Medium", "Low", "High"]
+    snapshot_claim_risks = ["Low", "Medium", "Low", "High", "Low"]
+    snapshot_segment_labels = ["VIP", "Standard", "Standard", "Risk", "VIP"]
+    snapshot_scores = [85, 62, 71, 38, 91]
+    for i in range(seed_n):
+        segment_snapshots.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT Customer Segment Snapshot",
+                    "customer": customers[i].name,
+                    "snapshot_date": today,
+                    "source_version": "v1",
+                    "score": snapshot_scores[i],
+                    "segment": snapshot_segment_labels[i],
+                    "claim_risk": snapshot_claim_risks[i],
+                    "value_band": snapshot_value_bands[i],
+                    "strengths_json": json.dumps({"signals": ["uzun_musteri", "dusuk_hasar"][: i % 2 + 1]}),
+                    "risks_json": json.dumps({"signals": ["odeme_gecikmesi"] if i == 3 else []}),
+                    "score_reason_json": json.dumps({"reason": f"Skor hesaplandi - musteri {i + 1}"}),
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT Customer Segment Snapshot"] = [d.name for d in segment_snapshots]
+
+    at_tasks = []
+    task_specs = [
+        {"task_title": "Policeye Yenileme Teklifi Hazirla", "task_type": "Renewal"},
+        {"task_title": "Hasar Belgesi Talep Et", "task_type": "Claim"},
+        {"task_title": "Musteri Ziyareti Planla", "task_type": "Visit"},
+        {"task_title": "Prim Tahsilat Aramasi Yap", "task_type": "Collection"},
+        {"task_title": "Konut Policesi Degerlendirme", "task_type": "Review"},
+    ]
+    task_statuses = ["Open", "In Progress", "Done", "Cancelled", "Open"]
+    task_priorities = ["High", "Normal", "Normal", "High", "Low"]
+    for i in range(seed_n):
+        spec = task_specs[i]
+        at_tasks.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT Task",
+                    "task_title": spec["task_title"],
+                    "task_type": spec["task_type"],
+                    "source_doctype": "AT Policy",
+                    "source_name": policies[i].name,
+                    "customer": customers[i].name,
+                    "policy": policies[i].name,
+                    "assigned_to": actor_user,
+                    "status": task_statuses[i],
+                    "priority": task_priorities[i],
+                    "due_date": add_days(today, 7 + i),
+                    "notes": f"{customers[i].full_name} gorevi",
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT Task"] = [d.name for d in at_tasks]
+
+    reminders = []
+    reminder_specs = [
+        {"reminder_title": "Yenileme Hatirlatmasi", "priority": "High"},
+        {"reminder_title": "Kasko Odeme Vadesi", "priority": "Normal"},
+        {"reminder_title": "Hasar Takip Notu", "priority": "Normal"},
+        {"reminder_title": "IPT Police Kontrol", "priority": "High"},
+        {"reminder_title": "DASK Kampanya Hatirlatma", "priority": "Low"},
+    ]
+    reminder_statuses = ["Open", "Open", "Done", "Cancelled", "Open"]
+    for i in range(seed_n):
+        spec = reminder_specs[i]
+        reminders.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT Reminder",
+                    "reminder_title": spec["reminder_title"],
+                    "source_doctype": "AT Policy",
+                    "source_name": policies[i].name,
+                    "customer": customers[i].name,
+                    "policy": policies[i].name,
+                    "assigned_to": actor_user,
+                    "status": reminder_statuses[i],
+                    "priority": spec["priority"],
+                    "remind_at": str(add_days(today, i + 1)) + " 09:00:00",
+                    "notes": f"{customers[i].full_name} hatirlatma",
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT Reminder"] = [d.name for d in reminders]
+
+    ownership_assignments = []
+    assignment_roles = ["Owner", "Assignee", "Reviewer", "Owner", "Follower"]
+    assignment_statuses = ["Open", "In Progress", "Done", "Open", "Cancelled"]
+    assignment_priorities = ["High", "Normal", "Normal", "High", "Low"]
+    for i in range(seed_n):
+        ownership_assignments.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT Ownership Assignment",
+                    "source_doctype": "AT Policy",
+                    "source_name": policies[i].name,
+                    "customer": customers[i].name,
+                    "policy": policies[i].name,
+                    "assigned_to": actor_user,
+                    "assignment_role": assignment_roles[i],
+                    "status": assignment_statuses[i],
+                    "priority": assignment_priorities[i],
+                    "due_date": add_days(today, 14 + i),
+                    "notes": f"{customers[i].full_name} atama kaydi",
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT Ownership Assignment"] = [d.name for d in ownership_assignments]
+
+    payment_installments = []
+    for payment in payments:
+        installment_name = frappe.db.get_value(
+            "AT Payment Installment",
+            {"payment": payment.name, "installment_no": 1},
+            "name",
+        )
+        if not installment_name:
+            frappe.throw(f"Payment installment was not created for payment {payment.name}")
+
+        payment_installments.append(frappe.get_doc("AT Payment Installment", installment_name))
+    created["AT Payment Installment"] = [d.name for d in payment_installments]
+
+    renewal_outcomes = []
+    for i in range(seed_n):
+        outcome_name = frappe.db.get_value(
+            "AT Renewal Outcome",
+            {"renewal_task": renewal_tasks[i].name},
+            "name",
+        )
+        if not outcome_name:
+            frappe.throw(f"Renewal outcome was not created for task {renewal_tasks[i].name}")
+
+        outcome = frappe.get_doc("AT Renewal Outcome", outcome_name)
+        outcome.offer = offers[i].name if renewal_statuses[i] == "Done" else None
+        outcome.notes = f"{customers[i].full_name} yenileme sonucu"
+        outcome.save(ignore_permissions=True)
+        renewal_outcomes.append(outcome)
+    created["AT Renewal Outcome"] = [d.name for d in renewal_outcomes]
+
+    campaigns = []
+    campaign_specs = [
+        {"campaign_name": "Trafik Yenileme 2026 Mart", "channel": "WHATSAPP", "status": "Completed"},
+        {"campaign_name": "Kasko Kampanya - Nisan", "channel": "SMS", "status": "Planned"},
+        {"campaign_name": "Konut VIP Bildirim", "channel": "Email", "status": "Draft"},
+        {"campaign_name": "Saglik Hatirlatma Kampanyasi", "channel": "Phone Call", "status": "Draft"},
+        {"campaign_name": "DASK Yenileme Temmuz", "channel": "WHATSAPP", "status": "Planned"},
+    ]
+    for i in range(seed_n):
+        spec = campaign_specs[i]
+        campaigns.append(
+            _insert_named(
+                {
+                    "doctype": "AT Campaign",
+                    "name": f"AT-CAMP-{now_dt.year}-{i + 1:05d}",
+                    "campaign_name": spec["campaign_name"],
+                    "segment": segments[i].name,
+                    "channel": spec["channel"],
+                    "status": spec["status"],
+                    "scheduled_for": str(add_days(today, 7 + i)) + " 10:00:00",
+                    "notes": f"Kampanya aciklamasi {i + 1}",
+                }
+            )
+        )
+    created["AT Campaign"] = [d.name for d in campaigns]
+
+    user_branch_accesses = []
+    for i, office_branch in enumerate(office_branches):
+        user_branch_accesses.append(
+            frappe.get_doc(
+                {
+                    "doctype": "AT User Branch Access",
+                    "name": f"UBA-SEED-{i + 1:04d}",
+                    "user": actor_user,
+                    "office_branch": office_branch.name,
+                    "scope_mode": "self_and_descendants",
+                    "is_default": 1 if i == 0 else 0,
+                    "is_active": 1,
+                }
+            ).insert(ignore_permissions=True)
+        )
+    created["AT User Branch Access"] = [d.name for d in user_branch_accesses]
 
     # Re-normalize auto-generated communication/accounting side effects to exact 5 sample rows.
     frappe.db.delete("AT Notification Outbox", {})
@@ -762,16 +1133,30 @@ def print_summary(before_counts, after_counts, created):
 TRACK_COUNTS = [
     "AT Insurance Company",
     "AT Branch",
+    "AT Office Branch",
     "AT Sales Entity",
+    "AT Segment",
     "AT Customer",
     "AT Lead",
     "AT Offer",
     "AT Policy",
     "AT Policy Snapshot",
     "AT Policy Endorsement",
+    "AT Insured Asset",
+    "AT Call Note",
+    "AT Activity",
+    "AT Customer Relation",
+    "AT Customer Segment Snapshot",
     "AT Claim",
     "AT Payment",
+    "AT Payment Installment",
     "AT Renewal Task",
+    "AT Renewal Outcome",
+    "AT Task",
+    "AT Reminder",
+    "AT Ownership Assignment",
+    "AT Campaign",
+    "AT User Branch Access",
     "AT Notification Draft",
     "AT Notification Outbox",
     "AT Accounting Entry",

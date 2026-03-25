@@ -127,10 +127,12 @@
     add_fields: [
       "status",
       "customer",
+      "office_branch",
       "insurance_company",
       "estimated_gross_premium",
       "converted_offer",
       "converted_policy",
+      "phone",
       "email",
     ],
     get_indicator(doc) {
@@ -157,7 +159,16 @@
   };
 
   frappe.listview_settings["AT Offer"] = {
-    add_fields: ["status", "customer", "insurance_company", "valid_until", "gross_premium", "converted_policy"],
+    add_fields: [
+      "status",
+      "customer",
+      "office_branch",
+      "insurance_company",
+      "offer_date",
+      "valid_until",
+      "gross_premium",
+      "converted_policy",
+    ],
     get_indicator(doc) {
       return indicatorForField("status", doc.status, offerStatusMap);
     },
@@ -182,7 +193,18 @@
   };
 
   frappe.listview_settings["AT Policy"] = {
-    add_fields: ["status", "customer", "insurance_company", "end_date", "gross_premium", "policy_no"],
+    add_fields: [
+      "status",
+      "customer",
+      "office_branch",
+      "insurance_company",
+      "policy_no",
+      "source_offer",
+      "issue_date",
+      "start_date",
+      "end_date",
+      "gross_premium",
+    ],
     get_indicator(doc) {
       return indicatorForField("status", doc.status, policyStatusMap);
     },
@@ -202,7 +224,16 @@
   };
 
   frappe.listview_settings["AT Customer"] = {
-    add_fields: ["full_name", "phone", "masked_phone", "email", "assigned_agent", "consent_status"],
+    add_fields: [
+      "full_name",
+      "office_branch",
+      "birth_date",
+      "phone",
+      "masked_phone",
+      "email",
+      "assigned_agent",
+      "consent_status",
+    ],
     get_indicator(doc) {
       return indicatorForField("consent_status", doc.consent_status || "Unknown", consentStatusMap);
     },
@@ -221,7 +252,17 @@
   };
 
   frappe.listview_settings["AT Claim"] = {
-    add_fields: ["claim_status", "policy", "customer", "approved_amount", "paid_amount", "reported_date"],
+    add_fields: [
+      "claim_status",
+      "policy",
+      "customer",
+      "office_branch",
+      "incident_date",
+      "reported_date",
+      "next_follow_up_on",
+      "approved_amount",
+      "paid_amount",
+    ],
     get_indicator(doc) {
       return indicatorForField("claim_status", doc.claim_status, claimStatusMap);
     },
@@ -240,7 +281,20 @@
   };
 
   frappe.listview_settings["AT Payment"] = {
-    add_fields: ["status", "payment_direction", "payment_purpose", "customer", "policy", "claim", "due_date", "amount_try", "amount"],
+    add_fields: [
+      "status",
+      "payment_direction",
+      "payment_purpose",
+      "customer",
+      "office_branch",
+      "policy",
+      "claim",
+      "payment_date",
+      "due_date",
+      "reference_no",
+      "amount_try",
+      "amount",
+    ],
     get_indicator(doc) {
       return indicatorForField("status", doc.status, paymentStatusMap);
     },

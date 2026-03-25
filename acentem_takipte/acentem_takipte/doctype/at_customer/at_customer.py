@@ -188,7 +188,13 @@ def get_permission_query_conditions(user=None):
         return ""
 
     roles = set(frappe.get_roles(user))
-    branch_condition = build_office_branch_permission_query("AT Customer", user=user)
+    # AT Customer uses origin_office_branch for permission queries per kanon branch model
+    # (docs/acente-erisim.md#L999-L1008)
+    branch_condition = build_office_branch_permission_query(
+        "AT Customer",
+        fieldname="origin_office_branch",
+        user=user,
+    )
     if "Agent" in roles:
         escaped_user = frappe.db.escape(user)
         agent_condition = f"(`tabAT Customer`.`assigned_agent` = {escaped_user} OR `tabAT Customer`.`owner` = {escaped_user})"
@@ -207,10 +213,13 @@ def has_permission(doc, user=None, permission_type="read"):
         return True
 
     roles = set(frappe.get_roles(user))
+    # AT Customer uses origin_office_branch for permission checks per kanon branch model
     if "Agent" in roles:
-        return (doc.assigned_agent == user or doc.owner == user) and has_office_branch_permission(doc, user=user)
+        return (doc.assigned_agent == user or doc.owner == user) and has_office_branch_permission(
+            doc, fieldname="origin_office_branch", user=user
+        )
 
-    return has_office_branch_permission(doc, user=user)
+    return has_office_branch_permission(doc, fieldname="origin_office_branch", user=user)
 
 
 def has_sensitive_access(user=None) -> bool:

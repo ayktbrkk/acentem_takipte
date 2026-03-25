@@ -16,6 +16,8 @@ from acentem_takipte.acentem_takipte.api.dashboard_v2 import serializers as dash
 from acentem_takipte.acentem_takipte.api.dashboard_v2 import tab_payload as dashboard_tab_sections
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import has_sensitive_access
 from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
+from acentem_takipte.acentem_takipte.services.privacy_masking import masked_query_gate
+from acentem_takipte.acentem_takipte.services.query_isolation import build_scope_filters_dict
 from acentem_takipte.acentem_takipte.services.customer_360 import build_customer_360_payload
 from acentem_takipte.acentem_takipte.services.follow_up_sla import build_follow_up_sla_payload
 from acentem_takipte.acentem_takipte.services.work_management import (
@@ -212,6 +214,7 @@ def get_customer_list(filters=None, limit: int = 20) -> list[dict]:
     if has_sensitive_access():
         return rows
 
+    masked_query_gate(frappe.session.user, endpoint="customer_list", row_count=len(rows))
     for row in rows:
         row["tax_id"] = row.get("masked_tax_id")
         row["phone"] = row.get("masked_phone")
@@ -423,6 +426,7 @@ def get_customer_workbench_rows(filters=None, page: int = 1, page_length: int = 
         dashboard_serializers.attach_customer_portfolio_summary(rows, summary_map)
 
     if not has_sensitive_access():
+        masked_query_gate(frappe.session.user, endpoint="customer_workbench", row_count=len(rows))
         dashboard_serializers.mask_customer_sensitive_fields(rows)
 
     return dashboard_serializers.build_paged_rows_response(
@@ -2292,6 +2296,10 @@ def _dashboard_bootstrap_global_fallback_enabled() -> bool:
 
 def _allowed_customers_for_user(include_meta: bool = False):
     return dashboard_security.allowed_customers_for_user(include_meta=include_meta)
+
+
+def _allowed_sales_entities_for_user(include_meta: bool = False):
+    return dashboard_security.allowed_sales_entities_for_user(include_meta=include_meta)
 
 
 def _get_request_cache_bucket(cache_name: str) -> dict:

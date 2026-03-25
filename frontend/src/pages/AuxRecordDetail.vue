@@ -263,6 +263,7 @@ import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { deskActionsEnabled } from "../utils/deskActions";
+import { buildOfficeBranchOptions } from "../utils/officeBranchTree";
 import DetailTabsBar from "../components/app-shell/DetailTabsBar.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
@@ -527,7 +528,7 @@ const auxQuickAccountingEntryResource = createResource({
   },
 });
 const auxMutationResource = createResource({
-  url: "acentem_takipte.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 const campaignDraftsResource = createResource({
@@ -553,15 +554,15 @@ const campaignOutboxResource = createResource({
   },
 });
 const sendDraftNowResource = createResource({
-  url: "acentem_takipte.api.communication.send_draft_now",
+  url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
   auto: false,
 });
 const retryOutboxResource = createResource({
-  url: "acentem_takipte.api.communication.retry_outbox_item",
+  url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
   auto: false,
 });
 const requeueOutboxResource = createResource({
-  url: "acentem_takipte.api.communication.requeue_outbox_item",
+  url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
   auto: false,
 });
 
@@ -613,6 +614,7 @@ const quickEditOptionsMap = computed(() => ({
   policies: asArray(resourceValue(auxQuickPolicyResource, [])).map((row) => ({ value: row.name, label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}` })),
   insuranceCompanies: asArray(resourceValue(auxQuickInsuranceCompanyResource, [])).map((row) => ({ value: row.name, label: `${row.company_name || row.name}${row.company_code ? ` (${row.company_code})` : ""}` })),
   salesEntities: asArray(resourceValue(auxQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: `${row.full_name || row.name}${row.entity_type ? ` (${row.entity_type})` : ""}` })),
+  officeBranches: buildOfficeBranchOptions(asArray(branchStore.items), { locale: activeLocale.value }).map((row) => ({ value: row.value, label: row.label })),
   accountingEntries: asArray(resourceValue(auxQuickAccountingEntryResource, [])).map((row) => ({ value: row.name, label: `${row.name}${row.source_doctype ? ` (${row.source_doctype})` : ""}` })),
 }));
 
@@ -1639,3 +1641,4 @@ watch(
 
 reloadDetail();
 </script>
+

@@ -343,7 +343,7 @@ describe("Reports page communication operations report", () => {
 
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+        url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
         method: "POST",
         params: expect.objectContaining({ limit: 250 }),
       }),
@@ -498,7 +498,7 @@ describe("Reports page communication operations report", () => {
     await wrapper.find('[data-testid="scheduled-run"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
+        url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
         method: "POST",
         params: expect.objectContaining({ frequency: "daily", limit: 10 }),
       }),
@@ -507,7 +507,7 @@ describe("Reports page communication operations report", () => {
     await wrapper.find('[data-testid="scheduled-save"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.api.reports.save_scheduled_report_config",
+        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_scheduled_report_config",
         method: "POST",
         params: expect.objectContaining({
           index: "",
@@ -519,7 +519,7 @@ describe("Reports page communication operations report", () => {
     await wrapper.find('[data-testid="scheduled-remove"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.api.reports.remove_scheduled_report_config",
+        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.remove_scheduled_report_config",
         method: "POST",
         params: expect.objectContaining({ index: "0" }),
       }),
@@ -763,3 +763,4 @@ describe("Reports page communication operations report", () => {
     openSpy.mockRestore();
   });
 });
+

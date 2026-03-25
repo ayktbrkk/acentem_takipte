@@ -6,8 +6,10 @@
  "field_order": [
   "user",
   "office_branch",
+    "scope_mode",
   "is_default",
-  "is_active"
+  "is_active",
+  "valid_until"
  ],
  "fields": [
   {
@@ -24,6 +26,14 @@
    "options": "AT Office Branch",
    "reqd": 1
   },
+    {
+     "default": "self_only",
+     "fieldname": "scope_mode",
+     "fieldtype": "Select",
+     "label": "Scope Mode",
+     "options": "self_only\nself_and_descendants",
+     "reqd": 1
+    },
   {
    "default": "0",
    "fieldname": "is_default",
@@ -35,6 +45,11 @@
    "fieldname": "is_active",
    "fieldtype": "Check",
    "label": "Is Active"
+  },
+  {
+   "fieldname": "valid_until",
+   "fieldtype": "Date",
+   "label": "Valid Until"
   }
  ],
  "index_web_pages_for_search": 1,

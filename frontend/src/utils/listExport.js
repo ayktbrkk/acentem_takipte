@@ -6,7 +6,7 @@ export function openListExport({ screen, query, format = "xlsx", limit = 1000 })
     limit: String(Number(limit) > 0 ? Number(limit) : 1000),
   });
   window.open(
-    `/api/method/acentem_takipte.api.list_exports.export_screen_list?${params.toString()}`,
+    `/api/method/acentem_takipte.acentem_takipte.api.list_exports.export_screen_list?${params.toString()}`,
     "_blank",
     "noopener",
   );
@@ -57,7 +57,7 @@ export function openTabularExport({
   filters = {},
   format = "xlsx",
 }) {
-  submitExportForm("/api/method/acentem_takipte.api.list_exports.export_tabular_payload", {
+  submitExportForm("/api/method/acentem_takipte.acentem_takipte.api.list_exports.export_tabular_payload", {
     permission_doctypes: JSON.stringify(
       Array.isArray(permissionDoctypes) ? permissionDoctypes : [permissionDoctypes],
     ),
@@ -71,3 +71,4 @@ export function openTabularExport({
     export_format: String(format || "xlsx").trim().toLowerCase() === "pdf" ? "pdf" : "xlsx",
   });
 }
+

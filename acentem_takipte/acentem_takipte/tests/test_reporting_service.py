@@ -194,6 +194,21 @@ def test_get_reconciliation_operations_report_rows_passes_office_branch_and_stat
     assert "resolution_action" in captured["query"]
 
 
+def test_get_reconciliation_operations_report_rows_passes_sales_entity(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: None)
+    monkeypatch.setattr(
+        reporting.frappe.db,
+        "sql",
+        lambda query, values, as_dict=False: captured.update({"query": query, "values": values}) or [],
+    )
+
+    reporting.get_reconciliation_operations_report_rows({"sales_entity": "SE-001"})
+
+    assert "ae.sales_entity = %(sales_entity)s" in captured["query"]
+    assert captured["values"]["sales_entity"] == "SE-001"
+
+
 def test_get_claims_operations_report_rows_passes_claim_filters(monkeypatch):
     captured = {}
     monkeypatch.setattr(reporting, "normalize_requested_office_branch", lambda office_branch=None, user=None: "BR-IZM")

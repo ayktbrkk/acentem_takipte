@@ -353,7 +353,7 @@ function t(key) {
 
 const leadResource = createResource({ url: "frappe.client.get", auto: false });
 const leadDetailPayloadResource = createResource({
-  url: "acentem_takipte.api.dashboard.get_lead_detail_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_lead_detail_payload",
   auto: false,
 });
 const leadRelatedOffersResource = createResource({ url: "frappe.client.get_list", auto: false });
@@ -822,3 +822,4 @@ watch(
 );
 onBeforeUnmount(clearActionFeedback);
 </script>
+

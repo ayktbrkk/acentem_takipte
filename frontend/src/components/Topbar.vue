@@ -142,12 +142,12 @@ const accountMenuItems = computed(() => [
 ]);
 
 const setLocaleResource = createResource({
-  url: "acentem_takipte.api.session.set_session_locale",
+  url: "acentem_takipte.acentem_takipte.api.session.set_session_locale",
 });
 
 async function persistLocaleViaFetch(locale) {
   const response = await fetch(
-    `/api/method/acentem_takipte.api.session.set_session_locale?locale=${encodeURIComponent(locale)}`,
+    `/api/method/acentem_takipte.acentem_takipte.api.session.set_session_locale?locale=${encodeURIComponent(locale)}`,
     {
       method: "GET",
       credentials: "include",
@@ -234,3 +234,4 @@ onBeforeUnmount(() => {
 });
 
 </script>
+

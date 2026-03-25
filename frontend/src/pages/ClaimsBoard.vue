@@ -360,7 +360,7 @@ const claimsResource = createResource({
   auto: true,
 });
 const claimMutationResource = createResource({
-  url: "acentem_takipte.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 const claimNotificationDraftResource = createResource({
@@ -1113,3 +1113,4 @@ watch(
   @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
 }
 </style>
+

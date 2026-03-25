@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "autoname": "AT-EMRG-.#####.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "beneficiary",
+  "scope_doctype",
+  "justification",
+  "col_break_granted",
+  "granted_by",
+  "valid_until",
+  "status",
+  "grant_ip",
+  "section_review",
+  "revocation_note"
+ ],
+ "fields": [
+  {
+   "fieldname": "beneficiary",
+   "fieldtype": "Link",
+   "label": "Yararlanan Kullanici",
+   "options": "User",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "AT Claim",
+   "fieldname": "scope_doctype",
+   "fieldtype": "Select",
+   "label": "Kapsam Dokuman Turu",
+   "options": "AT Claim",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "justification",
+   "fieldtype": "Small Text",
+   "label": "Gerekce",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break_granted",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "granted_by",
+   "fieldtype": "Link",
+   "label": "Veren Kullanici",
+   "options": "User",
+   "read_only": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "valid_until",
+   "fieldtype": "Datetime",
+   "label": "Gecerlilik Tarihi",
+   "read_only": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Durum",
+   "options": "Active\nExpired\nRevoked",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "grant_ip",
+   "fieldtype": "Data",
+   "label": "Veren IP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_review",
+   "fieldtype": "Section Break",
+   "label": "Inceleme"
+  },
+  {
+   "fieldname": "revocation_note",
+   "fieldtype": "Small Text",
+   "label": "Iptal Notu"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Emergency Access",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "Manager",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "beneficiary",
+ "track_changes": 1
+}

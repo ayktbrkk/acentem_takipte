@@ -114,6 +114,7 @@ def import_statement_preview_rows(
         entry.policy = payload.get("policy")
         entry.customer = payload.get("customer")
         entry.office_branch = payload.get("office_branch")
+        entry.sales_entity = payload.get("sales_entity")
         entry.insurance_company = payload.get("insurance_company")
         entry.currency = payload.get("currency") or "TRY"
         entry.local_amount = payload.get("local_amount") or 0

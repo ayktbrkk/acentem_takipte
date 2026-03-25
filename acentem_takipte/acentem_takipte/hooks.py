@@ -17,6 +17,7 @@ role_home_page = {
 }
 
 doctype_js = {
+    "AT Office Branch": "public/js/at_office_branch.js",
     "AT Lead": "public/js/at_lead.js",
     "AT Offer": "public/js/at_offer.js",
     "AT Policy": "public/js/at_policy.js",
@@ -25,6 +26,10 @@ doctype_js = {
     "AT Claim": "public/js/at_claim.js",
     "AT Payment": "public/js/at_payment.js",
     "AT Renewal Task": "public/js/at_renewal_task.js",
+}
+
+doctype_tree_js = {
+    "AT Office Branch": "public/js/at_office_branch_tree.js",
 }
 
 doctype_list_js = {
@@ -74,6 +79,20 @@ has_permission = {
 }
 
 doc_events = {
+    "AT User Branch Access": {
+        "on_update": "acentem_takipte.services.cache_precomputation.invalidate_user_scope_from_assignment_doc",
+        "on_trash": "acentem_takipte.services.cache_precomputation.invalidate_user_scope_from_assignment_doc",
+    },
+    "AT User Sales Entity Access": {
+        "on_update": "acentem_takipte.services.cache_precomputation.invalidate_user_scope_from_assignment_doc",
+        "on_trash": "acentem_takipte.services.cache_precomputation.invalidate_user_scope_from_assignment_doc",
+    },
+    "AT Office Branch": {
+        "on_update": "acentem_takipte.services.branches.invalidate_scope_cache_for_hierarchy_change",
+    },
+    "AT Sales Entity": {
+        "on_update": "acentem_takipte.services.branches.invalidate_scope_cache_for_hierarchy_change",
+    },
     "AT Policy": {
         "after_insert": "acentem_takipte.accounting.sync_doc_event",
         "on_update": "acentem_takipte.accounting.sync_doc_event",

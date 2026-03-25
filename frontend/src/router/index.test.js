@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { getDeskRedirectTarget } from "./index";
+import { getDeskRedirectTarget, hasSystemManagerRole } from "./index";
 
 describe("router home guard", () => {
   it("keeps spa users inside /at", () => {
@@ -39,5 +39,19 @@ describe("router home guard", () => {
 
   it("does not auto-redirect desk users without explicit role list and no user", () => {
     expect(getDeskRedirectTarget("/app", "desk", "", ["Desk User"])).toBeNull();
+  });
+});
+
+describe("break-glass manager role helper", () => {
+  it("returns true for System Manager role", () => {
+    expect(hasSystemManagerRole(["System Manager"])).toBe(true);
+  });
+
+  it("returns true for Administrator role", () => {
+    expect(hasSystemManagerRole(["Administrator"])).toBe(true);
+  });
+
+  it("returns false for non-manager roles", () => {
+    expect(hasSystemManagerRole(["Agent", "Desk User"])).toBe(false);
   });
 });

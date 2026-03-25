@@ -745,6 +745,7 @@ def create_quick_branch(
 def create_quick_sales_entity(
     entity_type: str | None = None,
     full_name: str | None = None,
+    office_branch: str | None = None,
     parent_entity: str | None = None,
 ) -> dict[str, str]:
     _assert_create_permission("AT Sales Entity", _("You do not have permission to create sales entities."))
@@ -753,6 +754,7 @@ def create_quick_sales_entity(
         "doctype": "AT Sales Entity",
         "entity_type": _normalize_option(entity_type, {"Agency", "Sub-Account", "Representative"}, default="Agency"),
         "full_name": (full_name or "").strip(),
+        "office_branch": _normalize_link("AT Office Branch", office_branch, required=True),
         "parent_entity": _normalize_link("AT Sales Entity", parent_entity),
     }
     doc = frappe.get_doc(payload)
@@ -816,6 +818,7 @@ def create_quick_accounting_entry(
     policy: str | None = None,
     customer: str | None = None,
     office_branch: str | None = None,
+    sales_entity: str | None = None,
     insurance_company: str | None = None,
     currency: str | None = None,
     local_amount: float | None = None,
@@ -854,6 +857,7 @@ def create_quick_accounting_entry(
         "policy": normalized_policy,
         "customer": normalized_customer,
         "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company),
         "currency": ((currency or "TRY").strip() or "TRY").upper(),
         "local_amount": flt(local_amount) if local_amount not in {None, ""} else 0,
@@ -1447,7 +1451,7 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
     },
     "AT Insurance Company": {"company_name", "company_code", "is_active"},
     "AT Branch": {"branch_name", "branch_code", "insurance_company", "is_active"},
-    "AT Sales Entity": {"entity_type", "full_name", "parent_entity"},
+    "AT Sales Entity": {"entity_type", "full_name", "office_branch", "parent_entity"},
     "AT Notification Template": {
         "template_key",
         "event_key",
@@ -1472,6 +1476,7 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
         "policy",
         "customer",
         "office_branch",
+        "sales_entity",
         "insurance_company",
         "currency",
         "local_amount",
@@ -1625,6 +1630,9 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
             continue
         if field in {"parent_entity"}:
             setattr(doc, field, _normalize_link("AT Sales Entity", value))
+            continue
+        if field in {"office_branch"} and doc.doctype == "AT Sales Entity":
+            setattr(doc, field, _normalize_link("AT Office Branch", value, required=True))
             continue
         if field in {"entity_type"}:
             setattr(doc, field, _normalize_option(value, {"Agency", "Sub-Account", "Representative"}, default="Agency"))

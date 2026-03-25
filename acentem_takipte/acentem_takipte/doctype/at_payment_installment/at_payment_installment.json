@@ -8,6 +8,8 @@
   "customer",
   "policy",
   "office_branch",
+  "origin_office_branch",
+  "current_office_branch",
   "installment_no",
   "installment_count",
   "status",
@@ -43,6 +45,20 @@
    "fieldtype": "Link",
    "label": "Office Branch",
    "options": "AT Office Branch"
+  },
+  {
+   "fieldname": "origin_office_branch",
+   "fieldtype": "Link",
+   "label": "Origin Office Branch",
+   "options": "AT Office Branch",
+   "description": "Branch at creation time (historical, for permission queries per kanon branch model)"
+  },
+  {
+   "fieldname": "current_office_branch",
+   "fieldtype": "Link",
+   "label": "Current Office Branch",
+   "options": "AT Office Branch",
+   "description": "Current branch (for operational tasks and transfer flows per kanon branch model)"
   },
   {
    "fieldname": "installment_no",
