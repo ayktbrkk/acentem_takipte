@@ -1256,7 +1256,8 @@ function draftToAppliedValue(v) {
 }
 
 function buildListParams() {
-  return {
+  const officeBranch = branchStore.requestBranch || "";
+  const out = {
     doctype: config.doctype,
     fields: config.listFields,
     filters: buildFilters(),
@@ -1265,14 +1266,23 @@ function buildListParams() {
     limit_start: (pagination.page - 1) * pagination.pageLength,
     limit_page_length: pagination.pageLength,
   };
+  if (officeBranch && OFFICE_BRANCH_FILTER_DOCTYPES.has(config.doctype)) {
+    out.office_branch = officeBranch;
+  }
+  return out;
 }
 
 function buildCountParams() {
-  return {
+  const officeBranch = branchStore.requestBranch || "";
+  const out = {
     doctype: config.doctype,
     filters: buildFilters(),
     or_filters: buildOrFilters() || undefined,
   };
+  if (officeBranch && OFFICE_BRANCH_FILTER_DOCTYPES.has(config.doctype)) {
+    out.office_branch = officeBranch;
+  }
+  return out;
 }
 
 function setFilterStateFromPayload(payload = {}) {
