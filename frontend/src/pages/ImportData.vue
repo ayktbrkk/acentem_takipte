@@ -61,6 +61,7 @@
             </tr>
           </thead>
           <tbody>
+            <!-- row data has no guaranteed unique field; rowIndex is the only stable key -->
             <tr v-for="(row, rowIndex) in previewRows" :key="rowIndex">
               <td v-for="head in columns" :key="`${rowIndex}-${head}`" class="table-cell">
                 {{ row[head] ?? '-' }}

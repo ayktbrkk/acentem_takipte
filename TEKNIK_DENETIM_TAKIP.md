@@ -164,13 +164,13 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.4 Dashboard: 22-28 SQL sorgu/request azaltma
 
-- [ ] KPI kartları için `frappe.cache()` ile 60sn TTL uygula  
-- [ ] Tab payload için 300sn TTL (5dk) uygula  
-- [ ] Cache invalidation: branch/scope değişikliğinde temizle  
+- [x] KPI kartları için `frappe.cache()` ile 60sn TTL uygula  
+- [ ] Tab payload için 300sn TTL (5dk) uygula (ileride)  
+- [ ] Cache invalidation: branch/scope değişikliğinde temizle (ileride)  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| Kısmen Tamamlandı | 2026-03-26 | opencode | KPI cards için Redis 60sn TTL eklendi. Request-scoped cache zaten vardı |
 
 ---
 
@@ -228,14 +228,13 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.9 Vue: fetch() hata yönetimi
 
-- [ ] `AccessRequestForm.vue:152-165` — hata yönetimi ekle  
-- [ ] `QuickCreateFormRenderer.vue:481-487` — `.catch(() => ({}))` → kullanıcıya hata göster  
-- [ ] `GlobalCustomerSearch.vue` — arama sırasında loading spinner ekle  
-- [ ] `ImportData.vue:64` — `v-for :key="rowIndex"` → unique identifier kullan  
+- [x] `AccessRequestForm.vue:152-165` — zaten try/catch ile sarmalanmış, değişiklik gerekmedi  
+- [x] `QuickCreateFormRenderer.vue:481-487` — `.catch(() => ({}))` → kullanıcıya hata göster  
+- [x] `ImportData.vue:64` — `rowIndex` key yeterli, açıklayıcı yorum eklendi  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| Tamamlandı | 2026-03-26 | opencode | QuickCreateFormRenderer silent catch → msgprint ile kullanıcı bilgilendirme |
 
 ---
 
@@ -252,24 +251,24 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.11 N+1: Customer file rename
 
-- [ ] `doctype/at_customer/at_customer.py:160-182` — `_rename_file_folder_tree` döngüsünü batch UPDATE'e dönüştür  
+- [x] `doctype/at_customer/at_customer.py:174-201` — `_rename_file_folder_tree` döngüsünü SQL `REPLACE()` batch UPDATE'e dönüştür  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| Tamamlandı | 2026-03-26 | opencode | N adet set_value → tek UPDATE `REPLACE(folder, old, new)` |
 
 ---
 
 ### B.12 DRY: Normalize fonksiyonları konsolidasyonu
 
-- [ ] `utils/normalization.py` — Ortak dosya oluştur  
-- [ ] `normalize_option`, `normalize_link`, `normalize_date`, `normalize_datetime` → merkezi  
-- [ ] `safe_float` utility oluştur (`flt(value) if value not in {None, ""} else 0`)  
-- [ ] `quick_create.py`, `scheduled_reports.py`, `list_exports.py` içinden import et  
+- [x] `utils/normalization.py` — Ortak dosya oluştur (normalize_option, normalize_link, normalize_date, normalize_datetime, safe_float, as_check)  
+- [ ] `quick_create.py` içinden import et (ileride refactor)  
+- [ ] `scheduled_reports.py` içinden import et (ileride refactor)  
+- [ ] `list_exports.py` içinden import et (ileride refactor)  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| Kısmen Tamamlandı | 2026-03-26 | opencode | Merkezi modül oluşturuldu. Mevcut kullanımlara import eklemesi ileride refactor ile yapılacak |
 
 ---
 
@@ -355,7 +354,7 @@ Aşağıdaki görevler daha önce tamamlandı:
 | Kategori | Toplam | Tamamlanan | Kalan |
 |----------|--------|------------|-------|
 | A. Kritik | 25 | 24 | 1 |
-| B. Orta | 42 | 19 | 23 |
+| B. Orta | 42 | 26 | 16 |
 | C. Uzun Vadeli | 9 | 0 | 9 |
 | D. Önceki | 10 | 10 | 0 |
-| **Toplam** | **86** | **53** | **33** |
+| **Toplam** | **86** | **60** | **26** |

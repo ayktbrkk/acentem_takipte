@@ -1540,6 +1540,13 @@ def _dashboard_cards_summary(
     if cache_key in cache:
         return dict(cache[cache_key])
 
+    # Redis cross-request cache (60s TTL) for KPI cards
+    redis_key = f"at_dashboard_kpi::{frappe.session.user}::{hash(cache_key)}"
+    redis_cached = frappe.cache().get_value(redis_key)
+    if redis_cached:
+        cache[cache_key] = dict(redis_cached)
+        return dict(redis_cached)
+
     policy_where, policy_values = _build_policy_where(
         from_date=from_date,
         to_date=to_date,
@@ -1629,6 +1636,8 @@ def _dashboard_cards_summary(
         "open_claims": int(open_claims or 0),
     }
     cache[cache_key] = dict(result)
+    # Redis cross-request cache (60s TTL) for KPI cards
+    frappe.cache().set_value(redis_key, result, expires_in_sec=60)
     return result
 
 

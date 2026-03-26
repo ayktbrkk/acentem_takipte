@@ -184,21 +184,19 @@ def _rename_file_folder_tree(old_name: str, new_name: str) -> None:
 
     old_folder_path = f"Home/customers/{old_name}"
     new_folder_path = f"Home/customers/{new_name}"
-    # unbounded: file folder paths for customer rename, filtered by old folder path prefix - expected max ~1k rows
-    rows = frappe.get_all(
-        "File",
-        filters=[["folder", "like", f"{old_folder_path}%"]],
-        fields=["name", "folder"],
-        limit_page_length=0,
+    # Batch UPDATE: rename all file folder paths matching the old prefix
+    frappe.db.sql(
+        """
+        UPDATE `tabFile`
+        SET folder = REPLACE(folder, %(old_path)s, %(new_path)s)
+        WHERE folder LIKE %(pattern)s
+    """,
+        {
+            "old_path": old_folder_path,
+            "new_path": new_folder_path,
+            "pattern": f"{old_folder_path}%",
+        },
     )
-    for row in rows:
-        current_folder = str(row.get("folder") or "")
-        if not current_folder.startswith(old_folder_path):
-            continue
-        updated_folder = current_folder.replace(old_folder_path, new_folder_path, 1)
-        frappe.db.set_value(
-            "File", row["name"], "folder", updated_folder, update_modified=False
-        )
 
 
 def get_permission_query_conditions(user=None):

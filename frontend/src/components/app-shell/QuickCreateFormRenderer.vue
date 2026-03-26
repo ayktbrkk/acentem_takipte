@@ -484,7 +484,10 @@ async function fetchRemoteOptions(field, { query = "", reset = false, token = ""
       headers: { Accept: "application/json" },
     });
 
-    const payload = await response.json().catch(() => ({}));
+    const payload = await response.json().catch((err) => {
+      frappe.msgprint({ message: err?.message || __('Operation failed'), indicator: 'red' });
+      return {};
+    });
     if (token && String(remoteTokenMap[fieldName] || "") !== token) return;
 
     const message = payload?.message || {};
