@@ -38,6 +38,10 @@ def dispatch_admin_job(action_key: str, **kwargs) -> dict[str, Any]:
         result = task_jobs.run_customer_segment_snapshot_job(limit=max(cint(kwargs.get("limit")), 1))
         _log_admin_job_run(reference_doctype, reference_name, normalized_action)
         return result
+    if normalized_action == "run_report_snapshot_job":
+        result = task_jobs.run_report_snapshot_job(limit=max(cint(kwargs.get("limit")), 1))
+        _log_admin_job_run(reference_doctype, reference_name, normalized_action)
+        return result
     if normalized_action == "run_accounting_sync_job":
         result = task_jobs.run_accounting_sync_job(limit=max(cint(kwargs.get("limit")), 1))
         _log_admin_job_run(reference_doctype, reference_name, normalized_action)
@@ -58,6 +62,7 @@ def _get_admin_job_audit_target(action_key: str) -> tuple[str, str]:
         "run_payment_due_job": ("DocType", "AT Payment"),
         "run_scheduled_reports_job": ("DocType", "AT Scheduled Report Config"),
         "run_customer_segment_snapshot_job": ("DocType", "AT Customer Segment Snapshot"),
+        "run_report_snapshot_job": ("DocType", "AT Report Snapshot"),
         "run_accounting_sync_job": ("DocType", "AT Accounting Entry"),
         "run_accounting_reconciliation_job": ("DocType", "AT Reconciliation Item"),
     }

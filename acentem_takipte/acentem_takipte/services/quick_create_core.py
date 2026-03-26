@@ -1,50 +1,12 @@
 from __future__ import annotations
 
-import frappe
 from frappe.utils import flt, getdate, nowdate
-from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
 
 
 def _insert_doc(payload: dict, result_key: str) -> dict[str, str]:
-    doc = frappe.get_doc(payload)
-    doc.insert()
-    frappe.db.commit()
-    log_decision_event(
-        doc.doctype,
-        doc.name,
-        action="Create",
-        action_summary=f"{doc.doctype} created",
-        decision_context=result_key,
-    )
-    return {result_key: doc.name}
+    from acentem_takipte.acentem_takipte.services.quick_create import _insert_doc as insert_doc_impl
 
-
-def update_aux_record(doc) -> dict[str, str]:
-    doc.save()
-    frappe.db.commit()
-    log_decision_event(
-        doc.doctype,
-        doc.name,
-        action="Edit",
-        action_summary=f"{doc.doctype} updated",
-        decision_context="quick_aux_edit",
-    )
-    return {"record": doc.name}
-
-
-def delete_aux_record(doc) -> dict[str, str | bool]:
-    record_name = doc.name
-    doctype = doc.doctype
-    doc.delete()
-    frappe.db.commit()
-    log_decision_event(
-        doctype,
-        record_name,
-        action="Delete",
-        action_summary=f"{doctype} deleted",
-        decision_context="quick_aux_delete",
-    )
-    return {"record": record_name, "doctype": doctype, "deleted": True}
+    return insert_doc_impl(payload, result_key)
 
 
 def create_customer(payload: dict) -> dict[str, str]:
@@ -358,4 +320,3 @@ def create_reminder(payload: dict) -> dict[str, str]:
         },
         "reminder",
     )
-

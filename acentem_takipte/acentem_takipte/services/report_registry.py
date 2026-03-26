@@ -16,6 +16,9 @@ from acentem_takipte.acentem_takipte.services.reporting import (
     get_renewal_performance_report_rows,
     normalize_report_filters,
 )
+from acentem_takipte.acentem_takipte.services.report_snapshots import (
+    build_snapshot_aware_report_payload,
+)
 
 ReportRowsFn = Callable[[dict, int], list[dict]]
 
@@ -216,7 +219,13 @@ def get_report_definition(report_key: str) -> dict[str, object]:
     return REPORT_DEFINITIONS[str(report_key or "").strip()]
 
 
-def build_report_payload(report_key: str, filters: dict | None = None, limit: int = 500) -> dict:
+def build_report_payload(
+    report_key: str,
+    filters: dict | None = None,
+    limit: int = 500,
+    *,
+    force_refresh: bool = False,
+) -> dict:
     definition = get_report_definition(report_key)
     normalized_filters = normalize_report_filters(filters)
     columns = list(definition["columns"])
@@ -225,12 +234,23 @@ def build_report_payload(report_key: str, filters: dict | None = None, limit: in
         columns = list(definition.get("granularity_columns") or columns)
 
     rows_fn: ReportRowsFn = definition["rows_fn"]  # type: ignore[assignment]
-    rows = rows_fn(normalized_filters, limit=max(cint(limit), 1))
-    return {
-        "report_key": report_key,
-        "columns": columns,
-        "rows": rows,
-        "filters": normalized_filters,
-        "total": len(rows),
-    }
+    normalized_limit = max(cint(limit), 1)
+
+    def _build_live_payload() -> dict:
+        rows = rows_fn(normalized_filters, limit=normalized_limit)
+        return {
+            "report_key": report_key,
+            "columns": columns,
+            "rows": rows,
+            "filters": normalized_filters,
+            "total": len(rows),
+        }
+
+    return build_snapshot_aware_report_payload(
+        report_key,
+        filters=normalized_filters,
+        limit=normalized_limit,
+        build_live_payload=_build_live_payload,
+        force_refresh=force_refresh,
+    )
 

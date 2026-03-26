@@ -24,9 +24,9 @@ def test_collect_dashboard_rows_stops_on_non_dict_payload():
 
 
 def test_collect_dashboard_rows_ignores_non_dict_rows():
-    pages = {1: {"rows": [{"name": "ROW-1"}, "bad-row", 123], "total": 3}}
+    pages = {1: {"rows": [{"name": "ROW-1"}, "bad-row", 123], "total": 1}}
 
-    rows = list_exports._collect_dashboard_rows(lambda **kwargs: pages[1], filters={}, limit=10)
+    rows = list_exports._collect_dashboard_rows(lambda **kwargs: pages[kwargs["page"]], filters={}, limit=10)
 
     assert rows == [{"name": "ROW-1"}]
 
@@ -60,8 +60,8 @@ def test_build_screen_export_payload_formats_policy_rows(monkeypatch):
         limit=100,
     )
 
-    assert payload["columns"][0] == "Poliçe No"
-    assert payload["rows"][0]["Poliçe No"] == "P-001"
+    assert payload["columns"][0] == "Kayıt No"
+    assert payload["rows"][0]["Kayıt No"] == "POL-001"
     assert payload["rows"][0]["Komisyon"] == "175.00 TRY"
 
 

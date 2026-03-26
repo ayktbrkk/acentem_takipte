@@ -33,10 +33,15 @@ def test_get_dashboard_tab_payload_normalizes_requested_office_branch(monkeypatc
     )
     monkeypatch.setattr(dashboard, "_allowed_customers_for_user", lambda include_meta=False: (None, {"scope": "all"}))
     monkeypatch.setattr(dashboard, "_dashboard_cards_summary", lambda **kwargs: {"total": 1})
+
+    def _build_dashboard_tab_sections(**kwargs):
+        captured["office_branch"] = kwargs["office_branch"]
+        return {"metrics": {}, "series": {}, "previews": {}}
+
     monkeypatch.setattr(
         dashboard.dashboard_tab_sections,
         "build_dashboard_tab_sections",
-        lambda **kwargs: captured.setdefault("office_branch", kwargs["office_branch"]) or {"metrics": {}, "series": {}, "previews": {}},
+        _build_dashboard_tab_sections,
     )
 
     dashboard.get_dashboard_tab_payload(filters={"office_branch": "BR-FORBIDDEN"})

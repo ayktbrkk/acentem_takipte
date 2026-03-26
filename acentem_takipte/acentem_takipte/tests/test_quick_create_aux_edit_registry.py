@@ -3,6 +3,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
+from acentem_takipte.acentem_takipte.services import quick_create_helpers
 
 
 def _prefixed_option(value, allowed, default=None):
@@ -22,7 +23,7 @@ def test_apply_aux_edit_payload_updates_notification_template_channel_both():
     doc.doctype = "AT Notification Template"
     doc.source_doctype = None
 
-    quick_create_api._apply_aux_edit_payload(
+    quick_create_helpers._apply_aux_edit_payload(
         doc,
         {
             "channel": "Both",
@@ -45,7 +46,7 @@ def test_apply_aux_edit_payload_updates_call_note_channel_video_call():
     doc.doctype = "AT Call Note"
     doc.source_doctype = None
 
-    quick_create_api._apply_aux_edit_payload(
+    quick_create_helpers._apply_aux_edit_payload(
         doc,
         {
             "channel": "Video Call",
@@ -60,8 +61,8 @@ def test_apply_aux_edit_payload_maps_call_note_option_fields():
     doc.doctype = "AT Call Note"
     doc.source_doctype = None
 
-    with patch.object(quick_create_api, "_normalize_option", side_effect=_prefixed_option):
-        quick_create_api._apply_aux_edit_payload(
+    with patch.object(quick_create_helpers, "_normalize_option", side_effect=_prefixed_option):
+        quick_create_helpers._apply_aux_edit_payload(
             doc,
             {
                 "direction": "Inbound",
@@ -78,10 +79,10 @@ def test_apply_aux_edit_payload_maps_claim_field_types():
     doc.doctype = "AT Claim"
     doc.source_doctype = None
 
-    with patch.object(quick_create_api, "_normalize_link", side_effect=_prefixed_link):
-        with patch.object(quick_create_api, "_normalize_option", side_effect=_prefixed_option):
-            with patch.object(quick_create_api, "_normalize_date", side_effect=_prefixed_date):
-                quick_create_api._apply_aux_edit_payload(
+    with patch.object(quick_create_helpers, "_normalize_link", side_effect=_prefixed_link):
+        with patch.object(quick_create_helpers, "_normalize_option", side_effect=_prefixed_option):
+            with patch.object(quick_create_helpers, "_normalize_date", side_effect=_prefixed_date):
+                quick_create_helpers._apply_aux_edit_payload(
                     doc,
                     {
                         "assigned_expert": "agent@example.com",
@@ -106,7 +107,7 @@ def test_apply_aux_edit_payload_maps_customer_relation_check_field():
     doc.doctype = "AT Customer Relation"
     doc.source_doctype = None
 
-    quick_create_api._apply_aux_edit_payload(doc, {"is_household": "1"})
+    quick_create_helpers._apply_aux_edit_payload(doc, {"is_household": "1"})
 
     assert doc.is_household == 1
 
@@ -116,10 +117,10 @@ def test_apply_aux_edit_payload_maps_activity_field_types():
     doc.doctype = "AT Activity"
     doc.source_doctype = None
 
-    with patch.object(quick_create_api, "_normalize_link", side_effect=_prefixed_link):
-        with patch.object(quick_create_api, "_normalize_option", side_effect=_prefixed_option):
-            with patch.object(quick_create_api, "_normalize_datetime", side_effect=lambda value: f"DT::{value}"):
-                quick_create_api._apply_aux_edit_payload(
+    with patch.object(quick_create_helpers, "_normalize_link", side_effect=_prefixed_link):
+        with patch.object(quick_create_helpers, "_normalize_option", side_effect=_prefixed_option):
+            with patch.object(quick_create_helpers, "_normalize_datetime", side_effect=lambda value: f"DT::{value}"):
+                quick_create_helpers._apply_aux_edit_payload(
                     doc,
                     {
                         "activity_type": "Review",

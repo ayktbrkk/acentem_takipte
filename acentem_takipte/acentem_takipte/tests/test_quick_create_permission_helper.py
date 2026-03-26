@@ -4,11 +4,12 @@ from unittest.mock import patch
 
 from frappe import _
 
+from acentem_takipte.acentem_takipte.services import quick_create_helpers
 from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
 
 
 def test_assert_create_permission_uses_shared_mutation_helper():
-    with patch.object(quick_create_api, "assert_mutation_access") as mutation_access:
+    with patch.object(quick_create_helpers, "assert_mutation_access") as mutation_access:
         quick_create_api._assert_create_permission("AT Customer", _("Create denied"))
 
     mutation_access.assert_called_once_with(
@@ -23,8 +24,8 @@ def test_assert_create_permission_uses_shared_mutation_helper():
 
 
 def test_assert_write_permission_uses_shared_mutation_helper():
-    with patch.object(quick_create_api, "assert_mutation_access") as mutation_access:
-        quick_create_api._assert_write_permission("AT Notification Template", _("Write denied"))
+    with patch.object(quick_create_helpers, "assert_mutation_access") as mutation_access:
+        quick_create_helpers._assert_write_permission("AT Notification Template", _("Write denied"))
 
     mutation_access.assert_called_once_with(
         action="api.quick_create.update_at_notification_template",

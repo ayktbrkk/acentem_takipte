@@ -46,6 +46,38 @@ def coerce_filters(filters: Any) -> dict[str, Any]:
     return {}
 
 
+def coerce_query_payload(query: Any) -> dict[str, Any]:
+    if query is None:
+        return {}
+    if isinstance(query, str):
+        if not query.strip():
+            return {}
+        try:
+            parsed = frappe.parse_json(query) or {}
+        except Exception:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    if isinstance(query, dict):
+        return dict(query)
+    if hasattr(query, "items"):
+        return {key: value for key, value in query.items()}
+    return {}
+
+
+def coerce_or_filters(or_filters: Any) -> Any:
+    if isinstance(or_filters, str):
+        if not or_filters.strip():
+            return None
+        try:
+            parsed = frappe.parse_json(or_filters) or None
+        except Exception:
+            return None
+        return parsed if isinstance(parsed, (dict, list, tuple)) else None
+    if isinstance(or_filters, (dict, list, tuple)):
+        return or_filters
+    return None
+
+
 def coerce_string_list(value: Any) -> list[str]:
     if isinstance(value, str):
         raw_items = [part.strip() for part in value.split(",")]

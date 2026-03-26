@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import json
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, getdate, nowdate
@@ -74,6 +77,8 @@ CUSTOMER_CONSENT_OPTIONS = {"Unknown", "Granted", "Revoked", ""}
 BOOTSTRAP_DASHBOARD_FALLBACK_FLAG = dashboard_security.BOOTSTRAP_DASHBOARD_FALLBACK_FLAG
 RENEWAL_STATUS_DONE = "Done"
 LEGACY_RENEWAL_STATUS_COMPLETED = "Completed"
+DASHBOARD_TAB_CACHE_TTL_SECONDS = 300
+DASHBOARD_TAB_CACHE_TTL_CONFIG_KEY = "at_dashboard_tab_cache_ttl_seconds"
 
 
 def _normalize_renewal_status(value: str | None) -> str:
@@ -103,6 +108,98 @@ def _assert_dashboard_endpoint_method(action: str) -> None:
 
     allowed_label = " / ".join(allowed_methods)
     frappe.throw(_(f"Only {allowed_label} requests are allowed for this action."))
+
+
+def _safe_session_user() -> str:
+    try:
+        return str(getattr(frappe.session, "user", "") or "").strip()
+    except Exception:
+        return ""
+
+
+def _dashboard_tab_cache_ttl_seconds() -> int:
+    try:
+        site_config = frappe.get_site_config() or {}
+        ttl = cint(site_config.get(DASHBOARD_TAB_CACHE_TTL_CONFIG_KEY) or 0)
+        return max(ttl or DASHBOARD_TAB_CACHE_TTL_SECONDS, 1)
+    except Exception:
+        return DASHBOARD_TAB_CACHE_TTL_SECONDS
+
+
+def _dashboard_tab_scope_digest(
+    *, allowed_customers: list[str] | None, scope_meta: dict | None
+) -> str:
+    normalized_customers: str
+    if allowed_customers is None:
+        normalized_customers = "__global__"
+    else:
+        cleaned_customers = sorted(
+            {
+                str(customer or "").strip()
+                for customer in allowed_customers
+                if str(customer or "").strip()
+            }
+        )
+        normalized_customers = (
+            hashlib.sha256(
+                json.dumps(cleaned_customers, separators=(",", ":"), ensure_ascii=False).encode()
+            ).hexdigest()[:16]
+            if cleaned_customers
+            else "__empty__"
+        )
+
+    normalized_scope_meta = {
+        "access_scope": str((scope_meta or {}).get("access_scope") or "").strip(),
+        "scope_reason": str((scope_meta or {}).get("scope_reason") or "").strip(),
+        "allowed_customers": normalized_customers,
+    }
+    return hashlib.sha256(
+        json.dumps(
+            normalized_scope_meta,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode()
+    ).hexdigest()[:16]
+
+
+def _dashboard_tab_cache_key(
+    *,
+    tab_key: str,
+    from_date,
+    to_date,
+    compare_from_date=None,
+    compare_to_date=None,
+    branch=None,
+    office_branch=None,
+    months: int,
+    allowed_customers: list[str] | None,
+    scope_meta: dict | None,
+) -> str:
+    cache_payload = {
+        "user": _safe_session_user() or "Guest",
+        "tab": str(tab_key or "").strip().lower(),
+        "from_date": str(from_date or ""),
+        "to_date": str(to_date or ""),
+        "compare_from_date": str(compare_from_date or ""),
+        "compare_to_date": str(compare_to_date or ""),
+        "branch": str(branch or ""),
+        "office_branch": str(office_branch or ""),
+        "months": cint(months or 0),
+        "scope": _dashboard_tab_scope_digest(
+            allowed_customers=allowed_customers, scope_meta=scope_meta
+        ),
+    }
+    cache_digest = hashlib.sha256(
+        json.dumps(
+            cache_payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            default=str,
+        ).encode()
+    ).hexdigest()[:24]
+    return f"at_dashboard_tab::{cache_digest}"
 
 
 @frappe.whitelist()
@@ -165,9 +262,28 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
         tab_key = "daily"
 
     allowed_customers, scope_meta = _allowed_customers_for_user(include_meta=True)
+    cache_key = _dashboard_tab_cache_key(
+        tab_key=tab_key,
+        from_date=from_date,
+        to_date=to_date,
+        compare_from_date=compare_from_date,
+        compare_to_date=compare_to_date,
+        branch=branch,
+        office_branch=office_branch,
+        months=months,
+        allowed_customers=allowed_customers,
+        scope_meta=scope_meta,
+    )
+    try:
+        cached_payload = frappe.cache().get_value(cache_key)
+        if cached_payload is not None:
+            return cached_payload
+    except Exception:
+        cached_payload = None
+
     if allowed_customers is not None and not allowed_customers:
         empty_cards = (_empty_dashboard_payload().get("cards") or {}).copy()
-        return {
+        result = {
             "tab": tab_key,
             "cards": empty_cards,
             "compare_cards": empty_cards.copy(),
@@ -176,6 +292,15 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
             "previews": {},
             "meta": scope_meta,
         }
+        try:
+            frappe.cache().set_value(
+                cache_key,
+                result,
+                expires_in_sec=_dashboard_tab_cache_ttl_seconds(),
+            )
+        except Exception:
+            pass
+        return result
 
     cards = _dashboard_cards_summary(
         from_date=from_date,
@@ -219,8 +344,7 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
     metrics = tab_sections["metrics"]
     series = tab_sections["series"]
     previews = tab_sections["previews"]
-
-    return {
+    result = {
         "tab": tab_key,
         "cards": cards,
         "compare_cards": compare_cards,
@@ -229,6 +353,15 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
         "previews": previews,
         "meta": scope_meta,
     }
+    try:
+        frappe.cache().set_value(
+            cache_key,
+            result,
+            expires_in_sec=_dashboard_tab_cache_ttl_seconds(),
+        )
+    except Exception:
+        pass
+    return result
 
 
 @frappe.whitelist()

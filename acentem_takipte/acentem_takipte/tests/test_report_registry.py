@@ -122,3 +122,32 @@ def test_build_report_payload_keeps_default_columns_when_no_granularity(monkeypa
     assert "name" in payload["columns"]
     assert "policy_no" in payload["columns"]
 
+
+def test_build_report_payload_delegates_to_snapshot_helper(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(report_registry, "normalize_report_filters", lambda filters=None: {"office_branch": "IST"})
+    monkeypatch.setattr(
+        report_registry,
+        "build_snapshot_aware_report_payload",
+        lambda report_key, **kwargs: captured.update({"report_key": report_key, **kwargs}) or {
+            "report_key": report_key,
+            "columns": ["name"],
+            "rows": [{"name": "POL-001"}],
+            "filters": kwargs["filters"],
+            "total": 1,
+        },
+    )
+
+    payload = report_registry.build_report_payload(
+        "policy_list",
+        filters={"office_branch": " IST "},
+        limit="25",
+        force_refresh=True,
+    )
+
+    assert captured["report_key"] == "policy_list"
+    assert captured["filters"] == {"office_branch": "IST"}
+    assert captured["limit"] == 25
+    assert captured["force_refresh"] is True
+    assert payload["total"] == 1
+

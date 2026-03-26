@@ -17,6 +17,7 @@ from acentem_takipte.acentem_takipte.renewal.pipeline import (
 from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
 from acentem_takipte.acentem_takipte.services.campaigns import execute_due_campaigns
 from acentem_takipte.acentem_takipte.services.customer_segments import refresh_due_customer_segment_snapshots
+from acentem_takipte.acentem_takipte.services.report_snapshots import refresh_report_snapshots
 from acentem_takipte.acentem_takipte.services.payments import build_payment_reminder_payload
 from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_scheduled_reports
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
@@ -180,6 +181,22 @@ def run_customer_segment_snapshot_job(limit: int = 250) -> dict[str, Any]:
     )
 
 
+def run_report_snapshot_job(limit: int = 1000) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    job = frappe.enqueue(
+        "acentem_takipte.tasks._run_report_snapshot_logic",
+        limit=safe_limit,
+        queue="long",
+        timeout=1500,
+    )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.tasks._run_report_snapshot_logic",
+        limit=safe_limit,
+    )
+
+
 def _run_notification_queue_logic(limit: int = 120) -> dict[str, dict[str, int]]:
     queued = queue_notification_drafts(limit=limit, include_failed=True)
     dispatched = process_notification_queue(limit=limit)
@@ -277,6 +294,10 @@ def _run_due_campaigns_logic(limit: int = 25, member_limit: int = 200) -> dict[s
 
 def _run_customer_segment_snapshot_logic(limit: int = 250) -> dict[str, Any]:
     return refresh_due_customer_segment_snapshots(limit=limit)
+
+
+def _run_report_snapshot_logic(limit: int = 1000) -> dict[str, Any]:
+    return refresh_report_snapshots(limit=max(cint(limit), 1))
 
 
 def _enqueue_outbox_dispatch_jobs(outbox_names: list[str]) -> dict[str, int]:

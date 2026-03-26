@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from acentem_takipte.acentem_takipte.services import quick_create
@@ -10,10 +11,14 @@ def test_insert_doc_logs_create_audit_event():
     fake_doc.doctype = "AT Claim"
     fake_doc.name = "CLM-0001"
 
-    with patch.object(quick_create.frappe, "get_doc", return_value=fake_doc):
-        with patch.object(quick_create.frappe.db, "commit"):
-            with patch.object(quick_create, "log_decision_event") as audit_mock:
-                result = quick_create._insert_doc({"doctype": "AT Claim"}, "claim")
+    fake_frappe = SimpleNamespace(
+        get_doc=lambda payload: fake_doc,
+        db=SimpleNamespace(commit=lambda: None),
+    )
+
+    with patch.object(quick_create, "frappe", fake_frappe):
+        with patch.object(quick_create, "log_decision_event") as audit_mock:
+            result = quick_create._insert_doc({"doctype": "AT Claim"}, "claim")
 
     audit_mock.assert_called_once_with(
         "AT Claim",
@@ -30,7 +35,9 @@ def test_update_aux_record_logs_edit_audit_event():
     fake_doc.doctype = "AT Ownership Assignment"
     fake_doc.name = "AT-ASN-0001"
 
-    with patch.object(quick_create.frappe.db, "commit"):
+    fake_frappe = SimpleNamespace(db=SimpleNamespace(commit=lambda: None))
+
+    with patch.object(quick_create, "frappe", fake_frappe):
         with patch.object(quick_create, "log_decision_event") as audit_mock:
             result = quick_create.update_aux_record(fake_doc)
 
@@ -50,7 +57,9 @@ def test_delete_aux_record_logs_delete_audit_event():
     fake_doc.doctype = "AT Call Note"
     fake_doc.name = "AT-CALL-0001"
 
-    with patch.object(quick_create.frappe.db, "commit"):
+    fake_frappe = SimpleNamespace(db=SimpleNamespace(commit=lambda: None))
+
+    with patch.object(quick_create, "frappe", fake_frappe):
         with patch.object(quick_create, "log_decision_event") as audit_mock:
             result = quick_create.delete_aux_record(fake_doc)
 

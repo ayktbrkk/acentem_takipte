@@ -13,14 +13,35 @@ from acentem_takipte.acentem_takipte.api.quick_payloads import (
     QuickPolicyPayload,
     QuickTaskPayload,
 )
+from acentem_takipte.acentem_takipte.services import quick_create_customer_flow
+from acentem_takipte.acentem_takipte.services import quick_create_special
+from acentem_takipte.acentem_takipte.services import quick_create_policy_task
 
 
 @pytest.fixture(autouse=True)
 def _mock_frappe_runtime(monkeypatch):
     monkeypatch.setattr(quick_create_api, "_", lambda value: value, raising=False)
     monkeypatch.setattr(quick_create_api, "nowdate", lambda: "2026-01-01", raising=False)
+    monkeypatch.setattr(quick_create_customer_flow, "_", lambda value: value, raising=False)
+    monkeypatch.setattr(quick_create_customer_flow, "nowdate", lambda: "2026-01-01", raising=False)
+    monkeypatch.setattr(quick_create_special, "_", lambda value: value, raising=False)
+    monkeypatch.setattr(quick_create_special, "nowdate", lambda: "2026-01-01", raising=False)
+    monkeypatch.setattr(quick_create_policy_task, "_", lambda value: value, raising=False)
+    monkeypatch.setattr(quick_create_policy_task, "nowdate", lambda: "2026-01-01", raising=False)
     monkeypatch.setattr(
         quick_create_api.frappe,
+        "local",
+        SimpleNamespace(request=object(), flags=SimpleNamespace(in_test=True)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        quick_create_special.frappe,
+        "local",
+        SimpleNamespace(request=object(), flags=SimpleNamespace(in_test=True)),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        quick_create_policy_task.frappe,
         "local",
         SimpleNamespace(request=object(), flags=SimpleNamespace(in_test=True)),
         raising=False,
@@ -28,6 +49,8 @@ def _mock_frappe_runtime(monkeypatch):
     fake_db = MagicMock()
     fake_db.exists.return_value = True
     monkeypatch.setattr(quick_create_api.frappe, "db", fake_db, raising=False)
+    monkeypatch.setattr(quick_create_special.frappe, "db", fake_db, raising=False)
+    monkeypatch.setattr(quick_create_policy_task.frappe, "db", fake_db, raising=False)
     return fake_db
 
 
@@ -56,25 +79,25 @@ def test_create_quick_policy_accepts_payload_dataclass():
         notes="Policy note",
     )
 
-    with patch.object(quick_create_api, "_assert_create_permission"):
-        with patch.object(quick_create_api, "_resolve_office_branch", return_value="IST"):
+    with patch.object(quick_create_policy_task, "_assert_create_permission"):
+        with patch.object(quick_create_policy_task, "_resolve_office_branch", return_value="IST"):
             with patch.object(
-                quick_create_api,
+                quick_create_policy_task,
                 "_normalize_link",
                 side_effect=lambda doctype, value, required=False: value,
             ):
                 with patch.object(
-                    quick_create_api,
+                    quick_create_policy_task,
                     "_normalize_date",
                     side_effect=lambda value: value,
                 ):
                     with patch.object(
-                        quick_create_api,
+                        quick_create_policy_task,
                         "resolve_or_create_quick_customer",
                         return_value=("CUST-001", False),
                     ):
                         with patch.object(
-                            quick_create_api,
+                            quick_create_policy_task,
                             "create_policy_service",
                             return_value={"policy": "POL-0001"},
                         ) as service_mock:
@@ -125,29 +148,29 @@ def test_create_quick_payment_accepts_payload_dataclass_and_aliases():
         notes="Pesin yerine 3 taksit",
     )
 
-    with patch.object(quick_create_api, "_assert_create_permission"):
-        with patch.object(quick_create_api, "_resolve_office_branch", return_value="IST"):
+    with patch.object(quick_create_customer_flow, "_assert_create_permission"):
+        with patch.object(quick_create_customer_flow, "_resolve_office_branch", return_value="IST"):
             with patch.object(
-                quick_create_api,
+                quick_create_customer_flow,
                 "_normalize_link",
                 side_effect=lambda doctype, value, required=False: value,
             ):
                 with patch.object(
-                    quick_create_api,
+                    quick_create_customer_flow,
                     "_normalize_date",
                     side_effect=lambda value: value,
                 ):
                     with patch.object(
-                        quick_create_api,
+                        quick_create_customer_flow,
                         "normalize_note_text",
                         side_effect=lambda value: (value or "").strip(),
                     ):
                         with patch.object(
-                            quick_create_api,
+                            quick_create_customer_flow,
                             "create_payment_service",
                             return_value={"payment": "PAY-0001"},
                         ) as service_mock:
-                            result = quick_create_api.create_quick_payment(payload)
+                            result = quick_create_customer_flow.create_quick_payment(payload)
 
     service_mock.assert_called_once_with(
         {
@@ -192,30 +215,30 @@ def test_create_quick_task_accepts_payload_dataclass():
         notes="Need callback",
     )
 
-    with patch.object(quick_create_api, "_assert_create_permission"):
-        with patch.object(quick_create_api, "_resolve_office_branch", return_value="IST"):
+    with patch.object(quick_create_policy_task, "_assert_create_permission"):
+        with patch.object(quick_create_policy_task, "_resolve_office_branch", return_value="IST"):
             with patch.object(
-                quick_create_api,
+                quick_create_policy_task,
                 "_normalize_link",
                 side_effect=lambda doctype, value, required=False: value,
             ):
                 with patch.object(
-                    quick_create_api,
+                    quick_create_policy_task,
                     "_normalize_date",
                     side_effect=lambda value: value,
                 ):
                     with patch.object(
-                        quick_create_api,
+                        quick_create_policy_task,
                         "_normalize_datetime",
                         side_effect=lambda value: value,
                     ):
                         with patch.object(
-                            quick_create_api,
+                            quick_create_policy_task,
                             "normalize_note_text",
                             side_effect=lambda value: (value or "").strip(),
                         ):
                             with patch.object(
-                                quick_create_api,
+                                quick_create_policy_task,
                                 "create_task_service",
                                 return_value={"task": "TASK-0001"},
                             ) as service_mock:
@@ -266,26 +289,26 @@ def test_create_quick_accounting_entry_accepts_payload_dataclass():
     fake_doc = MagicMock()
     fake_doc.name = "ACC-0001"
 
-    with patch.object(quick_create_api, "_assert_create_permission"):
-        with patch.object(quick_create_api, "_assert_doc_exists"):
-            with patch.object(quick_create_api, "_resolve_office_branch", return_value="IST"):
+    with patch.object(quick_create_special, "_assert_create_permission"):
+        with patch.object(quick_create_special, "_assert_doc_exists"):
+            with patch.object(quick_create_special, "_resolve_office_branch", return_value="IST"):
                 with patch.object(
-                    quick_create_api,
+                    quick_create_special,
                     "_normalize_link",
                     side_effect=lambda doctype, value, required=False: value,
                 ):
                     with patch.object(
-                        quick_create_api,
+                        quick_create_special,
                         "_normalize_option",
                         side_effect=lambda value, allowed, default=None: value or default,
                     ):
                         with patch.object(
-                            quick_create_api,
+                            quick_create_special,
                             "normalize_note_text",
                             side_effect=lambda value: (value or "").strip(),
                         ):
                             with patch.object(
-                                quick_create_api.frappe,
+                                quick_create_special.frappe,
                                 "get_doc",
                                 return_value=fake_doc,
                             ) as get_doc_mock:
@@ -298,7 +321,7 @@ def test_create_quick_accounting_entry_accepts_payload_dataclass():
     assert payload_doc["local_amount_try"] == 1000
     assert payload_doc["external_ref"] == "ACC-001"
     assert result == {"accounting_entry": "ACC-0001"}
-    quick_create_api.frappe.db.commit.assert_called_once()
+    quick_create_special.frappe.db.commit.assert_called_once()
 
 
 def test_create_quick_notification_template_accepts_payload_dataclass():
@@ -322,8 +345,8 @@ def test_create_quick_notification_template_accepts_payload_dataclass():
     fake_doc = MagicMock()
     fake_doc.name = "TPL-0001"
 
-    with patch.object(quick_create_api, "_assert_create_permission"):
-        with patch.object(quick_create_api.frappe, "get_doc", return_value=fake_doc) as get_doc_mock:
+    with patch.object(quick_create_special, "_assert_create_permission"):
+        with patch.object(quick_create_special.frappe, "get_doc", return_value=fake_doc) as get_doc_mock:
             result = quick_create_api.create_quick_notification_template(payload)
 
     payload_doc = get_doc_mock.call_args.args[0]
@@ -333,4 +356,4 @@ def test_create_quick_notification_template_accepts_payload_dataclass():
     assert payload_doc["whatsapp_body_template"] == "WhatsApp Govde"
     assert payload_doc["is_active"] == 0
     assert result == {"template": "TPL-0001"}
-    quick_create_api.frappe.db.commit.assert_called_once()
+    quick_create_special.frappe.db.commit.assert_called_once()

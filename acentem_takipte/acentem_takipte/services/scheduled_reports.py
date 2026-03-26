@@ -22,6 +22,9 @@ from acentem_takipte.acentem_takipte.services.report_registry import (
     REPORT_DEFINITIONS,
     build_report_payload,
 )
+from acentem_takipte.acentem_takipte.utils.normalization import (
+    normalize_option as shared_normalize_option,
+)
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 
@@ -427,12 +430,12 @@ def _ensure_scheduled_report_template() -> str:
 
 
 def _normalize_frequency(value: Any) -> str:
-    normalized = str(value or "daily").strip().lower() or "daily"
+    normalized = (shared_normalize_option(value) or "daily").lower()
     return normalized if normalized in {"daily", "weekly", "monthly"} else "daily"
 
 
 def _normalize_delivery_channel(value: Any) -> str:
-    normalized = str(value or "email").strip().lower() or "email"
+    normalized = (shared_normalize_option(value) or "email").lower()
     return normalized if normalized in {"email", "notification_outbox"} else "email"
 
 
@@ -469,7 +472,7 @@ def _normalize_day_of_month(value: Any) -> int:
 
 
 def _normalize_locale(value: Any) -> str:
-    normalized = str(value or "tr").strip()
+    normalized = shared_normalize_option(value) or "tr"
     return normalized or "tr"
 
 
@@ -478,7 +481,7 @@ def _normalize_export_format(value: Any) -> str:
 
 
 def _normalize_last_status(value: Any) -> str | None:
-    normalized = str(value or "").strip().lower()
+    normalized = (shared_normalize_option(value) or "").lower()
     return normalized or None
 
 

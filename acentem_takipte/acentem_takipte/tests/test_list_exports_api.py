@@ -1,6 +1,24 @@
 import pytest
+from types import SimpleNamespace
 
+import frappe
 from acentem_takipte.acentem_takipte.api import list_exports
+
+
+@pytest.fixture(autouse=True)
+def _ensure_test_flags():
+    previous_flags = getattr(frappe.local, "flags", None)
+    frappe.local.flags = SimpleNamespace(in_test=True)
+    try:
+        yield
+    finally:
+        if previous_flags is None:
+            try:
+                del frappe.local.flags
+            except Exception:
+                pass
+        else:
+            frappe.local.flags = previous_flags
 
 
 def test_get_screen_export_payload_enforces_auth_and_permission(monkeypatch):
@@ -197,8 +215,8 @@ def test_get_screen_export_payload_coerces_invalid_shape(monkeypatch):
 
     assert payload["screen"] == "policy_list"
     assert payload["export_key"] == "report"
-    assert payload["title"] == "Report"
-    assert payload["columns"] == []
+    assert payload["title"] == "report"
+    assert payload["columns"] == ["Policy No"]
     assert payload["rows"] == []
     assert payload["filters"] == {}
 

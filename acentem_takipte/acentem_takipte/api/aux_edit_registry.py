@@ -297,7 +297,7 @@ def resolve_handler(doctype: str, field: str) -> tuple | None:
 
 def apply_field_value(doc, field: str, value, handler_spec: tuple) -> None:
     """Apply a field value to a document using the handler spec."""
-    from acentem_takipte.acentem_takipte.api.quick_create import (
+    from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
         _normalize_date,
         _normalize_datetime,
         _normalize_doctype_or_blank,

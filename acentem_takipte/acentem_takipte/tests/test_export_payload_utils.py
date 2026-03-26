@@ -9,6 +9,15 @@ def test_coerce_filters_accepts_json_string():
     assert export_payload_utils.coerce_filters('{"status":"Open"}') == {"status": "Open"}
 
 
+def test_coerce_query_payload_and_or_filters_normalize_shapes():
+    assert export_payload_utils.coerce_query_payload('{"filters":{"status":"Open"}}') == {
+        "filters": {"status": "Open"}
+    }
+    assert export_payload_utils.coerce_or_filters('{"status":"Open"}') == {"status": "Open"}
+    assert export_payload_utils.coerce_or_filters("[{\"status\":\"Open\"}]") == [{"status": "Open"}]
+    assert export_payload_utils.coerce_or_filters("   ") is None
+
+
 def test_coerce_string_list_deduplicates():
     assert export_payload_utils.coerce_string_list(" a@example.com, b@example.com, a@example.com ") == [
         "a@example.com",

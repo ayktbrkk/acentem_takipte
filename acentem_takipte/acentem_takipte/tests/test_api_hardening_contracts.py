@@ -199,6 +199,12 @@ class TestApiHardeningContracts(IntegrationTestCase):
         self.assertEqual(reconciliation_job.get("queue"), "long")
         self.assertEqual(reconciliation_job.get("limit"), 56)
 
+        report_snapshot_job = task_jobs.run_report_snapshot_job(limit=78)
+
+        self.assertTrue(report_snapshot_job.get("queued"))
+        self.assertEqual(report_snapshot_job.get("queue"), "long")
+        self.assertEqual(report_snapshot_job.get("limit"), 78)
+
     def test_admin_jobs_api_returns_task_payload(self):
         expected = {
             "queued": True,
@@ -208,11 +214,11 @@ class TestApiHardeningContracts(IntegrationTestCase):
             "limit": 1,
         }
         with patch.object(admin_jobs_api, "_assert_admin_job_access") as access_mock:
-            with patch.object(admin_jobs_api.task_jobs, "run_accounting_sync_job", return_value=expected) as task_mock:
+            with patch.object(admin_jobs_api, "dispatch_admin_job", return_value=expected) as dispatch_mock:
                 result = admin_jobs_api.run_accounting_sync_job(limit=0)
 
         access_mock.assert_called_once()
-        task_mock.assert_called_once_with(limit=1)
+        dispatch_mock.assert_called_once_with("run_accounting_sync_job", limit=1)
         self.assertEqual(result, expected)
 
     def test_admin_jobs_api_run_customer_segment_snapshot_job_limits_input_and_checks_access(self):
@@ -225,14 +231,34 @@ class TestApiHardeningContracts(IntegrationTestCase):
 
         with patch.object(admin_jobs_api, "_assert_admin_job_access") as access_mock:
             with patch.object(
-                admin_jobs_api.task_jobs,
-                "run_customer_segment_snapshot_job",
+                admin_jobs_api,
+                "dispatch_admin_job",
                 return_value=expected,
-            ) as task_mock:
+            ) as dispatch_mock:
                 result = admin_jobs_api.run_customer_segment_snapshot_job(limit=0)
 
         access_mock.assert_called_once()
-        task_mock.assert_called_once_with(limit=1)
+        dispatch_mock.assert_called_once_with("run_customer_segment_snapshot_job", limit=1)
+        self.assertEqual(result, expected)
+
+    def test_admin_jobs_api_run_report_snapshot_job_limits_input_and_checks_access(self):
+        expected = {
+            "queued": True,
+            "method": "acentem_takipte.tasks._run_report_snapshot_logic",
+            "queue": "long",
+            "limit": 1,
+        }
+
+        with patch.object(admin_jobs_api, "_assert_admin_job_access") as access_mock:
+            with patch.object(
+                admin_jobs_api,
+                "dispatch_admin_job",
+                return_value=expected,
+            ) as dispatch_mock:
+                result = admin_jobs_api.run_report_snapshot_job(limit=0)
+
+        access_mock.assert_called_once()
+        dispatch_mock.assert_called_once_with("run_report_snapshot_job", limit=1)
         self.assertEqual(result, expected)
 
 

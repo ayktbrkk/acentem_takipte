@@ -1,15 +1,31 @@
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from acentem_takipte.acentem_takipte.api.quick_create import create_quick_reminder
+from acentem_takipte.acentem_takipte.services import quick_create_workflow
+
+
+@pytest.fixture(autouse=True)
+def _mock_frappe_runtime(monkeypatch):
+    monkeypatch.setattr(quick_create_workflow, "_", lambda value: value, raising=False)
+    monkeypatch.setattr(
+        quick_create_workflow.frappe,
+        "local",
+        MagicMock(request=object(), flags=MagicMock(in_test=True)),
+        raising=False,
+    )
+    monkeypatch.setattr(quick_create_workflow.frappe, "db", MagicMock(), raising=False)
 
 
 def test_create_quick_reminder_normalizes_payload():
     with (
-        patch("acentem_takipte.api.quick_create._assert_create_permission") as assert_permission,
-        patch("acentem_takipte.api.quick_create.create_reminder_service", return_value={"reminder": "REM-0001"}) as create_service,
-        patch("acentem_takipte.api.quick_create.frappe.db.exists", return_value=True),
+        patch.object(quick_create_workflow, "_assert_create_permission") as assert_permission,
+        patch.object(quick_create_workflow, "_resolve_office_branch", return_value="IST"),
+        patch.object(quick_create_workflow, "create_reminder_service", return_value={"reminder": "REM-0001"}) as create_service,
+        patch.object(quick_create_workflow.frappe.db, "exists", return_value=True),
     ):
         result = create_quick_reminder(
             reminder_title="  Follow up quote  ",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from frappe.tests import IntegrationTestCase
+from unittest import TestCase
 
 from acentem_takipte.acentem_takipte.api.versioning import (
     build_version_meta,
@@ -9,7 +9,7 @@ from acentem_takipte.acentem_takipte.api.versioning import (
 )
 
 
-class TestApiVersioning(IntegrationTestCase):
+class TestApiVersioning(TestCase):
     def test_normalize_api_version_uses_default(self):
         self.assertEqual(normalize_api_version(None), "v1")
 

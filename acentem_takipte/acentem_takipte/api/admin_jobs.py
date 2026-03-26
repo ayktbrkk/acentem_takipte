@@ -22,6 +22,7 @@ ADMIN_JOB_PERMISSION_DOCTYPES = build_doctype_permission_map(
     run_payment_due_job=("AT Payment", "AT Notification Draft"),
     run_scheduled_reports_job=(),
     run_customer_segment_snapshot_job=("AT Customer Segment Snapshot",),
+    run_report_snapshot_job=("AT Report Snapshot",),
     run_accounting_sync_job=("AT Accounting Entry",),
     run_accounting_reconciliation_job=("AT Reconciliation Item",),
 )
@@ -122,6 +123,13 @@ def run_customer_segment_snapshot_job(limit: int = 250) -> dict[str, Any]:
     safe_limit = max(cint(limit), 1)
     _assert_admin_job_access("api.admin_jobs.run_customer_segment_snapshot_job", {"limit": safe_limit})
     return dispatch_admin_job("run_customer_segment_snapshot_job", limit=safe_limit)
+
+
+@frappe.whitelist()
+def run_report_snapshot_job(limit: int = 1000) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    _assert_admin_job_access("api.admin_jobs.run_report_snapshot_job", {"limit": safe_limit})
+    return dispatch_admin_job("run_report_snapshot_job", limit=safe_limit)
 
 
 @frappe.whitelist()

@@ -8,6 +8,7 @@ from frappe.tests import IntegrationTestCase
 from acentem_takipte.acentem_takipte.api import seed as seed_api
 from acentem_takipte.acentem_takipte.api import smoke as smoke_api
 from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
+from acentem_takipte.acentem_takipte.services import quick_create_customer_flow
 
 
 class TestSeedSmokeSecurity(IntegrationTestCase):
@@ -92,10 +93,10 @@ class TestSeedSmokeSecurity(IntegrationTestCase):
         try:
             fake_doc = MagicMock()
             fake_doc.name = "AT-CUST-0001"
-            with patch.object(quick_create_api, "assert_mutation_access"):
-                with patch.object(quick_create_api.frappe, "get_doc", return_value=fake_doc):
-                    with patch.object(quick_create_api.frappe.db, "commit"):
-                        quick_create_api.create_quick_customer(full_name="Test User", tax_id="12345678901")
+            with patch.object(quick_create_customer_flow, "_assert_create_permission"):
+                with patch.object(quick_create_customer_flow.frappe, "get_doc", return_value=fake_doc):
+                    with patch.object(quick_create_customer_flow.frappe.db, "commit"):
+                        quick_create_customer_flow.create_quick_customer(full_name="Test User", tax_id="12345678901")
 
             fake_doc.insert.assert_called_once_with()
         finally:
