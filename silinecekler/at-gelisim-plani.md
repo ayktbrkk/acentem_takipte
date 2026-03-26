@@ -170,3 +170,13 @@ Aşağıdaki görevler önceki agent tarafından tamamlandı (plan dosyası disk
  acentem_takipte/hooks.py                               | +7 satır (doctype_js + doctype_tree_js)
  Toplam: -350 satır, +114 satır
 ```
+
+### Bu oturumda tamamlanan (2026-03-26)
+
+- [x] Repo temizlik: stale `acentem_takipte/acentem_takipte/hooks.py` silindi
+- [x] Repo temizlik: redundant `acentem_takipte.py` silindi
+- [x] Repo temizlik: orphan `sprint_d_001_index_migration.py` silindi
+- [x] Repo temizlik: boş `public/` dizini silindi
+- [x] `TEKNIK_DENETIM_TAKIP.md` uygulama takip dosyası oluşturuldu (86 madde, 5 kategori)
+- [x] `TEKNIK_DENETIM_RAPORU.md` detaylı denetim raporu oluşturuldu
+- [x] Non-essential dosyalar `silinecekler/` klasörüne taşındı (README, PROJECT_REGISTRY, docs, scripts, TECHNICAL_ANALYSIS_REPORT, at-gelisim-plani)
