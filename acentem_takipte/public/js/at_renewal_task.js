@@ -1,4 +1,14 @@
 frappe.ui.form.on("AT Renewal Task", {
+  validate(frm) {
+    if (!frm.doc.policy) {
+      frappe.validated = false;
+      frappe.msgprint(__("Poliçe seçilmelidir."));
+    }
+    if (!frm.doc.renewal_date) {
+      frappe.validated = false;
+      frappe.msgprint(__("Yenileme tarihi girilmelidir."));
+    }
+  },
   refresh(frm) {
     const navigate = (target) => {
       const url = new URL(target, window.location.origin);

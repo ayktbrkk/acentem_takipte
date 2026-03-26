@@ -1,4 +1,10 @@
 frappe.ui.form.on("AT Lead", {
+  validate(frm) {
+    if (!frm.doc.first_name && !frm.doc.last_name) {
+      frappe.validated = false;
+      frappe.msgprint(__("En az bir ad veya soyad girilmelidir."));
+    }
+  },
   refresh(frm) {
     const navigate = (target) => {
       const url = new URL(target, window.location.origin);
@@ -50,11 +56,21 @@ frappe.ui.form.on("AT Lead", {
           },
           freeze: true,
           callback: (r) => {
+            if (r.exc) {
+              frappe.msgprint({ message: __("Dönüşüm başarısız oldu."), indicator: "red" });
+              return;
+            }
             const offer = r?.message?.offer;
-            if (!offer) return;
+            if (!offer) {
+              frappe.msgprint({ message: __("Offer oluşturulamadı."), indicator: "orange" });
+              return;
+            }
             frappe.show_alert({ message: __("Offer created: {0}", [offer]), indicator: "green" });
             frm.reload_doc();
             frappe.set_route("Form", "AT Offer", offer);
+          },
+          error: () => {
+            frappe.msgprint({ message: __("Sunucu hatası oluştu."), indicator: "red" });
           },
         });
       }, __("Create"));

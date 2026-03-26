@@ -11,7 +11,11 @@ COMPANY_POLICY_NO_INDEX = "uniq_at_policy_company_policy_no"
 
 
 def _db_type() -> str:
-    raw = (getattr(frappe.db, "db_type", None) or getattr(frappe.conf, "db_type", None) or "").lower()
+    raw = (
+        getattr(frappe.db, "db_type", None)
+        or getattr(frappe.conf, "db_type", None)
+        or ""
+    ).lower()
     if "postgres" in raw:
         return "postgres"
     return "mariadb"
@@ -23,11 +27,19 @@ def _quote_ident(identifier: str, *, db_type: str) -> str:
     return f"`{identifier}`"
 
 
+def _sanitize_identifier(name: str) -> str:
+    return "".join(ch for ch in name if ch.isalnum() or ch == "_")
+
+
 def _normalize_blank_policy_numbers() -> None:
     db_type = _db_type()
     table_sql = _quote_ident(TABLE_NAME, db_type=db_type)
     policy_no_sql = _quote_ident("policy_no", db_type=db_type)
-    null_expr = f"coalesce({policy_no_sql}, '')" if db_type == "postgres" else f"ifnull({policy_no_sql}, '')"
+    null_expr = (
+        f"coalesce({policy_no_sql}, '')"
+        if db_type == "postgres"
+        else f"ifnull({policy_no_sql}, '')"
+    )
     frappe.db.sql(
         f"""
         update {table_sql}
@@ -87,10 +99,14 @@ def _drop_legacy_unique_policy_no_index(*, db_type: str) -> None:
                 continue
             if "(policy_no)" not in index_def.replace('"', ""):
                 continue
-            frappe.db.sql(f'drop index if exists "{index_name}"')
+            safe_name = _sanitize_identifier(index_name)
+            if safe_name:
+                frappe.db.sql(f'drop index if exists "{safe_name}"')
         return
 
-    rows = frappe.db.sql(f"show index from `{TABLE_NAME}`", as_dict=True)
+    rows = frappe.db.sql(
+        f"show index from {_quote_ident(TABLE_NAME, db_type=db_type)}", as_dict=True
+    )
     grouped: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
         grouped[str(row.get("Key_name") or "")].append(row)
@@ -102,11 +118,18 @@ def _drop_legacy_unique_policy_no_index(*, db_type: str) -> None:
             continue
         ordered_columns = [
             str(row.get("Column_name") or "")
-            for row in sorted(index_rows, key=lambda item: int(item.get("Seq_in_index") or 0))
+            for row in sorted(
+                index_rows, key=lambda item: int(item.get("Seq_in_index") or 0)
+            )
         ]
         if ordered_columns != ["policy_no"]:
             continue
-        frappe.db.sql(f"drop index `{index_name}` on `{TABLE_NAME}`")
+        safe_index = _sanitize_identifier(index_name)
+        if safe_index:
+            table_sql = _quote_ident(TABLE_NAME, db_type=db_type)
+            frappe.db.sql(
+                f"drop index {_quote_ident(safe_index, db_type=db_type)} on {table_sql}"
+            )
 
 
 def _ensure_company_policy_constraint() -> None:

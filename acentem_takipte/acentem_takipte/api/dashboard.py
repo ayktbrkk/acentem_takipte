@@ -4,22 +4,52 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import constants as dashboard_constants
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import details_lead as dashboard_lead_detail_builder
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import details_offer as dashboard_offer_detail_builder
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import filters as dashboard_filters
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_customers as dashboard_customer_queries
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_kpis as dashboard_kpi_queries
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import queries_leads as dashboard_lead_queries
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import security as dashboard_security
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import serializers as dashboard_serializers
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import tab_payload as dashboard_tab_sections
-from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import has_sensitive_access
-from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    constants as dashboard_constants,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    details_lead as dashboard_lead_detail_builder,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    details_offer as dashboard_offer_detail_builder,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    filters as dashboard_filters,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    queries_customers as dashboard_customer_queries,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    queries_kpis as dashboard_kpi_queries,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    queries_leads as dashboard_lead_queries,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    security as dashboard_security,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    serializers as dashboard_serializers,
+)
+from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+    tab_payload as dashboard_tab_sections,
+)
+from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
+    has_sensitive_access,
+)
+from acentem_takipte.acentem_takipte.services.branches import (
+    normalize_requested_office_branch,
+)
 from acentem_takipte.acentem_takipte.services.privacy_masking import masked_query_gate
-from acentem_takipte.acentem_takipte.services.query_isolation import build_scope_filters_dict
-from acentem_takipte.acentem_takipte.services.customer_360 import build_customer_360_payload
-from acentem_takipte.acentem_takipte.services.follow_up_sla import build_follow_up_sla_payload
+from acentem_takipte.acentem_takipte.services.query_isolation import (
+    build_scope_filters_dict,
+)
+from acentem_takipte.acentem_takipte.services.customer_360 import (
+    build_customer_360_payload,
+)
+from acentem_takipte.acentem_takipte.services.follow_up_sla import (
+    build_follow_up_sla_payload,
+)
 from acentem_takipte.acentem_takipte.services.work_management import (
     build_my_activities_payload,
     build_my_reminders_payload,
@@ -59,7 +89,11 @@ def _assert_dashboard_endpoint_method(action: str) -> None:
         return
 
     policy = dashboard_security.DASHBOARD_ENDPOINT_PERMISSION_POLICY.get(action) or {}
-    allowed_methods = [str(method or "").strip().upper() for method in policy.get("http_methods") or [] if method]
+    allowed_methods = [
+        str(method or "").strip().upper()
+        for method in policy.get("http_methods") or []
+        if method
+    ]
     if not allowed_methods:
         return
 
@@ -74,12 +108,16 @@ def _assert_dashboard_endpoint_method(action: str) -> None:
 @frappe.whitelist()
 def get_dashboard_kpis(filters=None) -> dict:
     _assert_dashboard_endpoint_method("get_dashboard_kpis")
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     from_date = payload.get("from_date")
     to_date = payload.get("to_date")
     compare_from_date = payload.get("compare_from_date")
     compare_to_date = payload.get("compare_to_date")
-    period_comparison = str(payload.get("period_comparison") or "").strip().lower() or None
+    period_comparison = (
+        str(payload.get("period_comparison") or "").strip().lower() or None
+    )
     branch = payload.get("branch")
     office_branch = normalize_requested_office_branch(payload.get("office_branch"))
     months = int(payload.get("months") or 6)
@@ -110,7 +148,9 @@ def get_dashboard_kpis(filters=None) -> dict:
 @frappe.whitelist()
 def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
     _assert_dashboard_endpoint_method("get_dashboard_tab_payload")
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     from_date = payload.get("from_date")
     to_date = payload.get("to_date")
     compare_from_date = payload.get("compare_from_date")
@@ -194,7 +234,9 @@ def get_dashboard_tab_payload(tab: str = "daily", filters=None) -> dict:
 @frappe.whitelist()
 def get_customer_list(filters=None, limit: int = 20) -> list[dict]:
     _assert_dashboard_endpoint_method("get_customer_list")
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     query_filters = {}
     if payload.get("assigned_agent"):
         query_filters["assigned_agent"] = payload["assigned_agent"]
@@ -205,7 +247,17 @@ def get_customer_list(filters=None, limit: int = 20) -> list[dict]:
 
     rows = frappe.get_list(
         "AT Customer",
-        fields=["name", "customer_type", "full_name", "tax_id", "masked_tax_id", "phone", "masked_phone", "email", "assigned_agent"],
+        fields=[
+            "name",
+            "customer_type",
+            "full_name",
+            "tax_id",
+            "masked_tax_id",
+            "phone",
+            "masked_phone",
+            "email",
+            "assigned_agent",
+        ],
         filters=query_filters,
         order_by="modified desc",
         limit_page_length=max(min(int(limit), 100), 1),
@@ -214,7 +266,9 @@ def get_customer_list(filters=None, limit: int = 20) -> list[dict]:
     if has_sensitive_access():
         return rows
 
-    masked_query_gate(frappe.session.user, endpoint="customer_list", row_count=len(rows))
+    masked_query_gate(
+        frappe.session.user, endpoint="customer_list", row_count=len(rows)
+    )
     for row in rows:
         row["tax_id"] = row.get("masked_tax_id")
         row["phone"] = row.get("masked_phone")
@@ -228,7 +282,9 @@ def get_customer_portfolio_summary_map(customers=None) -> dict[str, dict]:
     if user == "Guest":
         frappe.throw("Authentication required")
 
-    raw_customers = frappe.parse_json(customers) if isinstance(customers, str) else customers
+    raw_customers = (
+        frappe.parse_json(customers) if isinstance(customers, str) else customers
+    )
     if not isinstance(raw_customers, (list, tuple)):
         return {}
 
@@ -289,7 +345,9 @@ def get_policy_360_payload(name: str) -> dict:
     policy = frappe.get_doc("AT Policy", policy_name)
     policy.check_permission("read")
 
-    from acentem_takipte.acentem_takipte.services.policy_360 import build_policy_360_payload
+    from acentem_takipte.acentem_takipte.services.policy_360 import (
+        build_policy_360_payload,
+    )
 
     return build_policy_360_payload(policy_name)
 
@@ -300,7 +358,9 @@ def get_follow_up_sla_payload(filters=None) -> dict:
     if user == "Guest":
         frappe.throw("Authentication required")
 
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     office_branch = normalize_requested_office_branch(payload.get("office_branch"))
     allowed_customers = _allowed_customers_for_user()
     return build_follow_up_sla_payload(
@@ -315,7 +375,9 @@ def get_my_tasks_payload(filters=None) -> dict:
     if user == "Guest":
         frappe.throw("Authentication required")
 
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     office_branch = normalize_requested_office_branch(payload.get("office_branch"))
     return build_my_tasks_payload(office_branch=office_branch, assigned_to=user)
 
@@ -326,7 +388,9 @@ def get_my_activities_payload(filters=None) -> dict:
     if user == "Guest":
         frappe.throw("Authentication required")
 
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     office_branch = normalize_requested_office_branch(payload.get("office_branch"))
     return build_my_activities_payload(office_branch=office_branch, assigned_to=user)
 
@@ -337,19 +401,25 @@ def get_my_reminders_payload(filters=None) -> dict:
     if user == "Guest":
         frappe.throw("Authentication required")
 
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     office_branch = normalize_requested_office_branch(payload.get("office_branch"))
     return build_my_reminders_payload(office_branch=office_branch, assigned_to=user)
 
 
 @frappe.whitelist()
-def get_customer_workbench_rows(filters=None, page: int = 1, page_length: int = 20) -> dict:
+def get_customer_workbench_rows(
+    filters=None, page: int = 1, page_length: int = 20
+) -> dict:
     _assert_dashboard_endpoint_method("get_customer_workbench_rows")
     user = frappe.session.user
     if user == "Guest":
         frappe.throw("Authentication required")
 
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     payload = dashboard_filters.normalize_customer_workbench_payload(payload)
 
     page_no = max(cint(page), 1)
@@ -405,7 +475,9 @@ def get_customer_workbench_rows(filters=None, page: int = 1, page_length: int = 
         dashboard_serializers.attach_customer_portfolio_summary(seed_rows, summary_map)
         _sort_customer_workbench_rows(seed_rows, requested_sort)
         page_seed_rows = seed_rows[offset : offset + per_page]
-        page_customer_names = [row.get("name") for row in page_seed_rows if row.get("name")]
+        page_customer_names = [
+            row.get("name") for row in page_seed_rows if row.get("name")
+        ]
         rows = dashboard_customer_queries.fetch_customer_workbench_rows_by_names(
             customer_names=page_customer_names,
         )
@@ -422,11 +494,15 @@ def get_customer_workbench_rows(filters=None, page: int = 1, page_length: int = 
             or_filters=or_filters,
         )
 
-        summary_map = _customer_portfolio_summary_for_names([row.get("name") for row in rows if row.get("name")])
+        summary_map = _customer_portfolio_summary_for_names(
+            [row.get("name") for row in rows if row.get("name")]
+        )
         dashboard_serializers.attach_customer_portfolio_summary(rows, summary_map)
 
     if not has_sensitive_access():
-        masked_query_gate(frappe.session.user, endpoint="customer_workbench", row_count=len(rows))
+        masked_query_gate(
+            frappe.session.user, endpoint="customer_workbench", row_count=len(rows)
+        )
         dashboard_serializers.mask_customer_sensitive_fields(rows)
 
     return dashboard_serializers.build_paged_rows_response(
@@ -444,7 +520,9 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
     if user == "Guest":
         frappe.throw("Authentication required")
 
-    payload = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    payload = (
+        frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
+    )
     payload = dashboard_filters.normalize_lead_workbench_payload(payload)
 
     page_no = max(cint(page), 1)
@@ -491,12 +569,18 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
     }
 
     if use_python_sort_or_filter:
-        seed_kwargs = dashboard_lead_queries.build_lead_workbench_derived_sort_seed_kwargs(
-            query_filters=query_filters,
-            or_filters=or_filters,
+        seed_kwargs = (
+            dashboard_lead_queries.build_lead_workbench_derived_sort_seed_kwargs(
+                query_filters=query_filters,
+                or_filters=or_filters,
+            )
         )
-        seed_rows = dashboard_lead_queries.fetch_all_lead_workbench_rows(base_kwargs=seed_kwargs)
-        dashboard_serializers.attach_lead_workbench_derived_fields(seed_rows, **lead_derive_kwargs)
+        seed_rows = dashboard_lead_queries.fetch_all_lead_workbench_rows(
+            base_kwargs=seed_kwargs
+        )
+        dashboard_serializers.attach_lead_workbench_derived_fields(
+            seed_rows, **lead_derive_kwargs
+        )
         filtered_rows = dashboard_serializers.filter_lead_workbench_rows(
             seed_rows,
             stale_state=stale_state,
@@ -506,8 +590,12 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
         total = len(filtered_rows)
         page_seed_rows = filtered_rows[offset : offset + per_page]
         page_lead_names = [row.get("name") for row in page_seed_rows if row.get("name")]
-        rows = dashboard_lead_queries.fetch_lead_workbench_rows_by_names(lead_names=page_lead_names)
-        dashboard_serializers.attach_lead_workbench_derived_fields(rows, **lead_derive_kwargs)
+        rows = dashboard_lead_queries.fetch_lead_workbench_rows_by_names(
+            lead_names=page_lead_names
+        )
+        dashboard_serializers.attach_lead_workbench_derived_fields(
+            rows, **lead_derive_kwargs
+        )
         rows = dashboard_serializers.reorder_rows_by_name(rows, page_lead_names)
     else:
         rows = dashboard_lead_queries.fetch_lead_workbench_rows(
@@ -519,7 +607,9 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
             query_filters=query_filters,
             or_filters=or_filters,
         )
-        dashboard_serializers.attach_lead_workbench_derived_fields(rows, **lead_derive_kwargs)
+        dashboard_serializers.attach_lead_workbench_derived_fields(
+            rows, **lead_derive_kwargs
+        )
 
     return dashboard_serializers.build_paged_rows_response(
         rows=rows,
@@ -544,7 +634,11 @@ def get_lead_detail_payload(name: str) -> dict:
     lead.check_permission("read")
 
     allowed_customers = _allowed_customers_for_user()
-    if allowed_customers is not None and lead.customer and lead.customer not in set(allowed_customers):
+    if (
+        allowed_customers is not None
+        and lead.customer
+        and lead.customer not in set(allowed_customers)
+    ):
         frappe.throw("Not permitted")
 
     return dashboard_lead_detail_builder.build_lead_detail_payload(
@@ -576,7 +670,11 @@ def get_offer_detail_payload(name: str) -> dict:
     offer.check_permission("read")
 
     allowed_customers = _allowed_customers_for_user()
-    if allowed_customers is not None and offer.customer and offer.customer not in set(allowed_customers):
+    if (
+        allowed_customers is not None
+        and offer.customer
+        and offer.customer not in set(allowed_customers)
+    ):
         frappe.throw("Not permitted")
 
     return dashboard_offer_detail_builder.build_offer_detail_payload(
@@ -691,13 +789,17 @@ def _safe_lead_workbench_order_by(order_by) -> str:
 def _sort_customer_workbench_rows(rows: list[dict], sort_value: str) -> None:
     value = str(sort_value or "").strip().lower()
     if value not in CUSTOMER_WORKBENCH_DERIVED_SORTS:
-        rows.sort(key=lambda row: str(row.get("full_name") or row.get("name") or "").lower())
+        rows.sort(
+            key=lambda row: str(row.get("full_name") or row.get("name") or "").lower()
+        )
         rows.sort(key=lambda row: str(row.get("modified") or ""), reverse=True)
         return
 
     field, direction = value.rsplit(" ", 1)
     reverse = direction == "desc"
-    rows.sort(key=lambda row: str(row.get("full_name") or row.get("name") or "").lower())
+    rows.sort(
+        key=lambda row: str(row.get("full_name") or row.get("name") or "").lower()
+    )
     rows.sort(key=lambda row: _customer_sort_metric(row, field), reverse=reverse)
 
 
@@ -728,13 +830,17 @@ def _sort_lead_workbench_rows(rows: list[dict], sort_value: str) -> None:
         rows.sort(key=lambda row: str(row.get("first_name") or "").lower())
         return
     if value == "first_name desc":
-        rows.sort(key=lambda row: str(row.get("first_name") or "").lower(), reverse=True)
+        rows.sort(
+            key=lambda row: str(row.get("first_name") or "").lower(), reverse=True
+        )
         return
     if value == "estimated_gross_premium asc":
         rows.sort(key=lambda row: flt(row.get("estimated_gross_premium") or 0))
         return
     if value == "estimated_gross_premium desc":
-        rows.sort(key=lambda row: flt(row.get("estimated_gross_premium") or 0), reverse=True)
+        rows.sort(
+            key=lambda row: flt(row.get("estimated_gross_premium") or 0), reverse=True
+        )
         return
     rows.sort(key=lambda row: str(row.get("modified") or ""), reverse=True)
 
@@ -795,15 +901,20 @@ def _customer_names_by_portfolio_filters(
             f"""
             select distinct customer
             from `tabAT Policy`
-            where {' and '.join(conditions)}
+            where {" and ".join(conditions)}
             """,
             values=values,
             as_dict=True,
         )
-        policy_names = {str(row.get("customer") or "") for row in policy_rows if row.get("customer")}
+        policy_names = {
+            str(row.get("customer") or "") for row in policy_rows if row.get("customer")
+        }
 
     if has_open_offer:
-        conditions = ["status in ('Draft', 'Sent', 'Accepted')", "ifnull(converted_policy, '') = ''"]
+        conditions = [
+            "status in ('Draft', 'Sent', 'Accepted')",
+            "ifnull(converted_policy, '') = ''",
+        ]
         values = {}
         if allowed_customers is not None:
             conditions.append("customer in %(customers)s")
@@ -812,12 +923,14 @@ def _customer_names_by_portfolio_filters(
             f"""
             select distinct customer
             from `tabAT Offer`
-            where {' and '.join(conditions)}
+            where {" and ".join(conditions)}
             """,
             values=values,
             as_dict=True,
         )
-        offer_names = {str(row.get("customer") or "") for row in offer_rows if row.get("customer")}
+        offer_names = {
+            str(row.get("customer") or "") for row in offer_rows if row.get("customer")
+        }
 
     if has_active_policy and has_open_offer:
         names = (policy_names or set()).intersection(offer_names or set())
@@ -942,7 +1055,10 @@ def _access_log_events(reference_doctype: str, reference_name: str) -> list[dict
     except Exception:
         log_redacted_error(
             "Access log fetch error",
-            details={"reference_doctype": reference_doctype, "reference_name": reference_name},
+            details={
+                "reference_doctype": reference_doctype,
+                "reference_name": reference_name,
+            },
         )
         return []
     return [
@@ -976,7 +1092,16 @@ def _get_notification_draft_preview_rows(
         return []
     return _collect_notification_preview_rows(
         doctype="AT Notification Draft",
-        fields=["name", "status", "channel", "recipient", "customer", "reference_doctype", "reference_name", "modified"],
+        fields=[
+            "name",
+            "status",
+            "channel",
+            "recipient",
+            "customer",
+            "reference_doctype",
+            "reference_name",
+            "modified",
+        ],
         customer=customer,
         references=references,
         limit=limit,
@@ -993,7 +1118,16 @@ def _get_notification_outbox_preview_rows(
         return []
     return _collect_notification_preview_rows(
         doctype="AT Notification Outbox",
-        fields=["name", "status", "channel", "recipient", "customer", "reference_doctype", "reference_name", "modified"],
+        fields=[
+            "name",
+            "status",
+            "channel",
+            "recipient",
+            "customer",
+            "reference_doctype",
+            "reference_name",
+            "modified",
+        ],
         customer=customer,
         references=references,
         limit=limit,
@@ -1035,7 +1169,10 @@ def _collect_notification_preview_rows(
             frappe.get_list(
                 doctype,
                 fields=fields,
-                filters={"reference_doctype": reference_doctype, "reference_name": reference_name},
+                filters={
+                    "reference_doctype": reference_doctype,
+                    "reference_name": reference_name,
+                },
                 order_by="modified desc",
                 limit_page_length=max(cint(limit), 1),
             )
@@ -1046,7 +1183,9 @@ def _collect_notification_preview_rows(
     return rows[: max(cint(limit), 1)]
 
 
-def _get_payment_detail_preview_rows(*, customer: str | None, policy: str | None, limit: int = 5) -> list[dict]:
+def _get_payment_detail_preview_rows(
+    *, customer: str | None, policy: str | None, limit: int = 5
+) -> list[dict]:
     if not frappe.has_permission("AT Payment", "read"):
         return []
     filters = []
@@ -1059,21 +1198,41 @@ def _get_payment_detail_preview_rows(*, customer: str | None, policy: str | None
     if len(filters) == 1:
         return frappe.get_list(
             "AT Payment",
-            fields=["name", "payment_no", "status", "payment_direction", "payment_date", "amount_try", "customer", "policy"],
+            fields=[
+                "name",
+                "payment_no",
+                "status",
+                "payment_direction",
+                "payment_date",
+                "amount_try",
+                "customer",
+                "policy",
+            ],
             filters={filters[0][0]: filters[0][2]},
             order_by="modified desc",
             limit_page_length=max(cint(limit), 1),
         )
     return frappe.get_list(
         "AT Payment",
-        fields=["name", "payment_no", "status", "payment_direction", "payment_date", "amount_try", "customer", "policy"],
+        fields=[
+            "name",
+            "payment_no",
+            "status",
+            "payment_direction",
+            "payment_date",
+            "amount_try",
+            "customer",
+            "policy",
+        ],
         or_filters=[["AT Payment", f[0], f[1], f[2]] for f in filters],
         order_by="modified desc",
         limit_page_length=max(cint(limit), 1),
     )
 
 
-def _get_renewal_detail_preview_rows(*, customer: str | None, policy: str | None, limit: int = 5) -> list[dict]:
+def _get_renewal_detail_preview_rows(
+    *, customer: str | None, policy: str | None, limit: int = 5
+) -> list[dict]:
     if not frappe.has_permission("AT Renewal Task", "read"):
         return []
     filters = []
@@ -1086,14 +1245,30 @@ def _get_renewal_detail_preview_rows(*, customer: str | None, policy: str | None
     if len(filters) == 1:
         return frappe.get_list(
             "AT Renewal Task",
-            fields=["name", "policy", "status", "due_date", "renewal_date", "customer", "assigned_to"],
+            fields=[
+                "name",
+                "policy",
+                "status",
+                "due_date",
+                "renewal_date",
+                "customer",
+                "assigned_to",
+            ],
             filters={filters[0][0]: filters[0][2]},
             order_by="due_date asc",
             limit_page_length=max(cint(limit), 1),
         )
     return frappe.get_list(
         "AT Renewal Task",
-        fields=["name", "policy", "status", "due_date", "renewal_date", "customer", "assigned_to"],
+        fields=[
+            "name",
+            "policy",
+            "status",
+            "due_date",
+            "renewal_date",
+            "customer",
+            "assigned_to",
+        ],
         or_filters=[["AT Renewal Task", f[0], f[1], f[2]] for f in filters],
         order_by="due_date asc",
         limit_page_length=max(cint(limit), 1),
@@ -1139,7 +1314,12 @@ def _get_lead_link_preview(name: str | None) -> dict | None:
     if not row:
         return None
     row = dict(row)
-    row["display_name"] = " ".join(part for part in [row.get("first_name"), row.get("last_name")] if part).strip() or row["name"]
+    row["display_name"] = (
+        " ".join(
+            part for part in [row.get("first_name"), row.get("last_name")] if part
+        ).strip()
+        or row["name"]
+    )
     return row
 
 
@@ -1184,8 +1364,12 @@ def _customer_portfolio_summary_for_names(customer_names: list[str]) -> dict[str
         customer = row.get("customer")
         if customer not in summary_map:
             continue
-        summary_map[customer]["active_policy_count"] = cint(row.get("active_policy_count"))
-        summary_map[customer]["active_policy_gross_premium"] = flt(row.get("active_policy_gross_premium"))
+        summary_map[customer]["active_policy_count"] = cint(
+            row.get("active_policy_count")
+        )
+        summary_map[customer]["active_policy_gross_premium"] = flt(
+            row.get("active_policy_gross_premium")
+        )
 
     offer_rows = frappe.db.sql(
         """
@@ -1216,7 +1400,12 @@ def _lead_can_convert_to_offer(row: dict | None) -> bool:
         return False
     if str(row.get("status") or "") == "Closed":
         return False
-    if not row.get("customer") or not row.get("sales_entity") or not row.get("insurance_company") or not row.get("branch"):
+    if (
+        not row.get("customer")
+        or not row.get("sales_entity")
+        or not row.get("insurance_company")
+        or not row.get("branch")
+    ):
         return False
     estimated = flt(row.get("estimated_gross_premium") or 0)
     return estimated > 0
@@ -1396,19 +1585,24 @@ def _dashboard_cards_summary(
             office_branch=office_branch,
             allowed_customers=allowed_customers,
         ),
-        fields=["payment_direction", "status", "amount_try"],
-        limit_page_length=0,
+        fields=[
+            "payment_direction",
+            "status",
+            "sum(amount_try) as total_amount",
+        ],
+        group_by="payment_direction, status",
     )
     payment_totals = {
         "collected_try": sum(
-            flt(row.get("amount_try") or 0)
+            flt(row.get("total_amount") or 0)
             for row in payment_rows
             if row.get("payment_direction") == "Inbound" and row.get("status") == "Paid"
         ),
         "payout_try": sum(
-            flt(row.get("amount_try") or 0)
+            flt(row.get("total_amount") or 0)
             for row in payment_rows
-            if row.get("payment_direction") == "Outbound" and row.get("status") == "Paid"
+            if row.get("payment_direction") == "Outbound"
+            and row.get("status") == "Paid"
         ),
     }
 
@@ -1459,7 +1653,9 @@ def _build_offer_where(
         conditions.append("branch = %(branch)s")
         values["branch"] = branch
     if office_branch:
-        conditions.append("customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)")
+        conditions.append(
+            "customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)"
+        )
         values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("customer in %(customers)s")
@@ -1484,7 +1680,16 @@ def _build_offer_filters(
     if branch:
         filters.append(["branch", "=", branch])
     if office_branch:
-        filters.append(["customer", "in", _get_scoped_customer_names(office_branch=office_branch, allowed_customers=allowed_customers) or ["__none__"]])
+        filters.append(
+            [
+                "customer",
+                "in",
+                _get_scoped_customer_names(
+                    office_branch=office_branch, allowed_customers=allowed_customers
+                )
+                or ["__none__"],
+            ]
+        )
     elif allowed_customers is not None:
         filters.append(["customer", "in", allowed_customers or ["__none__"]])
     return filters
@@ -1582,10 +1787,10 @@ def _build_claim_filters(
 
 
 def _get_offer_preview_rows(
-	*,
+    *,
     where_clause: str | None = None,
     values: dict | None = None,
-	from_date: str | None = None,
+    from_date: str | None = None,
     to_date: str | None = None,
     branch: str | None = None,
     office_branch: str | None = None,
@@ -1611,7 +1816,10 @@ def _get_offer_preview_rows(
             order by modified desc
             limit %(limit)s
             """,
-            values={**(values or {}), "limit": max(cint(limit), 1) * (3 if ready_only else 1)},
+            values={
+                **(values or {}),
+                "limit": max(cint(limit), 1) * (3 if ready_only else 1),
+            },
             as_dict=True,
         )
         if ready_only:
@@ -1706,7 +1914,9 @@ def _get_policy_preview_rows(
     )
 
 
-def _get_top_companies_rows(*, where_clause: str, values: dict, limit: int = 5) -> list[dict]:
+def _get_top_companies_rows(
+    *, where_clause: str, values: dict, limit: int = 5
+) -> list[dict]:
     rows = frappe.db.sql(
         f"""
         select
@@ -1862,7 +2072,16 @@ def _get_renewal_task_preview_rows(
 
     return frappe.get_list(
         "AT Renewal Task",
-        fields=["name", "policy", "status", "due_date", "renewal_date", "customer", "assigned_to", "outcome_record"],
+        fields=[
+            "name",
+            "policy",
+            "status",
+            "due_date",
+            "renewal_date",
+            "customer",
+            "assigned_to",
+            "outcome_record",
+        ],
         filters=filters,
         order_by="due_date asc",
         limit_page_length=max(cint(limit), 1),
@@ -1876,7 +2095,10 @@ def _get_offer_waiting_renewal_summary(
     allowed_customers: list[str] | None,
     limit: int = 20,
 ) -> dict:
-    conditions = ["rt.status in ('Open', 'In Progress')", "(rt.outcome_record is null or ifnull(ro.offer, '') = '')"]
+    conditions = [
+        "rt.status in ('Open', 'In Progress')",
+        "(rt.outcome_record is null or ifnull(ro.offer, '') = '')",
+    ]
     values: dict[str, object] = {"limit": max(cint(limit), 1)}
 
     if office_branch:
@@ -2014,7 +2236,9 @@ def _build_payment_where(
         conditions.append("payment_date <= %(to_date)s")
         values["to_date"] = getdate(to_date)
     if branch:
-        conditions.append("policy in (select name from `tabAT Policy` where branch = %(branch)s)")
+        conditions.append(
+            "policy in (select name from `tabAT Policy` where branch = %(branch)s)"
+        )
         values["branch"] = branch
     if office_branch:
         conditions.append("office_branch = %(office_branch)s")
@@ -2048,7 +2272,9 @@ def _build_payment_collection_where(
         conditions.append("due_date < %(anchor_date)s")
 
     if branch:
-        conditions.append("policy in (select name from `tabAT Policy` where branch = %(branch)s)")
+        conditions.append(
+            "policy in (select name from `tabAT Policy` where branch = %(branch)s)"
+        )
         values["branch"] = branch
     if office_branch:
         conditions.append("office_branch = %(office_branch)s")
@@ -2120,22 +2346,53 @@ def _renewal_status_and_buckets(
         )
         filters["policy"] = ["in", policy_names or ["__none__"]]
 
-    rows = frappe.get_list(
-        "AT Renewal Task",
-        fields=["status", "due_date", "renewal_date"],
-        filters=filters,
-        limit_page_length=0,
+    status_rows_raw = frappe.db.sql(
+        f"""
+        select rt.status, count(rt.name) as total
+        from `tabAT Renewal Task` rt
+        where {where_clause}
+        group by rt.status
+        """,
+        values=values,
+        as_dict=True,
     )
 
-    status_counts = {"Open": 0, "In Progress": 0, RENEWAL_STATUS_DONE: 0, "Cancelled": 0}
+    status_counts = {
+        "Open": 0,
+        "In Progress": 0,
+        RENEWAL_STATUS_DONE: 0,
+        "Cancelled": 0,
+    }
     buckets = {"overdue": 0, "due7": 0, "due30": 0}
     retention = {"renewed": 0, "lost": 0, "cancelled": 0, "rate": 0.0}
     today = getdate(nowdate())
 
-    for row in rows:
+    for row in status_rows_raw:
         status = _normalize_renewal_status(row.get("status"))
         if status in status_counts:
-            status_counts[status] += 1
+            status_counts[status] += int(row.get("total") or 0)
+
+    # Buckets need individual rows for date calculations
+    bucket_rows = frappe.db.sql(
+        f"""
+        select rt.due_date, rt.renewal_date
+        from `tabAT Renewal Task` rt
+        where {where_clause}
+          and rt.status in ('Open', 'In Progress')
+        """,
+        values=values,
+        as_dict=True,
+    )
+    for row in bucket_rows:
+        due_date = row.get("due_date")
+        if due_date:
+            days_left = (getdate(due_date) - today).days
+            if days_left < 0:
+                buckets["overdue"] += 1
+            elif days_left <= 7:
+                buckets["due7"] += 1
+            elif days_left <= 30:
+                buckets["due30"] += 1
         if status not in {"Open", "In Progress"}:
             continue
         due_value = row.get("due_date") or row.get("renewal_date")
@@ -2164,26 +2421,29 @@ def _renewal_status_and_buckets(
         )
         outcome_filters["policy"] = ["in", policy_names or ["__none__"]]
 
-    outcome_rows = frappe.get_list(
+    outcome_agg = frappe.get_all(
         "AT Renewal Outcome",
-        fields=["outcome_status"],
+        fields=["outcome_status", "count(name) as total"],
         filters=outcome_filters,
-        limit_page_length=0,
+        group_by="outcome_status",
     )
-    for row in outcome_rows:
+    for row in outcome_agg:
         outcome_status = str(row.get("outcome_status") or "").strip()
+        total = int(row.get("total") or 0)
         if outcome_status == "Renewed":
-            retention["renewed"] += 1
+            retention["renewed"] += total
         elif outcome_status == "Lost":
-            retention["lost"] += 1
+            retention["lost"] += total
         elif outcome_status == "Cancelled":
-            retention["cancelled"] += 1
+            retention["cancelled"] += total
 
     retention_base = retention["renewed"] + retention["lost"]
     if retention_base > 0:
         retention["rate"] = round((retention["renewed"] / retention_base) * 100, 2)
 
-    status_rows = [{"status": key, "total": value} for key, value in status_counts.items()]
+    status_rows = [
+        {"status": key, "total": value} for key, value in status_counts.items()
+    ]
     result = {"status_rows": status_rows, "buckets": buckets, "retention": retention}
     cache[cache_key] = {
         "status_rows": [dict(item) for item in status_rows],
@@ -2212,10 +2472,14 @@ def _reconciliation_open_summary(
     values = {}
 
     if branch:
-        conditions.append("((ae.policy is not null and p.branch = %(branch)s) or (ae.policy is null and 1=1))")
+        conditions.append(
+            "((ae.policy is not null and p.branch = %(branch)s) or (ae.policy is null and 1=1))"
+        )
         values["branch"] = branch
     if office_branch:
-        conditions.append("ae.customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)")
+        conditions.append(
+            "ae.customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)"
+        )
         values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("ae.customer in %(customers)s")
@@ -2229,7 +2493,7 @@ def _reconciliation_open_summary(
         from `tabAT Reconciliation Item` ri
         left join `tabAT Accounting Entry` ae on ae.name = ri.accounting_entry
         left join `tabAT Policy` p on p.name = ae.policy
-        where {' and '.join(conditions)}
+        where {" and ".join(conditions)}
         """,
         values=values,
         as_dict=True,
@@ -2240,15 +2504,22 @@ def _reconciliation_open_summary(
 
 
 def _reconciliation_filter_conditions(
-    *, branch: str | None, office_branch: str | None, allowed_customers: list[str] | None
+    *,
+    branch: str | None,
+    office_branch: str | None,
+    allowed_customers: list[str] | None,
 ) -> tuple[list[str], dict]:
     conditions = ["ri.status = 'Open'"]
     values = {}
     if branch:
-        conditions.append("((ae.policy is not null and p.branch = %(branch)s) or (ae.policy is null and 1=1))")
+        conditions.append(
+            "((ae.policy is not null and p.branch = %(branch)s) or (ae.policy is null and 1=1))"
+        )
         values["branch"] = branch
     if office_branch:
-        conditions.append("ae.customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)")
+        conditions.append(
+            "ae.customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)"
+        )
         values["office_branch"] = office_branch
     if allowed_customers is not None:
         conditions.append("ae.customer in %(customers)s")
@@ -2280,7 +2551,7 @@ def _get_reconciliation_open_rows_preview(
         from `tabAT Reconciliation Item` ri
         left join `tabAT Accounting Entry` ae on ae.name = ri.accounting_entry
         left join `tabAT Policy` p on p.name = ae.policy
-        where {' and '.join(conditions)}
+        where {" and ".join(conditions)}
         order by ri.modified desc
         limit %(limit)s
         """,
@@ -2337,7 +2608,11 @@ def _get_scoped_policy_names(
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
 
-    policy_names = frappe.get_list("AT Policy", filters=filters, pluck="name", limit_page_length=0) if filters else []
+    policy_names = (
+        frappe.get_list("AT Policy", filters=filters, pluck="name", limit_page_length=0)
+        if filters
+        else []
+    )
     cache[cache_key] = policy_names
     return policy_names
 
@@ -2365,7 +2640,13 @@ def _get_scoped_customer_names(
     if allowed_customers is not None:
         filters["name"] = ["in", allowed_customers or ["__none__"]]
 
-    customer_names = frappe.get_list("AT Customer", filters=filters, pluck="name", limit_page_length=0) if filters else []
+    customer_names = (
+        frappe.get_list(
+            "AT Customer", filters=filters, pluck="name", limit_page_length=0
+        )
+        if filters
+        else []
+    )
     cache[cache_key] = customer_names
     return customer_names
 
@@ -2391,4 +2672,3 @@ def _empty_dashboard_payload(meta: dict | None = None) -> dict:
     if meta:
         payload["meta"] = meta
     return payload
-

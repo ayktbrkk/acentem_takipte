@@ -4,17 +4,23 @@ from typing import Any
 
 import frappe
 
-from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
+from acentem_takipte.acentem_takipte.services.branches import (
+    normalize_requested_office_branch,
+)
 from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr
 
 
-def normalize_report_filters(filters: dict[str, Any] | str | None = None) -> dict[str, Any]:
+def normalize_report_filters(
+    filters: dict[str, Any] | str | None = None,
+) -> dict[str, Any]:
     payload = _coerce_filter_payload(filters)
     normalized = {
         "from_date": _as_text(payload.get("from_date")),
         "to_date": _as_text(payload.get("to_date")),
         "branch": _as_text(payload.get("branch")),
-        "office_branch": normalize_requested_office_branch(payload.get("office_branch")),
+        "office_branch": normalize_requested_office_branch(
+            payload.get("office_branch")
+        ),
         "status": _as_text(payload.get("status")),
         "insurance_company": _as_text(payload.get("insurance_company")),
         "sales_entity": _as_text(payload.get("sales_entity")),
@@ -25,7 +31,9 @@ def normalize_report_filters(filters: dict[str, Any] | str | None = None) -> dic
     return {key: value for key, value in normalized.items() if value not in {None, ""}}
 
 
-def build_policy_report_filters(filters: dict[str, Any] | None = None) -> dict[str, Any]:
+def build_policy_report_filters(
+    filters: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     normalized = normalize_report_filters(filters)
     query_filters: dict[str, Any] = {}
     if normalized.get("branch"):
@@ -39,7 +47,10 @@ def build_policy_report_filters(filters: dict[str, Any] | None = None) -> dict[s
     if normalized.get("sales_entity"):
         query_filters["sales_entity"] = normalized["sales_entity"]
     if normalized.get("from_date") and normalized.get("to_date"):
-        query_filters["issue_date"] = ["between", [normalized["from_date"], normalized["to_date"]]]
+        query_filters["issue_date"] = [
+            "between",
+            [normalized["from_date"], normalized["to_date"]],
+        ]
     elif normalized.get("from_date"):
         query_filters["issue_date"] = [">=", normalized["from_date"]]
     elif normalized.get("to_date"):
@@ -47,7 +58,9 @@ def build_policy_report_filters(filters: dict[str, Any] | None = None) -> dict[s
     return query_filters
 
 
-def build_payment_report_filters(filters: dict[str, Any] | None = None) -> dict[str, Any]:
+def build_payment_report_filters(
+    filters: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     normalized = normalize_report_filters(filters)
     query_filters: dict[str, Any] = {}
     if normalized.get("office_branch"):
@@ -60,7 +73,10 @@ def build_payment_report_filters(filters: dict[str, Any] | None = None) -> dict[
     if normalized.get("sales_entity"):
         query_filters["sales_entity"] = normalized["sales_entity"]
     if normalized.get("from_date") and normalized.get("to_date"):
-        query_filters["due_date"] = ["between", [normalized["from_date"], normalized["to_date"]]]
+        query_filters["due_date"] = [
+            "between",
+            [normalized["from_date"], normalized["to_date"]],
+        ]
     elif normalized.get("from_date"):
         query_filters["due_date"] = [">=", normalized["from_date"]]
     elif normalized.get("to_date"):
@@ -86,7 +102,9 @@ def _policy_names_for_branch(branch: str | None) -> list[str]:
     return list(cache.get(branch_name) or [])
 
 
-def get_policy_list_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_policy_list_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     normalized_filters = normalize_report_filters(filters) if filters else {}
     granularity = normalized_filters.get("granularity", "")
 
@@ -166,12 +184,10 @@ def get_policy_list_report_rows(filters: dict[str, Any] | None = None, *, limit:
 
 
 def _get_policy_list_grouped_rows(
-    normalized_filters: dict[str, Any], 
-    granularity: str,
-    limit: int = 500
+    normalized_filters: dict[str, Any], granularity: str, limit: int = 500
 ) -> list[dict[str, Any]]:
     """Get policy list data grouped by date period (daily, monthly, yearly)."""
-    
+
     # Determine SQL date format and label format
     if granularity == "daily":
         date_format = "%Y-%m-%d"
@@ -182,27 +198,27 @@ def _get_policy_list_grouped_rows(
     else:  # yearly
         date_format = "%Y"
         label_format = "%Y"
-    
+
     # Build WHERE clause filters
     where_parts = ["1=1"]
     params = []
-    
+
     if normalized_filters.get("branch"):
         where_parts.append("`tabAT Policy`.branch = %s")
         params.append(normalized_filters["branch"])
-    
+
     if normalized_filters.get("office_branch"):
         where_parts.append("`tabAT Policy`.office_branch = %s")
         params.append(normalized_filters["office_branch"])
-    
+
     if normalized_filters.get("status"):
         where_parts.append("`tabAT Policy`.status = %s")
         params.append(normalized_filters["status"])
-    
+
     if normalized_filters.get("insurance_company"):
         where_parts.append("`tabAT Policy`.insurance_company = %s")
         params.append(normalized_filters["insurance_company"])
-    
+
     if normalized_filters.get("sales_entity"):
         where_parts.append("`tabAT Policy`.sales_entity = %s")
         params.append(normalized_filters["sales_entity"])
@@ -214,18 +230,18 @@ def _get_policy_list_grouped_rows(
     if normalized_filters.get("customer_tax_id"):
         where_parts.append("customer.tax_id LIKE %s")
         params.append(f"%{normalized_filters['customer_tax_id']}%")
-    
+
     # Date range filters
     if normalized_filters.get("from_date"):
         where_parts.append("`tabAT Policy`.issue_date >= %s")
         params.append(normalized_filters["from_date"])
-    
+
     if normalized_filters.get("to_date"):
         where_parts.append("`tabAT Policy`.issue_date <= %s")
         params.append(normalized_filters["to_date"])
-    
+
     where_clause = " AND ".join(where_parts)
-    
+
     # Build and execute query
     sql = f"""
         SELECT
@@ -241,11 +257,13 @@ def _get_policy_list_grouped_rows(
         ORDER BY period DESC
         LIMIT {max(int(limit or 500), 1)}
     """
-    
+
     return frappe.db.sql(sql, params, as_dict=True)
 
 
-def get_payment_status_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_payment_status_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     return frappe.get_all(
         "AT Payment",
         fields=[
@@ -269,7 +287,9 @@ def get_payment_status_report_rows(filters: dict[str, Any] | None = None, *, lim
     )
 
 
-def get_renewal_performance_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_renewal_performance_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     normalized = normalize_report_filters(filters)
     conditions = ["1=1"]
     values: dict[str, Any] = {}
@@ -317,7 +337,9 @@ def get_renewal_performance_report_rows(filters: dict[str, Any] | None = None, *
     )
 
 
-def get_claim_loss_ratio_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_claim_loss_ratio_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     normalized = normalize_report_filters(filters)
     conditions = ["1=1"]
     values: dict[str, Any] = {}
@@ -370,39 +392,52 @@ def get_claim_loss_ratio_report_rows(filters: dict[str, Any] | None = None, *, l
     )
 
 
-def get_agent_performance_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_agent_performance_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     normalized = normalize_report_filters(filters)
-    conditions = ["1=1"]
+    policy_conditions = ["1=1"]
     values: dict[str, Any] = {}
-    offer_conditions = ["o.sales_entity = p.sales_entity"]
-    renewal_conditions = ["r.assigned_to = p.sales_entity"]
 
     if normalized.get("office_branch"):
-        conditions.append("p.office_branch = %(office_branch)s")
+        policy_conditions.append("p.office_branch = %(office_branch)s")
         values["office_branch"] = normalized["office_branch"]
-        offer_conditions.append("o.customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)")
-        renewal_conditions.append("r.office_branch = %(office_branch)s")
     if normalized.get("branch"):
-        conditions.append("p.branch = %(branch)s")
+        policy_conditions.append("p.branch = %(branch)s")
         values["branch"] = normalized["branch"]
-        offer_conditions.append("o.branch = %(branch)s")
     if normalized.get("sales_entity"):
-        conditions.append("p.sales_entity = %(sales_entity)s")
+        policy_conditions.append("p.sales_entity = %(sales_entity)s")
         values["sales_entity"] = normalized["sales_entity"]
     if normalized.get("from_date"):
-        conditions.append("p.issue_date >= %(from_date)s")
+        policy_conditions.append("p.issue_date >= %(from_date)s")
         values["from_date"] = normalized["from_date"]
-        offer_conditions.append("o.offer_date >= %(from_date)s")
-        renewal_conditions.append("r.renewal_date >= %(from_date)s")
     if normalized.get("to_date"):
-        conditions.append("p.issue_date <= %(to_date)s")
+        policy_conditions.append("p.issue_date <= %(to_date)s")
         values["to_date"] = normalized["to_date"]
-        offer_conditions.append("o.offer_date <= %(to_date)s")
-        renewal_conditions.append("r.renewal_date <= %(to_date)s")
 
-    where_clause = " and ".join(conditions)
-    offer_where_clause = " and ".join(offer_conditions)
-    renewal_where_clause = " and ".join(renewal_conditions)
+    policy_where = " and ".join(policy_conditions)
+
+    # Build offer/renewal join conditions
+    offer_join_parts = ["o.sales_entity = p.sales_entity"]
+    renewal_join_parts = ["r.assigned_to = p.sales_entity"]
+
+    if normalized.get("office_branch"):
+        offer_join_parts.append(
+            "o.customer in (select name from `tabAT Customer` where office_branch = %(office_branch)s)"
+        )
+        renewal_join_parts.append("r.office_branch = %(office_branch)s")
+    if normalized.get("branch"):
+        offer_join_parts.append("o.branch = %(branch)s")
+    if normalized.get("from_date"):
+        offer_join_parts.append("o.offer_date >= %(from_date)s")
+        renewal_join_parts.append("r.renewal_date >= %(from_date)s")
+    if normalized.get("to_date"):
+        offer_join_parts.append("o.offer_date <= %(to_date)s")
+        renewal_join_parts.append("r.renewal_date <= %(to_date)s")
+
+    offer_join = " and ".join(offer_join_parts)
+    renewal_join = " and ".join(renewal_join_parts)
+
     return frappe.db.sql(
         f"""
         select
@@ -411,91 +446,28 @@ def get_agent_performance_report_rows(filters: dict[str, Any] | None = None, *, 
             count(distinct p.name) as policy_count,
             ifnull(sum(ifnull(p.gross_premium, 0)), 0) as total_gross_premium,
             ifnull(sum({commission_sql_expr("p.")}), 0) as total_commission,
-            (
-                select count(name)
-                from `tabAT Offer` o
-                where {offer_where_clause}
-            ) as offer_count,
-            (
-                select count(name)
-                from `tabAT Offer` o
-                where {offer_where_clause}
-                  and o.status = 'Accepted'
-            ) as accepted_offer_count,
-            (
-                select count(name)
-                from `tabAT Offer` o
-                where {offer_where_clause}
-                  and ifnull(o.converted_policy, '') != ''
-            ) as converted_offer_count,
-            (
-                case
-                    when (
-                        select count(name)
-                        from `tabAT Offer` o
-                        where {offer_where_clause}
-                    ) = 0 then 0
-                    else round(
-                        (
-                            (
-                                select count(name)
-                                from `tabAT Offer` o
-                                where {offer_where_clause}
-                                  and ifnull(o.converted_policy, '') != ''
-                            ) / (
-                                select count(name)
-                                from `tabAT Offer` o
-                                where {offer_where_clause}
-                            )
-                        ) * 100,
-                        2
-                    )
-                end
+            count(distinct o.name) as offer_count,
+            count(distinct case when o.status = 'Accepted' then o.name end) as accepted_offer_count,
+            count(distinct case when o.converted_policy is not null and o.converted_policy != '' then o.name end) as converted_offer_count,
+            round(
+                case when count(distinct o.name) = 0 then 0
+                else count(distinct case when o.converted_policy is not null and o.converted_policy != '' then o.name end) * 100.0
+                     / count(distinct o.name)
+                end, 2
             ) as offer_conversion_rate,
-            (
-                select count(name)
-                from `tabAT Renewal Task` r
-                where {renewal_where_clause}
-            ) as renewal_task_count
-            ,
-            (
-                select count(name)
-                from `tabAT Renewal Task` r
-                where {renewal_where_clause}
-                  and r.status = 'Done'
-            ) as completed_renewal_task_count,
-            (
-                select count(name)
-                from `tabAT Renewal Task` r
-                where {renewal_where_clause}
-                  and r.status in ('Open', 'In Progress')
-            ) as open_renewal_task_count,
-            (
-                case
-                    when (
-                        select count(name)
-                        from `tabAT Renewal Task` r
-                        where {renewal_where_clause}
-                    ) = 0 then 0
-                    else round(
-                        (
-                            (
-                                select count(name)
-                                from `tabAT Renewal Task` r
-                                where {renewal_where_clause}
-                                  and r.status = 'Done'
-                            ) / (
-                                select count(name)
-                                from `tabAT Renewal Task` r
-                                where {renewal_where_clause}
-                            )
-                        ) * 100,
-                        2
-                    )
-                end
+            count(distinct r.name) as renewal_task_count,
+            count(distinct case when r.status = 'Done' then r.name end) as completed_renewal_task_count,
+            count(distinct case when r.status in ('Open', 'In Progress') then r.name end) as open_renewal_task_count,
+            round(
+                case when count(distinct r.name) = 0 then 0
+                else count(distinct case when r.status = 'Done' then r.name end) * 100.0
+                     / count(distinct r.name)
+                end, 2
             ) as renewal_success_rate
         from `tabAT Policy` p
-        where {where_clause}
+        left join `tabAT Offer` o on {offer_join}
+        left join `tabAT Renewal Task` r on {renewal_join}
+        where {policy_where}
         group by p.sales_entity
         order by total_gross_premium desc, total_commission desc
         limit %(limit)s
@@ -505,38 +477,41 @@ def get_agent_performance_report_rows(filters: dict[str, Any] | None = None, *, 
     )
 
 
-def get_customer_segmentation_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_customer_segmentation_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     normalized = normalize_report_filters(filters)
     conditions = ["1=1"]
     values: dict[str, Any] = {}
-    policy_conditions = ["p.customer = c.name"]
-    claim_conditions = ["cl.customer = c.name"]
+    policy_join_parts = ["p.customer = c.name"]
+    claim_join_parts = ["cl.customer = c.name"]
 
     if normalized.get("office_branch"):
         conditions.append("c.office_branch = %(office_branch)s")
         values["office_branch"] = normalized["office_branch"]
-        policy_conditions.append("p.office_branch = %(office_branch)s")
+        policy_join_parts.append("p.office_branch = %(office_branch)s")
     if normalized.get("sales_entity"):
         conditions.append("c.assigned_agent = %(sales_entity)s")
         values["sales_entity"] = normalized["sales_entity"]
     if normalized.get("branch"):
-        policy_conditions.append("p.branch = %(branch)s")
+        policy_join_parts.append("p.branch = %(branch)s")
         values["branch"] = normalized["branch"]
     if normalized.get("insurance_company"):
-        policy_conditions.append("p.insurance_company = %(insurance_company)s")
+        policy_join_parts.append("p.insurance_company = %(insurance_company)s")
         values["insurance_company"] = normalized["insurance_company"]
     if normalized.get("from_date"):
-        policy_conditions.append("p.issue_date >= %(from_date)s")
-        claim_conditions.append("cl.reported_date >= %(from_date)s")
+        policy_join_parts.append("p.issue_date >= %(from_date)s")
+        claim_join_parts.append("cl.reported_date >= %(from_date)s")
         values["from_date"] = normalized["from_date"]
     if normalized.get("to_date"):
-        policy_conditions.append("p.issue_date <= %(to_date)s")
-        claim_conditions.append("cl.reported_date <= %(to_date)s")
+        policy_join_parts.append("p.issue_date <= %(to_date)s")
+        claim_join_parts.append("cl.reported_date <= %(to_date)s")
         values["to_date"] = normalized["to_date"]
 
     where_clause = " and ".join(conditions)
-    policy_where_clause = " and ".join(policy_conditions)
-    claim_where_clause = " and ".join(claim_conditions)
+    policy_join = " and ".join(policy_join_parts)
+    claim_join = " and ".join(claim_join_parts)
+
     return frappe.db.sql(
         f"""
         select
@@ -544,80 +519,36 @@ def get_customer_segmentation_report_rows(filters: dict[str, Any] | None = None,
             c.full_name,
             c.office_branch,
             c.assigned_agent,
-            (
-                select count(p.name)
-                from `tabAT Policy` p
-                where {policy_where_clause}
-            ) as policy_count,
-            (
-                select count(p.name)
-                from `tabAT Policy` p
-                where {policy_where_clause}
-                  and p.status = 'Active'
-            ) as active_policy_count,
-            (
-                select count(p.name)
-                from `tabAT Policy` p
-                where {policy_where_clause}
-                  and p.status = 'IPT'
-            ) as cancelled_policy_count,
-            (
-                select ifnull(sum(ifnull(p.gross_premium, 0)), 0)
-                from `tabAT Policy` p
-                where {policy_where_clause}
-            ) as total_premium,
-            (
-                select count(cl.name)
-                from `tabAT Claim` cl
-                where {claim_where_clause}
-            ) as claim_count,
+            count(distinct p.name) as policy_count,
+            count(distinct case when p.status = 'Active' then p.name end) as active_policy_count,
+            count(distinct case when p.status = 'IPT' then p.name end) as cancelled_policy_count,
+            ifnull(sum(distinct case when p.name is not null then ifnull(p.gross_premium, 0) end), 0) as total_premium,
+            count(distinct cl.name) as claim_count,
+            case when count(distinct cl.name) > 0 then 'HAS_CLAIM' else 'NO_CLAIM' end as claim_history_segment,
             case
-                when (
-                    select count(cl.name) from `tabAT Claim` cl where {claim_where_clause}
-                ) > 0 then 'HAS_CLAIM'
-                else 'NO_CLAIM'
-            end as claim_history_segment,
-            case
-                when (
-                    select count(p.name) from `tabAT Policy` p where {policy_where_clause} and p.status = 'Active'
-                ) >= 3
-                and (
-                    select count(cl.name) from `tabAT Claim` cl where {claim_where_clause}
-                ) = 0 then 'LOYAL'
-                when (
-                    select count(p.name) from `tabAT Policy` p where {policy_where_clause}
-                ) >= 2 then 'GROWING'
-                when (
-                    select count(p.name) from `tabAT Policy` p where {policy_where_clause}
-                ) >= 1 then 'NEW'
+                when count(distinct case when p.status = 'Active' then p.name end) >= 3
+                     and count(distinct cl.name) = 0 then 'LOYAL'
+                when count(distinct p.name) >= 2 then 'GROWING'
+                when count(distinct p.name) >= 1 then 'NEW'
                 else 'DORMANT'
             end as loyalty_segment,
             case
-                when (
-                    select count(p.name) from `tabAT Policy` p where {policy_where_clause}
-                ) >= 5 then '5+'
-                when (
-                    select count(p.name) from `tabAT Policy` p where {policy_where_clause}
-                ) >= 2 then '2-5'
-                when (
-                    select count(p.name) from `tabAT Policy` p where {policy_where_clause}
-                ) >= 1 then '1'
+                when count(distinct p.name) >= 5 then '5+'
+                when count(distinct p.name) >= 2 then '2-5'
+                when count(distinct p.name) >= 1 then '1'
                 else '0'
             end as policy_segment,
             case
-                when (
-                    select ifnull(sum(ifnull(p.gross_premium, 0)), 0) from `tabAT Policy` p where {policy_where_clause}
-                ) >= 100000 then 'HIGH'
-                when (
-                    select ifnull(sum(ifnull(p.gross_premium, 0)), 0) from `tabAT Policy` p where {policy_where_clause}
-                ) >= 25000 then 'MID'
-                when (
-                    select ifnull(sum(ifnull(p.gross_premium, 0)), 0) from `tabAT Policy` p where {policy_where_clause}
-                ) > 0 then 'LOW'
+                when ifnull(sum(distinct case when p.name is not null then ifnull(p.gross_premium, 0) end), 0) >= 100000 then 'HIGH'
+                when ifnull(sum(distinct case when p.name is not null then ifnull(p.gross_premium, 0) end), 0) >= 25000 then 'MID'
+                when ifnull(sum(distinct case when p.name is not null then ifnull(p.gross_premium, 0) end), 0) > 0 then 'LOW'
                 else 'NONE'
             end as premium_segment
         from `tabAT Customer` c
+        left join `tabAT Policy` p on {policy_join}
+        left join `tabAT Claim` cl on {claim_join}
         where {where_clause}
+        group by c.name, c.full_name, c.office_branch, c.assigned_agent
         order by total_premium desc, policy_count desc, c.modified desc
         limit %(limit)s
         """,
@@ -626,7 +557,9 @@ def get_customer_segmentation_report_rows(filters: dict[str, Any] | None = None,
     )
 
 
-def get_communication_operations_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_communication_operations_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     normalized = normalize_report_filters(filters)
     conditions = ["1=1"]
     values: dict[str, Any] = {}
@@ -662,27 +595,24 @@ def get_communication_operations_report_rows(filters: dict[str, Any] | None = No
             ifnull(c.matched_customer_count, 0) as matched_customer_count,
             ifnull(c.sent_count, 0) as sent_count,
             ifnull(c.skipped_count, 0) as skipped_count,
-            (
-                select count(d.name)
-                from `tabAT Notification Draft` d
-                where d.reference_doctype = 'AT Campaign'
-                  and d.reference_name = c.name
-            ) as draft_count,
-            (
-                select count(o.name)
-                from `tabAT Notification Outbox` o
-                where o.reference_doctype = 'AT Campaign'
-                  and o.reference_name = c.name
-                  and o.status = 'Sent'
-            ) as sent_outbox_count,
-            (
-                select count(o.name)
-                from `tabAT Notification Outbox` o
-                where o.reference_doctype = 'AT Campaign'
-                  and o.reference_name = c.name
-                  and o.status in ('Failed', 'Dead')
-            ) as failed_outbox_count
+            ifnull(draft_agg.draft_count, 0) as draft_count,
+            ifnull(outbox_agg.sent_outbox_count, 0) as sent_outbox_count,
+            ifnull(outbox_agg.failed_outbox_count, 0) as failed_outbox_count
         from `tabAT Campaign` c
+        left join (
+            select reference_name, count(name) as draft_count
+            from `tabAT Notification Draft`
+            where reference_doctype = 'AT Campaign'
+            group by reference_name
+        ) draft_agg on draft_agg.reference_name = c.name
+        left join (
+            select reference_name,
+                count(case when status = 'Sent' then name end) as sent_outbox_count,
+                count(case when status in ('Failed', 'Dead') then name end) as failed_outbox_count
+            from `tabAT Notification Outbox`
+            where reference_doctype = 'AT Campaign'
+            group by reference_name
+        ) outbox_agg on outbox_agg.reference_name = c.name
         where {where_clause}
         order by ifnull(c.last_run_on, c.scheduled_for) desc, c.modified desc
         limit %(limit)s
@@ -692,7 +622,9 @@ def get_communication_operations_report_rows(filters: dict[str, Any] | None = No
     )
 
 
-def get_reconciliation_operations_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_reconciliation_operations_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     normalized = normalize_report_filters(filters)
     conditions = ["1=1"]
     values: dict[str, Any] = {}
@@ -746,7 +678,9 @@ def get_reconciliation_operations_report_rows(filters: dict[str, Any] | None = N
     )
 
 
-def get_claims_operations_report_rows(filters: dict[str, Any] | None = None, *, limit: int = 500) -> list[dict[str, Any]]:
+def get_claims_operations_report_rows(
+    filters: dict[str, Any] | None = None, *, limit: int = 500
+) -> list[dict[str, Any]]:
     normalized = normalize_report_filters(filters)
     conditions = ["1=1"]
     values: dict[str, Any] = {}
@@ -790,28 +724,25 @@ def get_claims_operations_report_rows(filters: dict[str, Any] | None = None, *, 
             ifnull(cl.estimated_amount, 0) as estimated_amount,
             ifnull(cl.approved_amount, 0) as approved_amount,
             ifnull(cl.paid_amount, 0) as paid_amount,
-            (
-                select count(d.name)
-                from `tabAT Notification Draft` d
-                where d.reference_doctype = 'AT Claim'
-                  and d.reference_name = cl.name
-            ) as draft_count,
-            (
-                select count(o.name)
-                from `tabAT Notification Outbox` o
-                where o.reference_doctype = 'AT Claim'
-                  and o.reference_name = cl.name
-                  and o.status = 'Sent'
-            ) as sent_outbox_count,
-            (
-                select count(o.name)
-                from `tabAT Notification Outbox` o
-                where o.reference_doctype = 'AT Claim'
-                  and o.reference_name = cl.name
-                  and o.status in ('Failed', 'Dead')
-            ) as failed_outbox_count
+            ifnull(draft_agg.draft_count, 0) as draft_count,
+            ifnull(outbox_agg.sent_outbox_count, 0) as sent_outbox_count,
+            ifnull(outbox_agg.failed_outbox_count, 0) as failed_outbox_count
         from `tabAT Claim` cl
         left join `tabAT Policy` p on p.name = cl.policy
+        left join (
+            select reference_name, count(name) as draft_count
+            from `tabAT Notification Draft`
+            where reference_doctype = 'AT Claim'
+            group by reference_name
+        ) draft_agg on draft_agg.reference_name = cl.name
+        left join (
+            select reference_name,
+                count(case when status = 'Sent' then name end) as sent_outbox_count,
+                count(case when status in ('Failed', 'Dead') then name end) as failed_outbox_count
+            from `tabAT Notification Outbox`
+            where reference_doctype = 'AT Claim'
+            group by reference_name
+        ) outbox_agg on outbox_agg.reference_name = cl.name
         where {where_clause}
         order by cl.reported_date desc, cl.modified desc
         limit %(limit)s
@@ -844,4 +775,3 @@ def _coerce_filter_payload(filters: dict[str, Any] | str | None) -> dict[str, An
     if hasattr(filters, "items"):
         return {key: value for key, value in filters.items()}
     return {}
-

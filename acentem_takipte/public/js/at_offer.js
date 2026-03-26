@@ -1,4 +1,14 @@
 frappe.ui.form.on("AT Offer", {
+  validate(frm) {
+    if (!frm.doc.customer) {
+      frappe.validated = false;
+      frappe.msgprint(__("Müşteri seçilmelidir."));
+    }
+    if (!frm.doc.insurance_company) {
+      frappe.validated = false;
+      frappe.msgprint(__("Sigorta şirketi seçilmelidir."));
+    }
+  },
   refresh(frm) {
     const navigate = (target) => {
       const url = new URL(target, window.location.origin);
@@ -112,11 +122,21 @@ frappe.ui.form.on("AT Offer", {
               },
               freeze: true,
               callback: (r) => {
+                if (r.exc) {
+                  frappe.msgprint({ message: __("Poliçe dönüşümü başarısız oldu."), indicator: "red" });
+                  return;
+                }
                 const policy = r?.message?.policy;
-                if (!policy) return;
+                if (!policy) {
+                  frappe.msgprint({ message: __("Poliçe oluşturulamadı."), indicator: "orange" });
+                  return;
+                }
                 frappe.show_alert({ message: __("Policy created with record number: {0}", [policy]), indicator: "green" });
                 frm.reload_doc();
                 frappe.set_route("Form", "AT Policy", policy);
+              },
+              error: () => {
+                frappe.msgprint({ message: __("Sunucu hatası oluştu."), indicator: "red" });
               },
             });
           },

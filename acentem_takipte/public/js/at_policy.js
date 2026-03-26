@@ -1,4 +1,10 @@
 frappe.ui.form.on("AT Policy", {
+  validate(frm) {
+    if (!frm.doc.customer) {
+      frappe.validated = false;
+      frappe.msgprint(__("Müşteri seçilmelidir."));
+    }
+  },
   refresh(frm) {
     const navigate = (target) => {
       const url = new URL(target, window.location.origin);

@@ -1,4 +1,10 @@
 frappe.ui.form.on("AT Payment", {
+  validate(frm) {
+    if (frm.doc.amount_try != null && flt(frm.doc.amount_try) <= 0) {
+      frappe.validated = false;
+      frappe.msgprint(__("Tutar sıfırdan büyük olmalıdır."));
+    }
+  },
   refresh(frm) {
     const navigate = (target) => {
       const url = new URL(target, window.location.origin);

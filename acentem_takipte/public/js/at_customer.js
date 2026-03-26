@@ -18,6 +18,12 @@ function applyCustomerTypeState(frm) {
 }
 
 frappe.ui.form.on("AT Customer", {
+  validate(frm) {
+    if (!frm.doc.full_name) {
+      frappe.validated = false;
+      frappe.msgprint(__("Tam ad (full_name) girilmelidir."));
+    }
+  },
   refresh(frm) {
     const navigate = (target) => {
       const url = new URL(target, window.location.origin);

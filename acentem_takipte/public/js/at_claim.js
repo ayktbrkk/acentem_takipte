@@ -1,4 +1,10 @@
 frappe.ui.form.on("AT Claim", {
+  validate(frm) {
+    if (!frm.doc.policy) {
+      frappe.validated = false;
+      frappe.msgprint(__("Poliçe seçilmelidir."));
+    }
+  },
   refresh(frm) {
     const navigate = (target) => {
       const url = new URL(target, window.location.origin);

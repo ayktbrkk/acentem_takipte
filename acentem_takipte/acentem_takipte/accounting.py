@@ -50,7 +50,9 @@ def _enqueue_accounting_sync_doc(source_doctype: str, source_name: str) -> bool:
         raise
 
 
-def _run_accounting_sync_doc_event(source_doctype: str, source_name: str) -> dict[str, str]:
+def _run_accounting_sync_doc_event(
+    source_doctype: str, source_name: str
+) -> dict[str, str]:
     cache_key = _build_sync_doc_event_cache_key(source_doctype, source_name)
     try:
         return sync_accounting_entry(source_doctype, source_name)
@@ -114,7 +116,9 @@ def sync_accounting_entries(limit: int = 200) -> dict[str, int]:
     return summary
 
 
-def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool = False) -> dict[str, str]:
+def sync_accounting_entry(
+    source_doctype: str, source_name: str, *, force: bool = False
+) -> dict[str, str]:
     if source_doctype not in SOURCE_DOCTYPES:
         return {"status": "Skipped", "reason": "unsupported_source"}
     if not source_name or not frappe.db.exists(source_doctype, source_name):
@@ -127,7 +131,12 @@ def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool 
     entry = _get_or_create_entry(source_doctype, source_name)
     payload_hash = _hash_payload(payload)
 
-    if entry.name and entry.status == ATAccountingEntryStatus.SYNCED and entry.integration_hash == payload_hash and not force:
+    if (
+        entry.name
+        and entry.status == ATAccountingEntryStatus.SYNCED
+        and entry.integration_hash == payload_hash
+        and not force
+    ):
         return {"status": "Skipped", "reason": "already_synced", "entry": entry.name}
 
     try:
@@ -159,7 +168,11 @@ def sync_accounting_entry(source_doctype: str, source_name: str, *, force: bool 
         return {"status": ATAccountingEntryStatus.SYNCED, "entry": entry.name}
     except Exception:
         _mark_entry_failed(entry, frappe.get_traceback())
-        return {"status": ATAccountingEntryStatus.FAILED, "entry": entry.name or "", "reason": "sync_exception"}
+        return {
+            "status": ATAccountingEntryStatus.FAILED,
+            "entry": entry.name or "",
+            "reason": "sync_exception",
+        }
 
 
 def run_reconciliation_now(limit: int = 400) -> dict[str, int]:
@@ -170,7 +183,12 @@ def run_reconciliation(limit: int = 400) -> dict[str, int]:
     limit = max(cint(limit), 1)
     entries = frappe.get_all(
         "AT Accounting Entry",
-        filters={"status": ["in", [ATAccountingEntryStatus.SYNCED, ATAccountingEntryStatus.FAILED]]},
+        filters={
+            "status": [
+                "in",
+                [ATAccountingEntryStatus.SYNCED, ATAccountingEntryStatus.FAILED],
+            ]
+        },
         fields=[
             "name",
             "source_doctype",
@@ -223,7 +241,9 @@ def run_reconciliation(limit: int = 400) -> dict[str, int]:
     return summary
 
 
-def resolve_reconciliation_item(item_name: str, resolution_action: str = "Matched", notes: str | None = None) -> dict[str, str]:
+def resolve_reconciliation_item(
+    item_name: str, resolution_action: str = "Matched", notes: str | None = None
+) -> dict[str, str]:
     if not item_name or not frappe.db.exists("AT Reconciliation Item", item_name):
         return {"status": "Skipped", "reason": "missing_item"}
 
@@ -239,7 +259,9 @@ def resolve_reconciliation_item(item_name: str, resolution_action: str = "Matche
     # Permission checks are enforced by API wrappers (api/accounting.py); this service also runs from trusted internals.
     item.save(ignore_permissions=True)
 
-    _set_entry_reconciliation_flag(item.accounting_entry, _has_open_reconciliation(item.accounting_entry))
+    _set_entry_reconciliation_flag(
+        item.accounting_entry, _has_open_reconciliation(item.accounting_entry)
+    )
     if not frappe.flags.in_test:
         frappe.db.commit()
     return {"status": item.status, "item": item.name}
@@ -258,7 +280,9 @@ def build_accounting_payload(source_doctype: str, source_name: str) -> dict:
 def _build_policy_payload(policy_name: str) -> dict:
     policy = frappe.get_doc("AT Policy", policy_name)
     local_amount = flt(policy.gross_premium)
-    local_amount_try = flt(policy.gwp_try) or (local_amount * (flt(policy.fx_rate) or 1))
+    local_amount_try = flt(policy.gwp_try) or (
+        local_amount * (flt(policy.fx_rate) or 1)
+    )
     commission_value = resolve_commission_amount(
         policy.commission_amount,
         policy.commission,
@@ -306,8 +330,10 @@ def _build_payment_payload(payment_name: str) -> dict:
         "source_name": payment.name,
         "policy": payment.policy,
         "customer": payment.customer,
-        "office_branch": payment.office_branch or frappe.db.get_value("AT Policy", payment.policy, "office_branch"),
-        "sales_entity": payment.sales_entity or frappe.db.get_value("AT Policy", payment.policy, "sales_entity"),
+        "office_branch": payment.office_branch
+        or frappe.db.get_value("AT Policy", payment.policy, "office_branch"),
+        "sales_entity": payment.sales_entity
+        or frappe.db.get_value("AT Policy", payment.policy, "sales_entity"),
         "insurance_company": policy_company,
         "currency": cstr(payment.currency or "TRY").upper(),
         "local_amount": local_amount,
@@ -338,8 +364,11 @@ def _build_claim_payload(claim_name: str) -> dict:
         "source_name": claim.name,
         "policy": claim.policy,
         "customer": claim.customer,
-        "office_branch": claim.office_branch or frappe.db.get_value("AT Policy", claim.policy, "office_branch"),
-        "sales_entity": frappe.db.get_value("AT Policy", claim.policy, "sales_entity") if claim.policy else None,
+        "office_branch": claim.office_branch
+        or frappe.db.get_value("AT Policy", claim.policy, "office_branch"),
+        "sales_entity": frappe.db.get_value("AT Policy", claim.policy, "sales_entity")
+        if claim.policy
+        else None,
         "insurance_company": _policy_company(claim.policy),
         "currency": currency,
         "local_amount": amount,
@@ -437,7 +466,10 @@ def _mark_entry_failed(entry, traceback_text: str) -> None:
     except Exception:
         log_redacted_error(
             "AT Accounting Mark Failed Error",
-            details={"entry": getattr(entry, "name", None), "status": getattr(entry, "status", None)},
+            details={
+                "entry": getattr(entry, "name", None),
+                "status": getattr(entry, "status", None),
+            },
         )
 
 
@@ -471,7 +503,10 @@ def _evaluate_mismatch(entry_row) -> tuple[str | None, dict]:
         return "Status", {"reason": "sync_failed", "difference_try": difference_try}
 
     if not entry_row.external_ref:
-        return "Missing External", {"reason": "external_ref_missing", "difference_try": difference_try}
+        return "Missing External", {
+            "reason": "external_ref_missing",
+            "difference_try": difference_try,
+        }
 
     if abs(difference_try) > RECONCILIATION_TOLERANCE:
         return "Amount", {"reason": "amount_mismatch", "difference_try": difference_try}
@@ -481,7 +516,9 @@ def _evaluate_mismatch(entry_row) -> tuple[str | None, dict]:
 
 def _upsert_open_item(entry_row, mismatch_type: str, details: dict) -> None:
     unique_key = f"{entry_row.name}::{mismatch_type}"
-    item_name = frappe.db.get_value("AT Reconciliation Item", {"unique_key": unique_key}, "name")
+    item_name = frappe.db.get_value(
+        "AT Reconciliation Item", {"unique_key": unique_key}, "name"
+    )
 
     if item_name:
         item = frappe.get_doc("AT Reconciliation Item", item_name)
@@ -513,40 +550,58 @@ def _upsert_open_item(entry_row, mismatch_type: str, details: dict) -> None:
 
 
 def _close_open_items(accounting_entry: str, keep_mismatch_type: str | None) -> int:
-    open_items = frappe.get_all(
-        "AT Reconciliation Item",
-        filters={"accounting_entry": accounting_entry, "status": ATReconciliationItemStatus.OPEN},
-        fields=["name", "mismatch_type"],
-        limit_page_length=0,
+    conditions = [
+        "accounting_entry = %(entry)s",
+        "status = %(status)s",
+    ]
+    values = {"entry": accounting_entry, "status": ATReconciliationItemStatus.OPEN}
+
+    if keep_mismatch_type:
+        conditions.append("(mismatch_type IS NULL OR mismatch_type != %(keep_type)s)")
+        values["keep_type"] = keep_mismatch_type
+
+    where = " AND ".join(conditions)
+    frappe.db.sql(
+        f"""
+        UPDATE `tabAT Reconciliation Item`
+        SET status = %(resolved)s,
+            resolution_action = 'Matched',
+            notes = 'Auto-closed by reconciliation job.',
+            modified = NOW()
+        WHERE {where}
+        """,
+        {**values, "resolved": ATReconciliationItemStatus.RESOLVED},
     )
-    closed = 0
-    for row in open_items:
-        if keep_mismatch_type and row.mismatch_type == keep_mismatch_type:
-            continue
-        item = frappe.get_doc("AT Reconciliation Item", row.name)
-        item.status = ATReconciliationItemStatus.RESOLVED
-        item.resolution_action = "Matched"
-        item.notes = "Auto-closed by reconciliation job."
-        item.save(ignore_permissions=True)
-        closed += 1
-    return closed
+    return frappe.db.sql("SELECT ROW_COUNT()", as_list=True)[0][0]
 
 
 def _set_entry_reconciliation_flag(entry_name: str, needs_reconciliation: bool) -> None:
     if not entry_name or not frappe.db.exists("AT Accounting Entry", entry_name):
         return
-    current = cint(frappe.db.get_value("AT Accounting Entry", entry_name, "needs_reconciliation") or 0)
+    current = cint(
+        frappe.db.get_value("AT Accounting Entry", entry_name, "needs_reconciliation")
+        or 0
+    )
     target = 1 if needs_reconciliation else 0
     if current == target:
         return
-    frappe.db.set_value("AT Accounting Entry", entry_name, "needs_reconciliation", target, update_modified=False)
+    frappe.db.set_value(
+        "AT Accounting Entry",
+        entry_name,
+        "needs_reconciliation",
+        target,
+        update_modified=False,
+    )
 
 
 def _has_open_reconciliation(accounting_entry: str) -> bool:
     return bool(
         frappe.db.exists(
             "AT Reconciliation Item",
-            {"accounting_entry": accounting_entry, "status": ATReconciliationItemStatus.OPEN},
+            {
+                "accounting_entry": accounting_entry,
+                "status": ATReconciliationItemStatus.OPEN,
+            },
         )
     )
 
@@ -555,4 +610,3 @@ def _policy_company(policy_name: str | None) -> str | None:
     if not policy_name:
         return None
     return frappe.db.get_value("AT Policy", policy_name, "insurance_company")
-
