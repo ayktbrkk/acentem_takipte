@@ -12,6 +12,7 @@ from acentem_takipte.acentem_takipte.api.security import (
     assert_post_request,
     audit_admin_action,
 )
+from acentem_takipte.acentem_takipte.services.branches import assert_office_branch_access
 
 class ATLead(Document):
     def validate(self):
@@ -52,6 +53,12 @@ def convert_to_offer(lead_name: str) -> dict[str, str]:
 
     _validate_lead_conversion_inputs(lead)
     assert_doc_permission("AT Customer", lead.customer, "read")
+
+    derived_office_branch = (
+        str(getattr(lead, "office_branch", None) or getattr(lead, "origin_office_branch", None) or "") or None
+    )
+    if derived_office_branch:
+        derived_office_branch = assert_office_branch_access(derived_office_branch)
     lead_title = " ".join(part for part in [lead.first_name, lead.last_name] if part)
     notes = "\n".join(
         [
@@ -70,6 +77,10 @@ def convert_to_offer(lead_name: str) -> dict[str, str]:
             "sales_entity": lead.sales_entity,
             "insurance_company": lead.insurance_company,
             "branch": lead.branch,
+            "office_branch": derived_office_branch,
+            # Permission hooks for Offer use origin_office_branch.
+            "origin_office_branch": derived_office_branch,
+            "current_office_branch": derived_office_branch,
             "offer_date": nowdate(),
             "valid_until": add_days(nowdate(), 7),
             "currency": "TRY",
@@ -96,7 +107,7 @@ def convert_to_offer(lead_name: str) -> dict[str, str]:
 
 def _insert_offer_for_lead_conversion(payload: dict):
     # Permission checks are enforced by the whitelisted wrapper; insert runs as trusted internal service.
-    return frappe.get_doc(payload).insert(ignore_permissions=True)
+    return frappe.get_doc(payload).insert()
 
 
 def _validate_lead_conversion_inputs(lead: ATLead) -> None:

@@ -7,6 +7,7 @@ from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     normalize_customer_type,
     normalize_identity_number,
 )
+from acentem_takipte.acentem_takipte.services.branches import assert_office_branch_access
 
 
 def resolve_or_create_quick_customer(
@@ -33,6 +34,12 @@ def resolve_or_create_quick_customer(
     normalized_name = str(full_name or "").strip()
     identity_number = normalize_identity_number(tax_id)
 
+    resolved_office_branch = str(office_branch or "").strip() or None
+    if resolved_office_branch:
+        # Hardening: even when insert runs with previous bypass patterns,
+        # the derived branch must still be scope-valid.
+        resolved_office_branch = assert_office_branch_access(resolved_office_branch)
+
     if not normalized_name:
         if require_customer:
             frappe.throw(_("Customer is required."))
@@ -55,13 +62,15 @@ def resolve_or_create_quick_customer(
             "tax_id": identity_number,
             "phone": str(phone or "").strip() or None,
             "email": str(email or "").strip() or None,
-            "office_branch": str(office_branch or "").strip() or None,
+            "office_branch": resolved_office_branch,
+            "origin_office_branch": resolved_office_branch,
+            "current_office_branch": resolved_office_branch,
             "birth_date": birth_date or None,
             "gender": str(gender or "").strip() or None,
             "marital_status": str(marital_status or "").strip() or None,
             "occupation": str(occupation or "").strip() or None,
         }
     )
-    customer_doc.insert(ignore_permissions=True)
+    customer_doc.insert()
     return customer_doc.name, True
 

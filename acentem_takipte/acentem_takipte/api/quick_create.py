@@ -1297,13 +1297,17 @@ def _resolve_office_branch(
     if policy_name and frappe.db.exists("AT Policy", policy_name):
         policy_branch = frappe.db.get_value("AT Policy", policy_name, "office_branch")
         if policy_branch:
-            return policy_branch
+            # Derived office branch must also be access-checked:
+            # the caller might provide a policy from a different tenant/scope.
+            return assert_office_branch_access(policy_branch)
 
     customer_name = (customer or "").strip()
     if customer_name and frappe.db.exists("AT Customer", customer_name):
         customer_branch = frappe.db.get_value("AT Customer", customer_name, "office_branch")
         if customer_branch:
-            return customer_branch
+            # Derived office branch must also be access-checked:
+            # the caller might provide a customer from a different tenant/scope.
+            return assert_office_branch_access(customer_branch)
 
     return get_default_office_branch()
 

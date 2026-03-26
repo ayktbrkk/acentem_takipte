@@ -4,7 +4,10 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt, getdate, nowdate
-from acentem_takipte.acentem_takipte.services.branches import get_default_office_branch
+from acentem_takipte.acentem_takipte.services.branches import (
+    assert_office_branch_access,
+    get_default_office_branch,
+)
 from acentem_takipte.acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
 from acentem_takipte.acentem_takipte.utils.commissions import resolve_commission_amount
 from acentem_takipte.acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus, ATPolicyStatus
@@ -96,10 +99,15 @@ def create_quick_offer(
     tax_value = flt(tax_amount) if tax_amount not in {None, ""} else 0
     commission_value = flt(commission_amount) if commission_amount not in {None, ""} else 0
 
+    resolved_office_branch = _resolve_offer_office_branch(office_branch, resolved_customer)
+
     payload = {
         "doctype": "AT Offer",
         "customer": resolved_customer,
-        "office_branch": _resolve_offer_office_branch(office_branch, resolved_customer),
+        "office_branch": resolved_office_branch,
+        # Permission hooks use origin_office_branch; keep it aligned.
+        "origin_office_branch": resolved_office_branch,
+        "current_office_branch": resolved_office_branch,
         "status": normalized_status,
         "offer_date": offer_day,
         "valid_until": expiry_day,
@@ -116,7 +124,7 @@ def create_quick_offer(
 
     offer_doc = frappe.get_doc(payload)
     offer_doc.flags.ignore_mandatory = True
-    offer_doc.insert(ignore_permissions=True)
+    offer_doc.insert()
     frappe.db.commit()
 
     return {
@@ -316,11 +324,11 @@ def _resolve_or_create_quick_customer(
 def _resolve_offer_office_branch(office_branch: str | None, customer: str | None) -> str | None:
     explicit_branch = str(office_branch or "").strip()
     if explicit_branch:
-        return explicit_branch
+        return assert_office_branch_access(explicit_branch)
     customer_name = str(customer or "").strip()
     if customer_name and frappe.db.exists("AT Customer", customer_name):
         customer_branch = frappe.db.get_value("AT Customer", customer_name, "office_branch")
         if customer_branch:
-            return customer_branch
+            return assert_office_branch_access(customer_branch)
     return get_default_office_branch()
 

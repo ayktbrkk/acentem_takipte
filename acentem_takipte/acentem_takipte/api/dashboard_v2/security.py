@@ -79,6 +79,19 @@ DASHBOARD_ENDPOINT_PERMISSION_POLICY = {
 }
 
 
+def _audit_global_fallback_used(user: str, *, scope_reason: str) -> None:
+    """Audit when dashboard global scope fallback is used."""
+    try:
+        frappe.logger("acentem_takipte.dashboard_security").warning(
+            "Global dashboard scope fallback used: user=%s scope_reason=%s",
+            str(user or "").strip(),
+            str(scope_reason or "").strip(),
+        )
+    except Exception:
+        # Audit should never block dashboard reads.
+        pass
+
+
 def dashboard_bootstrap_global_fallback_enabled() -> bool:
     config = frappe.get_site_config() or {}
     return bool(cint(config.get(BOOTSTRAP_DASHBOARD_FALLBACK_FLAG) or 0))
@@ -107,6 +120,7 @@ def allowed_customers_for_user(include_meta: bool = False):
     if {"Manager", "Accountant"}.intersection(roles):
         if not allowed_branches:
             if fallback_enabled:
+                _audit_global_fallback_used(user, scope_reason="bootstrap_fallback_enabled")
                 return _result(None, "global", "bootstrap_fallback_enabled")
             return _result([], "empty", "branch_unassigned")
         branch_customers = frappe.get_all(
@@ -118,6 +132,7 @@ def allowed_customers_for_user(include_meta: bool = False):
         if branch_customers:
             return _result(branch_customers, "scoped", "branch_assignment")
         if fallback_enabled:
+            _audit_global_fallback_used(user, scope_reason="bootstrap_fallback_enabled")
             return _result(None, "global", "bootstrap_fallback_enabled")
         return _result([], "empty", "branch_assignment_empty")
 
@@ -134,6 +149,7 @@ def allowed_customers_for_user(include_meta: bool = False):
         if assigned_customers:
             return _result(assigned_customers, "scoped", "agent_assignment")
         if fallback_enabled:
+            _audit_global_fallback_used(user, scope_reason="bootstrap_fallback_enabled")
             return _result(None, "global", "bootstrap_fallback_enabled")
         if allowed_branches:
             return _result([], "empty", "agent_branch_assignment_empty")
@@ -144,6 +160,7 @@ def allowed_customers_for_user(include_meta: bool = False):
         return _result([], "empty", "non_system_user")
 
     if fallback_enabled:
+        _audit_global_fallback_used(user, scope_reason="bootstrap_fallback_enabled")
         return _result(None, "global", "bootstrap_fallback_enabled")
 
     frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)
@@ -195,6 +212,7 @@ def allowed_sales_entities_for_user(user: str | None = None, include_meta: bool 
 
     # Fall back to global access if bootstrap flag enabled
     if dashboard_bootstrap_global_fallback_enabled():
+        _audit_global_fallback_used(str(user or frappe.session.user or ""), scope_reason="bootstrap_fallback_enabled")
         return _result(None, "global", "bootstrap_fallback_enabled")
 
     frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)

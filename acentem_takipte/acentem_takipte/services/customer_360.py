@@ -452,9 +452,24 @@ def _build_cross_sell_payload(customer_name: str, policies: list[dict[str, Any]]
         owned_branch_names.append(branch_name)
         seen.add(branch_name)
 
+    # Perf: Avoid fetching all AT Branches for every customer_360 call.
+    # Use the insurance companies present in the customer's current portfolio
+    # as a candidate set for cross-sell suggestions.
+    candidate_insurance_companies = sorted(
+        {
+            str(p.get("insurance_company") or "").strip()
+            for p in policies
+            if str(p.get("insurance_company") or "").strip()
+        }
+    )
+    branch_filters = {}
+    if candidate_insurance_companies:
+        branch_filters = {"insurance_company": ["in", candidate_insurance_companies]}
+
     available_branches = frappe.get_list(
         "AT Branch",
         fields=["name"],
+        filters=branch_filters,
         order_by="name asc",
         limit_page_length=0,
     )
