@@ -33,9 +33,23 @@ from acentem_takipte.acentem_takipte.services.quick_create import (
     delete_aux_record as delete_aux_record_service,
     update_aux_record as update_aux_record_service,
 )
-from acentem_takipte.acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
-from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import convert_to_policy as convert_offer_to_policy
-from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import normalize_customer_type
+from acentem_takipte.acentem_takipte.api.quick_payloads import (
+    QuickAccountingEntryPayload,
+    QuickNotificationTemplatePayload,
+    QuickOwnershipAssignmentPayload,
+    QuickPaymentPayload,
+    QuickPolicyPayload,
+    QuickTaskPayload,
+)
+from acentem_takipte.acentem_takipte.services.quick_customer import (
+    resolve_or_create_quick_customer,
+)
+from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import (
+    convert_to_policy as convert_offer_to_policy,
+)
+from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
+    normalize_customer_type,
+)
 from acentem_takipte.acentem_takipte.utils.notes import normalize_note_text
 from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
 from acentem_takipte.acentem_takipte.utils.statuses import (
@@ -47,6 +61,7 @@ from acentem_takipte.acentem_takipte.utils.statuses import (
     ATReconciliationItemStatus,
     ATRenewalTaskStatus,
 )
+
 
 @frappe.whitelist()
 def create_quick_customer(
@@ -64,7 +79,9 @@ def create_quick_customer(
     assigned_agent: str | None = None,
     office_branch: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Customer", _("You do not have permission to create customers."))
+    _assert_create_permission(
+        "AT Customer", _("You do not have permission to create customers.")
+    )
 
     payload = {
         "doctype": "AT Customer",
@@ -76,14 +93,18 @@ def create_quick_customer(
         "address": (address or "").strip() or None,
         "office_branch": _resolve_office_branch(office_branch),
         "birth_date": birth_date or None,
-        "gender": _normalize_option(gender, {"Unknown", "Male", "Female", "Other"}, default="Unknown"),
+        "gender": _normalize_option(
+            gender, {"Unknown", "Male", "Female", "Other"}, default="Unknown"
+        ),
         "marital_status": _normalize_option(
             marital_status,
             {"Unknown", "Single", "Married", "Divorced", "Widowed"},
             default="Unknown",
         ),
         "occupation": (occupation or "").strip() or None,
-        "consent_status": _normalize_option(consent_status, {"Unknown", "Granted", "Revoked"}, default="Unknown"),
+        "consent_status": _normalize_option(
+            consent_status, {"Unknown", "Granted", "Revoked"}, default="Unknown"
+        ),
         "assigned_agent": (assigned_agent or "").strip() or None,
     }
 
@@ -108,13 +129,22 @@ def create_quick_lead(
     estimated_gross_premium: float | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Lead", _("You do not have permission to create leads."))
+    _assert_create_permission(
+        "AT Lead", _("You do not have permission to create leads.")
+    )
 
     normalized_customer = _normalize_link("AT Customer", customer)
-    resolved_office_branch = _resolve_office_branch(office_branch, customer=normalized_customer)
-    full_name = str(full_name or "").strip() or " ".join(
-        part for part in [(first_name or "").strip(), (last_name or "").strip()] if part
-    ).strip()
+    resolved_office_branch = _resolve_office_branch(
+        office_branch, customer=normalized_customer
+    )
+    full_name = (
+        str(full_name or "").strip()
+        or " ".join(
+            part
+            for part in [(first_name or "").strip(), (last_name or "").strip()]
+            if part
+        ).strip()
+    )
     resolved_first_name, resolved_last_name = _split_full_name(full_name)
     auto_customer, customer_created = resolve_or_create_quick_customer(
         customer=normalized_customer,
@@ -134,13 +164,17 @@ def create_quick_lead(
         "phone": (phone or "").strip() or None,
         "tax_id": _digits_only(tax_id) or None,
         "email": (email or "").strip() or None,
-        "status": _normalize_option(status, set(ATLeadStatus.VALID), default=ATLeadStatus.OPEN),
+        "status": _normalize_option(
+            status, set(ATLeadStatus.VALID), default=ATLeadStatus.OPEN
+        ),
         "customer": auto_customer,
         "office_branch": resolved_office_branch,
         "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
         "insurance_company": _normalize_link("AT Insurance Company", insurance_company),
         "branch": _normalize_link("AT Branch", branch),
-        "estimated_gross_premium": flt(estimated_gross_premium) if estimated_gross_premium not in {None, ""} else 0,
+        "estimated_gross_premium": flt(estimated_gross_premium)
+        if estimated_gross_premium not in {None, ""}
+        else 0,
         "notes": normalize_note_text(notes),
     }
 
@@ -149,61 +183,53 @@ def create_quick_lead(
 
 @frappe.whitelist()
 def create_quick_policy(
-    customer: str | None = None,
-    customer_full_name: str | None = None,
-    customer_type: str | None = None,
-    customer_tax_id: str | None = None,
-    customer_phone: str | None = None,
-    customer_email: str | None = None,
-    customer_birth_date: str | None = None,
-    sales_entity: str | None = None,
-    insurance_company: str | None = None,
-    branch: str | None = None,
-    office_branch: str | None = None,
-    policy_no: str | None = None,
-    status: str | None = None,
-    issue_date: str | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
-    currency: str | None = None,
-    net_premium: float | None = None,
-    tax_amount: float | None = None,
-    commission_amount: float | None = None,
-    gross_premium: float | None = None,
-    source_offer: str | None = None,
-    notes: str | None = None,
+    payload: QuickPolicyPayload | None = None,
+    **kwargs,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Policy", _("You do not have permission to create policies."))
+    quick_payload = QuickPolicyPayload.from_input(payload, **kwargs)
+    _assert_create_permission(
+        "AT Policy", _("You do not have permission to create policies.")
+    )
 
-    normalized_offer = _normalize_link("AT Offer", source_offer)
+    normalized_offer = _normalize_link("AT Offer", quick_payload.source_offer)
 
     if normalized_offer:
         return convert_offer_to_policy(
             offer_name=normalized_offer,
-            start_date=start_date,
-            end_date=end_date,
-            commission_amount=commission_amount,
-            tax_amount=tax_amount,
-            net_premium=net_premium,
-            policy_no=policy_no,
+            start_date=quick_payload.start_date,
+            end_date=quick_payload.end_date,
+            commission_amount=quick_payload.commission_amount,
+            tax_amount=quick_payload.tax_amount,
+            net_premium=quick_payload.net_premium,
+            policy_no=quick_payload.policy_no,
         )
 
     today = _normalize_date(nowdate())
-    issue = _normalize_date(issue_date) or today
-    start = _normalize_date(start_date) or issue
-    end = _normalize_date(end_date) or add_days(start, 365)
-    resolved_office_branch = _resolve_office_branch(office_branch, customer=customer)
-    normalized_customer_type = normalize_customer_type(customer_type, customer_tax_id)
-    normalized_birth_date = _normalize_date(customer_birth_date) if customer_birth_date else None
+    issue = _normalize_date(quick_payload.issue_date) or today
+    start = _normalize_date(quick_payload.start_date) or issue
+    end = _normalize_date(quick_payload.end_date) or add_days(start, 365)
+    resolved_office_branch = _resolve_office_branch(
+        quick_payload.office_branch, customer=quick_payload.customer
+    )
+    normalized_customer_type = normalize_customer_type(
+        quick_payload.customer_type, quick_payload.customer_tax_id
+    )
+    normalized_birth_date = (
+        _normalize_date(quick_payload.customer_birth_date)
+        if quick_payload.customer_birth_date
+        else None
+    )
     resolved_customer, customer_created = resolve_or_create_quick_customer(
-        customer=customer,
-        full_name=customer_full_name,
+        customer=quick_payload.customer,
+        full_name=quick_payload.customer_full_name,
         customer_type=normalized_customer_type,
-        tax_id=customer_tax_id,
-        phone=customer_phone,
-        email=customer_email,
+        tax_id=quick_payload.customer_tax_id,
+        phone=quick_payload.customer_phone,
+        email=quick_payload.customer_email,
         office_branch=resolved_office_branch,
-        birth_date=normalized_birth_date if normalized_customer_type != "Corporate" else None,
+        birth_date=normalized_birth_date
+        if normalized_customer_type != "Corporate"
+        else None,
         require_customer=True,
     )
 
@@ -211,21 +237,35 @@ def create_quick_policy(
         "doctype": "AT Policy",
         "customer": resolved_customer,
         "office_branch": resolved_office_branch,
-        "sales_entity": _normalize_link("AT Sales Entity", sales_entity, required=True),
-        "insurance_company": _normalize_link("AT Insurance Company", insurance_company, required=True),
-        "branch": _normalize_link("AT Branch", branch, required=True),
-        "policy_no": (policy_no or "").strip() or None,
-        "status": _normalize_option(status, set(ATPolicyStatus.VALID), default=ATPolicyStatus.ACTIVE),
+        "sales_entity": _normalize_link(
+            "AT Sales Entity", quick_payload.sales_entity, required=True
+        ),
+        "insurance_company": _normalize_link(
+            "AT Insurance Company", quick_payload.insurance_company, required=True
+        ),
+        "branch": _normalize_link("AT Branch", quick_payload.branch, required=True),
+        "policy_no": (quick_payload.policy_no or "").strip() or None,
+        "status": _normalize_option(
+            quick_payload.status, set(ATPolicyStatus.VALID), default=ATPolicyStatus.ACTIVE
+        ),
         "issue_date": issue,
         "start_date": start,
         "end_date": end,
-        "currency": ((currency or "TRY").strip() or "TRY").upper(),
-        "net_premium": flt(net_premium) if net_premium not in {None, ""} else 0,
-        "tax_amount": flt(tax_amount) if tax_amount not in {None, ""} else 0,
-        "commission_amount": flt(commission_amount) if commission_amount not in {None, ""} else 0,
-        "gross_premium": flt(gross_premium) if gross_premium not in {None, ""} else 0,
+        "currency": ((quick_payload.currency or "TRY").strip() or "TRY").upper(),
+        "net_premium": flt(quick_payload.net_premium)
+        if quick_payload.net_premium not in {None, ""}
+        else 0,
+        "tax_amount": flt(quick_payload.tax_amount)
+        if quick_payload.tax_amount not in {None, ""}
+        else 0,
+        "commission_amount": flt(quick_payload.commission_amount)
+        if quick_payload.commission_amount not in {None, ""}
+        else 0,
+        "gross_premium": flt(quick_payload.gross_premium)
+        if quick_payload.gross_premium not in {None, ""}
+        else 0,
         "source_offer": None,
-        "notes": normalize_note_text(notes),
+        "notes": normalize_note_text(quick_payload.notes),
     }
 
     return create_policy_service(payload)
@@ -246,7 +286,9 @@ def create_quick_claim(
     approved_amount: float | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Claim", _("You do not have permission to create claims."))
+    _assert_create_permission(
+        "AT Claim", _("You do not have permission to create claims.")
+    )
 
     today = _normalize_date(nowdate())
     incident = _normalize_date(incident_date) or today
@@ -256,19 +298,27 @@ def create_quick_claim(
         "doctype": "AT Claim",
         "policy": _normalize_link("AT Policy", policy, required=True),
         "customer": _normalize_link("AT Customer", customer, required=True),
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
+        "office_branch": _resolve_office_branch(
+            office_branch, customer=customer, policy=policy
+        ),
         "claim_no": (claim_no or "").strip() or None,
         "claim_type": _normalize_option(
             claim_type,
             {"Damage", "Health", "Theft", "Liability", "Other"},
             default="Damage",
         ),
-        "claim_status": _normalize_option(claim_status, set(ATClaimStatus.VALID), default=ATClaimStatus.OPEN),
+        "claim_status": _normalize_option(
+            claim_status, set(ATClaimStatus.VALID), default=ATClaimStatus.OPEN
+        ),
         "incident_date": incident,
         "reported_date": reported,
         "currency": ((currency or "TRY").strip() or "TRY").upper(),
-        "estimated_amount": flt(estimated_amount) if estimated_amount not in {None, ""} else 0,
-        "approved_amount": flt(approved_amount) if approved_amount not in {None, ""} else 0,
+        "estimated_amount": flt(estimated_amount)
+        if estimated_amount not in {None, ""}
+        else 0,
+        "approved_amount": flt(approved_amount)
+        if approved_amount not in {None, ""}
+        else 0,
         "notes": normalize_note_text(notes),
     }
 
@@ -277,50 +327,57 @@ def create_quick_claim(
 
 @frappe.whitelist()
 def create_quick_payment(
-    customer: str | None = None,
-    policy: str | None = None,
-    claim: str | None = None,
-    sales_entity: str | None = None,
-    office_branch: str | None = None,
-    payment_direction: str | None = None,
-    payment_purpose: str | None = None,
-    status: str | None = None,
-    payment_date: str | None = None,
-    due_date: str | None = None,
-    installment_count: int | str | None = None,
-    installment_interval_days: int | str | None = None,
-    currency: str | None = None,
-    amount: float | None = None,
-    reference_no: str | None = None,
-    notes: str | None = None,
+    payload: QuickPaymentPayload | None = None,
+    **kwargs,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Payment", _("You do not have permission to create payments."))
+    quick_payload = QuickPaymentPayload.from_input(payload, **kwargs)
+    _assert_create_permission(
+        "AT Payment", _("You do not have permission to create payments.")
+    )
     today = _normalize_date(nowdate())
-    normalized_customer = _normalize_link("AT Customer", customer, required=True)
-    normalized_policy = _normalize_link("AT Policy", policy)
+    normalized_customer = _normalize_link(
+        "AT Customer", quick_payload.customer, required=True
+    )
+    normalized_policy = _normalize_link("AT Policy", quick_payload.policy)
+    resolved_payment_date = quick_payload.payment_date or quick_payload.paid_date
+    resolved_amount = quick_payload.amount
+    if resolved_amount in {None, ""} and quick_payload.amount_try not in {None, ""}:
+        resolved_amount = quick_payload.amount_try
+    resolved_reference_no = quick_payload.reference_no or quick_payload.external_ref
 
     payload = {
         "doctype": "AT Payment",
         "customer": normalized_customer,
         "policy": normalized_policy,
-        "claim": _normalize_link("AT Claim", claim),
-        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
-        "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
-        "payment_direction": _normalize_option(payment_direction, {"Inbound", "Outbound"}, default="Inbound"),
+        "claim": _normalize_link("AT Claim", quick_payload.claim),
+        "office_branch": _resolve_office_branch(
+            quick_payload.office_branch,
+            customer=normalized_customer,
+            policy=normalized_policy,
+        ),
+        "sales_entity": _normalize_link("AT Sales Entity", quick_payload.sales_entity),
+        "payment_direction": _normalize_option(
+            quick_payload.payment_direction, {"Inbound", "Outbound"}, default="Inbound"
+        ),
         "payment_purpose": _normalize_option(
-            payment_purpose,
+            quick_payload.payment_purpose,
             {"Premium Collection", "Commission Payout", "Claim Payout", "Other"},
             default="Premium Collection",
         ),
-        "status": _normalize_option(status, set(ATPaymentStatus.VALID), default=ATPaymentStatus.DRAFT),
-        "payment_date": _normalize_date(payment_date) or today,
-        "due_date": _normalize_date(due_date) if due_date else None,
-        "installment_count": max(cint(installment_count or 1), 1),
-        "installment_interval_days": max(cint(installment_interval_days or 30), 1),
-        "currency": ((currency or "TRY").strip() or "TRY").upper(),
-        "amount": flt(amount) if amount not in {None, ""} else 0,
-        "reference_no": (reference_no or "").strip() or None,
-        "notes": normalize_note_text(notes),
+        "status": _normalize_option(
+            quick_payload.status, set(ATPaymentStatus.VALID), default=ATPaymentStatus.DRAFT
+        ),
+        "payment_date": _normalize_date(resolved_payment_date) or today,
+        "due_date": _normalize_date(quick_payload.due_date) if quick_payload.due_date else None,
+        "installment_count": max(cint(quick_payload.installment_count or 1), 1),
+        "installment_interval_days": max(
+            cint(quick_payload.installment_interval_days or 30), 1
+        ),
+        "currency": ((quick_payload.currency or "TRY").strip() or "TRY").upper(),
+        "amount": flt(resolved_amount) if resolved_amount not in {None, ""} else 0,
+        "amount_try": flt(resolved_amount) if resolved_amount not in {None, ""} else 0,
+        "reference_no": (resolved_reference_no or "").strip() or None,
+        "notes": normalize_note_text(quick_payload.notes),
     }
 
     return create_payment_service(payload)
@@ -340,7 +397,9 @@ def create_quick_renewal_task(
     notes: str | None = None,
     auto_created: int | None = 0,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Renewal Task", _("You do not have permission to create renewal tasks."))
+    _assert_create_permission(
+        "AT Renewal Task", _("You do not have permission to create renewal tasks.")
+    )
 
     today = _normalize_date(nowdate())
     renewal = _normalize_date(renewal_date) or add_days(today, 30)
@@ -352,13 +411,24 @@ def create_quick_renewal_task(
         "doctype": "AT Renewal Task",
         "policy": normalized_policy,
         "customer": normalized_customer,
-        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
+        "office_branch": _resolve_office_branch(
+            office_branch, customer=normalized_customer, policy=normalized_policy
+        ),
         "renewal_date": renewal,
         "due_date": due,
-        "status": _normalize_option(status, set(ATRenewalTaskStatus.VALID), default=ATRenewalTaskStatus.OPEN),
+        "status": _normalize_option(
+            status, set(ATRenewalTaskStatus.VALID), default=ATRenewalTaskStatus.OPEN
+        ),
         "lost_reason_code": _normalize_option(
             lost_reason_code,
-            {"Price", "Competitor", "Service", "Customer Declined", "Coverage Mismatch", "Other"},
+            {
+                "Price",
+                "Competitor",
+                "Service",
+                "Customer Declined",
+                "Coverage Mismatch",
+                "Other",
+            },
             default="Competitor",
         )
         if (lost_reason_code or "").strip()
@@ -380,12 +450,17 @@ def create_quick_customer_relation(
     is_household: int | str | bool | None = 0,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Customer Relation", _("You do not have permission to create customer relations."))
+    _assert_create_permission(
+        "AT Customer Relation",
+        _("You do not have permission to create customer relations."),
+    )
 
     payload = {
         "doctype": "AT Customer Relation",
         "customer": _normalize_link("AT Customer", customer, required=True),
-        "related_customer": _normalize_link("AT Customer", related_customer, required=True),
+        "related_customer": _normalize_link(
+            "AT Customer", related_customer, required=True
+        ),
         "relation_type": _normalize_option(
             relation_type,
             {"Spouse", "Child", "Parent", "Sibling", "Partner", "Household", "Other"},
@@ -406,7 +481,9 @@ def create_quick_insured_asset(
     asset_identifier: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Insured Asset", _("You do not have permission to create insured assets."))
+    _assert_create_permission(
+        "AT Insured Asset", _("You do not have permission to create insured assets.")
+    )
 
     normalized_customer = _normalize_link("AT Customer", customer, required=True)
     normalized_policy = _normalize_link("AT Policy", policy)
@@ -416,7 +493,16 @@ def create_quick_insured_asset(
         "policy": normalized_policy,
         "asset_type": _normalize_option(
             asset_type,
-            {"Vehicle", "Home", "Health Person", "Workplace", "Travel", "Boat", "Farm", "Other"},
+            {
+                "Vehicle",
+                "Home",
+                "Health Person",
+                "Workplace",
+                "Travel",
+                "Boat",
+                "Farm",
+                "Other",
+            },
             default="Other",
         ),
         "asset_label": (asset_label or "").strip(),
@@ -440,7 +526,9 @@ def create_quick_call_note(
     next_follow_up_on: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Call Note", _("You do not have permission to create call notes."))
+    _assert_create_permission(
+        "AT Call Note", _("You do not have permission to create call notes.")
+    )
 
     normalized_customer = _normalize_link("AT Customer", customer, required=True)
     normalized_policy = _normalize_link("AT Policy", policy)
@@ -449,13 +537,27 @@ def create_quick_call_note(
         "customer": normalized_customer,
         "policy": normalized_policy,
         "claim": _normalize_link("AT Claim", claim),
-        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
-        "channel": _normalize_option(channel, {"Phone Call", "WhatsApp Call", "Video Call", "Other"}, default="Phone Call"),
-        "direction": _normalize_option(direction, {"Inbound", "Outbound"}, default="Outbound"),
-        "call_status": _normalize_option(call_status, {"Planned", "Completed", "Missed", "No Answer", "Cancelled"}, default="Completed"),
+        "office_branch": _resolve_office_branch(
+            office_branch, customer=normalized_customer, policy=normalized_policy
+        ),
+        "channel": _normalize_option(
+            channel,
+            {"Phone Call", "WhatsApp Call", "Video Call", "Other"},
+            default="Phone Call",
+        ),
+        "direction": _normalize_option(
+            direction, {"Inbound", "Outbound"}, default="Outbound"
+        ),
+        "call_status": _normalize_option(
+            call_status,
+            {"Planned", "Completed", "Missed", "No Answer", "Cancelled"},
+            default="Completed",
+        ),
         "call_outcome": (call_outcome or "").strip() or None,
         "note_at": _normalize_datetime(note_at) or frappe.utils.now_datetime(),
-        "next_follow_up_on": _normalize_date(next_follow_up_on) if next_follow_up_on else None,
+        "next_follow_up_on": _normalize_date(next_follow_up_on)
+        if next_follow_up_on
+        else None,
         "notes": normalize_note_text(notes),
     }
     return create_call_note_service(payload)
@@ -471,15 +573,25 @@ def create_quick_segment(
     criteria_json: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Segment", _("You do not have permission to create segments."))
+    _assert_create_permission(
+        "AT Segment", _("You do not have permission to create segments.")
+    )
 
     payload = {
         "doctype": "AT Segment",
         "segment_name": (segment_name or "").strip(),
-        "segment_type": _normalize_option(segment_type, {"Static", "Dynamic", "Operational"}, default="Static"),
-        "channel_focus": _normalize_option(channel_focus, {"WHATSAPP", "SMS", "Email", "Phone Call"}, default="WHATSAPP"),
+        "segment_type": _normalize_option(
+            segment_type, {"Static", "Dynamic", "Operational"}, default="Static"
+        ),
+        "channel_focus": _normalize_option(
+            channel_focus,
+            {"WHATSAPP", "SMS", "Email", "Phone Call"},
+            default="WHATSAPP",
+        ),
         "office_branch": _resolve_office_branch(office_branch),
-        "status": _normalize_option(status, {"Draft", "Active", "Archived"}, default="Draft"),
+        "status": _normalize_option(
+            status, {"Draft", "Active", "Archived"}, default="Draft"
+        ),
         "criteria_json": (criteria_json or "").strip() or None,
         "notes": normalize_note_text(notes),
     }
@@ -497,16 +609,24 @@ def create_quick_campaign(
     scheduled_for: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Campaign", _("You do not have permission to create campaigns."))
+    _assert_create_permission(
+        "AT Campaign", _("You do not have permission to create campaigns.")
+    )
 
     payload = {
         "doctype": "AT Campaign",
         "campaign_name": (campaign_name or "").strip(),
         "segment": _normalize_link("AT Segment", segment, required=True),
         "template": _normalize_link("AT Notification Template", template),
-        "channel": _normalize_option(channel, {"WHATSAPP", "SMS", "Email", "Phone Call"}, default="WHATSAPP"),
+        "channel": _normalize_option(
+            channel, {"WHATSAPP", "SMS", "Email", "Phone Call"}, default="WHATSAPP"
+        ),
         "office_branch": _resolve_office_branch(office_branch),
-        "status": _normalize_option(status, {"Draft", "Planned", "Running", "Completed", "Cancelled"}, default="Draft"),
+        "status": _normalize_option(
+            status,
+            {"Draft", "Planned", "Running", "Completed", "Cancelled"},
+            default="Draft",
+        ),
         "scheduled_for": _normalize_datetime(scheduled_for) if scheduled_for else None,
         "notes": normalize_note_text(notes),
     }
@@ -515,30 +635,29 @@ def create_quick_campaign(
 
 @frappe.whitelist()
 def create_quick_ownership_assignment(
-    source_doctype: str | None = None,
-    source_name: str | None = None,
-    customer: str | None = None,
-    policy: str | None = None,
-    office_branch: str | None = None,
-    assigned_to: str | None = None,
-    assignment_role: str | None = None,
-    status: str | None = None,
-    priority: str | None = None,
-    due_date: str | None = None,
-    notes: str | None = None,
+    payload: QuickOwnershipAssignmentPayload | None = None,
+    **kwargs,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Ownership Assignment", _("You do not have permission to create ownership assignments."))
+    quick_payload = QuickOwnershipAssignmentPayload.from_input(payload, **kwargs)
+    _assert_create_permission(
+        "AT Ownership Assignment",
+        _("You do not have permission to create ownership assignments."),
+    )
 
     normalized_source_doctype = _normalize_option(
-        source_doctype,
+        quick_payload.source_doctype,
         {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign"},
         default=None,
     )
-    normalized_source_name = (source_name or "").strip() or None
-    if normalized_source_doctype and normalized_source_name and not frappe.db.exists(normalized_source_doctype, normalized_source_name):
+    normalized_source_name = (quick_payload.source_name or "").strip() or None
+    if (
+        normalized_source_doctype
+        and normalized_source_name
+        and not frappe.db.exists(normalized_source_doctype, normalized_source_name)
+    ):
         frappe.throw(_("Linked source record was not found"))
-    normalized_customer = _normalize_link("AT Customer", customer)
-    normalized_policy = _normalize_link("AT Policy", policy)
+    normalized_customer = _normalize_link("AT Customer", quick_payload.customer)
+    normalized_policy = _normalize_link("AT Policy", quick_payload.policy)
 
     payload = {
         "doctype": "AT Ownership Assignment",
@@ -546,65 +665,105 @@ def create_quick_ownership_assignment(
         "source_name": normalized_source_name,
         "customer": normalized_customer,
         "policy": normalized_policy,
-        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
-        "assigned_to": _normalize_link("User", assigned_to, required=True),
-        "assignment_role": _normalize_option(assignment_role, {"Owner", "Assignee", "Reviewer", "Follower"}, default="Owner"),
-        "status": _normalize_option(status, {"Open", "In Progress", "Blocked", "Done", "Cancelled"}, default="Open"),
-        "priority": _normalize_option(priority, {"Low", "Normal", "High", "Critical"}, default="Normal"),
-        "due_date": _normalize_date(due_date) if due_date else None,
-        "notes": normalize_note_text(notes),
+        "office_branch": _resolve_office_branch(
+            quick_payload.office_branch, customer=normalized_customer, policy=normalized_policy
+        ),
+        "assigned_to": _normalize_link("User", quick_payload.assigned_to, required=True),
+        "assignment_role": _normalize_option(
+            quick_payload.assignment_role,
+            {"Owner", "Assignee", "Reviewer", "Follower"},
+            default="Owner",
+        ),
+        "status": _normalize_option(
+            quick_payload.status,
+            {"Open", "In Progress", "Blocked", "Done", "Cancelled"},
+            default="Open",
+        ),
+        "priority": _normalize_option(
+            quick_payload.priority, {"Low", "Normal", "High", "Critical"}, default="Normal"
+        ),
+        "due_date": _normalize_date(quick_payload.due_date) if quick_payload.due_date else None,
+        "notes": normalize_note_text(quick_payload.notes),
     }
     return create_ownership_assignment_service(payload)
 
 
 @frappe.whitelist()
 def create_quick_task(
-    task_title: str | None = None,
-    task_type: str | None = None,
-    source_doctype: str | None = None,
-    source_name: str | None = None,
-    customer: str | None = None,
-    policy: str | None = None,
-    claim: str | None = None,
-    office_branch: str | None = None,
-    assigned_to: str | None = None,
-    status: str | None = None,
-    priority: str | None = None,
-    due_date: str | None = None,
-    reminder_at: str | None = None,
-    notes: str | None = None,
+    payload: QuickTaskPayload | None = None,
+    **kwargs,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Task", _("You do not have permission to create tasks."))
+    quick_payload = QuickTaskPayload.from_input(payload, **kwargs)
+    _assert_create_permission(
+        "AT Task", _("You do not have permission to create tasks.")
+    )
 
     normalized_source_doctype = _normalize_option(
-        source_doctype,
-        {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign", "AT Ownership Assignment", "AT Call Note"},
+        quick_payload.source_doctype,
+        {
+            "AT Customer",
+            "AT Policy",
+            "AT Claim",
+            "AT Renewal Task",
+            "AT Campaign",
+            "AT Ownership Assignment",
+            "AT Call Note",
+        },
         default=None,
     )
-    normalized_source_name = (source_name or "").strip() or None
-    if normalized_source_doctype and normalized_source_name and not frappe.db.exists(normalized_source_doctype, normalized_source_name):
+    normalized_source_name = (quick_payload.source_name or "").strip() or None
+    if (
+        normalized_source_doctype
+        and normalized_source_name
+        and not frappe.db.exists(normalized_source_doctype, normalized_source_name)
+    ):
         frappe.throw(_("Linked source record was not found"))
-    normalized_customer = _normalize_link("AT Customer", customer)
-    normalized_policy = _normalize_link("AT Policy", policy)
-    normalized_claim = _normalize_link("AT Claim", claim)
-    normalized_assigned_to = _normalize_link("User", assigned_to, required=True)
+    normalized_customer = _normalize_link("AT Customer", quick_payload.customer)
+    normalized_policy = _normalize_link("AT Policy", quick_payload.policy)
+    normalized_claim = _normalize_link("AT Claim", quick_payload.claim)
+    normalized_assigned_to = _normalize_link("User", quick_payload.assigned_to, required=True)
 
     payload = {
         "doctype": "AT Task",
-        "task_title": (task_title or "").strip(),
-        "task_type": _normalize_option(task_type, {"Follow-up", "Visit", "Call", "Collection", "Claim", "Renewal", "Review", "Other"}, default="Follow-up"),
+        "task_title": (quick_payload.task_title or "").strip(),
+        "task_type": _normalize_option(
+            quick_payload.task_type,
+            {
+                "Follow-up",
+                "Visit",
+                "Call",
+                "Collection",
+                "Claim",
+                "Renewal",
+                "Review",
+                "Other",
+            },
+            default="Follow-up",
+        ),
         "source_doctype": normalized_source_doctype,
         "source_name": normalized_source_name,
         "customer": normalized_customer,
         "policy": normalized_policy,
         "claim": normalized_claim,
-        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
+        "office_branch": _resolve_office_branch(
+            quick_payload.office_branch,
+            customer=normalized_customer,
+            policy=normalized_policy,
+        ),
         "assigned_to": normalized_assigned_to,
-        "status": _normalize_option(status, {"Open", "In Progress", "Blocked", "Done", "Cancelled"}, default="Open"),
-        "priority": _normalize_option(priority, {"Low", "Normal", "High", "Critical"}, default="Normal"),
-        "due_date": _normalize_date(due_date) if due_date else None,
-        "reminder_at": _normalize_datetime(reminder_at) if reminder_at else None,
-        "notes": normalize_note_text(notes),
+        "status": _normalize_option(
+            quick_payload.status,
+            {"Open", "In Progress", "Blocked", "Done", "Cancelled"},
+            default="Open",
+        ),
+        "priority": _normalize_option(
+            quick_payload.priority, {"Low", "Normal", "High", "Critical"}, default="Normal"
+        ),
+        "due_date": _normalize_date(quick_payload.due_date) if quick_payload.due_date else None,
+        "reminder_at": _normalize_datetime(quick_payload.reminder_at)
+        if quick_payload.reminder_at
+        else None,
+        "notes": normalize_note_text(quick_payload.notes),
     }
     return create_task_service(payload)
 
@@ -624,7 +783,9 @@ def create_quick_activity(
     status: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Activity", _("You do not have permission to create activities."))
+    _assert_create_permission(
+        "AT Activity", _("You do not have permission to create activities.")
+    )
 
     normalized_customer = _normalize_link("AT Customer", customer)
     normalized_policy = _normalize_link("AT Policy", policy)
@@ -635,7 +796,17 @@ def create_quick_activity(
         "activity_title": (activity_title or "").strip(),
         "activity_type": _normalize_option(
             activity_type,
-            {"Call", "Visit", "Note", "Claim Update", "Renewal Update", "Collection", "Campaign", "Review", "Other"},
+            {
+                "Call",
+                "Visit",
+                "Note",
+                "Claim Update",
+                "Renewal Update",
+                "Collection",
+                "Campaign",
+                "Review",
+                "Other",
+            },
             default="Note",
         ),
         "source_doctype": _normalize_doctype_or_blank(source_doctype),
@@ -643,10 +814,14 @@ def create_quick_activity(
         "customer": normalized_customer,
         "policy": normalized_policy,
         "claim": normalized_claim,
-        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
+        "office_branch": _resolve_office_branch(
+            office_branch, customer=normalized_customer, policy=normalized_policy
+        ),
         "assigned_to": normalized_assigned_to,
         "activity_at": _normalize_datetime(activity_at) or frappe.utils.now_datetime(),
-        "status": _normalize_option(status, {"Logged", "Shared", "Archived"}, default="Logged"),
+        "status": _normalize_option(
+            status, {"Logged", "Shared", "Archived"}, default="Logged"
+        ),
         "notes": normalize_note_text(notes),
     }
     return create_activity_service(payload)
@@ -667,15 +842,30 @@ def create_quick_reminder(
     remind_at: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Reminder", _("You do not have permission to create reminders."))
+    _assert_create_permission(
+        "AT Reminder", _("You do not have permission to create reminders.")
+    )
 
     normalized_source_doctype = _normalize_option(
         source_doctype,
-        {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign", "AT Ownership Assignment", "AT Call Note", "AT Task"},
+        {
+            "AT Customer",
+            "AT Policy",
+            "AT Claim",
+            "AT Renewal Task",
+            "AT Campaign",
+            "AT Ownership Assignment",
+            "AT Call Note",
+            "AT Task",
+        },
         default=None,
     )
     normalized_source_name = (source_name or "").strip() or None
-    if normalized_source_doctype and normalized_source_name and not frappe.db.exists(normalized_source_doctype, normalized_source_name):
+    if (
+        normalized_source_doctype
+        and normalized_source_name
+        and not frappe.db.exists(normalized_source_doctype, normalized_source_name)
+    ):
         frappe.throw(_("Linked source record was not found"))
     normalized_customer = _normalize_link("AT Customer", customer)
     normalized_policy = _normalize_link("AT Policy", policy)
@@ -689,10 +879,16 @@ def create_quick_reminder(
         "customer": normalized_customer,
         "policy": normalized_policy,
         "claim": normalized_claim,
-        "office_branch": _resolve_office_branch(office_branch, customer=normalized_customer, policy=normalized_policy),
+        "office_branch": _resolve_office_branch(
+            office_branch, customer=normalized_customer, policy=normalized_policy
+        ),
         "assigned_to": _normalize_link("User", assigned_to, required=True),
-        "status": _normalize_option(status, {"Open", "Done", "Cancelled"}, default="Open"),
-        "priority": _normalize_option(priority, {"Low", "Normal", "High", "Critical"}, default="Normal"),
+        "status": _normalize_option(
+            status, {"Open", "Done", "Cancelled"}, default="Open"
+        ),
+        "priority": _normalize_option(
+            priority, {"Low", "Normal", "High", "Critical"}, default="Normal"
+        ),
         "remind_at": _normalize_datetime(remind_at) or frappe.utils.now_datetime(),
         "notes": normalize_note_text(notes),
     }
@@ -705,7 +901,10 @@ def create_quick_insurance_company(
     company_code: str | None = None,
     is_active: int | str | bool | None = 1,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Insurance Company", _("You do not have permission to create insurance companies."))
+    _assert_create_permission(
+        "AT Insurance Company",
+        _("You do not have permission to create insurance companies."),
+    )
 
     payload = {
         "doctype": "AT Insurance Company",
@@ -726,7 +925,9 @@ def create_quick_branch(
     insurance_company: str | None = None,
     is_active: int | str | bool | None = 1,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Branch", _("You do not have permission to create branches."))
+    _assert_create_permission(
+        "AT Branch", _("You do not have permission to create branches.")
+    )
 
     payload = {
         "doctype": "AT Branch",
@@ -748,13 +949,19 @@ def create_quick_sales_entity(
     office_branch: str | None = None,
     parent_entity: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Sales Entity", _("You do not have permission to create sales entities."))
+    _assert_create_permission(
+        "AT Sales Entity", _("You do not have permission to create sales entities.")
+    )
 
     payload = {
         "doctype": "AT Sales Entity",
-        "entity_type": _normalize_option(entity_type, {"Agency", "Sub-Account", "Representative"}, default="Agency"),
+        "entity_type": _normalize_option(
+            entity_type, {"Agency", "Sub-Account", "Representative"}, default="Agency"
+        ),
         "full_name": (full_name or "").strip(),
-        "office_branch": _normalize_link("AT Office Branch", office_branch, required=True),
+        "office_branch": _normalize_link(
+            "AT Office Branch", office_branch, required=True
+        ),
         "parent_entity": _normalize_link("AT Sales Entity", parent_entity),
     }
     doc = frappe.get_doc(payload)
@@ -765,43 +972,40 @@ def create_quick_sales_entity(
 
 @frappe.whitelist()
 def create_quick_notification_template(
-    template_key: str | None = None,
-    event_key: str | None = None,
-    channel: str | None = None,
-    content_mode: str | None = None,
-    language: str | None = None,
-    provider_template_name: str | None = None,
-    provider_template_category: str | None = None,
-    variables_schema_json: str | None = None,
-    subject: str | None = None,
-    body_template: str | None = None,
-    sms_body_template: str | None = None,
-    email_body_template: str | None = None,
-    whatsapp_body_template: str | None = None,
-    is_active: int | str | bool | None = 1,
+    payload: QuickNotificationTemplatePayload | None = None,
+    **kwargs,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Notification Template", _("You do not have permission to create notification templates."))
+    quick_payload = QuickNotificationTemplatePayload.from_input(payload, **kwargs)
+    _assert_create_permission(
+        "AT Notification Template",
+        _("You do not have permission to create notification templates."),
+    )
 
     payload = {
         "doctype": "AT Notification Template",
-        "template_key": (template_key or "").strip(),
-        "event_key": (event_key or "").strip(),
-        "channel": _normalize_option(channel, {"SMS", "Email", "WHATSAPP", "Both"}, default="Both"),
-        "content_mode": _normalize_option(content_mode, {"freeform", "template"}, default="freeform"),
-        "language": _normalize_option(language, {"tr", "en"}, default="tr"),
-        "provider_template_name": (provider_template_name or "").strip() or None,
+        "template_key": (quick_payload.template_key or "").strip(),
+        "event_key": (quick_payload.event_key or "").strip(),
+        "channel": _normalize_option(
+            quick_payload.channel, {"SMS", "Email", "WHATSAPP", "Both"}, default="Both"
+        ),
+        "content_mode": _normalize_option(
+            quick_payload.content_mode, {"freeform", "template"}, default="freeform"
+        ),
+        "language": _normalize_option(quick_payload.language, {"tr", "en"}, default="tr"),
+        "provider_template_name": (quick_payload.provider_template_name or "").strip()
+        or None,
         "provider_template_category": _normalize_option(
-            provider_template_category,
+            quick_payload.provider_template_category,
             {"UTILITY", "MARKETING", "AUTHENTICATION"},
             default="UTILITY",
         ),
-        "variables_schema_json": (variables_schema_json or "").strip() or None,
-        "subject": (subject or "").strip() or None,
-        "body_template": (body_template or "").strip(),
-        "sms_body_template": (sms_body_template or "").strip() or None,
-        "email_body_template": (email_body_template or "").strip() or None,
-        "whatsapp_body_template": (whatsapp_body_template or "").strip() or None,
-        "is_active": _as_check(is_active, default=1),
+        "variables_schema_json": (quick_payload.variables_schema_json or "").strip() or None,
+        "subject": (quick_payload.subject or "").strip() or None,
+        "body_template": (quick_payload.body_template or "").strip(),
+        "sms_body_template": (quick_payload.sms_body_template or "").strip() or None,
+        "email_body_template": (quick_payload.email_body_template or "").strip() or None,
+        "whatsapp_body_template": (quick_payload.whatsapp_body_template or "").strip() or None,
+        "is_active": _as_check(quick_payload.is_active, default=1),
     }
     doc = frappe.get_doc(payload)
     doc.insert()
@@ -811,28 +1015,19 @@ def create_quick_notification_template(
 
 @frappe.whitelist()
 def create_quick_accounting_entry(
-    source_doctype: str | None = None,
-    source_name: str | None = None,
-    entry_type: str | None = None,
-    status: str | None = None,
-    policy: str | None = None,
-    customer: str | None = None,
-    office_branch: str | None = None,
-    sales_entity: str | None = None,
-    insurance_company: str | None = None,
-    currency: str | None = None,
-    local_amount: float | None = None,
-    local_amount_try: float | None = None,
-    external_amount: float | None = None,
-    external_amount_try: float | None = None,
-    external_ref: str | None = None,
+    payload: QuickAccountingEntryPayload | None = None,
+    **kwargs,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Accounting Entry", _("You do not have permission to create accounting entries."))
+    quick_payload = QuickAccountingEntryPayload.from_input(payload, **kwargs)
+    _assert_create_permission(
+        "AT Accounting Entry",
+        _("You do not have permission to create accounting entries."),
+    )
 
-    source_dt = (source_doctype or "").strip()
-    source_nm = (source_name or "").strip()
-    normalized_policy = _normalize_link("AT Policy", policy)
-    normalized_customer = _normalize_link("AT Customer", customer)
+    source_dt = (quick_payload.source_doctype or "").strip()
+    source_nm = (quick_payload.source_name or "").strip()
+    normalized_policy = _normalize_link("AT Policy", quick_payload.policy)
+    normalized_customer = _normalize_link("AT Customer", quick_payload.customer)
 
     if normalized_policy:
         source_dt = "AT Policy"
@@ -852,19 +1047,35 @@ def create_quick_accounting_entry(
         "doctype": "AT Accounting Entry",
         "source_doctype": source_dt,
         "source_name": source_nm,
-        "entry_type": _normalize_option(entry_type, {"Policy", "Payment", "Claim"}, default="Policy"),
-        "status": _normalize_option(status, set(ATAccountingEntryStatus.VALID), default=ATAccountingEntryStatus.DRAFT),
+        "entry_type": _normalize_option(
+            quick_payload.entry_type, {"Policy", "Payment", "Claim"}, default="Policy"
+        ),
+        "status": _normalize_option(
+            quick_payload.status,
+            set(ATAccountingEntryStatus.VALID),
+            default=ATAccountingEntryStatus.DRAFT,
+        ),
         "policy": normalized_policy,
         "customer": normalized_customer,
-        "office_branch": _resolve_office_branch(office_branch, customer=customer, policy=policy),
-        "sales_entity": _normalize_link("AT Sales Entity", sales_entity),
-        "insurance_company": _normalize_link("AT Insurance Company", insurance_company),
-        "currency": ((currency or "TRY").strip() or "TRY").upper(),
-        "local_amount": flt(local_amount) if local_amount not in {None, ""} else 0,
-        "local_amount_try": flt(local_amount_try) if local_amount_try not in {None, ""} else 0,
-        "external_amount": flt(external_amount) if external_amount not in {None, ""} else 0,
-        "external_amount_try": flt(external_amount_try) if external_amount_try not in {None, ""} else 0,
-        "external_ref": (external_ref or "").strip() or None,
+        "office_branch": _resolve_office_branch(
+            quick_payload.office_branch, customer=quick_payload.customer, policy=quick_payload.policy
+        ),
+        "sales_entity": _normalize_link("AT Sales Entity", quick_payload.sales_entity),
+        "insurance_company": _normalize_link("AT Insurance Company", quick_payload.insurance_company),
+        "currency": ((quick_payload.currency or "TRY").strip() or "TRY").upper(),
+        "local_amount": flt(quick_payload.local_amount)
+        if quick_payload.local_amount not in {None, ""}
+        else 0,
+        "local_amount_try": flt(quick_payload.local_amount_try)
+        if quick_payload.local_amount_try not in {None, ""}
+        else 0,
+        "external_amount": flt(quick_payload.external_amount)
+        if quick_payload.external_amount not in {None, ""}
+        else 0,
+        "external_amount_try": flt(quick_payload.external_amount_try)
+        if quick_payload.external_amount_try not in {None, ""}
+        else 0,
+        "external_ref": (quick_payload.external_ref or "").strip() or None,
     }
     doc = frappe.get_doc(payload)
     doc.insert()
@@ -884,28 +1095,54 @@ def create_quick_reconciliation_item(
     resolution_action: str | None = None,
     notes: str | None = None,
 ) -> dict[str, str]:
-    _assert_create_permission("AT Reconciliation Item", _("You do not have permission to create reconciliation items."))
+    _assert_create_permission(
+        "AT Reconciliation Item",
+        _("You do not have permission to create reconciliation items."),
+    )
 
     source_dt = _normalize_doctype_or_blank(source_doctype)
     source_nm = _normalize_source_name(source_doctype, source_name)
     if accounting_entry:
-        accounting_entry_doc = frappe.get_doc("AT Accounting Entry", _normalize_link("AT Accounting Entry", accounting_entry, required=True))
+        accounting_entry_doc = frappe.get_doc(
+            "AT Accounting Entry",
+            _normalize_link("AT Accounting Entry", accounting_entry, required=True),
+        )
         source_dt = accounting_entry_doc.source_doctype or ""
         source_nm = accounting_entry_doc.source_name or ""
 
     payload = {
         "doctype": "AT Reconciliation Item",
-        "accounting_entry": _normalize_link("AT Accounting Entry", accounting_entry, required=True),
+        "accounting_entry": _normalize_link(
+            "AT Accounting Entry", accounting_entry, required=True
+        ),
         "source_doctype": source_dt,
         "source_name": source_nm,
-        "status": _normalize_option(status, set(ATReconciliationItemStatus.RESOLUTION_REQUIRED | ATReconciliationItemStatus.CLOSED), default=ATReconciliationItemStatus.OPEN),
+        "status": _normalize_option(
+            status,
+            set(
+                ATReconciliationItemStatus.RESOLUTION_REQUIRED
+                | ATReconciliationItemStatus.CLOSED
+            ),
+            default=ATReconciliationItemStatus.OPEN,
+        ),
         "mismatch_type": _normalize_option(
             mismatch_type,
-            {"Amount", "Currency", "Missing External", "Missing Local", "Status", "Other"},
+            {
+                "Amount",
+                "Currency",
+                "Missing External",
+                "Missing Local",
+                "Status",
+                "Other",
+            },
             default="Amount",
         ),
-        "local_amount_try": flt(local_amount_try) if local_amount_try not in {None, ""} else 0,
-        "external_amount_try": flt(external_amount_try) if external_amount_try not in {None, ""} else 0,
+        "local_amount_try": flt(local_amount_try)
+        if local_amount_try not in {None, ""}
+        else 0,
+        "external_amount_try": flt(external_amount_try)
+        if external_amount_try not in {None, ""}
+        else 0,
         "resolution_action": _normalize_reconciliation_action(resolution_action),
         "notes": normalize_note_text(notes),
     }
@@ -922,7 +1159,9 @@ def update_quick_aux_record(
     data: dict | str | None = None,
 ) -> dict[str, str]:
     normalized_doctype = _normalize_aux_edit_doctype(doctype)
-    _assert_write_permission(normalized_doctype, _("You do not have permission to update this record."))
+    _assert_write_permission(
+        normalized_doctype, _("You do not have permission to update this record.")
+    )
 
     record_name = (name or "").strip()
     if not record_name:
@@ -941,7 +1180,9 @@ def delete_quick_aux_record(
     name: str,
 ) -> dict[str, str | bool]:
     normalized_doctype = _normalize_aux_delete_doctype(doctype)
-    _assert_delete_permission(normalized_doctype, _("You do not have permission to delete this record."))
+    _assert_delete_permission(
+        normalized_doctype, _("You do not have permission to delete this record.")
+    )
 
     record_name = (name or "").strip()
     if not record_name:
@@ -1008,19 +1249,38 @@ QUICK_OPTION_SEARCH_SOURCES: dict[str, dict] = {
     "accountingEntries": {
         "doctype": "AT Accounting Entry",
         "display_fields": ["source_doctype", "source_name", "status", "external_ref"],
-        "search_fields": ["name", "source_doctype", "source_name", "status", "external_ref"],
+        "search_fields": [
+            "name",
+            "source_doctype",
+            "source_name",
+            "status",
+            "external_ref",
+        ],
         "order_by": "modified desc",
     },
     "insuredAssets": {
         "doctype": "AT Insured Asset",
         "display_fields": ["asset_label", "asset_type", "asset_identifier"],
-        "search_fields": ["name", "asset_label", "asset_type", "asset_identifier", "customer", "policy"],
+        "search_fields": [
+            "name",
+            "asset_label",
+            "asset_type",
+            "asset_identifier",
+            "customer",
+            "policy",
+        ],
         "order_by": "modified desc",
     },
     "segments": {
         "doctype": "AT Segment",
         "display_fields": ["segment_name", "segment_type", "status"],
-        "search_fields": ["name", "segment_name", "segment_type", "channel_focus", "status"],
+        "search_fields": [
+            "name",
+            "segment_name",
+            "segment_type",
+            "channel_focus",
+            "status",
+        ],
         "order_by": "modified desc",
     },
     "campaigns": {
@@ -1058,7 +1318,8 @@ def search_quick_options(
         doctype,
         fields=_build_quick_option_fields(source_config),
         filters=dict(source_config.get("filters") or {}) or None,
-        or_filters=_build_quick_option_or_filters(doctype, source_config, query_text) or None,
+        or_filters=_build_quick_option_or_filters(doctype, source_config, query_text)
+        or None,
         order_by=str(source_config.get("order_by") or "modified desc"),
         limit_start=page_start,
         limit_page_length=page_limit + 1,
@@ -1092,7 +1353,9 @@ def _build_quick_option_fields(source_config: dict) -> list[str]:
     return ordered_fields
 
 
-def _build_quick_option_or_filters(doctype: str, source_config: dict, query_text: str) -> list[list[str]]:
+def _build_quick_option_or_filters(
+    doctype: str, source_config: dict, query_text: str
+) -> list[list[str]]:
     if not query_text:
         return []
     like_pattern = f"%{query_text}%"
@@ -1135,7 +1398,9 @@ def _format_quick_option_row(source_key: str, row: dict) -> dict[str, str]:
     elif source_key == "offers":
         customer = _value_or_fallback(row, "customer")
         label = f"{name} - {customer}" if customer else name
-        description = _join_non_empty([_value_or_fallback(row, "status"), _value_or_fallback(row, "offer_date")])
+        description = _join_non_empty(
+            [_value_or_fallback(row, "status"), _value_or_fallback(row, "offer_date")]
+        )
     elif source_key == "policies":
         policy_no = _value_or_fallback(row, "policy_no", name)
         if policy_no != name and name:
@@ -1151,15 +1416,29 @@ def _format_quick_option_row(source_key: str, row: dict) -> dict[str, str]:
     elif source_key == "notificationTemplates":
         template_key = _value_or_fallback(row, "template_key", name)
         label = template_key
-        description = _join_non_empty([_value_or_fallback(row, "channel"), _value_or_fallback(row, "language")])
+        description = _join_non_empty(
+            [_value_or_fallback(row, "channel"), _value_or_fallback(row, "language")]
+        )
     elif source_key == "accountingEntries":
-        source = _join_non_empty([_value_or_fallback(row, "source_doctype"), _value_or_fallback(row, "source_name")])
+        source = _join_non_empty(
+            [
+                _value_or_fallback(row, "source_doctype"),
+                _value_or_fallback(row, "source_name"),
+            ]
+        )
         label = f"{name} - {source}" if source else name
-        description = _join_non_empty([_value_or_fallback(row, "status"), _value_or_fallback(row, "external_ref")])
+        description = _join_non_empty(
+            [_value_or_fallback(row, "status"), _value_or_fallback(row, "external_ref")]
+        )
     elif source_key == "insuredAssets":
         asset_label = _value_or_fallback(row, "asset_label", name)
         label = asset_label
-        description = _join_non_empty([_value_or_fallback(row, "asset_type"), _value_or_fallback(row, "asset_identifier")])
+        description = _join_non_empty(
+            [
+                _value_or_fallback(row, "asset_type"),
+                _value_or_fallback(row, "asset_identifier"),
+            ]
+        )
 
     out = {"value": name, "label": label or name}
     if description:
@@ -1234,7 +1513,9 @@ def _normalize_option(value: str | None, allowed: set[str], *, default: str) -> 
     return normalized
 
 
-def _normalize_link(doctype: str, value: str | None, *, required: bool = False) -> str | None:
+def _normalize_link(
+    doctype: str, value: str | None, *, required: bool = False
+) -> str | None:
     normalized = (value or "").strip()
     if not normalized:
         if required:
@@ -1245,7 +1526,9 @@ def _normalize_link(doctype: str, value: str | None, *, required: bool = False) 
     return normalized
 
 
-def _normalize_date(value: str | date | None, *, default: date | None = None) -> date | None:
+def _normalize_date(
+    value: str | date | None, *, default: date | None = None
+) -> date | None:
     if value is None or value == "":
         return default
     if isinstance(value, date) and not isinstance(value, datetime):
@@ -1264,7 +1547,9 @@ def _normalize_date(value: str | date | None, *, default: date | None = None) ->
     return parsed
 
 
-def _normalize_datetime(value: str | datetime | None, *, default: datetime | None = None) -> datetime | None:
+def _normalize_datetime(
+    value: str | datetime | None, *, default: datetime | None = None
+) -> datetime | None:
     if value is None or value == "":
         return default
     if isinstance(value, datetime):
@@ -1289,7 +1574,9 @@ def _resolve_office_branch(
     customer: str | None = None,
     policy: str | None = None,
 ) -> str | None:
-    explicit_branch = _normalize_link("AT Office Branch", office_branch) if office_branch else None
+    explicit_branch = (
+        _normalize_link("AT Office Branch", office_branch) if office_branch else None
+    )
     if explicit_branch:
         return assert_office_branch_access(explicit_branch)
 
@@ -1303,7 +1590,9 @@ def _resolve_office_branch(
 
     customer_name = (customer or "").strip()
     if customer_name and frappe.db.exists("AT Customer", customer_name):
-        customer_branch = frappe.db.get_value("AT Customer", customer_name, "office_branch")
+        customer_branch = frappe.db.get_value(
+            "AT Customer", customer_name, "office_branch"
+        )
         if customer_branch:
             # Derived office branch must also be access-checked:
             # the caller might provide a customer from a different tenant/scope.
@@ -1331,7 +1620,9 @@ def _normalize_doctype_or_blank(value: str | None) -> str | None:
     return normalized
 
 
-def _normalize_source_name(source_doctype: str | None, source_name: str | None) -> str | None:
+def _normalize_source_name(
+    source_doctype: str | None, source_name: str | None
+) -> str | None:
     sd = (source_doctype or "").strip()
     sn = (source_name or "").strip()
     if not sn:
@@ -1394,8 +1685,21 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
         "approved_amount",
         "notes",
     },
-    "AT Customer Relation": {"customer", "related_customer", "relation_type", "is_household", "notes"},
-    "AT Insured Asset": {"customer", "policy", "asset_type", "asset_label", "asset_identifier", "notes"},
+    "AT Customer Relation": {
+        "customer",
+        "related_customer",
+        "relation_type",
+        "is_household",
+        "notes",
+    },
+    "AT Insured Asset": {
+        "customer",
+        "policy",
+        "asset_type",
+        "asset_label",
+        "asset_identifier",
+        "notes",
+    },
     "AT Ownership Assignment": {
         "source_doctype",
         "source_name",
@@ -1512,7 +1816,11 @@ def _normalize_aux_edit_doctype(doctype: str | None) -> str:
 
 def _normalize_aux_delete_doctype(doctype: str | None) -> str:
     value = (doctype or "").strip()
-    if value not in {"AT Customer Relation", "AT Insured Asset", "AT Ownership Assignment"}:
+    if value not in {
+        "AT Customer Relation",
+        "AT Insured Asset",
+        "AT Ownership Assignment",
+    }:
         frappe.throw(_("Unsupported quick delete doctype: {0}").format(value))
     return value
 
@@ -1536,235 +1844,19 @@ def _parse_update_payload(data) -> dict:
 
 
 def _apply_aux_edit_payload(doc, payload: dict) -> None:
+    from acentem_takipte.acentem_takipte.api.aux_edit_registry import (
+        apply_field_value,
+        resolve_handler,
+    )
+
     allowed_fields = ALLOWED_AUX_EDIT_FIELDS.get(doc.doctype, set())
     for field, value in (payload or {}).items():
         if field not in allowed_fields:
             continue
-        if field in {
-            "company_name",
-            "company_code",
-            "branch_name",
-            "branch_code",
-            "full_name",
-            "template_key",
-            "event_key",
-            "provider_template_name",
-            "variables_schema_json",
-            "subject",
-            "body_template",
-            "sms_body_template",
-            "email_body_template",
-            "whatsapp_body_template",
-            "external_ref",
-            "notes",
-        }:
-            setattr(doc, field, (value or "").strip() or None)
-            continue
-        if field in {"is_active"}:
-            setattr(doc, field, _as_check(value))
-            continue
-        if field in {"insurance_company"}:
-            setattr(doc, field, _normalize_link("AT Insurance Company", value))
-            continue
-        if field in {"segment"}:
-            setattr(doc, field, _normalize_link("AT Segment", value, required=True))
-            continue
-        if field in {"template"}:
-            setattr(doc, field, _normalize_link("AT Notification Template", value))
-            continue
-        if field in {"customer", "related_customer"} and doc.doctype == "AT Customer Relation":
-            setattr(doc, field, _normalize_link("AT Customer", value, required=True))
-            continue
-        if field in {"customer"} and doc.doctype == "AT Insured Asset":
-            setattr(doc, field, _normalize_link("AT Customer", value, required=True))
-            continue
-        if field in {"policy"} and doc.doctype == "AT Insured Asset":
-            setattr(doc, field, _normalize_link("AT Policy", value))
-            continue
-        if field in {"customer"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, _normalize_link("AT Customer", value))
-            continue
-        if field in {"policy"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, _normalize_link("AT Policy", value))
-            continue
-        if field in {"assigned_to"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, _normalize_link("User", value, required=True))
-            continue
-        if field in {"assigned_to"} and doc.doctype == "AT Task":
-            setattr(doc, field, _normalize_link("User", value, required=True))
-            continue
-        if field in {"assigned_to"} and doc.doctype == "AT Reminder":
-            setattr(doc, field, _normalize_link("User", value, required=True))
-            continue
-        if field in {"source_doctype"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, _normalize_option(value, {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign"}, default=None))
-            continue
-        if field in {"source_doctype"} and doc.doctype == "AT Task":
-            setattr(doc, field, _normalize_option(value, {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign", "AT Ownership Assignment", "AT Call Note"}, default=None))
-            continue
-        if field in {"source_doctype"} and doc.doctype == "AT Reminder":
-            setattr(doc, field, _normalize_option(value, {"AT Customer", "AT Policy", "AT Claim", "AT Renewal Task", "AT Campaign", "AT Ownership Assignment", "AT Call Note", "AT Task"}, default=None))
-            continue
-        if field in {"source_name"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, (value or "").strip() or None)
-            continue
-        if field in {"source_name"} and doc.doctype == "AT Task":
-            setattr(doc, field, (value or "").strip() or None)
-            continue
-        if field in {"source_name"} and doc.doctype == "AT Reminder":
-            setattr(doc, field, (value or "").strip() or None)
-            continue
-        if field in {"office_branch"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, _normalize_link("AT Office Branch", value))
-            continue
-        if field in {"office_branch"} and doc.doctype == "AT Task":
-            setattr(doc, field, _normalize_link("AT Office Branch", value))
-            continue
-        if field in {"office_branch"} and doc.doctype == "AT Reminder":
-            setattr(doc, field, _normalize_link("AT Office Branch", value))
-            continue
-        if field in {"relation_type"}:
-            setattr(doc, field, _normalize_option(value, {"Spouse", "Child", "Parent", "Sibling", "Partner", "Household", "Other"}, default="Other"))
-            continue
-        if field in {"asset_type"}:
-            setattr(doc, field, _normalize_option(value, {"Vehicle", "Home", "Health Person", "Workplace", "Travel", "Boat", "Farm", "Other"}, default="Other"))
-            continue
-        if field in {"asset_label", "asset_identifier"}:
-            setattr(doc, field, (value or "").strip() or None)
-            continue
-        if field in {"parent_entity"}:
-            setattr(doc, field, _normalize_link("AT Sales Entity", value))
-            continue
-        if field in {"office_branch"} and doc.doctype == "AT Sales Entity":
-            setattr(doc, field, _normalize_link("AT Office Branch", value, required=True))
-            continue
-        if field in {"entity_type"}:
-            setattr(doc, field, _normalize_option(value, {"Agency", "Sub-Account", "Representative"}, default="Agency"))
-            continue
-        if field in {"channel"}:
-            setattr(doc, field, _normalize_option(value, {"SMS", "Email", "WHATSAPP", "Both"}, default="Both"))
-            continue
-        if field in {"content_mode"}:
-            setattr(doc, field, _normalize_option(value, {"freeform", "template"}, default="freeform"))
-            continue
-        if field in {"language"}:
-            setattr(doc, field, _normalize_option(value, {"tr", "en"}, default="tr"))
-            continue
-        if field in {"provider_template_category"}:
-            setattr(doc, field, _normalize_option(value, {"UTILITY", "MARKETING", "AUTHENTICATION"}, default="UTILITY"))
-            continue
-        if field in {"segment_type"}:
-            setattr(doc, field, _normalize_option(value, {"Static", "Dynamic", "Operational"}, default="Static"))
-            continue
-        if field in {"channel_focus"}:
-            setattr(doc, field, _normalize_option(value, {"WHATSAPP", "SMS", "Email", "Phone Call"}, default="WHATSAPP"))
-            continue
-        if field in {"assignment_role"}:
-            setattr(doc, field, _normalize_option(value, {"Owner", "Assignee", "Reviewer", "Follower"}, default="Owner"))
-            continue
-        if field in {"task_type"}:
-            setattr(doc, field, _normalize_option(value, {"Follow-up", "Visit", "Call", "Collection", "Claim", "Renewal", "Review", "Other"}, default="Follow-up"))
-            continue
-        if field in {"priority"}:
-            setattr(doc, field, _normalize_option(value, {"Low", "Normal", "High", "Critical"}, default="Normal"))
-            continue
-        if field in {"criteria_json"}:
-            setattr(doc, field, (value or "").strip() or None)
-            continue
-        if field in {"status"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, _normalize_option(value, {"Open", "In Progress", "Blocked", "Done", "Cancelled"}, default="Open"))
-            continue
-        if field in {"status"} and doc.doctype == "AT Task":
-            setattr(doc, field, _normalize_option(value, {"Open", "In Progress", "Blocked", "Done", "Cancelled"}, default="Open"))
-            continue
-        if field in {"status"} and doc.doctype == "AT Reminder":
-            setattr(doc, field, _normalize_option(value, {"Open", "Done", "Cancelled"}, default="Open"))
-            continue
-        if field in {"note_at"} and doc.doctype == "AT Call Note":
-            setattr(doc, field, _normalize_datetime(value) if value else None)
-            continue
-        if field in {"next_follow_up_on"} and doc.doctype in {"AT Call Note", "AT Claim"}:
-            setattr(doc, field, _normalize_date(value) if value else None)
-            continue
-        if field in {"due_date"} and doc.doctype == "AT Ownership Assignment":
-            setattr(doc, field, _normalize_date(value) if value else None)
-            continue
-        if field in {"due_date"} and doc.doctype == "AT Task":
-            setattr(doc, field, _normalize_date(value) if value else None)
-            continue
-        if field in {"reminder_at"} and doc.doctype == "AT Task":
-            setattr(doc, field, _normalize_datetime(value) if value else None)
-            continue
-        if field in {"remind_at"} and doc.doctype == "AT Reminder":
-            setattr(doc, field, _normalize_datetime(value) if value else None)
-            continue
-        if field in {"activity_at"} and doc.doctype == "AT Activity":
-            setattr(doc, field, _normalize_datetime(value) if value else None)
-            continue
-        if field in {"scheduled_for"} and doc.doctype == "AT Campaign":
-            setattr(doc, field, _normalize_datetime(value) if value else None)
-            continue
-        if field in {"source_doctype"}:
-            setattr(doc, field, _normalize_doctype_or_blank(value))
-            continue
-        if field in {"source_name"}:
-            setattr(doc, field, _normalize_source_name(getattr(doc, "source_doctype", None), value))
-            continue
-        if field in {"entry_type"}:
-            setattr(doc, field, _normalize_option(value, {"Policy", "Payment", "Claim"}, default="Policy"))
-            continue
-        if field in {"status"} and doc.doctype == "AT Accounting Entry":
-            setattr(doc, field, _normalize_option(value, set(ATAccountingEntryStatus.VALID), default=ATAccountingEntryStatus.DRAFT))
-            continue
-        if field in {"status"} and doc.doctype == "AT Reconciliation Item":
-            setattr(
-                doc,
-                field,
-                _normalize_option(
-                    value,
-                    set(ATReconciliationItemStatus.RESOLUTION_REQUIRED | ATReconciliationItemStatus.CLOSED),
-                    default=ATReconciliationItemStatus.OPEN,
-                ),
-            )
-            continue
-        if field in {"status"} and doc.doctype == "AT Segment":
-            setattr(doc, field, _normalize_option(value, {"Draft", "Active", "Archived"}, default="Draft"))
-            continue
-        if field in {"status"} and doc.doctype == "AT Campaign":
-            setattr(doc, field, _normalize_option(value, {"Draft", "Planned", "Running", "Completed", "Cancelled"}, default="Draft"))
-            continue
-        if field in {"channel"} and doc.doctype == "AT Campaign":
-            setattr(doc, field, _normalize_option(value, {"WHATSAPP", "SMS", "Email", "Phone Call"}, default="WHATSAPP"))
-            continue
-        if field in {"policy"}:
-            setattr(doc, field, _normalize_link("AT Policy", value))
-            continue
-        if field in {"claim"}:
-            setattr(doc, field, _normalize_link("AT Claim", value))
-            continue
-        if field in {"customer"}:
-            setattr(doc, field, _normalize_link("AT Customer", value))
-            continue
-        if field in {"office_branch"}:
-            setattr(doc, field, _normalize_link("AT Office Branch", value))
-            continue
-        if field in {"accounting_entry"}:
-            setattr(doc, field, _normalize_link("AT Accounting Entry", value, required=True))
-            continue
-        if field in {"mismatch_type"}:
-            setattr(
-                doc,
-                field,
-                _normalize_option(value, {"Amount", "Currency", "Missing External", "Missing Local", "Status", "Other"}, default="Amount"),
-            )
-            continue
-        if field in {"resolution_action"}:
-            setattr(doc, field, _normalize_reconciliation_action(value))
-            continue
-        if field in {"local_amount", "local_amount_try", "external_amount", "external_amount_try"}:
-            setattr(doc, field, flt(value) if value not in {None, ""} else 0)
-            continue
-        if field in {"currency"}:
-            setattr(doc, field, ((value or "TRY").strip() or "TRY").upper())
-            continue
 
+        handler_spec = resolve_handler(doc.doctype, field)
+        if handler_spec:
+            apply_field_value(doc, field, value, handler_spec)
+        else:
+            # Fallback: treat unknown fields as strip-string
+            setattr(doc, field, (value or "").strip() or None)

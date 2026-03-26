@@ -200,29 +200,29 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.7 DRY: `_apply_aux_edit_payload` refactor
 
-- [ ] `quick_create.py:1538-1769` — 233 satırlık fonksiyonu field-type handler registry'e dönüştür  
-- [ ] Field registry mapping oluştur  
-- [ ] Test et: tüm aux edit akışları aynı davranışı sergilemeli  
+- [x] `quick_create.py:1538-1769` — 233 satırlık fonksiyonu field-type handler registry'e dönüştür
+- [x] Field registry mapping oluştur
+- [x] Test et: tüm aux edit akışları aynı davranışı sergilemeli
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| İleri Refactor | | | 80+ if/elif → data-driven handler. Tüm aux edit flow test edilmeli. PR gerekebilir |
+| Tamamlandı | 2026-03-26 | opencode | `api/aux_edit_registry.py` ile data-driven handler registry; claim/call note/template/activity/customer relation cover edildi |
 
 ---
 
 ### B.8 DRY: 18 parametreli fonksiyonlar → payload object
 
-- [ ] `create_quick_policy` (23 parametre) → `QuickPolicyPayload` dataclass  
-- [ ] `create_quick_payment` (17 parametre) → `QuickPaymentPayload` dataclass  
-- [ ] `create_quick_ownership_assignment` (15 parametre) → dataclass  
-- [ ] `create_quick_task` (15 parametre) → dataclass  
-- [ ] `create_quick_accounting_entry` (15 parametre) → dataclass  
-- [ ] `create_quick_notification_template` (16 parametre) → dataclass  
-- [ ] Geriye dönük uyumluluk: mevcut API çağrıları bozulmamalı (kwargs unpacking)  
+- [x] `create_quick_policy` (23 parametre) → `QuickPolicyPayload` dataclass
+- [x] `create_quick_payment` (17 parametre) → `QuickPaymentPayload` dataclass
+- [x] `create_quick_ownership_assignment` (15 parametre) → dataclass
+- [x] `create_quick_task` (15 parametre) → dataclass
+- [x] `create_quick_accounting_entry` (15 parametre) → dataclass
+- [x] `create_quick_notification_template` (16 parametre) → dataclass
+- [x] Geriye dönük uyumluluk: mevcut API çağrıları bozulmamalı (kwargs unpacking)
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| İleri Refactor | | | Mevcut API kwargs tabanlı, dataclass geçişi backward-compatible olmalı. PR gerekebilir |
+| Tamamlandı | 2026-03-26 | opencode | `api/quick_payloads.py` ile payload dataclass + alias desteği; legacy kwargs çağrıları korundu |
 
 ---
 
