@@ -200,13 +200,13 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.7 DRY: `_apply_aux_edit_payload` refactor
 
-- [ ] `quick_create.py:1538-1769` — 233 satırlık fonksiyonu field-type handler'lara böl  
+- [ ] `quick_create.py:1538-1769` — 233 satırlık fonksiyonu field-type handler registry'e dönüştür  
 - [ ] Field registry mapping oluştur  
 - [ ] Test et: tüm aux edit akışları aynı davranışı sergilemeli  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| İleri Refactor | | | 80+ if/elif → data-driven handler. Tüm aux edit flow test edilmeli. PR gerekebilir |
 
 ---
 
@@ -222,7 +222,7 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| İleri Refactor | | | Mevcut API kwargs tabanlı, dataclass geçişi backward-compatible olmalı. PR gerekebilir |
 
 ---
 
@@ -274,14 +274,14 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.13 DRY: Resolve-or-create pattern
 
-- [ ] `services/quick_customer.py` — `resolve_or_create_quick_customer`  
-- [ ] `accounting.py` — `_get_or_create_entry`  
-- [ ] `services/accounting_statement_import.py` — `_get_or_create_entry`  
-- [ ] → Ortak base service class'a taşı  
+- [x] `services/quick_customer.py` — resolve_or_create_quick_customer incelendi, benzersiz mantık  
+- [x] `accounting.py` — _get_or_create_entry incelendi, basit lookup  
+- [x] `services/accounting_statement_import.py` — _get_or_create_entry incelendi  
+- [x] İnceleme sonucu: Kalıplar birbirinden farklı, ortak base'e taşımak DRY'a katkı sağlamaz  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| İncelendi - Atlandı | 2026-03-26 | opencode | Farklı mantıklar: customer (identity match + branch validation) vs accounting (simple source lookup). Ortak abstraction gereksiz |
 
 ---
 
@@ -354,7 +354,17 @@ Aşağıdaki görevler daha önce tamamlandı:
 | Kategori | Toplam | Tamamlanan | Kalan |
 |----------|--------|------------|-------|
 | A. Kritik | 25 | 24 | 1 |
-| B. Orta | 42 | 26 | 16 |
+| B. Orta | 42 | 30 | 12 |
 | C. Uzun Vadeli | 9 | 0 | 9 |
 | D. Önceki | 10 | 10 | 0 |
-| **Toplam** | **86** | **60** | **26** |
+| **Toplam** | **86** | **64** | **22** |
+
+### Kalan Maddeler (ileri refactor / manuel)
+
+| Madde | Neden ertelendi |
+|-------|----------------|
+| A.6 Frappe CVE | Manuel versiyon kontrolü gerekli |
+| B.4 Tab payload cache | İleri optimizasyon |
+| B.7 Aux edit refactor | 233 satır, tüm flow test gerekli |
+| B.8 Parametre payload | Backward-compat PR gerekli |
+| C.1-C.9 Uzun vadeli | Mimari değişiklikler, ayrı sprint |
