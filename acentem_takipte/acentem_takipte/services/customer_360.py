@@ -9,7 +9,9 @@ from acentem_takipte.acentem_takipte.services.customer_segments import (
     build_customer_segment_snapshot_payload,
     upsert_customer_segment_snapshot,
 )
-from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
+from acentem_takipte.acentem_takipte.services.document_center import (
+    build_document_profile,
+)
 
 
 OPEN_OFFER_STATUSES = {"Draft", "Sent", "Accepted", "Negotiation"}
@@ -18,7 +20,14 @@ OPEN_CLAIM_STATUSES = {"Open", "Under Review", "Approved"}
 OPEN_RENEWAL_STATUSES = {"Open", "In Progress"}
 
 
-def _safe_get_list(doctype: str, *, fields: list[str], filters: dict[str, Any], order_by: str, limit_page_length: int) -> list[dict[str, Any]]:
+def _safe_get_list(
+    doctype: str,
+    *,
+    fields: list[str],
+    filters: dict[str, Any],
+    order_by: str,
+    limit_page_length: int,
+) -> list[dict[str, Any]]:
     try:
         return frappe.get_list(
             doctype,
@@ -36,7 +45,9 @@ def _safe_get_list(doctype: str, *, fields: list[str], filters: dict[str, Any], 
         return []
 
 
-def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool = False) -> dict[str, Any]:
+def build_customer_360_payload(
+    customer_name: str, *, can_view_sensitive: bool = False
+) -> dict[str, Any]:
     customer = frappe.get_doc("AT Customer", customer_name)
     today = getdate(nowdate())
 
@@ -145,16 +156,25 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
     files = _get_customer_files(customer_name)
 
     policy_total_premium = sum(flt(row.get("gross_premium")) for row in policies)
-    active_policy_count = sum(1 for row in policies if str(row.get("status") or "") in ACTIVE_POLICY_STATUSES)
-    cancelled_policy_count = sum(1 for row in policies if str(row.get("status") or "") == "Cancelled")
+    active_policy_count = sum(
+        1 for row in policies if str(row.get("status") or "") in ACTIVE_POLICY_STATUSES
+    )
+    cancelled_policy_count = sum(
+        1 for row in policies if str(row.get("status") or "") == "Cancelled"
+    )
     open_offer_count = sum(
         1
         for row in offers
-        if str(row.get("status") or "") in OPEN_OFFER_STATUSES and not str(row.get("converted_policy") or "").strip()
+        if str(row.get("status") or "") in OPEN_OFFER_STATUSES
+        and not str(row.get("converted_policy") or "").strip()
     )
     overdue_payments = [row for row in payments if _is_overdue_payment(row, today)]
-    overdue_installments = [row for row in payment_installments if str(row.get("status") or "") == "Overdue"]
-    open_claim_count = sum(1 for row in claims if str(row.get("claim_status") or "") in OPEN_CLAIM_STATUSES)
+    overdue_installments = [
+        row for row in payment_installments if str(row.get("status") or "") == "Overdue"
+    ]
+    open_claim_count = sum(
+        1 for row in claims if str(row.get("claim_status") or "") in OPEN_CLAIM_STATUSES
+    )
     upcoming_renewals = [row for row in renewals if _is_upcoming_renewal(row, today)]
 
     timeline = sorted(
@@ -170,7 +190,9 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
         open_claim_count=open_claim_count,
         upcoming_renewal_count=len(upcoming_renewals),
         overdue_payment_count=len(overdue_payments),
-        overdue_payment_amount=sum(flt(row.get("amount_try")) for row in overdue_payments),
+        overdue_payment_amount=sum(
+            flt(row.get("amount_try")) for row in overdue_payments
+        ),
         total_policy_count=len(policies),
         cancelled_policy_count=cancelled_policy_count,
     )
@@ -182,16 +204,23 @@ def build_customer_360_payload(customer_name: str, *, can_view_sensitive: bool =
     )
 
     return {
-        "customer": _serialize_customer(customer, can_view_sensitive=can_view_sensitive),
+        "customer": _serialize_customer(
+            customer, can_view_sensitive=can_view_sensitive
+        ),
         "summary": {
             "total_policy_count": len(policies),
             "active_policy_count": active_policy_count,
             "cancelled_policy_count": cancelled_policy_count,
             "open_offer_count": open_offer_count,
             "overdue_payment_count": len(overdue_payments),
-            "overdue_payment_amount": sum(flt(row.get("amount_try")) for row in overdue_payments),
+            "overdue_payment_amount": sum(
+                flt(row.get("amount_try")) for row in overdue_payments
+            ),
             "overdue_installment_count": len(overdue_installments),
-            "overdue_installment_amount": sum(flt(row.get("amount_try") or row.get("amount")) for row in overdue_installments),
+            "overdue_installment_amount": sum(
+                flt(row.get("amount_try") or row.get("amount"))
+                for row in overdue_installments
+            ),
             "open_claim_count": open_claim_count,
             "upcoming_renewal_count": len(upcoming_renewals),
             "total_premium": policy_total_premium,
@@ -270,7 +299,14 @@ def _get_comments(customer_name: str) -> list[dict[str, Any]]:
         return []
     return _safe_get_list(
         "Comment",
-        fields=["name", "comment_by", "content", "creation", "reference_doctype", "reference_name"],
+        fields=[
+            "name",
+            "comment_by",
+            "content",
+            "creation",
+            "reference_doctype",
+            "reference_name",
+        ],
         filters={"reference_doctype": "AT Customer", "reference_name": customer_name},
         order_by="creation desc",
         limit_page_length=50,
@@ -282,8 +318,20 @@ def _get_customer_files(customer_name: str) -> list[dict[str, Any]]:
         return []
     return frappe.get_list(
         "File",
-        fields=["name", "file_name", "file_url", "file_type", "creation", "attached_to_doctype", "attached_to_name"],
-        filters={"attached_to_doctype": "AT Customer", "attached_to_name": customer_name, "is_folder": 0},
+        fields=[
+            "name",
+            "file_name",
+            "file_url",
+            "file_type",
+            "creation",
+            "attached_to_doctype",
+            "attached_to_name",
+        ],
+        filters={
+            "attached_to_doctype": "AT Customer",
+            "attached_to_name": customer_name,
+            "is_folder": 0,
+        },
         order_by="creation desc",
         limit_page_length=100,
     )
@@ -403,7 +451,9 @@ def _build_communication_timeline_item(item: dict[str, Any]) -> dict[str, Any]:
     return {
         "type": "communication",
         "timestamp": item.get("creation"),
-        "title": item.get("subject") or item.get("communication_type") or item.get("name"),
+        "title": item.get("subject")
+        or item.get("communication_type")
+        or item.get("name"),
         "meta": item.get("sender"),
         "payload": item,
     }
@@ -419,11 +469,19 @@ def _build_comment_timeline_item(item: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _build_cross_sell_payload(customer_name: str, policies: list[dict[str, Any]]) -> dict[str, Any]:
+def _build_cross_sell_payload(
+    customer_name: str, policies: list[dict[str, Any]]
+) -> dict[str, Any]:
     related_customers = (
         frappe.get_list(
             "AT Customer Relation",
-            fields=["name", "related_customer", "relation_type", "is_household", "notes"],
+            fields=[
+                "name",
+                "related_customer",
+                "relation_type",
+                "is_household",
+                "notes",
+            ],
             filters={"customer": customer_name},
             order_by="modified desc",
             limit_page_length=20,
@@ -466,6 +524,7 @@ def _build_cross_sell_payload(customer_name: str, policies: list[dict[str, Any]]
     if candidate_insurance_companies:
         branch_filters = {"insurance_company": ["in", candidate_insurance_companies]}
 
+    # unbounded: available branches for upsell, filtered by insurance company - expected max ~500 rows
     available_branches = frappe.get_list(
         "AT Branch",
         fields=["name"],
@@ -500,4 +559,3 @@ def _build_cross_sell_payload(customer_name: str, policies: list[dict[str, Any]]
         "has_cross_sell_opportunity": bool(opportunity_branches),
         "customer": customer_name,
     }
-

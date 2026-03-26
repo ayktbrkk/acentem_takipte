@@ -184,6 +184,7 @@ def _rename_file_folder_tree(old_name: str, new_name: str) -> None:
 
     old_folder_path = f"Home/customers/{old_name}"
     new_folder_path = f"Home/customers/{new_name}"
+    # unbounded: file folder paths for customer rename, filtered by old folder path prefix - expected max ~1k rows
     rows = frappe.get_all(
         "File",
         filters=[["folder", "like", f"{old_folder_path}%"]],

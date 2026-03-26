@@ -137,6 +137,7 @@ def _get_all_sales_entity_names(*, include_inactive: bool) -> set[str]:
     if not include_inactive and frappe.db.has_column("AT Sales Entity", "is_active"):
         filters["is_active"] = 1
 
+    # unbounded: all sales entity names for pool lookup, bounded by total sales entity count - expected max ~10k rows
     rows = frappe.get_all(
         "AT Sales Entity",
         filters=filters,
@@ -158,6 +159,7 @@ def _get_user_sales_entity_access_rows(user_id: str) -> list[dict[str, Any]]:
     if frappe.db.has_column("AT User Sales Entity Access", "valid_until"):
         fields.append("valid_until")
 
+    # unbounded: user sales entity access rows, bounded by user's direct access grants - expected max ~50 rows
     rows = frappe.get_all(
         "AT User Sales Entity Access",
         filters={"user": user_id, "is_active": 1},
@@ -196,6 +198,7 @@ def _get_descendant_sales_entity_names(
     if not include_inactive and frappe.db.has_column("AT Sales Entity", "is_active"):
         filters["is_active"] = 1
 
+    # unbounded: sales entity hierarchy traversal, bounded by total sales entity count - expected max ~10k rows
     rows = frappe.get_all(
         "AT Sales Entity",
         filters=filters,
@@ -369,23 +372,27 @@ def reassign_sales_entity_records_to_branch_pool(
         ):
             filters[status_fieldname] = ["in", open_statuses]
 
+        # unbounded: reconciliation batch processing, filtered by sales entity and open statuses - expected max ~10k rows
         rows = frappe.get_all(
             doctype, filters=filters, fields=["name"], limit_page_length=0
         )
         if not rows:
             continue
 
-        count = 0
-        for row in rows:
-            name = str(row.get("name") or "").strip()
-            if not name:
-                continue
-            frappe.db.set_value(
-                doctype, name, fieldname, pool_entity, update_modified=False
-            )
-            count += 1
-        if count:
-            updates[doctype] = count
+        valid_names = [
+            str(r.get("name") or "").strip()
+            for r in rows
+            if str(r.get("name") or "").strip()
+        ]
+        if not valid_names:
+            continue
+
+        # Batch UPDATE instead of per-row set_value loop (N+1 fix)
+        frappe.db.sql(
+            f"UPDATE `tab{doctype}` SET `{fieldname}` = %s WHERE name IN %s",
+            (pool_entity, tuple(valid_names)),
+        )
+        updates[doctype] = len(valid_names)
 
     return updates
 
@@ -402,6 +409,7 @@ def deactivate_branch_sales_entities_and_reassign(
         pool_entity = create_pool_sales_entity(branch_name, is_active=0)
 
     totals: dict[str, int] = {}
+    # unbounded: branch sales entities for deactivation, bounded by branch's entity count - expected max ~1k rows
     entity_rows = frappe.get_all(
         "AT Sales Entity",
         filters={"office_branch": branch_name},
@@ -487,6 +495,7 @@ def reassign_user_owned_records_to_branch_pools(user: str | None) -> dict[str, i
         return {}
 
     entity_rows = (
+        # unbounded: user sales entity access for reassignment, bounded by user's entity assignments - expected max ~100 rows
         frappe.get_all(
             "AT User Sales Entity Access",
             filters={"user": user_id, "is_active": 1},
@@ -511,23 +520,25 @@ def reassign_user_owned_records_to_branch_pools(user: str | None) -> dict[str, i
             totals[doctype] = totals.get(doctype, 0) + count
 
     if frappe.db.has_column("AT Customer", "assigned_agent"):
+        # unbounded: customers assigned to disabled user, bounded by user's customer assignments - expected max ~10k rows
         customer_rows = frappe.get_all(
             "AT Customer",
             filters={"assigned_agent": user_id},
             fields=["name"],
             limit_page_length=0,
         )
-        cleared = 0
-        for row in customer_rows:
-            name = str(row.get("name") or "").strip()
-            if not name:
-                continue
-            frappe.db.set_value(
-                "AT Customer", name, "assigned_agent", None, update_modified=False
+        valid_names = [
+            str(r.get("name") or "").strip()
+            for r in customer_rows
+            if str(r.get("name") or "").strip()
+        ]
+        if valid_names:
+            # Batch UPDATE: clear assigned_agent for all customers owned by disabled user
+            frappe.db.sql(
+                "UPDATE `tabAT Customer` SET `assigned_agent` = NULL WHERE name IN %s",
+                (tuple(valid_names),),
             )
-            cleared += 1
-        if cleared:
-            totals["AT Customer"] = cleared
+            totals["AT Customer"] = len(valid_names)
 
     return totals
 

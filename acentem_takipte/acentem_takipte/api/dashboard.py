@@ -2608,6 +2608,7 @@ def _get_scoped_policy_names(
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
 
+    # unbounded: scoped policy names for dashboard, filtered by branch/customer scope - expected max ~50k rows
     policy_names = (
         frappe.get_list("AT Policy", filters=filters, pluck="name", limit_page_length=0)
         if filters
@@ -2640,6 +2641,7 @@ def _get_scoped_customer_names(
     if allowed_customers is not None:
         filters["name"] = ["in", allowed_customers or ["__none__"]]
 
+    # unbounded: scoped customer names for dashboard, filtered by office branch scope - expected max ~50k rows
     customer_names = (
         frappe.get_list(
             "AT Customer", filters=filters, pluck="name", limit_page_length=0

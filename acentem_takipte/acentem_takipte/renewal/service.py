@@ -116,6 +116,7 @@ def load_existing_renewal_keys(policy_names: list[str]) -> set[str]:
     if not policy_names:
         return set()
 
+    # unbounded: existing renewal keys lookup, filtered by policy names batch - expected max ~10k rows
     rows = frappe.get_all(
         "AT Renewal Task",
         filters={"policy": ["in", policy_names]},

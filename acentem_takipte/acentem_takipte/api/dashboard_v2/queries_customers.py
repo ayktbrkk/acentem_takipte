@@ -9,7 +9,9 @@ from acentem_takipte.acentem_takipte.api.dashboard_v2.constants import (
 )
 
 
-def build_customer_workbench_base_kwargs(*, query_filters: dict, or_filters, order_by: str) -> dict:
+def build_customer_workbench_base_kwargs(
+    *, query_filters: dict, or_filters, order_by: str
+) -> dict:
     kwargs = {
         "doctype": "AT Customer",
         "fields": list(CUSTOMER_WORKBENCH_BASE_FIELDS),
@@ -21,7 +23,9 @@ def build_customer_workbench_base_kwargs(*, query_filters: dict, or_filters, ord
     return kwargs
 
 
-def build_customer_workbench_derived_sort_seed_kwargs(*, query_filters: dict, or_filters) -> dict:
+def build_customer_workbench_derived_sort_seed_kwargs(
+    *, query_filters: dict, or_filters
+) -> dict:
     kwargs = {
         "doctype": "AT Customer",
         "fields": list(CUSTOMER_WORKBENCH_DERIVED_SORT_SEED_FIELDS),
@@ -33,7 +37,9 @@ def build_customer_workbench_derived_sort_seed_kwargs(*, query_filters: dict, or
     return kwargs
 
 
-def fetch_customer_workbench_rows(*, base_kwargs: dict, limit_start: int, limit_page_length: int) -> list[dict]:
+def fetch_customer_workbench_rows(
+    *, base_kwargs: dict, limit_start: int, limit_page_length: int
+) -> list[dict]:
     return frappe.get_list(
         **base_kwargs,
         limit_start=limit_start,
@@ -42,6 +48,7 @@ def fetch_customer_workbench_rows(*, base_kwargs: dict, limit_start: int, limit_
 
 
 def fetch_all_customer_workbench_rows(*, base_kwargs: dict) -> list[dict]:
+    # unbounded: all customer workbench rows for export, filtered by base query filters - expected max ~50k rows
     return frappe.get_list(
         **base_kwargs,
         limit_start=0,
@@ -73,4 +80,3 @@ def count_customer_workbench_rows(*, query_filters: dict, or_filters=None) -> in
     }
     rows = frappe.get_list(**count_kwargs)
     return cint((rows[0] or {}).get("total") if rows else 0)
-

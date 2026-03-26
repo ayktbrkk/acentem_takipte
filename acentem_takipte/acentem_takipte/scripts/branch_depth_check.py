@@ -13,6 +13,7 @@ Thresholds (can be overridden via Site Config):
     at_branch_count_warn      (default 100) - total branch count before warning
     at_allowed_set_avg_warn   (default 300) - avg allowed-set size before warning
 """
+
 from __future__ import annotations
 
 from collections import defaultdict, deque
@@ -54,7 +55,8 @@ def _compute_max_depth(rows: list[dict[str, Any]]) -> int:
         roots = {
             str(r.get("name") or "").strip()
             for r in rows
-            if not str(r.get("parent_office_branch") or "").strip() and str(r.get("name") or "").strip()
+            if not str(r.get("parent_office_branch") or "").strip()
+            and str(r.get("name") or "").strip()
         }
 
     if not roots:
@@ -123,6 +125,7 @@ def collect_metrics() -> BranchMetrics:
     count_warn: int = int(cfg.get("at_branch_count_warn", DEFAULT_COUNT_WARN))
     avg_set_warn: int = int(cfg.get("at_allowed_set_avg_warn", DEFAULT_AVG_SET_WARN))
 
+    # unbounded: all office branches for hierarchy metrics, bounded by total branch count - expected max ~500 rows
     branch_rows = frappe.get_all(
         "AT Office Branch",
         fields=["name", "parent_office_branch"],
@@ -131,13 +134,16 @@ def collect_metrics() -> BranchMetrics:
     metrics.total_branches = len(branch_rows)
     metrics.max_depth = _compute_max_depth(branch_rows)
 
+    # unbounded: all active branch access rows for set size metrics, bounded by total access count - expected max ~10k rows
     access_rows = frappe.get_all(
         "AT User Branch Access",
         filters={"is_active": 1},
         fields=["user", "office_branch", "scope_mode"],
         limit_page_length=0,
     )
-    metrics.avg_allowed_set_size, metrics.sample_user_count = _compute_avg_allowed_set(branch_rows, access_rows)
+    metrics.avg_allowed_set_size, metrics.sample_user_count = _compute_avg_allowed_set(
+        branch_rows, access_rows
+    )
 
     if metrics.total_branches > count_warn:
         metrics.warnings.append(
@@ -168,7 +174,9 @@ def run_check() -> None:
     print("=== Branch Hierarchy Health Check ===")
     print(f"  Total branches     : {metrics.total_branches}")
     print(f"  Max tree depth     : {metrics.max_depth}")
-    print(f"  Avg allowed-set    : {metrics.avg_allowed_set_size:.1f} (sampled {metrics.sample_user_count} users)")
+    print(
+        f"  Avg allowed-set    : {metrics.avg_allowed_set_size:.1f} (sampled {metrics.sample_user_count} users)"
+    )
     print(f"  Nested set needed  : {'YES' if metrics.nested_set_recommended else 'no'}")
 
     if metrics.warnings:

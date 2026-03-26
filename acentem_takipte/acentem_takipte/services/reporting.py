@@ -93,6 +93,7 @@ def _policy_names_for_branch(branch: str | None) -> list[str]:
         cache = {}
         setattr(frappe.local, "_at_reporting_policy_cache", cache)
     if branch_name not in cache:
+        # unbounded: policy names by branch for reporting cache, filtered by branch - expected max ~50k rows
         cache[branch_name] = frappe.get_all(
             "AT Policy",
             filters={"branch": branch_name},

@@ -5,7 +5,9 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import flt, getdate
-from acentem_takipte.acentem_takipte.claims.notifications import resolve_claim_status_template_key
+from acentem_takipte.acentem_takipte.claims.notifications import (
+    resolve_claim_status_template_key,
+)
 from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 from acentem_takipte.acentem_takipte.utils.statuses import ATClaimStatus
@@ -53,11 +55,16 @@ class ATClaim(Document):
         if approved_amount and flt(self.paid_amount) > approved_amount:
             frappe.throw(_("Paid amount cannot be greater than approved amount."))
 
-        if approved_amount and flt(self.paid_amount) >= approved_amount and self.claim_status in {
-            ATClaimStatus.OPEN,
-            ATClaimStatus.UNDER_REVIEW,
-            ATClaimStatus.APPROVED,
-        }:
+        if (
+            approved_amount
+            and flt(self.paid_amount) >= approved_amount
+            and self.claim_status
+            in {
+                ATClaimStatus.OPEN,
+                ATClaimStatus.UNDER_REVIEW,
+                ATClaimStatus.APPROVED,
+            }
+        ):
             self.claim_status = ATClaimStatus.PAID
 
     def _validate_operational_fields(self):
@@ -65,7 +72,9 @@ class ATClaim(Document):
         self.appeal_status = (self.appeal_status or "").strip()
 
         if self.claim_status == ATClaimStatus.REJECTED and not self.rejection_reason:
-            frappe.throw(_("Rejection reason is required when claim status is Rejected."))
+            frappe.throw(
+                _("Rejection reason is required when claim status is Rejected.")
+            )
 
         if self.appeal_status and self.claim_status != ATClaimStatus.REJECTED:
             frappe.throw(_("Appeal status can only be set for rejected claims."))
@@ -73,8 +82,14 @@ class ATClaim(Document):
         if self.next_follow_up_on and self.reported_date:
             next_follow_up_on = getdate(self.next_follow_up_on)
             reported_date = getdate(self.reported_date)
-            if next_follow_up_on and reported_date and next_follow_up_on < reported_date:
-                frappe.throw(_("Next follow up date cannot be earlier than reported date."))
+            if (
+                next_follow_up_on
+                and reported_date
+                and next_follow_up_on < reported_date
+            ):
+                frappe.throw(
+                    _("Next follow up date cannot be earlier than reported date.")
+                )
 
     def on_update(self):
         if not self.has_value_changed("claim_status"):
@@ -105,7 +120,11 @@ class ATClaim(Document):
         except Exception:
             log_redacted_error(
                 "AT Claim Notification Draft Error",
-                details={"claim": self.name, "customer": self.customer, "policy": self.policy},
+                details={
+                    "claim": self.name,
+                    "customer": self.customer,
+                    "policy": self.policy,
+                },
             )
 
 
@@ -113,11 +132,14 @@ def _get_paid_amount(claim_name: str, claim_currency: str | None = None) -> floa
     return _get_paid_amount_totals(claim_name, claim_currency).get("paid_amount", 0.0)
 
 
-def _get_paid_amount_totals(claim_name: str, claim_currency: str | None = None) -> dict[str, float]:
+def _get_paid_amount_totals(
+    claim_name: str, claim_currency: str | None = None
+) -> dict[str, float]:
     if not claim_name:
         return {"paid_amount": 0.0, "paid_amount_try": 0.0}
 
     normalized_claim_currency = str(claim_currency or "TRY").upper()
+    # unbounded: paid outbound payments for claim, filtered by claim name and status - expected max ~1k rows
     rows = frappe.get_all(
         "AT Payment",
         filters={
@@ -148,4 +170,3 @@ def _get_paid_amount_totals(claim_name: str, claim_currency: str | None = None) 
         "paid_amount": flt(paid_amount),
         "paid_amount_try": flt(paid_amount_try),
     }
-

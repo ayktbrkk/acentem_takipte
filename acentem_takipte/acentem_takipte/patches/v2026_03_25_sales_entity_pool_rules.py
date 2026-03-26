@@ -4,7 +4,9 @@ from collections import defaultdict
 
 import frappe
 
-from acentem_takipte.acentem_takipte.services import sales_entities as sales_entity_service
+from acentem_takipte.acentem_takipte.services import (
+    sales_entities as sales_entity_service,
+)
 
 
 def execute() -> None:
@@ -16,6 +18,7 @@ def execute() -> None:
 
 
 def _normalize_sales_entity_flags() -> None:
+    # unbounded: all sales entities for flag normalization, bounded by total entity count - expected max ~10k rows
     for row in frappe.get_all(
         "AT Sales Entity",
         fields=["name", "is_active", "is_pool"],
@@ -35,6 +38,7 @@ def _normalize_sales_entity_flags() -> None:
 
 
 def _repair_branch_pool_entities() -> None:
+    # unbounded: all office branches for pool repair, bounded by total branch count - expected max ~500 rows
     branches = frappe.get_all(
         "AT Office Branch",
         fields=["name", "office_branch_name", "is_active"],
@@ -44,6 +48,7 @@ def _repair_branch_pool_entities() -> None:
     if not branches:
         return
 
+    # unbounded: pool entities for branch pool repair, filtered by is_pool flag - expected max ~500 rows
     pool_rows = frappe.get_all(
         "AT Sales Entity",
         filters={"is_pool": 1},
@@ -71,11 +76,20 @@ def _repair_branch_pool_entities() -> None:
                 full_name=f"{str(branch.get('office_branch_name') or branch_name).strip()} Pool",
                 is_active=branch_is_active,
             )
-            pools_by_branch[branch_name] = [{"name": pool_name, "office_branch": branch_name, "is_active": branch_is_active}]
+            pools_by_branch[branch_name] = [
+                {
+                    "name": pool_name,
+                    "office_branch": branch_name,
+                    "is_active": branch_is_active,
+                }
+            ]
             continue
 
         primary_pool = str(branch_pools[0].get("name") or "").strip()
-        if primary_pool and int(branch_pools[0].get("is_active") or 0) != branch_is_active:
+        if (
+            primary_pool
+            and int(branch_pools[0].get("is_active") or 0) != branch_is_active
+        ):
             frappe.db.set_value(
                 "AT Sales Entity",
                 primary_pool,

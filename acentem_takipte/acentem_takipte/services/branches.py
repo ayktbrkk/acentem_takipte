@@ -6,18 +6,14 @@ from collections import defaultdict, deque
 import frappe
 from frappe.utils import getdate, today
 
+from acentem_takipte.acentem_takipte.utils.cache_keys import (
+    all_scope_cache_key_patterns,
+)
+
 
 DESK_BRANCH_ADMIN_ROLES = {"System Manager", "Administrator"}
 DEFAULT_SCOPE_MODE = "self_only"
 DESCENDANT_SCOPE_MODE = "self_and_descendants"
-SCOPE_CACHE_KEY_TEMPLATES = (
-    "at_scope::{user}::branches",
-    "at_scope::{user}::sales_entities",
-)
-
-
-def _scope_cache_keys_for_user(user_id: str) -> list[str]:
-    return [template.format(user=user_id) for template in SCOPE_CACHE_KEY_TEMPLATES]
 
 
 def clear_user_scope_cache(user: str | None) -> None:
@@ -26,7 +22,7 @@ def clear_user_scope_cache(user: str | None) -> None:
         return
 
     cache = frappe.cache()
-    for cache_key in _scope_cache_keys_for_user(user_id):
+    for cache_key in all_scope_cache_key_patterns(user_id):
         cache.delete_value(cache_key)
 
     # Notify active sessions so the client can refresh branch scope immediately.
@@ -45,13 +41,19 @@ def invalidate_scope_cache_for_access_doc(doc, method=None):
 def _collect_scope_users_from_access_tables() -> set[str]:
     users: set[str] = set()
 
-    for row in frappe.get_all("AT User Branch Access", fields=["user"], limit_page_length=0):
+    # unbounded: scope precomputation, bounded by user's branch access count - expected max ~10k rows
+    for row in frappe.get_all(
+        "AT User Branch Access", fields=["user"], limit_page_length=0
+    ):
         user_id = str(row.get("user") or "").strip()
         if user_id:
             users.add(user_id)
 
     if frappe.db.exists("DocType", "AT User Sales Entity Access"):
-        for row in frappe.get_all("AT User Sales Entity Access", fields=["user"], limit_page_length=0):
+        # unbounded: scope precomputation, bounded by user's sales entity access count - expected max ~10k rows
+        for row in frappe.get_all(
+            "AT User Sales Entity Access", fields=["user"], limit_page_length=0
+        ):
             user_id = str(row.get("user") or "").strip()
             if user_id:
                 users.add(user_id)
@@ -74,7 +76,9 @@ def user_can_access_all_office_branches(user: str | None = None) -> bool:
     return bool(DESK_BRANCH_ADMIN_ROLES.intersection(roles))
 
 
-def get_user_office_branches(user: str | None = None, *, include_inactive: bool = False) -> list[dict[str, Any]]:
+def get_user_office_branches(
+    user: str | None = None, *, include_inactive: bool = False
+) -> list[dict[str, Any]]:
     user_id = str(user or frappe.session.user or "").strip()
     if not user_id:
         return []
@@ -91,6 +95,7 @@ def get_user_office_branches(user: str | None = None, *, include_inactive: bool 
     ]
 
     if user_can_access_all_office_branches(user_id):
+        # unbounded: admin user branch list, bounded by total office branch count - expected max ~500 rows
         return frappe.get_all(
             "AT Office Branch",
             filters=branch_filters,
@@ -112,18 +117,22 @@ def get_user_office_branches(user: str | None = None, *, include_inactive: bool 
         str(row.get("office_branch") or "").strip()
         for row in access_rows
         if str(row.get("office_branch") or "").strip()
-        and str(row.get("scope_mode") or DEFAULT_SCOPE_MODE).strip() == DESCENDANT_SCOPE_MODE
+        and str(row.get("scope_mode") or DEFAULT_SCOPE_MODE).strip()
+        == DESCENDANT_SCOPE_MODE
     }
 
     branch_names = set(direct_branch_names)
     if descendant_seed_names:
         branch_names.update(
-            _get_descendant_branch_names(descendant_seed_names, include_inactive=include_inactive)
+            _get_descendant_branch_names(
+                descendant_seed_names, include_inactive=include_inactive
+            )
         )
 
     if not branch_names:
         return []
 
+    # unbounded: scoped branch list for user, bounded by allowed branch names set - expected max ~500 rows
     branch_rows = frappe.get_all(
         "AT Office Branch",
         filters={"name": ["in", sorted(branch_names)], **branch_filters},
@@ -147,6 +156,7 @@ def _get_user_branch_access_rows(user_id: str) -> list[dict[str, Any]]:
     if frappe.db.has_column("AT User Branch Access", "valid_until"):
         fields.append("valid_until")
 
+    # unbounded: user branch access rows, bounded by user's direct access grants - expected max ~50 rows
     rows = frappe.get_all(
         "AT User Branch Access",
         filters={
@@ -163,7 +173,10 @@ def _get_user_branch_access_rows(user_id: str) -> list[dict[str, Any]]:
         today_date = None
     normalized_rows: list[dict[str, Any]] = []
     for row in rows:
-        row["scope_mode"] = str(row.get("scope_mode") or DEFAULT_SCOPE_MODE).strip() or DEFAULT_SCOPE_MODE
+        row["scope_mode"] = (
+            str(row.get("scope_mode") or DEFAULT_SCOPE_MODE).strip()
+            or DEFAULT_SCOPE_MODE
+        )
         valid_until = row.get("valid_until")
         if valid_until and today_date and getdate(valid_until) < today_date:
             continue
@@ -180,6 +193,7 @@ def _get_descendant_branch_names(
         return set()
 
     branch_filters = {} if include_inactive else {"is_active": 1}
+    # unbounded: branch hierarchy traversal, bounded by total office branch count - expected max ~500 rows
     rows = frappe.get_all(
         "AT Office Branch",
         filters=branch_filters,
@@ -224,7 +238,9 @@ def get_default_office_branch(user: str | None = None) -> str | None:
     return branches[0].get("name")
 
 
-def get_allowed_office_branch_names(user: str | None = None, *, include_inactive: bool = False) -> set[str]:
+def get_allowed_office_branch_names(
+    user: str | None = None, *, include_inactive: bool = False
+) -> set[str]:
     return {
         str(row.get("name")).strip()
         for row in get_user_office_branches(user, include_inactive=include_inactive)
@@ -285,6 +301,7 @@ def get_scope_hash(user: str | None = None) -> str:
     parts = ["branches:" + ",".join(branch_names)]
 
     if frappe.db.exists("DocType", "AT User Sales Entity Access"):
+        # unbounded: user sales entity access for scope hash, bounded by user's entity assignments - expected max ~100 rows
         entity_rows = frappe.get_all(
             "AT User Sales Entity Access",
             filters={"user": user_id, "is_active": 1},

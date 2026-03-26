@@ -98,7 +98,9 @@ def dashboard_bootstrap_global_fallback_enabled() -> bool:
 
 
 def allowed_customers_for_user(include_meta: bool = False):
-    def _result(allowed_customers: list[str] | None, access_scope: str, scope_reason: str):
+    def _result(
+        allowed_customers: list[str] | None, access_scope: str, scope_reason: str
+    ):
         meta = {"access_scope": access_scope, "scope_reason": scope_reason}
         if include_meta:
             return allowed_customers, meta
@@ -110,7 +112,10 @@ def allowed_customers_for_user(include_meta: bool = False):
     if user == "Administrator":
         return _result(None, "global", "administrator")
     if user == "Guest":
-        frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)
+        frappe.throw(
+            _("You do not have permission to access dashboard data."),
+            frappe.PermissionError,
+        )
 
     roles = set(frappe.get_roles(user))
     if user_can_access_all_office_branches(user):
@@ -120,9 +125,12 @@ def allowed_customers_for_user(include_meta: bool = False):
     if {"Manager", "Accountant"}.intersection(roles):
         if not allowed_branches:
             if fallback_enabled:
-                _audit_global_fallback_used(user, scope_reason="bootstrap_fallback_enabled")
+                _audit_global_fallback_used(
+                    user, scope_reason="bootstrap_fallback_enabled"
+                )
                 return _result(None, "global", "bootstrap_fallback_enabled")
             return _result([], "empty", "branch_unassigned")
+        # unbounded: branch-scoped customer names, filtered by allowed branches - expected max ~50k rows
         branch_customers = frappe.get_all(
             "AT Customer",
             filters={"office_branch": ["in", allowed_branches]},
@@ -140,6 +148,7 @@ def allowed_customers_for_user(include_meta: bool = False):
         customer_filters = {"assigned_agent": user}
         if allowed_branches:
             customer_filters["office_branch"] = ["in", allowed_branches]
+        # unbounded: agent-assigned customers, filtered by agent and branches - expected max ~10k rows
         assigned_customers = frappe.get_all(
             "AT Customer",
             filters=customer_filters,
@@ -163,10 +172,15 @@ def allowed_customers_for_user(include_meta: bool = False):
         _audit_global_fallback_used(user, scope_reason="bootstrap_fallback_enabled")
         return _result(None, "global", "bootstrap_fallback_enabled")
 
-    frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)
+    frappe.throw(
+        _("You do not have permission to access dashboard data."),
+        frappe.PermissionError,
+    )
 
 
-def allowed_sales_entities_for_user(user: str | None = None, include_meta: bool = False):
+def allowed_sales_entities_for_user(
+    user: str | None = None, include_meta: bool = False
+):
     """
     Get sales entities accessible by user, considering their role and assigned sales entities.
 
@@ -178,7 +192,10 @@ def allowed_sales_entities_for_user(user: str | None = None, include_meta: bool 
     With include_meta=True:
         Returns (allowed_sales_entities, metadata_dict)
     """
-    def _result(allowed_sales_entities: list[str] | None, access_scope: str, scope_reason: str):
+
+    def _result(
+        allowed_sales_entities: list[str] | None, access_scope: str, scope_reason: str
+    ):
         meta = {"access_scope": access_scope, "scope_reason": scope_reason}
         if include_meta:
             return allowed_sales_entities, meta
@@ -190,10 +207,13 @@ def allowed_sales_entities_for_user(user: str | None = None, include_meta: bool 
     if user == "Administrator":
         return _result(None, "global", "administrator")
     if user == "Guest":
-        frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)
+        frappe.throw(
+            _("You do not have permission to access dashboard data."),
+            frappe.PermissionError,
+        )
 
     roles = set(frappe.get_roles(user))
-    
+
     # Global access roles
     if {"System Manager", "Manager", "Accountant"}.intersection(roles):
         return _result(None, "global", "privileged_role")
@@ -202,7 +222,9 @@ def allowed_sales_entities_for_user(user: str | None = None, include_meta: bool 
     if "Agent" in roles:
         allowed_sales_entities = sorted(get_allowed_sales_entity_names(user=user)) or []
         if allowed_sales_entities:
-            return _result(allowed_sales_entities, "scoped", "agent_sales_entity_assignment")
+            return _result(
+                allowed_sales_entities, "scoped", "agent_sales_entity_assignment"
+            )
         return _result([], "empty", "agent_sales_entity_unassigned")
 
     # Non-system users
@@ -212,12 +234,17 @@ def allowed_sales_entities_for_user(user: str | None = None, include_meta: bool 
 
     # Fall back to global access if bootstrap flag enabled
     if dashboard_bootstrap_global_fallback_enabled():
-        _audit_global_fallback_used(str(user or frappe.session.user or ""), scope_reason="bootstrap_fallback_enabled")
+        _audit_global_fallback_used(
+            str(user or frappe.session.user or ""),
+            scope_reason="bootstrap_fallback_enabled",
+        )
         return _result(None, "global", "bootstrap_fallback_enabled")
 
-    frappe.throw(_("You do not have permission to access dashboard data."), frappe.PermissionError)
+    frappe.throw(
+        _("You do not have permission to access dashboard data."),
+        frappe.PermissionError,
+    )
 
 
 def get_dashboard_endpoint_permission_policy() -> dict:
     return DASHBOARD_ENDPOINT_PERMISSION_POLICY.copy()
-

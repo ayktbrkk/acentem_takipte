@@ -17,9 +17,18 @@ def execute() -> None:
 
 
 def _backfill_customer_identity_fields() -> None:
+    # unbounded: all customers for identity field backfill, bounded by total customer count - expected max ~100k rows
     rows = frappe.get_all(
         "AT Customer",
-        fields=["name", "tax_id", "customer_type", "birth_date", "gender", "marital_status", "occupation"],
+        fields=[
+            "name",
+            "tax_id",
+            "customer_type",
+            "birth_date",
+            "gender",
+            "marital_status",
+            "occupation",
+        ],
         limit_page_length=0,
     )
     for row in rows:
@@ -48,12 +57,15 @@ def _backfill_customer_identity_fields() -> None:
                 updates["occupation"] = None
 
         if updates:
-            frappe.db.set_value("AT Customer", row["name"], updates, update_modified=False)
+            frappe.db.set_value(
+                "AT Customer", row["name"], updates, update_modified=False
+            )
 
     frappe.db.commit()
 
 
 def _rename_legacy_customer_names() -> None:
+    # unbounded: legacy customer names for rename, filtered by non-AT-CUST- prefix - expected max ~100k rows
     names = frappe.get_all(
         "AT Customer",
         filters={"name": ["not like", "AT-CUST-%"]},
@@ -61,7 +73,14 @@ def _rename_legacy_customer_names() -> None:
         limit_page_length=0,
     )
     for current_name in names:
-        rename_doc("AT Customer", current_name, _next_customer_name(), force=True, merge=False, show_alert=False)
+        rename_doc(
+            "AT Customer",
+            current_name,
+            _next_customer_name(),
+            force=True,
+            merge=False,
+            show_alert=False,
+        )
 
     frappe.db.commit()
 
@@ -71,4 +90,3 @@ def _next_customer_name() -> str:
         candidate = make_autoname("AT-CUST-.YYYY.-.######")
         if not frappe.db.exists("AT Customer", candidate):
             return candidate
-

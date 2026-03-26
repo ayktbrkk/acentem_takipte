@@ -135,29 +135,30 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.2 N+1: Sales entity deaktivasyon batch UPDATE
 
-- [ ] `services/sales_entities.py:309-364` — `reassign_sales_entity_records_to_branch_pool` döngüsünü batch UPDATE'e dönüştür  
-- [ ] `services/sales_entities.py:367-406` — `deactivate_branch_sales_entities_and_reassign` döngüsünü batch UPDATE'e dönüştür  
-- [ ] `services/sales_entities.py:456-496` — `reassign_user_owned_records_to_branch_pools` döngüsünü batch UPDATE'e dönüştür  
+- [x] `services/sales_entities.py:372-386` — `reassign_sales_entity_records_to_branch_pool` döngüsünü batch UPDATE'e dönüştür  
+- [x] `services/sales_entities.py:517-530` — `reassign_user_owned_records_to_branch_pools` customer loop → batch UPDATE  
+- [x] `services/sales_entities.py:405-431` — `deactivate_branch_sales_entities_and_reassign` (BATCH eklendi, outer loop kaldı)  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| Tamamlandı | 2026-03-26 | opencode | 2 N+1 loop → batch UPDATE. Outer entity loop kaldı (farklı doctype'lar için gerekli) |
 
 ---
 
 ### B.3 Sınırsız sorgular: limit_page_length=0 incelemesi
 
-- [ ] `services/sales_entities.py:140,157,192,350,381,465,484` — Her birine yorum ekle veya limit koy  
-- [ ] `services/branches.py:48,54,99,132,158,188` — Her birine yorum ekle veya limit koy  
-- [ ] `accounting.py:520` — Reconciliation items: makul limit  
-- [ ] `services/break_glass.py:106,439` — Emergency access: makul limit  
-- [ ] `services/customer_360.py:474` — Branch cross-sell: mevcut optimizasyon yeterli mi kontrol et  
-- [ ] `services/reporting.py:84` — Policy branch filter: makul limit  
-- [ ] `doctype/at_customer/at_customer.py:175` — File folder rename: makul limit  
+- [x] `services/sales_entities.py` — 7 adet yorumlandı  
+- [x] `services/branches.py` — 7 adet yorumlandı  
+- [x] `accounting.py` — 0 adet (kalmadı, batch UPDATE ile giderildi)  
+- [x] `services/break_glass.py` — 0 adet (batch UPDATE ile giderildi)  
+- [x] `services/customer_360.py:474` — yorumlandı  
+- [x] `services/reporting.py:84` — yorumlandı  
+- [x] `doctype/at_customer/at_customer.py:175` — yorumlandı  
+- [x] Kalan ~30+ adet: patches, dashboard_v2, scripts, renewal, accounting_runtime → yorumlandı  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| Tamamlandı | 2026-03-26 | opencode | 21 production dosyasında 54 adet limit_page_length=0 yorumlandı |
 
 ---
 
@@ -187,13 +188,13 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.6 Cache key tutarsızlığı
 
-- [ ] `services/branches.py` — `at_scope::{user}::branches` → ortak prefix kullan  
-- [ ] `services/cache_precomputation.py` — `at_user_scope::{user}::complete` → aynı prefix  
-- [ ] `utils/cache_keys.py` — Yeni dosya oluştur, tek namespace tanımla  
+- [x] `utils/cache_keys.py` — Yeni dosya oluştur, tek namespace tanımla  
+- [x] `services/branches.py` — `at_scope::{user}::branches` → ortak `all_scope_cache_key_patterns()` kullan  
+- [x] `services/cache_precomputation.py` — `at_user_scope::{user}::complete` → `scope_cache_key()` kullan  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| Tamamlandı | 2026-03-26 | opencode | `utils/cache_keys.py` oluşturuldu, 2 servis unified key'e geçti. Artık clear_user_scope_cache tüm pattern'leri temizliyor |
 
 ---
 
@@ -240,12 +241,12 @@ Her client-side JS dosyasına `validate(frm)` ekle:
 
 ### B.10 N+1: Break-glass per-record commit
 
-- [ ] `services/break_glass.py:89-120` — `expire_stale` per-record commit → batch update  
-- [ ] `services/break_glass.py:439` — `expire_break_glass_grants` → batch update  
+- [x] `services/break_glass.py:95-127` — `expire_stale` per-record commit → batch UPDATE  
+- [x] `services/break_glass.py:434-463` — `expire_break_glass_grants` per-record set_value → batch UPDATE  
 
 | Durum | Tarih | Sorumlu | Not |
 |-------|-------|---------|-----|
-| Bekliyor | | | |
+| Tamamlandı | 2026-03-26 | opencode | Her iki fonksiyon tek UPDATE sorgusuna dönüştürüldü. Per-record commit kaldırıldı |
 
 ---
 
@@ -354,7 +355,7 @@ Aşağıdaki görevler daha önce tamamlandı:
 | Kategori | Toplam | Tamamlanan | Kalan |
 |----------|--------|------------|-------|
 | A. Kritik | 25 | 24 | 1 |
-| B. Orta | 42 | 4 | 38 |
+| B. Orta | 42 | 19 | 23 |
 | C. Uzun Vadeli | 9 | 0 | 9 |
 | D. Önceki | 10 | 10 | 0 |
-| **Toplam** | **86** | **38** | **48** |
+| **Toplam** | **86** | **53** | **33** |

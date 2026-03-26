@@ -102,29 +102,21 @@ def expire_stale() -> dict[str, int]:
     if not frappe.db.exists("DocType", "AT Emergency Access"):
         return {"expired": 0}
 
-    stale = frappe.get_all(
-        "AT Emergency Access",
-        filters={
-            "status": "Active",
-            "valid_until": ["<", now_datetime()],
-        },
-        fields=["name"],
-        limit_page_length=0,
+    # Batch UPDATE instead of per-record save+commit loop (N+1 fix)
+    result = frappe.db.sql(
+        """
+        UPDATE `tabAT Emergency Access`
+        SET status = 'Expired', modified = NOW()
+        WHERE status = 'Active' AND valid_until < %s
+    """,
+        (now_datetime(),),
     )
+    expired_count = frappe.db.sql("SELECT ROW_COUNT()", as_list=True)[0][0]
 
-    expired_count = 0
-    for row in stale:
-        try:
-            doc = frappe.get_doc("AT Emergency Access", row.name)
-            doc.status = "Expired"
-            # ignore_permissions: Scheduler job (expire_stale) runs without user session; time-bound grant expiration.
-            doc.save(ignore_permissions=True)
-            frappe.db.commit()
-            expired_count += 1
-        except Exception:
-            frappe.db.rollback()
+    if expired_count:
+        frappe.db.commit()
 
-    return {"expired": expired_count}
+    return {"expired": int(expired_count or 0)}
 
 
 # Sprint E: Break-glass request workflow (approval-based grants)
@@ -436,28 +428,23 @@ def expire_break_glass_grants():
     try:
         now_dt = now_datetime()
 
-        # Find and update expired grants
-        expired_requests = frappe.get_all(
-            "AT Break Glass Request",
-            filters={"status": "Approved", "expires_at_ts": ["<", now_dt]},
-            fields=["name"],
-            limit_page_length=0,
+        # Batch UPDATE instead of per-record set_value loop (N+1 fix)
+        frappe.db.sql(
+            """
+            UPDATE `tabAT Break Glass Request`
+            SET status = 'Expired', modified = NOW()
+            WHERE status = 'Approved' AND expires_at_ts < %s
+        """,
+            (now_dt,),
         )
+        count = frappe.db.sql("SELECT ROW_COUNT()", as_list=True)[0][0]
 
-        for doc in expired_requests:
-            try:
-                frappe.db.set_value(
-                    "AT Break Glass Request", doc.name, "status", "Expired"
-                )
-            except Exception as e:
-                frappe.logger().warning(f"Failed to expire grant {doc.name}: {str(e)}")
-
-        if expired_requests:
+        if count:
             frappe.logger().info(
-                f"Break-glass grant expiration job: {len(expired_requests)} grants marked expired"
+                f"Break-glass grant expiration job: {count} grants marked expired"
             )
 
-        return {"expired": len(expired_requests)}
+        return {"expired": int(count or 0)}
 
     except Exception as e:
         frappe.logger().error(f"Break-glass expiration job failed: {str(e)}")

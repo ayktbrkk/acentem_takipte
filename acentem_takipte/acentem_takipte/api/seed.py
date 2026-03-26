@@ -9,7 +9,9 @@ from acentem_takipte.acentem_takipte.api.security import (
     assert_non_production_or_feature_flag,
 )
 from acentem_takipte.acentem_takipte.renewal.reminders import resolve_stage_for_days
-from acentem_takipte.acentem_takipte.notification_seed_service import upsert_default_notification_templates
+from acentem_takipte.acentem_takipte.notification_seed_service import (
+    upsert_default_notification_templates,
+)
 from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
 from acentem_takipte.acentem_takipte.tasks import build_renewal_key
 from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
@@ -122,8 +124,12 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
         summary["branches"] += 1 if doc else 0
 
     main_entity = _upsert_sales_entity("DEMO Main Agency", "Agency")
-    alpha_entity = _upsert_sales_entity("DEMO Team Alpha", "Sub-Account", parent_entity=main_entity.name)
-    rep_entity = _upsert_sales_entity("DEMO Rep Ayse", "Representative", parent_entity=alpha_entity.name)
+    alpha_entity = _upsert_sales_entity(
+        "DEMO Team Alpha", "Sub-Account", parent_entity=main_entity.name
+    )
+    rep_entity = _upsert_sales_entity(
+        "DEMO Rep Ayse", "Representative", parent_entity=alpha_entity.name
+    )
     summary["sales_entities"] += 3
 
     demo_agent = _pick_demo_agent()
@@ -249,7 +255,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
     ]
     for row in leads:
         if row.get("customer"):
-            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
+            row["customer"] = customer_name_map.get(
+                str(row["customer"]), row["customer"]
+            )
         _upsert_lead(row)
         summary["leads"] += 1
 
@@ -330,7 +338,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
     policy_name_map: dict[str, str] = {}
     for row in policies:
         if row.get("customer"):
-            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
+            row["customer"] = customer_name_map.get(
+                str(row["customer"]), row["customer"]
+            )
         doc = _upsert_policy(row)
         policy_name_map[row["policy_no"]] = doc.name
         summary["policies"] += 1
@@ -365,7 +375,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
     ]
     for row in claims:
         if row.get("customer"):
-            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
+            row["customer"] = customer_name_map.get(
+                str(row["customer"]), row["customer"]
+            )
         _upsert_by_name("AT Claim", row["claim_no"], row)
         summary["claims"] += 1
 
@@ -434,7 +446,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
     ]
     for row in payments:
         if row.get("customer"):
-            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
+            row["customer"] = customer_name_map.get(
+                str(row["customer"]), row["customer"]
+            )
         _upsert_by_name("AT Payment", row["payment_no"], row)
         summary["payments"] += 1
 
@@ -445,7 +459,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "policy_end_date": add_days(today, 305),
             "renewal_date": add_days(today, 7),
             "due_date": today,
-            "unique_key": build_renewal_stage_key(policy_name_map["DEMO-POL-001"], "1000000001", "D7", today),
+            "unique_key": build_renewal_stage_key(
+                policy_name_map["DEMO-POL-001"], "1000000001", "D7", today
+            ),
             "status": "Open",
             "assigned_to": "Administrator",
             "auto_created": 0,
@@ -457,7 +473,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "policy_end_date": add_days(today, 240),
             "renewal_date": add_days(today, 15),
             "due_date": today,
-            "unique_key": build_renewal_stage_key(policy_name_map["DEMO-POL-003"], "1000000003", "D15", today),
+            "unique_key": build_renewal_stage_key(
+                policy_name_map["DEMO-POL-003"], "1000000003", "D15", today
+            ),
             "status": "In Progress",
             "assigned_to": "Administrator",
             "auto_created": 0,
@@ -466,13 +484,17 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
     ]
     for row in renewals:
         if row.get("customer"):
-            row["customer"] = customer_name_map.get(str(row["customer"]), row["customer"])
+            row["customer"] = customer_name_map.get(
+                str(row["customer"]), row["customer"]
+            )
         row.pop("unique_key", None)
         _upsert_renewal_task(row)
         summary["renewal_tasks"] += 1
 
     frappe.db.commit()
-    summary["dashboard"] = frappe.get_attr("acentem_takipte.api.dashboard.get_dashboard_kpis")()
+    summary["dashboard"] = frappe.get_attr(
+        "acentem_takipte.api.dashboard.get_dashboard_kpis"
+    )()
     return summary
 
 
@@ -489,7 +511,9 @@ def _upsert_by_name(doctype: str, name: str, values: dict[str, Any]):
 
 def _upsert_customer(values: dict[str, Any]):
     identity_number = str(values.get("tax_id") or "").strip()
-    existing_name = frappe.db.get_value("AT Customer", {"tax_id": identity_number}, "name")
+    existing_name = frappe.db.get_value(
+        "AT Customer", {"tax_id": identity_number}, "name"
+    )
     if existing_name:
         doc = frappe.get_doc("AT Customer", existing_name)
         _apply_values(doc, values)
@@ -511,7 +535,9 @@ def _upsert_policy(values: dict[str, Any]):
             "name",
         )
     if not existing_name and policy_no:
-        existing_name = frappe.db.get_value("AT Policy", {"policy_no": policy_no}, "name")
+        existing_name = frappe.db.get_value(
+            "AT Policy", {"policy_no": policy_no}, "name"
+        )
 
     if existing_name:
         doc = frappe.get_doc("AT Policy", existing_name)
@@ -522,8 +548,12 @@ def _upsert_policy(values: dict[str, Any]):
     return frappe.get_doc({"doctype": "AT Policy", **values}).insert()
 
 
-def _upsert_sales_entity(full_name: str, entity_type: str, parent_entity: str | None = None):
-    existing_name = frappe.db.get_value("AT Sales Entity", {"full_name": full_name}, "name")
+def _upsert_sales_entity(
+    full_name: str, entity_type: str, parent_entity: str | None = None
+):
+    existing_name = frappe.db.get_value(
+        "AT Sales Entity", {"full_name": full_name}, "name"
+    )
     values = {
         "entity_type": entity_type,
         "full_name": full_name,
@@ -554,16 +584,28 @@ def _upsert_lead(values: dict[str, Any]):
 
 def _upsert_renewal_task(values: dict[str, Any]):
     if not values.get("unique_key") and values.get("policy") and values.get("due_date"):
-        renewal_date = getdate(values.get("renewal_date")) if values.get("renewal_date") else None
+        renewal_date = (
+            getdate(values.get("renewal_date")) if values.get("renewal_date") else None
+        )
         due_date = getdate(values.get("due_date")) if values.get("due_date") else None
         customer = values.get("customer")
-        stage = resolve_stage_for_days(date_diff(renewal_date, due_date)) if renewal_date and due_date else None
+        stage = (
+            resolve_stage_for_days(date_diff(renewal_date, due_date))
+            if renewal_date and due_date
+            else None
+        )
         if stage:
-            values["unique_key"] = build_renewal_stage_key(values["policy"], customer, stage.code, due_date)
+            values["unique_key"] = build_renewal_stage_key(
+                values["policy"], customer, stage.code, due_date
+            )
         else:
-            values["unique_key"] = build_renewal_key(values["policy"], values["due_date"])
+            values["unique_key"] = build_renewal_key(
+                values["policy"], values["due_date"]
+            )
 
-    existing_name = frappe.db.get_value("AT Renewal Task", {"unique_key": values["unique_key"]}, "name")
+    existing_name = frappe.db.get_value(
+        "AT Renewal Task", {"unique_key": values["unique_key"]}, "name"
+    )
     if existing_name:
         doc = frappe.get_doc("AT Renewal Task", existing_name)
         _apply_values(doc, values)
@@ -594,6 +636,7 @@ def _cleanup_demo_data():
         ("AT Branch", "branch_name", "DEMO "),
         ("AT Insurance Company", "company_name", "DEMO "),
     ]:
+        # unbounded: demo data cleanup by keyword pattern, filtered by name prefix - expected max ~1k rows
         names = frappe.get_all(
             doctype,
             filters={fieldname: ["like", f"{keyword}%"]},
@@ -603,6 +646,7 @@ def _cleanup_demo_data():
         for name in names:
             frappe.delete_doc(doctype, name, force=True)
 
+    # unbounded: demo sales entity cleanup, filtered by name prefix - expected max ~1k rows
     sales_entities = frappe.get_all(
         "AT Sales Entity",
         filters={"full_name": ["like", "DEMO %"]},
@@ -639,4 +683,3 @@ def _make_valid_tckn(seed: str | int) -> str:
     tenth = ((sum(digits[0:9:2]) * 7) - sum(digits[1:8:2])) % 10
     eleventh = (sum(digits) + tenth) % 10
     return f"{raw}{tenth}{eleventh}"
-

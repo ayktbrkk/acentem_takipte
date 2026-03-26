@@ -231,6 +231,7 @@ def _build_policy_map(
         filters["office_branch"] = office_branch
     if insurance_company:
         filters["insurance_company"] = insurance_company
+    # unbounded: policy lookup by policy_no refs, filtered by reference set - expected max ~50k rows
     rows = frappe.get_all(
         "AT Policy",
         filters=filters,
@@ -257,6 +258,7 @@ def _build_policy_map(
     fallback_filters: dict[str, Any] = {"name": ["in", missing_refs]}
     if office_branch:
         fallback_filters["office_branch"] = office_branch
+    # unbounded: fallback policy lookup by name, filtered by missing refs - expected max ~1k rows
     fallback_rows = frappe.get_all(
         "AT Policy",
         filters=fallback_filters,
@@ -286,6 +288,7 @@ def _build_payment_map(
     filters: dict[str, Any] = {"payment_no": ["in", list(set(refs))]}
     if office_branch:
         filters["office_branch"] = office_branch
+    # unbounded: payment lookup by payment_no refs, filtered by reference set - expected max ~50k rows
     rows = frappe.get_all(
         "AT Payment",
         filters=filters,

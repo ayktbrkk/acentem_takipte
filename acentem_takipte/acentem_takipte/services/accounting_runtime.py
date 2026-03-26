@@ -5,8 +5,13 @@ from typing import Any
 import frappe
 from frappe.utils import cint, flt, nowdate
 
-from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
-from acentem_takipte.acentem_takipte.utils.statuses import ATAccountingEntryStatus, ATReconciliationItemStatus
+from acentem_takipte.acentem_takipte.services.branches import (
+    normalize_requested_office_branch,
+)
+from acentem_takipte.acentem_takipte.utils.statuses import (
+    ATAccountingEntryStatus,
+    ATReconciliationItemStatus,
+)
 
 
 def build_reconciliation_workbench(
@@ -26,6 +31,7 @@ def build_reconciliation_workbench(
 
     permitted_entry_names = None
     if normalized_office_branch:
+        # unbounded: accounting entries by branch for reconciliation scope, filtered by office branch - expected max ~10k rows
         permitted_entry_names = frappe.get_all(
             "AT Accounting Entry",
             filters={"office_branch": normalized_office_branch},
@@ -70,6 +76,7 @@ def build_reconciliation_workbench(
     entry_map = {}
     entry_names = [row.accounting_entry for row in rows if row.accounting_entry]
     if entry_names:
+        # unbounded: accounting entry details for reconciliation items, filtered by entry names from result set - expected max ~500 rows
         entries = frappe.get_all(
             "AT Accounting Entry",
             filters={"name": ["in", list(set(entry_names))]},
@@ -91,7 +98,11 @@ def build_reconciliation_workbench(
     for row in rows:
         row["accounting"] = entry_map.get(row.accounting_entry, {})
 
-    scoped_entry_filter = {"accounting_entry": ["in", list(set(permitted_entry_names or []))]} if permitted_entry_names is not None else {}
+    scoped_entry_filter = (
+        {"accounting_entry": ["in", list(set(permitted_entry_names or []))]}
+        if permitted_entry_names is not None
+        else {}
+    )
     metrics = {
         "open": frappe.db.count(
             "AT Reconciliation Item",
@@ -118,18 +129,26 @@ def build_reconciliation_workbench(
             "AT Accounting Entry",
             {
                 "status": ATAccountingEntryStatus.FAILED,
-                **({"office_branch": normalized_office_branch} if normalized_office_branch else {}),
+                **(
+                    {"office_branch": normalized_office_branch}
+                    if normalized_office_branch
+                    else {}
+                ),
             },
         ),
     }
 
     overdue_payment_rows = _get_overdue_collection_rows(normalized_office_branch)
-    overdue_amount_try = sum(flt(row.amount_try or row.amount or 0) for row in overdue_payment_rows)
+    overdue_amount_try = sum(
+        flt(row.amount_try or row.amount or 0) for row in overdue_payment_rows
+    )
     metrics["overdue_collections"] = len(overdue_payment_rows)
     metrics["overdue_amount_try"] = overdue_amount_try
     commission_preview_rows = _get_commission_accrual_rows(normalized_office_branch)
     metrics["commission_accrual_count"] = len(commission_preview_rows)
-    metrics["commission_accrual_amount_try"] = sum(flt(row.get("commission_amount_try")) for row in commission_preview_rows)
+    metrics["commission_accrual_amount_try"] = sum(
+        flt(row.get("commission_amount_try")) for row in commission_preview_rows
+    )
 
     return {
         "rows": rows,
@@ -173,7 +192,9 @@ def _get_overdue_collection_rows(office_branch: str | None) -> list[dict]:
     )
     if installment_rows:
         for row in installment_rows:
-            row["payment_no"] = f"{row.payment} / {row.installment_no}/{row.installment_count}"
+            row["payment_no"] = (
+                f"{row.payment} / {row.installment_no}/{row.installment_count}"
+            )
         return installment_rows
 
     overdue_payment_filters: dict[str, Any] = {
@@ -227,4 +248,3 @@ def _get_commission_accrual_rows(office_branch: str | None) -> list[dict]:
         order_by="commission_amount desc, modified desc",
         limit_page_length=10,
     )
-
