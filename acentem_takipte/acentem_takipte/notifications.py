@@ -5,8 +5,11 @@ from typing import Any
 import frappe
 
 from acentem_takipte.acentem_takipte.notifications_catalog import is_valid_template_key
-from acentem_takipte.acentem_takipte.services.notifications import build_notification_draft_payloads
+from acentem_takipte.acentem_takipte.services.notifications import (
+    build_notification_draft_payloads,
+)
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+
 
 def create_notification_drafts(
     *,
@@ -44,8 +47,12 @@ def create_notification_drafts(
 
     if template_key:
         if not is_valid_template_key(event_key, template_key):
-            frappe.throw(f"Unsupported template key '{template_key}' for event '{event_key}'")
-        templates = [template for template in templates if template.template_key == template_key]
+            frappe.throw(
+                f"Unsupported template key '{template_key}' for event '{event_key}'"
+            )
+        templates = [
+            template for template in templates if template.template_key == template_key
+        ]
         if not templates:
             return []
 
@@ -64,6 +71,7 @@ def create_notification_drafts(
         resolve_body_template_for_channel=_resolve_body_template_for_channel,
     )
     for payload in payloads:
+        # ignore_permissions: Notification draft creation from event handler; internal service.
         draft = frappe.get_doc(payload).insert(ignore_permissions=True)
         created.append(draft.name)
         if enqueue:
@@ -90,7 +98,9 @@ def _resolve_body_template_for_channel(template: Any, channel: str) -> str:
     return template.body_template or ""
 
 
-def _resolve_recipient(channel: str, customer_payload: dict[str, Any], context_payload: dict[str, Any]) -> str | None:
+def _resolve_recipient(
+    channel: str, customer_payload: dict[str, Any], context_payload: dict[str, Any]
+) -> str | None:
     if channel == "SMS":
         return customer_payload.get("phone") or context_payload.get("phone")
 
@@ -120,9 +130,12 @@ def _get_customer_payload(customer: str | None) -> dict[str, Any]:
 
 def _enqueue_draft_safe(draft_name: str) -> None:
     try:
-        from acentem_takipte.acentem_takipte.communication import enqueue_notification_draft
+        from acentem_takipte.acentem_takipte.communication import (
+            enqueue_notification_draft,
+        )
 
         enqueue_notification_draft(draft_name)
     except Exception:
-        log_redacted_error("AT Notification Draft Queue Error", details={"draft": draft_name})
-
+        log_redacted_error(
+            "AT Notification Draft Queue Error", details={"draft": draft_name}
+        )

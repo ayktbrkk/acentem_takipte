@@ -5,8 +5,12 @@ from frappe import _
 from frappe.utils import cint, now_datetime
 
 from acentem_takipte.acentem_takipte import communication as communication_logic
-from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
-from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
+from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import (
+    log_decision_event,
+)
+from acentem_takipte.acentem_takipte.services.segments import (
+    build_segment_membership_preview,
+)
 from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus
 
 
@@ -27,6 +31,7 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
     drafts: list[str] = []
 
     campaign.status = "Running"
+    # ignore_permissions: Campaign scheduler job; runs without user session.
     campaign.save(ignore_permissions=True)
 
     for customer_row in preview.get("customers") or []:
@@ -53,9 +58,12 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
                 "event_key": template.event_key,
                 "channel": campaign.channel,
                 "language": template.language or "tr",
-                "provider_template_name": getattr(template, "provider_template_name", None),
+                "provider_template_name": getattr(
+                    template, "provider_template_name", None
+                ),
                 "customer": customer_name,
-                "office_branch": (customer or {}).get("office_branch") or campaign.office_branch,
+                "office_branch": (customer or {}).get("office_branch")
+                or campaign.office_branch,
                 "recipient": recipient,
                 "reference_doctype": "AT Campaign",
                 "reference_name": campaign.name,
@@ -63,14 +71,18 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
                 "body": template.get("body_template") or " ",
                 "status": ATNotificationDraftStatus.DRAFT,
             }
-        ).insert(ignore_permissions=True)
+        )
+        # ignore_permissions: Campaign scheduler job; runs without user session.
+        draft.insert(ignore_permissions=True)
 
         communication_logic.enqueue_notification_draft(draft.name)
         drafts.append(draft.name)
         created += 1
 
     campaign.sent_count = created
-    campaign.matched_customer_count = preview.get("summary", {}).get("matched_count", 0) or 0
+    campaign.matched_customer_count = (
+        preview.get("summary", {}).get("matched_count", 0) or 0
+    )
     campaign.skipped_count = skipped
     campaign.last_run_on = now_datetime()
     campaign.last_run_summary = (
@@ -79,6 +91,7 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
         f"Matched customers: {campaign.matched_customer_count}"
     )
     campaign.status = "Completed" if created else "Cancelled"
+    # ignore_permissions: Campaign scheduler job; runs without user session.
     campaign.save(ignore_permissions=True)
     log_decision_event(
         "AT Campaign",
@@ -99,7 +112,9 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
     }
 
 
-def execute_due_campaigns(*, limit: int = 25, member_limit: int = 200) -> dict[str, object]:
+def execute_due_campaigns(
+    *, limit: int = 25, member_limit: int = 200
+) -> dict[str, object]:
     safe_limit = max(cint(limit), 1)
     safe_member_limit = max(cint(member_limit), 1)
     due_campaigns = frappe.get_all(
@@ -119,7 +134,9 @@ def execute_due_campaigns(*, limit: int = 25, member_limit: int = 200) -> dict[s
     campaigns: list[dict[str, object]] = []
 
     for row in due_campaigns:
-        result = execute_campaign(str(row.get("name") or "").strip(), limit=safe_member_limit)
+        result = execute_campaign(
+            str(row.get("name") or "").strip(), limit=safe_member_limit
+        )
         processed += 1
         created += int(result.get("created") or 0)
         skipped += int(result.get("skipped") or 0)
@@ -140,11 +157,12 @@ def execute_due_campaigns(*, limit: int = 25, member_limit: int = 200) -> dict[s
     }
 
 
-def _resolve_campaign_recipient(channel: str | None, customer: dict[str, object]) -> str | None:
+def _resolve_campaign_recipient(
+    channel: str | None, customer: dict[str, object]
+) -> str | None:
     normalized_channel = str(channel or "").strip().upper()
     if normalized_channel in {"SMS", "WHATSAPP", "PHONE CALL"}:
         return str(customer.get("phone") or "").strip() or None
     if normalized_channel == "EMAIL":
         return str(customer.get("email") or "").strip() or None
     return None
-

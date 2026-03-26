@@ -6,7 +6,9 @@ import frappe
 from frappe.utils.pdf import get_pdf
 
 
-def attach_policy_pdf_to_customer_folder(policy_doc, print_format: str | None = None) -> str | None:
+def attach_policy_pdf_to_customer_folder(
+    policy_doc, print_format: str | None = None
+) -> str | None:
     if not policy_doc or not policy_doc.get("customer"):
         return None
 
@@ -41,13 +43,17 @@ def attach_policy_pdf_to_customer_folder(policy_doc, print_format: str | None = 
             "attached_to_name": policy_doc.name,
             "content": pdf_content,
         }
-    ).insert(ignore_permissions=True)
+    )
+    # ignore_permissions: Policy PDF attachment; triggered by policy save event.
+    file_doc.insert(ignore_permissions=True)
     return file_doc.name
 
 
 def _policy_pdf_filename(policy_doc) -> str:
     policy_ref = (policy_doc.get("policy_no") or policy_doc.name or "policy").strip()
-    safe_policy_ref = "".join(char if char.isalnum() or char in {"-", "_"} else "-" for char in policy_ref)
+    safe_policy_ref = "".join(
+        char if char.isalnum() or char in {"-", "_"} else "-" for char in policy_ref
+    )
     return f"{safe_policy_ref}.pdf"
 
 
@@ -59,7 +65,9 @@ def _ensure_customer_folder(customer_name: str) -> str:
 
 
 def _ensure_private_fs_path(customer_name: str) -> None:
-    private_folder_path = Path(frappe.get_site_path("private", "files", "customers", customer_name))
+    private_folder_path = Path(
+        frappe.get_site_path("private", "files", "customers", customer_name)
+    )
     private_folder_path.mkdir(parents=True, exist_ok=True)
 
 
@@ -67,7 +75,7 @@ def _ensure_file_folder(name: str, folder: str) -> None:
     if frappe.db.exists("File", {"file_name": name, "is_folder": 1, "folder": folder}):
         return
 
-    frappe.get_doc(
+    doc = frappe.get_doc(
         {
             "doctype": "File",
             "file_name": name,
@@ -75,4 +83,6 @@ def _ensure_file_folder(name: str, folder: str) -> None:
             "folder": folder,
             "is_private": 1,
         }
-    ).insert(ignore_permissions=True)
+    )
+    # ignore_permissions: Policy PDF attachment; triggered by policy save event.
+    doc.insert(ignore_permissions=True)

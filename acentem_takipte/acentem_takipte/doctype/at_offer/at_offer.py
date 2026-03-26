@@ -8,9 +8,15 @@ from acentem_takipte.acentem_takipte.services.branches import (
     assert_office_branch_access,
     get_default_office_branch,
 )
-from acentem_takipte.acentem_takipte.services.quick_customer import resolve_or_create_quick_customer
+from acentem_takipte.acentem_takipte.services.quick_customer import (
+    resolve_or_create_quick_customer,
+)
 from acentem_takipte.acentem_takipte.utils.commissions import resolve_commission_amount
-from acentem_takipte.acentem_takipte.utils.statuses import ATLeadStatus, ATOfferStatus, ATPolicyStatus
+from acentem_takipte.acentem_takipte.utils.statuses import (
+    ATLeadStatus,
+    ATOfferStatus,
+    ATPolicyStatus,
+)
 from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
@@ -97,9 +103,13 @@ def create_quick_offer(
     gross_value = flt(gross_premium) if gross_premium not in {None, ""} else 0
     net_value = flt(net_premium) if net_premium not in {None, ""} else 0
     tax_value = flt(tax_amount) if tax_amount not in {None, ""} else 0
-    commission_value = flt(commission_amount) if commission_amount not in {None, ""} else 0
+    commission_value = (
+        flt(commission_amount) if commission_amount not in {None, ""} else 0
+    )
 
-    resolved_office_branch = _resolve_offer_office_branch(office_branch, resolved_customer)
+    resolved_office_branch = _resolve_offer_office_branch(
+        office_branch, resolved_customer
+    )
 
     payload = {
         "doctype": "AT Offer",
@@ -151,14 +161,21 @@ def convert_to_policy(
     if not offer_name:
         frappe.throw(_("Offer is required."))
 
-    frappe.db.sql("select name from `tabAT Offer` where name = %s for update", offer_name)
+    frappe.db.sql(
+        "select name from `tabAT Offer` where name = %s for update", offer_name
+    )
     offer = frappe.get_doc("AT Offer", offer_name)
     offer.check_permission("read")
     offer.check_permission("write")
-    assert_doctype_permission("AT Policy", "create", "You do not have permission to create policies.")
+    assert_doctype_permission(
+        "AT Policy", "create", "You do not have permission to create policies."
+    )
 
     if offer.converted_policy:
-        return {"policy": offer.converted_policy, "message": _("Offer is already converted to Policy.")}
+        return {
+            "policy": offer.converted_policy,
+            "message": _("Offer is already converted to Policy."),
+        }
 
     _validate_offer_conversion_inputs(offer)
     assert_doc_permission("AT Customer", offer.customer, "read")
@@ -168,7 +185,9 @@ def convert_to_policy(
     if end < start:
         frappe.throw(_("Policy end date cannot be earlier than start date."))
 
-    commission_value = _resolve_commission_value(offer, commission_amount=commission_amount, commission=commission)
+    commission_value = _resolve_commission_value(
+        offer, commission_amount=commission_amount, commission=commission
+    )
     tax_value = _resolve_tax_value(offer, tax_amount=tax_amount)
     net_value = _resolve_net_value(offer, net_premium=net_premium)
     gross_value = flt(offer.gross_premium)
@@ -181,7 +200,11 @@ def convert_to_policy(
 
     calculated_gross = net_value + tax_value + commission_value
     if gross_value > 0 and abs(gross_value - calculated_gross) > 0.01:
-        frappe.throw(_("Offer premium values are inconsistent. Update offer amounts before conversion."))
+        frappe.throw(
+            _(
+                "Offer premium values are inconsistent. Update offer amounts before conversion."
+            )
+        )
 
     policy_payload = {
         "doctype": "AT Policy",
@@ -239,11 +262,14 @@ def convert_to_policy(
         lead.db_set("status", ATLeadStatus.CLOSED, update_modified=False)
 
     frappe.db.commit()
-    return {"policy": policy.name, "message": _("Offer converted to Policy successfully.")}
+    return {
+        "policy": policy.name,
+        "message": _("Offer converted to Policy successfully."),
+    }
 
 
 def _insert_policy_for_offer_conversion(payload: dict):
-    # Permission checks are enforced by the whitelisted wrapper; insert runs as trusted internal service.
+    # ignore_permissions: Permission enforced by whitelisted convert_to_offer() which checks has_permission before calling this.
     return frappe.get_doc(payload).insert(ignore_permissions=True)
 
 
@@ -254,9 +280,15 @@ def _validate_offer_conversion_inputs(offer: ATOffer) -> None:
         "insurance_company": _("Insurance Company"),
         "branch": _("Branch"),
     }
-    missing = [label for fieldname, label in required_fields.items() if not offer.get(fieldname)]
+    missing = [
+        label
+        for fieldname, label in required_fields.items()
+        if not offer.get(fieldname)
+    ]
     if missing:
-        frappe.throw(_("Offer is missing required fields: {0}").format(", ".join(missing)))
+        frappe.throw(
+            _("Offer is missing required fields: {0}").format(", ".join(missing))
+        )
 
     if offer.status not in ATOfferStatus.CONVERTIBLE:
         frappe.throw(_("Offer status must be Sent or Accepted before conversion."))
@@ -267,10 +299,16 @@ def _validate_offer_conversion_inputs(offer: ATOffer) -> None:
         frappe.throw(_("Offer has expired. Update Valid Until date before conversion."))
 
     if flt(offer.net_premium) <= 0 and flt(offer.gross_premium) <= 0:
-        frappe.throw(_("Offer premium values are missing. Set net or gross premium before conversion."))
+        frappe.throw(
+            _(
+                "Offer premium values are missing. Set net or gross premium before conversion."
+            )
+        )
 
 
-def _resolve_commission_value(offer: ATOffer, *, commission_amount: float | None, commission: float | None) -> float:
+def _resolve_commission_value(
+    offer: ATOffer, *, commission_amount: float | None, commission: float | None
+) -> float:
     if commission_amount is not None:
         resolved = flt(commission_amount)
     elif commission is not None:
@@ -278,7 +316,9 @@ def _resolve_commission_value(offer: ATOffer, *, commission_amount: float | None
     else:
         # Older data may still carry `commission`, but current AT Offer schema
         # only persists `commission_amount`.
-        resolved = resolve_commission_amount(offer.commission_amount, getattr(offer, "commission", None))
+        resolved = resolve_commission_amount(
+            offer.commission_amount, getattr(offer, "commission", None)
+        )
     if resolved < 0:
         frappe.throw(_("Commission amount cannot be negative."))
     return resolved
@@ -321,14 +361,17 @@ def _resolve_or_create_quick_customer(
     return str(resolved_customer or "").strip(), customer_created
 
 
-def _resolve_offer_office_branch(office_branch: str | None, customer: str | None) -> str | None:
+def _resolve_offer_office_branch(
+    office_branch: str | None, customer: str | None
+) -> str | None:
     explicit_branch = str(office_branch or "").strip()
     if explicit_branch:
         return assert_office_branch_access(explicit_branch)
     customer_name = str(customer or "").strip()
     if customer_name and frappe.db.exists("AT Customer", customer_name):
-        customer_branch = frappe.db.get_value("AT Customer", customer_name, "office_branch")
+        customer_branch = frappe.db.get_value(
+            "AT Customer", customer_name, "office_branch"
+        )
         if customer_branch:
             return assert_office_branch_access(customer_branch)
     return get_default_office_branch()
-

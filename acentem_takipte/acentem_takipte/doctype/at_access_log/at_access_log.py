@@ -9,7 +9,9 @@ class ATAccessLog(Document):
     pass
 
 
-def log_access(reference_doctype: str, reference_name: str, action: str = "View") -> None:
+def log_access(
+    reference_doctype: str, reference_name: str, action: str = "View"
+) -> None:
     _insert_access_log(reference_doctype, reference_name, action=action)
 
 
@@ -57,7 +59,7 @@ def _insert_access_log(
         return
 
     ip_address = getattr(frappe.local, "request_ip", None)
-    frappe.get_doc(
+    doc = frappe.get_doc(
         {
             "doctype": "AT Access Log",
             "reference_doctype": reference_doctype,
@@ -69,4 +71,6 @@ def _insert_access_log(
             "action_summary": action_summary,
             "decision_context": decision_context,
         }
-    ).insert(ignore_permissions=True)
+    )
+    # ignore_permissions: Audit log insertion; system-level operation.
+    doc.insert(ignore_permissions=True)

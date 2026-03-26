@@ -7,12 +7,23 @@ from dataclasses import dataclass
 
 import frappe
 from frappe.utils import add_to_date, cint, cstr, now_datetime
-from acentem_takipte.acentem_takipte.notification_dispatch import build_provider_message_from_records
+from acentem_takipte.acentem_takipte.notification_dispatch import (
+    build_provider_message_from_records,
+)
 from acentem_takipte.acentem_takipte.providers.router import get_provider_adapter
-from acentem_takipte.acentem_takipte.utils.statuses import ATNotificationDraftStatus, ATNotificationOutboxStatus
-from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error, redact_payload
+from acentem_takipte.acentem_takipte.utils.statuses import (
+    ATNotificationDraftStatus,
+    ATNotificationOutboxStatus,
+)
+from acentem_takipte.acentem_takipte.utils.logging import (
+    log_redacted_error,
+    redact_payload,
+)
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
-from acentem_takipte.acentem_takipte.utils.network_security import normalize_whatsapp_api_url, safe_urlopen
+from acentem_takipte.acentem_takipte.utils.network_security import (
+    normalize_whatsapp_api_url,
+    safe_urlopen,
+)
 
 DEFAULT_RETRY_MINUTES = 5
 DEFAULT_MAX_ATTEMPTS = 3
@@ -28,7 +39,9 @@ class DeliveryResult:
     provider_payload: str | None = None
 
 
-def queue_notification_drafts(limit: int = 200, include_failed: bool = True) -> dict[str, int]:
+def queue_notification_drafts(
+    limit: int = 200, include_failed: bool = True
+) -> dict[str, int]:
     statuses = [ATNotificationDraftStatus.DRAFT]
     if include_failed:
         statuses.append(ATNotificationDraftStatus.FAILED)
@@ -90,20 +103,31 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
         )
         return {"outcome": "invalid", "reason": "missing_recipient"}
 
-    customer = draft.customer if draft.customer and frappe.db.exists("AT Customer", draft.customer) else None
+    customer = (
+        draft.customer
+        if draft.customer and frappe.db.exists("AT Customer", draft.customer)
+        else None
+    )
     office_branch = draft.get("office_branch")
     if not office_branch and customer:
         office_branch = frappe.db.get_value("AT Customer", customer, "office_branch")
     reference_doctype = (
-        draft.reference_doctype if draft.reference_doctype and frappe.db.exists("DocType", draft.reference_doctype) else None
+        draft.reference_doctype
+        if draft.reference_doctype
+        and frappe.db.exists("DocType", draft.reference_doctype)
+        else None
     )
     reference_name = (
         draft.reference_name
-        if reference_doctype and draft.reference_name and frappe.db.exists(reference_doctype, draft.reference_name)
+        if reference_doctype
+        and draft.reference_name
+        and frappe.db.exists(reference_doctype, draft.reference_name)
         else None
     )
 
-    outbox_name = frappe.db.get_value("AT Notification Outbox", {"draft": draft.name}, "name")
+    outbox_name = frappe.db.get_value(
+        "AT Notification Outbox", {"draft": draft.name}, "name"
+    )
     if outbox_name:
         outbox_doc = frappe.get_doc("AT Notification Outbox", outbox_name)
         if outbox_doc.status == ATNotificationOutboxStatus.SENT:
@@ -120,11 +144,13 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
             outbox_doc.status = ATNotificationOutboxStatus.QUEUED
             outbox_doc.next_retry_on = now_datetime()
             outbox_doc.error_message = None
+            # ignore_permissions: Notification queue processor; permission checked at API entry (send_notification_draft_now).
             outbox_doc.save(ignore_permissions=True)
         else:
             outbox_doc.status = ATNotificationOutboxStatus.QUEUED
             outbox_doc.next_retry_on = now_datetime()
             outbox_doc.error_message = None
+            # ignore_permissions: Same as above; queue processor context.
             outbox_doc.save(ignore_permissions=True)
     else:
         try:
@@ -145,6 +171,7 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
                     "max_attempts": DEFAULT_MAX_ATTEMPTS,
                     "next_retry_on": now_datetime(),
                 }
+                # ignore_permissions: Outbox creation during queue processing; internal service operation.
             ).insert(ignore_permissions=True)
         except Exception:
             _set_draft_status(
@@ -164,7 +191,9 @@ def enqueue_notification_draft(draft_name: str) -> dict[str, str]:
             )
             return {"outcome": "invalid", "reason": "outbox_insert_failed"}
 
-    _set_draft_status(draft, status=ATNotificationDraftStatus.QUEUED, outbox_record=outbox_doc.name)
+    _set_draft_status(
+        draft, status=ATNotificationDraftStatus.QUEUED, outbox_record=outbox_doc.name
+    )
     return {"outcome": "queued", "outbox": outbox_doc.name}
 
 
@@ -230,7 +259,9 @@ def process_notification_queue(limit: int = 50) -> dict[str, int]:
     return summary
 
 
-def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> dict[str, str]:
+def dispatch_notification_outbox(
+    outbox_name: str, *, force: bool = False
+) -> dict[str, str]:
     outbox = frappe.get_doc("AT Notification Outbox", outbox_name)
     draft = frappe.get_doc("AT Notification Draft", outbox.draft)
     template_doc = frappe.get_doc("AT Notification Template", draft.template)
@@ -248,9 +279,12 @@ def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> di
     outbox.attempt_count = cint(outbox.attempt_count) + 1
     outbox.last_attempt_on = now_datetime()
     outbox.error_message = None
+    # ignore_permissions: Notification dispatch internal service; permission enforced at API entry.
     outbox.save(ignore_permissions=True)
 
-    delivery = _send_outbox_notification(outbox=outbox, draft=draft, template_doc=template_doc)
+    delivery = _send_outbox_notification(
+        outbox=outbox, draft=draft, template_doc=template_doc
+    )
 
     if delivery.ok:
         outbox.status = ATNotificationOutboxStatus.SENT
@@ -260,6 +294,7 @@ def dispatch_notification_outbox(outbox_name: str, *, force: bool = False) -> di
         outbox.provider_payload_json = delivery.provider_payload
         outbox.error_message = None
         outbox.next_retry_on = None
+        # ignore_permissions: Success handler in notification dispatch; internal service.
         outbox.save(ignore_permissions=True)
 
         _set_draft_status(
@@ -286,10 +321,13 @@ def retry_notification_outbox(outbox_name: str) -> dict[str, str]:
     outbox.status = ATNotificationOutboxStatus.QUEUED
     outbox.next_retry_on = now_datetime()
     outbox.error_message = None
+    # ignore_permissions: Retry scheduler in notification dispatch; internal service.
     outbox.save(ignore_permissions=True)
 
     draft = frappe.get_doc("AT Notification Draft", outbox.draft)
-    _set_draft_status(draft, status=ATNotificationDraftStatus.QUEUED, outbox_record=outbox.name)
+    _set_draft_status(
+        draft, status=ATNotificationDraftStatus.QUEUED, outbox_record=outbox.name
+    )
     if not frappe.flags.in_test:
         frappe.db.commit()
     return {"status": ATNotificationOutboxStatus.QUEUED, "outbox": outbox.name}
@@ -304,7 +342,9 @@ def send_notification_draft_now(draft_name: str) -> dict[str, str]:
     if queued.get("outcome") == "invalid":
         return {"status": "Invalid", "reason": queued.get("reason", "invalid")}
 
-    outbox_name = frappe.db.get_value("AT Notification Outbox", {"draft": draft_name}, "name")
+    outbox_name = frappe.db.get_value(
+        "AT Notification Outbox", {"draft": draft_name}, "name"
+    )
     if not outbox_name:
         return {"status": "Skipped", "reason": "outbox_missing"}
 
@@ -331,6 +371,7 @@ def _mark_delivery_failure(outbox, draft, error_message: str) -> None:
         retry_minutes = DEFAULT_RETRY_MINUTES * (2 ** max(attempts - 1, 0))
         outbox.next_retry_on = add_to_date(now_datetime(), minutes=retry_minutes)
         draft_status = ATNotificationDraftStatus.FAILED
+    # ignore_permissions: Failure/dead handler in notification dispatch; internal service.
     outbox.save(ignore_permissions=True)
 
     _set_draft_status(
@@ -358,7 +399,9 @@ def _set_draft_status(
     if outbox_record:
         values["outbox_record"] = outbox_record
 
-    frappe.db.set_value("AT Notification Draft", draft.name, values, update_modified=True)
+    frappe.db.set_value(
+        "AT Notification Draft", draft.name, values, update_modified=True
+    )
     for key, value in values.items():
         draft.set(key, value)
 
@@ -377,7 +420,9 @@ def _send_notification(
         return _send_email(recipient=recipient, subject=subject, body=body)
 
     # SMS channel is sent via WhatsApp adapter for Sprint 3.
-    return _send_whatsapp(recipient=recipient, subject=subject, body=body, context=context)
+    return _send_whatsapp(
+        recipient=recipient, subject=subject, body=body, context=context
+    )
 
 
 def _send_outbox_notification(*, outbox, draft, template_doc) -> DeliveryResult:
@@ -405,14 +450,18 @@ def _send_outbox_notification(*, outbox, draft, template_doc) -> DeliveryResult:
         result.provider_payload = frappe.as_json(provider_payload)
         return result
 
-    adapter = get_provider_adapter(normalized_channel, explicit_provider=outbox.provider)
+    adapter = get_provider_adapter(
+        normalized_channel, explicit_provider=outbox.provider
+    )
     if adapter:
         result = adapter.send(provider_message)
         return DeliveryResult(
             ok=result.ok,
             provider=result.provider,
             message_id=result.provider_message_id,
-            response_log=frappe.as_json(redact_payload(result.response_payload)) if result.response_payload is not None else None,
+            response_log=frappe.as_json(redact_payload(result.response_payload))
+            if result.response_payload is not None
+            else None,
             error=result.error_message,
             provider_payload=frappe.as_json(provider_payload),
         )
@@ -427,10 +476,21 @@ def _send_outbox_notification(*, outbox, draft, template_doc) -> DeliveryResult:
     return result
 
 
-def _send_email(*, recipient: str, subject: str | None, body: str, attachments: list[dict] | None = None) -> DeliveryResult:
+def _send_email(
+    *,
+    recipient: str,
+    subject: str | None,
+    body: str,
+    attachments: list[dict] | None = None,
+) -> DeliveryResult:
     if _is_dry_run():
         message_id = f"dry-email-{frappe.generate_hash(length=10)}"
-        return DeliveryResult(ok=True, provider="Email(DryRun)", message_id=message_id, response_log="dry_run")
+        return DeliveryResult(
+            ok=True,
+            provider="Email(DryRun)",
+            message_id=message_id,
+            response_log="dry_run",
+        )
 
     try:
         frappe.sendmail(
@@ -442,7 +502,12 @@ def _send_email(*, recipient: str, subject: str | None, body: str, attachments: 
             now=True,
         )
         message_id = f"mail-{frappe.generate_hash(length=10)}"
-        return DeliveryResult(ok=True, provider="Email(Frappe)", message_id=message_id, response_log="sent")
+        return DeliveryResult(
+            ok=True,
+            provider="Email(Frappe)",
+            message_id=message_id,
+            response_log="sent",
+        )
     except Exception:
         return DeliveryResult(
             ok=False,
@@ -452,25 +517,41 @@ def _send_email(*, recipient: str, subject: str | None, body: str, attachments: 
         )
 
 
-def _send_whatsapp(*, recipient: str, subject: str | None, body: str, context: dict) -> DeliveryResult:
+def _send_whatsapp(
+    *, recipient: str, subject: str | None, body: str, context: dict
+) -> DeliveryResult:
     if _is_dry_run():
         message_id = f"dry-wa-{frappe.generate_hash(length=10)}"
-        return DeliveryResult(ok=True, provider="WhatsApp(DryRun)", message_id=message_id, response_log="dry_run")
+        return DeliveryResult(
+            ok=True,
+            provider="WhatsApp(DryRun)",
+            message_id=message_id,
+            response_log="dry_run",
+        )
 
     site_config = frappe.get_site_config() or {}
     mode = cstr(site_config.get("at_whatsapp_mode") or "sandbox").lower()
     if mode != "production":
         message_id = f"sandbox-wa-{frappe.generate_hash(length=10)}"
-        return DeliveryResult(ok=True, provider="WhatsApp(Sandbox)", message_id=message_id, response_log="sandbox")
+        return DeliveryResult(
+            ok=True,
+            provider="WhatsApp(Sandbox)",
+            message_id=message_id,
+            response_log="sandbox",
+        )
 
     api_url = cstr(site_config.get("at_whatsapp_api_url") or "").strip()
     api_token = cstr(site_config.get("at_whatsapp_api_token") or "").strip()
     sender = cstr(site_config.get("at_whatsapp_sender") or "").strip()
 
     if not api_url:
-        return DeliveryResult(ok=False, provider="WhatsApp(API)", error="Missing at_whatsapp_api_url.")
+        return DeliveryResult(
+            ok=False, provider="WhatsApp(API)", error="Missing at_whatsapp_api_url."
+        )
     if not api_token:
-        return DeliveryResult(ok=False, provider="WhatsApp(API)", error="Missing at_whatsapp_api_token.")
+        return DeliveryResult(
+            ok=False, provider="WhatsApp(API)", error="Missing at_whatsapp_api_token."
+        )
 
     try:
         api_url = normalize_whatsapp_api_url(api_url)
@@ -503,16 +584,23 @@ def _send_whatsapp(*, recipient: str, subject: str | None, body: str, context: d
             allowed_hosts={"graph.facebook.com"},
         ) as response:
             response_body = response.read().decode("utf-8", errors="ignore")
-            message_id = _extract_message_id(response_body) or f"wa-{frappe.generate_hash(length=10)}"
+            message_id = (
+                _extract_message_id(response_body)
+                or f"wa-{frappe.generate_hash(length=10)}"
+            )
             return DeliveryResult(
                 ok=200 <= response.status < 300,
                 provider="WhatsApp(API)",
                 message_id=message_id,
                 response_log=response_body[:1000],
-                error=None if 200 <= response.status < 300 else f"Provider HTTP status: {response.status}",
+                error=None
+                if 200 <= response.status < 300
+                else f"Provider HTTP status: {response.status}",
             )
     except urllib.error.HTTPError as exc:
-        body_text = exc.read().decode("utf-8", errors="ignore") if hasattr(exc, "read") else ""
+        body_text = (
+            exc.read().decode("utf-8", errors="ignore") if hasattr(exc, "read") else ""
+        )
         return DeliveryResult(
             ok=False,
             provider="WhatsApp(API)",
@@ -584,4 +672,3 @@ def _get_outbox_attachments(outbox) -> list[dict]:
 def _is_dry_run() -> bool:
     config = frappe.get_site_config() or {}
     return cint(config.get("at_notification_dry_run", 1)) == 1
-

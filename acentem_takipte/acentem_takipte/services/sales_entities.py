@@ -55,7 +55,9 @@ def clear_user_scope_cache(user: str | None) -> None:
     branch_service.clear_user_scope_cache(user)
 
 
-def get_allowed_sales_entity_names(user: str | None = None, *, include_inactive: bool = False) -> set[str]:
+def get_allowed_sales_entity_names(
+    user: str | None = None, *, include_inactive: bool = False
+) -> set[str]:
     user_id = str(user or frappe.session.user or "").strip()
     if not user_id:
         return set()
@@ -80,13 +82,16 @@ def get_allowed_sales_entity_names(user: str | None = None, *, include_inactive:
         str(row.get("sales_entity") or "").strip()
         for row in access_rows
         if str(row.get("sales_entity") or "").strip()
-        and str(row.get("scope_mode") or DEFAULT_SCOPE_MODE).strip() == DESCENDANT_SCOPE_MODE
+        and str(row.get("scope_mode") or DEFAULT_SCOPE_MODE).strip()
+        == DESCENDANT_SCOPE_MODE
     }
 
     allowed_names = set(direct_entity_names)
     if descendant_seed_names:
         allowed_names.update(
-            _get_descendant_sales_entity_names(descendant_seed_names, include_inactive=include_inactive)
+            _get_descendant_sales_entity_names(
+                descendant_seed_names, include_inactive=include_inactive
+            )
         )
 
     _set_cached_allowed_sales_entities(user_id, allowed_names)
@@ -139,7 +144,11 @@ def _get_all_sales_entity_names(*, include_inactive: bool) -> set[str]:
         order_by="name asc",
         limit_page_length=0,
     )
-    return {str(row.get("name") or "").strip() for row in rows if str(row.get("name") or "").strip()}
+    return {
+        str(row.get("name") or "").strip()
+        for row in rows
+        if str(row.get("name") or "").strip()
+    }
 
 
 def _get_user_sales_entity_access_rows(user_id: str) -> list[dict[str, Any]]:
@@ -163,7 +172,10 @@ def _get_user_sales_entity_access_rows(user_id: str) -> list[dict[str, Any]]:
         today_date = None
     normalized_rows: list[dict[str, Any]] = []
     for row in rows:
-        row["scope_mode"] = str(row.get("scope_mode") or DEFAULT_SCOPE_MODE).strip() or DEFAULT_SCOPE_MODE
+        row["scope_mode"] = (
+            str(row.get("scope_mode") or DEFAULT_SCOPE_MODE).strip()
+            or DEFAULT_SCOPE_MODE
+        )
         valid_until = row.get("valid_until")
         if valid_until and today_date and getdate(valid_until) < today_date:
             continue
@@ -245,7 +257,9 @@ def is_office_branch_active(office_branch: str | None) -> bool:
         return False
     if not frappe.db.has_column("AT Office Branch", "is_active"):
         return True
-    return bool(frappe.db.get_value("AT Office Branch", office_branch_name, "is_active") or 0)
+    return bool(
+        frappe.db.get_value("AT Office Branch", office_branch_name, "is_active") or 0
+    )
 
 
 def get_pool_sales_entity_name(
@@ -289,7 +303,9 @@ def create_pool_sales_entity(
         return existing
 
     branch_label = (
-        frappe.db.get_value("AT Office Branch", office_branch_name, "office_branch_name")
+        frappe.db.get_value(
+            "AT Office Branch", office_branch_name, "office_branch_name"
+        )
         or office_branch_name
     )
     doc = frappe.get_doc(
@@ -302,6 +318,7 @@ def create_pool_sales_entity(
             "is_pool": 1,
         }
     )
+    # ignore_permissions: Pool entity creation during setup; called from admin migration patch.
     doc.insert(ignore_permissions=True)
     return str(doc.name)
 
@@ -319,7 +336,8 @@ def reassign_sales_entity_records_to_branch_pool(
     branch_name = str(office_branch or "").strip()
     if not branch_name:
         branch_name = str(
-            frappe.db.get_value("AT Sales Entity", sales_entity_name, "office_branch") or ""
+            frappe.db.get_value("AT Sales Entity", sales_entity_name, "office_branch")
+            or ""
         ).strip()
     if not branch_name:
         return {}
@@ -344,10 +362,16 @@ def reassign_sales_entity_records_to_branch_pool(
         filters: dict[str, Any] = {fieldname: sales_entity_name}
         if branch_name and frappe.db.has_column(doctype, "office_branch"):
             filters["office_branch"] = branch_name
-        if status_fieldname and open_statuses and frappe.db.has_column(doctype, status_fieldname):
+        if (
+            status_fieldname
+            and open_statuses
+            and frappe.db.has_column(doctype, status_fieldname)
+        ):
             filters[status_fieldname] = ["in", open_statuses]
 
-        rows = frappe.get_all(doctype, filters=filters, fields=["name"], limit_page_length=0)
+        rows = frappe.get_all(
+            doctype, filters=filters, fields=["name"], limit_page_length=0
+        )
         if not rows:
             continue
 
@@ -356,7 +380,9 @@ def reassign_sales_entity_records_to_branch_pool(
             name = str(row.get("name") or "").strip()
             if not name:
                 continue
-            frappe.db.set_value(doctype, name, fieldname, pool_entity, update_modified=False)
+            frappe.db.set_value(
+                doctype, name, fieldname, pool_entity, update_modified=False
+            )
             count += 1
         if count:
             updates[doctype] = count
@@ -364,7 +390,9 @@ def reassign_sales_entity_records_to_branch_pool(
     return updates
 
 
-def deactivate_branch_sales_entities_and_reassign(office_branch: str | None) -> dict[str, int]:
+def deactivate_branch_sales_entities_and_reassign(
+    office_branch: str | None,
+) -> dict[str, int]:
     branch_name = str(office_branch or "").strip()
     if not branch_name:
         return {}
@@ -458,12 +486,16 @@ def reassign_user_owned_records_to_branch_pools(user: str | None) -> dict[str, i
     if not user_id:
         return {}
 
-    entity_rows = frappe.get_all(
-        "AT User Sales Entity Access",
-        filters={"user": user_id, "is_active": 1},
-        fields=["sales_entity"],
-        limit_page_length=0,
-    ) if frappe.db.exists("DocType", "AT User Sales Entity Access") else []
+    entity_rows = (
+        frappe.get_all(
+            "AT User Sales Entity Access",
+            filters={"user": user_id, "is_active": 1},
+            fields=["sales_entity"],
+            limit_page_length=0,
+        )
+        if frappe.db.exists("DocType", "AT User Sales Entity Access")
+        else []
+    )
 
     totals: dict[str, int] = {}
     seen_entities: set[str] = set()
@@ -472,7 +504,9 @@ def reassign_user_owned_records_to_branch_pools(user: str | None) -> dict[str, i
         if not entity_name or entity_name in seen_entities:
             continue
         seen_entities.add(entity_name)
-        updates = reassign_sales_entity_records_to_branch_pool(entity_name, include_inactive_pool=True)
+        updates = reassign_sales_entity_records_to_branch_pool(
+            entity_name, include_inactive_pool=True
+        )
         for doctype, count in updates.items():
             totals[doctype] = totals.get(doctype, 0) + count
 
@@ -488,7 +522,9 @@ def reassign_user_owned_records_to_branch_pools(user: str | None) -> dict[str, i
             name = str(row.get("name") or "").strip()
             if not name:
                 continue
-            frappe.db.set_value("AT Customer", name, "assigned_agent", None, update_modified=False)
+            frappe.db.set_value(
+                "AT Customer", name, "assigned_agent", None, update_modified=False
+            )
             cleared += 1
         if cleared:
             totals["AT Customer"] = cleared

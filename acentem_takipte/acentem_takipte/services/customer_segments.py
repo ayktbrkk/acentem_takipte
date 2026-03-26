@@ -133,18 +133,28 @@ def upsert_customer_segment_snapshot(
     )
 
     snapshot.office_branch = office_branch
-    snapshot.source_version = str(insight_payload.get("source_version") or SNAPSHOT_SOURCE_VERSION)
+    snapshot.source_version = str(
+        insight_payload.get("source_version") or SNAPSHOT_SOURCE_VERSION
+    )
     snapshot.score = int(insight_payload.get("score") or 0)
     snapshot.segment = str(insight_payload.get("segment") or "")
     snapshot.claim_risk = str(insight_payload.get("claim_risk") or "")
     snapshot.value_band = str(insight_payload.get("value_band") or "")
-    snapshot.strengths_json = json.dumps(insight_payload.get("strengths") or [], ensure_ascii=False)
-    snapshot.risks_json = json.dumps(insight_payload.get("risks") or [], ensure_ascii=False)
-    snapshot.score_reason_json = json.dumps(insight_payload.get("score_reason") or {}, ensure_ascii=False)
+    snapshot.strengths_json = json.dumps(
+        insight_payload.get("strengths") or [], ensure_ascii=False
+    )
+    snapshot.risks_json = json.dumps(
+        insight_payload.get("risks") or [], ensure_ascii=False
+    )
+    snapshot.score_reason_json = json.dumps(
+        insight_payload.get("score_reason") or {}, ensure_ascii=False
+    )
 
     if existing_name:
+        # ignore_permissions: Customer segment snapshot; runs from scheduler job.
         snapshot.save(ignore_permissions=True)
     else:
+        # ignore_permissions: Customer segment snapshot; runs from scheduler job.
         snapshot.insert(ignore_permissions=True)
 
     return serialize_customer_segment_snapshot(snapshot)
@@ -167,10 +177,14 @@ def serialize_customer_segment_snapshot(snapshot_doc) -> dict[str, Any]:
     }
 
 
-def refresh_due_customer_segment_snapshots(limit: int = 250, snapshot_date=None) -> dict[str, Any]:
+def refresh_due_customer_segment_snapshots(
+    limit: int = 250, snapshot_date=None
+) -> dict[str, Any]:
     business_date = getdate(snapshot_date or today())
     safe_limit = max(cint(limit or 250), 1)
-    filters = {"disabled": 0} if frappe.db.has_column("AT Customer", "disabled") else None
+    filters = (
+        {"disabled": 0} if frappe.db.has_column("AT Customer", "disabled") else None
+    )
     customers = frappe.get_all(
         "AT Customer",
         filters=filters,
@@ -226,8 +240,12 @@ def _collect_customer_segment_metrics(customer_name: str) -> dict[str, Any]:
         limit_page_length=500,
     )
     total_policy_count = len(policies)
-    active_policy_count = sum(1 for row in policies if (row.status or "") in {"Active", "Renewal"})
-    cancelled_policy_count = sum(1 for row in policies if (row.status or "") == "Cancelled")
+    active_policy_count = sum(
+        1 for row in policies if (row.status or "") in {"Active", "Renewal"}
+    )
+    cancelled_policy_count = sum(
+        1 for row in policies if (row.status or "") == "Cancelled"
+    )
     policy_total_premium = sum(flt(row.gross_premium) for row in policies)
 
     claims = frappe.get_all(
@@ -236,7 +254,9 @@ def _collect_customer_segment_metrics(customer_name: str) -> dict[str, Any]:
         fields=["claim_status"],
         limit_page_length=500,
     )
-    open_claim_count = sum(1 for row in claims if (row.claim_status or "") not in {"Closed", "Rejected"})
+    open_claim_count = sum(
+        1 for row in claims if (row.claim_status or "") not in {"Closed", "Rejected"}
+    )
 
     overdue_payment_count = 0
     overdue_payment_amount = 0.0
@@ -248,7 +268,9 @@ def _collect_customer_segment_metrics(customer_name: str) -> dict[str, Any]:
             limit_page_length=500,
         )
         overdue_payment_count = len(overdue_installments)
-        overdue_payment_amount = sum(flt(row.amount_try) for row in overdue_installments)
+        overdue_payment_amount = sum(
+            flt(row.amount_try) for row in overdue_installments
+        )
     else:
         overdue_payments = frappe.get_all(
             "AT Payment",

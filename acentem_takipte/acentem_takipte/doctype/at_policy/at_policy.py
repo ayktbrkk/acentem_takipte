@@ -9,7 +9,9 @@ from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import add_days, flt, getdate, now_datetime, nowdate
 from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
-from acentem_takipte.acentem_takipte.policy_documents import attach_policy_pdf_to_customer_folder
+from acentem_takipte.acentem_takipte.policy_documents import (
+    attach_policy_pdf_to_customer_folder,
+)
 from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
@@ -68,7 +70,11 @@ class ATPolicy(Document):
         self.commission_amount = normalized["commission_amount"]
         self.commission = normalized["commission_amount"]
         self.gross_premium = normalized["gross_premium"]
-        self.commission_rate = (self.commission_amount / self.gross_premium) * 100 if self.gross_premium else 0
+        self.commission_rate = (
+            (self.commission_amount / self.gross_premium) * 100
+            if self.gross_premium
+            else 0
+        )
         self._set_exchange_rate()
         self.gwp_try = self.gross_premium * flt(self.fx_rate)
 
@@ -104,9 +110,16 @@ class ATPolicy(Document):
                 snapshot_version=1,
                 notes="Baseline snapshot",
             )
-            self.db_set("current_version", baseline_snapshot.snapshot_version, update_modified=False)
+            self.db_set(
+                "current_version",
+                baseline_snapshot.snapshot_version,
+                update_modified=False,
+            )
         except Exception:
-            log_redacted_error("AT Policy Baseline Snapshot Error", details={"policy": self.name, "customer": self.customer})
+            log_redacted_error(
+                "AT Policy Baseline Snapshot Error",
+                details={"policy": self.name, "customer": self.customer},
+            )
 
         try:
             create_notification_drafts(
@@ -135,7 +148,11 @@ class ATPolicy(Document):
         except Exception:
             log_redacted_error(
                 "AT Policy Notification Draft Error",
-                details={"policy": self.name, "policy_no": self.policy_no, "customer": self.customer},
+                details={
+                    "policy": self.name,
+                    "policy_no": self.policy_no,
+                    "customer": self.customer,
+                },
             )
 
         try:
@@ -143,7 +160,11 @@ class ATPolicy(Document):
         except Exception:
             log_redacted_error(
                 "AT Policy PDF Attachment Error",
-                details={"policy": self.name, "policy_no": self.policy_no, "customer": self.customer},
+                details={
+                    "policy": self.name,
+                    "policy_no": self.policy_no,
+                    "customer": self.customer,
+                },
             )
 
     def _set_exchange_rate(self):
@@ -164,7 +185,9 @@ class ATPolicy(Document):
         rate, rate_date = fetch_tcmb_rate(self.currency, reference_date)
 
         if not rate:
-            frappe.throw(_("TCMB exchange rate is unavailable. Enter FX Rate manually."))
+            frappe.throw(
+                _("TCMB exchange rate is unavailable. Enter FX Rate manually.")
+            )
 
         self.fx_rate = rate
         self.fx_date = rate_date
@@ -243,7 +266,9 @@ def _contains_unsafe_xml_constructs(xml_payload: bytes) -> bool:
 
 
 def serialize_policy_snapshot(policy_doc: ATPolicy) -> dict:
-    return {fieldname: policy_doc.get(fieldname) for fieldname in POLICY_SNAPSHOT_FIELDS}
+    return {
+        fieldname: policy_doc.get(fieldname) for fieldname in POLICY_SNAPSHOT_FIELDS
+    }
 
 
 def create_policy_snapshot(
@@ -272,7 +297,9 @@ def create_policy_snapshot(
             "captured_by": frappe.session.user,
             "notes": notes,
         }
-    ).insert(ignore_permissions=True)
+    )
+    # ignore_permissions: Snapshot creation during policy update; internal operation.
+    doc.insert(ignore_permissions=True)
     return snapshot_doc
 
 
@@ -286,4 +313,3 @@ def _next_snapshot_version(policy_name: str) -> int:
         policy_name,
     )[0][0]
     return (int(current) if current else 0) + 1
-

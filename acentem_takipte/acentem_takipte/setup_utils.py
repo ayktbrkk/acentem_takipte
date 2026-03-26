@@ -31,9 +31,27 @@ WORKSPACE_SIDEBAR_ITEMS = (
         "icon": "briefcase",
         "collapsible": 1,
     },
-    {"type": "Link", "label": "Leads", "link_type": "DocType", "link_to": "AT Lead", "child": 1},
-    {"type": "Link", "label": "Offers", "link_type": "DocType", "link_to": "AT Offer", "child": 1},
-    {"type": "Link", "label": "Policies", "link_type": "DocType", "link_to": "AT Policy", "child": 1},
+    {
+        "type": "Link",
+        "label": "Leads",
+        "link_type": "DocType",
+        "link_to": "AT Lead",
+        "child": 1,
+    },
+    {
+        "type": "Link",
+        "label": "Offers",
+        "link_type": "DocType",
+        "link_to": "AT Offer",
+        "child": 1,
+    },
+    {
+        "type": "Link",
+        "label": "Policies",
+        "link_type": "DocType",
+        "link_to": "AT Policy",
+        "child": 1,
+    },
     {
         "type": "Link",
         "label": "Renewal Tasks",
@@ -41,8 +59,20 @@ WORKSPACE_SIDEBAR_ITEMS = (
         "link_to": "AT Renewal Task",
         "child": 1,
     },
-    {"type": "Link", "label": "Claims", "link_type": "DocType", "link_to": "AT Claim", "child": 1},
-    {"type": "Link", "label": "Payments", "link_type": "DocType", "link_to": "AT Payment", "child": 1},
+    {
+        "type": "Link",
+        "label": "Claims",
+        "link_type": "DocType",
+        "link_to": "AT Claim",
+        "child": 1,
+    },
+    {
+        "type": "Link",
+        "label": "Payments",
+        "link_type": "DocType",
+        "link_to": "AT Payment",
+        "child": 1,
+    },
     {
         "type": "Section Break",
         "label": "Customer & Communication",
@@ -110,7 +140,13 @@ WORKSPACE_SIDEBAR_ITEMS = (
         "link_to": "AT Insurance Company",
         "child": 1,
     },
-    {"type": "Link", "label": "Branches", "link_type": "DocType", "link_to": "AT Branch", "child": 1},
+    {
+        "type": "Link",
+        "label": "Branches",
+        "link_type": "DocType",
+        "link_to": "AT Branch",
+        "child": 1,
+    },
     {
         "type": "Link",
         "label": "Sales Entities",
@@ -327,11 +363,15 @@ def precompute_user_scope_on_session_creation(login_manager=None):
         return
 
     try:
-        from acentem_takipte.acentem_takipte.services.cache_precomputation import precompute_user_scope
+        from acentem_takipte.acentem_takipte.services.cache_precomputation import (
+            precompute_user_scope,
+        )
 
         precompute_user_scope(user=user)
     except Exception as exc:
-        frappe.logger().warning("Failed to precompute scope during session creation for %s: %s", user, exc)
+        frappe.logger().warning(
+            "Failed to precompute scope during session creation for %s: %s", user, exc
+        )
 
 
 def invalidate_user_scope_on_logout(login_manager=None):
@@ -340,11 +380,15 @@ def invalidate_user_scope_on_logout(login_manager=None):
         return
 
     try:
-        from acentem_takipte.acentem_takipte.services.cache_precomputation import invalidate_user_scope_cache
+        from acentem_takipte.acentem_takipte.services.cache_precomputation import (
+            invalidate_user_scope_cache,
+        )
 
         invalidate_user_scope_cache(user=user)
     except Exception as exc:
-        frappe.logger().warning("Failed to invalidate scope cache during logout for %s: %s", user, exc)
+        frappe.logger().warning(
+            "Failed to invalidate scope cache during logout for %s: %s", user, exc
+        )
 
 
 def ensure_core_setup_önce():
@@ -384,7 +428,7 @@ def ensure_user_default_role(user: str | None = None) -> bool:
         return False
 
     if not frappe.db.exists("Has Role", {"parent": target_user, "role": "Agent"}):
-        frappe.get_doc(
+        doc = frappe.get_doc(
             {
                 "doctype": "Has Role",
                 "parent": target_user,
@@ -392,7 +436,9 @@ def ensure_user_default_role(user: str | None = None) -> bool:
                 "parenttype": "User",
                 "role": "Agent",
             }
-        ).insert(ignore_permissions=True)
+        )
+        # ignore_permissions: App install/migrate setup; runs as Administrator context.
+        doc.insert(ignore_permissions=True)
         frappe.clear_cache(user=target_user)
         return True
 
@@ -404,13 +450,15 @@ def ensure_roles() -> bool:
     for role_name in CORE_ROLES:
         if frappe.db.exists("Role", role_name):
             continue
-        frappe.get_doc(
+        doc = frappe.get_doc(
             {
                 "doctype": "Role",
                 "role_name": role_name,
                 "desk_access": 1,
             }
-        ).insert(ignore_permissions=True)
+        )
+        # ignore_permissions: App install/migrate setup; runs as Administrator context.
+        doc.insert(ignore_permissions=True)
         changed = True
     return changed
 
@@ -424,7 +472,12 @@ def ensure_role_permissions() -> bool:
             for permlevel, rule in permlevels.items():
                 if not frappe.db.exists(
                     "Custom DocPerm",
-                    {"parent": doctype, "role": role, "permlevel": permlevel, "if_owner": 0},
+                    {
+                        "parent": doctype,
+                        "role": role,
+                        "permlevel": permlevel,
+                        "if_owner": 0,
+                    },
                 ):
                     add_permission(doctype, role, permlevel=permlevel)
                     changed = True
@@ -433,7 +486,12 @@ def ensure_role_permissions() -> bool:
                     target_value = int(rule.get(key, 0))
                     current_value = frappe.db.get_value(
                         "Custom DocPerm",
-                        {"parent": doctype, "role": role, "permlevel": permlevel, "if_owner": 0},
+                        {
+                            "parent": doctype,
+                            "role": role,
+                            "permlevel": permlevel,
+                            "if_owner": 0,
+                        },
                         key,
                     )
                     if int(current_value or 0) == target_value:
@@ -457,7 +515,7 @@ def ensure_default_notification_templates() -> bool:
         if frappe.db.exists("AT Notification Template", template["template_key"]):
             continue
 
-        frappe.get_doc(
+        doc = frappe.get_doc(
             {
                 "doctype": "AT Notification Template",
                 "template_key": template["template_key"],
@@ -468,9 +526,12 @@ def ensure_default_notification_templates() -> bool:
                 "body_template": template["body_template"],
                 "is_active": 1,
             }
-        ).insert(ignore_permissions=True)
+        )
+        # ignore_permissions: App install/migrate setup; runs as Administrator context.
+        doc.insert(ignore_permissions=True)
         changed = True
     return changed
+
 
 def ensure_workspace_sidebar() -> bool:
     if not frappe.db.exists("DocType", "Workspace Sidebar"):
@@ -512,9 +573,11 @@ def ensure_workspace_sidebar() -> bool:
         changed = True
 
     if is_new:
+        # ignore_permissions: App install/migrate setup; runs as Administrator context.
         sidebar.insert(ignore_permissions=True)
         return True
     if changed:
+        # ignore_permissions: App install/migrate setup; runs as Administrator context.
         sidebar.save(ignore_permissions=True)
     return changed
 
@@ -533,7 +596,9 @@ def _workspace_sidebar_items_payload(items=None) -> list[dict]:
             "link_to": item.get("link_to"),
             "url": item.get("url"),
             "child": int(item.get("child", 0)),
-            "collapsible": int(item.get("collapsible", 1 if item_type == "Section Break" else 0)),
+            "collapsible": int(
+                item.get("collapsible", 1 if item_type == "Section Break" else 0)
+            ),
             "indent": int(item.get("indent", 0)),
             "keep_closed": int(item.get("keep_closed", 0)),
             "show_arrow": int(item.get("show_arrow", 0)),

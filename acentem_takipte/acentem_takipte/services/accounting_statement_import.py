@@ -23,7 +23,9 @@ def build_statement_import_preview(
     policy_refs = [row["policy_no"] for row in preview_rows if row.get("policy_no")]
     payment_refs = [row["payment_no"] for row in preview_rows if row.get("payment_no")]
 
-    policy_map = _build_policy_map(policy_refs, office_branch=office_branch, insurance_company=insurance_company)
+    policy_map = _build_policy_map(
+        policy_refs, office_branch=office_branch, insurance_company=insurance_company
+    )
     payment_map = _build_payment_map(payment_refs, office_branch=office_branch)
 
     matched = 0
@@ -33,7 +35,9 @@ def build_statement_import_preview(
     for row in preview_rows:
         total_amount_try += flt(row.get("amount_try") or 0)
         policy = policy_map.get(row.get("policy_no")) if row.get("policy_no") else None
-        payment = payment_map.get(row.get("payment_no")) if row.get("payment_no") else None
+        payment = (
+            payment_map.get(row.get("payment_no")) if row.get("payment_no") else None
+        )
         row["matched_policy"] = policy
         row["matched_payment"] = payment
         row["match_status"] = "Matched" if policy or payment else "Unmatched"
@@ -128,8 +132,10 @@ def import_statement_preview_rows(
         entry.error_message = None
 
         if entry.name:
+            # ignore_permissions: Accounting statement bulk import service; permission enforced at API entry.
             entry.save(ignore_permissions=True)
         else:
+            # ignore_permissions: Accounting statement bulk import service; permission enforced at API entry.
             entry.insert(ignore_permissions=True)
 
         entry_row = frappe._dict(
@@ -140,7 +146,9 @@ def import_statement_preview_rows(
             local_amount_try=entry.local_amount_try,
             external_amount_try=entry.external_amount_try,
             external_ref=entry.external_ref,
-            difference_try=(flt(entry.external_amount_try) - flt(entry.local_amount_try)),
+            difference_try=(
+                flt(entry.external_amount_try) - flt(entry.local_amount_try)
+            ),
         )
         mismatch_type, details = _evaluate_mismatch(entry_row)
         if mismatch_type:
@@ -164,7 +172,9 @@ def import_statement_preview_rows(
     }
 
 
-def _parse_csv_rows(*, csv_text: str, delimiter: str, limit: int) -> list[dict[str, str]]:
+def _parse_csv_rows(
+    *, csv_text: str, delimiter: str, limit: int
+) -> list[dict[str, str]]:
     safe_text = str(csv_text or "").strip()
     if not safe_text:
         return []
@@ -173,17 +183,30 @@ def _parse_csv_rows(*, csv_text: str, delimiter: str, limit: int) -> list[dict[s
     for index, row in enumerate(reader):
         if index >= max(int(limit), 1):
             break
-        rows.append({str(key or "").strip(): str(value or "").strip() for key, value in (row or {}).items()})
+        rows.append(
+            {
+                str(key or "").strip(): str(value or "").strip()
+                for key, value in (row or {}).items()
+            }
+        )
     return rows
 
 
 def _normalize_preview_row(row: dict[str, str]) -> dict[str, Any]:
-    external_ref = row.get("external_ref") or row.get("externalRef") or row.get("ref") or ""
+    external_ref = (
+        row.get("external_ref") or row.get("externalRef") or row.get("ref") or ""
+    )
     policy_no = row.get("policy_no") or row.get("policyNo") or row.get("policy") or ""
-    payment_no = row.get("payment_no") or row.get("paymentNo") or row.get("payment") or ""
+    payment_no = (
+        row.get("payment_no") or row.get("paymentNo") or row.get("payment") or ""
+    )
     customer = row.get("customer") or row.get("customer_name") or ""
     amount_value = row.get("amount_try") or row.get("amount") or row.get("total") or "0"
-    amount_value = str(amount_value).replace(".", "").replace(",", ".") if "," in str(amount_value) and "." in str(amount_value) else str(amount_value).replace(",", ".")
+    amount_value = (
+        str(amount_value).replace(".", "").replace(",", ".")
+        if "," in str(amount_value) and "." in str(amount_value)
+        else str(amount_value).replace(",", ".")
+    )
     return {
         "external_ref": external_ref,
         "policy_no": policy_no,
@@ -194,8 +217,12 @@ def _normalize_preview_row(row: dict[str, str]) -> dict[str, Any]:
     }
 
 
-def _build_policy_map(policy_refs: list[str], *, office_branch: str | None, insurance_company: str | None) -> dict[str, dict[str, Any]]:
-    refs = [str(value or "").strip() for value in policy_refs if str(value or "").strip()]
+def _build_policy_map(
+    policy_refs: list[str], *, office_branch: str | None, insurance_company: str | None
+) -> dict[str, dict[str, Any]]:
+    refs = [
+        str(value or "").strip() for value in policy_refs if str(value or "").strip()
+    ]
     if not refs:
         return {}
     ref_set = list(set(refs))
@@ -207,7 +234,14 @@ def _build_policy_map(policy_refs: list[str], *, office_branch: str | None, insu
     rows = frappe.get_all(
         "AT Policy",
         filters=filters,
-        fields=["name", "policy_no", "customer", "insurance_company", "office_branch", "status"],
+        fields=[
+            "name",
+            "policy_no",
+            "customer",
+            "insurance_company",
+            "office_branch",
+            "status",
+        ],
         limit_page_length=0,
     )
     policy_map: dict[str, dict[str, Any]] = {}
@@ -226,7 +260,14 @@ def _build_policy_map(policy_refs: list[str], *, office_branch: str | None, insu
     fallback_rows = frappe.get_all(
         "AT Policy",
         filters=fallback_filters,
-        fields=["name", "policy_no", "customer", "insurance_company", "office_branch", "status"],
+        fields=[
+            "name",
+            "policy_no",
+            "customer",
+            "insurance_company",
+            "office_branch",
+            "status",
+        ],
         limit_page_length=0,
     )
     for row in fallback_rows:
@@ -234,8 +275,12 @@ def _build_policy_map(policy_refs: list[str], *, office_branch: str | None, insu
     return policy_map
 
 
-def _build_payment_map(payment_refs: list[str], *, office_branch: str | None) -> dict[str, dict[str, Any]]:
-    refs = [str(value or "").strip() for value in payment_refs if str(value or "").strip()]
+def _build_payment_map(
+    payment_refs: list[str], *, office_branch: str | None
+) -> dict[str, dict[str, Any]]:
+    refs = [
+        str(value or "").strip() for value in payment_refs if str(value or "").strip()
+    ]
     if not refs:
         return {}
     filters: dict[str, Any] = {"payment_no": ["in", list(set(refs))]}
@@ -244,7 +289,15 @@ def _build_payment_map(payment_refs: list[str], *, office_branch: str | None) ->
     rows = frappe.get_all(
         "AT Payment",
         filters=filters,
-        fields=["name", "payment_no", "customer", "policy", "office_branch", "status", "amount_try"],
+        fields=[
+            "name",
+            "payment_no",
+            "customer",
+            "policy",
+            "office_branch",
+            "status",
+            "amount_try",
+        ],
         limit_page_length=0,
     )
     return {str(row.get("payment_no") or "").strip(): row for row in rows}
@@ -253,4 +306,3 @@ def _build_payment_map(payment_refs: list[str], *, office_branch: str | None) ->
 def _build_statement_row_hash(payload: dict[str, Any]) -> str:
     serialized = frappe.as_json(payload)
     return sha256(serialized.encode("utf-8")).hexdigest()
-

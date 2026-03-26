@@ -17,7 +17,9 @@ from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import (
     create_policy_snapshot,
     serialize_policy_snapshot,
 )
-from acentem_takipte.acentem_takipte.utils.commissions import sync_legacy_commission_fields
+from acentem_takipte.acentem_takipte.utils.commissions import (
+    sync_legacy_commission_fields,
+)
 from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyEndorsementStatus
 
 ALLOWED_ENDORSEMENT_FIELDS = {
@@ -54,7 +56,9 @@ def apply_endorsement(endorsement_name: str) -> dict[str, str]:
     user = assert_authenticated()
     assert_post_request("Only POST requests are allowed for endorsement application.")
     endorsement_name = str(endorsement_name or "").strip()
-    endorsement = assert_doc_permission("AT Policy Endorsement", endorsement_name, "write")
+    endorsement = assert_doc_permission(
+        "AT Policy Endorsement", endorsement_name, "write"
+    )
     if endorsement.status == ATPolicyEndorsementStatus.APPLIED:
         return {
             "policy": endorsement.policy,
@@ -79,6 +83,7 @@ def apply_endorsement(endorsement_name: str) -> dict[str, str]:
             payload.get("commission_amount", payload.get("commission")),
         )
 
+    # ignore_permissions: Policy update during endorsement apply; permission checked in calling function.
     policy.save(ignore_permissions=True)
     policy.reload()
 
@@ -94,9 +99,15 @@ def apply_endorsement(endorsement_name: str) -> dict[str, str]:
 
     endorsement.db_set("snapshot_version", next_version, update_modified=False)
     endorsement.db_set("snapshot_record", snapshot.name, update_modified=False)
-    endorsement.db_set("before_snapshot", frappe.as_json(before_snapshot), update_modified=False)
-    endorsement.db_set("after_snapshot", frappe.as_json(after_snapshot), update_modified=False)
-    endorsement.db_set("status", ATPolicyEndorsementStatus.APPLIED, update_modified=False)
+    endorsement.db_set(
+        "before_snapshot", frappe.as_json(before_snapshot), update_modified=False
+    )
+    endorsement.db_set(
+        "after_snapshot", frappe.as_json(after_snapshot), update_modified=False
+    )
+    endorsement.db_set(
+        "status", ATPolicyEndorsementStatus.APPLIED, update_modified=False
+    )
     endorsement.db_set("applied_on", now_datetime(), update_modified=False)
     endorsement.db_set("applied_by", frappe.session.user, update_modified=False)
 
@@ -129,7 +140,9 @@ def _parse_payload(raw_payload, validate_keys: bool = False) -> dict:
     if validate_keys:
         unknown = sorted(set(payload.keys()) - ALLOWED_ENDORSEMENT_FIELDS)
         if unknown:
-            frappe.throw(_("Unsupported endorsement fields: {0}").format(", ".join(unknown)))
+            frappe.throw(
+                _("Unsupported endorsement fields: {0}").format(", ".join(unknown))
+            )
 
     # Normalize payload for deterministic snapshots/logging.
     return json.loads(frappe.as_json(payload))
@@ -145,4 +158,3 @@ def _next_snapshot_version(policy_name: str) -> int:
         policy_name,
     )[0][0]
     return (int(current) if current else 0) + 1
-

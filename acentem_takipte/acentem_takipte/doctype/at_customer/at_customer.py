@@ -8,12 +8,16 @@ from frappe.model.document import Document
 from frappe.model.naming import make_autoname
 from frappe.utils import getdate, nowdate
 
-from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_access
+from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import (
+    log_access,
+)
 from acentem_takipte.acentem_takipte.doctype.branch_permissions import (
     build_office_branch_permission_query,
     has_office_branch_permission,
 )
-from acentem_takipte.acentem_takipte.services.branches import user_can_access_all_office_branches
+from acentem_takipte.acentem_takipte.services.branches import (
+    user_can_access_all_office_branches,
+)
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
 SENSITIVE_ROLES = {"System Manager", "Manager", "Accountant"}
@@ -53,7 +57,10 @@ class ATCustomer(Document):
         self.masked_tax_id = mask_tax_id(self.tax_id)
         self.masked_phone = mask_phone(self.phone)
 
-        if not self.assigned_agent and frappe.session.user not in {"Guest", "Administrator"}:
+        if not self.assigned_agent and frappe.session.user not in {
+            "Guest",
+            "Administrator",
+        }:
             self.assigned_agent = frappe.session.user
 
     def after_insert(self):
@@ -73,13 +80,19 @@ class ATCustomer(Document):
         self.set_onload("masked_phone", mask_phone(self.phone))
         self.set_onload("can_view_sensitive", has_sensitive_access())
         try:
-            log_access(reference_doctype=self.doctype, reference_name=self.name, action="View")
+            log_access(
+                reference_doctype=self.doctype, reference_name=self.name, action="View"
+            )
         except Exception:
-            log_redacted_error("AT Customer Access Log Error", details={"customer": self.name})
+            log_redacted_error(
+                "AT Customer Access Log Error", details={"customer": self.name}
+            )
 
     def ensure_private_folder(self):
         relative_folder = f"/private/files/customers/{self.name}"
-        folder_path = Path(frappe.get_site_path("private", "files", "customers", self.name))
+        folder_path = Path(
+            frappe.get_site_path("private", "files", "customers", self.name)
+        )
         folder_path.mkdir(parents=True, exist_ok=True)
         _ensure_file_folder_tree(self.name)
         self.db_set("customer_folder", relative_folder, update_modified=False)
@@ -145,6 +158,7 @@ def _ensure_folder(name: str, folder: str) -> None:
             "folder": folder,
             "is_private": 1,
         }
+        # ignore_permissions: Internal folder creation for customer file attachments; not user-facing mutation.
     ).insert(ignore_permissions=True)
 
 
@@ -164,7 +178,9 @@ def _rename_file_folder_tree(old_name: str, new_name: str) -> None:
         "name",
     )
     if folder_doc_name:
-        frappe.db.set_value("File", folder_doc_name, "file_name", new_name, update_modified=False)
+        frappe.db.set_value(
+            "File", folder_doc_name, "file_name", new_name, update_modified=False
+        )
 
     old_folder_path = f"Home/customers/{old_name}"
     new_folder_path = f"Home/customers/{new_name}"
@@ -179,7 +195,9 @@ def _rename_file_folder_tree(old_name: str, new_name: str) -> None:
         if not current_folder.startswith(old_folder_path):
             continue
         updated_folder = current_folder.replace(old_folder_path, new_folder_path, 1)
-        frappe.db.set_value("File", row["name"], "folder", updated_folder, update_modified=False)
+        frappe.db.set_value(
+            "File", row["name"], "folder", updated_folder, update_modified=False
+        )
 
 
 def get_permission_query_conditions(user=None):
@@ -215,11 +233,15 @@ def has_permission(doc, user=None, permission_type="read"):
     roles = set(frappe.get_roles(user))
     # AT Customer uses origin_office_branch for permission checks per kanon branch model
     if "Agent" in roles:
-        return (doc.assigned_agent == user or doc.owner == user) and has_office_branch_permission(
+        return (
+            doc.assigned_agent == user or doc.owner == user
+        ) and has_office_branch_permission(
             doc, fieldname="origin_office_branch", user=user
         )
 
-    return has_office_branch_permission(doc, fieldname="origin_office_branch", user=user)
+    return has_office_branch_permission(
+        doc, fieldname="origin_office_branch", user=user
+    )
 
 
 def has_sensitive_access(user=None) -> bool:
@@ -251,4 +273,3 @@ def mask_phone(value: str | None) -> str:
 
 def _can_access_all_customers(user: str) -> bool:
     return user_can_access_all_office_branches(user)
-

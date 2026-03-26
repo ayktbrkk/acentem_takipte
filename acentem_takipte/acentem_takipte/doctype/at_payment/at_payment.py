@@ -75,7 +75,11 @@ class ATPayment(Document):
         payment_currency = str((self.currency or claim_currency or "TRY")).upper()
         self.currency = payment_currency
         if claim_currency and payment_currency != claim_currency:
-            frappe.throw(_("Claim payout currency must match claim currency ({0}).").format(claim_currency))
+            frappe.throw(
+                _("Claim payout currency must match claim currency ({0}).").format(
+                    claim_currency
+                )
+            )
 
         if self.payment_direction != "Outbound":
             frappe.throw(_("Claim payments must be outbound."))
@@ -90,7 +94,12 @@ class ATPayment(Document):
 
         due_date = getdate(self.due_date) if self.due_date else None
         payment_date = getdate(self.payment_date) if self.payment_date else None
-        if due_date and payment_date and due_date > payment_date and self.status == ATPaymentStatus.PAID:
+        if (
+            due_date
+            and payment_date
+            and due_date > payment_date
+            and self.status == ATPaymentStatus.PAID
+        ):
             frappe.msgprint(_("Payment is marked as paid before due date."), alert=True)
 
     def _validate_status(self):
@@ -125,7 +134,9 @@ class ATPayment(Document):
         rate, rate_date = fetch_tcmb_rate(self.currency, reference_date)
 
         if not rate:
-            frappe.throw(_("TCMB exchange rate is unavailable. Enter FX Rate manually."))
+            frappe.throw(
+                _("TCMB exchange rate is unavailable. Enter FX Rate manually.")
+            )
 
         self.fx_rate = rate
         self.fx_date = rate_date
@@ -134,6 +145,7 @@ class ATPayment(Document):
         if not self.claim or not frappe.db.exists("AT Claim", self.claim):
             return
         claim_doc = frappe.get_doc("AT Claim", self.claim)
+        # ignore_permissions: Claim update triggered by payment status change; doc-level permission in effect.
         claim_doc.save(ignore_permissions=True)
 
     def _sync_installment_schedule(self):
@@ -164,7 +176,7 @@ class ATPayment(Document):
             elif due_date < getdate(nowdate()):
                 status = "Overdue"
 
-            frappe.get_doc(
+            doc = frappe.get_doc(
                 {
                     "doctype": "AT Payment Installment",
                     "payment": self.name,
@@ -181,5 +193,6 @@ class ATPayment(Document):
                     "amount_try": round(amount * fx_rate, 2),
                     "notes": self.notes,
                 }
-            ).insert(ignore_permissions=True)
-
+            )
+            # ignore_permissions: Claim update triggered by payment status change; doc-level permission in effect.
+            doc.insert(ignore_permissions=True)

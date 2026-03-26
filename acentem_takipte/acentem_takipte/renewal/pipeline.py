@@ -16,10 +16,16 @@ from acentem_takipte.acentem_takipte.renewal.telemetry import (
 )
 
 
-def run_renewal_task_creation(*, business_date=None, lookahead_days: int = 90, limit: int = 2000) -> dict[str, int]:
+def run_renewal_task_creation(
+    *, business_date=None, lookahead_days: int = 90, limit: int = 2000
+) -> dict[str, int]:
     today = getdate(business_date or nowdate())
-    candidates = get_renewal_candidates(business_date=today, lookahead_days=lookahead_days, limit=limit)
-    existing_keys = load_existing_renewal_keys([candidate.policy for candidate in candidates])
+    candidates = get_renewal_candidates(
+        business_date=today, lookahead_days=lookahead_days, limit=limit
+    )
+    existing_keys = load_existing_renewal_keys(
+        [candidate.policy for candidate in candidates]
+    )
 
     scanned = len(candidates)
     created = 0
@@ -39,6 +45,7 @@ def run_renewal_task_creation(*, business_date=None, lookahead_days: int = 90, l
             continue
 
         try:
+            # ignore_permissions: Renewal task creation pipeline; runs from scheduler job.
             doc.insert(ignore_permissions=True)
             if unique_key:
                 existing_keys.add(unique_key)
@@ -66,8 +73,9 @@ def queue_renewal_task_notification(task_doc) -> str | None:
     return create_renewal_notification_draft(task_doc)
 
 
-def run_stale_renewal_task_remediation(*, business_date=None, limit: int = 500) -> dict[str, int]:
+def run_stale_renewal_task_remediation(
+    *, business_date=None, limit: int = 500
+) -> dict[str, int]:
     summary = remediate_stale_renewal_tasks(business_date=business_date, limit=limit)
     log_renewal_remediation_summary(summary)
     return summary
-

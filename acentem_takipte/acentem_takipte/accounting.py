@@ -161,8 +161,11 @@ def sync_accounting_entry(
         entry.last_synced_on = now_datetime()
 
         if entry.name:
+            # ignore_permissions: Background scheduler job (sync_accounting_entries) runs without user session.
+            # Permission enforcement happens at API layer (api/accounting.py:107).
             entry.save(ignore_permissions=True)
         else:
+            # ignore_permissions: New entry created during background sync; API layer enforces permissions.
             entry.insert(ignore_permissions=True)
 
         return {"status": ATAccountingEntryStatus.SYNCED, "entry": entry.name}
@@ -257,6 +260,7 @@ def resolve_reconciliation_item(
     if normalized_notes:
         item.notes = normalized_notes
     # Permission checks are enforced by API wrappers (api/accounting.py); this service also runs from trusted internals.
+    # ignore_permissions: Reconciliation resolution called from API (api/accounting.py) which enforces has_permission.
     item.save(ignore_permissions=True)
 
     _set_entry_reconciliation_flag(
@@ -460,8 +464,10 @@ def _mark_entry_failed(entry, traceback_text: str) -> None:
         entry.sync_attempt_count = cint(entry.sync_attempt_count) + 1
         entry.last_synced_on = now_datetime()
         if entry.name:
+            # ignore_permissions: Background sync failure handler; permission enforced at API layer.
             entry.save(ignore_permissions=True)
         else:
+            # ignore_permissions: Entry creation during background sync failure path.
             entry.insert(ignore_permissions=True)
     except Exception:
         log_redacted_error(
@@ -544,8 +550,10 @@ def _upsert_open_item(entry_row, mismatch_type: str, details: dict) -> None:
     item.resolved_on = None
 
     if item.name:
+        # ignore_permissions: Reconciliation item management; permissions enforced by reconciliation API endpoints.
         item.save(ignore_permissions=True)
     else:
+        # ignore_permissions: New reconciliation item during background reconciliation job.
         item.insert(ignore_permissions=True)
 
 

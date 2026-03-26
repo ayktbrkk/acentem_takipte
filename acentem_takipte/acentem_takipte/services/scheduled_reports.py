@@ -18,7 +18,10 @@ from acentem_takipte.acentem_takipte.services.report_exports import (
     render_report_pdf,
     render_report_xlsx,
 )
-from acentem_takipte.acentem_takipte.services.report_registry import REPORT_DEFINITIONS, build_report_payload
+from acentem_takipte.acentem_takipte.services.report_registry import (
+    REPORT_DEFINITIONS,
+    build_report_payload,
+)
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 
@@ -80,7 +83,9 @@ def summarize_scheduled_report_configs() -> list[dict[str, Any]]:
                 "report_key": report_key,
                 "frequency": _normalize_frequency(config.get("frequency")),
                 "format": _normalize_export_format(config.get("format")),
-                "delivery_channel": _normalize_delivery_channel(config.get("delivery_channel")),
+                "delivery_channel": _normalize_delivery_channel(
+                    config.get("delivery_channel")
+                ),
                 "locale": _normalize_locale(config.get("locale")),
                 "recipients": _normalize_recipients(config.get("recipients")),
                 "filters": _coerce_filters(config.get("filters")),
@@ -131,7 +136,9 @@ def normalize_scheduled_report_config(payload: dict[str, Any]) -> dict[str, Any]
     }
 
 
-def upsert_scheduled_report_config(index: int | None, payload: dict[str, Any]) -> dict[str, Any]:
+def upsert_scheduled_report_config(
+    index: int | None, payload: dict[str, Any]
+) -> dict[str, Any]:
     config = normalize_scheduled_report_config(payload)
     configs = load_scheduled_report_configs()
     target_index = cint(index) - 1 if index else -1
@@ -156,7 +163,9 @@ def delete_scheduled_report_config(index: int) -> dict[str, int]:
     return {"remaining": len(configs)}
 
 
-def is_schedule_due(config: dict[str, Any], business_date=None, frequency: str | None = None) -> bool:
+def is_schedule_due(
+    config: dict[str, Any], business_date=None, frequency: str | None = None
+) -> bool:
     schedule = _normalize_frequency(config.get("frequency"))
     if frequency and schedule != _normalize_frequency(frequency):
         return False
@@ -173,7 +182,9 @@ def is_schedule_due(config: dict[str, Any], business_date=None, frequency: str |
     return False
 
 
-def dispatch_scheduled_reports(*, frequency: str | None = None, limit: int = 10, business_date=None) -> dict[str, Any]:
+def dispatch_scheduled_reports(
+    *, frequency: str | None = None, limit: int = 10, business_date=None
+) -> dict[str, Any]:
     configs = load_scheduled_report_configs()[: max(cint(limit), 1)]
     current_date = getdate(business_date or nowdate())
 
@@ -203,7 +214,11 @@ def dispatch_scheduled_reports(*, frequency: str | None = None, limit: int = 10,
             _update_config_run_metadata(
                 config,
                 status="invalid",
-                summary={"sent": 0, "queued": 0, "reason": "invalid_report_or_recipient"},
+                summary={
+                    "sent": 0,
+                    "queued": 0,
+                    "reason": "invalid_report_or_recipient",
+                },
                 business_date=current_date,
             )
             changed = True
@@ -212,7 +227,9 @@ def dispatch_scheduled_reports(*, frequency: str | None = None, limit: int = 10,
         filters = _coerce_filters(config.get("filters"))
         export_format = _normalize_export_format(config.get("format"))
         delivery_channel = _normalize_delivery_channel(config.get("delivery_channel"))
-        payload = build_report_payload(report_key, filters=filters, limit=max(cint(config.get("limit")) or 1000, 1))
+        payload = build_report_payload(
+            report_key, filters=filters, limit=max(cint(config.get("limit")) or 1000, 1)
+        )
 
         if export_format == "pdf":
             content = render_report_pdf(
@@ -233,7 +250,9 @@ def dispatch_scheduled_reports(*, frequency: str | None = None, limit: int = 10,
             )
 
         filename = build_report_filename(report_key, export_format)
-        report_title = build_report_title(report_key, _normalize_locale(config.get("locale")))
+        report_title = build_report_title(
+            report_key, _normalize_locale(config.get("locale"))
+        )
         if delivery_channel == "notification_outbox":
             queue_result = _queue_scheduled_report_delivery(
                 report_key=report_key,
@@ -345,13 +364,15 @@ def _queue_scheduled_report_delivery(
                     "body": f"{report_title} ektedir.",
                     "status": "Draft",
                 }
-            ).insert(ignore_permissions=True)
+            )
+            # ignore_permissions: Scheduled report generation; runs from scheduler job.
+            draft.insert(ignore_permissions=True)
             queued_result = enqueue_notification_draft(draft.name)
             outbox_name = queued_result.get("outbox")
             if not outbox_name:
                 failed += 1
                 continue
-            frappe.get_doc(
+            file_doc = frappe.get_doc(
                 {
                     "doctype": "File",
                     "file_name": filename,
@@ -361,7 +382,9 @@ def _queue_scheduled_report_delivery(
                     "content": content,
                     "decode": False,
                 }
-            ).insert(ignore_permissions=True)
+            )
+            # ignore_permissions: Scheduled report generation; runs from scheduler job.
+            file_doc.insert(ignore_permissions=True)
             outboxes.append(outbox_name)
             queued += 1
         except Exception:
@@ -384,7 +407,7 @@ def _ensure_scheduled_report_template() -> str:
     if frappe.db.exists("AT Notification Template", template_key):
         return template_key
 
-    frappe.get_doc(
+    doc = frappe.get_doc(
         {
             "doctype": "AT Notification Template",
             "template_key": template_key,
@@ -397,7 +420,9 @@ def _ensure_scheduled_report_template() -> str:
             "email_body_template": "{{ body or 'Zamanlanmis Rapor ektedir.' }}",
             "is_active": 1,
         }
-    ).insert(ignore_permissions=True)
+    )
+    # ignore_permissions: Scheduled report generation; runs from scheduler job.
+    doc.insert(ignore_permissions=True)
     return template_key
 
 
@@ -474,4 +499,3 @@ def _sanitize_schedule_config(value: dict[str, Any]) -> dict[str, Any]:
         "last_status": _normalize_last_status(value.get("last_status")),
         "last_summary": _coerce_summary(value.get("last_summary")),
     }
-
