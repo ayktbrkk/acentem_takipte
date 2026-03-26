@@ -26,6 +26,7 @@ doctype_js = {
     "AT Claim": "public/js/at_claim.js",
     "AT Payment": "public/js/at_payment.js",
     "AT Renewal Task": "public/js/at_renewal_task.js",
+    "AT Office Branch": "public/js/at_office_branch.js",
 }
 
 doctype_list_js = {
@@ -38,10 +39,16 @@ doctype_list_js = {
     "AT Renewal Task": "public/js/at_listviews.js",
 }
 
+doctype_tree_js = {
+    "AT Office Branch": "public/js/at_office_branch_tree.js",
+}
+
 after_install = "acentem_takipte.acentem_takipte.setup_utils.after_install"
 after_migrate = "acentem_takipte.acentem_takipte.setup_utils.after_migrate"
 on_session_creation = "acentem_takipte.acentem_takipte.setup_utils.precompute_user_scope_on_session_creation"
-on_logout = "acentem_takipte.acentem_takipte.setup_utils.invalidate_user_scope_on_logout"
+on_logout = (
+    "acentem_takipte.acentem_takipte.setup_utils.invalidate_user_scope_on_logout"
+)
 
 website_route_rules = [
     {"from_route": "/at", "to_route": "at"},
@@ -138,5 +145,5 @@ scheduler_events = {
         "acentem_takipte.acentem_takipte.tasks.run_accounting_reconciliation_job",
         "acentem_takipte.acentem_takipte.services.break_glass.expire_stale",
         "acentem_takipte.acentem_takipte.services.break_glass.run_break_glass_audit_monitor",
-    ]
+    ],
 }
