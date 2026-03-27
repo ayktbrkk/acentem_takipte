@@ -138,5 +138,8 @@ describe("CustomerList page store integration", () => {
     expect(customerStore.state.filters.query).toBe("aykut");
     expect(customerStore.state.pagination.pageLength).toBe(50);
     expect(wrapper.text()).toContain("50");
+
+    await wrapper.vm.openQuickCustomerDialog();
+    expect(wrapper.vm.showQuickCustomerDialog).toBe(true);
   });
 });

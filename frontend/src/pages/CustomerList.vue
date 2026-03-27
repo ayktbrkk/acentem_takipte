@@ -121,6 +121,7 @@ import { createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useCustomerStore } from "../stores/customer";
+import { useCustomerQuickCreateRuntime } from "../composables/useCustomerQuickCreateRuntime";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
@@ -132,12 +133,9 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import QuickCreateCustomer from "../components/QuickCreateCustomer.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
-import { getQuickCreateLabels } from "../utils/quickCreateCopy";
-import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";
 import { openListExport } from "../utils/listExport";
-import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
+import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import {
   extractCustomFilterPresetId,
   isCustomFilterPresetValue,
@@ -411,20 +409,7 @@ const CUSTOMER_PRESET_LIST_STORAGE_KEY = "at:customer-list:preset-list";
 const presetKey = ref(readFilterPresetKey(CUSTOMER_PRESET_STORAGE_KEY, "default"));
 const customPresets = ref(readFilterPresetList(CUSTOMER_PRESET_LIST_STORAGE_KEY));
 const loadErrorText = ref("");
-const quickCustomerConfig = getQuickCreateConfig("customer");
-const showQuickCustomerDialog = ref(false);
-const quickCustomerLoading = ref(false);
-const quickCustomerError = ref("");
-const quickCustomerFieldErrors = reactive({});
-const quickCustomerForm = reactive(buildQuickCreateDraft(quickCustomerConfig));
-const quickCustomerReturnTo = ref("");
-const quickCustomerOpenedFromIntent = ref(false);
-const quickCustomerSuccessHandlers = {
-  customer_list: refreshCustomerList,
-};
-
 const customerListResource = createResource({ url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows", auto: false });
-const quickCustomerCreateResource = createResource({ url: quickCustomerConfig.submitUrl, auto: false });
 const presetServerReadResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
   auto: false,
@@ -439,19 +424,28 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const currentUserId = computed(() => unref(authStore.userId) || "");
 const customerListLoading = computed(() => Boolean(unref(customerListResource.loading)));
-const customerQuickFields = computed(() => quickCustomerConfig?.fields || []);
-const quickCustomerUi = computed(() => ({
-  title: getLocalizedText(quickCustomerConfig?.title, activeLocale.value),
-  subtitle: getLocalizedText(quickCustomerConfig?.subtitle, activeLocale.value),
-  newLabel: activeLocale.value === "tr" ? "Yeni Müşteri" : "New Customer",
-}));
-const quickCreateCommon = computed(() => ({
-  ...getQuickCreateLabels("create", activeLocale.value),
-  validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları ve formatları kontrol edin." : "Please check required fields and formats.",
-  failed: activeLocale.value === "tr" ? "Hızlı müşteri oluşturma başarısız oldu." : "Quick customer create failed.",
-}));
-const quickCustomerType = computed(() => normalizeCustomerType(quickCustomerForm.customer_type, quickCustomerForm.tax_id));
-const isCorporateQuickCustomer = computed(() => quickCustomerType.value === "Corporate");
+const customerQuickRuntime = useCustomerQuickCreateRuntime({
+  t,
+  activeLocale,
+  router,
+  route,
+  branchStore,
+  refreshCustomerList,
+  openCustomer360,
+});
+const {
+  showQuickCustomerDialog,
+  quickCustomerOpenedFromIntent,
+  quickCustomerReturnTo,
+  quickCustomerUi,
+  quickCreateCommon,
+  quickCustomerSuccessHandlers,
+  openQuickCustomerDialog,
+  cancelQuickCustomerDialog,
+  validateQuickCustomerManaged,
+  buildQuickCustomerManagedPayload,
+  onQuickCustomerManagedCreated,
+} = customerQuickRuntime;
 const isInitialLoading = computed(() => customerStore.state.loading && rows.value.length === 0);
 
 const consentStatusOptions = computed(() => [
@@ -943,218 +937,6 @@ async function hydratePresetStateFromServer() {
   }
 }
 
-function clearQuickCustomerFieldErrors() {
-  Object.keys(quickCustomerFieldErrors).forEach((key) => delete quickCustomerFieldErrors[key]);
-}
-
-function resetQuickCustomerForm() {
-  Object.assign(quickCustomerForm, buildQuickCreateDraft(quickCustomerConfig));
-  quickCustomerError.value = "";
-  clearQuickCustomerFieldErrors();
-}
-
-function openQuickCustomerDialog({ fromIntent = false, returnTo = "" } = {}) {
-  resetQuickCustomerForm();
-  quickCustomerOpenedFromIntent.value = !!fromIntent;
-  quickCustomerReturnTo.value = returnTo || "";
-  showQuickCustomerDialog.value = true;
-}
-
-function cancelQuickCustomerDialog() {
-  showQuickCustomerDialog.value = false;
-  if (quickCustomerOpenedFromIntent.value && quickCustomerReturnTo.value) {
-    const target = quickCustomerReturnTo.value;
-    quickCustomerOpenedFromIntent.value = false;
-    quickCustomerReturnTo.value = "";
-    router.push(target).catch(() => {});
-    return;
-  }
-  quickCustomerOpenedFromIntent.value = false;
-  quickCustomerReturnTo.value = "";
-}
-
-function validateQuickCustomerForm() {
-  clearQuickCustomerFieldErrors();
-  quickCustomerError.value = "";
-  let valid = true;
-  for (const field of customerQuickFields.value) {
-    const fieldDisabled =
-      typeof field?.disabled === "function"
-        ? field.disabled({ field, model: quickCustomerForm, locale: activeLocale.value })
-        : Boolean(field?.disabled);
-    if (field?.name !== "tax_id" && field?.name !== "customer_type" && fieldDisabled) {
-      continue;
-    }
-    if (!field?.required) continue;
-    if (String(quickCustomerForm[field.name] ?? "").trim() === "") {
-      quickCustomerFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
-      valid = false;
-    }
-  }
-
-  const customerType = normalizeCustomerType(quickCustomerForm.customer_type, quickCustomerForm.tax_id);
-  const identityNumber = normalizeIdentityNumber(quickCustomerForm.tax_id);
-  if (!identityNumber) {
-    quickCustomerFieldErrors.tax_id = t("validationIdentityRequired");
-    valid = false;
-  } else if (customerType === "Corporate") {
-    if (identityNumber.length !== 10) {
-      quickCustomerFieldErrors.tax_id = t("validationTaxNumberLength");
-      valid = false;
-    }
-  } else if (identityNumber.length !== 11) {
-    quickCustomerFieldErrors.tax_id = t("validationTcLength");
-    valid = false;
-  } else if (!isValidTckn(identityNumber)) {
-    quickCustomerFieldErrors.tax_id = t("validationTcInvalid");
-    valid = false;
-  }
-
-  const email = String(quickCustomerForm.email || "").trim();
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    quickCustomerFieldErrors.email = activeLocale.value === "tr" ? "Geçerli e-posta girin." : "Enter a valid email.";
-    valid = false;
-  }
-  const birthDate = String(quickCustomerForm.birth_date || "");
-  if (!isCorporateQuickCustomer.value && birthDate) {
-    const parsed = new Date(birthDate);
-    if (!Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
-      quickCustomerFieldErrors.birth_date =
-        activeLocale.value === "tr" ? "Doğum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
-      valid = false;
-    }
-  }
-
-  if (!valid) quickCustomerError.value = quickCreateCommon.value.validation;
-  return valid;
-}
-
-function validateQuickCustomerManaged({ form, fieldErrors, setError }) {
-  Object.keys(fieldErrors).forEach((key) => delete fieldErrors[key]);
-  let valid = true;
-  const fields = customerQuickFields.value;
-
-  for (const field of fields) {
-    const fieldDisabled =
-      typeof field?.disabled === "function"
-        ? field.disabled({ field, model: form, locale: activeLocale.value })
-        : Boolean(field?.disabled);
-    if (field?.name !== "tax_id" && field?.name !== "customer_type" && fieldDisabled) continue;
-    if (!field?.required) continue;
-    if (String(form[field.name] ?? "").trim() === "") {
-      fieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
-      valid = false;
-    }
-  }
-
-  const customerType = normalizeCustomerType(form.customer_type, form.tax_id);
-  const identityNumber = normalizeIdentityNumber(form.tax_id);
-  if (!identityNumber) {
-    fieldErrors.tax_id = t("validationIdentityRequired");
-    valid = false;
-  } else if (customerType === "Corporate") {
-    if (identityNumber.length !== 10) {
-      fieldErrors.tax_id = t("validationTaxNumberLength");
-      valid = false;
-    }
-  } else if (identityNumber.length !== 11) {
-    fieldErrors.tax_id = t("validationTcLength");
-    valid = false;
-  } else if (!isValidTckn(identityNumber)) {
-    fieldErrors.tax_id = t("validationTcInvalid");
-    valid = false;
-  }
-
-  const email = String(form.email || "").trim();
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    fieldErrors.email = activeLocale.value === "tr" ? "Geçerli e-posta girin." : "Enter a valid email.";
-    valid = false;
-  }
-  const birthDate = String(form.birth_date || "");
-  if (customerType !== "Corporate" && birthDate) {
-    const parsed = new Date(birthDate);
-    if (!Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
-      fieldErrors.birth_date =
-        activeLocale.value === "tr" ? "Doğum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
-      valid = false;
-    }
-  }
-
-  if (!valid) setError(quickCreateCommon.value.validation);
-  return valid;
-}
-
-function buildQuickCustomerPayload() {
-  const payload = Object.fromEntries(
-    Object.entries(quickCustomerForm).map(([key, value]) => [key, String(value ?? "").trim() === "" ? null : value])
-  );
-  payload.customer_type = normalizeCustomerType(payload.customer_type, payload.tax_id);
-  payload.tax_id = normalizeIdentityNumber(payload.tax_id);
-  if (payload.customer_type === "Corporate") {
-    payload.birth_date = null;
-    payload.gender = "Unknown";
-    payload.marital_status = "Unknown";
-    payload.occupation = null;
-  }
-  return payload;
-}
-
-function buildQuickCustomerManagedPayload({ form }) {
-  const payload = Object.fromEntries(
-    Object.entries(form || {}).map(([key, value]) => [key, String(value ?? "").trim() === "" ? null : value])
-  );
-  payload.customer_type = normalizeCustomerType(payload.customer_type, payload.tax_id);
-  payload.tax_id = normalizeIdentityNumber(payload.tax_id);
-  if (payload.customer_type === "Corporate") {
-    payload.birth_date = null;
-    payload.gender = "Unknown";
-    payload.marital_status = "Unknown";
-    payload.occupation = null;
-  }
-  return payload;
-}
-
-function onQuickCustomerManagedCreated() {
-  quickCustomerOpenedFromIntent.value = false;
-  quickCustomerReturnTo.value = "";
-}
-
-async function submitQuickCustomer(openAfter = false) {
-  if (quickCustomerLoading.value) return;
-  if (!validateQuickCustomerForm()) return;
-  quickCustomerLoading.value = true;
-  quickCustomerError.value = "";
-  try {
-    const result = await quickCustomerCreateResource.submit(buildQuickCustomerPayload());
-    const customerName = result?.customer || quickCustomerCreateResource.data?.customer || null;
-    showQuickCustomerDialog.value = false;
-    resetQuickCustomerForm();
-    await runQuickCreateSuccessTargets(quickCustomerConfig?.successRefreshTargets, {
-      customer_list: refreshCustomerList,
-    });
-    const returnTarget = quickCustomerOpenedFromIntent.value ? quickCustomerReturnTo.value : "";
-    quickCustomerOpenedFromIntent.value = false;
-    quickCustomerReturnTo.value = "";
-    if (!openAfter && returnTarget) {
-      router.push(returnTarget).catch(() => {});
-      return;
-    }
-    if (openAfter && customerName) openCustomer360(customerName);
-  } catch (error) {
-    quickCustomerError.value = error?.messages?.join(" ") || error?.message || quickCreateCommon.value.failed;
-  } finally {
-    quickCustomerLoading.value = false;
-  }
-}
-
-function consumeQuickCustomerRouteIntent() {
-  const intent = readQuickCreateIntent(route.query);
-  if (!intent.quick) return;
-  openQuickCustomerDialog({ fromIntent: true, returnTo: intent.returnTo });
-  const nextQuery = stripQuickCreateIntentQuery(route.query);
-  router.replace({ name: "customer-list", query: nextQuery }).catch(() => {});
-}
-
 function openCustomer360(customerName) {
   router.push({ name: "customer-detail", params: { name: customerName } });
 }
@@ -1231,25 +1013,12 @@ function formatCurrency(value) {
 applyPreset(presetKey.value, { refresh: false });
 void refreshCustomerList();
 watch(
-  quickCustomerType,
-  (type) => {
-    if (type !== "Corporate") return;
-    quickCustomerForm.birth_date = "";
-    quickCustomerForm.gender = "Unknown";
-    quickCustomerForm.marital_status = "Unknown";
-    quickCustomerForm.occupation = "";
-  },
-  { immediate: true }
-);
-watch(
   () => branchStore.selected,
   () => {
     pagination.page = 1;
     void refreshCustomerList();
   }
 );
-void hydratePresetStateFromServer();
-void consumeQuickCustomerRouteIntent();
 </script>
 
 <style scoped>
