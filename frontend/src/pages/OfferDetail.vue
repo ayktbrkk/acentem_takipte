@@ -118,6 +118,7 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
+import { formatDate, formatDateTime, formatMoney, offerStatusTone as sharedOfferStatusTone } from "../utils/detailFormatters";
 
 const props = defineProps({
   name: { type: String, default: "" },
@@ -659,19 +660,13 @@ function openConvertInOfferBoard() {
 }
 
 function fmtMoney(value, currency = "TRY") {
-  return new Intl.NumberFormat(localeCode.value, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(Number(value || 0));
+  return formatMoney(localeCode.value, value, currency);
 }
 function fmtDate(value) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat(localeCode.value).format(new Date(value));
+  return formatDate(localeCode.value, value);
 }
 function fmtDateTime(value) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+  return formatDateTime(localeCode.value, value);
 }
 function relatedOfferMeta(item) {
   return [item?.status || null, fmtMoney(item?.gross_premium, item?.currency || "TRY")].filter(Boolean).join(" / ");
@@ -691,11 +686,7 @@ function notificationPreviewMeta(item) {
   return [item?.reference_doctype || null, item?.modified ? fmtDateTime(item.modified) : null].filter(Boolean).join(" / ");
 }
 function mapOfferStatusTone(status) {
-  const normalized = String(status || "draft").trim().toLowerCase();
-  if (["accepted", "converted", "active"].includes(normalized)) return "active";
-  if (["sent", "waiting", "pending"].includes(normalized)) return "waiting";
-  if (["cancelled", "rejected", "expired"].includes(normalized)) return "cancel";
-  return "draft";
+  return sharedOfferStatusTone(status);
 }
 function mapOfferActivityEvent(event) {
   if (!event || typeof event !== "object") return null;

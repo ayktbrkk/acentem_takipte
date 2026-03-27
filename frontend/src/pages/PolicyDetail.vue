@@ -234,6 +234,7 @@ import HeroStrip from "../components/ui/HeroStrip.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import StepBar from "../components/ui/StepBar.vue";
+import { formatDate, formatDateTime, formatMoney, formatPercent, stripHtml as sharedStripHtml, policyStatusLabel as sharedPolicyStatusLabel, paymentStatusLabel as sharedPaymentStatusLabel, installmentStatusLabel as sharedInstallmentStatusLabel, endorsementStatusLabel as sharedEndorsementStatusLabel, notificationStatusLabel as sharedNotificationStatusLabel } from "../utils/detailFormatters";
 import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
 
 const props = defineProps({ name: { type: String, default: "" } });
@@ -292,6 +293,32 @@ const labels = {
   },
 };
 const t = (k) => labels[activeLocale.value]?.[k] || labels.en[k] || k;
+
+const fmtDate = (v) => formatDate(locale.value, v);
+const fmtDateTime = (v) => formatDateTime(locale.value, v);
+const fmtMoney = (v, c) => formatMoney(locale.value, v, c);
+const fmtPct = (v) => formatPercent(locale.value, v);
+const stripHtml = (v) => sharedStripHtml(v);
+
+function policyStatusLabel(status) {
+  return sharedPolicyStatusLabel(activeLocale.value, status);
+}
+
+function paymentStatusLabel(status) {
+  return sharedPaymentStatusLabel(activeLocale.value, status);
+}
+
+function installmentStatusLabel(status) {
+  return sharedInstallmentStatusLabel(activeLocale.value, status);
+}
+
+function endorsementStatusLabel(status) {
+  return sharedEndorsementStatusLabel(activeLocale.value, status);
+}
+
+function notificationStatusLabel(status) {
+  return sharedNotificationStatusLabel(activeLocale.value, status);
+}
 
 const tabs = computed(() => [
   { key: "summary", label: t("tabSummary") },
@@ -842,75 +869,6 @@ async function deleteOwnershipAssignment(assignment) {
   await load();
 }
 const endorsementStatusClass = (s) => (s === "Applied" ? "text-emerald-700" : s === "Cancelled" ? "text-slate-700" : "text-slate-700");
-
-function policyStatusLabel(status) {
-  if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Active") return "Aktif";
-  if (status === "KYT") return "KYT";
-  if (status === "IPT" || status === "Cancelled") return "İptal";
-  if (status === "Expired") return "Süresi Doldu";
-  return status || "-";
-}
-
-function paymentStatusLabel(status) {
-  if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Submitted") return "Gönderildi";
-  if (status === "Draft") return "Taslak";
-  if (status === "Cancelled") return "İptal";
-  if (status === "Paid") return "Ödendi";
-  return status || "-";
-}
-
-function installmentStatusLabel(status) {
-  if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Scheduled") return "Planlandı";
-  if (status === "Overdue") return "Gecikti";
-  if (status === "Paid") return "Ödendi";
-  if (status === "Cancelled") return "İptal";
-  return status || "-";
-}
-
-function endorsementStatusLabel(status) {
-  if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Applied") return "Uygulandı";
-  if (status === "Pending") return "Beklemede";
-  if (status === "Cancelled") return "İptal";
-  return status || "-";
-}
-
-function notificationStatusLabel(status) {
-  if (activeLocale.value !== "tr") return status || "-";
-  if (status === "Queued") return "Kuyrukta";
-  if (status === "Processing") return "İşleniyor";
-  if (status === "Sent") return "Gönderildi";
-  if (status === "Failed") return "Başarısız";
-  if (status === "Dead") return "Kalıcı Hata";
-  if (status === "Draft") return "Taslak";
-  return status || "-";
-}
-
-const fmtDate = (v) => (v ? new Intl.DateTimeFormat(locale.value).format(new Date(v)) : "-");
-const fmtDateTime = (v) => (v ? new Intl.DateTimeFormat(locale.value, { dateStyle: "medium", timeStyle: "short" }).format(new Date(v)) : "-");
-const fmtMoney = (v, c) => new Intl.NumberFormat(locale.value, { style: "currency", currency: c || "TRY", maximumFractionDigits: 2 }).format(Number(v || 0));
-const fmtPct = (v) => `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(Number(v || 0))}%`;
-const stripHtml = (v) => (v ? String(v).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() : "");
-
-async function ensurePolicyQuickOptionSources() {
-  await Promise.allSettled([
-    policyQuickCustomerResource.reload({
-      doctype: "AT Customer",
-      fields: ["name", "full_name"],
-      filters: customer.value?.name ? { name: customer.value.name } : {},
-      limit_page_length: 50,
-    }),
-    policyQuickPolicyResource.reload({
-      doctype: "AT Policy",
-      fields: ["name", "policy_no", "customer"],
-      filters: props.name ? { name: props.name } : {},
-      limit_page_length: 50,
-    }),
-  ]);
-}
 
 async function updateReminderStatus(reminder, status) {
   if (!reminder?.name) return;
