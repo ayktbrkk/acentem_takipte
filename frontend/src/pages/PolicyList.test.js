@@ -166,6 +166,9 @@ describe("PolicyList page store integration", () => {
     expect(policyStore.state.filters.query).toBe("TR-001");
     expect(policyStore.state.pagination.pageLength).toBe(50);
     expect(wrapper.text()).toContain("50");
+
+    await wrapper.find("button.btn-primary").trigger("click");
+    expect(wrapper.vm.showQuickPolicyDialog).toBe(true);
   });
 
   it("loads only convertible offers for the quick policy source offer picker", async () => {
