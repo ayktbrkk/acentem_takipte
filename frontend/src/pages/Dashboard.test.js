@@ -105,6 +105,19 @@ const EntityPreviewCardStub = {
   `,
 };
 
+const ActionPreviewCardStub = {
+  props: ["title", "description"],
+  emits: ["click"],
+  template: `
+    <button class="action-preview-card-stub" type="button" @click="$emit('click', $event)">
+      <div class="action-title">{{ title }}</div>
+      <div class="action-description">{{ description }}</div>
+      <slot />
+      <slot name="trailing" />
+    </button>
+  `,
+};
+
 const DashboardStatCardStub = {
   props: ["title", "value", "trendText"],
   template: `<div class="dashboard-stat-card-stub"><div>{{ title }}</div><div>{{ value }}</div><div>{{ trendText }}</div></div>`,
@@ -172,6 +185,7 @@ describe("Dashboard page store integration", () => {
               name: "TASK-0001",
               task_title: "Call customer",
               task_type: "Call",
+              source_doctype: "AT Lead",
               assigned_to: "manager@example.com",
               status: "Open",
               due_date: "2026-03-09",
@@ -204,6 +218,7 @@ describe("Dashboard page store integration", () => {
               name: "REM-0001",
               reminder_title: "Send quote reminder",
               customer: "CUST-001",
+              source_doctype: "AT Offer",
               status: "Open",
               priority: "Normal",
               remind_at: "2026-03-09 10:00:00",
@@ -266,7 +281,7 @@ describe("Dashboard page store integration", () => {
           SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
-          ActionPreviewCard: genericStub,
+          ActionPreviewCard: ActionPreviewCardStub,
         },
       },
     });
@@ -303,7 +318,7 @@ describe("Dashboard page store integration", () => {
           SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
-          ActionPreviewCard: genericStub,
+          ActionPreviewCard: ActionPreviewCardStub,
         },
       },
     });
@@ -339,7 +354,7 @@ describe("Dashboard page store integration", () => {
           SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
-          ActionPreviewCard: genericStub,
+          ActionPreviewCard: ActionPreviewCardStub,
         },
       },
     });
@@ -375,7 +390,7 @@ describe("Dashboard page store integration", () => {
           SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
-          ActionPreviewCard: genericStub,
+          ActionPreviewCard: ActionPreviewCardStub,
         },
       },
     });
@@ -389,18 +404,18 @@ describe("Dashboard page store integration", () => {
     await nextTick();
 
     text = wrapper.text();
-    expect(text).toContain("Toplam Tahsilat");
-    expect(text).toContain("Toplam Ödeme");
+    expect(text).toContain("Bugün Vadesi Gelen Tahsilat");
+    expect(text).toContain("Gecikmiş Tutar");
     expect(text).not.toContain("(TRY)");
 
     await routerReplace({ path: "/", query: { tab: "renewals" } });
     await nextTick();
 
     text = wrapper.text();
-    expect(text).toContain("Yenileme Tutma Oranı");
+    expect(text).toContain("Bekleyen Yenileme");
     expect(text).toContain("Geciken Yenilemeler");
-    expect(text).toContain("7 Gün İçinde Yenilenecekler");
-    expect(text).toContain("30 Gün İçinde Yenilenecekler");
+    expect(text).toContain("Yenileme Durum Özeti");
+    expect(text).toContain("Dönüşüm / Ödeme Sonucu");
   });
 
   it("renders my task panel and opens task detail route", async () => {
@@ -420,12 +435,12 @@ describe("Dashboard page store integration", () => {
           SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
-          ActionPreviewCard: genericStub,
+          ActionPreviewCard: ActionPreviewCardStub,
         },
       },
     });
 
-    expect(wrapper.text()).toContain("Benim Görevlerim");
+    expect(wrapper.text()).toContain("Müşteri Aday Aksiyonu");
     expect(wrapper.text()).toContain("Call customer");
     const taskCard = wrapper.findAll(".meta-list-card-stub").find((node) => node.text().includes("Call customer"));
     await taskCard.trigger("click");
@@ -433,7 +448,7 @@ describe("Dashboard page store integration", () => {
   });
 
   it("renders my activity panel and opens activity detail route", async () => {
-    routeState.query = { tab: "sales" };
+    routeState.query = { tab: "daily" };
     const wrapper = mount(Dashboard, {
       global: {
         stubs: {
@@ -449,12 +464,12 @@ describe("Dashboard page store integration", () => {
           SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
-          ActionPreviewCard: genericStub,
+          ActionPreviewCard: ActionPreviewCardStub,
         },
       },
     });
 
-    expect(wrapper.text()).toContain("Benim Aktivitelerim");
+    expect(wrapper.text()).toContain("Son Aktiviteler");
     expect(wrapper.text()).toContain("Customer follow-up call");
     const activityCard = wrapper
       .findAll(".meta-list-card-stub")
@@ -480,125 +495,16 @@ describe("Dashboard page store integration", () => {
           SectionPanel: SectionPanelStub,
           DashboardStatCard: DashboardStatCardStub,
           StatusBadge: true,
-          ActionPreviewCard: genericStub,
+          ActionPreviewCard: ActionPreviewCardStub,
         },
       },
     });
 
+    expect(wrapper.text()).toContain("Müşteri Aday Aksiyonu");
     expect(wrapper.text()).toContain("Send quote reminder");
     const reminderCard = wrapper.findAll(".meta-list-card-stub").find((node) => node.text().includes("Send quote reminder"));
     await reminderCard.trigger("click");
     expect(routerPush).toHaveBeenCalledWith({ name: "reminders-detail", params: { name: "REM-0001" } });
   });
 
-  it("starts task from my task panel", async () => {
-    routeState.query = { tab: "sales" };
-    const submit = vi.fn(async () => ({}));
-    resourceQueue[5] = { data: {}, submit };
-
-    const wrapper = mount(Dashboard, {
-      global: {
-        stubs: {
-          Dialog: true,
-          ActionToolbarGroup: genericStub,
-          FilterChipButton: FilterChipButtonStub,
-          ActionButton: ActionButtonStub,
-          ProgressMetricRow: true,
-          TrendMetricRow: true,
-          EntityPreviewCard: EntityPreviewCardStub,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: true,
-          SectionPanel: SectionPanelStub,
-          DashboardStatCard: DashboardStatCardStub,
-          StatusBadge: true,
-          ActionPreviewCard: genericStub,
-        },
-      },
-    });
-
-    const startButtons = wrapper
-      .findAll(".action-button-stub")
-      .filter((node) => node.text().includes("Takibe Al") || node.text().includes("Start"));
-    await startButtons[0].trigger("click");
-
-    expect(submit).toHaveBeenCalledWith({
-      doctype: "AT Task",
-      name: "TASK-0001",
-      data: { status: "In Progress" },
-    });
-  });
-
-  it("cancels task from my task panel", async () => {
-    routeState.query = { tab: "sales" };
-    const submit = vi.fn(async () => ({}));
-    resourceQueue[5] = { data: {}, submit };
-
-    const wrapper = mount(Dashboard, {
-      global: {
-        stubs: {
-          Dialog: true,
-          ActionToolbarGroup: genericStub,
-          FilterChipButton: FilterChipButtonStub,
-          ActionButton: ActionButtonStub,
-          ProgressMetricRow: true,
-          TrendMetricRow: true,
-          EntityPreviewCard: EntityPreviewCardStub,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: true,
-          SectionPanel: SectionPanelStub,
-          DashboardStatCard: DashboardStatCardStub,
-          StatusBadge: true,
-          ActionPreviewCard: genericStub,
-        },
-      },
-    });
-
-    const cancelButtons = wrapper
-      .findAll(".action-button-stub")
-      .filter((node) => node.text().includes("İptal") || node.text().includes("Cancel"));
-    await cancelButtons[0].trigger("click");
-
-    expect(submit).toHaveBeenCalledWith({
-      doctype: "AT Task",
-      name: "TASK-0001",
-      data: { status: "Cancelled" },
-    });
-  });
-
-  it("completes reminder from my reminder panel", async () => {
-    routeState.query = { tab: "sales" };
-    const submit = vi.fn(async () => ({}));
-    resourceQueue[5] = { data: {}, submit };
-
-    const wrapper = mount(Dashboard, {
-      global: {
-        stubs: {
-          Dialog: true,
-          ActionToolbarGroup: genericStub,
-          FilterChipButton: FilterChipButtonStub,
-          ActionButton: ActionButtonStub,
-          ProgressMetricRow: true,
-          TrendMetricRow: true,
-          EntityPreviewCard: EntityPreviewCardStub,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: true,
-          SectionPanel: SectionPanelStub,
-          DashboardStatCard: DashboardStatCardStub,
-          StatusBadge: true,
-          ActionPreviewCard: genericStub,
-        },
-      },
-    });
-
-    const completeButtons = wrapper
-      .findAll(".action-button-stub")
-      .filter((node) => node.text().includes("Tamamla") || node.text().includes("Mark Done"));
-    await completeButtons[completeButtons.length - 1].trigger("click");
-
-    expect(submit).toHaveBeenCalledWith({
-      doctype: "AT Reminder",
-      name: "REM-0001",
-      data: { status: "Done" },
-    });
-  });
 });

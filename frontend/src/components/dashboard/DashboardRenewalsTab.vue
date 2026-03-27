@@ -1,0 +1,165 @@
+<template>
+  <div v-if="isRenewalsTab" class="grid gap-4 xl:grid-cols-3">
+    <div class="space-y-4 xl:col-span-2">
+      <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)">
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="offerWaitingRenewals.length === 0" class="at-empty-block">{{ t("noOfferWaitingRenewals") }}</div>
+        <ul v-else class="space-y-3">
+          <MetaListCard
+            v-for="task in pagedPreviewItems(offerWaitingRenewals, 'renewalsOfferWaiting')"
+            :key="task.name"
+            :title="task.policy || '-'"
+            clickable
+            @click="openRenewalTaskItem(task)"
+          >
+            <template #trailing>
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
+            </template>
+            <MiniFactList :items="renewalTaskFactsDetailed(task)" />
+          </MetaListCard>
+        </ul>
+        <PreviewPager
+          v-if="offerWaitingRenewals.length > 0"
+          :current-page="previewResolvedPage('renewalsOfferWaiting', offerWaitingRenewals)"
+          :total-pages="previewPageCount(offerWaitingRenewals)"
+          :show-view-all="shouldShowViewAll(offerWaitingRenewals)"
+          :view-all-label="t('viewAllItems')"
+          @change-page="setPreviewPage('renewalsOfferWaiting', $event, offerWaitingRenewals)"
+          @view-all="openPreviewList('renewals')"
+        />
+      </SectionPanel>
+
+      <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)">
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
+        <ul v-else class="space-y-3">
+          <MetaListCard
+            v-for="task in pagedPreviewItems(displayRenewalTasks, 'renewalsQueue')"
+            :key="task.name"
+            :title="task.policy || '-'"
+            clickable
+            @click="openRenewalTaskItem(task)"
+          >
+            <template #trailing>
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
+            </template>
+            <MiniFactList :items="renewalTaskFactsDetailed(task)" />
+          </MetaListCard>
+        </ul>
+        <PreviewPager
+          v-if="displayRenewalTasks.length > 0"
+          :current-page="previewResolvedPage('renewalsQueue', displayRenewalTasks)"
+          :total-pages="previewPageCount(displayRenewalTasks)"
+          :show-view-all="shouldShowViewAll(displayRenewalTasks)"
+          :view-all-label="t('viewAllItems')"
+          @change-page="setPreviewPage('renewalsQueue', $event, displayRenewalTasks)"
+          @view-all="openPreviewList('renewals')"
+        />
+      </SectionPanel>
+    </div>
+
+    <div class="space-y-4">
+      <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false">
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="renewalStatusSummary.length === 0" class="at-empty-block">{{ t("noRenewalStatus") }}</div>
+        <div v-else class="space-y-3">
+          <ProgressMetricRow
+            v-for="item in renewalStatusSummary"
+            :key="item.key"
+            :label="item.label"
+            :value="formatNumber(item.value)"
+            :ratio="item.ratio"
+            :bar-class="item.colorClass"
+          />
+        </div>
+      </SectionPanel>
+
+      <SectionPanel :title="t('renewalOutcomeTitle')" :show-count="false">
+        <p class="mb-3 text-xs text-slate-500">{{ t("renewalOutcomeHint") }}</p>
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="renewalOutcomeSummary.length === 0" class="at-empty-block">{{ t("noRenewalOutcome") }}</div>
+        <div v-else class="space-y-3">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("kpiRenewalRetention") }}</p>
+            <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(renewalRetentionRate) }}%</p>
+          </div>
+          <ProgressMetricRow
+            v-for="item in renewalOutcomeSummary"
+            :key="item.key"
+            :label="item.label"
+            :value="formatNumber(item.value)"
+            :ratio="item.ratio"
+            :bar-class="item.colorClass"
+          />
+        </div>
+      </SectionPanel>
+
+      <SectionPanel :title="t('linkedPoliciesTitle')" :count="formatNumber(renewalLinkedPolicies.length)">
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <div v-else-if="renewalLinkedPolicies.length === 0" class="at-empty-block">{{ t("noLinkedPolicies") }}</div>
+        <ul v-else class="space-y-3">
+          <EntityPreviewCard
+            v-for="policy in pagedPreviewItems(renewalLinkedPolicies, 'renewalsPolicies')"
+            :key="policy.name"
+            :title="policy.policy_no || policy.name"
+            clickable
+            @click="openPolicyItem(policy)"
+          >
+            <template #trailing>
+              <StatusBadge domain="policy" :status="policy.status" />
+            </template>
+            <MiniFactList :items="recentPolicyFacts(policy)" />
+            <p class="mt-1 text-xs text-slate-600">
+              {{ formatCurrencyBy(policy.gross_premium, policy.currency || "TRY") }}
+              /
+              {{ formatCurrencyBy(policy.commission_amount || policy.commission, policy.currency || "TRY") }}
+            </p>
+          </EntityPreviewCard>
+        </ul>
+        <PreviewPager
+          v-if="renewalLinkedPolicies.length > 0"
+          :current-page="previewResolvedPage('renewalsPolicies', renewalLinkedPolicies)"
+          :total-pages="previewPageCount(renewalLinkedPolicies)"
+          :show-view-all="shouldShowViewAll(renewalLinkedPolicies)"
+          :view-all-label="t('viewAllItems')"
+          @change-page="setPreviewPage('renewalsPolicies', $event, renewalLinkedPolicies)"
+          @view-all="openPreviewList('policies')"
+        />
+      </SectionPanel>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
+import MetaListCard from "../app-shell/MetaListCard.vue";
+import MiniFactList from "../app-shell/MiniFactList.vue";
+import PreviewPager from "../app-shell/PreviewPager.vue";
+import ProgressMetricRow from "../app-shell/ProgressMetricRow.vue";
+import SectionPanel from "../app-shell/SectionPanel.vue";
+import StatusBadge from "../ui/StatusBadge.vue";
+
+defineProps({
+  dashboardLoading: { type: Boolean, required: true },
+  displayRenewalTasks: { type: Array, required: true },
+  formatCurrencyBy: { type: Function, required: true },
+  formatNumber: { type: Function, required: true },
+  isRenewalsTab: { type: Boolean, required: true },
+  openPolicyItem: { type: Function, required: true },
+  openPreviewList: { type: Function, required: true },
+  openRenewalTaskItem: { type: Function, required: true },
+  pagedPreviewItems: { type: Function, required: true },
+  previewPageCount: { type: Function, required: true },
+  previewResolvedPage: { type: Function, required: true },
+  recentPolicyFacts: { type: Function, required: true },
+  renewalLinkedPolicies: { type: Array, required: true },
+  renewalOutcomeSummary: { type: Array, required: true },
+  renewalRetentionRate: { type: Number, required: true },
+  renewalStatusSummary: { type: Array, required: true },
+  renewalTaskFactsDetailed: { type: Function, required: true },
+  offerWaitingRenewals: { type: Array, required: true },
+  setPreviewPage: { type: Function, required: true },
+  shouldShowViewAll: { type: Function, required: true },
+  t: { type: Function, required: true },
+});
+</script>
