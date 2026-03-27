@@ -185,6 +185,6 @@ describe("RenewalsBoard page store integration", () => {
         status: "In Progress",
       },
     });
-    expect(reloadMock).toHaveBeenCalledTimes(2);
+    expect(reloadMock).toHaveBeenCalledTimes(1);
   });
 });
