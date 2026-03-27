@@ -130,7 +130,7 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
-import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
+import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreate";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { getAppPinia } from "../pinia";
 import { subtleFact } from "../utils/factItems";

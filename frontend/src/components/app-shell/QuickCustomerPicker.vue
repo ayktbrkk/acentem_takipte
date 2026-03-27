@@ -156,7 +156,7 @@ import { computed, onBeforeUnmount, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import { normalizeCustomerType } from "../../utils/customerIdentity";
-import { getLocalizedText } from "../../config/quickCreateRegistry";
+import { getLocalizedText } from "../../config/quickCreate";
 
 const props = defineProps({
   model: { type: Object, required: true },

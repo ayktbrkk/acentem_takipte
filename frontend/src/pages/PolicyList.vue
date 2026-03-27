@@ -133,7 +133,7 @@ import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import PolicyForm from "../components/PolicyForm.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
+import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";

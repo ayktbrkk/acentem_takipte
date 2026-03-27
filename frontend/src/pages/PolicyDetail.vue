@@ -234,7 +234,7 @@ import HeroStrip from "../components/ui/HeroStrip.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import StepBar from "../components/ui/StepBar.vue";
-import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
+import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreate";
 
 const props = defineProps({ name: { type: String, default: "" } });
 const router = useRouter();

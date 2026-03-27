@@ -132,7 +132,7 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import FilterBar from "../components/ui/FilterBar.vue";
 import QuickCreateCustomer from "../components/QuickCreateCustomer.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
+import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate";
 import { getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { mutedFact, subtleFact } from "../utils/factItems";

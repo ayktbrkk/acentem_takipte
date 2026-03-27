@@ -215,7 +215,7 @@ import { computed, ref, unref } from "vue";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import QuickCustomerPicker from "./app-shell/QuickCustomerPicker.vue";
 import SectionPanel from "./app-shell/SectionPanel.vue";
-import { getQuickCreateConfig } from "../config/quickCreateRegistry";
+import { getQuickCreateConfig } from "../config/quickCreate";
 import { useAuthStore } from "../stores/auth";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 import StepBar from "../components/ui/StepBar.vue";

@@ -597,12 +597,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, unref, watch } from "vue";
+import { computed, unref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
-import { resolveSameOriginPath } from "../utils/safeNavigation";
 import { useBranchStore } from "../stores/branch";
 import { useCommunicationStore } from "../stores/communication";
 import ActionButton from "../components/app-shell/ActionButton.vue";
@@ -615,9 +614,10 @@ import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManaged
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
-import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
-import { getSourcePanelConfig } from "../utils/sourcePanel";
-import { openTabularExport } from "../utils/listExport";
+import { useCommunicationCenterState } from "../composables/communicationCenter/state";
+import { useCommunicationCenterOperations } from "../composables/communicationCenter/operations";
+import { useCommunicationCenterCampaignFlow } from "../composables/communicationCenter/campaignFlow";
+import { useCommunicationCenterSegmentFlow } from "../composables/communicationCenter/segmentFlow";
 
 const route = useRoute();
 const router = useRouter();
@@ -859,46 +859,19 @@ function t(key) {
 }
 
 const activeLocale = computed(() => unref(authStore.locale) || "en");
-
-const filters = communicationStore.state.filters;
-
-const dispatching = ref(false);
-const showSegmentDialog = ref(false);
-const showCampaignDialog = ref(false);
-const showCampaignRunDialog = ref(false);
-const showSegmentPreviewDialog = ref(false);
-const showCallNoteDialog = ref(false);
-const showReminderDialog = ref(false);
-const showQuickMessageDialog = ref(false);
-const operationError = ref("");
-const campaignRunSelection = ref("");
-const campaignRunLoading = ref(false);
-const campaignRunError = ref("");
-const campaignRunResult = ref(null);
-const segmentPreviewSegment = ref("");
-const segmentPreviewLoading = ref(false);
-const segmentPreviewError = ref("");
-const segmentPreviewPayload = ref(null);
-
+const officeBranchFilters = branchStore.requestBranch ? { office_branch: branchStore.requestBranch } : {};
 const snapshotResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot",
-  params: buildParams(),
+  params: {
+    customer: null,
+    status: null,
+    channel: null,
+    reference_doctype: null,
+    reference_name: null,
+    office_branch: branchStore.requestBranch || null,
+    limit: 50,
+  },
   auto: true,
-});
-
-const runCycleResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
-});
-
-const sendDraftResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
-});
-
-const retryOutboxResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
-});
-const auxMutationResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
 });
 const communicationQuickTemplateResource = createResource({
   url: "frappe.client.get_list",
@@ -917,7 +890,7 @@ const communicationQuickCustomerResource = createResource({
   params: {
     doctype: "AT Customer",
     fields: ["name", "full_name"],
-    filters: buildCustomerQuickFilters(),
+    filters: officeBranchFilters,
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -928,7 +901,7 @@ const communicationQuickPolicyResource = createResource({
   params: {
     doctype: "AT Policy",
     fields: ["name", "policy_no", "customer"],
-    filters: buildCustomerQuickFilters(),
+    filters: officeBranchFilters,
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -939,7 +912,7 @@ const communicationQuickClaimResource = createResource({
   params: {
     doctype: "AT Claim",
     fields: ["name", "claim_no", "policy", "customer"],
-    filters: buildCustomerQuickFilters(),
+    filters: officeBranchFilters,
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -950,7 +923,7 @@ const communicationQuickSegmentResource = createResource({
   params: {
     doctype: "AT Segment",
     fields: ["name", "segment_name", "channel_focus", "status"],
-    filters: buildCustomerQuickFilters(),
+    filters: officeBranchFilters,
     order_by: "modified desc",
     limit_page_length: 500,
   },
@@ -961,734 +934,159 @@ const communicationQuickCampaignResource = createResource({
   params: {
     doctype: "AT Campaign",
     fields: ["name", "campaign_name", "channel", "status"],
-    filters: buildCustomerQuickFilters(),
+    filters: officeBranchFilters,
     order_by: "modified desc",
     limit_page_length: 500,
   },
 });
-const segmentPreviewResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.preview_segment_members",
-});
-const campaignRunResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.communication.execute_campaign",
+
+const communicationCenterState = useCommunicationCenterState({
+  t,
+  activeLocale,
+  route,
+  router,
+  authStore,
+  branchStore,
+  communicationStore,
+  snapshotResource,
+  communicationQuickTemplateResource,
+  communicationQuickCustomerResource,
+  communicationQuickPolicyResource,
+  communicationQuickClaimResource,
+  communicationQuickSegmentResource,
+  communicationQuickCampaignResource,
 });
 
-const snapshotData = computed(() => communicationStore.state.snapshot || {});
-const resourceValue = (resource, fallback = null) => {
-  const value = unref(resource?.data);
-  return value == null ? fallback : value;
-};
-const asArray = (value) => (Array.isArray(value) ? value : []);
-const snapshotErrorMessage = computed(() => {
-  if (communicationStore.state.error) return communicationStore.state.error;
-  const raw = unref(snapshotResource.error);
-  if (!raw) return "";
-  if (isPermissionDeniedError(raw)) return t("permissionDeniedRead");
-  if (typeof raw === "string") return raw;
-  return raw?.message || raw?.exc || t("loadErrorTitle");
-});
-const outboxItems = computed(() => communicationStore.outboxItems);
-const draftItems = computed(() => communicationStore.draftItems);
-const breakdown = computed(() => communicationStore.breakdown);
-const activeFilterCount = computed(() => communicationStore.activeFilterCount);
 const {
+  filters,
+  quickSegmentEyebrow,
+  quickCampaignEyebrow,
+  quickCallNoteEyebrow,
+  quickReminderEyebrow,
+  quickMessageEyebrow,
+  canCreateQuickMessage,
+  canSendDraftNowAction,
+  canRetryOutboxAction,
+  canRunDispatchCycle,
+  returnToTarget,
+  safeReturnTo,
+  canReturnToContext,
+  returnToLabel,
+  snapshotData,
+  snapshotErrorMessage,
+  outboxItems,
+  draftItems,
+  breakdown,
+  activeFilterCount,
+  statusOptions,
+  channelOptions,
+  referenceDoctypeOptions,
+  communicationQuickOptionsMap,
+  customerContextLabel,
+  referenceContextLabel,
+  channelStatusContextLabel,
+  hasContextFilters,
+  canStartAssignmentContext,
+  canBlockAssignmentContext,
+  canCloseAssignmentContext,
+  canClearCallNoteContext,
+  canCompleteReminderContext,
+  canCancelReminderContext,
   presetKey,
   presetOptions,
   canDeletePreset,
-  applyPreset,
   onPresetChange,
   savePreset,
   deletePreset,
-  persistPresetStateToServer,
-  hydratePresetStateFromServer,
-} = useCustomFilterPresets({
-  screen: "communication_center",
-  presetStorageKey: "at:communication-center:preset",
-  presetListStorageKey: "at:communication-center:preset-list",
+  statusCards,
+  reloadSnapshot,
+  reloadQuickCustomers,
+  clearCustomerFilter,
+  clearContextFilters,
+  applySnapshotFilters,
+  resetSnapshotFilters,
+  returnToContext,
+  downloadCommunicationExport,
+  sourcePanelConfig,
+  canOpenPanel,
+  panelActionLabel,
+  openPanel,
+  referenceTypeLabel,
+} = communicationCenterState;
+
+const {
+  dispatching,
+  operationError,
+  showSegmentDialog,
+  showCampaignDialog,
+  showCallNoteDialog,
+  showReminderDialog,
+  showQuickMessageDialog,
+  runCycleResource,
+  sendDraftResource,
+  retryOutboxResource,
+  auxMutationResource,
+  runDispatchCycle,
+  retryOutbox,
+  sendDraftNow,
+  startAssignmentContext,
+  blockAssignmentContext,
+  closeAssignmentContext,
+  clearCallNoteContext,
+  completeReminderContext,
+  cancelReminderContext,
+  canRetryOutboxRow,
+  canSendDraftFromOutboxRow,
+  canSendDraftCard,
+  buildQuickMessagePayload,
+  prepareQuickMessageDialog,
+  prepareCallNoteDialog,
+  prepareReminderDialog,
+  quickMessageDialogLabels,
+  quickMessageSuccessHandlers,
+  callNoteSuccessHandlers,
+  reminderSuccessHandlers,
+  segmentSuccessHandlers,
+  campaignSuccessHandlers,
+} = useCommunicationCenterOperations({
   t,
-  getCurrentPayload: currentCommunicationPresetPayload,
-  setFilterStateFromPayload: setCommunicationFilterStateFromPayload,
-  resetFilterState: resetCommunicationFilterState,
-  refresh: reloadSnapshot,
-  getSortLocale: () => (activeLocale.value === "tr" ? "tr-TR" : "en-US"),
-});
-const customerContextLabel = computed(
-  () => String(route.query.customer_label || filters.customer || "").trim() || String(filters.customer || "").trim()
-);
-const referenceContextLabel = computed(() => {
-  const doctype = String(route.query.reference_label || filters.referenceDoctype || "").trim();
-  const name = String(filters.referenceName || "").trim();
-  if (!doctype && !name) return "";
-  if (!doctype) return name;
-  if (!name) return doctype;
-  return `${doctype} / ${name}`;
-});
-const channelStatusContextLabel = computed(() => {
-  const parts = [];
-  if (filters.channel) parts.push(`${t("channel")}: ${channelLabel(filters.channel)}`);
-  if (filters.status) parts.push(`${t("status")}: ${statusLabel(filters.status)}`);
-  return parts.join(" • ");
-});
-const hasContextFilters = computed(
-  () => Boolean(filters.customer || filters.referenceDoctype || filters.referenceName || filters.channel || filters.status)
-);
-const canStartAssignmentContext = computed(
-  () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
-);
-const canBlockAssignmentContext = computed(
-  () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
-);
-const canCloseAssignmentContext = computed(
-  () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
-);
-const canClearCallNoteContext = computed(
-  () => filters.referenceDoctype === "AT Call Note" && Boolean(String(filters.referenceName || "").trim())
-);
-const canCompleteReminderContext = computed(
-  () => filters.referenceDoctype === "AT Reminder" && Boolean(String(filters.referenceName || "").trim())
-);
-const canCancelReminderContext = computed(
-  () => filters.referenceDoctype === "AT Reminder" && Boolean(String(filters.referenceName || "").trim())
-);
-const statusOptions = computed(() => [
-  { value: "Queued", label: t("queued") },
-  { value: "Processing", label: t("processing") },
-  { value: "Sent", label: t("sent") },
-  { value: "Failed", label: t("failed") },
-  { value: "Dead", label: t("dead") },
-]);
-const channelOptions = computed(() => [
-  { value: "SMS", label: t("sms") },
-  { value: "Email", label: t("email") },
-  { value: "WHATSAPP", label: t("whatsapp") },
-]);
-const referenceDoctypeOptions = computed(() => [
-  { value: "AT Customer", label: referenceTypeLabel("AT Customer") },
-  { value: "AT Lead", label: referenceTypeLabel("AT Lead") },
-  { value: "AT Offer", label: referenceTypeLabel("AT Offer") },
-  { value: "AT Policy", label: referenceTypeLabel("AT Policy") },
-  { value: "AT Claim", label: referenceTypeLabel("AT Claim") },
-  { value: "AT Payment", label: referenceTypeLabel("AT Payment") },
-  { value: "AT Reminder", label: referenceTypeLabel("AT Reminder") },
-  { value: "AT Renewal Task", label: referenceTypeLabel("AT Renewal Task") },
-  { value: "AT Accounting Entry", label: referenceTypeLabel("AT Accounting Entry") },
-  { value: "AT Reconciliation Item", label: referenceTypeLabel("AT Reconciliation Item") },
-  { value: "AT Segment", label: referenceTypeLabel("AT Segment") },
-  { value: "AT Campaign", label: referenceTypeLabel("AT Campaign") },
-]);
-const communicationQuickOptionsMap = computed(() => ({
-  notificationTemplates: asArray(resourceValue(communicationQuickTemplateResource, [])).map((row) => ({
-    value: row.name,
-    label: `${row.template_key || row.name}${row.channel ? ` (${channelLabel(row.channel)})` : ""}`,
-  })),
-  customers: asArray(resourceValue(communicationQuickCustomerResource, [])).map((row) => ({
-    value: row.name,
-    label: row.full_name || row.name,
-  })),
-  policies: asArray(resourceValue(communicationQuickPolicyResource, [])).map((row) => ({
-    value: row.name,
-    label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
-  })),
-  claims: asArray(resourceValue(communicationQuickClaimResource, [])).map((row) => ({
-    value: row.name,
-    label: `${row.claim_no || row.name}${row.policy ? ` - ${row.policy}` : ""}`,
-  })),
-  segments: asArray(resourceValue(communicationQuickSegmentResource, [])).map((row) => ({
-    value: row.name,
-    label: `${row.segment_name || row.name}${row.channel_focus ? ` - ${channelLabel(row.channel_focus)}` : ""}`,
-  })),
-  campaigns: asArray(resourceValue(communicationQuickCampaignResource, [])).map((row) => ({
-    value: row.name,
-    label: `${row.campaign_name || row.name}${row.channel ? ` - ${channelLabel(row.channel)}` : ""}`,
-  })),
-}));
-const quickSegmentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Segment" : "Quick Segment"));
-const quickCampaignEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Kampanya" : "Quick Campaign"));
-const quickCallNoteEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Arama Notu" : "Quick Call Note"));
-const quickReminderEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Hatırlatıcı" : "Quick Reminder"));
-const quickMessageEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Mesaj" : "Quick Message"));
-const canCreateQuickMessage = computed(() => authStore.can(["quickCreate", "communication_message"]));
-const canSendDraftNowAction = computed(() => authStore.can(["actions", "communication", "sendDraftNow"]));
-const canRetryOutboxAction = computed(() => authStore.can(["actions", "communication", "retryOutbox"]));
-const canRunDispatchCycle = computed(() => authStore.can(["actions", "communication", "runDispatchCycle"]));
-const returnToTarget = computed(() => String(route.query.return_to || "").trim());
-const safeReturnTo = computed(() => resolveSameOriginPath(returnToTarget.value) || "");
-const canReturnToContext = computed(() => Boolean(safeReturnTo.value || hasContextFilters.value));
-const returnToLabel = computed(() => {
-  if (safeReturnTo.value) return activeLocale.value === "tr" ? "Kaynaga Don" : "Back to Source";
-  return activeLocale.value === "tr" ? "Geri" : "Back";
-});
-const quickMessageDialogLabels = computed(() => ({
-  save: t("saveDraft"),
-  saveAndOpen: t("sendImmediately"),
-}));
-const segmentPreviewSummary = computed(() => segmentPreviewPayload.value?.summary || null);
-const segmentPreviewRows = computed(() => segmentPreviewPayload.value?.customers || []);
-const quickMessageSuccessHandlers = {
-  communication_snapshot: async () => {
-    await reloadSnapshot();
-  },
-};
-const callNoteSuccessHandlers = {
-  "call-notes-list": async () => {},
-};
-const reminderSuccessHandlers = {
-  "reminders-list": async () => {
-    await reloadSnapshot();
-  },
-};
-const segmentSuccessHandlers = {
-  "segments-list": async () => {},
-};
-const campaignSuccessHandlers = {
-  "campaigns-list": async () => {},
-};
-
-const statusCards = computed(() =>
-  communicationStore.statusCards.map((item) => ({
-    key: item.key,
-    label: statusLabel(item.status),
-    value: item.value,
-  }))
-);
-
-function buildParams() {
-  return {
-    customer: filters.customer || null,
-    status: filters.status || null,
-    channel: filters.channel || null,
-    reference_doctype: filters.referenceDoctype || null,
-    reference_name: filters.referenceName || null,
-    office_branch: branchStore.requestBranch || null,
-    limit: filters.limit,
-  };
-}
-
-function buildCustomerQuickFilters() {
-  if (!branchStore.requestBranch) return {};
-  return { office_branch: branchStore.requestBranch };
-}
-
-function resetCommunicationFilterState() {
-  communicationStore.resetFilters();
-}
-
-function currentCommunicationPresetPayload() {
-  return {
-    customer: filters.customer,
-    status: filters.status,
-    channel: filters.channel,
-    referenceDoctype: filters.referenceDoctype,
-    referenceName: filters.referenceName,
-    limit: Number(filters.limit) || 50,
-  };
-}
-
-function setCommunicationFilterStateFromPayload(payload) {
-  filters.customer = String(payload?.customer || "");
-  filters.status = String(payload?.status || "");
-  filters.channel = String(payload?.channel || "");
-  filters.referenceDoctype = String(payload?.referenceDoctype || "");
-  filters.referenceName = String(payload?.referenceName || "");
-  filters.limit = Number(payload?.limit || 50) || 50;
-}
-
-function statusClass(status) {
-  if (status === "Sent") return "bg-emerald-100 text-emerald-700";
-  if (status === "Queued") return "bg-sky-100 text-sky-700";
-  if (status === "Processing") return "bg-sky-100 text-sky-700";
-  if (status === "Failed") return "bg-amber-100 text-amber-700";
-  if (status === "Dead") return "bg-slate-100 text-slate-700";
-  return "bg-slate-200 text-slate-700";
-}
-
-function statusLabel(status) {
-  if (status === "Queued") return t("queued");
-  if (status === "Processing") return t("processing");
-  if (status === "Sent") return t("sent");
-  if (status === "Failed") return t("failed");
-  if (status === "Dead") return t("dead");
-  return status || "-";
-}
-
-function channelLabel(channel) {
-  if (channel === "SMS") return t("sms");
-  if (channel === "Email") return t("email");
-  if (channel === "WHATSAPP") return t("whatsapp");
-  return channel || "-";
-}
-
-function reloadSnapshot() {
-  operationError.value = "";
-  snapshotResource.params = buildParams();
-  communicationStore.setLoading(true);
-  communicationStore.clearError();
-  return snapshotResource
-    .reload()
-    .then((result) => {
-      communicationStore.setSnapshot(result || {});
-      communicationStore.setLoading(false);
-      return result;
-    })
-    .catch((error) => {
-      const message = isPermissionDeniedError(error)
-        ? t("permissionDeniedRead")
-        : error?.message || error?.exc || t("loadErrorTitle");
-      communicationStore.setSnapshot({});
-      communicationStore.setError(message);
-      communicationStore.setLoading(false);
-      throw error;
-    });
-}
-
-function downloadCommunicationExport(format) {
-  openTabularExport({
-    permissionDoctypes: ["AT Notification Outbox", "AT Notification Draft"],
-    exportKey: "communication_center",
-    title: t("title"),
-    columns: [
-      t("recordType"),
-      t("status"),
-      t("channel"),
-      t("recipient"),
-      t("attempts"),
-      t("nextRetry"),
-      t("referenceContext"),
-      t("error"),
-    ],
-    rows: [
-      ...outboxItems.value.map((row) => ({
-        [t("recordType")]: t("outboxTitle"),
-        [t("status")]: `${t("outboxTitle")} / ${statusLabel(row.status)}`,
-        [t("channel")]: channelLabel(row.channel),
-        [t("recipient")]: row.recipient || "-",
-        [t("attempts")]: `${row.attempt_count || 0}/${row.max_attempts || 0}`,
-        [t("nextRetry")]: row.next_retry_on || "-",
-        [t("referenceContext")]: [referenceTypeLabel(row.reference_doctype), row.reference_name].filter(Boolean).join(" / ") || "-",
-        [t("error")]: row.error_message || "-",
-      })),
-      ...draftItems.value.map((row) => ({
-        [t("recordType")]: t("draftTitle"),
-        [t("status")]: `${t("draftTitle")} / ${statusLabel(row.status)}`,
-        [t("channel")]: channelLabel(row.channel),
-        [t("recipient")]: row.recipient || "-",
-        [t("attempts")]: "-",
-        [t("nextRetry")]: "-",
-        [t("referenceContext")]: [referenceTypeLabel(row.reference_doctype), row.reference_name].filter(Boolean).join(" / ") || "-",
-        [t("error")]: row.error_message || "-",
-      })),
-    ],
-    filters: currentCommunicationPresetPayload(),
-    format,
-  });
-}
-
-function reloadQuickCustomers() {
-  communicationQuickCustomerResource.params = {
-    ...communicationQuickCustomerResource.params,
-    filters: buildCustomerQuickFilters(),
-  };
-  communicationQuickPolicyResource.params = {
-    ...communicationQuickPolicyResource.params,
-    filters: buildCustomerQuickFilters(),
-  };
-  communicationQuickClaimResource.params = {
-    ...communicationQuickClaimResource.params,
-    filters: buildCustomerQuickFilters(),
-  };
-  communicationQuickSegmentResource.params = {
-    ...communicationQuickSegmentResource.params,
-    filters: buildCustomerQuickFilters(),
-  };
-  communicationQuickCampaignResource.params = {
-    ...communicationQuickCampaignResource.params,
-    filters: buildCustomerQuickFilters(),
-  };
-  return Promise.all([
-    communicationQuickCustomerResource.reload(),
-    communicationQuickPolicyResource.reload(),
-    communicationQuickClaimResource.reload(),
-    communicationQuickSegmentResource.reload(),
-    communicationQuickCampaignResource.reload(),
-  ]);
-}
-function applySnapshotFilters() {
-  return reloadSnapshot();
-}
-function resetSnapshotFilters() {
-  applyPreset("default", { refresh: false });
-  void persistPresetStateToServer();
-  return clearContextFilters();
-}
-function clearCustomerFilter() {
-  filters.customer = "";
-  const nextQuery = { ...route.query };
-  delete nextQuery.customer;
-  delete nextQuery.customer_label;
-  router.replace({ query: nextQuery });
-  reloadSnapshot();
-}
-function clearContextFilters() {
-  communicationStore.setFilters({
-    customer: "",
-    status: "",
-    channel: "",
-    referenceDoctype: "",
-    referenceName: "",
-  });
-  const nextQuery = { ...route.query };
-  delete nextQuery.customer;
-  delete nextQuery.customer_label;
-  delete nextQuery.status;
-  delete nextQuery.channel;
-  delete nextQuery.reference_doctype;
-  delete nextQuery.reference_name;
-  delete nextQuery.reference_label;
-  router.replace({ query: nextQuery });
-  reloadSnapshot();
-}
-function returnToContext() {
-  if (!canReturnToContext.value) return;
-  if (safeReturnTo.value) {
-    router.push(safeReturnTo.value);
-    return;
-  }
-  router.back();
-}
-
-async function runDispatchCycle() {
-  if (!canRunDispatchCycle.value) return;
-  dispatching.value = true;
-  operationError.value = "";
-  try {
-    await runCycleResource.submit({ limit: filters.limit, include_failed: 1 });
-    await reloadSnapshot();
-  } catch (error) {
-    operationError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-  } finally {
-    dispatching.value = false;
-  }
-}
-
-async function retryOutbox(outboxName) {
-  if (!canRetryOutboxAction.value) return;
-  operationError.value = "";
-  try {
-    await retryOutboxResource.submit({ outbox_name: outboxName });
-    await reloadSnapshot();
-  } catch (error) {
-    operationError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-  }
-}
-
-async function sendDraftNow(draftName) {
-  if (!canSendDraftNowAction.value) return;
-  operationError.value = "";
-  try {
-    await sendDraftResource.submit({ draft_name: draftName });
-    await reloadSnapshot();
-  } catch (error) {
-    operationError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-  }
-}
-
-async function updateAssignmentContextStatus(status) {
-  if (!String(status || "").trim()) return;
-  if (!canCloseAssignmentContext.value) return;
-  operationError.value = "";
-  try {
-    await auxMutationResource.submit({
-      doctype: "AT Ownership Assignment",
-      name: filters.referenceName,
-      data: {
-        status,
-      },
-    });
-    await reloadSnapshot();
-  } catch (error) {
-    operationError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-  }
-}
-
-async function startAssignmentContext() {
-  await updateAssignmentContextStatus("In Progress");
-}
-
-async function blockAssignmentContext() {
-  await updateAssignmentContextStatus("Blocked");
-}
-
-async function closeAssignmentContext() {
-  await updateAssignmentContextStatus("Done");
-}
-
-async function clearCallNoteContext() {
-  if (!canClearCallNoteContext.value) return;
-  operationError.value = "";
-  try {
-    await auxMutationResource.submit({
-      doctype: "AT Call Note",
-      name: filters.referenceName,
-      data: {
-        next_follow_up_on: null,
-      },
-    });
-    await reloadSnapshot();
-  } catch (error) {
-    operationError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-  }
-}
-
-async function completeReminderContext() {
-  if (!canCompleteReminderContext.value) return;
-  operationError.value = "";
-  try {
-    await auxMutationResource.submit({
-      doctype: "AT Reminder",
-      name: filters.referenceName,
-      data: {
-        status: "Done",
-      },
-    });
-    await reloadSnapshot();
-  } catch (error) {
-    operationError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-  }
-}
-
-async function cancelReminderContext() {
-  if (!canCancelReminderContext.value) return;
-  operationError.value = "";
-  try {
-    await auxMutationResource.submit({
-      doctype: "AT Reminder",
-      name: filters.referenceName,
-      data: {
-        status: "Cancelled",
-      },
-    });
-    await reloadSnapshot();
-  } catch (error) {
-    operationError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-  }
-}
-
-function canRetryOutboxRow(row) {
-  return canRetryOutboxAction.value && ["Failed", "Dead"].includes(String(row?.status || ""));
-}
-
-function canSendDraftFromOutboxRow(row) {
-  return canSendDraftNowAction.value && row?.status !== "Sent" && Boolean(row?.draft);
-}
-
-function canSendDraftCard(draft) {
-  return canSendDraftNowAction.value && draft?.status !== "Sent";
-}
-
-function sourcePanelConfig(item) {
-  return getSourcePanelConfig(item?.reference_doctype, item?.reference_name);
-}
-function canOpenPanel(item) {
-  return Boolean(sourcePanelConfig(item));
-}
-function panelActionLabel(item) {
-  const cfg = sourcePanelConfig(item);
-  return cfg ? t(cfg.labelKey) : "";
-}
-function openPanel(item) {
-  const cfg = sourcePanelConfig(item);
-  if (!cfg?.url) return;
-  router.push(cfg.url);
-}
-function referenceTypeLabel(doctype) {
-  const value = String(doctype || "").trim();
-  if (value === "AT Lead") return t("referenceLead");
-  if (value === "AT Offer") return t("referenceOffer");
-  if (value === "AT Policy") return t("referencePolicy");
-  if (value === "AT Customer") return t("referenceCustomer");
-  if (value === "AT Claim") return t("referenceClaim");
-  if (value === "AT Payment") return t("referencePayment");
-  if (value === "AT Renewal Task") return t("referenceRenewalTask");
-  if (value === "AT Accounting Entry") return t("referenceAccountingEntry");
-  if (value === "AT Reconciliation Item") return t("referenceReconciliationItem");
-  return value || "-";
-}
-
-function buildQuickMessagePayload({ form, openAfter }) {
-  return {
-    template: form.template || null,
-    channel: form.channel || null,
-    language: form.language || null,
-    customer: form.customer || null,
-    office_branch: branchStore.requestBranch || null,
-    recipient: form.recipient || null,
-    reference_doctype: form.reference_doctype || null,
-    reference_name: form.reference_name || null,
-    subject: form.subject || null,
-    body: form.body || null,
-    send_now: openAfter ? 1 : 0,
-  };
-}
-
-function isPermissionDeniedError(error) {
-  const status = Number(
-    error?.statusCode ??
-      error?.status ??
-      error?.httpStatus ??
-      error?.response?.status ??
-      0
-  );
-  const text = String(error?.message || error?.messages?.join(" ") || error?.exc_type || "").toLowerCase();
-  return (
-    status === 401 ||
-    status === 403 ||
-    text.includes("permission") ||
-    text.includes("not permitted") ||
-    text.includes("not authorized")
-  );
-}
-
-async function prepareQuickMessageDialog({ form }) {
-  if (filters.customer && !form.customer) form.customer = filters.customer;
-  if (filters.channel && !form.channel) form.channel = filters.channel;
-  if (filters.referenceDoctype && !form.reference_doctype) form.reference_doctype = filters.referenceDoctype;
-  if (filters.referenceName && !form.reference_name) form.reference_name = filters.referenceName;
-  if (!form.language) form.language = activeLocale.value === "tr" ? "tr" : "en";
-}
-
-async function loadSegmentPreview() {
-  if (!segmentPreviewSegment.value) return;
-  segmentPreviewLoading.value = true;
-  segmentPreviewError.value = "";
-  try {
-    const result = await segmentPreviewResource.submit({
-      segment_name: segmentPreviewSegment.value,
-      limit: 20,
-    });
-    segmentPreviewPayload.value = result || null;
-  } catch (error) {
-    segmentPreviewPayload.value = null;
-    segmentPreviewError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedRead")
-      : error?.message || error?.exc || t("loadErrorTitle");
-  } finally {
-    segmentPreviewLoading.value = false;
-  }
-}
-
-async function runCampaignExecution() {
-  if (!campaignRunSelection.value) return;
-  campaignRunLoading.value = true;
-  campaignRunError.value = "";
-  try {
-    const result = await campaignRunResource.submit({
-      campaign_name: campaignRunSelection.value,
-      limit: 200,
-    });
-    campaignRunResult.value = result || null;
-    await reloadSnapshot();
-  } catch (error) {
-    campaignRunResult.value = null;
-    campaignRunError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.message || error?.exc || t("loadErrorTitle");
-  } finally {
-    campaignRunLoading.value = false;
-  }
-}
-
-async function prepareCallNoteDialog({ form }) {
-  if (filters.customer && !form.customer) form.customer = filters.customer;
-  if (filters.referenceDoctype === "AT Policy" && filters.referenceName && !form.policy) form.policy = filters.referenceName;
-  if (filters.referenceDoctype === "AT Claim" && filters.referenceName && !form.claim) form.claim = filters.referenceName;
-  if (!form.note_at) form.note_at = new Date().toISOString().slice(0, 16);
-}
-
-async function prepareReminderDialog({ form }) {
-  if (filters.customer && !form.customer) form.customer = filters.customer;
-  if (filters.referenceDoctype && !form.source_doctype) form.source_doctype = filters.referenceDoctype;
-  if (filters.referenceName && !form.source_name) form.source_name = filters.referenceName;
-  if (filters.referenceDoctype === "AT Policy" && filters.referenceName && !form.policy) form.policy = filters.referenceName;
-  if (filters.referenceDoctype === "AT Claim" && filters.referenceName && !form.claim) form.claim = filters.referenceName;
-  if (!form.remind_at) form.remind_at = new Date().toISOString().slice(0, 16);
-}
-
-function hasRouteContextQuery() {
-  return Boolean(
-    route.query.customer ||
-      route.query.status ||
-      route.query.channel ||
-      route.query.reference_doctype ||
-      route.query.reference_name
-  );
-}
-
-onMounted(() => {
-  if (!hasRouteContextQuery()) {
-    applyPreset(presetKey.value, { refresh: false });
-  }
-  void reloadSnapshot();
-  void hydratePresetStateFromServer();
+  filters,
+  activeLocale,
+  branchStore,
+  router,
+  reloadSnapshot,
+  canSendDraftNowAction,
+  canRetryOutboxAction,
+  canRunDispatchCycle,
+  canCloseAssignmentContext,
+  canClearCallNoteContext,
+  canCompleteReminderContext,
+  canCancelReminderContext,
+  canReturnToContext,
+  safeReturnTo,
 });
 
-watch(
-  () => [
-    route.query.customer,
-    route.query.customer_label,
-    route.query.status,
-    route.query.channel,
-    route.query.reference_doctype,
-    route.query.reference_name,
-    route.query.reference_label,
-  ],
-  ([customer, _customerLabel, status, channel, referenceDoctype, referenceName]) => {
-    const nextCustomer = String(customer || "").trim();
-    const nextStatus = String(status || "").trim();
-    const nextChannel = String(channel || "").trim();
-    const nextReferenceDoctype = String(referenceDoctype || "").trim();
-    const nextReferenceName = String(referenceName || "").trim();
-    if (
-      filters.customer === nextCustomer &&
-      filters.status === nextStatus &&
-      filters.channel === nextChannel &&
-      filters.referenceDoctype === nextReferenceDoctype &&
-      filters.referenceName === nextReferenceName
-    ) {
-      return;
-    }
-    communicationStore.setFilters({
-      customer: nextCustomer,
-      status: nextStatus,
-      channel: nextChannel,
-      referenceDoctype: nextReferenceDoctype,
-      referenceName: nextReferenceName,
-    });
-    reloadSnapshot();
-  },
-  { immediate: true }
-);
+const {
+  showSegmentPreviewDialog,
+  segmentPreviewSegment,
+  segmentPreviewLoading,
+  segmentPreviewError,
+  segmentPreviewPayload,
+  segmentPreviewResource,
+  loadSegmentPreview,
+  segmentPreviewSummary,
+  segmentPreviewRows,
+} = useCommunicationCenterSegmentFlow({ t });
 
-watch(
-  () => branchStore.selected,
-  () => {
-    void reloadQuickCustomers();
-    void reloadSnapshot();
-  }
-);
+const {
+  showCampaignRunDialog,
+  campaignRunSelection,
+  campaignRunLoading,
+  campaignRunError,
+  campaignRunResult,
+  campaignRunResource,
+  runCampaignExecution,
+} = useCommunicationCenterCampaignFlow({ t, reloadSnapshot });
 </script>
 
 <style scoped>

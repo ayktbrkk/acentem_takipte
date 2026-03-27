@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { AUX_WORKBENCH_ROUTE_DEFS } from "../config/auxWorkbenchConfigs";
+import { AUX_WORKBENCH_ROUTE_DEFS } from "../config/auxWorkbench";
 import { sessionState } from "../state/session";
 
 export const OFFICE_BRANCH_QUERY_KEY = "office_branch";

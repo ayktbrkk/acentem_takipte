@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
@@ -10,6 +11,28 @@ from acentem_takipte.acentem_takipte.api.dashboard_v2 import security as dashboa
 
 
 class TestDashboardContractSmoke(unittest.TestCase):
+    def setUp(self) -> None:
+        self._previous_user = getattr(dashboard_api.frappe.session, "user", None)
+        self._had_db = hasattr(dashboard_api.frappe.local, "db")
+        self._previous_db = getattr(dashboard_api.frappe.local, "db", None) if self._had_db else None
+        dashboard_api.frappe.session.user = "Administrator"
+        dashboard_api.frappe.local.db = SimpleNamespace(
+            sql=lambda *args, **kwargs: [],
+            get_value=lambda *args, **kwargs: None,
+            get_all=lambda *args, **kwargs: [],
+            get_list=lambda *args, **kwargs: [],
+            has_column=lambda *args, **kwargs: False,
+            exists=lambda *args, **kwargs: False,
+            count=lambda *args, **kwargs: 0,
+        )
+
+    def tearDown(self) -> None:
+        if self._had_db:
+            dashboard_api.frappe.local.db = self._previous_db
+        elif hasattr(dashboard_api.frappe.local, "db"):
+            delattr(dashboard_api.frappe.local, "db")
+        dashboard_api.frappe.session.user = self._previous_user
+
     def test_permission_policy_table_covers_core_dashboard_endpoints(self):
         policy_table = dashboard_security.get_dashboard_endpoint_permission_policy()
         for endpoint in [
@@ -26,28 +49,27 @@ class TestDashboardContractSmoke(unittest.TestCase):
             self.assertIn("scope", policy_table[endpoint])
 
     def test_get_dashboard_kpis_response_contract_smoke(self):
-        cards = dashboard_api._empty_dashboard_payload().get("cards", {}).copy()
         meta = {"access_scope": "global", "scope_reason": "privileged_role"}
+        expected_payload = {
+            "cards": dashboard_api._empty_dashboard_payload().get("cards", {}).copy(),
+            "lead_status": [],
+            "policy_status": [],
+            "top_companies": [],
+            "commission_trend": [],
+            "comparison": {},
+            "meta": meta,
+        }
 
         with patch.object(dashboard_api, "_allowed_customers_for_user", return_value=(None, meta)):
-            with patch.object(dashboard_api, "_build_policy_where", return_value=("1=1", {})):
-                with patch.object(dashboard_api, "_build_lead_where", return_value=("1=1", {})):
-                    with patch.object(dashboard_api, "_dashboard_cards_summary", return_value=cards):
-                        with patch.object(dashboard_api, "_monthly_commission_trend", return_value=[]):
-                            with patch.object(dashboard_api.frappe.db, "sql", side_effect=[[], [], []]):
-                                payload = dashboard_api.get_dashboard_kpis(filters={})
+            with patch.object(
+                dashboard_api.dashboard_kpi_queries,
+                "build_dashboard_kpis_payload",
+                return_value=expected_payload,
+            ) as build_mock:
+                payload = dashboard_api.get_dashboard_kpis(filters={})
 
-        self.assertEqual(
-            set(payload.keys()),
-            {"cards", "lead_status", "policy_status", "top_companies", "commission_trend", "comparison", "meta"},
-        )
-        self.assertIsInstance(payload["cards"], dict)
-        self.assertIsInstance(payload["lead_status"], list)
-        self.assertIsInstance(payload["policy_status"], list)
-        self.assertIsInstance(payload["top_companies"], list)
-        self.assertIsInstance(payload["commission_trend"], list)
-        self.assertIsInstance(payload["comparison"], dict)
-        self.assertEqual(payload["meta"], meta)
+        build_mock.assert_called_once()
+        self.assertEqual(payload, expected_payload)
 
     def test_get_dashboard_tab_payload_renewals_contract_smoke(self):
         cards = dashboard_api._empty_dashboard_payload().get("cards", {}).copy()
@@ -61,11 +83,12 @@ class TestDashboardContractSmoke(unittest.TestCase):
         offer_waiting = {"count": 1, "rows": [{"name": "RT-0002", "status": "Open"}]}
 
         with patch.object(dashboard_api, "_allowed_customers_for_user", return_value=(["CUST-0001"], meta)):
-            with patch.object(dashboard_api, "_dashboard_cards_summary", side_effect=[cards, compare_cards]):
-                with patch.object(dashboard_api, "_renewal_status_and_buckets", return_value=renewal_payload):
-                    with patch.object(dashboard_api, "_get_renewal_task_preview_rows", return_value=preview_rows):
-                        with patch.object(dashboard_api, "_get_offer_waiting_renewal_summary", return_value=offer_waiting):
-                            payload = dashboard_api.get_dashboard_tab_payload(tab="renewals", filters={})
+            with patch.object(dashboard_api, "normalize_requested_office_branch", lambda office_branch=None, user=None: office_branch):
+                with patch.object(dashboard_api, "_dashboard_cards_summary", side_effect=[cards, compare_cards]):
+                    with patch.object(dashboard_api, "_renewal_status_and_buckets", return_value=renewal_payload):
+                        with patch.object(dashboard_api, "_get_renewal_task_preview_rows", return_value=preview_rows):
+                            with patch.object(dashboard_api, "_get_offer_waiting_renewal_summary", return_value=offer_waiting):
+                                payload = dashboard_api.get_dashboard_tab_payload(tab="renewals", filters={})
 
         self.assertEqual(set(payload.keys()), {"tab", "cards", "compare_cards", "metrics", "series", "previews", "meta"})
         self.assertEqual(payload["tab"], "renewals")
@@ -82,31 +105,32 @@ class TestDashboardContractSmoke(unittest.TestCase):
         meta = {"access_scope": "global", "scope_reason": "privileged_role"}
 
         with patch.object(dashboard_api, "_allowed_customers_for_user", return_value=(None, meta)):
-            with patch.object(dashboard_api, "_dashboard_cards_summary", side_effect=[cards, compare_cards]):
-                with patch.object(dashboard_api, "_build_payment_where", return_value=("1=1", {})):
-                    with patch.object(
-                        dashboard_api,
-                        "_build_payment_collection_where",
-                        side_effect=[("1=1", {}), ("1=1", {})],
-                    ):
-                        with patch.object(dashboard_api, "_get_payment_preview_rows", return_value=[{"name": "PAY-0001"}]):
-                            with patch.object(dashboard_api, "_get_reconciliation_open_rows_preview", return_value=[{"name": "REC-0001"}]):
-                                with patch.object(
-                                    dashboard_api,
-                                    "_reconciliation_open_summary",
-                                    return_value={"open_count": 2, "open_difference_try": 150},
-                                ):
+            with patch.object(dashboard_api, "normalize_requested_office_branch", lambda office_branch=None, user=None: office_branch):
+                with patch.object(dashboard_api, "_dashboard_cards_summary", side_effect=[cards, compare_cards]):
+                    with patch.object(dashboard_api, "_build_payment_where", return_value=("1=1", {})):
+                        with patch.object(
+                            dashboard_api,
+                            "_build_payment_collection_where",
+                            side_effect=[("1=1", {}), ("1=1", {})],
+                        ):
+                            with patch.object(dashboard_api, "_get_payment_preview_rows", return_value=[{"name": "PAY-0001"}]):
+                                with patch.object(dashboard_api, "_get_reconciliation_open_rows_preview", return_value=[{"name": "REC-0001"}]):
                                     with patch.object(
-                                        dashboard_api.frappe.db,
-                                        "sql",
-                                        side_effect=[
-                                            [{"status": "Draft", "total": 3}],
-                                            [{"payment_direction": "Inbound", "total": 3, "paid_amount_try": 0}],
-                                            [{"total_count": 1, "total_amount_try": 100}],
-                                            [{"total_count": 2, "total_amount_try": 250}],
-                                        ],
+                                        dashboard_api,
+                                        "_reconciliation_open_summary",
+                                        return_value={"open_count": 2, "open_difference_try": 150},
                                     ):
-                                        payload = dashboard_api.get_dashboard_tab_payload(tab="collections", filters={})
+                                        with patch.object(
+                                            dashboard_api.frappe.db,
+                                            "sql",
+                                            side_effect=[
+                                                [{"status": "Draft", "total": 3}],
+                                                [{"payment_direction": "Inbound", "total": 3, "paid_amount_try": 0}],
+                                                [{"total_count": 1, "total_amount_try": 100}],
+                                                [{"total_count": 2, "total_amount_try": 250}],
+                                            ],
+                                        ):
+                                            payload = dashboard_api.get_dashboard_tab_payload(tab="collections", filters={})
 
         self.assertEqual(payload["tab"], "collections")
         self.assertIn("due_today_collection_count", payload["metrics"])

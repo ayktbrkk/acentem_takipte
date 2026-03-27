@@ -19,20 +19,7 @@
     </template>
 
     <template #metrics>
-      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div
-          v-for="item in heroSummaryCells"
-          :key="item.label"
-          class="mini-metric"
-        >
-          <p class="mini-metric-label">
-            {{ item.label }}
-          </p>
-          <p class="mini-metric-value" :class="item.valueClass">
-            {{ item.value }}
-          </p>
-        </div>
-      </div>
+      <ReportsHeroMetrics :items="heroSummaryCells" />
     </template>
 
     <SectionPanel
@@ -152,112 +139,36 @@
       </div>
     </SectionPanel>
 
-    <SectionPanel
-          :title="activeReportLabel"
-          :count="sortedRows.length"
-          :meta="branchScopeLabel"
-          panel-class="surface-card rounded-2xl p-5"
-        >
-          <div class="mt-1 flex items-center justify-between gap-3 text-xs text-slate-500">
-            <span>{{ t("columns") }}: {{ columnsSummaryLabel }}</span>
-            <span v-if="exportLoading">{{ t("exporting") }}</span>
-          </div>
-
-          <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
-              <p class="text-xs text-slate-600">{{ t("columnHint") }}</p>
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500">
-                  {{ columnsSummaryLabel }}
-                </span>
-                <button
-                  type="button"
-                  class="btn btn-outline btn-xs"
-                  @click="showAllColumns"
-                >
-                  {{ t("showAllColumns") }}
-                </button>
-              </div>
-            </div>
-
-            <div class="mt-3 rounded-xl border border-slate-200 bg-white/90 p-3">
-              <div class="flex items-center justify-between gap-2">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{{ t("columns") }}</p>
-                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-                  {{ columnsSummaryLabel }}
-                </span>
-              </div>
-              <div class="mt-2 max-h-40 overflow-y-auto flex flex-wrap gap-2">
-                <button
-                  v-for="column in columns"
-                  :key="`all-${column}`"
-                  type="button"
-                  :class="isColumnVisible(column)
-                    ? 'inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 transition hover:bg-sky-100'
-                    : 'inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100'"
-                  @click="toggleColumn(column)"
-                >
-                  {{ getColumnLabel(column) }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-            {{ t("loading") }}
-          </div>
-          <div v-else-if="error" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
-            <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-            <p class="qc-error-banner__text mt-1">{{ error }}</p>
-          </div>
-          <template v-else>
-            <div v-if="sortedRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
-            </div>
-
-            <div class="mt-4 overflow-hidden rounded-lg border border-gray-200">
-              <div class="overflow-auto">
-              <table class="w-full border-collapse">
-                <thead>
-                  <tr class="border-b border-gray-200 bg-gray-50">
-                    <th
-                      v-for="column in visibleColumns"
-                      :key="column"
-                      class="px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-wider text-gray-400"
-                    >
-                      <button
-                        type="button"
-                        class="inline-flex w-full items-center justify-between gap-2 text-left text-[10.5px] font-semibold uppercase tracking-wider text-gray-400 transition-colors hover:text-gray-600"
-                        @click="toggleSort(column)"
-                      >
-                        <span>{{ getColumnLabel(column) }}</span>
-                        <span class="text-[10px] text-gray-400">{{ getSortIndicator(column) }}</span>
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(row, rowIndex) in sortedRows"
-                    :key="row.name || rowIndex"
-                    class="border-b border-gray-100 transition-colors duration-100 last:border-0"
-                    :class="isRowClickable(row) ? 'cursor-pointer hover:bg-gray-50' : ''"
-                    @click="onRowClick(row)"
-                  >
-                    <td v-for="column in visibleColumns" :key="column" class="px-4 py-3 text-sm text-gray-900">
-                      {{ formatCellValue(column, row[column]) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              </div>
-
-              <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3">
-                <p class="text-xs text-gray-400">{{ sortedRows.length }} / {{ sortedRows.length }} {{ t("showingRecords") }}</p>
-              </div>
-            </div>
-          </template>
-        </SectionPanel>
+    <ReportsReportPanel
+      :title="activeReportLabel"
+      :count="sortedRows.length"
+      :meta="branchScopeLabel"
+      :columns-label="t('columns')"
+      :columns-summary-label="columnsSummaryLabel"
+      :column-hint="t('columnHint')"
+      :show-all-columns-label="t('showAllColumns')"
+      :loading-label="t('loading')"
+      :load-error-title="t('loadErrorTitle')"
+      :empty-title="t('emptyTitle')"
+      :empty-description="t('emptyDescription')"
+      :showing-records-label="t('showingRecords')"
+      :exporting-label="t('exporting')"
+      :loading="loading"
+      :export-loading="exportLoading"
+      :error="error"
+      :columns="columns"
+      :sorted-rows="sortedRows"
+      :visible-columns="visibleColumns"
+      :show-all-columns="showAllColumns"
+      :is-column-visible="isColumnVisible"
+      :toggle-column="toggleColumn"
+      :get-column-label="getColumnLabel"
+      :toggle-sort="toggleSort"
+      :get-sort-indicator="getSortIndicator"
+      :is-row-clickable="isRowClickable"
+      :on-row-click="onRowClick"
+      :format-cell-value="formatCellValue"
+    />
 
       <SectionPanel
         v-if="comparisonSummaryItems.length"
@@ -324,15 +235,20 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, unref, watch } from "vue";
+import { computed, ref, unref } from "vue";
 import { frappeRequest } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
-import EmptyState from "../components/app-shell/EmptyState.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import ScheduledReportsManager from "../components/reports/ScheduledReportsManager.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FilterPresetMenu from "../components/app-shell/FilterPresetMenu.vue";
+import ReportsHeroMetrics from "../components/reports/ReportsHeroMetrics.vue";
+import ReportsReportPanel from "../components/reports/ReportsReportPanel.vue";
+import { columnLabels as columnLabelsConfig, reportCatalog as reportCatalogConfig, reportFilterConfig as reportFilterConfigConfig } from "../composables/reports/catalog";
+import { useReportsRuntime } from "../composables/reports/runtime";
+import { useReportsScheduled } from "../composables/reports/scheduled";
+import { createReportFilters } from "../composables/reports/state";
 import { useCustomFilterPresets } from "../composables/useCustomFilterPresets";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
@@ -556,174 +472,17 @@ function t(key) {
 
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+const reportCatalog = reportCatalogConfig;
+const columnLabels = columnLabelsConfig;
+const reportFilterConfig = reportFilterConfigConfig;
+const filters = createReportFilters(props.initialReportKey);
 
-const reportCatalog = {
-  policy_list: {
-    label: { tr: "Poliçe Listesi", en: "Policy List" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_policy_list_report",
-  },
-  payment_status: {
-    label: { tr: "Tahsilat Durumu", en: "Payment Status" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_payment_status_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_payment_status_report",
-  },
-  renewal_performance: {
-    label: { tr: "Yenileme Performansı", en: "Renewal Performance" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_renewal_performance_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_renewal_performance_report",
-  },
-  claim_loss_ratio: {
-    label: { tr: "Hasar/Prim Oranı", en: "Claim Loss Ratio" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claim_loss_ratio_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claim_loss_ratio_report",
-  },
-  agent_performance: {
-    label: { tr: "Acente Üretim Karnesi", en: "Agency Performance Scorecard" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_agent_performance_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_agent_performance_report",
-  },
-  customer_segmentation: {
-    label: { tr: "Müşteri Segmentasyonu", en: "Customer Segmentation" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_customer_segmentation_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_customer_segmentation_report",
-  },
-  communication_operations: {
-    label: { tr: "İletişim Operasyonları", en: "Communication Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_communication_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_communication_operations_report",
-  },
-  reconciliation_operations: {
-    label: { tr: "Mutabakat Operasyonları", en: "Reconciliation Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_reconciliation_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_reconciliation_operations_report",
-  },
-  claims_operations: {
-    label: { tr: "Hasar Operasyonları", en: "Claims Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claims_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claims_operations_report",
-  },
-};
-
-const columnLabels = {
-  name: { tr: "Kayıt No", en: "Record Number" },
-  customer: { tr: "Müşteri", en: "Customer" },
-  customer_full_name: { tr: "Müşteri Ad Soyad", en: "Customer Full Name" },
-  customer_tax_id: { tr: "TC/VKN", en: "Tax ID" },
-  policy: { tr: "Poliçe", en: "Policy" },
-  policy_no: { tr: "Sigorta Şirketi Poliçe No", en: "Carrier Policy Number" },
-  office_branch: { tr: "Ofis Şube", en: "Office Branch" },
-  branch: { tr: "Sigorta Branşı", en: "Insurance Branch" },
-  insurance_company: { tr: "Sigorta Şirketi", en: "Insurance Company" },
-  sales_entity: { tr: "Satış Birimi", en: "Sales Entity" },
-  sales_entity_full_name: { tr: "Satış Birimi Ad Soyad", en: "Sales Entity Full Name" },
-  assigned_agent: { tr: "Atanan Temsilci", en: "Assigned Agent" },
-  status: { tr: "Durum", en: "Status" },
-  claim_status: { tr: "Hasar Durumu", en: "Claim Status" },
-  assigned_to: { tr: "Atanan Kişi", en: "Assigned To" },
-  issue_date: { tr: "Tanzim Tarihi", en: "Issue Date" },
-  period: { tr: "Dönem", en: "Period" },
-  period_label: { tr: "Dönem Etiketi", en: "Period Label" },
-  start_date: { tr: "Başlangıç Tarihi", en: "Start Date" },
-  end_date: { tr: "Bitiş Tarihi", en: "End Date" },
-  renewal_date: { tr: "Yenileme Tarihi", en: "Renewal Date" },
-  due_date: { tr: "Vade Tarihi", en: "Due Date" },
-  gross_premium: { tr: "Brüt Prim", en: "Gross Premium" },
-  total_gross_premium: { tr: "Toplam Brüt Prim", en: "Total Gross Premium" },
-  total_premium: { tr: "Toplam Prim", en: "Total Premium" },
-  commission_amount: { tr: "Komisyon", en: "Commission" },
-  total_commission: { tr: "Toplam Komisyon", en: "Total Commission" },
-  paid_amount: { tr: "Ödenen", en: "Paid Amount" },
-  approved_amount: { tr: "Onaylanan", en: "Approved Amount" },
-  estimated_amount: { tr: "Tahmini Tutar", en: "Estimated Amount" },
-  loss_ratio_percent: { tr: "Hasar/Prim Oranı", en: "Loss Ratio" },
-  policy_count: { tr: "Poliçe Sayısı", en: "Policy Count" },
-  active_policy_count: { tr: "Aktif Poliçe", en: "Active Policies" },
-  cancelled_policy_count: { tr: "İptal Poliçe", en: "Cancelled Policies" },
-  offer_count: { tr: "Teklif Sayısı", en: "Offer Count" },
-  accepted_offer_count: { tr: "Kabul Edilen Teklif", en: "Accepted Offers" },
-  converted_offer_count: { tr: "Poliçeye Dönüşen Teklif", en: "Converted Offers" },
-  offer_conversion_rate: { tr: "Teklif Dönüşüm Oranı", en: "Offer Conversion Rate" },
-  renewal_task_count: { tr: "Yenileme Görevi", en: "Renewal Tasks" },
-  completed_renewal_task_count: { tr: "Tamamlanan Yenileme", en: "Completed Renewals" },
-  open_renewal_task_count: { tr: "Açık Yenileme Yükü", en: "Open Renewal Load" },
-  renewal_success_rate: { tr: "Yenileme Başarı Oranı", en: "Renewal Success Rate" },
-  claim_count: { tr: "Hasar Sayısı", en: "Claim Count" },
-  claim_history_segment: { tr: "Hasar Geçmişi", en: "Claim History" },
-  loyalty_segment: { tr: "Sadakat Segmenti", en: "Loyalty Segment" },
-  policy_segment: { tr: "Poliçe Segmenti", en: "Policy Segment" },
-  premium_segment: { tr: "Prim Segmenti", en: "Premium Segment" },
-  campaign_name: { tr: "Kampanya", en: "Campaign" },
-  segment: { tr: "Segment", en: "Segment" },
-  channel: { tr: "Kanal", en: "Channel" },
-  scheduled_for: { tr: "Planlanan Çalışma", en: "Scheduled Run" },
-  last_run_on: { tr: "Son Çalışma", en: "Last Run" },
-  matched_customer_count: { tr: "Eşleşen Müşteri", en: "Matched Customers" },
-  sent_count: { tr: "Üretilen Taslak", en: "Created Drafts" },
-  skipped_count: { tr: "Atlanan", en: "Skipped" },
-  draft_count: { tr: "Toplam Taslak", en: "Draft Count" },
-  sent_outbox_count: { tr: "Başarılı Gönderim", en: "Successful Deliveries" },
-  failed_outbox_count: { tr: "Hatalı Gönderim", en: "Failed Deliveries" },
-  accounting_entry: { tr: "Muhasebe Kaydı", en: "Accounting Entry" },
-  claim_no: { tr: "Hasar No", en: "Claim No" },
-  source_doctype: { tr: "Kaynak Tipi", en: "Source Type" },
-  source_name: { tr: "Kaynak Kayıt", en: "Source Record" },
-  mismatch_type: { tr: "Uyumsuzluk Tipi", en: "Mismatch Type" },
-  difference_try: { tr: "Fark Tutarı", en: "Difference Amount" },
-  resolution_action: { tr: "Çözüm", en: "Resolution" },
-  resolved_on: { tr: "Çözüm Tarihi", en: "Resolved On" },
-  needs_reconciliation: { tr: "Mutabakat Gerekli", en: "Needs Reconciliation" },
-  assigned_expert: { tr: "Eksper", en: "Assigned Expert" },
-  rejection_reason: { tr: "Red Sebebi", en: "Rejection Reason" },
-  appeal_status: { tr: "İtiraz Durumu", en: "Appeal Status" },
-  next_follow_up_on: { tr: "Sonraki Takip", en: "Next Follow-up" },
-  reported_date: { tr: "Bildirim Tarihi", en: "Reported Date" },
-  unique_key: { tr: "Benzersiz Anahtar", en: "Unique Key" },
-};
-
-const reportFilterConfig = {
-  policy_list: ["branch", "insuranceCompany", "policyNo", "customerTaxId", "status"],
-  payment_status: ["branch", "insuranceCompany", "status"],
-  renewal_performance: ["branch", "salesEntity", "status"],
-  claim_loss_ratio: ["branch", "insuranceCompany", "status"],
-  agent_performance: ["branch", "salesEntity"],
-  customer_segmentation: ["branch", "salesEntity"],
-  communication_operations: ["status"],
-  reconciliation_operations: ["status"],
-  claims_operations: ["branch", "insuranceCompany", "status"],
-};
-
-const filters = reactive({
-  reportKey: props.initialReportKey || "policy_list",
-  fromDate: "",
-  toDate: "",
-  branch: "",
-  insuranceCompany: "",
-  policyNo: "",
-  customerTaxId: "",
-  salesEntity: "",
-  status: "",
-});
-
-const loading = ref(false);
-const exportLoading = ref(false);
 const scheduledLoading = ref(false);
 const scheduledRunLoading = ref(false);
 const snapshotRunLoading = ref(false);
 const filtersSectionRef = ref(null);
 const reportsAdvancedOpen = ref(false);
-const activePreset = ref(""); // Seçili tarih aralığı preset'i
-const error = ref("");
-const columns = ref([]);
-const rows = ref([]);
-const comparisonRows = ref([]);
 const scheduledReports = ref([]);
-const visibleColumnKeys = ref([]);
-const pendingVisibleColumnKeys = ref([]);
-const sortState = reactive({
-  column: "",
-  direction: "",
-});
 
 const reportOptions = computed(() =>
   Object.entries(reportCatalog).map(([value, config]) => ({
@@ -1099,6 +858,89 @@ const { presetKey, presetOptions, canDeletePreset, applyPreset, onPresetChange, 
     getSortLocale: () => localeCode.value,
   });
 
+let loadScheduledReports = async () => {};
+
+const reportsRuntime = useReportsRuntime({
+  t,
+  activeLocale,
+  localeCode,
+  reportCatalog,
+  columnLabels,
+  filters,
+  visibleFilters,
+  comparisonEnabled,
+  branchStore,
+  route,
+  router,
+  filtersSectionRef,
+  numberFormatter,
+  dateFormatter,
+  percentFormatter,
+  onLoadScheduledReports: () => loadScheduledReports(),
+});
+
+const {
+  loading,
+  exportLoading,
+  error,
+  columns,
+  rows,
+  comparisonRows,
+  activePreset,
+  visibleColumnKeys,
+  pendingVisibleColumnKeys,
+  sortState,
+  clearHiddenFilters,
+  formatComparisonDelta,
+  isFilterVisible,
+  getAdvancedFilterOptions,
+  getColumnLabel,
+  getReportRowRoute,
+  isRowClickable,
+  onRowClick,
+  formatCellValue,
+  normalizeSortableValue,
+  syncReportKeyFromRoute,
+  persistReportKeyToRoute,
+  applyViewState,
+  buildViewStatePayload,
+  persistViewStateToStorage,
+  syncViewStateFromStorage,
+  syncViewStateFromRoute,
+  persistViewStateToRoute,
+  loadReport,
+  scheduleReportLoad,
+  downloadReport,
+  isColumnVisible,
+  toggleColumn,
+  showAllColumns,
+  focusFilters,
+  toggleSort,
+  getSortIndicator,
+  applyDatePreset,
+  isActivePresetRange,
+} = reportsRuntime;
+
+const reportsScheduled = useReportsScheduled({
+  t,
+  frappeRequest,
+  canManageScheduledReports,
+  scheduledReports,
+  scheduledLoading,
+  scheduledRunLoading,
+  snapshotRunLoading,
+  errorRef: error,
+});
+
+loadScheduledReports = reportsScheduled.loadScheduledReports;
+
+const {
+  runScheduledReports,
+  runCustomerSegmentSnapshots,
+  saveScheduledReport,
+  removeScheduledReport,
+} = reportsScheduled;
+
 const presetModelValue = computed(() => String(unref(presetKey) || "default"));
 const presetOptionsList = computed(() => {
   const value = unref(presetOptions);
@@ -1106,774 +948,10 @@ const presetOptionsList = computed(() => {
 });
 const canDeletePresetFlag = computed(() => Boolean(unref(canDeletePreset)));
 
-function formatDateForInput(date) {
-  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
-    return "";
-  }
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getDateRangeForPreset(preset) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  if (preset === "today") {
-    return {
-      fromDate: formatDateForInput(today),
-      toDate: formatDateForInput(today),
-    };
-  }
-
-  if (preset === "this_month") {
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const monthStart = new Date(year, month, 1);
-    const monthEnd = new Date(year, month + 1, 0);
-    return {
-      fromDate: formatDateForInput(monthStart),
-      toDate: formatDateForInput(monthEnd),
-    };
-  }
-
-  if (preset === "this_year") {
-    const year = today.getFullYear();
-    const yearStart = new Date(year, 0, 1);
-    const yearEnd = new Date(year, 11, 31);
-    return {
-      fromDate: formatDateForInput(yearStart),
-      toDate: formatDateForInput(yearEnd),
-    };
-  }
-
-  if (preset === "yesterday") {
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    return {
-      fromDate: formatDateForInput(yesterday),
-      toDate: formatDateForInput(yesterday),
-    };
-  }
-
-  if (preset === "last_month") {
-    const year = today.getFullYear();
-    const month = today.getMonth() - 1;
-    const lastMonthStart = new Date(year, month, 1);
-    const lastMonthEnd = new Date(year, month + 1, 0);
-    return {
-      fromDate: formatDateForInput(lastMonthStart),
-      toDate: formatDateForInput(lastMonthEnd),
-    };
-  }
-
-  if (preset === "last_year") {
-    const lastYear = today.getFullYear() - 1;
-    const yearStart = new Date(lastYear, 0, 1);
-    const yearEnd = new Date(lastYear, 11, 31);
-    return {
-      fromDate: formatDateForInput(yearStart),
-      toDate: formatDateForInput(yearEnd),
-    };
-  }
-
-  return { fromDate: "", toDate: "" };
-}
-
-function buildFiltersPayload() {
-  return {
-    from_date: filters.fromDate || null,
-    to_date: filters.toDate || null,
-    branch: visibleFilters.value.has("branch") ? filters.branch || null : null,
-    insurance_company: visibleFilters.value.has("insuranceCompany") ? filters.insuranceCompany || null : null,
-    policy_no: visibleFilters.value.has("policyNo") ? filters.policyNo || null : null,
-    customer_tax_id: visibleFilters.value.has("customerTaxId") ? filters.customerTaxId || null : null,
-    sales_entity: visibleFilters.value.has("salesEntity") ? filters.salesEntity || null : null,
-    status: visibleFilters.value.has("status") ? filters.status || null : null,
-    office_branch: branchStore.requestBranch || null,
-  };
-}
-
-function shiftDateString(dateString, deltaDays) {
-  const base = new Date(`${dateString}T00:00:00`);
-  if (Number.isNaN(base.getTime())) {
-    return "";
-  }
-  base.setDate(base.getDate() + deltaDays);
-  const year = base.getFullYear();
-  const month = String(base.getMonth() + 1).padStart(2, "0");
-  const day = String(base.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function buildPreviousPeriodFiltersPayload() {
-  if (!comparisonEnabled.value) {
-    return null;
-  }
-  const fromDate = new Date(`${filters.fromDate}T00:00:00`);
-  const toDate = new Date(`${filters.toDate}T00:00:00`);
-  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime()) || toDate < fromDate) {
-    return null;
-  }
-  const diffDays = Math.round((toDate.getTime() - fromDate.getTime()) / 86400000) + 1;
-  return {
-    ...buildFiltersPayload(),
-    from_date: shiftDateString(filters.fromDate, -diffDays),
-    to_date: shiftDateString(filters.toDate, -diffDays),
-  };
-}
-
-function formatComparisonDelta(delta, previous) {
-  const sign = delta >= 0 ? "+" : "";
-  return `${sign}${numberFormatter.value.format(delta)} / ${numberFormatter.value.format(previous)}`;
-}
-
-function isFilterVisible(key) {
-  return visibleFilters.value.has(key);
-}
-
-function getAdvancedFilterOptions(key) {
-  const keyMap = {
-    branch: ["branch"],
-    insuranceCompany: ["insurance_company", "insuranceCompany"],
-    policyNo: ["policy_no"],
-    customerTaxId: ["customer_tax_id", "tax_id"],
-    salesEntity: ["sales_entity", "salesEntity"],
-    status: ["status", "claim_status"],
-  };
-
-  const sourceKeys = keyMap[key] || [key];
-  const options = new Set();
-
-  for (const row of rows.value || []) {
-    for (const sourceKey of sourceKeys) {
-      const raw = row?.[sourceKey];
-      const value = typeof raw === "string" ? raw.trim() : String(raw || "").trim();
-      if (value) {
-        options.add(value);
-      }
-    }
-  }
-
-  return [...options]
-    .sort((a, b) => a.localeCompare(b, localeCode.value))
-    .slice(0, 80);
-}
-
-function getColumnLabel(column) {
-  const entry = columnLabels[column];
-  if (entry) {
-    return entry[activeLocale.value] || entry.en || column;
-  }
-  return String(column)
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function isDateLikeValue(value) {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-
-function getReportRowRoute(row) {
-  if (!row || typeof row !== "object") {
-    return null;
-  }
-
-  if (filters.reportKey === "policy_list" && row.name) {
-    return { name: "policy-detail", params: { name: row.name } };
-  }
-
-  if (filters.reportKey === "payment_status" && row.name) {
-    return { name: "payment-detail", params: { name: row.name } };
-  }
-
-  if (filters.reportKey === "renewal_performance" && row.name) {
-    return { name: "renewal-task-detail", params: { name: row.name } };
-  }
-
-  if (filters.reportKey === "claims_operations" && row.name) {
-    return { name: "claim-detail", params: { name: row.name } };
-  }
-
-  if (filters.reportKey === "agent_performance" && row.sales_entity) {
-    return { name: "policy-list", query: { sales_entity: row.sales_entity } };
-  }
-
-  return null;
-}
-
-function isRowClickable(row) {
-  return Boolean(getReportRowRoute(row));
-}
-
-function onRowClick(row) {
-  const targetRoute = getReportRowRoute(row);
-  if (!targetRoute) {
-    return;
-  }
-  void router.push(targetRoute);
-}
-
-function formatCellValue(column, value) {
-  if (value === null || value === undefined || value === "") {
-    return "-";
-  }
-
-  if (["loss_ratio_percent", "offer_conversion_rate", "renewal_success_rate"].includes(column)) {
-    const numeric = Number(value);
-    return Number.isFinite(numeric) ? `%${percentFormatter.value.format(numeric)}` : String(value);
-  }
-
-  if (typeof value === "number") {
-    return numberFormatter.value.format(value);
-  }
-
-  if (typeof value === "string") {
-    const numeric = Number(value);
-    const numericColumns = new Set([
-      "gross_premium",
-      "total_gross_premium",
-      "total_premium",
-      "commission_amount",
-      "total_commission",
-      "paid_amount",
-      "approved_amount",
-      "estimated_amount",
-      "policy_count",
-      "offer_count",
-      "accepted_offer_count",
-      "renewal_task_count",
-      "claim_count",
-    ]);
-
-    if (numericColumns.has(column) && Number.isFinite(numeric)) {
-      return numberFormatter.value.format(numeric);
-    }
-
-    if (isDateLikeValue(value)) {
-      const parsed = new Date(`${value}T00:00:00`);
-      if (!Number.isNaN(parsed.getTime())) {
-        return dateFormatter.value.format(parsed);
-      }
-    }
-  }
-
-  return String(value);
-}
-
-function normalizeSortableValue(value) {
-  if (value === null || value === undefined || value === "") {
-    return "";
-  }
-  if (typeof value === "number") {
-    return value;
-  }
-  if (typeof value === "string") {
-    if (isDateLikeValue(value)) {
-      return value;
-    }
-    const numeric = Number(value);
-    if (Number.isFinite(numeric) && value.trim() !== "") {
-      return numeric;
-    }
-    return value.toLocaleLowerCase(localeCode.value);
-  }
-  return String(value);
-}
-
-function clearHiddenFilters() {
-  if (!visibleFilters.value.has("branch")) {
-    filters.branch = "";
-  }
-  if (!visibleFilters.value.has("insuranceCompany")) {
-    filters.insuranceCompany = "";
-  }
-  if (!visibleFilters.value.has("policyNo")) {
-    filters.policyNo = "";
-  }
-  if (!visibleFilters.value.has("customerTaxId")) {
-    filters.customerTaxId = "";
-  }
-  if (!visibleFilters.value.has("salesEntity")) {
-    filters.salesEntity = "";
-  }
-  if (!visibleFilters.value.has("status")) {
-    filters.status = "";
-  }
-}
-
-function syncReportKeyFromRoute() {
-  const requestedReport = String(route.query?.report || "");
-  if (requestedReport && reportCatalog[requestedReport]) {
-    filters.reportKey = requestedReport;
-  }
-}
-
-function persistReportKeyToRoute() {
-  const nextQuery = {
-    ...route.query,
-    report: filters.reportKey,
-  };
-  if (JSON.stringify(nextQuery) === JSON.stringify(route.query || {})) {
-    return;
-  }
-  void router.replace({ query: nextQuery });
-}
-
-function getViewStorageKey() {
-  return `at:reports:view:${filters.reportKey}`;
-}
-
-function getSafeLocalStorage() {
-  const storage = window?.localStorage;
-  if (!storage) return null;
-  return typeof storage.getItem === "function" && typeof storage.setItem === "function" ? storage : null;
-}
-
-// Column renames between releases — maps old key → new key per report
-const COLUMN_MIGRATIONS = {
-  policy_list: {
-    customer: "customer_full_name",
-    sales_entity: "sales_entity_full_name",
-  },
-};
-
-function migrateColumnKeys(reportKey, keys) {
-  const renames = COLUMN_MIGRATIONS[reportKey];
-  if (!renames || !keys.length) return keys;
-  const migrated = keys.map((k) => renames[k] ?? k);
-  // Insert customer_tax_id right after customer_full_name when customer was present
-  if (keys.includes("customer") && !migrated.includes("customer_tax_id")) {
-    const insertAt = migrated.indexOf("customer_full_name");
-    if (insertAt !== -1) migrated.splice(insertAt + 1, 0, "customer_tax_id");
-    else migrated.push("customer_tax_id");
-  }
-  return migrated;
-}
-
-function applyViewState(payload = {}) {
-  const rawKeys = Array.isArray(payload?.visibleColumnKeys)
-    ? payload.visibleColumnKeys.filter((item) => typeof item === "string" && item)
-    : [];
-  const columnKeys = migrateColumnKeys(filters.reportKey, rawKeys);
-
-  pendingVisibleColumnKeys.value = [...columnKeys];
-  visibleColumnKeys.value = columnKeys.length
-    ? columns.value.filter((column) => columnKeys.includes(column))
-    : [...columns.value];
-
-  sortState.column = typeof payload?.sortColumn === "string" && payload.sortColumn ? payload.sortColumn : "";
-  sortState.direction = payload?.sortDirection === "asc" || payload?.sortDirection === "desc" ? payload.sortDirection : "";
-}
-
-function buildViewStatePayload() {
-  return {
-    visibleColumnKeys: [...visibleColumnKeys.value],
-    sortColumn: sortState.column || "",
-    sortDirection: sortState.direction || "",
-  };
-}
-
-function persistViewStateToStorage() {
-  try {
-    const storage = getSafeLocalStorage();
-    if (!storage) return;
-    storage.setItem(getViewStorageKey(), JSON.stringify(buildViewStatePayload()));
-  } catch (err) {
-    error.value = String(err?.message || err || t("viewStateError"));
-  }
-}
-
-function syncViewStateFromStorage() {
-  try {
-    const storage = getSafeLocalStorage();
-    if (!storage) {
-      applyViewState({});
-      return;
-    }
-    const raw = storage.getItem(getViewStorageKey());
-    if (!raw) {
-      applyViewState({});
-      return;
-    }
-    applyViewState(JSON.parse(raw));
-  } catch {
-    applyViewState({});
-  }
-}
-
-function syncViewStateFromRoute() {
-  const visibleColumnsFromRoute = String(route.query?.report_cols || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  applyViewState({
-    visibleColumnKeys: visibleColumnsFromRoute,
-    sortColumn: String(route.query?.report_sort || ""),
-    sortDirection: String(route.query?.report_dir || ""),
-  });
-}
-
-function persistViewStateToRoute() {
-  const nextQuery = {
-    ...route.query,
-    report: filters.reportKey,
-    report_cols: visibleColumnKeys.value.length ? visibleColumnKeys.value.join(",") : undefined,
-    report_sort: sortState.column || undefined,
-    report_dir: sortState.direction || undefined,
-  };
-
-  if (JSON.stringify(nextQuery) === JSON.stringify(route.query || {})) {
-    return;
-  }
-
-  void router.replace({ query: nextQuery });
-}
-
-async function loadReport() {
-  loading.value = true;
-  error.value = "";
-  try {
-    const payload = await frappeRequest({
-      url: `/api/method/${reportCatalog[filters.reportKey].readMethod}`,
-      method: "GET",
-      params: {
-        filters: JSON.stringify(buildFiltersPayload()),
-        limit: 500,
-      },
-    });
-    const message = payload?.message || payload || {};
-    columns.value = message.columns || [];
-    rows.value = message.rows || [];
-    comparisonRows.value = [];
-
-    const previousFilters = buildPreviousPeriodFiltersPayload();
-    if (previousFilters) {
-      const comparisonPayload = await frappeRequest({
-        url: `/api/method/${reportCatalog[filters.reportKey].readMethod}`,
-        method: "GET",
-        params: {
-          filters: JSON.stringify(previousFilters),
-          limit: 500,
-        },
-      });
-      const comparisonMessage = comparisonPayload?.message || comparisonPayload || {};
-      comparisonRows.value = Array.isArray(comparisonMessage.rows) ? comparisonMessage.rows : [];
-    }
-  } catch (err) {
-    const errorMessage =
-      err?.response?.message
-      || (Array.isArray(err?.messages) && err.messages[0])
-      || err?.message
-      || t("loadErrorTitle");
-    error.value = String(errorMessage);
-    columns.value = [];
-    rows.value = [];
-    comparisonRows.value = [];
-  } finally {
-    loading.value = false;
-  }
-}
-
-function scheduleReportLoad({ immediate = false } = {}) {
-  const runLoad = () => {
-    reportLoadTimer = null;
-    void loadReport();
-  };
-
-  if (immediate) {
-    if (reportLoadTimer) {
-      window.clearTimeout(reportLoadTimer);
-      reportLoadTimer = null;
-    }
-    runLoad();
-    return;
-  }
-
-  if (reportLoadTimer) {
-    window.clearTimeout(reportLoadTimer);
-  }
-  reportLoadTimer = window.setTimeout(runLoad, REPORT_LOAD_DEBOUNCE_MS);
-}
-
-async function downloadReport(format) {
-  exportLoading.value = true;
-  try {
-    const method = reportCatalog[filters.reportKey].exportMethod;
-    const params = new URLSearchParams({
-      filters: JSON.stringify(buildFiltersPayload()),
-      export_format: format,
-      limit: "1000",
-    });
-    const popup = window.open(`/api/method/${method}?${params.toString()}`, "_blank", "noopener");
-    if (!popup) {
-      throw new Error("Popup blocked");
-    }
-  } catch (err) {
-    error.value = String(err?.message || err || t("exportError"));
-  } finally {
-    exportLoading.value = false;
-  }
-}
-
-async function loadScheduledReports() {
-  if (!canManageScheduledReports.value) {
-    scheduledReports.value = [];
-    return;
-  }
-
-  scheduledLoading.value = true;
-  try {
-    const payload = await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.get_scheduled_report_configs",
-      method: "GET",
-    });
-    const message = payload?.message || payload || {};
-    scheduledReports.value = Array.isArray(message.items) ? message.items : [];
-  } catch (err) {
-    error.value = String(err?.message || err || t("scheduledLoadError"));
-    scheduledReports.value = [];
-  } finally {
-    scheduledLoading.value = false;
-  }
-}
-
-async function runScheduledReports() {
-  scheduledRunLoading.value = true;
-  try {
-    await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
-      method: "POST",
-      params: {
-        frequency: "daily",
-        limit: 10,
-      },
-    });
-    await loadScheduledReports();
-  } catch (err) {
-    error.value = String(err?.message || err || t("scheduledRunError"));
-  } finally {
-    scheduledRunLoading.value = false;
-  }
-}
-
-async function runCustomerSegmentSnapshots() {
-  snapshotRunLoading.value = true;
-  try {
-    await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
-      method: "POST",
-      params: {
-        limit: 250,
-      },
-    });
-  } catch (err) {
-    error.value = String(err?.message || err || t("segmentSnapshotRunError"));
-  } finally {
-    snapshotRunLoading.value = false;
-  }
-}
-
-async function saveScheduledReport({ index, config }) {
-  try {
-    await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_scheduled_report_config",
-      method: "POST",
-      params: {
-        index: index || "",
-        config,
-      },
-    });
-    await loadScheduledReports();
-  } catch (err) {
-    error.value = String(err?.message || err || t("scheduledSaveError"));
-  }
-}
-
-async function removeScheduledReport(index) {
-  try {
-    await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.remove_scheduled_report_config",
-      method: "POST",
-      params: { index },
-    });
-    await loadScheduledReports();
-  } catch (err) {
-    error.value = String(err?.message || err || t("scheduledDeleteError"));
-  }
-}
-
 function resetFilters() {
   applyPreset("default", { refresh: false });
   void loadReport();
 }
-
-function isColumnVisible(column) {
-  return visibleColumns.value.includes(column);
-}
-
-function toggleColumn(column) {
-  if (visibleColumnKeys.value.includes(column)) {
-    if (visibleColumnKeys.value.length === 1) {
-      return;
-    }
-    visibleColumnKeys.value = visibleColumnKeys.value.filter((item) => item !== column);
-    if (!visibleColumnKeys.value.includes(sortState.column)) {
-      sortState.column = "";
-      sortState.direction = "";
-    }
-    return;
-  }
-  visibleColumnKeys.value = [...visibleColumnKeys.value, column];
-}
-
-function showAllColumns() {
-  visibleColumnKeys.value = [...columns.value];
-}
-
-function focusFilters() {
-  const root = filtersSectionRef.value?.$el || filtersSectionRef.value;
-  if (root && typeof root.scrollIntoView === "function") {
-    root.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}
-
-function toggleSort(column) {
-  if (sortState.column !== column) {
-    sortState.column = column;
-    sortState.direction = "asc";
-    return;
-  }
-  if (sortState.direction === "asc") {
-    sortState.direction = "desc";
-    return;
-  }
-  if (sortState.direction === "desc") {
-    sortState.column = "";
-    sortState.direction = "";
-    return;
-  }
-  sortState.direction = "asc";
-}
-
-function getSortIndicator(column) {
-  if (sortState.column !== column) {
-    return "|";
-  }
-  return sortState.direction === "desc" ? "v" : "^";
-}
-
-watch(
-  () => branchStore.selected,
-  () => {
-    scheduleReportLoad();
-  },
-);
-
-watch(
-  () => filters.reportKey,
-  () => {
-    clearHiddenFilters();
-    persistReportKeyToRoute();
-    syncViewStateFromStorage();
-    persistViewStateToRoute();
-    scheduleReportLoad();
-  },
-);
-
-function applyDatePreset(preset) {
-  activePreset.value = String(preset || "");
-  if (!activePreset.value) {
-    return;
-  }
-  const dateRange = getDateRangeForPreset(preset);
-  filters.fromDate = dateRange.fromDate;
-  filters.toDate = dateRange.toDate;
-  scheduleReportLoad();
-}
-
-function isActivePresetRange() {
-  if (!activePreset.value) {
-    return false;
-  }
-  const range = getDateRangeForPreset(activePreset.value);
-  return filters.fromDate === range.fromDate && filters.toDate === range.toDate;
-}
-
-watch(
-  [() => filters.fromDate, () => filters.toDate],
-  () => {
-    // Kullanıcı manuel tarih değiştirirse preset seçimini temizle
-    if (!isActivePresetRange()) {
-      activePreset.value = "";
-    }
-    scheduleReportLoad();
-  },
-);
-
-watch(
-  columns,
-  (nextColumns) => {
-    if (!Array.isArray(nextColumns) || nextColumns.length === 0) {
-      visibleColumnKeys.value = [];
-      pendingVisibleColumnKeys.value = [];
-      sortState.column = "";
-      sortState.direction = "";
-      return;
-    }
-
-    if (pendingVisibleColumnKeys.value.length) {
-      visibleColumnKeys.value = nextColumns.filter((column) => pendingVisibleColumnKeys.value.includes(column));
-      if (!visibleColumnKeys.value.length) {
-        visibleColumnKeys.value = [...nextColumns];
-      }
-      pendingVisibleColumnKeys.value = [];
-    } else if (!visibleColumnKeys.value.length) {
-      visibleColumnKeys.value = [...nextColumns];
-    } else {
-      visibleColumnKeys.value = visibleColumnKeys.value.filter((column) => nextColumns.includes(column));
-      if (!visibleColumnKeys.value.length) {
-        visibleColumnKeys.value = [...nextColumns];
-      }
-    }
-
-    if (sortState.column && !nextColumns.includes(sortState.column)) {
-      sortState.column = "";
-      sortState.direction = "";
-    }
-  },
-  { immediate: true },
-);
-
-watch(
-  [visibleColumnKeys, () => sortState.column, () => sortState.direction],
-  () => {
-    persistViewStateToStorage();
-    persistViewStateToRoute();
-  },
-  { deep: true },
-);
-
-onMounted(() => {
-  syncReportKeyFromRoute();
-  persistReportKeyToRoute();
-  syncViewStateFromRoute();
-  if (!String(route.query?.report_cols || "") && !String(route.query?.report_sort || "")) {
-    syncViewStateFromStorage();
-  }
-  void loadReport();
-  void loadScheduledReports();
-});
-
-onBeforeUnmount(() => {
-  if (reportLoadTimer) {
-    window.clearTimeout(reportLoadTimer);
-    reportLoadTimer = null;
-  }
-});
 </script>
 
 <style scoped>

@@ -1,17 +1,15 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+from unittest import TestCase
 from unittest.mock import patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
 
 
-class TestDashboardScope(IntegrationTestCase):
-    def tearDown(self) -> None:
-        frappe.db.rollback()
-
+class TestDashboardScope(TestCase):
     def test_agent_without_assignments_gets_empty_scope_by_default(self):
         previous_user = getattr(frappe.session, "user", None)
         frappe.session.user = "agent.scope@example.com"
@@ -32,7 +30,12 @@ class TestDashboardScope(IntegrationTestCase):
     def test_dashboard_tab_payload_returns_scope_meta_for_empty_scope(self):
         expected_meta = {"access_scope": "empty", "scope_reason": "agent_unassigned"}
         with patch.object(dashboard_api, "_allowed_customers_for_user", return_value=([], expected_meta)):
-            payload = dashboard_api.get_dashboard_tab_payload(tab="daily", filters={})
+            with patch.object(
+                dashboard_api,
+                "normalize_requested_office_branch",
+                lambda office_branch=None, user=None: office_branch,
+            ):
+                payload = dashboard_api.get_dashboard_tab_payload(tab="daily", filters={})
 
         self.assertEqual(payload.get("tab"), "daily")
         self.assertEqual(payload.get("meta"), expected_meta)
@@ -42,13 +45,23 @@ class TestDashboardScope(IntegrationTestCase):
     def test_unmapped_system_user_is_denied_without_fallback_flag(self):
         previous_user = getattr(frappe.session, "user", None)
         frappe.session.user = "no.role@example.com"
+        had_db = hasattr(dashboard_api.frappe.local, "db")
+        previous_db = getattr(dashboard_api.frappe.local, "db", None) if had_db else None
+        dashboard_api.frappe.local.db = SimpleNamespace(get_value=lambda *args, **kwargs: None)
         try:
             with patch.object(dashboard_api.frappe, "get_site_config", return_value={}):
                 with patch.object(dashboard_api.frappe, "get_roles", return_value=[]):
-                    with patch.object(dashboard_api.frappe.db, "get_value", return_value="System User"):
-                        with self.assertRaises(frappe.PermissionError):
-                            dashboard_api._allowed_customers_for_user()
+                    with patch.object(dashboard_api.dashboard_security, "user_can_access_all_office_branches", return_value=False):
+                        with patch.object(dashboard_api.dashboard_security, "get_allowed_office_branch_names", return_value=set()):
+                            with patch.object(dashboard_api.dashboard_security, "_", lambda message: message):
+                                with patch.object(dashboard_api.frappe.db, "get_value", return_value="System User"):
+                                    with self.assertRaises(frappe.PermissionError):
+                                        dashboard_api._allowed_customers_for_user()
         finally:
+            if had_db:
+                dashboard_api.frappe.local.db = previous_db
+            elif hasattr(dashboard_api.frappe.local, "db"):
+                delattr(dashboard_api.frappe.local, "db")
             frappe.session.user = previous_user
 
     def test_fallback_flag_restores_global_scope_for_unassigned_agent(self):

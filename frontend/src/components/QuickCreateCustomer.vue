@@ -55,7 +55,7 @@ import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateDialogShell from "./app-shell/QuickCreateDialogShell.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
+import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 
