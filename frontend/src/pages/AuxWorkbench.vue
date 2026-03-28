@@ -6,388 +6,148 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="isLoading" @click="refreshList">
-          {{ t('refresh') }}
-        </button>
-        <button
-          v-if="canExportSnapshotRows"
-          class="btn btn-outline btn-sm"
-          type="button"
-          @click="exportSnapshotRows"
-        >
-          {{ t('exportCsv') }}
-        </button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="isLoading" @click="downloadAuxExport('xlsx')">
-          {{ t('exportXlsx') }}
-        </button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="isLoading" @click="downloadAuxExport('pdf')">
-          {{ t('exportPdf') }}
-        </button>
-        <QuickCreateLauncher
-          v-if="auxQuickCreate && canLaunchAuxQuickCreate"
-          variant="primary"
-          size="sm"
-          :label="localize(auxQuickCreate.label) || t('newRecord')"
-          @launch="showAuxQuickCreateDialog = true"
-        />
-        <ActionButton
-          v-for="action in visibleToolbarActions"
-          :key="action.key || action.routeName || localize(action.label)"
-          variant="secondary"
-          size="sm"
-          @click="runToolbarAction(action)"
-        >
-          {{ localize(action.label) || t('panel') }}
-        </ActionButton>
+      <AuxWorkbenchActionBar
+        :is-loading="isLoading"
+        :can-export-snapshot-rows="canExportSnapshotRows"
+        :can-launch-aux-quick-create="canLaunchAuxQuickCreate"
+        :aux-quick-create-label="localize(auxQuickCreate?.label) || t('newRecord')"
+        :refresh-label="t('refresh')"
+        :export-csv-label="t('exportCsv')"
+        :export-xlsx-label="t('exportXlsx')"
+        :export-pdf-label="t('exportPdf')"
+        :panel-label="t('panel')"
+        :visible-toolbar-actions="visibleToolbarActions"
+        :localize="localize"
+        @refresh="refreshList"
+        @export-snapshot-rows="exportSnapshotRows"
+        @download-xlsx="downloadAuxExport('xlsx')"
+        @download-pdf="downloadAuxExport('pdf')"
+        @launch-quick-create="showAuxQuickCreateDialog = true"
+        @run-toolbar-action="runToolbarAction"
+      />
     </template>
 
     <template #metrics>
-      <div class="space-y-4">
-        <div
-          v-if="snapshotSummaryCards.length"
-          class="grid grid-cols-1 gap-4 md:grid-cols-4"
-        >
-          <article
-            v-for="card in snapshotSummaryCards"
-            :key="card.key"
-            class="mini-metric"
-          >
-            <p class="mini-metric-label">{{ card.label }}</p>
-            <p class="mini-metric-value">{{ card.value }}</p>
-            <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-          </article>
-        </div>
-        <div
-          v-if="reminderSummaryCards.length"
-          class="grid grid-cols-1 gap-4 md:grid-cols-4"
-        >
-          <article
-            v-for="card in reminderSummaryCards"
-            :key="card.key"
-            class="mini-metric"
-          >
-            <p class="mini-metric-label">{{ card.label }}</p>
-            <p class="mini-metric-value">{{ card.value }}</p>
-            <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-          </article>
-        </div>
-        <div
-          v-if="accessLogSummaryCards.length"
-          class="grid grid-cols-1 gap-4 md:grid-cols-4"
-        >
-          <article
-            v-for="card in accessLogSummaryCards"
-            :key="card.key"
-            class="mini-metric"
-          >
-            <p class="mini-metric-label">{{ card.label }}</p>
-            <p class="mini-metric-value">{{ card.value }}</p>
-            <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-          </article>
-        </div>
-        <div
-          v-if="fileSummaryCards.length"
-          class="grid grid-cols-1 gap-4 md:grid-cols-4"
-        >
-          <article
-            v-for="card in fileSummaryCards"
-            :key="card.key"
-            class="mini-metric"
-          >
-            <p class="mini-metric-label">{{ card.label }}</p>
-            <p class="mini-metric-value">{{ card.value }}</p>
-            <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-          </article>
-        </div>
-        <article
-          v-if="snapshotTrendRows.length"
-          class="surface-card rounded-2xl p-5"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("snapshotTrendTitle") }}</p>
-              <p class="text-sm text-slate-500">{{ t("snapshotTrendHint") }}</p>
-            </div>
-            <span class="text-xs text-slate-400">{{ t("showing") }} {{ snapshotTrendRows.length }}</span>
-          </div>
-          <div class="mt-4 grid gap-3 md:grid-cols-3">
-            <article
-              v-for="row in snapshotTrendRows"
-              :key="row.snapshotDate"
-              class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-            >
-              <p class="text-sm font-semibold text-slate-900">{{ row.snapshotDateLabel }}</p>
-              <div class="mt-2 space-y-1 text-xs text-slate-600">
-                <p>{{ t("totalSnapshots") }}: {{ row.total }}</p>
-                <p>{{ t("averageScore") }}: {{ row.averageScore }}</p>
-                <p>{{ t("highRiskSnapshots") }}: {{ row.highRisk }}</p>
-              </div>
-            </article>
-          </div>
-        </article>
-      </div>
+      <AuxWorkbenchMetricsPanel
+        :snapshot-summary-cards="snapshotSummaryCards"
+        :reminder-summary-cards="reminderSummaryCards"
+        :access-log-summary-cards="accessLogSummaryCards"
+        :file-summary-cards="fileSummaryCards"
+        :snapshot-trend-rows="snapshotTrendRows"
+        :snapshot-trend-title="t('snapshotTrendTitle')"
+        :snapshot-trend-hint="t('snapshotTrendHint')"
+        :showing-label="t('showing')"
+        :total-snapshots-label="t('totalSnapshots')"
+        :average-score-label="t('averageScore')"
+        :high-risk-snapshots-label="t('highRiskSnapshots')"
+      />
     </template>
 
-    <SectionPanel :title="t('filtersTitle')" :count="`${activeFilterCount} ${t('activeFilters')}`" panel-class="surface-card rounded-2xl p-5">
-      <WorkbenchFilterToolbar
-        :model-value="presetKey"
-        :show-preset="true"
-        :advanced-label="t('advanced')"
-        :collapse-label="t('hideAdvanced')"
-        :active-count="activeFilterCount"
-        :active-count-label="t('activeFilters')"
-        :preset-label="t('preset')"
-        :preset-options="presetOptions"
-        :can-delete-preset="canDeletePreset"
-        :save-label="t('savePreset')"
-        :delete-label="t('deletePreset')"
-        :apply-label="t('apply')"
-        :reset-label="t('reset')"
-        :disabled="isLoading"
-        @update:modelValue="onPresetModelValue"
-        @presetChange="onPresetChange"
-        @presetSave="savePreset"
-        @presetDelete="deletePreset"
-        @apply="applyFilters"
-        @reset="resetFilters"
-      >
-        <input v-model.trim="draft.query" class="rounded-lg border border-slate-300 px-3 py-2 text-sm" :placeholder="t('searchPlaceholder')" />
+    <AuxWorkbenchFilterPanel
+      :filters-title="t('filtersTitle')"
+      :active-filter-count="activeFilterCount"
+      :active-filters-label="t('activeFilters')"
+      :preset-key="presetKey"
+      :preset-options="presetOptions"
+      :can-delete-preset="canDeletePreset"
+      :is-loading="isLoading"
+      :draft="draft"
+      :quick-filter-defs="quickFilterDefs"
+      :advanced-filter-defs="advancedFilterDefs"
+      :sort-options="sortOptions"
+      :search-placeholder="t('searchPlaceholder')"
+      :advanced-label="t('advanced')"
+      :hide-advanced-label="t('hideAdvanced')"
+      :preset-label="t('preset')"
+      :save-preset-label="t('savePreset')"
+      :delete-preset-label="t('deletePreset')"
+      :apply-label="t('apply')"
+      :reset-label="t('reset')"
+      :field-label="fieldLabel"
+      :option-label="optionLabel"
+      @update:modelValue="onPresetModelValue"
+      @presetChange="onPresetChange"
+      @presetSave="savePreset"
+      @presetDelete="deletePreset"
+      @apply="applyFilters"
+      @reset="resetFilters"
+    />
 
-        <template v-for="fd in quickFilterDefs" :key="'q-'+fd.key">
-          <component
-            :is="fd.type === 'select' ? 'select' : 'input'"
-            v-model="draft[fd.key]"
-            :type="fd.type === 'select' ? undefined : fd.type === 'number' ? 'number' : 'text'"
-            class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          >
-            <template v-if="fd.type === 'select'">
-              <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-                {{ optionLabel(fd, opt) }}
-              </option>
-            </template>
-          </component>
-        </template>
-
-        <select v-model="draft.sort" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-          <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-        </select>
-        <select v-model.number="draft.pageLength" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-          <option v-for="n in [10,20,50]" :key="n" :value="n">{{ n }}</option>
-        </select>
-
-        <template #advanced>
-          <template v-for="fd in advancedFilterDefs" :key="'a-'+fd.key">
-            <component
-              :is="fd.type === 'select' ? 'select' : 'input'"
-              v-model="draft[fd.key]"
-              :type="fd.type === 'select' ? undefined : fd.type === 'number' ? 'number' : 'text'"
-              class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              :placeholder="fieldLabel(fd.field)"
-            >
-              <template v-if="fd.type === 'select'">
-                <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-                  {{ optionLabel(fd, opt) }}
-                </option>
-              </template>
-            </component>
-          </template>
-        </template>
-      </WorkbenchFilterToolbar>
-    </SectionPanel>
-
-    <SectionPanel :title="label('list')" :count="pagination.total" :meta="subtitleLabel" panel-class="surface-card rounded-2xl p-5">
-      <template #trailing>
-        <p class="text-xs text-slate-500">{{ t("showing") }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
-      </template>
-      <div v-if="isLoading && rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-        {{ t("loading") }}
-      </div>
-      <article v-else-if="loadError.text" class="qc-error-banner mt-4">
-        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="qc-error-banner__text mt-1">{{ loadError.text }}</p>
-      </article>
-      <div v-else-if="rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
-      </div>
-      <template v-else>
-        <div class="at-table-wrap mt-4">
-          <table class="at-table w-full min-w-[980px]">
-            <thead>
-              <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("record") }}</th>
-                <th class="at-table-head-cell">{{ t("details") }}</th>
-                <th class="at-table-head-cell">{{ t("status") }}</th>
-                <th class="at-table-head-cell">{{ t("info") }}</th>
-                <th class="at-table-head-cell">{{ t("actions") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="row in rows"
-                :key="row.name"
-                class="at-table-row cursor-pointer"
-                @click="openDetail(row)"
-              >
-                <DataTableCell>
-                  <TableEntityCell :title="rowTitle(row)" :facts="factItems(row, config.primaryFields)">
-                    <p class="text-xs text-slate-500">{{ fieldLabel('modified') }}: {{ formatField(row.modified, 'modified') }}</p>
-                  </TableEntityCell>
-                </DataTableCell>
-
-                <TableFactsCell :items="factItems(row, config.detailFields)" />
-
-                <DataTableCell>
-                  <div class="flex flex-wrap items-center gap-2">
-                    <StatusBadge v-if="config.statusField && row[config.statusField] !== undefined && row[config.statusField] !== null && row[config.statusField] !== ''" :domain="config.statusType || 'policy'" :status="statusValue(row, config.statusField, config.statusType)" />
-                    <StatusBadge v-if="config.secondaryStatusField && row[config.secondaryStatusField]" :domain="config.secondaryStatusType || 'policy'" :status="statusValue(row, config.secondaryStatusField, config.secondaryStatusType)" />
-                    <span v-if="!config.statusField && !config.secondaryStatusField" class="text-xs text-slate-400">-</span>
-                  </div>
-                </DataTableCell>
-
-                <TableFactsCell :items="factItems(row, config.metricFields)" />
-
-                <DataTableCell>
-                  <InlineActionRow>
-                    <ActionButton
-                      v-if="canSendDraftNowRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="sendDraftNowRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("sendNow") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canRetryOutboxRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="retryOutboxRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("retry") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canRequeueOutboxRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="requeueOutboxRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("requeue") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canOpenCommunicationContextRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      @click.stop="openCommunicationContextRow(row)"
-                    >
-                      {{ t("openCommunication") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canStartTaskRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="startTaskRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("startTask") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canBlockTaskRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="blockTaskRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("blockTaskAction") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canCompleteTaskRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="completeTaskRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canCancelTaskRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="cancelTaskRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("cancelTaskAction") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canCompleteReminderRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="completeReminderRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canCancelReminderRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="cancelReminderRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("cancelTaskAction") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canStartOwnershipAssignmentRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="startOwnershipAssignmentRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("startTask") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canBlockOwnershipAssignmentRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="blockOwnershipAssignmentRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("blockTaskAction") }}
-                    </ActionButton>
-                    <ActionButton
-                      v-if="canCompleteOwnershipAssignmentRow(row)"
-                      variant="secondary"
-                      size="xs"
-                      :disabled="rowActionBusyName === row.name"
-                      @click.stop="completeOwnershipAssignmentRow(row)"
-                    >
-                      {{ rowActionBusyName === row.name ? t("running") : t("completeTaskAction") }}
-                    </ActionButton>
-                    <ActionButton variant="secondary" size="xs" @click.stop="openDetail(row)">{{ t("openDetail") }}</ActionButton>
-                    <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="openPanel(row)">{{ t("panel") }}</ActionButton>
-                  </InlineActionRow>
-                </DataTableCell>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mt-4">
-          <TablePagerFooter
-            :page="pagination.page"
-            :total-pages="totalPages"
-            :page-label="t('page')"
-            :previous-label="t('prev')"
-            :next-label="t('next')"
-            :prev-disabled="pagination.page <= 1 || isLoading"
-            :next-disabled="!hasNextPage || isLoading"
-            @previous="previousPage"
-            @next="nextPage"
-          />
-        </div>
-      </template>
-    </SectionPanel>
+    <AuxWorkbenchTableSection
+      :list-label="label('list')"
+      :subtitle-label="subtitleLabel"
+      :showing-label="t('showing')"
+      :loading-label="t('loading')"
+      :load-error-title="t('loadErrorTitle')"
+      :load-error-text="loadError.text"
+      :empty-title="t('emptyTitle')"
+      :empty-description="t('emptyDescription')"
+      :record-label="t('record')"
+      :details-label="t('details')"
+      :status-label="t('status')"
+      :info-label="t('info')"
+      :actions-label="t('actions')"
+      :modified-label="fieldLabel('modified')"
+      :open-detail-label="t('openDetail')"
+      :panel-label="t('panel')"
+      :send-now-label="t('sendNow')"
+      :retry-label="t('retry')"
+      :requeue-label="t('requeue')"
+      :open-communication-label="t('openCommunication')"
+      :start-task-label="t('startTask')"
+      :block-task-label="t('blockTaskAction')"
+      :complete-task-label="t('completeTaskAction')"
+      :cancel-task-label="t('cancelTaskAction')"
+      :running-label="t('running')"
+      :page-label="t('page')"
+      :prev-label="t('prev')"
+      :next-label="t('next')"
+      :rows="rows"
+      :pagination="pagination"
+      :total-pages="totalPages"
+      :has-next-page="hasNextPage"
+      :start-row="startRow"
+      :end-row="endRow"
+      :is-loading="isLoading"
+      :config="config"
+      :row-action-busy-name="rowActionBusyName"
+      :row-title="rowTitle"
+      :fact-items="factItems"
+      :format-field="formatField"
+      :field-label="fieldLabel"
+      :status-value="statusValue"
+      :panel-cfg-for-row="panelCfgForRow"
+      :can-send-draft-now-row="canSendDraftNowRow"
+      :can-retry-outbox-row="canRetryOutboxRow"
+      :can-requeue-outbox-row="canRequeueOutboxRow"
+      :can-open-communication-context-row="canOpenCommunicationContextRow"
+      :can-start-task-row="canStartTaskRow"
+      :can-block-task-row="canBlockTaskRow"
+      :can-complete-task-row="canCompleteTaskRow"
+      :can-cancel-task-row="canCancelTaskRow"
+      :can-complete-reminder-row="canCompleteReminderRow"
+      :can-cancel-reminder-row="canCancelReminderRow"
+      :can-start-ownership-assignment-row="canStartOwnershipAssignmentRow"
+      :can-block-ownership-assignment-row="canBlockOwnershipAssignmentRow"
+      :can-complete-ownership-assignment-row="canCompleteOwnershipAssignmentRow"
+      @open-detail="openDetail"
+      @open-panel="openPanel"
+      @send-draft-now="sendDraftNowRow"
+      @retry-outbox="retryOutboxRow"
+      @requeue-outbox="requeueOutboxRow"
+      @open-communication-context="openCommunicationContextRow"
+      @start-task="startTaskRow"
+      @block-task="blockTaskRow"
+      @complete-task="completeTaskRow"
+      @cancel-task="cancelTaskRow"
+      @complete-reminder="completeReminderRow"
+      @cancel-reminder="cancelReminderRow"
+      @start-ownership-assignment="startOwnershipAssignmentRow"
+      @block-ownership-assignment="blockOwnershipAssignmentRow"
+      @complete-ownership-assignment="completeOwnershipAssignmentRow"
+      @previous="previousPage"
+      @next="nextPage"
+    />
 
     <QuickCreateManagedDialog
       v-if="auxQuickCreate && canLaunchAuxQuickCreate"
@@ -413,18 +173,11 @@ import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
 import { useAuxWorkbenchRuntime } from "../composables/useAuxWorkbenchRuntime";
 import { useAuxWorkbenchViewModel } from "../composables/useAuxWorkbenchViewModel";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
-import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
-import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
-import TablePagerFooter from "../components/app-shell/TablePagerFooter.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import EmptyState from "../components/app-shell/EmptyState.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
+import AuxWorkbenchActionBar from "../components/aux-workbench/AuxWorkbenchActionBar.vue";
+import AuxWorkbenchMetricsPanel from "../components/aux-workbench/AuxWorkbenchMetricsPanel.vue";
+import AuxWorkbenchFilterPanel from "../components/aux-workbench/AuxWorkbenchFilterPanel.vue";
+import AuxWorkbenchTableSection from "../components/aux-workbench/AuxWorkbenchTableSection.vue";
 
 const props = defineProps({
   screenKey: { type: String, required: true },
