@@ -2,6 +2,8 @@ import { computed, onMounted, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
+import { useClaimsBoardClaimActions } from "./useClaimsBoardClaimActions";
+import { useClaimsBoardClaimFacts } from "./useClaimsBoardClaimFacts";
 import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { openTabularExport } from "../utils/listExport";
 import { subtleFact } from "../utils/factItems";
@@ -705,6 +707,28 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
     getSortLocale: () => localeCode.value,
   });
 
+  const claimFacts = useClaimsBoardClaimFacts({
+    claimStore,
+    claimsResource,
+    claimNotificationDraftResource,
+    claimNotificationOutboxResource,
+    claimAssignmentResource,
+    claimFileResource,
+    claimsLoading,
+    localeCode,
+    t,
+    reloadClaims,
+  });
+
+  const claimActions = useClaimsBoardClaimActions({
+    claimMutationResource,
+    claimNotificationDraftResource,
+    claimNotificationOutboxResource,
+    reloadClaims,
+    route,
+    t,
+  });
+
   function syncClaimsRouteFilters({ refresh = true } = {}) {
     const routeClaim = String(route.query.claim || "").trim();
     if (!routeClaim || filters.query === routeClaim) return;
@@ -833,5 +857,7 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
     openPolicy,
     openClaimDetail,
     syncClaimsRouteFilters,
+    ...claimFacts,
+    ...claimActions,
   };
 }

@@ -7,46 +7,18 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <QuickCreateLauncher
-        variant="primary"
-        size="sm"
-        :label="t('newClaim')"
-        @launch="showQuickClaimDialog = true"
+      <ClaimsBoardActionBar
+        :claims-loading="claimsLoading"
+        :t="t"
+        @launch-quick-claim="showQuickClaimDialog = true"
+        @refresh="reloadClaims"
+        @download-xlsx="downloadClaimExport('xlsx')"
+        @download-pdf="downloadClaimExport('pdf')"
       />
-      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="reloadClaims">
-        {{ t("refresh") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('xlsx')">
-        {{ t("exportXlsx") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="downloadClaimExport('pdf')">
-        {{ t("exportPdf") }}
-      </ActionButton>
     </template>
 
     <template #metrics>
-      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-          <p class="mini-metric-value">{{ formatCount(claimSummary.total) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryOpen") }}</p>
-          <p class="mini-metric-value text-brand-600">{{ formatCount(claimSummary.open) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryApproved") }}</p>
-          <p class="mini-metric-value text-amber-600">{{ formatCount(claimSummary.approved) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryPaid") }}</p>
-          <p class="mini-metric-value text-green-600">{{ formatCount(claimSummary.paid) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryReservePaid") }}</p>
-          <p class="mini-metric-value text-slate-900">{{ claimSummary.reserveVsPaid }}</p>
-        </div>
-      </div>
+      <ClaimsBoardMetricsPanel :claim-summary="claimSummary" :format-count="formatCount" :t="t" />
     </template>
 
     <article v-if="claimsErrorText" class="qc-error-banner">
@@ -54,55 +26,35 @@
       <p class="qc-error-banner__text mt-1">{{ claimsErrorText }}</p>
     </article>
 
-    <SectionPanel
-      :title="t('filtersTitle')"
-      :count="`${claimsListActiveCount} ${t('activeFilters')}`"
-      panel-class="surface-card rounded-2xl p-4"
-    >
-      <FilterBar
-        v-model:search="claimsListSearchQuery"
-        :filters="claimsListFilterConfig"
-        :active-count="claimsListActiveCount"
-        @filter-change="onClaimsListFilterChange"
-        @reset="onClaimsListFilterReset"
-      >
-        <template #actions>
-          <button class="btn btn-outline btn-sm" @click="onClaimsListFilterReset">{{ t("clearFilters") }}</button>
-          <button class="btn btn-outline btn-sm" @click="focusClaimSearch">{{ t("searchPlaceholder") }}</button>
-        </template>
-      </FilterBar>
-    </SectionPanel>
-
-    <SectionPanel
-      :title="t('claimsTableTitle')"
-      :count="formatCount(claimsListRowsWithActions.length)"
-      panel-class="surface-card rounded-2xl p-5"
-    >
-      <ListTable
-        :columns="claimsTableColumns"
-        :rows="claimsListRowsWithActions"
-        :loading="claimsLoading"
-        empty-message="Hasar bulunamadı."
-        @row-click="openClaimDetail"
-      />
-    </SectionPanel>
-
-    <QuickCreateClaim
-      v-model="showQuickClaimDialog"
-      :locale="activeLocale"
-      :options-map="claimQuickOptionsMap"
-      :before-open="prepareQuickClaimDialog"
-      :success-handlers="quickClaimSuccessHandlers"
+    <ClaimsBoardFilterSection
+      v-model:search-query="claimsListSearchQuery"
+      :claims-list-filter-config="claimsListFilterConfig"
+      :claims-list-active-count="claimsListActiveCount"
+      :t="t"
+      @filter-change="onClaimsListFilterChange"
+      @reset="onClaimsListFilterReset"
+      @focus-search="focusClaimSearch"
     />
-    <QuickCreateManagedDialog
-      v-model="showOwnershipAssignmentDialog"
-      config-key="ownership_assignment"
-      :locale="activeLocale"
-      :options-map="claimQuickOptionsMap"
-      :eyebrow="ownershipAssignmentEyebrow"
-      :show-save-and-open="false"
-      :before-open="prepareOwnershipAssignmentDialog"
-      :success-handlers="ownershipAssignmentSuccessHandlers"
+
+    <ClaimsBoardTableSection
+      :claims-table-columns="claimsTableColumns"
+      :rows="claimsListRowsWithActions"
+      :loading="claimsLoading"
+      :format-count="formatCount"
+      :t="t"
+      @row-click="openClaimDetail"
+    />
+
+    <ClaimsBoardDialogs
+      v-model:show-quick-claim-dialog="showQuickClaimDialog"
+      v-model:show-ownership-assignment-dialog="showOwnershipAssignmentDialog"
+      :active-locale="activeLocale"
+      :claim-quick-options-map="claimQuickOptionsMap"
+      :ownership-assignment-eyebrow="ownershipAssignmentEyebrow"
+      :prepare-quick-claim-dialog="prepareQuickClaimDialog"
+      :quick-claim-success-handlers="quickClaimSuccessHandlers"
+      :prepare-ownership-assignment-dialog="prepareOwnershipAssignmentDialog"
+      :ownership-assignment-success-handlers="ownershipAssignmentSuccessHandlers"
     />
   </WorkbenchPageLayout>
 </template>
@@ -114,15 +66,12 @@ import { useRoute } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useClaimStore } from "../stores/claim";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import QuickCreateLauncher from "../components/app-shell/QuickCreateLauncher.vue";
-import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import ClaimsBoardActionBar from "../components/claims-board/ClaimsBoardActionBar.vue";
+import ClaimsBoardDialogs from "../components/claims-board/ClaimsBoardDialogs.vue";
+import ClaimsBoardFilterSection from "../components/claims-board/ClaimsBoardFilterSection.vue";
+import ClaimsBoardMetricsPanel from "../components/claims-board/ClaimsBoardMetricsPanel.vue";
+import ClaimsBoardTableSection from "../components/claims-board/ClaimsBoardTableSection.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import QuickCreateClaim from "../components/QuickCreateClaim.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import FilterBar from "../components/ui/FilterBar.vue";
 import { useClaimsBoardRuntime } from "../composables/useClaimsBoardRuntime";
 import { getAppPinia } from "../pinia";
 
@@ -312,15 +261,6 @@ const claimsTableColumns = [
   { key: "_actions", label: "Actions", width: "280px", type: "actions", align: "right" },
 ];
 
-const claimsListColumns = [
-  { key: "claim_no", label: "Hasar No", width: "140px", type: "mono" },
-  { key: "policy", label: "Poliçe", width: "140px", type: "mono" },
-  { key: "customer", label: "Müşteri", width: "220px" },
-  { key: "claim_status", label: "Durum", width: "130px", type: "status" },
-  { key: "approved_amount", label: "Onaylanan", width: "120px", type: "amount", align: "right" },
-  { key: "paid_amount", label: "Ödenen", width: "120px", type: "amount", align: "right" },
-  { key: "remaining_days", label: "Takip Günü", width: "110px", type: "urgency", align: "right" },
-];
 const claimsRuntime = useClaimsBoardRuntime({
   authStore,
   branchStore,
@@ -367,7 +307,12 @@ const {
   prepareOwnershipAssignmentDialog,
 } = claimsRuntime;
 
-// Static columns remain here for template readability.
+function focusClaimSearch() {
+  const input = document.querySelector(".surface-card input[type='text']");
+  if (input && typeof input.focus === "function") {
+    input.focus();
+  }
+}
 
 </script>
 
