@@ -93,7 +93,7 @@ import { usePolicyListPresetSync } from "../composables/usePolicyListPresetSync"
 import { usePolicyListRuntime } from "../composables/usePolicyListRuntime";
 import { usePolicyListTableData } from "../composables/usePolicyListTableData";
 import { usePolicyListActions } from "../composables/usePolicyListActions";
-import { usePolicyQuickCreateRuntime } from "../composables/usePolicyQuickCreateRuntime";
+import { usePolicyListQuickPolicy } from "../composables/usePolicyListQuickPolicy";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
@@ -276,7 +276,7 @@ const sortOptions = computed(() => [
   { value: "end_date desc", label: t("sortEndDateDesc") },
   { value: "gross_premium desc", label: t("sortGrossDesc") },
 ]);
-const policyQuickRuntime = usePolicyQuickCreateRuntime({
+const policyQuickRuntime = usePolicyListQuickPolicy({
   t,
   activeLocale,
   router,
