@@ -105,12 +105,6 @@ import PolicyListMetricsPanel from "../components/policy-list/PolicyListMetricsP
 import PolicyListFilterSection from "../components/policy-list/PolicyListFilterSection.vue";
 import PolicyListTableSection from "../components/policy-list/PolicyListTableSection.vue";
 import PolicyListQuickPolicyDialog from "../components/policy-list/PolicyListQuickPolicyDialog.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
-import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
-import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
-import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
-import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
-import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 
 const router = useRouter();
 const route = useRoute();
@@ -264,22 +258,6 @@ const copy = {
 
 function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
-}
-
-function resolveFieldValue(source, field) {
-  if (typeof source === "function") {
-    return source({
-      field,
-      model: quickPolicyForm,
-      locale: activeLocale.value,
-      text: (value) => getLocalizedText(value, activeLocale.value),
-    });
-  }
-  return source;
-}
-
-function isFieldRequired(field) {
-  return Boolean(resolveFieldValue(field?.required, field));
 }
 
 const activeLocale = computed(() => unref(authStore.locale) || "en");
