@@ -1,0 +1,197 @@
+<template>
+  <SectionPanel
+    :title="t('filtersTitle')"
+    :count="`${activeFilterCount} ${t('activeFilters')}`"
+    :meta="branchScopeLabel"
+    panel-class="surface-card rounded-2xl p-4"
+  >
+    <div class="space-y-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <select v-model="filters.reportKey" class="report-filter-control min-w-[180px]">
+          <option v-for="option in reportOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+
+        <select
+          v-if="filters.reportKey === 'policy_list'"
+          :value="activePreset"
+          class="report-filter-control min-w-[210px]"
+          @change="$emit('apply-date-preset', $event.target.value)"
+        >
+          <option value="">{{ t("dateRangeLabel") }}</option>
+          <option v-for="preset in datePresets" :key="preset.value" :value="preset.value">
+            {{ preset.label }}
+          </option>
+        </select>
+
+        <div class="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-1.5 py-1">
+          <input
+            v-model="filters.fromDate"
+            class="report-filter-control report-filter-control--date"
+            type="date"
+            :placeholder="t('dateFrom')"
+            :title="t('dateFrom')"
+          />
+          <span class="text-xs text-gray-400">-</span>
+          <input
+            v-model="filters.toDate"
+            class="report-filter-control report-filter-control--date"
+            type="date"
+            :placeholder="t('dateTo')"
+            :title="t('dateTo')"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-2">
+        <button
+          type="button"
+          class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
+          @click="$emit('toggle-advanced')"
+        >
+          {{ reportsAdvancedOpen ? t('hideAdvancedFilters') : t('advancedFilters') }}
+        </button>
+
+        <span
+          v-if="activeFilterCount > 0"
+          class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500"
+        >
+          {{ activeFilterCount }} {{ t('activeFilters') }}
+        </span>
+
+        <div class="ml-auto flex flex-wrap items-center gap-2">
+          <FilterPresetMenu
+            :model-value="presetModelValue"
+            :label="t('presetLabel')"
+            :options="presetOptionsList"
+            :can-delete="canDeletePresetFlag"
+            :show-save="true"
+            :show-delete="true"
+            :disabled="loading"
+            :save-label="t('savePreset')"
+            :delete-label="t('deletePreset')"
+            @update:model-value="$emit('update:preset-key', $event)"
+            @change="$emit('preset-change', $event)"
+            @save="$emit('preset-save')"
+            @delete="$emit('preset-delete')"
+          />
+          <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('refresh')">{{ t('refresh') }}</button>
+          <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('apply-filters')">{{ t('applyFilters') }}</button>
+          <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="$emit('clear-filters')">{{ t('clearFilters') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="reportsAdvancedOpen" class="mt-3 rounded-lg border border-gray-200 bg-gray-50/50 p-3">
+      <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+        <label
+          v-for="field in visibleAdvancedFilters"
+          :key="field.key"
+          class="flex flex-col gap-1"
+        >
+          <span class="text-xs font-medium text-gray-600">{{ field.label }}</span>
+          <input
+            v-model.trim="filters[field.modelKey]"
+            class="report-filter-control"
+            type="search"
+            :placeholder="field.label"
+            :list="`advanced-${field.key}-options`"
+          />
+          <datalist :id="`advanced-${field.key}-options`">
+            <option
+              v-for="option in getAdvancedFilterOptions(field.key)"
+              :key="`${field.key}-${option}`"
+              :value="option"
+            />
+          </datalist>
+        </label>
+      </div>
+    </div>
+
+    <div class="mt-3 flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
+      <span>{{ t("listSummaryTitle") }}</span>
+      <span>{{ t("columns") }}: {{ columnsSummaryLabel }}</span>
+    </div>
+  </SectionPanel>
+</template>
+
+<script setup>
+import SectionPanel from "../app-shell/SectionPanel.vue";
+import FilterPresetMenu from "../app-shell/FilterPresetMenu.vue";
+
+defineProps({
+  filters: {
+    type: Object,
+    required: true,
+  },
+  t: {
+    type: Function,
+    required: true,
+  },
+  reportOptions: {
+    type: Array,
+    default: () => [],
+  },
+  activePreset: {
+    type: String,
+    default: "",
+  },
+  datePresets: {
+    type: Array,
+    default: () => [],
+  },
+  reportsAdvancedOpen: {
+    type: Boolean,
+    default: false,
+  },
+  activeFilterCount: {
+    type: Number,
+    default: 0,
+  },
+  branchScopeLabel: {
+    type: String,
+    default: "",
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  presetModelValue: {
+    type: String,
+    default: "default",
+  },
+  presetOptionsList: {
+    type: Array,
+    default: () => [],
+  },
+  canDeletePresetFlag: {
+    type: Boolean,
+    default: false,
+  },
+  visibleAdvancedFilters: {
+    type: Array,
+    default: () => [],
+  },
+  getAdvancedFilterOptions: {
+    type: Function,
+    required: true,
+  },
+  columnsSummaryLabel: {
+    type: String,
+    default: "",
+  },
+});
+
+defineEmits([
+  "toggle-advanced",
+  "refresh",
+  "apply-filters",
+  "clear-filters",
+  "apply-date-preset",
+  "preset-change",
+  "preset-save",
+  "preset-delete",
+  "update:preset-key",
+]);
+</script>
