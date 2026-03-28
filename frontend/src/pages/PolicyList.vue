@@ -7,30 +7,17 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <button class="btn btn-outline btn-sm" type="button" @click="focusPolicySearch">{{ t("focusFilters") }}</button>
-      <button class="btn btn-outline btn-sm" type="button" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">{{ t("exportXlsx") }}</button>
-      <button class="btn btn-primary btn-sm" type="button" @click="openQuickPolicyDialog">{{ t("newPolicy") }}</button>
+      <PolicyListActionBar
+        :policy-loading="policyLoading"
+        :t="t"
+        @focus-filters="focusPolicySearch"
+        @export-xlsx="downloadPolicyExport('xlsx')"
+        @new-policy="openQuickPolicyDialog"
+      />
     </template>
 
     <template #metrics>
-      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-          <p class="mini-metric-value">{{ formatCount(policySummary.total) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryActive") }}</p>
-          <p class="mini-metric-value text-brand-600">{{ formatCount(policySummary.active) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryPending") }}</p>
-          <p class="mini-metric-value text-amber-600">{{ formatCount(policySummary.pending) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryTotalPremium") }}</p>
-          <p class="mini-metric-value text-green-600">{{ formatCurrency(policySummary.totalPremium, "TRY") }}</p>
-        </div>
-      </div>
+      <PolicyListMetricsPanel :policy-summary="policySummary" :format-count="formatCount" :format-currency="formatCurrency" :t="t" />
     </template>
 
     <article v-if="policyListError" class="qc-error-banner">
@@ -38,87 +25,65 @@
       <p class="qc-error-banner__text mt-1">{{ policyListError }}</p>
     </article>
 
-    <SectionPanel
-      :title="t('filtersTitle')"
-      :count="`${policyListActiveCount} ${t('activeFilters')}`"
-      panel-class="surface-card rounded-2xl p-4"
-    >
-      <FilterBar
-        v-model:search="policyListSearchQuery"
-        :filters="policyListFilterConfig"
-        :active-count="policyListActiveCount"
-        @filter-change="onPolicyListFilterChange"
-        @reset="onPolicyListFilterReset"
-      >
-        <template #actions>
-          <button class="btn btn-sm" :disabled="policyLoading" @click="refreshPolicyList">{{ t("refresh") }}</button>
-          <button v-if="policyListActiveCount > 0" class="btn btn-outline btn-sm" @click="onPolicyListFilterReset">{{ t("clearFilters") }}</button>
-        </template>
-      </FilterBar>
-      <div class="hidden" aria-hidden="true">
-        <input v-model="filters.query" class="input" type="text" />
-        <input v-model="filters.status" class="input" type="text" />
-        <input v-model="filters.insurance_company" class="input" type="text" />
-        <input v-model="filters.customer" class="input" type="text" />
-        <input v-model="filters.gross_min" class="input" type="text" />
-        <input v-model.number="pagination.pageLength" class="input" type="number" min="1" />
-      </div>
-      <div class="mt-3 flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
-        <span>{{ t("mobileSummaryTitle") }}</span>
-        <span>{{ t("pageSize") }}: {{ pagination.pageLength || 20 }}</span>
-      </div>
-    </SectionPanel>
+    <PolicyListFilterSection
+      v-model:search="policyListSearchQuery"
+      :filters="policyListFilterConfig"
+      :active-count="policyListActiveCount"
+      :policy-loading="policyLoading"
+      :page-length="pagination.pageLength"
+      :t="t"
+      @filter-change="onPolicyListFilterChange"
+      @reset="onPolicyListFilterReset"
+      @refresh="refreshPolicyList"
+      @clear="onPolicyListFilterReset"
+    />
 
-    <SectionPanel
-      :title="t('policyTableTitle')"
-      :count="formatCount(policyListTotalCount)"
-      panel-class="surface-card rounded-2xl p-5"
-    >
-      <ListTable
-        :columns="policyListColumns"
-        :rows="policyListRowsWithUrgency"
-        :loading="policyLoading"
-        :empty-message="t('empty')"
-        @row-click="(row) => openPolicyDetail(row.name)"
-      />
+    <div class="hidden" aria-hidden="true">
+      <input v-model="filters.query" class="input" type="text" />
+      <input v-model="filters.status" class="input" type="text" />
+      <input v-model="filters.insurance_company" class="input" type="text" />
+      <input v-model="filters.customer" class="input" type="text" />
+      <input v-model="filters.gross_min" class="input" type="text" />
+      <input v-model.number="pagination.pageLength" class="input" type="number" min="1" />
+    </div>
 
-      <div class="mt-4 flex items-center justify-between">
-        <p class="text-xs text-gray-400">{{ policyListPagedRows.length }} / {{ policyListTotalCount }} {{ t("showingRecords") }}</p>
-        <div class="flex items-center gap-1">
-          <button class="btn btn-sm" :disabled="policyListPage <= 1" @click="policyListPage--">←</button>
-          <span class="px-2 text-xs text-gray-600">{{ policyListPage }}</span>
-          <button class="btn btn-sm" :disabled="policyListPage >= policyListTotalPages" @click="policyListPage++">→</button>
-        </div>
-      </div>
-    </SectionPanel>
+    <PolicyListTableSection
+      :columns="policyListColumns"
+      :rows="policyListRowsWithUrgency"
+      :loading="policyLoading"
+      :empty-message="t('empty')"
+      :total-count="policyListTotalCount"
+      :total-pages="policyListTotalPages"
+      v-model:page="policyListPage"
+      :format-count="formatCount"
+      :t="t"
+      @row-click="(row) => openPolicyDetail(row.name)"
+    />
 
-    <Dialog v-model="showQuickPolicyDialog" :options="{ title: quickPolicyUi.title, size: 'xl' }">
-      <template #body-content>
-        <PolicyForm
-          :key="quickPolicyDialogKey"
-          :model="quickPolicyForm"
-          :field-errors="quickPolicyFieldErrors"
-          :options-map="policyQuickOptionsMap"
-          :disabled="quickPolicyLoading"
-          :loading="quickPolicyLoading"
-          :has-source-offer="hasQuickPolicySourceOffer"
-          :office-branch="branchStore.requestBranch || ''"
-          :error="quickPolicyError"
-          :eyebrow="quickPolicyUi.eyebrow"
-          :title="quickPolicyUi.title"
-          :subtitle="quickPolicyUi.subtitle"
-          @cancel="cancelQuickPolicyDialog"
-          @submit="submitQuickPolicy(false)"
-        />
-      </template>
-    </Dialog>
+    <PolicyListQuickPolicyDialog
+      v-model:show="showQuickPolicyDialog"
+      :dialog-key="quickPolicyDialogKey"
+      :model="quickPolicyForm"
+      :field-errors="quickPolicyFieldErrors"
+      :options-map="policyQuickOptionsMap"
+      :disabled="quickPolicyLoading"
+      :loading="quickPolicyLoading"
+      :has-source-offer="hasQuickPolicySourceOffer"
+      :office-branch="branchStore.requestBranch || ''"
+      :error="quickPolicyError"
+      :eyebrow="quickPolicyUi.eyebrow"
+      :title="quickPolicyUi.title"
+      :subtitle="quickPolicyUi.subtitle"
+      @cancel="cancelQuickPolicyDialog"
+      @submit="submitQuickPolicy(false)"
+    />
   </WorkbenchPageLayout>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Dialog, createResource } from "frappe-ui";
+import { createResource } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -135,10 +100,11 @@ import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
 import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
 import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import FilterBar from "../components/ui/FilterBar.vue";
-import PolicyForm from "../components/PolicyForm.vue";
+import PolicyListActionBar from "../components/policy-list/PolicyListActionBar.vue";
+import PolicyListMetricsPanel from "../components/policy-list/PolicyListMetricsPanel.vue";
+import PolicyListFilterSection from "../components/policy-list/PolicyListFilterSection.vue";
+import PolicyListTableSection from "../components/policy-list/PolicyListTableSection.vue";
+import PolicyListQuickPolicyDialog from "../components/policy-list/PolicyListQuickPolicyDialog.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
