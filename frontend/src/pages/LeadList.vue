@@ -7,180 +7,97 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <button class="btn btn-primary btn-sm" type="button" @click="openQuickLeadDialog">{{ t("newLead") }}</button>
-      <button class="btn btn-outline btn-sm" type="button" @click="focusLeadSearch">{{ t("focusFilters") }}</button>
-      <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="refreshLeadList">{{ t("refresh") }}</button>
-      <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('xlsx')">{{ t("exportXlsx") }}</button>
-      <button class="btn btn-outline btn-sm" :disabled="leadListResource.loading" @click="downloadLeadExport('pdf')">{{ t("exportPdf") }}</button>
+      <LeadListActionBar
+        :lead-list-loading="leadListResource.loading"
+        :t="t"
+        @new-lead="openQuickLeadDialog"
+        @focus-search="focusLeadSearch"
+        @refresh="refreshLeadList"
+        @download-xlsx="downloadLeadExport('xlsx')"
+        @download-pdf="downloadLeadExport('pdf')"
+      />
     </template>
 
     <template #metrics>
-      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-          <p class="mini-metric-value">{{ formatCount(pagination.total) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryOpen") }}</p>
-          <p class="mini-metric-value text-brand-600">{{ formatCount(leadPageSummary.open) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryFollowUp") }}</p>
-          <p class="mini-metric-value text-amber-600">{{ formatCount(leadPageSummary.followUp) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryActionable") }}</p>
-          <p class="mini-metric-value text-blue-600">{{ formatCount(leadPageSummary.actionable) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryConversion") }}</p>
-          <p class="mini-metric-value text-green-600">{{ formatPercent(leadPageSummary.conversionRate) }}</p>
-        </div>
-      </div>
+      <LeadListMetricsPanel
+        :pagination="pagination"
+        :lead-page-summary="leadPageSummary"
+        :format-count="formatCount"
+        :format-percent="formatPercent"
+        :t="t"
+      />
     </template>
 
-    <SectionPanel :title="t('statusFiltersTitle')" :count="leadVisibleStatusOptions.length" panel-class="surface-card rounded-2xl p-3">
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="option in leadVisibleStatusOptions"
-          :key="option.value || 'all'"
-          class="btn btn-sm"
-          :class="filters.status === option.value ? 'btn-primary' : 'btn-outline'"
-          type="button"
-          @click="applyLeadStatusFilter(option.value)"
-        >
-          {{ option.label }}
-          <span class="badge badge-gray">{{ formatCount(option.count) }}</span>
-        </button>
-      </div>
-    </SectionPanel>
+    <LeadListStatusChips
+      :lead-visible-status-options="leadVisibleStatusOptions"
+      :status-value="filters.status"
+      :format-count="formatCount"
+      :t="t"
+      @apply-status="applyLeadStatusFilter"
+    />
 
-    <SectionPanel :title="t('filtersTitle')" :count="`${activeFilterCount} ${t('activeFilters')}`" panel-class="surface-card rounded-2xl p-4">
-      <FilterBar
-        v-model:search="filters.query"
-        :filters="leadListFilterConfig"
-        :active-count="activeFilterCount"
-        @filter-change="onLeadListFilterChange"
-        @reset="onLeadListFilterReset"
-      >
-        <template #actions>
-          <button v-if="hasLeadActiveFilters" class="btn btn-outline btn-sm" @click="onLeadListFilterReset">{{ t("clearFilters") }}</button>
-          <button class="btn btn-outline btn-sm" @click="focusLeadSearch">{{ t("searchAction") }}</button>
-        </template>
-      </FilterBar>
-    </SectionPanel>
+    <LeadListFilterSection
+      v-model:search="filters.query"
+      :lead-list-filter-config="leadListFilterConfig"
+      :active-filter-count="activeFilterCount"
+      :has-lead-active-filters="hasLeadActiveFilters"
+      :t="t"
+      @filter-change="onLeadListFilterChange"
+      @reset="onLeadListFilterReset"
+      @focus-search="focusLeadSearch"
+    />
 
-    <SectionPanel :title="t('leadTableTitle')" :count="formatCount(pagination.total)" panel-class="surface-card rounded-2xl p-5">
-      <div v-if="loadErrorText" class="qc-error-banner mb-4">
-        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="qc-error-banner__text mt-1">{{ loadErrorText }}</p>
-      </div>
-      <div v-else-if="actionErrorText" class="qc-error-banner mb-4">
-        <p class="qc-error-banner__text">{{ actionErrorText }}</p>
-      </div>
-      <div v-else-if="actionSuccessText && !lastConvertedOfferName" class="qc-success-banner mb-4">
-        <p class="qc-success-banner__text">{{ actionSuccessText }}</p>
-      </div>
-      <div v-if="lastConvertedOfferName" class="qc-success-banner mb-4 flex flex-wrap items-center gap-2">
-        <p class="qc-success-banner__text">{{ t('convertLeadSuccess') }}</p>
-        <ActionButton variant="link" size="xs" @click="openOfferDetail(lastConvertedOfferName)">{{ t('openOffer') }}</ActionButton>
-      </div>
+    <LeadListTableSection
+      :lead-list-columns="leadListColumns"
+      :lead-list-rows="leadListRows"
+      :pagination="pagination"
+      :is-initial-loading="isInitialLoading"
+      :lead-list-loading="leadListResource.loading"
+      :has-next-page="hasNextPage"
+      :load-error-text="loadErrorText"
+      :action-error-text="actionErrorText"
+      :action-success-text="actionSuccessText"
+      :last-converted-offer-name="lastConvertedOfferName"
+      :format-count="formatCount"
+      :t="t"
+      @row-click="(row) => openLeadDetail(row.name)"
+      @previous="previousPage"
+      @next="nextPage"
+      @open-offer="openOfferDetail"
+    />
 
-      <ListTable
-        :columns="leadListColumns"
-        :rows="leadListRows"
-        :loading="isInitialLoading"
-        :empty-message="t('emptyDescription')"
-        @row-click="(row) => openLeadDetail(row.name)"
-      />
-
-      <div class="mt-4 flex items-center justify-between">
-        <p class="text-xs text-gray-400">{{ leadListRows.length }} / {{ pagination.total }} {{ t("showingRecords") }}</p>
-        <div class="flex items-center gap-1">
-          <button class="btn btn-sm" :disabled="pagination.page <= 1 || leadListResource.loading" @click="previousPage">←</button>
-          <span class="px-2 text-xs text-gray-600">{{ pagination.page }}</span>
-          <button class="btn btn-sm" :disabled="!hasNextPage || leadListResource.loading" @click="nextPage">→</button>
-        </div>
-      </div>
-    </SectionPanel>
-
-    <Dialog
-      v-model="showQuickLeadDialog"
-      :options="{ title: quickLeadUi.title, size: 'xl' }"
-    >
-      <template #body-content>
-        <QuickCreateDialogShell
-          :error="quickLeadError"
-          :eyebrow="quickLeadUi.eyebrow"
-          :subtitle="quickLeadUi.subtitle"
-          :labels="quickCreateCommon"
-          :loading="quickLeadLoading"
-          @cancel="cancelQuickLeadDialog"
-          @save="submitQuickLead(false)"
-          @save-and-open="submitQuickLead(true)"
-        >
-          <QuickCustomerPicker
-            :model="quickLeadForm"
-            :field-errors="quickLeadFieldErrors"
-            :disabled="quickLeadLoading"
-            :locale="activeLocale"
-            :office-branch="branchStore.requestBranch || ''"
-            :customer-label="{ tr: 'Müşteri / Ad Soyad', en: 'Customer / Full Name' }"
-          />
-          <QuickCreateFormRenderer
-            :fields="leadQuickFormFields"
-            :model="quickLeadForm"
-            :field-errors="quickLeadFieldErrors"
-            :disabled="quickLeadLoading"
-            :locale="activeLocale"
-            :options-map="leadQuickOptionsMap"
-            @submit="submitQuickLead(false)"
-            @request-related-create="onLeadRelatedCreateRequested"
-          />
-        </QuickCreateDialogShell>
-      </template>
-    </Dialog>
+    <LeadListQuickLeadDialog
+      v-model:show-quick-lead-dialog="showQuickLeadDialog"
+      :quick-lead-ui="quickLeadUi"
+      :quick-lead-error="quickLeadError"
+      :quick-create-common="quickCreateCommon"
+      :quick-lead-loading="quickLeadLoading"
+      :quick-lead-form="quickLeadForm"
+      :quick-lead-field-errors="quickLeadFieldErrors"
+      :active-locale="activeLocale"
+      :office-branch="branchStore.requestBranch || ''"
+      :lead-quick-form-fields="leadQuickFormFields"
+      :lead-quick-options-map="leadQuickOptionsMap"
+      @cancel="cancelQuickLeadDialog"
+      @save="submitQuickLead"
+      @request-related-create="onLeadRelatedCreateRequested"
+    />
   </WorkbenchPageLayout>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, unref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { Dialog, createResource } from "frappe-ui";
+import { computed, unref } from "vue";
 
 import { useAuthStore } from "../stores/auth";
-import ActionButton from "../components/app-shell/ActionButton.vue";
 import { useLeadListRuntime } from "../composables/useLeadListRuntime";
-import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import MiniFactList from "../components/app-shell/MiniFactList.vue";
-import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
-import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
-import QuickCreateFormRenderer from "../components/app-shell/QuickCreateFormRenderer.vue";
+import LeadListActionBar from "../components/lead-list/LeadListActionBar.vue";
+import LeadListFilterSection from "../components/lead-list/LeadListFilterSection.vue";
+import LeadListMetricsPanel from "../components/lead-list/LeadListMetricsPanel.vue";
+import LeadListQuickLeadDialog from "../components/lead-list/LeadListQuickLeadDialog.vue";
+import LeadListStatusChips from "../components/lead-list/LeadListStatusChips.vue";
+import LeadListTableSection from "../components/lead-list/LeadListTableSection.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
-import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import FilterBar from "../components/ui/FilterBar.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
-import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
-import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
-import { mutedFact, subtleFact } from "../utils/factItems";
-import { openListExport } from "../utils/listExport";
-import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
-import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
-import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
-import {
-  extractCustomFilterPresetId,
-  isCustomFilterPresetValue,
-  makeCustomFilterPresetValue,
-  readFilterPresetKey,
-  readFilterPresetList,
-  writeFilterPresetKey,
-  writeFilterPresetList,
-} from "../utils/filterPresetState";
+import { getAppPinia } from "../pinia";
 
 const copy = {
   tr: {
