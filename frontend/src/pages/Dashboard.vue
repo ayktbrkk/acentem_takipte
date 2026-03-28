@@ -238,7 +238,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, unref, watch } from "vue";
+import { computed, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
@@ -266,9 +266,31 @@ import DashboardStatCard from "../components/DashboardStatCard.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
-import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 import { useDashboardPresentation } from "../composables/useDashboardPresentation";
+import { useDashboardFormatters } from "../composables/useDashboardFormatters";
+import { useDashboardFacts } from "../composables/useDashboardFacts";
 import { useDashboardSales } from "../composables/useDashboardSales";
+import { useDashboardSummary } from "../composables/useDashboardSummary";
+import { useDashboardOrchestration } from "../composables/useDashboardOrchestration";
+import { useDashboardItemActions } from "../composables/useDashboardItemActions";
+import { useDashboardLeadDialog } from "../composables/useDashboardLeadDialog";
+import { useDashboardLeadSubmission } from "../composables/useDashboardLeadSubmission";
+import { useDashboardLeadState } from "../composables/useDashboardLeadState";
+import { useDashboardPreviewData } from "../composables/useDashboardPreviewData";
+import { useDashboardPreviewPager } from "../composables/useDashboardPreviewPager";
+import { useDashboardStatus } from "../composables/useDashboardStatus";
+import { useDashboardTabHelpers } from "../composables/useDashboardTabHelpers";
+import { useDashboardVisibleRange } from "../composables/useDashboardVisibleRange";
+import {
+  asArray,
+  buildInitialClaimListParams,
+  buildInitialKpiParams,
+  buildInitialTabPayloadParams,
+  isPermissionDeniedError,
+  normalizeResourcePayload,
+  withDashboardOfficeBranchFilter,
+} from "../utils/dashboardHelpers";
+import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 
 const router = useRouter();
 const route = useRoute();
@@ -278,14 +300,6 @@ const dashboardStore = useDashboardStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const quickLeadConfig = getQuickCreateConfig("lead");
 const quickLeadDialogTitle = computed(() => getLocalizedText(quickLeadConfig?.title, activeLocale.value));
-function normalizeResourcePayload(payload) {
-  return payload?.message || payload || {};
-}
-
-function cstr(value) {
-  return String(value ?? "").trim();
-}
-
 const copy = {
   tr: {
     heroTag: "Sigorta Kontrol Merkezi",
@@ -822,70 +836,44 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const DASHBOARD_TABS = ["daily", "sales", "collections", "renewals"];
-
-function normalizeDashboardTab(value) {
-  const candidate = String(value || "").toLowerCase();
-  if (!candidate || candidate === "overview" || candidate === "operations") return "daily";
-  return DASHBOARD_TABS.includes(candidate) ? candidate : "daily";
-}
-
-function asArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
 const rangeOptions = [1, 7, 15, 30];
 const selectedRange = computed({
   get: () => dashboardStore.state.range || 30,
   set: (value) => dashboardStore.setRange(value),
 });
-const showLeadDialog = ref(false);
-const isSubmitting = ref(false);
-const leadDialogError = ref("");
-const leadDialogFieldErrors = reactive({});
-const DASHBOARD_RELOAD_DEBOUNCE_MS = 300;
-const DASHBOARD_PREVIEW_PAGE_SIZE = 5;
-const DASHBOARD_PREVIEW_FETCH_LIMIT = 20;
-let dashboardReloadTimer = null;
-
-const newLead = reactive({
-  customer: "",
-  queryText: "",
-  customerOption: null,
-  createCustomerMode: false,
-  customer_type: "Individual",
-  tax_id: "",
-  phone: "",
-  email: "",
-  estimated_gross_premium: "",
-  notes: "",
-});
+const {
+  showLeadDialog,
+  isSubmitting,
+  leadDialogError,
+  leadDialogFieldErrors,
+  newLead,
+} = useDashboardLeadState();
 
 const kpiResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
-  params: buildKpiParams(),
+  params: buildInitialKpiParams(branchStore, selectedRange),
   auto: false,
 });
 
 const followUpResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_follow_up_sla_payload",
-  params: withOfficeBranchFilter({ filters: {} }),
+  params: withDashboardOfficeBranchFilter(branchStore, { filters: {} }),
   auto: true,
 });
 
 const myTasksResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_tasks_payload",
-  params: withOfficeBranchFilter({ filters: {} }),
+  params: withDashboardOfficeBranchFilter(branchStore, { filters: {} }),
   auto: true,
 });
 const myActivitiesResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_activities_payload",
-  params: withOfficeBranchFilter({ filters: {} }),
+  params: withDashboardOfficeBranchFilter(branchStore, { filters: {} }),
   auto: true,
 });
 const myRemindersResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_reminders_payload",
-  params: withOfficeBranchFilter({ filters: {} }),
+  params: withDashboardOfficeBranchFilter(branchStore, { filters: {} }),
   auto: true,
 });
 
@@ -966,18 +954,9 @@ const offerListResource = createResource({
 
 const claimListResource = createResource({
   url: "frappe.client.get_list",
-  params: buildClaimListParams(),
+  params: buildInitialClaimListParams(branchStore),
   auto: true,
 });
-
-function buildClaimListParams() {
-  return withOfficeBranchFilter({
-    doctype: "AT Claim",
-    fields: ["name", "claim_no", "customer", "policy", "claim_status", "approved_amount", "paid_amount", "modified"],
-    order_by: "modified desc",
-    limit_page_length: 12,
-  });
-}
 
 const reconciliationPreviewResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
@@ -991,7 +970,7 @@ const reconciliationPreviewResource = createResource({
 
 const dashboardTabPayloadResource = createResource({
   url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
-  params: buildTabPayloadParams("daily"),
+  params: buildInitialTabPayloadParams(branchStore, selectedRange, "daily"),
   auto: true,
 });
 
@@ -1025,103 +1004,64 @@ const recentOffers = computed(() =>
     ? asArray(dashboardTabPreviews.value.offers)
     : asArray(offerListResource.data)
 );
-const openClaimsPreviewRows = computed(() =>
-  asArray(unref(claimListResource.data))
-    .filter((claim) => ["Open", "Under Review", "Approved"].includes(String(claim?.claim_status || "")))
-    .slice(0, 12)
-);
-const dueTodayCollectionPayments = computed(() => asArray(dashboardTabPreviews.value.due_today_payments));
-const overdueCollectionPayments = computed(() => asArray(dashboardTabPreviews.value.overdue_payments));
-const offerWaitingRenewals = computed(() => asArray(dashboardTabPreviews.value.offer_waiting_renewals));
-const reconciliationPreviewData = computed(() => unref(reconciliationPreviewResource.data) || {});
-const reconciliationPreviewRows = computed(() =>
-  asArray(dashboardTabPreviews.value.reconciliation_rows).length
-    ? asArray(dashboardTabPreviews.value.reconciliation_rows)
-    : asArray(reconciliationPreviewData.value.rows)
-);
-const dueTodayCollectionCount = computed(() => Number(dashboardTabMetrics.value?.due_today_collection_count || 0));
-const dueTodayCollectionAmount = computed(() => Number(dashboardTabMetrics.value?.due_today_collection_amount_try || 0));
-const overdueCollectionCount = computed(() => Number(dashboardTabMetrics.value?.overdue_collection_count || 0));
-const overdueCollectionAmount = computed(() => Number(dashboardTabMetrics.value?.overdue_collection_amount_try || 0));
-const offerWaitingRenewalCount = computed(() => Number(dashboardTabMetrics.value?.offer_waiting_count || 0));
-const reconciliationPreviewMetrics = computed(() => ({
-  ...(reconciliationPreviewData.value.metrics || {}),
-  ...(dashboardTabMetrics.value?.reconciliation_open_count != null
-    ? { open: Number(dashboardTabMetrics.value.reconciliation_open_count || 0) }
-    : {}),
-}));
-const dashboardData = computed(() => dashboardStore.state.kpiPayload || {});
-const dashboardComparison = computed(() => dashboardStore.comparison || {});
-const dashboardMeta = computed(() => {
-  return dashboardStore.meta || {};
-});
-const dashboardAccessScope = computed(() => String(dashboardMeta.value?.access_scope || ""));
-const dashboardAccessReason = computed(() => String(dashboardMeta.value?.scope_reason || ""));
-const dashboardCards = computed(() => ({
-  ...(dashboardData.value.cards || {}),
-  ...(dashboardTabCards.value || {}),
-}));
-const dashboardBranchLabel = computed(() => branchStore.requestBranch || "Tum Subeler");
-const previousDashboardCards = computed(() => dashboardStore.previousCards || {});
-const dashboardComparisonTrendHint = computed(() => {
-  const mode = String(dashboardComparison.value?.mode || "").toLowerCase();
-  if (mode === "previous_period") return t("trendAgainstPreviousPeriod");
-  if (mode === "previous_month") return t("trendAgainstPreviousMonth");
-  if (mode === "previous_year") return t("trendAgainstPreviousYear");
-  if (mode === "custom") return t("trendAgainstCustomPeriod");
-  return t("trendAgainstPrevious");
-});
-const commissionTrend = computed(() =>
-  asArray(dashboardTabSeries.value.commission_trend).length
-    ? asArray(dashboardTabSeries.value.commission_trend)
-    : asArray(dashboardData.value.commission_trend)
-);
-const policyStatusRows = computed(() => asArray(dashboardData.value.policy_status));
-const topCompanies = computed(() =>
-  asArray(dashboardTabSeries.value.top_companies).length
-    ? asArray(dashboardTabSeries.value.top_companies)
-    : asArray(dashboardData.value.top_companies)
-);
-const dashboardLoadingRaw = computed(() => {
-  const kpiLoading = isDailyTab.value ? Boolean(unref(kpiResource.loading)) : false;
-  const tabLoading = Boolean(unref(dashboardTabPayloadResource.loading));
-  return Boolean(kpiLoading || tabLoading);
-});
-const followUpLoading = computed(() => Boolean(unref(followUpResource.loading)));
-const myTasksLoading = computed(() => Boolean(unref(myTasksResource.loading)));
-const myActivitiesLoading = computed(() => Boolean(unref(myActivitiesResource.loading)));
-const myRemindersLoading = computed(() => Boolean(unref(myRemindersResource.loading)));
-const dashboardLoading = computed(() => dashboardStore.state.loading);
-const dashboardPermissionError = computed(() => {
-  const candidates = [
-    unref(dashboardTabPayloadResource.error),
-    isDailyTab.value ? unref(kpiResource.error) : null,
-  ];
-  return candidates.find((error) => Boolean(error) && isPermissionDeniedError(error)) || null;
-});
-const dashboardScopeMessage = computed(() => {
-  if (dashboardLoadingRaw.value || dashboardPermissionError.value) return "";
-  if (dashboardAccessScope.value !== "empty") return "";
-  if (dashboardAccessReason.value === "agent_unassigned") return t("dashboardScopeNoAssignments");
-  return t("dashboardScopeRestrictedEmpty");
-});
-const dashboardAccessMessage = computed(() => {
-  if (dashboardPermissionError.value) return t("dashboardPermissionDenied");
-  return dashboardScopeMessage.value;
-});
-const dashboardAccessMessageKind = computed(() => (dashboardPermissionError.value ? "permission" : "scope"));
 
-const readyOfferCount = computed(() => {
-  if (dashboardTabMetrics.value?.ready_offer_count != null) {
-    return Number(dashboardTabMetrics.value.ready_offer_count || 0);
-  }
-  return recentOffers.value.filter((offer) => ["Sent", "Accepted"].includes(offer.status) && !offer.converted_policy).length;
+const {
+  acceptedOfferCount,
+  commissionTrend,
+  convertedOfferCount,
+  dashboardAccessReason,
+  dashboardAccessScope,
+  dashboardCards,
+  dashboardComparisonTrendHint,
+  dashboardData,
+  maxTrendValue,
+  policyStatusRows,
+  previousDashboardCards,
+  topCompanies,
+} = useDashboardSummary({
+  branchStore,
+  dashboardStore,
+  dashboardTabCards,
+  dashboardTabMetrics,
+  dashboardTabSeries,
+  t,
 });
-const activeDashboardTab = computed(() => normalizeDashboardTab(route.query?.tab));
-const isDailyTab = computed(() => activeDashboardTab.value === "daily");
-const isSalesTab = computed(() => activeDashboardTab.value === "sales");
-const isCollectionsTab = computed(() => activeDashboardTab.value === "collections");
-const isRenewalsTab = computed(() => activeDashboardTab.value === "renewals");
+
+const {
+  activeDashboardTab,
+  dashboardAccessMessage,
+  dashboardAccessMessageKind,
+  dashboardLoading,
+  dashboardLoadingRaw,
+  dashboardPermissionError,
+  dashboardScopeMessage,
+  followUpLoading,
+  isCollectionsTab,
+  isDailyTab,
+  isRenewalsTab,
+  isSalesTab,
+  myActivitiesLoading,
+  myRemindersLoading,
+  myTasksLoading,
+  readyOfferCount,
+} = useDashboardStatus({
+  dashboardAccessReason,
+  dashboardAccessScope,
+  dashboardTabMetrics,
+  dashboardTabPayloadResource,
+  dashboardStore,
+  followUpResource,
+  isPermissionDeniedError,
+  kpiResource,
+  myActivitiesResource,
+  myRemindersResource,
+  myTasksResource,
+  recentOffers,
+  route,
+  selectedRange,
+  t,
+});
+
 const {
   dashboardHeroSubtitle,
   dashboardHeroTitle,
@@ -1139,129 +1079,156 @@ const {
   isRenewalsTab,
 });
 
-const renewalAlertItems = computed(() =>
-  activeRenewalTasks.value
-    .slice()
-    .sort((a, b) => new Date(a.due_date || a.renewal_date || 0).getTime() - new Date(b.due_date || b.renewal_date || 0).getTime())
-);
-const displayRenewalAlertItems = computed(() => renewalAlertItems.value);
-const displayRenewalTasks = computed(() => activeRenewalTasks.value);
-const displayTopCompanies = computed(() => topCompanies.value);
-const prioritizedFollowUpItems = computed(() =>
-  followUpItems.value
-    .slice()
-    .sort((left, right) => Number(left?.days_delta ?? 999) - Number(right?.days_delta ?? 999))
-);
-const priorityTaskItems = computed(() =>
-  myTaskItems.value
-    .filter((task) => !["Done", "Completed", "Cancelled"].includes(String(task?.status || "")))
-    .slice()
-    .sort((left, right) => compareDueDateAsc(left?.due_date, right?.due_date))
-);
-const recentActivityItems = computed(() =>
-  myActivityItems.value
-    .slice()
-    .sort((left, right) => compareDateDesc(left?.activity_at || left?.modified || left?.creation, right?.activity_at || right?.modified || right?.creation))
-);
-const renewalLinkedPolicies = computed(() => {
-  const linkedKeys = new Set(
-    activeRenewalTasks.value
-      .map((task) => normalizeLookupValue(task?.policy))
-      .filter(Boolean)
-  );
-
-  if (!linkedKeys.size) return [];
-
-  return displayRecentPolicies.value.filter((policy) => {
-    const policyName = normalizeLookupValue(policy?.name);
-    const policyNumber = normalizeLookupValue(policy?.policy_no);
-    return linkedKeys.has(policyName) || linkedKeys.has(policyNumber);
-  });
-});
-const displayReadyOfferCount = computed(
-  () => readyOfferCount.value
-);
-const acceptedOfferCount = computed(() => Number(dashboardTabMetrics.value?.accepted_offer_count || 0));
-const convertedOfferCount = computed(() => Number(dashboardTabMetrics.value?.converted_offer_count || 0));
-const reconciliationPreviewOpenDifference = computed(() => {
-  if (dashboardTabMetrics.value?.reconciliation_open_difference_try != null) {
-    return Number(dashboardTabMetrics.value.reconciliation_open_difference_try || 0);
-  }
-  return reconciliationPreviewRows.value.reduce((sum, row) => sum + Number(row?.difference_try || 0), 0);
-});
-const dailyActionOffers = computed(() =>
-  (dashboardTabPreviews.value.action_offers || recentOffers.value)
-    .filter((offer) => ["Sent", "Accepted"].includes(String(offer?.status || "")) && !offer.converted_policy)
-);
-
-const previewPages = reactive({
-  dailyFollowUp: 1,
-  dailyActivities: 1,
-  dailyTasks: 1,
-  dailyClaims: 1,
-  dailyPolicies: 1,
-  dailyActionOffers: 1,
-  dailyRenewalAlerts: 1,
-  dailyTopCompanies: 1,
-  collectionsDueToday: 1,
-  collectionsOverdue: 1,
-  collectionsPayments: 1,
-  collectionsRisk: 1,
-  collectionsReconciliation: 1,
-  renewalsPolicies: 1,
-  renewalsOfferWaiting: 1,
-  renewalsQueue: 1,
-  salesLeads: 1,
-  salesOffers: 1,
-  salesConvertedOffers: 1,
-  salesPolicies: 1,
-  salesActions: 1,
-  salesTasks: 1,
-  salesActivities: 1,
-  salesReminders: 1,
+const {
+  applyRange,
+  buildKpiParams,
+  buildTabPayloadParams,
+  openPage,
+  openPreviewList,
+  reloadData,
+  setDashboardTab,
+  triggerDashboardReload,
+} = useDashboardOrchestration({
+  activeDashboardTab,
+  branchStore,
+  buildClaimListParams: buildInitialClaimListParams,
+  claimListResource,
+  dashboardTabPayloadResource,
+  followUpResource,
+  kpiResource,
+  myActivitiesResource,
+  myRemindersResource,
+  myTasksResource,
+  route,
+  router,
+  selectedRange,
 });
 
-function previewPageCount(items) {
-  return Math.max(1, Math.ceil(asArray(unref(items)).length / DASHBOARD_PREVIEW_PAGE_SIZE));
-}
+const {
+  pagedPreviewItems,
+  previewPageCount,
+  previewResolvedPage,
+  setPreviewPage,
+  shouldShowViewAll,
+} = useDashboardPreviewPager();
 
-function previewResolvedPage(key, items) {
-  return Math.min(previewPages[key] || 1, previewPageCount(items));
-}
+const {
+  dueTodayCollectionAmount,
+  dueTodayCollectionCount,
+  dueTodayCollectionPayments,
+  offerWaitingRenewalCount,
+  offerWaitingRenewals,
+  openClaimsPreviewRows,
+  overdueCollectionAmount,
+  overdueCollectionCount,
+  overdueCollectionPayments,
+  reconciliationPreviewMetrics,
+  reconciliationPreviewOpenDifference,
+  reconciliationPreviewRows,
+  } = useDashboardPreviewData({
+  claimListResource,
+  dashboardTabMetrics,
+  dashboardTabPreviews,
+  reconciliationPreviewResource,
+});
 
-function pagedPreviewItems(items, key) {
-  const rows = asArray(unref(items));
-  const page = previewResolvedPage(key, rows);
-  const start = (page - 1) * DASHBOARD_PREVIEW_PAGE_SIZE;
-  return rows.slice(start, start + DASHBOARD_PREVIEW_PAGE_SIZE);
-}
+const {
+  canBlockTask,
+  canCancelReminder,
+  canCancelTask,
+  canCompleteReminder,
+  canCompleteTask,
+  canStartTask,
+  cancelReminder,
+  cancelTask,
+  completeReminder,
+  completeTask,
+  openActivityItem,
+  openClaimItem,
+  openCollectionRiskItem,
+  openFollowUpItem,
+  openPaymentItem,
+  openPolicyItem,
+  openReconciliationItem,
+  openRenewalTaskItem,
+  openTaskItem,
+} = useDashboardItemActions({
+  myTaskMutationResource,
+  openPreviewList,
+  router,
+  triggerDashboardReload,
+});
 
-function setPreviewPage(key, page, items) {
-  const maxPage = previewPageCount(items);
-  previewPages[key] = Math.min(Math.max(Number(page) || 1, 1), maxPage);
-}
+const { openLeadDialog, resetLeadForm } = useDashboardLeadDialog({
+  leadDialogError,
+  leadDialogFieldErrors,
+  newLead,
+  showLeadDialog,
+});
 
-function shouldShowPreviewPager(items) {
-  return previewPageCount(items) > 1;
-}
-
-function shouldShowViewAll(items) {
-  return asArray(unref(items)).length >= DASHBOARD_PREVIEW_FETCH_LIMIT;
-}
+const { createLead } = useDashboardLeadSubmission({
+  activeLocale,
+  createLeadResource,
+  isSubmitting,
+  leadDialogError,
+  leadDialogFieldErrors,
+  newLead,
+  normalizeCustomerType,
+  normalizeIdentityNumber,
+  resetLeadForm,
+  showLeadDialog,
+  triggerDashboardReload,
+  t,
+  isValidTckn,
+});
 
 const renewalBucketCounts = computed(() => dashboardStore.renewalBucketCounts || { overdue: 0, due7: 0, due30: 0 });
-const followUpPayload = computed(() => unref(followUpResource.data) || {});
-const followUpSummary = computed(() => followUpPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
-const followUpItems = computed(() => (Array.isArray(followUpPayload.value.items) ? followUpPayload.value.items : []));
-const myTasksPayload = computed(() => unref(myTasksResource.data) || {});
-const myTaskSummary = computed(() => myTasksPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
-const myTaskItems = computed(() => (Array.isArray(myTasksPayload.value.items) ? myTasksPayload.value.items : []));
-const myActivitiesPayload = computed(() => unref(myActivitiesResource.data) || {});
-const myActivitySummary = computed(() => myActivitiesPayload.value.summary || { total: 0, logged: 0, shared: 0, archived: 0 });
-const myActivityItems = computed(() => (Array.isArray(myActivitiesPayload.value.items) ? myActivitiesPayload.value.items : []));
-const myRemindersPayload = computed(() => unref(myRemindersResource.data) || {});
-const myReminderSummary = computed(() => myRemindersPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
-const myReminderItems = computed(() => (Array.isArray(myRemindersPayload.value.items) ? myRemindersPayload.value.items : []));
+
+const {
+  buildQuickStatCard,
+  compareDateDesc,
+  compareDueDateAsc,
+  formatCurrency,
+  formatCurrencyBy,
+  formatDate,
+  formatDaysToDue,
+  formatMonthKey,
+  formatNumber,
+  rangeLabel,
+  trendRatio,
+} = useDashboardFormatters({
+  dashboardComparisonTrendHint,
+  localeCode,
+  maxTrendValue,
+});
+
+const visibleRange = useDashboardVisibleRange({
+  formatDate,
+  selectedRange,
+});
+
+const {
+  displayRenewalAlertItems,
+  displayRenewalTasks,
+  followUpSummary,
+  myReminderItems,
+  myTaskItems,
+  myTaskSummary,
+  prioritizedFollowUpItems,
+  priorityTaskItems,
+  recentActivityItems,
+  renewalAlertItems,
+  renewalLinkedPolicies,
+} = useDashboardTabHelpers({
+  activeRenewalTasks,
+  compareDateDesc,
+  compareDueDateAsc,
+  followUpResource,
+  myActivitiesResource,
+  myRemindersResource,
+  myTasksResource,
+  displayRecentPolicies: recentPolicies,
+});
 
 const {
   convertedSalesOffers,
@@ -1298,1115 +1265,55 @@ const {
   t,
 });
 
-const visibleRange = computed(() => {
-  const range = getDateRange(selectedRange.value);
-  return `${formatDate(range.from)} - ${formatDate(range.to)}`;
+const {
+  activityFacts,
+  claimFacts,
+  collectionPaymentDirectionSummary,
+  collectionPaymentStatusSummary,
+  collectionRiskFacts,
+  collectionRiskRows,
+  dashboardPaymentFacts,
+  dashboardReconciliationFacts,
+  followUpDescription,
+  followUpFacts,
+  followUpTitle,
+  policyStatusSummary,
+  renewalAlertFacts,
+  renewalOutcomeSummary,
+  renewalRetentionRate,
+  renewalStatusSummary,
+  renewalTaskFactsDetailed,
+  taskFacts,
+  visibleQuickStatCards,
+} = useDashboardFacts({
+  acceptedOfferCount,
+  buildQuickStatCard,
+  dashboardCards,
+  dashboardTabSeries,
+  dueTodayCollectionAmount,
+  dueTodayCollectionCount,
+  formatCurrency,
+  formatDate,
+  formatNumber,
+  overdueCollectionAmount,
+  overdueCollectionCount,
+  overdueCollectionPayments,
+  dueTodayCollectionPayments,
+  followUpSummary,
+  isCollectionsTab,
+  isDailyTab,
+  isRenewalsTab,
+  isSalesTab,
+  myTaskSummary,
+  offerWaitingRenewalCount,
+  previousDashboardCards,
+  readyOfferCount,
+  renewalBucketCounts,
+  renewalTasks,
+  t,
+  policyStatusRows,
+  convertedOfferCount,
 });
-
-const quickStatCards = computed(() => [
-  buildQuickStatCard({
-    key: "quick-policy",
-    title: t("kpiPolicy"),
-    value: formatNumber(dashboardCards.value.total_policies),
-    current: dashboardCards.value.total_policies,
-    previous: previousDashboardCards.value.total_policies,
-    icon: "shield",
-  }),
-  buildQuickStatCard({
-    key: "quick-gwp",
-    title: t("kpiGwp"),
-    value: formatCurrency(dashboardCards.value.total_gwp_try),
-    current: dashboardCards.value.total_gwp_try,
-    previous: previousDashboardCards.value.total_gwp_try,
-    icon: "bar-chart-2",
-  }),
-  buildQuickStatCard({
-    key: "quick-commission",
-    title: t("kpiCommission"),
-    value: formatCurrency(dashboardCards.value.total_commission),
-    current: dashboardCards.value.total_commission,
-    previous: previousDashboardCards.value.total_commission,
-    icon: "percent",
-  }),
-  buildQuickStatCard({
-    key: "quick-renewal",
-    title: t("kpiRenewal"),
-    value: formatNumber(dashboardCards.value.pending_renewals),
-    current: dashboardCards.value.pending_renewals,
-    previous: previousDashboardCards.value.pending_renewals,
-    icon: "alert-triangle",
-    reverseTrend: true,
-  }),
-]);
-
-function buildStaticQuickStatCard({ key, title, value, icon, hint = t("todaySnapshot") }) {
-  return {
-    key,
-    title,
-    value,
-    trendText: "",
-    trendClass: "text-slate-500",
-    trendHint: hint,
-    icon,
-  };
-}
-
-const collectionQuickStatCards = computed(() => [
-  buildStaticQuickStatCard({
-    key: "quick-collect-due-today-count",
-    title: t("kpiCollectionDueTodayCount"),
-    value: formatNumber(dueTodayCollectionCount.value),
-    icon: "calendar-days",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-collect-due-today-amount",
-    title: t("kpiCollectionDueTodayAmount"),
-    value: formatCurrency(dueTodayCollectionAmount.value),
-    icon: "banknote",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-collect-overdue-count",
-    title: t("kpiCollectionOverdueCount"),
-    value: formatNumber(overdueCollectionCount.value),
-    icon: "alert-triangle",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-collect-overdue-amount",
-    title: t("kpiCollectionOverdueAmount"),
-    value: formatCurrency(overdueCollectionAmount.value),
-    icon: "wallet",
-  }),
-]);
-
-const renewalQuickStatCards = computed(() => [
-  quickStatCards.value.find((card) => card.key === "quick-renewal"),
-  buildStaticQuickStatCard({
-    key: "quick-renewal-offer-waiting",
-    title: t("kpiRenewalOfferWaiting"),
-    value: formatNumber(offerWaitingRenewalCount.value),
-    icon: "file-clock",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-renewal-overdue",
-    title: t("kpiRenewalOverdue"),
-    value: formatNumber(renewalBucketCounts.value.overdue),
-    icon: "alert-octagon",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-renewal-due7",
-    title: t("kpiRenewalDue7"),
-    value: formatNumber(renewalBucketCounts.value.due7),
-    icon: "clock",
-  }),
-].filter(Boolean));
-
-const operationsQuickStatCards = computed(() => [
-  buildStaticQuickStatCard({
-    key: "quick-follow-up-overdue",
-    title: t("kpiFollowUpOverdue"),
-    value: formatNumber(followUpSummary.value.overdue),
-    icon: "alert-triangle",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-follow-up-today",
-    title: t("kpiFollowUpToday"),
-    value: formatNumber(followUpSummary.value.due_today),
-    icon: "calendar-days",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-task-overdue",
-    title: t("kpiTaskOverdue"),
-    value: formatNumber(myTaskSummary.value.overdue),
-    icon: "briefcase",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-task-today",
-    title: t("kpiTaskToday"),
-    value: formatNumber(myTaskSummary.value.due_today),
-    icon: "list-todo",
-  }),
-]);
-
-const salesQuickStatCards = computed(() => [
-  buildStaticQuickStatCard({
-    key: "quick-sales-ready-offers",
-    title: t("kpiReadyOffers"),
-    value: formatNumber(readyOfferCount.value),
-    icon: "send",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-sales-accepted-offers",
-    title: t("kpiAcceptedOffers"),
-    value: formatNumber(acceptedOfferCount.value),
-    icon: "badge-check",
-  }),
-  buildStaticQuickStatCard({
-    key: "quick-sales-converted-offers",
-    title: t("kpiConvertedOffers"),
-    value: formatNumber(convertedOfferCount.value),
-    icon: "repeat",
-  }),
-  buildQuickStatCard({
-    key: "quick-sales-gwp",
-    title: t("kpiGwp"),
-    value: formatCurrency(dashboardCards.value.total_gwp_try),
-    current: dashboardCards.value.total_gwp_try,
-    previous: previousDashboardCards.value.total_gwp_try,
-    icon: "bar-chart-2",
-  }),
-]);
-
-const visibleQuickStatCards = computed(() => {
-  if (isCollectionsTab.value) return collectionQuickStatCards.value;
-  if (isRenewalsTab.value) return renewalQuickStatCards.value;
-  if (isDailyTab.value) return operationsQuickStatCards.value;
-  if (isSalesTab.value) return salesQuickStatCards.value;
-  return quickStatCards.value;
-});
-
-const policyStatusSummary = computed(() => {
-  const map = {};
-  for (const row of policyStatusRows.value) {
-    map[row.status] = {
-      total: Number(row.total || 0),
-      gwp: Number(row.total_gwp_try || 0),
-    };
-  }
-
-  const total = Object.values(map).reduce((sum, item) => sum + item.total, 0) || 1;
-
-  return [
-    {
-      key: "Active",
-      label: t("statusActive"),
-      value: map.Active?.total || 0,
-      gwp: map.Active?.gwp || 0,
-      colorClass: "bg-emerald-500",
-    },
-    {
-      key: "KYT",
-      label: t("statusKyt"),
-      value: map.KYT?.total || 0,
-      gwp: map.KYT?.gwp || 0,
-      colorClass: "bg-sky-500",
-    },
-    {
-      key: "IPT",
-      label: t("statusIpt"),
-      value: map.IPT?.total || 0,
-      gwp: map.IPT?.gwp || 0,
-      colorClass: "bg-amber-400",
-    },
-  ].map((entry) => ({
-    ...entry,
-    ratio: entry.value ? Math.max(6, Math.round((entry.value / total) * 100)) : 0,
-  }));
-});
-
-const maxTrendValue = computed(() => {
-  const values = commissionTrend.value.map((entry) => Number(entry.total_commission || 0));
-  return Math.max(1, ...values);
-});
-
-function trendPercent(currentValue, previousValue) {
-  const current = Number(currentValue || 0);
-  const previous = Number(previousValue || 0);
-  if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) return null;
-  return Number((((current - previous) / Math.abs(previous)) * 100).toFixed(1));
-}
-
-const renewalStatusSummary = computed(() => {
-  const serverRows = Array.isArray(dashboardTabSeries.value?.renewal_status) ? dashboardTabSeries.value.renewal_status : null;
-  if (serverRows) {
-    const counts = {
-      Open: 0,
-      "In Progress": 0,
-      Done: 0,
-      Cancelled: 0,
-    };
-    for (const row of serverRows) {
-      const rawKey = String(row?.status || "");
-      const key = rawKey === "Completed" ? "Done" : rawKey;
-      if (key in counts) counts[key] = Number(row?.total || 0);
-    }
-    const total = Object.values(counts).reduce((sum, value) => sum + value, 0) || 1;
-    return [
-      { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-amber-500" },
-      { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-sky-500" },
-      { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-emerald-500" },
-      { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-slate-400" },
-    ]
-      .filter((row) => row.value > 0 || isRenewalsTab.value)
-      .map((row) => ({
-        ...row,
-        ratio: row.value ? Math.max(6, Math.round((row.value / total) * 100)) : 0,
-      }));
-  }
-  const counts = {
-    Open: 0,
-    "In Progress": 0,
-    Done: 0,
-    Cancelled: 0,
-  };
-  for (const task of renewalTasks.value) {
-    const rawStatus = String(task?.status || "");
-    const status = rawStatus === "Completed" ? "Done" : rawStatus;
-    if (status in counts) counts[status] += 1;
-  }
-  const total = Object.values(counts).reduce((sum, value) => sum + value, 0) || 1;
-  return [
-    { key: "Open", label: t("open"), value: counts.Open, colorClass: "bg-amber-500" },
-    { key: "In Progress", label: t("statusInProgress"), value: counts["In Progress"], colorClass: "bg-sky-500" },
-    { key: "Done", label: t("statusCompleted"), value: counts.Done, colorClass: "bg-emerald-500" },
-    { key: "Cancelled", label: t("statusCancelled"), value: counts.Cancelled, colorClass: "bg-slate-400" },
-  ]
-    .filter((row) => row.value > 0 || isRenewalsTab.value)
-    .map((row) => ({
-      ...row,
-      ratio: row.value ? Math.max(6, Math.round((row.value / total) * 100)) : 0,
-    }));
-});
-
-const collectionPaymentStatusSummary = computed(() => {
-  const rows = Array.isArray(dashboardTabSeries.value?.payment_status) ? dashboardTabSeries.value.payment_status : [];
-  const totalsByStatus = {};
-  for (const row of rows) {
-    totalsByStatus[String(row?.status || "")] = Number(row?.total || 0);
-  }
-  const total = Object.values(totalsByStatus).reduce((sum, value) => sum + Number(value || 0), 0) || 1;
-  const order = ["Draft", "Paid", "Cancelled"];
-  const colorMap = {
-    Draft: "bg-amber-500",
-    Paid: "bg-emerald-500",
-    Cancelled: "bg-slate-400",
-  };
-  return order
-    .map((status) => ({
-      key: status,
-      label: paymentStatusLabel(status),
-      value: Number(totalsByStatus[status] || 0),
-      colorClass: colorMap[status] || "bg-slate-400",
-    }))
-    .filter((row) => row.value > 0)
-    .map((row) => ({
-      ...row,
-      ratio: row.value ? Math.max(6, Math.round((row.value / total) * 100)) : 0,
-    }));
-});
-
-const collectionPaymentDirectionSummary = computed(() => {
-  const rows = Array.isArray(dashboardTabSeries.value?.payment_direction) ? dashboardTabSeries.value.payment_direction : [];
-  const map = {};
-  for (const row of rows) {
-    const key = String(row?.payment_direction || "");
-    map[key] = {
-      total: Number(row?.total || 0),
-      paidAmount: Number(row?.paid_amount_try || 0),
-    };
-  }
-  const totalRows = Object.values(map).reduce((sum, item) => sum + Number(item?.total || 0), 0) || 1;
-  const order = ["Inbound", "Outbound"];
-  const colorMap = {
-    Inbound: "bg-sky-500",
-    Outbound: "bg-fuchsia-500",
-  };
-  return order
-    .map((direction) => ({
-      key: direction,
-      label: paymentDirectionLabel(direction),
-      value: Number(map[direction]?.total || 0),
-      paidAmount: Number(map[direction]?.paidAmount || 0),
-      colorClass: colorMap[direction] || "bg-slate-400",
-    }))
-    .filter((row) => row.value > 0)
-    .map((row) => ({
-      ...row,
-      ratio: row.value ? Math.max(6, Math.round((row.value / totalRows) * 100)) : 0,
-    }));
-});
-
-const collectionRiskRows = computed(() => {
-  const grouped = new Map();
-  const pushPayment = (payment, bucket) => {
-    const customer = cstr(payment?.customer);
-    const policy = cstr(payment?.policy);
-    const key = `${customer}::${policy}`;
-    const current = grouped.get(key) || {
-      key,
-      customer,
-      policy,
-      overdueCount: 0,
-      dueTodayCount: 0,
-      overdueAmount: 0,
-    };
-    if (bucket === "overdue") {
-      current.overdueCount += 1;
-      current.overdueAmount += Number(payment?.amount_try || 0);
-    } else {
-      current.dueTodayCount += 1;
-    }
-    grouped.set(key, current);
-  };
-
-  for (const payment of overdueCollectionPayments.value) pushPayment(payment, "overdue");
-  for (const payment of dueTodayCollectionPayments.value) pushPayment(payment, "due_today");
-
-  return Array.from(grouped.values())
-    .map((row) => {
-      const score = row.overdueCount * 3 + row.dueTodayCount + Math.min(4, Math.ceil(row.overdueAmount / 5000));
-      return {
-        ...row,
-        score,
-        title: row.policy || row.customer || "-",
-        description: `${riskLevelLabel(score)} · ${row.customer || row.policy || "-"}`,
-      };
-    })
-    .filter((row) => row.score > 0)
-    .sort((left, right) => {
-      if (right.score !== left.score) return right.score - left.score;
-      if (right.overdueAmount !== left.overdueAmount) return right.overdueAmount - left.overdueAmount;
-      return right.overdueCount - left.overdueCount;
-    });
-});
-
-const renewalRetentionRate = computed(() => Number(dashboardTabSeries.value?.renewal_retention?.rate || 0));
-
-const renewalOutcomeSummary = computed(() => {
-  const retention = dashboardTabSeries.value?.renewal_retention || {};
-  const rows = [
-    {
-      key: "renewed",
-      label: t("outcomeRenewed"),
-      value: Number(retention?.renewed || 0),
-      colorClass: "bg-emerald-500",
-    },
-    {
-      key: "lost",
-      label: t("outcomeLost"),
-      value: Number(retention?.lost || 0),
-      colorClass: "bg-amber-500",
-    },
-    {
-      key: "cancelled",
-      label: t("outcomeCancelled"),
-      value: Number(retention?.cancelled || 0),
-      colorClass: "bg-slate-400",
-    },
-  ].filter((row) => row.value > 0);
-  const total = rows.reduce((sum, row) => sum + row.value, 0) || 1;
-  return rows.map((row) => ({
-    ...row,
-    ratio: row.value ? Math.max(6, Math.round((row.value / total) * 100)) : 0,
-  }));
-});
-
-function buildKpiParams() {
-  const range = getDateRange(selectedRange.value);
-  return withOfficeBranchFilter({
-    filters: {
-      from_date: formatDate(range.from),
-      to_date: formatDate(range.to),
-      period_comparison: "previous_period",
-      months: 6,
-    },
-  });
-}
-
-function buildTabPayloadParams(tabKey = activeDashboardTab.value) {
-  const normalizedTab = normalizeDashboardTab(tabKey);
-  const currentRange = getDateRange(selectedRange.value);
-  const previousRange = getPreviousDateRange(selectedRange.value);
-  return withOfficeBranchFilter({
-    tab: normalizedTab,
-    filters: {
-      from_date: formatDate(currentRange.from),
-      to_date: formatDate(currentRange.to),
-      compare_from_date: formatDate(previousRange.from),
-      compare_to_date: formatDate(previousRange.to),
-      months: 6,
-    },
-  });
-}
-
-function withOfficeBranchFilter(params) {
-  const officeBranch = branchStore.requestBranch;
-  if (!officeBranch) {
-    return params;
-  }
-  const next = { ...(params || {}) };
-  next.office_branch = officeBranch;
-  const filters = { ...(next.filters || {}) };
-  filters.office_branch = officeBranch;
-  next.filters = filters;
-  return next;
-}
-
-function getDateRange(days) {
-  const to = new Date();
-  const from = new Date(to);
-  from.setDate(to.getDate() - days);
-  return { from, to };
-}
-
-function getPreviousDateRange(days) {
-  const current = getDateRange(days);
-  const to = new Date(current.from);
-  to.setDate(to.getDate() - 1);
-  const from = new Date(to);
-  from.setDate(to.getDate() - days);
-  return { from, to };
-}
-
-function buildQuickStatCard({ key, title, value, current, previous, icon, reverseTrend = false, trendHint }) {
-  const trend = buildTrend(current, previous, reverseTrend);
-  return {
-    key,
-    title,
-    value,
-    trendText: trend.text,
-    trendClass: trend.className,
-    trendHint: trendHint || dashboardComparisonTrendHint.value,
-    icon,
-  };
-}
-
-function buildTrend(currentValue, previousValue, reverseTrend = false) {
-  const current = Number(currentValue || 0);
-  const previous = Number(previousValue || 0);
-  if (!previous && !current) {
-    return { text: "0%", className: "text-slate-500" };
-  }
-  if (!previous && current) {
-    return {
-      text: "+100%",
-      className: reverseTrend ? "text-amber-700" : "text-emerald-600",
-    };
-  }
-
-  const rawPercent = ((current - previous) / Math.abs(previous)) * 100;
-  const rounded = Math.round(rawPercent * 10) / 10;
-  const positive = reverseTrend ? rounded <= 0 : rounded >= 0;
-  const sign = rounded > 0 ? "+" : "";
-  return {
-    text: `${sign}${new Intl.NumberFormat(localeCode.value, { maximumFractionDigits: 1 }).format(rounded)}%`,
-    className: positive ? "text-emerald-600" : "text-amber-700",
-  };
-}
-
-function formatDate(dateValue) {
-  if (!dateValue) return "-";
-  const date = new Date(dateValue);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function formatMonthKey(monthKey) {
-  if (!monthKey) return "-";
-  const [year, month] = monthKey.split("-");
-  if (!year || !month) return monthKey;
-  const date = new Date(Number(year), Number(month) - 1, 1);
-  return new Intl.DateTimeFormat(localeCode.value, { month: "short", year: "2-digit" }).format(date);
-}
-
-function formatNumber(value) {
-  return new Intl.NumberFormat(localeCode.value).format(Number(value || 0));
-}
-
-function formatCurrency(value) {
-  return formatCurrencyBy(value, "TRY");
-}
-
-function formatCurrencyBy(value, currency) {
-  return new Intl.NumberFormat(localeCode.value, {
-    style: "currency",
-    currency: currency || "TRY",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function topCompanyFacts(company) {
-  return [
-    {
-      key: "policyCount",
-      label: t("policyCount"),
-      value: formatNumber(company?.policy_count),
-      valueClass: "text-xs text-slate-500",
-    },
-    {
-      key: "grossProduction",
-      label: t("grossProduction"),
-      value: formatCurrency(company?.total_gwp_try),
-      valueClass: "text-xs text-slate-500",
-    },
-  ];
-}
-
-function renewalTaskFacts(task) {
-  return [
-    {
-      key: "dueDate",
-      label: t("dueDate"),
-      value: formatDate(task?.due_date),
-      valueClass: "text-xs text-slate-500",
-    },
-  ];
-}
-
-function renewalTaskFactsDetailed(task) {
-  return [
-    {
-      key: "dueDate",
-      label: t("dueDate"),
-      value: formatDate(task?.due_date),
-      valueClass: "text-xs text-slate-500",
-    },
-    {
-      key: "renewalDate",
-      label: t("renewalDate"),
-      value: formatDate(task?.renewal_date),
-      valueClass: "text-xs text-slate-500",
-    },
-  ];
-}
-
-function renewalAlertFacts(task) {
-  return [
-    { label: t("dueDate"), value: formatDate(task.due_date) },
-    { label: t("renewalDate"), value: formatDate(task.renewal_date) },
-  ];
-}
-
-function dashboardPaymentFacts(payment) {
-  return [
-    {
-      key: "dueDate",
-      label: t("dueDate"),
-      value: formatDate(payment?.due_date || payment?.payment_date),
-      valueClass: "text-xs text-slate-500",
-    },
-    {
-      key: "customer",
-      label: t("customer"),
-      value: payment?.customer || "-",
-      valueClass: "text-xs text-slate-500",
-    },
-    {
-      key: "policy",
-      label: t("policyLabel"),
-      value: payment?.policy || "-",
-      valueClass: "text-xs text-slate-500",
-    },
-  ];
-}
-
-function dashboardReconciliationFacts(row) {
-  return [
-    {
-      key: "type",
-      label: t("reconciliationType"),
-      value: row?.mismatch_type || "-",
-      valueClass: "text-xs text-slate-500",
-    },
-    {
-      key: "difference",
-      label: t("difference"),
-      value: formatCurrency(row?.difference_try || 0),
-      valueClass: "text-xs text-slate-500",
-    },
-  ];
-}
-
-function followUpTitle(item) {
-  return item?.source_name || "-";
-}
-
-function followUpDescription(item) {
-  const delta = Number(item?.days_delta ?? 0);
-  if (delta < 0) return `${t("followUpDeltaOverdue")} ${Math.abs(delta)} ${t("followUpDeltaDays")}`;
-  if (delta === 0) return t("followUpDeltaToday");
-  return `${delta} ${t("followUpDeltaDays")}`;
-}
-
-function followUpFacts(item) {
-  return [
-    { label: t("customer"), value: item?.customer || "-" },
-    { label: t("status"), value: item?.status || "-" },
-    { label: t("followUpDate"), value: formatDate(item?.follow_up_on) },
-    ...(item?.assigned_to ? [{ label: t("followUpAssignee"), value: item.assigned_to }] : []),
-  ];
-}
-
-function openFollowUpItem(item) {
-  const sourceType = String(item?.source_type || "");
-  const sourceName = String(item?.source_name || "");
-  if (!sourceName) {
-    return;
-  }
-  if (sourceType === "claim") {
-    router.push({ name: "claims-board", query: { claim: sourceName } });
-    return;
-  }
-  if (sourceType === "renewal") {
-    router.push({ name: "renewals-board", query: { task: sourceName } });
-    return;
-  }
-  if (sourceType === "assignment" || sourceType === "call_note") {
-    router.push({
-      name: "communication-center",
-      query: {
-        reference_doctype: sourceType === "assignment" ? "AT Ownership Assignment" : "AT Call Note",
-        reference_name: sourceName,
-      },
-    });
-    return;
-  }
-}
-
-function taskFacts(task) {
-  return [
-    { label: t("taskType"), value: task?.task_type || "-" },
-    { label: t("taskAssignee"), value: task?.assigned_to || "-" },
-    { label: t("dueDate"), value: formatDate(task?.due_date) },
-  ];
-}
-
-function openTaskItem(task) {
-  if (!task?.name) return;
-  router.push({ name: "tasks-detail", params: { name: task.name } });
-}
-
-function activityFacts(activity) {
-  return [
-    { label: t("activityType"), value: activity?.activity_type || "-" },
-    { label: t("taskAssignee"), value: activity?.assigned_to || "-" },
-    { label: t("activityAt"), value: formatDate(activity?.activity_at) },
-  ];
-}
-
-function claimFacts(claim) {
-  return [
-    { label: t("customer"), value: claim?.customer || "-" },
-    { label: t("policyLabel"), value: claim?.policy || "-" },
-    { label: t("status"), value: claim?.claim_status || "-" },
-  ];
-}
-
-function reminderFacts(reminder) {
-  return [
-    { label: t("customer"), value: reminder?.customer || "-" },
-    { label: t("policyLabel"), value: reminder?.policy || "-" },
-    { label: t("claimLabel"), value: reminder?.claim || "-" },
-    { label: t("taskAssignee"), value: reminder?.assigned_to || "-" },
-    { label: t("date"), value: formatDate(reminder?.remind_at) },
-  ].filter((item) => item.value && item.value !== "-");
-}
-
-function paymentStatusLabel(status) {
-  const normalized = cstr(status);
-  if (normalized === "Draft") return t("draft");
-  if (normalized === "Paid") return t("statusPaid");
-  if (normalized === "Cancelled") return t("statusCancelled");
-  if (normalized === "Open") return t("open");
-  return normalized || "-";
-}
-
-function paymentDirectionLabel(direction) {
-  const normalized = cstr(direction);
-  if (normalized === "Inbound") return t("paymentDirectionInbound");
-  if (normalized === "Outbound") return t("paymentDirectionOutbound");
-  return normalized || "-";
-}
-
-function riskLevelLabel(score) {
-  const numericScore = Number(score || 0);
-  if (numericScore >= 6) return t("riskLevelHigh");
-  if (numericScore >= 3) return t("riskLevelMedium");
-  return t("riskLevelLow");
-}
-
-function collectionRiskFacts(row) {
-  return [
-    { label: t("riskScore"), value: formatNumber(row?.score || 0) },
-    { label: t("overdueCount"), value: formatNumber(row?.overdueCount || 0) },
-    { label: t("dueTodayCount"), value: formatNumber(row?.dueTodayCount || 0) },
-    { label: t("riskOverdueAmount"), value: formatCurrency(row?.overdueAmount || 0) },
-  ];
-}
-
-function openCollectionRiskItem(row) {
-  const queryValue = cstr(row?.policy) || cstr(row?.customer);
-  if (!queryValue) {
-    openPreviewList("payments");
-    return;
-  }
-  router.push({ name: "payments-board", query: { query: queryValue } });
-}
-
-function openActivityItem(activity) {
-  if (!activity?.name) return;
-  router.push({ name: "activities-detail", params: { name: activity.name } });
-}
-
-function canCompleteReminder(reminder) {
-  return cstr(reminder?.status) === "Open";
-}
-
-function canCancelReminder(reminder) {
-  return cstr(reminder?.status) === "Open";
-}
-
-async function updateReminderStatus(reminder, nextStatus) {
-  if (!reminder?.name || !nextStatus) return;
-  await myTaskMutationResource.submit({
-    doctype: "AT Reminder",
-    name: reminder.name,
-    data: { status: nextStatus },
-  });
-  triggerDashboardReload({ immediate: true });
-}
-
-async function completeReminder(reminder) {
-  await updateReminderStatus(reminder, "Done");
-}
-
-async function cancelReminder(reminder) {
-  await updateReminderStatus(reminder, "Cancelled");
-}
-
-function canStartTask(task) {
-  return cstr(task?.status) === "Open";
-}
-
-function canBlockTask(task) {
-  return ["Open", "In Progress"].includes(cstr(task?.status));
-}
-
-function canCompleteTask(task) {
-  return ["Open", "In Progress", "Blocked"].includes(cstr(task?.status));
-}
-
-function canCancelTask(task) {
-  return ["Open", "In Progress", "Blocked"].includes(cstr(task?.status));
-}
-
-async function updateTaskStatus(task, nextStatus) {
-  if (!task?.name || !nextStatus) return;
-  await myTaskMutationResource.submit({
-    doctype: "AT Task",
-    name: task.name,
-    data: { status: nextStatus },
-  });
-  triggerDashboardReload({ immediate: true });
-}
-
-async function startTask(task) {
-  await updateTaskStatus(task, "In Progress");
-}
-
-async function blockTask(task) {
-  await updateTaskStatus(task, "Blocked");
-}
-
-async function completeTask(task) {
-  await updateTaskStatus(task, "Done");
-}
-
-async function cancelTask(task) {
-  await updateTaskStatus(task, "Cancelled");
-}
-
-function formatDaysToDue(dateValue) {
-  if (!dateValue) return "-";
-  const days = daysUntil(dateValue);
-  if (days == null) return "-";
-  if (days < 0) return `+${Math.abs(days)}d`;
-  return `${days}d`;
-}
-
-function daysUntil(dateValue) {
-  if (!dateValue) return null;
-  const due = new Date(dateValue);
-  if (Number.isNaN(due.getTime())) return null;
-  const today = new Date();
-  due.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-  return Math.round((due.getTime() - today.getTime()) / 86400000);
-}
-
-function compareDueDateAsc(leftDate, rightDate) {
-  const leftDays = daysUntil(leftDate);
-  const rightDays = daysUntil(rightDate);
-  const safeLeft = leftDays == null ? Number.POSITIVE_INFINITY : leftDays;
-  const safeRight = rightDays == null ? Number.POSITIVE_INFINITY : rightDays;
-  return safeLeft - safeRight;
-}
-
-function compareDateDesc(leftDate, rightDate) {
-  const leftTime = new Date(leftDate || 0).getTime();
-  const rightTime = new Date(rightDate || 0).getTime();
-  const safeLeft = Number.isFinite(leftTime) ? leftTime : 0;
-  const safeRight = Number.isFinite(rightTime) ? rightTime : 0;
-  return safeRight - safeLeft;
-}
-
-function normalizeLookupValue(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function trendRatio(value) {
-  const numericValue = Number(value || 0);
-  if (numericValue <= 0) return 0;
-  return Math.max(4, Math.round((numericValue / maxTrendValue.value) * 100));
-}
-
-function rangeLabel(days) {
-  return `${days}d`;
-}
-
-function setDashboardTab(tabKey) {
-  const nextTab = normalizeDashboardTab(tabKey);
-  const nextQuery = { ...route.query };
-  if (nextTab === "daily") {
-    delete nextQuery.tab;
-  } else {
-    nextQuery.tab = nextTab;
-  }
-  router.replace({ name: "dashboard", query: nextQuery });
-}
-
-function triggerDashboardReload({ includeKpis = true, immediate = false } = {}) {
-  const runReload = () => {
-    dashboardReloadTimer = null;
-    dashboardTabPayloadResource.params = buildTabPayloadParams();
-    dashboardTabPayloadResource.reload();
-    followUpResource.params = withOfficeBranchFilter({ filters: {} });
-    followUpResource.reload();
-    myActivitiesResource.params = withOfficeBranchFilter({ filters: {} });
-    myActivitiesResource.reload();
-    claimListResource.params = buildClaimListParams();
-    claimListResource.reload();
-    myRemindersResource.params = withOfficeBranchFilter({ filters: {} });
-    myRemindersResource.reload();
-    myTasksResource.params = withOfficeBranchFilter({ filters: {} });
-    myTasksResource.reload();
-    if (includeKpis) {
-      kpiResource.params = buildKpiParams();
-      kpiResource.reload();
-    }
-  };
-
-  if (immediate) {
-    if (dashboardReloadTimer) {
-      window.clearTimeout(dashboardReloadTimer);
-      dashboardReloadTimer = null;
-    }
-    runReload();
-    return;
-  }
-
-  if (dashboardReloadTimer) {
-    window.clearTimeout(dashboardReloadTimer);
-  }
-  dashboardReloadTimer = window.setTimeout(runReload, DASHBOARD_RELOAD_DEBOUNCE_MS);
-}
-
-function applyRange(days) {
-  selectedRange.value = days;
-  triggerDashboardReload();
-}
-
-function resetLeadForm() {
-  leadDialogError.value = "";
-  Object.keys(leadDialogFieldErrors).forEach((key) => delete leadDialogFieldErrors[key]);
-  newLead.customer = "";
-  newLead.queryText = "";
-  newLead.customerOption = null;
-  newLead.createCustomerMode = false;
-  newLead.customer_type = "Individual";
-  newLead.tax_id = "";
-  newLead.phone = "";
-  newLead.email = "";
-  newLead.estimated_gross_premium = "";
-  newLead.notes = "";
-}
-
-function openLeadDialog() {
-  resetLeadForm();
-  showLeadDialog.value = true;
-}
-
-function openClaimItem(claim) {
-  if (!claim?.name) return;
-  router.push({ name: "claim-detail", params: { name: claim.name } });
-}
-
-function openPolicyItem(policy) {
-  if (!policy?.name) return;
-  router.push({ name: "policy-detail", params: { name: policy.name } });
-}
-
-function openRenewalTaskItem(task) {
-  if (!task?.name) return;
-  router.push({ name: "renewals-board", query: { task: task.name } });
-}
-
-function openPaymentItem(payment) {
-  const paymentQuery = String(payment?.payment_no || payment?.name || "").trim();
-  if (!paymentQuery) return;
-  router.push({ name: "payments-board", query: { query: paymentQuery } });
-}
-
-function openReconciliationItem(row) {
-  const sourceQuery = String(row?.source_name || row?.name || "").trim();
-  if (!sourceQuery) return;
-  router.push({
-    name: "reconciliation-workbench",
-    query: {
-      sourceQuery,
-      ...(row?.status ? { status: row.status } : {}),
-    },
-  });
-}
-
-function openPreviewList(target) {
-  switch (target) {
-    case "policies":
-      openPage("/policies");
-      return;
-    case "offers":
-      openPage("/offers");
-      return;
-    case "renewals":
-      openPage("/renewals");
-      return;
-    case "companies":
-      openPage("/insurance-companies");
-      return;
-    case "payments":
-      openPage("/payments");
-      return;
-    case "claims":
-      openPage("/claims");
-      return;
-    case "reconciliation":
-      openPage("/reconciliation-items");
-      return;
-    case "leads":
-      openPage("/leads");
-      return;
-    case "tasks":
-      router.push({ name: "tasks-list" });
-      return;
-    case "activities":
-      router.push({ name: "activities-list" });
-      return;
-    case "reminders":
-      router.push({ name: "reminders-list" });
-      return;
-    default:
-      return;
-  }
-}
-
-async function createLead() {
-  try {
-    leadDialogError.value = "";
-    Object.keys(leadDialogFieldErrors).forEach((key) => delete leadDialogFieldErrors[key]);
-    const selectedCustomer = String(newLead.customer || "").trim();
-    const shouldCreateCustomer = !selectedCustomer && Boolean(newLead.createCustomerMode);
-    const fullName = String(newLead.queryText || "").trim();
-    const customerType = normalizeCustomerType(newLead.customer_type, newLead.tax_id);
-    const identityNumber = normalizeIdentityNumber(newLead.tax_id);
-    if (!selectedCustomer && !shouldCreateCustomer) {
-      leadDialogFieldErrors.customer =
-        activeLocale.value === "tr"
-          ? "Bir müşteri seçin veya yeni müşteri ekleyin."
-          : "Select a customer or add a new customer.";
-      leadDialogError.value = activeLocale.value === "tr" ? "Müşteri alanını tamamlayın." : "Complete the customer section.";
-      return;
-    }
-    if (shouldCreateCustomer && !fullName) {
-      leadDialogFieldErrors.customer =
-        activeLocale.value === "tr" ? "Yeni müşteri adı gerekli." : "New customer name is required.";
-      leadDialogError.value = activeLocale.value === "tr" ? "Müşteri alanını tamamlayın." : "Complete the customer section.";
-      return;
-    }
-    if (shouldCreateCustomer) {
-      if (customerType === "Corporate") {
-        if (identityNumber.length !== 10) {
-          leadDialogFieldErrors.tax_id = t("validationTaxNumberLength");
-          leadDialogError.value = t("validationTaxNumberLength");
-          return;
-        }
-      } else if (identityNumber.length !== 11) {
-        leadDialogFieldErrors.tax_id = t("validationTcLength");
-        leadDialogError.value = t("validationTcLength");
-        return;
-      } else if (!isValidTckn(identityNumber)) {
-        leadDialogFieldErrors.tax_id = t("validationTcInvalid");
-        leadDialogError.value = t("validationTcInvalid");
-        return;
-      }
-    }
-
-    isSubmitting.value = true;
-    await createLeadResource.submit({
-      full_name: fullName || null,
-      customer: selectedCustomer || null,
-      customer_type: shouldCreateCustomer ? customerType : null,
-      tax_id: shouldCreateCustomer ? identityNumber : null,
-      phone: shouldCreateCustomer ? newLead.phone : null,
-      email: shouldCreateCustomer ? newLead.email : null,
-      estimated_gross_premium: Number(newLead.estimated_gross_premium || 0),
-      notes: newLead.notes,
-      status: "Open",
-    });
-    showLeadDialog.value = false;
-    resetLeadForm();
-    triggerDashboardReload({ immediate: true });
-  } catch (error) {
-    leadDialogError.value = error?.messages?.join(" ") || error?.message || t("loadError");
-  } finally {
-    isSubmitting.value = false;
-  }
-}
-
-function openPage(path) {
-  if (path === "/communication") {
-    router.push({
-      path,
-      query: {
-        return_to: route.fullPath || route.path || "",
-      },
-    });
-    return;
-  }
-  router.push(path);
-}
-
-function reloadData() {
-  triggerDashboardReload({ immediate: true });
-}
-
-function isPermissionDeniedError(error) {
-  const status = Number(
-    error?.statusCode ??
-      error?.status ??
-      error?.httpStatus ??
-      error?.response?.status ??
-      0
-  );
-  const text = String(error?.message || error?.messages?.join(" ") || error?.exc_type || "").toLowerCase();
-  return (
-    status === 401 ||
-    status === 403 ||
-    text.includes("permission") ||
-    text.includes("not permitted") ||
-    text.includes("not authorized")
-  );
-}
 
 watch(
   () => unref(kpiResource.data),
@@ -2447,12 +1354,5 @@ watch(
     triggerDashboardReload();
   }
 );
-
-onBeforeUnmount(() => {
-  if (dashboardReloadTimer) {
-    window.clearTimeout(dashboardReloadTimer);
-    dashboardReloadTimer = null;
-  }
-});
 </script>
 
