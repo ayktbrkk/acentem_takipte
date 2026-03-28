@@ -116,7 +116,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, unref, watch } from "vue";
+import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
@@ -742,6 +742,9 @@ function formatCount(value) {
 }
 
 applyPolicyPreset(policyPresetKey.value, { refresh: false });
+onMounted(() => {
+  void hydratePolicyPresetStateFromServer();
+});
 void refreshPolicyList();
 watch(
   () => branchStore.selected,
