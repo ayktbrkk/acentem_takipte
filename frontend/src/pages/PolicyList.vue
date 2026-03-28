@@ -319,10 +319,18 @@ const activeLocale = computed(() => unref(authStore.locale) || "en");
 const filters = policyStore.state.filters;
 const pagination = policyStore.state.pagination;
 
+function normalizePolicyListStatus(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) return "";
+  if (["active"].includes(raw)) return "active";
+  if (["kyt", "ipt", "waiting"].includes(raw)) return "waiting";
+  if (["cancel", "cancelled", "expired"].includes(raw)) return "cancel";
+  return raw;
+}
+
 const statusOptions = computed(() => [
-  { value: "Active", label: activeLocale.value === "tr" ? "Aktif" : "Active" },
-  { value: "KYT", label: "KYT" },
-  { value: "IPT", label: activeLocale.value === "tr" ? "İptal" : "Cancelled" },
+  { value: "active", label: activeLocale.value === "tr" ? "Aktif" : "Active" },
+  { value: "waiting", label: activeLocale.value === "tr" ? "Bekliyor" : "Waiting" },
 ]);
 
 const sortOptions = computed(() => [
@@ -397,8 +405,15 @@ const startRow = computed(() => policyStore.startRow);
 const endRow = computed(() => policyStore.endRow);
 const isInitialLoading = computed(() => policyStore.state.loading && rows.value.length === 0);
 const policyActiveFilterCount = computed(() => policyStore.activeFilterCount);
-const policyListPage = ref(1);
-const policyListPageSize = 20;
+const policyListHydratingPreset = ref(false);
+const policyListPage = computed({
+  get: () => Number(pagination.page || 1),
+  set: (value) => {
+    pagination.page = Number(value) || 1;
+    void refreshPolicyList();
+  },
+});
+const policyListPageSize = computed(() => Math.max(1, Number(pagination.pageLength || 20)));
 let persistPolicyPresetStateToServer = () => Promise.resolve();
 
 const {
@@ -490,7 +505,7 @@ const policyListFilteredRows = computed(() => {
 
     const matchesStatus =
       !policyListLocalFilters.status ||
-      String(row.status || "").toLocaleLowerCase(localeCode.value).includes(policyListLocalFilters.status);
+      normalizePolicyListStatus(row.status) === policyListLocalFilters.status;
 
     const matchesBranch = !policyListLocalFilters.branch || String(row.branch || "") === policyListLocalFilters.branch;
 
@@ -498,12 +513,9 @@ const policyListFilteredRows = computed(() => {
   });
 });
 
-const policyListTotalCount = computed(() => policyListFilteredRows.value.length);
-const policyListTotalPages = computed(() => Math.max(1, Math.ceil(policyListTotalCount.value / policyListPageSize)));
-const policyListPagedRows = computed(() => {
-  const start = (policyListPage.value - 1) * policyListPageSize;
-  return policyListFilteredRows.value.slice(start, start + policyListPageSize);
-});
+const policyListTotalCount = computed(() => Number(policyStore.state.pagination.total || policyListFilteredRows.value.length));
+const policyListTotalPages = computed(() => Math.max(1, Math.ceil(policyListTotalCount.value / policyListPageSize.value)));
+const policyListPagedRows = computed(() => policyListFilteredRows.value);
 const policyListRowsWithUrgency = computed(() =>
   policyListPagedRows.value.map((row) => ({
     ...row,
@@ -517,9 +529,9 @@ const policySummary = computed(() => {
   let totalPremium = 0;
 
   rowsAll.forEach((row) => {
-    const status = String(row.status || "").toLocaleLowerCase(localeCode.value);
-    if (status.includes("active")) active += 1;
-    if (status.includes("waiting") || status.includes("draft") || status.includes("kyt")) pending += 1;
+    const status = normalizePolicyListStatus(row.status);
+    if (status === "active") active += 1;
+    if (status === "waiting") pending += 1;
     totalPremium += Number(row.gwp_try || row.gross_premium || 0);
   });
 
@@ -743,9 +755,25 @@ function formatCount(value) {
 
 applyPolicyPreset(policyPresetKey.value, { refresh: false });
 onMounted(() => {
-  void hydratePolicyPresetStateFromServer();
+  void (async () => {
+    policyListHydratingPreset.value = true;
+    try {
+      await hydratePolicyPresetStateFromServer();
+    } finally {
+      policyListHydratingPreset.value = false;
+    }
+    await refreshPolicyList();
+  })();
 });
-void refreshPolicyList();
+watch(
+  () => pagination.pageLength,
+  () => {
+    if (policyListHydratingPreset.value) return;
+    pagination.page = 1;
+    void refreshPolicyList();
+  }
+);
+
 watch(
   () => branchStore.selected,
   () => {

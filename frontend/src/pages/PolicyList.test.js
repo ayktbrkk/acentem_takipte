@@ -19,6 +19,7 @@ const routeState = reactive({
 const routerPush = vi.fn();
 const routerReplace = vi.fn();
 const createdResources = [];
+const resourceCallSequence = [];
 
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
@@ -41,7 +42,7 @@ vi.mock("frappe-ui", () => ({
 
     if (url === "frappe.client.get_list" && config?.auto === false) {
       const data = ref([]);
-      return {
+      const resource = {
         data,
         loading: ref(false),
         error: ref(null),
@@ -49,51 +50,68 @@ vi.mock("frappe-ui", () => ({
         setData(payload) {
           data.value = payload;
         },
-        reload: vi.fn(async () => [
-          {
-            name: "POL-001",
-            policy_no: "TR-001",
-            customer: "CUST-001",
-            status: "Active",
-            gross_premium: 12000,
-            commission_amount: 1200,
-            gwp_try: 12000,
-          },
-          {
-            name: "POL-002",
-            policy_no: "TR-002",
-            customer: "CUST-002",
-            status: "KYT",
-            gross_premium: 8000,
-            commission_amount: 800,
-            gwp_try: 8000,
-          },
-        ]),
+        reload: vi.fn(async () => {
+          const label = resource.params?.doctype || config?.params?.doctype || "unknown";
+          resourceCallSequence.push(`get_list:${label}`);
+          return [
+            {
+              name: "POL-001",
+              policy_no: "TR-001",
+              customer: "CUST-001",
+              status: "Active",
+              gross_premium: 12000,
+              commission_amount: 1200,
+              gwp_try: 12000,
+            },
+            {
+              name: "POL-002",
+              policy_no: "TR-002",
+              customer: "CUST-002",
+              status: "KYT",
+              gross_premium: 8000,
+              commission_amount: 800,
+              gwp_try: 8000,
+            },
+          ];
+        }),
         submit: vi.fn(async () => ({})),
       };
+      createdResources.push({ config, resource });
+      return resource;
     }
 
     if (url === "frappe.client.get_count") {
-      return {
+      const resource = {
         data: ref(0),
         loading: ref(false),
         error: ref(null),
         params: {},
         setData: vi.fn(),
-        reload: vi.fn(async () => 2),
+        reload: vi.fn(async () => {
+          const label = resource.params?.doctype || config?.params?.doctype || "unknown";
+          resourceCallSequence.push(`get_count:${label}`);
+          return 2;
+        }),
         submit: vi.fn(async () => ({})),
       };
+      createdResources.push({ config, resource });
+      return resource;
     }
 
-    return {
+    const resource = {
       data: ref([]),
       loading: ref(false),
       error: ref(null),
       params: config?.params || {},
       setData: vi.fn(),
-      reload: vi.fn(async () => []),
+      reload: vi.fn(async () => {
+        resourceCallSequence.push(`reload:${url}`);
+        return [];
+      }),
       submit: vi.fn(async () => ({})),
     };
+    createdResources.push({ config, resource });
+    return resource;
   },
 }));
 
@@ -150,6 +168,8 @@ describe("PolicyList page store integration", () => {
 
     const policyStore = usePolicyStore();
     await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await nextTick();
 
     expect(policyStore.state.items).toHaveLength(2);
     expect(policyStore.state.pagination.total).toBe(2);
@@ -193,17 +213,21 @@ describe("PolicyList page store integration", () => {
     });
 
     const offerResource = createdResources.find(
-      (resource) => resource?.url === "frappe.client.get_list" && resource?.params?.doctype === "AT Offer"
+      (entry) => entry?.config?.url === "frappe.client.get_list" && entry?.config?.params?.doctype === "AT Offer"
     );
     const presetReadResource = createdResources.find(
-      (resource) => resource?.url === "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state"
+      (entry) => entry?.config?.url === "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state"
     );
     const presetWriteResource = createdResources.find(
-      (resource) => resource?.url === "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state"
+      (entry) => entry?.config?.url === "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state"
     );
 
-    expect(offerResource?.params?.filters).toEqual({ status: ["in", ["Sent", "Accepted"]] });
+    expect(offerResource?.config?.params?.filters).toEqual({ status: ["in", ["Sent", "Accepted"]] });
     expect(presetReadResource).toBeTruthy();
+    expect(presetReadResource?.resource?.reload).toHaveBeenCalledWith({ screen: "policy_list" });
+    expect(resourceCallSequence.indexOf("reload:acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state")).toBeLessThan(
+      resourceCallSequence.indexOf("get_list:AT Policy")
+    );
     expect(presetWriteResource).toBeTruthy();
   });
 });
