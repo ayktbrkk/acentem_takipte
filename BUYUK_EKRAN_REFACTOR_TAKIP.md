@@ -21,7 +21,7 @@
 | Öncelik | Ekran | Durum | Mevcut Hal | Yapılacak İş | Kabul Kriteri | Test Kriteri |
 |---------|-------|-------|------------|--------------|---------------|--------------|
 | 1 | `OfferBoard.vue` | `Tamamlandı` | Action bar, metrics, filter, list, pipeline, quick offer ve convert component'leri ayrıldı; liste preset/refresh/export, navigation, locale, resource/state, bootstrap, drag/drop ve liste state boundary'leri composable'lara taşındı; page dosyası shell seviyesine indi | - | Filter, conversion, route intent, dialog ve board render parçaları ayrı composable/component sınırlarında olur; page dosyası shell seviyesine indi | `npm run build` |
-| 2 | `CommunicationCenter.vue` | `Devam Ediyor` | State + campaign/segment/outbox akışları parçalanmaya başladı | Kalan state/view helperlarını ve UI bloklarını ayır; orchestration katmanını sadeleştir | Route/filter/snapshot orchestration composable'larda; campaign/segment/outbox alanları component'lerde olur | `npm run test:unit -- --run src/pages/CommunicationCenter.test.js` + `npm run build` |
+| 2 | `CommunicationCenter.vue` | `Tamamlandı` | State + campaign/segment/outbox akışları composable/component'lere ayrıldı; page shell seviyesine indi | - | Route/filter/snapshot orchestration composable'larda; campaign/segment/outbox alanları component'lerde olur | `npm run test:unit -- --run src/pages/CommunicationCenter.test.js` + `npm run build` |
 | 3 | `AuxRecordDetail.vue` | `Tamamlandı` | Runtime / summary / actions / quick-dialog split tamamlandı | Sayfa shell'i dışında iş mantığı bırakılmadı | `npm run test:unit -- --run src/pages/AuxRecordDetail.test.js src/composables/useAuxRecordDetailQuickDialogs.test.js` + `npm run build` |
 | 4 | `PolicyList.vue` | `Tamamlandı` | Action bar, metrics, filtre, tablo, quick-policy, runtime, table data ve actions composable/component'lerine ayrıldı; page shell seviyesine indi | - | Policy list ekranı action bar, filtre, tablo ve quick-policy boundary'leriyle ayrışmış olur | `npm run test:unit -- --run src/pages/PolicyList.test.js` + `npm run build` |
 | 5 | `PolicyDetail.vue` | `Tamamlandı` | Runtime / summary / quick-dialog / UI split tamamlandı | - | Detay ekranı veri hazırlama, aksiyonlar ve sunum component'leriyle ayrılır | `npm run test:unit -- --run src/pages/PolicyDetail.test.js` + `npm run build` |
@@ -70,11 +70,11 @@ Bu bölüm sayfa değil, ama büyük ve bölünebilir component'leri izlemek iç
 | Öncelik | Component | Durum | Yapılacak İş | Kabul Kriteri | Test Kriteri |
 |---------|-----------|-------|--------------|---------------|--------------|
 | 1 | `PolicyForm.vue` | `Tamamlandı` | Runtime composable ve step component'leri ayrıldı | Form alanları küçük subcomponent'lerle yönetilir | `src/components/PolicyForm.test.js` + `npm run build` |
-| 2 | `ScheduledReportsManager.vue` | `Tamamlanmadı` | Schedule-specific filter/action bloklarını böl | Schedule akışları shared config ile sadeleşir | `src/components/reports/ScheduledReportsManager.test.js` + build |
+| 2 | `ScheduledReportsManager.vue` | `Tamamlandı` | Schedule-specific filter/action blokları composable ve panel component'lerine taşındı; shell seviyesine indi | Schedule akışları shared config ile sadeleşir | `src/components/reports/ScheduledReportsManager.test.js` + `npm run build` |
 | 3 | `OfficeBranchSelect.vue` | `Tamamlandı` | Branch list/scope helperları composable'a taşındı; component shell seviyesine yaklaştı | Seçici bileşen shell + data helper sınırına iner | `src/components/app-shell/OfficeBranchSelect.test.js` + `npm run build` |
 | 4 | `QuickCreateFormRenderer.vue` | `Tamamlandı` | Field renderer logic'i composable'a taşındı; component shell seviyesine indi | Form renderer daha küçük field-type bileşenlerine bölünür | `src/components/app-shell/QuickCreateFormRenderer.test.js` + `npm run build` |
 | 5 | `QuickCustomerPicker.vue` | `Tamamlandı` | Picker logic'i composable'a taşındı; component shell seviyesine indi | Seçici bileşen temiz boundary'lere sahip olur | `src/components/app-shell/QuickCustomerPicker.test.js` + `npm run build` |
-| 6 | `Sidebar.vue` | `Tamamlanmadı` | Menü/section render bloklarını sadeleştir | Sidebar daha küçük sunum bileşenlerine ayrılır | Layout smoke + build |
+| 6 | `Sidebar.vue` | `Tamamlandı` | Menü/section render blokları composable ve panel component'lerine taşındı; shell seviyesine indi | Sidebar daha küçük sunum bileşenlerine ayrılır | `src/components/Sidebar.test.js` + `npm run build` |
 
 ---
 
