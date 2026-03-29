@@ -20,19 +20,19 @@
 - Modify: `frontend/src/pages/PolicyList.vue`
 - Modify: `frontend/src/pages/PolicyList.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```js
 // usePolicyListFilters.test.js
 // Assert preset key hydration, custom preset persistence, remote preset sync, and active filter count behavior.
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && npm run test:unit -- --run src/composables/usePolicyListFilters.test.js src/composables/usePolicyListPresetSync.test.js`
 Expected: FAIL because the composables do not exist yet.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```js
 // Extract preset state, custom preset list, local status/branch filters into `usePolicyListFilters`.
@@ -40,12 +40,12 @@ Expected: FAIL because the composables do not exist yet.
 // Keep the page API identical to the current template bindings.
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd frontend && npm run test:unit -- --run src/composables/usePolicyListFilters.test.js src/composables/usePolicyListPresetSync.test.js`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/composables/usePolicyListFilters.js frontend/src/composables/usePolicyListPresetSync.js frontend/src/composables/usePolicyListFilters.test.js frontend/src/composables/usePolicyListPresetSync.test.js frontend/src/pages/PolicyList.vue frontend/src/pages/PolicyList.test.js
@@ -64,7 +64,7 @@ git commit -m "refactor: extract PolicyList filter state"
 - Modify: `frontend/src/pages/PolicyList.vue`
 - Modify: `frontend/src/pages/PolicyList.test.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```js
 // Runtime: list refresh, pagination, export, office branch lookup payload.
@@ -72,14 +72,14 @@ git commit -m "refactor: extract PolicyList filter state"
 // Actions: detail navigation and row-level helpers.
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run:
 `cd frontend && npm run test:unit -- --run src/composables/usePolicyListRuntime.test.js src/composables/usePolicyListTableData.test.js src/composables/usePolicyListActions.test.js`
 
 Expected: FAIL because the composables do not exist yet.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```js
 // Move list refresh, export, route sync, and query builder helpers into runtime.
@@ -87,14 +87,14 @@ Expected: FAIL because the composables do not exist yet.
 // Move open detail and other policy entry actions into actions.
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run:
 `cd frontend && npm run test:unit -- --run src/composables/usePolicyListRuntime.test.js src/composables/usePolicyListTableData.test.js src/composables/usePolicyListActions.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/composables/usePolicyListRuntime.js frontend/src/composables/usePolicyListTableData.js frontend/src/composables/usePolicyListActions.js frontend/src/composables/usePolicyListRuntime.test.js frontend/src/composables/usePolicyListTableData.test.js frontend/src/composables/usePolicyListActions.test.js frontend/src/pages/PolicyList.vue frontend/src/pages/PolicyList.test.js
@@ -109,29 +109,29 @@ git commit -m "refactor: extract PolicyList runtime and table logic"
 - Modify: `frontend/src/pages/PolicyList.vue`
 - Modify: `frontend/src/pages/PolicyList.test.js`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```js
 // Assert dialog visibility, source-offer handling, cancel/reset, and submit hooks.
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd frontend && npm run test:unit -- --run src/composables/usePolicyListQuickPolicy.test.js`
 Expected: FAIL because the composable does not exist yet.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```js
 // Delegate to the existing quick policy runtime, but keep PolicyList-specific dialog state here.
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd frontend && npm run test:unit -- --run src/composables/usePolicyListQuickPolicy.test.js`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/composables/usePolicyListQuickPolicy.js frontend/src/composables/usePolicyListQuickPolicy.test.js frontend/src/pages/PolicyList.vue frontend/src/pages/PolicyList.test.js
@@ -149,29 +149,29 @@ git commit -m "refactor: extract PolicyList quick policy flow"
 - Modify: `frontend/src/pages/PolicyList.vue`
 - Modify: `frontend/src/pages/PolicyList.test.js`
 
-- [ ] **Step 1: Write the failing page/component tests**
+- [x] **Step 1: Write the failing page/component tests**
 
 ```js
 // Assert the page still renders the action bar, metrics, filters, table, and quick policy dialog.
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd frontend && npm run test:unit -- --run src/pages/PolicyList.test.js`
 Expected: FAIL until the page shell is rewired.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```vue
 <!-- Replace inline template blocks with focused components. Keep props and emits explicit. -->
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd frontend && npm run test:unit -- --run src/pages/PolicyList.test.js`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/policy-list frontend/src/pages/PolicyList.vue frontend/src/pages/PolicyList.test.js
@@ -185,30 +185,30 @@ git commit -m "refactor: split PolicyList UI into sections"
 - Modify: `BUYUK_EKRAN_REFACTOR_TAKIP.md`
 - Modify: `docs/superpowers/plans/2026-03-29-policylist-full-split.md` if any scope changes were needed during implementation
 
-- [ ] **Step 1: Run the focused tests**
+- [x] **Step 1: Run the focused tests**
 
 Run:
 `cd frontend && npm run test:unit -- --run src/composables/usePolicyListFilters.test.js src/composables/usePolicyListPresetSync.test.js src/composables/usePolicyListRuntime.test.js src/composables/usePolicyListTableData.test.js src/composables/usePolicyListActions.test.js src/composables/usePolicyListQuickPolicy.test.js src/pages/PolicyList.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 2: Run the build**
+- [x] **Step 2: Run the build**
 
 Run: `cd frontend && npm run build`
 Expected: PASS.
 
-- [ ] **Step 3: Run diff hygiene**
+- [x] **Step 3: Run diff hygiene**
 
 Run: `git diff --check`
 Expected: PASS with no new whitespace errors.
 
-- [ ] **Step 4: Update the tracker**
+- [x] **Step 4: Update the tracker**
 
 ```md
 Mark `PolicyList` as complete in `BUYUK_EKRAN_REFACTOR_TAKIP.md`.
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add BUYUK_EKRAN_REFACTOR_TAKIP.md docs/superpowers/plans/2026-03-29-policylist-full-split.md
