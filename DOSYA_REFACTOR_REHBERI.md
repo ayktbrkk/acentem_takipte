@@ -711,6 +711,162 @@ Yeni bir büyük ekran açılırsa:
 
 Bu sıra dışına çıkma; ancak canlı bug fix varsa önce bug fix sonra bölme yap.
 
+## Pratik Kataloglar
+
+Bu bölüm, ileride gelen agent'ın hızlı ilerlemesi için hazır kalıplar içerir.
+
+### Örnek Commit Mesajları
+
+Tercih edilen format:
+
+- `refactor: split <Feature> runtime`
+- `refactor: split <Feature> UI sections`
+- `refactor: extract <Feature> table logic`
+- `refactor: move <Feature> summary helpers`
+- `fix: restore <Feature> live behavior`
+- `docs: update refactor handbook`
+- `docs: mark <Feature> complete in backlog`
+
+İyi commit mesajı özellikleri:
+
+- kısa
+- tek amaçlı
+- hangi sınırın değiştiğini söyler
+- testten önce değil, testten sonra atılır
+
+### Örnek Test Komutları
+
+Sık kullanılan komut formatı:
+
+```bash
+cd frontend && npm run test:unit -- --run src/pages/PolicyList.test.js
+cd frontend && npm run test:unit -- --run src/composables/usePolicyListFilters.test.js src/composables/usePolicyListTableData.test.js
+cd frontend && npm run build
+cd frontend && npx vitest run src/components/Sidebar.test.js --reporter verbose
+```
+
+Playwright smoke örnekleri:
+
+```bash
+cd frontend && npx playwright test at-smoke.spec.js
+cd frontend && npx playwright test --grep "OfferBoard"
+```
+
+Beklenen sıra:
+
+1. unit test
+2. build
+3. gerekiyorsa Playwright smoke
+
+### Sık Görülen Hata Türleri
+
+#### 1. `ReferenceError` / isim uyuşmazlığı
+
+Belirti:
+
+- component setup aşamasında patlar
+- build bazen geçer ama runtime kırılır
+
+Çözüm:
+
+- destructure edilen isimleri kontrol et
+- composable return değerlerini doğrula
+- gerekirse alias ekle
+
+#### 2. Boş ekran / veri gelmiyor
+
+Belirti:
+
+- sayfa render oluyor ama içerik yok
+- metrics / table boş
+
+Çözüm:
+
+- route parametresi doğru mu
+- fetch/resource çalışıyor mu
+- preset / query state doğru mu
+- backend payload beklenen alanları döndürüyor mu
+
+#### 3. Yetki / alan erişim hatası
+
+Belirti:
+
+- `field permission` veya `cannot read property` tarzı hata
+
+Çözüm:
+
+- backend query alanlarını kontrol et
+- gereksiz kolonları kaldır
+- izinli fallback alanı ekle
+
+#### 4. Log truncation / uzun hata mesajı
+
+Belirti:
+
+- error log kaydı kesiliyor
+- backend loglama mekanizması ikinci bir hataya yol açıyor
+
+Çözüm:
+
+- log mesajlarını kısalt
+- gerekiyorsa redaction / fallback ekle
+
+#### 5. Test sırası bozulması
+
+Belirti:
+
+- resource mock sırası veya watcher davranışı yüzünden testler kırılıyor
+
+Çözüm:
+
+- resource creation sırasını page ile hizala
+- test double'larını güncelle
+- mümkünse daha küçük composable testleri yaz
+
+### Agent İçin Hızlı Kontrol Listesi
+
+Yeni bir düzenleme yapmadan önce:
+
+- tracker satırını oku
+- ilgili page/component dosyasını bul
+- mevcut composable/component sınırını haritala
+- canlıda bug mı, refactor mı olduğuna karar ver
+- test planını belirle
+- en küçük değişiklikten başla
+
+### Bir Dosya Ne Zaman Bölünmeli?
+
+Bir dosya aşağıdakilerden birini yapıyorsa bölünmeye adaydır:
+
+- iki veya daha fazla bağımsız state taşıyorsa
+- hem veri hazırlıyor hem render yapıyorsa
+- aynı helper'lar farklı sayfalarda tekrar ediyorsa
+- test yazmak zorlaşıyorsa
+- runtime ve UI aynı dosyada yığılmışsa
+
+### Bölme Sonrası Beklenen Sonuç
+
+İyi bir bölme sonrası:
+
+- page shell kısa kalır
+- composable'lar davranışı açıklar
+- component'ler görünümü açıklar
+- utils saf dönüşümlerle sınırlı kalır
+- tracker ve commit tarihi işin izini taşır
+
+### Yeni Agent İçin Çalışma Talimatı
+
+Bu dosyayı açan agent şu sırayla ilerlemeli:
+
+1. En üstteki repo özetini oku.
+2. Mantık şemasını anla.
+3. Tracker'daki açık satırları gör.
+4. İlgili page için runtime/UI/helper sınırı seç.
+5. Küçük bir chunk çıkar.
+6. Test et, build et, gerekiyorsa smoke et.
+7. Tracker'ı güncelle.
+8. Commit/push/checkpoint yap.
+
 ---
 
 Bu dosya yaşayan bir rehberdir.  
