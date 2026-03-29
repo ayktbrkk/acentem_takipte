@@ -7,304 +7,100 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <ActionButton variant="secondary" size="sm" @click="openImportDialog">
-        {{ t("importStatement") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Matched')">
-        {{ bulkActionLoading ? t("bulkResolving") : t("bulkResolve") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" :disabled="bulkActionLoading || openRowCount === 0" @click="runBulkResolution('Ignored')">
-        {{ bulkActionLoading ? t("bulkIgnoring") : t("bulkIgnore") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" :disabled="syncing" @click="runSync">
-        {{ syncing ? t("syncing") : t("sync") }}
-      </ActionButton>
-      <ActionButton variant="primary" size="sm" :disabled="reconciling" @click="runReconciliation">
-        {{ reconciling ? t("reconciling") : t("reconcile") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
-        {{ t("refresh") }}
-      </ActionButton>
-      <ActionButton
-        variant="secondary"
-        size="sm"
-        :disabled="workbenchLoading"
-        @click="downloadReconciliationExport('xlsx')"
-      >
-        {{ t("exportXlsx") }}
-      </ActionButton>
-      <ActionButton
-        variant="primary"
-        size="sm"
-        :disabled="workbenchLoading"
-        @click="downloadReconciliationExport('pdf')"
-      >
-        {{ t("exportPdf") }}
-      </ActionButton>
+      <ReconciliationWorkbenchActionBar
+        :t="t"
+        :syncing="syncing"
+        :reconciling="reconciling"
+        :bulk-action-loading="bulkActionLoading"
+        :open-row-count="openRowCount"
+        :workbench-loading="workbenchLoading"
+        @open-import="openImportDialog"
+        @bulk-resolve="runBulkResolution('Matched')"
+        @bulk-ignore="runBulkResolution('Ignored')"
+        @sync="runSync"
+        @reconcile="runReconciliation"
+        @refresh="reloadWorkbench"
+        @export-xlsx="downloadReconciliationExport('xlsx')"
+        @export-pdf="downloadReconciliationExport('pdf')"
+      />
     </template>
 
     <template #metrics>
-      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-          <p class="mini-metric-value">{{ reconciliationSummary.total }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryMatched") }}</p>
-          <p class="mini-metric-value text-emerald-600">{{ reconciliationSummary.matched }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryPending") }}</p>
-          <p class="mini-metric-value text-amber-600">{{ reconciliationSummary.pending }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryMismatch") }}</p>
-          <p class="mini-metric-value text-amber-700">{{ reconciliationSummary.mismatch }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryDifference") }}</p>
-          <p class="mini-metric-value text-sky-600">{{ formatMoney(reconciliationSummary.totalDifference) }}</p>
-        </div>
-      </div>
+      <ReconciliationWorkbenchMetricsPanel :t="t" :summary="reconciliationSummary" :format-money="formatMoney" />
     </template>
 
     <div v-if="operationError" class="qc-error-banner" role="alert" aria-live="polite">
       <p class="qc-error-banner__text">{{ operationError }}</p>
     </div>
 
-    <SectionPanel :title="t('filtersTitle')" :count="`${activeFilterCount} ${t('activeFilters')}`" :meta="t('subtitle')">
-      <WorkbenchFilterToolbar
-        v-model="presetKey"
-        :advanced-label="t('advancedFilters')"
-        :collapse-label="t('hideAdvancedFilters')"
-        :active-count="activeFilterCount"
-        :active-count-label="t('activeFilters')"
-        :preset-label="t('presetLabel')"
-        :preset-options="presetOptions"
-        :can-delete-preset="canDeletePreset"
-        :save-label="t('savePreset')"
-        :delete-label="t('deletePreset')"
-        :apply-label="t('applyFilters')"
-        :reset-label="t('clearFilters')"
-        @preset-change="onPresetChange"
-        @preset-save="savePreset"
-        @preset-delete="deletePreset"
-        @apply="applyWorkbenchFilters"
-        @reset="resetWorkbenchFilters"
-      >
-        <select v-model="filters.status" class="input">
-          <option value="Open">{{ t("statusOpen") }}</option>
-          <option value="Resolved">{{ t("statusResolved") }}</option>
-          <option value="Ignored">{{ t("statusIgnored") }}</option>
-          <option value="">{{ t("allStatuses") }}</option>
-        </select>
-        <select v-model="filters.mismatchType" class="input">
-          <option value="">{{ t("allTypes") }}</option>
-          <option v-for="option in mismatchOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        <template #advanced>
-          <input
-            v-model.trim="filters.sourceQuery"
-            class="input"
-            type="search"
-            :placeholder="t('sourceSearchPlaceholder')"
-            @keyup.enter="applyWorkbenchFilters"
-          />
-          <select v-model="filters.sourceDoctype" class="input">
-            <option value="">{{ t("allSources") }}</option>
-            <option v-for="option in sourceDoctypeOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <select v-model.number="filters.limit" class="input">
-            <option :value="20">20</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
-          </select>
-        </template>
-      </WorkbenchFilterToolbar>
-    </SectionPanel>
+    <ReconciliationWorkbenchFilterSection
+      v-model="presetKey"
+      :t="t"
+      :filters="filters"
+      :preset-options="presetOptions"
+      :can-delete-preset="canDeletePreset"
+      :active-filter-count="activeFilterCount"
+      :mismatch-options="mismatchOptions"
+      :source-doctype-options="sourceDoctypeOptions"
+      @preset-change="onPresetChange"
+      @preset-save="savePreset"
+      @preset-delete="deletePreset"
+      @apply="applyWorkbenchFilters"
+      @reset="resetWorkbenchFilters"
+    />
 
-    <Dialog v-model="showImportDialog" :options="{ title: t('importStatementTitle'), size: 'xl' }">
-      <template #body-content>
-        <QuickCreateDialogShell
-          :error="importError"
-          :eyebrow="importDialogEyebrow"
-          :subtitle="t('importStatementSubtitle')"
-          :loading="importLoading"
-          :show-save-and-open="false"
-          :labels="importDialogLabels"
-          @cancel="closeImportDialog"
-          @save="previewStatementImport"
-        >
-          <div class="space-y-3">
-            <textarea
-              v-model="statementImportCsv"
-              class="input min-h-[180px] font-mono text-xs"
-              :placeholder="t('importStatementPlaceholder')"
-              :disabled="importLoading"
-            />
-            <div class="grid gap-3 md:grid-cols-3">
-              <input v-model.trim="statementImportInsuranceCompany" class="input" type="text" :placeholder="t('insuranceCompany')" />
-              <input v-model.trim="statementImportDelimiter" class="input" type="text" maxlength="1" :placeholder="t('delimiter')" />
-              <input v-model.number="statementImportLimit" class="input" type="number" min="1" max="500" />
-            </div>
-            <div v-if="statementImportSummary.total_rows" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <article class="at-metric-card">
-                <p class="at-metric-label">{{ t("importTotalRows") }}</p>
-                <p class="at-metric-value">{{ statementImportSummary.total_rows || 0 }}</p>
-              </article>
-              <article class="at-metric-card">
-                <p class="at-metric-label">{{ t("importMatchedRows") }}</p>
-                <p class="at-metric-value !text-emerald-700">{{ statementImportSummary.matched_rows || 0 }}</p>
-              </article>
-              <article class="at-metric-card">
-                <p class="at-metric-label">{{ t("importUnmatchedRows") }}</p>
-                <p class="at-metric-value !text-amber-700">{{ statementImportSummary.unmatched_rows || 0 }}</p>
-              </article>
-              <article class="at-metric-card">
-                <p class="at-metric-label">{{ t("importAmount") }}</p>
-                <p class="at-metric-value !text-sky-700">{{ formatMoney(statementImportSummary.total_amount_try || 0) }}</p>
-              </article>
-            </div>
-            <div v-if="statementImportRows.length" class="flex justify-end">
-              <ActionButton variant="primary" size="sm" :disabled="importLoading" @click="importStatementPreviewRows">
-                {{ importLoading ? t("importingStatement") : t("importStatementRows") }}
-              </ActionButton>
-            </div>
-            <div v-if="statementImportRows.length" class="rounded-xl border border-slate-200 bg-white">
-              <div class="grid grid-cols-5 gap-2 border-b border-slate-200 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                <span>{{ t("externalRef") }}</span>
-                <span>{{ t("policy") }}</span>
-                <span>{{ t("payment") }}</span>
-                <span>{{ t("metricOverdueAmount") }}</span>
-                <span>{{ t("status") }}</span>
-              </div>
-              <div
-                v-for="row in statementImportRows"
-                :key="`${row.external_ref}-${row.policy_no}-${row.payment_no}`"
-                class="grid grid-cols-5 gap-2 px-3 py-2 text-sm text-slate-700"
-              >
-                <span>{{ row.external_ref || "-" }}</span>
-                <span>{{ row.policy_no || "-" }}</span>
-                <span>{{ row.payment_no || "-" }}</span>
-                <span>{{ formatMoney(row.amount_try || 0) }}</span>
-                <span :class="row.match_status === 'Matched' ? 'text-emerald-700' : 'text-amber-700'">{{ row.match_status || "-" }}</span>
-              </div>
-            </div>
-          </div>
-        </QuickCreateDialogShell>
-      </template>
-    </Dialog>
+    <ReconciliationWorkbenchImportDialog
+      v-model:show="showImportDialog"
+      v-model:csv="statementImportCsv"
+      v-model:insurance-company="statementImportInsuranceCompany"
+      v-model:delimiter="statementImportDelimiter"
+      v-model:limit="statementImportLimit"
+      :t="t"
+      :loading="importLoading"
+      :error="importError"
+      :eyebrow="importDialogEyebrow"
+      :labels="importDialogLabels"
+      :summary="statementImportSummary"
+      :rows="statementImportRows"
+      :format-money="formatMoney"
+      @close="closeImportDialog"
+      @preview="previewStatementImport"
+      @import="importStatementPreviewRows"
+    />
 
-    <SectionPanel :title="t('collectionPreviewTitle')" :count="collectionPreviewRows.length">
-      <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-      <div v-else-if="collectionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCollectionPreview") }}</div>
-      <ul v-else class="space-y-2 text-sm">
-        <MetaListCard
-          v-for="row in collectionPreviewRows"
-          :key="row.name"
-          :title="row.payment_no || row.name"
-          :description="`${row.customer || '-'} / ${row.policy || '-'}`"
-          :meta="formatMoney(row.amount_try || row.amount)"
-        >
-          <template #trailing>
-            <div class="text-right">
-              <p class="text-xs text-slate-500">{{ t("dueDate") }}: {{ row.due_date || "-" }}</p>
-              <p class="text-xs text-amber-700">{{ row.status || "-" }}</p>
-            </div>
-          </template>
-        </MetaListCard>
-      </ul>
-    </SectionPanel>
+    <ReconciliationWorkbenchPreviewSections
+      :t="t"
+      :workbench-loading="workbenchLoading"
+      :collection-preview-rows="collectionPreviewRows"
+      :commission-preview-rows="commissionPreviewRows"
+      :format-money="formatMoney"
+    />
 
-    <SectionPanel :title="t('commissionPreviewTitle')" :count="commissionPreviewRows.length">
-      <div v-if="workbenchLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-      <div v-else-if="commissionPreviewRows.length === 0" class="at-empty-block">{{ t("emptyCommissionPreview") }}</div>
-      <ul v-else class="space-y-2 text-sm">
-        <MetaListCard
-          v-for="row in commissionPreviewRows"
-          :key="row.name"
-          :title="row.policy_no || row.name"
-          :description="`${row.customer || '-'} / ${row.insurance_company || '-'}`"
-          :meta="formatMoney(row.commission_amount_try || row.commission_amount)"
-        >
-          <template #trailing>
-            <div class="text-right">
-              <p class="text-xs text-slate-500">{{ row.office_branch || "-" }}</p>
-              <p class="text-xs text-sky-700">{{ row.status || "-" }}</p>
-            </div>
-          </template>
-        </MetaListCard>
-      </ul>
-    </SectionPanel>
+    <ReconciliationWorkbenchTableSection
+      :t="t"
+      :workbench-loading="workbenchLoading"
+      :workbench-error-text="workbenchErrorText"
+      :rows="rows"
+      :reconciliation-list-columns="reconciliationListColumns"
+      :reconciliation-list-rows="reconciliationListRows"
+      @row-click="handleReconciliationRowClick"
+    />
 
-    <SectionPanel :title="t('reconciliationListTitle')" :count="reconciliationListRows.length" :meta="t('subtitle')">
-      <template #trailing>
-        <p class="text-xs text-slate-500">{{ t("showing") }} {{ reconciliationListRows.length }} / {{ rows.length }}</p>
-      </template>
-
-      <div v-if="workbenchLoading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-        {{ t("loading") }}
-      </div>
-      <div v-else-if="workbenchErrorText" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
-        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-        <p class="qc-error-banner__text mt-1">{{ workbenchErrorText }}</p>
-      </div>
-      <div v-else-if="rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
-      </div>
-      <div v-else class="mt-4">
-        <ListTable
-          :columns="reconciliationListColumns"
-          :rows="reconciliationListRows"
-          :loading="false"
-          :empty-message="t('empty')"
-          @row-click="handleReconciliationRowClick"
-        />
-      </div>
-    </SectionPanel>
-
-    <Dialog v-model="showActionDialog" :options="{ title: reconciliationActionDialogTitle, size: 'lg' }">
-      <template #body-content>
-        <QuickCreateDialogShell
-          :error="actionDialogError"
-          :eyebrow="actionDialogEyebrow"
-          :subtitle="reconciliationActionDialogSubtitle"
-          :loading="actionDialogLoading"
-          :show-save-and-open="false"
-          :labels="actionDialogLabels"
-          @cancel="closeReconciliationActionDialog"
-          @save="submitReconciliationActionDialog"
-        >
-          <div class="space-y-3">
-            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-              <p class="font-medium text-slate-700">
-                {{ actionDialogRow?.source_doctype || "-" }} / {{ actionDialogRow?.source_name || "-" }}
-              </p>
-              <p class="mt-1">
-                {{ t("difference") }}:
-                {{ formatMoney(actionDialogRow?.difference_try) }}
-              </p>
-              <p v-if="actionDialogRow?.notes" class="mt-1">
-                {{ t("currentNote") }}: {{ actionDialogRow.notes }}
-              </p>
-            </div>
-            <label class="block text-xs font-medium uppercase tracking-wide text-slate-500">
-              {{ t("noteLabel") }}
-            </label>
-            <textarea
-              v-model="actionDialogNotes"
-              class="input min-h-[120px]"
-              :placeholder="t('notePlaceholder')"
-              :disabled="actionDialogLoading"
-            />
-          </div>
-        </QuickCreateDialogShell>
-      </template>
-    </Dialog>
+    <ReconciliationWorkbenchActionDialog
+      v-model:show="showActionDialog"
+      v-model:notes="actionDialogNotes"
+      :t="t"
+      :action-dialog-eyebrow="actionDialogEyebrow"
+      :action-dialog-labels="actionDialogLabels"
+      :action-dialog-row="actionDialogRow"
+      :action-dialog-loading="actionDialogLoading"
+      :action-dialog-error="actionDialogError"
+      :reconciliation-action-dialog-title="reconciliationActionDialogTitle"
+      :reconciliation-action-dialog-subtitle="reconciliationActionDialogSubtitle"
+      :format-money="formatMoney"
+      @close="closeReconciliationActionDialog"
+      @save="submitReconciliationActionDialog"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -317,19 +113,14 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useAccountingStore } from "../stores/accounting";
 import { useReconciliationWorkbenchRuntime } from "../composables/useReconciliationWorkbenchRuntime";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import FormattedCurrencyValue from "../components/app-shell/FormattedCurrencyValue.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import EmptyState from "../components/app-shell/EmptyState.vue";
-import QuickCreateDialogShell from "../components/app-shell/QuickCreateDialogShell.vue";
-import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import WorkbenchFilterToolbar from "../components/app-shell/WorkbenchFilterToolbar.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
+import ReconciliationWorkbenchActionBar from "../components/reconciliation-workbench/ReconciliationWorkbenchActionBar.vue";
+import ReconciliationWorkbenchActionDialog from "../components/reconciliation-workbench/ReconciliationWorkbenchActionDialog.vue";
+import ReconciliationWorkbenchFilterSection from "../components/reconciliation-workbench/ReconciliationWorkbenchFilterSection.vue";
+import ReconciliationWorkbenchImportDialog from "../components/reconciliation-workbench/ReconciliationWorkbenchImportDialog.vue";
+import ReconciliationWorkbenchMetricsPanel from "../components/reconciliation-workbench/ReconciliationWorkbenchMetricsPanel.vue";
+import ReconciliationWorkbenchPreviewSections from "../components/reconciliation-workbench/ReconciliationWorkbenchPreviewSections.vue";
+import ReconciliationWorkbenchTableSection from "../components/reconciliation-workbench/ReconciliationWorkbenchTableSection.vue";
 
 const copy = {
   tr: {
