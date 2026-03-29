@@ -1,8 +1,10 @@
 import { computed, onMounted, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
+import { usePaymentsBoardActions } from "./usePaymentsBoardActions";
 import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { usePaymentsBoardQuickPayment } from "./usePaymentsBoardQuickPayment";
+import { usePaymentsBoardSummary } from "./usePaymentsBoardSummary";
 import { mutedFact, pushMutedFactIf, subtleFact } from "../utils/factItems";
 import { openTabularExport } from "../utils/listExport";
 
@@ -70,37 +72,21 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     }
     return grouped;
   });
+  const actionsUi = usePaymentsBoardActions({ t, router, installmentSummaryByPayment });
+  const summaryUi = usePaymentsBoardSummary({
+    t,
+    localeCode,
+    payments,
+    installmentSummaryByPayment,
+    buildPaymentRowActions: actionsUi.buildPaymentRowActions,
+    paymentStore,
+  });
   const paymentsErrorText = computed(() => {
     if (paymentStore.state.error) return paymentStore.state.error;
     const err = paymentsResourceError.value;
     if (!err) return "";
     return err?.messages?.join(" ") || err?.message || t("loadError");
   });
-  const paymentSnapshots = computed(() => payments.value.map((payment) => buildPaymentSnapshot(payment)));
-  const paymentSummary = computed(() => {
-    const rows = paymentSnapshots.value;
-    return {
-      total: rows.length,
-      pending: rows.filter((row) => row.isPending).length,
-      collected: rows.filter((row) => row.isCollected).length,
-      overdue: rows.filter((row) => row.isOverdue).length,
-      totalAmount: rows.reduce((sum, row) => sum + Number(row.totalAmount || 0), 0),
-    };
-  });
-  const paymentListColumns = computed(() => [
-    { key: "payment_no", label: t("paymentNo"), width: "180px", type: "mono" },
-    { key: "customer", label: t("customer"), width: "220px" },
-    { key: "policy", label: t("policy"), width: "160px", type: "mono" },
-    { key: "due_date_label", label: t("dueDate"), width: "135px", type: "date" },
-    { key: "amount_label", label: t("amount"), width: "140px", type: "amount", align: "right" },
-    { key: "collected_amount_label", label: t("collected"), width: "150px", type: "amount", align: "right" },
-    { key: "remaining_amount_label", label: t("remaining"), width: "130px", type: "amount", align: "right" },
-    { key: "status", label: t("status"), width: "130px", type: "status", domain: "payment" },
-    { key: "_actions", label: t("actions"), width: "340px", type: "actions", align: "right" },
-  ]);
-  const paymentsWithActions = computed(() => paymentSnapshots.value.map((row) => ({ ...row, _actions: buildPaymentRowActions(row) })));
-  const inboundTotal = computed(() => paymentStore.inboundTotal);
-  const outboundTotal = computed(() => paymentStore.outboundTotal);
 
   const {
     presetKey,
@@ -468,12 +454,12 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     quickPaymentEyebrow: quickPaymentUi.quickPaymentEyebrow,
     quickPaymentSuccessHandlers: quickPaymentUi.quickPaymentSuccessHandlers,
     paymentsErrorText,
-    paymentSnapshots,
-    paymentSummary,
-    paymentListColumns,
-    paymentsWithActions,
-    inboundTotal,
-    outboundTotal,
+    paymentSnapshots: summaryUi.paymentSnapshots,
+    paymentSummary: summaryUi.paymentSummary,
+    paymentListColumns: summaryUi.paymentListColumns,
+    paymentsWithActions: summaryUi.paymentsWithActions,
+    inboundTotal: summaryUi.inboundTotal,
+    outboundTotal: summaryUi.outboundTotal,
     reloadPayments,
     downloadPaymentExport,
     applyPaymentFilters,
@@ -484,15 +470,15 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     resetPaymentFilterState,
     todayIso,
     prepareQuickPaymentDialog: quickPaymentUi.prepareQuickPaymentDialog,
-    paymentIdentityFacts,
-    paymentDetailFacts,
-    openRelatedRecord,
-    openPaymentDetail,
-    openCollectPayment,
-    addReceipt,
-    sendReminder,
-    formatCurrency,
-    formatCount,
+    paymentIdentityFacts: actionsUi.paymentIdentityFacts,
+    paymentDetailFacts: actionsUi.paymentDetailFacts,
+    openRelatedRecord: actionsUi.openRelatedRecord,
+    openPaymentDetail: actionsUi.openPaymentDetail,
+    openCollectPayment: actionsUi.openCollectPayment,
+    addReceipt: actionsUi.addReceipt,
+    sendReminder: actionsUi.sendReminder,
+    formatCurrency: summaryUi.formatCurrency,
+    formatCount: summaryUi.formatCount,
     formatDate,
   };
 }
