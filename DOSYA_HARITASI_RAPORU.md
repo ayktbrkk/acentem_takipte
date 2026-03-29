@@ -13,7 +13,7 @@ Bu repo, Frappe tabanlı bir sigorta operasyon platformudur.
 - **Route tanımı:** `frontend/src/router/index.js`
 - **Paylaşılan ana yapı:** page shell + composable + presentational component mimarisi
 
-Bu repo üzerinde yapılan son temizlikte, canlı uygulamada kullanılmayan bazı eski görsel bileşenler ve bir kullanılmayan composable arşive taşındı.
+Bu repo üzerinde yapılan son temizlikte, canlı uygulamada kullanılmayan bazı eski görsel bileşenler, bir kullanılmayan composable ve iki yalnızca bakım/dev helper backend dosyası arşive taşındı.
 
 ---
 
@@ -293,7 +293,14 @@ Kontrol yöntemi:
 |---|---|---|
 | `frontend/src/composables/useBreakGlassApprovals.js` | `silinecekler/frontend/src/composables/useBreakGlassApprovals.js` | Repo genelinde referansı yoktu; `BreakGlassApprovals.vue` şu anda kendi yerel logic'iyle çalışıyor, bu composable canlı akışta kullanılmıyordu |
 
-### 5.3 Taşınmayan ama incelenen dosyalar
+### 5.3 Taşınan backend helper'ları
+
+| Kaynak | Arşiv yolu | Neden taşındı |
+|---|---|---|
+| `acentem_takipte/acentem_takipte/dev_seed.py` | `silinecekler/acentem_takipte/dev_seed.py` | Canlı uygulama akışının parçası değil; sadece dev/test seed yardımı sağlıyor. Testler ve dokümantasyon için wrapper bırakıldı, implementasyon arşive alındı |
+| `acentem_takipte/acentem_takipte/scripts/branch_depth_check.py` | `silinecekler/acentem_takipte/scripts/branch_depth_check.py` | Üretim UI/REST akışına dahil değil; yalnızca bakım/izleme script'i. Canlı zincirde gereksiz ağırlık oluşturuyordu |
+
+### 5.4 Taşınmayan ama incelenen dosyalar
 
 Bu dosyalar tarandı ama arşive alınmadı:
 
@@ -307,6 +314,14 @@ Bu dosyalar tarandı ama arşive alınmadı:
   - aktif teklif panosu akışının parçası
 - `acentem_takipte/acentem_takipte/api/dashboard_v2/*`
   - backend dashboard yolunun aktif alt yapısı
+- `acentem_takipte/acentem_takipte/desktop.py`
+  - Frappe desk menüsü / app launcher yüzeyi olarak canlıda kalmalı
+- `acentem_takipte/acentem_takipte/doctype/*`
+  - Frappe doctype yükleme mekanizmasıyla canlıda zorunlu
+- `acentem_takipte/acentem_takipte/patches/*`
+  - migration geçmişi ve site yükseltmeleri için korunmalı
+- `acentem_takipte/acentem_takipte/notification_dispatch.py`
+  - notification akışları tarafından kullanılıyor
 
 ---
 
@@ -322,6 +337,8 @@ Bu kararların ortak gerekçeleri:
    - bazıları yeni dashboard/panel/list bileşenlerinin eski karşılıklarıydı.
 4. **Canlı uygulamayı etkilemiyorlardı**
    - build ve canlı smoke sırasında ihtiyaç duyulmayan yardımcılar oldukları görüldü.
+5. **Backend helper'ları bakım/dev amaçlıydı**
+   - `dev_seed.py` ve `branch_depth_check.py` kullanıcı yüzeyi değil; geliştirme ve bakım araçlarıydı.
 
 Bu nedenle bunları silmek yerine `silinecekler/` altına taşımak:
 
@@ -373,7 +390,7 @@ Bu temizlikte:
 
 - canlı app için kullanılmayan eski component'ler arşive taşındı,
 - kullanılmayan bir composable arşive taşındı,
+- iki backend bakım/helper dosyası arşive taşındı,
 - repodaki ana mimari harita ve görev sınırları belgelendi.
 
 `silinecekler/` klasörü artık sadece eski dump alanı değil, kontrollü arşiv alanı olarak kullanılmalıdır.
-
