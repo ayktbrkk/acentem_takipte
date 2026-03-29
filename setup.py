@@ -13,7 +13,7 @@ def get_requirements():
 
 setup(
     name=APP_NAME,
-    version="0.0.1",
+    version="0.1.0",
     description="Insurance agency CRM and policy tracking app",
     author="ABK",
     author_email="aykutburakk@gmail.com",

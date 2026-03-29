@@ -1,6 +1,6 @@
 [project]
 name = "acentem_takipte"
-version = "0.0.1"
+version = "0.1.0"
 description = "Insurance agency CRM and policy tracking app"
 authors = [
     { name = "Acentem Takipte", email = "dev@acentemtakipte.local"}

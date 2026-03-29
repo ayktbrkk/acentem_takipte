@@ -1,6 +1,8 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+.mypy_cache/
+.bench/
 
 node_modules/
 frontend/node_modules/
@@ -8,6 +10,8 @@ frontend/dist/
 frontend/playwright-report/
 frontend/test-results/
 frontend/output/
+frontend/.vite/
+frontend/.cache/
 frontend/root.png
 frontend/vite.config.js.timestamp-*.mjs
 acentem_takipte/frontend/
@@ -19,6 +23,8 @@ acentem_takipte/public/frontend/
 .pytest_cache/
 .roo/
 .agents/
+silinecekler/**/__pycache__/
+silinecekler/**/*.py[cod]
 
 .env
 .venv/
@@ -26,3 +32,8 @@ env/
 lint-out.txt
 test-out.txt
 test-results/
+*.log
+coverage/
+htmlcov/
+.nox/
+.tox/
