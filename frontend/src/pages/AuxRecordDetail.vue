@@ -103,6 +103,7 @@ import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuxRecordDetailRuntime } from "../composables/useAuxRecordDetailRuntime";
 import { useAuxRecordDetailSummary } from "../composables/useAuxRecordDetailSummary";
 import { useAuxRecordDetailActions } from "../composables/useAuxRecordDetailActions";
+import { useAuxRecordDetailQuickDialogs } from "../composables/useAuxRecordDetailQuickDialogs";
 import AuxRecordDetailTopbar from "../components/aux-record-detail/AuxRecordDetailTopbar.vue";
 import AuxRecordDetailHero from "../components/aux-record-detail/AuxRecordDetailHero.vue";
 import AuxRecordDetailContent from "../components/aux-record-detail/AuxRecordDetailContent.vue";
@@ -342,29 +343,15 @@ const {
 const detailActions = useAuxRecordDetailActions({
   props,
   config,
-  activeLocale,
-  localeCode,
   authStore,
-  branchStore,
   route,
   router,
-  localize,
-  t,
   activeDoctype,
   doc,
   reloadDetail,
 });
 
 const {
-  showQuickEditDialog,
-  quickEditConfig,
-  quickEditEyebrow,
-  canUseQuickEdit,
-  copiedRecordKey,
-  copyRecordValue,
-  prepareQuickEditDialog,
-  buildQuickEditPayload,
-  afterQuickEditSubmit,
   sendDraftLifecycle,
   retryOutboxLifecycle,
   requeueOutboxLifecycle,
@@ -376,7 +363,6 @@ const {
   openDesk,
   openPanel,
   panelConfig,
-  quickEditOptionsMap,
   canOpenCommunicationContext,
   isTaskDetail,
   isReminderDetail,
@@ -395,10 +381,31 @@ const {
   canCloseAssignmentLifecycle,
 } = detailActions;
 
-const quickEditSuccessHandlers = {
-  aux_detail: async () => {
-    await reloadDetail();
-  },
-};
+const detailQuickDialogs = useAuxRecordDetailQuickDialogs({
+  props,
+  config,
+  activeLocale,
+  authStore,
+  branchStore,
+  activeDoctype,
+  doc,
+  reloadDetail,
+  localize,
+  t,
+});
+
+const {
+  showQuickEditDialog,
+  quickEditConfig,
+  quickEditEyebrow,
+  canUseQuickEdit,
+  copiedRecordKey,
+  copyRecordValue,
+  prepareQuickEditDialog,
+  buildQuickEditPayload,
+  afterQuickEditSubmit,
+  quickEditOptionsMap,
+  quickEditSuccessHandlers,
+} = detailQuickDialogs;
 
 </script>
