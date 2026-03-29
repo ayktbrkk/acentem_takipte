@@ -109,14 +109,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
-import { frappeRequest } from "frappe-ui";
 
 import EmptyState from "../components/app-shell/EmptyState.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
+import { useBreakGlassApprovals } from "../composables/useBreakGlassApprovals";
 
 const authStore = useAuthStore(getAppPinia());
 
@@ -183,102 +182,20 @@ function t(key) {
   return copy[authStore.locale]?.[key] || copy.en[key] || key;
 }
 
-const canManage = computed(() => Boolean(authStore.isDeskUser));
-const pendingRows = ref([]);
-const loading = ref(false);
-const errorText = ref("");
-const actionResult = ref("");
-const busyRows = reactive({});
-const actionForm = reactive({});
-
-function ensureActionForm(rowName) {
-  if (!actionForm[rowName]) {
-    actionForm[rowName] = {
-      durationHours: 24,
-      comments: "",
-    };
-  }
-}
-
-function isRowBusy(rowName) {
-  return Boolean(busyRows[rowName]);
-}
-
-function mapAccessType(value) {
-  if (value === "customer_data") return t("customerData");
-  if (value === "customer_financials") return t("customerFinancials");
-  if (value === "system_admin") return t("systemAdmin");
-  if (value === "reporting_override") return t("reportingOverride");
-  return value || "-";
-}
-
-async function loadPending() {
-  if (!canManage.value) {
-    pendingRows.value = [];
-    return;
-  }
-
-  loading.value = true;
-  errorText.value = "";
-  try {
-    const payload = await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.break_glass.list_pending",
-      method: "GET",
-    });
-    const message = payload?.message || payload || [];
-    pendingRows.value = Array.isArray(message) ? message : [];
-    pendingRows.value.forEach((row) => ensureActionForm(row.name));
-  } catch (error) {
-    pendingRows.value = [];
-    errorText.value = String(error?.message || error || t("unknownError"));
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function approve(requestId) {
-  await runAction("approve", requestId);
-}
-
-async function reject(requestId) {
-  await runAction("reject", requestId);
-}
-
-async function runAction(action, requestId) {
-  const form = actionForm[requestId] || { durationHours: 24, comments: "" };
-  busyRows[requestId] = true;
-  errorText.value = "";
-  actionResult.value = "";
-
-  const method = action === "approve" ? "approve_request" : "reject_request";
-
-  try {
-    const payload = await frappeRequest({
-      url: `/api/method/acentem_takipte.acentem_takipte.api.break_glass.${method}`,
-      method: "POST",
-      params: {
-        request_id: requestId,
-        duration_hours: form.durationHours,
-        approver_comments: form.comments,
-      },
-    });
-
-    const message = payload?.message || payload || {};
-    if (message?.ok === false) {
-      errorText.value = String(message.error || t("unknownError"));
-      return;
-    }
-
-    actionResult.value = String(message?.message || `${requestId} ${action}`);
-    await loadPending();
-  } catch (error) {
-    errorText.value = String(error?.message || error || t("unknownError"));
-  } finally {
-    busyRows[requestId] = false;
-  }
-}
-
-onMounted(() => {
-  loadPending();
+const {
+  canManage,
+  pendingRows,
+  loading,
+  errorText,
+  actionResult,
+  actionForm,
+  isRowBusy,
+  mapAccessType,
+  loadPending,
+  approve,
+  reject,
+} = useBreakGlassApprovals({
+  authStore,
+  t,
 });
 </script>
