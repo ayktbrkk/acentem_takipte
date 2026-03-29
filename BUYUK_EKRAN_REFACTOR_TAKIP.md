@@ -71,7 +71,7 @@ Bu bölüm sayfa değil, ama büyük ve bölünebilir component'leri izlemek iç
 |---------|-----------|-------|--------------|---------------|--------------|
 | 1 | `PolicyForm.vue` | `Tamamlandı` | Runtime composable ve step component'leri ayrıldı | Form alanları küçük subcomponent'lerle yönetilir | `src/components/PolicyForm.test.js` + `npm run build` |
 | 2 | `ScheduledReportsManager.vue` | `Tamamlanmadı` | Schedule-specific filter/action bloklarını böl | Schedule akışları shared config ile sadeleşir | `src/components/reports/ScheduledReportsManager.test.js` + build |
-| 3 | `OfficeBranchSelect.vue` | `Tamamlanmadı` | Branch list/scope helperlarını küçült | Seçici bileşen shell + data helper sınırına iner | İlgili component testleri + build |
+| 3 | `OfficeBranchSelect.vue` | `Tamamlandı` | Branch list/scope helperları composable'a taşındı; component shell seviyesine yaklaştı | Seçici bileşen shell + data helper sınırına iner | `src/components/app-shell/OfficeBranchSelect.test.js` + `npm run build` |
 | 4 | `QuickCreateFormRenderer.vue` | `Tamamlanmadı` | Field renderer bloklarını ayrıştır | Form renderer daha küçük field-type bileşenlerine bölünür | İlgili quick-create testleri + build |
 | 5 | `QuickCustomerPicker.vue` | `Tamamlanmadı` | Picker UI ve option mapping'i sadeleştir | Seçici bileşen temiz boundary'lere sahip olur | İlgili quick-create testleri + build |
 | 6 | `Sidebar.vue` | `Tamamlanmadı` | Menü/section render bloklarını sadeleştir | Sidebar daha küçük sunum bileşenlerine ayrılır | Layout smoke + build |
