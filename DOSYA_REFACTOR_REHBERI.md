@@ -576,6 +576,141 @@ Ama bölme yaparken:
 - sonra testi geçir,
 - sonra tracker'ı güncelle.
 
+## Operasyonel Oynatma Kitabı
+
+Bu bölüm, bu repoda refactor yaparken izlenecek pratik akışı tanımlar.
+
+### 1. Başlangıç kontrol listesi
+
+Bir işe başlamadan önce şunları kontrol et:
+
+- Açık tracker satırı var mı?
+- İlgili sayfa veya component hangi composable'ları kullanıyor?
+- Canlıda bug var mı, yoksa sadece mimari cleanup mı yapılıyor?
+- Mevcut test adı ne?
+- Bu iş tek commit'te bitecek kadar küçük mü?
+
+### 2. Chunk stratejisi
+
+Her büyük iş şu sırayla bölünmeli:
+
+1. runtime / state
+2. derived data / summary
+3. actions / dialogs
+4. UI sections
+5. helper cleanup
+
+Bu sıra neden önemli:
+
+- runtime önce ayrılırsa state akışı netleşir,
+- derived data sonra ayrılırsa template sadeleşir,
+- actions / dialogs ayrı kalırsa UI kolay test edilir,
+- UI sections en son ayrılırsa davranış kırma riski düşer,
+- helper cleanup en son yapılırsa dead code temizliği güvenli kalır.
+
+### 3. Commit ritmi
+
+Tercih edilen commit düzeni:
+
+- küçük ve tek amaçlı commit
+- her commit bir sınır
+- test geçmeden commit alma
+- mümkünse commit mesajı şu kalıpta olsun:
+  - `refactor: split <Feature> runtime`
+  - `refactor: split <Feature> UI sections`
+  - `fix: restore <behavior>`
+  - `docs: update refactor handbook`
+
+### 4. Test ritmi
+
+Yeni bir sınır açıldığında şu sırayı izle:
+
+1. önce test ekle veya mevcut testi güncelle
+2. sonra minimal değişikliği yap
+3. sonra unit test çalıştır
+4. sonra build çalıştır
+5. gerekiyorsa Playwright smoke çalıştır
+
+Test sonucu beklentisi:
+
+- unit test: davranışın doğru olduğunu kanıtlar
+- build: import / syntax / wiring hatalarını yakalar
+- Playwright smoke: canlı route ve veri akışını kontrol eder
+
+### 5. Duruş kuralları
+
+Aşağıdaki durumlarda işi durdur ve mevcut durumu netleştir:
+
+- aynı commit içinde iki bağımsız feature değişecekse
+- testler kırıldıysa ve neden belirsizse
+- canlı sayfa console error üretiyorsa
+- page shell tekrar şişmeye başladıysa
+- tracker ile kod durumu çelişiyorsa
+
+### 6. Geriye dönük uyumluluk
+
+Refactor sırasında şu tip geriye uyumluluklar korunmalı:
+
+- eski route redirect'leri
+- alias edilmiş composable return değerleri
+- mevcut prop isimleri
+- sayfa testlerinin beklediği visible text
+- API payload şekli
+
+Eğer bir isim değişecekse, önce alias veya geçiş katmanı ekle.
+
+### 7. Canlı smoke notları
+
+Canlı smoke gerektiğinde önce şu sayfalar kontrol edilmeli:
+
+- offers
+- renewals
+- reports
+- policies
+- communication
+- reconciliation
+
+Smoke sırasında bakılacaklar:
+
+- page error var mı
+- console error var mı
+- data dolu geliyor mu
+- başlık ve ana metrikler görünür mü
+- network fail var mı
+
+### 8. Kritik “yapma” listesi
+
+Şunlardan kaçın:
+
+- page içine yeni büyük helper yığmak
+- aynı anda hem veri modeli hem render modelini değiştirmek
+- test yazmadan büyük refactor yapmak
+- birden fazla domain akışını tek composable'a zorlamak
+- tracker'ı güncellemeden işi kapatmak
+
+### 9. İyi örnek davranış
+
+İyi bir refactor çıktısı şunları sağlar:
+
+- page shell küçülür
+- composable isimleri davranışı anlatır
+- component isimleri render rolünü anlatır
+- testler tek bir davranışa odaklanır
+- canlı sayfa aynı ya da daha iyi çalışır
+
+### 10. Eğer yeni büyük ekran eklenirse
+
+Yeni bir büyük ekran açılırsa:
+
+1. önce tracker'a ekle
+2. sonra plan/spec yaz
+3. sonra runtime/UI sınırlarını belirle
+4. sonra en riskli bloğu ayır
+5. sonra build/test/smoke doğrula
+6. sonra checkpoint commit yap
+
+Bu sıra dışına çıkma; ancak canlı bug fix varsa önce bug fix sonra bölme yap.
+
 ---
 
 Bu dosya yaşayan bir rehberdir.  
