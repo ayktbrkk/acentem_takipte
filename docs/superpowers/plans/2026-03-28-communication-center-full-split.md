@@ -8,6 +8,8 @@
 
 **Tech Stack:** Vue 3 `<script setup>`, Pinia store, Frappe `createResource`, existing app-shell components, Vitest, Vite.
 
+**Status:** Completed
+
 ---
 
 ## Chunk 1: CommunicationCenter composable boundaries
@@ -19,26 +21,26 @@
 - Create: `frontend/src/composables/communicationCenter/quickDialogs.js`
 - Modify: `frontend/src/pages/CommunicationCenter.vue`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add or adjust a focused page smoke test that asserts the page still renders the same actions, metrics, filters, outbox, drafts, and dialogs after the split.
 
-- [ ] **Step 2: Run the test to verify the current baseline**
+- [x] **Step 2: Run the test to verify the current baseline**
 
 Run: `npm run test:unit -- --run src/pages/CommunicationCenter.test.js`
 Expected: PASS on current baseline before the split.
 
-- [ ] **Step 3: Extract the state/runtime helpers**
+- [x] **Step 3: Extract the state/runtime helpers**
 
 Move computed state, route/query sync, preset handling, snapshot reload, dispatch-cycle orchestration, and error/loading state into the new composables. Keep the page shell responsible only for wiring and template slots.
 
-- [ ] **Step 4: Run unit and build verification**
+- [x] **Step 4: Run unit and build verification**
 
 Run: `npm run test:unit -- --run src/pages/CommunicationCenter.test.js`
 Run: `npm run build`
 Expected: both pass with no page behavior regressions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/CommunicationCenter.vue frontend/src/composables/communicationCenter
@@ -57,26 +59,26 @@ git commit -m "refactor: split CommunicationCenter logic"
 - Create: `frontend/src/components/communication-center/CommunicationCenterDialogs.vue`
 - Modify: `frontend/src/pages/CommunicationCenter.vue`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Update the page smoke test to cover the new component boundaries by asserting the same buttons, metrics, tables, and dialogs still exist and trigger the same callbacks.
 
-- [ ] **Step 2: Run the test to verify the current baseline**
+- [x] **Step 2: Run the test to verify the current baseline**
 
 Run: `npm run test:unit -- --run src/pages/CommunicationCenter.test.js`
 Expected: PASS before component extraction.
 
-- [ ] **Step 3: Extract the UI sections**
+- [x] **Step 3: Extract the UI sections**
 
 Replace inline toolbar, metrics, filter, context banner, outbox table, draft grid, and dialog markup with focused components that receive props and emit events only.
 
-- [ ] **Step 4: Run unit and build verification**
+- [x] **Step 4: Run unit and build verification**
 
 Run: `npm run test:unit -- --run src/pages/CommunicationCenter.test.js`
 Run: `npm run build`
 Expected: both pass with no UI regressions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/CommunicationCenter.vue frontend/src/components/communication-center
@@ -89,21 +91,21 @@ git commit -m "refactor: split CommunicationCenter UI"
 - Modify: `BUYUK_EKRAN_REFACTOR_TAKIP.md`
 - Modify: `frontend/src/pages/CommunicationCenter.vue`
 
-- [ ] **Step 1: Clean up page-scope leftovers**
+- [x] **Step 1: Clean up page-scope leftovers**
 
 Remove any stale helper functions or unused imports that remain after the split. Keep the shell minimal and avoid introducing new abstractions unless they replace real page logic.
 
-- [ ] **Step 2: Update the tracker**
+- [x] **Step 2: Update the tracker**
 
 Mark `CommunicationCenter.vue` as `Tamamlandı` only when logic, actions, and UI boundaries are all split and build/tests pass.
 
-- [ ] **Step 3: Run final verification**
+- [x] **Step 3: Run final verification**
 
 Run: `npm run test:unit -- --run src/pages/CommunicationCenter.test.js`
 Run: `npm run build`
 Expected: both pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/pages/CommunicationCenter.vue BUYUK_EKRAN_REFACTOR_TAKIP.md
