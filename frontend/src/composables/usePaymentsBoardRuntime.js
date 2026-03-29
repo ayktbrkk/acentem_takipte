@@ -1,7 +1,8 @@
-import { computed, onMounted, ref, unref, watch } from "vue";
+import { computed, onMounted, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import { useCustomFilterPresets } from "./useCustomFilterPresets";
+import { usePaymentsBoardQuickPayment } from "./usePaymentsBoardQuickPayment";
 import { mutedFact, pushMutedFactIf, subtleFact } from "../utils/factItems";
 import { openTabularExport } from "../utils/listExport";
 
@@ -40,50 +41,6 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     auto: true,
   });
 
-  const paymentQuickCustomerResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Customer",
-      fields: ["name", "full_name"],
-      filters: buildOfficeBranchLookupFilters(),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-  const paymentQuickPolicyResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Policy",
-      fields: ["name", "policy_no", "customer"],
-      filters: buildOfficeBranchLookupFilters(),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-  const paymentQuickClaimResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Claim",
-      fields: ["name", "claim_no", "customer", "policy"],
-      filters: buildOfficeBranchLookupFilters(),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-  const paymentQuickSalesEntityResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Sales Entity",
-      fields: ["name", "full_name"],
-      order_by: "full_name asc",
-      limit_page_length: 500,
-    },
-  });
-
   const payments = computed(() => paymentStore.filteredItems);
   const installmentSummaryByPayment = computed(() => {
     const grouped = new Map();
@@ -113,25 +70,6 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     }
     return grouped;
   });
-  const showQuickPaymentDialog = ref(false);
-  const paymentQuickOptionsMap = computed(() => ({
-    customers: asArray(resourceValue(paymentQuickCustomerResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
-    policies: asArray(resourceValue(paymentQuickPolicyResource, [])).map((row) => ({
-      value: row.name,
-      label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
-    })),
-    claims: asArray(resourceValue(paymentQuickClaimResource, [])).map((row) => ({
-      value: row.name,
-      label: `${row.claim_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
-    })),
-    salesEntities: asArray(resourceValue(paymentQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
-  }));
-  const quickPaymentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Ödeme" : "Quick Payment"));
-  const quickPaymentSuccessHandlers = {
-    payment_list: async () => {
-      await reloadPayments();
-    },
-  };
   const paymentsErrorText = computed(() => {
     if (paymentStore.state.error) return paymentStore.state.error;
     const err = paymentsResourceError.value;
@@ -185,11 +123,6 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     refresh: reloadPayments,
     getSortLocale: () => localeCode.value,
   });
-
-  function buildOfficeBranchLookupFilters() {
-    const officeBranch = branchStore.requestBranch || "";
-    return officeBranch ? { office_branch: officeBranch } : {};
-  }
 
   function formatCurrency(value) {
     return new Intl.NumberFormat(localeCode.value, {
@@ -335,6 +268,13 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     };
   }
 
+  const quickPaymentUi = usePaymentsBoardQuickPayment({
+    t,
+    branchStore,
+    reloadPayments,
+    localeCode,
+  });
+
   function reloadPayments() {
     paymentsResource.params = buildPaymentListParams();
     paymentInstallmentResource.params = buildPaymentInstallmentListParams();
@@ -433,10 +373,6 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     return new Date().toISOString().slice(0, 10);
   }
 
-  function prepareQuickPaymentDialog({ form }) {
-    if (!form.payment_date) form.payment_date = todayIso();
-  }
-
   function paymentIdentityFacts(payment) {
     return [mutedFact("purpose", t("purpose"), payment?.payment_purpose || "-", "at-clamp-2"), subtleFact("record", t("recordId"), payment?.name || "-")];
   }
@@ -502,21 +438,6 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     }
   );
 
-  watch(
-    () => branchStore.selected,
-    () => {
-      paymentStore.setLocaleCode(localeCode.value);
-      const officeFilters = buildOfficeBranchLookupFilters();
-      paymentQuickCustomerResource.params = { doctype: "AT Customer", fields: ["name", "full_name"], filters: officeFilters, order_by: "modified desc", limit_page_length: 500 };
-      paymentQuickPolicyResource.params = { doctype: "AT Policy", fields: ["name", "policy_no", "customer"], filters: officeFilters, order_by: "modified desc", limit_page_length: 500 };
-      paymentQuickClaimResource.params = { doctype: "AT Claim", fields: ["name", "claim_no", "customer", "policy"], filters: officeFilters, order_by: "modified desc", limit_page_length: 500 };
-      void paymentQuickCustomerResource.reload();
-      void paymentQuickPolicyResource.reload();
-      void paymentQuickClaimResource.reload();
-      void reloadPayments();
-    }
-  );
-
   return {
     activeLocale,
     localeCode,
@@ -536,16 +457,16 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     paymentsLoading,
     paymentsResourceError,
     paymentInstallmentResource,
-    paymentQuickCustomerResource,
-    paymentQuickPolicyResource,
-    paymentQuickClaimResource,
-    paymentQuickSalesEntityResource,
+    paymentQuickCustomerResource: quickPaymentUi.paymentQuickCustomerResource,
+    paymentQuickPolicyResource: quickPaymentUi.paymentQuickPolicyResource,
+    paymentQuickClaimResource: quickPaymentUi.paymentQuickClaimResource,
+    paymentQuickSalesEntityResource: quickPaymentUi.paymentQuickSalesEntityResource,
     payments,
     installmentSummaryByPayment,
-    showQuickPaymentDialog,
-    paymentQuickOptionsMap,
-    quickPaymentEyebrow,
-    quickPaymentSuccessHandlers,
+    showQuickPaymentDialog: quickPaymentUi.showQuickPaymentDialog,
+    paymentQuickOptionsMap: quickPaymentUi.paymentQuickOptionsMap,
+    quickPaymentEyebrow: quickPaymentUi.quickPaymentEyebrow,
+    quickPaymentSuccessHandlers: quickPaymentUi.quickPaymentSuccessHandlers,
     paymentsErrorText,
     paymentSnapshots,
     paymentSummary,
@@ -562,7 +483,7 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     applyRouteFilters,
     resetPaymentFilterState,
     todayIso,
-    prepareQuickPaymentDialog,
+    prepareQuickPaymentDialog: quickPaymentUi.prepareQuickPaymentDialog,
     paymentIdentityFacts,
     paymentDetailFacts,
     openRelatedRecord,
