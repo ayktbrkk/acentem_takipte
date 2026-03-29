@@ -10,9 +10,8 @@
 </template>
 
 <script setup>
-import { useRoute, useRouter } from "vue-router";
 import ActionButton from "./ActionButton.vue";
-import { buildQuickCreateIntentQuery } from "../../utils/quickRouteIntent";
+import { useQuickCreateLauncher } from "../../composables/useQuickCreateLauncher";
 
 const props = defineProps({
   label: { type: String, default: "" },
@@ -29,24 +28,6 @@ const props = defineProps({
 
 const emit = defineEmits(["launch"]);
 
-const router = useRouter();
-const route = useRoute();
-
-function onClick() {
-  if (props.disabled || props.busy) return;
-  if (!props.routeName) {
-    emit("launch");
-    return;
-  }
-  const returnTo = props.withReturnTo ? (props.returnTo || route.fullPath || "") : "";
-  router.push({
-    name: props.routeName,
-    query: buildQuickCreateIntentQuery({
-      prefills: props.prefills,
-      extras: props.extras,
-      returnTo,
-    }),
-  });
-}
+const { onClick } = useQuickCreateLauncher(props, emit);
 </script>
 
