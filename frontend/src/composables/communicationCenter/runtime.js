@@ -1,13 +1,11 @@
 import { ref } from "vue";
-import { createResource } from "frappe-ui";
-
 import { isPermissionDeniedError } from "./helpers";
+import { useCommunicationCenterOperations } from "./operations";
+import { useCommunicationCenterResources } from "./resources";
 import { resolveSameOriginPath } from "../../utils/safeNavigation";
 import { openTabularExport } from "../../utils/listExport";
 
 export function useCommunicationCenterRuntime({ route, router, branchStore, communicationStore, filters, t }) {
-  const dispatching = ref(false);
-  const operationError = ref("");
   const showSegmentDialog = ref(false);
   const showCampaignDialog = ref(false);
   const showCampaignRunDialog = ref(false);
@@ -15,14 +13,6 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
   const showCallNoteDialog = ref(false);
   const showReminderDialog = ref(false);
   const showQuickMessageDialog = ref(false);
-  const campaignRunSelection = ref("");
-  const campaignRunLoading = ref(false);
-  const campaignRunError = ref("");
-  const campaignRunResult = ref(null);
-  const segmentPreviewSegment = ref("");
-  const segmentPreviewLoading = ref(false);
-  const segmentPreviewError = ref("");
-  const segmentPreviewPayload = ref(null);
 
   const openSegmentDialog = () => {
     showSegmentDialog.value = true;
@@ -52,106 +42,12 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
     showQuickMessageDialog.value = true;
   };
 
-  const snapshotResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot",
-    params: buildParams(),
-    auto: true,
-  });
-
-  const runCycleResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
-  });
-
-  const sendDraftResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
-  });
-
-  const retryOutboxResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
-  });
-
-  const auxMutationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
-  });
-
-  const communicationQuickTemplateResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Notification Template",
-      fields: ["name", "template_key", "channel", "is_active"],
-      filters: { is_active: 1 },
-      order_by: "template_key asc",
-      limit_page_length: 500,
-    },
-  });
-
-  const communicationQuickCustomerResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Customer",
-      fields: ["name", "full_name"],
-      filters: buildCustomerQuickFilters(),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-
-  const communicationQuickPolicyResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Policy",
-      fields: ["name", "policy_no", "customer"],
-      filters: buildCustomerQuickFilters(),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-
-  const communicationQuickClaimResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Claim",
-      fields: ["name", "claim_no", "policy", "customer"],
-      filters: buildCustomerQuickFilters(),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-
-  const communicationQuickSegmentResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Segment",
-      fields: ["name", "segment_name", "channel_focus", "status"],
-      filters: buildCustomerQuickFilters(),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-
-  const communicationQuickCampaignResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Campaign",
-      fields: ["name", "campaign_name", "channel", "status"],
-      filters: buildCustomerQuickFilters(),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-
-  const segmentPreviewResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.preview_segment_members",
-  });
-
-  const campaignRunResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.execute_campaign",
+  const resources = useCommunicationCenterResources({ branchStore, filters });
+  const operations = useCommunicationCenterOperations({
+    filters,
+    reloadSnapshot,
+    resources,
+    t,
   });
 
   function buildParams() {
@@ -164,11 +60,6 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
       office_branch: branchStore.requestBranch || null,
       limit: filters.limit,
     };
-  }
-
-  function buildCustomerQuickFilters() {
-    if (!branchStore.requestBranch) return {};
-    return { office_branch: branchStore.requestBranch };
   }
 
   function currentCommunicationPresetPayload() {
@@ -206,11 +97,11 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
   }
 
   function reloadSnapshot() {
-    operationError.value = "";
-    snapshotResource.params = buildParams();
+    operations.operationError.value = "";
+    resources.snapshotResource.params = buildParams();
     communicationStore.setLoading(true);
     communicationStore.clearError();
-    return snapshotResource
+    return resources.snapshotResource
       .reload()
       .then((result) => {
         communicationStore.setSnapshot(result || {});
@@ -271,33 +162,33 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
   }
 
   function reloadQuickCustomers() {
-    const filtersPayload = buildCustomerQuickFilters();
-    communicationQuickCustomerResource.params = {
-      ...communicationQuickCustomerResource.params,
+    const filtersPayload = branchStore.requestBranch ? { office_branch: branchStore.requestBranch } : {};
+    resources.communicationQuickCustomerResource.params = {
+      ...resources.communicationQuickCustomerResource.params,
       filters: filtersPayload,
     };
-    communicationQuickPolicyResource.params = {
-      ...communicationQuickPolicyResource.params,
+    resources.communicationQuickPolicyResource.params = {
+      ...resources.communicationQuickPolicyResource.params,
       filters: filtersPayload,
     };
-    communicationQuickClaimResource.params = {
-      ...communicationQuickClaimResource.params,
+    resources.communicationQuickClaimResource.params = {
+      ...resources.communicationQuickClaimResource.params,
       filters: filtersPayload,
     };
-    communicationQuickSegmentResource.params = {
-      ...communicationQuickSegmentResource.params,
+    resources.communicationQuickSegmentResource.params = {
+      ...resources.communicationQuickSegmentResource.params,
       filters: filtersPayload,
     };
-    communicationQuickCampaignResource.params = {
-      ...communicationQuickCampaignResource.params,
+    resources.communicationQuickCampaignResource.params = {
+      ...resources.communicationQuickCampaignResource.params,
       filters: filtersPayload,
     };
     return Promise.all([
-      communicationQuickCustomerResource.reload(),
-      communicationQuickPolicyResource.reload(),
-      communicationQuickClaimResource.reload(),
-      communicationQuickSegmentResource.reload(),
-      communicationQuickCampaignResource.reload(),
+      resources.communicationQuickCustomerResource.reload(),
+      resources.communicationQuickPolicyResource.reload(),
+      resources.communicationQuickClaimResource.reload(),
+      resources.communicationQuickSegmentResource.reload(),
+      resources.communicationQuickCampaignResource.reload(),
     ]);
   }
 
@@ -346,172 +237,7 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
     router.back();
   }
 
-  async function runDispatchCycle() {
-    dispatching.value = true;
-    operationError.value = "";
-    try {
-      await runCycleResource.submit({ limit: filters.limit, include_failed: 1 });
-      await reloadSnapshot();
-    } catch (error) {
-      operationError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-    } finally {
-      dispatching.value = false;
-    }
-  }
-
-  async function retryOutbox(outboxName) {
-    operationError.value = "";
-    try {
-      await retryOutboxResource.submit({ outbox_name: outboxName });
-      await reloadSnapshot();
-    } catch (error) {
-      operationError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-    }
-  }
-
-  async function sendDraftNow(draftName) {
-    operationError.value = "";
-    try {
-      await sendDraftResource.submit({ draft_name: draftName });
-      await reloadSnapshot();
-    } catch (error) {
-      operationError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-    }
-  }
-
-  async function updateAssignmentContextStatus(status) {
-    if (!String(status || "").trim()) return;
-    operationError.value = "";
-    try {
-      await auxMutationResource.submit({
-        doctype: "AT Ownership Assignment",
-        name: filters.referenceName,
-        data: { status },
-      });
-      await reloadSnapshot();
-    } catch (error) {
-      operationError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-    }
-  }
-
-  async function startAssignmentContext() {
-    await updateAssignmentContextStatus("In Progress");
-  }
-
-  async function blockAssignmentContext() {
-    await updateAssignmentContextStatus("Blocked");
-  }
-
-  async function closeAssignmentContext() {
-    await updateAssignmentContextStatus("Done");
-  }
-
-  async function clearCallNoteContext() {
-    operationError.value = "";
-    try {
-      await auxMutationResource.submit({
-        doctype: "AT Call Note",
-        name: filters.referenceName,
-        data: {
-          next_follow_up_on: null,
-        },
-      });
-      await reloadSnapshot();
-    } catch (error) {
-      operationError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-    }
-  }
-
-  async function completeReminderContext() {
-    operationError.value = "";
-    try {
-      await auxMutationResource.submit({
-        doctype: "AT Reminder",
-        name: filters.referenceName,
-        data: {
-          status: "Done",
-        },
-      });
-      await reloadSnapshot();
-    } catch (error) {
-      operationError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-    }
-  }
-
-  async function cancelReminderContext() {
-    operationError.value = "";
-    try {
-      await auxMutationResource.submit({
-        doctype: "AT Reminder",
-        name: filters.referenceName,
-        data: {
-          status: "Cancelled",
-        },
-      });
-      await reloadSnapshot();
-    } catch (error) {
-      operationError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-    }
-  }
-
-  async function loadSegmentPreview() {
-    if (!segmentPreviewSegment.value) return;
-    segmentPreviewLoading.value = true;
-    segmentPreviewError.value = "";
-    try {
-      const result = await segmentPreviewResource.submit({
-        segment_name: segmentPreviewSegment.value,
-        limit: 20,
-      });
-      segmentPreviewPayload.value = result || null;
-    } catch (error) {
-      segmentPreviewPayload.value = null;
-      segmentPreviewError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedRead")
-        : error?.message || error?.exc || t("loadErrorTitle");
-    } finally {
-      segmentPreviewLoading.value = false;
-    }
-  }
-
-  async function runCampaignExecution() {
-    if (!campaignRunSelection.value) return;
-    campaignRunLoading.value = true;
-    campaignRunError.value = "";
-    try {
-      const result = await campaignRunResource.submit({
-        campaign_name: campaignRunSelection.value,
-        limit: 200,
-      });
-      campaignRunResult.value = result || null;
-      await reloadSnapshot();
-    } catch (error) {
-      campaignRunResult.value = null;
-      campaignRunError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.message || error?.exc || t("loadErrorTitle");
-    } finally {
-      campaignRunLoading.value = false;
-    }
-  }
-
   return {
-    dispatching,
-    operationError,
     showSegmentDialog,
     showCampaignDialog,
     showCampaignRunDialog,
@@ -526,27 +252,29 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
     openCallNoteDialog,
     openReminderDialog,
     openQuickMessageDialog,
-    campaignRunSelection,
-    campaignRunLoading,
-    campaignRunError,
-    campaignRunResult,
-    segmentPreviewSegment,
-    segmentPreviewLoading,
-    segmentPreviewError,
-    segmentPreviewPayload,
-    snapshotResource,
-    runCycleResource,
-    sendDraftResource,
-    retryOutboxResource,
-    auxMutationResource,
-    communicationQuickTemplateResource,
-    communicationQuickCustomerResource,
-    communicationQuickPolicyResource,
-    communicationQuickClaimResource,
-    communicationQuickSegmentResource,
-    communicationQuickCampaignResource,
-    segmentPreviewResource,
-    campaignRunResource,
+    dispatching: operations.dispatching,
+    operationError: operations.operationError,
+    campaignRunSelection: operations.campaignRunSelection,
+    campaignRunLoading: operations.campaignRunLoading,
+    campaignRunError: operations.campaignRunError,
+    campaignRunResult: operations.campaignRunResult,
+    segmentPreviewSegment: operations.segmentPreviewSegment,
+    segmentPreviewLoading: operations.segmentPreviewLoading,
+    segmentPreviewError: operations.segmentPreviewError,
+    segmentPreviewPayload: operations.segmentPreviewPayload,
+    snapshotResource: resources.snapshotResource,
+    runCycleResource: resources.runCycleResource,
+    sendDraftResource: resources.sendDraftResource,
+    retryOutboxResource: resources.retryOutboxResource,
+    auxMutationResource: resources.auxMutationResource,
+    communicationQuickTemplateResource: resources.communicationQuickTemplateResource,
+    communicationQuickCustomerResource: resources.communicationQuickCustomerResource,
+    communicationQuickPolicyResource: resources.communicationQuickPolicyResource,
+    communicationQuickClaimResource: resources.communicationQuickClaimResource,
+    communicationQuickSegmentResource: resources.communicationQuickSegmentResource,
+    communicationQuickCampaignResource: resources.communicationQuickCampaignResource,
+    segmentPreviewResource: resources.segmentPreviewResource,
+    campaignRunResource: resources.campaignRunResource,
     currentCommunicationPresetPayload,
     setCommunicationFilterStateFromPayload,
     resetCommunicationFilterState,
@@ -558,16 +286,16 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
     clearCustomerFilter,
     clearContextFilters,
     returnToContext,
-    runDispatchCycle,
-    retryOutbox,
-    sendDraftNow,
-    startAssignmentContext,
-    blockAssignmentContext,
-    closeAssignmentContext,
-    clearCallNoteContext,
-    completeReminderContext,
-    cancelReminderContext,
-    loadSegmentPreview,
-    runCampaignExecution,
+    runDispatchCycle: operations.runDispatchCycle,
+    retryOutbox: operations.retryOutbox,
+    sendDraftNow: operations.sendDraftNow,
+    startAssignmentContext: operations.startAssignmentContext,
+    blockAssignmentContext: operations.blockAssignmentContext,
+    closeAssignmentContext: operations.closeAssignmentContext,
+    clearCallNoteContext: operations.clearCallNoteContext,
+    completeReminderContext: operations.completeReminderContext,
+    cancelReminderContext: operations.cancelReminderContext,
+    loadSegmentPreview: operations.loadSegmentPreview,
+    runCampaignExecution: operations.runCampaignExecution,
   };
 }
