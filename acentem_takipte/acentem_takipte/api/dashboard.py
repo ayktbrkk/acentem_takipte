@@ -2477,16 +2477,21 @@ def _renewal_status_and_buckets(
             "retention": dict(cache[cache_key]["retention"]),
         }
 
-    filters = {}
+    conditions = ["1=1"]
+    values: dict[str, object] = {}
     if office_branch:
-        filters["office_branch"] = office_branch
+        conditions.append("rt.office_branch = %(office_branch)s")
+        values["office_branch"] = office_branch
     if branch or allowed_customers is not None:
         policy_names = _get_scoped_policy_names(
             branch=branch,
             office_branch=None,
             allowed_customers=allowed_customers,
         )
-        filters["policy"] = ["in", policy_names or ["__none__"]]
+        conditions.append("rt.policy in %(policies)s")
+        values["policies"] = tuple(policy_names or ["__none__"])
+
+    where_clause = " and ".join(conditions)
 
     status_rows_raw = frappe.db.sql(
         f"""
@@ -2526,17 +2531,6 @@ def _renewal_status_and_buckets(
         as_dict=True,
     )
     for row in bucket_rows:
-        due_date = row.get("due_date")
-        if due_date:
-            days_left = (getdate(due_date) - today).days
-            if days_left < 0:
-                buckets["overdue"] += 1
-            elif days_left <= 7:
-                buckets["due7"] += 1
-            elif days_left <= 30:
-                buckets["due30"] += 1
-        if status not in {"Open", "In Progress"}:
-            continue
         due_value = row.get("due_date") or row.get("renewal_date")
         if not due_value:
             continue

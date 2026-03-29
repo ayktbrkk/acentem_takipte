@@ -10,122 +10,46 @@
       class="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white transition-all duration-200 lg:static lg:z-0"
       :class="[mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', isCollapsed ? 'lg:w-24' : 'lg:w-[220px]']"
     >
-      <div class="border-b border-gray-100 px-4 py-4">
-        <div class="mb-4 flex items-center justify-between lg:hidden">
-          <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{{ t("menu") }}</p>
-          <button class="rounded-lg border border-slate-300 px-2 py-1 text-xs" type="button" @click="$emit('close')">
-            X
-          </button>
-        </div>
-
-        <div class="flex items-start gap-2.5">
-          <div class="min-w-0 flex-1">
-            <p class="text-sm font-medium text-gray-900" :class="isCollapsed ? 'text-center' : ''">{{ t("brand") }}</p>
-            <template v-if="!isCollapsed">
-              <p class="mt-0.5 text-xs text-gray-400">{{ t("subtitle") }}</p>
-            </template>
-            <template v-else>
-              <p class="mt-2 text-center text-xs font-semibold text-slate-700">{{ t("miniTitle") }}</p>
-            </template>
-          </div>
-
-          <button
-            class="hidden h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600 hover:bg-slate-100 lg:grid"
-            type="button"
-            :title="isCollapsed ? t('expandSidebar') : t('collapseSidebar')"
-            @click="toggleSidebarCollapsedDesktop"
-          >
-            {{ isCollapsed ? ">>" : "<<" }}
-          </button>
-        </div>
-      </div>
+      <SidebarBrandPanel
+        :menu-label="menuLabel"
+        :brand-label="brandLabel"
+        :subtitle-label="subtitleLabel"
+        :mini-title-label="miniTitleLabel"
+        :collapsed="isCollapsed"
+        :toggle-title="sidebarToggleTitle"
+        @close="$emit('close')"
+        @toggle-collapse="toggleSidebarCollapsedDesktop"
+      />
 
       <nav class="flex-1 overflow-y-auto pb-4">
-        <div v-for="section in navSections" :key="section.title" class="mb-4">
-          <p
-            v-if="!isCollapsed"
-            class="px-4 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-widest text-gray-400"
-          >
-            {{ section.title }}
-          </p>
-          <div v-else class="mx-2 mb-2 border-t border-slate-200/80" />
-
-          <template v-for="item in section.items" :key="item.key">
-            <a
-              v-if="item.external"
-              :href="item.to"
-              :title="item.label"
-              class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-900"
-              :class="linkClass(item)"
-              @click="$emit('navigate')"
-            >
-              <span
-                class="grid h-6 w-6 shrink-0 place-items-center rounded bg-gray-100 text-[10px] font-semibold text-gray-500"
-                :class="item.badgeClass"
-              >
-                {{ item.short }}
-              </span>
-              <div v-if="!isCollapsed" class="min-w-0 flex-1">
-                <p class="truncate font-medium" :class="item.indent ? 'text-xs text-slate-500' : ''">
-                  {{ item.label }}
-                </p>
-              </div>
-            </a>
-
-            <RouterLink
-              v-else
-              :to="item.to"
-              :title="item.label"
-              class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-900"
-              :class="linkClass(item)"
-              active-class="bg-brand-50 text-brand-700 font-medium border-l-2 border-brand-600 !rounded-l-none pl-[10px]"
-              @click="$emit('navigate')"
-            >
-              <span
-                class="grid h-6 w-6 shrink-0 place-items-center rounded bg-gray-100 text-[10px] font-semibold text-gray-500 [.router-link-active_&]:bg-brand-100 [.router-link-active_&]:text-brand-700"
-                :class="item.badgeClass"
-              >
-                {{ item.short }}
-              </span>
-              <div v-if="!isCollapsed" class="min-w-0 flex-1">
-                <p class="truncate font-medium" :class="item.indent ? 'text-xs text-slate-500' : ''">
-                  {{ item.label }}
-                </p>
-              </div>
-            </RouterLink>
-          </template>
-        </div>
+        <SidebarNavGroup
+          v-for="section in navSections"
+          :key="section.title"
+          :section="section"
+          :collapsed="isCollapsed"
+          @navigate="$emit('navigate')"
+        />
       </nav>
 
-      <footer class="mt-auto border-t border-gray-100 px-4 py-3">
-        <div class="mb-3 flex items-center gap-2.5">
-          <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-medium text-white">
-            {{ userInitials }}
-          </div>
-          <div v-if="!isCollapsed" class="min-w-0">
-            <p class="truncate text-xs font-medium text-gray-900">{{ userDisplayName }}</p>
-            <p class="truncate text-[10px] text-gray-400">{{ branchLabel }}</p>
-          </div>
-        </div>
-        <button
-          class="hidden w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 lg:flex"
-          type="button"
-          :title="isCollapsed ? t('expandSidebar') : t('collapseSidebar')"
-          @click="toggleSidebarCollapsedDesktop"
-        >
-          <span class="text-[11px]">{{ isCollapsed ? t("expandShort") : t("collapseShort") }}</span>
-          <span v-if="!isCollapsed">{{ t("collapseSidebar") }}</span>
-        </button>
-      </footer>
+      <SidebarFooterPanel
+        :collapsed="isCollapsed"
+        :user-initials="userInitials"
+        :user-display-name="userDisplayName"
+        :branch-label="branchLabel"
+        :toggle-title="sidebarToggleTitle"
+        :toggle-short-label="sidebarToggleShortLabel"
+        :collapse-sidebar-label="collapseSidebarLabel"
+        @toggle-collapse="toggleSidebarCollapsedDesktop"
+      />
     </aside>
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
-import { useUiStore } from "../stores/ui";
+import SidebarBrandPanel from "./sidebar/SidebarBrandPanel.vue";
+import SidebarFooterPanel from "./sidebar/SidebarFooterPanel.vue";
+import SidebarNavGroup from "./sidebar/SidebarNavGroup.vue";
+import { useSidebarNavigation } from "../composables/useSidebarNavigation";
 
 defineProps({
   mobileOpen: {
@@ -135,182 +59,20 @@ defineProps({
 });
 
 defineEmits(["close", "navigate"]);
-const authStore = useAuthStore();
-const branchStore = useBranchStore();
-const uiStore = useUiStore();
 
-const copy = {
-  tr: {
-    menu: "Menü",
-    brand: "Acentem Takipte",
-    title: "Sigorta CRM",
-    miniTitle: "CRM",
-    subtitle: "Fırsat, poliçe, hasar ve tahsilat operasyonları",
-    sectionOverview: "Genel Görünüm",
-    sectionSalesPortfolio: "Satış ve Portföy",
-    sectionOperations: "Operasyonlar",
-    sectionCommunication: "İletişim ve Takip",
-    sectionMaster: "Ana Veriler",
-    sectionFinance: "Finans ve Kontrol",
-    dashboard: "Pano",
-    leads: "Fırsatlar",
-    offers: "Teklifler",
-    policies: "Poliçeler",
-    customers: "Müşteriler",
-    customerSearch: "Müşteri Ara",
-    claims: "Hasarlar",
-    payments: "Ödemeler",
-    renewals: "Yenilemeler",
-    reconciliation: "Mutabakat",
-    communication: "İletişim Merkezi",
-    reports: "Raporlar",
-    breakGlassRequest: "Acil Erisim Talebi",
-    breakGlassApprovals: "Acil Erisim Onaylari",
-    dataImport: "Veri İçe Aktarma",
-    dataExport: "Veri Dışa Aktarma",
-    tasks: "Görevler",
-    notificationDrafts: "Bildirim Taslakları",
-    notificationOutbox: "Giden Bildirimler",
-    companies: "Sigorta Şirketleri",
-    branches: "Branşlar",
-    salesEntities: "Satış Birimleri",
-    templates: "Bildirim Şablonları",
-    accountingEntries: "Muhasebe Kayıtları",
-    reconciliationItems: "Mutabakat Kalemleri",
-    collapseSidebar: "Kenar menüsünü daralt",
-    expandSidebar: "Kenar menüsünü genişlet",
-    collapseShort: "Daralt",
-    expandShort: "Genişlet",
-  },
-  en: {
-    menu: "Menu",
-    brand: "Acentem Takipte",
-    title: "Insurance CRM",
-    miniTitle: "CRM",
-    subtitle: "Lead, policy, claim, and collections operations",
-    sectionOverview: "Overview",
-    sectionSalesPortfolio: "Sales & Portfolio",
-    sectionOperations: "Operations",
-    sectionCommunication: "Communication & Follow-up",
-    sectionMaster: "Master Data",
-    sectionFinance: "Finance & Control",
-    dashboard: "Dashboard",
-    leads: "Leads",
-    offers: "Offers",
-    policies: "Policies",
-    customers: "Customers",
-    customerSearch: "Search Customers",
-    claims: "Claims",
-    payments: "Payments",
-    renewals: "Renewals",
-    reconciliation: "Reconciliation",
-    communication: "Communication Center",
-    reports: "Reports",
-    breakGlassRequest: "Break-Glass Request",
-    breakGlassApprovals: "Break-Glass Approvals",
-    dataImport: "Data Import",
-    dataExport: "Data Export",
-    tasks: "Tasks",
-    notificationDrafts: "Notification Drafts",
-    notificationOutbox: "Sent Notifications",
-    companies: "Insurance Companies",
-    branches: "Branches",
-    salesEntities: "Sales Entities",
-    templates: "Notification Templates",
-    accountingEntries: "Accounting Entries",
-    reconciliationItems: "Reconciliation Items",
-    collapseSidebar: "Collapse Sidebar",
-    expandSidebar: "Expand Sidebar",
-    collapseShort: "Collapse",
-    expandShort: "Expand",
-  },
-};
-
-function t(key) {
-  return copy[authStore.locale]?.[key] || copy.en[key] || key;
-}
-
-const isCollapsed = computed(() => uiStore.sidebarCollapsed);
-const userDisplayName = computed(() => String(authStore.user || authStore.userId || "-").trim() || "-");
-const userInitials = computed(() => {
-  const parts = userDisplayName.value.split(/\s+/).filter(Boolean);
-  if (!parts.length) return "AT";
-  return parts.slice(0, 2).map((part) => String(part[0] || "")).join("").toUpperCase();
-});
-const branchLabel = computed(() => String(branchStore.requestBranch || authStore.defaultOfficeBranch || "-").trim() || "-");
-const isSystemManager = computed(() => Boolean(authStore.isDeskUser));
-
-function toggleSidebarCollapsedDesktop() {
-  uiStore.toggleSidebarCollapsed();
-}
-
-function linkClass(item) {
-  if (isCollapsed.value) {
-    return "justify-center px-2";
-  }
-  if (item.indent) {
-    return "pl-8 pr-3";
-  }
-  return "px-3";
-}
-
-const navSections = computed(() => [
-  {
-    title: t("sectionOverview"),
-    items: [
-      { key: "dashboard", label: t("dashboard"), to: "/", short: "DB", badgeClass: "text-emerald-700" },
-    ],
-  },
-  {
-    title: t("sectionSalesPortfolio"),
-    items: [
-      { key: "leads", label: t("leads"), to: "/leads", short: "LD", badgeClass: "text-fuchsia-700" },
-      { key: "offers", label: t("offers"), to: "/offers", short: "OF", badgeClass: "text-teal-700" },
-      { key: "policies", label: t("policies"), to: "/policies", short: "PL", badgeClass: "text-sky-700" },
-      { key: "customers", label: t("customers"), to: "/customers", short: "CU", badgeClass: "text-cyan-700" },
-      { key: "customer-search", label: t("customerSearch"), to: "/customer-search", short: "CS", badgeClass: "text-teal-700" },
-    ],
-  },
-  {
-    title: t("sectionOperations"),
-    items: [
-      { key: "claims", label: t("claims"), to: "/claims", short: "CL", badgeClass: "text-amber-700" },
-      { key: "payments", label: t("payments"), to: "/payments", short: "PM", badgeClass: "text-indigo-700" },
-      { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", badgeClass: "text-amber-700" },
-      { key: "reconciliation", label: t("reconciliation"), to: "/reconciliation", short: "RC", badgeClass: "text-cyan-700" },
-      { key: "reports", label: t("reports"), to: "/reports", short: "RP", badgeClass: "text-sky-700" },
-      { key: "data-import", label: t("dataImport"), to: "/data-import", short: "IM", badgeClass: "text-emerald-700" },
-      { key: "data-export", label: t("dataExport"), to: "/data-export", short: "EX", badgeClass: "text-indigo-700" },
-    ],
-  },
-  {
-    title: t("sectionCommunication"),
-    items: [
-      { key: "communication", label: t("communication"), to: "/communication", short: "CM", badgeClass: "text-violet-700" },
-      { key: "tasks", label: t("tasks"), to: "/tasks", short: "TS", badgeClass: "text-slate-700" },
-      { key: "notification-drafts", label: t("notificationDrafts"), to: "/notification-drafts", short: "ND", badgeClass: "text-blue-700" },
-      { key: "notification-outbox", label: t("notificationOutbox"), to: "/notification-outbox", short: "NO", badgeClass: "text-green-700" },
-    ],
-  },
-  {
-    title: t("sectionMaster"),
-    items: [
-      { key: "companies", label: t("companies"), to: "/insurance-companies", short: "IC", badgeClass: "text-violet-700" },
-      { key: "branches", label: t("branches"), to: "/branches", short: "BR", badgeClass: "text-orange-700" },
-      { key: "sales-entities", label: t("salesEntities"), to: "/sales-entities", short: "SE", badgeClass: "text-lime-700" },
-      { key: "templates", label: t("templates"), to: "/notification-templates", short: "NT", badgeClass: "text-pink-700" },
-    ],
-  },
-  {
-    title: t("sectionFinance"),
-    items: [
-      { key: "break-glass-request", label: t("breakGlassRequest"), to: "/break-glass", short: "BG", badgeClass: "text-rose-700" },
-      ...(isSystemManager.value
-        ? [{ key: "break-glass-approvals", label: t("breakGlassApprovals"), to: "/break-glass/approvals", short: "BA", badgeClass: "text-rose-700" }]
-        : []),
-      { key: "accounting-entries", label: t("accountingEntries"), to: "/accounting-entries", short: "AC", badgeClass: "text-slate-700" },
-      { key: "reconciliation-items", label: t("reconciliationItems"), to: "/reconciliation-items", short: "RI", badgeClass: "text-cyan-700" },
-    ],
-  },
-]);
+const {
+  isCollapsed,
+  menuLabel,
+  brandLabel,
+  subtitleLabel,
+  miniTitleLabel,
+  collapseSidebarLabel,
+  sidebarToggleTitle,
+  sidebarToggleShortLabel,
+  userDisplayName,
+  userInitials,
+  branchLabel,
+  navSections,
+  toggleSidebarCollapsedDesktop,
+} = useSidebarNavigation();
 </script>
