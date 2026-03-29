@@ -103,6 +103,6 @@ describe("usePolicyListPresetSync", () => {
 
     expect(customPresets.value).toEqual([{ id: "remote", label: "Remote", payload: { status: "Active" } }]);
     expect(JSON.parse(window.localStorage.getItem("at:policy-list:preset-list"))).toEqual(customPresets.value);
-    expect(applyPolicyPreset).toHaveBeenCalledWith("custom:remote", { refresh: true });
+    expect(applyPolicyPreset).toHaveBeenCalledWith("custom:remote", { refresh: false });
   });
 });

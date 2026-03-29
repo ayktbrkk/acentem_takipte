@@ -1,4 +1,4 @@
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, unref } from "vue";
 
 import {
   extractCustomFilterPresetId,
@@ -131,7 +131,7 @@ export function usePolicyListFilters({
 
   function onPolicyListFilterChange({ key, value }) {
     const nextValue = String(value || "");
-    policyListLocalFilters[key] = key === "status" ? nextValue.toLocaleLowerCase(localeCode) : nextValue;
+    policyListLocalFilters[key] = key === "status" ? nextValue.toLocaleLowerCase(unref(localeCode)) : nextValue;
     pagination.page = 1;
   }
 
@@ -157,7 +157,7 @@ export function usePolicyListFilters({
       label: name,
       payload: currentPolicyPresetPayload(),
     });
-    policyCustomPresets.value = nextList.sort((a, b) => a.label.localeCompare(b.label, localeCode));
+    policyCustomPresets.value = nextList.sort((a, b) => a.label.localeCompare(b.label, unref(localeCode)));
     writeFilterPresetList(POLICY_PRESET_LIST_STORAGE_KEY, policyCustomPresets.value);
     policyPresetKey.value = makeCustomFilterPresetValue(targetId);
     writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, policyPresetKey.value);

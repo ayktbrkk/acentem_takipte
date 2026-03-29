@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
-
-from frappe.tests import IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.api import security as security_api
 from acentem_takipte.acentem_takipte.utils.logging import (
@@ -13,7 +13,7 @@ from acentem_takipte.acentem_takipte.utils.logging import (
 )
 
 
-class TestLoggingRedaction(IntegrationTestCase):
+class TestLoggingRedaction(unittest.TestCase):
     def test_redact_value_masks_sensitive_keys(self):
         self.assertEqual(redact_value("tax_id", "12345678901"), "12*******01")
         self.assertEqual(redact_value("phone", "05321234567"), "05*******67")
@@ -35,14 +35,20 @@ class TestLoggingRedaction(IntegrationTestCase):
         self.assertEqual(redacted["details"]["email"], "de************om")
 
     def test_audit_admin_action_logs_redacted_payload(self):
-        with patch.object(security_api.frappe.session, "user", "manager@example.com"):
-            with patch.object(security_api.frappe, "logger") as logger_mock:
-                security_api.audit_admin_action(
-                    "api.test.action",
-                    {"tax_id": "12345678901", "email": "demo@example.com"},
-                )
+        fake_logger = unittest.mock.MagicMock()
+        fake_frappe = SimpleNamespace(
+            session=SimpleNamespace(user="manager@example.com"),
+            local=SimpleNamespace(request_ip="127.0.0.1"),
+            logger=lambda name: fake_logger,
+        )
 
-        args = logger_mock.return_value.info.call_args.args
+        with patch.object(security_api, "frappe", fake_frappe):
+            security_api.audit_admin_action(
+                "api.test.action",
+                {"tax_id": "12345678901", "email": "demo@example.com"},
+            )
+
+        args = fake_logger.info.call_args.args
         self.assertEqual(args[0], "AT admin action: %s")
         self.assertEqual(args[1]["details"]["tax_id"], "12*******01")
         self.assertEqual(args[1]["details"]["email"], "de************om")
@@ -73,4 +79,30 @@ class TestLoggingRedaction(IntegrationTestCase):
         self.assertIn("op***********om", args[1])
         self.assertNotIn("05321234567", args[1])
         self.assertNotIn("ops@example.com", args[1])
+
+    def test_log_redacted_error_falls_back_when_title_is_too_long(self):
+        calls = []
+        length_error = type("CharacterLengthExceededError", (Exception,), {})
+
+        def _log_error(traceback_text, title):
+            calls.append(title)
+            if len(title) > 140:
+                raise length_error("too long")
+
+        with patch("frappe.log_error", side_effect=_log_error):
+            with patch("frappe.get_traceback", return_value="trace"):
+                log_redacted_error(
+                    "Report payload build failed",
+                    details={
+                        "filters": {
+                            "branch": "ANK",
+                            "status": "Open",
+                            "insurance_company": "X" * 200,
+                            "sales_entity": "Y" * 200,
+                        }
+                    },
+                )
+
+        self.assertGreaterEqual(len(calls), 2)
+        self.assertEqual(calls[-1], "Report payload build failed")
 

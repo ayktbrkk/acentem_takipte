@@ -107,7 +107,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
         ...task,
         customerLabel: renewalCustomerLookupMap.value[task.customer]?.full_name || task.customer || "-",
         branchLabel: branchOptions.find((branch) => branch.value === task.office_branch)?.label || task.office_branch || "-",
-        premiumLabel: formatRenewalPremium(task.estimated_premium_amount, task.currency),
+        premiumLabel: formatRenewalPremium(task.estimated_gross_premium || task.gross_premium, task.currency),
         avatarInitials: buildInitials(task.customer || task.policy || task.name),
         priorityTone: priorityMeta.tone,
         priorityLabel: priorityMeta.label,
@@ -280,6 +280,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
 
   function formatRenewalPremium(amount, currency) {
     const number = Number(amount || 0);
+    if (!Number.isFinite(number) || number <= 0) return "-";
     return new Intl.NumberFormat(localeCode.value, {
       style: "currency",
       currency: currency || "TRY",
@@ -328,7 +329,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
       avatarInitials: buildInitials(task.customer || task.policy || task.name),
       branchLabel: branchStore.items.find((branch) => branch.name === task.office_branch)?.office_branch_name || task.office_branch || "-",
       customerLabel: renewalCustomerLookupMap.value[task.customer]?.full_name || task.customer || "-",
-      premiumLabel: formatRenewalPremium(task.estimated_premium_amount, task.currency),
+      premiumLabel: formatRenewalPremium(task.estimated_gross_premium || task.gross_premium, task.currency),
       priorityLabel: priorityMeta.label,
       priorityTone: priorityMeta.tone,
       status: task.status || "",
@@ -378,10 +379,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
         "status",
         "due_date",
         "renewal_date",
-        "estimated_premium_amount",
-        "currency",
         "lost_reason_code",
-        "lost_reason_detail",
       ],
       order_by: "due_date asc, modified desc",
       limit_page_length: Number(filters.limit) || 40,

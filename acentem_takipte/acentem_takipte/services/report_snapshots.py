@@ -100,9 +100,9 @@ def store_report_snapshot_payload(
     snapshot.report_key = normalized_report_key
     snapshot.snapshot_date = business_date
     snapshot.scope_hash = scope_hash
-    snapshot.filters_json = json.dumps(normalized_filters, ensure_ascii=False, sort_keys=True)
-    snapshot.columns_json = json.dumps(normalized_payload["columns"], ensure_ascii=False)
-    snapshot.rows_json = json.dumps(rows, ensure_ascii=False)
+    snapshot.filters_json = json.dumps(normalized_filters, ensure_ascii=False, sort_keys=True, default=str)
+    snapshot.columns_json = json.dumps(normalized_payload["columns"], ensure_ascii=False, default=str)
+    snapshot.rows_json = json.dumps(rows, ensure_ascii=False, default=str)
     snapshot.row_count = len(rows)
     snapshot.source_version = str(normalized_payload["source_version"] or SNAPSHOT_SOURCE_VERSION)
     snapshot.generated_on = now_datetime()

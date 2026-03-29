@@ -64,4 +64,26 @@ def build_redacted_log_message(message: str, details=None) -> str:
 def log_redacted_error(message: str, details=None, traceback_text: str | None = None) -> None:
     import frappe
 
-    frappe.log_error(traceback_text or frappe.get_traceback(), build_redacted_log_message(message, details))
+    title = build_redacted_log_message(message, details)
+    try:
+        frappe.log_error(traceback_text or frappe.get_traceback(), title)
+    except Exception as exc:
+        if not _looks_like_log_title_length_error(exc):
+            raise
+        fallback_title = _truncate_log_title(message)
+        if fallback_title == title:
+            raise
+        frappe.log_error(traceback_text or frappe.get_traceback(), fallback_title)
+
+
+def _truncate_log_title(message: str, max_length: int = 140) -> str:
+    title = str(message or "").strip() or "Application error"
+    if len(title) <= max_length:
+        return title
+    return f"{title[: max_length - 3].rstrip()}..."
+
+
+def _looks_like_log_title_length_error(exc: Exception) -> bool:
+    if exc.__class__.__name__ == "CharacterLengthExceededError":
+        return True
+    return "max characters allowed" in str(exc).lower()

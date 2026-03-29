@@ -44,7 +44,7 @@ export function usePolicyListPresetSync({
 
       if (!remoteHasState) {
         if (localHasState) {
-          void persistPolicyPresetStateToServer();
+          await persistPolicyPresetStateToServer();
         }
         return;
       }
@@ -62,7 +62,7 @@ export function usePolicyListPresetSync({
 
       customPresets.value = remoteCustomPresets;
       writeFilterPresetList(presetListStorageKey, customPresets.value);
-      applyPolicyPreset?.(remoteSelectedKey, { refresh: true });
+      applyPolicyPreset?.(remoteSelectedKey, { refresh: false });
     } catch {
       // Keep local-only behavior on any API error.
     }

@@ -78,6 +78,10 @@ export const useRenewalStore = defineStore("renewal", () => {
     Object.assign(state.filters, nextFilters && typeof nextFilters === "object" ? nextFilters : {});
   }
 
+  function resetFilters() {
+    Object.assign(state.filters, createRenewalInitialState().filters);
+  }
+
   function setSummary(summary) {
     state.summary = {
       ...state.summary,
@@ -103,6 +107,7 @@ export const useRenewalStore = defineStore("renewal", () => {
     setItems,
     setSelected,
     setFilters,
+    resetFilters,
     setSummary,
     reset,
     buildRenewalSummary,
