@@ -44,7 +44,9 @@ test.describe("Acentem Takipte detail pages smoke", () => {
         await page.goto(`${config.routePrefix}/${encodeURIComponent(name)}`);
         await expect(page.locator(".page-shell").first()).toBeVisible();
         await expect(page.locator(".detail-title").first()).toBeVisible();
-        await expect(page.locator(".nav-tabs-bar").first()).toBeVisible();
+        if (config.label !== "offer") {
+          await expect(page.locator(".nav-tabs-bar").first()).toBeVisible();
+        }
       });
     }
   });

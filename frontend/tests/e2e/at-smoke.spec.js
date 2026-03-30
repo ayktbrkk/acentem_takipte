@@ -37,6 +37,7 @@ test.describe("Acentem Takipte smoke", () => {
     await expect(page.getByText(/Dashboard|Pano|Operasyon Panosu/i).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Offers|Teklif/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Policies|Poliçe/i }).first()).toBeVisible();
+    await page.waitForTimeout(4000);
 
     await page.getByRole("link", { name: /Offers|Teklif/i }).first().click();
     await expect(page).toHaveURL(/\/at\/offers/);
@@ -59,7 +60,7 @@ test.describe("Acentem Takipte smoke", () => {
     expect(isLoginHeadingVisible || atRouteRedirectedToLogin).toBeTruthy();
 
     const sessionContextResponse = await page.request.get(
-      "/api/method/acentem_takipte.api.session.get_session_context"
+      "/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context"
     );
     const sessionContextText = await sessionContextResponse.text().catch(() => "");
     let sessionContextPayload = null;
@@ -97,7 +98,7 @@ test.describe("Acentem Takipte smoke", () => {
     await ensureAuthenticated(page);
 
     const sessionContextResponse = await page.request.get(
-      "/api/method/acentem_takipte.api.session.get_session_context"
+      "/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context"
     );
     const policyResponse = await page.request.get(
       "/api/method/acentem_takipte.acentem_takipte.api.reports.get_policy_list_report"
@@ -144,7 +145,7 @@ test.describe("Acentem Takipte smoke", () => {
     await ensureAuthenticated(page);
 
     const sessionContextResponse = await page.request.get(
-      "/api/method/acentem_takipte.api.session.get_session_context"
+      "/api/method/acentem_takipte.acentem_takipte.api.session.get_session_context"
     );
     const sessionPayload = await readMethodPayload(sessionContextResponse);
     const userRoles = (Array.isArray(sessionPayload?.message?.roles) ? sessionPayload.message.roles : []).map(
@@ -156,7 +157,7 @@ test.describe("Acentem Takipte smoke", () => {
 
     const snapshotResponse = await callPostMethod(
       page,
-      "acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+      "acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
       { limit: 250 }
     );
 
@@ -183,7 +184,7 @@ test.describe("Acentem Takipte smoke", () => {
     await ensureAuthenticated(page);
 
     const response = await page.request.get(
-      "/api/method/acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job"
+      "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job"
     );
     const text = await response.text().catch(() => "");
     let payload = null;

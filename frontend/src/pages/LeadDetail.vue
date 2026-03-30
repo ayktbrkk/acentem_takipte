@@ -202,6 +202,7 @@ const leadRuntime = useLeadDetailRuntime({
 
 const {
   lead,
+  t,
   loading,
   loadErrorText,
   leadDisplayTitle,

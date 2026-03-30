@@ -2,7 +2,7 @@ import { computed, onBeforeUnmount, ref, unref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
-export function useLeadDetailRuntime({ name, activeLocale }) {
+export function useLeadDetailRuntime({ name, activeLocale, t = (key) => key }) {
   const router = useRouter();
   const leadName = computed(() => String(unref(name) || "").trim());
   const localeValue = computed(() => unref(activeLocale) || "en");
@@ -633,6 +633,7 @@ export function useLeadDetailRuntime({ name, activeLocale }) {
   onBeforeUnmount(clearActionFeedback);
 
   return {
+    t,
     lead,
     loading,
     loadErrorText,
