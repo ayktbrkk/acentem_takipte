@@ -3,16 +3,20 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, unref } from "vue";
+import { getActivePinia } from "pinia";
+
+import { useAuthStore } from "@/stores/auth";
+import { translateText } from "@/utils/i18n";
 
 const props = defineProps({
   status: { type: String, required: true },
-  // Domain: 'customer', 'policy', 'offer', 'lead', 'claim', 'renewal', 'payment', etc.
-  // Otomatik muamele yapıyoruz; gerekirse explicit ayarla
+  locale: { type: String, default: "" },
+  // Domain: customer, policy, offer, lead, claim, renewal, payment, etc.
+  // We normalize the raw value first and then localize the final label.
   domain: { type: String, default: null },
 });
 
-// Frappe raw value → normalization mapping
 const DOMAIN_MAP = {
   customer: {
     1: "active",      // customer.enabled = 1
@@ -25,26 +29,26 @@ const DOMAIN_MAP = {
     Granted: "active",
     Revoked: "cancel",
   },
+  lead: {
+    Draft: "draft",
+    Open: "open",
+    Replied: "active",
+    Closed: "cancel",
+  },
+  offer: {
+    Draft: "draft",
+    Sent: "waiting",
+    Accepted: "open",
+    Rejected: "cancel",
+    Converted: "active",
+  },
   policy: {
     "Active": "active",
     "Draft": "draft",
-    "KYT": "waiting",  // Kaybedilme Tehdidi Altında
-    "IPT": "waiting",  // İptal Prim Teklifinde
+    "KYT": "waiting",
+    "IPT": "waiting",
     "Expired": "cancel",
     "Cancelled": "cancel",
-  },
-  offer: {
-    "Draft": "draft",
-    "Sent": "waiting",
-    "Accepted": "open",
-    "Rejected": "cancel",
-    "Converted": "active",
-  },
-  lead: {
-    "Draft": "draft",
-    "Open": "open",
-    "Replied": "active",
-    "Closed": "cancel",
   },
   lead_conversion: {
     "Actionable": "open",
@@ -147,124 +151,172 @@ const DOMAIN_MAP = {
     "Synced": "active",
     "Failed": "cancel",
   },
-};
+  };
 
 const DOMAIN_LABELS = {
   consent: {
-    Unknown: "Bilinmiyor",
-    Granted: "Onaylı",
-    Revoked: "İptal",
+    Unknown: "Unknown",
+    Granted: "Granted",
+    Revoked: "Revoked",
+  },
+  lead: {
+    Draft: "Draft",
+    Open: "Open",
+    Replied: "Replied",
+    Closed: "Closed",
+  },
+  offer: {
+    Draft: "Draft",
+    Sent: "Sent",
+    Accepted: "Accepted",
+    Rejected: "Rejected",
+    Converted: "Converted",
   },
   lead_conversion: {
-    Actionable: "Aksiyon Bekliyor",
-    Offer: "Teklife Dönüştü",
-    Policy: "Poliçeye Dönüştü",
-    Incomplete: "Eksik Bilgi",
-    Closed: "Kapalı",
+    Actionable: "Actionable",
+    Offer: "Converted to Offer",
+    Policy: "Converted to Policy",
+    Incomplete: "Incomplete",
+    Closed: "Closed",
   },
   lead_stale: {
-    Fresh: "Güncel",
-    FollowUp: "Takip Et",
-    Stale: "Bekliyor",
+    Fresh: "Fresh",
+    FollowUp: "Follow Up",
+    Stale: "Stale",
   },
   activity: {
-    Draft: "Taslak",
-    Open: "Açık",
-    "In Progress": "Devam Ediyor",
-    Pending: "Bekliyor",
-    Done: "Tamamlandı",
-    Completed: "Tamamlandı",
-    Cancelled: "İptal",
+    Draft: "Draft",
+    Open: "Open",
+    "In Progress": "In Progress",
+    Pending: "Pending",
+    Done: "Done",
+    Completed: "Completed",
+    Cancelled: "Cancelled",
   },
   reminder: {
-    Draft: "Taslak",
-    Open: "Açık",
-    Scheduled: "Planlandı",
-    Pending: "Bekliyor",
-    Snoozed: "Ertelendi",
-    Done: "Tamamlandı",
-    Completed: "Tamamlandı",
-    Cancelled: "İptal",
+    Draft: "Draft",
+    Open: "Open",
+    Scheduled: "Scheduled",
+    Pending: "Pending",
+    Snoozed: "Snoozed",
+    Done: "Done",
+    Completed: "Completed",
+    Cancelled: "Cancelled",
   },
   payment: {
-    Draft: "Taslak",
-    Outstanding: "Açık",
-    Pending: "Bekliyor",
-    Processing: "İşleniyor",
-    Overdue: "Vadesi Geçti",
-    "Partially Paid": "Kısmi Ödendi",
-    Paid: "Ödendi",
-    Completed: "Tamamlandı",
-    Failed: "Başarısız",
-    Cancelled: "İptal",
+    Draft: "Draft",
+    Outstanding: "Outstanding",
+    Pending: "Pending",
+    Processing: "Processing",
+    Overdue: "Overdue",
+    "Partially Paid": "Partially Paid",
+    Paid: "Paid",
+    Completed: "Completed",
+    Failed: "Failed",
+    Cancelled: "Cancelled",
   },
   payment_direction: {
-    Inbound: "Tahsilat",
-    Outbound: "Ödeme",
+    Inbound: "Inbound",
+    Outbound: "Outbound",
   },
   notification_status: {
-    Draft: "Taslak",
-    Queued: "Kuyrukta",
-    Processing: "İşleniyor",
-    Sent: "Gönderildi",
-    Failed: "Başarısız",
-    Dead: "Kalıcı Hata",
+    Draft: "Draft",
+    Queued: "Queued",
+    Processing: "Processing",
+    Sent: "Sent",
+    Failed: "Failed",
+    Dead: "Dead",
   },
   notification_channel: {
     SMS: "SMS",
-    Email: "E-posta",
-    WHATSAPP: "WhatsApp",
-    Both: "Her İkisi",
+    Email: "Email",
+    WhatsApp: "WhatsApp",
+    Both: "Both",
   },
   boolean_active: {
-    "1": "Aktif",
-    "0": "Pasif",
-    true: "Aktif",
-    false: "Pasif",
+    "1": "Active",
+    "0": "Inactive",
+    true: "Active",
+    false: "Inactive",
   },
   sales_entity_type: {
-    Agency: "Acente",
-    Representative: "Temsilci",
-    "Sub-Account": "Alt Hesap",
+    Agency: "Agency",
+    Representative: "Representative",
+    "Sub-Account": "Sub-Account",
   },
   accounting_sync: {
-    Draft: "Taslak",
-    Synced: "Senkronize",
-    Failed: "Başarısız",
+    Draft: "Draft",
+    Synced: "Synced",
+    Failed: "Failed",
+  },
+  claim: {
+    Draft: "Draft",
+    Open: "Open",
+    "Under Review": "Under Review",
+    Approved: "Approved",
+    Paid: "Paid",
+    Closed: "Closed",
+    Rejected: "Rejected",
+    Cancelled: "Cancelled",
+  },
+  reconciliation: {
+    Open: "Open",
+    Matched: "Matched",
+    Pending: "Pending",
+    Mismatch: "Mismatch",
+    Cancelled: "Cancelled",
+  },
+  policy: {
+    Active: "Active",
+    Draft: "Draft",
+    Expired: "Expired",
+    Cancelled: "Cancelled",
   },
 };
 
 const STANDARD_MAP = {
-  active: { cls: "status-active", label: "Aktif" },
-  draft: { cls: "status-draft", label: "Taslak" },
-  waiting: { cls: "status-waiting", label: "Bekliyor" },
-  open: { cls: "status-open", label: "Açık" },
-  cancel: { cls: "status-cancel", label: "İptal" },
+  active: { cls: "status-active", label: "Active" },
+  draft: { cls: "status-draft", label: "Draft" },
+  waiting: { cls: "status-waiting", label: "Waiting" },
+  open: { cls: "status-open", label: "Open" },
+  cancel: { cls: "status-cancel", label: "Cancelled" },
 };
+
+const authStore = getActivePinia() ? useAuthStore() : null;
+
+const activeLocale = computed(() => {
+  const explicitLocale = String(props.locale || "").trim();
+  if (explicitLocale) return explicitLocale.toLowerCase();
+  return String(authStore ? unref(authStore.locale) || "en" : "en").trim().toLowerCase();
+});
+
+const translateBadgeText = (source) => translateText(source, activeLocale.value);
 
 const normalizedStatus = computed(() => {
   const raw = String(props.status || "").trim();
-  
-  // 1. Try domain-specific mapping
+
+  // 1. Try domain-specific mapping.
   if (props.domain && DOMAIN_MAP[props.domain]) {
     const domainNorm = DOMAIN_MAP[props.domain][raw];
     if (domainNorm) return domainNorm;
   }
-  
-  // 2. Fallback: lowercase → try standard map
+
+  // 2. Fallback: lower-case and check the standard map.
   const lower = raw.toLowerCase();
   if (STANDARD_MAP[lower]) return lower;
-  
-  // 3. Last resort: kesin lowercase değerse (e.g., "active" → "active")
+
+  // 3. Last resort: preserve a lower-case match when available.
   return lower in STANDARD_MAP ? lower : "draft";
 });
 
 const localizedDomainLabel = computed(() => {
   const raw = String(props.status || "").trim();
   if (!props.domain || !DOMAIN_LABELS[props.domain]) return null;
-  return DOMAIN_LABELS[props.domain][raw] || null;
+  const sourceLabel = DOMAIN_LABELS[props.domain][raw] || null;
+  return sourceLabel ? translateBadgeText(sourceLabel) : null;
 });
 
 const variantClass = computed(() => STANDARD_MAP[normalizedStatus.value]?.cls ?? "status-draft");
-const label = computed(() => localizedDomainLabel.value || STANDARD_MAP[normalizedStatus.value]?.label || props.status);
+const fallbackLabel = computed(() => translateBadgeText(STANDARD_MAP[normalizedStatus.value]?.label || props.status || ""));
+const label = computed(() => localizedDomainLabel.value || fallbackLabel.value || props.status);
 </script>

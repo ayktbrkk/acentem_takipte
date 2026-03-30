@@ -1,62 +1,77 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { mount } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
 
 import StatusBadge from "../../../src/components/ui/StatusBadge.vue";
+import { useAuthStore } from "../../../src/stores/auth";
+import { translateText } from "../../../src/utils/i18n";
 
 describe("ui/StatusBadge", () => {
-  it("maps consent statuses with customer-facing labels", () => {
-    const granted = mount(StatusBadge, {
-      props: { domain: "consent", status: "Granted" },
+  let pinia;
+
+  beforeEach(() => {
+    pinia = createPinia();
+    setActivePinia(pinia);
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "tr",
     });
-    expect(granted.text()).toBe("Onaylı");
+  });
+
+  function mountBadge(props) {
+    return mount(StatusBadge, {
+      props,
+      global: {
+        plugins: [pinia],
+      },
+    });
+  }
+
+  it("maps consent and lead statuses with localized labels", () => {
+    const granted = mountBadge({ domain: "consent", status: "Granted" });
+    expect(granted.text()).toBe(translateText("Granted", "tr"));
     expect(granted.find("span").classes()).toContain("status-active");
 
-    const unknown = mount(StatusBadge, {
-      props: { domain: "consent", status: "Unknown" },
-    });
-    expect(unknown.text()).toBe("Bilinmiyor");
-    expect(unknown.find("span").classes()).toContain("status-draft");
+    const replied = mountBadge({ domain: "lead", status: "Replied" });
+    expect(replied.text()).toBe(translateText("Replied", "tr"));
+    expect(replied.find("span").classes()).toContain("status-active");
   });
 
-  it("supports customer detail activity and reminder domains", () => {
-    const activity = mount(StatusBadge, {
-      props: { domain: "activity", status: "Done" },
-    });
-    expect(activity.text()).toBe("Tamamlandı");
-    expect(activity.find("span").classes()).toContain("status-active");
+  it("supports offer, claim, and stale lead badges", () => {
+    const offer = mountBadge({ domain: "offer", status: "Accepted" });
+    expect(offer.text()).toBe(translateText("Accepted", "tr"));
+    expect(offer.find("span").classes()).toContain("status-open");
 
-    const reminder = mount(StatusBadge, {
-      props: { domain: "reminder", status: "Snoozed" },
-    });
-    expect(reminder.text()).toBe("Ertelendi");
-    expect(reminder.find("span").classes()).toContain("status-waiting");
+    const claim = mountBadge({ domain: "claim", status: "Under Review" });
+    expect(claim.text()).toBe(translateText("Under Review", "tr"));
+    expect(claim.find("span").classes()).toContain("status-waiting");
+
+    const followUp = mountBadge({ domain: "lead_stale", status: "FollowUp" });
+    expect(followUp.text()).toBe(translateText("Follow Up", "tr"));
+    expect(followUp.find("span").classes()).toContain("status-waiting");
+
+    const stale = mountBadge({ domain: "lead_stale", status: "Stale" });
+    expect(stale.text()).toBe(translateText("Stale", "tr"));
+    expect(stale.find("span").classes()).toContain("status-cancel");
   });
 
-  it("supports payment statuses used in customer timelines", () => {
-    const partiallyPaid = mount(StatusBadge, {
-      props: { domain: "payment", status: "Partially Paid" },
-    });
-    expect(partiallyPaid.text()).toBe("Kısmi Ödendi");
+  it("supports payment, reminder, and notification labels", () => {
+    const partiallyPaid = mountBadge({ domain: "payment", status: "Partially Paid" });
+    expect(partiallyPaid.text()).toBe(translateText("Partially Paid", "tr"));
     expect(partiallyPaid.find("span").classes()).toContain("status-waiting");
 
-    const failed = mount(StatusBadge, {
-      props: { domain: "payment", status: "Failed" },
-    });
-    expect(failed.text()).toBe("Başarısız");
-    expect(failed.find("span").classes()).toContain("status-cancel");
+    const reminder = mountBadge({ domain: "reminder", status: "Snoozed" });
+    expect(reminder.text()).toBe(translateText("Snoozed", "tr"));
+    expect(reminder.find("span").classes()).toContain("status-waiting");
+
+    const notification = mountBadge({ domain: "notification_status", status: "Dead" });
+    expect(notification.text()).toBe(translateText("Dead", "tr"));
+    expect(notification.find("span").classes()).toContain("status-cancel");
   });
 
-  it("supports lead stale and conversion domain mappings", () => {
-    const stale = mount(StatusBadge, {
-      props: { domain: "lead_stale", status: "Stale" },
-    });
-    expect(stale.text()).toBe("Bekliyor");
-    expect(stale.find("span").classes()).toContain("status-cancel");
-
-    const conversion = mount(StatusBadge, {
-      props: { domain: "lead_conversion", status: "Policy" },
-    });
-    expect(conversion.text()).toBe("Poliçeye Dönüştü");
+  it("respects explicit locale overrides", () => {
+    const conversion = mountBadge({ domain: "lead_conversion", status: "Policy", locale: "en" });
+    expect(conversion.text()).toBe("Converted to Policy");
     expect(conversion.find("span").classes()).toContain("status-active");
   });
 });
