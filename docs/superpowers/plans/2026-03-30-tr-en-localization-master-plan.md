@@ -1,51 +1,51 @@
-# Acentem Takipte TR/EN Localization Implementation Plan
+# Acentem Takipte TR/EN Yerelleştirme Uygulama Planı
 
-> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Ajans tabanlı çalışanlar için:** ZORUNLU: Bu planı uygulamak için mevcutsa superpowers:subagent-driven-development, yoksa superpowers:executing-plans kullanın. Adımlar takip için checkbox (`- [ ]`) biçiminde yazılmıştır.
 
-**Goal:** Convert `acentem_takipte` into a bilingual English-first / Turkish-second Frappe app with a CSV-based translation workflow that can later support additional languages without changing the code architecture.
+**Amaç:** `acentem_takipte` uygulamasını, kod mimarisini değiştirmeden gelecekte yeni dilleri de destekleyebilecek CSV tabanlı bir çeviri akışıyla İngilizce kaynak dili ve Türkçe ikinci dili olan iki dilli bir Frappe uygulamasına dönüştürmek.
 
-**Architecture:** English is the source of truth for all user-facing strings. Python uses `frappe._()`, JavaScript/Vue uses `__()`, and Jinja uses `{{ _("...") }}`. Translation data lives in `acentem_takipte/translations/*.csv`, with `en.csv` as the source template and `tr.csv` as the second-language translation file. Locale resolution is user preference -> browser language -> English fallback.
+**Mimari:** Kullanıcıya görünen tüm metinlerde kaynak dil İngilizce olacaktır. Python tarafında `frappe._()`, JavaScript/Vue tarafında `__()`, Jinja tarafında `{{ _("...") }}` kullanılacaktır. Çeviri verisi `acentem_takipte/translations/*.csv` altında tutulacak; `en.csv` kaynak şablon, `tr.csv` ise ikinci dil dosyası olacaktır. Dil çözümleme sırası: kullanıcı tercihi -> tarayıcı dili -> İngilizce fallback.
 
-**Tech Stack:** Frappe Framework, Python, Vue 3, JavaScript, CSV-based translation dictionaries, bench, Vitest, Playwright.
+**Teknoloji Yığını:** Frappe Framework, Python, Vue 3, JavaScript, CSV tabanlı çeviri sözlükleri, bench, Vitest, Playwright.
 
 ---
 
-## Current State
+## Mevcut Durum
 
-- Translation foundation is already in place:
+- Çeviri altyapısı zaten kuruldu:
   - `acentem_takipte/translations/en.csv`
   - `acentem_takipte/translations/tr.csv`
-  - `acentem_takipte/hooks.py` with `translated_languages = ["en", "tr"]`
-  - locale fallback in `frontend/src/state/session.js` and `acentem_takipte/www/at.py`
-- The quick-create registry was converted to English-first source labels:
+  - `acentem_takipte/hooks.py` içinde `translated_languages = ["en", "tr"]`
+  - `frontend/src/state/session.js` ve `acentem_takipte/www/at.py` içinde locale fallback
+- Hızlı oluşturma sözlüğü İngilizce kaynak etiketlere çevrildi:
   - `frontend/src/config/quickCreate/registry.js`
-- The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
+- Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
 
 ---
 
-## Global Rules
+## Genel Kurallar
 
-1. **Source strings are always English**
-   - All user-facing text in code must be written in English first.
-   - Turkish lives in `tr.csv`.
+1. **Kaynak string’ler her zaman İngilizce olacak**
+   - Kodda kullanıcıya görünen tüm metinler önce İngilizce yazılmalıdır.
+   - Türkçe çeviriler `tr.csv` içinde tutulur.
 
-2. **Use the correct Frappe wrapper**
+2. **Doğru Frappe sarmalayıcısını kullan**
    - Python: `from frappe import _`
    - JS/Vue: `__()`
    - Jinja/HTML: `{{ _("...") }}`
 
-3. **Do not split dynamic strings**
-   - Wrong: `_("Policy") + " " + policy_no + " " + _("created")`
-   - Right: `_("Policy {0} has been created").format(policy_no)`
+3. **Dinamik string’leri parçalama**
+   - Yanlış: `_("Policy") + " " + policy_no + " " + _("created")`
+   - Doğru: `_("Policy {0} has been created").format(policy_no)`
 
-4. **Use context when a source string is ambiguous**
-   - Example:
+4. **Belirsiz kaynak string’lerde context kullan**
+   - Örnek:
      - `_("Type", context="Policy Type")`
      - `_("Type", context="Document Type")`
 
-5. **Keep the glossary consistent**
+5. **Sözlük tutarlılığını koru**
    - `Policy` -> `Poliçe`
    - `Endorsement` -> `Zeyil`
    - `Installment` -> `Taksit`
@@ -54,39 +54,39 @@
    - `Net Premium` -> `Net Prim`
    - `Effective Date` -> `Yürürlük Tarihi`
    - `Expiry Date` -> `Bitiş Tarihi`
-   - `Policyholder` -> use context-sensitive translation:
-     - `Sigortalı` in customer-facing policy contexts
-     - `Ettiren` in formal / contractual contexts when appropriate
+   - `Policyholder` -> bağlama duyarlı çeviri:
+     - müşteri odaklı poliçe bağlamında `Sigortalı`
+     - resmi / sözleşmesel bağlamda gerektiğinde `Ettiren`
 
-6. **DocType JSONs must be handled safely**
-   - Prefer controlled Frappe export / fixtures / editor workflows.
-   - Avoid careless manual edits that could break schema or options.
+6. **DocType JSON’ları güvenli şekilde ele al**
+   - Kontrollü Frappe export / fixtures / editor akışlarını tercih et.
+   - Şema veya seçenekleri bozabilecek dikkatsiz manuel düzenlemelerden kaçın.
 
-7. **Commit in small chunks**
-   - Prefer one file family per commit.
-   - `customer` and `policy` should never be bundled into a giant unreviewable change.
+7. **Küçük parçalar halinde commit yap**
+   - Tercihen her dosya ailesi ayrı commit olsun.
+   - `customer` ve `policy`, büyük ve denetlenmesi zor tek bir değişiklik içinde birleştirilmemeli.
 
-8. **Hardcoded Turkish string discovery is a required first pass**
-   - Use the regex scan to build a source inventory before touching conversion logic.
+8. **Hardcoded Türkçe string keşfi zorunlu ilk adımdır**
+   - Dönüşüm mantığına geçmeden önce regex taramasıyla kaynak envanteri çıkarılmalıdır.
 
 ---
 
-## Search / Discovery Pattern
+## Arama / Keşif Kalıbı
 
-Use this regex to find likely hardcoded Turkish strings:
+Muhtemel hardcoded Türkçe string’leri bulmak için şu regex’i kullan:
 
 ```regex
 [^"']*[ğĞüÜşŞİıöÖçÇ][^"']*
 ```
 
-Suggested search targets:
+Önerilen arama hedefleri:
 - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
 - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
 - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`
 - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`
-- any helper modules those files import
+- bu dosyaların import ettiği yardımcı modüller
 
-Suggested CLI equivalent:
+Önerilen CLI karşılığı:
 
 ```powershell
 rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py
@@ -95,285 +95,285 @@ rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_t
 
 ---
 
-## Phase Map
+## Faz Haritası
 
 | Faz | Görev | İlgili Dosya/Yol | Durum | Öncelik |
 |---|---|---|---|---|
-| Altyapı | Translation folder + CSV template + hooks + locale fallback | `acentem_takipte/translations/*.csv`, `acentem_takipte/hooks.py`, `acentem_takipte/www/at.py`, `frontend/src/state/session.js` | Tamamlandı | Yüksek |
-| Backend | `at_customer.py` localization pass | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Bekliyor | Yüksek |
-| Backend | `at_policy.py` localization pass | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Bekliyor | Yüksek |
-| Backend | Shared backend helpers and report/notification strings | `acentem_takipte/acentem_takipte/**/*.py` | Bekliyor | Yüksek |
-| Frontend | App shell, boards, detail pages localization pass | `frontend/src/**/*.vue`, `frontend/src/**/*.js` | Bekliyor | Yüksek |
-| Metadata | DocType labels, descriptions, select options | `acentem_takipte/acentem_takipte/doctype/**/*.json` | Bekliyor | Yüksek |
-| Test | Backend / frontend / smoke / CSV roundtrip | `acentem_takipte/acentem_takipte/tests/*`, `frontend/src/**/*.test.js`, `frontend/tests/e2e/*` | Bekliyor | Yüksek |
+| Altyapı | Translation klasörü + CSV şablonu + hooks + locale fallback | `acentem_takipte/translations/*.csv`, `acentem_takipte/hooks.py`, `acentem_takipte/www/at.py`, `frontend/src/state/session.js` | Tamamlandı | Yüksek |
+| Backend | `at_customer.py` yerelleştirme geçişi | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Bekliyor | Yüksek |
+| Backend | `at_policy.py` yerelleştirme geçişi | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Bekliyor | Yüksek |
+| Backend | Ortak backend yardımcıları ve rapor/bildirim string’leri | `acentem_takipte/acentem_takipte/**/*.py` | Bekliyor | Yüksek |
+| Frontend | App shell, board’lar ve detay sayfaları yerelleştirme geçişi | `frontend/src/**/*.vue`, `frontend/src/**/*.js` | Bekliyor | Yüksek |
+| Metadata | DocType label, description, select option alanları | `acentem_takipte/acentem_takipte/doctype/**/*.json` | Bekliyor | Yüksek |
+| Test | Backend / frontend / smoke / CSV roundtrip doğrulaması | `acentem_takipte/acentem_takipte/tests/*`, `frontend/src/**/*.test.js`, `frontend/tests/e2e/*` | Bekliyor | Yüksek |
 
 ---
 
-## Phase 2: Backend Localization Launch
+## Faz 2: Backend Yerelleştirme Başlangıcı
 
-This phase is intentionally small and controlled. The first work targets `at_customer.py`, then `at_policy.py`. Each file is handled in its own commit when possible.
+Bu faz özellikle küçük ve kontrollü tutulacak. İlk çalışma `at_customer.py`, ardından `at_policy.py` üzerinde olacak. Mümkün oldukça her dosya ayrı commit ile ilerleyecek.
 
-### Task 2.1: Inventory `at_customer.py`
+### Görev 2.1: `at_customer.py` envanteri
 
-**Files:**
-- Modify: `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
-- Test: `acentem_takipte/acentem_takipte/doctype/at_customer/` targeted backend tests if they exist
+**Dosyalar:**
+- Değiştir: `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
+- Test: varsa `acentem_takipte/acentem_takipte/doctype/at_customer/` altındaki hedeflenmiş backend testleri
 
-- [ ] **Step 1: Run the Turkish-string regex scan**
+- [ ] **Adım 1: Türkçe string regex taramasını çalıştır**
 
-Run:
+Çalıştır:
 ```powershell
 rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py
 ```
-Expected: a list of every likely hardcoded Turkish string and its line number.
+Beklenen: olası hardcoded Türkçe string’lerin ve satır numaralarının listesi.
 
-- [ ] **Step 2: Categorize each string**
+- [ ] **Adım 2: Her string’i kategorize et**
 
-Classify each match into one of these buckets:
-- Error message
-- Success message
-- Validation message
-- Label / button / UI copy
-- Technical message that should not be user-facing
+Her eşleşmeyi şu kategorilerden birine ayır:
+- Hata mesajı
+- Başarı mesajı
+- Validasyon mesajı
+- Etiket / buton / UI metni
+- Kullanıcıya gösterilmemesi gereken teknik mesaj
 
-Expected: a categorized inventory note before editing the file.
+Beklenen: dosyayı değiştirmeden önce kategorize edilmiş bir envanter notu.
 
-- [ ] **Step 3: Define the English source string**
+- [ ] **Adım 3: İngilizce source string’i tanımla**
 
-For every user-facing string, write the master English source string and decide whether context is needed.
+Kullanıcıya görünen her string için ana İngilizce source karşılığını yaz ve context gerekip gerekmediğine karar ver.
 
-Expected:
-- English source is explicit
-- ambiguous strings include `context`
-- dynamic strings use placeholders
+Beklenen:
+- İngilizce source açıkça tanımlanmış olacak
+- belirsiz string’lerde `context` kullanılacak
+- dinamik string’ler placeholder’lı olacak
 
-- [ ] **Step 4: Update CSV entries**
+- [ ] **Adım 4: CSV girişlerini güncelle**
 
-Sync the source inventory into:
+Kaynak envanterini şuraya senkronize et:
 - `acentem_takipte/translations/en.csv`
 - `acentem_takipte/translations/tr.csv`
 
-Expected:
-- one source row per string
-- no broken commas / empty columns
-- consistent glossary terms
+Beklenen:
+- her string için tek source satırı
+- bozuk virgül / boş sütun yok
+- sözlük terimleri tutarlı
 
-- [ ] **Step 5: Convert Python strings**
+- [ ] **Adım 5: Python string’lerini dönüştür**
 
-Wrap user-facing strings with `_()` and rewrite dynamic messages with `.format()`.
+Kullanıcıya görünen string’leri `_()` ile sar ve dinamik mesajları `.format()` ile yeniden yaz.
 
-Expected:
-- `from frappe import _` exists in the file
-- no fragmented string concatenation for user-facing messages
+Beklenen:
+- dosyada `from frappe import _` mevcut olacak
+- kullanıcıya gösterilen metinlerde parçalanmış string birleştirmesi olmayacak
 
-- [ ] **Step 6: Refresh message dictionary**
+- [ ] **Adım 6: Mesaj sözlüğünü yenile**
 
-Run:
+Çalıştır:
 ```powershell
 bench --site at.localhost get-msg-dict acentem_takipte
 ```
-Expected: message dictionary regeneration completes without errors.
+Beklenen: message dictionary yenilemesi hatasız tamamlanır.
 
-- [ ] **Step 7: Run targeted tests**
+- [ ] **Adım 7: Hedefli testleri çalıştır**
 
-Run:
+Çalıştır:
 ```powershell
 bench --site at.localhost run-tests --app acentem_takipte
 ```
-Expected:
-- targeted tests pass
-- no new translation-related regression
+Beklenen:
+- hedefli testler geçer
+- yeni çeviri kaynaklı regresyon oluşmaz
 
-- [ ] **Step 8: Commit**
+- [ ] **Adım 8: Commit**
 
-Commit message guideline:
+Commit mesajı kılavuzu:
 ```bash
 git commit -m "refactor: localize customer backend messages"
 ```
 
-Expected: one focused commit for `at_customer.py`.
+Beklenen: `at_customer.py` için tek ve odaklı commit.
 
-**Definition of Done:**
-- All user-facing strings in `at_customer.py` are English source and wrapped in `_()`
-- Dynamic strings use placeholders, not concatenation
-- Ambiguous terms use context where necessary
-- `en.csv` / `tr.csv` include the new source rows
-- Targeted tests and message dict refresh pass
+**Tamamlanma Kriteri:**
+- `at_customer.py` içindeki tüm kullanıcıya dönük string’ler İngilizce source ve `_()` ile sarılmış olacak
+- dinamik string’ler placeholder kullanacak
+- belirsiz terimlerde context gerektiği yerde kullanılacak
+- `en.csv` / `tr.csv` yeni source satırlarını içerecek
+- hedefli testler ve message dict yenilemesi geçecek
 
 ---
 
-### Task 2.2: Inventory `at_policy.py`
+### Görev 2.2: `at_policy.py` envanteri
 
-**Files:**
-- Modify: `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
+**Dosyalar:**
+- Değiştir: `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
 - Test: `acentem_takipte/acentem_takipte/doctype/at_policy/test_at_policy.py`
 
-- [ ] **Step 1: Run the Turkish-string regex scan**
+- [ ] **Adım 1: Türkçe string regex taramasını çalıştır**
 
-Run:
+Çalıştır:
 ```powershell
 rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py
 ```
-Expected: a complete inventory of candidate strings.
+Beklenen: aday string’lerin eksiksiz envanteri.
 
-- [ ] **Step 2: Categorize each string**
+- [ ] **Adım 2: Her string’i kategorize et**
 
-Buckets:
-- Error
-- Success
-- Validation
-- UI / label
-- Technical
+Kategoriler:
+- Hata
+- Başarı
+- Validasyon
+- UI / etiket
+- Teknik
 
-Expected: a clear list of what needs conversion and what should stay technical.
+Beklenen: neyin dönüştürüleceği ve neyin teknik olarak kalacağı netleşmiş olacak.
 
-- [ ] **Step 3: Define the English source string**
+- [ ] **Adım 3: İngilizce source string’i tanımla**
 
-Expected:
-- source strings are concise English phrases
-- context is added for ambiguous terms like `Type`, `Status`, `Save`, `Reset`
-- sector terms use the glossary
+Beklenen:
+- source string’ler kısa ve net İngilizce cümleler olacak
+- `Type`, `Status`, `Save`, `Reset` gibi belirsiz terimlerde context eklenecek
+- sektörel terimler sözlüğe uygun olacak
 
-- [ ] **Step 4: Update CSV entries**
+- [ ] **Adım 4: CSV girişlerini güncelle**
 
-Sync to:
+Şuralarla senkronize et:
 - `acentem_takipte/translations/en.csv`
 - `acentem_takipte/translations/tr.csv`
 
-Expected:
-- glossary alignment
-- no duplicate source rows with conflicting translations
+Beklenen:
+- sözlük uyumu
+- aynı source için çakışan çeviriler yok
 
-- [ ] **Step 5: Convert Python strings**
+- [ ] **Adım 5: Python string’lerini dönüştür**
 
-Expected:
-- `from frappe import _` imported
-- `_()` wraps all user-facing strings
-- `.format()` used for dynamic messages
+Beklenen:
+- `from frappe import _` import edilmiş olacak
+- tüm kullanıcıya dönük string’ler `_()` ile sarılacak
+- dinamik mesajlarda `.format()` kullanılacak
 
-- [ ] **Step 6: Refresh message dictionary**
+- [ ] **Adım 6: Mesaj sözlüğünü yenile**
 
-Run:
+Çalıştır:
 ```powershell
 bench --site at.localhost get-msg-dict acentem_takipte
 ```
 
-Expected: dictionary refresh completes successfully.
+Beklenen: dictionary yenilemesi başarıyla tamamlanır.
 
-- [ ] **Step 7: Run targeted tests**
+- [ ] **Adım 7: Hedefli testleri çalıştır**
 
-Run:
+Çalıştır:
 ```powershell
 bench --site at.localhost run-tests --app acentem_takipte
 ```
 
-Expected:
-- `test_at_policy.py` remains green
-- translation changes do not break policy behavior
+Beklenen:
+- `test_at_policy.py` yeşil kalır
+- çeviri değişiklikleri poliçe davranışını bozmaz
 
-- [ ] **Step 8: Commit**
+- [ ] **Adım 8: Commit**
 
-Commit message guideline:
+Commit mesajı kılavuzu:
 ```bash
 git commit -m "refactor: localize policy backend messages"
 ```
 
-**Definition of Done:**
-- All user-facing strings in `at_policy.py` are English source and wrapped in `_()`
-- Dynamic strings are placeholder-based
-- Context is used for ambiguous terms
-- `en.csv` / `tr.csv` are updated
-- Tests and message dict regeneration pass
+**Tamamlanma Kriteri:**
+- `at_policy.py` içindeki tüm kullanıcıya dönük string’ler İngilizce source ve `_()` ile sarılmış olacak
+- dinamik string’ler placeholder tabanlı olacak
+- context gerekli yerlerde kullanılacak
+- `en.csv` / `tr.csv` güncellenmiş olacak
+- testler ve message dict yenilemesi geçecek
 
 ---
 
-### Task 2.3: Shared backend helpers
+### Görev 2.3: Ortak backend yardımcıları
 
-**Files:**
-- Modify: any helper modules imported by `at_customer.py` and `at_policy.py`
-- Modify: `acentem_takipte/acentem_takipte/services/*.py`
-- Modify: `acentem_takipte/acentem_takipte/api/*.py`
+**Dosyalar:**
+- Değiştir: `at_customer.py` ve `at_policy.py` tarafından import edilen yardımcı modüller
+- Değiştir: `acentem_takipte/acentem_takipte/services/*.py`
+- Değiştir: `acentem_takipte/acentem_takipte/api/*.py`
 
-- [ ] **Step 1: Scan shared modules for user-facing text**
-- [ ] **Step 2: Convert to `_()`**
-- [ ] **Step 3: Add context where needed**
-- [ ] **Step 4: Sync CSV**
-- [ ] **Step 5: Run bench msg dict refresh**
-- [ ] **Step 6: Run tests**
-- [ ] **Step 7: Commit**
+- [ ] **Adım 1: Ortak modüllerde kullanıcıya dönük metinleri tara**
+- [ ] **Adım 2: `_()` ile dönüştür**
+- [ ] **Adım 3: Gereken yerlere context ekle**
+- [ ] **Adım 4: CSV’yi senkronize et**
+- [ ] **Adım 5: bench msg dict yenilemesini çalıştır**
+- [ ] **Adım 6: Testleri çalıştır**
+- [ ] **Adım 7: Commit et**
 
-**Definition of Done:**
-- backend messages remain consistent across shared services
-- no hardcoded Turkish user-facing strings remain in shared modules
+**Tamamlanma Kriteri:**
+- backend mesajları ortak servislerde tutarlı kalır
+- ortak modüllerde hardcoded Türkçe kullanıcı metni kalmaz
 
 ---
 
-## Later Phases (Do not start until backend launch is stable)
+## Sonraki Fazlar (Backend başlangıcı stabil olana kadar başlamayın)
 
-### Phase 3: Frontend Localization
+### Faz 3: Frontend Yerelleştirme
 
-Targets:
+Hedefler:
 - `frontend/src/pages/*`
 - `frontend/src/components/*`
 - `frontend/src/composables/*`
 
-Rules:
-- use `__()` for UI copy
-- convert page titles, buttons, empty states, tooltips, errors
-- keep English source as the key
+Kurallar:
+- kullanıcı arayüzü metinlerinde `__()` kullan
+- sayfa başlıklarını, butonları, boş durumları, tooltip’leri ve hataları dönüştür
+- İngilizce source’u anahtar olarak koru
 
-Success criteria:
-- language toggle changes visible text
-- no hardcoded Turkish strings in visible UI copy
-- dynamic UI copy uses placeholders and context where needed
+Başarı kriterleri:
+- dil değişimi görünür metni gerçekten değiştirir
+- görünür UI copy içinde hardcoded Türkçe string kalmaz
+- dinamik UI copy placeholder ve context kullanır
 
-### Phase 4: Metadata / DocType Localization
+### Faz 4: Metadata / DocType Yerelleştirme
 
-Targets:
+Hedefler:
 - `acentem_takipte/acentem_takipte/doctype/**/*.json`
 
-Rules:
-- do not break schemas
-- prefer controlled export/fixtures/editor flow
-- keep labels/descriptions/options English source based
+Kurallar:
+- şemayı bozma
+- kontrollü export/fixtures/editor akışını tercih et
+- label/description/options metinlerini İngilizce source temelli tut
 
-Success criteria:
-- DocType label/description/options are translatable
-- fixtures or export steps do not corrupt schema
+Başarı kriterleri:
+- DocType label/description/options çevrilebilir olur
+- fixtures veya export adımları şemayı bozmaz
 
-### Phase 5: Validation, Smoke, and Release
+### Faz 5: Doğrulama, Smoke ve Release
 
-Commands:
+Komutlar:
 - `bench --site at.localhost get-msg-dict acentem_takipte`
 - `bench --site at.localhost migrate`
 - `bench build --app acentem_takipte`
 - `cd frontend && npm run build`
 - `cd frontend && npm run test:unit`
-- Playwright smoke on `at.localhost:8000`
+- `at.localhost:8000` üzerinde Playwright smoke
 
-Success criteria:
-- TR/EN mode works end-to-end
-- backend messages, frontend copy, and metadata all follow the glossary
-- future languages can be added by creating a new CSV file without changing architecture
+Başarı kriterleri:
+- TR/EN modu uçtan uca çalışır
+- backend mesajları, frontend copy ve metadata sözlüğe uygun olur
+- gelecekte yeni dil, mimariyi değiştirmeden yalnızca yeni CSV dosyası ekleyerek desteklenebilir
 
 ---
 
-## Tracking Rules
+## Takip Kuralları
 
-Each task is complete only when:
-- the regex inventory is updated
-- source strings are in English
-- translation CSVs are synced
-- tests pass
-- bench message dict refresh has been run
-- a small, reviewable commit exists
+Her görev ancak şu şartlar sağlandığında tamamlanmış sayılır:
+- regex envanteri güncellenmiş olacak
+- source string’ler İngilizce olacak
+- çeviri CSV’leri senkronize edilmiş olacak
+- testler geçecek
+- bench message dict yenilemesi yapılmış olacak
+- küçük ve gözden geçirilebilir bir commit oluşturulmuş olacak
 
-If a file becomes too large or noisy during localization:
-- split by responsibility
-- keep the split small
-- commit the split separately before proceeding
+Bir dosya yerelleştirme sırasında çok büyük veya gürültülü hale gelirse:
+- sorumluluklarına göre böl
+- bölmeyi küçük tut
+- devam etmeden önce ayrılmış halini ayrı commit ile kaydet
 
-If a term is ambiguous:
-- prefer context over inventing duplicate source strings
-- keep glossary decisions consistent across the entire app
+Bir terim belirsizse:
+- duplicate source string üretmek yerine context’i tercih et
+- sözlük kararlarını tüm uygulama genelinde tutarlı koru
 
