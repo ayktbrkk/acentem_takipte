@@ -53,6 +53,8 @@
   - `acentem_takipte/acentem_takipte/doctype/at_call_note/at_call_note.json`
 - `AT Campaign` metadata dosyasındaki kalan Türkçe ve ASCII-Türkçe alanlar İngilizce source’a taşındı:
   - `acentem_takipte/acentem_takipte/doctype/at_campaign/at_campaign.json`
+- `AT Policy Endorsement` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_policy_endorsement/at_policy_endorsement.json`
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`

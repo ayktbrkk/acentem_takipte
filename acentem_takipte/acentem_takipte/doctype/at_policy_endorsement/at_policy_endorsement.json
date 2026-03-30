@@ -96,8 +96,8 @@
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Kullanıcı Notu",
-   "description": "Kullanıcı tarafından eklenen serbest metin."
+   "label": "User Note",
+   "description": "Free-form text added by the user."
   }
  ],
  "index_web_pages_for_search": 1,
