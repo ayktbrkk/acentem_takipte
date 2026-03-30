@@ -14,69 +14,86 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
-const AUX_FIELD_VALUE_LABELS = {
-  tr: {
-    Synced: "Senkron",
-    Draft: "Taslak",
-    Failed: "Başarısız",
-    Claim: "Hasar",
-    Policy: "Poliçe",
-    Payment: "Ödeme",
-    Resolved: "Çözüldü",
-    Open: "Açık",
-    Ignored: "Yoksayıldı",
-    Amount: "Tutar",
-    Currency: "Döviz",
-    "Missing External": "Harici Kayıt Eksik",
-    "Missing Local": "Yerel Kayıt Eksik",
-    Status: "Durum",
-    Other: "Diğer",
-    Matched: "Eşleşti",
-    Adjusted: "Düzeltildi",
-    "Manual Override": "Manuel Geçersiz Kılma",
-    "AT Policy": "Poliçe",
-    "AT Claim": "Hasar",
-    "AT Payment": "Ödeme",
-    "AT Customer": "Müşteri",
-    "AT Accounting Entry": "Muhasebe Kaydı",
-    Agency: "Acente",
-    Representative: "Temsilci",
-    "Sub-Account": "Alt Hesap",
-    Both: "Her İkisi",
-    tr: "Türkçe",
-    en: "İngilizce",
-  },
-  en: {},
-};
-
 const AUX_FIELD_LABELS = {
   "notification-outbox": {
-    tr: { name: "Kayıt", customer: "Müşteri", recipient: "Alıcı", provider: "Sağlayıcı", reference_name: "Referans Kayıt", attempt_count: "Deneme Sayısı", next_retry_on: "Sonraki Deneme", owner: "Kayıt Sahibi", modified: "Güncellendi" },
-    en: { name: "Record", customer: "Customer", recipient: "Recipient", provider: "Provider", reference_name: "Reference Record", attempt_count: "Attempt Count", next_retry_on: "Next Retry", owner: "Owner", modified: "Modified" },
+    name: "Record",
+    customer: "Customer",
+    recipient: "Recipient",
+    provider: "Provider",
+    reference_name: "Reference Record",
+    attempt_count: "Attempt Count",
+    next_retry_on: "Next Retry",
+    owner: "Owner",
+    modified: "Modified",
   },
   companies: {
-    tr: { name: "Kayıt", company_code: "Şirket Kodu", owner: "Oluşturan", modified: "Güncellendi" },
-    en: { name: "Record", company_code: "Company Code", owner: "Owner", modified: "Modified" },
+    name: "Record",
+    company_code: "Company Code",
+    owner: "Owner",
+    modified: "Modified",
   },
   branches: {
-    tr: { name: "Kayıt", branch_code: "Branş Kodu", insurance_company: "Sigorta Şirketi", modified: "Güncellendi" },
-    en: { name: "Record", branch_code: "Branch Code", insurance_company: "Insurance Company", modified: "Modified" },
+    name: "Record",
+    branch_code: "Branch Code",
+    insurance_company: "Insurance Company",
+    modified: "Modified",
   },
   "sales-entities": {
-    tr: { name: "Kayıt", parent_entity: "Üst Birim", entity_type: "Birim Türü", modified: "Güncellendi" },
-    en: { name: "Record", parent_entity: "Parent Entity", entity_type: "Entity Type", modified: "Modified" },
+    name: "Record",
+    parent_entity: "Parent Entity",
+    entity_type: "Entity Type",
+    modified: "Modified",
   },
   templates: {
-    tr: { name: "Kayıt", event_key: "Olay Anahtarı", subject: "Konu", language: "Dil", modified: "Güncellendi" },
-    en: { name: "Record", event_key: "Event Key", subject: "Subject", language: "Language", modified: "Modified" },
+    name: "Record",
+    event_key: "Event Key",
+    subject: "Subject",
+    language: "Language",
+    modified: "Modified",
   },
   "accounting-entries": {
-    tr: { name: "Kayıt", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kaydı", policy: "Poliçe", customer: "Müşteri", local_amount_try: "Yerel Tutar (TRY)", external_amount_try: "Harici Tutar (TRY)", difference_try: "Fark (TRY)", local_amount: "Yerel Tutar", external_amount: "Harici Tutar", status: "Durum", entry_type: "Kayıt Türü", insurance_company: "Sigorta Şirketi", external_ref: "Harici Referans", needs_reconciliation: "Mutabakat Gerekli", last_synced_on: "Son Senkron", sync_attempt_count: "Senkron Denemesi", payload_json: "Payload (JSON)", error_message: "Hata Mesajı", currency: "Döviz", accounting_entry: "Muhasebe Kaydı", owner: "Kayıt Sahibi", modified: "Güncellendi" },
-    en: { name: "Record", source_doctype: "Source DocType", source_name: "Source Record", policy: "Policy", customer: "Customer", local_amount_try: "Local Amount (TRY)", external_amount_try: "External Amount (TRY)", difference_try: "Difference (TRY)", local_amount: "Local Amount", external_amount: "External Amount", status: "Status", entry_type: "Entry Type", insurance_company: "Insurance Company", external_ref: "External Reference", needs_reconciliation: "Needs Reconciliation", last_synced_on: "Last Synced", sync_attempt_count: "Sync Attempts", payload_json: "Payload (JSON)", error_message: "Error Message", currency: "Currency", accounting_entry: "Accounting Entry", owner: "Owner", modified: "Modified" },
+    name: "Record",
+    source_doctype: "Source DocType",
+    source_name: "Source Record",
+    policy: "Policy",
+    customer: "Customer",
+    local_amount_try: "Local Amount (TRY)",
+    external_amount_try: "External Amount (TRY)",
+    difference_try: "Difference (TRY)",
+    local_amount: "Local Amount",
+    external_amount: "External Amount",
+    status: "Status",
+    entry_type: "Entry Type",
+    insurance_company: "Insurance Company",
+    external_ref: "External Reference",
+    needs_reconciliation: "Needs Reconciliation",
+    last_synced_on: "Last Synced",
+    sync_attempt_count: "Sync Attempts",
+    payload_json: "Payload (JSON)",
+    error_message: "Error Message",
+    currency: "Currency",
+    accounting_entry: "Accounting Entry",
+    owner: "Owner",
+    modified: "Modified",
   },
   "reconciliation-items": {
-    tr: { name: "Kayıt", accounting_entry: "Muhasebe Kaydı", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kaydı", mismatch_type: "Uyumsuzluk Tipi", difference_try: "Fark (TRY)", local_amount_try: "Yerel Tutar (TRY)", external_amount_try: "Harici Tutar (TRY)", resolution_action: "Çözüm İşlemi", resolved_by: "Çözen Kullanıcı", resolved_on: "Çözüm Tarihi", unique_key: "Benzersiz Anahtar", notes: "Notlar", details_json: "Ham JSON", status: "Durum", owner: "Kayıt Sahibi", modified: "Güncellendi" },
-    en: { name: "Record", accounting_entry: "Accounting Entry", source_doctype: "Source DocType", source_name: "Source Record", mismatch_type: "Mismatch Type", difference_try: "Difference (TRY)", local_amount_try: "Local Amount (TRY)", external_amount_try: "External Amount (TRY)", resolution_action: "Resolution Action", resolved_by: "Resolved By", resolved_on: "Resolved On", unique_key: "Unique Key", notes: "Notes", details_json: "Raw JSON", status: "Status", owner: "Owner", modified: "Modified" },
+    name: "Record",
+    accounting_entry: "Accounting Entry",
+    source_doctype: "Source DocType",
+    source_name: "Source Record",
+    mismatch_type: "Mismatch Type",
+    difference_try: "Difference (TRY)",
+    local_amount_try: "Local Amount (TRY)",
+    external_amount_try: "External Amount (TRY)",
+    resolution_action: "Resolution Action",
+    resolved_by: "Resolved By",
+    resolved_on: "Resolved On",
+    unique_key: "Unique Key",
+    notes: "Notes",
+    details_json: "Raw JSON",
+    status: "Status",
+    owner: "Owner",
+    modified: "Modified",
   },
 };
 
@@ -90,7 +107,7 @@ function resolveLocaleCode(localeCode) {
 
 function translateFieldValue(value, activeLocale) {
   const key = String(value ?? "");
-  return AUX_FIELD_VALUE_LABELS[currentLocale(activeLocale)]?.[key] || key;
+  return translateText(key, currentLocale(activeLocale));
 }
 
 function normalizeBoolStatus(v) {
@@ -263,9 +280,8 @@ export function useAuxWorkbenchViewModel({
   }
 
   function fieldLabel(field) {
-    const locale = currentLocale(activeLocale);
-    const localized = AUX_FIELD_LABELS[config?.key]?.[locale]?.[field] || AUX_FIELD_LABELS[config?.key]?.en?.[field];
-    return localized || humanizeField(field);
+    const source = AUX_FIELD_LABELS[config?.key]?.[field] || humanizeField(field);
+    return translateText(source, currentLocale(activeLocale));
   }
 
   function optionLabel(fd, opt) {
