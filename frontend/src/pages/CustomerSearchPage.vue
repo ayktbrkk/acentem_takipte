@@ -68,76 +68,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import GlobalCustomerSearch from "../components/app-shell/GlobalCustomerSearch.vue";
+import { useCustomerSearchPage } from "../composables/useCustomerSearchPage";
 
-interface AccessRequest {
-  id: string;
-  customer_name: string;
-  request_kind: "access" | "transfer" | "share";
-  status: "Pending" | "Approved" | "Rejected";
-  created: string;
-}
-
-const hasSearched = ref(false);
-const accessRequestHistory = ref<AccessRequest[]>([]);
-const showRequestHistory = ref(false);
-
-const onCustomerSelected = (customer: any) => {
-  hasSearched.value = true;
-};
-
-const resetSearch = () => {
-  hasSearched.value = false;
-};
-
-const formatDate = (dateStr: string): string => {
-  try {
-    return new Date(dateStr).toLocaleDateString("tr-TR", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
-};
-
-// Load request history on mount
-onMounted(async () => {
-  try {
-    const response = await fetch("/api/resource/AT Access Log?filters=[[\"action\",\"=\",\"Create\"]]&fields=[\"name\",\"reference_name\",\"action_summary\",\"docstatus\",\"created\"]&limit_page_length=10", {
-      headers: {
-        "X-Frappe-CSRF-Token": (window as any).frappe?.csrf_token || "",
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.data) {
-        accessRequestHistory.value = data.data
-          .filter((log: any) => log.action_summary?.includes("REQUEST"))
-          .map((log: any) => ({
-            id: log.name,
-            customer_name: log.reference_name || "Unknown",
-            request_kind: log.action_summary?.includes("ACCESS")
-              ? "access"
-              : log.action_summary?.includes("TRANSFER")
-              ? "transfer"
-              : "share",
-            status: "Pending", // Would be set based on actual approval workflow
-            created: log.created,
-          }));
-        showRequestHistory.value = accessRequestHistory.value.length > 0;
-      }
-    }
-  } catch (error) {
-    console.error("Failed to load access request history:", error);
-  }
-});
+const {
+  hasSearched,
+  accessRequestHistory,
+  showRequestHistory,
+  onCustomerSelected,
+  resetSearch,
+  formatDate,
+} = useCustomerSearchPage();
 </script>
 
 <style scoped>
