@@ -17,7 +17,7 @@ export function useScheduledReportsManager(props, emit) {
     tr: {
       title: "Zamanlanmış Raporlar",
       subtitle: "Site konfigürasyonu ile tanımlı rapor teslimleri",
-      run: "Zamanlanmis Raporlari Çalıştır",
+      run: "Zamanlanmış Raporları Çalıştır",
       new: "Yeni Kural",
       loading: "Raporlar yükleniyor...",
       empty: "Tanımlı zamanlanmış rapor yok.",
