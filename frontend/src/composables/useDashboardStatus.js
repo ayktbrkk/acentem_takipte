@@ -6,6 +6,7 @@ export function useDashboardStatus({
   dashboardAccessReason,
   dashboardAccessScope,
   dashboardTabMetrics,
+  dashboardTabKey,
   dashboardTabPayloadResource,
   isPermissionDeniedError,
   kpiResource,
@@ -19,7 +20,7 @@ export function useDashboardStatus({
   selectedRange,
   t,
 }) {
-  const activeDashboardTab = computed(() => normalizeDashboardTab(route.query?.tab));
+  const activeDashboardTab = computed(() => normalizeDashboardTab(unref(dashboardTabKey) || dashboardStore.state.activeTab));
   const isDailyTab = computed(() => activeDashboardTab.value === "daily");
   const isSalesTab = computed(() => activeDashboardTab.value === "sales");
   const isCollectionsTab = computed(() => activeDashboardTab.value === "collections");

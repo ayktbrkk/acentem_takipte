@@ -10,6 +10,11 @@ frontend/test-results/
 frontend/output/
 frontend/root.png
 frontend/vite.config.js.timestamp-*.mjs
+frontend/tests/e2e/tmp-*.spec.js
+frontend/tests/e2e/tmp-*.spec.ts
+frontend/tests/e2e/*-debug.spec.js
+frontend/tests/e2e/*-debug.spec.ts
+frontend/tests/e2e/tmp-live-smoke.spec.js
 acentem_takipte/frontend/
 # Frontend build output (generated during build/deploy; never commit)
 acentem_takipte/public/frontend/

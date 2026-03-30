@@ -59,6 +59,25 @@ class TestLoggingRedaction(IntegrationTestCase):
         self.assertNotIn("ops@example.com", message)
         self.assertNotIn("POL-12345", message)
 
+    def test_build_redacted_log_message_truncates_long_messages(self):
+        message = build_redacted_log_message(
+            "Report payload build failed",
+            {
+                "report_key": "policy_list",
+                "filters": {
+                    "branch": "B" * 200,
+                    "customer_tax_id": "1" * 50,
+                    "policy_no": "POL-1234567890",
+                },
+                "limit": 500,
+            },
+        )
+
+        self.assertLessEqual(len(message), 120)
+        self.assertIn("Report payload build failed", message)
+        self.assertNotIn("B" * 200, message)
+        self.assertNotIn("1" * 50, message)
+
     def test_log_redacted_error_uses_masked_message(self):
         with patch("frappe.log_error") as log_error_mock:
             with patch("frappe.get_traceback", return_value="trace"):
@@ -73,4 +92,24 @@ class TestLoggingRedaction(IntegrationTestCase):
         self.assertIn("op***********om", args[1])
         self.assertNotIn("05321234567", args[1])
         self.assertNotIn("ops@example.com", args[1])
+
+    def test_log_redacted_error_falls_back_when_log_error_raises(self):
+        calls = []
+
+        def _log_error(traceback_text, title):
+            calls.append((traceback_text, title))
+            if len(calls) == 1:
+                raise ValueError("title too long")
+
+        with patch("frappe.log_error", side_effect=_log_error):
+            with patch("frappe.get_traceback", return_value="trace"):
+                log_redacted_error(
+                    "AT Notification Outbox Insert Error",
+                    details={"recipient": "05321234567", "email": "ops@example.com"},
+                )
+
+        self.assertGreaterEqual(len(calls), 2)
+        self.assertEqual(calls[0][0], "trace")
+        self.assertEqual(calls[1][0], "trace")
+        self.assertEqual(calls[1][1], "AT Notification Outbox Insert Error")
 

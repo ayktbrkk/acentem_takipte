@@ -40,6 +40,8 @@ export function useDashboardOrchestration({
   buildClaimListParams,
   claimListResource,
   dashboardTabPayloadResource,
+  dashboardStore,
+  dashboardTabKey,
   followUpResource,
   kpiResource,
   myActivitiesResource,
@@ -94,13 +96,21 @@ export function useDashboardOrchestration({
 
   function setDashboardTab(tabKey) {
     const nextTab = normalizeDashboardTab(tabKey);
+    if (dashboardTabKey) {
+      dashboardTabKey.value = nextTab;
+    }
+    dashboardStore.setActiveTab(nextTab);
     const nextQuery = { ...route.query };
     if (nextTab === "daily") {
       delete nextQuery.tab;
     } else {
       nextQuery.tab = nextTab;
     }
-    router.replace({ name: "dashboard", query: nextQuery });
+    router.replace({
+      name: "dashboard",
+      query: nextQuery,
+      hash: route.hash || "",
+    });
   }
 
   function triggerDashboardReload({ includeKpis = true, immediate = false } = {}) {

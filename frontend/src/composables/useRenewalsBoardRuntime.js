@@ -62,7 +62,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
     auto: true,
     params: {
       doctype: "AT Policy",
-      fields: ["name", "policy_no", "customer"],
+      fields: ["name", "policy_no", "customer", "gross_premium"],
       filters: buildOfficeBranchLookupFilters(),
       order_by: "modified desc",
       limit_page_length: 500,
@@ -101,13 +101,14 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   const renewals = computed(() => {
     const branchOptions = buildOfficeBranchOptions(branchStore.items);
     return asArray(renewalsRaw.value).map((task) => {
+      const policySummary = renewalPolicyLookupMap.value[task.policy];
       const daysUntilDue = getRenewalDaysUntilDue(task.due_date || task.renewal_date);
       const priorityMeta = getRenewalPriorityMeta(task, daysUntilDue);
       return {
         ...task,
         customerLabel: renewalCustomerLookupMap.value[task.customer]?.full_name || task.customer || "-",
         branchLabel: branchOptions.find((branch) => branch.value === task.office_branch)?.label || task.office_branch || "-",
-        premiumLabel: formatRenewalPremium(task.estimated_premium_amount, task.currency),
+        premiumLabel: formatRenewalPremium(policySummary?.gross_premium, "TRY"),
         avatarInitials: buildInitials(task.customer || task.policy || task.name),
         priorityTone: priorityMeta.tone,
         priorityLabel: priorityMeta.label,
@@ -320,6 +321,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   }
 
   function buildRenewalBoardCard(task) {
+    const policySummary = renewalPolicyLookupMap.value[task.policy];
     const daysUntilDue = getRenewalDaysUntilDue(task.due_date || task.renewal_date);
     const priorityMeta = getRenewalPriorityMeta(task, daysUntilDue);
     return {
@@ -328,7 +330,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
       avatarInitials: buildInitials(task.customer || task.policy || task.name),
       branchLabel: branchStore.items.find((branch) => branch.name === task.office_branch)?.office_branch_name || task.office_branch || "-",
       customerLabel: renewalCustomerLookupMap.value[task.customer]?.full_name || task.customer || "-",
-      premiumLabel: formatRenewalPremium(task.estimated_premium_amount, task.currency),
+      premiumLabel: formatRenewalPremium(policySummary?.gross_premium, "TRY"),
       priorityLabel: priorityMeta.label,
       priorityTone: priorityMeta.tone,
       status: task.status || "",
@@ -378,10 +380,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
         "status",
         "due_date",
         "renewal_date",
-        "estimated_premium_amount",
-        "currency",
         "lost_reason_code",
-        "lost_reason_detail",
       ],
       order_by: "due_date asc, modified desc",
       limit_page_length: Number(filters.limit) || 40,
@@ -423,7 +422,11 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   }
 
   function resetRenewalFilterState() {
-    renewalStore.resetFilters();
+    if (typeof renewalStore.resetFilters === "function") {
+      renewalStore.resetFilters();
+      return;
+    }
+    renewalStore.reset?.();
   }
 
   function currentRenewalPresetPayload() {

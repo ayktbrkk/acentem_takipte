@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, datetime
 import hashlib
 import json
 from typing import Any, Iterable
@@ -102,7 +103,7 @@ def store_report_snapshot_payload(
     snapshot.scope_hash = scope_hash
     snapshot.filters_json = json.dumps(normalized_filters, ensure_ascii=False, sort_keys=True)
     snapshot.columns_json = json.dumps(normalized_payload["columns"], ensure_ascii=False)
-    snapshot.rows_json = json.dumps(rows, ensure_ascii=False)
+    snapshot.rows_json = json.dumps(rows, ensure_ascii=False, default=_json_default)
     snapshot.row_count = len(rows)
     snapshot.source_version = str(normalized_payload["source_version"] or SNAPSHOT_SOURCE_VERSION)
     snapshot.generated_on = now_datetime()
@@ -277,3 +278,14 @@ def _safe_session_user() -> str | None:
     except Exception:
         user = ""
     return user or None
+
+
+def _json_default(value: Any) -> str:
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except Exception:
+            pass
+    return str(value)

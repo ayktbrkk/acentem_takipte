@@ -100,10 +100,10 @@ test.describe("Acentem Takipte smoke", () => {
       "/api/method/acentem_takipte.api.session.get_session_context"
     );
     const policyResponse = await page.request.get(
-      "/api/method/acentem_takipte.api.reports.get_policy_list_report"
+      "/api/method/acentem_takipte.acentem_takipte.api.reports.get_policy_list_report"
     );
     const scheduledResponse = await page.request.get(
-      "/api/method/acentem_takipte.api.reports.get_scheduled_report_configs"
+      "/api/method/acentem_takipte.acentem_takipte.api.reports.get_scheduled_report_configs"
     );
 
     const sessionPayload = await readMethodPayload(sessionContextResponse);

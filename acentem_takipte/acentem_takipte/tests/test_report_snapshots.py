@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from types import SimpleNamespace
 
 from acentem_takipte.acentem_takipte.services import report_registry
@@ -82,6 +83,63 @@ def test_store_and_load_report_snapshot_payload_round_trip(monkeypatch):
     )
 
     assert loaded == stored
+
+
+def test_store_report_snapshot_payload_serializes_date_values(monkeypatch):
+    snapshots: dict[str, SimpleNamespace] = {}
+    fixed_today = "2026-03-26"
+
+    monkeypatch.setattr(report_snapshots, "_has_snapshot_doctype", lambda: True)
+    monkeypatch.setattr(report_snapshots, "today", lambda: fixed_today)
+    monkeypatch.setattr(report_snapshots, "now_datetime", lambda: "2026-03-26 12:00:00")
+    monkeypatch.setattr(report_snapshots, "_safe_session_user", lambda: "Administrator")
+    fake_frappe = SimpleNamespace()
+    fake_frappe.parse_json = report_snapshots.frappe.parse_json
+    fake_frappe.session = SimpleNamespace(user="Administrator")
+
+    def fake_get_value(doctype, filters, fieldname):
+        return None
+
+    def fake_get_doc(*args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], dict):
+            data = dict(args[0])
+            doc = SimpleNamespace(**data)
+
+            def insert(ignore_permissions=False):
+                doc.name = "SNAP-1"
+                snapshots[doc.name] = doc
+                return doc
+
+            doc.insert = insert
+            doc.save = lambda ignore_permissions=False: doc
+            return doc
+        raise AssertionError(f"Unexpected get_doc call: {args!r} {kwargs!r}")
+
+    fake_frappe.db = SimpleNamespace(exists=lambda *args, **kwargs: True, get_value=fake_get_value)
+    fake_frappe.get_doc = fake_get_doc
+    monkeypatch.setattr(report_snapshots, "frappe", fake_frappe)
+
+    payload = {
+        "columns": ["name", "status", "renewal_date"],
+        "rows": [
+            {
+                "name": "POL-001",
+                "status": "Active",
+                "renewal_date": date(2026, 3, 30),
+            }
+        ],
+        "filters": {"office_branch": "IST"},
+    }
+
+    stored = report_snapshots.store_report_snapshot_payload(
+        "policy_list",
+        {"office_branch": "IST"},
+        payload,
+        snapshot_date=fixed_today,
+    )
+
+    assert snapshots["SNAP-1"].rows_json == '[{"name": "POL-001", "status": "Active", "renewal_date": "2026-03-30"}]'
+    assert stored["rows"][0]["renewal_date"] == "2026-03-30"
 
 
 def test_build_snapshot_aware_report_payload_prefers_snapshot_when_limit_fits(monkeypatch):

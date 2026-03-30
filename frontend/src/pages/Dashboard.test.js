@@ -400,7 +400,7 @@ describe("Dashboard page store integration", () => {
     expect(text).toContain("Toplam Brüt Prim");
     expect(text).not.toContain("Hazır Teklifler:");
 
-    await routerReplace({ path: "/", query: { tab: "collections" } });
+    await wrapper.findAll(".at-tab-chip")[2].trigger("click");
     await nextTick();
 
     text = wrapper.text();
@@ -408,7 +408,7 @@ describe("Dashboard page store integration", () => {
     expect(text).toContain("Gecikmiş Tutar");
     expect(text).not.toContain("(TRY)");
 
-    await routerReplace({ path: "/", query: { tab: "renewals" } });
+    await wrapper.findAll(".at-tab-chip")[3].trigger("click");
     await nextTick();
 
     text = wrapper.text();

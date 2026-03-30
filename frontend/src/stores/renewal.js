@@ -90,6 +90,10 @@ export const useRenewalStore = defineStore("renewal", () => {
     lastLoadedAt.value = null;
   }
 
+  function resetFilters() {
+    reset();
+  }
+
   return {
     state,
     lastLoadedAt,
@@ -103,6 +107,7 @@ export const useRenewalStore = defineStore("renewal", () => {
     setItems,
     setSelected,
     setFilters,
+    resetFilters,
     setSummary,
     reset,
     buildRenewalSummary,

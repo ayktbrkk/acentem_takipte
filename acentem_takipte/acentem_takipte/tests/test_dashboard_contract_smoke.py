@@ -76,6 +76,44 @@ class TestDashboardContractSmoke(unittest.TestCase):
         self.assertIn("offer_waiting_renewals", payload["previews"])
         self.assertEqual(payload["meta"], meta)
 
+    def test_renewal_status_and_buckets_contract_smoke(self):
+        sql_calls = []
+
+        def fake_sql(query, values=None, as_dict=False):
+            sql_calls.append({"query": query, "values": values, "as_dict": as_dict})
+            if len(sql_calls) == 1:
+                return [
+                    {"status": "Open", "total": 2},
+                    {"status": "In Progress", "total": 1},
+                    {"status": "Done", "total": 3},
+                    {"status": "Cancelled", "total": 1},
+                ]
+            return [
+                {"due_date": "2026-03-29", "renewal_date": "2026-04-05"},
+                {"due_date": "2026-03-20", "renewal_date": "2026-04-01"},
+                {"due_date": "2026-04-25", "renewal_date": "2026-04-25"},
+            ]
+
+        with patch.object(dashboard_api.frappe.db, "sql", side_effect=fake_sql):
+            with patch.object(
+                dashboard_api.frappe,
+                "get_all",
+                return_value=[{"outcome_status": "Renewed", "total": 2}, {"outcome_status": "Lost", "total": 1}],
+            ):
+                payload = dashboard_api._renewal_status_and_buckets(
+                    branch=None,
+                    office_branch=None,
+                    allowed_customers=None,
+                )
+
+        self.assertEqual(payload["status_rows"][0]["status"], "Open")
+        self.assertEqual(payload["buckets"]["overdue"], 1)
+        self.assertEqual(payload["buckets"]["due7"], 1)
+        self.assertEqual(payload["buckets"]["due30"], 0)
+        self.assertEqual(payload["retention"]["renewed"], 2)
+        self.assertEqual(payload["retention"]["lost"], 1)
+        self.assertTrue(sql_calls)
+
     def test_get_dashboard_tab_payload_collections_contract_smoke(self):
         cards = dashboard_api._empty_dashboard_payload().get("cards", {}).copy()
         compare_cards = cards.copy()

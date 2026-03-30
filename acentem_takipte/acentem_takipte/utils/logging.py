@@ -27,6 +27,8 @@ SENSITIVE_KEYS = {
     "reference_no",
 }
 
+MAX_LOG_TITLE_LENGTH = 120
+
 
 def redact_value(key: str, value):
     normalized_key = str(key or "").strip().lower()
@@ -56,12 +58,30 @@ def redact_payload(payload):
 def build_redacted_log_message(message: str, details=None) -> str:
     base_message = str(message or "").strip() or "Application error"
     if details in (None, "", {}, []):
-        return base_message
+        return _truncate_log_title(base_message)
     serialized = json.dumps(redact_payload(details), ensure_ascii=False, default=str, sort_keys=True)
-    return f"{base_message} | {serialized}"
+    return _truncate_log_title(f"{base_message} | {serialized}")
 
 
 def log_redacted_error(message: str, details=None, traceback_text: str | None = None) -> None:
     import frappe
 
-    frappe.log_error(traceback_text or frappe.get_traceback(), build_redacted_log_message(message, details))
+    traceback_value = traceback_text or frappe.get_traceback()
+    log_title = build_redacted_log_message(message, details)
+    try:
+        frappe.log_error(traceback_value, log_title)
+    except Exception:
+        fallback_title = _truncate_log_title(str(message or "").strip() or "Application error")
+        if fallback_title == log_title:
+            return
+        try:
+            frappe.log_error(traceback_value, fallback_title)
+        except Exception:
+            return
+
+
+def _truncate_log_title(title: str) -> str:
+    safe_title = str(title or "").strip() or "Application error"
+    if len(safe_title) <= MAX_LOG_TITLE_LENGTH:
+        return safe_title
+    return f"{safe_title[: MAX_LOG_TITLE_LENGTH - 1].rstrip()}…"

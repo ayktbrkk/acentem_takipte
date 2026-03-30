@@ -10,12 +10,14 @@ function buildSubject(overrides = {}) {
   const dashboardAccessScope = computed(() => overrides.dashboardAccessScope || "empty");
   const dashboardAccessReason = computed(() => overrides.dashboardAccessReason || "");
   const recentOffers = computed(() => overrides.recentOffers || []);
-  const dashboardStore = overrides.dashboardStore || { state: { loading: false } };
+  const dashboardTabKey = overrides.dashboardTabKey || ref("daily");
+  const dashboardStore = overrides.dashboardStore || { state: { loading: false, activeTab: "daily" } };
 
   return useDashboardStatus({
     dashboardAccessReason,
     dashboardAccessScope,
     dashboardTabMetrics,
+    dashboardTabKey,
     dashboardTabPayloadResource: overrides.dashboardTabPayloadResource || {
       error: ref(null),
       loading: ref(false),
@@ -37,7 +39,7 @@ function buildSubject(overrides = {}) {
 describe("useDashboardStatus", () => {
   it("derives tabs and loading state", () => {
     const subject = buildSubject({
-      route: { query: { tab: "sales" } },
+      dashboardTabKey: ref("sales"),
     });
 
     expect(subject.isSalesTab.value).toBe(true);

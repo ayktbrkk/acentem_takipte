@@ -238,7 +238,7 @@
 </template>
 
 <script setup>
-import { computed, ref, unref, watch } from "vue";
+import { computed, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
@@ -288,6 +288,7 @@ import {
   buildInitialTabPayloadParams,
   isPermissionDeniedError,
   normalizeResourcePayload,
+  normalizeDashboardTab,
   withDashboardOfficeBranchFilter,
 } from "../utils/dashboardHelpers";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
@@ -297,6 +298,37 @@ const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const dashboardStore = useDashboardStore();
+const DASHBOARD_TAB_STORAGE_KEY = "at.dashboard.active-tab";
+let dashboardRouteReady = false;
+
+function readPersistedDashboardTab() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    return normalizeDashboardTab(window.sessionStorage.getItem(DASHBOARD_TAB_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function persistDashboardTab(tab) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    const normalizedTab = normalizeDashboardTab(tab);
+    if (normalizedTab === "daily") {
+      window.sessionStorage.removeItem(DASHBOARD_TAB_STORAGE_KEY);
+      return;
+    }
+    window.sessionStorage.setItem(DASHBOARD_TAB_STORAGE_KEY, normalizedTab);
+  } catch {
+    // Ignore storage errors; dashboard state still works from route/query alone.
+  }
+}
+
+const dashboardTabKey = ref(normalizeDashboardTab(route.query?.tab || readPersistedDashboardTab()));
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const quickLeadConfig = getQuickCreateConfig("lead");
 const quickLeadDialogTitle = computed(() => getLocalizedText(quickLeadConfig?.title, activeLocale.value));
@@ -1057,6 +1089,7 @@ const {
   myRemindersResource,
   myTasksResource,
   recentOffers,
+  dashboardTabKey,
   route,
   selectedRange,
   t,
@@ -1094,6 +1127,8 @@ const {
   buildClaimListParams: buildInitialClaimListParams,
   claimListResource,
   dashboardTabPayloadResource,
+  dashboardStore,
+  dashboardTabKey,
   followUpResource,
   kpiResource,
   myActivitiesResource,
@@ -1342,11 +1377,52 @@ watch(
 watch(
   activeDashboardTab,
   (value) => {
+    persistDashboardTab(value);
     dashboardStore.setActiveTab(value);
     triggerDashboardReload({ includeKpis: false });
   },
   { immediate: true }
 );
+
+watch(
+  () => normalizeDashboardTab(route.query?.tab),
+  (routeTab) => {
+    const currentTab = normalizeDashboardTab(unref(dashboardTabKey) || dashboardStore.state.activeTab);
+    if (!dashboardRouteReady) {
+      if (route.query?.tab && routeTab !== currentTab) {
+        dashboardTabKey.value = routeTab;
+        dashboardStore.setActiveTab(routeTab);
+      }
+      return;
+    }
+    if (routeTab === currentTab) {
+      persistDashboardTab(currentTab);
+      return;
+    }
+    persistDashboardTab(routeTab);
+    dashboardTabKey.value = routeTab;
+    dashboardStore.setActiveTab(routeTab);
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  dashboardRouteReady = true;
+  if (route.query?.tab) {
+    return;
+  }
+  const persistedTab = normalizeDashboardTab(readPersistedDashboardTab());
+  if (persistedTab === "daily") {
+    return;
+  }
+  dashboardTabKey.value = persistedTab;
+  dashboardStore.setActiveTab(persistedTab);
+  router.replace({
+    name: "dashboard",
+    query: { ...route.query, tab: persistedTab },
+    hash: route.hash || "",
+  });
+});
 
 watch(
   () => branchStore.selected,
