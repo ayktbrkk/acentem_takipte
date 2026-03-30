@@ -55,6 +55,8 @@
   - `acentem_takipte/acentem_takipte/doctype/at_campaign/at_campaign.json`
 - The remaining Turkish fields in `AT Policy Endorsement` metadata were moved to English source:
   - `acentem_takipte/acentem_takipte/doctype/at_policy_endorsement/at_policy_endorsement.json`
+- The remaining Turkish fields in `AT Renewal Outcome` metadata were moved to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_renewal_outcome/at_renewal_outcome.json`
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
