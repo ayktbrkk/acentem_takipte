@@ -42,5 +42,8 @@ describe("aux workbench split", () => {
     expect(AUX_WORKBENCH_ROUTE_DEFS.length).toBeGreaterThan(0);
     expect(getAuxWorkbenchConfig("tasks")).toBeTruthy();
     expect(keySet(AUX_WORKBENCH_CONFIGS).has("tasks")).toBe(true);
+    expect(AUX_WORKBENCH_CONFIGS.tasks.labels.list.en).toBe("Tasks");
+    expect(AUX_WORKBENCH_CONFIGS.tasks.labels.list.tr).toBe("Görevler");
+    expect(AUX_WORKBENCH_CONFIGS.campaigns.subtitle.en).toBe("Manage segment-based campaign flow");
   });
 });

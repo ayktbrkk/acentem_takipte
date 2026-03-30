@@ -1,5 +1,5 @@
-export function L(tr, en) {
-  return { tr, en };
+export function L(en, tr) {
+  return { en, tr };
 }
 
 export function F(key, field, type = "text", extra = {}) {
