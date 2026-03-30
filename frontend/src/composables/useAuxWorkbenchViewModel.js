@@ -2,6 +2,7 @@ import { computed, unref } from "vue";
 
 import { buildOfficeBranchOptions } from "../utils/officeBranchTree";
 import { openTabularExport } from "../utils/listExport";
+import { translateText } from "@/utils/i18n";
 
 function humanizeField(field) {
   return String(field || "")
@@ -156,186 +157,96 @@ export function useAuxWorkbenchViewModel({
 
   function t(key) {
     const locale = currentLocale(activeLocale);
-    return copy[locale]?.[key] || copy.en[key] || key;
+    return translateText(copy[key] || key, locale);
   }
 
   const copy = {
-    tr: {
-      recordCount: "kayıt",
-      filtersTitle: "Filtreler",
-      refresh: "Yenile",
-      advanced: "Gelişmiş Filtreler",
-      hideAdvanced: "Gelişmiş Filtreleri Gizle",
-      activeFilters: "aktif filtre",
-      preset: "Filtre Şablonu",
-      presetDefault: "Standart",
-      apply: "Uygula",
-      reset: "Temizle",
-      savePreset: "Kaydet",
-      deletePreset: "Sil",
-      savePresetPrompt: "Şablon adı",
-      deletePresetConfirm: "Bu özel şablon silinsin mi?",
-      searchPlaceholder: "Kayıtlarda ara...",
-      loading: "Kayıtlar yükleniyor...",
-      loadErrorTitle: "Kayıtlar Yüklenemedi",
-      emptyTitle: "Kayıt bulunamadı",
-      emptyDescription: "Filtreleri güncelleyip tekrar deneyin.",
-      showing: "Gösterilen",
-      record: "Kayıt",
-      details: "Detaylar",
-      status: "Durum",
-      info: "Bilgiler",
-      actions: "Aksiyon",
-      exportCsv: "CSV Dışa Aktar",
-      exportXlsx: "Excel",
-      exportPdf: "PDF",
-      totalSnapshots: "Toplam Snapshot",
-      highRiskSnapshots: "Yüksek Risk",
-      highValueSnapshots: "Yüksek Değer",
-      averageScore: "Ortalama Skor",
-      totalAuditEvents: "Toplam Kayıt",
-      totalReminders: "Toplam Hatırlatıcı",
-      openReminders: "Açık",
-      overdueReminders: "Geciken",
-      highPriorityReminders: "Yüksek Öncelik",
-      createEvents: "Oluşturma",
-      editEvents: "Düzenleme",
-      deleteEvents: "Silme",
-      runEvents: "Çalıştırma",
-      totalFiles: "Toplam Dosya",
-      pdfFiles: "PDF",
-      imageFiles: "Görseller",
-      spreadsheetFiles: "E-Tablolar",
-      attachedCustomers: "Müşteri Ekleri",
-      attachedPolicies: "Poliçe Ekleri",
-      attachedClaims: "Hasar Ekleri",
-      snapshotTrendTitle: "Snapshot Eğilimi",
-      snapshotTrendHint: "Görünen kayıtlardaki son üç snapshot gününü özetler",
-      snapshotWindowHint: "Geçerli filtre penceresindeki kayıtlar",
-      highRiskHint: "Hasar riski yüksek kayıtlar",
-      highValueHint: "Yüksek veya premium değer bandındaki kayıtlar",
-      averageScoreHint: "Filtrelenen kayıtların ortalama skoru",
-      auditWindowHint: "Geçerli filtre penceresindeki audit kayıtları",
-      reminderWindowHint: "Geçerli filtre penceresindeki hatırlatıcılar",
-      openRemindersHint: "Açık durumundaki hatırlatıcılar",
-      overdueRemindersHint: "Hatırlatma zamanı geçmiş açık kayıtlar",
-      highPriorityRemindersHint: "Yüksek öncelikli açık hatırlatıcılar",
-      createEventsHint: "Oluşturma aksiyonları",
-      editEventsHint: "Düzenleme aksiyonları",
-      deleteEventsHint: "Silme aksiyonları",
-      runEventsHint: "Çalıştırma aksiyonları",
-      filesWindowHint: "Geçerli filtre penceresindeki dosyalar",
-      pdfFilesHint: "PDF biçimindeki belgeler",
-      imageFilesHint: "Görsel dosyalar",
-      spreadsheetFilesHint: "E-tablo belgeleri",
-      attachedCustomersHint: "AT Customer kayıtlarına ekli dosyalar",
-      attachedPoliciesHint: "AT Policy kayıtlarına ekli dosyalar",
-      attachedClaimsHint: "AT Claim kayıtlarına ekli dosyalar",
-      newRecord: "Yeni Kayıt",
-      openDetail: "Kayıt Detayını Aç",
-      openDesk: "Yönetim Ekranını Aç",
-      panel: "Panel",
-      openCommunication: "İletişim Merkezini Aç",
-      sendNow: "Hemen Gönder",
-      retry: "Tekrar Dene",
-      requeue: "Kuyruğa Al",
-      startTask: "Takibe Al",
-      blockTaskAction: "Bloke Et",
-      completeTaskAction: "Tamamla",
-      cancelTaskAction: "İptal",
-      running: "Çalışıyor...",
-      page: "Sayfa",
-      prev: "Önceki",
-      next: "Sonraki",
-    },
-    en: {
-      recordCount: "records",
-      filtersTitle: "Filters",
-      refresh: "Refresh",
-      advanced: "Advanced Filters",
-      hideAdvanced: "Hide Advanced",
-      activeFilters: "active filters",
-      preset: "Filter Preset",
-      presetDefault: "Standard",
-      apply: "Apply",
-      reset: "Reset",
-      savePreset: "Save",
-      deletePreset: "Delete",
-      savePresetPrompt: "Preset name",
-      deletePresetConfirm: "Delete this custom preset?",
-      searchPlaceholder: "Search records...",
-      loading: "Loading records...",
-      loadErrorTitle: "Failed to Load",
-      emptyTitle: "No records found",
-      emptyDescription: "Adjust filters and try again.",
-      showing: "Showing",
-      record: "Record",
-      details: "Details",
-      status: "Status",
-      info: "Info",
-      actions: "Actions",
-      exportCsv: "Export CSV",
-      exportXlsx: "Excel",
-      exportPdf: "PDF",
-      totalSnapshots: "Total Snapshots",
-      highRiskSnapshots: "High Risk",
-      highValueSnapshots: "High Value",
-      averageScore: "Average Score",
-      totalAuditEvents: "Total Audit Events",
-      totalReminders: "Total Reminders",
-      openReminders: "Open",
-      overdueReminders: "Overdue",
-      highPriorityReminders: "High Priority",
-      createEvents: "Create",
-      editEvents: "Edit",
-      deleteEvents: "Delete",
-      runEvents: "Run",
-      totalFiles: "Total Files",
-      pdfFiles: "PDF",
-      imageFiles: "Images",
-      spreadsheetFiles: "Spreadsheets",
-      attachedCustomers: "Customer Attached",
-      attachedPolicies: "Policy Attached",
-      attachedClaims: "Claim Attached",
-      snapshotTrendTitle: "Snapshot Trend",
-      snapshotTrendHint: "Summarizes the latest three snapshot days from visible records",
-      snapshotWindowHint: "Records in the current filtered window",
-      highRiskHint: "Records where claim risk is High",
-      highValueHint: "Records with High or Premium value band",
-      averageScoreHint: "Average score for filtered records",
-      auditWindowHint: "Audit events in the current filtered window",
-      reminderWindowHint: "Reminders in the current filtered window",
-      openRemindersHint: "Reminders with Open status",
-      overdueRemindersHint: "Open reminders whose remind time has passed",
-      highPriorityRemindersHint: "Open reminders with High priority",
-      createEventsHint: "Create actions",
-      editEventsHint: "Edit actions",
-      deleteEventsHint: "Delete actions",
-      runEventsHint: "Run actions",
-      filesWindowHint: "Files in the current filtered window",
-      pdfFilesHint: "Documents in PDF format",
-      imageFilesHint: "Image files",
-      spreadsheetFilesHint: "Spreadsheet documents",
-      attachedCustomersHint: "Files attached to AT Customer records",
-      attachedPoliciesHint: "Files attached to AT Policy records",
-      attachedClaimsHint: "Files attached to AT Claim records",
-      newRecord: "New Record",
-      openDetail: "Open Record Details",
-      openDesk: "Open Desk",
-      panel: "Panel",
-      openCommunication: "Communication Center",
-      sendNow: "Send Now",
-      retry: "Retry",
-      requeue: "Requeue",
-      startTask: "Start",
-      blockTaskAction: "Block",
-      completeTaskAction: "Mark Done",
-      cancelTaskAction: "Cancel",
-      running: "Running...",
-      page: "Page",
-      prev: "Previous",
-      next: "Next",
-    },
+    recordCount: "records",
+    filtersTitle: "Filters",
+    refresh: "Refresh",
+    advanced: "Advanced Filters",
+    hideAdvanced: "Hide Advanced",
+    activeFilters: "active filters",
+    preset: "Filter Preset",
+    presetDefault: "Standard",
+    apply: "Apply",
+    reset: "Reset",
+    savePreset: "Save",
+    deletePreset: "Delete",
+    savePresetPrompt: "Preset name",
+    deletePresetConfirm: "Delete this custom preset?",
+    searchPlaceholder: "Search records...",
+    loading: "Loading records...",
+    loadErrorTitle: "Failed to Load",
+    emptyTitle: "No records found",
+    emptyDescription: "Adjust filters and try again.",
+    showing: "Showing",
+    record: "Record",
+    details: "Details",
+    status: "Status",
+    info: "Info",
+    actions: "Actions",
+    exportCsv: "Export CSV",
+    exportXlsx: "Excel",
+    exportPdf: "PDF",
+    totalSnapshots: "Total Snapshots",
+    highRiskSnapshots: "High Risk",
+    highValueSnapshots: "High Value",
+    averageScore: "Average Score",
+    totalAuditEvents: "Total Audit Events",
+    totalReminders: "Total Reminders",
+    openReminders: "Open",
+    overdueReminders: "Overdue",
+    highPriorityReminders: "High Priority",
+    createEvents: "Create",
+    editEvents: "Edit",
+    deleteEvents: "Delete",
+    runEvents: "Run",
+    totalFiles: "Total Files",
+    pdfFiles: "PDF",
+    imageFiles: "Images",
+    spreadsheetFiles: "Spreadsheets",
+    attachedCustomers: "Customer Attached",
+    attachedPolicies: "Policy Attached",
+    attachedClaims: "Claim Attached",
+    snapshotTrendTitle: "Snapshot Trend",
+    snapshotTrendHint: "Summarizes the latest three snapshot days from visible records",
+    snapshotWindowHint: "Records in the current filtered window",
+    highRiskHint: "Records where claim risk is High",
+    highValueHint: "Records with High or Premium value band",
+    averageScoreHint: "Average score for filtered records",
+    auditWindowHint: "Audit events in the current filtered window",
+    reminderWindowHint: "Reminders in the current filtered window",
+    openRemindersHint: "Reminders with Open status",
+    overdueRemindersHint: "Open reminders whose remind time has passed",
+    highPriorityRemindersHint: "Open reminders with High priority",
+    createEventsHint: "Create actions",
+    editEventsHint: "Edit actions",
+    deleteEventsHint: "Delete actions",
+    runEventsHint: "Run actions",
+    filesWindowHint: "Files in the current filtered window",
+    pdfFilesHint: "Documents in PDF format",
+    imageFilesHint: "Image files",
+    spreadsheetFilesHint: "Spreadsheet documents",
+    attachedCustomersHint: "Files attached to AT Customer records",
+    attachedPoliciesHint: "Files attached to AT Policy records",
+    attachedClaimsHint: "Files attached to AT Claim records",
+    newRecord: "New Record",
+    openDetail: "Open Record Details",
+    openDesk: "Open Desk",
+    panel: "Panel",
+    openCommunication: "Open Communication Center",
+    sendNow: "Send Now",
+    retry: "Retry",
+    requeue: "Requeue",
+    startTask: "Start",
+    blockTaskAction: "Block",
+    completeTaskAction: "Mark Done",
+    cancelTaskAction: "Cancel",
+    running: "Running...",
+    page: "Page",
+    prev: "Previous",
+    next: "Next",
   };
 
   function label(kind) {
@@ -346,8 +257,8 @@ export function useAuxWorkbenchViewModel({
     const [field, dir] = String(orderBy || "").split(/\s+/);
     const base = fieldLabel(field);
     const suffix = String(dir || "").toLowerCase() === "asc"
-      ? currentLocale(activeLocale) === "tr" ? "artan" : "asc"
-      : currentLocale(activeLocale) === "tr" ? "azalan" : "desc";
+      ? translateText("Ascending", currentLocale(activeLocale))
+      : translateText("Descending", currentLocale(activeLocale));
     return `${base} (${suffix})`;
   }
 
@@ -359,10 +270,10 @@ export function useAuxWorkbenchViewModel({
 
   function optionLabel(fd, opt) {
     const locale = currentLocale(activeLocale);
-    if (opt === "") return locale === "tr" ? "Tümü" : "All";
+    if (opt === "") return translateText("All", locale);
     if (fd.field === "is_active") {
-      if (String(opt) === "1") return locale === "tr" ? "Aktif" : "Active";
-      if (String(opt) === "0") return locale === "tr" ? "Pasif" : "Inactive";
+      if (String(opt) === "1") return translateText("Active", locale);
+      if (String(opt) === "0") return translateText("Inactive", locale);
     }
     return translateFieldValue(opt, activeLocale);
   }
@@ -384,8 +295,8 @@ export function useAuxWorkbenchViewModel({
     const locale = currentLocale(activeLocale);
     const prefix =
       field === "strengths_json"
-        ? locale === "tr" ? "Güçlü" : "Strengths"
-        : locale === "tr" ? "Risk" : "Risks";
+        ? translateText("Strengths", locale)
+        : translateText("Risks", locale);
     return `${prefix}: ${count}`;
   }
 
@@ -398,7 +309,7 @@ export function useAuxWorkbenchViewModel({
     const lc = resolveLocaleCode(localeCode);
     if (isFieldType(config, field, "bool")) {
       const active = value === true || String(value) === "1";
-      return active ? (locale === "tr" ? "Evet" : "Yes") : (locale === "tr" ? "Hayır" : "No");
+      return active ? translateText("Yes", locale) : translateText("No", locale);
     }
     if (isFieldType(config, field, "currency")) {
       const n = Number(value);
