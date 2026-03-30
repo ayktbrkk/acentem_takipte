@@ -79,6 +79,8 @@
   - `acentem_takipte/acentem_takipte/doctype/at_offer/at_offer.json`
 - `AT Payment` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
   - `acentem_takipte/acentem_takipte/doctype/at_payment/at_payment.json`
+- `AT Ownership Assignment` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_ownership_assignment/at_ownership_assignment.json`
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`

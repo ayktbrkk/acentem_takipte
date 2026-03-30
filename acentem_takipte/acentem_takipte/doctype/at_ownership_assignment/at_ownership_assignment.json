@@ -22,13 +22,13 @@
   {
    "fieldname": "source_doctype",
    "fieldtype": "Select",
-   "label": "Kaynak Tipi",
+   "label": "Source DocType",
    "options": "\nAT Customer\nAT Policy\nAT Claim\nAT Renewal Task\nAT Campaign"
   },
   {
    "fieldname": "source_name",
    "fieldtype": "Data",
-   "label": "Kaynak Kayıt"
+   "label": "Source Record"
   },
   {
    "fieldname": "customer",
@@ -53,19 +53,19 @@
    "fieldtype": "Link",
    "label": "Origin Office Branch",
    "options": "AT Office Branch",
-   "description": "Kayıt anındaki ofis şubesi - tarihsel rapor ve muhasebe tutarlılığı için kullanılır."
+   "description": "The office branch at the time of the record - used for historical reporting and accounting consistency."
   },
   {
    "fieldname": "current_office_branch",
    "fieldtype": "Link",
    "label": "Current Office Branch",
    "options": "AT Office Branch",
-   "description": "Güncel ofis şubesi - operasyonel iş listeleri ve transfer/devir akışları için kullanılır."
+   "description": "The current office branch - used for operational work queues and transfer/assignment flows."
   },
   {
    "fieldname": "assigned_to",
    "fieldtype": "Link",
-   "label": "Atanan Kişi",
+   "label": "Assigned User",
    "options": "User",
    "reqd": 1
   },
@@ -73,7 +73,7 @@
    "default": "Owner",
    "fieldname": "assignment_role",
    "fieldtype": "Select",
-   "label": "Atama Rolü",
+   "label": "Assignment Role",
    "options": "\nOwner\nAssignee\nReviewer\nFollower",
    "reqd": 1
   },
@@ -89,20 +89,20 @@
    "default": "Normal",
    "fieldname": "priority",
    "fieldtype": "Select",
-   "label": "Öncelik",
+   "label": "Priority",
    "options": "\nLow\nNormal\nHigh\nCritical",
    "reqd": 1
   },
   {
    "fieldname": "due_date",
    "fieldtype": "Date",
-   "label": "Termin Tarihi"
+   "label": "Due Date"
   },
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Kullanıcı Notu",
-   "description": "Kullanıcı tarafindan eklenen serbest metin."
+   "label": "User Note",
+   "description": "Free-form text added by the user."
   }
  ],
  "index_web_pages_for_search": 1,
