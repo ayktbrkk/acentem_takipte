@@ -53,15 +53,15 @@
           </div>
         </SectionPanel>
 
-        <SectionPanel title="Ödeme Geçmişi">
-          <div v-if="!payments.length" class="card-empty">Ödeme kaydı bulunamadı.</div>
+        <SectionPanel :title="t('paymentHistory')">
+          <div v-if="!payments.length" class="card-empty">{{ t("noPayments") }}</div>
           <table v-else class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
-                <th class="table-header">Tarih</th>
-                <th class="table-header">Referans</th>
-                <th class="table-header text-right">Tutar</th>
-                <th class="table-header">Durum</th>
+                <th class="table-header">{{ t("claimDate") }}</th>
+                <th class="table-header">{{ t("claimNo") }}</th>
+                <th class="table-header text-right">{{ t("amount") }}</th>
+                <th class="table-header">{{ t("status") }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -75,13 +75,13 @@
           </table>
         </SectionPanel>
 
-        <SectionPanel title="Ekspertiz Raporlari">
+        <SectionPanel :title="t('expertReports')">
           <FieldGroup :fields="expertiseFields" :cols="2" />
         </SectionPanel>
 
         <SectionPanel :title="t('timeline')">
           <div class="mb-4">
-            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Notlar</p>
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("notes") }}</p>
             <p class="text-sm text-gray-700">{{ claim.rejection_reason || claim.notes || '-' }}</p>
           </div>
           <div>
@@ -104,19 +104,19 @@
       </div>
 
       <aside class="detail-sidebar space-y-4">
-        <SectionPanel title="İlgili Kişiler">
+        <SectionPanel :title="t('relatedPeople')">
           <FieldGroup :fields="peopleFields" :cols="1" />
         </SectionPanel>
 
-        <SectionPanel title="Rezerv Bilgileri">
+        <SectionPanel :title="t('reserveInformation')">
           <FieldGroup :fields="reserveFields" :cols="1" />
         </SectionPanel>
 
-        <SectionPanel title="Ödeme Bilgileri">
+        <SectionPanel :title="t('paymentInformation')">
           <FieldGroup :fields="paymentFields" :cols="1" />
         </SectionPanel>
 
-        <SectionPanel title="Kayıt Meta">
+        <SectionPanel :title="t('recordMetadata')">
           <FieldGroup :fields="recordMetaFields" :cols="1" />
           <button class="mt-3 btn btn-full btn-sm" @click="openCustomer">{{ t("customerRecord") }}</button>
         </SectionPanel>
@@ -126,7 +126,8 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, unref } from "vue";
+import { useAuthStore } from "../stores/auth";
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
@@ -135,8 +136,10 @@ import StepBar from "@/components/ui/StepBar.vue";
 import { useClaimDetailRuntime } from "../composables/useClaimDetailRuntime";
 
 const props = defineProps({ name: { type: String, required: true } });
+const authStore = useAuthStore();
 const { t, claim, claimStatus, documents, payments, heroCells, processFields, detailFields, claimSteps, peopleFields, reserveFields, paymentFields, expertiseFields, recordMetaFields, formatDate, formatCurrency, backToList, openPolicy, openCustomer, openClaimDocuments } = useClaimDetailRuntime({
   name: computed(() => props.name || ""),
+  activeLocale: computed(() => unref(authStore.locale) || "en"),
 });
 </script>
 

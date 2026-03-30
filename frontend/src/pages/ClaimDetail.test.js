@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
-import { nextTick, ref } from "vue";
+import { createPinia, setActivePinia } from "pinia";
+import { computed, nextTick, ref } from "vue";
 
 import ClaimDetail from "./ClaimDetail.vue";
+import { useAuthStore } from "../stores/auth";
 
 const resourceQueue = [];
 const routerPush = vi.fn();
@@ -70,6 +72,20 @@ describe("ClaimDetail page", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
     routerPush.mockReset();
+    setActivePinia(createPinia());
+
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+    });
 
     const claimData = ref({
       name: "CLM-001",
@@ -150,7 +166,7 @@ describe("ClaimDetail page", () => {
     expect(wrapper.text()).toContain("Hasar Detayları");
     expect(wrapper.text()).toContain("Belgeler");
     expect(wrapper.text()).toContain("Ödeme Geçmişi");
-    expect(wrapper.text()).toContain("Ekspertiz Raporlari");
+    expect(wrapper.text()).toContain("Ekspertiz Raporları");
     expect(wrapper.text()).toContain("H-001");
     expect(wrapper.text()).toContain("POL-001");
     expect(wrapper.text()).toContain("rapor.pdf");
@@ -164,5 +180,42 @@ describe("ClaimDetail page", () => {
 
     await buttons.find((button) => button.text() === "Müşteri Kaydı").trigger("click");
     expect(routerPush).toHaveBeenCalledWith("/customers/CUST-001");
+  });
+
+  it("renders English labels when locale is en", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "en",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+    });
+
+    const wrapper = mount(ClaimDetail, {
+      props: { name: "CLM-001" },
+      global: {
+        stubs: {
+          StatusBadge: StatusBadgeStub,
+          HeroStrip: HeroStripStub,
+          SectionPanel: SectionPanelStub,
+          FieldGroup: FieldGroupStub,
+          StepBar: StepBarStub,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Claim Process");
+    expect(wrapper.text()).toContain("Payment History");
+    expect(wrapper.text()).toContain("Expert Reports");
+    expect(wrapper.text()).toContain("Claim Details");
   });
 });
