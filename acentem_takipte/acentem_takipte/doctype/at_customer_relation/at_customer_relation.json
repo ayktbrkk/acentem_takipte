@@ -28,7 +28,7 @@
   {
    "fieldname": "relation_type",
    "fieldtype": "Select",
-   "label": "İlişki Türü",
+   "label": "Relation Type",
    "options": "\nSpouse\nChild\nParent\nSibling\nPartner\nHousehold\nOther",
    "reqd": 1
   },
@@ -36,13 +36,13 @@
    "default": "0",
    "fieldname": "is_household",
    "fieldtype": "Check",
-   "label": "Aynı Hane"
+   "label": "Same Household"
   },
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Kullanıcı Notu",
-   "description": "Kullanıcı tarafindan eklenen serbest metin."
+   "label": "User Note",
+   "description": "Free-form text added by the user."
   }
  ],
  "index_web_pages_for_search": 1,
