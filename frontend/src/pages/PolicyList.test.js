@@ -195,7 +195,15 @@ describe("PolicyList page store integration", () => {
     const offerResource = createdResources.find(
       (resource) => resource?.url === "frappe.client.get_list" && resource?.params?.doctype === "AT Offer"
     );
+    const presetReadResource = createdResources.find(
+      (resource) => resource?.url === "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state"
+    );
+    const presetWriteResource = createdResources.find(
+      (resource) => resource?.url === "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state"
+    );
 
     expect(offerResource?.params?.filters).toEqual({ status: ["in", ["Sent", "Accepted"]] });
+    expect(presetReadResource).toBeTruthy();
+    expect(presetWriteResource).toBeTruthy();
   });
 });

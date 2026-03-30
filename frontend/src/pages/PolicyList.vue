@@ -123,6 +123,8 @@ import { Dialog, createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { usePolicyStore } from "../stores/policy";
+import { usePolicyListFilters } from "../composables/usePolicyListFilters";
+import { usePolicyListPresetSync } from "../composables/usePolicyListPresetSync";
 import { usePolicyQuickCreateRuntime } from "../composables/usePolicyQuickCreateRuntime";
 import DataTableCell from "../components/app-shell/DataTableCell.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
@@ -142,15 +144,6 @@ import { openListExport } from "../utils/listExport";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
-import {
-  extractCustomFilterPresetId,
-  isCustomFilterPresetValue,
-  makeCustomFilterPresetValue,
-  readFilterPresetKey,
-  readFilterPresetList,
-  writeFilterPresetKey,
-  writeFilterPresetList,
-} from "../utils/filterPresetState";
 
 const router = useRouter();
 const route = useRoute();
@@ -325,10 +318,6 @@ function isFieldRequired(field) {
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const filters = policyStore.state.filters;
 const pagination = policyStore.state.pagination;
-const POLICY_PRESET_STORAGE_KEY = "at:policy-list:preset";
-const POLICY_PRESET_LIST_STORAGE_KEY = "at:policy-list:preset-list";
-const policyPresetKey = ref(readFilterPresetKey(POLICY_PRESET_STORAGE_KEY, "default"));
-const policyCustomPresets = ref(readFilterPresetList(POLICY_PRESET_LIST_STORAGE_KEY));
 
 const statusOptions = computed(() => [
   { value: "Active", label: activeLocale.value === "tr" ? "Aktif" : "Active" },
@@ -342,17 +331,6 @@ const sortOptions = computed(() => [
   { value: "end_date desc", label: t("sortEndDateDesc") },
   { value: "gross_premium desc", label: t("sortGrossDesc") },
 ]);
-const policyPresetOptions = computed(() => [
-  { value: "default", label: t("presetDefault") },
-  { value: "active", label: t("presetActive") },
-  { value: "expiring30", label: t("presetExpiring30") },
-  { value: "highPremium", label: t("presetHighPremium") },
-  ...policyCustomPresets.value.map((preset) => ({
-    value: makeCustomFilterPresetValue(preset.id),
-    label: preset.label,
-  })),
-]);
-const canDeletePolicyPreset = computed(() => isCustomFilterPresetValue(policyPresetKey.value));
 const policyQuickRuntime = usePolicyQuickCreateRuntime({
   t,
   activeLocale,
@@ -419,11 +397,45 @@ const startRow = computed(() => policyStore.startRow);
 const endRow = computed(() => policyStore.endRow);
 const isInitialLoading = computed(() => policyStore.state.loading && rows.value.length === 0);
 const policyActiveFilterCount = computed(() => policyStore.activeFilterCount);
-
-const policyListSearchQuery = ref("");
 const policyListPage = ref(1);
 const policyListPageSize = 20;
-const policyListLocalFilters = reactive({ status: "", branch: "" });
+let persistPolicyPresetStateToServer = () => Promise.resolve();
+
+const {
+  POLICY_PRESET_STORAGE_KEY,
+  policyPresetKey,
+  policyCustomPresets,
+  policyPresetOptions,
+  canDeletePolicyPreset,
+  policyListSearchQuery,
+  policyListLocalFilters,
+  policyListActiveCount,
+  currentPolicyPresetPayload,
+  applyPolicyPreset,
+  onPolicyPresetChange,
+  onPolicyListFilterChange,
+  onPolicyListFilterReset,
+  savePolicyPreset,
+  deletePolicyPreset,
+} = usePolicyListFilters({
+  t,
+  localeCode,
+  filters,
+  pagination,
+  refreshPolicyList,
+  persistPolicyPresetStateToServer: () => persistPolicyPresetStateToServer(),
+});
+const {
+  hydratePolicyPresetStateFromServer,
+  persistPolicyPresetStateToServer: persistPolicyPresetStateToServerImpl,
+} = usePolicyListPresetSync({
+  presetKey: policyPresetKey,
+  customPresets: policyCustomPresets,
+  applyPolicyPreset,
+  policyPresetServerReadResource,
+  policyPresetServerWriteResource,
+});
+persistPolicyPresetStateToServer = persistPolicyPresetStateToServerImpl;
 
 const policyListColumns = [
   { key: "name", label: "Poliçe No", width: "160px", type: "mono" },
@@ -518,30 +530,12 @@ const policySummary = computed(() => {
     totalPremium,
   };
 });
-const policyListActiveCount = computed(
-  () =>
-    (policyListSearchQuery.value.trim() ? 1 : 0) +
-    Object.values(policyListLocalFilters).filter((value) => String(value || "").trim() !== "").length
-);
-
 function focusPolicySearch() {
   const searchInput = document.querySelector('input[placeholder*="ara"]');
   if (searchInput instanceof HTMLInputElement) {
     searchInput.focus();
     searchInput.select();
   }
-}
-
-function onPolicyListFilterChange({ key, value }) {
-  policyListLocalFilters[key] = String(value || "").toLocaleLowerCase(localeCode.value);
-  policyListPage.value = 1;
-}
-
-function onPolicyListFilterReset() {
-  policyListSearchQuery.value = "";
-  policyListLocalFilters.status = "";
-  policyListLocalFilters.branch = "";
-  policyListPage.value = 1;
 }
 
 function computeRemainingDays(endDate) {
@@ -573,127 +567,6 @@ function buildPolicyFilterPayload() {
     ];
   }
   return out;
-}
-
-function dateAfterDays(days) {
-  const date = new Date();
-  date.setDate(date.getDate() + Number(days || 0));
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function applyPolicyPreset(key, { refresh = true } = {}) {
-  const requested = String(key || "default");
-
-  if (isCustomFilterPresetValue(requested)) {
-    const customId = extractCustomFilterPresetId(requested);
-    const presetRow = policyCustomPresets.value.find((item) => item.id === customId);
-    if (!presetRow) {
-      applyPolicyPreset("default", { refresh });
-      return;
-    }
-    const payload = presetRow.payload || {};
-    policyPresetKey.value = requested;
-    writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, requested);
-    filters.query = String(payload.query || "");
-    filters.insurance_company = String(payload.insurance_company || "");
-    filters.end_date = String(payload.end_date || "");
-    filters.status = String(payload.status || "");
-    filters.customer = String(payload.customer || "");
-    filters.gross_min = payload.gross_min != null ? String(payload.gross_min) : "";
-    filters.gross_max = payload.gross_max != null ? String(payload.gross_max) : "";
-    filters.sort = String(payload.sort || "modified desc");
-    pagination.pageLength = Number(payload.pageLength || 20) || 20;
-    pagination.page = 1;
-    if (refresh) refreshPolicyList();
-    return;
-  }
-
-  const preset = requested;
-  policyPresetKey.value = preset;
-  writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, preset);
-
-  filters.query = "";
-  filters.insurance_company = "";
-  filters.end_date = "";
-  filters.status = "";
-  filters.customer = "";
-  filters.gross_min = "";
-  filters.gross_max = "";
-  filters.sort = "modified desc";
-  pagination.pageLength = 20;
-
-  if (preset === "active") {
-    filters.status = "Active";
-  } else if (preset === "expiring30") {
-    filters.status = "Active";
-    filters.end_date = dateAfterDays(30);
-    filters.sort = "end_date asc";
-  } else if (preset === "highPremium") {
-    filters.sort = "gross_premium desc";
-    filters.gross_min = "10000";
-  }
-
-  pagination.page = 1;
-  if (refresh) refreshPolicyList();
-}
-
-function onPolicyPresetChange() {
-  applyPolicyPreset(policyPresetKey.value, { refresh: true });
-  void persistPolicyPresetStateToServer();
-}
-
-function currentPolicyPresetPayload() {
-  return {
-    query: filters.query,
-    insurance_company: filters.insurance_company,
-    end_date: filters.end_date,
-    status: filters.status,
-    customer: filters.customer,
-    gross_min: filters.gross_min,
-    gross_max: filters.gross_max,
-    sort: filters.sort,
-    pageLength: pagination.pageLength,
-  };
-}
-
-function savePolicyPreset() {
-  const currentCustomId = extractCustomFilterPresetId(policyPresetKey.value);
-  const currentCustom = currentCustomId
-    ? policyCustomPresets.value.find((item) => item.id === currentCustomId)
-    : null;
-  const initialName = currentCustom?.label || "";
-  const name = String(window.prompt(t("savePresetPrompt"), initialName) || "").trim();
-  if (!name) return;
-
-  const existing = policyCustomPresets.value.find(
-    (item) => item.label.toLowerCase() === name.toLowerCase()
-  );
-  const targetId = currentCustomId || existing?.id || `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-  const nextList = policyCustomPresets.value.filter((item) => item.id !== targetId);
-  nextList.push({
-    id: targetId,
-    label: name,
-    payload: currentPolicyPresetPayload(),
-  });
-  policyCustomPresets.value = nextList.sort((a, b) => a.label.localeCompare(b.label, localeCode.value));
-  writeFilterPresetList(POLICY_PRESET_LIST_STORAGE_KEY, policyCustomPresets.value);
-  policyPresetKey.value = makeCustomFilterPresetValue(targetId);
-  writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, policyPresetKey.value);
-  void persistPolicyPresetStateToServer();
-}
-
-function deletePolicyPreset() {
-  if (!canDeletePolicyPreset.value) return;
-  if (!window.confirm(t("deletePresetConfirm"))) return;
-  const customId = extractCustomFilterPresetId(policyPresetKey.value);
-  if (!customId) return;
-  policyCustomPresets.value = policyCustomPresets.value.filter((item) => item.id !== customId);
-  writeFilterPresetList(POLICY_PRESET_LIST_STORAGE_KEY, policyCustomPresets.value);
-  applyPolicyPreset("default", { refresh: true });
-  void persistPolicyPresetStateToServer();
 }
 
 function buildPolicyParams() {
@@ -803,71 +676,9 @@ function applyFilters() {
 }
 
 function resetFilters() {
-  policyPresetKey.value = "default";
-  writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, "default");
-  filters.query = "";
-  filters.insurance_company = "";
-  filters.end_date = "";
-  filters.status = "";
-  filters.customer = "";
-  filters.gross_min = "";
-  filters.gross_max = "";
-  filters.sort = "modified desc";
-  pagination.pageLength = 20;
-  pagination.page = 1;
+  applyPolicyPreset("default", { refresh: false });
   void persistPolicyPresetStateToServer();
   refreshPolicyList();
-}
-
-function hasMeaningfulPolicyPresetState(selectedKey, presets) {
-  return String(selectedKey || "default") !== "default" || (Array.isArray(presets) && presets.length > 0);
-}
-
-async function persistPolicyPresetStateToServer() {
-  try {
-    await policyPresetServerWriteResource.submit({
-      screen: "policy_list",
-      selected_key: policyPresetKey.value,
-      custom_presets: policyCustomPresets.value,
-    });
-  } catch {
-    // Keep localStorage as fallback; server sync is best-effort.
-  }
-}
-
-async function hydratePolicyPresetStateFromServer() {
-  try {
-    const remote = await policyPresetServerReadResource.reload({ screen: "policy_list" });
-    const remoteSelectedKey = String(remote?.selected_key || "default");
-    const remoteCustomPresets = Array.isArray(remote?.custom_presets) ? remote.custom_presets : [];
-
-    const localHasState = hasMeaningfulPolicyPresetState(policyPresetKey.value, policyCustomPresets.value);
-    const remoteHasState = hasMeaningfulPolicyPresetState(remoteSelectedKey, remoteCustomPresets);
-
-    if (!remoteHasState) {
-      if (localHasState) {
-        void persistPolicyPresetStateToServer();
-      }
-      return;
-    }
-
-    const localSnapshot = JSON.stringify({
-      selected_key: policyPresetKey.value,
-      custom_presets: policyCustomPresets.value,
-    });
-    const remoteSnapshot = JSON.stringify({
-      selected_key: remoteSelectedKey,
-      custom_presets: remoteCustomPresets,
-    });
-
-    if (localSnapshot === remoteSnapshot) return;
-
-    policyCustomPresets.value = remoteCustomPresets;
-    writeFilterPresetList(POLICY_PRESET_LIST_STORAGE_KEY, policyCustomPresets.value);
-    applyPolicyPreset(remoteSelectedKey, { refresh: true });
-  } catch {
-    // Keep local-only behavior on any API error.
-  }
 }
 
 function previousPage() {
