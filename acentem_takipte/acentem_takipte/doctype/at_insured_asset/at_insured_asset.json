@@ -28,26 +28,26 @@
   {
    "fieldname": "asset_type",
    "fieldtype": "Select",
-   "label": "Varlık Türü",
+   "label": "Asset Type",
    "options": "\nVehicle\nHome\nHealth Person\nWorkplace\nTravel\nBoat\nFarm\nOther",
    "reqd": 1
   },
   {
    "fieldname": "asset_label",
    "fieldtype": "Data",
-   "label": "Varlık Başlığı",
+   "label": "Asset Label",
    "reqd": 1
   },
   {
    "fieldname": "asset_identifier",
    "fieldtype": "Data",
-   "label": "Varlık Kimliği"
+   "label": "Asset Identifier"
   },
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Kullanıcı Notu",
-   "description": "Kullanıcı tarafindan eklenen serbest metin."
+   "label": "User Note",
+   "description": "Free-form text added by the user."
   }
  ],
  "index_web_pages_for_search": 1,
