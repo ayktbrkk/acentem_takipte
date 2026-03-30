@@ -71,6 +71,10 @@
   - `acentem_takipte/acentem_takipte/doctype/at_claim/at_claim.json`
 - `AT Reconciliation Item` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
   - `acentem_takipte/acentem_takipte/doctype/at_reconciliation_item/at_reconciliation_item.json`
+- `AT Lead` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_lead/at_lead.json`
+- `AT Renewal Task` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_renewal_task/at_renewal_task.json`
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
