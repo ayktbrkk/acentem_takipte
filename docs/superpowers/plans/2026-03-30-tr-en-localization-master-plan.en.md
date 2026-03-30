@@ -49,6 +49,8 @@
   - `acentem_takipte/acentem_takipte/doctype/at_policy_snapshot/at_policy_snapshot.json`
 - The remaining Turkish fields in `AT Payment Installment` metadata were moved to English source:
   - `acentem_takipte/acentem_takipte/doctype/at_payment_installment/at_payment_installment.json`
+- The remaining Turkish fields in `AT Call Note` metadata were moved to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_call_note/at_call_note.json`
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
