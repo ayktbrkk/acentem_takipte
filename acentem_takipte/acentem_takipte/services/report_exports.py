@@ -12,15 +12,15 @@ from openpyxl.styles import Font
 from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_columns, coerce_filters, coerce_rows, normalize_title
 
 REPORT_TITLES = {
-    "policy_list": {"tr": "Poliçe Listesi Raporu", "en": "Policy List Report"},
-    "payment_status": {"tr": "Tahsilat Durumu Raporu", "en": "Payment Status Report"},
-    "renewal_performance": {"tr": "Yenileme Performans Raporu", "en": "Renewal Performance Report"},
-    "claim_loss_ratio": {"tr": "Hasar Prim Oranı Raporu", "en": "Claim Loss Ratio Report"},
-    "agent_performance": {"tr": "Acente Üretim Karnesi", "en": "Agency Performance Scorecard"},
-    "customer_segmentation": {"tr": "Müşteri Segmentasyon Raporu", "en": "Customer Segmentation Report"},
-    "communication_operations": {"tr": "İletişim Operasyonları Raporu", "en": "Communication Operations Report"},
-    "reconciliation_operations": {"tr": "Mutabakat Operasyonları Raporu", "en": "Reconciliation Operations Report"},
-    "claims_operations": {"tr": "Hasar Operasyonları Raporu", "en": "Claims Operations Report"},
+    "policy_list": {"en": "Policy List Report", "tr": "Poliçe Listesi Raporu"},
+    "payment_status": {"en": "Payment Status Report", "tr": "Tahsilat Durumu Raporu"},
+    "renewal_performance": {"en": "Renewal Performance Report", "tr": "Yenileme Performans Raporu"},
+    "claim_loss_ratio": {"en": "Claim Loss Ratio Report", "tr": "Hasar Prim Oranı Raporu"},
+    "agent_performance": {"en": "Agency Performance Scorecard", "tr": "Acente Üretim Karnesi"},
+    "customer_segmentation": {"en": "Customer Segmentation Report", "tr": "Müşteri Segmentasyon Raporu"},
+    "communication_operations": {"en": "Communication Operations Report", "tr": "İletişim Operasyonları Raporu"},
+    "reconciliation_operations": {"en": "Reconciliation Operations Report", "tr": "Mutabakat Operasyonları Raporu"},
+    "claims_operations": {"en": "Claims Operations Report", "tr": "Hasar Operasyonları Raporu"},
 }
 
 
@@ -36,10 +36,10 @@ def build_report_filename(report_key: str, export_format: str) -> str:
     return build_export_filename(report_key, export_format)
 
 
-def build_report_title(report_key: str, locale: str = "tr") -> str:
+def build_report_title(report_key: str, locale: str = "en") -> str:
     normalized_key = str(report_key or "").strip()
     entry = REPORT_TITLES.get(normalized_key, {})
-    normalized_locale = str(locale or "tr").strip() or "tr"
+    normalized_locale = str(locale or "en").strip() or "en"
     base_locale = normalized_locale.split("-")[0]
     return entry.get(normalized_locale) or entry.get(base_locale) or entry.get("en") or normalized_key or "Report"
 
@@ -113,7 +113,7 @@ def render_report_pdf(
     columns: list[str],
     rows: list[dict[str, Any]],
     filters: dict[str, Any],
-    locale: str = "tr",
+    locale: str = "en",
 ) -> bytes:
     return render_tabular_pdf(
         title=build_report_title(report_key, locale),
@@ -163,7 +163,7 @@ def render_report_xlsx(
     columns: list[str],
     rows: list[dict[str, Any]],
     filters: dict[str, Any],
-    locale: str = "tr",
+    locale: str = "en",
 ) -> bytes:
     return render_tabular_xlsx(
         title=build_report_title(report_key, locale),

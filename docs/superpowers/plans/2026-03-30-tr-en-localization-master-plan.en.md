@@ -25,6 +25,58 @@
 
 ---
 
+## Repo Gap Audit (2026-03-30)
+
+After a full repo scan, the main localization surfaces that still need attention are:
+
+### Backend hot spots
+
+- `acentem_takipte/acentem_takipte/setup_utils.py`
+- `acentem_takipte/acentem_takipte/notification_seed_data.py`
+- `acentem_takipte/acentem_takipte/api/smoke.py`
+- `acentem_takipte/acentem_takipte/services/report_exports.py`
+- `acentem_takipte/acentem_takipte/services/list_exports.py`
+- `acentem_takipte/acentem_takipte/tests/test_report_exports.py`
+- `acentem_takipte/acentem_takipte/tests/test_list_exports_service.py`
+- `acentem_takipte/acentem_takipte/tests/test_reports_runtime.py`
+
+### Frontend hot spots
+
+The majority of visible copy still clusters in these file families:
+
+- `frontend/src/pages/Dashboard.vue`
+- `frontend/src/pages/PolicyList.vue`
+- `frontend/src/pages/RenewalsBoard.vue`
+- `frontend/src/pages/PolicyDetail.vue`
+- `frontend/src/pages/OfferBoard.vue`
+- `frontend/src/pages/CustomerDetail.vue`
+- `frontend/src/pages/CommunicationCenter.vue`
+- `frontend/src/pages/ClaimsBoard.vue`
+- `frontend/src/pages/LeadList.vue`
+- `frontend/src/pages/PaymentsBoard.vue`
+- `frontend/src/pages/ImportData.vue`
+- `frontend/src/pages/ExportData.vue`
+- `frontend/src/pages/ReconciliationWorkbench.vue`
+- `frontend/src/pages/RenewalTaskDetail.vue`
+- `frontend/src/pages/OfferDetail.vue`
+- `frontend/src/composables/usePolicyFormRuntime.js`
+- `frontend/src/composables/useRenewalsBoardRuntime.js`
+- `frontend/src/composables/useSidebarNavigation.js`
+
+### Metadata hot spot
+
+- `acentem_takipte/acentem_takipte/doctype/at_activity/at_activity.json`
+
+### New priority note
+
+The next implementation wave should be:
+1. Normalize backend report/export helpers to English source order
+2. Review backend seed templates
+3. Then continue with `at_customer.py` and `at_policy.py`
+4. Finally move through the frontend copy clusters
+
+---
+
 ## Global Rules
 
 1. **Source strings are always English**
@@ -376,4 +428,3 @@ If a file becomes too large or noisy during localization:
 If a term is ambiguous:
 - prefer context over inventing duplicate source strings
 - keep glossary decisions consistent across the entire app
-

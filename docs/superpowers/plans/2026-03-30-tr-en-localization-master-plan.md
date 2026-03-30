@@ -25,6 +25,58 @@
 
 ---
 
+## Repo Gap Audit (2026-03-30)
+
+Tam repo taraması sonrası, henüz ele alınması gereken başlıca yerelleştirme yüzeyleri şunlar:
+
+### Backend hot spot kümeleri
+
+- `acentem_takipte/acentem_takipte/setup_utils.py`
+- `acentem_takipte/acentem_takipte/notification_seed_data.py`
+- `acentem_takipte/acentem_takipte/api/smoke.py`
+- `acentem_takipte/acentem_takipte/services/report_exports.py`
+- `acentem_takipte/acentem_takipte/services/list_exports.py`
+- `acentem_takipte/acentem_takipte/tests/test_report_exports.py`
+- `acentem_takipte/acentem_takipte/tests/test_list_exports_service.py`
+- `acentem_takipte/acentem_takipte/tests/test_reports_runtime.py`
+
+### Frontend hot spot kümeleri
+
+Görünür copy’nin büyük kısmı hâlâ bu dosya ailelerinde toplanıyor:
+
+- `frontend/src/pages/Dashboard.vue`
+- `frontend/src/pages/PolicyList.vue`
+- `frontend/src/pages/RenewalsBoard.vue`
+- `frontend/src/pages/PolicyDetail.vue`
+- `frontend/src/pages/OfferBoard.vue`
+- `frontend/src/pages/CustomerDetail.vue`
+- `frontend/src/pages/CommunicationCenter.vue`
+- `frontend/src/pages/ClaimsBoard.vue`
+- `frontend/src/pages/LeadList.vue`
+- `frontend/src/pages/PaymentsBoard.vue`
+- `frontend/src/pages/ImportData.vue`
+- `frontend/src/pages/ExportData.vue`
+- `frontend/src/pages/ReconciliationWorkbench.vue`
+- `frontend/src/pages/RenewalTaskDetail.vue`
+- `frontend/src/pages/OfferDetail.vue`
+- `frontend/src/composables/usePolicyFormRuntime.js`
+- `frontend/src/composables/useRenewalsBoardRuntime.js`
+- `frontend/src/composables/useSidebarNavigation.js`
+
+### Metadata hot spot
+
+- `acentem_takipte/acentem_takipte/doctype/at_activity/at_activity.json`
+
+### Yeni öncelik notu
+
+Bu tarama sonrası yeni ilk dalga şu olmalı:
+1. Backend export/report helper’larının İngilizce kaynak düzene alınması
+2. Backend seed template’lerinin tekrar gözden geçirilmesi
+3. Ardından `at_customer.py` ve `at_policy.py`
+4. Son olarak frontend copy kümesi
+
+---
+
 ## Genel Kurallar
 
 1. **Kaynak string’ler her zaman İngilizce olacak**
@@ -102,6 +154,7 @@ rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_t
 | Altyapı | Translation klasörü + CSV şablonu + hooks + locale fallback | `acentem_takipte/translations/*.csv`, `acentem_takipte/hooks.py`, `acentem_takipte/www/at.py`, `frontend/src/state/session.js` | Tamamlandı | Yüksek |
 | Backend | `at_customer.py` yerelleştirme geçişi | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Bekliyor | Yüksek |
 | Backend | `at_policy.py` yerelleştirme geçişi | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Bekliyor | Yüksek |
+| Backend | Rapor ve liste dışa aktarma yardımcılarını İngilizce kaynak düzene alma | `acentem_takipte/acentem_takipte/services/report_exports.py`, `acentem_takipte/acentem_takipte/services/list_exports.py` | Tamamlandı | Yüksek |
 | Backend | Ortak backend yardımcıları ve rapor/bildirim string’leri | `acentem_takipte/acentem_takipte/**/*.py` | Bekliyor | Yüksek |
 | Frontend | App shell, board’lar ve detay sayfaları yerelleştirme geçişi | `frontend/src/**/*.vue`, `frontend/src/**/*.js` | Bekliyor | Yüksek |
 | Metadata | DocType label, description, select option alanları | `acentem_takipte/acentem_takipte/doctype/**/*.json` | Bekliyor | Yüksek |
@@ -376,4 +429,3 @@ Bir dosya yerelleştirme sırasında çok büyük veya gürültülü hale gelirs
 Bir terim belirsizse:
 - duplicate source string üretmek yerine context’i tercih et
 - sözlük kararlarını tüm uygulama genelinde tutarlı koru
-

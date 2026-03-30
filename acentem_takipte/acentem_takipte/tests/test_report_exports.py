@@ -16,6 +16,10 @@ def test_build_report_title_uses_full_locale_then_base_locale():
     assert build_report_title("policy_list", "tr-TR") == "Poliçe Listesi Raporu"
 
 
+def test_build_report_title_defaults_to_english():
+    assert build_report_title("policy_list") == "Policy List Report"
+
+
 def test_build_report_title_trims_report_key():
     assert build_report_title(" policy_list ", "tr") == "Poliçe Listesi Raporu"
 
