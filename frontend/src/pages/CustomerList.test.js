@@ -74,6 +74,45 @@ const genericStub = {
     `<div><slot /><slot name="actions" /><slot name="filters" /><slot name="default" /><slot name="footer" /><slot name="body-content" /><slot name="advanced" /><slot name="header" /></div>`,
 };
 
+async function mountCustomerList(locale = "tr") {
+  const authStore = useAuthStore();
+  authStore.applyContext({
+    user: "agent@example.com",
+    full_name: "Agent",
+    roles: ["Agent"],
+    preferred_home: "/at",
+    interface_mode: "spa",
+    locale,
+    office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+    default_office_branch: "IST",
+    can_access_all_office_branches: false,
+  });
+
+  const wrapper = mount(CustomerList, {
+    global: {
+      stubs: {
+        Dialog: true,
+        ActionButton: true,
+        DataTableCell: genericStub,
+        InlineActionRow: genericStub,
+        MiniFactList: true,
+        PageToolbar: genericStub,
+        QuickCreateDialogShell: genericStub,
+        QuickCreateFormRenderer: true,
+        QuickCreateLauncher: true,
+        TableEntityCell: true,
+        TableFactsCell: true,
+        TablePagerFooter: genericStub,
+        WorkbenchFilterToolbar: genericStub,
+        StatusBadge: true,
+      },
+    },
+  });
+
+  await nextTick();
+  return wrapper;
+}
+
 describe("CustomerList page store integration", () => {
   beforeEach(() => {
     routerPush.mockReset();
@@ -99,29 +138,9 @@ describe("CustomerList page store integration", () => {
   });
 
   it("writes list payload and pagination state into customer store", async () => {
-    const wrapper = mount(CustomerList, {
-      global: {
-        stubs: {
-          Dialog: true,
-          ActionButton: true,
-          DataTableCell: genericStub,
-          InlineActionRow: genericStub,
-          MiniFactList: true,
-          PageToolbar: genericStub,
-          QuickCreateDialogShell: genericStub,
-          QuickCreateFormRenderer: true,
-          QuickCreateLauncher: true,
-          TableEntityCell: true,
-          TableFactsCell: true,
-          TablePagerFooter: genericStub,
-          WorkbenchFilterToolbar: genericStub,
-          StatusBadge: true,
-        },
-      },
-    });
+    const wrapper = await mountCustomerList("tr");
 
     const customerStore = useCustomerStore();
-    await nextTick();
 
     expect(customerStore.state.items).toHaveLength(2);
     expect(customerStore.state.pagination.total).toBe(2);
@@ -130,6 +149,10 @@ describe("CustomerList page store integration", () => {
     expect(wrapper.text()).toContain("Liste Özeti");
     expect(wrapper.text()).toContain("Sayfa Boyutu");
     expect(wrapper.text()).toContain("20");
+    expect(wrapper.vm.customerListColumns[0].label).toBe("Müşteri No");
+    expect(wrapper.vm.customerListColumns[1].label).toBe("Müşteri Adı");
+    expect(wrapper.vm.customerListColumns[4].label).toBe("Cinsiyet");
+    expect(wrapper.vm.customerListColumns[5].label).toBe("İzin Durumu");
 
     const inputs = wrapper.findAll(".input");
     await inputs[0].setValue("aykut");
@@ -141,5 +164,16 @@ describe("CustomerList page store integration", () => {
 
     await wrapper.vm.openQuickCustomerDialog();
     expect(wrapper.vm.showQuickCustomerDialog).toBe(true);
+  });
+
+  it("renders English column labels when locale is en", async () => {
+    const wrapper = await mountCustomerList("en");
+
+    expect(wrapper.text()).toContain("Customer Workbench");
+    expect(wrapper.vm.customerListColumns[0].label).toBe("Customer No");
+    expect(wrapper.vm.customerListColumns[1].label).toBe("Customer Name");
+    expect(wrapper.vm.customerListColumns[4].label).toBe("Gender");
+    expect(wrapper.vm.customerListColumns[5].label).toBe("Consent Status");
+    expect(wrapper.vm.customerListFilterConfig[0].label).toBe("Consent Status");
   });
 });

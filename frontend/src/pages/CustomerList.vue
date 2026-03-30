@@ -224,6 +224,9 @@ const copy = {
     colConsentOwner: "İzin / Temsilci",
     colPortfolio: "Portföy Özet",
     colActions: "Aksiyon",
+    customerNo: "Müşteri No",
+    customerName: "Müşteri Adı",
+    consentStatus: "İzin Durumu",
     taxId: "Kimlik / Vergi No",
     nationalId: "TC Kimlik No",
     taxNumber: "Vergi No",
@@ -345,6 +348,9 @@ const copy = {
     colConsentOwner: "Consent / Owner",
     colPortfolio: "Portfolio",
     colActions: "Actions",
+    customerNo: "Customer No",
+    customerName: "Customer Name",
+    consentStatus: "Consent Status",
     taxId: "Identity / Tax Number",
     nationalId: "National ID Number",
     taxNumber: "Tax Number",
@@ -506,24 +512,24 @@ const customerListPage = ref(1);
 const customerListPageSize = 20;
 const customerListLocalFilters = reactive({ consent_status: "", gender: "" });
 
-const customerListColumns = [
-  { key: "name", label: "Müşteri No", width: "150px", type: "mono" },
-  { key: "full_name", label: "Müşteri", width: "220px" },
-  { key: "mobile_no", label: "Telefon", width: "160px" },
-  { key: "email_id", label: "E-posta", width: "220px" },
-  { key: "gender", label: "Cinsiyet", width: "90px" },
-  { key: "consent_status", label: "İzin", width: "120px", type: "badge" },
-];
+const customerListColumns = computed(() => [
+  { key: "name", label: t("customerNo"), width: "150px", type: "mono" },
+  { key: "full_name", label: t("customerName"), width: "220px" },
+  { key: "mobile_no", label: t("phone"), width: "160px" },
+  { key: "email_id", label: t("email"), width: "220px" },
+  { key: "gender", label: t("gender"), width: "90px" },
+  { key: "consent_status", label: t("consentStatus"), width: "120px", type: "badge" },
+]);
 
 const customerListFilterConfig = computed(() => [
   {
     key: "consent_status",
-    label: "İzin",
+    label: t("consentStatus"),
     options: consentStatusOptions.value.map((item) => ({ value: item.value, label: item.label })),
   },
   {
     key: "gender",
-    label: "Cinsiyet",
+    label: t("gender"),
     options: genderOptions.value.map((item) => ({ value: item.value, label: item.label })),
   },
 ]);

@@ -1,9 +1,11 @@
+import { translateText } from "../utils/i18n";
+
 function cstr(value) {
   return String(value ?? "").trim();
 }
 
-function buildLeadDialogError(locale, fallbackTr, fallbackEn) {
-  return locale === "tr" ? fallbackTr : fallbackEn;
+function buildLeadDialogError(locale, sourceText) {
+  return translateText(sourceText, locale);
 }
 
 export function useDashboardLeadSubmission({
@@ -35,12 +37,10 @@ export function useDashboardLeadSubmission({
       if (!selectedCustomer && !shouldCreateCustomer) {
         leadDialogFieldErrors.customer = buildLeadDialogError(
           activeLocale.value,
-          "Bir müşteri seçin veya yeni müşteri ekleyin.",
           "Select a customer or add a new customer."
         );
         leadDialogError.value = buildLeadDialogError(
           activeLocale.value,
-          "Müşteri alanını tamamlayın.",
           "Complete the customer section."
         );
         return;
@@ -49,12 +49,10 @@ export function useDashboardLeadSubmission({
       if (shouldCreateCustomer && !fullName) {
         leadDialogFieldErrors.customer = buildLeadDialogError(
           activeLocale.value,
-          "Yeni müşteri adı gerekli.",
           "New customer name is required."
         );
         leadDialogError.value = buildLeadDialogError(
           activeLocale.value,
-          "Müşteri alanını tamamlayın.",
           "Complete the customer section."
         );
         return;
