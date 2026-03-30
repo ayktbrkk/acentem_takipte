@@ -75,6 +75,8 @@
   - `acentem_takipte/acentem_takipte/doctype/at_lead/at_lead.json`
 - The remaining Turkish fields in `AT Renewal Task` metadata were moved to English source:
   - `acentem_takipte/acentem_takipte/doctype/at_renewal_task/at_renewal_task.json`
+- The remaining Turkish fields in `AT Offer` metadata were moved to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_offer/at_offer.json`
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
