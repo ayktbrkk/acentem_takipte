@@ -65,6 +65,8 @@
   - `acentem_takipte/acentem_takipte/doctype/at_insured_asset/at_insured_asset.json`
 - The remaining Turkish description fields in `AT Notification Draft` metadata were moved to English source:
   - `acentem_takipte/acentem_takipte/doctype/at_notification_draft/at_notification_draft.json`
+- The remaining Turkish description fields in `AT Accounting Entry` metadata were moved to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_accounting_entry/at_accounting_entry.json`
 - The remaining Turkish fields in `AT Reconciliation Item` metadata were moved to English source:
   - `acentem_takipte/acentem_takipte/doctype/at_reconciliation_item/at_reconciliation_item.json`
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:

@@ -65,6 +65,8 @@
   - `acentem_takipte/acentem_takipte/doctype/at_insured_asset/at_insured_asset.json`
 - `AT Notification Draft` metadata dosyasındaki kalan Türkçe description alanları İngilizce source’a taşındı:
   - `acentem_takipte/acentem_takipte/doctype/at_notification_draft/at_notification_draft.json`
+- `AT Accounting Entry` metadata dosyasındaki kalan Türkçe description alanları İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_accounting_entry/at_accounting_entry.json`
 - `AT Reconciliation Item` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
   - `acentem_takipte/acentem_takipte/doctype/at_reconciliation_item/at_reconciliation_item.json`
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
