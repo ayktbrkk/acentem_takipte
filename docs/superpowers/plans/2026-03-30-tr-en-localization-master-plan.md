@@ -40,6 +40,9 @@
 - `at_customer.py` ve `at_policy.py` regex taramasında hardcoded Türkçe string vermedi; dosyalar zaten İngilizce source + `_()` standardına uyuyor.
 - `AT Activity` metadata dosyası İngilizce source'a çevrildi:
   - `acentem_takipte/acentem_takipte/doctype/at_activity/at_activity.json`
+- `AT Customer` ve `AT Policy` metadata dosyalarındaki kalan Türkçe label/description alanları İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`
+  - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`

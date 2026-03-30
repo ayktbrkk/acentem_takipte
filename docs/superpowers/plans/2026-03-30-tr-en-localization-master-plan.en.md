@@ -40,6 +40,9 @@
 - `at_customer.py` and `at_policy.py` returned no hardcoded Turkish strings during the regex scan; both modules already follow English source + `_()` conventions for user-facing text.
 - The `AT Activity` metadata file was converted to English source:
   - `acentem_takipte/acentem_takipte/doctype/at_activity/at_activity.json`
+- The remaining Turkish label/description fields in `AT Customer` and `AT Policy` metadata were moved to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`
+  - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`

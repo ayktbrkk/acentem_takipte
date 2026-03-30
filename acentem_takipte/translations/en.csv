@@ -191,3 +191,6 @@
 "Notes","Notes"
 "The office branch at the time of the record - used for historical reporting and accounting consistency.","The office branch at the time of the record - used for historical reporting and accounting consistency."
 "The current office branch - used for operational work queues and transfer/assignment flows.","The current office branch - used for operational work queues and transfer/assignment flows."
+"Customer Type","Customer Type"
+"User Note","User Note"
+"Free-form text added by the user.","Free-form text added by the user."

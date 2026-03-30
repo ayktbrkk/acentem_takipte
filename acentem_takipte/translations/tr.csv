@@ -191,3 +191,6 @@
 "Notes","Notlar"
 "The office branch at the time of the record - used for historical reporting and accounting consistency.","Kayıt anındaki ofis şubesi - tarihsel rapor ve muhasebe tutarlılığı için kullanılır."
 "The current office branch - used for operational work queues and transfer/assignment flows.","Güncel ofis şubesi - operasyonel iş listeleri ve transfer/devir akışları için kullanılır."
+"Customer Type","Müşteri Tipi"
+"User Note","Kullanıcı Notu"
+"Free-form text added by the user.","Kullanıcı tarafından eklenen serbest metin."
