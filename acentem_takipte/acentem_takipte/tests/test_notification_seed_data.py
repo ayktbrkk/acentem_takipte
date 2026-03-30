@@ -18,3 +18,7 @@ def test_default_notification_templates_use_template_mode_for_whatsapp():
     assert whatsapp_rows
     assert all(row["content_mode"] == "template" for row in whatsapp_rows)
 
+
+def test_default_notification_templates_use_english_source_language():
+    assert {row["language"] for row in DEFAULT_NOTIFICATION_TEMPLATES} == {"en"}
+

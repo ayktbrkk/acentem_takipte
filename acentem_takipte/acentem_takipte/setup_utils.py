@@ -289,21 +289,6 @@ PERMISSION_MATRIX = {
 
 DEFAULT_NOTIFICATION_TEMPLATES = (
     {
-        "template_key": "policy_created_tr",
-        "event_key": "policy_created",
-        "channel": "Both",
-        "language": "tr",
-        "subject": "Poliçeniz oluşturuldu: {{ policy_no }}",
-        "body_template": (
-            "Sayin {{ customer.full_name }},\n"
-            "Poliçeniz oluşturuldu.\n"
-            "Poliçe No: {{ policy_no }}\n"
-            "Başlangıç: {{ start_date }}\n"
-            "Bitiş: {{ end_date }}\n"
-            "Prim: {{ gross_premium }} {{ currency }}"
-        ),
-    },
-    {
         "template_key": "policy_created_en",
         "event_key": "policy_created",
         "channel": "Both",
@@ -319,17 +304,18 @@ DEFAULT_NOTIFICATION_TEMPLATES = (
         ),
     },
     {
-        "template_key": "renewal_due_tr",
-        "event_key": "renewal_due",
+        "template_key": "policy_created_tr",
+        "event_key": "policy_created",
         "channel": "Both",
         "language": "tr",
-        "subject": "Poliçe yenileme hatırlatması",
+        "subject": "Poliçeniz oluşturuldu: {{ policy_no }}",
         "body_template": (
-            "Sayin {{ customer.full_name }},\n"
-            "Poliçenizin yenileme tarihi yaklaşıyor.\n"
-            "Poliçe: {{ policy }}\n"
-            "Yenileme: {{ renewal_date }}\n"
-            "Son tarih: {{ due_date }}"
+            "Sayın {{ customer.full_name }},\n"
+            "Poliçeniz oluşturuldu.\n"
+            "Poliçe No: {{ policy_no }}\n"
+            "Başlangıç: {{ start_date }}\n"
+            "Bitiş: {{ end_date }}\n"
+            "Prim: {{ gross_premium }} {{ currency }}"
         ),
     },
     {
@@ -344,6 +330,20 @@ DEFAULT_NOTIFICATION_TEMPLATES = (
             "Policy: {{ policy }}\n"
             "Renewal date: {{ renewal_date }}\n"
             "Due date: {{ due_date }}"
+        ),
+    },
+    {
+        "template_key": "renewal_due_tr",
+        "event_key": "renewal_due",
+        "channel": "Both",
+        "language": "tr",
+        "subject": "Poliçe yenileme hatırlatması",
+        "body_template": (
+            "Sayın {{ customer.full_name }},\n"
+            "Poliçenizin yenileme tarihi yaklaşıyor.\n"
+            "Poliçe: {{ policy }}\n"
+            "Yenileme: {{ renewal_date }}\n"
+            "Son tarih: {{ due_date }}"
         ),
     },
 )

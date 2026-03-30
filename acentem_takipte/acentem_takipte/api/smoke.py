@@ -140,9 +140,9 @@ def run_backend_smoke_test() -> dict:
                 "template_key": f"smoke-policy-{marker}",
                 "event_key": "policy_created",
                 "channel": "SMS",
-                "language": "tr",
-                "subject": "Poliçeniz oluşturuldu: {{ policy_no }}",
-                "body_template": "Sayın {{ customer.full_name }}, poliçeniz oluşturuldu.",
+                "language": "en",
+                "subject": "Your policy has been created: {{ policy_no }}",
+                "body_template": "Dear {{ customer.full_name }}, your policy has been created.",
                 "is_active": 1,
             }
         ).insert()
@@ -154,9 +154,9 @@ def run_backend_smoke_test() -> dict:
                 "template_key": f"smoke-renewal-{marker}",
                 "event_key": "renewal_due",
                 "channel": "SMS",
-                "language": "tr",
-                "subject": "Poliçeniz yenileme zamanı",
-                "body_template": "Sayin {{ customer.full_name }}, yenileme tarihi {{ renewal_date }}.",
+                "language": "en",
+                "subject": "Your policy renewal is due",
+                "body_template": "Dear {{ customer.full_name }}, the renewal date is {{ renewal_date }}.",
                 "is_active": 1,
             }
         ).insert()

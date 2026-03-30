@@ -19,6 +19,22 @@
   - `frontend/src/state/session.js` ve `acentem_takipte/www/at.py` içinde locale fallback
 - Hızlı oluşturma sözlüğü İngilizce kaynak etiketlere çevrildi:
   - `frontend/src/config/quickCreate/registry.js`
+- Backend seed şablonları ve varsayılan dil akışı İngilizce kaynağa çekildi:
+  - `acentem_takipte/acentem_takipte/notification_seed_data.py`
+  - `acentem_takipte/acentem_takipte/api/smoke.py`
+  - `acentem_takipte/acentem_takipte/api/session.py`
+  - `acentem_takipte/acentem_takipte/notification_dispatch.py`
+  - `acentem_takipte/acentem_takipte/providers/whatsapp_meta.py`
+  - `acentem_takipte/acentem_takipte/services/notifications.py`
+  - `acentem_takipte/acentem_takipte/services/campaigns.py`
+  - `acentem_takipte/acentem_takipte/services/quick_create_special.py`
+  - `acentem_takipte/acentem_takipte/services/scheduled_reports.py`
+  - `acentem_takipte/acentem_takipte/api/aux_edit_registry.py`
+  - `acentem_takipte/acentem_takipte/setup_utils.py`
+- Customer access ve report runtime helper mesajları CSV kaynak envanterine eklendi:
+  - `acentem_takipte/acentem_takipte/api/customers.py`
+  - `acentem_takipte/acentem_takipte/services/reports_runtime.py`
+- `at_customer.py` ve `at_policy.py` regex taramasında hardcoded Türkçe string vermedi; dosyalar zaten İngilizce source + `_()` standardına uyuyor.
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
@@ -31,14 +47,11 @@ Tam repo taraması sonrası, henüz ele alınması gereken başlıca yerelleşti
 
 ### Backend hot spot kümeleri
 
-- `acentem_takipte/acentem_takipte/setup_utils.py`
-- `acentem_takipte/acentem_takipte/notification_seed_data.py`
-- `acentem_takipte/acentem_takipte/api/smoke.py`
-- `acentem_takipte/acentem_takipte/services/report_exports.py`
-- `acentem_takipte/acentem_takipte/services/list_exports.py`
-- `acentem_takipte/acentem_takipte/tests/test_report_exports.py`
-- `acentem_takipte/acentem_takipte/tests/test_list_exports_service.py`
-- `acentem_takipte/acentem_takipte/tests/test_reports_runtime.py`
+- `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
+- `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
+- `acentem_takipte/acentem_takipte/**/*.py` içindeki kalan ortak helper ve report/notification string’leri
+- `acentem_takipte/acentem_takipte/api/customers.py`
+- `acentem_takipte/acentem_takipte/services/reports_runtime.py`
 
 ### Frontend hot spot kümeleri
 
@@ -70,10 +83,8 @@ Görünür copy’nin büyük kısmı hâlâ bu dosya ailelerinde toplanıyor:
 ### Yeni öncelik notu
 
 Bu tarama sonrası yeni ilk dalga şu olmalı:
-1. Backend export/report helper’larının İngilizce kaynak düzene alınması
-2. Backend seed template’lerinin tekrar gözden geçirilmesi
-3. Ardından `at_customer.py` ve `at_policy.py`
-4. Son olarak frontend copy kümesi
+1. Ardından `at_customer.py` ve `at_policy.py`
+2. Son olarak frontend copy kümesi
 
 ---
 
@@ -121,6 +132,10 @@ Bu tarama sonrası yeni ilk dalga şu olmalı:
 8. **Hardcoded Türkçe string keşfi zorunlu ilk adımdır**
    - Dönüşüm mantığına geçmeden önce regex taramasıyla kaynak envanteri çıkarılmalıdır.
 
+9. **Frappe translation tooling dikkat ister**
+   - `bench build-message-files` gibi komutlar çalışma ağacındaki CSV çeviri dosyalarını yeniden yazabilir.
+   - Bu komutlar yalnızca diff kontrolü yapılarak ve gerekirse yedek alındıktan sonra kullanılmalıdır.
+
 ---
 
 ## Arama / Keşif Kalıbı
@@ -152,9 +167,10 @@ rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_t
 | Faz | Görev | İlgili Dosya/Yol | Durum | Öncelik |
 |---|---|---|---|---|
 | Altyapı | Translation klasörü + CSV şablonu + hooks + locale fallback | `acentem_takipte/translations/*.csv`, `acentem_takipte/hooks.py`, `acentem_takipte/www/at.py`, `frontend/src/state/session.js` | Tamamlandı | Yüksek |
-| Backend | `at_customer.py` yerelleştirme geçişi | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Bekliyor | Yüksek |
-| Backend | `at_policy.py` yerelleştirme geçişi | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Bekliyor | Yüksek |
+| Backend | `at_customer.py` yerelleştirme geçişi (regex taraması temiz; mevcut olarak uyumlu) | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Tamamlandı | Yüksek |
+| Backend | `at_policy.py` yerelleştirme geçişi (regex taraması temiz; mevcut olarak uyumlu) | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Tamamlandı | Yüksek |
 | Backend | Rapor ve liste dışa aktarma yardımcılarını İngilizce kaynak düzene alma | `acentem_takipte/acentem_takipte/services/report_exports.py`, `acentem_takipte/acentem_takipte/services/list_exports.py` | Tamamlandı | Yüksek |
+| Backend | Seed şablonları ve varsayılan dil fallback akışı | `acentem_takipte/acentem_takipte/notification_seed_data.py`, `acentem_takipte/acentem_takipte/api/smoke.py`, `acentem_takipte/acentem_takipte/api/session.py`, `acentem_takipte/acentem_takipte/notification_dispatch.py`, `acentem_takipte/acentem_takipte/providers/whatsapp_meta.py`, `acentem_takipte/acentem_takipte/services/notifications.py`, `acentem_takipte/acentem_takipte/services/campaigns.py`, `acentem_takipte/acentem_takipte/services/quick_create_special.py`, `acentem_takipte/acentem_takipte/services/scheduled_reports.py`, `acentem_takipte/acentem_takipte/api/aux_edit_registry.py`, `acentem_takipte/acentem_takipte/setup_utils.py` | Tamamlandı | Yüksek |
 | Backend | Ortak backend yardımcıları ve rapor/bildirim string’leri | `acentem_takipte/acentem_takipte/**/*.py` | Bekliyor | Yüksek |
 | Frontend | App shell, board’lar ve detay sayfaları yerelleştirme geçişi | `frontend/src/**/*.vue`, `frontend/src/**/*.js` | Bekliyor | Yüksek |
 | Metadata | DocType label, description, select option alanları | `acentem_takipte/acentem_takipte/doctype/**/*.json` | Bekliyor | Yüksek |

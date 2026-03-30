@@ -18,6 +18,9 @@ frontend/tests/e2e/tmp-live-smoke.spec.js
 acentem_takipte/frontend/
 # Frontend build output (generated during build/deploy; never commit)
 acentem_takipte/public/frontend/
+acentem_takipte/translations/*.csv
+!acentem_takipte/translations/en.csv
+!acentem_takipte/translations/tr.csv
 .plan/
 .vscode/
 .playwright-cli/

@@ -38,7 +38,7 @@ class MetaWhatsAppAdapter(ProviderAdapter):
 
     def build_payload(self, message: ProviderMessage) -> Dict[str, object]:
         template_name = (message.template_name or "").strip()
-        language = (message.template_language or "tr").strip()
+        language = (message.template_language or "en").strip()
         components = message.components or []
 
         if template_name:

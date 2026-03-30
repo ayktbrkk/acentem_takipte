@@ -155,7 +155,7 @@ def get_session_context() -> dict:
         pass
 
     full_name = frappe.db.get_value("User", user, "full_name") or user
-    language = (frappe.db.get_value("User", user, "language") or frappe.local.lang or "tr")
+    language = (frappe.db.get_value("User", user, "language") or frappe.local.lang or "en")
     interface = _resolve_session_interface(user)
     office_branches = get_user_office_branches(user)
     default_office_branch = get_default_office_branch(user)
@@ -178,7 +178,7 @@ def get_session_context() -> dict:
 
 
 def _normalize_locale(locale: str | None) -> str:
-    value = str(locale or "tr").lower()
+    value = str(locale or "en").lower()
     return "en" if value.startswith("en") else "tr"
 
 

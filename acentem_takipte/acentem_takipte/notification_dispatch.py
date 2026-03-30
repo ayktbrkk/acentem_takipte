@@ -24,7 +24,7 @@ def build_provider_message_from_records(template_doc: Any, draft_doc: Any, outbo
         subject=getattr(draft_doc, "subject", None) or resolve_subject_template(template_doc, channel),
         body=getattr(draft_doc, "body", None) or resolve_body_template(template_doc, channel),
         template_name=provider_template_name,
-        template_language=getattr(draft_doc, "language", None) or getattr(template_doc, "language", None) or "tr",
+        template_language=getattr(draft_doc, "language", None) or getattr(template_doc, "language", None) or "en",
         components=parse_template_components(raw_components),
         metadata={
             "channel": channel,

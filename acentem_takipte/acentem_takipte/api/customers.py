@@ -106,7 +106,7 @@ def create_customer_access_request(
     if not customer_id:
         frappe.throw(_safe_translate("Customer is required."))
     if not frappe.db.exists("AT Customer", customer_id):
-        frappe.throw(_safe_translate("Customer not found."))
+        frappe.throw(_safe_translate("Customer not found: {0}").format(customer_id))
 
     reason = str(justification or "").strip()
     if len(reason) < 10:

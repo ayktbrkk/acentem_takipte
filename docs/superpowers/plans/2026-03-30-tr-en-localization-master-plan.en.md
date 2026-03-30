@@ -19,6 +19,22 @@
   - locale fallback in `frontend/src/state/session.js` and `acentem_takipte/www/at.py`
 - The quick-create registry was converted to English-first source labels:
   - `frontend/src/config/quickCreate/registry.js`
+- Backend seed templates and default language flow were normalized to English source:
+  - `acentem_takipte/acentem_takipte/notification_seed_data.py`
+  - `acentem_takipte/acentem_takipte/api/smoke.py`
+  - `acentem_takipte/acentem_takipte/api/session.py`
+  - `acentem_takipte/acentem_takipte/notification_dispatch.py`
+  - `acentem_takipte/acentem_takipte/providers/whatsapp_meta.py`
+  - `acentem_takipte/acentem_takipte/services/notifications.py`
+  - `acentem_takipte/acentem_takipte/services/campaigns.py`
+  - `acentem_takipte/acentem_takipte/services/quick_create_special.py`
+  - `acentem_takipte/acentem_takipte/services/scheduled_reports.py`
+  - `acentem_takipte/acentem_takipte/api/aux_edit_registry.py`
+  - `acentem_takipte/acentem_takipte/setup_utils.py`
+- Customer access and report runtime helper messages were added to the CSV source inventory:
+  - `acentem_takipte/acentem_takipte/api/customers.py`
+  - `acentem_takipte/acentem_takipte/services/reports_runtime.py`
+- `at_customer.py` and `at_policy.py` returned no hardcoded Turkish strings during the regex scan; both modules already follow English source + `_()` conventions for user-facing text.
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
@@ -31,14 +47,11 @@ After a full repo scan, the main localization surfaces that still need attention
 
 ### Backend hot spots
 
-- `acentem_takipte/acentem_takipte/setup_utils.py`
-- `acentem_takipte/acentem_takipte/notification_seed_data.py`
-- `acentem_takipte/acentem_takipte/api/smoke.py`
-- `acentem_takipte/acentem_takipte/services/report_exports.py`
-- `acentem_takipte/acentem_takipte/services/list_exports.py`
-- `acentem_takipte/acentem_takipte/tests/test_report_exports.py`
-- `acentem_takipte/acentem_takipte/tests/test_list_exports_service.py`
-- `acentem_takipte/acentem_takipte/tests/test_reports_runtime.py`
+- `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
+- `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
+- `acentem_takipte/acentem_takipte/**/*.py` for the remaining shared helper and report/notification strings
+- `acentem_takipte/acentem_takipte/api/customers.py`
+- `acentem_takipte/acentem_takipte/services/reports_runtime.py`
 
 ### Frontend hot spots
 
@@ -70,10 +83,8 @@ The majority of visible copy still clusters in these file families:
 ### New priority note
 
 The next implementation wave should be:
-1. Normalize backend report/export helpers to English source order
-2. Review backend seed templates
-3. Then continue with `at_customer.py` and `at_policy.py`
-4. Finally move through the frontend copy clusters
+1. Then continue with `at_customer.py` and `at_policy.py`
+2. Finally move through the frontend copy clusters
 
 ---
 
@@ -121,6 +132,10 @@ The next implementation wave should be:
 8. **Hardcoded Turkish string discovery is a required first pass**
    - Use the regex scan to build a source inventory before touching conversion logic.
 
+9. **Frappe translation tooling needs caution**
+   - Commands like `bench build-message-files` can rewrite CSV translation files in the working tree.
+   - Use these commands only after checking the diff and, if needed, taking a backup first.
+
 ---
 
 ## Search / Discovery Pattern
@@ -152,9 +167,10 @@ rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_t
 | Phase | Task | File/Path | Status | Priority |
 |---|---|---|---|---|
 | Infrastructure | Translation folder + CSV template + hooks + locale fallback | `acentem_takipte/translations/*.csv`, `acentem_takipte/hooks.py`, `acentem_takipte/www/at.py`, `frontend/src/state/session.js` | Done | High |
-| Backend | `at_customer.py` localization pass | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Todo | High |
-| Backend | `at_policy.py` localization pass | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Todo | High |
+| Backend | `at_customer.py` localization pass (regex scan clean; already compliant) | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Done | High |
+| Backend | `at_policy.py` localization pass (regex scan clean; already compliant) | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Done | High |
 | Backend | Shared backend helpers and report/notification strings | `acentem_takipte/acentem_takipte/**/*.py` | Todo | High |
+| Backend | Seed templates and default language fallback flow | `acentem_takipte/acentem_takipte/notification_seed_data.py`, `acentem_takipte/acentem_takipte/api/smoke.py`, `acentem_takipte/acentem_takipte/api/session.py`, `acentem_takipte/acentem_takipte/notification_dispatch.py`, `acentem_takipte/acentem_takipte/providers/whatsapp_meta.py`, `acentem_takipte/acentem_takipte/services/notifications.py`, `acentem_takipte/acentem_takipte/services/campaigns.py`, `acentem_takipte/acentem_takipte/services/quick_create_special.py`, `acentem_takipte/acentem_takipte/services/scheduled_reports.py`, `acentem_takipte/acentem_takipte/api/aux_edit_registry.py`, `acentem_takipte/acentem_takipte/setup_utils.py` | Done | High |
 | Frontend | App shell, boards, detail pages localization pass | `frontend/src/**/*.vue`, `frontend/src/**/*.js` | Todo | High |
 | Metadata | DocType labels, descriptions, select options | `acentem_takipte/acentem_takipte/doctype/**/*.json` | Todo | High |
 | Test | Backend / frontend / smoke / CSV roundtrip | `acentem_takipte/acentem_takipte/tests/*`, `frontend/src/**/*.test.js`, `frontend/tests/e2e/*` | Todo | High |

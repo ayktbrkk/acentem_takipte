@@ -50,11 +50,11 @@
    "reqd": 1
   },
   {
-   "default": "tr",
+   "default": "en",
    "fieldname": "language",
    "fieldtype": "Select",
    "label": "Language",
-   "options": "tr\nen",
+   "options": "en\ntr",
    "reqd": 1
   },
   {

@@ -360,7 +360,7 @@ def _queue_scheduled_report_delivery(
                     "template": template_name,
                     "event_key": "scheduled_report_delivery",
                     "channel": "Email",
-                    "language": "tr",
+                    "language": "en",
                     "recipient": recipient,
                     "office_branch": office_branch,
                     "subject": f"{report_title} - {business_date.isoformat()}",
@@ -417,10 +417,10 @@ def _ensure_scheduled_report_template() -> str:
             "event_key": "scheduled_report_delivery",
             "channel": "Email",
             "content_mode": "freeform",
-            "language": "tr",
-            "subject": "Zamanlanmis Rapor",
-            "body_template": "{{ subject or 'Zamanlanmis Rapor' }} ektedir.",
-            "email_body_template": "{{ body or 'Zamanlanmis Rapor ektedir.' }}",
+            "language": "en",
+            "subject": "Scheduled Report",
+            "body_template": "{{ subject or 'Scheduled Report' }} is attached.",
+            "email_body_template": "{{ body or 'Scheduled Report is attached.' }}",
             "is_active": 1,
         }
     )

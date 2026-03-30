@@ -172,3 +172,8 @@
 "Related","İlişkili"
 "Tax Amount","Vergi Tutarı"
 "View Snapshots","Snapshotları Görüntüle"
+"Identity number must be 10 or 11 digits.","Kimlik numarası 10 veya 11 haneli olmalıdır."
+"Justification must be at least 10 characters.","Gerekçe en az 10 karakter olmalıdır."
+"Request kind must be access, transfer or share.","Talep türü access, transfer veya share olmalıdır."
+"Access request has been created.","Erişim talebi oluşturuldu."
+"Report cannot be loaded. Please try again later.","Rapor yüklenemedi. Lütfen daha sonra tekrar deneyin."

@@ -43,7 +43,7 @@ def build_notification_draft_payloads(
                     "template": template.name,
                     "event_key": event_key,
                     "channel": channel,
-                    "language": template.language or "tr",
+                    "language": template.language or "en",
                     "customer": customer,
                     "office_branch": customer_payload.get("office_branch") or render_context.get("office_branch"),
                     "recipient": recipient,

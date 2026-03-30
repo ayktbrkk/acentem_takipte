@@ -59,7 +59,7 @@ def create_quick_notification_template(
         "content_mode": _normalize_option(
             quick_payload.content_mode, {"freeform", "template"}, default="freeform"
         ),
-        "language": _normalize_option(quick_payload.language, {"tr", "en"}, default="tr"),
+        "language": _normalize_option(quick_payload.language, {"tr", "en"}, default="en"),
         "provider_template_name": (quick_payload.provider_template_name or "").strip()
         or None,
         "provider_template_category": _normalize_option(

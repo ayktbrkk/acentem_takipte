@@ -114,7 +114,7 @@ FIELD_REGISTRY: dict[tuple[str, str], tuple] = {
     ),
     (_ANY, "channel"): ("option", {"SMS", "Email", "WHATSAPP", "Both"}, "Both"),
     (_ANY, "content_mode"): ("option", {"freeform", "template"}, "freeform"),
-    (_ANY, "language"): ("option", {"tr", "en"}, "tr"),
+    (_ANY, "language"): ("option", {"tr", "en"}, "en"),
     (_ANY, "provider_template_category"): (
         "option",
         {"UTILITY", "MARKETING", "AUTHENTICATION"},

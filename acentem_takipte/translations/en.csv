@@ -172,3 +172,8 @@
 "Related","Related"
 "Tax Amount","Tax Amount"
 "View Snapshots","View Snapshots"
+"Identity number must be 10 or 11 digits.","Identity number must be 10 or 11 digits."
+"Justification must be at least 10 characters.","Justification must be at least 10 characters."
+"Request kind must be access, transfer or share.","Request kind must be access, transfer or share."
+"Access request has been created.","Access request has been created."
+"Report cannot be loaded. Please try again later.","Report cannot be loaded. Please try again later."

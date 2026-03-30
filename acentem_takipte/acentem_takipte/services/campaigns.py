@@ -57,7 +57,7 @@ def execute_campaign(campaign_name: str, *, limit: int = 200) -> dict[str, objec
                 "template": template.name,
                 "event_key": template.event_key,
                 "channel": campaign.channel,
-                "language": template.language or "tr",
+                "language": template.language or "en",
                 "provider_template_name": getattr(
                     template, "provider_template_name", None
                 ),
