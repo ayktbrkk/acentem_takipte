@@ -75,14 +75,14 @@
    "fieldtype": "Link",
    "label": "Origin Office Branch",
    "options": "AT Office Branch",
-   "description": "Kayıt anındaki ofis şubesi - tarihsel rapor ve muhasebe tutarlılığı için kullanılır."
+   "description": "The office branch at the time of the record - used for historical reporting and accounting consistency."
   },
   {
    "fieldname": "current_office_branch",
    "fieldtype": "Link",
    "label": "Current Office Branch",
    "options": "AT Office Branch",
-   "description": "Güncel ofis şubesi - operasyonel iş listeleri ve transfer/devir akışları için kullanılır."
+   "description": "The current office branch - used for operational work queues and transfer/assignment flows."
   },
   {
    "fieldname": "recipient",
