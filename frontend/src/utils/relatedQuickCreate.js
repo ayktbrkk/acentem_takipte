@@ -1,29 +1,30 @@
 import { buildQuickCreateIntentQuery } from "./quickRouteIntent";
+import { translateText } from "./i18n";
 
 const RELATED_QUICK_CREATE_SOURCE_MAP = Object.freeze({
   customers: {
     routeName: "customer-list",
     quickIntent: true,
     prefillField: "full_name",
-    actionLabel: { tr: "Yeni Müşteri Ekle", en: "Add New Customer" },
+    actionLabel: "Add New Customer",
   },
   salesEntities: {
     routeName: "sales-entities-list",
     quickIntent: false,
     prefillField: "full_name",
-    actionLabel: { tr: "Yeni Satış Birimi Ekle", en: "Add New Sales Entity" },
+    actionLabel: "Add New Sales Entity",
   },
   insuranceCompanies: {
     routeName: "companies-list",
     quickIntent: false,
     prefillField: "company_name",
-    actionLabel: { tr: "Yeni Sigorta Şirketi Ekle", en: "Add New Insurance Company" },
+    actionLabel: "Add New Insurance Company",
   },
   branches: {
     routeName: "branches-list",
     quickIntent: false,
     prefillField: "branch_name",
-    actionLabel: { tr: "Yeni Branş Ekle", en: "Add New Branch" },
+    actionLabel: "Add New Branch",
   },
 });
 
@@ -48,7 +49,7 @@ export function supportsRelatedQuickCreateSource(optionsSource) {
 export function getRelatedQuickCreateActionLabel(optionsSource, locale = "tr", query = "") {
   const meta = getRelatedQuickCreateMeta(optionsSource);
   if (!meta) return "";
-  const base = String(meta.actionLabel?.[locale] || meta.actionLabel?.tr || meta.actionLabel?.en || "").trim();
+  const base = translateText(String(meta.actionLabel || ""), locale).trim();
   if (!base) return "";
   const queryText = normalizeText(query);
   if (!queryText) return base;

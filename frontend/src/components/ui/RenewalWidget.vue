@@ -1,11 +1,11 @@
 <template>
   <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
     <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-      <p class="text-sm font-medium text-gray-800">Yaklaşan Yenilemeler</p>
-      <span class="badge badge-amber">{{ renewals.length }} bekliyor</span>
+      <p class="text-sm font-medium text-gray-800">{{ translateText('Upcoming Renewals', locale) }}</p>
+      <span class="badge badge-amber">{{ renewals.length }} {{ translateText('pending', locale) }}</span>
     </div>
 
-    <div v-if="!renewals.length" class="card-empty">Yaklaşan yenileme yok.</div>
+    <div v-if="!renewals.length" class="card-empty">{{ translateText('No upcoming renewals.', locale) }}</div>
 
     <div v-else>
       <div
@@ -27,7 +27,7 @@
         </div>
 
         <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" :class="urgencyBadgeClass(r.remaining_days)">
-          {{ r.remaining_days }} gun
+          {{ r.remaining_days }} {{ translateText('days', locale) }}
         </span>
 
         <p class="w-24 shrink-0 text-right text-sm font-medium text-gray-900">{{ r.premium }}</p>
@@ -36,18 +36,25 @@
 
     <div class="border-t border-gray-100 px-4 py-2.5">
       <button class="text-xs font-medium text-brand-600 transition-colors hover:text-brand-700" @click="$emit('view-all')">
-        Tümünü Gör ->
+        {{ translateText('View All', locale) }} ->
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from "vue";
+
+import { translateText } from "@/utils/i18n";
+
+const props = defineProps({
   renewals: { type: Array, default: () => [] },
+  locale: { type: String, default: "tr" },
 })
 
 defineEmits(['row-click', 'view-all'])
+
+const locale = computed(() => props.locale || "tr");
 
 function initials(name = '') {
   return name

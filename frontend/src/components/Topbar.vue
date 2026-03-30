@@ -67,6 +67,7 @@ import { createResource } from "frappe-ui";
 
 import OfficeBranchSelect from "./app-shell/OfficeBranchSelect.vue";
 import { useAuthStore } from "../stores/auth";
+import { translateText } from "@/utils/i18n";
 
 defineEmits(["toggle-sidebar"]);
 
@@ -76,32 +77,19 @@ const accountMenuOpen = ref(false);
 const accountMenuRef = ref(null);
 
 const copy = {
-  tr: {
-    menu: "Menu",
-    user: "Kullanıcı",
-    defaultPage: "Pano",
-    defaultSection: "Acentem Takipte",
-    scope: "Kapsam",
-    allBranches: "Tüm Şubeler",
-    account: "Hesabim",
-    logout: "Çıkış",
-    desk: "Uygulamaya Git",
-  },
-  en: {
-    menu: "Menu",
-    user: "User",
-    defaultPage: "Dashboard",
-    defaultSection: "Acentem Takipte",
-    scope: "Scope",
-    allBranches: "All Branches",
-    account: "My Account",
-    logout: "Logout",
-    desk: "Open Desk",
-  },
+  menu: "Menu",
+  user: "User",
+  defaultPage: "Dashboard",
+  defaultSection: "Acentem Takipte",
+  scope: "Scope",
+  allBranches: "All Branches",
+  account: "My Account",
+  logout: "Logout",
+  desk: "Open Desk",
 };
 
 function t(key) {
-  return copy[authStore.locale]?.[key] || copy.en[key] || key;
+  return translateText(copy[key] || key, authStore.locale);
 }
 
 const pageTitle = computed(() => {
@@ -109,14 +97,14 @@ const pageTitle = computed(() => {
   if (title && typeof title === "object") {
     return title[authStore.locale] || title.en || t("defaultPage");
   }
-  return title || t("defaultPage");
+  return translateText(title || t("defaultPage"), authStore.locale);
 });
 const sectionLabel = computed(() => {
   const section = route.meta?.section;
   if (section && typeof section === "object") {
     return section[authStore.locale] || section.en || t("defaultSection");
   }
-  return section || t("defaultSection");
+  return translateText(section || t("defaultSection"), authStore.locale);
 });
 const localeLabel = computed(() => (authStore.locale === "tr" ? "TR" : "EN"));
 const displayUser = computed(() => authStore.user || authStore.userId || t("user"));
@@ -152,7 +140,7 @@ async function persistLocaleViaFetch(locale) {
       method: "GET",
       credentials: "include",
       headers: {
-        Açcept: "application/json",
+        Accept: "application/json",
       },
     },
   );

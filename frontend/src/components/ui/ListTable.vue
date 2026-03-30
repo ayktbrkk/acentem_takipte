@@ -61,7 +61,7 @@
             </span>
 
             <span v-else-if="col.type === 'urgency'" :class="urgencyClass(row[col.key])">
-              {{ row[col.key] != null ? `${row[col.key]} gun` : '-' }}
+              {{ row[col.key] != null ? `${row[col.key]} ${translateText('days', locale)}` : '-' }}
             </span>
 
             <span v-else-if="col.type === 'date'" class="text-sm text-gray-600">
@@ -95,16 +95,22 @@
 </template>
 
 <script setup>
-import StatusBadge from "@/components/ui/StatusBadge.vue";
+import { computed } from "vue";
 
-defineProps({
+import StatusBadge from "@/components/ui/StatusBadge.vue";
+import { translateText } from "@/utils/i18n";
+
+const props = defineProps({
   columns: { type: Array, required: true },
   rows: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
-  emptyMessage: { type: String, default: "Kayıt bulunamadı." },
+  emptyMessage: { type: String, default: "No records found." },
+  locale: { type: String, default: "tr" },
 });
 
 defineEmits(["row-click"]);
+
+const locale = computed(() => props.locale || "tr");
 
 function urgencyClass(days) {
   if (days == null) return "text-sm text-gray-400";

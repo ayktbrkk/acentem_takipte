@@ -1,3 +1,5 @@
+import { translateText } from "./i18n";
+
 export function formatDate(locale, value) {
   if (!value) return "-";
   try {
@@ -34,47 +36,47 @@ export function stripHtml(value) {
 
 export function policyStatusLabel(locale, status) {
   if (locale !== "tr") return status || "-";
-  if (status === "Active") return "Aktif";
+  if (status === "Active") return translateText("Active", locale);
   if (status === "KYT") return "KYT";
-  if (status === "IPT" || status === "Cancelled") return "İptal";
-  if (status === "Expired") return "Süresi Doldu";
+  if (status === "IPT" || status === "Cancelled") return translateText("Cancelled", locale);
+  if (status === "Expired") return translateText("Expired", locale);
   return status || "-";
 }
 
 export function paymentStatusLabel(locale, status) {
   if (locale !== "tr") return status || "-";
-  if (status === "Submitted") return "Gönderildi";
-  if (status === "Draft") return "Taslak";
-  if (status === "Cancelled") return "İptal";
-  if (status === "Paid") return "Ödendi";
+  if (status === "Submitted") return translateText("Submitted", locale);
+  if (status === "Draft") return translateText("Draft", locale);
+  if (status === "Cancelled") return translateText("Cancelled", locale);
+  if (status === "Paid") return translateText("Paid", locale);
   return status || "-";
 }
 
 export function installmentStatusLabel(locale, status) {
   if (locale !== "tr") return status || "-";
-  if (status === "Scheduled") return "Planlandı";
-  if (status === "Overdue") return "Gecikti";
-  if (status === "Paid") return "Ödendi";
-  if (status === "Cancelled") return "İptal";
+  if (status === "Scheduled") return translateText("Scheduled", locale);
+  if (status === "Overdue") return translateText("Overdue", locale);
+  if (status === "Paid") return translateText("Paid", locale);
+  if (status === "Cancelled") return translateText("Cancelled", locale);
   return status || "-";
 }
 
 export function endorsementStatusLabel(locale, status) {
   if (locale !== "tr") return status || "-";
-  if (status === "Applied") return "Uygulandı";
-  if (status === "Pending") return "Beklemede";
-  if (status === "Cancelled") return "İptal";
+  if (status === "Applied") return translateText("Applied", locale);
+  if (status === "Pending") return translateText("Pending", locale);
+  if (status === "Cancelled") return translateText("Cancelled", locale);
   return status || "-";
 }
 
 export function notificationStatusLabel(locale, status) {
   if (locale !== "tr") return status || "-";
-  if (status === "Queued") return "Kuyrukta";
-  if (status === "Processing") return "İşleniyor";
-  if (status === "Sent") return "Gönderildi";
-  if (status === "Failed") return "Başarısız";
-  if (status === "Dead") return "Kalıcı Hata";
-  if (status === "Draft") return "Taslak";
+  if (status === "Queued") return translateText("Queued", locale);
+  if (status === "Processing") return translateText("Processing", locale);
+  if (status === "Sent") return translateText("Sent", locale);
+  if (status === "Failed") return translateText("Failed", locale);
+  if (status === "Dead") return translateText("Dead", locale);
+  if (status === "Draft") return translateText("Draft", locale);
   return status || "-";
 }
 
@@ -85,4 +87,3 @@ export function offerStatusTone(status) {
   if (["cancelled", "rejected", "expired"].includes(normalized)) return "cancel";
   return "draft";
 }
-

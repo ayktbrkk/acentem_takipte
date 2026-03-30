@@ -163,10 +163,7 @@ const props = defineProps({
   locked: { type: Boolean, default: false },
   lockedMessage: {
     type: [String, Object],
-    default: () => ({
-      tr: "Kaynak teklif seçildiğinde müşteri bilgisi tekliften otomatik alınır.",
-      en: "Customer information is inherited automatically when a source offer is selected.",
-    }),
+    default: "Customer information is inherited automatically when a source offer is selected.",
   },
   customerFieldName: { type: String, default: "customer" },
   queryFieldName: { type: String, default: "queryText" },
@@ -179,24 +176,15 @@ const props = defineProps({
   emailFieldName: { type: String, default: "email" },
   customerLabel: {
     type: [String, Object],
-    default: () => ({
-      tr: "Müşteri",
-      en: "Customer",
-    }),
+    default: "Customer",
   },
   searchPlaceholder: {
     type: [String, Object],
-    default: () => ({
-      tr: "Listede ara veya yeni müşteri adı yazın...",
-      en: "Search the list or type a new customer name...",
-    }),
+    default: "Search the list or type a new customer name...",
   },
   noResultsText: {
     type: [String, Object],
-    default: () => ({
-      tr: "Aranan müşteri bulunamadı.",
-      en: "No customers matched your search.",
-    }),
+    default: "No customers matched your search.",
   },
 });
 
