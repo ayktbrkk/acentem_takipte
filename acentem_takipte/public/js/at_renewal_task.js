@@ -2,11 +2,11 @@ frappe.ui.form.on("AT Renewal Task", {
   validate(frm) {
     if (!frm.doc.policy) {
       frappe.validated = false;
-      frappe.msgprint(__("Poliçe seçilmelidir."));
+      frappe.msgprint(__("Policy must be selected."));
     }
     if (!frm.doc.renewal_date) {
       frappe.validated = false;
-      frappe.msgprint(__("Yenileme tarihi girilmelidir."));
+      frappe.msgprint(__("Renewal date must be entered."));
     }
   },
   refresh(frm) {
