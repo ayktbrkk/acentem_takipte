@@ -73,7 +73,7 @@ def test_create_quick_customer_relation_uses_service_payload():
     with patch.object(quick_create_auxiliary, "_assert_create_permission"):
         with patch.object(quick_create_auxiliary, "_normalize_link", side_effect=lambda doctype, value, required=False: value):
             with patch.object(quick_create_auxiliary, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
-                with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Aile iliskisi"):
+                with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Family relation"):
                     with patch.object(
                         quick_create_auxiliary,
                         "create_customer_relation_service",
@@ -84,7 +84,7 @@ def test_create_quick_customer_relation_uses_service_payload():
                             related_customer="CUST-002",
                             relation_type="Spouse",
                             is_household=1,
-                            notes="Aile iliskisi",
+                            notes="Family relation",
                         )
 
     service_mock.assert_called_once_with(
@@ -94,7 +94,7 @@ def test_create_quick_customer_relation_uses_service_payload():
             "related_customer": "CUST-002",
             "relation_type": "Spouse",
             "is_household": 1,
-            "notes": "Aile iliskisi",
+            "notes": "Family relation",
         }
     )
     assert result == {"customer_relation": "REL-0001"}
@@ -140,7 +140,7 @@ def test_create_quick_insured_asset_uses_service_payload():
     with patch.object(quick_create_auxiliary, "_assert_create_permission"):
         with patch.object(quick_create_auxiliary, "_normalize_link", side_effect=lambda doctype, value, required=False: value):
             with patch.object(quick_create_auxiliary, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
-                with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Ikincil arac"):
+                with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Secondary vehicle"):
                     with patch.object(
                         quick_create_auxiliary,
                         "create_insured_asset_service",
@@ -152,7 +152,7 @@ def test_create_quick_insured_asset_uses_service_payload():
                             asset_type="Vehicle",
                             asset_label="34 ABC 123",
                             asset_identifier="VIN-001",
-                            notes="Ikincil arac",
+                            notes="Secondary vehicle",
                         )
 
     service_mock.assert_called_once_with(
@@ -163,7 +163,7 @@ def test_create_quick_insured_asset_uses_service_payload():
             "asset_type": "Vehicle",
             "asset_label": "34 ABC 123",
             "asset_identifier": "VIN-001",
-            "notes": "Ikincil arac",
+            "notes": "Secondary vehicle",
         }
     )
     assert result == {"insured_asset": "AST-0001"}
@@ -175,7 +175,7 @@ def test_create_quick_call_note_uses_service_payload():
             with patch.object(quick_create_auxiliary, "_normalize_link", side_effect=lambda doctype, value, required=False: value):
                 with patch.object(quick_create_auxiliary, "_normalize_datetime", side_effect=lambda value: value):
                     with patch.object(quick_create_auxiliary, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
-                        with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Müşteriyle görüşüldü"):
+                        with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Customer was contacted"):
                             with patch.object(
                                 quick_create_auxiliary,
                                 "create_call_note_service",
@@ -189,10 +189,10 @@ def test_create_quick_call_note_uses_service_payload():
                                     channel="Phone Call",
                                     direction="Outbound",
                                     call_status="Completed",
-                                    call_outcome="Bilgi verildi",
+                                    call_outcome="Information shared",
                                     note_at="2026-03-09 10:30:00",
                                     next_follow_up_on="2026-03-12",
-                                    notes="Müşteriyle görüşüldü",
+                                    notes="Customer was contacted",
                                 )
 
     service_mock.assert_called_once_with(
@@ -205,10 +205,10 @@ def test_create_quick_call_note_uses_service_payload():
             "channel": "Phone Call",
             "direction": "Outbound",
             "call_status": "Completed",
-            "call_outcome": "Bilgi verildi",
+            "call_outcome": "Information shared",
             "note_at": "2026-03-09 10:30:00",
             "next_follow_up_on": quick_create_api.frappe.utils.getdate("2026-03-12"),
-            "notes": "Müşteriyle görüşüldü",
+            "notes": "Customer was contacted",
         }
     )
     assert result == {"call_note": "AT-CALL-2026-00001"}
@@ -218,32 +218,32 @@ def test_create_quick_segment_uses_service_payload():
     with patch.object(quick_create_auxiliary, "_assert_create_permission"):
         with patch.object(quick_create_auxiliary, "_resolve_office_branch", return_value="IST"):
             with patch.object(quick_create_auxiliary, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
-                with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Yenileme odaklı"):
+                with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Renewal focused"):
                     with patch.object(
                         quick_create_auxiliary,
                         "create_segment_service",
                         return_value={"segment": "AT-SEG-2026-00001"},
                     ) as service_mock:
                         result = quick_create_auxiliary.create_quick_segment(
-                            segment_name="Yenileme Riski",
+                            segment_name="Renewal Risk",
                             segment_type="Operational",
                             channel_focus="WHATSAPP",
                             office_branch="IST",
                             status="Active",
                             criteria_json='{"renewal_window_days":30}',
-                            notes="Yenileme odaklı",
+                            notes="Renewal focused",
                         )
 
     service_mock.assert_called_once_with(
         {
             "doctype": "AT Segment",
-            "segment_name": "Yenileme Riski",
+            "segment_name": "Renewal Risk",
             "segment_type": "Operational",
             "channel_focus": "WHATSAPP",
             "office_branch": "IST",
             "status": "Active",
             "criteria_json": '{"renewal_window_days":30}',
-            "notes": "Yenileme odaklı",
+            "notes": "Renewal focused",
         }
     )
     assert result == {"segment": "AT-SEG-2026-00001"}
@@ -254,34 +254,34 @@ def test_create_quick_campaign_uses_service_payload():
         with patch.object(quick_create_auxiliary, "_resolve_office_branch", return_value="IST"):
             with patch.object(quick_create_auxiliary, "_normalize_link", side_effect=lambda doctype, value, required=False: value):
                 with patch.object(quick_create_auxiliary, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
-                    with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="WhatsApp cikisi"):
+                    with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="WhatsApp dispatch"):
                         with patch.object(
                             quick_create_auxiliary,
                             "create_campaign_service",
                             return_value={"campaign": "AT-CAMP-2026-00001"},
                         ) as service_mock:
                             result = quick_create_auxiliary.create_quick_campaign(
-                                campaign_name="Mart Yenileme Hatırlatma",
+                                campaign_name="March Renewal Reminder",
                                 segment="AT-SEG-2026-00001",
                                 template="TPL-001",
                                 channel="WHATSAPP",
                                 office_branch="IST",
                                 status="Planned",
                                 scheduled_for="2026-03-15 10:00:00",
-                                notes="WhatsApp cikisi",
+                                notes="WhatsApp dispatch",
                             )
 
     service_mock.assert_called_once_with(
         {
             "doctype": "AT Campaign",
-            "campaign_name": "Mart Yenileme Hatırlatma",
+            "campaign_name": "March Renewal Reminder",
             "segment": "AT-SEG-2026-00001",
             "template": "TPL-001",
             "channel": "WHATSAPP",
             "office_branch": "IST",
             "status": "Planned",
             "scheduled_for": quick_create_api.frappe.utils.get_datetime("2026-03-15 10:00:00"),
-            "notes": "WhatsApp cikisi",
+            "notes": "WhatsApp dispatch",
         }
     )
     assert result == {"campaign": "AT-CAMP-2026-00001"}
@@ -292,7 +292,7 @@ def test_create_quick_ownership_assignment_uses_service_payload():
         with patch.object(quick_create_auxiliary, "_resolve_office_branch", return_value="IST"):
             with patch.object(quick_create_auxiliary, "_normalize_link", side_effect=lambda doctype, value, required=False: value):
                 with patch.object(quick_create_auxiliary, "_normalize_option", side_effect=lambda value, allowed, default=None: value or default):
-                    with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Yenileme owner atamasi"):
+                    with patch.object(quick_create_auxiliary, "normalize_note_text", return_value="Renewal owner assignment"):
                         with patch.object(
                             quick_create_auxiliary,
                             "create_ownership_assignment_service",
@@ -308,7 +308,7 @@ def test_create_quick_ownership_assignment_uses_service_payload():
                                 status="Open",
                                 priority="High",
                                 due_date="2026-03-12",
-                                notes="Yenileme owner atamasi",
+                                notes="Renewal owner assignment",
                             )
 
     service_mock.assert_called_once_with(
@@ -324,7 +324,7 @@ def test_create_quick_ownership_assignment_uses_service_payload():
             "status": "Open",
             "priority": "High",
             "due_date": quick_create_api.frappe.utils.getdate("2026-03-12"),
-            "notes": "Yenileme owner atamasi",
+            "notes": "Renewal owner assignment",
         }
     )
     assert result == {"ownership_assignment": "AT-ASN-2026-00001"}

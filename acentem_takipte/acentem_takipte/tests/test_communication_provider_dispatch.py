@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import types
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from acentem_takipte.acentem_takipte.communication import _default_provider_for_channel, _send_outbox_notification
 from acentem_takipte.acentem_takipte.providers.base import ProviderResult
@@ -17,7 +17,7 @@ def test_send_outbox_notification_uses_email_path_for_email_channel():
     draft = types.SimpleNamespace(name="DRF-1")
     outbox = types.SimpleNamespace(channel="Email", provider=None)
 
-    with patch("acentem_takipte.communication.build_provider_message_from_records") as build_message:
+    with patch("acentem_takipte.acentem_takipte.communication.build_provider_message_from_records") as build_message:
         build_message.return_value = types.SimpleNamespace(
             recipient="aykut@example.com",
             subject="Konu",
@@ -27,7 +27,7 @@ def test_send_outbox_notification_uses_email_path_for_email_channel():
             components=[],
             metadata={"event_key": "policy_delivery"},
         )
-        with patch("acentem_takipte.communication._send_email") as send_email:
+        with patch("acentem_takipte.acentem_takipte.communication._send_email") as send_email:
             send_email.return_value = types.SimpleNamespace(
                 ok=True,
                 provider="Email(Frappe)",
@@ -36,7 +36,7 @@ def test_send_outbox_notification_uses_email_path_for_email_channel():
                 error=None,
                 provider_payload=None,
             )
-            with patch("acentem_takipte.communication._get_outbox_attachments") as get_attachments:
+            with patch("acentem_takipte.acentem_takipte.communication._get_outbox_attachments") as get_attachments:
                 get_attachments.return_value = [{"fname": "rapor.xlsx", "fcontent": b"xlsx"}]
                 result = _send_outbox_notification(outbox=outbox, draft=draft, template_doc=template_doc)
 
@@ -51,7 +51,7 @@ def test_send_outbox_notification_uses_provider_adapter_for_whatsapp():
     draft = types.SimpleNamespace(name="DRF-2")
     outbox = types.SimpleNamespace(channel="WHATSAPP", provider="meta_whatsapp")
 
-    with patch("acentem_takipte.communication.build_provider_message_from_records") as build_message:
+    with patch("acentem_takipte.acentem_takipte.communication.build_provider_message_from_records") as build_message:
         build_message.return_value = types.SimpleNamespace(
             recipient="905551112233",
             subject=None,
@@ -61,8 +61,8 @@ def test_send_outbox_notification_uses_provider_adapter_for_whatsapp():
             components=[{"type": "body", "parameters": []}],
             metadata={"event_key": "renewal_reminder"},
         )
-        with patch("acentem_takipte.communication.get_provider_adapter") as get_adapter:
-            adapter = types.SimpleNamespace()
+        with patch("acentem_takipte.acentem_takipte.communication.get_provider_adapter") as get_adapter:
+            adapter = Mock()
             adapter.send.return_value = ProviderResult(
                 ok=True,
                 provider="meta_whatsapp",

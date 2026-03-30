@@ -51,7 +51,7 @@ class TestSeedScriptSmoke(unittest.TestCase):
                     {
                         "doctype": "AT Segment",
                         "name": "AT-SEG-2026-00001",
-                        "segment_name": "Trafik Yenileme - Istanbul",
+                        "segment_name": "Motor Renewal - Istanbul",
                     }
                 )
         finally:

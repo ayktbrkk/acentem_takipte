@@ -10,6 +10,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 
 from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_columns, coerce_filters, coerce_rows, normalize_title
+from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_locale
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 REPORT_TITLES = {
@@ -51,10 +52,13 @@ def render_tabular_pdf(
     rows: list[dict[str, Any]],
     filters: dict[str, Any],
 ) -> bytes:
-    safe_title = _normalize_title(title)
+    locale = coerce_locale(getattr(frappe.local, "lang", "en"), "en")
+    safe_title = translate_text(_normalize_title(title), locale)
     safe_columns = _coerce_columns(columns)
     safe_rows = _coerce_rows(rows)
     safe_filters = _coerce_filters(filters)
+    filters_label = translate_text("Filters:", locale)
+    total_rows_label = translate_text("Total rows:", locale)
     html = frappe.render_template(
         """
         <html>
@@ -73,8 +77,8 @@ def render_tabular_pdf(
           <body>
             <div class="header">
               <div class="title">{{ report_title }}</div>
-              <div class="meta">Filters: {{ filters }}</div>
-              <div class="summary">Total rows: {{ rows|length }}</div>
+              <div class="meta">{{ filters_label }} {{ filters }}</div>
+              <div class="summary">{{ total_rows_label }} {{ rows|length }}</div>
             </div>
             <table>
               <thead>
@@ -102,6 +106,8 @@ def render_tabular_pdf(
             "columns": safe_columns,
             "rows": safe_rows,
             "filters": safe_filters,
+            "filters_label": filters_label,
+            "total_rows_label": total_rows_label,
         },
     )
     return get_pdf(html)
@@ -130,18 +136,19 @@ def render_tabular_xlsx(
     rows: list[dict[str, Any]],
     filters: dict[str, Any],
 ) -> bytes:
-    safe_title = _normalize_title(title)
+    locale = coerce_locale(getattr(frappe.local, "lang", "en"), "en")
+    safe_title = translate_text(_normalize_title(title), locale)
     safe_columns = _coerce_columns(columns)
     safe_rows = _coerce_rows(rows)
     safe_filters = _coerce_filters(filters)
     workbook = Workbook()
     sheet = workbook.active
-    sheet.title = "Report"
+    sheet.title = translate_text("Report", locale)
 
     sheet["A1"] = safe_title
     sheet["A1"].font = Font(bold=True, size=14)
-    sheet["A2"] = f"Filters: {safe_filters}"
-    sheet["A3"] = f"Total rows: {len(safe_rows)}"
+    sheet["A2"] = f"{translate_text('Filters:', locale)} {safe_filters}"
+    sheet["A3"] = f"{translate_text('Total rows:', locale)} {len(safe_rows)}"
 
     header_row = 5
     for index, column in enumerate(safe_columns, start=1):

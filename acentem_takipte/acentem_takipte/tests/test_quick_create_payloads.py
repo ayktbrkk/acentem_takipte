@@ -145,7 +145,7 @@ def test_create_quick_payment_accepts_payload_dataclass_and_aliases():
         currency="try",
         amount_try=12000,
         external_ref="PAY-REF-1",
-        notes="Pesin yerine 3 taksit",
+        notes="Cash instead of 3 installments",
     )
 
     with patch.object(quick_create_customer_flow, "_assert_create_permission"):
@@ -191,7 +191,7 @@ def test_create_quick_payment_accepts_payload_dataclass_and_aliases():
             "amount": 12000,
             "amount_try": 12000,
             "reference_no": "PAY-REF-1",
-            "notes": "Pesin yerine 3 taksit",
+            "notes": "Cash instead of 3 installments",
         }
     )
     assert result == {"payment": "PAY-0001"}
@@ -334,11 +334,11 @@ def test_create_quick_notification_template_accepts_payload_dataclass():
         provider_template_name="renewal_reminder_30",
         provider_template_category="UTILITY",
         variables_schema_json='[{"name":"musteri_adi"}]',
-        subject="Hatirlatma",
+        subject="Reminder",
         body_template="Genel",
-        sms_body_template="SMS Govde",
-        email_body_template="Email Govde",
-        whatsapp_body_template="WhatsApp Govde",
+        sms_body_template="SMS Body",
+        email_body_template="Email Body",
+        whatsapp_body_template="WhatsApp Body",
         is_active=False,
     )
 
@@ -353,7 +353,7 @@ def test_create_quick_notification_template_accepts_payload_dataclass():
     assert payload_doc["channel"] == "Both"
     assert payload_doc["content_mode"] == "template"
     assert payload_doc["provider_template_name"] == "renewal_reminder_30"
-    assert payload_doc["whatsapp_body_template"] == "WhatsApp Govde"
+    assert payload_doc["whatsapp_body_template"] == "WhatsApp Body"
     assert payload_doc["is_active"] == 0
     assert result == {"template": "TPL-0001"}
     quick_create_special.frappe.db.commit.assert_called_once()

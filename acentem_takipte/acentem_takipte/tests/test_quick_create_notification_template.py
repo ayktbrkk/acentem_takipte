@@ -62,7 +62,7 @@ def test_apply_aux_edit_payload_updates_whatsapp_template_fields():
             "content_mode": "template",
             "provider_template_name": "claim_status_paid",
             "provider_template_category": "UTILITY",
-            "whatsapp_body_template": "Ödeme tamamlandi",
+            "whatsapp_body_template": "Payment completed",
         },
     )
 
@@ -70,5 +70,5 @@ def test_apply_aux_edit_payload_updates_whatsapp_template_fields():
     assert doc.content_mode == "template"
     assert doc.provider_template_name == "claim_status_paid"
     assert doc.provider_template_category == "UTILITY"
-    assert doc.whatsapp_body_template == "Ödeme tamamlandi"
+    assert doc.whatsapp_body_template == "Payment completed"
 

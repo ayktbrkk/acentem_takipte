@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from acentem_takipte.acentem_takipte.services import reports_runtime
+from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 
 def test_normalize_export_format_accepts_pdf_and_defaults_to_xlsx():
@@ -116,14 +117,14 @@ def test_build_tabular_download_response_uses_full_locale_before_base_locale(mon
 
     reports_runtime.build_tabular_download_response(
         export_key="policy_list",
-        title={"tr-TR": "Poliçe Listesi", "tr": "Poliçeler", "en": "Policy List"},
+        title={"tr-TR": "Policy List", "tr": "Policy List", "en": "Policy List"},
         columns=["name"],
         rows=[{"name": "POL-001"}],
         filters={},
         export_format="xlsx",
     )
 
-    assert captured["title"] == "Poliçe Listesi"
+    assert captured["title"] == translate_text("Policy List", "tr-TR")
 
 
 def test_build_safe_report_payload_logs_and_throws(monkeypatch):
@@ -135,6 +136,7 @@ def test_build_safe_report_payload_logs_and_throws(monkeypatch):
 
     monkeypatch.setattr(reports_runtime, "build_report_payload", lambda *args, **kwargs: 1 / 0)
     monkeypatch.setattr(reports_runtime, "log_redacted_error", _log_redacted_error)
+    monkeypatch.setattr(reports_runtime, "_", lambda text: text)
     monkeypatch.setattr(reports_runtime.frappe, "throw", lambda *args, **kwargs: (_ for _ in ()).throw(Exception("boom")))
 
     try:

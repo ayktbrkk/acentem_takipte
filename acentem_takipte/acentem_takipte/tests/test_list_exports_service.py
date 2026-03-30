@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from acentem_takipte.acentem_takipte.services import list_exports
+from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 
 def test_collect_dashboard_rows_paginates_until_total():
@@ -40,7 +41,7 @@ def test_build_screen_export_payload_formats_policy_rows(monkeypatch):
             {
                 "name": "POL-001",
                 "policy_no": "P-001",
-                "customer": "Açme",
+                "customer": "Acme",
                 "insurance_company": "Demo Sigorta",
                 "status": "Active",
                 "currency": "TRY",
@@ -60,9 +61,10 @@ def test_build_screen_export_payload_formats_policy_rows(monkeypatch):
         limit=100,
     )
 
-    assert payload["columns"][0] == "Kayıt No"
-    assert payload["rows"][0]["Kayıt No"] == "POL-001"
-    assert payload["rows"][0]["Komisyon"] == "175.00 TRY"
+    assert payload["title"] == translate_text("Policy List", "tr")
+    assert payload["columns"][0] == translate_text("Record Number", "tr")
+    assert payload["rows"][0][translate_text("Record Number", "tr")] == "POL-001"
+    assert payload["rows"][0][translate_text("Commission", "tr")] == "175.00 TRY"
 
 
 def test_build_screen_export_payload_handles_invalid_json_query(monkeypatch):
@@ -93,7 +95,11 @@ def test_build_screen_export_payload_uses_full_locale_before_base_locale(monkeyp
         [
             {
                 "field": "policy_no",
-                "label": {"tr-TR": "Poliçe No", "tr": "Poliçe No", "en": "Policy No"},
+                "label": {
+                    "tr-TR": "Carrier Policy Number",
+                    "tr": "Carrier Policy Number",
+                    "en": "Carrier Policy Number",
+                },
                 "formatter": None,
                 "currency_field": None,
                 "getter": None,
@@ -106,7 +112,7 @@ def test_build_screen_export_payload_uses_full_locale_before_base_locale(monkeyp
     finally:
         monkeypatch.setitem(list_exports.SCREEN_EXPORTS["policy_list"], "columns", original_columns)
 
-    assert payload["columns"] == ["Poliçe No"]
+    assert payload["columns"] == [translate_text("Carrier Policy Number", "tr-TR")]
 
 
 def test_build_tabular_payload_export_response_uses_given_columns(monkeypatch):

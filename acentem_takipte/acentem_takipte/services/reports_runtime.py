@@ -31,6 +31,7 @@ from acentem_takipte.acentem_takipte.services.scheduled_reports import (
     upsert_scheduled_report_config,
 )
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 
 def build_safe_report_payload(report_key: str, filters: dict | None, limit: int) -> dict[str, Any]:
@@ -85,7 +86,7 @@ def build_report_download_response(
     filters: dict,
     export_format: str,
 ) -> dict[str, Any]:
-    locale = coerce_locale(getattr(frappe.local, "lang", "tr"))
+    locale = coerce_locale(getattr(frappe.local, "lang", "en"), "en")
     return _build_download_response(
         export_key=report_key,
         title=build_report_title(report_key, locale),
@@ -106,7 +107,7 @@ def build_tabular_download_response(
     filters: dict,
     export_format: str,
 ) -> dict[str, Any]:
-    locale = coerce_locale(getattr(frappe.local, "lang", "tr"))
+    locale = coerce_locale(getattr(frappe.local, "lang", "en"), "en")
     resolved_title = _resolve_tabular_title(title, locale, export_key)
     return _build_download_response(
         export_key=export_key,
@@ -190,12 +191,12 @@ def normalize_export_format(export_format: str | None) -> str:
 def _resolve_tabular_title(title: str | dict[str, str], locale: str, export_key: str) -> str:
     safe_export_key = normalize_export_key(export_key)
     if not isinstance(title, dict):
-        return normalize_title(title, safe_export_key)
+        return translate_text(normalize_title(title, safe_export_key), locale)
     base_locale = locale.split("-")[0]
     for key in (locale, base_locale, "en"):
         value = str(title.get(key) or "").strip()
         if value:
-            return value
+            return translate_text(value, locale)
     return safe_export_key
 
 

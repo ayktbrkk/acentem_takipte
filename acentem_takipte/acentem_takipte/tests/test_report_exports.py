@@ -1,19 +1,21 @@
 from io import BytesIO
+from types import SimpleNamespace
 
 from openpyxl import load_workbook
 
 from acentem_takipte.acentem_takipte.services import report_exports
 from acentem_takipte.acentem_takipte.services.report_exports import build_export_filename, build_report_title
+from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 
 def test_build_report_title_includes_extended_report_catalog():
-    assert build_report_title("communication_operations", "tr") == "İletişim Operasyonları Raporu"
+    assert build_report_title("communication_operations", "tr") == translate_text("Communication Operations Report", "tr")
     assert build_report_title("reconciliation_operations", "en") == "Reconciliation Operations Report"
-    assert build_report_title("claims_operations", "tr") == "Hasar Operasyonları Raporu"
+    assert build_report_title("claims_operations", "tr") == translate_text("Claims Operations Report", "tr")
 
 
 def test_build_report_title_uses_full_locale_then_base_locale():
-    assert build_report_title("policy_list", "tr-TR") == "Poliçe Listesi Raporu"
+    assert build_report_title("policy_list", "tr-TR") == translate_text("Policy List Report", "tr-TR")
 
 
 def test_build_report_title_defaults_to_english():
@@ -21,7 +23,7 @@ def test_build_report_title_defaults_to_english():
 
 
 def test_build_report_title_trims_report_key():
-    assert build_report_title(" policy_list ", "tr") == "Poliçe Listesi Raporu"
+    assert build_report_title(" policy_list ", "tr") == translate_text("Policy List Report", "tr")
 
 
 def test_build_export_filename_uses_report_fallback_for_blank_key():
@@ -37,10 +39,11 @@ def test_build_export_filename_trims_export_format():
 
 
 def test_build_report_title_trims_locale():
-    assert build_report_title("policy_list", " tr-TR ") == "Poliçe Listesi Raporu"
+    assert build_report_title("policy_list", " tr-TR ") == translate_text("Policy List Report", "tr-TR")
 
 
 def test_render_tabular_pdf_coerces_invalid_shapes(monkeypatch):
+    monkeypatch.setattr(report_exports.frappe, "local", SimpleNamespace(lang="tr"), raising=False)
     captured = {}
     monkeypatch.setattr(
         report_exports.frappe,
@@ -57,10 +60,12 @@ def test_render_tabular_pdf_coerces_invalid_shapes(monkeypatch):
     )
 
     assert result == b"pdf"
-    assert captured["report_title"] == "Report"
-    assert captured["columns"] == []
+    assert captured["report_title"] == translate_text("Report", "tr")
+    assert captured["columns"] == ["name"]
     assert captured["rows"] == []
     assert captured["filters"] == {}
+    assert captured["filters_label"] == translate_text("Filters:", "tr")
+    assert captured["total_rows_label"] == translate_text("Total rows:", "tr")
 
 
 def test_render_tabular_xlsx_coerces_invalid_shapes():
@@ -79,7 +84,8 @@ def test_render_tabular_xlsx_coerces_invalid_shapes():
     assert sheet["A3"].value == "Total rows: 0"
 
 
-def test_render_tabular_xlsx_keeps_only_valid_columns_and_rows():
+def test_render_tabular_xlsx_keeps_only_valid_columns_and_rows(monkeypatch):
+    monkeypatch.setattr(report_exports.frappe, "local", SimpleNamespace(lang="tr"), raising=False)
     payload = report_exports.render_tabular_xlsx(
         title="Policy List",
         columns=["name", "", "status"],
@@ -90,6 +96,7 @@ def test_render_tabular_xlsx_keeps_only_valid_columns_and_rows():
     workbook = load_workbook(BytesIO(payload))
     sheet = workbook.active
 
+    assert sheet["A1"].value == translate_text("Policy List", "tr")
     assert sheet["A5"].value == "name"
     assert sheet["B5"].value == "status"
     assert sheet["A6"].value == "POL-001"

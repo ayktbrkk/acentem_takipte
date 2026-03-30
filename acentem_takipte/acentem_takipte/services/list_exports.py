@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Any, Callable
 
 import frappe
+from frappe import _
 from frappe.utils import cint, flt, format_datetime, formatdate
 
 from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
@@ -178,7 +179,7 @@ def get_screen_export_definition(screen: str) -> dict[str, Any]:
     key = str(screen or "").strip()
     definition = SCREEN_EXPORTS.get(key)
     if not definition:
-        frappe.throw("Unsupported export screen")
+        frappe.throw(_("Unsupported export screen"))
     return definition
 
 
@@ -200,7 +201,7 @@ def build_screen_export_payload(screen: str, query: dict | str | None = None, li
     return {
         "screen": screen,
         "export_key": definition["export_key"],
-        "title": definition["title"],
+        "title": translate_text(definition["title"], locale),
         "columns": column_labels,
         "rows": rows,
         "filters": normalized_query,
@@ -381,12 +382,13 @@ def _lead_display_name(row: dict[str, Any]) -> str:
 def _localize(value: dict[str, str] | str, locale: str) -> str:
     if isinstance(value, dict):
         base_locale = str(locale or "tr").split("-")[0]
-        return value.get(locale) or value.get(base_locale) or value.get("en") or next(iter(value.values()))
+        resolved = value.get(locale) or value.get(base_locale) or value.get("en") or next(iter(value.values()))
+        return translate_text(str(resolved or ""), locale)
     return translate_text(str(value or ""), locale)
 
 
 def _active_locale() -> str:
-    return coerce_locale(getattr(frappe.local, "lang", "tr"), "tr")
+    return coerce_locale(getattr(frappe.local, "lang", "en"), "en")
 
 
 def _normalize_columns(columns: Any) -> list[str]:

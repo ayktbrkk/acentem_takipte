@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from frappe.tests import IntegrationTestCase
+try:
+    from frappe.tests import IntegrationTestCase
+except ImportError:  # pragma: no cover - bench environments may not expose this helper
+    from unittest import TestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.providers.base import ProviderAdapter, ProviderMessage, ProviderResult
 
