@@ -34,7 +34,12 @@
 - Customer access ve report runtime helper mesajları CSV kaynak envanterine eklendi:
   - `acentem_takipte/acentem_takipte/api/customers.py`
   - `acentem_takipte/acentem_takipte/services/reports_runtime.py`
+- Privacy masking limit mesajı ve emergency access validation mesajları İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/services/privacy_masking.py`
+  - `acentem_takipte/acentem_takipte/doctype/at_emergency_access/at_emergency_access.py`
 - `at_customer.py` ve `at_policy.py` regex taramasında hardcoded Türkçe string vermedi; dosyalar zaten İngilizce source + `_()` standardına uyuyor.
+- `AT Activity` metadata dosyası İngilizce source'a çevrildi:
+  - `acentem_takipte/acentem_takipte/doctype/at_activity/at_activity.json`
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`

@@ -34,7 +34,12 @@
 - Customer access and report runtime helper messages were added to the CSV source inventory:
   - `acentem_takipte/acentem_takipte/api/customers.py`
   - `acentem_takipte/acentem_takipte/services/reports_runtime.py`
+- The privacy masking rate-limit message and emergency access validation messages were converted to English source:
+  - `acentem_takipte/acentem_takipte/services/privacy_masking.py`
+  - `acentem_takipte/acentem_takipte/doctype/at_emergency_access/at_emergency_access.py`
 - `at_customer.py` and `at_policy.py` returned no hardcoded Turkish strings during the regex scan; both modules already follow English source + `_()` conventions for user-facing text.
+- The `AT Activity` metadata file was converted to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_activity/at_activity.json`
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`

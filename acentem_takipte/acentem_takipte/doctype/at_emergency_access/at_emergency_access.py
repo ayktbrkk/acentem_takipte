@@ -60,13 +60,13 @@ class ATEmergencyAccess(Document):
         roles = set(frappe.get_roles(frappe.session.user))
         if not roles.intersection(_ALLOWED_GRANTING_ROLES):
             frappe.throw(
-                _("Acil erişim izni yalnızca Yönetici (Manager) rolü tarafından verilebilir."),
+                _("Emergency access may only be granted by a Manager or System Manager."),
                 frappe.PermissionError,
             )
 
     def _guard_self_grant(self) -> None:
         if str(self.beneficiary or "").strip() == str(frappe.session.user or "").strip():
-            frappe.throw(_("Kendinize acil erişim izni veremezsiniz."), frappe.PermissionError)
+            frappe.throw(_("You cannot grant emergency access to yourself."), frappe.PermissionError)
 
     def _guard_duplicate_active_grant(self) -> None:
         existing = frappe.get_all(
@@ -82,9 +82,7 @@ class ATEmergencyAccess(Document):
         )
         if existing:
             frappe.throw(
-                _(
-                    "Bu kullanıcı için zaten aktif bir acil erişim izni bulunmaktadır: {name}"
-                ).format(name=existing[0].name),
+                _("An active emergency access grant already exists for this user: {name}").format(name=existing[0].name),
                 frappe.ValidationError,
             )
 

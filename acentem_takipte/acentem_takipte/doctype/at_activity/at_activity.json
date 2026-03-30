@@ -12,50 +12,50 @@
     {
       "fieldname": "activity_title",
       "fieldtype": "Data",
-      "label": "Aktivite Başlığı",
+      "label": "Activity Title",
       "reqd": 1,
       "in_list_view": 1
     },
     {
       "fieldname": "activity_type",
       "fieldtype": "Select",
-      "label": "Aktivite Tipi",
+      "label": "Activity Type",
       "options": "Call\nVisit\nNote\nClaim Update\nRenewal Update\nCollection\nCampaign\nReview\nOther",
       "in_list_view": 1
     },
     {
       "fieldname": "source_doctype",
       "fieldtype": "Data",
-      "label": "Kaynak Tipi"
+      "label": "Source DocType"
     },
     {
       "fieldname": "source_name",
       "fieldtype": "Data",
-      "label": "Kaynak Kayıt"
+      "label": "Source Record"
     },
     {
       "fieldname": "customer",
       "fieldtype": "Link",
-      "label": "Müşteri",
+      "label": "Customer",
       "options": "AT Customer",
       "in_list_view": 1
     },
     {
       "fieldname": "policy",
       "fieldtype": "Link",
-      "label": "Poliçe",
+      "label": "Policy",
       "options": "AT Policy"
     },
     {
       "fieldname": "claim",
       "fieldtype": "Link",
-      "label": "Hasar",
+      "label": "Claim",
       "options": "AT Claim"
     },
     {
       "fieldname": "office_branch",
       "fieldtype": "Link",
-      "label": "Ofis Şube",
+      "label": "Office Branch",
       "options": "AT Office Branch"
     },
     {
@@ -63,31 +63,31 @@
       "fieldtype": "Link",
       "label": "Origin Office Branch",
       "options": "AT Office Branch",
-      "description": "Kayıt anındaki ofis şubesi - tarihsel rapor ve muhasebe tutarlılığı için kullanılır."
+      "description": "The office branch at the time of the record - used for historical reporting and accounting consistency."
     },
     {
       "fieldname": "current_office_branch",
       "fieldtype": "Link",
       "label": "Current Office Branch",
       "options": "AT Office Branch",
-      "description": "Güncel ofis şubesi - operasyonel iş listeleri ve transfer/devir akışları için kullanılır."
+      "description": "The current office branch - used for operational work queues and transfer/assignment flows."
     },
     {
       "fieldname": "assigned_to",
       "fieldtype": "Link",
-      "label": "Atanan Kullanıcı",
+      "label": "Assigned User",
       "options": "User"
     },
     {
       "fieldname": "activity_at",
       "fieldtype": "Datetime",
-      "label": "Aktivite Zamanı",
+      "label": "Activity Time",
       "in_list_view": 1
     },
     {
       "fieldname": "status",
       "fieldtype": "Select",
-      "label": "Durum",
+      "label": "Status",
       "options": "Logged\nShared\nArchived",
       "default": "Logged",
       "in_list_view": 1
@@ -95,7 +95,7 @@
     {
       "fieldname": "notes",
       "fieldtype": "Small Text",
-      "label": "Notlar"
+      "label": "Notes"
     }
   ],
   "permissions": [

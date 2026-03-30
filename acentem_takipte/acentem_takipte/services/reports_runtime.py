@@ -59,7 +59,7 @@ def build_safe_report_payload(report_key: str, filters: dict | None, limit: int)
             "Report payload build failed",
             details={"report_key": str(report_key or "").strip(), "filters": coerced_filters, "limit": normalized_limit},
         )
-        frappe.throw(_safe_translate("Report cannot be loaded. Please try again later."))
+        frappe.throw(_("Report cannot be loaded. Please try again later."))
         return {}
 
     if cache_key:
@@ -75,13 +75,6 @@ def _safe_session_user() -> str:
         return str(getattr(frappe.session, "user", "") or "").strip()
     except RuntimeError:
         return ""
-
-
-def _safe_translate(message: str) -> str:
-    try:
-        return _(message)
-    except Exception:
-        return message
 
 
 def build_report_download_response(

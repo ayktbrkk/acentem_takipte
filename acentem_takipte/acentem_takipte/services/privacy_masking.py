@@ -94,8 +94,8 @@ def _check_rate_limit(user_id: str) -> None:
         frappe.response["http_status_code"] = 429
         frappe.throw(
             _(
-                "Günlük maskelenmiş sorgu limitine ulaştınız ({limit}). "
-                "Lütfen yarın tekrar deneyiniz."
+                "You have reached the daily masked-query limit ({limit}). "
+                "Please try again tomorrow."
             ).format(limit=limit),
             frappe.PermissionError,
         )
