@@ -1,0 +1,379 @@
+# Acentem Takipte TR/EN Localization Implementation Plan
+
+> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Convert `acentem_takipte` into a bilingual English-first / Turkish-second Frappe app with a CSV-based translation workflow that can later support additional languages without changing the code architecture.
+
+**Architecture:** English is the source of truth for all user-facing strings. Python uses `frappe._()`, JavaScript/Vue uses `__()`, and Jinja uses `{{ _("...") }}`. Translation data lives in `acentem_takipte/translations/*.csv`, with `en.csv` as the source template and `tr.csv` as the second-language translation file. Locale resolution is user preference -> browser language -> English fallback.
+
+**Tech Stack:** Frappe Framework, Python, Vue 3, JavaScript, CSV-based translation dictionaries, bench, Vitest, Playwright.
+
+---
+
+## Current State
+
+- Translation foundation is already in place:
+  - `acentem_takipte/translations/en.csv`
+  - `acentem_takipte/translations/tr.csv`
+  - `acentem_takipte/hooks.py` with `translated_languages = ["en", "tr"]`
+  - locale fallback in `frontend/src/state/session.js` and `acentem_takipte/www/at.py`
+- The quick-create registry was converted to English-first source labels:
+  - `frontend/src/config/quickCreate/registry.js`
+- The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
+  - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
+  - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
+
+---
+
+## Global Rules
+
+1. **Source strings are always English**
+   - All user-facing text in code must be written in English first.
+   - Turkish lives in `tr.csv`.
+
+2. **Use the correct Frappe wrapper**
+   - Python: `from frappe import _`
+   - JS/Vue: `__()`
+   - Jinja/HTML: `{{ _("...") }}`
+
+3. **Do not split dynamic strings**
+   - Wrong: `_("Policy") + " " + policy_no + " " + _("created")`
+   - Right: `_("Policy {0} has been created").format(policy_no)`
+
+4. **Use context when a source string is ambiguous**
+   - Example:
+     - `_("Type", context="Policy Type")`
+     - `_("Type", context="Document Type")`
+
+5. **Keep the glossary consistent**
+   - `Policy` -> `Poliçe`
+   - `Endorsement` -> `Zeyil`
+   - `Installment` -> `Taksit`
+   - `Renewal` -> `Yenileme`
+   - `Gross Premium` -> `Brüt Prim`
+   - `Net Premium` -> `Net Prim`
+   - `Effective Date` -> `Yürürlük Tarihi`
+   - `Expiry Date` -> `Bitiş Tarihi`
+   - `Policyholder` -> use context-sensitive translation:
+     - `Sigortalı` in customer-facing policy contexts
+     - `Ettiren` in formal / contractual contexts when appropriate
+
+6. **DocType JSONs must be handled safely**
+   - Prefer controlled Frappe export / fixtures / editor workflows.
+   - Avoid careless manual edits that could break schema or options.
+
+7. **Commit in small chunks**
+   - Prefer one file family per commit.
+   - `customer` and `policy` should never be bundled into a giant unreviewable change.
+
+8. **Hardcoded Turkish string discovery is a required first pass**
+   - Use the regex scan to build a source inventory before touching conversion logic.
+
+---
+
+## Search / Discovery Pattern
+
+Use this regex to find likely hardcoded Turkish strings:
+
+```regex
+[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*
+```
+
+Suggested search targets:
+- `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
+- `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
+- `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`
+- `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`
+- any helper modules those files import
+
+Suggested CLI equivalent:
+
+```powershell
+rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py
+rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py
+```
+
+---
+
+## Phase Map
+
+| Faz | Görev | İlgili Dosya/Yol | Durum | Öncelik |
+|---|---|---|---|---|
+| Altyapı | Translation folder + CSV template + hooks + locale fallback | `acentem_takipte/translations/*.csv`, `acentem_takipte/hooks.py`, `acentem_takipte/www/at.py`, `frontend/src/state/session.js` | Tamamlandı | Yüksek |
+| Backend | `at_customer.py` localization pass | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Bekliyor | Yüksek |
+| Backend | `at_policy.py` localization pass | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Bekliyor | Yüksek |
+| Backend | Shared backend helpers and report/notification strings | `acentem_takipte/acentem_takipte/**/*.py` | Bekliyor | Yüksek |
+| Frontend | App shell, boards, detail pages localization pass | `frontend/src/**/*.vue`, `frontend/src/**/*.js` | Bekliyor | Yüksek |
+| Metadata | DocType labels, descriptions, select options | `acentem_takipte/acentem_takipte/doctype/**/*.json` | Bekliyor | Yüksek |
+| Test | Backend / frontend / smoke / CSV roundtrip | `acentem_takipte/acentem_takipte/tests/*`, `frontend/src/**/*.test.js`, `frontend/tests/e2e/*` | Bekliyor | Yüksek |
+
+---
+
+## Phase 2: Backend Localization Launch
+
+This phase is intentionally small and controlled. The first work targets `at_customer.py`, then `at_policy.py`. Each file is handled in its own commit when possible.
+
+### Task 2.1: Inventory `at_customer.py`
+
+**Files:**
+- Modify: `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
+- Test: `acentem_takipte/acentem_takipte/doctype/at_customer/` targeted backend tests if they exist
+
+- [ ] **Step 1: Run the Turkish-string regex scan**
+
+Run:
+```powershell
+rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py
+```
+Expected: a list of every likely hardcoded Turkish string and its line number.
+
+- [ ] **Step 2: Categorize each string**
+
+Classify each match into one of these buckets:
+- Error message
+- Success message
+- Validation message
+- Label / button / UI copy
+- Technical message that should not be user-facing
+
+Expected: a categorized inventory note before editing the file.
+
+- [ ] **Step 3: Define the English source string**
+
+For every user-facing string, write the master English source string and decide whether context is needed.
+
+Expected:
+- English source is explicit
+- ambiguous strings include `context`
+- dynamic strings use placeholders
+
+- [ ] **Step 4: Update CSV entries**
+
+Sync the source inventory into:
+- `acentem_takipte/translations/en.csv`
+- `acentem_takipte/translations/tr.csv`
+
+Expected:
+- one source row per string
+- no broken commas / empty columns
+- consistent glossary terms
+
+- [ ] **Step 5: Convert Python strings**
+
+Wrap user-facing strings with `_()` and rewrite dynamic messages with `.format()`.
+
+Expected:
+- `from frappe import _` exists in the file
+- no fragmented string concatenation for user-facing messages
+
+- [ ] **Step 6: Refresh message dictionary**
+
+Run:
+```powershell
+bench --site at.localhost get-msg-dict acentem_takipte
+```
+Expected: message dictionary regeneration completes without errors.
+
+- [ ] **Step 7: Run targeted tests**
+
+Run:
+```powershell
+bench --site at.localhost run-tests --app acentem_takipte
+```
+Expected:
+- targeted tests pass
+- no new translation-related regression
+
+- [ ] **Step 8: Commit**
+
+Commit message guideline:
+```bash
+git commit -m "refactor: localize customer backend messages"
+```
+
+Expected: one focused commit for `at_customer.py`.
+
+**Definition of Done:**
+- All user-facing strings in `at_customer.py` are English source and wrapped in `_()`
+- Dynamic strings use placeholders, not concatenation
+- Ambiguous terms use context where necessary
+- `en.csv` / `tr.csv` include the new source rows
+- Targeted tests and message dict refresh pass
+
+---
+
+### Task 2.2: Inventory `at_policy.py`
+
+**Files:**
+- Modify: `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
+- Test: `acentem_takipte/acentem_takipte/doctype/at_policy/test_at_policy.py`
+
+- [ ] **Step 1: Run the Turkish-string regex scan**
+
+Run:
+```powershell
+rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py
+```
+Expected: a complete inventory of candidate strings.
+
+- [ ] **Step 2: Categorize each string**
+
+Buckets:
+- Error
+- Success
+- Validation
+- UI / label
+- Technical
+
+Expected: a clear list of what needs conversion and what should stay technical.
+
+- [ ] **Step 3: Define the English source string**
+
+Expected:
+- source strings are concise English phrases
+- context is added for ambiguous terms like `Type`, `Status`, `Save`, `Reset`
+- sector terms use the glossary
+
+- [ ] **Step 4: Update CSV entries**
+
+Sync to:
+- `acentem_takipte/translations/en.csv`
+- `acentem_takipte/translations/tr.csv`
+
+Expected:
+- glossary alignment
+- no duplicate source rows with conflicting translations
+
+- [ ] **Step 5: Convert Python strings**
+
+Expected:
+- `from frappe import _` imported
+- `_()` wraps all user-facing strings
+- `.format()` used for dynamic messages
+
+- [ ] **Step 6: Refresh message dictionary**
+
+Run:
+```powershell
+bench --site at.localhost get-msg-dict acentem_takipte
+```
+
+Expected: dictionary refresh completes successfully.
+
+- [ ] **Step 7: Run targeted tests**
+
+Run:
+```powershell
+bench --site at.localhost run-tests --app acentem_takipte
+```
+
+Expected:
+- `test_at_policy.py` remains green
+- translation changes do not break policy behavior
+
+- [ ] **Step 8: Commit**
+
+Commit message guideline:
+```bash
+git commit -m "refactor: localize policy backend messages"
+```
+
+**Definition of Done:**
+- All user-facing strings in `at_policy.py` are English source and wrapped in `_()`
+- Dynamic strings are placeholder-based
+- Context is used for ambiguous terms
+- `en.csv` / `tr.csv` are updated
+- Tests and message dict regeneration pass
+
+---
+
+### Task 2.3: Shared backend helpers
+
+**Files:**
+- Modify: any helper modules imported by `at_customer.py` and `at_policy.py`
+- Modify: `acentem_takipte/acentem_takipte/services/*.py`
+- Modify: `acentem_takipte/acentem_takipte/api/*.py`
+
+- [ ] **Step 1: Scan shared modules for user-facing text**
+- [ ] **Step 2: Convert to `_()`**
+- [ ] **Step 3: Add context where needed**
+- [ ] **Step 4: Sync CSV**
+- [ ] **Step 5: Run bench msg dict refresh**
+- [ ] **Step 6: Run tests**
+- [ ] **Step 7: Commit**
+
+**Definition of Done:**
+- backend messages remain consistent across shared services
+- no hardcoded Turkish user-facing strings remain in shared modules
+
+---
+
+## Later Phases (Do not start until backend launch is stable)
+
+### Phase 3: Frontend Localization
+
+Targets:
+- `frontend/src/pages/*`
+- `frontend/src/components/*`
+- `frontend/src/composables/*`
+
+Rules:
+- use `__()` for UI copy
+- convert page titles, buttons, empty states, tooltips, errors
+- keep English source as the key
+
+Success criteria:
+- language toggle changes visible text
+- no hardcoded Turkish strings in visible UI copy
+- dynamic UI copy uses placeholders and context where needed
+
+### Phase 4: Metadata / DocType Localization
+
+Targets:
+- `acentem_takipte/acentem_takipte/doctype/**/*.json`
+
+Rules:
+- do not break schemas
+- prefer controlled export/fixtures/editor flow
+- keep labels/descriptions/options English source based
+
+Success criteria:
+- DocType label/description/options are translatable
+- fixtures or export steps do not corrupt schema
+
+### Phase 5: Validation, Smoke, and Release
+
+Commands:
+- `bench --site at.localhost get-msg-dict acentem_takipte`
+- `bench --site at.localhost migrate`
+- `bench build --app acentem_takipte`
+- `cd frontend && npm run build`
+- `cd frontend && npm run test:unit`
+- Playwright smoke on `at.localhost:8000`
+
+Success criteria:
+- TR/EN mode works end-to-end
+- backend messages, frontend copy, and metadata all follow the glossary
+- future languages can be added by creating a new CSV file without changing architecture
+
+---
+
+## Tracking Rules
+
+Each task is complete only when:
+- the regex inventory is updated
+- source strings are in English
+- translation CSVs are synced
+- tests pass
+- bench message dict refresh has been run
+- a small, reviewable commit exists
+
+If a file becomes too large or noisy during localization:
+- split by responsibility
+- keep the split small
+- commit the split separately before proceeding
+
+If a term is ambiguous:
+- prefer context over inventing duplicate source strings
+- keep glossary decisions consistent across the entire app
+
