@@ -105,7 +105,18 @@ function readBootSession() {
 const boot = readBootSession();
 
 function normalizeLocale(value) {
-  return String(value || "tr").toLowerCase().startsWith("en") ? "en" : "tr";
+  return String(value || "en").toLowerCase().startsWith("en") ? "en" : "tr";
+}
+
+function readBrowserLocale() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return null;
+  }
+
+  const browserLanguage =
+    Array.isArray(navigator.languages) && navigator.languages.length > 0 ? navigator.languages[0] : navigator.language;
+
+  return browserLanguage ? normalizeLocale(browserLanguage) : null;
 }
 
 function readStoredLocale() {
@@ -155,7 +166,7 @@ export const sessionState = reactive({
   officeBranches: Array.isArray(boot.office_branches) ? boot.office_branches : [],
   defaultOfficeBranch: boot.default_office_branch || null,
   canAccessAllOfficeBranches: Boolean(boot.can_access_all_office_branches),
-  locale: normalizeLocale(readStoredLocale() || boot.locale || "tr"),
+  locale: normalizeLocale(readStoredLocale() || boot.locale || readBrowserLocale() || "en"),
   capabilities: normalizeCapabilities(boot.capabilities),
   realtime: normalizeRealtime(boot.realtime),
   roles: cloneStringList(boot.roles),
@@ -217,7 +228,7 @@ function applySessionContext(data, loggedUser) {
   if (Object.prototype.hasOwnProperty.call(data, "can_access_all_office_branches")) {
     sessionState.canAccessAllOfficeBranches = Boolean(data.can_access_all_office_branches);
   }
-  setPreferredLocale(readStoredLocale() || data.locale || sessionState.locale);
+  setPreferredLocale(readStoredLocale() || data.locale || readBrowserLocale() || sessionState.locale);
   if (Object.prototype.hasOwnProperty.call(data, "roles")) {
     sessionState.roles = cloneStringList(data.roles);
   }

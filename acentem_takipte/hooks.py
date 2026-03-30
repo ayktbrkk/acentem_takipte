@@ -4,6 +4,7 @@ app_publisher = "Acentem Takipte"
 app_description = "Insurance agency CRM and policy management"
 app_email = "dev@acentemtakipte.local"
 app_license = "MIT"
+translated_languages = ["en", "tr"]
 
 # /at SPA assets are injected dynamically in www/at.py from latest Vite manifest.
 app_include_js = []

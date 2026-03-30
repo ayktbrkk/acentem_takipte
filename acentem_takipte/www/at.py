@@ -40,7 +40,7 @@ def get_context(context):
         "full_name": frappe.db.get_value("User", current_user, "full_name") or current_user,
         "branch": frappe.defaults.get_user_default("AT Branch"),
         "locale": (
-            frappe.db.get_value("User", current_user, "language") or frappe.local.lang or "tr"
+            frappe.db.get_value("User", current_user, "language") or frappe.local.lang or "en"
         ).split("-")[0],
         "capabilities": _build_session_capabilities(),
         "realtime": _build_realtime_config(),
