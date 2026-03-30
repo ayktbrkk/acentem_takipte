@@ -43,6 +43,12 @@
 - The remaining Turkish label/description fields in `AT Customer` and `AT Policy` metadata were moved to English source:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`
+- The remaining Turkish / ASCII-Turkish fields in `AT Customer Segment Snapshot` metadata were moved to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_customer_segment_snapshot/at_customer_segment_snapshot.json`
+- The remaining Turkish fields in `AT Policy Snapshot` metadata were moved to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_policy_snapshot/at_policy_snapshot.json`
+- The remaining Turkish fields in `AT Payment Installment` metadata were moved to English source:
+  - `acentem_takipte/acentem_takipte/doctype/at_payment_installment/at_payment_installment.json`
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`

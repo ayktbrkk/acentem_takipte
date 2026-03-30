@@ -27,7 +27,7 @@
   {
    "fieldname": "office_branch",
    "fieldtype": "Link",
-   "label": "Ofis Şube",
+   "label": "Office Branch",
    "options": "AT Office Branch"
   },
   {
@@ -60,7 +60,7 @@
   {
    "fieldname": "value_band",
    "fieldtype": "Data",
-   "label": "Deger Bandi"
+   "label": "Value Band"
   },
   {
    "fieldname": "strengths_json",

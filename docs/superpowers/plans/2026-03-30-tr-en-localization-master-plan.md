@@ -43,6 +43,12 @@
 - `AT Customer` ve `AT Policy` metadata dosyalarındaki kalan Türkçe label/description alanları İngilizce source’a taşındı:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.json`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.json`
+- `AT Customer Segment Snapshot` metadata dosyasındaki kalan Türkçe / ASCII-Türkçe alanlar İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_customer_segment_snapshot/at_customer_segment_snapshot.json`
+- `AT Policy Snapshot` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_policy_snapshot/at_policy_snapshot.json`
+- `AT Payment Installment` metadata dosyasındaki kalan Türkçe alanlar İngilizce source’a taşındı:
+  - `acentem_takipte/acentem_takipte/doctype/at_payment_installment/at_payment_installment.json`
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
