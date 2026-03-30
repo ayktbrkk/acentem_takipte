@@ -111,15 +111,15 @@
   {
    "fieldname": "last_run_summary",
    "fieldtype": "Small Text",
-   "label": "Son Calisma Ozeti",
-   "description": "Kampanya calistirildiginda olusan son ozet.",
+   "label": "Last Run Summary",
+   "description": "Summary produced when the campaign is run.",
    "read_only": 1
   },
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Kullanıcı Notu",
-   "description": "Kullanıcı tarafından eklenen serbest metin."
+   "label": "User Note",
+   "description": "Free-form text added by the user."
   }
  ],
  "index_web_pages_for_search": 1,
