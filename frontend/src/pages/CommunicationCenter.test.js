@@ -438,14 +438,6 @@ describe("CommunicationCenter page store integration", () => {
         })),
         submit: vi.fn(async () => ({})),
       },
-      // runCycleResource
-      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
-      // sendDraftResource
-      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
-      // retryOutboxResource
-      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
-      // auxMutationResource
-      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       // communicationQuickTemplateResource
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       // communicationQuickCustomerResource
@@ -465,6 +457,14 @@ describe("CommunicationCenter page store integration", () => {
       },
       // communicationQuickCampaignResource
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      // runCycleResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // sendDraftResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // retryOutboxResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // auxMutationResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       // segmentPreviewResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: previewSubmit },
       // campaignRunResource
@@ -521,14 +521,6 @@ describe("CommunicationCenter page store integration", () => {
         reload: snapshotReload,
         submit: vi.fn(async () => ({})),
       },
-      // runCycleResource
-      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
-      // sendDraftResource
-      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
-      // retryOutboxResource
-      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
-      // auxMutationResource
-      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       // communicationQuickTemplateResource
       { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       // communicationQuickCustomerResource
@@ -555,6 +547,14 @@ describe("CommunicationCenter page store integration", () => {
         reload: vi.fn(async () => []),
         submit: vi.fn(async () => ({})),
       },
+      // runCycleResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // sendDraftResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // retryOutboxResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
+      // auxMutationResource
+      { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       // segmentPreviewResource
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       // campaignRunResource
@@ -600,6 +600,12 @@ describe("CommunicationCenter page store integration", () => {
 
     resourceQueue.push(
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
@@ -651,6 +657,12 @@ describe("CommunicationCenter page store integration", () => {
 
     resourceQueue.push(
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
@@ -702,6 +714,12 @@ describe("CommunicationCenter page store integration", () => {
 
     resourceQueue.push(
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
@@ -753,6 +771,12 @@ describe("CommunicationCenter page store integration", () => {
 
     resourceQueue.push(
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
@@ -804,6 +828,12 @@ describe("CommunicationCenter page store integration", () => {
 
     resourceQueue.push(
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
@@ -855,6 +885,12 @@ describe("CommunicationCenter page store integration", () => {
 
     resourceQueue.push(
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: snapshotReload, submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },
       { data: ref({}), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => ({})), submit: vi.fn(async () => ({})) },

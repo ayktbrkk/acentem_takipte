@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { AUX_WORKBENCH_CONFIGS } from "./auxWorkbenchConfigs";
-import { getQuickCreateConfig } from "./quickCreateRegistry";
+import { AUX_WORKBENCH_CONFIGS } from "./auxWorkbench";
+import { getQuickCreateConfig } from "./quickCreate";
 
 describe("quick edit coverage", () => {
   it("resolves edit-mode config for every aux workbench quick edit action", () => {

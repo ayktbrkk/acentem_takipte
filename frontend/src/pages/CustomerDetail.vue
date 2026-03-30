@@ -760,7 +760,9 @@ import FieldGroup from "../components/ui/FieldGroup.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
-import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
+import { useCustomerDetailActions } from "../composables/customerDetail";
+import { useCustomerDetailViewData } from "../composables/customerDetailViewData";
+import { createCustomerDetailFacts, createCustomerDetailFormatters } from "../composables/customerDetailHelpers";
 
 const props = defineProps({
   name: {
@@ -773,12 +775,6 @@ const router = useRouter();
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const activeCustomerTab = ref("overview");
-const customerRelationEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("customer_relation")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Yeni İlişki" : "New Relation"));
-const insuredAssetEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("insured_asset")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Yeni Varlık" : "New Asset"));
-const customerRelationEditEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("customer_relation_edit")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "İlişkiyi Düzenle" : "Edit Relation"));
-const insuredAssetEditEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("insured_asset_edit")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Varlığı Düzenle" : "Edit Asset"));
-const ownershipAssignmentEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Yeni Atama" : "New Assignment"));
-const ownershipAssignmentEditEyebrow = computed(() => getLocalizedText(getQuickCreateConfig("ownership_assignment_edit")?.title, activeLocale.value) || (activeLocale.value === "tr" ? "Atamayı Düzenle" : "Edit Assignment"));
 
 const copy = {
   tr: {
@@ -1201,6 +1197,8 @@ const paymentInstallments = computed(() => customer360Portfolio.value.payment_in
 const claims = computed(() => customer360Portfolio.value.claims || []);
 const renewals = computed(() => customer360Portfolio.value.renewals || []);
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+
+if (false) {
 const profileEditMode = ref(false);
 const profileSaveError = ref("");
 const profileSaveMessage = ref("");
@@ -1229,6 +1227,8 @@ const profileForm = reactive({
   address: "",
   consent_status: "Unknown",
 });
+
+}
 
 const customerLoading = computed(() => Boolean(unref(customer360Resource.loading)));
 const timelineLoading = computed(() => Boolean(unref(customer360Resource.loading)));
@@ -1301,6 +1301,174 @@ const auxQuickPolicyResource = createResource({
   auto: false,
 });
 
+const customerDetailActions = useCustomerDetailActions({
+  props,
+  t,
+  activeLocale,
+  router,
+  customer,
+  customer360Payload,
+  customer360Resource,
+  customerProfileUpdateResource,
+  customerRelationDeleteResource,
+  insuredAssetDeleteResource,
+  reminderUpdateResource,
+  auxQuickCustomerResource,
+  auxQuickPolicyResource,
+});
+
+const {
+  customerRelationEyebrow,
+  insuredAssetEyebrow,
+  customerRelationEditEyebrow,
+  insuredAssetEditEyebrow,
+  ownershipAssignmentEyebrow,
+  ownershipAssignmentEditEyebrow,
+  profileEditMode,
+  profileSaveError,
+  profileSaveMessage,
+  showCustomerRelationDialog,
+  showInsuredAssetDialog,
+  showCustomerRelationEditDialog,
+  showInsuredAssetEditDialog,
+  showOwnershipAssignmentDialog,
+  showOwnershipAssignmentEditDialog,
+  editingCustomerRelation,
+  editingInsuredAsset,
+  editingOwnershipAssignment,
+  profileFormErrors,
+  profileForm,
+  customer360QuickOptionsMap,
+  customer360QuickSuccessHandlers,
+  startProfileEdit,
+  cancelProfileEdit,
+  saveProfile,
+  setProfileField,
+  openQuickOfferForCustomer,
+  openCommunicationCenterForCustomer,
+  openCustomerDocuments,
+  openCustomerRelations,
+  openInsuredAssets,
+  openQuickCustomerRelation,
+  openQuickInsuredAsset,
+  openQuickOwnershipAssignment,
+  openEditCustomerRelation,
+  openEditInsuredAsset,
+  openEditOwnershipAssignment,
+  deleteCustomerRelation,
+  deleteInsuredAsset,
+  deleteOwnershipAssignment,
+  markReminderDone,
+  cancelReminder,
+  markAssignmentInProgress,
+  markAssignmentBlocked,
+  markAssignmentDone,
+  prepareCustomerRelationDialog,
+  prepareInsuredAssetDialog,
+  prepareOwnershipAssignmentDialog,
+  prepareCustomerRelationEditDialog,
+  prepareInsuredAssetEditDialog,
+  prepareOwnershipAssignmentEditDialog,
+  openCustomerDesk,
+  openPolicyDetail,
+} = customerDetailActions;
+
+const {
+  describeValueBand,
+  describeInsightSignal,
+  stripHtml,
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+} = createCustomerDetailFormatters({ t, localeCode });
+
+const customerDetailViewData = useCustomerDetailViewData({
+  t,
+  customer,
+  customer360Payload,
+  customer360Summary,
+  customer360Insights,
+  customer360Communication,
+  customer360CrossSell,
+  customerDocumentProfile,
+  policies,
+  offers,
+  payments,
+  paymentInstallments,
+  claims,
+  renewals,
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  stripHtml,
+  describeValueBand,
+  describeInsightSignal,
+});
+
+const {
+  activePolicies,
+  openOffers,
+  paymentPreviewRows,
+  paymentOverdueInstallmentCount,
+  paymentOverdueInstallmentAmount,
+  paymentInstallmentsByPayment,
+  claimPreviewRows,
+  renewalPreviewRows,
+  communicationChannelRows,
+  insuredAssetRows,
+  crossSellOpportunityRows,
+  relatedCustomerRows,
+  ownershipAssignmentRows,
+  valueBandLabel,
+  totalRiskLimit,
+  insightStrengthRows,
+  insightRiskRows,
+  customerHeaderSubtitle,
+  riskSummaryItems,
+  customerHeaderSummaryItems,
+  overviewSummaryCards,
+  insightSummaryFields,
+  insightContextFields,
+  crossSellSummaryFields,
+  crossSellOpportunityFields,
+  documentSummaryFields,
+  customerTypeValue,
+  isCorporateCustomer,
+  customerTypeLabel,
+  customerTaxIdLabel,
+  customerTaxIdDisplay,
+  customerPhoneDisplay,
+  genderLabel,
+  maritalStatusLabel,
+  consentStatusLabel,
+  genderOptions,
+  maritalStatusOptions,
+  consentStatusOptions,
+  profileViewFields,
+  profileEditFields,
+  timelineRows,
+  activityRows,
+  reminderRows,
+} = customerDetailViewData;
+
+const {
+  assignmentSummaryLabel,
+  activityCardFacts,
+  reminderCardFacts,
+  policyCardFacts,
+  offerCardFacts,
+  paymentCardFacts,
+  claimCardFacts,
+  renewalCardFacts,
+  insuredAssetFacts,
+} = createCustomerDetailFacts({
+  t,
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  paymentInstallmentsByPayment,
+});
+
 function resourceValue(resource, fallback) {
   const value = unref(resource?.data);
   return value == null ? fallback : value;
@@ -1310,40 +1478,7 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
-const activePolicies = computed(() =>
-  policies.value.filter((policy) => String(policy.status || "").toUpperCase() !== "IPT")
-);
-const openOffers = computed(() =>
-  offers.value.filter((offer) => !["Rejected", "Converted"].includes(String(offer.status || "")))
-);
-const paymentPreviewRows = computed(() => payments.value.slice(0, 6));
-const paymentOverdueInstallmentCount = computed(() => Number(customer360Summary.value.overdue_installment_count || 0));
-const paymentOverdueInstallmentAmount = computed(() => Number(customer360Summary.value.overdue_installment_amount || 0));
-const paymentInstallmentsByPayment = computed(() => {
-  const map = new Map();
-  for (const row of paymentInstallments.value) {
-    const paymentName = String(row?.payment || "").trim();
-    if (!paymentName) continue;
-    const existing = map.get(paymentName) || [];
-    existing.push(row);
-    map.set(paymentName, existing);
-  }
-  return map;
-});
-const claimPreviewRows = computed(() => claims.value.slice(0, 6));
-const renewalPreviewRows = computed(() => renewals.value.slice(0, 6));
-const communicationChannelRows = computed(() => customer360Communication.value.channel_summary || []);
-const insuredAssetRows = computed(() => customer360CrossSell.value.insured_assets || []);
-const crossSellOpportunityRows = computed(() => customer360CrossSell.value.opportunity_branches || []);
-const relatedCustomerRows = computed(() => customer360CrossSell.value.related_customers || []);
-const ownershipAssignmentRows = computed(() => customer360Payload.value.operations?.assignments || []);
-const valueBandLabel = computed(() => describeValueBand(customer360Insights.value.value_band));
-const insightStrengthRows = computed(() =>
-  (customer360Insights.value.strengths || []).map((item) => describeInsightSignal(item)).filter(Boolean)
-);
-const insightRiskRows = computed(() =>
-  (customer360Insights.value.risks || []).map((item) => describeInsightSignal(item)).filter(Boolean)
-);
+if (false) {
 const customer360QuickOptionsMap = computed(() => ({
   customers: asArray(resourceValue(auxQuickCustomerResource, [])).map((row) => ({
     value: row.name,
@@ -1365,7 +1500,9 @@ const customer360QuickSuccessHandlers = {
     await loadCustomer360();
   },
 };
+}
 
+if (false) {
 const totalRiskLimit = computed(() =>
   Number(customer360Summary.value.total_premium || 0)
 );
@@ -1699,6 +1836,12 @@ function setProfileField(fieldName, value) {
   profileForm[fieldName] = String(value ?? "").trim();
 }
 
+function timelineTypeLabel(type) {
+  if (type === "comment") return t("typeNote");
+  if (type === "lead") return t("typeLead");
+  return t("typeCommunication");
+}
+
 const timelineRows = computed(() =>
   (customer360Communication.value.timeline || [])
     .map((item, index) => ({
@@ -1715,6 +1858,9 @@ const timelineRows = computed(() =>
 const activityRows = computed(() => (customer360Payload.value?.operations?.activities || []).slice(0, 6));
 const reminderRows = computed(() => (customer360Payload.value?.operations?.reminders || []).slice(0, 6));
 
+}
+
+if (false) {
 watch(
   () => props.name,
   () => {
@@ -1876,12 +2022,6 @@ async function loadCustomer360() {
     name: props.name,
   });
   syncProfileFormFromCustomer();
-}
-
-function timelineTypeLabel(type) {
-  if (type === "comment") return t("typeNote");
-  if (type === "lead") return t("typeLead");
-  return t("typeCommunication");
 }
 
 function openPolicyDetail(policyName) {
@@ -2130,217 +2270,7 @@ async function prepareOwnershipAssignmentEditDialog({ resetForm }) {
     notes: assignment.notes || "",
   });
 }
-
-function assignmentSummaryLabel(assignment) {
-  return [assignment.status || "-", assignment.due_date || "-"].filter(Boolean).join(" / ");
 }
 
-function activityCardFacts(activity) {
-  return [
-    {
-      key: "activityAt",
-      label: t("date"),
-      value: formatDateTime(activity?.activity_at),
-      valueClass: "text-xs text-slate-600",
-    },
-    {
-      key: "assignedTo",
-      label: t("assignedTo"),
-      value: activity?.assigned_to || "-",
-      valueClass: "text-sm text-slate-800",
-    },
-    {
-      key: "source",
-      label: t("source"),
-      value: [activity?.source_doctype, activity?.source_name].filter(Boolean).join(" / ") || "-",
-      valueClass: "text-sm text-slate-800",
-    },
-  ];
-}
-
-function reminderCardFacts(reminder) {
-  return [
-    {
-      key: "remindAt",
-      label: t("reminderAt"),
-      value: formatDateTime(reminder?.remind_at),
-      valueClass: "text-xs text-slate-600",
-    },
-    {
-      key: "priority",
-      label: t("reminderPriority"),
-      value: reminder?.priority || "-",
-      valueClass: "text-xs text-slate-700",
-    },
-    {
-      key: "assignedTo",
-      label: t("assignedTo"),
-      value: reminder?.assigned_to || "-",
-      valueClass: "text-xs text-slate-700",
-    },
-    {
-      key: "source",
-      label: t("recordId"),
-      value: reminder?.source_name || reminder?.policy || reminder?.claim || "-",
-      valueClass: "text-xs text-slate-700",
-    },
-  ];
-}
-
-function policyCardFacts(policy) {
-  return [
-    {
-      key: "endDate",
-      label: t("endDate"),
-      value: formatDate(policy?.end_date),
-      valueClass: "text-xs text-slate-600",
-    },
-    {
-      key: "grossPremium",
-      label: t("grossPremium"),
-      value: formatCurrency(policy?.gross_premium, policy?.currency || "TRY"),
-      valueClass: "text-sm font-semibold text-slate-900",
-    },
-  ];
-}
-
-function describeValueBand(value) {
-  if (value === "High Value") return t("valueBandHighValue");
-  if (value === "Mid Value") return t("valueBandMidValue");
-  return t("valueBandStandard");
-}
-
-function describeInsightSignal(value) {
-  if (value === "multi_policy") return t("insightSignalMultiPolicy");
-  if (value === "active_portfolio") return t("insightSignalActivePortfolio");
-  if (value === "high_premium") return t("insightSignalHighPremium");
-  if (value === "medium_premium") return t("insightSignalMediumPremium");
-  if (value === "clean_claims") return t("insightSignalCleanClaims");
-  if (value === "renewal_pipeline") return t("insightSignalRenewalPipeline");
-  if (value === "claim_pressure") return t("insightRiskClaimPressure");
-  if (value === "collection_risk") return t("insightRiskCollectionRisk");
-  if (value === "overdue_payment") return t("insightRiskOverduePayment");
-  if (value === "cancellation_history") return t("insightRiskCancellationHistory");
-  return value || "";
-}
-
-function offerCardFacts(offer) {
-  return [
-    {
-      key: "validUntil",
-      label: t("validUntil"),
-      value: formatDate(offer?.valid_until),
-      valueClass: "text-xs text-slate-600",
-    },
-    {
-      key: "grossPremium",
-      label: t("grossPremium"),
-      value: formatCurrency(offer?.gross_premium, offer?.currency || "TRY"),
-      valueClass: "text-sm font-semibold text-slate-900",
-    },
-  ];
-}
-
-function paymentCardFacts(payment) {
-  const relatedInstallments = paymentInstallmentsByPayment.value.get(payment?.name) || [];
-  const overdueInstallmentCount = relatedInstallments.filter((row) => String(row?.status || "") === "Overdue").length;
-  return [
-    {
-      key: "paymentDate",
-      label: t("paymentDate"),
-      value: formatDate(payment?.payment_date),
-      valueClass: "text-xs text-slate-600",
-    },
-    {
-      key: "amount",
-      label: t("grossPremium"),
-      value: formatCurrency(payment?.amount_try, "TRY"),
-      valueClass: "text-sm font-semibold text-slate-900",
-    },
-    {
-      key: "overdueInstallments",
-      label: t("overdueInstallments"),
-      value: String(overdueInstallmentCount),
-      valueClass: overdueInstallmentCount > 0 ? "text-sm font-semibold text-amber-700" : "text-sm text-slate-700",
-    },
-  ];
-}
-
-function claimCardFacts(claim) {
-  return [
-    {
-      key: "reportedDate",
-      label: t("reportedDate"),
-      value: formatDate(claim?.reported_date),
-      valueClass: "text-xs text-slate-600",
-    },
-    {
-      key: "claimAmount",
-      label: t("claimAmount"),
-      value: formatCurrency(claim?.claim_amount, "TRY"),
-      valueClass: "text-sm font-semibold text-slate-900",
-    },
-  ];
-}
-
-function renewalCardFacts(renewal) {
-  return [
-    {
-      key: "dueDate",
-      label: t("dueDate"),
-      value: formatDate(renewal?.due_date || renewal?.renewal_date),
-      valueClass: "text-xs text-slate-600",
-    },
-    {
-      key: "lostReason",
-      label: t("lostReason"),
-      value: renewal?.lost_reason_code || "-",
-      valueClass: "text-sm text-slate-800",
-    },
-  ];
-}
-
-function insuredAssetFacts(asset) {
-  return [
-    {
-      key: "assetType",
-      label: t("assetType"),
-      value: asset?.asset_type || asset?.branch || "-",
-      valueClass: "text-xs text-slate-600",
-    },
-    {
-      key: "assetIdentifier",
-      label: t("assetIdentifier"),
-      value: asset?.asset_identifier || asset?.policy || "-",
-      valueClass: "text-sm text-slate-800",
-    },
-  ];
-}
-
-function stripHtml(value) {
-  if (!value) return "";
-  return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function formatDate(value) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat(localeCode.value).format(new Date(value));
-}
-
-function formatDateTime(value) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat(localeCode.value, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function formatCurrency(value, currency) {
-  return new Intl.NumberFormat(localeCode.value, {
-    style: "currency",
-    currency: currency || "TRY",
-    maximumFractionDigits: 2,
-  }).format(Number(value || 0));
-}
 </script>
 

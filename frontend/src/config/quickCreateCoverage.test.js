@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { AUX_WORKBENCH_CONFIGS } from "./auxWorkbenchConfigs";
-import { getQuickCreateConfig, quickCreateRegistry } from "./quickCreateRegistry";
+import { AUX_WORKBENCH_CONFIGS } from "./auxWorkbench";
+import { getQuickCreateConfig, quickCreateRegistry } from "./quickCreate";
 
 function isLocalizedText(value) {
   return typeof value === "function" || (value !== null && typeof value === "object");

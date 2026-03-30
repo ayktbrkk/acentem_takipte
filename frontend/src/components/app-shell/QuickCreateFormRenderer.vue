@@ -132,7 +132,7 @@
 <script setup>
 import { getCurrentInstance, nextTick, onBeforeUnmount, reactive } from "vue";
 import VueSelect from "vue3-select-component";
-import { getLocalizedText } from "../../config/quickCreateRegistry";
+import { getLocalizedText } from "../../config/quickCreate";
 import {
   getRelatedQuickCreateActionLabel,
   supportsRelatedQuickCreateSource,
