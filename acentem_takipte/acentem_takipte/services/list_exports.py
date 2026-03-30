@@ -19,10 +19,11 @@ from acentem_takipte.acentem_takipte.services.export_payload_utils import (
     normalize_title,
 )
 from acentem_takipte.acentem_takipte.services.reports_runtime import build_tabular_download_response
+from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 
-def _t(en: str, tr: str) -> dict[str, str]:
-    return {"en": en, "tr": tr}
+def _t(en: str) -> str:
+    return en
 
 
 def _column(
@@ -46,60 +47,60 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
     "lead_list": {
         "permission_doctype": "AT Lead",
         "export_key": "lead_list",
-        "title": _t("Lead List", "Firsat Listesi"),
+        "title": _t("Lead List"),
         "type": "custom",
         "fetcher": "_fetch_lead_rows",
         "columns": [
-            _column("display_name", _t("Lead", "Firsat"), getter=lambda row: _lead_display_name(row)),
-            _column("name", _t("Record", "Kayıt")),
-            _column("email", _t("Email", "E-posta")),
-            _column("customer", _t("Customer", "Müşteri")),
-            _column("sales_entity", _t("Sales Entity", "Satış Birimi")),
-            _column("insurance_company", _t("Insurance Company", "Sigorta Şirketi")),
-            _column("branch", _t("Branch", "Branş")),
-            _column("status", _t("Status", "Durum")),
-            _column("stale_state", _t("Follow-up State", "Takip Durumu")),
-            _column("conversion_state", _t("Conversion", "Dönüşüm")),
-            _column("can_convert_to_offer", _t("Can Convert", "Teklife Dönüşebilir"), formatter="boolean"),
-            _column("estimated_gross_premium", _t("Estimated Gross Premium", "Tahmini Brüt Prim"), formatter="currency"),
-            _column("converted_offer", _t("Converted Offer", "Dönüşen Teklif")),
-            _column("converted_policy", _t("Converted Policy", "Dönüşen Poliçe")),
+            _column("display_name", _t("Lead"), getter=lambda row: _lead_display_name(row)),
+            _column("name", _t("Record")),
+            _column("email", _t("Email")),
+            _column("customer", _t("Customer")),
+            _column("sales_entity", _t("Sales Entity")),
+            _column("insurance_company", _t("Insurance Company")),
+            _column("branch", _t("Branch")),
+            _column("status", _t("Status")),
+            _column("stale_state", _t("Follow-up State")),
+            _column("conversion_state", _t("Conversion")),
+            _column("can_convert_to_offer", _t("Can Convert"), formatter="boolean"),
+            _column("estimated_gross_premium", _t("Estimated Gross Premium"), formatter="currency"),
+            _column("converted_offer", _t("Converted Offer")),
+            _column("converted_policy", _t("Converted Policy")),
             _column(
                 "conversion_missing_fields",
-                _t("Missing Fields", "Eksik Alanlar"),
+                _t("Missing Fields"),
                 getter=lambda row: ", ".join(row.get("conversion_missing_fields") or []),
             ),
-            _column("modified", _t("Modified", "Güncellendi"), formatter="datetime"),
+            _column("modified", _t("Modified"), formatter="datetime"),
         ],
     },
     "customer_list": {
         "permission_doctype": "AT Customer",
         "export_key": "customer_list",
-        "title": _t("Customer List", "Müşteri Listesi"),
+        "title": _t("Customer List"),
         "type": "custom",
         "fetcher": "_fetch_customer_rows",
         "columns": [
-            _column("full_name", _t("Customer", "Müşteri"), getter=lambda row: row.get("full_name") or row.get("name")),
-            _column("name", _t("Record", "Kayıt")),
-            _column("tax_id", _t("Tax ID", "TC / VKN")),
-            _column("phone", _t("Phone", "Telefon")),
-            _column("email", _t("Email", "E-posta")),
-            _column("consent_status", _t("Consent Status", "Izin Durumu")),
-            _column("assigned_agent", _t("Assigned Agent", "Temsilci")),
-            _column("birth_date", _t("Birth Date", "Dogum Tarihi"), formatter="date"),
-            _column("gender", _t("Gender", "Cinsiyet")),
-            _column("marital_status", _t("Marital Status", "Medeni Durum")),
-            _column("occupation", _t("Occupation", "Meslek")),
-            _column("active_policy_count", _t("Active Policies", "Aktif Poliçe")),
-            _column("open_offer_count", _t("Open Offers", "Açık Teklif")),
-            _column("active_policy_gross_premium", _t("Active Gross Premium", "Aktif Brüt Prim"), formatter="currency"),
-            _column("modified", _t("Modified", "Güncellendi"), formatter="datetime"),
+            _column("full_name", _t("Customer"), getter=lambda row: row.get("full_name") or row.get("name")),
+            _column("name", _t("Record")),
+            _column("tax_id", _t("Tax ID")),
+            _column("phone", _t("Phone")),
+            _column("email", _t("Email")),
+            _column("consent_status", _t("Consent Status")),
+            _column("assigned_agent", _t("Assigned Agent")),
+            _column("birth_date", _t("Birth Date"), formatter="date"),
+            _column("gender", _t("Gender")),
+            _column("marital_status", _t("Marital Status")),
+            _column("occupation", _t("Occupation")),
+            _column("active_policy_count", _t("Active Policies")),
+            _column("open_offer_count", _t("Open Offers")),
+            _column("active_policy_gross_premium", _t("Active Gross Premium"), formatter="currency"),
+            _column("modified", _t("Modified"), formatter="datetime"),
         ],
     },
     "policy_list": {
         "permission_doctype": "AT Policy",
         "export_key": "policy_list_workbench",
-        "title": _t("Policy List", "Poliçe Listesi"),
+        "title": _t("Policy List"),
         "type": "doctype",
         "doctype": "AT Policy",
         "fields": [
@@ -117,28 +118,28 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
             "modified",
         ],
         "columns": [
-            _column("name", _t("Record Number", "Kayıt No")),
-            _column("policy_no", _t("Carrier Policy Number", "Sigorta Şirketi Poliçe No")),
-            _column("customer", _t("Customer", "Müşteri")),
-            _column("insurance_company", _t("Insurance Company", "Sigorta Şirketi")),
-            _column("status", _t("Status", "Durum")),
-            _column("end_date", _t("End Date", "Bitiş Tarihi"), formatter="date"),
-            _column("gross_premium", _t("Gross Premium", "Brüt Prim"), formatter="currency", currency_field="currency"),
+            _column("name", _t("Record Number")),
+            _column("policy_no", _t("Carrier Policy Number")),
+            _column("customer", _t("Customer")),
+            _column("insurance_company", _t("Insurance Company")),
+            _column("status", _t("Status")),
+            _column("end_date", _t("End Date"), formatter="date"),
+            _column("gross_premium", _t("Gross Premium"), formatter="currency", currency_field="currency"),
             _column(
                 "commission_display",
-                _t("Commission", "Komisyon"),
+                _t("Commission"),
                 formatter="currency",
                 currency_field="currency",
                 getter=lambda row: row.get("commission_amount") if row.get("commission_amount") not in (None, "") else row.get("commission"),
             ),
-            _column("gwp_try", _t("GWP TRY", "GWP TRY"), formatter="currency", getter=lambda row: row.get("gwp_try"), currency_field=None),
-            _column("modified", _t("Modified", "Güncellendi"), formatter="datetime"),
+            _column("gwp_try", _t("GWP TRY"), formatter="currency", getter=lambda row: row.get("gwp_try"), currency_field=None),
+            _column("modified", _t("Modified"), formatter="datetime"),
         ],
     },
     "offer_list": {
         "permission_doctype": "AT Offer",
         "export_key": "offer_list",
-        "title": _t("Offer List", "Teklif Listesi"),
+        "title": _t("Offer List"),
         "type": "doctype",
         "doctype": "AT Offer",
         "fields": [
@@ -157,17 +158,17 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
             "modified",
         ],
         "columns": [
-            _column("name", _t("Offer", "Teklif")),
-            _column("customer", _t("Customer", "Müşteri")),
-            _column("insurance_company", _t("Insurance Company", "Sigorta Şirketi")),
-            _column("status", _t("Status", "Durum")),
-            _column("offer_date", _t("Offer Date", "Teklif Tarihi"), formatter="date"),
-            _column("valid_until", _t("Valid Until", "Geçerlilik"), formatter="date"),
-            _column("gross_premium", _t("Gross Premium", "Brüt Prim"), formatter="currency", currency_field="currency"),
-            _column("net_premium", _t("Net Premium", "Net Prim"), formatter="currency", currency_field="currency"),
-            _column("commission_amount", _t("Commission", "Komisyon"), formatter="currency", currency_field="currency"),
-            _column("converted_policy", _t("Converted Policy", "Dönüşen Poliçe")),
-            _column("modified", _t("Modified", "Güncellendi"), formatter="datetime"),
+            _column("name", _t("Offer")),
+            _column("customer", _t("Customer")),
+            _column("insurance_company", _t("Insurance Company")),
+            _column("status", _t("Status")),
+            _column("offer_date", _t("Offer Date"), formatter="date"),
+            _column("valid_until", _t("Valid Until"), formatter="date"),
+            _column("gross_premium", _t("Gross Premium"), formatter="currency", currency_field="currency"),
+            _column("net_premium", _t("Net Premium"), formatter="currency", currency_field="currency"),
+            _column("commission_amount", _t("Commission"), formatter="currency", currency_field="currency"),
+            _column("converted_policy", _t("Converted Policy")),
+            _column("modified", _t("Modified"), formatter="datetime"),
         ],
     },
 }
@@ -342,7 +343,7 @@ def _format_value(value: Any, *, formatter: str | None, locale: str, currency: s
     if formatter == "boolean":
         normalized_value = str(value).strip().lower()
         is_true = value is True or normalized_value in {"1", "true", "yes", "on", "evet"}
-        return "Evet" if locale == "tr" and is_true else "Hayır" if locale == "tr" else "Yes" if is_true else "No"
+        return translate_text("Yes", locale) if is_true else translate_text("No", locale)
     if isinstance(value, (list, tuple, set)):
         return ", ".join(str(item) for item in value if item not in (None, ""))
     if isinstance(value, (datetime, date)):
@@ -381,7 +382,7 @@ def _localize(value: dict[str, str] | str, locale: str) -> str:
     if isinstance(value, dict):
         base_locale = str(locale or "tr").split("-")[0]
         return value.get(locale) or value.get(base_locale) or value.get("en") or next(iter(value.values()))
-    return str(value or "")
+    return translate_text(str(value or ""), locale)
 
 
 def _active_locale() -> str:

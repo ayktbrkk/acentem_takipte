@@ -10,17 +10,18 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 
 from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_columns, coerce_filters, coerce_rows, normalize_title
+from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 REPORT_TITLES = {
-    "policy_list": {"en": "Policy List Report", "tr": "Poliçe Listesi Raporu"},
-    "payment_status": {"en": "Payment Status Report", "tr": "Tahsilat Durumu Raporu"},
-    "renewal_performance": {"en": "Renewal Performance Report", "tr": "Yenileme Performans Raporu"},
-    "claim_loss_ratio": {"en": "Claim Loss Ratio Report", "tr": "Hasar Prim Oranı Raporu"},
-    "agent_performance": {"en": "Agency Performance Scorecard", "tr": "Acente Üretim Karnesi"},
-    "customer_segmentation": {"en": "Customer Segmentation Report", "tr": "Müşteri Segmentasyon Raporu"},
-    "communication_operations": {"en": "Communication Operations Report", "tr": "İletişim Operasyonları Raporu"},
-    "reconciliation_operations": {"en": "Reconciliation Operations Report", "tr": "Mutabakat Operasyonları Raporu"},
-    "claims_operations": {"en": "Claims Operations Report", "tr": "Hasar Operasyonları Raporu"},
+    "policy_list": "Policy List Report",
+    "payment_status": "Payment Status Report",
+    "renewal_performance": "Renewal Performance Report",
+    "claim_loss_ratio": "Claim Loss Ratio Report",
+    "agent_performance": "Agency Performance Scorecard",
+    "customer_segmentation": "Customer Segmentation Report",
+    "communication_operations": "Communication Operations Report",
+    "reconciliation_operations": "Reconciliation Operations Report",
+    "claims_operations": "Claims Operations Report",
 }
 
 
@@ -38,10 +39,9 @@ def build_report_filename(report_key: str, export_format: str) -> str:
 
 def build_report_title(report_key: str, locale: str = "en") -> str:
     normalized_key = str(report_key or "").strip()
-    entry = REPORT_TITLES.get(normalized_key, {})
-    normalized_locale = str(locale or "en").strip() or "en"
-    base_locale = normalized_locale.split("-")[0]
-    return entry.get(normalized_locale) or entry.get(base_locale) or entry.get("en") or normalized_key or "Report"
+    entry = REPORT_TITLES.get(normalized_key)
+    source = entry or normalized_key or "Report"
+    return translate_text(source, locale)
 
 
 def render_tabular_pdf(

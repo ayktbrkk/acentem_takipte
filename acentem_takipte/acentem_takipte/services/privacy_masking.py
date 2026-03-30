@@ -11,8 +11,8 @@ Masked query gate
         rejected with HTTP 429 before any data is returned.
 
     2.  **Audit trail** — each successful masked query is recorded in the Frappe
-        Error Log under the title ``[KVKK Audit] Masked Query``.  Raw PII (TC
-        kimlik / VKN, phone) is **never** stored; only a SHA-256 fingerprint of
+        Error Log under the title ``[KVKK Audit] Masked Query``.  Raw PII (national
+        ID / tax ID, phone) is **never** stored; only a SHA-256 fingerprint of
         ``user|endpoint|date`` is logged.
 
 Cache key pattern
@@ -121,8 +121,8 @@ def _write_audit_entry(user_id: str, *, endpoint: str, row_count: int) -> None:
     """Write a structured, PII-free audit entry to the Frappe Error Log.
 
     The entry is retrievable via Frappe > Error Log, filtered by title
-    ``[KVKK Audit] Masked Query``.  Ham kimlik verisi (TC/VKN, phone) hiçbir
-    zaman bu kayıta eklenmez.
+    ``[KVKK Audit] Masked Query``.  Raw PII (national ID / tax ID, phone) is
+    never added to this record.
     """
     try:
         today = date.today().isoformat()

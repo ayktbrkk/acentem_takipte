@@ -37,6 +37,8 @@
 - The privacy masking rate-limit message and emergency access validation messages were converted to English source:
   - `acentem_takipte/acentem_takipte/services/privacy_masking.py`
   - `acentem_takipte/acentem_takipte/doctype/at_emergency_access/at_emergency_access.py`
+- The renewal service auto-close note was normalized to English-first source:
+  - `acentem_takipte/acentem_takipte/renewal/service.py`
 - `at_customer.py` and `at_policy.py` returned no hardcoded Turkish strings during the regex scan; both modules already follow English source + `_()` conventions for user-facing text.
 - The `AT Activity` metadata file was converted to English source:
   - `acentem_takipte/acentem_takipte/doctype/at_activity/at_activity.json`
@@ -103,6 +105,17 @@ After a full repo scan, the main localization surfaces that still need attention
 - `acentem_takipte/acentem_takipte/api/customers.py`
 - `acentem_takipte/acentem_takipte/services/reports_runtime.py`
 
+### Completed backend normalization waves
+
+- `acentem_takipte/acentem_takipte/services/report_exports.py`
+- `acentem_takipte/acentem_takipte/services/list_exports.py`
+- `acentem_takipte/acentem_takipte/setup_utils.py`
+- `acentem_takipte/acentem_takipte/api/seed.py`
+- `acentem_takipte/acentem_takipte/services/policy_360.py`
+- `acentem_takipte/acentem_takipte/utils/i18n.py`
+
+These files now use source-only English plus CSV-based locale resolution.
+
 ### Frontend hot spots
 
 The majority of visible copy still clusters in these file families:
@@ -133,7 +146,7 @@ The majority of visible copy still clusters in these file families:
 ### New priority note
 
 The next implementation wave should be:
-1. Then continue with `at_customer.py` and `at_policy.py`
+1. First continue with `at_customer.py` and `at_policy.py`
 2. Finally move through the frontend copy clusters
 
 ---

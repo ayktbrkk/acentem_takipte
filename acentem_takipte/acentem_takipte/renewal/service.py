@@ -234,7 +234,7 @@ def remediate_stale_renewal_tasks(
         task = frappe.get_doc("AT Renewal Task", row.name)
         task.status = ATRenewalTaskStatus.CANCELLED
         existing_notes = str(task.notes or "").strip()
-        remediation_note = "Sistem Notu: Eski yenileme görevi otomatik kapatıldı."
+        remediation_note = _("System Note: Stale renewal task was automatically closed.")
         task.notes = (
             f"{existing_notes}\n{remediation_note}".strip()
             if existing_notes

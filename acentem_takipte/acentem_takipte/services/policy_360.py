@@ -161,7 +161,7 @@ def _build_product_profile(policy: dict) -> dict:
                 {"key": "usage_type", "label": "Usage Type", "value": policy.get("usage_type")},
             ]
         )
-    elif any(_fold_ascii(token) in _fold_ascii(branch_value) for token in ["sağlık", "health", "tamamlayıcı"]):
+    elif any(_fold_ascii(token) in _fold_ascii(branch_value) for token in ["saglik", "health", "tamamlayici"]):
         product_family = "Health"
         insured_subject = "Person"
         coverage_focus = "Health"

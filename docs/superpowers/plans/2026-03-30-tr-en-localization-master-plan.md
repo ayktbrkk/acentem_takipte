@@ -37,6 +37,8 @@
 - Privacy masking limit mesajı ve emergency access validation mesajları İngilizce source’a taşındı:
   - `acentem_takipte/acentem_takipte/services/privacy_masking.py`
   - `acentem_takipte/acentem_takipte/doctype/at_emergency_access/at_emergency_access.py`
+- Renewal service içindeki otomatik kapatma notu English-first standartta tutuldu:
+  - `acentem_takipte/acentem_takipte/renewal/service.py`
 - `at_customer.py` ve `at_policy.py` regex taramasında hardcoded Türkçe string vermedi; dosyalar zaten İngilizce source + `_()` standardına uyuyor.
 - `AT Activity` metadata dosyası İngilizce source'a çevrildi:
   - `acentem_takipte/acentem_takipte/doctype/at_activity/at_activity.json`
@@ -103,6 +105,17 @@ Tam repo taraması sonrası, henüz ele alınması gereken başlıca yerelleşti
 - `acentem_takipte/acentem_takipte/api/customers.py`
 - `acentem_takipte/acentem_takipte/services/reports_runtime.py`
 
+### Tamamlanan backend normalizasyon dalgaları
+
+- `acentem_takipte/acentem_takipte/services/report_exports.py`
+- `acentem_takipte/acentem_takipte/services/list_exports.py`
+- `acentem_takipte/acentem_takipte/setup_utils.py`
+- `acentem_takipte/acentem_takipte/api/seed.py`
+- `acentem_takipte/acentem_takipte/services/policy_360.py`
+- `acentem_takipte/acentem_takipte/utils/i18n.py`
+
+Bu dosyalarda source-only İngilizce düzeni ve CSV tabanlı locale çözümleme uygulanmış durumda.
+
 ### Frontend hot spot kümeleri
 
 Görünür copy’nin büyük kısmı hâlâ bu dosya ailelerinde toplanıyor:
@@ -133,7 +146,7 @@ Görünür copy’nin büyük kısmı hâlâ bu dosya ailelerinde toplanıyor:
 ### Yeni öncelik notu
 
 Bu tarama sonrası yeni ilk dalga şu olmalı:
-1. Ardından `at_customer.py` ve `at_policy.py`
+1. Önce `at_customer.py` ve `at_policy.py`
 2. Son olarak frontend copy kümesi
 
 ---

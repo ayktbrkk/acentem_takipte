@@ -108,7 +108,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
     branch_map = {
         "DEMO Trafik": ("DTF", company_names[0]),
         "DEMO Kasko": ("DKS", company_names[1]),
-        "DEMO Sağlık": ("DSG", company_names[2]),
+        "DEMO Saglik": ("DSG", company_names[2]),
     }
     for branch_name, (branch_code, insurance_company) in branch_map.items():
         doc = _upsert_by_name(
@@ -223,9 +223,9 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "customer": "1000000003",
             "sales_entity": rep_entity.name,
             "insurance_company": company_names[2],
-            "branch": "DEMO Sağlık",
+            "branch": "DEMO Saglik",
             "estimated_gross_premium": 17800,
-            "notes": "DEMO_SEED - sağlık lead",
+            "notes": "DEMO_SEED - health lead",
         },
         {
             "lookup_key": "demo.sude.lead@example.com",
@@ -295,7 +295,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "customer": "1000000003",
             "sales_entity": rep_entity.name,
             "insurance_company": company_names[2],
-            "branch": "DEMO Sağlık",
+            "branch": "DEMO Saglik",
             "status": "KYT",
             "issue_date": add_days(today, -121),
             "start_date": add_days(today, -120),
@@ -323,7 +323,7 @@ def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
             "customer": "1000000001",
             "sales_entity": rep_entity.name,
             "insurance_company": company_names[2],
-            "branch": "DEMO Sağlık",
+            "branch": "DEMO Saglik",
             "status": "Active",
             "issue_date": add_days(today, -10),
             "start_date": add_days(today, -9),

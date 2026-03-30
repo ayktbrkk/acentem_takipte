@@ -6,6 +6,7 @@ import frappe
 from frappe.permissions import add_permission, update_permission_property
 
 from .utils.assets import ensure_site_asset_symlink
+from .utils.i18n import translate_text
 
 CORE_ROLES = ("Agent", "Manager", "Accountant")
 CORE_ACCESS_ROLES = {"System Manager", "Agent", "Manager", "Accountant"}
@@ -308,14 +309,14 @@ DEFAULT_NOTIFICATION_TEMPLATES = (
         "event_key": "policy_created",
         "channel": "Both",
         "language": "tr",
-        "subject": "Poliçeniz oluşturuldu: {{ policy_no }}",
+        "subject": "Your policy has been created: {{ policy_no }}",
         "body_template": (
-            "Sayın {{ customer.full_name }},\n"
-            "Poliçeniz oluşturuldu.\n"
-            "Poliçe No: {{ policy_no }}\n"
-            "Başlangıç: {{ start_date }}\n"
-            "Bitiş: {{ end_date }}\n"
-            "Prim: {{ gross_premium }} {{ currency }}"
+            "Dear {{ customer.full_name }},\n"
+            "Your policy has been created.\n"
+            "Policy No: {{ policy_no }}\n"
+            "Start: {{ start_date }}\n"
+            "End: {{ end_date }}\n"
+            "Premium: {{ gross_premium }} {{ currency }}"
         ),
     },
     {
@@ -337,13 +338,13 @@ DEFAULT_NOTIFICATION_TEMPLATES = (
         "event_key": "renewal_due",
         "channel": "Both",
         "language": "tr",
-        "subject": "Poliçe yenileme hatırlatması",
+        "subject": "Policy renewal reminder",
         "body_template": (
-            "Sayın {{ customer.full_name }},\n"
-            "Poliçenizin yenileme tarihi yaklaşıyor.\n"
-            "Poliçe: {{ policy }}\n"
-            "Yenileme: {{ renewal_date }}\n"
-            "Son tarih: {{ due_date }}"
+            "Dear {{ customer.full_name }},\n"
+            "Your policy renewal date is approaching.\n"
+            "Policy: {{ policy }}\n"
+            "Renewal date: {{ renewal_date }}\n"
+            "Due date: {{ due_date }}"
         ),
     },
 )
@@ -389,14 +390,6 @@ def invalidate_user_scope_on_logout(login_manager=None):
         frappe.logger().warning(
             "Failed to invalidate scope cache during logout for %s: %s", user, exc
         )
-
-
-def ensure_core_setup_önce():
-    cache = frappe.cache()
-    if cache.get_value(CORE_SETUP_CACHE_KEY):
-        return
-    ensure_core_setup()
-    cache.set_value(CORE_SETUP_CACHE_KEY, 1)
 
 
 def ensure_core_setup():
@@ -515,15 +508,19 @@ def ensure_default_notification_templates() -> bool:
         if frappe.db.exists("AT Notification Template", template["template_key"]):
             continue
 
+        language = str(template.get("language") or "en").strip() or "en"
+        subject = translate_text(template["subject"], language)
+        body_template = translate_text(template["body_template"], language)
+
         doc = frappe.get_doc(
             {
                 "doctype": "AT Notification Template",
                 "template_key": template["template_key"],
                 "event_key": template["event_key"],
                 "channel": template["channel"],
-                "language": template["language"],
-                "subject": template["subject"],
-                "body_template": template["body_template"],
+                "language": language,
+                "subject": subject,
+                "body_template": body_template,
                 "is_active": 1,
             }
         )
