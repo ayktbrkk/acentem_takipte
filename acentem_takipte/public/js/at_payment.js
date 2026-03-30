@@ -2,7 +2,7 @@ frappe.ui.form.on("AT Payment", {
   validate(frm) {
     if (frm.doc.amount_try != null && flt(frm.doc.amount_try) <= 0) {
       frappe.validated = false;
-      frappe.msgprint(__("Tutar sıfırdan büyük olmalıdır."));
+      frappe.msgprint(__("Amount must be greater than zero."));
     }
   },
   refresh(frm) {

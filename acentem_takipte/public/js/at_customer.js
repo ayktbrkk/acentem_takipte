@@ -1,7 +1,7 @@
 function applyCustomerTypeState(frm) {
   const customerType = String(frm.doc.customer_type || "Individual");
   const isCorporate = customerType === "Corporate";
-  const identityLabel = isCorporate ? __("Vergi No") : __("TC Kimlik No");
+  const identityLabel = isCorporate ? __("Tax ID") : __("National ID No");
 
   frm.set_df_property("tax_id", "label", identityLabel);
   frm.set_df_property("birth_date", "read_only", isCorporate ? 1 : 0);
@@ -21,7 +21,7 @@ frappe.ui.form.on("AT Customer", {
   validate(frm) {
     if (!frm.doc.full_name) {
       frappe.validated = false;
-      frappe.msgprint(__("Tam ad (full_name) girilmelidir."));
+      frappe.msgprint(__("Full name (full_name) must be entered."));
     }
   },
   refresh(frm) {

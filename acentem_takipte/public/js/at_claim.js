@@ -2,7 +2,7 @@ frappe.ui.form.on("AT Claim", {
   validate(frm) {
     if (!frm.doc.policy) {
       frappe.validated = false;
-      frappe.msgprint(__("Poliçe seçilmelidir."));
+      frappe.msgprint(__("Policy must be selected."));
     }
   },
   refresh(frm) {
