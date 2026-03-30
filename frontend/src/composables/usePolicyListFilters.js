@@ -1,4 +1,4 @@
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, unref, watch } from "vue";
 
 import {
   extractCustomFilterPresetId,
@@ -38,6 +38,7 @@ export function usePolicyListFilters({
   const policyCustomPresets = ref(readFilterPresetList(POLICY_PRESET_LIST_STORAGE_KEY));
   const policyListSearchQuery = ref("");
   const policyListLocalFilters = reactive({ status: "", branch: "" });
+  const suppressSearchSync = ref(false);
 
   const policyPresetOptions = computed(() => [
     { value: "default", label: t("presetDefault") },
@@ -55,10 +56,20 @@ export function usePolicyListFilters({
       (policyListSearchQuery.value.trim() ? 1 : 0) +
       Object.values(policyListLocalFilters).filter((value) => String(value || "").trim() !== "").length
   );
+  watch(policyListSearchQuery, (value) => {
+    filters.query = value;
+    if (suppressSearchSync.value) return;
+    pagination.page = 1;
+    refreshPolicyList?.();
+  });
+
 
   function currentPolicyPresetPayload() {
     return {
       query: filters.query,
+      search_query: policyListSearchQuery.value,
+      status_filter: policyListLocalFilters.status,
+      branch_filter: policyListLocalFilters.branch,
       insurance_company: filters.insurance_company,
       end_date: filters.end_date,
       status: filters.status,
@@ -72,56 +83,69 @@ export function usePolicyListFilters({
 
   function applyPolicyPreset(key, { refresh = true } = {}) {
     const requested = String(key || "default");
+    suppressSearchSync.value = true;
 
-    if (isCustomFilterPresetValue(requested)) {
-      const customId = extractCustomFilterPresetId(requested);
-      const presetRow = policyCustomPresets.value.find((item) => item.id === customId);
-      if (!presetRow) {
-        applyPolicyPreset("default", { refresh });
+    try {
+      if (isCustomFilterPresetValue(requested)) {
+        const customId = extractCustomFilterPresetId(requested);
+        const presetRow = policyCustomPresets.value.find((item) => item.id === customId);
+        if (!presetRow) {
+          applyPolicyPreset("default", { refresh });
+          return;
+        }
+        const payload = presetRow.payload || {};
+        policyPresetKey.value = requested;
+        writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, requested);
+        policyListSearchQuery.value = String(payload.search_query || payload.query || "");
+        filters.query = policyListSearchQuery.value;
+        policyListLocalFilters.status = String(payload.status_filter || "");
+        policyListLocalFilters.branch = String(payload.branch_filter || "");
+        filters.insurance_company = String(payload.insurance_company || "");
+        filters.end_date = String(payload.end_date || "");
+        filters.status = String(payload.status || "");
+        filters.customer = String(payload.customer || "");
+        filters.gross_min = payload.gross_min != null ? String(payload.gross_min) : "";
+        filters.gross_max = payload.gross_max != null ? String(payload.gross_max) : "";
+        filters.sort = String(payload.sort || "modified desc");
+        pagination.pageLength = Number(payload.pageLength || 20) || 20;
+        pagination.page = 1;
+        if (refresh) refreshPolicyList?.();
         return;
       }
-      const payload = presetRow.payload || {};
+
       policyPresetKey.value = requested;
       writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, requested);
-      filters.query = String(payload.query || "");
-      filters.insurance_company = String(payload.insurance_company || "");
-      filters.end_date = String(payload.end_date || "");
-      filters.status = String(payload.status || "");
-      filters.customer = String(payload.customer || "");
-      filters.gross_min = payload.gross_min != null ? String(payload.gross_min) : "";
-      filters.gross_max = payload.gross_max != null ? String(payload.gross_max) : "";
-      filters.sort = String(payload.sort || "modified desc");
-      pagination.pageLength = Number(payload.pageLength || 20) || 20;
+      policyListSearchQuery.value = "";
+      filters.query = "";
+      policyListLocalFilters.status = "";
+      policyListLocalFilters.branch = "";
+      filters.insurance_company = "";
+      filters.end_date = "";
+      filters.status = "";
+      filters.customer = "";
+      filters.gross_min = "";
+      filters.gross_max = "";
+      filters.sort = "modified desc";
+      pagination.pageLength = 20;
+
+      if (requested === "active") {
+        policyListLocalFilters.status = "active";
+        filters.status = "Active";
+      } else if (requested === "expiring30") {
+        policyListLocalFilters.status = "active";
+        filters.status = "Active";
+        filters.end_date = dateAfterDays(30);
+        filters.sort = "end_date asc";
+      } else if (requested === "highPremium") {
+        filters.sort = "gross_premium desc";
+        filters.gross_min = "10000";
+      }
+
       pagination.page = 1;
       if (refresh) refreshPolicyList?.();
-      return;
+    } finally {
+      suppressSearchSync.value = false;
     }
-
-    policyPresetKey.value = requested;
-    writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, requested);
-    filters.query = "";
-    filters.insurance_company = "";
-    filters.end_date = "";
-    filters.status = "";
-    filters.customer = "";
-    filters.gross_min = "";
-    filters.gross_max = "";
-    filters.sort = "modified desc";
-    pagination.pageLength = 20;
-
-    if (requested === "active") {
-      filters.status = "Active";
-    } else if (requested === "expiring30") {
-      filters.status = "Active";
-      filters.end_date = dateAfterDays(30);
-      filters.sort = "end_date asc";
-    } else if (requested === "highPremium") {
-      filters.sort = "gross_premium desc";
-      filters.gross_min = "10000";
-    }
-
-    pagination.page = 1;
-    if (refresh) refreshPolicyList?.();
   }
 
   function onPolicyPresetChange() {
@@ -131,7 +155,7 @@ export function usePolicyListFilters({
 
   function onPolicyListFilterChange({ key, value }) {
     const nextValue = String(value || "");
-    policyListLocalFilters[key] = key === "status" ? nextValue.toLocaleLowerCase(localeCode) : nextValue;
+    policyListLocalFilters[key] = key === "status" ? nextValue.toLocaleLowerCase(unref(localeCode)) : nextValue;
     pagination.page = 1;
   }
 
@@ -157,7 +181,7 @@ export function usePolicyListFilters({
       label: name,
       payload: currentPolicyPresetPayload(),
     });
-    policyCustomPresets.value = nextList.sort((a, b) => a.label.localeCompare(b.label, localeCode));
+    policyCustomPresets.value = nextList.sort((a, b) => a.label.localeCompare(b.label, unref(localeCode)));
     writeFilterPresetList(POLICY_PRESET_LIST_STORAGE_KEY, policyCustomPresets.value);
     policyPresetKey.value = makeCustomFilterPresetValue(targetId);
     writeFilterPresetKey(POLICY_PRESET_STORAGE_KEY, policyPresetKey.value);
