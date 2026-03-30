@@ -1,167 +1,107 @@
-import { computed, unref } from "vue";
-import { createResource } from "frappe-ui";
-import { useRoute } from "vue-router";
-
-import { useBranchStore } from "../../stores/branch";
-import { useCommunicationStore } from "../../stores/communication";
+import { ref } from "vue";
+import { isPermissionDeniedError } from "./helpers";
+import { useCommunicationCenterOperations } from "./operations";
+import { useCommunicationCenterResources } from "./resources";
+import { resolveSameOriginPath } from "../../utils/safeNavigation";
 import { openTabularExport } from "../../utils/listExport";
-import { isPermissionDeniedError } from "./common";
 
-function resourceValue(resource, fallback = null) {
-  const value = unref(resource?.data);
-  return value == null ? fallback : value;
-}
+export function useCommunicationCenterRuntime({ route, router, branchStore, communicationStore, filters, t }) {
+  const showSegmentDialog = ref(false);
+  const showCampaignDialog = ref(false);
+  const showCampaignRunDialog = ref(false);
+  const showSegmentPreviewDialog = ref(false);
+  const showCallNoteDialog = ref(false);
+  const showReminderDialog = ref(false);
+  const showQuickMessageDialog = ref(false);
 
-function asArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-function buildDateQueryParams(filters, branchStore) {
-  return {
-    customer: filters.customer || null,
-    status: filters.status || null,
-    channel: filters.channel || null,
-    reference_doctype: filters.referenceDoctype || null,
-    reference_name: filters.referenceName || null,
-    office_branch: branchStore.requestBranch || null,
-    limit: filters.limit,
+  const openSegmentDialog = () => {
+    showSegmentDialog.value = true;
   };
-}
 
-function buildCustomerQuickFilters(branchStore) {
-  if (!branchStore.requestBranch) return {};
-  return { office_branch: branchStore.requestBranch };
-}
+  const openCampaignDialog = () => {
+    showCampaignDialog.value = true;
+  };
 
-export function useCommunicationCenterRuntime({ t, statusLabel, channelLabel, referenceTypeLabel }) {
-  const communicationStore = useCommunicationStore();
-  const branchStore = useBranchStore();
-  const route = useRoute();
+  const openCampaignRunDialog = () => {
+    showCampaignRunDialog.value = true;
+  };
 
-  const snapshotResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot",
-    params: buildDateQueryParams(communicationStore.state.filters, branchStore),
-    auto: true,
-  });
+  const openSegmentPreviewDialog = () => {
+    showSegmentPreviewDialog.value = true;
+  };
 
-  const runCycleResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
-  });
+  const openCallNoteDialog = () => {
+    showCallNoteDialog.value = true;
+  };
 
-  const sendDraftResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
-  });
+  const openReminderDialog = () => {
+    showReminderDialog.value = true;
+  };
 
-  const retryOutboxResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
-  });
-  const auxMutationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
-  });
-  const communicationQuickTemplateResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Notification Template",
-      fields: ["name", "template_key", "channel", "is_active"],
-      filters: { is_active: 1 },
-      order_by: "template_key asc",
-      limit_page_length: 500,
-    },
-  });
-  const communicationQuickCustomerResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Customer",
-      fields: ["name", "full_name"],
-      filters: buildCustomerQuickFilters(branchStore),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-  const communicationQuickPolicyResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Policy",
-      fields: ["name", "policy_no", "customer"],
-      filters: buildCustomerQuickFilters(branchStore),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-  const communicationQuickClaimResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Claim",
-      fields: ["name", "claim_no", "policy", "customer"],
-      filters: buildCustomerQuickFilters(branchStore),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-  const communicationQuickSegmentResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Segment",
-      fields: ["name", "segment_name", "channel_focus", "status"],
-      filters: buildCustomerQuickFilters(branchStore),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-  const communicationQuickCampaignResource = createResource({
-    url: "frappe.client.get_list",
-    auto: true,
-    params: {
-      doctype: "AT Campaign",
-      fields: ["name", "campaign_name", "channel", "status"],
-      filters: buildCustomerQuickFilters(branchStore),
-      order_by: "modified desc",
-      limit_page_length: 500,
-    },
-  });
-  const segmentPreviewResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.preview_segment_members",
-  });
-  const campaignRunResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.execute_campaign",
-  });
+  const openQuickMessageDialog = () => {
+    showQuickMessageDialog.value = true;
+  };
 
-  const snapshotData = computed(() => communicationStore.state.snapshot || {});
-  const outboxItems = computed(() => communicationStore.outboxItems);
-  const draftItems = computed(() => communicationStore.draftItems);
-  const breakdown = computed(() => communicationStore.breakdown);
-  const activeFilterCount = computed(() => communicationStore.activeFilterCount);
-  const statusCards = computed(() =>
-    communicationStore.statusCards.map((item) => ({
-      key: item.key,
-      label: statusLabel(item.status),
-      value: item.value,
-    }))
-  );
-
-  const snapshotErrorMessage = computed(() => {
-    if (communicationStore.state.error) return communicationStore.state.error;
-    const raw = unref(snapshotResource.error);
-    if (!raw) return "";
-    if (isPermissionDeniedError(raw)) return t("permissionDeniedRead");
-    if (typeof raw === "string") return raw;
-    return raw?.message || raw?.exc || t("loadErrorTitle");
+  const resources = useCommunicationCenterResources({ branchStore, filters });
+  const operations = useCommunicationCenterOperations({
+    filters,
+    reloadSnapshot,
+    resources,
+    t,
   });
 
   function buildParams() {
-    return buildDateQueryParams(communicationStore.state.filters, branchStore);
+    return {
+      customer: filters.customer || null,
+      status: filters.status || null,
+      channel: filters.channel || null,
+      reference_doctype: filters.referenceDoctype || null,
+      reference_name: filters.referenceName || null,
+      office_branch: branchStore.requestBranch || null,
+      limit: filters.limit,
+    };
+  }
+
+  function currentCommunicationPresetPayload() {
+    return {
+      customer: filters.customer,
+      status: filters.status,
+      channel: filters.channel,
+      referenceDoctype: filters.referenceDoctype,
+      referenceName: filters.referenceName,
+      limit: Number(filters.limit) || 50,
+    };
+  }
+
+  function setCommunicationFilterStateFromPayload(payload) {
+    filters.customer = String(payload?.customer || "");
+    filters.status = String(payload?.status || "");
+    filters.channel = String(payload?.channel || "");
+    filters.referenceDoctype = String(payload?.referenceDoctype || "");
+    filters.referenceName = String(payload?.referenceName || "");
+    filters.limit = Number(payload?.limit || 50) || 50;
+  }
+
+  function resetCommunicationFilterState() {
+    communicationStore.resetFilters();
+  }
+
+  function hasRouteContextQuery() {
+    return Boolean(
+      route.query.customer ||
+        route.query.status ||
+        route.query.channel ||
+        route.query.reference_doctype ||
+        route.query.reference_name,
+    );
   }
 
   function reloadSnapshot() {
-    snapshotResource.params = buildParams();
+    operations.operationError.value = "";
+    resources.snapshotResource.params = buildParams();
     communicationStore.setLoading(true);
     communicationStore.clearError();
-    return snapshotResource
+    return resources.snapshotResource
       .reload()
       .then((result) => {
         communicationStore.setSnapshot(result || {});
@@ -180,30 +120,7 @@ export function useCommunicationCenterRuntime({ t, statusLabel, channelLabel, re
   }
 
   function downloadCommunicationExport(format) {
-    const filters = communicationStore.state.filters;
-    const rows = [
-      ...outboxItems.value.map((row) => ({
-        [t("recordType")]: t("outboxTitle"),
-        [t("status")]: `${t("outboxTitle")} / ${statusLabel(row.status)}`,
-        [t("channel")]: channelLabel(row.channel),
-        [t("recipient")]: row.recipient || "-",
-        [t("attempts")]: `${row.attempt_count || 0}/${row.max_attempts || 0}`,
-        [t("nextRetry")]: row.next_retry_on || "-",
-        [t("referenceContext")]: [referenceTypeLabel(row.reference_doctype), row.reference_name].filter(Boolean).join(" / ") || "-",
-        [t("error")]: row.error_message || "-",
-      })),
-      ...draftItems.value.map((row) => ({
-        [t("recordType")]: t("draftTitle"),
-        [t("status")]: `${t("draftTitle")} / ${statusLabel(row.status)}`,
-        [t("channel")]: channelLabel(row.channel),
-        [t("recipient")]: row.recipient || "-",
-        [t("attempts")]: "-",
-        [t("nextRetry")]: "-",
-        [t("referenceContext")]: [referenceTypeLabel(row.reference_doctype), row.reference_name].filter(Boolean).join(" / ") || "-",
-        [t("error")]: row.error_message || "-",
-      })),
-    ];
-    return openTabularExport({
+    openTabularExport({
       permissionDoctypes: ["AT Notification Outbox", "AT Notification Draft"],
       exportKey: "communication_center",
       title: t("title"),
@@ -217,78 +134,168 @@ export function useCommunicationCenterRuntime({ t, statusLabel, channelLabel, re
         t("referenceContext"),
         t("error"),
       ],
-      rows,
-      filters,
+      rows: [
+        ...communicationStore.outboxItems.map((row) => ({
+          [t("recordType")]: t("outboxTitle"),
+          [t("status")]: `${t("outboxTitle")} / ${row.status || "-"}`,
+          [t("channel")]: row.channel || "-",
+          [t("recipient")]: row.recipient || "-",
+          [t("attempts")]: `${row.attempt_count || 0}/${row.max_attempts || 0}`,
+          [t("nextRetry")]: row.next_retry_on || "-",
+          [t("referenceContext")]: [row.reference_doctype, row.reference_name].filter(Boolean).join(" / ") || "-",
+          [t("error")]: row.error_message || "-",
+        })),
+        ...communicationStore.draftItems.map((row) => ({
+          [t("recordType")]: t("draftTitle"),
+          [t("status")]: `${t("draftTitle")} / ${row.status || "-"}`,
+          [t("channel")]: row.channel || "-",
+          [t("recipient")]: row.recipient || "-",
+          [t("attempts")]: "-",
+          [t("nextRetry")]: "-",
+          [t("referenceContext")]: [row.reference_doctype, row.reference_name].filter(Boolean).join(" / ") || "-",
+          [t("error")]: row.error_message || "-",
+        })),
+      ],
+      filters: currentCommunicationPresetPayload(),
       format,
     });
   }
 
   function reloadQuickCustomers() {
-    const filters = buildCustomerQuickFilters(branchStore);
-    communicationQuickCustomerResource.params = {
-      ...communicationQuickCustomerResource.params,
-      filters,
+    const filtersPayload = branchStore.requestBranch ? { office_branch: branchStore.requestBranch } : {};
+    resources.communicationQuickCustomerResource.params = {
+      ...resources.communicationQuickCustomerResource.params,
+      filters: filtersPayload,
     };
-    communicationQuickPolicyResource.params = {
-      ...communicationQuickPolicyResource.params,
-      filters,
+    resources.communicationQuickPolicyResource.params = {
+      ...resources.communicationQuickPolicyResource.params,
+      filters: filtersPayload,
     };
-    communicationQuickClaimResource.params = {
-      ...communicationQuickClaimResource.params,
-      filters,
+    resources.communicationQuickClaimResource.params = {
+      ...resources.communicationQuickClaimResource.params,
+      filters: filtersPayload,
     };
-    communicationQuickSegmentResource.params = {
-      ...communicationQuickSegmentResource.params,
-      filters,
+    resources.communicationQuickSegmentResource.params = {
+      ...resources.communicationQuickSegmentResource.params,
+      filters: filtersPayload,
     };
-    communicationQuickCampaignResource.params = {
-      ...communicationQuickCampaignResource.params,
-      filters,
+    resources.communicationQuickCampaignResource.params = {
+      ...resources.communicationQuickCampaignResource.params,
+      filters: filtersPayload,
     };
     return Promise.all([
-      communicationQuickCustomerResource.reload(),
-      communicationQuickPolicyResource.reload(),
-      communicationQuickClaimResource.reload(),
-      communicationQuickSegmentResource.reload(),
-      communicationQuickCampaignResource.reload(),
+      resources.communicationQuickCustomerResource.reload(),
+      resources.communicationQuickPolicyResource.reload(),
+      resources.communicationQuickClaimResource.reload(),
+      resources.communicationQuickSegmentResource.reload(),
+      resources.communicationQuickCampaignResource.reload(),
     ]);
   }
 
-  function hasRouteContextQuery() {
-    return Boolean(
-      route.query.customer ||
-        route.query.status ||
-        route.query.channel ||
-        route.query.reference_doctype ||
-        route.query.reference_name
-    );
+  function applySnapshotFilters() {
+    return reloadSnapshot();
+  }
+
+  function clearCustomerFilter() {
+    filters.customer = "";
+    const nextQuery = { ...route.query };
+    delete nextQuery.customer;
+    delete nextQuery.customer_label;
+    router.replace({ query: nextQuery });
+    reloadSnapshot();
+  }
+
+  function clearContextFilters() {
+    communicationStore.setFilters({
+      customer: "",
+      status: "",
+      channel: "",
+      referenceDoctype: "",
+      referenceName: "",
+    });
+    const nextQuery = { ...route.query };
+    delete nextQuery.customer;
+    delete nextQuery.customer_label;
+    delete nextQuery.status;
+    delete nextQuery.channel;
+    delete nextQuery.reference_doctype;
+    delete nextQuery.reference_name;
+    delete nextQuery.reference_label;
+    router.replace({ query: nextQuery });
+    reloadSnapshot();
+  }
+
+  function returnToContext() {
+    const returnToTarget = String(route.query.return_to || "").trim();
+    const safeReturnTo = resolveSameOriginPath(returnToTarget) || "";
+    const canReturn = Boolean(safeReturnTo || filters.customer || filters.referenceDoctype || filters.referenceName || filters.channel || filters.status);
+    if (!canReturn) return;
+    if (safeReturnTo) {
+      router.push(safeReturnTo);
+      return;
+    }
+    router.back();
   }
 
   return {
-    activeFilterCount,
-    auxMutationResource,
-    breakdown,
-    campaignRunResource,
-    communicationQuickCampaignResource,
-    communicationQuickClaimResource,
-    communicationQuickCustomerResource,
-    communicationQuickPolicyResource,
-    communicationQuickSegmentResource,
-    communicationQuickTemplateResource,
-    draftItems,
-    buildParams,
-    buildCustomerQuickFilters: () => buildCustomerQuickFilters(branchStore),
+    showSegmentDialog,
+    showCampaignDialog,
+    showCampaignRunDialog,
+    showSegmentPreviewDialog,
+    showCallNoteDialog,
+    showReminderDialog,
+    showQuickMessageDialog,
+    openSegmentDialog,
+    openCampaignDialog,
+    openCampaignRunDialog,
+    openSegmentPreviewDialog,
+    openCallNoteDialog,
+    openReminderDialog,
+    openQuickMessageDialog,
+    dispatching: operations.dispatching,
+    operationError: operations.operationError,
+    campaignRunSelection: operations.campaignRunSelection,
+    campaignRunLoading: operations.campaignRunLoading,
+    campaignRunError: operations.campaignRunError,
+    campaignRunResult: operations.campaignRunResult,
+    segmentPreviewSegment: operations.segmentPreviewSegment,
+    segmentPreviewLoading: operations.segmentPreviewLoading,
+    segmentPreviewError: operations.segmentPreviewError,
+    segmentPreviewPayload: operations.segmentPreviewPayload,
+    snapshotResource: resources.snapshotResource,
+    runCycleResource: resources.runCycleResource,
+    sendDraftResource: resources.sendDraftResource,
+    retryOutboxResource: resources.retryOutboxResource,
+    auxMutationResource: resources.auxMutationResource,
+    communicationQuickTemplateResource: resources.communicationQuickTemplateResource,
+    communicationQuickCustomerResource: resources.communicationQuickCustomerResource,
+    communicationQuickPolicyResource: resources.communicationQuickPolicyResource,
+    communicationQuickClaimResource: resources.communicationQuickClaimResource,
+    communicationQuickSegmentResource: resources.communicationQuickSegmentResource,
+    communicationQuickCampaignResource: resources.communicationQuickCampaignResource,
+    segmentPreviewResource: resources.segmentPreviewResource,
+    campaignRunResource: resources.campaignRunResource,
+    currentCommunicationPresetPayload,
+    setCommunicationFilterStateFromPayload,
+    resetCommunicationFilterState,
     hasRouteContextQuery,
-    outboxItems,
-    reloadQuickCustomers,
     reloadSnapshot,
-    runCycleResource,
-    sendDraftResource,
-    retryOutboxResource,
-    segmentPreviewResource,
-    snapshotData,
-    snapshotErrorMessage,
-    snapshotResource,
-    statusCards,
+    downloadCommunicationExport,
+    reloadQuickCustomers,
+    applySnapshotFilters,
+    clearCustomerFilter,
+    clearContextFilters,
+    returnToContext,
+    runDispatchCycle: operations.runDispatchCycle,
+    retryOutbox: operations.retryOutbox,
+    sendDraftNow: operations.sendDraftNow,
+    startAssignmentContext: operations.startAssignmentContext,
+    blockAssignmentContext: operations.blockAssignmentContext,
+    closeAssignmentContext: operations.closeAssignmentContext,
+    clearCallNoteContext: operations.clearCallNoteContext,
+    completeReminderContext: operations.completeReminderContext,
+    cancelReminderContext: operations.cancelReminderContext,
+    loadSegmentPreview: operations.loadSegmentPreview,
+    runCampaignExecution: operations.runCampaignExecution,
   };
 }

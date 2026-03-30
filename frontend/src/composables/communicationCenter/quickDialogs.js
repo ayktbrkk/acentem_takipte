@@ -1,62 +1,31 @@
-import { ref, computed } from "vue";
+import { computed } from "vue";
 
-import { useBranchStore } from "../../stores/branch";
-import { isPermissionDeniedError } from "./common";
-
-export function useCommunicationCenterQuickDialogs({
-  activeLocale,
-  filters,
-  reloadSnapshot,
-  segmentPreviewResource,
-  campaignRunResource,
-  t,
-}) {
-  const branchStore = useBranchStore();
-
-  const showSegmentDialog = ref(false);
-  const showCampaignDialog = ref(false);
-  const showCampaignRunDialog = ref(false);
-  const showSegmentPreviewDialog = ref(false);
-  const showCallNoteDialog = ref(false);
-  const showReminderDialog = ref(false);
-  const showQuickMessageDialog = ref(false);
-  const campaignRunSelection = ref("");
-  const campaignRunLoading = ref(false);
-  const campaignRunError = ref("");
-  const campaignRunResult = ref(null);
-  const segmentPreviewSegment = ref("");
-  const segmentPreviewLoading = ref(false);
-  const segmentPreviewError = ref("");
-  const segmentPreviewPayload = ref(null);
-
+export function useCommunicationCenterQuickDialogs({ filters, branchStore, activeLocale, t, reloadSnapshot, runtime }) {
   const quickMessageDialogLabels = computed(() => ({
     save: t("saveDraft"),
     saveAndOpen: t("sendImmediately"),
   }));
-  const quickSegmentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Segment" : "Quick Segment"));
-  const quickCampaignEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Kampanya" : "Quick Campaign"));
-  const quickCallNoteEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Arama Notu" : "Quick Call Note"));
-  const quickReminderEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Hatırlatıcı" : "Quick Reminder"));
-  const quickMessageEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Mesaj" : "Quick Message"));
-  const segmentPreviewSummary = computed(() => segmentPreviewPayload.value?.summary || null);
-  const segmentPreviewRows = computed(() => segmentPreviewPayload.value?.customers || []);
 
   const quickMessageSuccessHandlers = {
     communication_snapshot: async () => {
       await reloadSnapshot();
     },
   };
+
   const callNoteSuccessHandlers = {
     "call-notes-list": async () => {},
   };
+
   const reminderSuccessHandlers = {
     "reminders-list": async () => {
       await reloadSnapshot();
     },
   };
+
   const segmentSuccessHandlers = {
     "segments-list": async () => {},
   };
+
   const campaignSuccessHandlers = {
     "campaigns-list": async () => {},
   };
@@ -85,47 +54,6 @@ export function useCommunicationCenterQuickDialogs({
     if (!form.language) form.language = activeLocale.value === "tr" ? "tr" : "en";
   }
 
-  async function loadSegmentPreview() {
-    if (!segmentPreviewSegment.value) return;
-    segmentPreviewLoading.value = true;
-    segmentPreviewError.value = "";
-    try {
-      const result = await segmentPreviewResource.submit({
-        segment_name: segmentPreviewSegment.value,
-        limit: 20,
-      });
-      segmentPreviewPayload.value = result || null;
-    } catch (error) {
-      segmentPreviewPayload.value = null;
-      segmentPreviewError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedRead")
-        : error?.message || error?.exc || t("loadErrorTitle");
-    } finally {
-      segmentPreviewLoading.value = false;
-    }
-  }
-
-  async function runCampaignExecution() {
-    if (!campaignRunSelection.value) return;
-    campaignRunLoading.value = true;
-    campaignRunError.value = "";
-    try {
-      const result = await campaignRunResource.submit({
-        campaign_name: campaignRunSelection.value,
-        limit: 200,
-      });
-      campaignRunResult.value = result || null;
-      await reloadSnapshot();
-    } catch (error) {
-      campaignRunResult.value = null;
-      campaignRunError.value = isPermissionDeniedError(error)
-        ? t("permissionDeniedAction")
-        : error?.message || error?.exc || t("loadErrorTitle");
-    } finally {
-      campaignRunLoading.value = false;
-    }
-  }
-
   async function prepareCallNoteDialog({ form }) {
     if (filters.customer && !form.customer) form.customer = filters.customer;
     if (filters.referenceDoctype === "AT Policy" && filters.referenceName && !form.policy) form.policy = filters.referenceName;
@@ -143,39 +71,15 @@ export function useCommunicationCenterQuickDialogs({
   }
 
   return {
-    buildQuickMessagePayload,
-    campaignRunError,
-    campaignRunLoading,
-    campaignRunResult,
-    campaignRunSelection,
-    campaignSuccessHandlers,
-    callNoteSuccessHandlers,
-    loadSegmentPreview,
-    quickCallNoteEyebrow,
-    quickCampaignEyebrow,
     quickMessageDialogLabels,
-    quickMessageEyebrow,
     quickMessageSuccessHandlers,
-    quickReminderEyebrow,
-    quickSegmentEyebrow,
-    prepareCallNoteDialog,
-    prepareQuickMessageDialog,
-    prepareReminderDialog,
-    runCampaignExecution,
-    segmentPreviewError,
-    segmentPreviewLoading,
-    segmentPreviewPayload,
-    segmentPreviewRows,
-    segmentPreviewSegment,
-    segmentPreviewSummary,
-    segmentSuccessHandlers,
-    showCallNoteDialog,
-    showCampaignDialog,
-    showCampaignRunDialog,
-    showQuickMessageDialog,
-    showReminderDialog,
-    showSegmentDialog,
-    showSegmentPreviewDialog,
+    callNoteSuccessHandlers,
     reminderSuccessHandlers,
+    segmentSuccessHandlers,
+    campaignSuccessHandlers,
+    buildQuickMessagePayload,
+    prepareQuickMessageDialog,
+    prepareCallNoteDialog,
+    prepareReminderDialog,
   };
 }

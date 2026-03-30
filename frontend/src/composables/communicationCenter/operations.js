@@ -1,52 +1,24 @@
 import { ref } from "vue";
-import { createResource } from "frappe-ui";
 
-import { isPermissionDeniedError } from "./common";
+import { isPermissionDeniedError } from "./helpers";
 
-export function useCommunicationCenterOperations({
-  t,
-  filters,
-  activeLocale,
-  branchStore,
-  router,
-  reloadSnapshot,
-  canSendDraftNowAction,
-  canRetryOutboxAction,
-  canRunDispatchCycle,
-  canCloseAssignmentContext,
-  canClearCallNoteContext,
-  canCompleteReminderContext,
-  canCancelReminderContext,
-  canReturnToContext,
-  safeReturnTo,
-}) {
+export function useCommunicationCenterOperations({ filters, reloadSnapshot, resources, t }) {
   const dispatching = ref(false);
   const operationError = ref("");
-  const showSegmentDialog = ref(false);
-  const showCampaignDialog = ref(false);
-  const showCallNoteDialog = ref(false);
-  const showReminderDialog = ref(false);
-  const showQuickMessageDialog = ref(false);
-
-  const runCycleResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
-  });
-  const sendDraftResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
-  });
-  const retryOutboxResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
-  });
-  const auxMutationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
-  });
+  const campaignRunSelection = ref("");
+  const campaignRunLoading = ref(false);
+  const campaignRunError = ref("");
+  const campaignRunResult = ref(null);
+  const segmentPreviewSegment = ref("");
+  const segmentPreviewLoading = ref(false);
+  const segmentPreviewError = ref("");
+  const segmentPreviewPayload = ref(null);
 
   async function runDispatchCycle() {
-    if (!canRunDispatchCycle.value) return;
     dispatching.value = true;
     operationError.value = "";
     try {
-      await runCycleResource.submit({ limit: filters.limit, include_failed: 1 });
+      await resources.runCycleResource.submit({ limit: filters.limit, include_failed: 1 });
       await reloadSnapshot();
     } catch (error) {
       operationError.value = isPermissionDeniedError(error)
@@ -58,10 +30,9 @@ export function useCommunicationCenterOperations({
   }
 
   async function retryOutbox(outboxName) {
-    if (!canRetryOutboxAction.value) return;
     operationError.value = "";
     try {
-      await retryOutboxResource.submit({ outbox_name: outboxName });
+      await resources.retryOutboxResource.submit({ outbox_name: outboxName });
       await reloadSnapshot();
     } catch (error) {
       operationError.value = isPermissionDeniedError(error)
@@ -71,10 +42,9 @@ export function useCommunicationCenterOperations({
   }
 
   async function sendDraftNow(draftName) {
-    if (!canSendDraftNowAction.value) return;
     operationError.value = "";
     try {
-      await sendDraftResource.submit({ draft_name: draftName });
+      await resources.sendDraftResource.submit({ draft_name: draftName });
       await reloadSnapshot();
     } catch (error) {
       operationError.value = isPermissionDeniedError(error)
@@ -85,10 +55,9 @@ export function useCommunicationCenterOperations({
 
   async function updateAssignmentContextStatus(status) {
     if (!String(status || "").trim()) return;
-    if (!canCloseAssignmentContext.value) return;
     operationError.value = "";
     try {
-      await auxMutationResource.submit({
+      await resources.auxMutationResource.submit({
         doctype: "AT Ownership Assignment",
         name: filters.referenceName,
         data: { status },
@@ -114,13 +83,14 @@ export function useCommunicationCenterOperations({
   }
 
   async function clearCallNoteContext() {
-    if (!canClearCallNoteContext.value) return;
     operationError.value = "";
     try {
-      await auxMutationResource.submit({
+      await resources.auxMutationResource.submit({
         doctype: "AT Call Note",
         name: filters.referenceName,
-        data: { next_follow_up_on: null },
+        data: {
+          next_follow_up_on: null,
+        },
       });
       await reloadSnapshot();
     } catch (error) {
@@ -131,13 +101,14 @@ export function useCommunicationCenterOperations({
   }
 
   async function completeReminderContext() {
-    if (!canCompleteReminderContext.value) return;
     operationError.value = "";
     try {
-      await auxMutationResource.submit({
+      await resources.auxMutationResource.submit({
         doctype: "AT Reminder",
         name: filters.referenceName,
-        data: { status: "Done" },
+        data: {
+          status: "Done",
+        },
       });
       await reloadSnapshot();
     } catch (error) {
@@ -148,13 +119,14 @@ export function useCommunicationCenterOperations({
   }
 
   async function cancelReminderContext() {
-    if (!canCancelReminderContext.value) return;
     operationError.value = "";
     try {
-      await auxMutationResource.submit({
+      await resources.auxMutationResource.submit({
         doctype: "AT Reminder",
         name: filters.referenceName,
-        data: { status: "Cancelled" },
+        data: {
+          status: "Cancelled",
+        },
       });
       await reloadSnapshot();
     } catch (error) {
@@ -164,103 +136,58 @@ export function useCommunicationCenterOperations({
     }
   }
 
-  function canRetryOutboxRow(row) {
-    return canRetryOutboxAction.value && ["Failed", "Dead"].includes(String(row?.status || ""));
-  }
-
-  function canSendDraftFromOutboxRow(row) {
-    return canSendDraftNowAction.value && row?.status !== "Sent" && Boolean(row?.draft);
-  }
-
-  function canSendDraftCard(draft) {
-    return canSendDraftNowAction.value && draft?.status !== "Sent";
-  }
-
-  function buildQuickMessagePayload({ form, openAfter }) {
-    return {
-      template: form.template || null,
-      channel: form.channel || null,
-      language: form.language || null,
-      customer: form.customer || null,
-      office_branch: branchStore.requestBranch || null,
-      recipient: form.recipient || null,
-      reference_doctype: form.reference_doctype || null,
-      reference_name: form.reference_name || null,
-      subject: form.subject || null,
-      body: form.body || null,
-      send_now: openAfter ? 1 : 0,
-    };
-  }
-
-  async function prepareQuickMessageDialog({ form }) {
-    if (filters.customer && !form.customer) form.customer = filters.customer;
-    if (filters.channel && !form.channel) form.channel = filters.channel;
-    if (filters.referenceDoctype && !form.reference_doctype) form.reference_doctype = filters.referenceDoctype;
-    if (filters.referenceName && !form.reference_name) form.reference_name = filters.referenceName;
-    if (!form.language) form.language = activeLocale.value === "tr" ? "tr" : "en";
-  }
-
-  async function prepareCallNoteDialog({ form }) {
-    if (filters.customer && !form.customer) form.customer = filters.customer;
-    if (filters.referenceDoctype === "AT Policy" && filters.referenceName && !form.policy) form.policy = filters.referenceName;
-    if (filters.referenceDoctype === "AT Claim" && filters.referenceName && !form.claim) form.claim = filters.referenceName;
-    if (!form.note_at) form.note_at = new Date().toISOString().slice(0, 16);
-  }
-
-  async function prepareReminderDialog({ form }) {
-    if (filters.customer && !form.customer) form.customer = filters.customer;
-    if (filters.referenceDoctype && !form.source_doctype) form.source_doctype = filters.referenceDoctype;
-    if (filters.referenceName && !form.source_name) form.source_name = filters.referenceName;
-    if (filters.referenceDoctype === "AT Policy" && filters.referenceName && !form.policy) form.policy = filters.referenceName;
-    if (filters.referenceDoctype === "AT Claim" && filters.referenceName && !form.claim) form.claim = filters.referenceName;
-    if (!form.remind_at) form.remind_at = new Date().toISOString().slice(0, 16);
-  }
-
-  const quickMessageDialogLabels = {
-    save: t("saveDraft"),
-    saveAndOpen: t("sendImmediately"),
-  };
-  const quickMessageSuccessHandlers = {
-    communication_snapshot: async () => {
-      await reloadSnapshot();
-    },
-  };
-  const callNoteSuccessHandlers = {
-    "call-notes-list": async () => {},
-  };
-  const reminderSuccessHandlers = {
-    "reminders-list": async () => {
-      await reloadSnapshot();
-    },
-  };
-  const segmentSuccessHandlers = {
-    "segments-list": async () => {},
-  };
-  const campaignSuccessHandlers = {
-    "campaigns-list": async () => {},
-  };
-
-  function returnToContext() {
-    if (!canReturnToContext.value) return;
-    if (safeReturnTo.value) {
-      router.push(safeReturnTo.value);
-      return;
+  async function loadSegmentPreview() {
+    if (!segmentPreviewSegment.value) return;
+    segmentPreviewLoading.value = true;
+    segmentPreviewError.value = "";
+    try {
+      const result = await resources.segmentPreviewResource.submit({
+        segment_name: segmentPreviewSegment.value,
+        limit: 20,
+      });
+      segmentPreviewPayload.value = result || null;
+    } catch (error) {
+      segmentPreviewPayload.value = null;
+      segmentPreviewError.value = isPermissionDeniedError(error)
+        ? t("permissionDeniedRead")
+        : error?.message || error?.exc || t("loadErrorTitle");
+    } finally {
+      segmentPreviewLoading.value = false;
     }
-    router.back();
+  }
+
+  async function runCampaignExecution() {
+    if (!campaignRunSelection.value) return;
+    campaignRunLoading.value = true;
+    campaignRunError.value = "";
+    try {
+      const result = await resources.campaignRunResource.submit({
+        campaign_name: campaignRunSelection.value,
+        limit: 200,
+      });
+      campaignRunResult.value = result || null;
+      await reloadSnapshot();
+    } catch (error) {
+      campaignRunResult.value = null;
+      campaignRunError.value = isPermissionDeniedError(error)
+        ? t("permissionDeniedAction")
+        : error?.message || error?.exc || t("loadErrorTitle");
+    } finally {
+      campaignRunLoading.value = false;
+    }
   }
 
   return {
     dispatching,
     operationError,
-    showSegmentDialog,
-    showCampaignDialog,
-    showCallNoteDialog,
-    showReminderDialog,
-    showQuickMessageDialog,
-    runCycleResource,
-    sendDraftResource,
-    retryOutboxResource,
-    auxMutationResource,
+    campaignRunSelection,
+    campaignRunLoading,
+    campaignRunError,
+    campaignRunResult,
+    segmentPreviewSegment,
+    segmentPreviewLoading,
+    segmentPreviewError,
+    segmentPreviewPayload,
     runDispatchCycle,
     retryOutbox,
     sendDraftNow,
@@ -270,19 +197,7 @@ export function useCommunicationCenterOperations({
     clearCallNoteContext,
     completeReminderContext,
     cancelReminderContext,
-    canRetryOutboxRow,
-    canSendDraftFromOutboxRow,
-    canSendDraftCard,
-    buildQuickMessagePayload,
-    prepareQuickMessageDialog,
-    prepareCallNoteDialog,
-    prepareReminderDialog,
-    quickMessageDialogLabels,
-    quickMessageSuccessHandlers,
-    callNoteSuccessHandlers,
-    reminderSuccessHandlers,
-    segmentSuccessHandlers,
-    campaignSuccessHandlers,
-    returnToContext,
+    loadSegmentPreview,
+    runCampaignExecution,
   };
 }

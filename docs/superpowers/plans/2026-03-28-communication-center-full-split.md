@@ -8,6 +8,8 @@
 
 **Tech Stack:** Vue 3 `<script setup>`, Pinia store, Frappe `createResource`, existing app-shell components, Vitest, Vite.
 
+**Status:** Completed
+
 ---
 
 ## Chunk 1: CommunicationCenter composable boundaries
@@ -38,7 +40,7 @@ Run: `npm run test:unit -- --run src/pages/CommunicationCenter.test.js`
 Run: `npm run build`
 Expected: both pass with no page behavior regressions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/CommunicationCenter.vue frontend/src/composables/communicationCenter
@@ -76,7 +78,7 @@ Run: `npm run test:unit -- --run src/pages/CommunicationCenter.test.js`
 Run: `npm run build`
 Expected: both pass with no UI regressions.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/pages/CommunicationCenter.vue frontend/src/components/communication-center
@@ -103,7 +105,7 @@ Run: `npm run test:unit -- --run src/pages/CommunicationCenter.test.js`
 Run: `npm run build`
 Expected: both pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add frontend/src/pages/CommunicationCenter.vue BUYUK_EKRAN_REFACTOR_TAKIP.md

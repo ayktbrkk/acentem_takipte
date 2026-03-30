@@ -1,152 +1,6 @@
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-
 import { getSourcePanelConfig } from "../../utils/sourcePanel";
-import { isPermissionDeniedError } from "./common";
 
-export function useCommunicationCenterActions({
-  auxMutationResource,
-  canCancelReminderContext,
-  canClearCallNoteContext,
-  canCloseAssignmentContext,
-  canCompleteReminderContext,
-  canRetryOutboxAction,
-  canRunDispatchCycle,
-  canSendDraftNowAction,
-  filters,
-  reloadSnapshot,
-  retryOutboxResource,
-  runCycleResource,
-  sendDraftResource,
-  t,
-}) {
-  const router = useRouter();
-  const dispatching = ref(false);
-  const operationError = ref("");
-
-  function notifyActionError(error) {
-    operationError.value = isPermissionDeniedError(error)
-      ? t("permissionDeniedAction")
-      : error?.messages?.join(" ") || error?.message || t("loadErrorTitle");
-  }
-
-  async function runDispatchCycle() {
-    if (!canRunDispatchCycle.value) return;
-    dispatching.value = true;
-    operationError.value = "";
-    try {
-      await runCycleResource.submit({ limit: filters.limit, include_failed: 1 });
-      await reloadSnapshot();
-    } catch (error) {
-      notifyActionError(error);
-    } finally {
-      dispatching.value = false;
-    }
-  }
-
-  async function retryOutbox(outboxName) {
-    if (!canRetryOutboxAction.value) return;
-    operationError.value = "";
-    try {
-      await retryOutboxResource.submit({ outbox_name: outboxName });
-      await reloadSnapshot();
-    } catch (error) {
-      notifyActionError(error);
-    }
-  }
-
-  async function sendDraftNow(draftName) {
-    if (!canSendDraftNowAction.value) return;
-    operationError.value = "";
-    try {
-      await sendDraftResource.submit({ draft_name: draftName });
-      await reloadSnapshot();
-    } catch (error) {
-      notifyActionError(error);
-    }
-  }
-
-  async function updateAssignmentContextStatus(status) {
-    if (!String(status || "").trim()) return;
-    if (!canCloseAssignmentContext.value) return;
-    operationError.value = "";
-    try {
-      await auxMutationResource.submit({
-        doctype: "AT Ownership Assignment",
-        name: filters.referenceName,
-        data: {
-          status,
-        },
-      });
-      await reloadSnapshot();
-    } catch (error) {
-      notifyActionError(error);
-    }
-  }
-
-  async function startAssignmentContext() {
-    await updateAssignmentContextStatus("In Progress");
-  }
-
-  async function blockAssignmentContext() {
-    await updateAssignmentContextStatus("Blocked");
-  }
-
-  async function closeAssignmentContext() {
-    await updateAssignmentContextStatus("Done");
-  }
-
-  async function clearCallNoteContext() {
-    if (!canClearCallNoteContext.value) return;
-    operationError.value = "";
-    try {
-      await auxMutationResource.submit({
-        doctype: "AT Call Note",
-        name: filters.referenceName,
-        data: {
-          next_follow_up_on: null,
-        },
-      });
-      await reloadSnapshot();
-    } catch (error) {
-      notifyActionError(error);
-    }
-  }
-
-  async function completeReminderContext() {
-    if (!canCompleteReminderContext.value) return;
-    operationError.value = "";
-    try {
-      await auxMutationResource.submit({
-        doctype: "AT Reminder",
-        name: filters.referenceName,
-        data: {
-          status: "Done",
-        },
-      });
-      await reloadSnapshot();
-    } catch (error) {
-      notifyActionError(error);
-    }
-  }
-
-  async function cancelReminderContext() {
-    if (!canCancelReminderContext.value) return;
-    operationError.value = "";
-    try {
-      await auxMutationResource.submit({
-        doctype: "AT Reminder",
-        name: filters.referenceName,
-        data: {
-          status: "Cancelled",
-        },
-      });
-      await reloadSnapshot();
-    } catch (error) {
-      notifyActionError(error);
-    }
-  }
-
+export function useCommunicationCenterActions({ router, canRetryOutboxAction, canSendDraftNowAction, referenceTypeLabel, t }) {
   function canRetryOutboxRow(row) {
     return canRetryOutboxAction.value && ["Failed", "Dead"].includes(String(row?.status || ""));
   }
@@ -179,24 +33,12 @@ export function useCommunicationCenterActions({
   }
 
   return {
-    blockAssignmentContext,
-    canOpenPanel,
     canRetryOutboxRow,
-    canSendDraftCard,
     canSendDraftFromOutboxRow,
-    cancelReminderContext,
-    clearCallNoteContext,
-    closeAssignmentContext,
-    completeReminderContext,
-    dispatching,
-    openPanel,
-    operationError,
+    canSendDraftCard,
+    canOpenPanel,
     panelActionLabel,
-    retryOutbox,
-    runDispatchCycle,
-    sendDraftNow,
-    sourcePanelConfig,
-    startAssignmentContext,
-    updateAssignmentContextStatus,
+    openPanel,
+    referenceTypeLabel,
   };
 }

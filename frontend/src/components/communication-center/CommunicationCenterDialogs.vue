@@ -1,6 +1,6 @@
 <template>
   <QuickCreateManagedDialog
-    v-model="showSegmentDialogModel"
+    v-model="segmentDialogModel"
     config-key="segment"
     :locale="activeLocale"
     :options-map="communicationQuickOptionsMap"
@@ -8,11 +8,11 @@
     :title-override="t('quickSegment')"
     :subtitle-override="t('quickSegmentSubtitle')"
     :show-save-and-open="false"
-    :success-handlers="segmentSuccessHandlers"
+    :success-handlers="quickDialogs.segmentSuccessHandlers"
   />
 
   <QuickCreateManagedDialog
-    v-model="showCampaignDialogModel"
+    v-model="campaignDialogModel"
     config-key="campaign"
     :locale="activeLocale"
     :options-map="communicationQuickOptionsMap"
@@ -20,11 +20,11 @@
     :title-override="t('quickCampaign')"
     :subtitle-override="t('quickCampaignSubtitle')"
     :show-save-and-open="false"
-    :success-handlers="campaignSuccessHandlers"
+    :success-handlers="quickDialogs.campaignSuccessHandlers"
   />
 
   <Dialog
-    v-model="showCampaignRunDialogModel"
+    v-model="campaignRunDialogModel"
     :options="{
       title: t('campaignRunTitle'),
       size: '3xl',
@@ -33,8 +33,8 @@
     <template #body-content>
       <div class="space-y-4">
         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_120px]">
-          <select v-model="campaignRunSelectionModel" class="input" data-testid="campaign-run-select">
-            <option value="">{{ t("selectCampaign") }}</option>
+          <select v-model="campaignRunSelection" class="input" data-testid="campaign-run-select">
+            <option value="">{{ t('selectCampaign') }}</option>
             <option v-for="option in communicationQuickOptionsMap.campaigns" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
@@ -44,9 +44,9 @@
             size="sm"
             :disabled="!campaignRunSelection || campaignRunLoading"
             data-testid="campaign-run-submit"
-            @click="runCampaignExecution"
+            @click="runtime.runCampaignExecution"
           >
-            {{ campaignRunLoading ? t("dispatching") : t("runCampaign") }}
+            {{ campaignRunLoading ? t('dispatching') : t('runCampaign') }}
           </ActionButton>
         </div>
 
@@ -60,15 +60,15 @@
         >
           <div class="grid gap-3 sm:grid-cols-3">
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("createdDrafts") }}</p>
+              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('createdDrafts') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.created || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("skippedRows") }}</p>
+              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('skippedRows') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.skipped || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("matchedCustomers") }}</p>
+              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('matchedCustomers') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.matched_customers || 0 }}</p>
             </div>
           </div>
@@ -78,7 +78,7 @@
   </Dialog>
 
   <Dialog
-    v-model="showSegmentPreviewDialogModel"
+    v-model="segmentPreviewDialogModel"
     :options="{
       title: t('segmentPreviewTitle'),
       size: '4xl',
@@ -87,8 +87,8 @@
     <template #body-content>
       <div class="space-y-4">
         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_140px]">
-          <select v-model="segmentPreviewSegmentModel" class="input" data-testid="segment-preview-select">
-            <option value="">{{ t("selectSegment") }}</option>
+          <select v-model="segmentPreviewSegment" class="input" data-testid="segment-preview-select">
+            <option value="">{{ t('selectSegment') }}</option>
             <option v-for="option in communicationQuickOptionsMap.segments" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
@@ -98,9 +98,9 @@
             size="sm"
             :disabled="!segmentPreviewSegment || segmentPreviewLoading"
             data-testid="segment-preview-submit"
-            @click="loadSegmentPreview"
+            @click="runtime.loadSegmentPreview"
           >
-            {{ segmentPreviewLoading ? t("loading") : t("previewSegment") }}
+            {{ segmentPreviewLoading ? t('loading') : t('previewSegment') }}
           </ActionButton>
         </div>
 
@@ -114,16 +114,16 @@
         >
           <div class="grid gap-3 sm:grid-cols-3">
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("matchedCustomers") }}</p>
+              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('matchedCustomers') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.matched_count || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("previewRows") }}</p>
+              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('previewRows') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.preview_count || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("hasMore") }}</p>
-              <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.has_more ? t("yes") : t("no") }}</p>
+              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('hasMore') }}</p>
+              <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.has_more ? t('yes') : t('no') }}</p>
             </div>
           </div>
         </article>
@@ -132,10 +132,10 @@
           <table class="at-table">
             <thead>
               <tr class="at-table-head-row">
-                <th class="at-table-head-cell">{{ t("customer") }}</th>
-                <th class="at-table-head-cell">{{ t("policies") }}</th>
-                <th class="at-table-head-cell">{{ t("overdueInstallments") }}</th>
-                <th class="at-table-head-cell">{{ t("renewalWindow") }}</th>
+                <th class="at-table-head-cell">{{ t('customer') }}</th>
+                <th class="at-table-head-cell">{{ t('policies') }}</th>
+                <th class="at-table-head-cell">{{ t('overdueInstallments') }}</th>
+                <th class="at-table-head-cell">{{ t('renewalWindow') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -148,10 +148,10 @@
                   <span class="text-slate-700">{{ row.active_policy_count || 0 }}</span>
                 </DataTableCell>
                 <DataTableCell>
-                  <span class="text-slate-700">{{ row.has_overdue_installment ? t("yes") : t("no") }}</span>
+                  <span class="text-slate-700">{{ row.has_overdue_installment ? t('yes') : t('no') }}</span>
                 </DataTableCell>
                 <DataTableCell>
-                  <span class="text-slate-700">{{ row.in_renewal_window ? t("yes") : t("no") }}</span>
+                  <span class="text-slate-700">{{ row.in_renewal_window ? t('yes') : t('no') }}</span>
                 </DataTableCell>
               </tr>
             </tbody>
@@ -162,7 +162,7 @@
   </Dialog>
 
   <QuickCreateManagedDialog
-    v-model="showCallNoteDialogModel"
+    v-model="callNoteDialogModel"
     config-key="call_note"
     :locale="activeLocale"
     :options-map="communicationQuickOptionsMap"
@@ -170,12 +170,12 @@
     :title-override="t('quickCallNote')"
     :subtitle-override="t('quickCallNoteSubtitle')"
     :show-save-and-open="false"
-    :before-open="prepareCallNoteDialog"
-    :success-handlers="callNoteSuccessHandlers"
+    :before-open="quickDialogs.prepareCallNoteDialog"
+    :success-handlers="quickDialogs.callNoteSuccessHandlers"
   />
 
   <QuickCreateManagedDialog
-    v-model="showReminderDialogModel"
+    v-model="reminderDialogModel"
     config-key="reminder"
     :locale="activeLocale"
     :options-map="communicationQuickOptionsMap"
@@ -183,13 +183,13 @@
     :title-override="t('quickReminder')"
     :subtitle-override="t('quickReminderSubtitle')"
     :show-save-and-open="false"
-    :before-open="prepareReminderDialog"
-    :success-handlers="reminderSuccessHandlers"
+    :before-open="quickDialogs.prepareReminderDialog"
+    :success-handlers="quickDialogs.reminderSuccessHandlers"
   />
 
   <QuickCreateManagedDialog
     v-if="canCreateQuickMessage"
-    v-model="showQuickMessageDialogModel"
+    v-model="quickMessageDialogModel"
     config-key="communication_message"
     :locale="activeLocale"
     :options-map="communicationQuickOptionsMap"
@@ -198,14 +198,14 @@
     :subtitle-override="t('quickMessageSubtitle')"
     :labels="quickMessageDialogLabels"
     :show-save-and-open="canSendDraftNowAction"
-    :before-open="prepareQuickMessageDialog"
-    :build-payload="buildQuickMessagePayload"
-    :success-handlers="quickMessageSuccessHandlers"
+    :before-open="quickDialogs.prepareQuickMessageDialog"
+    :build-payload="quickDialogs.buildQuickMessagePayload"
+    :success-handlers="quickDialogs.quickMessageSuccessHandlers"
   />
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, unref } from "vue";
 import { Dialog } from "frappe-ui";
 
 import ActionButton from "../app-shell/ActionButton.vue";
@@ -215,155 +215,19 @@ import QuickCreateManagedDialog from "../app-shell/QuickCreateManagedDialog.vue"
 const props = defineProps({
   activeLocale: {
     type: String,
-    default: "en",
-  },
-  buildQuickMessagePayload: {
-    type: Function,
     required: true,
   },
-  canCreateQuickMessage: {
-    type: Boolean,
-    default: false,
-  },
-  canSendDraftNowAction: {
-    type: Boolean,
-    default: false,
-  },
-  campaignRunError: {
-    type: String,
-    default: "",
-  },
-  campaignRunLoading: {
-    type: Boolean,
-    default: false,
-  },
-  campaignRunResult: {
+  quickDialogs: {
     type: Object,
-    default: null,
-  },
-  campaignRunSelection: {
-    type: String,
-    default: "",
-  },
-  campaignSuccessHandlers: {
-    type: Object,
-    default: () => ({}),
-  },
-  callNoteSuccessHandlers: {
-    type: Object,
-    default: () => ({}),
-  },
-  communicationQuickOptionsMap: {
-    type: Object,
-    default: () => ({}),
-  },
-  loadSegmentPreview: {
-    type: Function,
     required: true,
   },
-  prepareCallNoteDialog: {
-    type: Function,
+  runtime: {
+    type: Object,
     required: true,
   },
-  prepareQuickMessageDialog: {
-    type: Function,
+  state: {
+    type: Object,
     required: true,
-  },
-  prepareReminderDialog: {
-    type: Function,
-    required: true,
-  },
-  quickCallNoteEyebrow: {
-    type: String,
-    default: "",
-  },
-  quickCampaignEyebrow: {
-    type: String,
-    default: "",
-  },
-  quickMessageDialogLabels: {
-    type: Object,
-    default: () => ({}),
-  },
-  quickMessageEyebrow: {
-    type: String,
-    default: "",
-  },
-  quickMessageSuccessHandlers: {
-    type: Object,
-    default: () => ({}),
-  },
-  quickReminderEyebrow: {
-    type: String,
-    default: "",
-  },
-  quickSegmentEyebrow: {
-    type: String,
-    default: "",
-  },
-  reminderSuccessHandlers: {
-    type: Object,
-    default: () => ({}),
-  },
-  runCampaignExecution: {
-    type: Function,
-    required: true,
-  },
-  segmentPreviewError: {
-    type: String,
-    default: "",
-  },
-  segmentPreviewLoading: {
-    type: Boolean,
-    default: false,
-  },
-  segmentPreviewPayload: {
-    type: Object,
-    default: null,
-  },
-  segmentPreviewRows: {
-    type: Array,
-    default: () => [],
-  },
-  segmentPreviewSegment: {
-    type: String,
-    default: "",
-  },
-  segmentPreviewSummary: {
-    type: Object,
-    default: null,
-  },
-  segmentSuccessHandlers: {
-    type: Object,
-    default: () => ({}),
-  },
-  showCallNoteDialog: {
-    type: Boolean,
-    default: false,
-  },
-  showCampaignDialog: {
-    type: Boolean,
-    default: false,
-  },
-  showCampaignRunDialog: {
-    type: Boolean,
-    default: false,
-  },
-  showQuickMessageDialog: {
-    type: Boolean,
-    default: false,
-  },
-  showReminderDialog: {
-    type: Boolean,
-    default: false,
-  },
-  showSegmentDialog: {
-    type: Boolean,
-    default: false,
-  },
-  showSegmentPreviewDialog: {
-    type: Boolean,
-    default: false,
   },
   t: {
     type: Function,
@@ -371,52 +235,99 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits([
-  "update:campaignRunSelection",
-  "update:showCallNoteDialog",
-  "update:showCampaignDialog",
-  "update:showCampaignRunDialog",
-  "update:showQuickMessageDialog",
-  "update:showReminderDialog",
-  "update:showSegmentDialog",
-  "update:showSegmentPreviewDialog",
-  "update:segmentPreviewSegment",
-]);
+const communicationQuickOptionsMap = computed(() => unref(props.state.communicationQuickOptionsMap));
+const quickSegmentEyebrow = computed(() => unref(props.state.quickSegmentEyebrow));
+const quickCampaignEyebrow = computed(() => unref(props.state.quickCampaignEyebrow));
+const quickCallNoteEyebrow = computed(() => unref(props.state.quickCallNoteEyebrow));
+const quickReminderEyebrow = computed(() => unref(props.state.quickReminderEyebrow));
+const quickMessageEyebrow = computed(() => unref(props.state.quickMessageEyebrow));
+const quickMessageDialogLabels = computed(() => unref(props.state.quickMessageDialogLabels));
+const canCreateQuickMessage = computed(() => unref(props.state.canCreateQuickMessage));
+const canSendDraftNowAction = computed(() => unref(props.state.canSendDraftNowAction));
+const campaignRunSelection = computed({
+  get() {
+    return props.runtime.campaignRunSelection.value;
+  },
+  set(value) {
+    props.runtime.campaignRunSelection.value = value;
+  },
+});
+const campaignRunLoading = computed(() => unref(props.runtime.campaignRunLoading));
+const campaignRunError = computed(() => unref(props.runtime.campaignRunError));
+const campaignRunResult = computed(() => unref(props.runtime.campaignRunResult));
+const segmentPreviewSegment = computed({
+  get() {
+    return props.runtime.segmentPreviewSegment.value;
+  },
+  set(value) {
+    props.runtime.segmentPreviewSegment.value = value;
+  },
+});
+const segmentPreviewLoading = computed(() => unref(props.runtime.segmentPreviewLoading));
+const segmentPreviewError = computed(() => unref(props.runtime.segmentPreviewError));
+const segmentPreviewSummary = computed(() => unref(props.state.segmentPreviewSummary));
+const segmentPreviewRows = computed(() => unref(props.state.segmentPreviewRows));
 
-const campaignRunSelectionModel = computed({
-  get: () => props.campaignRunSelection,
-  set: (value) => emit("update:campaignRunSelection", value),
+const segmentDialogModel = computed({
+  get() {
+    return props.runtime.showSegmentDialog.value;
+  },
+  set(value) {
+    props.runtime.showSegmentDialog.value = value;
+  },
 });
-const segmentPreviewSegmentModel = computed({
-  get: () => props.segmentPreviewSegment,
-  set: (value) => emit("update:segmentPreviewSegment", value),
+
+const campaignDialogModel = computed({
+  get() {
+    return props.runtime.showCampaignDialog.value;
+  },
+  set(value) {
+    props.runtime.showCampaignDialog.value = value;
+  },
 });
-const showCallNoteDialogModel = computed({
-  get: () => props.showCallNoteDialog,
-  set: (value) => emit("update:showCallNoteDialog", value),
+
+const campaignRunDialogModel = computed({
+  get() {
+    return props.runtime.showCampaignRunDialog.value;
+  },
+  set(value) {
+    props.runtime.showCampaignRunDialog.value = value;
+  },
 });
-const showCampaignDialogModel = computed({
-  get: () => props.showCampaignDialog,
-  set: (value) => emit("update:showCampaignDialog", value),
+
+const segmentPreviewDialogModel = computed({
+  get() {
+    return props.runtime.showSegmentPreviewDialog.value;
+  },
+  set(value) {
+    props.runtime.showSegmentPreviewDialog.value = value;
+  },
 });
-const showCampaignRunDialogModel = computed({
-  get: () => props.showCampaignRunDialog,
-  set: (value) => emit("update:showCampaignRunDialog", value),
+
+const callNoteDialogModel = computed({
+  get() {
+    return props.runtime.showCallNoteDialog.value;
+  },
+  set(value) {
+    props.runtime.showCallNoteDialog.value = value;
+  },
 });
-const showQuickMessageDialogModel = computed({
-  get: () => props.showQuickMessageDialog,
-  set: (value) => emit("update:showQuickMessageDialog", value),
+
+const reminderDialogModel = computed({
+  get() {
+    return props.runtime.showReminderDialog.value;
+  },
+  set(value) {
+    props.runtime.showReminderDialog.value = value;
+  },
 });
-const showReminderDialogModel = computed({
-  get: () => props.showReminderDialog,
-  set: (value) => emit("update:showReminderDialog", value),
-});
-const showSegmentDialogModel = computed({
-  get: () => props.showSegmentDialog,
-  set: (value) => emit("update:showSegmentDialog", value),
-});
-const showSegmentPreviewDialogModel = computed({
-  get: () => props.showSegmentPreviewDialog,
-  set: (value) => emit("update:showSegmentPreviewDialog", value),
+
+const quickMessageDialogModel = computed({
+  get() {
+    return props.runtime.showQuickMessageDialog.value;
+  },
+  set(value) {
+    props.runtime.showQuickMessageDialog.value = value;
+  },
 });
 </script>

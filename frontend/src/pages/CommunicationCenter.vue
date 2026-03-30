@@ -3,169 +3,56 @@
     :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
-    :record-count="outboxItems.length + draftItems.length"
+    :record-count="recordCount"
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <CommunicationCenterActionBar
-        :can-create-quick-message="canCreateQuickMessage"
-        :can-return-to-context="canReturnToContext"
-        :can-run-dispatch-cycle="canRunDispatchCycle"
-        :dispatching="dispatching"
-        :return-to-label="returnToLabel"
-        :snapshot-loading="snapshotLoading"
-        :t="t"
-        @dispatch="runDispatchCycle"
-        @export-pdf="downloadCommunicationExport('pdf')"
-        @export-xlsx="downloadCommunicationExport('xlsx')"
-        @launch-call-note="showCallNoteDialog = true"
-        @launch-campaign="showCampaignDialog = true"
-        @launch-campaign-run="showCampaignRunDialog = true"
-        @launch-quick-message="showQuickMessageDialog = true"
-        @launch-reminder="showReminderDialog = true"
-        @launch-segment="showSegmentDialog = true"
-        @launch-segment-preview="showSegmentPreviewDialog = true"
-        @refresh="reloadSnapshot"
-        @return-context="returnToContext"
-      />
+      <CommunicationCenterActionBar :state="state" :runtime="runtime" :t="t" />
     </template>
 
-    <CommunicationCenterFilterSection
-      :active-filter-count="activeFilterCount"
-      :can-delete-preset="canDeletePreset"
-      :channel-options="channelOptions"
-      :filters="communicationFilters"
-      :has-context-filters="hasContextFilters"
-      :on-apply-filters="applySnapshotFilters"
-      :on-clear-context-filters="clearContextFilters"
-      :on-preset-change="onPresetChange"
-      :on-preset-delete="deletePreset"
-      :on-preset-save="savePreset"
-      :on-reset-filters="resetSnapshotFilters"
-      :preset-key="presetKey"
-      :preset-options="presetOptions"
-      :reference-doctype-options="referenceDoctypeOptions"
-      :status-options="statusOptions"
+    <CommunicationCenterOverview :filters="filters" :state="state" :runtime="runtime" :t="t" />
+
+    <CommunicationCenterAlerts
+      :snapshot-error-message="state.snapshotErrorMessage"
+      :operation-error="runtime.operationError"
       :t="t"
     />
 
-    <CommunicationCenterContextBanner
-      :can-block-assignment-context="canBlockAssignmentContext"
-      :can-cancel-reminder-context="canCancelReminderContext"
-      :can-clear-call-note-context="canClearCallNoteContext"
-      :can-close-assignment-context="canCloseAssignmentContext"
-      :can-complete-reminder-context="canCompleteReminderContext"
-      :can-return-to-context="canReturnToContext"
-      :can-start-assignment-context="canStartAssignmentContext"
-      :channel-status-context-label="channelStatusContextLabel"
-      :customer-context-label="customerContextLabel"
-      :filters="communicationFilters"
-      :has-context-filters="hasContextFilters"
-      :on-block-assignment-context="blockAssignmentContext"
-      :on-cancel-reminder-context="cancelReminderContext"
-      :on-clear-call-note-context="clearCallNoteContext"
-      :on-clear-context-filters="clearContextFilters"
-      :on-close-assignment-context="closeAssignmentContext"
-      :on-complete-reminder-context="completeReminderContext"
-      :on-return-to-context="returnToContext"
-      :on-start-assignment-context="startAssignmentContext"
-      :reference-context-label="referenceContextLabel"
-      :return-to-label="returnToLabel"
-      :t="t"
-    />
-
-    <template #metrics>
-      <CommunicationCenterMetricsPanel :status-cards="statusCards" />
-    </template>
-
-    <article v-if="snapshotErrorMessage" class="qc-error-banner">
-      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-      <p class="qc-error-banner__text mt-1">{{ snapshotErrorMessage }}</p>
-    </article>
-
-    <article v-if="operationError" class="qc-error-banner">
-      <p class="qc-error-banner__text font-semibold">{{ t("actions") }}</p>
-      <p class="qc-error-banner__text mt-1">{{ operationError }}</p>
-    </article>
-
-    <CommunicationCenterOutboxSection
-      :can-open-panel="canOpenPanel"
-      :can-retry-outbox-row="canRetryOutboxRow"
-      :can-send-draft-card="canSendDraftCard"
-      :can-send-draft-from-outbox-row="canSendDraftFromOutboxRow"
-      :draft-items="draftItems"
-      :on-open-panel="openPanel"
-      :on-retry-outbox="retryOutbox"
-      :on-send-draft-now="sendDraftNow"
-      :outbox-items="outboxItems"
-      :panel-action-label="panelActionLabel"
-      :reference-type-label="referenceTypeLabel"
-      :snapshot-loading="snapshotLoading"
-      :t="t"
-    />
+    <CommunicationCenterQueueSections :state="state" :runtime="runtime" :actions="actions" :t="t" />
 
     <CommunicationCenterDialogs
-      v-model:campaign-run-selection="campaignRunSelection"
-      v-model:segment-preview-segment="segmentPreviewSegment"
-      v-model:show-call-note-dialog="showCallNoteDialog"
-      v-model:show-campaign-dialog="showCampaignDialog"
-      v-model:show-campaign-run-dialog="showCampaignRunDialog"
-      v-model:show-quick-message-dialog="showQuickMessageDialog"
-      v-model:show-reminder-dialog="showReminderDialog"
-      v-model:show-segment-dialog="showSegmentDialog"
-      v-model:show-segment-preview-dialog="showSegmentPreviewDialog"
       :active-locale="activeLocale"
-      :build-quick-message-payload="buildQuickMessagePayload"
-      :can-create-quick-message="canCreateQuickMessage"
-      :can-send-draft-now-action="canSendDraftNowAction"
-      :campaign-run-error="campaignRunError"
-      :campaign-run-loading="campaignRunLoading"
-      :campaign-run-result="campaignRunResult"
-      :campaign-success-handlers="campaignSuccessHandlers"
-      :call-note-success-handlers="callNoteSuccessHandlers"
-      :communication-quick-options-map="communicationQuickOptionsMap"
-      :load-segment-preview="loadSegmentPreview"
-      :prepare-call-note-dialog="prepareCallNoteDialog"
-      :prepare-quick-message-dialog="prepareQuickMessageDialog"
-      :prepare-reminder-dialog="prepareReminderDialog"
-      :quick-call-note-eyebrow="quickCallNoteEyebrow"
-      :quick-campaign-eyebrow="quickCampaignEyebrow"
-      :quick-message-dialog-labels="quickMessageDialogLabels"
-      :quick-message-eyebrow="quickMessageEyebrow"
-      :quick-message-success-handlers="quickMessageSuccessHandlers"
-      :quick-reminder-eyebrow="quickReminderEyebrow"
-      :quick-segment-eyebrow="quickSegmentEyebrow"
-      :reminder-success-handlers="reminderSuccessHandlers"
-      :run-campaign-execution="runCampaignExecution"
-      :segment-preview-error="segmentPreviewError"
-      :segment-preview-loading="segmentPreviewLoading"
-      :segment-preview-rows="segmentPreviewRows"
-      :segment-preview-summary="segmentPreviewSummary"
-      :segment-success-handlers="segmentSuccessHandlers"
+      :quick-dialogs="quickDialogs"
+      :runtime="runtime"
+      :state="state"
       :t="t"
     />
   </WorkbenchPageLayout>
 </template>
 
 <script setup>
-import { computed, ref, unref } from "vue";
+import { computed, unref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
+import { useCommunicationStore } from "../stores/communication";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import CommunicationCenterActionBar from "../components/communication-center/CommunicationCenterActionBar.vue";
-import CommunicationCenterContextBanner from "../components/communication-center/CommunicationCenterContextBanner.vue";
+import CommunicationCenterAlerts from "../components/communication-center/CommunicationCenterAlerts.vue";
 import CommunicationCenterDialogs from "../components/communication-center/CommunicationCenterDialogs.vue";
-import CommunicationCenterFilterSection from "../components/communication-center/CommunicationCenterFilterSection.vue";
-import CommunicationCenterMetricsPanel from "../components/communication-center/CommunicationCenterMetricsPanel.vue";
-import CommunicationCenterOutboxSection from "../components/communication-center/CommunicationCenterOutboxSection.vue";
-import { useCommunicationCenterBootstrap } from "../composables/communicationCenter/bootstrap";
-import { channelLabel, referenceTypeLabel, statusLabel } from "../composables/communicationCenter/common";
+import CommunicationCenterOverview from "../components/communication-center/CommunicationCenterOverview.vue";
+import CommunicationCenterQueueSections from "../components/communication-center/CommunicationCenterQueueSections.vue";
 import { useCommunicationCenterRuntime } from "../composables/communicationCenter/runtime";
 import { useCommunicationCenterState } from "../composables/communicationCenter/state";
 import { useCommunicationCenterActions } from "../composables/communicationCenter/actions";
 import { useCommunicationCenterQuickDialogs } from "../composables/communicationCenter/quickDialogs";
 
+const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
+const branchStore = useBranchStore();
+const communicationStore = useCommunicationStore();
 
 const copy = {
   tr: {
@@ -180,57 +67,39 @@ const copy = {
     dispatching: "Çalışıyor...",
     runCampaign: "Kampanyayı Çalıştır",
     campaignRunTitle: "Kampanya Çalıştır",
-    selectCampaign: "Kampanya seçin",
-    previewSegment: "Segment Önizleme",
-    segmentPreviewTitle: "Segment Üye Önizleme",
-    selectSegment: "Segment seçin",
+    segmentPreviewTitle: "Segment Önizleme",
     quickSegment: "Segment",
-    quickSegmentSubtitle: "Hedef müşteri segmenti oluştur",
     quickCampaign: "Kampanya",
-    quickCampaignSubtitle: "Segmente bağlı kampanya oluştur",
     quickCallNote: "Arama Notu",
-    quickCallNoteSubtitle: "Telefon görüşmesini not olarak kaydet",
-    quickReminder: "Hatırlatıcı",
-    quickReminderSubtitle: "Müşteri veya kayıt için zaman bazlı hatırlatıcı ekle",
-    startAssignmentContext: "Atamayı İşleme Al",
-    blockAssignmentContext: "Atamayı Bloke Et",
-    closeAssignmentContext: "Atamayı Kapat",
-    clearCallFollowUpContext: "Arama Takibini Temizle",
-    completeReminderContext: "Hatırlatıcıyı Tamamla",
-    cancelReminderContext: "İptal",
-    quickMessage: "Hızlı İletişim",
-    quickMessageSubtitle: "Taslak kaydet veya seçili kanal ile hemen gönder",
-    saveDraft: "Taslak Kaydet",
-    sendImmediately: "Hemen Gönder",
+    quickReminder: "Hatırlatma",
+    quickMessage: "Hızlı Mesaj",
+    quickSegmentSubtitle: "Yeni segment tanımı oluştur",
+    quickCampaignSubtitle: "Yeni kampanya tanımı oluştur",
+    quickCallNoteSubtitle: "Arama sonrası not kaydı oluştur",
+    quickReminderSubtitle: "Hatırlatma kaydı oluştur",
+    quickMessageSubtitle: "Hızlı mesaj kaydı oluştur",
     filtersTitle: "Filtreler",
-    advancedFilters: "Gelişmiş Filtreler",
-    hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
     activeFilters: "aktif filtre",
-    presetLabel: "Filtre Şablonu",
-    presetDefault: "Standart",
+    advancedFilters: "Gelişmiş filtreler",
+    hideAdvancedFilters: "Gelişmiş filtreleri gizle",
+    presetLabel: "Hazır ayar",
     savePreset: "Kaydet",
     deletePreset: "Sil",
-    savePresetPrompt: "Filtre şablonu adı",
-    deletePresetConfirm: "Seçili özel filtre şablonu silinsin mi?",
     applyFilters: "Uygula",
-    clearFilters: "Filtreleri Temizle",
-    customerFilter: "Müşteri (AT Customer)",
-    customerContext: "Müşteri Filtresi",
-    clearCustomer: "Müşteri Filtresini Temizle",
-    referenceContext: "Kayıt Bağlamı",
-    clearContext: "Bağlam Filtrelerini Temizle",
+    clearFilters: "Temizle",
+    customerFilter: "Müşteri",
     allStatuses: "Tüm durumlar",
     allChannels: "Tüm kanallar",
-    allReferenceTypes: "Tüm kayıt tipleri",
+    allReferenceTypes: "Tüm kayıt türleri",
     referenceNameFilter: "Kayıt adı / ID",
     outboxTitle: "Gönderim Kuyruğu",
     draftTitle: "Bildirim Taslakları",
     loading: "Yükleniyor...",
-    loadErrorTitle: "İletişim Verileri Yüklenemedi",
-    permissionDeniedRead: "İletişim verilerini görmek için yetkiniz yok.",
-    permissionDeniedAction: "Bu iletişim işlemini yapmaya yetkiniz yok.",
+    loadErrorTitle: "İletişim Verisi Yüklenemedi",
+    permissionDeniedRead: "İletişim verilerini görüntüleme izniniz yok.",
+    permissionDeniedAction: "Bu iletişim işlemini yapma izniniz yok.",
     emptyOutbox: "Gönderim kuyruğu kaydı bulunamadı.",
-    emptyOutboxTitle: "Kuyruk Kaydı Yok",
+    emptyOutboxTitle: "Gönderim Kaydı Yok",
     emptyDrafts: "Taslak kaydı bulunamadı.",
     emptyDraftsTitle: "Taslak Kaydı Yok",
     recipient: "Alıcı",
@@ -239,26 +108,26 @@ const copy = {
     recordType: "Kayıt Türü",
     attempts: "Deneme",
     nextRetry: "Sonraki Deneme",
-    actions: "Aksiyon",
+    actions: "Aksiyonlar",
     error: "Hata",
     retry: "Tekrar Dene",
-    sendNow: "Hemen Gönder",
+    sendNow: "Şimdi Gönder",
     openRef: "Kaydı Aç",
-    queued: "Kuyrukta",
+    queued: "Sırada",
     processing: "İşleniyor",
     sent: "Gönderildi",
     failed: "Başarısız",
-    dead: "Kalıcı Hata",
+    dead: "Ölü",
     sms: "SMS",
     email: "E-posta",
     whatsapp: "WhatsApp",
     openPolicyPanel: "Poliçeyi Aç",
     openCustomerPanel: "Müşteriyi Aç",
-    openOffersPanel: "Teklif Panosu",
-    openClaimsPanel: "Hasar Panosu",
-    openPaymentsPanel: "Ödeme Panosu",
-    openRenewalsPanel: "Yenileme Panosu",
-    openReconciliationPanel: "Mutabakat Panosu",
+    openOffersPanel: "Teklifler",
+    openClaimsPanel: "Hasarlar",
+    openPaymentsPanel: "Ödemeler",
+    openRenewalsPanel: "Yenilemeler",
+    openReconciliationPanel: "Mutabakat",
     openCommunicationPanel: "İletişim Kaydı",
     openMasterDataPanel: "Ana Veri Kaydı",
     referenceLead: "Lead",
@@ -272,20 +141,29 @@ const copy = {
     referenceReconciliationItem: "Mutabakat",
     matchedCustomers: "Eşleşen Müşteriler",
     createdDrafts: "Üretilen Taslaklar",
-    skippedRows: "Atlanan Kayıtlar",
+    skippedRows: "Atlanan Satır",
     previewRows: "Önizleme Satırı",
-    hasMore: "Devamı Var",
+    hasMore: "Daha Fazla",
     yes: "Evet",
     no: "Hayır",
-    policies: "Poliçe",
+    policies: "Poliçeler",
     overdueInstallments: "Geciken Taksit",
     renewalWindow: "Yenileme Penceresi",
+    customerContext: "Müşteri bağlamı",
+    referenceContext: "Referans bağlamı",
+    startAssignmentContext: "Atamayı İşleme Al",
+    blockAssignmentContext: "Atamayı Bloke Et",
+    closeAssignmentContext: "Atamayı Kapat",
+    clearCallFollowUpContext: "Arama Takibini Temizle",
+    completeReminderContext: "Hatırlatıcıyı Tamamla",
+    cancelReminderContext: "İptal",
+    clearContext: "Bağlamı Temizle",
   },
   en: {
     breadcrumb: "Control Center → Communication",
     recordCount: "records",
     title: "Communication Center",
-    subtitle: "Notification queue, dispatch and retry operations",
+    subtitle: "Notification queue, distribution and retry operations",
     refresh: "Refresh",
     exportXlsx: "Excel",
     exportPdf: "PDF",
@@ -293,45 +171,27 @@ const copy = {
     dispatching: "Running...",
     runCampaign: "Run Campaign",
     campaignRunTitle: "Run Campaign",
-    selectCampaign: "Select campaign",
-    previewSegment: "Preview Segment",
-    segmentPreviewTitle: "Segment Member Preview",
-    selectSegment: "Select segment",
+    segmentPreviewTitle: "Segment Preview",
     quickSegment: "Segment",
-    quickSegmentSubtitle: "Create a target customer segment",
     quickCampaign: "Campaign",
-    quickCampaignSubtitle: "Create a segment-based campaign",
     quickCallNote: "Call Note",
-    quickCallNoteSubtitle: "Log a phone conversation as an interaction note",
     quickReminder: "Reminder",
-    quickReminderSubtitle: "Create a time-based reminder for the current context",
-    startAssignmentContext: "Start Assignment",
-    blockAssignmentContext: "Block Assignment",
-    closeAssignmentContext: "Close Assignment",
-    clearCallFollowUpContext: "Clear Call Follow-up",
-    completeReminderContext: "Complete Reminder",
-    cancelReminderContext: "Cancel Reminder",
     quickMessage: "Quick Message",
-    quickMessageSubtitle: "Save as draft or send immediately",
-    saveDraft: "Save Draft",
-    sendImmediately: "Send Now",
+    quickSegmentSubtitle: "Create a new segment definition",
+    quickCampaignSubtitle: "Create a new campaign definition",
+    quickCallNoteSubtitle: "Create a call follow-up note",
+    quickReminderSubtitle: "Create a reminder record",
+    quickMessageSubtitle: "Create a quick message record",
     filtersTitle: "Filters",
-    advancedFilters: "Advanced Filters",
-    hideAdvancedFilters: "Hide Advanced Filters",
     activeFilters: "active filters",
-    presetLabel: "Filter Preset",
-    presetDefault: "Standard",
+    advancedFilters: "Advanced filters",
+    hideAdvancedFilters: "Hide advanced filters",
+    presetLabel: "Preset",
     savePreset: "Save",
     deletePreset: "Delete",
-    savePresetPrompt: "Filter preset name",
-    deletePresetConfirm: "Delete selected custom filter preset?",
     applyFilters: "Apply",
-    clearFilters: "Clear Filters",
-    customerFilter: "Customer (AT Customer)",
-    customerContext: "Customer Filter",
-    clearCustomer: "Clear Customer Filter",
-    referenceContext: "Record Context",
-    clearContext: "Clear Context Filters",
+    clearFilters: "Clear",
+    customerFilter: "Customer",
     allStatuses: "All statuses",
     allChannels: "All channels",
     allReferenceTypes: "All record types",
@@ -393,200 +253,52 @@ const copy = {
     policies: "Policies",
     overdueInstallments: "Overdue Installments",
     renewalWindow: "Renewal Window",
+    customerContext: "Customer context",
+    referenceContext: "Reference context",
+    startAssignmentContext: "Start Assignment",
+    blockAssignmentContext: "Block Assignment",
+    closeAssignmentContext: "Close Assignment",
+    clearCallFollowUpContext: "Clear call follow-up context",
+    completeReminderContext: "Complete Reminder",
+    cancelReminderContext: "Cancel Reminder",
+    clearContext: "Clear context",
   },
 };
+
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+const recordCount = computed(() => (unref(state.outboxItems)?.length || 0) + (unref(state.draftItems)?.length || 0));
 
 function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const activeLocale = computed(() => unref(authStore.locale) || "en");
+const filters = communicationStore.state.filters;
 
-let filters;
-
-const runtime = useCommunicationCenterRuntime({
-  t,
-  statusLabel,
-  channelLabel,
-  referenceTypeLabel,
-});
-
-const {
-  activeFilterCount,
-  auxMutationResource,
-  breakdown,
-  campaignRunResource,
-  communicationQuickCampaignResource,
-  communicationQuickClaimResource,
-  communicationQuickCustomerResource,
-  communicationQuickPolicyResource,
-  communicationQuickSegmentResource,
-  communicationQuickTemplateResource,
-  draftItems,
-  hasRouteContextQuery,
-  outboxItems,
-  reloadQuickCustomers,
-  reloadSnapshot,
-  runCycleResource,
-  sendDraftResource,
-  retryOutboxResource,
-  segmentPreviewResource,
-  snapshotData,
-  snapshotErrorMessage,
-  snapshotResource,
-  statusCards,
-} = runtime;
-const snapshotLoading = computed(() => Boolean(snapshotResource?.loading));
-
+const runtime = useCommunicationCenterRuntime({ route, router, branchStore, communicationStore, filters, t });
 const state = useCommunicationCenterState({
-  activeLocale,
-  reloadSnapshot,
-  communicationQuickTemplateResource,
-  communicationQuickCustomerResource,
-  communicationQuickPolicyResource,
-  communicationQuickClaimResource,
-  communicationQuickSegmentResource,
-  communicationQuickCampaignResource,
-  statusCards,
+  route,
+  authStore,
+  branchStore,
+  communicationStore,
+  filters,
   t,
-  statusLabel,
-  channelLabel,
-  referenceTypeLabel,
+  activeLocale,
+  runtime,
 });
-
-const {
-  applyPreset,
-  applySnapshotFilters,
-  canBlockAssignmentContext,
-  canCancelReminderContext,
-  canClearCallNoteContext,
-  canCloseAssignmentContext,
-  canCompleteReminderContext,
-  canCreateQuickMessage,
-  canDeletePreset,
-  canReturnToContext,
-  canRetryOutboxAction,
-  canRunDispatchCycle,
-  canSendDraftNowAction,
-  canStartAssignmentContext,
-  channelOptions,
-  channelStatusContextLabel,
-  clearContextFilters,
-  clearCustomerFilter,
-  communicationQuickOptionsMap,
-  customerContextLabel,
-  deletePreset,
-  filters: communicationFilters,
-  hasContextFilters,
-  hydratePresetStateFromServer,
-  onPresetChange,
-  persistPresetStateToServer,
-  presetKey,
-  presetOptions,
-  quickCallNoteEyebrow,
-  quickCampaignEyebrow,
-  quickMessageDialogLabels,
-  quickMessageEyebrow,
-  quickReminderEyebrow,
-  quickSegmentEyebrow,
-  referenceContextLabel,
-  referenceDoctypeOptions,
-  resetCommunicationFilterState,
-  resetSnapshotFilters,
-  returnToContext,
-  returnToLabel,
-  returnToTarget,
-  safeReturnTo,
-  savePreset,
-  statusOptions,
-} = state;
-filters = communicationFilters;
-
+const actions = useCommunicationCenterActions({
+  router,
+  canRetryOutboxAction: state.canRetryOutboxAction,
+  canSendDraftNowAction: state.canSendDraftNowAction,
+  referenceTypeLabel: state.referenceTypeLabel,
+  t,
+});
 const quickDialogs = useCommunicationCenterQuickDialogs({
+  filters,
+  branchStore,
   activeLocale,
-  filters: communicationFilters,
-  reloadSnapshot,
-  segmentPreviewResource,
-  campaignRunResource,
   t,
-});
-
-const {
-  buildQuickMessagePayload,
-  campaignRunError,
-  campaignRunLoading,
-  campaignRunResult,
-  campaignRunSelection,
-  callNoteSuccessHandlers,
-  loadSegmentPreview,
-  quickMessageSuccessHandlers,
-  prepareCallNoteDialog,
-  prepareQuickMessageDialog,
-  prepareReminderDialog,
-  runCampaignExecution,
-  segmentPreviewError,
-  segmentPreviewLoading,
-  segmentPreviewPayload,
-  segmentPreviewRows,
-  segmentPreviewSegment,
-  segmentPreviewSummary,
-  showCallNoteDialog,
-  showCampaignDialog,
-  showCampaignRunDialog,
-  showQuickMessageDialog,
-  showReminderDialog,
-  showSegmentDialog,
-  showSegmentPreviewDialog,
-  reminderSuccessHandlers,
-  segmentSuccessHandlers,
-  campaignSuccessHandlers,
-} = quickDialogs;
-
-const dispatchingState = useCommunicationCenterActions({
-  auxMutationResource,
-  canCancelReminderContext,
-  canClearCallNoteContext,
-  canCloseAssignmentContext,
-  canCompleteReminderContext,
-  canRetryOutboxAction,
-  canRunDispatchCycle,
-  canSendDraftNowAction,
-  filters: communicationFilters,
-  reloadSnapshot,
-  retryOutboxResource,
-  runCycleResource,
-  sendDraftResource,
-  t,
-});
-
-const {
-  blockAssignmentContext,
-  canOpenPanel,
-  canRetryOutboxRow,
-  canSendDraftCard,
-  canSendDraftFromOutboxRow,
-  cancelReminderContext,
-  clearCallNoteContext,
-  closeAssignmentContext,
-  completeReminderContext,
-  dispatching,
-  operationError,
-  openPanel,
-  panelActionLabel,
-  retryOutbox,
-  runDispatchCycle,
-  sendDraftNow,
-  sourcePanelConfig,
-  startAssignmentContext,
-} = dispatchingState;
-
-useCommunicationCenterBootstrap({
-  applyPreset,
-  hasRouteContextQuery,
-  hydratePresetStateFromServer,
-  presetKey,
-  reloadQuickCustomers,
-  reloadSnapshot,
+  reloadSnapshot: runtime.reloadSnapshot,
+  runtime,
 });
 </script>
 
@@ -595,4 +307,3 @@ useCommunicationCenterBootstrap({
   @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
 }
 </style>
-

@@ -1,64 +1,31 @@
-import { computed, unref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, unref, watch } from "vue";
 
-import { useAuthStore } from "../../stores/auth";
-import { useCommunicationStore } from "../../stores/communication";
-import { resolveSameOriginPath } from "../../utils/safeNavigation";
 import { useCustomFilterPresets } from "../useCustomFilterPresets";
-
-function resourceValue(resource, fallback = null) {
-  const value = unref(resource?.data);
-  return value == null ? fallback : value;
-}
-
-function asArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-export function useCommunicationCenterState({
-  activeLocale,
-  reloadSnapshot,
-  communicationQuickTemplateResource,
-  communicationQuickCustomerResource,
-  communicationQuickPolicyResource,
-  communicationQuickClaimResource,
-  communicationQuickSegmentResource,
-  communicationQuickCampaignResource,
-  statusCards,
-  t,
-  statusLabel,
+import {
+  buildCommunicationQuickOptionsMap,
   channelLabel,
   referenceTypeLabel,
+  statusLabel,
+  isPermissionDeniedError,
+} from "./helpers";
+import { resolveSameOriginPath } from "../../utils/safeNavigation";
+
+export function useCommunicationCenterState({
+  route,
+  authStore,
+  branchStore,
+  communicationStore,
+  filters,
+  t,
+  activeLocale,
+  runtime,
 }) {
-  const authStore = useAuthStore();
-  const communicationStore = useCommunicationStore();
-  const route = useRoute();
-  const router = useRouter();
-  const filters = communicationStore.state.filters;
-
-  function resetCommunicationFilterState() {
-    communicationStore.resetFilters();
-  }
-
-  function currentCommunicationPresetPayload() {
-    return {
-      customer: filters.customer,
-      status: filters.status,
-      channel: filters.channel,
-      referenceDoctype: filters.referenceDoctype,
-      referenceName: filters.referenceName,
-      limit: Number(filters.limit) || 50,
-    };
-  }
-
-  function setCommunicationFilterStateFromPayload(payload) {
-    filters.customer = String(payload?.customer || "");
-    filters.status = String(payload?.status || "");
-    filters.channel = String(payload?.channel || "");
-    filters.referenceDoctype = String(payload?.referenceDoctype || "");
-    filters.referenceName = String(payload?.referenceName || "");
-    filters.limit = Number(payload?.limit || 50) || 50;
-  }
+  const snapshotData = computed(() => communicationStore.state.snapshot || {});
+  const resourceValue = (resource, fallback = null) => {
+    const value = unref(resource?.data);
+    return value == null ? fallback : value;
+  };
+  const asArray = (value) => (Array.isArray(value) ? value : []);
 
   const {
     presetKey,
@@ -75,15 +42,29 @@ export function useCommunicationCenterState({
     presetStorageKey: "at:communication-center:preset",
     presetListStorageKey: "at:communication-center:preset-list",
     t,
-    getCurrentPayload: currentCommunicationPresetPayload,
-    setFilterStateFromPayload: setCommunicationFilterStateFromPayload,
-    resetFilterState: resetCommunicationFilterState,
-    refresh: reloadSnapshot,
+    getCurrentPayload: runtime.currentCommunicationPresetPayload,
+    setFilterStateFromPayload: runtime.setCommunicationFilterStateFromPayload,
+    resetFilterState: runtime.resetCommunicationFilterState,
+    refresh: runtime.reloadSnapshot,
     getSortLocale: () => (activeLocale.value === "tr" ? "tr-TR" : "en-US"),
   });
 
+  const snapshotErrorMessage = computed(() => {
+    if (communicationStore.state.error) return communicationStore.state.error;
+    const raw = unref(runtime.snapshotResource.error);
+    if (!raw) return "";
+    if (isPermissionDeniedError(raw)) return t("permissionDeniedRead");
+    if (typeof raw === "string") return raw;
+    return raw?.message || raw?.exc || t("loadErrorTitle");
+  });
+
+  const outboxItems = computed(() => communicationStore.outboxItems);
+  const draftItems = computed(() => communicationStore.draftItems);
+  const breakdown = computed(() => communicationStore.breakdown);
+  const activeFilterCount = computed(() => communicationStore.activeFilterCount);
+
   const customerContextLabel = computed(
-    () => String(route.query.customer_label || filters.customer || "").trim() || String(filters.customer || "").trim()
+    () => String(route.query.customer_label || filters.customer || "").trim() || String(filters.customer || "").trim(),
   );
   const referenceContextLabel = computed(() => {
     const doctype = String(route.query.reference_label || filters.referenceDoctype || "").trim();
@@ -95,30 +76,31 @@ export function useCommunicationCenterState({
   });
   const channelStatusContextLabel = computed(() => {
     const parts = [];
-    if (filters.channel) parts.push(`${t("channel")}: ${channelLabel(filters.channel)}`);
-    if (filters.status) parts.push(`${t("status")}: ${statusLabel(filters.status)}`);
+    if (filters.channel) parts.push(`${t("channel")}: ${channelLabel(filters.channel, t)}`);
+    if (filters.status) parts.push(`${t("status")}: ${statusLabel(filters.status, t)}`);
     return parts.join(" • ");
   });
   const hasContextFilters = computed(
-    () => Boolean(filters.customer || filters.referenceDoctype || filters.referenceName || filters.channel || filters.status)
+    () =>
+      Boolean(filters.customer || filters.referenceDoctype || filters.referenceName || filters.channel || filters.status),
   );
   const canStartAssignmentContext = computed(
-    () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
+    () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim()),
   );
   const canBlockAssignmentContext = computed(
-    () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
+    () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim()),
   );
   const canCloseAssignmentContext = computed(
-    () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim())
+    () => filters.referenceDoctype === "AT Ownership Assignment" && Boolean(String(filters.referenceName || "").trim()),
   );
   const canClearCallNoteContext = computed(
-    () => filters.referenceDoctype === "AT Call Note" && Boolean(String(filters.referenceName || "").trim())
+    () => filters.referenceDoctype === "AT Call Note" && Boolean(String(filters.referenceName || "").trim()),
   );
   const canCompleteReminderContext = computed(
-    () => filters.referenceDoctype === "AT Reminder" && Boolean(String(filters.referenceName || "").trim())
+    () => filters.referenceDoctype === "AT Reminder" && Boolean(String(filters.referenceName || "").trim()),
   );
   const canCancelReminderContext = computed(
-    () => filters.referenceDoctype === "AT Reminder" && Boolean(String(filters.referenceName || "").trim())
+    () => filters.referenceDoctype === "AT Reminder" && Boolean(String(filters.referenceName || "").trim()),
   );
   const statusOptions = computed(() => [
     { value: "Queued", label: t("queued") },
@@ -133,45 +115,30 @@ export function useCommunicationCenterState({
     { value: "WHATSAPP", label: t("whatsapp") },
   ]);
   const referenceDoctypeOptions = computed(() => [
-    { value: "AT Customer", label: referenceTypeLabel("AT Customer") },
-    { value: "AT Lead", label: referenceTypeLabel("AT Lead") },
-    { value: "AT Offer", label: referenceTypeLabel("AT Offer") },
-    { value: "AT Policy", label: referenceTypeLabel("AT Policy") },
-    { value: "AT Claim", label: referenceTypeLabel("AT Claim") },
-    { value: "AT Payment", label: referenceTypeLabel("AT Payment") },
-    { value: "AT Reminder", label: referenceTypeLabel("AT Reminder") },
-    { value: "AT Renewal Task", label: referenceTypeLabel("AT Renewal Task") },
-    { value: "AT Accounting Entry", label: referenceTypeLabel("AT Accounting Entry") },
-    { value: "AT Reconciliation Item", label: referenceTypeLabel("AT Reconciliation Item") },
-    { value: "AT Segment", label: referenceTypeLabel("AT Segment") },
-    { value: "AT Campaign", label: referenceTypeLabel("AT Campaign") },
+    { value: "AT Customer", label: referenceTypeLabel("AT Customer", t) },
+    { value: "AT Lead", label: referenceTypeLabel("AT Lead", t) },
+    { value: "AT Offer", label: referenceTypeLabel("AT Offer", t) },
+    { value: "AT Policy", label: referenceTypeLabel("AT Policy", t) },
+    { value: "AT Claim", label: referenceTypeLabel("AT Claim", t) },
+    { value: "AT Payment", label: referenceTypeLabel("AT Payment", t) },
+    { value: "AT Reminder", label: referenceTypeLabel("AT Reminder", t) },
+    { value: "AT Renewal Task", label: referenceTypeLabel("AT Renewal Task", t) },
+    { value: "AT Accounting Entry", label: referenceTypeLabel("AT Accounting Entry", t) },
+    { value: "AT Reconciliation Item", label: referenceTypeLabel("AT Reconciliation Item", t) },
+    { value: "AT Segment", label: referenceTypeLabel("AT Segment", t) },
+    { value: "AT Campaign", label: referenceTypeLabel("AT Campaign", t) },
   ]);
-  const communicationQuickOptionsMap = computed(() => ({
-    notificationTemplates: asArray(resourceValue(communicationQuickTemplateResource, [])).map((row) => ({
-      value: row.name,
-      label: `${row.template_key || row.name}${row.channel ? ` (${channelLabel(row.channel)})` : ""}`,
-    })),
-    customers: asArray(resourceValue(communicationQuickCustomerResource, [])).map((row) => ({
-      value: row.name,
-      label: row.full_name || row.name,
-    })),
-    policies: asArray(resourceValue(communicationQuickPolicyResource, [])).map((row) => ({
-      value: row.name,
-      label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
-    })),
-    claims: asArray(resourceValue(communicationQuickClaimResource, [])).map((row) => ({
-      value: row.name,
-      label: `${row.claim_no || row.name}${row.policy ? ` - ${row.policy}` : ""}`,
-    })),
-    segments: asArray(resourceValue(communicationQuickSegmentResource, [])).map((row) => ({
-      value: row.name,
-      label: `${row.segment_name || row.name}${row.channel_focus ? ` - ${channelLabel(row.channel_focus)}` : ""}`,
-    })),
-    campaigns: asArray(resourceValue(communicationQuickCampaignResource, [])).map((row) => ({
-      value: row.name,
-      label: `${row.campaign_name || row.name}${row.channel ? ` - ${channelLabel(row.channel)}` : ""}`,
-    })),
-  }));
+  const communicationQuickOptionsMap = computed(() =>
+    buildCommunicationQuickOptionsMap({
+      templateRows: resourceValue(runtime.communicationQuickTemplateResource, []),
+      customerRows: resourceValue(runtime.communicationQuickCustomerResource, []),
+      policyRows: resourceValue(runtime.communicationQuickPolicyResource, []),
+      claimRows: resourceValue(runtime.communicationQuickClaimResource, []),
+      segmentRows: resourceValue(runtime.communicationQuickSegmentResource, []),
+      campaignRows: resourceValue(runtime.communicationQuickCampaignResource, []),
+      channelLabel: (value) => channelLabel(value, t),
+    }),
+  );
   const quickSegmentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Segment" : "Quick Segment"));
   const quickCampaignEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Kampanya" : "Quick Campaign"));
   const quickCallNoteEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Arama Notu" : "Quick Call Note"));
@@ -182,7 +149,7 @@ export function useCommunicationCenterState({
   const canRetryOutboxAction = computed(() => authStore.can(["actions", "communication", "retryOutbox"]));
   const canRunDispatchCycle = computed(() => authStore.can(["actions", "communication", "runDispatchCycle"]));
   const returnToTarget = computed(() => String(route.query.return_to || "").trim());
-  const safeReturnTo = computed(() => resolveSameOriginPath(String(route.query.return_to || "").trim()) || "");
+  const safeReturnTo = computed(() => resolveSameOriginPath(returnToTarget.value) || "");
   const canReturnToContext = computed(() => Boolean(safeReturnTo.value || hasContextFilters.value));
   const returnToLabel = computed(() => {
     if (safeReturnTo.value) return activeLocale.value === "tr" ? "Kaynaga Don" : "Back to Source";
@@ -192,108 +159,127 @@ export function useCommunicationCenterState({
     save: t("saveDraft"),
     saveAndOpen: t("sendImmediately"),
   }));
+  const segmentPreviewSummary = computed(() => runtime.segmentPreviewPayload.value?.summary || null);
+  const segmentPreviewRows = computed(() => runtime.segmentPreviewPayload.value?.customers || []);
+  const statusCards = computed(() =>
+    communicationStore.statusCards.map((item) => ({
+      key: item.key,
+      label: statusLabel(item.status, t),
+      value: item.value,
+    })),
+  );
 
-  return {
-    activeLocale,
-    canBlockAssignmentContext,
-    canCancelReminderContext,
-    canClearCallNoteContext,
-    canCloseAssignmentContext,
-    canCompleteReminderContext,
-    canCreateQuickMessage,
-    canDeletePreset,
-    canReturnToContext,
-    canRetryOutboxAction,
-    canRunDispatchCycle,
-    canSendDraftNowAction,
-    channelOptions,
-    channelStatusContextLabel,
-    communicationQuickOptionsMap,
-    customerContextLabel,
-    deletePreset,
-    filters,
-    hasContextFilters,
-    hydratePresetStateFromServer,
-    onPresetChange,
-    persistPresetStateToServer,
-    presetKey,
-    presetOptions,
-    quickCallNoteEyebrow,
-    quickCampaignEyebrow,
-    quickMessageDialogLabels,
-    quickMessageEyebrow,
-    quickReminderEyebrow,
-    quickSegmentEyebrow,
-    referenceContextLabel,
-    referenceDoctypeOptions,
-    returnToLabel,
-    returnToTarget,
-    safeReturnTo,
-    savePreset,
-    setCommunicationFilterStateFromPayload,
-    statusOptions,
-    statusCards,
-    statusLabel,
-    channelLabel,
-    referenceTypeLabel,
-    canStartAssignmentContext,
-    applyPreset,
-    resetCommunicationFilterState,
-    currentCommunicationPresetPayload,
-    clearCustomerFilter: () => {
-      filters.customer = "";
-      const nextQuery = { ...route.query };
-      delete nextQuery.customer;
-      delete nextQuery.customer_label;
-      router.replace({ query: nextQuery });
-    },
-    clearContextFilters: () => {
-      communicationStore.setFilters({
-        customer: "",
-        status: "",
-        channel: "",
-        referenceDoctype: "",
-        referenceName: "",
-      });
-      const nextQuery = { ...route.query };
-      delete nextQuery.customer;
-      delete nextQuery.customer_label;
-      delete nextQuery.status;
-      delete nextQuery.channel;
-      delete nextQuery.reference_doctype;
-      delete nextQuery.reference_name;
-      delete nextQuery.reference_label;
-      router.replace({ query: nextQuery });
-    },
-    applySnapshotFilters: () => reloadSnapshot(),
-    resetSnapshotFilters: () => {
-      applyPreset("default", { refresh: false });
-      void persistPresetStateToServer();
-      communicationStore.setFilters({
-        customer: "",
-        status: "",
-        channel: "",
-        referenceDoctype: "",
-        referenceName: "",
-      });
-      const nextQuery = { ...route.query };
-      delete nextQuery.customer;
-      delete nextQuery.customer_label;
-      delete nextQuery.status;
-      delete nextQuery.channel;
-      delete nextQuery.reference_doctype;
-      delete nextQuery.reference_name;
-      delete nextQuery.reference_label;
-      router.replace({ query: nextQuery });
-      void reloadSnapshot();
-    },
-    returnToContext: () => {
-      if (!canReturnToContext.value) return;
-      if (safeReturnTo.value) {
-        router.push(safeReturnTo.value);
+  function resetSnapshotFilters() {
+    applyPreset("default", { refresh: false });
+    void persistPresetStateToServer();
+    return runtime.clearContextFilters();
+  }
+
+  function applySnapshotFilters() {
+    return runtime.reloadSnapshot();
+  }
+
+  onMounted(() => {
+    if (!runtime.hasRouteContextQuery()) {
+      applyPreset(presetKey.value, { refresh: false });
+    }
+    void runtime.reloadSnapshot();
+    void hydratePresetStateFromServer();
+  });
+
+  watch(
+    () => [
+      route.query.customer,
+      route.query.customer_label,
+      route.query.status,
+      route.query.channel,
+      route.query.reference_doctype,
+      route.query.reference_name,
+      route.query.reference_label,
+    ],
+    ([customer, _customerLabel, status, channel, referenceDoctype, referenceName]) => {
+      const nextCustomer = String(customer || "").trim();
+      const nextStatus = String(status || "").trim();
+      const nextChannel = String(channel || "").trim();
+      const nextReferenceDoctype = String(referenceDoctype || "").trim();
+      const nextReferenceName = String(referenceName || "").trim();
+      if (
+        filters.customer === nextCustomer &&
+        filters.status === nextStatus &&
+        filters.channel === nextChannel &&
+        filters.referenceDoctype === nextReferenceDoctype &&
+        filters.referenceName === nextReferenceName
+      ) {
         return;
       }
-      router.back();
+      communicationStore.setFilters({
+        customer: nextCustomer,
+        status: nextStatus,
+        channel: nextChannel,
+        referenceDoctype: nextReferenceDoctype,
+        referenceName: nextReferenceName,
+      });
+      runtime.reloadSnapshot();
     },
+    { immediate: true },
+  );
+
+  watch(
+    () => branchStore.selected,
+    () => {
+      void runtime.reloadQuickCustomers();
+      void runtime.reloadSnapshot();
+    },
+  );
+
+  return {
+    snapshotData,
+    snapshotErrorMessage,
+    outboxItems,
+    draftItems,
+    breakdown,
+    activeFilterCount,
+    presetKey,
+    presetOptions,
+    canDeletePreset,
+    applyPreset,
+    onPresetChange,
+    savePreset,
+    deletePreset,
+    persistPresetStateToServer,
+    hydratePresetStateFromServer,
+    customerContextLabel,
+    referenceContextLabel,
+    channelStatusContextLabel,
+    hasContextFilters,
+    canStartAssignmentContext,
+    canBlockAssignmentContext,
+    canCloseAssignmentContext,
+    canClearCallNoteContext,
+    canCompleteReminderContext,
+    canCancelReminderContext,
+    statusOptions,
+    channelOptions,
+    referenceDoctypeOptions,
+    communicationQuickOptionsMap,
+    quickSegmentEyebrow,
+    quickCampaignEyebrow,
+    quickCallNoteEyebrow,
+    quickReminderEyebrow,
+    quickMessageEyebrow,
+    canCreateQuickMessage,
+    canSendDraftNowAction,
+    canRetryOutboxAction,
+    canRunDispatchCycle,
+    returnToTarget,
+    safeReturnTo,
+    canReturnToContext,
+    returnToLabel,
+    quickMessageDialogLabels,
+    segmentPreviewSummary,
+    segmentPreviewRows,
+    applySnapshotFilters,
+    resetSnapshotFilters,
+    referenceTypeLabel: (doctype) => referenceTypeLabel(doctype, t),
   };
 }
