@@ -6,101 +6,31 @@
     :show-record-count="false"
   >
     <template #actions>
-      <button class="btn btn-outline btn-sm" type="button" @click="resetForm">{{ t("reset") }}</button>
+      <ExportDataHeaderActions :t="t" @reset="resetForm" />
     </template>
 
-    <SectionPanel :title="t('step1Title')" panel-class="surface-card rounded-2xl p-5">
-      <div class="grid gap-4 md:grid-cols-3">
-        <div class="form-field">
-          <label class="form-label">{{ t("datasetLabel") }}</label>
-          <select v-model="form.screen" class="form-input">
-            <option v-for="option in screenOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-          </select>
-        </div>
+    <ExportDataOptionsPanel :form="form" :screen-options="localizedScreenOptions" :t="t" />
 
-        <div class="form-field">
-          <label class="form-label">{{ t("formatLabel") }}</label>
-          <select v-model="form.format" class="form-input">
-            <option value="xlsx">{{ t("formatXlsx") }}</option>
-            <option value="pdf">{{ t("formatPdf") }}</option>
-            <option value="csv">{{ t("formatCsv") }}</option>
-          </select>
-        </div>
+    <ExportDataFiltersPanel :form="form" :t="t" />
 
-        <div class="form-field">
-          <label class="form-label">{{ t("filenameLabel") }}</label>
-          <input v-model="form.filename" class="form-input" type="text" :placeholder="t('filenamePlaceholder')" />
-        </div>
-      </div>
-    </SectionPanel>
+    <ExportDataHistoryPanel :history-rows="historyRows" :t="t" />
 
-    <SectionPanel :title="t('step2Title')" panel-class="surface-card rounded-2xl p-5">
-      <div class="grid gap-4 md:grid-cols-3">
-        <div class="form-field">
-          <label class="form-label">{{ t("startDateLabel") }}</label>
-          <input v-model="form.startDate" class="form-input" type="date" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label">{{ t("endDateLabel") }}</label>
-          <input v-model="form.endDate" class="form-input" type="date" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label">{{ t("statusLabel") }}</label>
-          <select v-model="form.status" class="form-input">
-            <option value="">{{ t("allStatuses") }}</option>
-            <option value="Draft">{{ t("statusDraft") }}</option>
-            <option value="Active">{{ t("statusActive") }}</option>
-            <option value="Open">{{ t("statusOpen") }}</option>
-            <option value="Closed">{{ t("statusClosed") }}</option>
-          </select>
-        </div>
-      </div>
-    </SectionPanel>
-
-    <SectionPanel :title="t('step3Title')" panel-class="surface-card rounded-2xl p-5">
-      <div v-if="!historyRows.length" class="card-empty">{{ t("historyEmpty") }}</div>
-      <div v-else class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr>
-              <th class="table-header">{{ t("historyDate") }}</th>
-              <th class="table-header">{{ t("historyDataset") }}</th>
-              <th class="table-header">{{ t("historyFormat") }}</th>
-              <th class="table-header">{{ t("historyFile") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in historyRows" :key="row.id">
-              <td class="table-cell">{{ row.date }}</td>
-              <td class="table-cell">{{ row.screenLabel }}</td>
-              <td class="table-cell">{{ row.format.toUpperCase() }}</td>
-              <td class="table-cell">{{ row.filename }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </SectionPanel>
-
-    <div class="flex justify-end gap-2">
-      <button class="btn btn-outline" type="button" @click="cancel">{{ t("cancel") }}</button>
-      <button class="btn btn-primary" type="button" @click="downloadExport">{{ t("exportAction") }}</button>
-    </div>
-
-    <p v-if="message" class="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-      {{ message }}
-    </p>
+    <ExportDataFooterActions :message="message" :t="t" @cancel="cancel" @export="downloadExport" />
   </WorkbenchPageLayout>
 </template>
 
 <script setup>
-import { computed, reactive, ref, unref } from "vue";
+import { computed, unref } from "vue";
 import { useRouter } from "vue-router";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
+import { useExportDataRuntime } from "../composables/useExportDataRuntime";
+import ExportDataHeaderActions from "../components/export-data/ExportDataHeaderActions.vue";
+import ExportDataOptionsPanel from "../components/export-data/ExportDataOptionsPanel.vue";
+import ExportDataFiltersPanel from "../components/export-data/ExportDataFiltersPanel.vue";
+import ExportDataHistoryPanel from "../components/export-data/ExportDataHistoryPanel.vue";
+import ExportDataFooterActions from "../components/export-data/ExportDataFooterActions.vue";
 
 const router = useRouter();
 const appPinia = getAppPinia();
@@ -195,86 +125,7 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const screenOptions = [
-  { value: "dashboard", labelKey: "screenDashboard" },
-  { value: "policy_list", labelKey: "screenPolicies" },
-  { value: "offer_list", labelKey: "screenOffers" },
-  { value: "customer_list", labelKey: "screenCustomers" },
-  { value: "claims_board", labelKey: "screenClaims" },
-  { value: "payments_board", labelKey: "screenPayments" },
-  { value: "renewals_board", labelKey: "screenRenewals" },
-];
-
-const localizedScreenOptions = computed(() =>
-  screenOptions.map((option) => ({
-    value: option.value,
-    label: t(option.labelKey),
-  })),
-);
-
-const form = reactive({
-  screen: "policy_list",
-  format: "xlsx",
-  filename: "",
-  startDate: "",
-  endDate: "",
-  status: "",
-});
-
-const message = ref("");
-const historyRows = ref([]);
-
-function buildExportUrl() {
-  const params = new URLSearchParams({
-    screen: form.screen,
-    format: form.format,
-  });
-
-  if (form.filename) params.set("filename", form.filename);
-  if (form.startDate) params.set("start_date", form.startDate);
-  if (form.endDate) params.set("end_date", form.endDate);
-  if (form.status) params.set("status", form.status);
-
-  return `/api/method/acentem_takipte.acentem_takipte.api.list_exports.download_export?${params.toString()}`;
-}
-
-function addHistory() {
-  const screenLabel = localizedScreenOptions.value.find((option) => option.value === form.screen)?.label || t("screenNoLabel");
-  const filename = form.filename || `${form.screen}_${new Date().toISOString().slice(0, 10)}`;
-  historyRows.value = [
-    {
-      id: `${Date.now()}`,
-      date: new Intl.DateTimeFormat(activeLocale.value === "tr" ? "tr-TR" : "en-US", {
-        dateStyle: "short",
-        timeStyle: "short",
-      }).format(new Date()),
-      screenLabel,
-      format: form.format,
-      filename,
-    },
-    ...historyRows.value,
-  ].slice(0, 8);
-}
-
-function downloadExport() {
-  const url = buildExportUrl();
-  window.open(url, "_blank", "noopener,noreferrer");
-  addHistory();
-  message.value = t("exportStarted");
-}
-
-function resetForm() {
-  form.screen = "policy_list";
-  form.format = "xlsx";
-  form.filename = "";
-  form.startDate = "";
-  form.endDate = "";
-  form.status = "";
-  message.value = "";
-}
-
-function cancel() {
-  router.push({ name: "dashboard" });
-}
+const runtime = useExportDataRuntime({ t, router, authStore });
+const { form, message, historyRows, localizedScreenOptions, downloadExport, resetForm, cancel } = runtime;
 </script>
 
