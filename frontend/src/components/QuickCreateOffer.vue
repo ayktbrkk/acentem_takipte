@@ -57,6 +57,7 @@ import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateDialogShell from "./app-shell/QuickCreateDialogShell.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
+import { translateText } from "../utils/i18n";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 
 const props = defineProps({
@@ -141,7 +142,7 @@ function validateRequired() {
     }
   }
   if (!valid) {
-    errorText.value = props.locale === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.";
+    errorText.value = translateText("Please fill required fields.", props.locale);
   }
   return valid;
 }
@@ -151,8 +152,8 @@ async function submit(openAfter = false) {
 
   const hasPolicyHolderField = fields.value.some((field) => field?.name === "policy_holder");
   if (hasPolicyHolderField && !String(form.policy_holder || "").trim()) {
-    errorText.value = props.locale === "tr" ? "Sigortalı alanı zorunludur." : "Policy holder is required.";
-    fieldErrors.policy_holder = props.locale === "tr" ? "Sigortalı" : "Policy Holder";
+    errorText.value = translateText("Policy holder is required.", props.locale);
+    fieldErrors.policy_holder = translateText("Policy Holder", props.locale);
     return;
   }
 
@@ -180,7 +181,7 @@ async function submit(openAfter = false) {
     }
     if (!openAfter && props.returnTo) await router.push(props.returnTo).catch(() => {});
   } catch (error) {
-    errorText.value = error?.messages?.join(" ") || error?.message || (props.locale === "tr" ? "Kayıt oluşturma başarısız oldu." : "Create failed.");
+    errorText.value = error?.messages?.join(" ") || error?.message || translateText("Create failed.", props.locale);
     emit("error", error);
   } finally {
     loading.value = false;

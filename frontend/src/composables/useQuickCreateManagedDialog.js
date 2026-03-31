@@ -4,6 +4,7 @@ import { createResource } from "frappe-ui";
 
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
+import { translateText } from "../utils/i18n";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 
 export function useQuickCreateManagedDialog(props, emit) {
@@ -78,7 +79,7 @@ export function useQuickCreateManagedDialog(props, emit) {
       }
     }
     if (!valid) {
-      errorText.value = props.locale === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.";
+      errorText.value = translateText("Please fill required fields.", props.locale);
     }
     return valid;
   }
@@ -113,9 +114,7 @@ export function useQuickCreateManagedDialog(props, emit) {
       const gross = Number(form.gross_premium) || 0;
       const calcGross = Number((net + comm + tax).toFixed(2));
       if (gross > 0 && Math.abs(gross - calcGross) > 0.01) {
-        errorText.value = props.locale === "tr"
-          ? "Brüt Prim, Net Prim + Komisyon + Vergi toplamına eşit olmalıdır."
-          : "Gross Premium must equal Net Premium + Commission + Tax.";
+        errorText.value = translateText("Gross Premium must equal Net Premium + Commission + Tax.", props.locale);
         return;
       }
     }
@@ -155,7 +154,7 @@ export function useQuickCreateManagedDialog(props, emit) {
       errorText.value =
         error?.messages?.join(" ") ||
         error?.message ||
-        (props.locale === "tr" ? "Kayıt oluşturma başarısız oldu." : "Create failed.");
+        translateText("Create failed.", props.locale);
       emit("error", error);
     } finally {
       loading.value = false;

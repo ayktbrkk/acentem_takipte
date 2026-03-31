@@ -148,6 +148,17 @@ export function usePolicyQuickCreateRuntime({
     eyebrow: getQuickCreateEyebrow("policy", activeLocale.value),
     newLabel: translateText("New Policy", activeLocale.value),
   }));
+  const quickPolicyValidation = computed(() => ({
+    unsupportedStatusSelection: translateText("Unsupported status selection.", activeLocale.value),
+    selectedSourceOfferNotFound: translateText("Selected source offer was not found.", activeLocale.value),
+    selectCustomerOrCreate: translateText("Select a customer or add a new customer.", activeLocale.value),
+    newCustomerNameRequired: translateText("New customer name is required.", activeLocale.value),
+    taxNumberTenDigits: translateText("Tax number must be 10 digits.", activeLocale.value),
+    nationalIdElevenDigits: translateText("National ID number must be 11 digits.", activeLocale.value),
+    validTurkishNationalId: translateText("Enter a valid Turkish national ID number.", activeLocale.value),
+    birthDateFuture: translateText("Birth date cannot be in the future.", activeLocale.value),
+    grossPremiumMismatch: translateText("Gross Premium must equal Net Premium + Commission + Tax.", activeLocale.value),
+  }));
   const quickCreateCommon = computed(() => ({
     ...getQuickCreateLabels("create", activeLocale.value),
     validation: translateText("Please fill required fields.", activeLocale.value),
@@ -250,13 +261,12 @@ export function usePolicyQuickCreateRuntime({
     const hasSourceOffer = hasQuickPolicySourceOffer.value;
     const statusValue = String(quickPolicyForm.status || "").trim();
     if (!hasSourceOffer && statusValue && !policyQuickAllowedStatuses.has(statusValue)) {
-      quickPolicyFieldErrors.status = activeLocale.value === "tr" ? "Geçersiz durum seçimi." : "Unsupported status selection.";
+      quickPolicyFieldErrors.status = quickPolicyValidation.value.unsupportedStatusSelection;
       valid = false;
     }
     const selectedSourceOffer = String(quickPolicyForm.source_offer || "").trim();
     if (hasSourceOffer && selectedSourceOffer && !policyQuickAllowedOfferNames.value.has(selectedSourceOffer)) {
-      quickPolicyFieldErrors.source_offer =
-        activeLocale.value === "tr" ? "Seçili teklif bulunamadı." : "Selected source offer was not found.";
+      quickPolicyFieldErrors.source_offer = quickPolicyValidation.value.selectedSourceOfferNotFound;
       valid = false;
     }
     for (const field of policyQuickFormFields.value) {
@@ -272,11 +282,10 @@ export function usePolicyQuickCreateRuntime({
       const identityNumber = normalizeIdentityNumber(quickPolicyForm.customer_tax_id);
       const customerType = normalizeCustomerType(quickPolicyForm.customer_type, identityNumber);
       if (!shouldCreateCustomer) {
-        quickPolicyFieldErrors.customer =
-          activeLocale.value === "tr" ? "Bir müşteri seçin veya yeni müşteri ekleyin." : "Select a customer or add a new customer.";
+        quickPolicyFieldErrors.customer = quickPolicyValidation.value.selectCustomerOrCreate;
         valid = false;
       } else if (!customerName) {
-        quickPolicyFieldErrors.customer = activeLocale.value === "tr" ? "Yeni müşteri adı gerekli." : "New customer name is required.";
+        quickPolicyFieldErrors.customer = quickPolicyValidation.value.newCustomerNameRequired;
         valid = false;
       }
       if (shouldCreateCustomer && !identityNumber) {
@@ -287,17 +296,14 @@ export function usePolicyQuickCreateRuntime({
         valid = false;
       } else if (shouldCreateCustomer && customerType === "Corporate") {
         if (identityNumber.length !== 10) {
-          quickPolicyFieldErrors.customer_tax_id =
-            activeLocale.value === "tr" ? "Vergi numarası 10 haneli olmalıdır." : "Tax number must be 10 digits.";
+          quickPolicyFieldErrors.customer_tax_id = quickPolicyValidation.value.taxNumberTenDigits;
           valid = false;
         }
       } else if (shouldCreateCustomer && identityNumber.length !== 11) {
-        quickPolicyFieldErrors.customer_tax_id =
-          activeLocale.value === "tr" ? "TC kimlik numarası 11 haneli olmalıdır." : "National ID number must be 11 digits.";
+        quickPolicyFieldErrors.customer_tax_id = quickPolicyValidation.value.nationalIdElevenDigits;
         valid = false;
       } else if (shouldCreateCustomer && !isValidTckn(identityNumber)) {
-        quickPolicyFieldErrors.customer_tax_id =
-          activeLocale.value === "tr" ? "Geçerli bir TC kimlik numarası girin." : "Enter a valid Turkish national ID number.";
+        quickPolicyFieldErrors.customer_tax_id = quickPolicyValidation.value.validTurkishNationalId;
         valid = false;
       }
       const birthDateValue = String(quickPolicyForm.customer_birth_date || "").trim();
@@ -306,8 +312,7 @@ export function usePolicyQuickCreateRuntime({
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (Number.isNaN(birthDate.getTime()) || birthDate > today) {
-          quickPolicyFieldErrors.customer_birth_date =
-            activeLocale.value === "tr" ? "Doğum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
+          quickPolicyFieldErrors.customer_birth_date = quickPolicyValidation.value.birthDateFuture;
           valid = false;
         }
       }
@@ -337,6 +342,16 @@ export function usePolicyQuickCreateRuntime({
       );
       quickPolicyError.value = quickCreateCommon.value.validation;
       return false;
+    }
+    if (!hasSourceOffer) {
+      const net = Number(quickPolicyForm.net_premium) || 0;
+      const comm = Number(quickPolicyForm.commission_amount) || 0;
+      const tax = Number(quickPolicyForm.tax_amount) || 0;
+      const calcGross = Number((net + comm + tax).toFixed(2));
+      if (gross > 0 && Math.abs(gross - calcGross) > 0.01) {
+        quickPolicyError.value = quickPolicyValidation.value.grossPremiumMismatch;
+        return false;
+      }
     }
     return true;
   }
