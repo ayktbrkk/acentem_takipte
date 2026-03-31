@@ -90,6 +90,65 @@
 - Asıl çalışma, en yüksek trafik alan iki DocType modülü üzerinden backend yerelleştirme ile başlayacak:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
+- Lead stale etiketleri translation katalogundan çözülür hale getirildi:
+  - `frontend/src/composables/useLeadDetailRuntime.js`
+- Policy / Claims quick-assignment eyebrow fallback'leri source-English hale getirildi:
+  - `frontend/src/composables/usePolicyDetailQuickDialogs.js`
+  - `frontend/src/composables/useClaimsBoardRuntime.js`
+- Lead list'teki "All" filtresi katalogdan çözülür hale getirildi:
+  - `frontend/src/composables/useLeadListTableData.js`
+- OfferBoard validation mesajları source-English helper'a bağlandı:
+  - `frontend/src/composables/offerBoard/quickOffer.js`
+- Translation catalog ve CSV'lere eksik source'lar eklendi:
+  - `frontend/src/generated/translations.js`
+  - `acentem_takipte/translations/en.csv`
+  - `acentem_takipte/translations/tr.csv`
+- **Durum analizi (2026-03-31):** Tüm 20+ frontend sayfasında zaten `copy = { tr: {...}, en: {...} }` yapısı mevcut. English string'ler `en:` altında kaynak olarak duruyor. Mevcut `t(key)` fonksiyonu locale'ye göre çeviri yapıyor. `translateText` i18n utility'si de CSV kataloğuna bağlı.
+- **Commit:** `2fb32ab` — `refactor: normalize remaining locale fallbacks`
+
+---
+
+## Devam Eden Çalışma (2026-03-31)
+
+### Sonraki Dalga Hedefleri
+
+Önceki agent'ın belirlediği sonraki dalga:
+
+1. **`CustomerList.vue`** - Müşteri listesi sayfası locale-map kontrolü
+2. **`Dashboard.vue`** - Gösterge paneli locale-map kontrolü
+3. **`LeadList.vue`** - Lead listesi sayfası locale-map kontrolü
+4. **`usePolicyFormRuntime.js`** - Policy form runtime içindeki locale-map blokları
+
+### Analiz Notu
+
+Frontend yerelleştirme durumu:
+- 20+ Vue sayfasında `copy = { tr: {...}, en: {...} }` yapısı mevcut
+- English string'ler `en:` altında kaynak olarak duruyor
+- `translateText` i18n utility'si CSV kataloğuna bağlı
+- Vitest testleri: 28 passed ✅
+- Build: başarılı ✅
+
+### WSL Frappe Sunucusu
+
+- URL: `http://at.localhost:8000/at/`
+- Giriş: `Administrator` / `admin`
+- WSL'de `bench start` ile çalıştırılmalı
+
+---
+
+## Test Sonuçları (2026-03-31)
+
+### ❌ Playwright E2E Smoke Test
+- **Durum:** Başarısız - Sunucu çalışmıyor
+- **Hata:** `ERR_CONNECTION_REFUSED at http://localhost:8080/login`
+- **Neden:** Frappe sunucusu `localhost:8080` adresinde çalışmıyor
+- **Çözüm:** WSL'de `bench start` ile sunucuyu başlatılması gerekiyor
+
+### ❌ bench build --app acentem_takipte
+- **Durum:** Başarısız - Node eksik
+- **Hata:** `ValueError: Invalid version string: 'bin/sh: 1: node: not found'`
+- **Neden:** WSL ortamında Node.js yüklü değil
+- **Çözüm:** Sistemde Node.js kurulumu yapılması gerekiyor
 
 ---
 

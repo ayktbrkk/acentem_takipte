@@ -90,6 +90,65 @@
 - The next real work starts in backend localization, beginning with the two highest-traffic DocType modules:
   - `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py`
   - `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py`
+- Lead stale labels now resolved from translation catalog:
+  - `frontend/src/composables/useLeadDetailRuntime.js`
+- Policy / Claims quick-assignment eyebrow fallbacks converted to source-English:
+  - `frontend/src/composables/usePolicyDetailQuickDialogs.js`
+  - `frontend/src/composables/useClaimsBoardRuntime.js`
+- Lead list "All" filter now resolved from catalog:
+  - `frontend/src/composables/useLeadListTableData.js`
+- OfferBoard validation messages connected to source-English helper:
+  - `frontend/src/composables/offerBoard/quickOffer.js`
+- Translation catalog and CSVs updated with missing sources:
+  - `frontend/src/generated/translations.js`
+  - `acentem_takipte/translations/en.csv`
+  - `acentem_takipte/translations/tr.csv`
+- **Status analysis (2026-03-31):** All 20+ frontend pages already have `copy = { tr: {...}, en: {...} }` structure. English strings are in `en:` as source. Current `t(key)` function translates by locale. `translateText` i18n utility also connected to CSV catalog.
+- **Commit:** `2fb32ab` — `refactor: normalize remaining locale fallbacks`
+
+---
+
+## Ongoing Work (2026-03-31)
+
+### Next Wave Targets
+
+As identified by the previous agent:
+
+1. **`CustomerList.vue`** - Customer list page locale-map check
+2. **`Dashboard.vue`** - Dashboard locale-map check
+3. **`LeadList.vue`** - Lead list page locale-map check
+4. **`usePolicyFormRuntime.js`** - Locale-map blocks in policy form runtime
+
+### Analysis Note
+
+Frontend localization status:
+- 20+ Vue pages have `copy = { tr: {...}, en: {...} }` structure
+- English strings are in `en:` as source
+- `translateText` i18n utility connected to CSV catalog
+- Vitest tests: 28 passed ✅
+- Build: successful ✅
+
+### WSL Frappe Server
+
+- URL: `http://at.localhost:8000/at/`
+- Login: `Administrator` / `admin`
+- Must be started with `bench start` in WSL
+
+---
+
+## Test Results (2026-03-31)
+
+### ❌ Playwright E2E Smoke Test
+- **Status:** Failed - Server not running
+- **Error:** `ERR_CONNECTION_REFUSED at http://localhost:8080/login`
+- **Cause:** Frappe server not running at `localhost:8080`
+- **Solution:** Need to start server with `bench start` in WSL
+
+### ❌ bench build --app acentem_takipte
+- **Status:** Failed - Node missing
+- **Error:** `ValueError: Invalid version string: 'bin/sh: 1: node: not found'`
+- **Cause:** Node.js not installed in WSL environment
+- **Solution:** Node.js needs to be installed on the system
 
 ---
 
