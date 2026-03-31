@@ -16,6 +16,7 @@ from acentem_takipte.acentem_takipte.api import session as session_api
 from acentem_takipte.acentem_takipte.doctype.at_policy_endorsement import (
     at_policy_endorsement as endorsement_api,
 )
+from acentem_takipte.acentem_takipte.services import quick_create_search as quick_create_search_service
 
 
 @contextmanager
@@ -79,9 +80,9 @@ class TestApiHardeningContracts(IntegrationTestCase):
         previous_user = getattr(frappe.session, "user", None)
         frappe.session.user = "Administrator"
         try:
-            with patch.object(quick_create_api, "assert_doctype_permission") as permission_mock:
+            with patch.object(quick_create_search_service, "assert_doctype_permission") as permission_mock:
                 with patch.object(
-                    quick_create_api.frappe,
+                    quick_create_search_service.frappe,
                     "get_list",
                     return_value=[{"name": "AT-CUST-0001", "full_name": "Ayse Yilmaz", "tax_id": "12345678901"}],
                 ) as get_list_mock:
