@@ -183,8 +183,8 @@ Frontend yerelleştirme durumu:
 
 4. ✅ **Build Doğrulama** - `npm run build` başarılı (26.81s)
 
-5. ⏳ **bench get-msg-dict** - WSL'de çalıştırılması gerekiyor
-6. ⏳ **Canlı TR/EN Smoke** - WSL bench start sonrası test edilecek
+5. ✅ **Mesaj sözlüğü yenileme** - `bench --site at.localhost build-message-files` + `clear-cache` tamamlandı
+6. ✅ **Canlı TR/EN Smoke** - API doğrulaması tamamlandı (locale switch + aynı validation hatasında TR/EN mesaj farkı doğrulandı)
 
 ### WSL Frappe Sunucusu (Canlı Test için Hazır)
 
@@ -392,8 +392,8 @@ rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_t
 | CSV Sync | 44 kaynak string `en.csv` + `tr.csv`'ye eklendi | `translations/en.csv`, `translations/tr.csv` | ✅ Tamamlandı `f2dffd0` | Yüksek |
 | Frontend Test | 14 pre-existing Vitest hatası düzeltildi — 258/258 ✅ | `Sidebar.vue`, `quickCreate/registry.js`, `CommunicationCenter.test.js` vs. | ✅ Tamamlandı `f1db740` | Yüksek |
 | Build | `npm run build` başarılı | `frontend/` | ✅ Tamamlandı | Yüksek |
-| bench get-msg-dict | Frappe mesaj sözlüğü yenileme | WSL: `bench --site at.localhost get-msg-dict acentem_takipte` | ⏳ WSL gerekiyor | Orta |
-| Canlı Smoke | TR/EN dil toggle + hata mesajı doğrulama | `http://at.localhost:8000/at/` | ⏳ bench start sonrası | Orta |
+| Mesaj sözlüğü yenileme | Frappe mesaj sözlüğü yenileme | WSL: `bench --site at.localhost build-message-files` + `bench --site at.localhost clear-cache` | ✅ Tamamlandı | Orta |
+| Canlı Smoke | TR/EN dil toggle + hata mesajı doğrulama | API smoke: `set_session_locale` + `get_customer_360_payload` | ✅ Tamamlandı | Orta |
 
 ---
 
