@@ -127,13 +127,19 @@
 
 - ✅ Lokalizasyon kapanışı tamamlandı (backend throw wrapping + CSV + frontend regression + build + TR/EN canlı smoke).
 - ✅ `developer_mode=0` + `build-message-files` + `clear-cache` ile live API JSON davranışı stabilize edildi.
-- ⏳ **Yeni Aşama:** Backend test altyapısı uyumluluk/hijyen düzeltmeleri.
-  - `bench --site at.localhost run-tests --app acentem_takipte` artık discovery aşamasını geçiyor ancak test altyapısı kaynaklı blokajlar var.
-  - İlk düzeltmeler uygulandı:
-   - Eski test importları Frappe v15 uyumuna alındı (`IntegrationTestCase` / `UnitTestCase` import uyumu).
-   - Harici script'e bağlı smoke testlerinde dosya yoksa class-level skip eklendi.
-   - 2 test dosyasında (`test_session_branch_context.py`, `test_session_interface_routing.py`) indentation/syntax hatası düzeltildi.
-  - Son durum: test koşumu `Ran 176 tests` seviyesine kadar ilerliyor; kalan hata/failure'lar lokalizasyon dışı test altyapısı ve fixture izolasyonu kaynaklı.
+- ✅ **Backend test altyapısı uyumluluk/hijyen fazı kapatıldı.**
+  - `bench --site at.localhost run-tests --app acentem_takipte --skip-before-tests` sonucu: `Ran 176 tests`, `OK (skipped=24)`.
+  - Faz 6 kapsamındaki discovery, fixture izolasyonu ve kontrat testleri tamamlandı.
+
+### Canlı Yayın Checkpoint (2026-03-31 Gece)
+
+- ✅ GitHub `main` güncel ve yayında.
+- ✅ Frontend yayın build'i alındı (`npm run build`).
+- ✅ Backend yayın adımları çalıştırıldı (`bench migrate`, `build-message-files`, `clear-cache`, `bench build --app acentem_takipte`).
+- ✅ Canlı erişim doğrulandı (`http://at.localhost:8000/at/` -> HTTP 200).
+- ✅ Post-deploy doğrulama:
+  - Backend: `Ran 176 tests`, `OK (skipped=24)`.
+  - Frontend: `Test Files 81 passed`, `Tests 258 passed`.
 
 ### Yeni İlerleme Aşaması (Faz 6)
 
@@ -146,13 +152,16 @@
 4. ✅ **Aşama 6.4 - Tam Backend Green + Release Notu**
   - Tam backend test koşusu green alındı ve plan dokümanı final checkpoint ile güncellendi.
 
-### ⚠️ KRİTİK BULGU: Backend API Message Lokalizasyonu Boşluğu
+### ✅ KRİTİK BULGU KAPANIŞI: Backend API Message Lokalizasyonu
 
 **Tarih:** 2026-03-31 | **Tarayan:** Automated codebase audit
 
-**Sonuç:** Frontend ✅ tamamlandı (20+ sayfa), **Backend API/Service/DocType lokalizasyonu şu anda 0% bitmemiş** (69 unlocalized throw gerekli).
+**Durum:** Bu bulgu kapatıldı.
 
-Detaylar [Test Sonuçları #Backend API Message Audit] bölümünde.
+**Kapanış Özeti:**
+- `api/`, `services/` ve 8 doctype validation dosyasında toplam 73 throw i18n wrapper ile sarıldı.
+- `en.csv` / `tr.csv` tarafına 44 kaynak mesaj senkronize edildi.
+- Kapanış commitleri: `83d2a38` (backend wrapper), `f2dffd0` (CSV sync).
 
 ### Doğrulama Sonuçları
 
@@ -173,7 +182,6 @@ Frontend yerelleştirme durumu:
 - `translateText` i18n utility'si CSV kataloğuna bağlı ✅
 - Turkish karakterli string'ler sadece `tr:` alanlarında (bu doğru) ✅
 
-**Backend API/Service/DocType Durumu (KRİTİK):**
 **Backend API/Service/DocType Durumu:**
 - `at_customer.py`: ✅ Compliant (7 throws `frappe._()` ile sarılı)
 - `at_policy.py`: ✅ Compliant (4 throws `frappe._()` ile sarılı)
@@ -194,9 +202,8 @@ Frontend yerelleştirme durumu:
 
 ### Kalan Görevler
 
-- ⏳ Diğer composable'ların `copy` yapılarını kontrol et
-- Build: başarılı ✅
-- Commit: `1e3ce50` ✅
+- ✅ Faz 1-6 ve yayın doğrulama adımları tamamlandı.
+- ℹ️ Açık teknik blokaj bulunmuyor; yalnızca dokümantasyon sadeleştirme/temizlik işleri kalır.
 
 ### Kalan Çalışmalar
 ### ✅ Tamamlanan Çalışmalar (2026-03-31)
@@ -261,24 +268,15 @@ Frontend yerelleştirme durumu:
 - **Credentials:** Administrator / admin
 - **Implication:** Canlı TR/EN smoke test Phase 12'de mümkün ✅
 
-### ❌ Backend API Message Audit (YENİ - KRİTİK)
-- **Durum:** KRİTİK BOŞLUK BULUNDU
-- **Bulgu:** 31 api/service + 38 doctype `frappe.throw()` çıplak string (wrapper yok)
-- **Scan Method:** Regex `frappe\.throw\((?!_\()` pattern match
-- **Impact:** Tüm bu hata mesajları çeviri sistemi tarafından erişilemiyor
-- **Envanteri:**
-  - `api/dashboard.py`: 24 throw  
-  - `api/filter_presets.py`: 3 throw
-  - `api/list_exports.py`: 1 throw
-  - `api/session.py`: 2 throw
-  - `services/branches.py`: 1 throw
-  - `services/scheduled_reports.py`: 4 throw
-  - 8 doctype validation files: 38 throw total
-- **Action Needed:** Phase 4-6 taramasında tam i18n wrapping gerekli
+### ✅ Backend API Message Audit (KAPATILDI)
+- **Durum:** Kapatıldı
+- **Bulgu (Tarihi):** 31 api/service + 38 doctype çıplak `frappe.throw()` string
+- **Uygulanan Çözüm:** 73 throw i18n wrapper ile sarıldı; CSV kaynakları senkronize edildi
+- **Doğrulama:** Backend test koşusu green (`Ran 176 tests`, `OK`, skipped=24)
 
-### ⚠️ bench build --app acentem_takipte
-- **Durum:** Node eksik (ancak opsiyonel)
-- **Plan:** Phase 11'de denenir; başarısız olursa acceptable skip (frontend kodu unchanged)
+### ✅ bench build --app acentem_takipte
+- **Durum:** Başarılı
+- **Not:** Yayın döngüsünde `bench migrate` ve frontend `npm run build` ile birlikte doğrulandı.
 
 ---
 
@@ -430,11 +428,13 @@ rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_t
 | Build | `npm run build` başarılı | `frontend/` | ✅ Tamamlandı | Yüksek |
 | Mesaj sözlüğü yenileme | Frappe mesaj sözlüğü yenileme | WSL: `bench --site at.localhost build-message-files` + `bench --site at.localhost clear-cache` | ✅ Tamamlandı | Orta |
 | Canlı Smoke | TR/EN dil toggle + hata mesajı doğrulama | API smoke: `set_session_locale` + `get_customer_360_payload` | ✅ Tamamlandı | Orta |
-| Backend Test Harness | Test altyapısı uyumluluk ve fixture izolasyon düzeltmeleri | `acentem_takipte/acentem_takipte/tests/**/*.py` | ⏳ Faz 6 başladı | Orta |
+| Backend Test Harness | Test altyapısı uyumluluk ve fixture izolasyon düzeltmeleri | `acentem_takipte/acentem_takipte/tests/**/*.py` | ✅ Faz 6 tamamlandı | Orta |
 
 ---
 
 ## Faz 2: Backend Yerelleştirme Başlangıcı
+
+> Not (2026-03-31): Aşağıdaki checkbox listesi tarihsel uygulama şablonudur. Bu fazdaki görevler tamamlanmış ve sonuçları üstteki checkpoint bölümlerinde kapanmıştır.
 
 Bu faz özellikle küçük ve kontrollü tutulacak. İlk çalışma `at_customer.py`, ardından `at_policy.py` üzerinde olacak. Mümkün oldukça her dosya ayrı commit ile ilerleyecek.
 
