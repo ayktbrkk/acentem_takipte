@@ -110,25 +110,34 @@
 
 ## Ongoing Work (2026-03-31)
 
-### Next Wave Targets
+### Verification Results
 
-As identified by the previous agent:
+Next wave targets checked:
 
-1. **`CustomerList.vue`** - Customer list page locale-map check
-2. **`Dashboard.vue`** - Dashboard locale-map check
-3. **`LeadList.vue`** - Lead list page locale-map check
-4. **`usePolicyFormRuntime.js`** - Locale-map blocks in policy form runtime
+1. **`CustomerList.vue`** - `copy = { tr: {...}, en: {...} }` ✅
+2. **`Dashboard.vue`** - `copy = { tr: {...}, en: {...} }` ✅
+3. **`LeadList.vue`** - `copy = { tr: {...}, en: {...} }` ✅
+4. **`usePolicyFormRuntime.js`** - `copy = { tr: {...}, en: {...} }` ✅
 
-### Analysis Note
+All files have English strings in `en:` as source.
+
+### Overall Status
 
 Frontend localization status:
 - 20+ Vue pages have `copy = { tr: {...}, en: {...} }` structure
 - English strings are in `en:` as source
 - `translateText` i18n utility connected to CSV catalog
-- Vitest tests: 28 passed ✅
+- Turkish characters only in `tr:` fields (correct)
 - Build: successful ✅
+- Commit: `1e3ce50` ✅
 
-### WSL Frappe Server
+### Remaining Work
+
+1. **Vitest test files** - 81 test files exist but no vitest format tests found
+2. **WSL Frappe Server** - Connection optional
+3. **Frontend hot spot files** - All comply with localization standards
+
+### WSL Frappe Server (Optional)
 
 - URL: `http://at.localhost:8000/at/`
 - Login: `Administrator` / `admin`

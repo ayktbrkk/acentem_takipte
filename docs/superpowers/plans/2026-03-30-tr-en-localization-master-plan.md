@@ -110,25 +110,34 @@
 
 ## Devam Eden Çalışma (2026-03-31)
 
-### Sonraki Dalga Hedefleri
+### Doğrulama Sonuçları
 
-Önceki agent'ın belirlediği sonraki dalga:
+Sonraki dalga hedefleri kontrol edildi:
 
-1. **`CustomerList.vue`** - Müşteri listesi sayfası locale-map kontrolü
-2. **`Dashboard.vue`** - Gösterge paneli locale-map kontrolü
-3. **`LeadList.vue`** - Lead listesi sayfası locale-map kontrolü
-4. **`usePolicyFormRuntime.js`** - Policy form runtime içindeki locale-map blokları
+1. **`CustomerList.vue`** - `copy = { tr: {...}, en: {...} }` ✅
+2. **`Dashboard.vue`** - `copy = { tr: {...}, en: {...} }` ✅
+3. **`LeadList.vue`** - `copy = { tr: {...}, en: {...} }` ✅
+4. **`usePolicyFormRuntime.js`** - `copy = { tr: {...}, en: {...} }` ✅
 
-### Analiz Notu
+Tüm dosyalarda English string'ler `en:` altında kaynak olarak duruyor.
+
+### Genel Durum
 
 Frontend yerelleştirme durumu:
 - 20+ Vue sayfasında `copy = { tr: {...}, en: {...} }` yapısı mevcut
 - English string'ler `en:` altında kaynak olarak duruyor
 - `translateText` i18n utility'si CSV kataloğuna bağlı
-- Vitest testleri: 28 passed ✅
+- Turkish karakterli string'ler sadece `tr:` alanlarında (bu doğru)
 - Build: başarılı ✅
+- Commit: `1e3ce50` ✅
 
-### WSL Frappe Sunucusu
+### Kalan Çalışmalar
+
+1. **Vitest test dosyaları** - Mevcut 81 test dosyasında vitest formatında test yok
+2. **WSL Frappe Sunucusu** - Bağlantı opsiyonel
+3. **Frontend hot spot dosyaları** - Tümü localization standartlarına uygun
+
+### WSL Frappe Sunucusu (Opsiyonel)
 
 - URL: `http://at.localhost:8000/at/`
 - Giriş: `Administrator` / `admin`
