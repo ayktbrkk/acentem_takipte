@@ -257,7 +257,8 @@ def approve_break_glass_request(
 
     # Update + submit
     doc.status = "Approved"
-    doc.approved_by = approver
+    if not doc.approved_by:
+        doc.approved_by = approver
     doc.approved_at_ts = now_dt
     doc.expires_at_ts = expires_at
     doc.duration_hours = duration_hours
@@ -326,7 +327,8 @@ def reject_break_glass_request(
         )
 
     doc.status = "Rejected"
-    doc.approved_by = approver
+    if not doc.approved_by:
+        doc.approved_by = approver
     doc.approved_at_ts = now_datetime()
     if approver_comments:
         doc.approver_comments = approver_comments
