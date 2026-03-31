@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.api import seed as seed_api
 from acentem_takipte.acentem_takipte.api import smoke as smoke_api
@@ -141,5 +141,6 @@ class TestSeedSmokeSecurity(IntegrationTestCase):
                 get_doc_mock.assert_called_once()
 
         self.assertEqual(values["unique_key"], "POL-0001:CUS-0001:D7:2026-03-06")
+
 
 

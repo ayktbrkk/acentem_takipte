@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.api import admin_jobs
 
@@ -22,4 +22,5 @@ class TestAdminJobPaymentDueAccess(IntegrationTestCase):
             role_message="You do not have permission to trigger admin jobs.",
             post_message="Only POST requests are allowed for admin job triggers.",
         )
+
 

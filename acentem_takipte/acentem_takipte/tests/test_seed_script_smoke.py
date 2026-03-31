@@ -12,7 +12,12 @@ from acentem_takipte.acentem_takipte.doctype.at_renewal_task.at_renewal_task imp
 
 def _load_seed_module():
     current = Path(__file__).resolve()
-    root = next(parent for parent in current.parents if (parent / "scripts" / "reset_and_seed_at_data.py").exists())
+    root = next(
+        (parent for parent in current.parents if (parent / "scripts" / "reset_and_seed_at_data.py").exists()),
+        None,
+    )
+    if root is None:
+        return None
     module_path = root / "scripts" / "reset_and_seed_at_data.py"
     spec = importlib.util.spec_from_file_location("at_seed_script", module_path)
     module = importlib.util.module_from_spec(spec)
@@ -24,6 +29,7 @@ def _load_seed_module():
 seed_script = _load_seed_module()
 
 
+@unittest.skipIf(seed_script is None, "reset_and_seed_at_data.py not found under any parent scripts directory")
 class TestSeedScriptSmoke(unittest.TestCase):
     def test_insert_named_enables_import_mode_only_during_insert(self):
         inserted = []

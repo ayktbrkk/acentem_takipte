@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.notifications
 class TestNotificationCatalogValidation(IntegrationTestCase):
@@ -19,6 +19,7 @@ class TestNotificationCatalogValidation(IntegrationTestCase):
                     context={},
                     enqueue=False,
                 )
+
 
 
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 try:
-    from frappe.tests import IntegrationTestCase
+    from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 except ImportError:  # pragma: no cover - bench environments may not expose this helper
     from unittest import TestCase as IntegrationTestCase
 
@@ -49,4 +49,5 @@ class TestProviderContracts(IntegrationTestCase):
         self.assertTrue(result.ok)
         self.assertEqual(result.provider, "fake_whatsapp")
         self.assertEqual(result.message_id, "msg:905321234567")
+
 

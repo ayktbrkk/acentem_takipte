@@ -3,7 +3,7 @@ from __future__ import annotations
 import types
 from unittest.mock import patch
 
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.tasks as task_jobs
 class TestPaymentDueTasks(IntegrationTestCase):
@@ -42,6 +42,7 @@ class TestPaymentDueTasks(IntegrationTestCase):
         self.assertEqual(summary["created"], 0)
         self.assertEqual(summary["skipped_duplicate"], 1)
         create_drafts.assert_not_called()
+
 
 
 

@@ -110,6 +110,29 @@
 
 ## Devam Eden Çalışma (2026-03-31)
 
+### Güncel Checkpoint (2026-03-31 Gece)
+
+- ✅ Lokalizasyon kapanışı tamamlandı (backend throw wrapping + CSV + frontend regression + build + TR/EN canlı smoke).
+- ✅ `developer_mode=0` + `build-message-files` + `clear-cache` ile live API JSON davranışı stabilize edildi.
+- ⏳ **Yeni Aşama:** Backend test altyapısı uyumluluk/hijyen düzeltmeleri.
+  - `bench --site at.localhost run-tests --app acentem_takipte` artık discovery aşamasını geçiyor ancak test altyapısı kaynaklı blokajlar var.
+  - İlk düzeltmeler uygulandı:
+   - Eski test importları Frappe v15 uyumuna alındı (`IntegrationTestCase` / `UnitTestCase` import uyumu).
+   - Harici script'e bağlı smoke testlerinde dosya yoksa class-level skip eklendi.
+   - 2 test dosyasında (`test_session_branch_context.py`, `test_session_interface_routing.py`) indentation/syntax hatası düzeltildi.
+  - Son durum: test koşumu `Ran 176 tests` seviyesine kadar ilerliyor; kalan hata/failure'lar lokalizasyon dışı test altyapısı ve fixture izolasyonu kaynaklı.
+
+### Yeni İlerleme Aşaması (Faz 6)
+
+1. **Aşama 6.1 - Test Discovery Stabilizasyonu**
+  - Eski test API importları ve syntax/dosya-bağımlılığı kaynaklı discovery crash'lerini temizle.
+2. **Aşama 6.2 - Fixture İzolasyon Sertleştirme**
+  - `frappe.model` / `frappe.permissions` attribute hatası üreten testlerde global monkeypatch sızıntısını izole et.
+3. **Aşama 6.3 - Kontrat Test Dengeleme**
+  - `test_api_hardening_contracts`, `test_break_glass`, `test_dashboard_contract_smoke` failure'larını yeni davranışa göre düzelt.
+4. **Aşama 6.4 - Tam Backend Green + Release Notu**
+  - `bench run-tests` backend green hedefi, ardından dokümana final test matrisi ekleme.
+
 ### ⚠️ KRİTİK BULGU: Backend API Message Lokalizasyonu Boşluğu
 
 **Tarih:** 2026-03-31 | **Tarayan:** Automated codebase audit
@@ -394,6 +417,7 @@ rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_t
 | Build | `npm run build` başarılı | `frontend/` | ✅ Tamamlandı | Yüksek |
 | Mesaj sözlüğü yenileme | Frappe mesaj sözlüğü yenileme | WSL: `bench --site at.localhost build-message-files` + `bench --site at.localhost clear-cache` | ✅ Tamamlandı | Orta |
 | Canlı Smoke | TR/EN dil toggle + hata mesajı doğrulama | API smoke: `set_session_locale` + `get_customer_360_payload` | ✅ Tamamlandı | Orta |
+| Backend Test Harness | Test altyapısı uyumluluk ve fixture izolasyon düzeltmeleri | `acentem_takipte/acentem_takipte/tests/**/*.py` | ⏳ Faz 6 başladı | Orta |
 
 ---
 

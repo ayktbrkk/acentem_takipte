@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.accounting as accounting_logic
 import acentem_takipte.acentem_takipte.communication as communication_logic
@@ -48,6 +48,7 @@ class TestObservabilityMetrics(IntegrationTestCase):
         self.assertEqual(result["synced"], 0)
         payload = logger_mock.return_value.info.call_args.args[1]
         self.assertEqual(payload["metric"], "accounting.sync")
+
 
 
 

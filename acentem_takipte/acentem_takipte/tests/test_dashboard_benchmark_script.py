@@ -9,7 +9,12 @@ from unittest.mock import patch
 
 def _load_benchmark_module():
     current = Path(__file__).resolve()
-    root = next(parent for parent in current.parents if (parent / "scripts" / "benchmark_dashboard_api.py").exists())
+    root = next(
+        (parent for parent in current.parents if (parent / "scripts" / "benchmark_dashboard_api.py").exists()),
+        None,
+    )
+    if root is None:
+        return None
     module_path = root / "scripts" / "benchmark_dashboard_api.py"
     spec = importlib.util.spec_from_file_location("benchmark_dashboard_api", module_path)
     module = importlib.util.module_from_spec(spec)
@@ -21,6 +26,7 @@ def _load_benchmark_module():
 benchmark_dashboard_api = _load_benchmark_module()
 
 
+@unittest.skipIf(benchmark_dashboard_api is None, "benchmark_dashboard_api.py not found under any parent scripts directory")
 class TestDashboardBenchmarkScript(unittest.TestCase):
     def test_get_available_presets_returns_sorted_names(self):
         presets = benchmark_dashboard_api.get_available_presets()

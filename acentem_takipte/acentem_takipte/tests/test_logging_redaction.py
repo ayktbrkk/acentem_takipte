@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.api import security as security_api
 from acentem_takipte.acentem_takipte.utils.logging import (
@@ -112,4 +112,5 @@ class TestLoggingRedaction(IntegrationTestCase):
         self.assertEqual(calls[0][0], "trace")
         self.assertEqual(calls[1][0], "trace")
         self.assertEqual(calls[1][1], "AT Notification Outbox Insert Error")
+
 

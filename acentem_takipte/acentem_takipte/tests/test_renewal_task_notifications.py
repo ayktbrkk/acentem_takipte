@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.doctype.at_renewal_task.at_renewal_task import ATRenewalTask
 
@@ -44,4 +44,5 @@ class TestRenewalTaskNotifications(IntegrationTestCase):
         kwargs = create_drafts.call_args.kwargs
         self.assertEqual(kwargs["template_key"], "renewal_reminder_30")
         self.assertEqual(kwargs["context"]["renewal_stage"], "D30")
+
 

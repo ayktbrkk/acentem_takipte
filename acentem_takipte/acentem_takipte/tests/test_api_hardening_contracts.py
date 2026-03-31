@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import ANY, patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.tasks as task_jobs
 from acentem_takipte.acentem_takipte.api import admin_jobs as admin_jobs_api
@@ -260,6 +260,7 @@ class TestApiHardeningContracts(IntegrationTestCase):
         access_mock.assert_called_once()
         dispatch_mock.assert_called_once_with("run_report_snapshot_job", limit=1)
         self.assertEqual(result, expected)
+
 
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from frappe.tests import UnitTestCase
+from frappe.tests.utils import FrappeTestCase as UnitTestCase
 
 from acentem_takipte.acentem_takipte.utils.network_security import (
     normalize_outbound_url,

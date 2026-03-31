@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.doctype.at_claim.at_claim import ATClaim
 
@@ -49,4 +49,5 @@ class TestClaimNotificationTrigger(IntegrationTestCase):
         self.assertEqual(kwargs["event_key"], "claim_status_update")
         self.assertEqual(kwargs["template_key"], "claim_status_approved")
         self.assertEqual(kwargs["context"]["claim_status"], "Approved")
+
 

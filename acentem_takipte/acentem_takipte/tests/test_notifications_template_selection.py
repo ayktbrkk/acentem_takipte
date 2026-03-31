@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.notifications
 class TestNotificationTemplateSelection(IntegrationTestCase):
@@ -75,6 +75,7 @@ class TestNotificationTemplateSelection(IntegrationTestCase):
             notifications._resolve_body_template_for_channel(template, "WHATSAPP"),
             "WhatsApp Govde",
         )
+
 
 
 

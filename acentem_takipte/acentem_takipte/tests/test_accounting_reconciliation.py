@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 from frappe.utils import add_days, nowdate
 
 from acentem_takipte.acentem_takipte.api import accounting as accounting_api
@@ -196,4 +196,5 @@ def _random_tax_id() -> str:
     tenth = ((sum(digits[0:9:2]) * 7) - sum(digits[1:8:2])) % 10
     eleventh = (sum(digits) + tenth) % 10
     return f"{raw}{tenth}{eleventh}"
+
 

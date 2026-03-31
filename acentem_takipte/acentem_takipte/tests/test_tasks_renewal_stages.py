@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.tasks as task_jobs
 class TestRenewalTaskStages(IntegrationTestCase):
@@ -50,6 +50,7 @@ class TestRenewalTaskStages(IntegrationTestCase):
 
         self.assertEqual(summary["created"], 0)
         self.assertEqual(summary["skipped_invalid"], 1)
+
 
 
 

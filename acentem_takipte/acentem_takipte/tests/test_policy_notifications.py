@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import ATPolicy
 
@@ -46,4 +46,5 @@ class TestPolicyNotifications(IntegrationTestCase):
         self.assertEqual(kwargs["event_key"], "policy_created")
         self.assertEqual(kwargs["template_key"], "policy_delivery")
         self.assertEqual(kwargs["reference_name"], "POL-0001")
+
 

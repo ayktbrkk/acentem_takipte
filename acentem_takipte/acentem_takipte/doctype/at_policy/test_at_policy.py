@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 from frappe.utils import add_days, flt, nowdate
 
 
@@ -191,3 +191,4 @@ def _random_tax_id() -> str:
     if len(digits) >= 11:
         return digits[:11]
     return (digits + "12345678901")[:11]
+

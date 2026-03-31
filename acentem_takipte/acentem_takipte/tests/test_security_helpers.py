@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.api import security as security_api
 
@@ -47,4 +47,5 @@ class TestSecurityHelpers(IntegrationTestCase):
                 get_doc_mock.assert_not_called()
         finally:
             frappe.session.user = previous_user
+
 
