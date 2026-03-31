@@ -2,6 +2,7 @@ import { computed, ref } from "vue";
 import { createResource } from "frappe-ui";
 
 import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
+import { translateText } from "../utils/i18n";
 
 const QUICK_OPTION_LIMIT = 200;
 
@@ -13,14 +14,14 @@ export function usePolicyDetailQuickDialogs({ props, policy, customer, activeLoc
   const ownershipAssignmentEyebrow = computed(() => {
     return (
       getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "Hızlı Atama" : "Quick Assignment")
+      translateText("Quick Assignment", activeLocale.value)
     );
   });
 
   const ownershipAssignmentEditEyebrow = computed(() => {
     return (
       getLocalizedText(getQuickCreateConfig("ownership_assignment_edit")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "Atamayı Düzenle" : "Edit Assignment")
+      translateText("Edit Assignment", activeLocale.value)
     );
   });
 

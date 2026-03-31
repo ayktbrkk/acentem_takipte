@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, ref, unref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
+import { translateText } from "../utils/i18n";
 
 export function useLeadDetailRuntime({ name, activeLocale, t = (key) => key }) {
   const router = useRouter();
@@ -535,9 +536,9 @@ export function useLeadDetailRuntime({ name, activeLocale, t = (key) => key }) {
     return "Fresh";
   }
   function leadStaleLabel(state) {
-    if (state === "Fresh") return localeValue.value === "tr" ? "Güncel" : "Fresh";
-    if (state === "FollowUp") return localeValue.value === "tr" ? "Takip Et" : "Follow Up";
-    return localeValue.value === "tr" ? "Bekliyor" : "Stale";
+    if (state === "Fresh") return translateText("Fresh", localeValue.value);
+    if (state === "FollowUp") return translateText("Follow Up", localeValue.value);
+    return translateText("Stale", localeValue.value);
   }
   function fmtMoney(value, currency = "TRY") {
     return new Intl.NumberFormat(localeCode.value, {
@@ -704,9 +705,9 @@ export function leadStaleState(row) {
 }
 
 export function leadStaleLabel(state, locale = "en") {
-  if (state === "Fresh") return locale === "tr" ? "Güncel" : "Fresh";
-  if (state === "FollowUp") return locale === "tr" ? "Takip Et" : "Follow Up";
-  return locale === "tr" ? "Bekliyor" : "Stale";
+  if (state === "Fresh") return translateText("Fresh", locale);
+  if (state === "FollowUp") return translateText("Follow Up", locale);
+  return translateText("Stale", locale);
 }
 
 export function leadConversionState(row) {

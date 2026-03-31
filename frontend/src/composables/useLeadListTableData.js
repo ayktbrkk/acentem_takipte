@@ -1,4 +1,5 @@
 import { computed } from "vue";
+import { translateText } from "../utils/i18n";
 
 export function useLeadListTableData({ t, activeLocale, leadListResource }) {
   const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
@@ -120,7 +121,7 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
   const leadVisibleStatusOptions = computed(() => [
     {
       value: "",
-      label: activeLocale.value === "tr" ? "Tümü" : "All",
+      label: translateText("All", activeLocale.value),
       count: leadStatusCountMap.value[""] || 0,
     },
     ...leadStatusOptions.value.map((option) => ({

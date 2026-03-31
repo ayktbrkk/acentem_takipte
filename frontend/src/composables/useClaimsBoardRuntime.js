@@ -7,6 +7,7 @@ import { useClaimsBoardClaimFacts } from "./useClaimsBoardClaimFacts";
 import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { openTabularExport } from "../utils/listExport";
 import { subtleFact } from "../utils/factItems";
+import { translateText } from "../utils/i18n";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -21,7 +22,7 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
   const ownershipAssignmentEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "Hızlı Atama" : "Quick Assignment")
+      translateText("Quick Assignment", activeLocale.value)
   );
 
   function buildOfficeBranchLookupFilters() {

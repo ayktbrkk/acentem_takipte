@@ -1,5 +1,6 @@
 import { buildQuickCreateDraft } from "../../config/quickCreate";
 import { getLocalizedText } from "../../config/quickCreate";
+import { translateText } from "../../utils/i18n";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../../utils/relatedQuickCreate";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../../utils/customerIdentity";
@@ -60,15 +61,11 @@ export function useOfferBoardQuickOffer({
     const typedName = quickOffer.queryText.trim();
     const shouldCreateCustomer = !selectedCustomerName && Boolean(quickOffer.createCustomerMode);
     if (!selectedCustomerName && !shouldCreateCustomer) {
-      quickOfferFieldErrors.customer =
-        activeLocale.value === "tr"
-          ? "Bir müşteri seçin veya yeni müşteri ekleyin."
-          : "Select a customer or add a new customer.";
+      quickOfferFieldErrors.customer = translateText("Select a customer or add a new customer.", activeLocale.value);
       valid = false;
     }
     if (shouldCreateCustomer && !typedName) {
-      quickOfferFieldErrors.customer =
-        activeLocale.value === "tr" ? "Yeni müşteri adı gerekli." : "New customer name is required.";
+      quickOfferFieldErrors.customer = translateText("New customer name is required.", activeLocale.value);
       valid = false;
     }
 
@@ -89,19 +86,14 @@ export function useOfferBoardQuickOffer({
       const identityNumber = normalizeIdentityNumber(quickOffer.tax_id);
       if (customerType === "Corporate") {
         if (identityNumber.length !== 10) {
-          quickOfferFieldErrors.tax_id =
-            activeLocale.value === "tr" ? "Vergi numarası 10 haneli olmalıdır." : "Tax number must be 10 digits.";
+          quickOfferFieldErrors.tax_id = translateText("Tax number must be 10 digits.", activeLocale.value);
           valid = false;
         }
       } else if (identityNumber.length !== 11) {
-        quickOfferFieldErrors.tax_id =
-          activeLocale.value === "tr"
-            ? "TC kimlik numarası 11 haneli olmalıdır."
-            : "T.R. identity number must be 11 digits.";
+        quickOfferFieldErrors.tax_id = translateText("National ID number must be 11 digits.", activeLocale.value);
         valid = false;
       } else if (!isValidTckn(identityNumber)) {
-        quickOfferFieldErrors.tax_id =
-          activeLocale.value === "tr" ? "Geçerli bir TC kimlik numarası girin." : "Enter a valid T.R. identity number.";
+        quickOfferFieldErrors.tax_id = translateText("Enter a valid Turkish national ID number.", activeLocale.value);
         valid = false;
       }
     }
