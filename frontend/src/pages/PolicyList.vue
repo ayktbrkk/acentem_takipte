@@ -134,6 +134,8 @@ const copy = {
     summaryActive: "Aktif",
     summaryPending: "Beklemede",
     summaryTotalPremium: "Toplam Prim",
+    statusActive: "Aktif",
+    statusWaiting: "Bekliyor",
     allCompanies: "Tüm Sigorta Şirketleri",
     searchPlaceholder: "Poliçe / Müşteri / Kayıt ara",
     endDateFilter: "Bitiş Tarihi",
@@ -202,6 +204,8 @@ const copy = {
     summaryActive: "Active",
     summaryPending: "Pending",
     summaryTotalPremium: "Total Premium",
+    statusActive: "Active",
+    statusWaiting: "Waiting",
     allCompanies: "All Insurance Companies",
     searchPlaceholder: "Search policy / customer / record",
     endDateFilter: "End Date",
@@ -266,8 +270,8 @@ const pagination = policyStore.state.pagination;
 let refreshPolicyList = () => Promise.resolve();
 
 const statusOptions = computed(() => [
-  { value: "active", label: activeLocale.value === "tr" ? "Aktif" : "Active" },
-  { value: "waiting", label: activeLocale.value === "tr" ? "Bekliyor" : "Waiting" },
+  { value: "active", label: t("statusActive") },
+  { value: "waiting", label: t("statusWaiting") },
 ]);
 
 const sortOptions = computed(() => [

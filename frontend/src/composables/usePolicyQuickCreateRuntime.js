@@ -7,6 +7,7 @@ import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
+import { translateText } from "../utils/i18n";
 
 const QUICK_OPTION_LIMIT = 2000;
 const POLICY_PRESET_STORAGE_KEY = "at:policy-list:preset";
@@ -145,20 +146,14 @@ export function usePolicyQuickCreateRuntime({
     title: getLocalizedText(quickPolicyConfig?.title, activeLocale.value),
     subtitle: getLocalizedText(quickPolicyConfig?.subtitle, activeLocale.value),
     eyebrow: getQuickCreateEyebrow("policy", activeLocale.value),
-    newLabel: activeLocale.value === "tr" ? "Yeni Poliçe" : "New Policy",
+    newLabel: translateText("New Policy", activeLocale.value),
   }));
   const quickCreateCommon = computed(() => ({
     ...getQuickCreateLabels("create", activeLocale.value),
-    validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.",
-    issueDateAfterStartDate:
-      activeLocale.value === "tr"
-        ? "Tanzim tarihi başlangıç tarihinden sonra olamaz."
-        : "Issue date cannot be later than start date.",
-    startDateAfterEndDate:
-      activeLocale.value === "tr"
-        ? "Başlangıç tarihi bitiş tarihinden sonra olamaz."
-        : "Start date cannot be later than end date.",
-    failed: activeLocale.value === "tr" ? "Hızlı poliçe oluşturma başarısız oldu." : "Quick policy create failed.",
+    validation: translateText("Please fill required fields.", activeLocale.value),
+    issueDateAfterStartDate: translateText("Issue date cannot be later than start date.", activeLocale.value),
+    startDateAfterEndDate: translateText("Start date cannot be later than end date.", activeLocale.value),
+    failed: translateText("Quick policy create failed.", activeLocale.value),
   }));
 
   function buildOfficeBranchLookupFilters() {

@@ -9,6 +9,7 @@ import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
+import { translateText } from "../utils/i18n";
 
 const QUICK_OPTION_LIMIT = 2000;
 
@@ -109,12 +110,12 @@ export function useLeadListQuickLead({ t, activeLocale, refreshLeadList, openLea
     eyebrow: getQuickCreateEyebrow("lead", activeLocale.value),
     title: getLocalizedText(quickLeadConfig?.title, activeLocale.value),
     subtitle: getLocalizedText(quickLeadConfig?.subtitle, activeLocale.value),
-    newLabel: activeLocale.value === "tr" ? "Yeni Fırsat" : "New Lead",
+    newLabel: translateText("New Lead", activeLocale.value),
   }));
   const quickCreateCommon = computed(() => ({
     ...getQuickCreateLabels("create", activeLocale.value),
-    validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.",
-    failed: activeLocale.value === "tr" ? "Hızlı kayıt oluşturulamadı." : "Quick create failed.",
+    validation: translateText("Please fill required fields.", activeLocale.value),
+    failed: translateText("Quick lead create failed.", activeLocale.value),
   }));
 
   function buildOfficeBranchLookupFilters() {
@@ -173,15 +174,11 @@ export function useLeadListQuickLead({ t, activeLocale, refreshLeadList, openLea
     const fullName = String(quickLeadForm.queryText || "").trim();
     const shouldCreateCustomer = !selectedCustomer && Boolean(quickLeadForm.createCustomerMode);
     if (!selectedCustomer && !shouldCreateCustomer) {
-      quickLeadFieldErrors.customer =
-        activeLocale.value === "tr"
-          ? "Bir müşteri seçin veya yeni müşteri ekleyin."
-          : "Select a customer or add a new customer.";
+      quickLeadFieldErrors.customer = translateText("Select a customer or add a new customer.", activeLocale.value);
       valid = false;
     }
     if (shouldCreateCustomer && !fullName) {
-      quickLeadFieldErrors.customer =
-        activeLocale.value === "tr" ? "Yeni müşteri adı gerekli." : "New customer name is required.";
+      quickLeadFieldErrors.customer = translateText("New customer name is required.", activeLocale.value);
       valid = false;
     }
     const identityNumber = normalizeIdentityNumber(quickLeadForm.tax_id);

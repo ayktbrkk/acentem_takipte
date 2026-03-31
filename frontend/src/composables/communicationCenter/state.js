@@ -9,6 +9,7 @@ import {
   isPermissionDeniedError,
 } from "./helpers";
 import { resolveSameOriginPath } from "../../utils/safeNavigation";
+import { translateText } from "../../utils/i18n";
 
 export function useCommunicationCenterState({
   route,
@@ -139,11 +140,11 @@ export function useCommunicationCenterState({
       channelLabel: (value) => channelLabel(value, t),
     }),
   );
-  const quickSegmentEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Segment" : "Quick Segment"));
-  const quickCampaignEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Kampanya" : "Quick Campaign"));
-  const quickCallNoteEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Arama Notu" : "Quick Call Note"));
-  const quickReminderEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Hatırlatıcı" : "Quick Reminder"));
-  const quickMessageEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Mesaj" : "Quick Message"));
+  const quickSegmentEyebrow = computed(() => translateText("Quick Segment", activeLocale.value));
+  const quickCampaignEyebrow = computed(() => translateText("Quick Campaign", activeLocale.value));
+  const quickCallNoteEyebrow = computed(() => translateText("Quick Call Note", activeLocale.value));
+  const quickReminderEyebrow = computed(() => translateText("Quick Reminder", activeLocale.value));
+  const quickMessageEyebrow = computed(() => translateText("Quick Message", activeLocale.value));
   const canCreateQuickMessage = computed(() => authStore.can(["quickCreate", "communication_message"]));
   const canSendDraftNowAction = computed(() => authStore.can(["actions", "communication", "sendDraftNow"]));
   const canRetryOutboxAction = computed(() => authStore.can(["actions", "communication", "retryOutbox"]));
@@ -151,10 +152,7 @@ export function useCommunicationCenterState({
   const returnToTarget = computed(() => String(route.query.return_to || "").trim());
   const safeReturnTo = computed(() => resolveSameOriginPath(returnToTarget.value) || "");
   const canReturnToContext = computed(() => Boolean(safeReturnTo.value || hasContextFilters.value));
-  const returnToLabel = computed(() => {
-    if (safeReturnTo.value) return activeLocale.value === "tr" ? "Kaynaga Don" : "Back to Source";
-    return activeLocale.value === "tr" ? "Geri" : "Back";
-  });
+  const returnToLabel = computed(() => (safeReturnTo.value ? translateText("Back to Source", activeLocale.value) : translateText("Back", activeLocale.value)));
   const quickMessageDialogLabels = computed(() => ({
     save: t("saveDraft"),
     saveAndOpen: t("sendImmediately"),

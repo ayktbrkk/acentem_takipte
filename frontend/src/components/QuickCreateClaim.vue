@@ -10,12 +10,12 @@
         <button
           class="qc-managed-dialog__close"
           type="button"
-          :aria-label="locale === 'tr' ? 'Kapat' : 'Close'"
-          :title="locale === 'tr' ? 'Kapat' : 'Close'"
+          :aria-label="translateText('Close', locale)"
+          :title="translateText('Close', locale)"
           @click="close"
         >
           <span aria-hidden="true">×</span>
-          <span class="sr-only">{{ locale === 'tr' ? 'Kapat' : 'Close' }}</span>
+          <span class="sr-only">{{ translateText('Close', locale) }}</span>
         </button>
       </div>
 
@@ -56,6 +56,7 @@ import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import QuickCreateDialogShell from "./app-shell/QuickCreateDialogShell.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
+import { translateText } from "../utils/i18n";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 
 const props = defineProps({
@@ -140,7 +141,7 @@ function validateRequired() {
     }
   }
   if (!valid) {
-    errorText.value = props.locale === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.";
+    errorText.value = translateText("Please fill required fields.", props.locale);
   }
   return valid;
 }
@@ -172,7 +173,7 @@ async function submit(openAfter = false) {
     }
     if (!openAfter && props.returnTo) await router.push(props.returnTo).catch(() => {});
   } catch (error) {
-    errorText.value = error?.messages?.join(" ") || error?.message || (props.locale === "tr" ? "Kayıt oluşturma başarısız oldu." : "Create failed.");
+    errorText.value = error?.messages?.join(" ") || error?.message || translateText("Create failed.", props.locale);
     emit("error", error);
   } finally {
     loading.value = false;

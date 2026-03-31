@@ -2,6 +2,7 @@ import { computed, reactive, ref, unref } from "vue";
 
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
+import { translateText } from "../utils/i18n";
 
 export function usePolicyFormRuntime({ props, authStore, emit }) {
   const copy = {
@@ -203,22 +204,19 @@ export function usePolicyFormRuntime({ props, authStore, emit }) {
     return copy[activeLocaleValue.value]?.[key] || copy.en[key] || key;
   }
 
-  const customerPickerLabel = {
-    tr: "Müşteri Ara / Yeni Müşteri",
-    en: "Customer Search / New Customer",
-  };
-  const customerSearchPlaceholder = {
-    tr: "Müşteri adı, ünvanı veya TC/VKN girin...",
-    en: "Search by customer name, company name, or ID...",
-  };
-  const customerNoResultsText = {
-    tr: "Aranan müşteri bulunamadı. Aynı çubuktan yeni müşteri ekleyebilirsiniz.",
-    en: "No customer found. You can add a new customer from the same bar.",
-  };
-  const customerLockedMessage = {
-    tr: "Kaynak teklif seçildiğinde müşteri bilgisi tekliften otomatik alınır.",
-    en: "Customer information is inherited automatically when a source offer is selected.",
-  };
+  const customerPickerLabel = computed(() => translateText("Customer Search / New Customer", activeLocaleValue.value));
+  const customerSearchPlaceholder = computed(() =>
+    translateText("Search by customer name, company name, or tax ID...", activeLocaleValue.value)
+  );
+  const customerNoResultsText = computed(() =>
+    translateText("No customer found. You can add a new customer from the same search bar.", activeLocaleValue.value)
+  );
+  const customerLockedMessage = computed(() =>
+    translateText(
+      "Customer information is inherited automatically when a source offer is selected.",
+      activeLocaleValue.value
+    )
+  );
 
   const currentStep = ref(1);
   const totalSteps = 4;

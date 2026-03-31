@@ -401,8 +401,6 @@ export function useAuxRecordDetailSummary({
       ];
     }
     if (specialDetailMode.value === "access_log") {
-      const actionSummaryTitle = "Eylem Özeti";
-      const decisionContextTitle = "Karar Bağlamı";
       return [
         {
           key: "audit-context",
@@ -420,10 +418,10 @@ export function useAuxRecordDetailSummary({
           key: "audit-decision",
           title: t("auditDecision"),
           items: [
-            item("action_summary", actionSummaryTitle),
+            item("action_summary", t("auditActionSummary")),
             {
               key: "decision_context_count",
-              label: decisionContextTitle,
+              label: t("auditDecisionContext"),
               value: String(parseSignalEntries(doc.value?.decision_context).length || 0),
             },
           ],
@@ -474,7 +472,7 @@ export function useAuxRecordDetailSummary({
       return [
         {
           key: "reconciliation-context",
-          title: activeLocale.value === "tr" ? "Kaynak ve Kayit Baglami" : "Source & Record Context",
+          title: t("reconciliationContextTitle"),
           items: [
             item("accounting_entry"),
             item("source_doctype"),
@@ -485,7 +483,7 @@ export function useAuxRecordDetailSummary({
         },
         {
           key: "reconciliation-amounts",
-          title: activeLocale.value === "tr" ? "Mutabakat Tutar Ozeti" : "Reconciliation Amount Summary",
+          title: t("reconciliationAmountsTitle"),
           items: [
             item("mismatch_type"),
             item("local_amount_try"),
@@ -496,7 +494,7 @@ export function useAuxRecordDetailSummary({
         },
         {
           key: "reconciliation-resolution",
-          title: activeLocale.value === "tr" ? "Cozum ve Yasam Dongusu" : "Resolution & Lifecycle",
+          title: t("reconciliationResolutionTitle"),
           items: [
             item("resolved_by"),
             item("resolved_on"),
@@ -595,12 +593,12 @@ export function useAuxRecordDetailSummary({
 
   function groupTitle(key) {
     const titles = {
-      base: activeLocale.value === "tr" ? "Temel Bilgiler" : "Base Info",
-      schedule: activeLocale.value === "tr" ? "Takvim" : "Schedule",
-      assignment: activeLocale.value === "tr" ? "Atama" : "Assignment",
-      draft: activeLocale.value === "tr" ? "Taslak Bilgisi" : "Draft Info",
-      delivery: activeLocale.value === "tr" ? "Gonderim Bilgisi" : "Delivery Info",
-      reference: activeLocale.value === "tr" ? "Kaynak Baglami" : "Reference Context",
+      base: t("baseInfo"),
+      schedule: t("scheduleInfo"),
+      assignment: t("assignmentInfo"),
+      draft: t("draftInfo"),
+      delivery: t("deliveryInfo"),
+      reference: t("referenceContext"),
     };
     return titles[key] || humanizeField(key);
   }

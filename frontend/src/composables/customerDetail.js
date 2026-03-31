@@ -23,32 +23,32 @@ export function useCustomerDetailActions({
   const customerRelationEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("customer_relation")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "Yeni İlişki" : "New Relation")
+      t("newRelation")
   );
   const insuredAssetEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("insured_asset")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "Yeni Varlık" : "New Asset")
+      t("newAsset")
   );
   const customerRelationEditEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("customer_relation_edit")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "İlişkiyi Düzenle" : "Edit Relation")
+      t("editRelation")
   );
   const insuredAssetEditEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("insured_asset_edit")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "Varlığı Düzenle" : "Edit Asset")
+      t("editAsset")
   );
   const ownershipAssignmentEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "Yeni Atama" : "New Assignment")
+      t("newAssignment")
   );
   const ownershipAssignmentEditEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("ownership_assignment_edit")?.title, activeLocale.value) ||
-      (activeLocale.value === "tr" ? "Atamayı Düzenle" : "Edit Assignment")
+      t("editAssignment")
   );
 
   const profileEditMode = ref(false);

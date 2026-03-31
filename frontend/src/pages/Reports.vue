@@ -343,6 +343,7 @@ const reportTableData = useReportsTableData({
   activeLocale,
   localeCode,
   branchScopeLabel,
+  t,
 });
 
 const {

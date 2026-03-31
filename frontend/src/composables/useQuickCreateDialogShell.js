@@ -1,11 +1,14 @@
 import { computed } from "vue";
+import { translateText } from "../utils/i18n";
 
 export function useQuickCreateDialogShell(props, authStore) {
   const resolvedLocale = computed(() => props.locale || authStore.locale || "tr");
   const fallbackLabels = computed(() =>
-    resolvedLocale.value === "tr"
-      ? { cancel: "İptal", save: "Kaydet", saveAndOpen: "Kaydet ve Aç" }
-      : { cancel: "Cancel", save: "Save", saveAndOpen: "Save & Open" },
+    ({
+      cancel: translateText("Cancel", resolvedLocale.value),
+      save: translateText("Save", resolvedLocale.value),
+      saveAndOpen: translateText("Save & Open", resolvedLocale.value),
+    }),
   );
   const saveButtonClass = computed(() => {
     if (props.showSaveAndOpen) {

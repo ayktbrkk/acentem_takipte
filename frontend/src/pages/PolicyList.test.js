@@ -120,6 +120,14 @@ const genericStub = {
     `<div><slot /><slot name="actions" /><slot name="filters" /><slot name="default" /><slot name="footer" /><slot name="body-content" /><slot name="advanced" /><slot name="header" /></div>`,
 };
 
+async function waitForPolicyStoreRows(policyStore, expectedLength, timeoutMs = 1000) {
+  const startedAt = Date.now();
+  while ((policyStore.state.items || []).length !== expectedLength && Date.now() - startedAt < timeoutMs) {
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+}
+
 describe("PolicyList page store integration", () => {
   beforeEach(() => {
     routerPush.mockReset();
@@ -146,6 +154,9 @@ describe("PolicyList page store integration", () => {
   });
 
   it("writes list payload and filter state into policy store", async () => {
+    const policyStore = usePolicyStore();
+    const applyListPayloadSpy = vi.spyOn(policyStore, "applyListPayload");
+
     const wrapper = mount(PolicyList, {
       global: {
         stubs: {
@@ -166,10 +177,11 @@ describe("PolicyList page store integration", () => {
       },
     });
 
-    const policyStore = usePolicyStore();
     await nextTick();
     await new Promise((resolve) => setTimeout(resolve, 0));
     await nextTick();
+    await waitForPolicyStoreRows(policyStore, 2);
+    expect(applyListPayloadSpy).toHaveBeenCalled();
 
     expect(policyStore.state.items).toHaveLength(2);
     expect(policyStore.state.pagination.total).toBe(2);

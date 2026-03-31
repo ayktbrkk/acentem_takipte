@@ -6,6 +6,7 @@ import { getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
+import { translateText } from "../utils/i18n";
 
 const QUICK_OPTION_LIMIT = 2000;
 
@@ -34,13 +35,13 @@ export function useCustomerQuickCreateRuntime({
   const quickCustomerUi = computed(() => ({
     title: getLocalizedText(quickCustomerConfig?.title, activeLocale.value),
     subtitle: getLocalizedText(quickCustomerConfig?.subtitle, activeLocale.value),
-    eyebrow: activeLocale.value === "tr" ? "Müşteri" : "Customer",
-    newLabel: activeLocale.value === "tr" ? "Yeni Müşteri" : "New Customer",
+    eyebrow: translateText("Customer", activeLocale.value),
+    newLabel: translateText("New Customer", activeLocale.value),
   }));
   const quickCreateCommon = computed(() => ({
     ...getQuickCreateLabels("create", activeLocale.value),
-    validation: activeLocale.value === "tr" ? "Lütfen gerekli alanları doldurun." : "Please fill required fields.",
-    failed: activeLocale.value === "tr" ? "Hızlı müşteri oluşturma başarısız oldu." : "Quick customer create failed.",
+    validation: translateText("Please fill required fields.", activeLocale.value),
+    failed: translateText("Quick customer create failed.", activeLocale.value),
   }));
   const quickCustomerType = computed(() => normalizeCustomerType(quickCustomerForm.customer_type, quickCustomerForm.tax_id));
   const isCorporateQuickCustomer = computed(() => quickCustomerType.value === "Corporate");
@@ -115,15 +116,14 @@ export function useCustomerQuickCreateRuntime({
 
     const email = String(quickCustomerForm.email || "").trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      quickCustomerFieldErrors.email = activeLocale.value === "tr" ? "Geçerli e-posta girin." : "Enter a valid email.";
+      quickCustomerFieldErrors.email = translateText("Enter a valid email.", activeLocale.value);
       valid = false;
     }
     const birthDate = String(quickCustomerForm.birth_date || "");
     if (!isCorporateQuickCustomer.value && birthDate) {
       const parsed = new Date(birthDate);
       if (!Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
-        quickCustomerFieldErrors.birth_date =
-          activeLocale.value === "tr" ? "Doğum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
+        quickCustomerFieldErrors.birth_date = translateText("Birth date cannot be in the future.", activeLocale.value);
         valid = false;
       }
     }
@@ -170,15 +170,14 @@ export function useCustomerQuickCreateRuntime({
 
     const email = String(form.email || "").trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      fieldErrors.email = activeLocale.value === "tr" ? "Geçerli e-posta girin." : "Enter a valid email.";
+      fieldErrors.email = translateText("Enter a valid email.", activeLocale.value);
       valid = false;
     }
     const birthDate = String(form.birth_date || "");
     if (customerType !== "Corporate" && birthDate) {
       const parsed = new Date(birthDate);
       if (!Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
-        fieldErrors.birth_date =
-          activeLocale.value === "tr" ? "Doğum tarihi gelecekte olamaz." : "Birth date cannot be in the future.";
+        fieldErrors.birth_date = translateText("Birth date cannot be in the future.", activeLocale.value);
         valid = false;
       }
     }

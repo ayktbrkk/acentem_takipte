@@ -8,6 +8,7 @@ import { useBranchStore } from "../stores/branch";
 import { useRenewalStore } from "../stores/renewal";
 import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { openTabularExport } from "../utils/listExport";
+import { translateText } from "../utils/i18n";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -43,9 +44,12 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   const filters = renewalStore.state.filters;
 
   const renewalStatusOptions = computed(() =>
-    ["Open", "In Progress", "Done", "Cancelled"].map((value) => ({ value, label: value }))
+    ["Open", "In Progress", "Done", "Cancelled"].map((value) => ({
+      value,
+      label: translateText(value, localeCode.value),
+    }))
   );
-  const lostReasonColumnLabel = computed(() => (activeLocale.value === "tr" ? "Kayıp Nedeni" : "Lost Reason"));
+  const lostReasonColumnLabel = computed(() => translateText("Lost Reason", localeCode.value));
   const activeFilterCount = computed(() => renewalStore.activeFilterCount);
 
   const renewalsResource = createResource({
@@ -132,7 +136,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
       label: row.full_name || row.name,
     })),
   }));
-  const quickRenewalEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Yenileme" : "Quick Renewal"));
+  const quickRenewalEyebrow = computed(() => translateText("Quick Renewal", activeLocale.value));
   const quickRenewalSuccessHandlers = {
     renewal_task_list: async () => {
       await reloadRenewals();

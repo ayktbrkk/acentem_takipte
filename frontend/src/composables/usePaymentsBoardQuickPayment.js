@@ -1,5 +1,6 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
+import { translateText } from "../utils/i18n";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -83,7 +84,7 @@ export function usePaymentsBoardQuickPayment({ t, branchStore, reloadPayments, l
     })),
   }));
 
-  const quickPaymentEyebrow = computed(() => (unref(localeCode) === "tr-TR" ? "Hızlı Ödeme" : "Quick Payment"));
+  const quickPaymentEyebrow = computed(() => translateText("Quick Payment", unref(localeCode)));
   const quickPaymentSuccessHandlers = {
     payment_list: async () => {
       await reloadPayments();

@@ -8,6 +8,7 @@ import {
   normalizeReconciliationStatus,
   sourceRowFacts,
 } from "./reconciliationWorkbench/helpers";
+import { translateText } from "../utils/i18n";
 
 export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData, rows, metrics, openReconciliationDetail, openReconciliationActionDialog }) {
   const collectionPreviewRows = computed(() => workbenchData.value.collection_preview?.overdue_rows || []);
@@ -23,15 +24,15 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
     };
   });
   const reconciliationListColumns = computed(() => [
-    { key: "reconciliationNo", label: "Mutabakat No", type: "mono" },
-    { key: "company", label: "Şirket" },
-    { key: "period", label: "Dönem" },
-    { key: "totalPolicy", label: "Toplam Poliçe", align: "center" },
-    { key: "totalPremium", label: "Toplam Prim", type: "amount", align: "right" },
-    { key: "companyStatement", label: "Şirket Bildirimi", type: "amount", align: "right" },
-    { key: "difference", label: "Fark", type: "amount", align: "right" },
-    { key: "status", label: "Durum", type: "status", domain: "reconciliation" },
-    { key: "_actions", label: "Actions", type: "actions", align: "right" },
+    { key: "reconciliationNo", label: translateText("Reconciliation No", localeCode.value), type: "mono" },
+    { key: "company", label: translateText("Company", localeCode.value) },
+    { key: "period", label: translateText("Period", localeCode.value) },
+    { key: "totalPolicy", label: translateText("Total Policy", localeCode.value), align: "center" },
+    { key: "totalPremium", label: translateText("Total Premium", localeCode.value), type: "amount", align: "right" },
+    { key: "companyStatement", label: translateText("Company Statement", localeCode.value), type: "amount", align: "right" },
+    { key: "difference", label: translateText("Difference", localeCode.value), type: "amount", align: "right" },
+    { key: "status", label: translateText("Status", localeCode.value), type: "status", domain: "reconciliation" },
+    { key: "_actions", label: translateText("Actions", localeCode.value), type: "actions", align: "right" },
   ]);
   const reconciliationListRows = computed(() =>
     rows.value.map((row) => {
@@ -52,6 +53,7 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
         _actions: buildReconciliationRowActions({
           row,
           t,
+          localeCode: localeCode.value,
           openReconciliationDetail,
           openReconciliationActionDialog,
         }),

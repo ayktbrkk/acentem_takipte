@@ -1,6 +1,7 @@
 import { getSourcePanelConfig } from "../../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../../utils/safeNavigation";
 import { subtleFact, mutedFact } from "../../utils/factItems";
+import { translateText } from "../../utils/i18n";
 
 export function isPermissionDeniedError(error) {
   const status = Number(
@@ -89,11 +90,11 @@ export function deriveReconciliationPeriod(localeCode, row) {
   return new Intl.DateTimeFormat(localeCode, { month: "short", year: "numeric" }).format(parsedDate);
 }
 
-export function buildReconciliationRowActions({ row, t, openReconciliationDetail, openReconciliationActionDialog }) {
+export function buildReconciliationRowActions({ row, t, localeCode, openReconciliationDetail, openReconciliationActionDialog }) {
   const actions = [];
   actions.push({
     key: `${row?.name}-detail`,
-    label: "Kayıt Detayı",
+    label: translateText("Record Detail", localeCode),
     variant: "primary",
     onClick: () => openReconciliationDetail(row),
   });

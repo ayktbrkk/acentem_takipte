@@ -1,9 +1,10 @@
 import { computed, ref } from "vue";
 
 import { isPermissionDeniedError } from "./reconciliationWorkbench/helpers";
+import { translateText } from "../utils/i18n";
 
 export function useReconciliationWorkbenchImport({ t, branchStore, reloadWorkbench, previewStatementImportResource, importStatementPreviewResource, localeCode }) {
-  const importDialogEyebrow = computed(() => (localeCode.value === "tr-TR" ? "Ekstre Önizleme" : "Statement Preview"));
+  const importDialogEyebrow = computed(() => translateText("Statement Preview", localeCode.value));
   const showImportDialog = ref(false);
   const importLoading = ref(false);
   const importError = ref("");
@@ -16,8 +17,8 @@ export function useReconciliationWorkbenchImport({ t, branchStore, reloadWorkben
   const statementImportRows = computed(() => statementImportPreview.value?.rows || []);
   const statementImportSummary = computed(() => statementImportPreview.value?.summary || {});
   const importDialogLabels = computed(() => ({
-    cancel: localeCode.value === "tr-TR" ? "İptal" : "Cancel",
-    save: localeCode.value === "tr-TR" ? "Önizleme Oluştur" : "Build Preview",
+    cancel: translateText("Cancel", localeCode.value),
+    save: translateText("Build Preview", localeCode.value),
   }));
 
   function openImportDialog() {

@@ -26,6 +26,7 @@ describe("useReportsTableData", () => {
       activeLocale: ref("tr"),
       localeCode: ref("tr-TR"),
       branchScopeLabel: computed(() => "Ofis Şube: IST"),
+      t: (key) => key,
     });
 
     expect(result.columnsSummaryLabel.value).toBe("3/3");

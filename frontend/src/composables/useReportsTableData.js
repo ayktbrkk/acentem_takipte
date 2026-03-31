@@ -14,6 +14,7 @@ export function useReportsTableData({
   activeLocale,
   localeCode,
   branchScopeLabel,
+  t,
 }) {
   const visibleColumnKeys = ref([]);
   const pendingVisibleColumnKeys = ref([]);
@@ -150,30 +151,30 @@ export function useReportsTableData({
 
     if (filters.reportKey === "policy_list" && filters.granularity) {
       return [
-        buildMetricItem("rows", "Kayıt Sayısı", numberFormatter.value.format(numericTotal(["policy_count"]))),
-        buildMetricItem("gross_premium", "Brüt Prim", numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
-        buildMetricItem("commission", "Komisyon", numberFormatter.value.format(numericTotal(["total_commission"]))),
-        buildMetricItem("paid_amount", "Tahsil Edilen", numberFormatter.value.format(0)),
+        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(numericTotal(["policy_count"]))),
+        buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
+        buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["total_commission"]))),
+        buildMetricItem("paid_amount", t("summaryPaidAmount"), numberFormatter.value.format(0)),
       ];
     }
 
     if (filters.reportKey === "agent_performance") {
       return [
-        buildMetricItem("rows", "Kayıt Sayısı", numberFormatter.value.format(rows.value.length)),
-        buildMetricItem("gross_premium", "Brüt Prim", numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
-        buildMetricItem("commission", "Komisyon", numberFormatter.value.format(numericTotal(["total_commission"]))),
-        buildMetricItem("conversion_rate", "Ort. Teklif Dönüşümü", `%${percentFormatter.value.format(avgNumeric("offer_conversion_rate"))}`),
+        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+        buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
+        buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["total_commission"]))),
+        buildMetricItem("conversion_rate", t("summaryAvgConversionRate"), `%${percentFormatter.value.format(avgNumeric("offer_conversion_rate"))}`),
       ];
     }
 
     if (filters.reportKey === "customer_segmentation") {
       return [
-        buildMetricItem("rows", "Kayıt Sayısı", numberFormatter.value.format(rows.value.length)),
-        buildMetricItem("gross_premium", "Brüt Prim", numberFormatter.value.format(numericTotal(["total_premium"]))),
-        buildMetricItem("active_policies", "Aktif Poliçe", numberFormatter.value.format(numericTotal(["active_policy_count"]))),
+        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+        buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_premium"]))),
+        buildMetricItem("active_policies", t("summaryActivePolicies"), numberFormatter.value.format(numericTotal(["active_policy_count"]))),
         buildMetricItem(
           "claim_customers",
-          "Hasarlı Müşteri",
+          t("summaryClaimCustomers"),
           numberFormatter.value.format(rows.value.filter((row) => String(row?.claim_history_segment || "") === "HAS_CLAIM").length),
         ),
       ];
@@ -181,21 +182,21 @@ export function useReportsTableData({
 
     if (filters.reportKey === "communication_operations") {
       return [
-        buildMetricItem("rows", "Kayıt Sayısı", numberFormatter.value.format(rows.value.length)),
-        buildMetricItem("matched_customers", "Eşleşen Müşteri", numberFormatter.value.format(numericTotal(["matched_customer_count"]))),
-        buildMetricItem("created_drafts", "Üretilen Taslak", numberFormatter.value.format(numericTotal(["sent_count"]))),
-        buildMetricItem("successful_deliveries", "Başarılı Gönderim", numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
+        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+        buildMetricItem("matched_customers", t("summaryMatchedCustomers"), numberFormatter.value.format(numericTotal(["matched_customer_count"]))),
+        buildMetricItem("created_drafts", t("summaryCreatedDrafts"), numberFormatter.value.format(numericTotal(["sent_count"]))),
+        buildMetricItem("successful_deliveries", t("summarySuccessfulDeliveries"), numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
       ];
     }
 
     if (filters.reportKey === "reconciliation_operations") {
       return [
-        buildMetricItem("rows", "Kayıt Sayısı", numberFormatter.value.format(rows.value.length)),
-        buildMetricItem("open_reconciliation", "Açık Mutabakat", numberFormatter.value.format(rows.value.filter((row) => String(row?.status || "") === "Open").length)),
-        buildMetricItem("difference_amount", "Fark Tutarı", numberFormatter.value.format(numericTotal(["difference_try"]))),
+        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+        buildMetricItem("open_reconciliation", t("summaryOpenReconciliation"), numberFormatter.value.format(rows.value.filter((row) => String(row?.status || "") === "Open").length)),
+        buildMetricItem("difference_amount", t("summaryDifferenceAmount"), numberFormatter.value.format(numericTotal(["difference_try"]))),
         buildMetricItem(
           "resolved_items",
-          "Çözülen Kalem",
+          t("summaryResolvedItems"),
           numberFormatter.value.format(rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length),
         ),
       ];
@@ -203,26 +204,26 @@ export function useReportsTableData({
 
     if (filters.reportKey === "claims_operations") {
       return [
-        buildMetricItem("rows", "Kayıt Sayısı", numberFormatter.value.format(rows.value.length)),
+        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
         buildMetricItem(
           "open_claims",
-          "Açık Hasar",
+          t("summaryOpenClaims"),
           numberFormatter.value.format(rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length),
         ),
         buildMetricItem(
           "rejected_claims",
-          "Reddedilen Hasar",
+          t("summaryRejectedClaims"),
           numberFormatter.value.format(rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length),
         ),
-        buildMetricItem("successful_notifications", "Başarılı Bildirim", numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
+        buildMetricItem("successful_notifications", t("summarySuccessfulNotifications"), numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
       ];
     }
 
     return [
-      buildMetricItem("rows", "Kayıt Sayısı", numberFormatter.value.format(rows.value.length)),
-      buildMetricItem("gross_premium", "Brüt Prim", numberFormatter.value.format(numericTotal(["gross_premium", "total_gross_premium", "total_premium"]))),
-      buildMetricItem("commission", "Komisyon", numberFormatter.value.format(numericTotal(["commission_amount", "total_commission"]))),
-      buildMetricItem("paid_amount", "Tahsil Edilen", numberFormatter.value.format(numericTotal(["paid_amount", "approved_amount"]))),
+      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+      buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["gross_premium", "total_gross_premium", "total_premium"]))),
+      buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["commission_amount", "total_commission"]))),
+      buildMetricItem("paid_amount", t("summaryPaidAmount"), numberFormatter.value.format(numericTotal(["paid_amount", "approved_amount"]))),
     ];
   });
 
@@ -248,9 +249,9 @@ export function useReportsTableData({
       const currentDeliveries = numericTotalFromRows(rows.value, ["sent_outbox_count"]);
       const previousDeliveries = numericTotalFromRows(comparisonRows.value, ["sent_outbox_count"]);
       return [
-        { key: "cmp_matched", label: "Eşleşen Müşteri", value: numberFormatter.value.format(currentMatched), previous: previousMatched, delta: currentMatched - previousMatched, valueClass: metricToneClasses.matched_customers, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
-        { key: "cmp_drafts", label: "Üretilen Taslak", value: numberFormatter.value.format(currentDrafts), previous: previousDrafts, delta: currentDrafts - previousDrafts, valueClass: metricToneClasses.created_drafts, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
-        { key: "cmp_deliveries", label: "Başarılı Gönderim", value: numberFormatter.value.format(currentDeliveries), previous: previousDeliveries, delta: currentDeliveries - previousDeliveries, valueClass: metricToneClasses.successful_deliveries, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_matched", label: t("summaryMatchedCustomers"), value: numberFormatter.value.format(currentMatched), previous: previousMatched, delta: currentMatched - previousMatched, valueClass: metricToneClasses.matched_customers, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_drafts", label: t("summaryCreatedDrafts"), value: numberFormatter.value.format(currentDrafts), previous: previousDrafts, delta: currentDrafts - previousDrafts, valueClass: metricToneClasses.created_drafts, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_deliveries", label: t("summarySuccessfulDeliveries"), value: numberFormatter.value.format(currentDeliveries), previous: previousDeliveries, delta: currentDeliveries - previousDeliveries, valueClass: metricToneClasses.successful_deliveries, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
       ];
     }
 
@@ -262,9 +263,9 @@ export function useReportsTableData({
       const currentResolved = rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length;
       const previousResolved = comparisonRows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length;
       return [
-        { key: "cmp_open", label: "Açık Mutabakat", value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen, valueClass: metricToneClasses.open_reconciliation, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
-        { key: "cmp_difference", label: "Fark Tutarı", value: numberFormatter.value.format(currentDiff), previous: previousDiff, delta: currentDiff - previousDiff, valueClass: metricToneClasses.difference_amount, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
-        { key: "cmp_resolved", label: "Çözülen Kalem", value: numberFormatter.value.format(currentResolved), previous: previousResolved, delta: currentResolved - previousResolved, valueClass: metricToneClasses.resolved_items, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_open", label: t("summaryOpenReconciliation"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen, valueClass: metricToneClasses.open_reconciliation, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_difference", label: t("summaryDifferenceAmount"), value: numberFormatter.value.format(currentDiff), previous: previousDiff, delta: currentDiff - previousDiff, valueClass: metricToneClasses.difference_amount, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_resolved", label: t("summaryResolvedItems"), value: numberFormatter.value.format(currentResolved), previous: previousResolved, delta: currentResolved - previousResolved, valueClass: metricToneClasses.resolved_items, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
       ];
     }
 
@@ -276,9 +277,9 @@ export function useReportsTableData({
       const currentNotifications = numericTotalFromRows(rows.value, ["sent_outbox_count"]);
       const previousNotifications = numericTotalFromRows(comparisonRows.value, ["sent_outbox_count"]);
       return [
-        { key: "cmp_claim_open", label: "Açık Hasar", value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen, valueClass: metricToneClasses.open_claims, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
-        { key: "cmp_claim_rejected", label: "Reddedilen Hasar", value: numberFormatter.value.format(currentRejected), previous: previousRejected, delta: currentRejected - previousRejected, valueClass: metricToneClasses.rejected_claims, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
-        { key: "cmp_claim_notifications", label: "Başarılı Bildirim", value: numberFormatter.value.format(currentNotifications), previous: previousNotifications, delta: currentNotifications - previousNotifications, valueClass: metricToneClasses.successful_notifications, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_claim_open", label: t("summaryOpenClaims"), value: numberFormatter.value.format(currentOpen), previous: previousOpen, delta: currentOpen - previousOpen, valueClass: metricToneClasses.open_claims, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_claim_rejected", label: t("summaryRejectedClaims"), value: numberFormatter.value.format(currentRejected), previous: previousRejected, delta: currentRejected - previousRejected, valueClass: metricToneClasses.rejected_claims, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
+        { key: "cmp_claim_notifications", label: t("summarySuccessfulNotifications"), value: numberFormatter.value.format(currentNotifications), previous: previousNotifications, delta: currentNotifications - previousNotifications, valueClass: metricToneClasses.successful_notifications, cardClass: "rounded-2xl border-slate-200 bg-white/95 shadow-sm" },
       ];
     }
 

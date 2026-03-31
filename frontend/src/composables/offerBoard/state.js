@@ -1,6 +1,7 @@
 import { computed, reactive, ref, unref } from "vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../../config/quickCreate";
 import { readFilterPresetKey, readFilterPresetList } from "../../utils/filterPresetState";
+import { translateText } from "../../utils/i18n";
 
 function countOfferFilters(filters) {
   return [
@@ -267,7 +268,7 @@ export function useOfferBoardState({
     { key: "Accepted", label: t("acceptedLane"), borderClass: "border-t-emerald-400" },
     { key: "Converted", label: t("convertedLane"), borderClass: "border-t-indigo-400" },
   ]);
-  const convertDialogEyebrow = computed(() => (activeLocale.value === "tr" ? "Hızlı Dönüştürme" : "Quick Conversion"));
+  const convertDialogEyebrow = computed(() => translateText("Quick Conversion", activeLocale.value));
   const canCreateQuickOffer = computed(() => {
     const selectedName = getSelectedCustomerName();
     const typedName = quickOffer.queryText.trim();
