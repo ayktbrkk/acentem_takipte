@@ -138,15 +138,17 @@ Frontend yerelleştirme durumu:
 - Turkish karakterli string'ler sadece `tr:` alanlarında (bu doğru) ✅
 
 **Backend API/Service/DocType Durumu (KRİTİK):**
+**Backend API/Service/DocType Durumu:**
 - `at_customer.py`: ✅ Compliant (7 throws `frappe._()` ile sarılı)
 - `at_policy.py`: ✅ Compliant (4 throws `frappe._()` ile sarılı)
-- **`api/dashboard.py`: ❌ KRİTİK (24 throws çıplak → Faz 4'de)**
-- **`api/filter_presets.py`: ❌ (3 throws çıplak → Faz 5'te)**
-- **`api/list_exports.py`: ❌ (1 throw çıplak → Faz 5'te)**
-- **`api/session.py`: ❌ (2 throws çıplak → Faz 5'te)**
-- **`services/branches.py`: ❌ (1 throw çıplak → Faz 5'te)**
-- **`services/scheduled_reports.py`: ❌ (4 throws çıplak → Faz 5'te)**
-- **doctype validation (8 files): ❌ (38 throws çıplak → Faz 6'da)**
+- `api/dashboard.py`: ✅ **TAMAMLANDI** (24 throw sarıldı → commit `83d2a38`)
+- `api/filter_presets.py`: ✅ **TAMAMLANDI** (3 throw sarıldı → commit `83d2a38`)
+- `api/list_exports.py`: ✅ **TAMAMLANDI** (1 throw sarıldı → commit `83d2a38`)
+- `api/session.py`: ✅ **TAMAMLANDI** (2 throw sarıldı → commit `83d2a38`)
+- `services/branches.py`: ✅ **TAMAMLANDI** (1 throw sarıldı → commit `83d2a38`)
+- `services/scheduled_reports.py`: ✅ **TAMAMLANDI** (4 throw sarıldı → commit `83d2a38`)
+- `doctype validation (8 files)`: ✅ **TAMAMLANDI** (38 throw sarıldı → commit `83d2a38`)
+- **Toplam: 73 throw sarıldı, 44 kaynak string CSV'ye eklendi**
 
 ### Güncellemeler (2026-03-31)
 
@@ -161,25 +163,28 @@ Frontend yerelleştirme durumu:
 - Commit: `1e3ce50` ✅
 
 ### Kalan Çalışmalar
+### ✅ Tamamlanan Çalışmalar (2026-03-31)
 
-1. **Backend API Message Wrapping** - 69 throw = PRİORİTE 1 (Faz 4-6)
-   - `api/dashboard.py` - 24 throw (KRİTİK)
-   - `api/filter_presets.py`, `api/list_exports.py`, `api/session.py` - 6 throw
-   - `services/branches.py`, `services/scheduled_reports.py` - 5 throw
-   - 8 doctype validation files - 38 throw
+1. ✅ **Backend API Message Wrapping** - 73 throw sarıldı (commit `83d2a38`)
+  - `api/dashboard.py` - 24 throw
+  - `api/filter_presets.py`, `api/list_exports.py`, `api/session.py` - 6 throw
+  - `services/branches.py`, `services/scheduled_reports.py` - 5 throw
+  - 8 doctype validation files - 38 throw
 
-2. **CSV Enumeration + Sync** - ~31 yeni kaynak string (Faz 7)
-   - Unique source string'leri `en.csv`'ye ekle
-   - Turkish çeviriler `tr.csv`'ye ekle (glossary tutarlı)
+2. ✅ **CSV Enumeration + Sync** - 44 kaynak string (commit `f2dffd0`)
+  - 44 unique source string `en.csv`'ye eklendi
+  - 44 Turkish çeviri `tr.csv`'ye eklendi (glossary tutarlı)
 
-3. **Test Validation** - Faz 9-10
-   - Backend tests: dashboard, session, services, doctype (pytest)
-   - Frontend regression: Vitest 69 test
+3. ✅ **Frontend Test Fixes** - 14 pre-existing test onarıldı (commit `f1db740`)
+  - Sidebar "Genel Görünüm" label düzeltildi
+  - quickCreateRegistry 441 locale key sorunları çözüldü
+  - CommunicationCenter + RenewalTaskDetail test fixture'ları düzeltildi
+  - **258/258 Vitest testi geçiyor**
 
-4. **Canlı TR/EN Smoke** - Faz 12
-   - http://at.localhost:8000/at/ login
-   - Dil toggle: EN → TR
-   - Error message doğrulama (minimum 3 critical message)
+4. ✅ **Build Doğrulama** - `npm run build` başarılı (26.81s)
+
+5. ⏳ **bench get-msg-dict** - WSL'de çalıştırılması gerekiyor
+6. ⏳ **Canlı TR/EN Smoke** - WSL bench start sonrası test edilecek
 
 ### WSL Frappe Sunucusu (Canlı Test için Hazır)
 
@@ -197,7 +202,22 @@ Frontend yerelleştirme durumu:
 - **Coverage:** 20+ Vue sayfası + 69 Vitest dosyası + 14 E2E spec
 - **Bulgu:** Tüm sayfalar `copy = { tr: {...}, en: {...} }` formatında. English source kataloğa bağlı.
 - **Result:** Frontend lokalizasyon altyapısı ✅ ready
+- **Result:** Frontend lokalizasyon altyapısı ✅ ready
 
+### ✅ Backend i18n Closure (2026-03-31)
+- **Durum:** Tamamlandı
+- **Coverage:** 14 Python dosyası — `api/`, `services/`, `doctype/` (8 dosya)
+- **Bulgu:** 73 `frappe.throw("...")` → `frappe.throw(_("..."))` sarıldı
+- **CSV:** 44 kaynak string `en.csv` + `tr.csv` eklendi
+- **Commit:** `83d2a38` (backend) + `f2dffd0` (CSV)
+
+### ✅ Frontend Test Closure (2026-03-31)
+- **Durum:** Tamamlandı
+- **Coverage:** 81 test dosyası, 258 test
+- **Bulgu:** 14 pre-existing failure onarıldı (Sidebar, quickCreate i18n, CommunicationCenter, RenewalTaskDetail)
+- **Result:** 258/258 ✅ — `Test Files 81 passed (81)`
+- **Build:** `npm run build` ✅ 26.81s
+- **Commit:** `f1db740`
 ### ✅ Frappe Sunucusu Erişimi
 - **Status:** Başarılı - Sunucu accessible
 - **URL:** http://at.localhost:8000/at/
@@ -362,15 +382,18 @@ rg -n --pcre2 '[^"']*[ğĞüÜşŞİıöÖçÇ][^"']*' acentem_takipte/acentem_t
 
 | Faz | Görev | İlgili Dosya/Yol | Durum | Öncelik |
 |---|---|---|---|---|
-| Altyapı | Translation klasörü + CSV şablonu + hooks + locale fallback | `acentem_takipte/translations/*.csv`, `acentem_takipte/hooks.py`, `acentem_takipte/www/at.py`, `frontend/src/state/session.js` | Tamamlandı | Yüksek |
-| Backend | `at_customer.py` yerelleştirme geçişi (regex taraması temiz; mevcut olarak uyumlu) | `acentem_takipte/acentem_takipte/doctype/at_customer/at_customer.py` | Tamamlandı | Yüksek |
-| Backend | `at_policy.py` yerelleştirme geçişi (regex taraması temiz; mevcut olarak uyumlu) | `acentem_takipte/acentem_takipte/doctype/at_policy/at_policy.py` | Tamamlandı | Yüksek |
-| Backend | Rapor ve liste dışa aktarma yardımcılarını İngilizce kaynak düzene alma | `acentem_takipte/acentem_takipte/services/report_exports.py`, `acentem_takipte/acentem_takipte/services/list_exports.py` | Tamamlandı | Yüksek |
-| Backend | Seed şablonları ve varsayılan dil fallback akışı | `acentem_takipte/acentem_takipte/notification_seed_data.py`, `acentem_takipte/acentem_takipte/api/smoke.py`, `acentem_takipte/acentem_takipte/api/session.py`, `acentem_takipte/acentem_takipte/notification_dispatch.py`, `acentem_takipte/acentem_takipte/providers/whatsapp_meta.py`, `acentem_takipte/acentem_takipte/services/notifications.py`, `acentem_takipte/acentem_takipte/services/campaigns.py`, `acentem_takipte/acentem_takipte/services/quick_create_special.py`, `acentem_takipte/acentem_takipte/services/scheduled_reports.py`, `acentem_takipte/acentem_takipte/api/aux_edit_registry.py`, `acentem_takipte/acentem_takipte/setup_utils.py` | Tamamlandı | Yüksek |
-| Backend | Ortak backend yardımcıları ve rapor/bildirim string’leri | `acentem_takipte/acentem_takipte/**/*.py` | Bekliyor | Yüksek |
-| Frontend | App shell, board’lar ve detay sayfaları yerelleştirme geçişi | `frontend/src/**/*.vue`, `frontend/src/**/*.js` | Bekliyor | Yüksek |
-| Metadata | DocType label, description, select option alanları | `acentem_takipte/acentem_takipte/doctype/**/*.json` | Bekliyor | Yüksek |
-| Test | Backend / frontend / smoke / CSV roundtrip doğrulaması | `acentem_takipte/acentem_takipte/tests/*`, `frontend/src/**/*.test.js`, `frontend/tests/e2e/*` | Bekliyor | Yüksek |
+| Altyapı | Translation klasörü + CSV şablonu + hooks + locale fallback | `acentem_takipte/translations/*.csv`, `acentem_takipte/hooks.py` | ✅ Tamamlandı | Yüksek |
+| Backend | `at_customer.py` + `at_policy.py` yerelleştirme geçişi | `doctype/at_customer/`, `doctype/at_policy/` | ✅ Tamamlandı | Yüksek |
+| Backend | Rapor ve liste dışa aktarma + seed şablonları | `services/report_exports.py`, `services/list_exports.py`, `notification_seed_data.py` vs. | ✅ Tamamlandı | Yüksek |
+| Frontend | Sidebar + AuxWorkbench `copy` yapısı geçişi | `useSidebarNavigation.js`, `useAuxWorkbenchViewModel.js` | ✅ Tamamlandı `90af0aa` | Yüksek |
+| Backend API | `api/dashboard.py` 24 throw sarıldı | `api/dashboard.py` | ✅ Tamamlandı `83d2a38` | Yüksek |
+| Backend API/Servis | 5 dosya, 11 throw sarıldı | `api/filter_presets.py`, `api/list_exports.py`, `api/session.py`, `services/branches.py`, `services/scheduled_reports.py` | ✅ Tamamlandı `83d2a38` | Yüksek |
+| Backend DocType | 8 validation dosyası, 38 throw sarıldı | `doctype/at_activity/`, `at_task/`, `at_ownership_assignment/` vs. | ✅ Tamamlandı `83d2a38` | Yüksek |
+| CSV Sync | 44 kaynak string `en.csv` + `tr.csv`'ye eklendi | `translations/en.csv`, `translations/tr.csv` | ✅ Tamamlandı `f2dffd0` | Yüksek |
+| Frontend Test | 14 pre-existing Vitest hatası düzeltildi — 258/258 ✅ | `Sidebar.vue`, `quickCreate/registry.js`, `CommunicationCenter.test.js` vs. | ✅ Tamamlandı `f1db740` | Yüksek |
+| Build | `npm run build` başarılı | `frontend/` | ✅ Tamamlandı | Yüksek |
+| bench get-msg-dict | Frappe mesaj sözlüğü yenileme | WSL: `bench --site at.localhost get-msg-dict acentem_takipte` | ⏳ WSL gerekiyor | Orta |
+| Canlı Smoke | TR/EN dil toggle + hata mesajı doğrulama | `http://at.localhost:8000/at/` | ⏳ bench start sonrası | Orta |
 
 ---
 
