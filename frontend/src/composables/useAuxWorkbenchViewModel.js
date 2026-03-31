@@ -257,7 +257,7 @@ export function useAuxWorkbenchViewModel({
       sendNow: "Şimdi Gönder",
       retry: "Tekrar Dene",
       requeue: "Kuyruğa Al",
-      startTask: "Başlat",
+      startTask: "Takibe Al",
       blockTaskAction: "Bloke Et",
       completeTaskAction: "Tamamla",
       cancelTaskAction: "İptal",

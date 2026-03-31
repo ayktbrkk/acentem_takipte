@@ -1,7 +1,7 @@
 import { translateText } from "@/utils/i18n";
 
 function i18nLabel(en) {
-  return en;
+  return (locale) => translateText(en, locale || "en");
 }
 
 function option(value, label) {

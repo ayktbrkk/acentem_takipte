@@ -970,7 +970,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Kaynaga Don"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Kaynağa Dön"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith("/at/aux-workbench?screen=reminders");
@@ -1005,7 +1005,7 @@ describe("CommunicationCenter page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Kaynaga Don"));
+    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Kaynağa Dön"));
     await button.trigger("click");
 
     expect(routerPush).toHaveBeenCalledWith("/at/customers/CUST-001");

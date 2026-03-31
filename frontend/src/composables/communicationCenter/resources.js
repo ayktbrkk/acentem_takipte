@@ -12,22 +12,6 @@ export function useCommunicationCenterResources({ branchStore, filters }) {
     auto: true,
   });
 
-  const runCycleResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
-  });
-
-  const sendDraftResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
-  });
-
-  const retryOutboxResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
-  });
-
-  const auxMutationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
-  });
-
   const communicationQuickTemplateResource = createResource({
     url: "frappe.client.get_list",
     auto: true,
@@ -98,6 +82,22 @@ export function useCommunicationCenterResources({ branchStore, filters }) {
       order_by: "modified desc",
       limit_page_length: 500,
     },
+  });
+
+  const runCycleResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
+  });
+
+  const sendDraftResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
+  });
+
+  const retryOutboxResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
+  });
+
+  const auxMutationResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
   });
 
   const segmentPreviewResource = createResource({

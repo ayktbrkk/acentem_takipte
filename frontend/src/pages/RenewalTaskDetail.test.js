@@ -3,6 +3,7 @@ import { mount } from "@vue/test-utils";
 import { ref } from "vue";
 
 import RenewalTaskDetail from "./RenewalTaskDetail.vue";
+import { sessionState } from "@/state/session";
 
 const resourceQueue = [];
 const routerPush = vi.fn();
@@ -22,6 +23,7 @@ vi.mock("frappe-ui", () => ({
       params: {},
       reload: vi.fn(async () => []),
       submit: vi.fn(async () => ({})),
+      setData: vi.fn(),
     },
 }));
 
@@ -71,6 +73,7 @@ describe("RenewalTaskDetail page", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
     routerPush.mockReset();
+    sessionState.locale = "tr";
 
     resourceQueue.push(
       {
@@ -115,6 +118,7 @@ describe("RenewalTaskDetail page", () => {
         error: ref(null),
         params: {},
         reload: vi.fn(async () => ([])),
+        setData: vi.fn(),
       },
       {
         data: ref([
@@ -124,6 +128,7 @@ describe("RenewalTaskDetail page", () => {
         error: ref(null),
         params: {},
         reload: vi.fn(async () => ([])),
+        setData: vi.fn(),
       },
     );
   });

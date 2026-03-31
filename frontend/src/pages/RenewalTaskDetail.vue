@@ -66,7 +66,7 @@
             <div v-for="item in communications" :key="item.name" class="timeline-item">
               <div class="tl-dot" />
               <div>
-                <p class="tl-text">{{ item.call_outcome || item.channel || '-' }}</p>
+                <p class="tl-text">{{ item.subject || item.call_outcome || item.channel || '-' }}</p>
                 <p class="tl-time">{{ formatDate(item.note_at) }} · {{ item.owner || '-' }}</p>
               </div>
             </div>
