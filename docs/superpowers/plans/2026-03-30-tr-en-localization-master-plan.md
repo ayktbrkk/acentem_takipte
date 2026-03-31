@@ -128,6 +128,16 @@ Frontend yerelleştirme durumu:
 - English string'ler `en:` altında kaynak olarak duruyor
 - `translateText` i18n utility'si CSV kataloğuna bağlı
 - Turkish karakterli string'ler sadece `tr:` alanlarında (bu doğru)
+
+### Güncellemeler (2026-03-31)
+
+- ✅ `useSidebarNavigation.js` - `copy` yapısını `{ tr: {...}, en: {...} }` formatına dönüştürüldü
+- ✅ `useAuxWorkbenchViewModel.js` - `copy` yapısını `{ tr: {...}, en: {...} }` formatına dönüştürüldü (87 tuş)
+- ✅ Build doğrulaması geçti
+
+### Kalan Görevler
+
+- ⏳ Diğer composable'ların `copy` yapılarını kontrol et
 - Build: başarılı ✅
 - Commit: `1e3ce50` ✅
 

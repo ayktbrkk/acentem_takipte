@@ -137,6 +137,12 @@ Frontend localization status:
 2. **WSL Frappe Server** - Connection optional
 3. **Frontend hot spot files** - All comply with localization standards
 
+### Updates (2026-03-31)
+
+- ✅ `useSidebarNavigation.js` - converted `copy` to `{ tr: {...}, en: {...} }` format
+- ✅ `useAuxWorkbenchViewModel.js` - converted `copy` to `{ tr: {...}, en: {...} }` format (87 keys)
+- ✅ Build verification passed
+
 ### WSL Frappe Server (Optional)
 
 - URL: `http://at.localhost:8000/at/`
