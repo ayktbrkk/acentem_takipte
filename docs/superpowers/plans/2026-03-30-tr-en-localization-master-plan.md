@@ -110,6 +110,19 @@
 
 ## Devam Eden Çalışma (2026-03-31)
 
+### Final Checkpoint (2026-03-31 Gece Geç)
+
+- ✅ Faz 6 backend test stabilizasyonu tamamlandı.
+- ✅ `bench --site at.localhost run-tests --app acentem_takipte --skip-before-tests` tam koşu **green**:
+  - `Ran 176 tests in 19.124s`
+  - `OK (skipped=24)`
+- ✅ Kapanan ana kümeler:
+  - Test fixture zorunlu alan uyumları (`AT Sales Entity.office_branch`, `AT Office Branch` fallback fixture akışı).
+  - Refactor sonrası patch hedef/path uyumları (api/service/doctypes).
+  - Break-glass workflow test izolasyonu ve submit akışı stabilizasyonu.
+  - Dashboard/notification smoke testlerinde cache ve provider bağımlılığı izolasyonu.
+- ℹ️ Test sırasında görülen CSS parser mesajları warning seviyesinde kaldı; backend test sonucunu etkilemedi.
+
 ### Güncel Checkpoint (2026-03-31 Gece)
 
 - ✅ Lokalizasyon kapanışı tamamlandı (backend throw wrapping + CSV + frontend regression + build + TR/EN canlı smoke).
@@ -124,14 +137,14 @@
 
 ### Yeni İlerleme Aşaması (Faz 6)
 
-1. **Aşama 6.1 - Test Discovery Stabilizasyonu**
-  - Eski test API importları ve syntax/dosya-bağımlılığı kaynaklı discovery crash'lerini temizle.
-2. **Aşama 6.2 - Fixture İzolasyon Sertleştirme**
-  - `frappe.model` / `frappe.permissions` attribute hatası üreten testlerde global monkeypatch sızıntısını izole et.
-3. **Aşama 6.3 - Kontrat Test Dengeleme**
-  - `test_api_hardening_contracts`, `test_break_glass`, `test_dashboard_contract_smoke` failure'larını yeni davranışa göre düzelt.
-4. **Aşama 6.4 - Tam Backend Green + Release Notu**
-  - `bench run-tests` backend green hedefi, ardından dokümana final test matrisi ekleme.
+1. ✅ **Aşama 6.1 - Test Discovery Stabilizasyonu**
+  - Eski test API importları ve syntax/dosya-bağımlılığı kaynaklı discovery crash'leri temizlendi.
+2. ✅ **Aşama 6.2 - Fixture İzolasyon Sertleştirme**
+  - Global monkeypatch/module cache kaynaklı sızıntılar ve fixture çakışmaları izole edildi.
+3. ✅ **Aşama 6.3 - Kontrat Test Dengeleme**
+  - Break-glass, dashboard, notification ve ilgili kontrat/smoke test beklentileri güncel davranışla hizalandı.
+4. ✅ **Aşama 6.4 - Tam Backend Green + Release Notu**
+  - Tam backend test koşusu green alındı ve plan dokümanı final checkpoint ile güncellendi.
 
 ### ⚠️ KRİTİK BULGU: Backend API Message Lokalizasyonu Boşluğu
 
