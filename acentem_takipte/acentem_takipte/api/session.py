@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import frappe
+from frappe import _
 
 from acentem_takipte.acentem_takipte.api.security import assert_post_request
 from acentem_takipte.acentem_takipte.services.branches import (
