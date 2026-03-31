@@ -11,12 +11,12 @@ class ATActivity(Document):
             self.activity_at = now_datetime()
 
         if self.customer and not frappe.db.exists("AT Customer", self.customer):
-            frappe.throw("Customer not found.")
+            frappe.throw(_("Customer not found."))
         if self.policy and not frappe.db.exists("AT Policy", self.policy):
-            frappe.throw("Policy not found.")
+            frappe.throw(_("Policy not found."))
         if self.claim and not frappe.db.exists("AT Claim", self.claim):
-            frappe.throw("Claim not found.")
+            frappe.throw(_("Claim not found."))
         if self.assigned_to and not frappe.db.exists("User", self.assigned_to):
-            frappe.throw("Assigned user not found.")
+            frappe.throw(_("Assigned user not found."))
         if self.source_doctype and self.source_name and not frappe.db.exists(self.source_doctype, self.source_name):
-            frappe.throw("Source record not found.")
+            frappe.throw(_("Source record not found."))

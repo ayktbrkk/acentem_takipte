@@ -145,7 +145,7 @@ def resolve_current_user() -> str:
 def get_session_context() -> dict:
     user = resolve_current_user()
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     try:
         from acentem_takipte.acentem_takipte.services.cache_precomputation import get_cached_user_scope
@@ -187,7 +187,7 @@ def set_session_locale(locale: str | None = None) -> dict:
     assert_post_request("Only POST requests are allowed when updating session locale.")
     user = resolve_current_user()
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     language = _normalize_locale(locale)
     frappe.db.set_value("User", user, "language", language)

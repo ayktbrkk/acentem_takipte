@@ -76,7 +76,7 @@ def export_tabular_payload(
     assert_authenticated()
     normalized_doctypes = _normalize_permission_doctypes(permission_doctypes)
     if not normalized_doctypes:
-        frappe.throw("At least one permission doctype is required for tabular export.")
+        frappe.throw(_("At least one permission doctype is required for tabular export."))
     for doctype in normalized_doctypes:
         assert_doctype_permission(doctype, "read")
     frappe.response.update(

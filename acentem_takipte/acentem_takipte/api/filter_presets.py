@@ -37,7 +37,7 @@ def _storage_key(screen: str) -> str:
 def _normalize_screen(screen: str | None) -> str:
     value = str(screen or "").strip().lower().replace("-", "_")
     if value not in ALLOWED_SCREENS:
-        frappe.throw("Invalid preset screen")
+        frappe.throw(_("Invalid preset screen"))
     return value
 
 
@@ -134,7 +134,7 @@ def _write_state(user: str, screen: str, state: dict[str, Any]) -> dict[str, Any
 def get_filter_preset_state(screen: str) -> dict[str, Any]:
     user = resolve_current_user()
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
     normalized_screen = _normalize_screen(screen)
     return _read_state(user, normalized_screen)
 
@@ -147,7 +147,7 @@ def set_filter_preset_state(
 ) -> dict[str, Any]:
     user = resolve_current_user()
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     normalized_screen = _normalize_screen(screen)
     current = _read_state(user, normalized_screen)

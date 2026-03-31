@@ -107,19 +107,19 @@ def summarize_scheduled_report_configs() -> list[dict[str, Any]]:
 def normalize_scheduled_report_config(payload: dict[str, Any]) -> dict[str, Any]:
     report_key = str(payload.get("report_key") or "").strip()
     if report_key not in REPORT_DEFINITIONS:
-        frappe.throw("Invalid scheduled report key.")
+        frappe.throw(_("Invalid scheduled report key."))
 
     frequency = _normalize_frequency(payload.get("frequency"))
     if frequency not in {"daily", "weekly", "monthly"}:
-        frappe.throw("Invalid scheduled report frequency.")
+        frappe.throw(_("Invalid scheduled report frequency."))
 
     delivery_channel = _normalize_delivery_channel(payload.get("delivery_channel"))
     if delivery_channel not in {"email", "notification_outbox"}:
-        frappe.throw("Invalid scheduled report delivery channel.")
+        frappe.throw(_("Invalid scheduled report delivery channel."))
 
     recipients = _normalize_recipients(payload.get("recipients"))
     if not recipients:
-        frappe.throw("At least one scheduled report recipient is required.")
+        frappe.throw(_("At least one scheduled report recipient is required."))
 
     return {
         "enabled": 1 if cint(payload.get("enabled", 1)) else 0,

@@ -10,8 +10,8 @@ VALID_ASSET_TYPES = {"Vehicle", "Home", "Health Person", "Workplace", "Travel", 
 class ATInsuredAsset(Document):
     def validate(self):
         if not self.customer:
-            frappe.throw("Customer is required")
+            frappe.throw(_("Customer is required"))
         if str(self.asset_type or "") not in VALID_ASSET_TYPES:
-            frappe.throw("Valid asset type is required")
+            frappe.throw(_("Valid asset type is required"))
         if not str(self.asset_label or "").strip():
-            frappe.throw("Asset label is required")
+            frappe.throw(_("Asset label is required"))

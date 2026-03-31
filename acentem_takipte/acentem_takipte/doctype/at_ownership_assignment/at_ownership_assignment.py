@@ -14,29 +14,29 @@ VALID_PRIORITIES = {"Low", "Normal", "High", "Critical"}
 class ATOwnershipAssignment(Document):
     def validate(self):
         if not self.assigned_to:
-            frappe.throw("Assigned user is required")
+            frappe.throw(_("Assigned user is required"))
         if self.source_doctype and self.source_doctype not in VALID_SOURCE_DOCTYPES:
-            frappe.throw("Valid source doctype is required")
+            frappe.throw(_("Valid source doctype is required"))
         if self.source_name and not self.source_doctype:
-            frappe.throw("Source doctype is required when source name is set")
+            frappe.throw(_("Source doctype is required when source name is set"))
         if self.source_doctype and not self.source_name:
-            frappe.throw("Source name is required when source doctype is set")
+            frappe.throw(_("Source name is required when source doctype is set"))
         if self.assignment_role not in VALID_ASSIGNMENT_ROLES:
-            frappe.throw("Valid assignment role is required")
+            frappe.throw(_("Valid assignment role is required"))
         if self.status not in VALID_STATUSES:
-            frappe.throw("Valid assignment status is required")
+            frappe.throw(_("Valid assignment status is required"))
         if self.priority not in VALID_PRIORITIES:
-            frappe.throw("Valid priority is required")
+            frappe.throw(_("Valid priority is required"))
         if self.due_date and getdate(self.due_date) < getdate(nowdate()) and self.status in {"Open", "In Progress"}:
             self.add_comment("Comment", "Assignment due date is in the past.")
 
         self._backfill_from_source()
         if not self.customer and not self.policy and not self.source_name:
-            frappe.throw("Assignment must be linked to a source, customer or policy")
+            frappe.throw(_("Assignment must be linked to a source, customer or policy"))
 
     def _backfill_from_source(self):
         if self.source_doctype and self.source_name and not frappe.db.exists(self.source_doctype, self.source_name):
-            frappe.throw("Linked source record was not found")
+            frappe.throw(_("Linked source record was not found"))
 
         if self.source_doctype == "AT Customer" and self.source_name and not self.customer:
             self.customer = self.source_name

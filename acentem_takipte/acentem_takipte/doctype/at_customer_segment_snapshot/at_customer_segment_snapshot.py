@@ -10,9 +10,9 @@ from frappe.utils import getdate
 class ATCustomerSegmentSnapshot(Document):
     def validate(self):
         if not self.customer:
-            frappe.throw("Customer is required")
+            frappe.throw(_("Customer is required"))
         if not self.snapshot_date:
-            frappe.throw("Snapshot date is required")
+            frappe.throw(_("Snapshot date is required"))
 
         self.snapshot_date = getdate(self.snapshot_date)
         self.score = max(0, min(100, int(self.score or 0)))

@@ -413,7 +413,7 @@ def get_customer_portfolio_summary_map(customers=None) -> dict[str, dict]:
     _assert_dashboard_endpoint_method("get_customer_portfolio_summary_map")
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     raw_customers = (
         frappe.parse_json(customers) if isinstance(customers, str) else customers
@@ -446,18 +446,18 @@ def get_customer_portfolio_summary_map(customers=None) -> dict[str, dict]:
 def get_customer_360_payload(name: str) -> dict:
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     customer_name = str(name or "").strip()
     if not customer_name:
-        frappe.throw("Customer is required")
+        frappe.throw(_("Customer is required"))
 
     customer = frappe.get_doc("AT Customer", customer_name)
     customer.check_permission("read")
 
     allowed_customers = _allowed_customers_for_user()
     if allowed_customers is not None and customer_name not in set(allowed_customers):
-        frappe.throw("Not permitted")
+        frappe.throw(_("Not permitted"))
 
     return build_customer_360_payload(
         customer_name,
@@ -469,11 +469,11 @@ def get_customer_360_payload(name: str) -> dict:
 def get_policy_360_payload(name: str) -> dict:
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     policy_name = str(name or "").strip()
     if not policy_name:
-        frappe.throw("Policy is required")
+        frappe.throw(_("Policy is required"))
 
     policy = frappe.get_doc("AT Policy", policy_name)
     policy.check_permission("read")
@@ -489,7 +489,7 @@ def get_policy_360_payload(name: str) -> dict:
 def get_follow_up_sla_payload(filters=None) -> dict:
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     payload = (
         frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
@@ -506,7 +506,7 @@ def get_follow_up_sla_payload(filters=None) -> dict:
 def get_my_tasks_payload(filters=None) -> dict:
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     payload = (
         frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
@@ -519,7 +519,7 @@ def get_my_tasks_payload(filters=None) -> dict:
 def get_my_activities_payload(filters=None) -> dict:
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     payload = (
         frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
@@ -532,7 +532,7 @@ def get_my_activities_payload(filters=None) -> dict:
 def get_my_reminders_payload(filters=None) -> dict:
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     payload = (
         frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
@@ -548,7 +548,7 @@ def get_customer_workbench_rows(
     _assert_dashboard_endpoint_method("get_customer_workbench_rows")
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     payload = (
         frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
@@ -651,7 +651,7 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
     _assert_dashboard_endpoint_method("get_lead_workbench_rows")
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     payload = (
         frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})
@@ -757,11 +757,11 @@ def get_lead_detail_payload(name: str) -> dict:
     _assert_dashboard_endpoint_method("get_lead_detail_payload")
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     lead_name = str(name or "").strip()
     if not lead_name:
-        frappe.throw("Lead is required")
+        frappe.throw(_("Lead is required"))
 
     lead = frappe.get_doc("AT Lead", lead_name)
     lead.check_permission("read")
@@ -772,7 +772,7 @@ def get_lead_detail_payload(name: str) -> dict:
         and lead.customer
         and lead.customer not in set(allowed_customers)
     ):
-        frappe.throw("Not permitted")
+        frappe.throw(_("Not permitted"))
 
     return dashboard_lead_detail_builder.build_lead_detail_payload(
         lead,
@@ -793,11 +793,11 @@ def get_offer_detail_payload(name: str) -> dict:
     _assert_dashboard_endpoint_method("get_offer_detail_payload")
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     offer_name = str(name or "").strip()
     if not offer_name:
-        frappe.throw("Offer is required")
+        frappe.throw(_("Offer is required"))
 
     offer = frappe.get_doc("AT Offer", offer_name)
     offer.check_permission("read")
@@ -808,7 +808,7 @@ def get_offer_detail_payload(name: str) -> dict:
         and offer.customer
         and offer.customer not in set(allowed_customers)
     ):
-        frappe.throw("Not permitted")
+        frappe.throw(_("Not permitted"))
 
     return dashboard_offer_detail_builder.build_offer_detail_payload(
         offer,
@@ -829,11 +829,11 @@ def update_customer_profile(name: str, values=None) -> dict:
     _assert_dashboard_endpoint_method("update_customer_profile")
     user = frappe.session.user
     if user == "Guest":
-        frappe.throw("Authentication required")
+        frappe.throw(_("Authentication required"))
 
     customer_name = str(name or "").strip()
     if not customer_name:
-        frappe.throw("Customer is required")
+        frappe.throw(_("Customer is required"))
 
     payload = frappe.parse_json(values) if isinstance(values, str) else (values or {})
     if not isinstance(payload, dict):
@@ -856,21 +856,21 @@ def update_customer_profile(name: str, values=None) -> dict:
         elif fieldname == "gender":
             normalized = str(value or "").strip()
             if normalized not in CUSTOMER_GENDER_OPTIONS:
-                frappe.throw("Invalid gender value")
+                frappe.throw(_("Invalid gender value"))
             updates[fieldname] = normalized or "Unknown"
         elif fieldname == "marital_status":
             normalized = str(value or "").strip()
             if normalized not in CUSTOMER_MARITAL_OPTIONS:
-                frappe.throw("Invalid marital status value")
+                frappe.throw(_("Invalid marital status value"))
             updates[fieldname] = normalized or "Unknown"
         elif fieldname == "consent_status":
             normalized = str(value or "").strip()
             if normalized not in CUSTOMER_CONSENT_OPTIONS:
-                frappe.throw("Invalid consent status value")
+                frappe.throw(_("Invalid consent status value"))
             updates[fieldname] = normalized or "Unknown"
 
     if "full_name" in updates and not updates.get("full_name"):
-        frappe.throw("Full Name is required")
+        frappe.throw(_("Full Name is required"))
 
     for fieldname, value in updates.items():
         doc.set(fieldname, value)

@@ -10,11 +10,11 @@ from frappe.utils import cint, getdate
 class ATReportSnapshot(Document):
     def validate(self):
         if not self.report_key:
-            frappe.throw("Report key is required")
+            frappe.throw(_("Report key is required"))
         if not self.snapshot_date:
-            frappe.throw("Snapshot date is required")
+            frappe.throw(_("Snapshot date is required"))
         if not str(self.scope_hash or "").strip():
-            frappe.throw("Scope hash is required")
+            frappe.throw(_("Scope hash is required"))
 
         self.snapshot_date = getdate(self.snapshot_date)
         self.row_count = max(cint(self.row_count), 0)

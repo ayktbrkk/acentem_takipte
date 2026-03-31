@@ -14,32 +14,32 @@ VALID_PRIORITIES = {"Low", "Normal", "High", "Critical"}
 class ATTask(Document):
     def validate(self):
         if not (self.task_title or "").strip():
-            frappe.throw("Task title is required")
+            frappe.throw(_("Task title is required"))
         if self.task_type not in VALID_TASK_TYPES:
-            frappe.throw("Valid task type is required")
+            frappe.throw(_("Valid task type is required"))
         if not self.assigned_to:
-            frappe.throw("Assigned user is required")
+            frappe.throw(_("Assigned user is required"))
         if self.status not in VALID_STATUSES:
-            frappe.throw("Valid task status is required")
+            frappe.throw(_("Valid task status is required"))
         if self.priority not in VALID_PRIORITIES:
-            frappe.throw("Valid priority is required")
+            frappe.throw(_("Valid priority is required"))
         if self.source_doctype and self.source_doctype not in VALID_SOURCE_DOCTYPES:
-            frappe.throw("Valid source doctype is required")
+            frappe.throw(_("Valid source doctype is required"))
         if self.source_name and not self.source_doctype:
-            frappe.throw("Source doctype is required when source name is set")
+            frappe.throw(_("Source doctype is required when source name is set"))
         if self.source_doctype and not self.source_name:
-            frappe.throw("Source name is required when source doctype is set")
+            frappe.throw(_("Source name is required when source doctype is set"))
         if self.due_date and self.reminder_at and get_datetime(self.reminder_at).date() > getdate(self.due_date):
-            frappe.throw("Reminder time must be on or before due date")
+            frappe.throw(_("Reminder time must be on or before due date"))
 
         self._backfill_from_source()
         self._sync_completion_timestamp()
         if not self.customer and not self.policy and not self.claim and not self.source_name:
-            frappe.throw("Task must be linked to a source, customer, policy or claim")
+            frappe.throw(_("Task must be linked to a source, customer, policy or claim"))
 
     def _backfill_from_source(self):
         if self.source_doctype and self.source_name and not frappe.db.exists(self.source_doctype, self.source_name):
-            frappe.throw("Linked source record was not found")
+            frappe.throw(_("Linked source record was not found"))
 
         if self.source_doctype == "AT Customer" and self.source_name and not self.customer:
             self.customer = self.source_name

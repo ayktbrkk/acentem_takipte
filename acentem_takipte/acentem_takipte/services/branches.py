@@ -277,7 +277,7 @@ def assert_office_branch_access(
     branch_name = str(requested_office_branch or "").strip() or None
     normalized_branch = normalize_requested_office_branch(branch_name, user=user)
     if branch_name and normalized_branch != branch_name:
-        frappe.throw("You are not allowed to access the selected office branch.")
+        frappe.throw(_("You are not allowed to access the selected office branch."))
     return normalized_branch
 
 

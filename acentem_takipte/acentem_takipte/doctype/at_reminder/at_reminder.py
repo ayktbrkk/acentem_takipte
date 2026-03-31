@@ -8,7 +8,7 @@ from frappe.utils import get_datetime, now_datetime
 class ATReminder(Document):
     def validate(self):
         if self.source_doctype and self.source_name and not frappe.db.exists(self.source_doctype, self.source_name):
-            frappe.throw("Linked source record was not found")
+            frappe.throw(_("Linked source record was not found"))
 
         if self.remind_at:
             self.remind_at = get_datetime(self.remind_at)
