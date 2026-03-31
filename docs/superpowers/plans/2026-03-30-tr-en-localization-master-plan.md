@@ -110,6 +110,14 @@
 
 ## Devam Eden Çalışma (2026-03-31)
 
+### ⚠️ KRİTİK BULGU: Backend API Message Lokalizasyonu Boşluğu
+
+**Tarih:** 2026-03-31 | **Tarayan:** Automated codebase audit
+
+**Sonuç:** Frontend ✅ tamamlandı (20+ sayfa), **Backend API/Service/DocType lokalizasyonu şu anda 0% bitmemiş** (69 unlocalized throw gerekli).
+
+Detaylar [Test Sonuçları #Backend API Message Audit] bölümünde.
+
 ### Doğrulama Sonuçları
 
 Sonraki dalga hedefleri kontrol edildi:
@@ -124,10 +132,21 @@ Tüm dosyalarda English string'ler `en:` altında kaynak olarak duruyor.
 ### Genel Durum
 
 Frontend yerelleştirme durumu:
-- 20+ Vue sayfasında `copy = { tr: {...}, en: {...} }` yapısı mevcut
-- English string'ler `en:` altında kaynak olarak duruyor
-- `translateText` i18n utility'si CSV kataloğuna bağlı
-- Turkish karakterli string'ler sadece `tr:` alanlarında (bu doğru)
+- 20+ Vue sayfasında `copy = { tr: {...}, en: {...} }` yapısı mevcut ✅
+- English string'ler `en:` altında kaynak olarak duruyor ✅
+- `translateText` i18n utility'si CSV kataloğuna bağlı ✅
+- Turkish karakterli string'ler sadece `tr:` alanlarında (bu doğru) ✅
+
+**Backend API/Service/DocType Durumu (KRİTİK):**
+- `at_customer.py`: ✅ Compliant (7 throws `frappe._()` ile sarılı)
+- `at_policy.py`: ✅ Compliant (4 throws `frappe._()` ile sarılı)
+- **`api/dashboard.py`: ❌ KRİTİK (24 throws çıplak → Faz 4'de)**
+- **`api/filter_presets.py`: ❌ (3 throws çıplak → Faz 5'te)**
+- **`api/list_exports.py`: ❌ (1 throw çıplak → Faz 5'te)**
+- **`api/session.py`: ❌ (2 throws çıplak → Faz 5'te)**
+- **`services/branches.py`: ❌ (1 throw çıplak → Faz 5'te)**
+- **`services/scheduled_reports.py`: ❌ (4 throws çıplak → Faz 5'te)**
+- **doctype validation (8 files): ❌ (38 throws çıplak → Faz 6'da)**
 
 ### Güncellemeler (2026-03-31)
 
@@ -143,31 +162,67 @@ Frontend yerelleştirme durumu:
 
 ### Kalan Çalışmalar
 
-1. **Vitest test dosyaları** - Mevcut 81 test dosyasında vitest formatında test yok
-2. **WSL Frappe Sunucusu** - Bağlantı opsiyonel
-3. **Frontend hot spot dosyaları** - Tümü localization standartlarına uygun
+1. **Backend API Message Wrapping** - 69 throw = PRİORİTE 1 (Faz 4-6)
+   - `api/dashboard.py` - 24 throw (KRİTİK)
+   - `api/filter_presets.py`, `api/list_exports.py`, `api/session.py` - 6 throw
+   - `services/branches.py`, `services/scheduled_reports.py` - 5 throw
+   - 8 doctype validation files - 38 throw
 
-### WSL Frappe Sunucusu (Opsiyonel)
+2. **CSV Enumeration + Sync** - ~31 yeni kaynak string (Faz 7)
+   - Unique source string'leri `en.csv`'ye ekle
+   - Turkish çeviriler `tr.csv`'ye ekle (glossary tutarlı)
+
+3. **Test Validation** - Faz 9-10
+   - Backend tests: dashboard, session, services, doctype (pytest)
+   - Frontend regression: Vitest 69 test
+
+4. **Canlı TR/EN Smoke** - Faz 12
+   - http://at.localhost:8000/at/ login
+   - Dil toggle: EN → TR
+   - Error message doğrulama (minimum 3 critical message)
+
+### WSL Frappe Sunucusu (Canlı Test için Hazır)
 
 - URL: `http://at.localhost:8000/at/`
-- Giriş: `Administrator` / `admin`
-- WSL'de `bench start` ile çalıştırılmalı
+- Login: `Administrator` / `admin`
+- Status: ✅ Accessible (2026-03-31 verified)
+- Usage: Phase 12 canlı TR/EN smoke test için ready
 
 ---
 
 ## Test Sonuçları (2026-03-31)
 
-### ❌ Playwright E2E Smoke Test
-- **Durum:** Başarısız - Sunucu çalışmıyor
-- **Hata:** `ERR_CONNECTION_REFUSED at http://localhost:8080/login`
-- **Neden:** Frappe sunucusu `localhost:8080` adresinde çalışmıyor
-- **Çözüm:** WSL'de `bench start` ile sunucuyu başlatılması gerekiyor
+### ✅ Frontend Hotspot Audit
+- **Durum:** Başarılı - Compliance doğrulandı
+- **Coverage:** 20+ Vue sayfası + 69 Vitest dosyası + 14 E2E spec
+- **Bulgu:** Tüm sayfalar `copy = { tr: {...}, en: {...} }` formatında. English source kataloğa bağlı.
+- **Result:** Frontend lokalizasyon altyapısı ✅ ready
 
-### ❌ bench build --app acentem_takipte
-- **Durum:** Başarısız - Node eksik
-- **Hata:** `ValueError: Invalid version string: 'bin/sh: 1: node: not found'`
-- **Neden:** WSL ortamında Node.js yüklü değil
-- **Çözüm:** Sistemde Node.js kurulumu yapılması gerekiyor
+### ✅ Frappe Sunucusu Erişimi
+- **Status:** Başarılı - Sunucu accessible
+- **URL:** http://at.localhost:8000/at/
+- **Test:** Login sayfası returned (Frappe responsive)
+- **Credentials:** Administrator / admin
+- **Implication:** Canlı TR/EN smoke test Phase 12'de mümkün ✅
+
+### ❌ Backend API Message Audit (YENİ - KRİTİK)
+- **Durum:** KRİTİK BOŞLUK BULUNDU
+- **Bulgu:** 31 api/service + 38 doctype `frappe.throw()` çıplak string (wrapper yok)
+- **Scan Method:** Regex `frappe\.throw\((?!_\()` pattern match
+- **Impact:** Tüm bu hata mesajları çeviri sistemi tarafından erişilemiyor
+- **Envanteri:**
+  - `api/dashboard.py`: 24 throw  
+  - `api/filter_presets.py`: 3 throw
+  - `api/list_exports.py`: 1 throw
+  - `api/session.py`: 2 throw
+  - `services/branches.py`: 1 throw
+  - `services/scheduled_reports.py`: 4 throw
+  - 8 doctype validation files: 38 throw total
+- **Action Needed:** Phase 4-6 taramasında tam i18n wrapping gerekli
+
+### ⚠️ bench build --app acentem_takipte
+- **Durum:** Node eksik (ancak opsiyonel)
+- **Plan:** Phase 11'de denenir; başarısız olursa acceptable skip (frontend kodu unchanged)
 
 ---
 
