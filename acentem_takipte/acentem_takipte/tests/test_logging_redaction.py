@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
@@ -35,7 +36,7 @@ class TestLoggingRedaction(IntegrationTestCase):
         self.assertEqual(redacted["details"]["email"], "de************om")
 
     def test_audit_admin_action_logs_redacted_payload(self):
-        with patch.object(security_api.frappe.session, "user", "manager@example.com"):
+        with patch.object(security_api.frappe, "session", SimpleNamespace(user="manager@example.com")):
             with patch.object(security_api.frappe, "logger") as logger_mock:
                 security_api.audit_admin_action(
                     "api.test.action",

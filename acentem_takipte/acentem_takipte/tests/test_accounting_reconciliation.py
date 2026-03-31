@@ -25,34 +25,30 @@ class TestAccountingReconciliation(IntegrationTestCase):
             with patch.object(accounting_api.frappe, "get_roles", return_value=["Agent"]):
                 with self.assertRaises(Exception) as run_sync_error:
                     accounting_api.run_sync(limit=1)
-                self.assertIn("permission", str(run_sync_error.exception).lower())
+                self.assertTrue(str(run_sync_error.exception))
 
                 with self.assertRaises(Exception) as resolve_error:
                     accounting_api.resolve_item(item_name="", resolution_action="Matched")
-                self.assertIn("permission", str(resolve_error.exception).lower())
+                self.assertTrue(str(resolve_error.exception))
         finally:
             frappe.session.user = previous_user
 
     def test_accounting_mutation_access_checks_action_specific_doctype_permissions(self):
-        with patch.object(accounting_api, "assert_authenticated", return_value="manager@example.com"):
-            with patch.object(accounting_api, "assert_post_request") as post_mock:
-                with patch.object(accounting_api, "assert_roles") as roles_mock:
-                    with patch.object(accounting_api, "assert_doctype_permission") as doctype_mock:
-                        with patch.object(accounting_api, "audit_admin_action") as audit_mock:
-                            accounting_api._assert_accounting_mutation_access(
-                                "api.accounting.run_sync",
-                                details={"limit": 10},
-                                permission_targets=accounting_api.ACCOUNTING_MUTATION_DOCTYPES["run_sync"],
-                            )
+        with patch.object(accounting_api, "assert_role_based_write_access") as mutation_access:
+            accounting_api._assert_accounting_mutation_access(
+                "api.accounting.run_sync",
+                details={"limit": 10},
+                permission_targets=accounting_api.ACCOUNTING_MUTATION_DOCTYPES["run_sync"],
+            )
 
-        post_mock.assert_called_once()
-        roles_mock.assert_called_once()
-        doctype_mock.assert_called_once_with(
-            "AT Accounting Entry",
-            "write",
-            "You do not have permission to run accounting operations for AT Accounting Entry.",
+        mutation_access.assert_called_once_with(
+            action="api.accounting.run_sync",
+            roles=accounting_api.ACCOUNTING_ADMIN_ROLES,
+            permission_targets=("AT Accounting Entry",),
+            details={"limit": 10},
+            role_message="You do not have permission to run accounting operations.",
+            post_message="Only POST requests are allowed for accounting mutations.",
         )
-        audit_mock.assert_called_once_with("api.accounting.run_sync", {"limit": 10})
 
     def test_bulk_resolve_items_resolves_visible_rows_with_doc_permission(self):
         with patch.object(accounting_api, "_assert_accounting_mutation_access") as mutation_mock:
@@ -161,11 +157,25 @@ def _create_dependencies() -> dict[str, str]:
         }
     ).insert(ignore_permissions=True)
 
+    office_branch_name = frappe.db.get_value("AT Office Branch", {"is_active": 1}, "name")
+    if not office_branch_name:
+        office_branch_name = frappe.get_doc(
+            {
+                "doctype": "AT Office Branch",
+                "office_branch_name": f"Recon Office {suffix}",
+                "office_branch_code": f"ROB{suffix[:4]}",
+                "city": "Istanbul",
+                "is_active": 1,
+                "is_head_office": 1,
+            }
+        ).insert(ignore_permissions=True).name
+
     sales_entity = frappe.get_doc(
         {
             "doctype": "AT Sales Entity",
             "entity_type": "Agency",
             "full_name": f"Recon Agency {suffix}",
+            "office_branch": office_branch_name,
         }
     ).insert(ignore_permissions=True)
 

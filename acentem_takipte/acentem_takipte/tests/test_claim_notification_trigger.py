@@ -20,7 +20,7 @@ class TestClaimNotificationTrigger(IntegrationTestCase):
 
         with patch.object(doc, "has_value_changed", return_value=False):
             with patch(
-                "acentem_takipte.doctype.at_claim.at_claim.create_notification_drafts"
+                "acentem_takipte.acentem_takipte.doctype.at_claim.at_claim.create_notification_drafts"
             ) as create_drafts:
                 doc.on_update()
 
@@ -41,7 +41,7 @@ class TestClaimNotificationTrigger(IntegrationTestCase):
 
         with patch.object(doc, "has_value_changed", return_value=True):
             with patch(
-                "acentem_takipte.doctype.at_claim.at_claim.create_notification_drafts"
+                "acentem_takipte.acentem_takipte.doctype.at_claim.at_claim.create_notification_drafts"
             ) as create_drafts:
                 doc.on_update()
 

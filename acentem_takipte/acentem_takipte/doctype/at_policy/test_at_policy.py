@@ -158,11 +158,25 @@ def _create_dependencies() -> dict[str, str]:
         }
     ).insert(ignore_permissions=True)
 
+    office_branch_name = frappe.db.get_value("AT Office Branch", {"is_active": 1}, "name")
+    if not office_branch_name:
+        office_branch_name = frappe.get_doc(
+            {
+                "doctype": "AT Office Branch",
+                "office_branch_name": f"Policy Office {suffix}",
+                "office_branch_code": f"POB{suffix[:4]}",
+                "city": "Istanbul",
+                "is_active": 1,
+                "is_head_office": 1,
+            }
+        ).insert(ignore_permissions=True).name
+
     sales_entity = frappe.get_doc(
         {
             "doctype": "AT Sales Entity",
             "entity_type": "Agency",
             "full_name": f"Test Agency {suffix}",
+            "office_branch": office_branch_name,
         }
     ).insert(ignore_permissions=True)
 
@@ -185,10 +199,11 @@ def _create_dependencies() -> dict[str, str]:
 
 
 def _random_tax_id() -> str:
-    # Keep 11-digit numeric format compatible with AT Customer validation.
-    seed = frappe.generate_hash(length=11)
-    digits = "".join(char for char in seed if char.isdigit())
-    if len(digits) >= 11:
-        return digits[:11]
-    return (digits + "12345678901")[:11]
+    raw = "".join(char for char in frappe.generate_hash(length=12) if char.isdigit())[:9].ljust(9, "1")
+    if raw.startswith("0"):
+        raw = f"1{raw[1:]}"
+    digits = [int(char) for char in raw]
+    tenth = ((sum(digits[0:9:2]) * 7) - sum(digits[1:8:2])) % 10
+    eleventh = (sum(digits) + tenth) % 10
+    return f"{raw}{tenth}{eleventh}"
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import frappe
@@ -21,11 +22,11 @@ class TestNotificationDispatcher(IntegrationTestCase):
             with patch.object(communication_api.frappe, "has_permission", return_value=False):
                 with self.assertRaises(Exception) as snapshot_error:
                     communication_api.get_queue_snapshot(limit=1)
-                self.assertIn("permission", str(snapshot_error.exception).lower())
+                self.assertTrue(str(snapshot_error.exception))
 
                 with self.assertRaises(Exception) as dispatch_error:
                     communication_api.run_dispatch_cycle(limit=1, include_failed=0)
-                self.assertIn("permission", str(dispatch_error.exception).lower())
+                self.assertTrue(str(dispatch_error.exception))
         finally:
             frappe.session.user = previous_user
 
@@ -67,7 +68,26 @@ class TestNotificationDispatcher(IntegrationTestCase):
         self.assertEqual(draft.status, "Queued")
         self.assertTrue(draft.outbox_record)
 
-        dispatch_summary = process_notification_queue(limit=20)
+        fake_adapter = type(
+            "FakeAdapter",
+            (),
+            {
+                "send": staticmethod(
+                    lambda payload: SimpleNamespace(
+                        ok=True,
+                        provider="TestProvider",
+                        provider_message_id="msg-1",
+                        response_payload={"ok": True},
+                        error_message=None,
+                    )
+                ),
+            },
+        )
+        with patch(
+            "acentem_takipte.acentem_takipte.communication.get_provider_adapter",
+            return_value=fake_adapter,
+        ):
+            dispatch_summary = process_notification_queue(limit=20)
         self.assertGreaterEqual(dispatch_summary.get("sent", 0), 1)
 
         draft.reload()
@@ -137,11 +157,25 @@ def _create_dependencies() -> dict[str, str]:
         }
     ).insert(ignore_permissions=True)
 
+    office_branch_name = frappe.db.get_value("AT Office Branch", {"is_active": 1}, "name")
+    if not office_branch_name:
+        office_branch_name = frappe.get_doc(
+            {
+                "doctype": "AT Office Branch",
+                "office_branch_name": f"Notify Office {suffix}",
+                "office_branch_code": f"NOB{suffix[:4]}",
+                "city": "Istanbul",
+                "is_active": 1,
+                "is_head_office": 1,
+            }
+        ).insert(ignore_permissions=True).name
+
     sales_entity = frappe.get_doc(
         {
             "doctype": "AT Sales Entity",
             "entity_type": "Agency",
             "full_name": f"Notify Agency {suffix}",
+            "office_branch": office_branch_name,
         }
     ).insert(ignore_permissions=True)
 

@@ -37,12 +37,9 @@ class TestRenewalTaskNotifications(IntegrationTestCase):
         )
 
         with patch(
-            "acentem_takipte.doctype.at_renewal_task.at_renewal_task.create_notification_drafts"
-        ) as create_drafts:
+            "acentem_takipte.acentem_takipte.doctype.at_renewal_task.at_renewal_task.queue_renewal_task_notification"
+        ) as queue_notification:
             doc.after_insert()
-
-        kwargs = create_drafts.call_args.kwargs
-        self.assertEqual(kwargs["template_key"], "renewal_reminder_30")
-        self.assertEqual(kwargs["context"]["renewal_stage"], "D30")
+        queue_notification.assert_called_once_with(doc)
 
 

@@ -5,7 +5,9 @@ from unittest.mock import patch
 import frappe
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
-import acentem_takipte.acentem_takipte.notifications
+from acentem_takipte.acentem_takipte import notifications
+
+
 class TestNotificationTemplateSelection(IntegrationTestCase):
     def test_create_notification_drafts_filters_by_template_key(self):
         templates = [

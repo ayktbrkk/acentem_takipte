@@ -9,9 +9,16 @@ from acentem_takipte.acentem_takipte.api import session as session_api
 
 class TestSessionBranchContext(IntegrationTestCase):
     def test_get_session_context_includes_office_branch_payload(self):
+        def _get_value(doctype, name, fieldname):
+            if fieldname == "full_name":
+                return "Agent User"
+            if fieldname == "language":
+                return "tr"
+            return None
+
         with patch.object(session_api, "resolve_current_user", return_value="agent@example.com"):
             with patch.object(session_api.frappe, "get_site_config", return_value={}):
-                with patch.object(session_api.frappe.db, "get_value", side_effect=["Agent User", "tr"]):
+                with patch.object(session_api.frappe.db, "get_value", side_effect=_get_value):
                     with patch.object(session_api, "_resolve_session_interface", return_value={"roles": ["Agent"], "preferred_home": "/at", "interface_mode": "spa"}):
                         with patch.object(session_api, "get_user_office_branches", return_value=[{"name": "BR-1"}]):
                             with patch.object(session_api, "get_default_office_branch", return_value="BR-1"):
@@ -28,9 +35,16 @@ class TestSessionBranchContext(IntegrationTestCase):
     def test_get_session_context_includes_enabled_realtime_config(self):
         site_config = {"at_realtime_enabled": True, "at_realtime_port": 9100}
 
+        def _get_value(doctype, name, fieldname):
+            if fieldname == "full_name":
+                return "Agent User"
+            if fieldname == "language":
+                return "tr"
+            return None
+
         with patch.object(session_api, "resolve_current_user", return_value="agent@example.com"):
             with patch.object(session_api.frappe, "get_site_config", return_value=site_config):
-                with patch.object(session_api.frappe.db, "get_value", side_effect=["Agent User", "tr"]):
+                with patch.object(session_api.frappe.db, "get_value", side_effect=_get_value):
                     with patch.object(session_api, "_resolve_session_interface", return_value={"roles": ["Agent"], "preferred_home": "/at", "interface_mode": "spa"}):
                         with patch.object(session_api, "get_user_office_branches", return_value=[]):
                             with patch.object(session_api, "get_default_office_branch", return_value=None):

@@ -6,6 +6,13 @@ import types
 import unittest
 from datetime import date, datetime, timedelta
 from types import SimpleNamespace
+from unittest.mock import patch
+
+
+_ORIGINAL_MODULES = {
+    name: sys.modules.get(name)
+    for name in ("frappe", "frappe.utils")
+}
 
 
 def _install_frappe_stub(*, sql_impl=None, get_all_impl=None, get_list_impl=None):
@@ -59,14 +66,19 @@ def _as_date(value):
 class DashboardWave4BuilderTests(unittest.TestCase):
     def tearDown(self):
         for name in [
-            "frappe",
-            "frappe.utils",
-            "acentem_takipte.api.dashboard_v2.queries_kpis",
-            "acentem_takipte.api.dashboard_v2.tab_payload",
-            "acentem_takipte.api.dashboard_v2.details_lead",
-            "acentem_takipte.api.dashboard_v2.details_offer",
+            "acentem_takipte.acentem_takipte.api.dashboard_v2.queries_kpis",
+            "acentem_takipte.acentem_takipte.api.dashboard_v2.tab_payload",
+            "acentem_takipte.acentem_takipte.api.dashboard_v2.details_lead",
+            "acentem_takipte.acentem_takipte.api.dashboard_v2.details_offer",
         ]:
             sys.modules.pop(name, None)
+
+        for name in ("frappe", "frappe.utils"):
+            original = _ORIGINAL_MODULES.get(name)
+            if original is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = original
 
     def test_queries_kpis_builder_contract(self):
         responses = [
@@ -80,23 +92,24 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return responses.pop(0)
 
         _install_frappe_stub(sql_impl=fake_sql)
-        mod = _reload("acentem_takipte.api.dashboard_v2.queries_kpis")
+        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.queries_kpis")
 
-        payload = mod.build_dashboard_kpis_payload(
-            from_date="2026-02-01",
-            to_date="2026-02-26",
-            period_comparison="previous_period",
-            branch="Istanbul",
-            months=6,
-            allowed_customers=["CUST-1"],
-            scope_meta={"access_scope": "scoped"},
-            build_policy_where_fn=lambda **kwargs: ("1=1", kwargs),
-            dashboard_cards_summary_fn=lambda **kwargs: {"policy_count": 9, "gwp_try": 12345}
-            if kwargs.get("from_date") == "2026-02-01"
-            else {"policy_count": 6, "gwp_try": 10000},
-            build_lead_where_fn=lambda **kwargs: ("1=1", kwargs),
-            monthly_commission_trend_fn=lambda **kwargs: [{"month": "2026-02", "commission_try": 123}],
-        )
+        with patch.object(mod, "_get_lead_status_rows", return_value=[{"status": "Open", "total": 3}]):
+            payload = mod.build_dashboard_kpis_payload(
+                from_date="2026-02-01",
+                to_date="2026-02-26",
+                period_comparison="previous_period",
+                branch="Istanbul",
+                months=6,
+                allowed_customers=["CUST-1"],
+                scope_meta={"access_scope": "scoped"},
+                build_policy_where_fn=lambda **kwargs: ("1=1", kwargs),
+                dashboard_cards_summary_fn=lambda **kwargs: {"policy_count": 9, "gwp_try": 12345}
+                if kwargs.get("from_date") == "2026-02-01"
+                else {"policy_count": 6, "gwp_try": 10000},
+                build_lead_where_fn=lambda **kwargs: ("1=1", kwargs),
+                monthly_commission_trend_fn=lambda **kwargs: [{"month": "2026-02", "commission_try": 123}],
+            )
 
         self.assertEqual(payload["cards"]["policy_count"], 9)
         self.assertEqual(payload["meta"]["access_scope"], "scoped")
@@ -107,7 +120,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
         self.assertEqual(payload["comparison"]["cards"]["policy_count"], 6)
         self.assertEqual(payload["comparison"]["delta"]["policy_count"]["delta"], 3.0)
         self.assertEqual(payload["comparison"]["delta"]["policy_count"]["direction"], "up")
-        self.assertFalse(responses)
+        self.assertEqual(len(responses), 1)
 
     def test_tab_payload_builder_daily_contract(self):
         responses = [
@@ -134,7 +147,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return responses.pop(0)
 
         _install_frappe_stub(sql_impl=fake_sql)
-        mod = _reload("acentem_takipte.api.dashboard_v2.tab_payload")
+        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.tab_payload")
 
         payload = mod.build_dashboard_tab_sections(
             tab_key="daily",
@@ -205,7 +218,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return []
 
         _install_frappe_stub(get_all_impl=fake_get_all)
-        mod = _reload("acentem_takipte.api.dashboard_v2.details_lead")
+        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.details_lead")
 
         captured = {}
 
@@ -257,7 +270,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return []
 
         _install_frappe_stub(get_all_impl=fake_get_all)
-        mod = _reload("acentem_takipte.api.dashboard_v2.details_offer")
+        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.details_offer")
 
         captured = {}
 

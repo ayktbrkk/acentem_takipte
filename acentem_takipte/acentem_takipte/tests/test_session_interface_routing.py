@@ -9,9 +9,10 @@ from acentem_takipte.acentem_takipte.api import session as session_api
 
 
 def _fake_user_get_value(expected_user: str, field_values: dict[str, str | None]):
-    def _resolver(doctype: str, name: str, fieldname: str):
+    def _resolver(doctype: str, name: str = "", fieldname: str = "", *args, **kwargs):
         if doctype == "User" and name == expected_user:
-            return field_values.get(fieldname)
+            target_field = fieldname or kwargs.get("fieldname") or ""
+            return field_values.get(target_field)
         return None
 
     return _resolver
@@ -37,8 +38,11 @@ class TestSessionInterfaceRouting(IntegrationTestCase):
                                 },
                             ),
                         ):
-                            with patch.object(session_api.frappe.defaults, "get_user_default", return_value="AT-Istanbul"):
-                                result = session_api.get_session_context()
+                            with patch.object(session_api, "get_user_office_branches", return_value=[]):
+                                with patch.object(session_api, "get_default_office_branch", return_value=None):
+                                    with patch.object(session_api, "user_can_access_all_office_branches", return_value=False):
+                                        with patch.object(session_api.frappe.defaults, "get_user_default", return_value="AT-Istanbul"):
+                                            result = session_api.get_session_context()
 
         self.assertEqual(result["user"], "agent@example.com")
         self.assertEqual(result["roles"], ["Agent"])
@@ -62,8 +66,11 @@ class TestSessionInterfaceRouting(IntegrationTestCase):
                                 },
                             ),
                         ):
-                            with patch.object(session_api.frappe.defaults, "get_user_default", return_value="AT-Ankara"):
-                                result = session_api.get_session_context()
+                            with patch.object(session_api, "get_user_office_branches", return_value=[]):
+                                with patch.object(session_api, "get_default_office_branch", return_value=None):
+                                    with patch.object(session_api, "user_can_access_all_office_branches", return_value=False):
+                                        with patch.object(session_api.frappe.defaults, "get_user_default", return_value="AT-Ankara"):
+                                            result = session_api.get_session_context()
 
         self.assertEqual(result["user"], "manager@example.com")
         self.assertEqual(result["roles"], ["System Manager"])
