@@ -1,0 +1,407 @@
+Localization Guard Report
+Turkish-char violations (except allowed files): 4061
+Bare frappe.throw violations: 0
+Localized strings missing in en.csv: 234
+Placeholder mismatches en.csv <-> tr.csv: 0
+Turkish-char Violations
+frontend/src/components/PolicyForm.test.js:115: expect(wrapper.text()).toContain("Yeni Polie");
+frontend/src/components/PolicyForm.test.js:116: expect(wrapper.text()).toContain("¦leri");
+frontend/src/components/PolicyForm.test.js:118: const nextButton = () => wrapper.findAll("button").find((button) => button.text() === "¦leri");
+frontend/src/components/Sidebar.test.js:54: expect(wrapper.text()).toContain("Men³");
+frontend/src/components/Sidebar.test.js:55: expect(wrapper.text()).toContain("Genel G÷r³n³m");
+frontend/src/components/Sidebar.test.js:55: expect(wrapper.text()).toContain("Genel G÷r³n³m");
+frontend/src/components/Sidebar.test.js:55: expect(wrapper.text()).toContain("Genel G÷r³n³m");
+frontend/src/components/Sidebar.test.js:57: expect(wrapper.text()).toContain("F²rsatlar");
+frontend/src/components/Sidebar.test.js:58: expect(wrapper.text()).toContain("Acil Eri■im Talebi");
+frontend/src/components/Sidebar.test.js:59: expect(wrapper.text()).toContain("Kenar Men³s³n³ Daralt");
+frontend/src/components/Sidebar.test.js:59: expect(wrapper.text()).toContain("Kenar Men³s³n³ Daralt");
+frontend/src/components/Sidebar.test.js:59: expect(wrapper.text()).toContain("Kenar Men³s³n³ Daralt");
+frontend/src/components/app-shell/OfficeBranchSelect.test.js:57: expect(wrapper.text()).toContain("Merkez ■ube");
+frontend/src/components/app-shell/QuickCreateDialogShell.test.js:28: expect(wrapper.text()).toContain("¦ptal");
+frontend/src/components/app-shell/QuickCreateDialogShell.test.js:30: expect(wrapper.text()).toContain("Kaydet ve A");
+frontend/src/components/app-shell/QuickCreateManagedDialog.test.js:84: notes: "Ayn² hane",
+frontend/src/components/app-shell/QuickCreateManagedDialog.test.js:109: notes: "Ayn² hane",
+frontend/src/components/aux-record-detail/AuxRecordDetailQuickEditDialog.vue:43: default: () => ({ save: "Kaydet", cancel: "¦ptal" }),
+frontend/src/components/claims-board/ClaimsBoardTableSection.vue:3: <ListTable :columns="claimsTableColumns" :rows="rows" :loading="loading" empty-message="Hasar bulunamad²." @row-click="$emit('row-click', $event)" />
+frontend/src/components/lead-list/LeadListQuickLeadDialog.vue:20: :customer-label="{ tr: 'M³■teri / Ad Soyad', en: 'Customer / Full Name' }"
+frontend/src/components/lead-list/LeadListQuickLeadDialog.vue:20: :customer-label="{ tr: 'M³■teri / Ad Soyad', en: 'Customer / Full Name' }"
+frontend/src/components/reports/ScheduledReportsManager.test.js:8: label: { tr: "Polie Listesi", en: "Policy List" },
+frontend/src/components/reports/ScheduledReportsManager.test.js:11: label: { tr: "Hasar Operasyonlar²", en: "Claims Operations" },
+frontend/src/components/reports/ScheduledReportsManager.test.js:33: expect(wrapper.text()).toContain("Geersiz al²c² adresi");
+frontend/src/components/reports/ScheduledReportsManager.test.js:33: expect(wrapper.text()).toContain("Geersiz al²c² adresi");
+frontend/src/components/reports/ScheduledReportsManager.test.js:33: expect(wrapper.text()).toContain("Geersiz al²c² adresi");
+frontend/src/components/reports/ScheduledReportsManager.test.js:115: expect(wrapper.text()).toContain("Sigorta Bran■²");
+frontend/src/components/reports/ScheduledReportsManager.test.js:115: expect(wrapper.text()).toContain("Sigorta Bran■²");
+frontend/src/components/reports/ScheduledReportsManager.test.js:116: expect(wrapper.text()).toContain("Sigorta Ìirketi");
+frontend/src/components/reports/ScheduledReportsManager.test.js:118: expect(wrapper.text()).toContain("Ba■lang² Tarihi");
+frontend/src/components/reports/ScheduledReportsManager.test.js:118: expect(wrapper.text()).toContain("Ba■lang² Tarihi");
+frontend/src/components/reports/ScheduledReportsManager.test.js:118: expect(wrapper.text()).toContain("Ba■lang² Tarihi");
+frontend/src/components/reports/ScheduledReportsManager.test.js:119: expect(wrapper.text()).toContain("Biti■ Tarihi");
+frontend/src/composables/offerBoard/state.js:209: label: "Sigorta Ìirketi",
+frontend/src/composables/reports/catalog.js:3: label: { tr: "Polie Listesi", en: "Policy List" },
+frontend/src/composables/reports/catalog.js:13: label: { tr: "Yenileme Performans²", en: "Renewal Performance" },
+frontend/src/composables/reports/catalog.js:18: label: { tr: "Hasar/Prim Oran²", en: "Claim Loss Ratio" },
+frontend/src/composables/reports/catalog.js:23: label: { tr: "Acente ▄retim Karnesi", en: "Agency Performance Scorecard" },
+frontend/src/composables/reports/catalog.js:28: label: { tr: "M³■teri Segmentasyonu", en: "Customer Segmentation" },
+frontend/src/composables/reports/catalog.js:28: label: { tr: "M³■teri Segmentasyonu", en: "Customer Segmentation" },
+frontend/src/composables/reports/catalog.js:33: label: { tr: "¦leti■im Operasyonlar²", en: "Communication Operations" },
+frontend/src/composables/reports/catalog.js:33: label: { tr: "¦leti■im Operasyonlar²", en: "Communication Operations" },
+frontend/src/composables/reports/catalog.js:33: label: { tr: "¦leti■im Operasyonlar²", en: "Communication Operations" },
+frontend/src/composables/reports/catalog.js:38: label: { tr: "Mutabakat Operasyonlar²", en: "Reconciliation Operations" },
+frontend/src/composables/reports/catalog.js:43: label: { tr: "Hasar Operasyonlar²", en: "Claims Operations" },
+frontend/src/composables/reports/catalog.js:50: name: { tr: "Kay²t No", en: "Record Number" },
+frontend/src/composables/reports/catalog.js:51: customer: { tr: "M³■teri", en: "Customer" },
+frontend/src/composables/reports/catalog.js:51: customer: { tr: "M³■teri", en: "Customer" },
+frontend/src/composables/reports/catalog.js:52: customer_full_name: { tr: "M³■teri Ad Soyad", en: "Customer Full Name" },
+frontend/src/composables/reports/catalog.js:52: customer_full_name: { tr: "M³■teri Ad Soyad", en: "Customer Full Name" },
+frontend/src/composables/reports/catalog.js:54: policy: { tr: "Polie", en: "Policy" },
+frontend/src/composables/reports/catalog.js:55: policy_no: { tr: "Sigorta Ìirketi Polie No", en: "Carrier Policy Number" },
+frontend/src/composables/reports/catalog.js:55: policy_no: { tr: "Sigorta Ìirketi Polie No", en: "Carrier Policy Number" },
+frontend/src/composables/reports/catalog.js:56: office_branch: { tr: "Ofis Ìube", en: "Office Branch" },
+frontend/src/composables/reports/catalog.js:57: branch: { tr: "Sigorta Bran■²", en: "Insurance Branch" },
+frontend/src/composables/reports/catalog.js:57: branch: { tr: "Sigorta Bran■²", en: "Insurance Branch" },
+frontend/src/composables/reports/catalog.js:58: insurance_company: { tr: "Sigorta Ìirketi", en: "Insurance Company" },
+frontend/src/composables/reports/catalog.js:59: sales_entity: { tr: "Sat²■ Birimi", en: "Sales Entity" },
+frontend/src/composables/reports/catalog.js:59: sales_entity: { tr: "Sat²■ Birimi", en: "Sales Entity" },
+frontend/src/composables/reports/catalog.js:60: sales_entity_full_name: { tr: "Sat²■ Birimi Ad Soyad", en: "Sales Entity Full Name" },
+frontend/src/composables/reports/catalog.js:60: sales_entity_full_name: { tr: "Sat²■ Birimi Ad Soyad", en: "Sales Entity Full Name" },
+frontend/src/composables/reports/catalog.js:64: assigned_to: { tr: "Atanan Ki■i", en: "Assigned To" },
+frontend/src/composables/reports/catalog.js:66: period: { tr: "D÷nem", en: "Period" },
+frontend/src/composables/reports/catalog.js:67: period_label: { tr: "D÷nem Etiketi", en: "Period Label" },
+frontend/src/composables/reports/catalog.js:68: start_date: { tr: "Ba■lang² Tarihi", en: "Start Date" },
+frontend/src/composables/reports/catalog.js:68: start_date: { tr: "Ba■lang² Tarihi", en: "Start Date" },
+frontend/src/composables/reports/catalog.js:68: start_date: { tr: "Ba■lang² Tarihi", en: "Start Date" },
+frontend/src/composables/reports/catalog.js:69: end_date: { tr: "Biti■ Tarihi", en: "End Date" },
+frontend/src/composables/reports/catalog.js:72: gross_premium: { tr: "Br³t Prim", en: "Gross Premium" },
+frontend/src/composables/reports/catalog.js:73: total_gross_premium: { tr: "Toplam Br³t Prim", en: "Total Gross Premium" },
+frontend/src/composables/reports/catalog.js:77: paid_amount: { tr: "Ídenen", en: "Paid Amount" },
+frontend/src/composables/reports/catalog.js:80: loss_ratio_percent: { tr: "Hasar/Prim Oran²", en: "Loss Ratio" },
+frontend/src/composables/reports/catalog.js:81: policy_count: { tr: "Polie Say²s²", en: "Policy Count" },
+frontend/src/composables/reports/catalog.js:81: policy_count: { tr: "Polie Say²s²", en: "Policy Count" },
+frontend/src/composables/reports/catalog.js:81: policy_count: { tr: "Polie Say²s²", en: "Policy Count" },
+frontend/src/composables/reports/catalog.js:82: active_policy_count: { tr: "Aktif Polie", en: "Active Policies" },
+frontend/src/composables/reports/catalog.js:83: cancelled_policy_count: { tr: "¦ptal Polie", en: "Cancelled Policies" },
+frontend/src/composables/reports/catalog.js:83: cancelled_policy_count: { tr: "¦ptal Polie", en: "Cancelled Policies" },
+frontend/src/composables/reports/catalog.js:84: offer_count: { tr: "Teklif Say²s²", en: "Offer Count" },
+frontend/src/composables/reports/catalog.js:84: offer_count: { tr: "Teklif Say²s²", en: "Offer Count" },
+frontend/src/composables/reports/catalog.js:86: converted_offer_count: { tr: "Polieye D÷n³■en Teklif", en: "Converted Offers" },
+frontend/src/composables/reports/catalog.js:86: converted_offer_count: { tr: "Polieye D÷n³■en Teklif", en: "Converted Offers" },
+frontend/src/composables/reports/catalog.js:86: converted_offer_count: { tr: "Polieye D÷n³■en Teklif", en: "Converted Offers" },
+frontend/src/composables/reports/catalog.js:86: converted_offer_count: { tr: "Polieye D÷n³■en Teklif", en: "Converted Offers" },
+frontend/src/composables/reports/catalog.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reports/catalog.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reports/catalog.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reports/catalog.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reports/catalog.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reports/catalog.js:88: renewal_task_count: { tr: "Yenileme G÷revi", en: "Renewal Tasks" },
+frontend/src/composables/reports/catalog.js:90: open_renewal_task_count: { tr: "A²k Yenileme Y³k³", en: "Open Renewal Load" },
+frontend/src/composables/reports/catalog.js:90: open_renewal_task_count: { tr: "A²k Yenileme Y³k³", en: "Open Renewal Load" },
+frontend/src/composables/reports/catalog.js:90: open_renewal_task_count: { tr: "A²k Yenileme Y³k³", en: "Open Renewal Load" },
+frontend/src/composables/reports/catalog.js:90: open_renewal_task_count: { tr: "A²k Yenileme Y³k³", en: "Open Renewal Load" },
+frontend/src/composables/reports/catalog.js:91: renewal_success_rate: { tr: "Yenileme Ba■ar² Oran²", en: "Renewal Success Rate" },
+frontend/src/composables/reports/catalog.js:91: renewal_success_rate: { tr: "Yenileme Ba■ar² Oran²", en: "Renewal Success Rate" },
+frontend/src/composables/reports/catalog.js:91: renewal_success_rate: { tr: "Yenileme Ba■ar² Oran²", en: "Renewal Success Rate" },
+frontend/src/composables/reports/catalog.js:92: claim_count: { tr: "Hasar Say²s²", en: "Claim Count" },
+frontend/src/composables/reports/catalog.js:92: claim_count: { tr: "Hasar Say²s²", en: "Claim Count" },
+frontend/src/composables/reports/catalog.js:93: claim_history_segment: { tr: "Hasar Gemi■i", en: "Claim History" },
+frontend/src/composables/reports/catalog.js:93: claim_history_segment: { tr: "Hasar Gemi■i", en: "Claim History" },
+frontend/src/composables/reports/catalog.js:95: policy_segment: { tr: "Polie Segmenti", en: "Policy Segment" },
+frontend/src/composables/reports/catalog.js:100: scheduled_for: { tr: "Planlanan Ãal²■ma", en: "Scheduled Run" },
+frontend/src/composables/reports/catalog.js:100: scheduled_for: { tr: "Planlanan Ãal²■ma", en: "Scheduled Run" },
+frontend/src/composables/reports/catalog.js:100: scheduled_for: { tr: "Planlanan Ãal²■ma", en: "Scheduled Run" },
+frontend/src/composables/reports/catalog.js:101: last_run_on: { tr: "Son Ãal²■ma", en: "Last Run" },
+frontend/src/composables/reports/catalog.js:101: last_run_on: { tr: "Son Ãal²■ma", en: "Last Run" },
+frontend/src/composables/reports/catalog.js:101: last_run_on: { tr: "Son Ãal²■ma", en: "Last Run" },
+frontend/src/composables/reports/catalog.js:102: matched_customer_count: { tr: "E■le■en M³■teri", en: "Matched Customers" },
+frontend/src/composables/reports/catalog.js:102: matched_customer_count: { tr: "E■le■en M³■teri", en: "Matched Customers" },
+frontend/src/composables/reports/catalog.js:102: matched_customer_count: { tr: "E■le■en M³■teri", en: "Matched Customers" },
+frontend/src/composables/reports/catalog.js:102: matched_customer_count: { tr: "E■le■en M³■teri", en: "Matched Customers" },
+frontend/src/composables/reports/catalog.js:103: sent_count: { tr: "▄retilen Taslak", en: "Created Drafts" },
+frontend/src/composables/reports/catalog.js:106: sent_outbox_count: { tr: "Ba■ar²l² G÷nderim", en: "Successful Deliveries" },
+frontend/src/composables/reports/catalog.js:106: sent_outbox_count: { tr: "Ba■ar²l² G÷nderim", en: "Successful Deliveries" },
+frontend/src/composables/reports/catalog.js:106: sent_outbox_count: { tr: "Ba■ar²l² G÷nderim", en: "Successful Deliveries" },
+frontend/src/composables/reports/catalog.js:106: sent_outbox_count: { tr: "Ba■ar²l² G÷nderim", en: "Successful Deliveries" },
+frontend/src/composables/reports/catalog.js:107: failed_outbox_count: { tr: "Hatal² G÷nderim", en: "Failed Deliveries" },
+frontend/src/composables/reports/catalog.js:107: failed_outbox_count: { tr: "Hatal² G÷nderim", en: "Failed Deliveries" },
+frontend/src/composables/reports/catalog.js:108: accounting_entry: { tr: "Muhasebe Kayd²", en: "Accounting Entry" },
+frontend/src/composables/reports/catalog.js:111: source_name: { tr: "Kaynak Kay²t", en: "Source Record" },
+frontend/src/composables/reports/catalog.js:113: difference_try: { tr: "Fark Tutar²", en: "Difference Amount" },
+frontend/src/composables/reports/catalog.js:114: resolution_action: { tr: "Ã÷z³m", en: "Resolution" },
+frontend/src/composables/reports/catalog.js:114: resolution_action: { tr: "Ã÷z³m", en: "Resolution" },
+frontend/src/composables/reports/catalog.js:114: resolution_action: { tr: "Ã÷z³m", en: "Resolution" },
+frontend/src/composables/reports/catalog.js:115: resolved_on: { tr: "Ã÷z³m Tarihi", en: "Resolved On" },
+frontend/src/composables/reports/catalog.js:115: resolved_on: { tr: "Ã÷z³m Tarihi", en: "Resolved On" },
+frontend/src/composables/reports/catalog.js:115: resolved_on: { tr: "Ã÷z³m Tarihi", en: "Resolved On" },
+frontend/src/composables/reports/catalog.js:119: appeal_status: { tr: "¦tiraz Durumu", en: "Appeal Status" },
+frontend/src/composables/reportsConfig.js:3: label: { tr: "Polie Listesi", en: "Policy List" },
+frontend/src/composables/reportsConfig.js:13: label: { tr: "Yenileme Performans²", en: "Renewal Performance" },
+frontend/src/composables/reportsConfig.js:18: label: { tr: "Hasar/Prim Oran²", en: "Claim Loss Ratio" },
+frontend/src/composables/reportsConfig.js:23: label: { tr: "Acente ▄retim Karnesi", en: "Agency Performance Scorecard" },
+frontend/src/composables/reportsConfig.js:28: label: { tr: "M³■teri Segmentasyonu", en: "Customer Segmentation" },
+frontend/src/composables/reportsConfig.js:28: label: { tr: "M³■teri Segmentasyonu", en: "Customer Segmentation" },
+frontend/src/composables/reportsConfig.js:33: label: { tr: "¦leti■im Operasyonlar²", en: "Communication Operations" },
+frontend/src/composables/reportsConfig.js:33: label: { tr: "¦leti■im Operasyonlar²", en: "Communication Operations" },
+frontend/src/composables/reportsConfig.js:33: label: { tr: "¦leti■im Operasyonlar²", en: "Communication Operations" },
+frontend/src/composables/reportsConfig.js:38: label: { tr: "Mutabakat Operasyonlar²", en: "Reconciliation Operations" },
+frontend/src/composables/reportsConfig.js:43: label: { tr: "Hasar Operasyonlar²", en: "Claims Operations" },
+frontend/src/composables/reportsConfig.js:50: name: { tr: "Kay²t No", en: "Record Number" },
+frontend/src/composables/reportsConfig.js:51: customer: { tr: "M³■teri", en: "Customer" },
+frontend/src/composables/reportsConfig.js:51: customer: { tr: "M³■teri", en: "Customer" },
+frontend/src/composables/reportsConfig.js:52: customer_full_name: { tr: "M³■teri Ad Soyad", en: "Customer Full Name" },
+frontend/src/composables/reportsConfig.js:52: customer_full_name: { tr: "M³■teri Ad Soyad", en: "Customer Full Name" },
+frontend/src/composables/reportsConfig.js:54: policy: { tr: "Polie", en: "Policy" },
+frontend/src/composables/reportsConfig.js:55: policy_no: { tr: "Sigorta Ìirketi Polie No", en: "Carrier Policy Number" },
+frontend/src/composables/reportsConfig.js:55: policy_no: { tr: "Sigorta Ìirketi Polie No", en: "Carrier Policy Number" },
+frontend/src/composables/reportsConfig.js:56: office_branch: { tr: "Ofis Ìube", en: "Office Branch" },
+frontend/src/composables/reportsConfig.js:57: branch: { tr: "Sigorta Bran■²", en: "Insurance Branch" },
+frontend/src/composables/reportsConfig.js:57: branch: { tr: "Sigorta Bran■²", en: "Insurance Branch" },
+frontend/src/composables/reportsConfig.js:58: insurance_company: { tr: "Sigorta Ìirketi", en: "Insurance Company" },
+frontend/src/composables/reportsConfig.js:59: sales_entity: { tr: "Sat²■ Birimi", en: "Sales Entity" },
+frontend/src/composables/reportsConfig.js:59: sales_entity: { tr: "Sat²■ Birimi", en: "Sales Entity" },
+frontend/src/composables/reportsConfig.js:60: sales_entity_full_name: { tr: "Sat²■ Birimi Ad Soyad", en: "Sales Entity Full Name" },
+frontend/src/composables/reportsConfig.js:60: sales_entity_full_name: { tr: "Sat²■ Birimi Ad Soyad", en: "Sales Entity Full Name" },
+frontend/src/composables/reportsConfig.js:64: assigned_to: { tr: "Atanan Ki■i", en: "Assigned To" },
+frontend/src/composables/reportsConfig.js:66: period: { tr: "D÷nem", en: "Period" },
+frontend/src/composables/reportsConfig.js:67: period_label: { tr: "D÷nem Etiketi", en: "Period Label" },
+frontend/src/composables/reportsConfig.js:68: start_date: { tr: "Ba■lang² Tarihi", en: "Start Date" },
+frontend/src/composables/reportsConfig.js:68: start_date: { tr: "Ba■lang² Tarihi", en: "Start Date" },
+frontend/src/composables/reportsConfig.js:68: start_date: { tr: "Ba■lang² Tarihi", en: "Start Date" },
+frontend/src/composables/reportsConfig.js:69: end_date: { tr: "Biti■ Tarihi", en: "End Date" },
+frontend/src/composables/reportsConfig.js:72: gross_premium: { tr: "Br³t Prim", en: "Gross Premium" },
+frontend/src/composables/reportsConfig.js:73: total_gross_premium: { tr: "Toplam Br³t Prim", en: "Total Gross Premium" },
+frontend/src/composables/reportsConfig.js:77: paid_amount: { tr: "Ídenen", en: "Paid Amount" },
+frontend/src/composables/reportsConfig.js:80: loss_ratio_percent: { tr: "Hasar/Prim Oran²", en: "Loss Ratio" },
+frontend/src/composables/reportsConfig.js:81: policy_count: { tr: "Polie Say²s²", en: "Policy Count" },
+frontend/src/composables/reportsConfig.js:81: policy_count: { tr: "Polie Say²s²", en: "Policy Count" },
+frontend/src/composables/reportsConfig.js:81: policy_count: { tr: "Polie Say²s²", en: "Policy Count" },
+frontend/src/composables/reportsConfig.js:82: active_policy_count: { tr: "Aktif Polie", en: "Active Policies" },
+frontend/src/composables/reportsConfig.js:83: cancelled_policy_count: { tr: "¦ptal Polie", en: "Cancelled Policies" },
+frontend/src/composables/reportsConfig.js:83: cancelled_policy_count: { tr: "¦ptal Polie", en: "Cancelled Policies" },
+frontend/src/composables/reportsConfig.js:84: offer_count: { tr: "Teklif Say²s²", en: "Offer Count" },
+frontend/src/composables/reportsConfig.js:84: offer_count: { tr: "Teklif Say²s²", en: "Offer Count" },
+frontend/src/composables/reportsConfig.js:86: converted_offer_count: { tr: "Polieye D÷n³■en Teklif", en: "Converted Offers" },
+frontend/src/composables/reportsConfig.js:86: converted_offer_count: { tr: "Polieye D÷n³■en Teklif", en: "Converted Offers" },
+frontend/src/composables/reportsConfig.js:86: converted_offer_count: { tr: "Polieye D÷n³■en Teklif", en: "Converted Offers" },
+frontend/src/composables/reportsConfig.js:86: converted_offer_count: { tr: "Polieye D÷n³■en Teklif", en: "Converted Offers" },
+frontend/src/composables/reportsConfig.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reportsConfig.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reportsConfig.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reportsConfig.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reportsConfig.js:87: offer_conversion_rate: { tr: "Teklif D÷n³■³m Oran²", en: "Offer Conversion Rate" },
+frontend/src/composables/reportsConfig.js:88: renewal_task_count: { tr: "Yenileme G÷revi", en: "Renewal Tasks" },
+frontend/src/composables/reportsConfig.js:90: open_renewal_task_count: { tr: "A²k Yenileme Y³k³", en: "Open Renewal Load" },
+frontend/src/composables/reportsConfig.js:90: open_renewal_task_count: { tr: "A²k Yenileme Y³k³", en: "Open Renewal Load" },
+frontend/src/composables/reportsConfig.js:90: open_renewal_task_count: { tr: "A²k Yenileme Y³k³", en: "Open Renewal Load" },
+frontend/src/composables/reportsConfig.js:90: open_renewal_task_count: { tr: "A²k Yenileme Y³k³", en: "Open Renewal Load" },
+frontend/src/composables/reportsConfig.js:91: renewal_success_rate: { tr: "Yenileme Ba■ar² Oran²", en: "Renewal Success Rate" },
+frontend/src/composables/reportsConfig.js:91: renewal_success_rate: { tr: "Yenileme Ba■ar² Oran²", en: "Renewal Success Rate" },
+frontend/src/composables/reportsConfig.js:91: renewal_success_rate: { tr: "Yenileme Ba■ar² Oran²", en: "Renewal Success Rate" },
+frontend/src/composables/reportsConfig.js:92: claim_count: { tr: "Hasar Say²s²", en: "Claim Count" },
+frontend/src/composables/reportsConfig.js:92: claim_count: { tr: "Hasar Say²s²", en: "Claim Count" },
+frontend/src/composables/reportsConfig.js:93: claim_history_segment: { tr: "Hasar Gemi■i", en: "Claim History" },
+frontend/src/composables/reportsConfig.js:93: claim_history_segment: { tr: "Hasar Gemi■i", en: "Claim History" },
+frontend/src/composables/reportsConfig.js:95: policy_segment: { tr: "Polie Segmenti", en: "Policy Segment" },
+frontend/src/composables/reportsConfig.js:100: scheduled_for: { tr: "Planlanan Ãal²■ma", en: "Scheduled Run" },
+frontend/src/composables/reportsConfig.js:100: scheduled_for: { tr: "Planlanan Ãal²■ma", en: "Scheduled Run" },
+frontend/src/composables/reportsConfig.js:100: scheduled_for: { tr: "Planlanan Ãal²■ma", en: "Scheduled Run" },
+Missing en.csv Source Keys
+A branch cannot be the parent of itself.
+A sales entity cannot be the parent of itself.
+AT Accounting Entry office_branch column not found
+AT Activity office_branch column not found
+AT Claim office_branch column not found
+AT Customer office_branch column not found
+AT Lead office_branch column not found
+AT Notification Draft office_branch column not found
+AT Notification Template is required.
+AT Offer office_branch column not found
+AT Ownership Assignment office_branch column not found
+AT Payment office_branch column not found
+AT Policy office_branch column not found
+AT Reminder office_branch column not found
+AT Renewal Task office_branch column not found
+AT Task office_branch column not found
+Access audit log
+Accounting synchronization entries
+Agency and sales hierarchy
+An active emergency access grant already exists for this user: {name}
+Appeal status can only be set for rejected claims.
+Approval Failed
+Approved amount cannot be greater than estimated amount.
+Approved amount cannot be negative.
+Birth Date cannot be in the future.
+Branch
+Branch hierarchy cannot contain cycles.
+Break-glass request approved. Access valid until {0}
+Break-glass request rejected
+Break-glass request submitted for approval. You will be notified when reviewed.
+Campaign is required.
+Campaign template is required.
+Cannot migrate policy number model because duplicate insurance_company + policy_no pairs exist:
+Carrier policy number already exists for {0}: {1}
+Change Payload cannot be empty when applying endorsement.
+Change Payload must be a JSON object.
+Claim operations
+Claim payments must be outbound.
+Claim payout currency must match claim currency ({0}).
+Commission amount cannot be negative.
+Company Code must be 2-12 chars and contain only A-Z, 0-9, '_' or '-'.
+Company Code must be unique.
+Company Name is required.
+Competitor name is required when lost reason is competitor.
+Converted offers must be linked to a policy.
+Create denied
+Criteria JSON is not valid JSON.
+Criteria JSON must be an object or array.
+Criteria JSON must be an object.
+Customer identity number is required to create a new customer.
+Customer is required.
+Customer must match selected Policy
+Customer not found: {0}
+Customer records
+Default office branch access must be active.
+Default sales entity access must be active.
+Document name is required.
+Due date cannot be later than renewal date.
+Duplicate Pending Request
+Duration must be between 1 and 72 hours
+Each active office branch must have exactly one pool sales entity.
+Either Net Premium or Gross Premium must be greater than zero for this {0}.
+Emergency access may only be granted by a Manager or System Manager.
+Endorsement already applied.
+Endorsement applied successfully.
+Error validating access
+Estimated Gross Premium cannot be negative.
+Estimated Gross Premium must be greater than zero.
+Estimated amount cannot be negative.
+Failed to approve request
+Failed to create request. Please contact support.
+Failed to reject request
+First Name is required.
+Full Name is required.
+Full name is required.
+Gross premium must be greater than zero.
+Gross premium must equal Net Premium + Commission Amount + Tax Amount.
+Head office branch cannot have a parent office branch.
+Identity Number is required.
+Identity Number must contain only digits.
+Incident date cannot be later than reported date.
+Installment amount must be greater than zero.
+Installment count must be greater than zero.
+Installment interval must be greater than zero.
+Installment number and installment count must be greater than zero.
+Insurance Ops
+Insurance branch definitions
+Insurance company definitions
+Invalid Access Type
+Invalid Duration
+Invalid Status
+Invalid access type. Must be one of: {0}
+Invalid date value: {0}
+Invalid datetime value: {0}
+Invalid renewal status transition: {0} -> {1}
+Invalid update payload
+Justification Too Short
+Justification must be at least 20 characters
+Lead Email: {0}
+Lead Name: {0}
+Lead Notes: {0}
+Lead converted to Offer successfully.
+Lead is already converted to Offer.
+Lead is missing required fields: {0}
+Lead is required.
+Lead pipeline
+Lost renewal outcomes require a lost reason code.
+Net premium must be greater than zero after deductions.
+Net premium must be greater than zero for policy conversion.
+Next follow up date cannot be earlier than note date.
+Next follow up date cannot be earlier than reported date.
+No active break-glass grant for {0}
+Non-head office branches must reference a parent office branch.
+Notification content templates
+Notification delivery queue
+Notification template is required.
+Offer board and conversion
+Offer converted to Policy successfully.
+Offer has expired. Update Valid Until date before conversion.
+Offer is already converted to Policy.
+Offer is missing required fields: {0}
+Offer is required.
+Offer premium values are inconsistent. Update offer amounts before conversion.
+Offer premium values are missing. Set net or gross premium before conversion.
+Offer status must be Sent or Accepted before conversion.
+Only System Managers can approve break-glass requests
+Only System Managers can approve requests
+Only System Managers can reject break-glass requests
+Only System Managers can reject requests
+Only System Managers can view pending requests
+Only System Managers or Compliance users can view break-glass audit logs
+Only one default office branch is allowed per user.
+Only one default sales entity access is allowed per user.
+Only one head office branch is allowed.
+Only one pool sales entity is allowed per office branch.
+Paid amount cannot be greater than approved amount.
+Parent sales entity must belong to the same office branch.
+Payment amount must be greater than zero.
+Payment customer must match claim customer.
+Payment is marked as paid before due date.
+Payment not found.
+Payment policy must match claim policy.
+Permission Denied
+Please enter a valid T.C. Identity Number.
+Please enter a valid email address.
+Policy end date cannot be earlier than start date.
+Policy endorsement operations
+Policy lifecycle management
+Policy or customer selection is required.
+Pool sales entity cannot be deactivated while its office branch is active.
+Premium collections and payouts
+Prepared outbound notifications
+Quick communication requires a single delivery channel.
+Recipient is required.
+Reconciliation work items
+Record name is required.
+Reference record not found.
+Rejection Failed
+Rejection reason is required when claim status is Rejected.
+Renewal Task not found.
+Renewal follow-up
+Report cannot be loaded. Please try again later.
+Request Failed
+Request status is {0}, cannot approve
+Request status is {0}, cannot reject
+Sales Entity
+Sales Entity must belong to the selected Office Branch
+Scheduled For cannot be in the past for planned campaigns.
+Scheduled For is required for planned or running campaigns.
+Scope Mode must be either self_only or self_and_descendants.
+Security: Developer Mode Required
+Seed data operations are only allowed in developer mode.
+Seed inspection is only allowed in developer mode.
+Segment is required.
+Selected notification template is inactive.
+Server Error
+Source DocType is required when Source Name is provided.
+Source Lead: {0}
+Source record is required.
+System Note: Stale renewal task was automatically closed.
+T.C. Identity Number must be 11 digits long.
+TCMB exchange rate is unavailable. Enter FX Rate manually.
+Tax Number must be 10 digits long.
+Tax amount cannot be negative.
+Template context could not be serialized.
+Template context is too large. Maximum allowed size is {0} bytes.
+Template context must be a JSON object.
+Too many admin job trigger requests. Please retry shortly.
+Too many template preview requests. Please retry shortly.
+Unsupported endorsement fields: {0}
+Unsupported installment status: {0}
+Unsupported notification channel.
+Unsupported option source: {0}
+Unsupported option value: {0}
+Unsupported payment status: {0}
+Unsupported quick delete doctype: {0}
+Unsupported quick edit doctype: {0}
+Unsupported quick offer status: {0}
+Unsupported renewal outcome status: {0}
+Unsupported renewal status: {0}
