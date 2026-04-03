@@ -40,7 +40,7 @@ defineProps({
   },
   labels: {
     type: Object,
-    default: () => ({ save: "Kaydet", cancel: "İptal" }),
+    default: () => ({ save: "Save", cancel: "Cancel" }),
   },
 });
 
