@@ -438,7 +438,20 @@ export function useAuxWorkbenchViewModel({
     if (["due_date", "renewal_date", "policy_end_date"].includes(field)) {
       try { return new Intl.DateTimeFormat(lc, { dateStyle: "short" }).format(new Date(value)); } catch { /* noop */ }
     }
-    if (["status", "entry_type", "source_doctype", "mismatch_type", "resolution_action"].includes(field)) {
+    if ([
+      "status",
+      "entry_type",
+      "source_doctype",
+      "reference_doctype",
+      "mismatch_type",
+      "resolution_action",
+      "task_type",
+      "priority",
+      "channel",
+      "direction",
+      "call_status",
+      "call_outcome",
+    ].includes(field)) {
       return translateFieldValue(value, activeLocale);
     }
     return String(value);
@@ -459,7 +472,8 @@ export function useAuxWorkbenchViewModel({
   }
 
   function rowTitle(row) {
-    return String(row?.[config?.titleField] || row?.name || "-");
+    const raw = String(row?.[config?.titleField] || row?.name || "-");
+    return translateFieldValue(raw, activeLocale);
   }
 
   const subtitleLabel = computed(() => localize(config?.subtitle));
