@@ -143,8 +143,8 @@
 **Aktif Backlog (Phase 2):**
 - [x] `Reports.vue` için kalan EN-only metinlerin görsel doğrulaması ve eksik TR karşılıkları → translations.js duplike temizliği + Wave 3 ile kapatıldı.
 - [x] `PolicyList`, `Claims`, `Lead`, `Offer` filtre bileşenlerinde placeholder ve enum label son kontrolü → Tüm StatusBadge.vue domain etiketleri TR sözlüğünde mevcut, ClaimsBoard kolon başlıkları Wave 3'te düzeltildi.
-- [ ] TR modunda tüm sayfalarda smoke walkthrough (UI labels, status badges, CTA metinleri).
-- [ ] EN modunda regresyon kontrolü (TR text bleed olmamalı).
+- [x] TR modunda tüm sayfalarda smoke walkthrough (UI labels, status badges, CTA metinleri). → Wave 4 + Canlı Smoke ile kapatıldı (2026-04-03).
+- [x] EN modunda regresyon kontrolü (TR text bleed olmamalı). → Wave 4 + Canlı Smoke ile kapatıldı (2026-04-03).
 
 **Phase 2 Wave 2 özeti (commit `3a76151`, 2026-04-03):**
 - ✅ P0: `PaymentDetail.vue` — `computed(() => "tr")` hardcode → authStore.locale okuma
@@ -158,6 +158,23 @@
 **Phase 2 Wave 3 özeti (commit `ec893b6`, 2026-04-03):**
 - ✅ `ClaimsBoard.vue`: `claimsTableColumns` statik TR array → `computed()` + `t()` (8 yeni copy key)
 - ✅ `translations.js`: duplike ilk blok kaldırıldı (60+ çakışan daha kötü çeviri); ikinci blok otoriter kaynak
+
+**Phase 2 Wave 4 özeti (commit `864c2d8`, 2026-04-03):**
+- ✅ `ReportsScheduledSection.vue`: `default: "tr"` → `"en"` (prop default)
+- ✅ `quickCreateCopy.js`: `getQuickCreateEyebrow/getQuickCreateLabels` locale default `"tr"` → `"en"`
+- ✅ `relatedQuickCreate.js`: `getRelatedQuickCreateActionLabel` locale default `"tr"` → `"en"`
+- ✅ `registry.js`: 3x notification/template `language: "tr"` → `"en"`, `getLocalizedText` default + fallback sırası düzeltildi
+- ✅ `useAuxWorkbenchRuntime.js`: notification_draft `form.language = "tr"` → activeLocale'den türetildi
+- ✅ `QuickCreateManagedDialog.vue`: 3x inline locale ternary → `translateText('Close', locale)`
+
+**Canlı Smoke (commit `3f39d0b`, 2026-04-03):**
+- ✅ TR/EN locale switching: `set_session_locale(tr)` → `locale: tr`, `set_session_locale(en)` → `locale: en` ✅
+- ✅ Frappe sistem mesajları locale'e göre değişiyor (TR'de Türkçe, EN'de İngilizce) ✅
+- ✅ Kendi `_()` wrapped validation throw'larımız da locale'e göre değişiyor:
+  - TR: `"Kimlik numarası 10 veya 11 haneli olmalıdır."` ✅
+  - EN: `"Identity number must be 10 or 11 digits."` ✅
+- ✅ 3 eksik CSV çevirisi eklendi: `customers.py` validation mesajları (`en.csv` + `tr.csv`)
+- **Build:** `npm run build` ✅ | **Tests:** 258/258 ✅ | **Git:** main güncel
 
 ### Final Checkpoint (2026-03-31 Gece Geç)
 
