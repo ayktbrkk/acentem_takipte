@@ -11,12 +11,13 @@ These fields implement the kanon branch model per docs/acente-erisim.md#L995-L10
 - Permission queries use origin_office_branch (historical access rights preserved)
 """
 
+from frappe import _
 import frappe
 
 
 def execute():
     if not frappe.db.has_column("AT Accounting Entry", "office_branch"):
-        frappe.throw("AT Accounting Entry office_branch column not found")
+        frappe.throw(_("AT Accounting Entry office_branch column not found"))
 
     # Step 1: Add the new columns if they don't exist
     if not frappe.db.has_column("AT Accounting Entry", "origin_office_branch"):

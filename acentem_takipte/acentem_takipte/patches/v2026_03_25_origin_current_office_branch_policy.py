@@ -13,12 +13,13 @@ These fields implement the kanon branch model per docs/acente-erisim.md#L995-L10
 - Transfer flows preserve both fields
 """
 
+from frappe import _
 import frappe
 
 
 def execute():
     if not frappe.db.has_column("AT Policy", "office_branch"):
-        frappe.throw("AT Policy office_branch column not found")
+        frappe.throw(_("AT Policy office_branch column not found"))
 
     # Step 1: Add the new columns if they don't exist
     if not frappe.db.has_column("AT Policy", "origin_office_branch"):

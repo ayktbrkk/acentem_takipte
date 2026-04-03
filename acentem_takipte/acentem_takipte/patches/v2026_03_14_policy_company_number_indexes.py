@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+from frappe import _
 import frappe
 
 
@@ -75,7 +76,7 @@ def _assert_no_company_policy_duplicates() -> None:
         for row in duplicates
     )
     frappe.throw(
-        "Cannot migrate policy number model because duplicate insurance_company + policy_no pairs exist: "
+        _("Cannot migrate policy number model because duplicate insurance_company + policy_no pairs exist: ")
         + sample
     )
 

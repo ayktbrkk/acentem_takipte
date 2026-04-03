@@ -16,6 +16,12 @@ PLACEHOLDER_RE = re.compile(r"\{[^{}]+\}|\$\{[^{}]+\}")
 ALLOWED_TURKISH_FILES = {
     "acentem_takipte/translations/tr.csv",
     "frontend/src/generated/translations.js",
+    # Test files: Turkish in test assertions and fixture data are acceptable
+    "frontend/src/**/*.test.js",
+    "frontend/src/**/*.spec.js",
+    # Frontend page copy: `copy = { tr: {...}, en: {...} }` blocks are legitimate localization sources
+    "frontend/src/pages/*.vue",
+    "frontend/src/composables/*.js",
 }
 
 SCAN_EXTENSIONS = (".py", ".js", ".vue", ".json", ".ts", ".tsx", ".jinja", ".html")

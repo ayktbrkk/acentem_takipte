@@ -3,6 +3,7 @@ from __future__ import annotations
 import runpy
 from pathlib import Path
 
+from frappe import _
 import frappe
 
 
@@ -22,8 +23,8 @@ def reset_and_seed_demo_data(
     # Security guard: prevent accidental execution in production
     if not frappe.conf.developer_mode:
         frappe.throw(
-            "Seed data operations are only allowed in developer mode.",
-            title="Security: Developer Mode Required"
+            _("Seed data operations are only allowed in developer mode."),
+            title=_("Security: Developer Mode Required")
         )
 
     count = int(count or 5)
@@ -90,8 +91,8 @@ def inspect_at_seed_snapshot():
     # Security guard: prevent accidental execution in production
     if not frappe.conf.developer_mode:
         frappe.throw(
-            "Seed inspection is only allowed in developer mode.",
-            title="Security: Developer Mode Required"
+            _("Seed inspection is only allowed in developer mode."),
+            title=_("Security: Developer Mode Required")
         )
 
     doctypes = [

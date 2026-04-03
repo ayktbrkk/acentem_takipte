@@ -8,12 +8,13 @@ These fields implement the kanon branch model per docs/acente-erisim.md#L995-L10
 - Notification Draft records use origin_office_branch for permission queries (historical access)
 """
 
+from frappe import _
 import frappe
 
 
 def execute():
     if not frappe.db.has_column("AT Notification Draft", "office_branch"):
-        frappe.throw("AT Notification Draft office_branch column not found")
+        frappe.throw(_("AT Notification Draft office_branch column not found"))
 
     # Step 1: Add the new columns if they don't exist
     if not frappe.db.has_column("AT Notification Draft", "origin_office_branch"):
