@@ -7,6 +7,15 @@ import ReconciliationDetail from "./ReconciliationDetail.vue";
 const resourceQueue = [];
 const routerPush = vi.fn();
 
+vi.mock("../stores/auth", () => ({
+  useAuthStore: vi.fn(() => ({ locale: "tr" })),
+}));
+
+vi.mock("../pinia", () => ({
+  getAppPinia: vi.fn(() => null),
+  setAppPinia: vi.fn(),
+}));
+
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),

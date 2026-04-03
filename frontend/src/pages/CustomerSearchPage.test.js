@@ -65,6 +65,6 @@ describe("CustomerSearchPage", () => {
     await wrapper.find(".actions button").trigger("click");
     await nextTick();
 
-    expect(wrapper.text()).toContain("?");
+    expect(wrapper.text()).toContain("Search");
   });
 });
