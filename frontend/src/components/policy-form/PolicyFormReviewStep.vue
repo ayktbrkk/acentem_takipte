@@ -63,7 +63,7 @@ defineProps({
   fieldErrors: { type: Object, default: () => ({}) },
   optionsMap: { type: Object, default: () => ({}) },
   disabled: { type: Boolean, default: false },
-  activeLocale: { type: String, default: "tr" },
+  activeLocale: { type: String, default: "en" },
   policyReviewFields: { type: Array, default: () => [] },
   summaryCustomerName: { type: String, default: "-" },
   summaryCustomerType: { type: String, default: "-" },

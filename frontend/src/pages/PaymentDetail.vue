@@ -121,9 +121,12 @@ import HeroStrip from "@/components/ui/HeroStrip.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "@/components/ui/FieldGroup.vue";
 import { usePaymentDetailRuntime } from "../composables/usePaymentDetailRuntime";
+import { getAppPinia } from "../pinia";
+import { useAuthStore } from "../stores/auth";
 
 const props = defineProps({ name: { type: String, required: true } });
-const activeLocale = computed(() => "tr");
+const authStore = useAuthStore(getAppPinia());
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 const paymentRuntime = usePaymentDetailRuntime({
   name: computed(() => props.name || ""),
   activeLocale,

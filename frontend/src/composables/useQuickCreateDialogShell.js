@@ -2,7 +2,7 @@ import { computed } from "vue";
 import { translateText } from "../utils/i18n";
 
 export function useQuickCreateDialogShell(props, authStore) {
-  const resolvedLocale = computed(() => props.locale || authStore.locale || "tr");
+  const resolvedLocale = computed(() => props.locale || authStore.locale || "en");
   const fallbackLabels = computed(() =>
     ({
       cancel: translateText("Cancel", resolvedLocale.value),

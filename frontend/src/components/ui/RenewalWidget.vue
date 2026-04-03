@@ -49,12 +49,12 @@ import { translateText } from "@/utils/i18n";
 
 const props = defineProps({
   renewals: { type: Array, default: () => [] },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
 })
 
 defineEmits(['row-click', 'view-all'])
 
-const locale = computed(() => props.locale || "tr");
+const locale = computed(() => props.locale || "en");
 
 function initials(name = '') {
   return name

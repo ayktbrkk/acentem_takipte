@@ -37,12 +37,12 @@
     <div class="detail-body">
       <div class="detail-main space-y-4">
         <SectionPanel :title="t('previousPolicy')" panel-class="surface-card rounded-2xl p-5">
-          <div v-if="!policy" class="card-empty">Poliçe bilgisi bulunamadı.</div>
+          <div v-if="!policy" class="card-empty">{{ t('noPolicy') }}</div>
           <FieldGroup v-else :fields="policyFields" :cols="2" />
         </SectionPanel>
 
         <SectionPanel :title="t('newOffers')" panel-class="surface-card rounded-2xl p-5">
-          <div v-if="!offers.length" class="card-empty">Bu poliçe için teklif bulunamadı.</div>
+          <div v-if="!offers.length" class="card-empty">{{ t('noOffers') }}</div>
           <div v-else class="space-y-3">
             <div
               v-for="offer in offers"
@@ -54,14 +54,14 @@
                   <p class="text-sm font-medium text-gray-900">{{ offer.name }}</p>
                   <p class="text-xs text-gray-500">{{ formatDate(offer.offer_date) }} · {{ offer.status || '-' }}</p>
                 </div>
-                <button class="btn btn-sm" type="button" @click="openOffer(offer.name)">Teklif Detayını Aç</button>
+                <button class="btn btn-sm" type="button" @click="openOffer(offer.name)">{{ t('openOfferDetail') }}</button>
               </div>
             </div>
           </div>
         </SectionPanel>
 
         <SectionPanel :title="t('communicationHistory')" panel-class="surface-card rounded-2xl p-5">
-          <div v-if="!communications.length" class="card-empty">İletişim kaydı bulunamadı.</div>
+          <div v-if="!communications.length" class="card-empty">{{ t('noCommunication') }}</div>
           <div v-else>
             <div v-for="item in communications" :key="item.name" class="timeline-item">
               <div class="tl-dot" />
@@ -74,7 +74,7 @@
         </SectionPanel>
 
         <SectionPanel :title="t('reminders')" panel-class="surface-card rounded-2xl p-5">
-          <div v-if="!reminders.length" class="card-empty">Hatırlatıcı kaydı bulunamadı.</div>
+          <div v-if="!reminders.length" class="card-empty">{{ t('noReminders') }}</div>
           <div v-else class="space-y-2">
             <div v-for="item in reminders" :key="item.label" class="rounded-md bg-gray-50 px-3 py-2">
               <p class="text-sm font-medium text-gray-900">{{ item.label }}</p>
@@ -116,7 +116,7 @@ import { useAuthStore } from '../stores/auth';
 
 const _appPinia = getAppPinia();
 const _authStore = useAuthStore(_appPinia);
-const activeLocale = computed(() => _authStore.locale || 'tr');
+const activeLocale = computed(() => unref(_authStore.locale) || 'en');
 
 const copy = {
   tr: {
@@ -131,6 +131,36 @@ const copy = {
     people: 'İlgili Kişiler',
     statusInfo: 'Durum Bilgisi',
     recordMeta: 'Kayıt Meta',
+    noPolicy: 'Poliçe bilgisi bulunamadı.',
+    noOffers: 'Bu poliçe için teklif bulunamadı.',
+    noCommunication: 'İletişim kaydı bulunamadı.',
+    noReminders: 'Hatırlatıcı kaydı bulunamadı.',
+    openOfferDetail: 'Teklif Detayını Aç',
+    stepNotified: 'Bildirim',
+    stepOfferSent: 'Teklif',
+    stepDecision: 'Karar',
+    stepRenewed: 'Poliçe',
+    lblPolicy: 'Poliçe',
+    lblDue: 'Vade',
+    lblRenewalDate: 'Yenileme Tarihi',
+    lblStatus: 'Durum',
+    fldPolicyNo: 'Poliçe No',
+    fldCustomer: 'Müşteri',
+    fldBranch: 'Branş',
+    fldEndDate: 'Bitiş',
+    fldAgent: 'Temsilci',
+    fldPriority: 'Öncelik',
+    fldLostReason: 'Kayıp Nedeni',
+    fldCreatedBy: 'Oluşturan',
+    fldCreated: 'Oluşturma',
+    fldModifiedBy: 'Güncelleyen',
+    fldModified: 'Güncelleme',
+    fldDueDate: 'Son Tarih',
+    fldRenewalDateLbl: 'Yenileme Tarihi',
+    fldNextContact: 'Sonraki İletişim',
+    priorityHigh: 'Yüksek',
+    priorityMedium: 'Orta',
+    priorityLow: 'Düşük',
   },
   en: {
     breadcrumb: 'Renewals',
@@ -144,6 +174,36 @@ const copy = {
     people: 'People',
     statusInfo: 'Status',
     recordMeta: 'Record Info',
+    noPolicy: 'No policy information found.',
+    noOffers: 'No offers found for this policy.',
+    noCommunication: 'No communication records found.',
+    noReminders: 'No reminder records found.',
+    openOfferDetail: 'Open Offer Detail',
+    stepNotified: 'Notified',
+    stepOfferSent: 'Offer',
+    stepDecision: 'Decision',
+    stepRenewed: 'Policy',
+    lblPolicy: 'Policy',
+    lblDue: 'Due',
+    lblRenewalDate: 'Renewal Date',
+    lblStatus: 'Status',
+    fldPolicyNo: 'Policy No',
+    fldCustomer: 'Customer',
+    fldBranch: 'Branch',
+    fldEndDate: 'End Date',
+    fldAgent: 'Agent',
+    fldPriority: 'Priority',
+    fldLostReason: 'Lost Reason',
+    fldCreatedBy: 'Created By',
+    fldCreated: 'Created',
+    fldModifiedBy: 'Modified By',
+    fldModified: 'Modified',
+    fldDueDate: 'Due Date',
+    fldRenewalDateLbl: 'Renewal Date',
+    fldNextContact: 'Next Contact',
+    priorityHigh: 'High',
+    priorityMedium: 'Medium',
+    priorityLow: 'Low',
   },
 };
 function t(key) {
@@ -169,10 +229,10 @@ const offers = computed(() => (Array.isArray(unref(offersResource.data)) ? unref
 const communications = computed(() => (Array.isArray(unref(communicationsResource.data)) ? unref(communicationsResource.data) : []));
 
 const heroCells = computed(() => [
-  { label: 'Poliçe', value: renewal.value.policy || '-', variant: 'default' },
-  { label: 'Vade', value: formatDate(renewal.value.due_date), variant: 'default' },
-  { label: 'Yenileme Tarihi', value: formatDate(renewal.value.renewal_date), variant: 'lg' },
-  { label: 'Durum', value: renewal.value.status || '-', variant: 'accent' },
+  { label: t('lblPolicy'), value: renewal.value.policy || '-', variant: 'default' },
+  { label: t('lblDue'), value: formatDate(renewal.value.due_date), variant: 'default' },
+  { label: t('lblRenewalDate'), value: formatDate(renewal.value.renewal_date), variant: 'lg' },
+  { label: t('lblStatus'), value: renewal.value.status || '-', variant: 'accent' },
 ]);
 
 function getStepStatus(key) {
@@ -198,48 +258,48 @@ function getStepStatus(key) {
 }
 
 const renewalSteps = computed(() => [
-  { label: 'Bildirim', state: getStepStatus('notified') },
-  { label: 'Teklif', state: getStepStatus('offer_sent') },
-  { label: 'Karar', state: getStepStatus('decision') },
-  { label: 'Poliçe', state: getStepStatus('renewed') },
+  { label: t('stepNotified'), state: getStepStatus('notified') },
+  { label: t('stepOfferSent'), state: getStepStatus('offer_sent') },
+  { label: t('stepDecision'), state: getStepStatus('decision') },
+  { label: t('stepRenewed'), state: getStepStatus('renewed') },
 ]);
 
 const policyFields = computed(() => [
-  { label: 'Poliçe No', value: policy.value?.policy_no || policy.value?.name || renewal.value.policy || '-' },
-  { label: 'Müşteri', value: policy.value?.customer || '-' },
-  { label: 'Branş', value: policy.value?.branch || '-' },
-  { label: 'Bitiş', value: formatDate(policy.value?.end_date) },
-  { label: 'Durum', value: policy.value?.status || '-' },
+  { label: t('fldPolicyNo'), value: policy.value?.policy_no || policy.value?.name || renewal.value.policy || '-' },
+  { label: t('fldCustomer'), value: policy.value?.customer || '-' },
+  { label: t('fldBranch'), value: policy.value?.branch || '-' },
+  { label: t('fldEndDate'), value: formatDate(policy.value?.end_date) },
+  { label: t('lblStatus'), value: policy.value?.status || '-' },
 ]);
 
 const reminders = computed(() => {
   const rows = [];
-  if (renewal.value.due_date) rows.push({ label: 'Son Tarih', value: formatDate(renewal.value.due_date) });
-  if (renewal.value.renewal_date) rows.push({ label: 'Yenileme Tarihi', value: formatDate(renewal.value.renewal_date) });
-  if (renewal.value.next_contact_date) rows.push({ label: 'Sonraki İletişim', value: formatDate(renewal.value.next_contact_date) });
+  if (renewal.value.due_date) rows.push({ label: t('fldDueDate'), value: formatDate(renewal.value.due_date) });
+  if (renewal.value.renewal_date) rows.push({ label: t('fldRenewalDateLbl'), value: formatDate(renewal.value.renewal_date) });
+  if (renewal.value.next_contact_date) rows.push({ label: t('fldNextContact'), value: formatDate(renewal.value.next_contact_date) });
   return rows;
 });
 
 const peopleFields = computed(() => [
-  { label: 'Müşteri', value: policy.value?.customer || '-' },
-  { label: 'Temsilci', value: renewal.value.assigned_to || '-' },
+  { label: t('fldCustomer'), value: policy.value?.customer || '-' },
+  { label: t('fldAgent'), value: renewal.value.assigned_to || '-' },
 ]);
 
 const statusFields = computed(() => [
-  { label: 'Durum', value: renewal.value.status || '-' },
-  { label: 'Öncelik', value: priorityLabel(renewal.value.priority) },
-  { label: 'Kayıp Nedeni', value: renewal.value.lost_reason_code || '-' },
+  { label: t('lblStatus'), value: renewal.value.status || '-' },
+  { label: t('fldPriority'), value: priorityLabel(renewal.value.priority) },
+  { label: t('fldLostReason'), value: renewal.value.lost_reason_code || '-' },
 ]);
 
 const recordFields = computed(() => [
-  { label: 'Oluşturan', value: renewal.value.owner || '-' },
-  { label: 'Oluşturma', value: formatDate(renewal.value.creation) },
-  { label: 'Güncelleyen', value: renewal.value.modified_by || '-' },
-  { label: 'Güncelleme', value: formatDate(renewal.value.modified) },
+  { label: t('fldCreatedBy'), value: renewal.value.owner || '-' },
+  { label: t('fldCreated'), value: formatDate(renewal.value.creation) },
+  { label: t('fldModifiedBy'), value: renewal.value.modified_by || '-' },
+  { label: t('fldModified'), value: formatDate(renewal.value.modified) },
 ]);
 
 function priorityLabel(value) {
-  const map = { high: 'Yüksek', medium: 'Orta', low: 'Düşük' };
+  const map = { high: t('priorityHigh'), medium: t('priorityMedium'), low: t('priorityLow') };
   return map[String(value || '').toLowerCase()] || '-';
 }
 

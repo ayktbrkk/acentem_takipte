@@ -61,7 +61,7 @@ import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
   optionsMap: { type: Object, default: () => ({}) },
   saveDisabled: { type: Boolean, default: false },
   titleOverride: { type: [String, Object], default: "" },

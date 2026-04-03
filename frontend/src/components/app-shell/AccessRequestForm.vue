@@ -7,9 +7,9 @@
     <div class="relative w-full max-w-md rounded-lg bg-white shadow-xl">
       <!-- Header -->
       <div class="border-b border-slate-200 px-6 py-4">
-        <h2 class="text-lg font-semibold text-slate-900">Request Customer Access</h2>
+        <h2 class="text-lg font-semibold text-slate-900">{{ t('title') }}</h2>
         <p class="mt-1 text-sm text-slate-600">
-          for <span class="font-medium">{{ customerDisplayName }}</span>
+          {{ t('for') }} <span class="font-medium">{{ customerDisplayName }}</span>
         </p>
       </div>
 
@@ -18,7 +18,7 @@
         <!-- Request Kind Selection -->
         <div>
           <label class="mb-2 block text-sm font-semibold text-slate-700">
-            Request Type <span class="text-red-500">*</span>
+            {{ t('requestType') }} <span class="text-red-500">*</span>
           </label>
           <div class="space-y-2">
             <label class="flex items-center gap-3 cursor-pointer">
@@ -29,8 +29,8 @@
                 class="h-4 w-4 rounded border-slate-300 text-brand-600"
               />
               <span class="text-sm text-slate-700">
-                <span class="font-medium">View Access</span>
-                <span class="block text-xs text-slate-500">Temporary read-only access to customer details</span>
+                <span class="font-medium">{{ t('viewAccessLabel') }}</span>
+                <span class="block text-xs text-slate-500">{{ t('viewAccessDesc') }}</span>
               </span>
             </label>
 
@@ -42,8 +42,8 @@
                 class="h-4 w-4 rounded border-slate-300 text-brand-600"
               />
               <span class="text-sm text-slate-700">
-                <span class="font-medium">Transfer Ownership</span>
-                <span class="block text-xs text-slate-500">Assign this customer to your sales entity</span>
+                <span class="font-medium">{{ t('transferLabel') }}</span>
+                <span class="block text-xs text-slate-500">{{ t('transferDesc') }}</span>
               </span>
             </label>
 
@@ -55,8 +55,8 @@
                 class="h-4 w-4 rounded border-slate-300 text-brand-600"
               />
               <span class="text-sm text-slate-700">
-                <span class="font-medium">Share Access</span>
-                <span class="block text-xs text-slate-500">Grant read access to a team member</span>
+                <span class="font-medium">{{ t('shareLabel') }}</span>
+                <span class="block text-xs text-slate-500">{{ t('shareDesc') }}</span>
               </span>
             </label>
           </div>
@@ -65,13 +65,13 @@
         <!-- Justification -->
         <div>
           <label for="justification" class="mb-2 block text-sm font-semibold text-slate-700">
-            Business Justification <span class="text-red-500">*</span>
+            {{ t('justification') }} <span class="text-red-500">*</span>
           </label>
           <textarea
             id="justification"
             v-model="formData.justification"
             rows="4"
-            placeholder="Explain why you need access to this customer. Minimum 10 characters."
+            :placeholder="t('justificationPlaceholder')"
             class="input w-full"
             :disabled="isSubmitting"
           />
@@ -89,21 +89,21 @@
             :disabled="isSubmitting"
             @click="$emit('closed')"
           >
-            Cancel
+            {{ t('cancel') }}
           </button>
           <button
             type="submit"
             class="btn btn-primary flex-1"
             :disabled="isSubmitting || !isFormValid"
           >
-            {{ isSubmitting ? "Submitting..." : "Submit Request" }}
+            {{ isSubmitting ? t('submitting') : t('submit') }}
           </button>
         </div>
 
         <!-- Success Message -->
         <div v-if="showSuccess" class="rounded-lg border border-green-200 bg-green-50 p-3">
-          <p class="text-sm font-medium text-green-900">✓ Request submitted successfully!</p>
-          <p class="mt-1 text-xs text-green-700">Your access request has been logged and will be reviewed.</p>
+          <p class="text-sm font-medium text-green-900">{{ t('successTitle') }}</p>
+          <p class="mt-1 text-xs text-green-700">{{ t('successDesc') }}</p>
         </div>
       </form>
     </div>
@@ -111,7 +111,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed, unref } from "vue";
 import { useAccessRequestForm } from "../../composables/useAccessRequestForm";
+import { getAppPinia } from "../../pinia";
+import { useAuthStore } from "../../stores/auth";
 
 interface Props {
   customerName: string;
@@ -124,6 +127,52 @@ const emit = defineEmits<{
   submitted: [requestKind: string];
   closed: [];
 }>();
+
+const authStore = useAuthStore(getAppPinia());
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+
+const copy = {
+  tr: {
+    title: "Müşteri Erişim Talebi",
+    for: "için",
+    requestType: "Talep Türü",
+    viewAccessLabel: "Görüntüleme Erişimi",
+    viewAccessDesc: "Müşteri bilgilerine geçici salt okunur erişim",
+    transferLabel: "Sahiplik Devri",
+    transferDesc: "Bu müşteriyi satış entitinize atayın",
+    shareLabel: "Erişim Paylaşımı",
+    shareDesc: "Bir ekip üyesine okuma erişimi verin",
+    justification: "İş Gerekçesi",
+    justificationPlaceholder: "Bu müşteriye neden erişmeniz gerektiğini açıklayın. En az 10 karakter.",
+    cancel: "İptal",
+    submitting: "Gönderiliyor...",
+    submit: "Talep Gönder",
+    successTitle: "✓ Talep başarıyla gönderildi!",
+    successDesc: "Erişim talebiniz kaydedildi ve incelenecek.",
+  },
+  en: {
+    title: "Request Customer Access",
+    for: "for",
+    requestType: "Request Type",
+    viewAccessLabel: "View Access",
+    viewAccessDesc: "Temporary read-only access to customer details",
+    transferLabel: "Transfer Ownership",
+    transferDesc: "Assign this customer to your sales entity",
+    shareLabel: "Share Access",
+    shareDesc: "Grant read access to a team member",
+    justification: "Business Justification",
+    justificationPlaceholder: "Explain why you need access to this customer. Minimum 10 characters.",
+    cancel: "Cancel",
+    submitting: "Submitting...",
+    submit: "Submit Request",
+    successTitle: "✓ Request submitted successfully!",
+    successDesc: "Your access request has been logged and will be reviewed.",
+  },
+};
+
+function t(key: string) {
+  return copy[activeLocale.value as keyof typeof copy]?.[key as keyof typeof copy.en] || copy.en[key as keyof typeof copy.en] || key;
+}
 
 const {
   formData,

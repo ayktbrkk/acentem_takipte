@@ -54,13 +54,13 @@ const props = defineProps({
   search: { type: String, default: '' },
   filters: { type: Array, default: () => [] },
   activeCount: { type: Number, default: 0 },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
   searchPlaceholder: { type: String, default: "" },
 })
 
 defineEmits(['update:search', 'filter-change', 'reset'])
 
 const authStore = useAuthStore(getAppPinia());
-const locale = computed(() => props.locale || unref(authStore.locale) || "tr");
+const locale = computed(() => props.locale || unref(authStore.locale) || "en");
 const searchPlaceholder = computed(() => props.searchPlaceholder || "");
 </script>

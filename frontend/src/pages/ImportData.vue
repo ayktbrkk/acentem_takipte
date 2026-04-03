@@ -141,7 +141,7 @@ function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
-const activeLocale = computed(() => unref(authStore.locale) || "tr");
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const runtime = useImportDataRuntime({ t, router, authStore });
 const {

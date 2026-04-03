@@ -20,7 +20,7 @@ defineProps({
   fieldErrors: { type: Object, default: () => ({}) },
   optionsMap: { type: Object, default: () => ({}) },
   disabled: { type: Boolean, default: false },
-  activeLocale: { type: String, default: "tr" },
+  activeLocale: { type: String, default: "en" },
   policyStepFields: { type: Array, default: () => [] },
   t: { type: Function, required: true },
 });

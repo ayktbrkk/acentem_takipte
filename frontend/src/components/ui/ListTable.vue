@@ -105,12 +105,12 @@ const props = defineProps({
   rows: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
   emptyMessage: { type: String, default: "No records found." },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
 });
 
 defineEmits(["row-click"]);
 
-const locale = computed(() => props.locale || "tr");
+const locale = computed(() => props.locale || "en");
 
 function urgencyClass(days) {
   if (days == null) return "text-sm text-gray-400";

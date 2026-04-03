@@ -198,7 +198,7 @@ export function usePolicyFormRuntime({ props, authStore, emit }) {
     },
   };
 
-  const activeLocaleValue = computed(() => unref(authStore?.locale) || "tr");
+  const activeLocaleValue = computed(() => unref(authStore?.locale) || "en");
 
   function t(key) {
     return copy[activeLocaleValue.value]?.[key] || copy.en[key] || key;

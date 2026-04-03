@@ -158,7 +158,7 @@ const props = defineProps({
   model: { type: Object, required: true },
   fieldErrors: { type: Object, default: () => ({}) },
   disabled: { type: Boolean, default: false },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
   officeBranch: { type: String, default: "" },
   locked: { type: Boolean, default: false },
   lockedMessage: {

@@ -61,7 +61,7 @@ function parseCsv(text) {
 }
 
 export function useImportDataRuntime({ t, router, authStore }) {
-  const activeLocale = computed(() => unref(authStore.locale) || "tr");
+  const activeLocale = computed(() => unref(authStore.locale) || "en");
   const selectedDataset = ref(datasets[0].key);
   const fileName = ref("");
   const columns = ref([]);

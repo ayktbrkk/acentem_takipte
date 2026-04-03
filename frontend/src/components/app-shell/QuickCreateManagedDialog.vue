@@ -57,7 +57,7 @@ import { useQuickCreateManagedDialog } from "../../composables/useQuickCreateMan
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   configKey: { type: String, required: true },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
   optionsMap: { type: Object, default: () => ({}) },
   saveDisabled: { type: Boolean, default: false },
   showSaveAndOpen: { type: Boolean, default: true },

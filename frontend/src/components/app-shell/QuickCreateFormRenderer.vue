@@ -138,7 +138,7 @@ const props = defineProps({
   model: { type: Object, required: true },
   fieldErrors: { type: Object, default: () => ({}) },
   disabled: { type: Boolean, default: false },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
   optionsMap: { type: Object, default: () => ({}) },
   defaultSelectPlaceholder: { type: [String, Object], default: "Select" },
   defaultSearchPlaceholder: { type: [String, Object], default: "Search in list..." },

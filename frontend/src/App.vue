@@ -11,11 +11,11 @@
         class="shrink-0 rounded bg-amber-600 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
         @click="confirmScopeRefresh"
       >
-        Yenile
+        {{ locale === 'tr' ? 'Yenile' : 'Refresh' }}
       </button>
       <button
         class="shrink-0 text-amber-700 hover:text-amber-900 focus:outline-none"
-        aria-label="Kapat"
+        :aria-label="locale === 'tr' ? 'Kapat' : 'Dismiss'"
         @click="dismissScopeNotice"
       >
         &times;
@@ -39,16 +39,20 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, unref, watch } from "vue";
 import { useRoute } from "vue-router";
 import Sidebar from "./components/Sidebar.vue";
 import Topbar from "./components/Topbar.vue";
 import { sessionState } from "./state/session";
 import { useUiStore } from "./stores/ui";
+import { getAppPinia } from "./pinia";
+import { useAuthStore } from "./stores/auth";
 
 const uiStore = useUiStore();
+const authStore = useAuthStore(getAppPinia());
 const route = useRoute();
 const scopeRefreshNotice = ref("");
+const locale = computed(() => unref(authStore.locale) || "en");
 
 let scopeChangeHandler = null;
 
@@ -60,7 +64,9 @@ function handleScopeChanged(payload) {
   if (targetUser && sessionState.userId && targetUser !== sessionState.userId) {
     return;
   }
-  scopeRefreshNotice.value = "Erisim yetkileriniz guncellendi. Guncel yetkilerle devam etmek icin sayfayi yenileyin.";
+  scopeRefreshNotice.value = locale.value === "tr"
+    ? "Erisim yetkileriniz guncellendi. Guncel yetkilerle devam etmek icin sayfayi yenileyin."
+    : "Your access permissions have been updated. Refresh to continue with the latest permissions.";
 }
 
 function confirmScopeRefresh() {

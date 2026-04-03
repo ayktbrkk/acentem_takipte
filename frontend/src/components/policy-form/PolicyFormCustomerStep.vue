@@ -75,7 +75,7 @@ defineProps({
   fieldErrors: { type: Object, default: () => ({}) },
   optionsMap: { type: Object, default: () => ({}) },
   disabled: { type: Boolean, default: false },
-  activeLocale: { type: String, default: "tr" },
+  activeLocale: { type: String, default: "en" },
   hasSourceOffer: { type: Boolean, default: false },
   officeBranch: { type: String, default: "" },
   customerLockedMessage: { type: [String, Object], required: true },

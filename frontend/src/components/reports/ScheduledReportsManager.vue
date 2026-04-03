@@ -85,7 +85,7 @@ const props = defineProps({
   items: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
   running: { type: Boolean, default: false },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
   reportCatalog: { type: Object, default: () => ({}) },
   activeOfficeBranch: { type: String, default: "" },
 });

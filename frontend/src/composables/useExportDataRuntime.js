@@ -1,7 +1,7 @@
 import { computed, reactive, ref, unref } from "vue";
 
 export function useExportDataRuntime({ t, router, authStore }) {
-  const activeLocale = computed(() => unref(authStore.locale) || "tr");
+  const activeLocale = computed(() => unref(authStore.locale) || "en");
 
   const screenOptions = [
     { value: "dashboard", labelKey: "screenDashboard" },

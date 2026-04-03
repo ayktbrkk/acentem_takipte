@@ -10,12 +10,12 @@
         <button
           class="qc-managed-dialog__close"
           type="button"
-          :aria-label="locale === 'tr' ? 'Kapat' : 'Close'"
-          :title="locale === 'tr' ? 'Kapat' : 'Close'"
+          :aria-label="translateText('Close', locale)"
+          :title="translateText('Close', locale)"
           @click="close"
         >
           <span aria-hidden="true">×</span>
-          <span class="sr-only">{{ locale === 'tr' ? 'Kapat' : 'Close' }}</span>
+          <span class="sr-only">{{ translateText('Close', locale) }}</span>
         </button>
       </div>
 
@@ -62,7 +62,7 @@ import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "en" },
   optionsMap: { type: Object, default: () => ({}) },
   saveDisabled: { type: Boolean, default: false },
   titleOverride: { type: [String, Object], default: "" },

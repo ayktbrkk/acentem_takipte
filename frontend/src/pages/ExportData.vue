@@ -119,7 +119,7 @@ const copy = {
   },
 };
 
-const activeLocale = computed(() => unref(authStore.locale) || "tr");
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function t(key) {
   return copy[activeLocale.value]?.[key] || copy.en[key] || key;
