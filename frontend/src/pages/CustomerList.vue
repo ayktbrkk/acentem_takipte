@@ -48,6 +48,7 @@
         v-model:search="customerListSearchQuery"
         :filters="customerListFilterConfig"
         :active-count="customerListActiveCount"
+        :search-placeholder="t('searchPlaceholder')"
         @filter-change="onCustomerListFilterChange"
         @reset="onCustomerListFilterReset"
       >

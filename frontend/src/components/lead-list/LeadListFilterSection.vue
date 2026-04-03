@@ -4,6 +4,7 @@
       v-model:search="searchProxy"
       :filters="leadListFilterConfig"
       :active-count="activeFilterCount"
+      :search-placeholder="t('searchPlaceholder')"
       @filter-change="$emit('filter-change', $event)"
       @reset="$emit('reset')"
     >

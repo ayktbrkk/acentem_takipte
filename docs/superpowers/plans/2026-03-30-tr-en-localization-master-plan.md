@@ -123,6 +123,29 @@
 
 **Status:** Zero-tolerance localization for blocking violations ✅
 
+### 🔄 PHASE 2 BAŞLANGIÇ (2026-04-03) — Tüm Sayfalarda TR/EN Uyum Dalgası
+
+**Yeni Hedef (kullanıcı talebi):** Sadece 3 ekran değil, tüm uygulama sayfalarında Türkçe/İngilizce uyumsuzluklarını kapatmak.
+
+**Kapsam:**
+- `frontend/src/pages/**/*.vue`
+- `frontend/src/components/**/*.vue`
+- ortak i18n akışı (`FilterBar`, çeviri sözlüğü, status label map'leri)
+
+**Bu dalgada tamamlananlar:**
+- ✅ `RenewalsBoard` key sızıntısı kapatıldı (`columnOpen`, `columnInProgress`, `columnCancelled`, `priority*`, `metricDue` key'leri eklendi).
+- ✅ `CustomerSearchPage` tamamen i18n hale getirildi (breadcrumb, title, help card, request history, status map).
+- ✅ `GlobalCustomerSearch` bileşeni hardcoded EN metinlerden arındırıldı (placeholder, butonlar, empty-state, not-found, masked-notice, alan etiketleri).
+- ✅ `ReconciliationDetail` locale bug fix: `copy.tr[...]` sabiti kaldırıldı, aktif locale'e bağlandı.
+- ✅ `FilterBar` locale kaynağı global auth locale ile hizalandı; arama placeholder'ı prop ile override edilebilir hale getirildi.
+- ✅ `generated/translations.js` sözlüğüne reports + global customer search + genel UI anahtarları eklendi (`Search...`, reports metinleri vb).
+
+**Aktif Backlog (Phase 2):**
+- [ ] `Reports.vue` için kalan EN-only metinlerin görsel doğrulaması ve eksik TR karşılıkları.
+- [ ] `PolicyList`, `Claims`, `Lead`, `Offer` filtre bileşenlerinde placeholder ve enum label son kontrolü.
+- [ ] TR modunda tüm sayfalarda smoke walkthrough (UI labels, status badges, CTA metinleri).
+- [ ] EN modunda regresyon kontrolü (TR text bleed olmamalı).
+
 ### Final Checkpoint (2026-03-31 Gece Geç)
 
 - ✅ Faz 6 backend test stabilizasyonu tamamlandı.

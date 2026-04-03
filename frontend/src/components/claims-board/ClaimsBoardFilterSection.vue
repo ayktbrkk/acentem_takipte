@@ -8,6 +8,7 @@
       v-model:search="searchProxy"
       :filters="claimsListFilterConfig"
       :active-count="claimsListActiveCount"
+      :search-placeholder="t('searchPlaceholder')"
       @filter-change="$emit('filter-change', $event)"
       @reset="$emit('reset')"
     >

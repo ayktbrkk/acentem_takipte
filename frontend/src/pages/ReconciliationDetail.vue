@@ -94,6 +94,8 @@
 import { computed, onMounted, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
+import { getAppPinia } from "../pinia";
+import { useAuthStore } from "../stores/auth";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
@@ -104,6 +106,8 @@ import ListTable from "@/components/ui/ListTable.vue";
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || "");
 const router = useRouter();
+const authStore = useAuthStore(getAppPinia());
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 const copy = {
   tr: {
@@ -187,7 +191,7 @@ const copy = {
 };
 
 function t(key) {
-  return copy.tr[key] || copy.en[key] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
 const itemResource = createResource({ url: "frappe.client.get", auto: false });
@@ -207,7 +211,7 @@ const heroCells = computed(() => [
   { label: t("reconciliationNo"), value: item.value.name || name.value || "-", variant: "default" },
   { label: t("company"), value: entry.value.insurance_company || "-", variant: "default" },
   { label: t("period"), value: periodLabel.value, variant: "lg" },
-  { label: "Fark", value: formatMoney(differenceValue.value), variant: differenceValue.value ? "warn" : "success" },
+  { label: t("difference"), value: formatMoney(differenceValue.value), variant: differenceValue.value ? "warn" : "success" },
 ]);
 
 const summaryFields = computed(() => [

@@ -8,7 +8,7 @@
       <input
         :value="search"
         type="text"
-        :placeholder="translateText('Search...', locale)"
+        :placeholder="searchPlaceholder || translateText('Search...', locale)"
         class="h-8 w-full rounded-md border border-gray-200 bg-white pl-8 pr-3 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-brand-600 focus:outline-none"
         @input="$emit('update:search', $event.target.value)"
       />
@@ -44,18 +44,23 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, unref } from "vue";
 
 import { translateText } from "@/utils/i18n";
+import { getAppPinia } from "@/pinia";
+import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps({
   search: { type: String, default: '' },
   filters: { type: Array, default: () => [] },
   activeCount: { type: Number, default: 0 },
   locale: { type: String, default: "tr" },
+  searchPlaceholder: { type: String, default: "" },
 })
 
 defineEmits(['update:search', 'filter-change', 'reset'])
 
-const locale = computed(() => props.locale || "tr");
+const authStore = useAuthStore(getAppPinia());
+const locale = computed(() => props.locale || unref(authStore.locale) || "tr");
+const searchPlaceholder = computed(() => props.searchPlaceholder || "");
 </script>
