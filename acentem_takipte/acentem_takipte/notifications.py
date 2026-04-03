@@ -48,7 +48,9 @@ def create_notification_drafts(
     if template_key:
         if not is_valid_template_key(event_key, template_key):
             frappe.throw(
-                f"Unsupported template key '{template_key}' for event '{event_key}'"
+                frappe._("Unsupported template key '{0}' for event '{1}'").format(
+                    template_key, event_key
+                )
             )
         templates = [
             template for template in templates if template.template_key == template_key

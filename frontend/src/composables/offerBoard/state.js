@@ -206,12 +206,12 @@ export function useOfferBoardState({
   const offerListFilterConfig = computed(() => [
     {
       key: "insurance_company",
-      label: "Sigorta Şirketi",
+      label: translateText("Insurance Company", activeLocale.value),
       options: offerCompanies.value.map((company) => ({ value: company, label: company })),
     },
     {
       key: "status",
-      label: "Durum",
+      label: translateText("Status", activeLocale.value),
       options: offerStatusOptions.value.map((item) => ({ value: item.value, label: item.label })),
     },
   ]);
