@@ -65,7 +65,7 @@ defineProps({
   },
   activeLocale: {
     type: String,
-    default: "tr",
+    default: "en",
   },
   reportCatalog: {
     type: Object,

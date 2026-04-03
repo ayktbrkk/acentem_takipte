@@ -15,12 +15,12 @@ const QUICK_CREATE_LABELS = {
   claim: { cancel: "Cancel", save: "Create" },
 };
 
-export function getQuickCreateEyebrow(configKey, locale = "tr") {
+export function getQuickCreateEyebrow(configKey, locale = "en") {
   const source = QUICK_CREATE_EYEBROWS[configKey] || QUICK_CREATE_EYEBROWS.managed;
   return translateText(source, locale);
 }
 
-export function getQuickCreateLabels(mode, locale = "tr") {
+export function getQuickCreateLabels(mode, locale = "en") {
   const group = QUICK_CREATE_LABELS[mode] || QUICK_CREATE_LABELS.manage;
   return {
     cancel: translateText(group.cancel, locale),

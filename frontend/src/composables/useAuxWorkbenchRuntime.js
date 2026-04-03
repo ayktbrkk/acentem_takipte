@@ -359,7 +359,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
       if (!form.due_date) form.due_date = addDaysIso(15);
     }
     if (auxQuickCreate.value?.registryKey === "notification_draft") {
-      if (!form.language) form.language = "tr";
+      if (!form.language) form.language = String(unref(activeLocale) || "en").trim() === "tr" ? "tr" : "en";
       if (!form.status) form.status = "Draft";
     }
   }

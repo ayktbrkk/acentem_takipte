@@ -46,7 +46,7 @@ export function supportsRelatedQuickCreateSource(optionsSource) {
   return Boolean(getRelatedQuickCreateMeta(optionsSource));
 }
 
-export function getRelatedQuickCreateActionLabel(optionsSource, locale = "tr", query = "") {
+export function getRelatedQuickCreateActionLabel(optionsSource, locale = "en", query = "") {
   const meta = getRelatedQuickCreateMeta(optionsSource);
   if (!meta) return "";
   const base = translateText(String(meta.actionLabel || ""), locale).trim();

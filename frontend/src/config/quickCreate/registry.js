@@ -712,7 +712,7 @@ export const quickCreateRegistry = {
     defaults: {
       template: "",
       channel: "",
-      language: "tr",
+      language: "en",
       customer: "",
       recipient: "",
       reference_doctype: "",
@@ -766,7 +766,7 @@ export const quickCreateRegistry = {
     defaults: {
       template: "",
       channel: "",
-      language: "tr",
+      language: "en",
       customer: "",
       recipient: "",
       reference_doctype: "",
@@ -868,7 +868,7 @@ export const quickCreateRegistry = {
       template_key: "",
       event_key: "",
       channel: "WHATSAPP",
-      language: "tr",
+      language: "en",
       content_mode: "template",
       provider_template_name: "",
       provider_template_category: "",
@@ -1351,10 +1351,10 @@ export function buildQuickCreateDraft(config, overrides = {}) {
   return { ...(config.defaults || {}), ...overrides };
 }
 
-export function getLocalizedText(value, locale = "tr") {
+export function getLocalizedText(value, locale = "en") {
   if (value == null) return "";
   if (typeof value === "string") return translateText(value, locale);
-  if (typeof value === "object") return value[locale] || value.tr || value.en || "";
+  if (typeof value === "object") return value[locale] || value.en || value.tr || "";
   return String(value);
 }
 

@@ -10,12 +10,12 @@
         <button
           class="qc-managed-dialog__close"
           type="button"
-          :aria-label="locale === 'tr' ? 'Kapat' : 'Close'"
-          :title="locale === 'tr' ? 'Kapat' : 'Close'"
+          :aria-label="translateText('Close', locale)"
+          :title="translateText('Close', locale)"
           @click="onCancel"
         >
           <span aria-hidden="true">×</span>
-          <span class="sr-only">{{ locale === 'tr' ? 'Kapat' : 'Close' }}</span>
+          <span class="sr-only">{{ translateText('Close', locale) }}</span>
         </button>
       </div>
 
@@ -50,6 +50,7 @@
 </template>
 
 <script setup>
+import { translateText } from "../../utils/i18n";
 import QuickCreateDialogShell from "./QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "./QuickCreateFormRenderer.vue";
 import { useQuickCreateManagedDialog } from "../../composables/useQuickCreateManagedDialog";
