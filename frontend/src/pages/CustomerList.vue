@@ -547,6 +547,15 @@ const customerListFilteredRows = computed(() => {
       !customerListLocalFilters.consent_status || String(row.consent_status || "") === customerListLocalFilters.consent_status;
     const matchesGender = !customerListLocalFilters.gender || String(row.gender || "") === customerListLocalFilters.gender;
     return matchesQuery && matchesConsent && matchesGender;
+  }).map((row) => {
+    const consentValue = normalizeConsentValue(row?.consent_status);
+    const consentColor = consentValue === "Granted" ? "green" : consentValue === "Revoked" ? "amber" : "gray";
+    return {
+      ...row,
+      gender: genderLabel(row?.gender),
+      consent_status: consentLabel(consentValue),
+      consent_status_color: consentColor,
+    };
   });
 });
 
@@ -612,6 +621,12 @@ function normalizeConsentValue(value) {
   const status = String(value || "Unknown");
   if (status === "Granted" || status === "Revoked") return status;
   return "Unknown";
+}
+
+function consentLabel(value) {
+  if (value === "Granted") return t("consentGranted");
+  if (value === "Revoked") return t("consentRevoked");
+  return t("consentUnknown");
 }
 
 function genderLabel(value) {

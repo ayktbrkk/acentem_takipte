@@ -70,6 +70,7 @@
 
     <ReconciliationWorkbenchPreviewSections
       :t="t"
+      :locale="activeLocale"
       :workbench-loading="workbenchLoading"
       :collection-preview-rows="collectionPreviewRows"
       :commission-preview-rows="commissionPreviewRows"
@@ -105,7 +106,7 @@
 </template>
 
 <script setup>
-import { unref } from "vue";
+import { computed, unref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { getAppPinia } from "../pinia";
@@ -372,6 +373,7 @@ const branchStore = useBranchStore(appPinia);
 const accountingStore = useAccountingStore();
 const route = useRoute();
 const router = useRouter();
+const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function t(key) {
   const locale = unref(authStore.locale) || "en";

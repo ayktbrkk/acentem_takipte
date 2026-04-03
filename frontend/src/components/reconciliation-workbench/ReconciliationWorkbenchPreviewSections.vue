@@ -13,7 +13,7 @@
         <template #trailing>
           <div class="text-right">
             <p class="text-xs text-slate-500">{{ props.t("dueDate") }}: {{ row.due_date || "-" }}</p>
-            <p class="text-xs text-amber-700">{{ row.status || "-" }}</p>
+            <p class="text-xs text-amber-700">{{ statusLabel(row.status) }}</p>
           </div>
         </template>
       </MetaListCard>
@@ -34,7 +34,7 @@
         <template #trailing>
           <div class="text-right">
             <p class="text-xs text-slate-500">{{ row.office_branch || "-" }}</p>
-            <p class="text-xs text-sky-700">{{ row.status || "-" }}</p>
+            <p class="text-xs text-sky-700">{{ statusLabel(row.status) }}</p>
           </div>
         </template>
       </MetaListCard>
@@ -45,6 +45,7 @@
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
+import { translateText } from "@/utils/i18n";
 
 const props = defineProps({
   t: { type: Function, required: true },
@@ -52,5 +53,12 @@ const props = defineProps({
   collectionPreviewRows: { type: Array, default: () => [] },
   commissionPreviewRows: { type: Array, default: () => [] },
   formatMoney: { type: Function, required: true },
+  locale: { type: String, default: "en" },
 });
+
+function statusLabel(value) {
+  const text = String(value || "").trim();
+  if (!text) return "-";
+  return translateText(text, props.locale);
+}
 </script>
