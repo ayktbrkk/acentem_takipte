@@ -451,6 +451,8 @@ Bu tarama sonrası yeni ilk dalga şu olmalı:
 9. **Frappe translation tooling dikkat ister**
    - `bench build-message-files` gibi komutlar çalışma ağacındaki CSV çeviri dosyalarını yeniden yazabilir.
    - Bu komutlar yalnızca diff kontrolü yapılarak ve gerekirse yedek alındıktan sonra kullanılmalıdır.
+  - **Kritik not (2026-04-04):** `bench build-message-files`, elle eklenen çeviri satırlarını silebilir. Elle `en.csv` / `tr.csv` güncellemesi yapıldıysa bu komutu rutin akışta çalıştırma.
+  - Güvenli akış: CSV güncellemelerini commit et -> `bench --site at.localhost clear-cache` -> `bench build --app acentem_takipte`.
 
 ---
 

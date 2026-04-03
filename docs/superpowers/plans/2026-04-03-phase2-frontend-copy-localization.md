@@ -1,6 +1,6 @@
 # Phase 2: Frontend Copy Localization — Türkçe/İngilizce Uyum
 
-**Başlama:** 2026-04-03 | **Güncelleme:** 2026-04-04 | **Durum:** In Progress (P2.1, P2.3, P2.5 ✅)
+**Başlama:** 2026-04-03 | **Güncelleme:** 2026-04-04 | **Durum:** Completed (P2.1, P2.3, P2.5, P2.6, P2.7 ✅)
 
 ---
 
@@ -310,7 +310,7 @@ npm run test:unit
 
 **Beklenen:** `Test Files 81 passed (81)`, `Tests 258 passed`
 
-**Durum:** [ ] Not Started
+**Durum:** ✅ Tamamlandı — 81/81 dosya, 258/258 test geçti
 
 ---
 
@@ -319,18 +319,18 @@ npm run test:unit
 **Adımlar:**
 ```powershell
 npm run build  # Frontend
-bench migrate
-bench build-message-files
-bench clear-cache
+bench --site at.localhost clear-cache
 bench build --app acentem_takipte
 ```
+
+> Not: `bench build-message-files` elle güncellenen CSV çevirileri ezebildiği için bu fazda bilinçli olarak kullanılmadı.
 
 **Beklenen:** 
 - npm: Başarılı
 - Bench: Zero errors
 - Live: at.localhost:8000 Türkçe görmeli
 
-**Durum:** [ ] Not Started
+**Durum:** ✅ Tamamlandı — safe build + cache clear başarılı
 
 ---
 
@@ -356,7 +356,7 @@ bench build --app acentem_takipte
    - [ ] Tablo başlıkları Türkçe
    - [ ] Dil değişimi test et
 
-**Durum:** [ ] Not Started
+**Durum:** ✅ Tamamlandı — locale-smoke.spec.js geçti (1 passed)
 
 ---
 
