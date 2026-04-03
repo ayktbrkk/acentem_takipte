@@ -745,6 +745,18 @@ Başarı kriterleri:
 - backend mesajları, frontend copy ve metadata sözlüğe uygun olur
 - gelecekte yeni dil, mimariyi değiştirmeden yalnızca yeni CSV dosyası ekleyerek desteklenebilir
 
+### Faz 5 Tamamlanma Kaydı (2026-04-03)
+
+- ✅ `bench build --app acentem_takipte` — `DONE Total Build Time: 544.258ms` + `Compiling translations for acentem_takipte` ✅
+- ✅ Final TR hardcode taraması (`frontend/src/**/*.vue`, `*.js`) — 1 ihlal bulundu ve düzeltildi:
+  - `AuxRecordDetailQuickEditDialog.vue` prop default `{ save: "Kaydet", cancel: "İptal" }` → `{ save: "Save", cancel: "Cancel" }` (commit `8580b79`)
+  - Kalan eşleşmeler: `copy.tr` blokları (doğru), `generated/translations.js` (doğru), `registry.js` L() iki dilli yardımcı (doğru), test dosyaları (kabul edilebilir)
+- ✅ Playwright E2E `locale-smoke.spec.js` — **1 passed (19.6s)** `http://at.localhost:8000`
+  - TR topbar toggle → QuickCreate "İptal" doğrulandı ✅
+  - EN topbar toggle → QuickCreate "Cancel" doğrulandı ✅
+  - Account menu "Logout" label doğrulandı ✅
+- ✅ `git push origin main` — `14f26e4..8580b79 main → main` ✅
+
 ---
 
 ## Takip Kuralları
