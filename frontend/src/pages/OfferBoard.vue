@@ -67,6 +67,7 @@
       :count="formatCount(offerListTotal)"
       :columns="offerListColumns"
       :rows="offerListRowsWithUrgency"
+      :locale="activeLocale"
       :loading="isOfferListInitialLoading"
       :empty-message="t('empty')"
       :row-count="pagedOfferRows.length"

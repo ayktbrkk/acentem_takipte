@@ -7,6 +7,7 @@
     <ListTable
       :columns="columns"
       :rows="rows"
+      :locale="locale"
       :loading="loading"
       :empty-message="emptyMessage"
       @row-click="emit('row-click', $event)"
@@ -35,6 +36,10 @@ defineProps({
   rows: {
     type: Array,
     required: true,
+  },
+  locale: {
+    type: String,
+    default: "en",
   },
   loading: {
     type: Boolean,

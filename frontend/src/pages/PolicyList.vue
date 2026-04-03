@@ -50,6 +50,7 @@
     <PolicyListTableSection
       :columns="policyListColumns"
       :rows="policyListRowsWithUrgency"
+      :locale="activeLocale"
       :loading="policyLoading"
       :empty-message="t('empty')"
       :total-count="policyListTotalCount"
