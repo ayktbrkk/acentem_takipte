@@ -154,6 +154,13 @@ const copy = {
     assignmentSummary: "Atama",
     assignmentNone: "Açık atama yok",
     assignmentOpenCount: "açık",
+    claimNo: "Hasar No",
+    fldCustomer: "Müşteri",
+    fldPolicy: "Poliçe No",
+    fldIncidentDate: "Hasar Tarihi",
+    fldBranch: "Şube",
+    fldClaimType: "Hasar Tipi",
+    fldReserve: "Rezerv Tutar",
   },
   en: {
     breadcrumb: "Insurance Operations → Claims",
@@ -233,6 +240,13 @@ const copy = {
     assignmentSummary: "Assignment",
     assignmentNone: "No open assignment",
     assignmentOpenCount: "open",
+    claimNo: "Claim No",
+    fldCustomer: "Customer",
+    fldPolicy: "Policy No",
+    fldIncidentDate: "Incident Date",
+    fldBranch: "Branch",
+    fldClaimType: "Claim Type",
+    fldReserve: "Reserve Amount",
   },
 };
 
@@ -248,18 +262,18 @@ const route = useRoute();
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
-const claimsTableColumns = [
-  { key: "claim_no", label: "Hasar No", width: "140px", type: "mono" },
-  { key: "customer", label: "Müşteri", width: "220px" },
-  { key: "policy", label: "Poliçe No", width: "140px", type: "mono" },
-  { key: "incident_date_label", label: "Hasar Tarihi", width: "120px", type: "date" },
-  { key: "office_branch_label", label: "Şube", width: "120px" },
-  { key: "claim_type", label: "Hasar Tipi", width: "120px" },
-  { key: "reserve_amount_label", label: "Rezerv Tutar", width: "140px", type: "amount", align: "right" },
-  { key: "paid_amount_label", label: "Ödenen", width: "140px", type: "amount", align: "right" },
-  { key: "claim_status", label: "Durum", width: "130px", type: "status", domain: "claim" },
-  { key: "_actions", label: "Actions", width: "280px", type: "actions", align: "right" },
-];
+const claimsTableColumns = computed(() => [
+  { key: "claim_no", label: t("claimNo"), width: "140px", type: "mono" },
+  { key: "customer", label: t("fldCustomer"), width: "220px" },
+  { key: "policy", label: t("fldPolicy"), width: "140px", type: "mono" },
+  { key: "incident_date_label", label: t("fldIncidentDate"), width: "120px", type: "date" },
+  { key: "office_branch_label", label: t("fldBranch"), width: "120px" },
+  { key: "claim_type", label: t("fldClaimType"), width: "120px" },
+  { key: "reserve_amount_label", label: t("fldReserve"), width: "140px", type: "amount", align: "right" },
+  { key: "paid_amount_label", label: t("paid"), width: "140px", type: "amount", align: "right" },
+  { key: "claim_status", label: t("status"), width: "130px", type: "status", domain: "claim" },
+  { key: "_actions", label: t("actions"), width: "280px", type: "actions", align: "right" },
+]);
 
 const claimsRuntime = useClaimsBoardRuntime({
   authStore,
