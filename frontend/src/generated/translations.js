@@ -78,6 +78,7 @@ export const TRANSLATIONS_TR = {
   "Dead": "Kalıcı Hata",
   "Delete": "Sil",
   "Done": "Tamamlandı",
+  "days": "gün",
   "Draft": "Taslak",
   "Dynamic": "Dinamik",
   "Email": "E-posta",
