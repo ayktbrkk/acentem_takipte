@@ -141,10 +141,23 @@
 - ✅ `generated/translations.js` sözlüğüne reports + global customer search + genel UI anahtarları eklendi (`Search...`, reports metinleri vb).
 
 **Aktif Backlog (Phase 2):**
-- [ ] `Reports.vue` için kalan EN-only metinlerin görsel doğrulaması ve eksik TR karşılıkları.
-- [ ] `PolicyList`, `Claims`, `Lead`, `Offer` filtre bileşenlerinde placeholder ve enum label son kontrolü.
+- [x] `Reports.vue` için kalan EN-only metinlerin görsel doğrulaması ve eksik TR karşılıkları → translations.js duplike temizliği + Wave 3 ile kapatıldı.
+- [x] `PolicyList`, `Claims`, `Lead`, `Offer` filtre bileşenlerinde placeholder ve enum label son kontrolü → Tüm StatusBadge.vue domain etiketleri TR sözlüğünde mevcut, ClaimsBoard kolon başlıkları Wave 3'te düzeltildi.
 - [ ] TR modunda tüm sayfalarda smoke walkthrough (UI labels, status badges, CTA metinleri).
 - [ ] EN modunda regresyon kontrolü (TR text bleed olmamalı).
+
+**Phase 2 Wave 2 özeti (commit `3a76151`, 2026-04-03):**
+- ✅ P0: `PaymentDetail.vue` — `computed(() => "tr")` hardcode → authStore.locale okuma
+- ✅ P0: `App.vue` — "Yenile"/"Kapat" hardcode → locale-aware banner metinleri
+- ✅ P1: `AccessRequestForm.vue` — sıfırdan `copy{tr,en}` + `t()` (tümü EN hardcode'du)
+- ✅ P1: `ClaimsBoardTableSection.vue` — `"Hasar bulunamadı."` → `t('empty')`
+- ✅ P1: `RenewalTaskDetail.vue` — 'tr' fallback düzeltme + 4 hardcoded empty state + tüm computed field label'ları + priorityLabel fonksiyonu
+- ✅ P2: 6 dosya `|| "tr"` fallback → `|| "en"` (pages + composables)
+- ✅ P3: 14 dosya `locale: { default: "tr" }` → `"en"` (prop defaults, policy-form, QuickCreate vb.)
+
+**Phase 2 Wave 3 özeti (commit `ec893b6`, 2026-04-03):**
+- ✅ `ClaimsBoard.vue`: `claimsTableColumns` statik TR array → `computed()` + `t()` (8 yeni copy key)
+- ✅ `translations.js`: duplike ilk blok kaldırıldı (60+ çakışan daha kötü çeviri); ikinci blok otoriter kaynak
 
 ### Final Checkpoint (2026-03-31 Gece Geç)
 
