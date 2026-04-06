@@ -726,6 +726,14 @@ export const TRANSLATIONS_TR = {
   "Update task fields": "Görev alanlarını güncelleyin",
   "Video Call": "Görüntülü Görüşme",
   "WhatsApp Call": "WhatsApp Görüşmesi",
+
+  "National ID Number": "TC Kimlik Numarası",
+  "Tax Number": "Vergi Numarası",
+  "Enter an 11-digit Turkish national ID number.": "11 haneli TC kimlik numaranızı girin.",
+  "Enter a 10-digit tax number.": "10 haneli vergi numaranızı girin.",
+  "Disabled for corporate customers.": "Kurumsal müşteriler için kullanılamaz.",
+  "Quick Offer": "Hızlı Teklif",
+  "Quick Create": "Hızlı Oluştur",
 };
 
 export const TRANSLATIONS_EN = {};

@@ -131,7 +131,8 @@ export function useQuickCreateFormRenderer(props, emit) {
 
   function resolveOptions(field) {
     const fieldName = String(field?.name || "");
-    const mapValue = props.optionsMap?.[fieldName];
+    const sourceKey = String(field?.optionsSource || "");
+    const mapValue = (sourceKey && props.optionsMap?.[sourceKey]) || props.optionsMap?.[fieldName];
     if (mapValue) {
       return readOptionsMapValue(field, mapValue);
     }
