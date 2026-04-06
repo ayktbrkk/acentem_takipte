@@ -78,7 +78,7 @@ describe("BreakGlassRequest page", () => {
       },
     });
 
-    const validateButton = wrapper.findAll("button").find((button) => button.text().includes("Erisimi Dogrula"));
+    const validateButton = wrapper.findAll("button").find((button) => button.text().includes("Erişimi Doğrula"));
     await validateButton.trigger("click");
 
     expect(frappeRequest).toHaveBeenCalledWith(

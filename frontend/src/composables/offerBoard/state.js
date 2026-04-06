@@ -226,7 +226,7 @@ export function useOfferBoardState({
       return {
         ...row,
         customer_label: customerDisplayLabel(row),
-        customer_type_label: row.customer_customer_type || "-",
+        customer_type_label: translateText(row.customer_customer_type || "-", activeLocale.value),
         customer_tax_id: row.customer_masked_tax_id || "-",
         customer_birth_date: row.customer_birth_date || null,
         remaining_days: remainingDays,

@@ -102,7 +102,7 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
     rows.value.map((row) => ({
       ...row,
       name: row.name,
-      customer_type_label: row.customer_customer_type || "-",
+      customer_type_label: translateText(row.customer_customer_type || "-", activeLocale.value),
       customer_tax_id: row.customer_masked_tax_id || "-",
       customer_label: row.customer_full_name || row.customer_name || row.customer || "-",
       customer_birth_date: row.customer_birth_date || null,

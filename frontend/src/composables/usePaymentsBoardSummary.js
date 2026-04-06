@@ -1,6 +1,7 @@
 import { computed } from "vue";
 
 import { buildPaymentSnapshot, formatCount, formatCurrency } from "./paymentsBoard/helpers";
+import { translateText } from "../utils/i18n";
 
 export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSummaryByPayment, buildPaymentRowActions, paymentStore }) {
   const paymentSnapshots = computed(() =>
@@ -12,7 +13,7 @@ export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSu
         insurance_company_label: snapshot.insurance_company || "-",
         carrier_policy_no: snapshot.carrier_policy_no || snapshot.policy_no || "-",
         branch_label: snapshot.branch || "-",
-        customer_type_label: snapshot.customer_customer_type || "-",
+        customer_type_label: translateText(snapshot.customer_customer_type || "-", localeCode.value),
         customer_tax_id: snapshot.customer_masked_tax_id || "-",
         customer_label: snapshot.customer_full_name || snapshot.customer_name || snapshot.customer || "-",
         customer_birth_date: snapshot.customer_birth_date || null,

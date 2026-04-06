@@ -65,7 +65,7 @@ function handleScopeChanged(payload) {
     return;
   }
   scopeRefreshNotice.value = locale.value === "tr"
-    ? "Erisim yetkileriniz guncellendi. Guncel yetkilerle devam etmek icin sayfayi yenileyin."
+    ? "Erişim yetkileriniz güncellendi. Güncel yetkilerle devam etmek için sayfayı yenileyin."
     : "Your access permissions have been updated. Refresh to continue with the latest permissions.";
 }
 

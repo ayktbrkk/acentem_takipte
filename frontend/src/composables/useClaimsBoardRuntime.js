@@ -331,7 +331,7 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
       insurance_company_label: claim.insurance_company || "-",
       carrier_policy_no: claim.carrier_policy_no || claim.policy_no || "-",
       branch_label: claim.branch || claim.office_branch || "-",
-      customer_type_label: claim.customer_customer_type || "-",
+      customer_type_label: translateText(claim.customer_customer_type || "-", activeLocale.value),
       customer_tax_id: claim.customer_masked_tax_id || "-",
       customer_birth_date: claim.customer_birth_date || null,
       customer_label: claim.customer_full_name || claim.customer_name || claim.customer || "-",
