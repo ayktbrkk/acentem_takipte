@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import frappe
 from frappe import _
+from frappe.utils import getdate
 
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     normalize_customer_type,
@@ -52,6 +53,21 @@ def resolve_or_create_quick_customer(
 
     existing_by_identity = frappe.db.get_value("AT Customer", {"tax_id": identity_number}, "name")
     if existing_by_identity:
+        normalized_existing_birth_date = getdate(birth_date) if birth_date else None
+        if normalized_existing_birth_date:
+            existing_customer_type, existing_birth_date = frappe.db.get_value(
+                "AT Customer",
+                existing_by_identity,
+                ["customer_type", "birth_date"],
+            )
+            if str(existing_customer_type or "").strip() != "Corporate" and not existing_birth_date:
+                frappe.db.set_value(
+                    "AT Customer",
+                    existing_by_identity,
+                    "birth_date",
+                    normalized_existing_birth_date,
+                    update_modified=False,
+                )
         return existing_by_identity, False
 
     customer_doc = frappe.get_doc(

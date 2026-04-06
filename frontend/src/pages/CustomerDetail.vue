@@ -114,7 +114,7 @@
                 <p class="qc-success-banner__text">{{ profileSaveMessage }}</p>
               </div>
 
-              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+              <div class="grid gap-3 sm:grid-cols-2">
                 <template v-for="field in profileEditFields" :key="field.key">
                   <div
                     v-if="field.type !== 'hidden'"
