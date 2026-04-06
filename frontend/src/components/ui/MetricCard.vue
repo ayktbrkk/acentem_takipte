@@ -1,7 +1,7 @@
 <template>
   <div class="rounded-lg border border-gray-200 bg-white p-4 transition-colors duration-150 hover:border-gray-300">
     <div class="mb-3 flex items-start justify-between">
-      <p class="text-[10.5px] font-semibold uppercase tracking-wider text-gray-400">
+      <p class="text-[10.5px] font-semibold tracking-wider text-gray-400">
         {{ label }}
       </p>
       <div

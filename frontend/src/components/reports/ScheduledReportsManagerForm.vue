@@ -11,13 +11,13 @@
 
     <div class="grid gap-3 md:grid-cols-2">
       <label class="space-y-1">
-        <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ reportKeyLabel }}</span>
+        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ reportKeyLabel }}</span>
         <select v-model="form.reportKey" class="input">
           <option v-for="option in reportOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
         </select>
       </label>
       <label class="space-y-1">
-        <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ frequencyLabel }}</span>
+        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ frequencyLabel }}</span>
         <select v-model="form.frequency" class="input">
           <option value="daily">daily</option>
           <option value="weekly">weekly</option>
@@ -25,29 +25,29 @@
         </select>
       </label>
       <label class="space-y-1">
-        <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ formatLabel }}</span>
+        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ formatLabel }}</span>
         <select v-model="form.format" class="input">
           <option value="xlsx">xlsx</option>
           <option value="pdf">pdf</option>
         </select>
       </label>
       <label class="space-y-1">
-        <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ deliveryChannelLabel }}</span>
+        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ deliveryChannelLabel }}</span>
         <select v-model="form.deliveryChannel" class="input">
           <option value="email">{{ deliveryEmailLabel }}</option>
           <option value="notification_outbox">{{ deliveryOutboxLabel }}</option>
         </select>
       </label>
       <label class="space-y-1">
-        <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ limitLabel }}</span>
+        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ limitLabel }}</span>
         <input v-model.number="form.limit" class="input" type="number" min="1" step="1" />
       </label>
       <label v-if="form.frequency === 'weekly'" class="space-y-1">
-        <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ weekdayLabel }}</span>
+        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ weekdayLabel }}</span>
         <input v-model.number="form.weekday" class="input" type="number" min="0" max="6" step="1" />
       </label>
       <label v-if="form.frequency === 'monthly'" class="space-y-1">
-        <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ dayOfMonthLabel }}</span>
+        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ dayOfMonthLabel }}</span>
         <input v-model.number="form.dayOfMonth" class="input" type="number" min="1" max="31" step="1" />
       </label>
       <label class="flex items-center gap-2 pt-6 text-sm text-slate-700">
@@ -57,12 +57,12 @@
     </div>
 
     <label class="space-y-1">
-      <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ recipientsLabel }}</span>
+      <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ recipientsLabel }}</span>
       <textarea v-model.trim="form.recipients" class="input min-h-24" :placeholder="recipientsPlaceholder" />
     </label>
 
     <div class="space-y-2">
-      <span class="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">{{ filtersLabel }}</span>
+      <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ filtersLabel }}</span>
       <div class="grid gap-3 md:grid-cols-2">
         <label v-if="isFilterVisible('office_branch')" class="space-y-1">
           <span class="text-xs text-slate-500">{{ officeBranchLabel }}</span>

@@ -102,6 +102,13 @@ export function useSidebarNavigation() {
     return translateText(copy[locale]?.[key] || copy.en[key] || key, locale);
   }
 
+  function upper(value) {
+    const text = value == null ? "" : String(value);
+    if (!text) return text;
+    const locale = String(authStore.locale || "en").toLowerCase();
+    return locale.startsWith("tr") ? text.toLocaleUpperCase("tr-TR") : text.toUpperCase();
+  }
+
   const isCollapsed = computed(() => uiStore.sidebarCollapsed);
   const userDisplayName = computed(() => String(authStore.user || authStore.userId || "-").trim() || "-");
   const userInitials = computed(() => {
@@ -186,6 +193,7 @@ export function useSidebarNavigation() {
 
   return {
     t,
+    upper,
     isCollapsed,
     userDisplayName,
     userInitials,

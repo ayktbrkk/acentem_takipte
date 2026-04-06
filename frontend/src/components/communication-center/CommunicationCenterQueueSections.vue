@@ -26,7 +26,7 @@
               <div v-if="row.reference_doctype || row.reference_name" class="mt-1 flex flex-wrap items-center gap-1">
                 <span
                   v-if="row.reference_doctype"
-                  class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
+                    class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-700"
                 >
                   {{ referenceTypeLabel(row.reference_doctype) }}
                 </span>
@@ -109,7 +109,7 @@
         <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
           <span
             v-if="draft.reference_doctype"
-            class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
+              class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-700"
           >
             {{ referenceTypeLabel(draft.reference_doctype) }}
           </span>

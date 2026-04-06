@@ -60,15 +60,15 @@
         >
           <div class="grid gap-3 sm:grid-cols-3">
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('createdDrafts') }}</p>
+              <p class="text-xs tracking-wide text-slate-500">{{ t('createdDrafts') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.created || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('skippedRows') }}</p>
+              <p class="text-xs tracking-wide text-slate-500">{{ t('skippedRows') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.skipped || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('matchedCustomers') }}</p>
+              <p class="text-xs tracking-wide text-slate-500">{{ t('matchedCustomers') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ campaignRunResult.matched_customers || 0 }}</p>
             </div>
           </div>
@@ -114,15 +114,15 @@
         >
           <div class="grid gap-3 sm:grid-cols-3">
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('matchedCustomers') }}</p>
+              <p class="text-xs tracking-wide text-slate-500">{{ t('matchedCustomers') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.matched_count || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('previewRows') }}</p>
+              <p class="text-xs tracking-wide text-slate-500">{{ t('previewRows') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.preview_count || 0 }}</p>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-wide text-slate-500">{{ t('hasMore') }}</p>
+              <p class="text-xs tracking-wide text-slate-500">{{ t('hasMore') }}</p>
               <p class="mt-1 text-lg font-semibold text-slate-900">{{ segmentPreviewSummary.has_more ? t('yes') : t('no') }}</p>
             </div>
           </div>

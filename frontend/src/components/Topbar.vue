@@ -10,7 +10,7 @@
           {{ t("menu") }}
         </button>
         <div>
-          <p class="text-xs uppercase tracking-wide text-slate-500">{{ sectionLabel }}</p>
+          <p class="text-xs tracking-wide text-slate-500">{{ upperLabel(sectionLabel) }}</p>
           <p class="text-lg font-semibold text-slate-900">{{ pageTitle }}</p>
         </div>
       </div>
@@ -106,6 +106,15 @@ const sectionLabel = computed(() => {
   }
   return translateText(section || t("defaultSection"), authStore.locale);
 });
+
+function upperLabel(value) {
+  const text = value == null ? "" : String(value);
+  if (!text) return text;
+  return String(authStore.locale || "en").toLowerCase().startsWith("tr")
+    ? text.toLocaleUpperCase("tr-TR")
+    : text.toUpperCase();
+}
+
 const localeLabel = computed(() => (authStore.locale === "tr" ? "TR" : "EN"));
 const displayUser = computed(() => authStore.user || authStore.userId || t("user"));
 const displayUserId = computed(() => authStore.userId || "");

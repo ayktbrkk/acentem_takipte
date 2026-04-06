@@ -12,7 +12,7 @@
     >
       <div class="border-b border-gray-100 px-4 py-4">
         <div class="mb-4 flex items-center justify-between lg:hidden">
-          <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{{ t("menu") }}</p>
+          <p class="text-xs font-semibold tracking-[0.22em] text-slate-500">{{ upper(t("menu")) }}</p>
           <button class="rounded-lg border border-slate-300 px-2 py-1 text-xs" type="button" @click="$emit('close')">
             X
           </button>
@@ -44,9 +44,9 @@
         <div v-for="section in navSections" :key="section.title" class="mb-4">
           <p
             v-if="!isCollapsed"
-            class="px-4 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-widest text-gray-400"
+            class="px-4 pb-1 pt-4 text-[10px] font-semibold tracking-widest text-gray-400"
           >
-            {{ section.title }}
+            {{ upper(section.title) }}
           </p>
           <div v-else class="mx-2 mb-2 border-t border-slate-200/80" />
 
@@ -135,6 +135,7 @@ defineEmits(["close", "navigate"]);
 
 const {
   t,
+  upper,
   isCollapsed,
   userDisplayName,
   userInitials,

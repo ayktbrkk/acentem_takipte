@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-1.5">
     <div class="flex items-center justify-between gap-3">
-      <span class="text-[11px] uppercase tracking-wide text-slate-400">{{ leftLabel }}</span>
+      <span class="text-[11px] tracking-wide text-slate-400">{{ leftLabel }}</span>
       <FormattedCurrencyValue
         :value="leftValue"
         :locale="locale"
@@ -11,7 +11,7 @@
       />
     </div>
     <div class="flex items-center justify-between gap-3">
-      <span class="text-[11px] uppercase tracking-wide text-slate-400">{{ rightLabel }}</span>
+      <span class="text-[11px] tracking-wide text-slate-400">{{ rightLabel }}</span>
       <FormattedCurrencyValue
         :value="rightValue"
         :locale="locale"

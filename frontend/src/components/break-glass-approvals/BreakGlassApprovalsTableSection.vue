@@ -46,7 +46,7 @@
             </td>
             <td class="at-table-cell min-w-[220px]">
               <label class="mb-2 flex flex-col gap-1">
-                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("durationHours") }}</span>
+                <span class="text-[11px] font-semibold tracking-wide text-slate-500">{{ t("durationHours") }}</span>
                 <select v-model.number="actionForm[row.name].durationHours" class="input input-xs">
                   <option :value="4">4</option>
                   <option :value="8">8</option>
@@ -56,7 +56,7 @@
                 </select>
               </label>
               <label class="mb-2 flex flex-col gap-1">
-                <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("comments") }}</span>
+                <span class="text-[11px] font-semibold tracking-wide text-slate-500">{{ t("comments") }}</span>
                 <input
                   v-model.trim="actionForm[row.name].comments"
                   class="input input-xs"

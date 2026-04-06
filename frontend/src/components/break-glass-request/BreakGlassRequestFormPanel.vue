@@ -3,7 +3,7 @@
     <form class="space-y-4" @submit.prevent="$emit('submit')">
       <div class="grid gap-3 md:grid-cols-2">
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("accessType") }}</span>
+          <span class="text-xs font-semibold tracking-wide text-slate-500">{{ t("accessType") }}</span>
           <select v-model="form.accessType" class="input" required>
             <option v-for="option in accessTypeOptions" :key="option.value" :value="option.value">
               {{ option.label }}
@@ -12,18 +12,18 @@
         </label>
 
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("referenceDoctype") }}</span>
+          <span class="text-xs font-semibold tracking-wide text-slate-500">{{ t("referenceDoctype") }}</span>
           <input v-model.trim="form.referenceDoctype" class="input" type="text" :placeholder="t('referenceDoctypePlaceholder')" />
         </label>
 
         <label class="flex flex-col gap-1 md:col-span-2">
-          <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("referenceName") }}</span>
+          <span class="text-xs font-semibold tracking-wide text-slate-500">{{ t("referenceName") }}</span>
           <input v-model.trim="form.referenceName" class="input" type="text" :placeholder="t('referenceNamePlaceholder')" />
         </label>
       </div>
 
       <label class="flex flex-col gap-1">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("justification") }}</span>
+        <span class="text-xs font-semibold tracking-wide text-slate-500">{{ t("justification") }}</span>
         <textarea
           v-model.trim="form.justification"
           class="input min-h-[130px]"

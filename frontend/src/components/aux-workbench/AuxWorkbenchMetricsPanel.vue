@@ -35,7 +35,7 @@
     <article v-if="snapshotTrendRows.length" class="surface-card rounded-2xl p-5">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ snapshotTrendTitle }}</p>
+          <p class="text-xs font-semibold tracking-wide text-slate-500">{{ snapshotTrendTitle }}</p>
           <p class="text-sm text-slate-500">{{ snapshotTrendHint }}</p>
         </div>
         <span class="text-xs text-slate-400">{{ showingLabel }} {{ snapshotTrendRows.length }}</span>

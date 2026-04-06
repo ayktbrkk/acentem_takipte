@@ -2,7 +2,7 @@
   <SectionPanel :title="t('validatePanelTitle')" panel-class="surface-card rounded-2xl p-5">
     <div class="grid gap-3 md:grid-cols-2">
       <label class="flex flex-col gap-1">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("accessType") }}</span>
+        <span class="text-xs font-semibold tracking-wide text-slate-500">{{ t("accessType") }}</span>
         <select v-model="validation.accessType" class="input">
           <option v-for="option in accessTypeOptions" :key="`validate-${option.value}`" :value="option.value">
             {{ option.label }}
@@ -11,7 +11,7 @@
       </label>
 
       <label class="flex flex-col gap-1">
-        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("referenceDoctype") }}</span>
+        <span class="text-xs font-semibold tracking-wide text-slate-500">{{ t("referenceDoctype") }}</span>
         <input v-model.trim="validation.referenceDoctype" class="input" type="text" :placeholder="t('referenceDoctypePlaceholder')" />
       </label>
     </div>
