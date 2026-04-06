@@ -18,6 +18,7 @@
     <ListTable
       :columns="leadListColumns"
       :rows="leadListRows"
+      :locale="locale"
       :loading="isInitialLoading"
       :empty-message="t('emptyDescription')"
       @row-click="$emit('row-click', $event)"
@@ -59,6 +60,10 @@ defineProps({
   leadListLoading: {
     type: Boolean,
     default: false,
+  },
+  locale: {
+    type: String,
+    default: "en",
   },
   hasNextPage: {
     type: Boolean,

@@ -50,6 +50,7 @@
     <LeadListTableSection
       :lead-list-columns="leadListColumns"
       :lead-list-rows="leadListRows"
+      :locale="activeLocale"
       :pagination="pagination"
       :is-initial-loading="isInitialLoading"
       :lead-list-loading="leadListResource.loading"

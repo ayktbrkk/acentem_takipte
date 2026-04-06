@@ -1,6 +1,6 @@
 <template>
   <SectionPanel :title="t('claimsTableTitle')" :count="formatCount(rows.length)" panel-class="surface-card rounded-2xl p-5">
-    <ListTable :columns="claimsTableColumns" :rows="rows" :loading="loading" :empty-message="t('empty')" @row-click="$emit('row-click', $event)" />
+    <ListTable :columns="claimsTableColumns" :rows="rows" :locale="locale" :loading="loading" :empty-message="t('empty')" @row-click="$emit('row-click', $event)" />
   </SectionPanel>
 </template>
 
@@ -20,6 +20,10 @@ defineProps({
   loading: {
     type: Boolean,
     default: false,
+  },
+  locale: {
+    type: String,
+    default: "en",
   },
   formatCount: {
     type: Function,

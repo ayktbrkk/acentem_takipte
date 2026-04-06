@@ -21,6 +21,7 @@
       <ListTable
         :columns="paymentListColumns"
         :rows="paymentsWithActions"
+        :locale="locale"
         :loading="false"
         :empty-message="t('empty')"
         @row-click="$emit('row-click', $event)"
@@ -53,6 +54,10 @@ defineProps({
   errorText: {
     type: String,
     default: "",
+  },
+  locale: {
+    type: String,
+    default: "en",
   },
   t: {
     type: Function,

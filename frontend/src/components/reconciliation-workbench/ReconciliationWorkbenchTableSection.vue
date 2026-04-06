@@ -18,6 +18,7 @@
       <ListTable
         :columns="props.reconciliationListColumns"
         :rows="props.reconciliationListRows"
+        :locale="props.locale"
         :loading="false"
         :empty-message="props.t('empty')"
         @row-click="$emit('row-click', $event)"
@@ -36,6 +37,7 @@ const props = defineProps({
   workbenchLoading: { type: Boolean, default: false },
   workbenchErrorText: { type: String, default: "" },
   rows: { type: Array, default: () => [] },
+  locale: { type: String, default: "en" },
   reconciliationListColumns: { type: Array, default: () => [] },
   reconciliationListRows: { type: Array, default: () => [] },
 });

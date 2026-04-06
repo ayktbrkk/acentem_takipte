@@ -39,6 +39,7 @@
     <ClaimsBoardTableSection
       :claims-table-columns="claimsTableColumns"
       :rows="claimsListRowsWithActions"
+      :locale="activeLocale"
       :loading="claimsLoading"
       :format-count="formatCount"
       :t="t"

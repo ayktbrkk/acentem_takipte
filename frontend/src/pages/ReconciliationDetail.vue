@@ -31,6 +31,7 @@
           <ListTable
             :columns="policyColumns"
             :rows="policyRows"
+            :locale="activeLocale"
             :loading="loading"
             :empty-message="t('noPolicyRows')"
           />
@@ -40,6 +41,7 @@
           <ListTable
             :columns="unmatchedColumns"
             :rows="unmatchedRows"
+            :locale="activeLocale"
             :loading="loading"
             :empty-message="t('noUnmatchedRows')"
           />

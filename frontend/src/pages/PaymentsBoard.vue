@@ -50,6 +50,7 @@
       :payments="payments"
       :payment-list-columns="paymentListColumns"
       :payments-with-actions="paymentsWithActions"
+      :locale="activeLocale"
       :loading="paymentsLoading"
       :error-text="paymentsErrorText"
       :t="t"

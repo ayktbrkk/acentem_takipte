@@ -79,6 +79,7 @@
 
     <ReconciliationWorkbenchTableSection
       :t="t"
+      :locale="activeLocale"
       :workbench-loading="workbenchLoading"
       :workbench-error-text="workbenchErrorText"
       :rows="rows"

@@ -68,6 +68,7 @@
       <ListTable
         :columns="customerListColumns"
         :rows="customerListPagedRows"
+        :locale="activeLocale"
         :loading="isInitialLoading"
         :empty-message="t('emptyDescription')"
         @row-click="(row) => openCustomer360(row.name)"
