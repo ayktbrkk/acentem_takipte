@@ -149,10 +149,11 @@ describe("CustomerList page store integration", () => {
     expect(wrapper.text()).toContain("Liste Özeti");
     expect(wrapper.text()).toContain("Sayfa Boyutu");
     expect(wrapper.text()).toContain("20");
-    expect(wrapper.vm.customerListColumns[0].label).toBe("Müşteri No");
-    expect(wrapper.vm.customerListColumns[1].label).toBe("Müşteri Adı");
-    expect(wrapper.vm.customerListColumns[4].label).toBe("Cinsiyet");
-    expect(wrapper.vm.customerListColumns[5].label).toBe("İzin Durumu");
+    const trColumns = Object.fromEntries(wrapper.vm.customerListColumns.map((col) => [col.key, col.label]));
+    expect(trColumns.name).toBe("Müşteri No");
+    expect(trColumns.full_name).toBe("Müşteri Ad Soyad");
+    expect(trColumns.gender).toBe("Cinsiyet");
+    expect(trColumns.consent_status).toBe("İzin Durumu");
 
     const inputs = wrapper.findAll(".input");
     await inputs[0].setValue("aykut");
@@ -170,10 +171,11 @@ describe("CustomerList page store integration", () => {
     const wrapper = await mountCustomerList("en");
 
     expect(wrapper.text()).toContain("Customer Workbench");
-    expect(wrapper.vm.customerListColumns[0].label).toBe("Customer No");
-    expect(wrapper.vm.customerListColumns[1].label).toBe("Customer Name");
-    expect(wrapper.vm.customerListColumns[4].label).toBe("Gender");
-    expect(wrapper.vm.customerListColumns[5].label).toBe("Consent Status");
+    const enColumns = Object.fromEntries(wrapper.vm.customerListColumns.map((col) => [col.key, col.label]));
+    expect(enColumns.name).toBe("Customer No");
+    expect(enColumns.full_name).toBe("Customer Full Name");
+    expect(enColumns.gender).toBe("Gender");
+    expect(enColumns.consent_status).toBe("Consent Status");
     expect(wrapper.vm.customerListFilterConfig[0].label).toBe("Consent Status");
   });
 });
