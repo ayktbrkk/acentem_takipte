@@ -363,7 +363,7 @@ export function useOfferBoardQuickOffer({
       quickOfferReturnTo.value = "";
       resetQuickOfferForm();
     } catch (error) {
-      quickOfferError.value = error?.messages?.join(" ") || error?.message || t("quickOfferCreateFailed");
+      quickOfferError.value = parseQuickOfferSubmitError(error) || t("quickOfferCreateFailed");
     } finally {
       quickOfferLoading.value = false;
     }
@@ -419,4 +419,27 @@ export function useOfferBoardQuickOffer({
       },
     },
   };
+}
+
+function parseQuickOfferSubmitError(error) {
+  const direct = error?.message || error?.exc_type;
+  if (direct) return String(direct);
+
+  if (Array.isArray(error?.messages) && error.messages.length) {
+    return error.messages.map((entry) => String(entry || "").replace(/<[^>]*>/g, "").trim()).filter(Boolean).join(" ");
+  }
+
+  const serverMessage = error?._server_messages || error?.response?._server_messages || error?.response?.message;
+  if (!serverMessage) return "";
+
+  try {
+    const parsed = typeof serverMessage === "string" ? JSON.parse(serverMessage) : serverMessage;
+    if (Array.isArray(parsed) && parsed.length) {
+      return String(parsed[0]).replace(/<[^>]*>/g, "").trim();
+    }
+  } catch {
+    return String(serverMessage).replace(/<[^>]*>/g, "").trim();
+  }
+
+  return "";
 }

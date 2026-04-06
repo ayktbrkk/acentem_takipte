@@ -241,7 +241,7 @@ export function useCustomerQuickCreateRuntime({
       }
       if (openAfter && customerName && typeof openCustomer360 === "function") openCustomer360(customerName);
     } catch (error) {
-      quickCustomerError.value = error?.messages?.join(" ") || error?.message || quickCreateCommon.value.failed;
+      quickCustomerError.value = parseQuickCustomerSubmitError(error) || quickCreateCommon.value.failed;
     } finally {
       quickCustomerLoading.value = false;
     }
@@ -304,4 +304,27 @@ export function useCustomerQuickCreateRuntime({
     clearQuickCustomerFieldErrors,
     resetQuickCustomerForm,
   };
+}
+
+function parseQuickCustomerSubmitError(error) {
+  const direct = error?.message || error?.exc_type;
+  if (direct) return String(direct);
+
+  if (Array.isArray(error?.messages) && error.messages.length) {
+    return error.messages.map((entry) => String(entry || "").replace(/<[^>]*>/g, "").trim()).filter(Boolean).join(" ");
+  }
+
+  const serverMessage = error?._server_messages || error?.response?._server_messages || error?.response?.message;
+  if (!serverMessage) return "";
+
+  try {
+    const parsed = typeof serverMessage === "string" ? JSON.parse(serverMessage) : serverMessage;
+    if (Array.isArray(parsed) && parsed.length) {
+      return String(parsed[0]).replace(/<[^>]*>/g, "").trim();
+    }
+  } catch {
+    return String(serverMessage).replace(/<[^>]*>/g, "").trim();
+  }
+
+  return "";
 }
