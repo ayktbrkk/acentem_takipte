@@ -46,9 +46,22 @@ def _coerce_realtime_port(value) -> int | None:
     return None
 
 
+def _coerce_realtime_enabled(value) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return int(value) == 1
+    normalized = str(value or "").strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off", ""}:
+        return False
+    return False
+
+
 def _build_realtime_config() -> dict[str, int | bool | None]:
     site_config = frappe.get_site_config() or {}
-    enabled = bool(site_config.get("at_realtime_enabled"))
+    enabled = _coerce_realtime_enabled(site_config.get("at_realtime_enabled"))
     port = _coerce_realtime_port(site_config.get("at_realtime_port") or 9000)
 
     return {
