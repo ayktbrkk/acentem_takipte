@@ -12,12 +12,12 @@
             :key="col.key"
             :style="col.width ? `width: ${col.width}` : ''"
             :class="[
-              'px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-wider text-gray-400',
+              'px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-wider text-gray-400',
               col.align === 'right' && 'text-right',
               col.align === 'center' && 'text-center',
             ]"
           >
-            {{ col.label }}
+            {{ formatHeaderLabel(col.label) }}
           </th>
         </tr>
       </thead>
@@ -134,5 +134,13 @@ function formatDateCell(value) {
     month: "2-digit",
     year: "numeric",
   }).format(date);
+}
+
+function formatHeaderLabel(value) {
+  const text = value == null ? "" : String(value);
+  if (!text) return text;
+  return locale.value.toLowerCase().startsWith("tr")
+    ? text.toLocaleUpperCase("tr-TR")
+    : text.toUpperCase();
 }
 </script>
