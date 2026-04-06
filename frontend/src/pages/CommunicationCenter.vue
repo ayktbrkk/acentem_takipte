@@ -130,7 +130,7 @@ const copy = {
     openReconciliationPanel: "Mutabakat",
     openCommunicationPanel: "İletişim Kaydı",
     openMasterDataPanel: "Ana Veri Kaydı",
-    referenceLead: "Lead",
+    referenceLead: "Fırsat",
     referenceOffer: "Teklif",
     referencePolicy: "Poliçe",
     referenceCustomer: "Müşteri",

@@ -1,122 +1,132 @@
-# TR/EN Yerellestirme Uygulama Rehberi
+# TR/EN Yerelleştirme Uygulama Rehberi
 
-Bu rehber, acentem_takipte projesinde yeni bir ozellik, alan, mesaj veya ekran eklendiginde TR/EN yerellestirme standardinin nasil uygulanacagini tanimlar.
+Bu rehber, acentem_takipte projesinde yeni bir özellik, alan, mesaj veya ekran eklendiğinde TR/EN yerelleştirme standardının nasıl uygulanacağını tanımlar.
 
-## 1) Temel Ilke
+## 1) Temel İlke
 
 - Kaynak dil her zaman English olacak.
-- Turkish metinler ceviri katmaninda tutulacak.
-- Kodda kullaniciya gorunen metin hardcoded Turkish olarak birakilmayacak.
-- Yeni metin ekleyen her PR, ceviri etkisini ayni PR icinde kapatacak.
+- Turkish metinler çeviri katmanında tutulacak.
+- Kodda kullanıcıya görünen metin hardcoded Turkish olarak bırakılmayacak.
+- Yeni metin ekleyen her PR, çeviri etkisini aynı PR içinde kapatacak.
 
 ## 2) Kaynaklar ve Sorumluluklar
 
-- Backend/Frappe kaynak mesajlari:
-  - `frappe._("...")` ile tanimlanir.
-- Frontend (Vue/JS) kaynak mesajlari:
-  - `translateText("...", locale)` veya ilgili i18n helper uzerinden kullanilir.
-- Ceviri kataloglari:
+- Backend/Frappe kaynak mesajları:
+  - `frappe._("...")` ile tanımlanır.
+- Frontend (Vue/JS) kaynak mesajları:
+  - `translateText("...", locale)` veya ilgili i18n helper üzerinden kullanılır.
+- Çeviri katalogları:
   - `acentem_takipte/translations/en.csv` (source registry)
-  - `acentem_takipte/translations/tr.csv` (TR karsiliklar)
+  - `acentem_takipte/translations/tr.csv` (TR karşılıklar)
   - `frontend/src/generated/translations.js` (frontend runtime TR map)
 
-Not: Frontend bilesenlerinin bir kismi sayfa ici `copy = { tr: {...}, en: {...} }` yapisi kullaniyor. Bu yuzeylerde yeni key eklendiginde iki dilin birlikte guncellenmesi zorunludur.
+Not: Frontend bileşenlerinin bir kısmı sayfa içi `copy = { tr: {...}, en: {...} }` yapısı kullanıyor. Bu yüzeylerde yeni key eklendiğinde iki dilin birlikte güncellenmesi zorunludur.
 
-## 3) Zorunlu Kod Standartlari
+## 3) Zorunlu Kod Standartları
 
 ### 3.1 Backend (Python/Frappe)
 
-- Kullaniciya donen tum hata/uyari/bilgi mesajlari `_()` ile sarilacak.
-- Dinamik mesajlar placeholder ile yazilacak:
-  - Dogru: `_("Policy {0} created").format(policy_no)`
-  - Yanlis: `_("Policy") + " " + policy_no + " " + _("created")`
-- API response message, `frappe.throw`, validation mesaji, logtan UI'a cikan mesajlar kapsama dahildir.
+- Kullanıcıya dönen tüm hata/uyarı/bilgi mesajları `_()` ile sarılacak.
+- Dinamik mesajlar placeholder ile yazılacak:
+  - Doğru: `_("Policy {0} created").format(policy_no)`
+  - Yanlış: `_("Policy") + " " + policy_no + " " + _("created")`
+- API response message, `frappe.throw`, validation mesajı, logtan UI'a çıkan mesajlar kapsama dahildir.
 
 ### 3.2 Frontend (Vue/JS)
 
-- Metinler dogrudan Turkish yazilmayacak.
-- Yeni label/button/placeholder/empty-state/status text eklendiginde:
+- Metinler doğrudan Turkish yazılmayacak.
+- Yeni label/button/placeholder/empty-state/status text eklendiğinde:
   1. Source English metin eklenir.
-  2. `frontend/src/generated/translations.js` icine TR karsiligi eklenir.
-  3. Gerekliysa sayfa ici `copy.tr` ve `copy.en` birlikte guncellenir.
-- `option.label` gibi select etiketleri render aninda cevriliyor; buna ragmen yeni source key sozlukte yoksa EN gorunur. Bu nedenle sozluk anahtari eklemek zorunludur.
+  2. `frontend/src/generated/translations.js` içine TR karşılığı eklenir.
+  3. Gerekliyse sayfa içi `copy.tr` ve `copy.en` birlikte güncellenir.
+- `option.label` gibi select etiketleri render anında çevriliyor; buna rağmen yeni source key sözlükte yoksa EN görünür. Bu nedenle sözlük anahtarı eklemek zorunludur.
 
 ### 3.3 Metadata (DocType JSON)
 
 - Label/description/options source English tutulur.
-- Manual edit yerine kontrollu export/editor akisi tercih edilir.
-- JSON semasini bozacak toplu duzenlemelerden kacinilir.
+- Manual edit yerine kontrollü export/editor akışı tercih edilir.
+- JSON şemasını bozacak toplu düzenlemelerden kaçınılır.
 
-## 4) Yeni Ozellik Ekleme Akisi (Definition of Done)
+### 3.4 Türkçe Karakter Doğruluğu (Zorunlu)
 
-Yeni bir ozellikte kullaniciya gorunen metin eklendi mi? Asagidaki sira zorunludur:
+- Türkçe çevirilerde karakterler eksiksiz ve doğru kullanılmalıdır.
+- Özellikle şu harfler ASCII'ye düşürülmeyecek: `i/İ`, `ı/I`, `ş/Ş`, `ü/Ü`, `ö/Ö`, `ğ/Ğ`, `ç/Ç`. 
+- Örnek:
+  - Doğru: `Müşteri`, `Görev`, `İşlem`, `Çözüm`, `Şube`, `Ödeme`
+  - Yanlış: `Musteri`, `Gorev`, `Islem`, `Cozum`, `Sube`, `Odeme`
+- CSV, frontend sözlüğü ve sayfa içi copy bloklarında aynı terim her yerde aynı karakter setiyle yazılacaktır.
+
+## 4) Yeni Özellik Ekleme Akışı (Definition of Done)
+
+Yeni bir özellikte kullanıcıya görünen metin eklendi mi? Aşağıdaki sıra zorunludur:
 
 1. Source English metni kodda uygula.
 2. Backend ise `_()` wrapper ekle.
-3. Frontend ise i18n helper uzerinden kullan.
-4. Ceviri kaynaklarini guncelle:
+3. Frontend ise i18n helper üzerinden kullan.
+4. Çeviri kaynaklarını güncelle:
    - `en.csv`
    - `tr.csv`
    - gerekiyorsa `generated/translations.js`
-5. Hedefli testleri calistir (unit + ilgili page testleri).
+5. Hedefli testleri çalıştır (unit + ilgili page testleri).
 6. Frontend build al.
-7. Frappe cache/build adimlarini calistir.
+7. Frappe cache/build adımlarını çalıştır.
 8. TR ve EN modunda smoke kontrol yap.
 
-Bu 8 adim tamamlanmadan PR merge edilmez.
+Bu 8 adım tamamlanmadan PR merge edilmez.
 
-## 5) Guvenli Build ve Cache Akisi
+## 5) Güvenli Build ve Cache Akışı
 
 Kritik operasyon notu:
 
-- `bench --site at.localhost build-message-files` komutu, elle eklenmis satirlari yeniden yazip silebilir.
-- Elle CSV duzenlemesi yapilan PR'larda varsayilan guvenli akis:
-  1. CSV degisikliklerini commit et.
+- `bench --site at.localhost build-message-files` komutu, elle eklenmiş satırları yeniden yazıp silebilir.
+- Elle CSV düzenlemesi yapılan PR'larda varsayılan güvenli akış:
+  1. CSV değişikliklerini commit et.
   2. `bench --site at.localhost clear-cache`
   3. `bench build --app acentem_takipte`
 
-Sadece zorunlu oldugunda ve diff kontrolu yapilarak `build-message-files` calistirilir.
+Sadece zorunlu olduğunda ve diff kontrolü yapılarak `build-message-files` çalıştırılır.
 
 ## 6) PR Kontrol Listesi (Copy/Paste)
 
-- [ ] Yeni gorunen tum metinler source English
-- [ ] Backend mesajlari `_()` ile sarildi
-- [ ] Frontend metinleri i18n helper uzerinden geciyor
+- [ ] Yeni görünen tüm metinler source English
+- [ ] Backend mesajları `_()` ile sarıldı
+- [ ] Frontend metinleri i18n helper üzerinden geçiyor
 - [ ] `en.csv` ve `tr.csv` senkron
-- [ ] Gerekli yeni key'ler `frontend/src/generated/translations.js` icine eklendi
-- [ ] Sayfa ici `copy.tr/en` bloklari birlikte guncellendi (varsa)
-- [ ] Unit testler gecti
-- [ ] `npm run build` basarili
-- [ ] Frappe cache/build adimlari calisti
-- [ ] TR/EN smoke kontrol tamamlandi
+- [ ] Türkçe karşılıklarda karakter doğruluğu kontrol edildi (`i, İ, ı, ş, ü, ö, ğ, ç`)
+- [ ] Gerekli yeni key'ler `frontend/src/generated/translations.js` içine eklendi
+- [ ] Sayfa içi `copy.tr/en` blokları birlikte güncellendi (varsa)
+- [ ] Unit testler geçti
+- [ ] `npm run build` başarılı
+- [ ] Frappe cache/build adımları çalıştı
+- [ ] TR/EN smoke kontrol tamamlandı
 
-## 7) Terim Sozlugu (Tutarlilik)
+## 7) Terim Sözlüğü (Tutarlılık)
 
-- Policy -> Police
+- Policy -> Poliçe
 - Endorsement -> Zeyil
 - Installment -> Taksit
 - Renewal -> Yenileme
-- Gross Premium -> Brut Prim
+- Gross Premium -> Brüt Prim
 - Net Premium -> Net Prim
 - Due Date -> Vade Tarihi
-- Task -> Gorev
-- Reminder -> Hatirlatici
+- Task -> Görev
+- Reminder -> Hatırlatıcı
 - Claim -> Hasar
 - Offer -> Teklif
 
-Not: Yeni terim gerekiyorsa once bu bolume eklenir, sonra kod/CSV guncellenir.
+Not: Yeni terim gerekiyorsa önce bu bölüme eklenir, sonra kod/CSV güncellenir.
 
-## 8) Hata Siniflandirma ve Oncelik
+## 8) Hata Sınıflandırma ve Öncelik
 
-- P0: Kullaniciya Turkish hardcoded metin sizmasi
+- P0: Kullanıcıya Turkish hardcoded metin sızması
 - P0: EN modunda TR text bleed
-- P1: Eksik TR ceviri (EN fallback gorunmesi)
-- P1: Ayni source icin tutarsiz TR karsilik
-- P2: Testte ama runtime'da gorunmeyen ceviri bosluklari
+- P1: Eksik TR çeviri (EN fallback görünmesi)
+- P1: Aynı source için tutarsız TR karşılık
+- P2: Testte ama runtime'da görünmeyen çeviri boşlukları
 
-P0/P1 bulgulari ayni sprintte kapatilir.
+P0/P1 bulguları aynı sprintte kapatılır.
 
-## 9) Onerilen Komut Seti
+## 9) Önerilen Komut Seti
 
 Frontend:
 
@@ -133,7 +143,7 @@ Opsiyonel (dikkatli):
 
 - `bench --site at.localhost build-message-files`
 
-## 10) Rehberin Guncel Tutulmasi
+## 10) Rehberin Güncel Tutulması
 
-- Yeni bir pattern eklendiginde (ornegin yeni locale helper, yeni runtime sozluk kaynagi), bu rehber ayni PR'da guncellenir.
-- Bu dosya standart referanstir; plan dokumanlari gecici olabilir, bu rehber kalici kural setidir.
+- Yeni bir pattern eklendiğinde (örneğin yeni locale helper, yeni runtime sözlük kaynağı), bu rehber aynı PR'da güncellenir.
+- Bu dosya standart referanstır; plan dokümanları geçici olabilir, bu rehber kalıcı kural setidir.

@@ -1,7 +1,13 @@
 import { translateText } from "@/utils/i18n";
 
 function i18nLabel(en) {
-  return (locale) => translateText(en, locale || "en");
+  return (context) => {
+    const locale =
+      typeof context === "string"
+        ? context
+        : context?.locale;
+    return translateText(en, locale || "en");
+  };
 }
 
 function option(value, label) {
@@ -1354,6 +1360,9 @@ export function buildQuickCreateDraft(config, overrides = {}) {
 export function getLocalizedText(value, locale = "en") {
   if (value == null) return "";
   if (typeof value === "string") return translateText(value, locale);
+  if (typeof value === "function") {
+    return value(locale);
+  }
   if (typeof value === "object") return value[locale] || value.en || value.tr || "";
   return String(value);
 }

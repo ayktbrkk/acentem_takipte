@@ -1,6 +1,7 @@
 import { computed, reactive, ref } from "vue";
 
 import { columnLabels } from "./reportsConfig";
+import { translateText } from "@/utils/i18n";
 
 function isDateLikeValue(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -16,6 +17,23 @@ export function useReportsTableData({
   branchScopeLabel,
   t,
 }) {
+  const translatableCategoricalColumns = new Set([
+    "status",
+    "claim_status",
+    "payment_status",
+    "mismatch_type",
+    "resolution_action",
+    "entry_type",
+    "source_doctype",
+    "reference_doctype",
+    "task_type",
+    "priority",
+    "channel",
+    "direction",
+    "claim_type",
+    "purpose",
+  ]);
+
   const visibleColumnKeys = ref([]);
   const pendingVisibleColumnKeys = ref([]);
   const sortState = reactive({
@@ -310,6 +328,16 @@ export function useReportsTableData({
     }
 
     if (typeof value === "string") {
+      const lowerColumn = String(column || "").toLowerCase();
+      const shouldTranslateCategory =
+        translatableCategoricalColumns.has(lowerColumn)
+        || lowerColumn.endsWith("_status")
+        || lowerColumn.endsWith("_type")
+        || lowerColumn.endsWith("_doctype");
+      if (shouldTranslateCategory) {
+        return translateText(value, activeLocale.value || "en");
+      }
+
       const numeric = Number(value);
       const numericColumns = new Set([
         "gross_premium",
