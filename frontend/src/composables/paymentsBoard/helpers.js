@@ -1,5 +1,12 @@
 import { mutedFact, pushMutedFactIf, subtleFact } from "../../utils/factItems";
 
+function normalizePaymentOrderBy(value) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^modified\s+(asc|desc)$/i);
+  if (match) return `\`tabAT Payment\`.modified ${match[1].toLowerCase()}`;
+  return raw || "`tabAT Payment`.modified desc";
+}
+
 export function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -108,13 +115,21 @@ export function buildPaymentListParams({ filters, officeBranch }) {
       "payment_date",
       "due_date",
       "customer",
+      "customer.full_name as customer_full_name",
+      "customer.customer_type as customer_customer_type",
+      "customer.masked_tax_id as customer_masked_tax_id",
+      "customer.birth_date as customer_birth_date",
       "policy",
+      "policy.policy_no as policy_no",
+      "policy.policy_no as carrier_policy_no",
+      "policy.insurance_company as insurance_company",
+      "policy.branch as branch",
       "reference_no",
       "installment_count",
       "office_branch",
       "sales_entity",
     ],
-    order_by: filters.sort || "modified desc",
+    order_by: normalizePaymentOrderBy(filters.sort),
     limit_page_length: Number(filters.limit) || 24,
   };
   if (filters.direction) {
@@ -151,7 +166,10 @@ export function paymentIdentityFacts(t, payment) {
 }
 
 export function paymentDetailFacts(t, payment, installmentSummary) {
-  const items = [mutedFact("date", t("date"), payment?.payment_date || "-"), mutedFact("customer", t("customer"), payment?.customer || "-")];
+  const items = [
+    mutedFact("date", t("date"), payment?.payment_date || "-"),
+    mutedFact("customer", t("customer"), payment?.customer_label || payment?.customer_full_name || payment?.customer_name || payment?.customer || "-"),
+  ];
   pushMutedFactIf(items, Boolean(payment?.policy), "policy", t("policy"), payment?.policy);
   const installmentCount = Number(installmentSummary?.total || payment?.installment_count || 0);
   pushMutedFactIf(items, installmentCount > 1, "installments", t("installments"), `${installmentCount}`);

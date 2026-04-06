@@ -8,6 +8,13 @@ function buildOfficeBranchLookupFilters(branchStore) {
   return officeBranch ? { office_branch: officeBranch } : {};
 }
 
+function normalizePolicyOrderBy(value) {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^modified\s+(asc|desc)$/i);
+  if (match) return `\`tabAT Policy\`.modified ${match[1].toLowerCase()}`;
+  return raw || "`tabAT Policy`.modified desc";
+}
+
 export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pagination }) {
   const policyResource = createResource({
     url: "frappe.client.get_list",
@@ -85,9 +92,16 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
         "name",
         "policy_no",
         "customer",
+        "customer.full_name as customer_full_name",
+        "customer.customer_type as customer_customer_type",
+        "customer.masked_tax_id as customer_masked_tax_id",
+        "customer.birth_date as customer_birth_date",
         "insurance_company",
+        "branch",
         "status",
         "currency",
+        "issue_date",
+        "start_date",
         "end_date",
         "gross_premium",
         "commission_amount",
@@ -96,7 +110,7 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
       ],
       filters: payload.filters,
       ...(payload.or_filters ? { or_filters: payload.or_filters } : {}),
-      order_by: filters.sort,
+      order_by: normalizePolicyOrderBy(filters.sort),
       limit_start: (pagination.page - 1) * pagination.pageLength,
       limit_page_length: pagination.pageLength,
     });
@@ -107,7 +121,7 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
     return withOfficeBranchFilter({
       filters: payload.filters,
       ...(payload.or_filters ? { or_filters: payload.or_filters } : {}),
-      order_by: filters.sort,
+      order_by: normalizePolicyOrderBy(filters.sort),
     });
   }
 

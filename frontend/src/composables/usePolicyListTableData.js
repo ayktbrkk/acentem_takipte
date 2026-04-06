@@ -28,6 +28,11 @@ export function usePolicyListTableData({
     unref(rows).map((row) => ({
       ...row,
       name: row.policy_no || row.name,
+      carrier_policy_no: row.policy_no || "-",
+      customer_label: row.customer_full_name || row.customer_name || row.customer || "-",
+      customer_type_label: row.customer_customer_type || "-",
+      customer_tax_id: row.customer_masked_tax_id || "-",
+      customer_birth_date: row.customer_birth_date || null,
       branch: row.branch || "-",
       remaining_days: computeRemainingDays(row.end_date),
     }))
@@ -40,7 +45,7 @@ export function usePolicyListTableData({
     return policyListMappedRows.value.filter((row) => {
       const matchesQuery =
         !q ||
-        [row.name, row.customer, row.branch, row.status]
+        [row.name, row.carrier_policy_no, row.customer_label, row.customer, row.branch, row.status]
           .map((value) => String(value || "").toLocaleLowerCase(unref(localeCode)))
           .some((value) => value.includes(q));
 

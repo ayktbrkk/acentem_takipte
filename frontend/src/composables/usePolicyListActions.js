@@ -3,13 +3,15 @@ import { computed } from "vue";
 import { mutedFact, subtleFact } from "../utils/factItems";
 
 export function usePolicyListActions({ router, localeCode, t }) {
+  const customerLabel = (row) => row?.customer_full_name || row?.customer_name || row?.customer || "-";
+
   const policyIdentityFacts = (row) => [
     subtleFact("record", t("recordNo"), row?.name || "-"),
     subtleFact("policyNo", t("carrierPolicyNo"), row?.policy_no || "-"),
   ];
 
   const policyDetailsFacts = (row) => [
-    mutedFact("customer", t("colCustomer"), row?.customer || "-"),
+    mutedFact("customer", t("colCustomer"), customerLabel(row)),
     mutedFact("company", t("colCompany"), row?.insurance_company || "-"),
     mutedFact("endDate", t("colEndDate"), formatDate(row?.end_date)),
   ];

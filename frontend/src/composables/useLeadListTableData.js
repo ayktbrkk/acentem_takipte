@@ -102,6 +102,11 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
     rows.value.map((row) => ({
       ...row,
       name: row.name,
+      customer_type_label: row.customer_customer_type || "-",
+      customer_tax_id: row.customer_masked_tax_id || "-",
+      customer_label: row.customer_full_name || row.customer_name || row.customer || "-",
+      customer_birth_date: row.customer_birth_date || null,
+      issue_date: row.creation || null,
       customer: row.customer || "-",
       branch: row.branch || "-",
       status: row.status || "Draft",
@@ -180,12 +185,17 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
   ]);
   const leadListColumns = [
     { key: "name", label: "Fırsat No", width: "160px", type: "mono" },
-    { key: "customer", label: "Müşteri", width: "220px" },
+    { key: "insurance_company", label: "Sigorta Şirketi", width: "180px" },
     { key: "branch", label: "Branş", width: "160px" },
-    { key: "estimated_gross_premium", label: "Tahmini Brüt Prim", width: "120px", type: "amount", align: "right" },
     { key: "status", label: "Durum", width: "100px", type: "status" },
+    { key: "customer_type_label", label: "Müşteri Türü", width: "130px" },
+    { key: "customer_tax_id", label: "TC/VNO", width: "140px", type: "mono" },
+    { key: "customer_label", label: "Müşteri Ad Soyad", width: "220px" },
+    { key: "customer_birth_date", label: "Doğum Tarihi", width: "120px", type: "date" },
+    { key: "issue_date", label: "Tanzim Tarihi", width: "120px", type: "date" },
     { key: "stale_state", label: "Takip Durumu", width: "120px", type: "status" },
     { key: "conversion_state", label: "Dönüşüm", width: "140px", type: "status" },
+    { key: "estimated_gross_premium", label: "Tahmini Brüt Prim", width: "140px", type: "amount", align: "right" },
   ];
 
   return {

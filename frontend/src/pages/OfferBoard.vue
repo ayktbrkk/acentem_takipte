@@ -747,12 +747,17 @@ const {
 
 const offerListColumns = [
   { key: "name", label: "Teklif No", width: "160px", type: "mono" },
-  { key: "customer", label: "Müşteri", width: "220px" },
   { key: "insurance_company", label: "Sigorta Şirketi", width: "200px" },
+  { key: "branch", label: "Branş", width: "150px" },
   { key: "status", label: "Durum", width: "120px", type: "status" },
-  { key: "gross_premium", label: "Brüt Prim", width: "120px", type: "amount", align: "right" },
+  { key: "customer_type_label", label: "Müşteri Türü", width: "130px" },
+  { key: "customer_tax_id", label: "TC/VNO", width: "140px", type: "mono" },
+  { key: "customer_label", label: "Müşteri Ad Soyad", width: "220px" },
+  { key: "customer_birth_date", label: "Doğum Tarihi", width: "120px", type: "date" },
+  { key: "valid_until", label: "Geçerlilik Tarihi", width: "120px", type: "date" },
   { key: "remaining_days", label: "Kalan Gün", width: "100px", type: "urgency", align: "right" },
-  { key: "valid_until", label: "Geçerlilik", width: "120px", type: "date" },
+  { key: "gross_premium", label: "Brüt Prim", width: "120px", type: "amount", align: "right" },
+  { key: "commission_amount", label: "Komisyon", width: "120px", type: "amount", align: "right" },
 ];
 
 function onOfferListFilterBarChange({ key, value }) {

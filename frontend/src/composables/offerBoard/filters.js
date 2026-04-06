@@ -11,7 +11,7 @@ function buildOfferListOrderBy(offerListFilters) {
   if (offerListFilters.sort === "valid_until_asc") return "valid_until asc";
   if (offerListFilters.sort === "valid_until_desc") return "valid_until desc";
   if (offerListFilters.sort === "gross_premium_desc") return "gross_premium desc";
-  return "modified desc";
+  return "`tabAT Offer`.modified desc";
 }
 
 function buildOfferFilterPayload(offerListFilters, branchStore) {
@@ -199,7 +199,12 @@ export function useOfferBoardFilters({
       fields: [
         "name",
         "customer",
+        "customer.full_name as customer_full_name",
+        "customer.customer_type as customer_customer_type",
+        "customer.masked_tax_id as customer_masked_tax_id",
+        "customer.birth_date as customer_birth_date",
         "insurance_company",
+        "branch",
         "status",
         "currency",
         "offer_date",
@@ -224,7 +229,12 @@ export function useOfferBoardFilters({
       fields: [
         "name",
         "customer",
+        "customer.full_name as customer_full_name",
+        "customer.customer_type as customer_customer_type",
+        "customer.masked_tax_id as customer_masked_tax_id",
+        "customer.birth_date as customer_birth_date",
         "insurance_company",
+        "branch",
         "status",
         "currency",
         "offer_date",

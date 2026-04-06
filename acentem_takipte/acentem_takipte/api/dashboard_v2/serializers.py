@@ -19,6 +19,7 @@ def attach_customer_portfolio_summary(rows: list[dict], summary_map: dict[str, d
     for row in rows:
         summary = summary_map.get(row.get("name"), {})
         row["active_policy_count"] = _to_int(summary.get("active_policy_count"))
+        row["active_renewal_count"] = _to_int(summary.get("active_renewal_count"))
         row["open_offer_count"] = _to_int(summary.get("open_offer_count"))
         row["active_policy_gross_premium"] = _to_float(summary.get("active_policy_gross_premium"))
         row["has_active_policy"] = bool(row["active_policy_count"])

@@ -1471,6 +1471,7 @@ def _customer_portfolio_summary_for_names(customer_names: list[str]) -> dict[str
     summary_map: dict[str, dict] = {
         name: {
             "active_policy_count": 0,
+            "active_renewal_count": 0,
             "open_offer_count": 0,
             "active_policy_gross_premium": 0.0,
         }
@@ -1523,6 +1524,25 @@ def _customer_portfolio_summary_for_names(customer_names: list[str]) -> dict[str
         if customer not in summary_map:
             continue
         summary_map[customer]["open_offer_count"] = cint(row.get("open_offer_count"))
+
+    renewal_rows = frappe.db.sql(
+        """
+        select
+            customer,
+            count(name) as active_renewal_count
+        from `tabAT Renewal Task`
+        where customer in %(customers)s
+            and status in ('Open', 'In Progress')
+        group by customer
+        """,
+        values=values,
+        as_dict=True,
+    )
+    for row in renewal_rows:
+        customer = row.get("customer")
+        if customer not in summary_map:
+            continue
+        summary_map[customer]["active_renewal_count"] = cint(row.get("active_renewal_count"))
 
     return summary_map
 

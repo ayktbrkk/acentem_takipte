@@ -4,7 +4,20 @@ import { buildPaymentSnapshot, formatCount, formatCurrency } from "./paymentsBoa
 
 export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSummaryByPayment, buildPaymentRowActions, paymentStore }) {
   const paymentSnapshots = computed(() =>
-    payments.value.map((payment) => buildPaymentSnapshot(payment, installmentSummaryByPayment.value.get(payment?.name), localeCode.value))
+    payments.value.map((payment) => {
+      const snapshot = buildPaymentSnapshot(payment, installmentSummaryByPayment.value.get(payment?.name), localeCode.value);
+      return {
+        ...snapshot,
+        policy_no_display: snapshot.policy_no || snapshot.policy || "-",
+        insurance_company_label: snapshot.insurance_company || "-",
+        carrier_policy_no: snapshot.carrier_policy_no || snapshot.policy_no || "-",
+        branch_label: snapshot.branch || "-",
+        customer_type_label: snapshot.customer_customer_type || "-",
+        customer_tax_id: snapshot.customer_masked_tax_id || "-",
+        customer_label: snapshot.customer_full_name || snapshot.customer_name || snapshot.customer || "-",
+        customer_birth_date: snapshot.customer_birth_date || null,
+      };
+    })
   );
 
   const paymentSummary = computed(() => {
@@ -20,13 +33,19 @@ export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSu
 
   const paymentListColumns = computed(() => [
     { key: "payment_no", label: t("paymentNo"), width: "180px", type: "mono" },
-    { key: "customer", label: t("customer"), width: "220px" },
-    { key: "policy", label: t("policy"), width: "160px", type: "mono" },
+    { key: "policy_no_display", label: t("policy"), width: "160px", type: "mono" },
+    { key: "insurance_company_label", label: t("insuranceCompany"), width: "180px" },
+    { key: "carrier_policy_no", label: t("carrierPolicyNo"), width: "180px", type: "mono" },
+    { key: "branch_label", label: t("branch"), width: "130px" },
     { key: "due_date_label", label: t("dueDate"), width: "135px", type: "date" },
+    { key: "status", label: t("status"), width: "130px", type: "status", domain: "payment" },
+    { key: "customer_type_label", label: t("customerType"), width: "130px" },
+    { key: "customer_tax_id", label: t("taxIdLabel"), width: "140px", type: "mono" },
+    { key: "customer_label", label: t("customerFullName"), width: "220px" },
+    { key: "customer_birth_date", label: t("birthDate"), width: "120px", type: "date" },
     { key: "amount_label", label: t("amount"), width: "140px", type: "amount", align: "right" },
     { key: "collected_amount_label", label: t("collected"), width: "150px", type: "amount", align: "right" },
     { key: "remaining_amount_label", label: t("remaining"), width: "130px", type: "amount", align: "right" },
-    { key: "status", label: t("status"), width: "130px", type: "status", domain: "payment" },
     { key: "_actions", label: t("actions"), width: "340px", type: "actions", align: "right" },
   ]);
 

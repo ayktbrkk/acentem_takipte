@@ -53,7 +53,15 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
         "name",
         "claim_no",
         "policy",
+        "policy.policy_no as policy_no",
+        "policy.policy_no as carrier_policy_no",
+        "policy.insurance_company as insurance_company",
+        "policy.branch as branch",
         "customer",
+        "customer.full_name as customer_full_name",
+        "customer.customer_type as customer_customer_type",
+        "customer.masked_tax_id as customer_masked_tax_id",
+        "customer.birth_date as customer_birth_date",
         "claim_status",
         "office_branch",
         "claim_type",
@@ -66,7 +74,7 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
         "approved_amount",
         "paid_amount",
       ],
-      order_by: "modified desc",
+      order_by: "`tabAT Claim`.modified desc",
       limit_page_length: Number(filters.limit) || 30,
     };
     if (filters.status) {
@@ -293,7 +301,7 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
       .filter((claim) => {
         const matchesQuery =
           !q ||
-          [claim.claim_no, claim.name, claim.policy, claim.customer]
+          [claim.claim_no, claim.name, claim.policy_no, claim.policy, claim.customer_full_name, claim.customer]
             .map((value) => String(value || "").toLocaleLowerCase(localeCode.value))
             .some((value) => value.includes(q));
         const matchesStatus = !claimsListLocalFilters.value.status || claim.claim_status === claimsListLocalFilters.value.status;
@@ -319,6 +327,14 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
   const claimsListRowsWithActions = computed(() =>
     claimsListFilteredRows.value.map((claim) => ({
       ...claim,
+      policy_no_display: claim.policy_no || claim.policy || "-",
+      insurance_company_label: claim.insurance_company || "-",
+      carrier_policy_no: claim.carrier_policy_no || claim.policy_no || "-",
+      branch_label: claim.branch || claim.office_branch || "-",
+      customer_type_label: claim.customer_customer_type || "-",
+      customer_tax_id: claim.customer_masked_tax_id || "-",
+      customer_birth_date: claim.customer_birth_date || null,
+      customer_label: claim.customer_full_name || claim.customer_name || claim.customer || "-",
       incident_date_label: formatDate(claim.incident_date),
       office_branch_label: claim.office_branch || "-",
       reserve_amount_label: formatCurrency(claim.estimated_amount || 0),

@@ -412,12 +412,20 @@ const {
 
 const policyListColumns = [
   { key: "name", label: "Poliçe No", width: "160px", type: "mono" },
-  { key: "customer", label: "Müşteri", width: "220px" },
+  { key: "insurance_company", label: "Sigorta Şirketi", width: "160px" },
   { key: "branch", label: "Branş", width: "160px" },
-  { key: "gross_premium", label: "Brüt Prim", width: "120px", type: "amount", align: "right" },
   { key: "status", label: "Durum", width: "100px", type: "status" },
-  { key: "remaining_days", label: "Kalan Gün", width: "100px", type: "urgency", align: "right" },
+  { key: "customer_type_label", label: "Müşteri Türü", width: "130px" },
+  { key: "customer_tax_id", label: "TC/VNO", width: "140px", type: "mono" },
+  { key: "customer_label", label: "Müşteri Ad Soyad", width: "220px" },
+  { key: "customer_birth_date", label: "Doğum Tarihi", width: "120px", type: "date" },
+  { key: "carrier_policy_no", label: "Sigorta Şirketi Poliçe No", width: "190px", type: "mono" },
+  { key: "issue_date", label: "Tanzim Tarihi", width: "120px", type: "date" },
+  { key: "start_date", label: "Başlangıç Tarihi", width: "120px", type: "date" },
   { key: "end_date", label: "Bitiş Tarihi", width: "120px", type: "date" },
+  { key: "remaining_days", label: "Kalan Gün", width: "100px", type: "urgency", align: "right" },
+  { key: "gross_premium", label: "Brüt Prim", width: "120px", type: "amount", align: "right" },
+  { key: "commission", label: "Komisyon", width: "110px", type: "amount", align: "right" },
 ];
 
 const policyListFilterConfig = computed(() => {

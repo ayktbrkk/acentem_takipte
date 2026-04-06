@@ -29,6 +29,10 @@ function formatDate(dateValue) {
   return `${year}-${month}-${day}`;
 }
 
+function customerDisplayLabel(row) {
+  return row?.customer_full_name || row?.customer_name || row?.customer || "-";
+}
+
 export function useOfferBoardState({
   t,
   activeLocale,
@@ -221,6 +225,10 @@ export function useOfferBoardState({
       const remainingDays = computeOfferRemainingDays(row.valid_until);
       return {
         ...row,
+        customer_label: customerDisplayLabel(row),
+        customer_type_label: row.customer_customer_type || "-",
+        customer_tax_id: row.customer_masked_tax_id || "-",
+        customer_birth_date: row.customer_birth_date || null,
         remaining_days: remainingDays,
         _urgency: remainingDays <= 7 ? "row-critical" : remainingDays <= 30 ? "row-warning" : "",
       };
@@ -315,7 +323,7 @@ export function useOfferBoardState({
       {
         key: "customer",
         label: t("customerName"),
-        value: offer?.customer || "-",
+        value: customerDisplayLabel(offer),
       },
       {
         key: "premium",
@@ -342,7 +350,7 @@ export function useOfferBoardState({
 
   function offerDetailsFacts(offer) {
     return [
-      { key: "customer", label: t("customerName"), value: offer?.customer || "-" },
+      { key: "customer", label: t("customerName"), value: customerDisplayLabel(offer) },
       { key: "company", label: t("company"), value: offer?.insurance_company || "-" },
       { key: "validUntil", label: t("validUntil"), value: formatDisplayDate(offer?.valid_until) },
     ];

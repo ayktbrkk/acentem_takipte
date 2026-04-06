@@ -515,10 +515,17 @@ const customerListLocalFilters = reactive({ consent_status: "", gender: "" });
 
 const customerListColumns = computed(() => [
   { key: "name", label: t("customerNo"), width: "150px", type: "mono" },
-  { key: "full_name", label: t("customerName"), width: "220px" },
-  { key: "mobile_no", label: t("phone"), width: "160px" },
-  { key: "email_id", label: t("email"), width: "220px" },
+  { key: "customer_type_label", label: "Müşteri Türü", width: "130px" },
+  { key: "customer_tax_id", label: "TC/VNO", width: "140px", type: "mono" },
+  { key: "full_name", label: "Müşteri Ad Soyad", width: "220px" },
+  { key: "customer_birth_date", label: "Doğum Tarihi", width: "120px", type: "date" },
+  { key: "phone_label", label: t("phone"), width: "160px" },
+  { key: "email_label", label: t("email"), width: "220px" },
   { key: "gender", label: t("gender"), width: "90px" },
+  { key: "occupation", label: t("occupation"), width: "140px" },
+  { key: "assigned_agent", label: t("assignedAgent"), width: "160px" },
+  { key: "active_policy_count", label: "Aktif Poliçe Sayısı", width: "130px", type: "amount", align: "right" },
+  { key: "active_renewal_count", label: "Aktif Yenileme Sayısı", width: "140px", type: "amount", align: "right" },
   { key: "consent_status", label: t("consentStatus"), width: "120px", type: "badge" },
 ]);
 
@@ -540,7 +547,7 @@ const customerListFilteredRows = computed(() => {
   return rows.value.filter((row) => {
     const matchesQuery =
       !q ||
-      [row.name, row.full_name, row.mobile_no, row.email_id]
+      [row.name, row.full_name, row.tax_id, row.masked_tax_id, row.phone, row.masked_phone, row.email, row.assigned_agent]
         .map((value) => String(value || "").toLocaleLowerCase(localeCode.value))
         .some((value) => value.includes(q));
     const matchesConsent =
@@ -552,6 +559,15 @@ const customerListFilteredRows = computed(() => {
     const consentColor = consentValue === "Granted" ? "green" : consentValue === "Revoked" ? "amber" : "gray";
     return {
       ...row,
+      customer_type_label: customerTypeLabel(row?.customer_type),
+      customer_tax_id: row?.tax_id || row?.masked_tax_id || "-",
+      customer_birth_date: row?.birth_date || null,
+      phone_label: row?.phone || row?.masked_phone || "-",
+      email_label: row?.email || "-",
+      occupation: row?.occupation || "-",
+      assigned_agent: row?.assigned_agent || "-",
+      active_policy_count: Number(row?.active_policy_count || 0),
+      active_renewal_count: Number(row?.active_renewal_count || 0),
       gender: genderLabel(row?.gender),
       consent_status: consentLabel(consentValue),
       consent_status_color: consentColor,
