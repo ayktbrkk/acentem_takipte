@@ -8,6 +8,7 @@ import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { openTabularExport } from "../utils/listExport";
 import { subtleFact } from "../utils/factItems";
 import { translateText } from "../utils/i18n";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -352,7 +353,7 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
     })),
     customers: asArray(resourceValue(claimQuickCustomerResource, [])).map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
     })),
   }));
 

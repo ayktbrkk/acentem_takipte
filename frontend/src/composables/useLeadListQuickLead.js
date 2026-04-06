@@ -9,6 +9,7 @@ import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { translateText } from "../utils/i18n";
 
 const QUICK_OPTION_LIMIT = 2000;
@@ -103,7 +104,7 @@ export function useLeadListQuickLead({ t, activeLocale, refreshLeadList, openLea
     })),
     customers: (Array.isArray(leadQuickCustomerResource.data) ? leadQuickCustomerResource.data : []).map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
     })),
   }));
   const quickLeadUi = computed(() => ({

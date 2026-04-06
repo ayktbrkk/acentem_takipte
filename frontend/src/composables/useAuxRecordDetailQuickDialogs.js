@@ -2,6 +2,7 @@ import { computed, getCurrentInstance, ref, unref, watch, onBeforeUnmount } from
 import { createResource } from "frappe-ui";
 
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { buildOfficeBranchOptions } from "../utils/officeBranchTree";
 
 function asArray(value) {
@@ -92,7 +93,7 @@ export function useAuxRecordDetailQuickDialogs({
   });
 
   const quickEditOptionsMap = computed(() => ({
-    customers: asArray(resourceValue(auxQuickCustomerResource, [])).map((row) => ({ value: row.name, label: row.full_name || row.name })),
+    customers: asArray(resourceValue(auxQuickCustomerResource, [])).map((row) => ({ value: row.name, label: getCustomerOptionLabel(row) })),
     policies: asArray(resourceValue(auxQuickPolicyResource, [])).map((row) => ({ value: row.name, label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}` })),
     insuranceCompanies: asArray(resourceValue(auxQuickInsuranceCompanyResource, [])).map((row) => ({ value: row.name, label: `${row.company_name || row.name}${row.company_code ? ` (${row.company_code})` : ""}` })),
     salesEntities: asArray(resourceValue(auxQuickSalesEntityResource, [])).map((row) => ({ value: row.name, label: `${row.full_name || row.name}${row.entity_type ? ` (${row.entity_type})` : ""}` })),

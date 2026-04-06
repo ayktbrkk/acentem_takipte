@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, reactive, ref, unref, watch } from "vue";
 
 import { deskActionsEnabled } from "../utils/deskActions";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreate";
 
@@ -118,7 +119,7 @@ export function useCustomerDetailActions({
   );
 
   const customer360QuickOptionsMap = computed(() => ({
-    customers: resourceListToOptions(auxQuickCustomerResource, (row) => row.full_name || row.name),
+    customers: resourceListToOptions(auxQuickCustomerResource, (row) => getCustomerOptionLabel(row)),
     policies: resourceListToOptions(auxQuickPolicyResource, (row) =>
       `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`
     ),

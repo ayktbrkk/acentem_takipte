@@ -2,6 +2,7 @@ import { computed, onBeforeUnmount, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import { normalizeCustomerType } from "../utils/customerIdentity";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { getLocalizedText } from "../config/quickCreateRegistry";
 
 export function useQuickCustomerPicker(props) {
@@ -31,7 +32,7 @@ export function useQuickCustomerPicker(props) {
   const customerOptions = computed(() =>
     searchRows.value.map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
       description: row.tax_id || "",
     })),
   );

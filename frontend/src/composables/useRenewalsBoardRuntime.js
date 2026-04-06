@@ -9,6 +9,7 @@ import { useRenewalStore } from "../stores/renewal";
 import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { openTabularExport } from "../utils/listExport";
 import { translateText } from "../utils/i18n";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -133,7 +134,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
     })),
     customers: renewalCustomerLookupRows.value.map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
     })),
   }));
   const quickRenewalEyebrow = computed(() => translateText("Quick Renewal", activeLocale.value));

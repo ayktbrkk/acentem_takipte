@@ -2,6 +2,7 @@ import { computed, ref } from "vue";
 import { createResource } from "frappe-ui";
 
 import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { translateText } from "../utils/i18n";
 
 const QUICK_OPTION_LIMIT = 200;
@@ -38,7 +39,7 @@ export function usePolicyDetailQuickDialogs({ props, policy, customer, activeLoc
   const policyQuickOptionsMap = computed(() => ({
     customers: asArray(resourceValue(policyQuickCustomerResource, [])).map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
     })),
     policies: asArray(resourceValue(policyQuickPolicyResource, [])).map((row) => ({
       value: row.name,

@@ -1,6 +1,7 @@
 import { computed, reactive, ref, unref } from "vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../../config/quickCreate";
 import { readFilterPresetKey, readFilterPresetList } from "../../utils/filterPresetState";
+import { getCustomerOptionLabel } from "../../utils/customerOptions";
 import { translateText } from "../../utils/i18n";
 
 function countOfferFilters(filters) {
@@ -111,7 +112,7 @@ export function useOfferBoardState({
   const customerSearchRows = computed(() => customerSearchResource.data || []);
   const customerOptions = computed(() =>
     customerSearchRows.value.map((row) => ({
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
       value: row.name,
       description: row.tax_id || "",
     }))

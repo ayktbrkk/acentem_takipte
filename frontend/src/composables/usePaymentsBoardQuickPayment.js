@@ -1,5 +1,6 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { translateText } from "../utils/i18n";
 
 function asArray(value) {
@@ -68,7 +69,7 @@ export function usePaymentsBoardQuickPayment({ t, branchStore, reloadPayments, l
   const paymentQuickOptionsMap = computed(() => ({
     customers: asArray(resourceValue(paymentQuickCustomerResource, [])).map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
     })),
     policies: asArray(resourceValue(paymentQuickPolicyResource, [])).map((row) => ({
       value: row.name,

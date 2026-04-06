@@ -1,3 +1,5 @@
+import { getCustomerOptionLabel } from "../../utils/customerOptions";
+
 export function isPermissionDeniedError(error) {
   const status = Number(
     error?.statusCode ??
@@ -63,7 +65,7 @@ export function buildCommunicationQuickOptionsMap({
     })),
     customers: asArray(customerRows).map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
     })),
     policies: asArray(policyRows).map((row) => ({
       value: row.name,

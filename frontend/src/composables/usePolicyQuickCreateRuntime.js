@@ -7,6 +7,7 @@ import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { translateText } from "../utils/i18n";
 
 const QUICK_OPTION_LIMIT = 2000;
@@ -109,7 +110,7 @@ export function usePolicyQuickCreateRuntime({
   const policyQuickCustomerOptions = computed(() =>
     asArray(resourceValue(policyQuickCustomerResource, [])).map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
       description: row.tax_id || "",
       customer_type: row.customer_type || "",
       tax_id: row.tax_id || "",

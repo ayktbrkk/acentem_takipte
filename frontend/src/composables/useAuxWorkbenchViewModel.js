@@ -2,6 +2,7 @@ import { computed, unref } from "vue";
 
 import { buildOfficeBranchOptions } from "../utils/officeBranchTree";
 import { openTabularExport } from "../utils/listExport";
+import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { translateText } from "@/utils/i18n";
 
 function humanizeField(field) {
@@ -501,7 +502,7 @@ export function useAuxWorkbenchViewModel({
   const auxQuickOptionsMap = computed(() => ({
     customers: asArray(auxQuickCustomerResource?.data?.value || auxQuickCustomerResource?.data).map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: getCustomerOptionLabel(row),
     })),
     policies: asArray(auxQuickPolicyResource?.data?.value || auxQuickPolicyResource?.data).map((row) => ({
       value: row.name,
