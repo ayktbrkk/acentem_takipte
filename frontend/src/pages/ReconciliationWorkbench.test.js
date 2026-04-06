@@ -321,10 +321,10 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(wrapper.text()).toContain("Beklemede");
     expect(wrapper.text()).toContain("Uyumsuzluk");
     expect(wrapper.text()).toContain("Toplam Tutar Farkı");
-    expect(wrapper.text()).toContain("Mutabakat No");
-    expect(wrapper.text()).toContain("Şirket");
-    expect(wrapper.text()).toContain("Toplam Poliçe");
-    expect(wrapper.text()).toContain("Şirket Bildirimi");
+    expect(wrapper.text()).toContain("MUTABAKAT NO");
+    expect(wrapper.text()).toContain("ŞİRKET");
+    expect(wrapper.text()).toContain("TOPLAM POLİÇE");
+    expect(wrapper.text()).toContain("ŞİRKET BİLDİRİMİ");
     expect(wrapper.text()).toContain("REC-001");
     expect(wrapper.text()).toContain("REC-002");
     expect(wrapper.html()).toContain("text-green-600");

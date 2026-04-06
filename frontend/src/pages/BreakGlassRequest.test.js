@@ -50,7 +50,7 @@ describe("BreakGlassRequest page", () => {
       },
     });
 
-    await wrapper.find("textarea").setValue("Yuksek onemli musteri kaydinda acil degisiklik gerekiyor.");
+    await wrapper.find("textarea").setValue("Yüksek önemli müşteri kaydında acil değişiklik gerekiyor.");
     await wrapper.find("form").trigger("submit.prevent");
 
     expect(frappeRequest).toHaveBeenCalledWith(

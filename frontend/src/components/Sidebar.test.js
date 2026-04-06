@@ -51,8 +51,8 @@ describe("Sidebar localization", () => {
       },
     });
 
-    expect(wrapper.text()).toContain("Menü");
-    expect(wrapper.text()).toContain("Genel Görünüm");
+    expect(wrapper.text()).toContain("MENÜ");
+    expect(wrapper.text()).toContain("GENEL GÖRÜNÜM");
     expect(wrapper.text()).toContain("Pano");
     expect(wrapper.text()).toContain("Fırsatlar");
     expect(wrapper.text()).toContain("Acil Erişim Talebi");
@@ -80,8 +80,8 @@ describe("Sidebar localization", () => {
       },
     });
 
-    expect(wrapper.text()).toContain("Menu");
-    expect(wrapper.text()).toContain("Overview");
+    expect(wrapper.text()).toContain("MENU");
+    expect(wrapper.text()).toContain("OVERVIEW");
     expect(wrapper.text()).toContain("Dashboard");
     expect(wrapper.text()).toContain("Leads");
     expect(wrapper.text()).toContain("Break-Glass Request");

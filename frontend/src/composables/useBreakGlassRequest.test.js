@@ -37,7 +37,7 @@ describe("useBreakGlassRequest", () => {
         })[key] || key,
     });
 
-    runtime.form.justification = "Yuksek onemli musteri kaydinda acil degisiklik gerekiyor.";
+    runtime.form.justification = "Yüksek önemli müşteri kaydında acil değişiklik gerekiyor.";
     await runtime.submitRequest();
     await nextTick();
 

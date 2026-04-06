@@ -222,8 +222,8 @@ describe("PaymentsBoard page store integration", () => {
     expect(wrapper.text()).toContain("Tahsilat Kaydet");
     expect(wrapper.text()).toContain("Dekont Ekle");
     expect(wrapper.text()).toContain("Hatırlatma Gönder");
-    expect(wrapper.text()).toContain("Ödeme No");
-    expect(wrapper.text()).toContain("Müşteri");
+    expect(wrapper.text()).toContain("ÖDEME NO");
+    expect(wrapper.text()).toContain("MÜŞTERİ");
 
     const inputs = wrapper.findAll(".input");
     await inputs[0].setValue("POL-001");
