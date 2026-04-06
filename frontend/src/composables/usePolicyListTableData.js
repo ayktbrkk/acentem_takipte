@@ -16,6 +16,18 @@ function computeRemainingDays(endDate) {
   return Math.ceil((target.getTime() - Date.now()) / 86400000);
 }
 
+function mapCustomerTypeLabel(value, localeCode) {
+  const normalized = String(value || "").trim().toLowerCase();
+  const isTr = String(localeCode || "").toLowerCase().startsWith("tr");
+  if (normalized === "corporate" || normalized === "kurumsal") {
+    return isTr ? "Kurumsal" : "Corporate";
+  }
+  if (normalized === "individual" || normalized === "bireysel") {
+    return isTr ? "Bireysel" : "Individual";
+  }
+  return "-";
+}
+
 export function usePolicyListTableData({
   rows,
   policyStore,
@@ -28,9 +40,9 @@ export function usePolicyListTableData({
     unref(rows).map((row) => ({
       ...row,
       name: row.policy_no || row.name,
-      carrier_policy_no: row.policy_no || "-",
+      carrier_policy_no: row.carrier_policy_no || row.policy_no || "-",
       customer_label: row.customer_full_name || row.customer_name || row.customer || "-",
-      customer_type_label: row.customer_customer_type || "-",
+      customer_type_label: mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode)),
       customer_tax_id: row.customer_masked_tax_id || "-",
       customer_birth_date: row.customer_birth_date || null,
       branch: row.branch || "-",

@@ -139,7 +139,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   }));
   const quickRenewalEyebrow = computed(() => translateText("Quick Renewal", activeLocale.value));
   const quickRenewalSuccessHandlers = {
-    renewal_task_list: async () => {
+    renewal_list: async () => {
       await reloadRenewals();
     },
   };

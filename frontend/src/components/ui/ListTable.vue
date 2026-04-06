@@ -65,7 +65,7 @@
             </span>
 
             <span v-else-if="col.type === 'date'" class="text-sm text-gray-600">
-              {{ row[col.key] ?? '-' }}
+              {{ formatDateCell(row[col.key]) }}
             </span>
 
             <div v-else-if="col.type === 'actions'" class="flex flex-wrap justify-end gap-2" @click.stop>
@@ -123,5 +123,16 @@ function urgencyClass(days) {
 function resolveCellClass(col, row) {
   if (typeof col?.cellClass === "function") return col.cellClass(row);
   return col?.cellClass || "";
+}
+
+function formatDateCell(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
 }
 </script>

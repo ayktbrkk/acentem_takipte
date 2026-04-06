@@ -287,7 +287,7 @@ const policyQuickRuntime = usePolicyListQuickPolicy({
   router,
   route,
   branchStore,
-  refreshPolicyList,
+  refreshPolicyList: () => refreshPolicyList(),
   openPolicyDetail: (policyName) => router.push({ name: "policy-detail", params: { name: policyName } }),
 });
 const {

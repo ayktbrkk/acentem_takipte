@@ -100,8 +100,13 @@ class ATCustomer(Document):
 
 def normalize_customer_type(value: str | None, tax_id: str | None = None) -> str:
     normalized = str(value or "").strip()
+    lowered = normalized.lower()
     if normalized in CUSTOMER_TYPES:
         return normalized
+    if lowered == "bireysel":
+        return "Individual"
+    if lowered == "kurumsal":
+        return "Corporate"
     return infer_customer_type_from_tax_id(tax_id)
 
 

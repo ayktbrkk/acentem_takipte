@@ -378,7 +378,7 @@ export const TRANSLATIONS_TR = {
   "Page": "Sayfa",
   "Previous": "Önceki",
   "Next": "Sonraki",
-  "All": "Tümü",
+  "All": "Hepsi",
   "Ascending": "Artan",
   "Descending": "Azalan",
   "Strengths": "Güçlü",

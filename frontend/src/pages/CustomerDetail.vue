@@ -133,6 +133,7 @@
                       :rows="field.rows || 3"
                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                       @input="setProfileField(field.model, $event.target.value)"
+                      @change="setProfileField(field.model, $event.target.value)"
                     />
                     <select
                       v-else-if="field.type === 'select'"
@@ -152,6 +153,7 @@
                       :disabled="field.disabled"
                       :type="field.type"
                       @input="setProfileField(field.model, $event.target.value)"
+                      @change="setProfileField(field.model, $event.target.value)"
                     />
                     <p v-if="field.model && profileFormErrors[field.model]" class="mt-1 qc-inline-error">
                       {{ profileFormErrors[field.model] }}
@@ -804,6 +806,8 @@ const copy = {
     validationFullNameRequired: "Ad Soyad zorunludur.",
     validationEmailInvalid: "Geçerli bir e-posta girin.",
     validationBirthDateFuture: "Doğum tarihi bugünden ileri olamaz.",
+    validationPhoneInvalid: "Geçerli bir cep telefonu girin.",
+    unassignedAgent: "Atanmadı",
     loading: "Yükleniyor...",
     fullName: "Ad Soyad",
     birthDate: "Doğum Tarihi",
@@ -992,6 +996,8 @@ const copy = {
     validationFullNameRequired: "Full Name is required.",
     validationEmailInvalid: "Enter a valid email address.",
     validationBirthDateFuture: "Birth Date cannot be in the future.",
+    validationPhoneInvalid: "Enter a valid mobile phone number.",
+    unassignedAgent: "Unassigned",
     loading: "Loading...",
     fullName: "Full Name",
     birthDate: "Birth Date",
@@ -1306,6 +1312,24 @@ const auxQuickPolicyResource = createResource({
   url: "frappe.client.get_list",
   auto: false,
 });
+const customerAgentResource = createResource({
+  url: "frappe.client.get_list",
+  auto: true,
+  params: {
+    doctype: "User",
+    fields: ["name", "full_name"],
+    filters: { enabled: 1, user_type: "System User" },
+    order_by: "full_name asc",
+    limit_page_length: 500,
+  },
+});
+const assignedAgentOptions = computed(() => [
+  { value: "", label: t("unassignedAgent") },
+  ...asArray(unref(customerAgentResource.data)).map((row) => ({
+    value: row.name,
+    label: row.full_name || row.name,
+  })),
+]);
 
 const customerDetailActions = useCustomerDetailActions({
   props,
@@ -1409,6 +1433,7 @@ const customerDetailViewData = useCustomerDetailViewData({
   stripHtml,
   describeValueBand,
   describeInsightSignal,
+  assignedAgentOptions,
 });
 
 const {

@@ -26,7 +26,13 @@ export function createCustomerDetailFormatters({ t, localeCode }) {
 
   function formatDate(value) {
     if (!value) return "-";
-    return new Intl.DateTimeFormat(localeCode.value).format(new Date(value));
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return String(value);
+    return new Intl.DateTimeFormat("tr-TR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(parsed);
   }
 
   function formatDateTime(value) {

@@ -20,7 +20,7 @@
       class="h-8 appearance-none rounded-md border border-gray-200 bg-white bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJtNSA2IDMgMyAzLTMiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[right_6px_center] bg-no-repeat px-2.5 pr-7 text-sm text-gray-700 transition-colors focus:border-brand-600 focus:outline-none"
       @change="$emit('filter-change', { key: filter.key, value: $event.target.value })"
     >
-      <option value="">{{ filter.label }}: {{ translateText('All', locale) }}</option>
+      <option value="">{{ filter.label }}: Hepsi</option>
       <option v-for="opt in filter.options" :key="opt.value" :value="opt.value">
         {{ opt.label }}
       </option>

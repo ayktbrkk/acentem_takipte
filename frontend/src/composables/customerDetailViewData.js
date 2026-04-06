@@ -65,6 +65,7 @@ export function useCustomerDetailViewData({
   stripHtml,
   describeValueBand,
   describeInsightSignal,
+  assignedAgentOptions,
 }) {
   const activePolicies = computed(() =>
     asArray(policies.value).filter((policy) => String(policy.status || "").toUpperCase() !== "IPT")
@@ -369,6 +370,20 @@ export function useCustomerDetailViewData({
     { value: "Granted", label: t("consentGranted") },
     { value: "Revoked", label: t("consentRevoked") },
   ]);
+  const assignedAgentLabelMap = computed(() => {
+    const map = new Map();
+    for (const option of asArray(assignedAgentOptions?.value || [])) {
+      const key = String(option?.value || "").trim();
+      if (!key) continue;
+      map.set(key, String(option?.label || key));
+    }
+    return map;
+  });
+  const assignedAgentDisplay = computed(() => {
+    const key = String(customer.value.assigned_agent || "").trim();
+    if (!key) return "-";
+    return assignedAgentLabelMap.value.get(key) || key;
+  });
   const profileViewFields = computed(() => [
     { key: "full_name", label: t("fullName"), value: customer.value.full_name || "-", variant: "lg", span: 2 },
     { key: "birth_date", label: t("birthDate"), value: isCorporateCustomer.value ? "-" : formatDate(customer.value.birth_date), variant: "default" },
@@ -378,7 +393,7 @@ export function useCustomerDetailViewData({
     { key: "mobile_phone", label: t("mobilePhone"), value: customerPhoneDisplay.value, variant: "default" },
     { key: "email", label: t("email"), value: customer.value.email || "-", variant: "default" },
     { key: "occupation", label: t("occupation"), value: isCorporateCustomer.value ? "-" : customer.value.occupation || "-", variant: "default" },
-    { key: "assigned_agent", label: t("assignedAgent"), value: customer.value.assigned_agent || "-", variant: "default" },
+    { key: "assigned_agent", label: t("assignedAgent"), value: assignedAgentDisplay.value, variant: "default" },
     { key: "consent_status", label: t("consentStatus"), value: consentStatusLabel.value, variant: "default" },
     { key: "customer_folder", label: t("customerFolder"), value: customer.value.customer_folder || "-", variant: "default" },
   ]);
@@ -388,10 +403,16 @@ export function useCustomerDetailViewData({
     { key: "gender", label: t("gender"), model: "gender", type: "select", options: genderOptions.value, disabled: isCorporateCustomer.value },
     { key: "marital_status", label: t("maritalStatus"), model: "marital_status", type: "select", options: maritalStatusOptions.value, disabled: isCorporateCustomer.value },
     { key: "address", label: t("address"), model: "address", type: "textarea", span: 2, rows: 3 },
-    { key: "mobile_phone", label: t("mobilePhone"), type: "static", value: customerPhoneDisplay.value },
+    { key: "mobile_phone", label: t("mobilePhone"), model: "phone", type: "text" },
     { key: "email", label: t("email"), model: "email", type: "email" },
     { key: "occupation", label: t("occupation"), model: "occupation", type: "text", disabled: isCorporateCustomer.value },
-    { key: "assigned_agent", label: t("assignedAgent"), type: "static", value: customer.value.assigned_agent || "-" },
+    {
+      key: "assigned_agent",
+      label: t("assignedAgent"),
+      model: "assigned_agent",
+      type: "select",
+      options: asArray(assignedAgentOptions?.value || []),
+    },
     { key: "consent_status", label: t("consentStatus"), model: "consent_status", type: "select", options: consentStatusOptions.value },
     { key: "customer_folder", label: t("customerFolder"), type: "static", value: customer.value.customer_folder || "-" },
   ]);

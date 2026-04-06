@@ -67,9 +67,11 @@ CUSTOMER_PROFILE_EDIT_FIELDS = {
     "gender",
     "marital_status",
     "occupation",
+    "phone",
     "email",
     "address",
     "consent_status",
+    "assigned_agent",
 }
 CUSTOMER_GENDER_OPTIONS = {"Unknown", "Male", "Female", "Other", ""}
 CUSTOMER_MARITAL_OPTIONS = {"Unknown", "Single", "Married", "Divorced", "Widowed", ""}
@@ -847,7 +849,7 @@ def update_customer_profile(name: str, values=None) -> dict:
         if fieldname not in payload:
             continue
         value = payload.get(fieldname)
-        if fieldname in {"full_name", "occupation", "email"}:
+        if fieldname in {"full_name", "occupation", "phone", "email"}:
             updates[fieldname] = str(value or "").strip() or None
         elif fieldname == "address":
             updates[fieldname] = str(value or "").strip() or None
@@ -868,6 +870,11 @@ def update_customer_profile(name: str, values=None) -> dict:
             if normalized not in CUSTOMER_CONSENT_OPTIONS:
                 frappe.throw(_("Invalid consent status value"))
             updates[fieldname] = normalized or "Unknown"
+        elif fieldname == "assigned_agent":
+            normalized = str(value or "").strip()
+            if normalized and not frappe.db.exists("User", normalized):
+                frappe.throw(_("Invalid assigned agent value"))
+            updates[fieldname] = normalized or None
 
     if "full_name" in updates and not updates.get("full_name"):
         frappe.throw(_("Full Name is required"))
@@ -893,9 +900,11 @@ def update_customer_profile(name: str, values=None) -> dict:
         "gender": doc.gender,
         "marital_status": doc.marital_status,
         "occupation": doc.occupation,
+        "phone": doc.phone,
         "email": doc.email,
         "address": doc.address,
         "consent_status": doc.consent_status,
+        "assigned_agent": doc.assigned_agent,
         "modified": doc.modified,
     }
 

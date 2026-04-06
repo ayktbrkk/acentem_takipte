@@ -13,7 +13,9 @@ export function useCommunicationCenterQuickDialogs({ filters, branchStore, activ
   };
 
   const callNoteSuccessHandlers = {
-    "call-notes-list": async () => {},
+    "call-notes-list": async () => {
+      await reloadSnapshot();
+    },
   };
 
   const reminderSuccessHandlers = {
@@ -23,11 +25,17 @@ export function useCommunicationCenterQuickDialogs({ filters, branchStore, activ
   };
 
   const segmentSuccessHandlers = {
-    "segments-list": async () => {},
+    "segments-list": async () => {
+      await runtime.reloadQuickCustomers();
+      await reloadSnapshot();
+    },
   };
 
   const campaignSuccessHandlers = {
-    "campaigns-list": async () => {},
+    "campaigns-list": async () => {
+      await runtime.reloadQuickCustomers();
+      await reloadSnapshot();
+    },
   };
 
   function buildQuickMessagePayload({ form, openAfter }) {

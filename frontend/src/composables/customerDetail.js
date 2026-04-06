@@ -69,6 +69,7 @@ export function useCustomerDetailActions({
   const profileFormErrors = reactive({
     full_name: "",
     birth_date: "",
+    phone: "",
     email: "",
   });
   const profileForm = reactive({
@@ -77,6 +78,8 @@ export function useCustomerDetailActions({
     gender: "Unknown",
     marital_status: "Unknown",
     occupation: "",
+    phone: "",
+    assigned_agent: "",
     email: "",
     address: "",
     consent_status: "Unknown",
@@ -178,7 +181,9 @@ export function useCustomerDetailActions({
 
   function normalizeCustomerType(value, identityNumber = "") {
     const normalized = String(value || "").trim().toLowerCase();
-    if (normalized === "corporate" || normalizeIdentityNumber(identityNumber).length > 10) return "Corporate";
+    if (normalized === "corporate" || normalized === "kurumsal") return "Corporate";
+    if (normalized === "individual" || normalized === "bireysel") return "Individual";
+    if (normalizeIdentityNumber(identityNumber).length === 10) return "Corporate";
     return "Individual";
   }
 
@@ -192,6 +197,7 @@ export function useCustomerDetailActions({
   function clearProfileFormErrors() {
     profileFormErrors.full_name = "";
     profileFormErrors.birth_date = "";
+    profileFormErrors.phone = "";
     profileFormErrors.email = "";
   }
 
@@ -217,6 +223,11 @@ export function useCustomerDetailActions({
       profileFormErrors.email = t("validationEmailInvalid");
       valid = false;
     }
+    const phone = String(profileForm.phone || "").trim();
+    if (phone && phone.length < 7) {
+      profileFormErrors.phone = t("validationPhoneInvalid");
+      valid = false;
+    }
     return valid;
   }
 
@@ -235,6 +246,8 @@ export function useCustomerDetailActions({
     profileForm.gender = isCorporateCustomer.value ? "Unknown" : String(customer.value.gender || "Unknown") || "Unknown";
     profileForm.marital_status = isCorporateCustomer.value ? "Unknown" : String(customer.value.marital_status || "Unknown") || "Unknown";
     profileForm.occupation = isCorporateCustomer.value ? "" : String(customer.value.occupation || "");
+    profileForm.phone = String(customer.value.phone || customer.value.masked_phone || "");
+    profileForm.assigned_agent = String(customer.value.assigned_agent || "");
     profileForm.email = String(customer.value.email || "");
     profileForm.address = String(customer.value.address || "");
     profileForm.consent_status = String(customer.value.consent_status || "Unknown") || "Unknown";
@@ -282,6 +295,8 @@ export function useCustomerDetailActions({
           gender: isCorporateCustomer.value ? "Unknown" : profileForm.gender || "Unknown",
           marital_status: isCorporateCustomer.value ? "Unknown" : profileForm.marital_status || "Unknown",
           occupation: isCorporateCustomer.value ? null : profileForm.occupation,
+          phone: profileForm.phone || null,
+          assigned_agent: profileForm.assigned_agent || null,
           email: profileForm.email,
           address: profileForm.address,
           consent_status: profileForm.consent_status || "Unknown",
@@ -296,6 +311,8 @@ export function useCustomerDetailActions({
           },
         });
       }
+      // Keep server as source of truth, but do not fail UX if refresh request is delayed.
+      await loadCustomer360().catch(() => {});
       profileEditMode.value = false;
       profileSaveMessage.value = t("saveProfileSuccess");
       syncProfileFormFromCustomer();
