@@ -8,6 +8,11 @@
 
 **Teknoloji Yığını:** Frappe Framework, Python, Vue 3, JavaScript, CSV tabanlı çeviri sözlükleri, bench, Vitest, Playwright.
 
+## Kalıcı Uygulama Rehberi
+
+- Yeni geliştirmelerde uygulanacak standartların tekil referansı:
+  - `docs/superpowers/guides/2026-04-06-tr-en-localization-implementation-guide.md`
+
 ---
 
 ## Mevcut Durum
