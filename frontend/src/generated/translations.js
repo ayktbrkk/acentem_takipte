@@ -700,6 +700,7 @@ export const TRANSLATIONS_TR = {
   "Edit Reminder": "Hatırlatıcıyı Düzenle",
   "Edit Task": "Görevi Düzenle",
   "Message": "Mesaj",
+  "Search in list...": "Listede ara...",
   "Next Follow Up": "Sonraki Takip",
   "No Answer": "Yanıt Yok",
   "None": "Yok",

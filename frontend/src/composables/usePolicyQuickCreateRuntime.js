@@ -270,7 +270,7 @@ export function usePolicyQuickCreateRuntime({
       valid = false;
     }
     for (const field of policyQuickFormFields.value) {
-      if (!isFieldRequired(field)) continue;
+      if (!isFieldRequired(field, quickPolicyForm, activeLocale.value)) continue;
       if (String(quickPolicyForm[field.name] ?? "").trim() === "") {
         quickPolicyFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
         valid = false;
@@ -419,7 +419,7 @@ export function usePolicyQuickCreateRuntime({
       }
       if (openAfter && policyName && typeof openPolicyDetail === "function") openPolicyDetail(policyName);
     } catch (error) {
-      quickPolicyError.value = error?.messages?.join(" ") || error?.message || quickCreateCommon.value.failed;
+      quickPolicyError.value = parsePolicySubmitError(error) || quickCreateCommon.value.failed;
     } finally {
       quickPolicyLoading.value = false;
     }
@@ -566,4 +566,40 @@ export function usePolicyQuickCreateRuntime({
     policyQuickCustomerResource,
     quickPolicyCreateResource,
   };
+}
+
+function isFieldRequired(field, model, locale = "en") {
+  const candidate = field?.required ?? field?.mandatory ?? field?.reqd;
+  if (typeof candidate === "function") {
+    return Boolean(
+      candidate({
+        field,
+        model,
+        locale,
+        text: (value) => getLocalizedText(value, locale),
+      })
+    );
+  }
+  return Boolean(candidate);
+}
+
+function parsePolicySubmitError(error) {
+  const direct = error?.message || error?.exc_type;
+  if (direct) return String(direct);
+  if (Array.isArray(error?.messages) && error.messages.length) {
+    return error.messages.map((entry) => String(entry || "").replace(/<[^>]*>/g, "").trim()).filter(Boolean).join(" ");
+  }
+
+  const serverMessage = error?._server_messages || error?.response?._server_messages || error?.response?.message;
+  if (!serverMessage) return "";
+
+  try {
+    const parsed = typeof serverMessage === "string" ? JSON.parse(serverMessage) : serverMessage;
+    if (Array.isArray(parsed) && parsed.length) {
+      return String(parsed[0]).replace(/<[^>]*>/g, "").trim();
+    }
+  } catch {
+    return String(serverMessage).replace(/<[^>]*>/g, "").trim();
+  }
+  return "";
 }

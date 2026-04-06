@@ -180,11 +180,17 @@ const props = defineProps({
   },
   searchPlaceholder: {
     type: [String, Object],
-    default: "Search the list or type a new customer name...",
+    default: () => ({
+      tr: "Listede ara veya yeni müşteri adı yaz...",
+      en: "Search the list or type a new customer name...",
+    }),
   },
   noResultsText: {
     type: [String, Object],
-    default: "No customers matched your search.",
+    default: () => ({
+      tr: "Aramanızla eşleşen müşteri bulunamadı.",
+      en: "No customers matched your search.",
+    }),
   },
 });
 
