@@ -96,6 +96,7 @@
       :claim-facts="claimFacts"
       :task-facts="taskFacts"
       :t="t"
+      :locale="activeLocale"
       :visible-quick-actions="visibleQuickActions"
     />
 
@@ -515,6 +516,9 @@ const copy = {
     statusAccepted: "Kabul Edildi",
     statusRejected: "Reddedildi",
     paymentDirectionInbound: "Tahsilat",
+    statusUnderReview: "İnceleniyor",
+    statusApproved: "Onaylı",
+    statusClosed: "Kapandı",
     paymentDirectionOutbound: "Ödeme",
     validationTaxNumberLength: "Vergi numarası 10 haneli olmalıdır.",
     validationTcLength: "TC kimlik numarası 11 haneli olmalıdır.",
@@ -781,6 +785,9 @@ const copy = {
     statusAccepted: "Accepted",
     statusRejected: "Rejected",
     paymentDirectionInbound: "Inbound",
+    statusUnderReview: "Under Review",
+    statusApproved: "Approved",
+    statusClosed: "Closed",
     paymentDirectionOutbound: "Outbound",
     validationTaxNumberLength: "Tax number must be 10 digits.",
     validationTcLength: "T.R. identity number must be 11 digits.",

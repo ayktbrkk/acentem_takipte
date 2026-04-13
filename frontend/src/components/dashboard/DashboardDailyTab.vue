@@ -7,15 +7,15 @@
         <div v-else class="space-y-3">
           <div class="grid grid-cols-3 gap-2">
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("followUpOverdue") }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ upperLabel(t("followUpOverdue")) }}</p>
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.overdue) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("followUpToday") }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ upperLabel(t("followUpToday")) }}</p>
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.due_today) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("followUpSoon") }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-sky-700">{{ upperLabel(t("followUpSoon")) }}</p>
               <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(followUpSummary.due_soon) }}</p>
             </div>
           </div>
@@ -51,15 +51,15 @@
         <div v-else class="space-y-3">
           <div class="grid grid-cols-3 gap-2">
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskOverdue") }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ upperLabel(t("taskOverdue")) }}</p>
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.overdue) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">{{ t("taskToday") }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ upperLabel(t("taskToday")) }}</p>
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">{{ t("taskSoon") }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-sky-700">{{ upperLabel(t("taskSoon")) }}</p>
               <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
             </div>
           </div>
@@ -68,7 +68,7 @@
               v-for="task in pagedPreviewItems(priorityTaskItems, 'dailyTasks')"
               :key="task.name"
               :title="task.task_title || task.name || '-'"
-              :description="task.status || '-'"
+              :description="localizeStatus(task.status)"
               description-class="mt-2 text-xs font-semibold text-slate-600"
               clickable
               @click="openTaskItem(task)"
@@ -134,7 +134,7 @@
             v-for="activity in pagedPreviewItems(recentActivityItems, 'dailyActivities')"
             :key="activity.name"
             :title="activity.activity_title || activity.activity_type || activity.name || '-'"
-            :description="activity.status || '-'"
+              :description="localizeStatus(activity.status)"
             description-class="mt-2 text-xs font-semibold text-slate-600"
             clickable
             @click="openActivityItem(activity)"
@@ -234,7 +234,9 @@ import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 import DashboardQuickActions from "./DashboardQuickActions.vue";
 
-defineProps({
+import { translateText } from "@/generated/translations";
+
+const props = defineProps({
   activityFacts: { type: Function, required: true },
   dashboardLoading: { type: Boolean, required: true },
   displayRecentPolicies: { type: Array, required: true },
@@ -273,6 +275,18 @@ defineProps({
   claimFacts: { type: Function, required: true },
   taskFacts: { type: Function, required: true },
   t: { type: Function, required: true },
+  locale: { type: String, default: "en" },
   visibleQuickActions: { type: Array, required: true },
 });
+
+function upperLabel(text) {
+  const loc = String(props.locale || "en").toLowerCase();
+  return loc.startsWith("tr") ? String(text ?? "").toLocaleUpperCase("tr-TR") : String(text ?? "").toUpperCase();
+}
+
+function localizeStatus(rawStatus) {
+  const s = String(rawStatus || "").trim();
+  if (!s || s === "-") return s || "-";
+  return translateText(s, props.locale) || s;
+}
 </script>

@@ -397,23 +397,23 @@ describe("Dashboard page store integration", () => {
 
     let text = wrapper.text();
     expect(text).toContain("Fırsat Süreci");
-    expect(text).toContain("Toplam Brüt Prim");
+    expect(text).toContain("TOPLAM BRÜT PRİM");
     expect(text).not.toContain("Hazır Teklifler:");
 
     await wrapper.findAll(".at-tab-chip")[2].trigger("click");
     await nextTick();
 
     text = wrapper.text();
-    expect(text).toContain("Bugün Vadesi Gelen Tahsilat");
-    expect(text).toContain("Gecikmiş Tutar");
+    expect(text).toContain("BUGÜN VADESİ GELEN TAHSİLAT");
+    expect(text).toContain("GECİKMİŞ TUTAR");
     expect(text).not.toContain("(TRY)");
 
     await wrapper.findAll(".at-tab-chip")[3].trigger("click");
     await nextTick();
 
     text = wrapper.text();
-    expect(text).toContain("Bekleyen Yenileme");
-    expect(text).toContain("Geciken Yenilemeler");
+    expect(text).toContain("BEKLEYEN YENİLEME");
+    expect(text).toContain("GECİKEN YENİLEMELER");
     expect(text).toContain("Yenileme Durum Özeti");
     expect(text).toContain("Dönüşüm / Ödeme Sonucu");
   });

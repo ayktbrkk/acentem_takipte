@@ -78,15 +78,8 @@ export function useDashboardFacts({
   convertedOfferCount,
 }) {
   function buildStaticQuickStatCard({ key, title, value, icon, hint = t("todaySnapshot") }) {
-    return {
-      key,
-      title,
-      value,
-      trendText: "",
-      trendClass: "text-slate-500",
-      trendHint: hint,
-      icon,
-    };
+    const card = buildQuickStatCard({ key, title, value, icon, trendHint: hint });
+    return { ...card, trendText: "" };
   }
 
   const quickStatCards = computed(() => [
@@ -505,7 +498,7 @@ export function useDashboardFacts({
   function followUpFacts(item) {
     return [
       { label: t("customer"), value: item?.customer || "-" },
-      { label: t("status"), value: item?.status || "-" },
+      { label: t("status"), value: translatedStatus(item?.status) },
       { label: t("followUpDate"), value: formatDate(item?.follow_up_on) },
       ...(item?.assigned_to ? [{ label: t("followUpAssignee"), value: item.assigned_to }] : []),
     ];
@@ -531,7 +524,7 @@ export function useDashboardFacts({
     return [
       { label: t("customer"), value: claim?.customer || "-" },
       { label: t("policyLabel"), value: claim?.policy || "-" },
-      { label: t("status"), value: claim?.claim_status || "-" },
+      { label: t("status"), value: translatedStatus(claim?.claim_status) },
     ];
   }
 
@@ -543,6 +536,27 @@ export function useDashboardFacts({
       { label: t("taskAssignee"), value: reminder?.assigned_to || "-" },
       { label: t("date"), value: formatDate(reminder?.remind_at) },
     ].filter((item) => item.value && item.value !== "-");
+  }
+
+  function translatedStatus(rawStatus) {
+    const s = String(rawStatus || "").trim();
+    if (!s || s === "-") return s || "-";
+    const map = {
+      Open: t("open"),
+      "In Progress": t("statusInProgress"),
+      Completed: t("statusCompleted"),
+      Done: t("statusCompleted"),
+      Cancelled: t("statusCancelled"),
+      "Under Review": t("statusUnderReview"),
+      Approved: t("statusApproved"),
+      Paid: t("statusPaid"),
+      Draft: t("draft"),
+      Sent: t("statusSent"),
+      Accepted: t("statusAccepted"),
+      Rejected: t("statusRejected"),
+      Closed: t("statusClosed"),
+    };
+    return Object.prototype.hasOwnProperty.call(map, s) ? map[s] : s;
   }
 
   function paymentDirectionLabel(direction) {
@@ -600,6 +614,7 @@ export function useDashboardFacts({
     renewalTaskFactsDetailed,
     salesQuickStatCards,
     taskFacts,
+    translatedStatus,
     visibleQuickStatCards,
   };
 }
