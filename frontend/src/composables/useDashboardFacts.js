@@ -4,6 +4,18 @@ function normalizeText(value) {
   return String(value ?? "").trim();
 }
 
+function customerDisplay(row) {
+  return (
+    normalizeText(row?.customer_full_name) ||
+    normalizeText(row?.customer_name) ||
+    normalizeText(row?.customer_label) ||
+    normalizeText(row?.party_name) ||
+    normalizeText(row?.full_name) ||
+    normalizeText(row?.customer) ||
+    "-"
+  );
+}
+
 function buildOutcomeRows(t, retention) {
   const rows = [
     {
@@ -375,7 +387,7 @@ export function useDashboardFacts({
   const collectionRiskRows = computed(() => {
     const grouped = new Map();
     const pushPayment = (payment, bucket) => {
-      const customer = normalizeText(payment?.customer);
+      const customer = customerDisplay(payment);
       const policy = normalizeText(payment?.policy);
       const key = `${customer}::${policy}`;
       const current = grouped.get(key) || {
@@ -455,7 +467,7 @@ export function useDashboardFacts({
       {
         key: "customer",
         label: t("customer"),
-        value: payment?.customer || "-",
+        value: customerDisplay(payment),
         valueClass: "text-xs text-slate-500",
       },
       {
@@ -497,7 +509,7 @@ export function useDashboardFacts({
 
   function followUpFacts(item) {
     return [
-      { label: t("customer"), value: item?.customer || "-" },
+      { label: t("customer"), value: customerDisplay(item) },
       { label: t("status"), value: translatedStatus(item?.status) },
       { label: t("followUpDate"), value: formatDate(item?.follow_up_on) },
       ...(item?.assigned_to ? [{ label: t("followUpAssignee"), value: item.assigned_to }] : []),
@@ -522,7 +534,7 @@ export function useDashboardFacts({
 
   function claimFacts(claim) {
     return [
-      { label: t("customer"), value: claim?.customer || "-" },
+      { label: t("customer"), value: customerDisplay(claim) },
       { label: t("policyLabel"), value: claim?.policy || "-" },
       { label: t("status"), value: translatedStatus(claim?.claim_status) },
     ];
@@ -530,7 +542,7 @@ export function useDashboardFacts({
 
   function reminderFacts(reminder) {
     return [
-      { label: t("customer"), value: reminder?.customer || "-" },
+      { label: t("customer"), value: customerDisplay(reminder) },
       { label: t("policyLabel"), value: reminder?.policy || "-" },
       { label: t("claimLabel"), value: reminder?.claim || "-" },
       { label: t("taskAssignee"), value: reminder?.assigned_to || "-" },

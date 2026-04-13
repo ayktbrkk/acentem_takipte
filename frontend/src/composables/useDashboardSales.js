@@ -4,6 +4,10 @@ function cstr(value) {
   return String(value ?? "").trim();
 }
 
+function customerDisplay(row) {
+  return cstr(row?.customer_full_name) || cstr(row?.customer_name) || cstr(row?.customer_label) || cstr(row?.party_name) || cstr(row?.full_name) || cstr(row?.customer) || "-";
+}
+
 function isSalesActionSource(sourceDoctype) {
   const source = cstr(sourceDoctype);
   return source === "AT Lead" || source === "AT Offer";
@@ -154,7 +158,7 @@ export function useDashboardSales({
       {
         key: "customer",
         label: t("customer"),
-        value: policy?.customer || "-",
+        value: customerDisplay(policy),
         valueClass: "text-xs text-slate-500",
       },
       {
@@ -171,7 +175,7 @@ export function useDashboardSales({
       {
         key: "customer",
         label: t("customer"),
-        value: offer?.customer || "-",
+        value: customerDisplay(offer),
         valueClass: "text-xs text-slate-500",
       },
       {
