@@ -17,7 +17,7 @@ def build_my_tasks_payload(*, office_branch: str | None = None, assigned_to: str
 
     rows = frappe.get_list(
         "AT Task",
-        fields=["name", "task_title", "task_type", "customer", "policy", "claim", "status", "priority", "due_date", "source_doctype", "source_name"],
+        fields=["name", "task_title", "task_type", "customer", "customer.full_name as customer_full_name", "policy", "claim", "status", "priority", "due_date", "source_doctype", "source_name"],
         filters=filters,
         order_by="due_date asc, modified desc",
         limit_page_length=max(min(int(limit or 12), 50), 1),
@@ -55,6 +55,7 @@ def build_my_activities_payload(*, office_branch: str | None = None, assigned_to
             "source_doctype",
             "source_name",
             "customer",
+            "customer.full_name as customer_full_name",
             "policy",
             "claim",
             "status",
@@ -92,6 +93,7 @@ def build_my_reminders_payload(*, office_branch: str | None = None, assigned_to:
             "source_doctype",
             "source_name",
             "customer",
+            "customer.full_name as customer_full_name",
             "policy",
             "claim",
             "assigned_to",

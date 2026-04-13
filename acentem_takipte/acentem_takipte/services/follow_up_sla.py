@@ -69,7 +69,7 @@ def _get_claim_follow_ups(*, office_branch: str | None, allowed_customers: list[
         filters["office_branch"] = office_branch
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
-    return frappe.get_list("AT Claim", fields=["name", "customer", "claim_status", "next_follow_up_on"], filters=filters, order_by="next_follow_up_on asc, modified desc", limit_page_length=50)
+    return frappe.get_list("AT Claim", fields=["name", "customer", "customer.full_name as customer_full_name", "claim_status", "next_follow_up_on"], filters=filters, order_by="next_follow_up_on asc, modified desc", limit_page_length=50)
 
 
 def _get_renewal_follow_ups(*, office_branch: str | None, allowed_customers: list[str] | None) -> list[dict[str, Any]]:
@@ -78,7 +78,7 @@ def _get_renewal_follow_ups(*, office_branch: str | None, allowed_customers: lis
         filters["office_branch"] = office_branch
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
-    return frappe.get_list("AT Renewal Task", fields=["name", "customer", "status", "due_date"], filters=filters, order_by="due_date asc, modified desc", limit_page_length=50)
+    return frappe.get_list("AT Renewal Task", fields=["name", "customer", "customer.full_name as customer_full_name", "status", "due_date"], filters=filters, order_by="due_date asc, modified desc", limit_page_length=50)
 
 
 def _get_assignment_follow_ups(*, office_branch: str | None, allowed_customers: list[str] | None) -> list[dict[str, Any]]:
@@ -89,7 +89,7 @@ def _get_assignment_follow_ups(*, office_branch: str | None, allowed_customers: 
         filters["office_branch"] = office_branch
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
-    return frappe.get_list("AT Ownership Assignment", fields=["name", "customer", "status", "assigned_to", "due_date"], filters=filters, order_by="due_date asc, modified desc", limit_page_length=50)
+    return frappe.get_list("AT Ownership Assignment", fields=["name", "customer", "customer.full_name as customer_full_name", "status", "assigned_to", "due_date"], filters=filters, order_by="due_date asc, modified desc", limit_page_length=50)
 
 
 def _get_call_note_follow_ups(*, office_branch: str | None, allowed_customers: list[str] | None) -> list[dict[str, Any]]:
@@ -100,7 +100,7 @@ def _get_call_note_follow_ups(*, office_branch: str | None, allowed_customers: l
         filters["office_branch"] = office_branch
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
-    return frappe.get_list("AT Call Note", fields=["name", "customer", "call_status", "next_follow_up_on"], filters=filters, order_by="next_follow_up_on asc, modified desc", limit_page_length=50)
+    return frappe.get_list("AT Call Note", fields=["name", "customer", "customer.full_name as customer_full_name", "call_status", "next_follow_up_on"], filters=filters, order_by="next_follow_up_on asc, modified desc", limit_page_length=50)
 
 
 def _build_preview_row(
