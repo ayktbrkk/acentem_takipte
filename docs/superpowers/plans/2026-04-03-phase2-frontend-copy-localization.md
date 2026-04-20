@@ -177,7 +177,7 @@ const copy = {
 - Brand filtering label
 - Tablo header alanları (POLICY NO, BRAND, BRUT PREM, vb.)
 
-**Durum:** [ ] Not Started
+**Durum:** ✅ Tamamlandı — PolicyList refactor ile bütün lokalizasyon composable'lara taşındı; copy yapisi ve testler yeyeşil
 
 #### P2.2c: CustomerList.vue Çeviri Mapping
 ```javascript
@@ -294,7 +294,7 @@ const copy = {
    if (!copy[locale][key]) console.warn(`Missing: ${key}`)
    ```
 
-**Durum:** [ ] Not Started
+**Durum:** ✅ Tamamlandı — at-documents finance slice'a eklendi; 81/81 dosya, 266/266 test yeşil
 
 ---
 

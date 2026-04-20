@@ -5,6 +5,7 @@ export const financeWorkbenchConfigs = pickAuxWorkbenchEntries(AUX_WORKBENCH_CON
   "accounting-entries",
   "reconciliation-items",
   "files",
+  "at-documents",
   "customer-segment-snapshots",
   "access-logs",
 ]);
