@@ -33,6 +33,7 @@
         :endorsements="endorsements"
         :file-loading="fileLoading"
         :files="files"
+        :at-documents="atDocuments"
         :document-field-groups="documentFieldGroups"
         :fmt-date="fmtDate"
         :fmt-date-time="fmtDateTime"
@@ -72,7 +73,7 @@
     <PolicyDocumentUploadModal
       :open="showUploadModal"
       :can-upload="canUploadDocuments"
-      :policy-name="name"
+      :policy-name="policy?.name || name"
       :t="t"
       @close="closeUploadModal"
       @uploaded="handleUploadComplete"
@@ -122,12 +123,14 @@ const labels = {
     productFamily: "Ürün Ailesi", insuredSubject: "Sigortalanan Konu", coverageFocus: "Kapsam Odağı",
     readinessScore: "Hazırlık Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
     missingProductFields: "Eksik Ürün Alanları", noMissingProductField: "Eksik zorunlu alan bulunamadı.", missingFieldStatus: "Eksik",
-    endorsementTitle: "Zeyilname Geçmişi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.",
+    endorsementTitle: "Zeyilname Geçmişi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.", emptyDocuments: "Henüz belge yüklenmedi.",
     totalDocuments: "Toplam Doküman", pdfDocuments: "PDF", imageDocuments: "Görsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diğer", lastUploadedOn: "Son Yükleme",
     notifications: "Bildirim Taslakları", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Aç",
     uploadDocument: "Belge Yükle", chooseFile: "Dosya seçin veya buraya sürükleyin", uploadSuccess: "Belge başarıyla yüklendi",
     uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.", fileTooLarge: "Dosya çok büyük (maks. 10 MB)", private: "Gizli", fileSize: "Dosya boyutu",
     cancel: "İptal", upload: "Yükle", uploading: "Yükleniyor...",
+    documentKind: "Belge Türü", documentDate: "Belge Tarihi", notes: "Notlar",
+    kindPolicy: "Poliçe", kindEndorsement: "Zeyilname", kindClaim: "Hasar", kindOther: "Diğer",
     tabSummary: "Özet", tabPremiums: "Prim/Ödeme", tabCoverages: "Teminatlar", tabEndorsements: "Zeyilnameler", tabDocuments: "Dokümanlar",
     typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Süresi Doldu", noDate: "Tarih yok",
   },
@@ -148,12 +151,14 @@ const labels = {
     productFamily: "Product Family", insuredSubject: "Insured Subject", coverageFocus: "Coverage Focus",
     readinessScore: "Readiness Score", completedFields: "Completed Fields", missingFields: "Missing Fields",
     missingProductFields: "Missing Product Fields", noMissingProductField: "No missing required field found.", missingFieldStatus: "Missing",
-    endorsementTitle: "Endorsement History", emptyEndorsement: "No endorsements.", documents: "Documents", emptyFiles: "No files.",
+    endorsementTitle: "Endorsement History", emptyEndorsement: "No endorsements.", documents: "Documents", emptyFiles: "No files.", emptyDocuments: "No documents uploaded yet.",
     totalDocuments: "Total Documents", pdfDocuments: "PDF", imageDocuments: "Images", spreadsheetDocuments: "Spreadsheets", otherDocuments: "Other", lastUploadedOn: "Last Upload",
     notifications: "Notification Drafts", emptyNotifications: "No notifications.", version: "Version", open: "Open",
     uploadDocument: "Upload Document", chooseFile: "Choose a file or drag it here", uploadSuccess: "Document uploaded successfully",
     uploadError: "Upload failed. Please try again.", fileTooLarge: "File is too large (max 10 MB)", private: "Private", fileSize: "File size",
     cancel: "Cancel", upload: "Upload", uploading: "Uploading...",
+    documentKind: "Document Type", documentDate: "Document Date", notes: "Notes",
+    kindPolicy: "Policy", kindEndorsement: "Endorsement", kindClaim: "Claim", kindOther: "Other",
     tabSummary: "Summary", tabPremiums: "Premiums/Payments", tabCoverages: "Coverages", tabEndorsements: "Endorsements", tabDocuments: "Documents",
     typeEndorsement: "Endorsement", typeCall: "Call", typeNote: "Note", expired: "Expired", noDate: "No date",
   },
@@ -187,6 +192,7 @@ const {
   snapshots,
   payments,
   files,
+  atDocuments,
   assignments,
   productProfile,
   documentProfile,

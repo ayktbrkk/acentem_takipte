@@ -80,6 +80,7 @@ def build_policy_360_payload(name: str) -> dict:
         ),
         "files": files,
         "document_profile": build_document_profile(files),
+        "at_documents": _get_at_documents_for_policy(policy_name),
         "notifications": _get_rows(
             "AT Notification Draft",
             fields=["name", "creation", "channel", "language", "status", "subject", "body"],
@@ -110,6 +111,47 @@ def build_policy_360_payload(name: str) -> dict:
         ) if frappe.db.exists("DocType", "AT Reminder") else [],
         "product_profile": _build_product_profile(policy),
     }
+
+
+def _get_at_documents_for_policy(policy_name: str) -> list[dict]:
+    if not frappe.db.exists("DocType", "AT Document"):
+        return []
+
+    docs = _get_rows(
+        "AT Document",
+        fields=["name", "file", "document_kind", "document_date", "notes", "status", "version_no", "creation", "owner"],
+        filters={"policy": policy_name, "status": "Active"},
+        order_by="creation desc",
+        limit_page_length=100,
+    )
+
+    if not docs:
+        return []
+
+    file_ids = [d["file"] for d in docs if d.get("file")]
+    file_map: dict = {}
+    if file_ids:
+        try:
+            file_rows = frappe.get_list(
+                "File",
+                filters={"name": ["in", file_ids]},
+                fields=["name", "file_name", "file_url", "file_size", "is_private"],
+            )
+            file_map = {str(f.get("name") or ""): dict(f) for f in file_rows}
+        except Exception:
+            pass
+
+    result = []
+    for doc in docs:
+        fi = file_map.get(str(doc.get("file") or ""), {})
+        result.append({
+            **doc,
+            "file_name": fi.get("file_name"),
+            "file_url": fi.get("file_url"),
+            "file_size": fi.get("file_size"),
+            "is_private": fi.get("is_private"),
+        })
+    return result
 
 
 def _get_customer(customer_name: str | None) -> dict | None:

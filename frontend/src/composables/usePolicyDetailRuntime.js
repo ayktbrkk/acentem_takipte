@@ -24,6 +24,7 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
   const snapshotR = createResource({ url: "frappe.client.get_list", auto: false });
   const paymentR = createResource({ url: "frappe.client.get_list", auto: false });
   const fileR = createResource({ url: "frappe.client.get_list", auto: false });
+  const atDocumentR = createResource({ url: "frappe.client.get_list", auto: false });
   const notificationR = createResource({ url: "frappe.client.get_list", auto: false });
 
   const policy360Data = computed(() => resourceValue(policy360Resource, {}));
@@ -39,6 +40,7 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
   });
   const payments = computed(() => asArray(resourceValue(paymentR, [])));
   const files = computed(() => asArray(resourceValue(fileR, [])));
+  const atDocuments = computed(() => asArray(resourceValue(atDocumentR, [])));
   const assignments = computed(() => asArray(policy360Data.value?.assignments));
   const productProfile = computed(() => policy360Data.value?.product_profile || {});
   const documentProfile = computed(() => policy360Data.value?.document_profile || {});
@@ -134,6 +136,7 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
     snapshotR.setData(payload.snapshots || []);
     paymentR.setData(payload.payments || []);
     fileR.setData(payload.files || []);
+    atDocumentR.setData(payload.at_documents || []);
     notificationR.setData(payload.notifications || []);
     selectedSnapshotName.value = asArray(payload.snapshots).at(-1)?.name || "";
   }
@@ -238,6 +241,7 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
     snapshots,
     payments,
     files,
+    atDocuments,
     assignments,
     productProfile,
     documentProfile,

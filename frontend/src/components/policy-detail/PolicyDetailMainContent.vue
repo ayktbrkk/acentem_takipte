@@ -106,22 +106,43 @@
           <button class="btn btn-sm" type="button" @click="openPolicyDocuments">{{ t("open") }}</button>
         </template>
         <div v-if="fileLoading" class="card-empty">{{ t("loading") }}</div>
-        <div v-else-if="files.length === 0" class="card-empty">{{ t("emptyFiles") }}</div>
-        <div v-else class="space-y-3">
-          <FieldGroup :fields="documentFieldGroups" :cols="3" />
-          <MetaListCard
-            v-for="f in files"
-            :key="f.name"
-            :title="f.file_name || f.name"
-            :description="fmtFileSize(f.file_size)"
-            :meta="fmtDateTime(f.creation)"
-          >
-            <template #trailing>
-              <span v-if="f.is_private" class="badge badge-slate">{{ t("private") }}</span>
-              <a class="btn btn-sm" :href="f.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
-            </template>
-          </MetaListCard>
-        </div>
+        <template v-else>
+          <FieldGroup v-if="documentFieldGroups.length" :fields="documentFieldGroups" :cols="3" class="mb-4" />
+          <template v-if="atDocuments.length">
+            <div class="space-y-3">
+              <MetaListCard
+                v-for="d in atDocuments"
+                :key="d.name"
+                :title="d.file_name || d.name"
+                :description="d.document_kind ? t('kind' + d.document_kind) : fmtFileSize(d.file_size)"
+                :meta="d.document_date ? fmtDate(d.document_date) : fmtDateTime(d.creation)"
+              >
+                <template #trailing>
+                  <span v-if="d.is_private" class="badge badge-slate">{{ t("private") }}</span>
+                  <a class="btn btn-sm" :href="d.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
+                </template>
+                <p v-if="d.notes" class="mt-1 text-xs text-slate-500">{{ d.notes }}</p>
+              </MetaListCard>
+            </div>
+          </template>
+          <template v-else-if="files.length">
+            <div class="space-y-3">
+              <MetaListCard
+                v-for="f in files"
+                :key="f.name"
+                :title="f.file_name || f.name"
+                :description="fmtFileSize(f.file_size)"
+                :meta="fmtDateTime(f.creation)"
+              >
+                <template #trailing>
+                  <span v-if="f.is_private" class="badge badge-slate">{{ t("private") }}</span>
+                  <a class="btn btn-sm" :href="f.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
+                </template>
+              </MetaListCard>
+            </div>
+          </template>
+          <div v-else class="card-empty">{{ t("emptyDocuments") }}</div>
+        </template>
       </SectionPanel>
     </template>
   </div>
@@ -152,6 +173,7 @@ defineProps({
   endorsements: { type: Array, required: true },
   fileLoading: { type: Boolean, required: true },
   files: { type: Array, required: true },
+  atDocuments: { type: Array, default: () => [] },
   documentFieldGroups: { type: Array, required: true },
   fmtDate: { type: Function, required: true },
   fmtDateTime: { type: Function, required: true },
