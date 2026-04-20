@@ -93,6 +93,7 @@ def _build_session_capabilities() -> dict:
             *SESSION_CAPABILITY_QUICK_CREATE.values(),
             *SESSION_CAPABILITY_QUICK_EDIT.values(),
             "AT Notification Outbox",
+            "AT Policy",
         }
     )
 
