@@ -68,8 +68,8 @@ vi.mock("frappe-ui", () => ({
             snapshots: [],
             payments: [],
             files: [
-              { name: "FILE-001", file_name: "police.pdf", file_url: "/files/police.pdf", creation: "2026-03-09T09:00:00Z" },
-              { name: "FILE-002", file_name: "hasar-foto.jpg", file_url: "/files/hasar-foto.jpg", creation: "2026-03-08T09:00:00Z" },
+              { name: "FILE-001", file_name: "police.pdf", file_url: "/files/police.pdf", file_size: 102400, is_private: 1, creation: "2026-03-09T09:00:00Z" },
+              { name: "FILE-002", file_name: "hasar-foto.jpg", file_url: "/files/hasar-foto.jpg", file_size: 0, is_private: 0, creation: "2026-03-08T09:00:00Z" },
             ],
             notifications: [],
             assignments: [
@@ -244,6 +244,16 @@ const QuickCreateManagedDialogStub = {
   }),
 };
 
+const PolicyDocumentUploadModalStub = {
+  props: ["open", "canUpload", "policyName"],
+  emits: ["close", "uploaded"],
+  template: `
+    <div class="upload-modal-stub" :data-open="String(open)" :data-can-upload="String(canUpload)">
+      <button class="modal-stub-close" @click="$emit('close')">Close</button>
+      <button class="modal-stub-uploaded" @click="$emit('uploaded')">Uploaded</button>
+    </div>
+  `,
+};
 const genericStub = {
   template: `<div><slot /><slot name="actions" /><slot name="trailing" /><slot name="footer" /></div>`,
 };
@@ -281,6 +291,7 @@ const commonStubs = {
   SectionPanel: SectionPanelStub,
   QuickCreateManagedDialog: QuickCreateManagedDialogStub,
   StatusBadge: true,
+  PolicyDocumentUploadModal: PolicyDocumentUploadModalStub,
 };
 
 describe("PolicyDetail policy 360 integration", () => {
@@ -307,6 +318,7 @@ describe("PolicyDetail policy 360 integration", () => {
       office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
       default_office_branch: "IST",
       can_access_all_office_branches: false,
+      capabilities: {},
     });
   });
 
@@ -332,10 +344,10 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(wrapper.text()).toContain("Ürün Profili");
     expect(wrapper.text()).toContain("Ürün Hazırlık Durumu");
     expect(wrapper.text()).toContain("Motor");
-    expect(wrapper.text()).toContain("Vehicle");
+    expect(wrapper.text()).toContain("Araç");
     expect(wrapper.text()).toContain("67%");
-    expect(wrapper.text()).toContain("Chassis No");
-    expect(wrapper.text()).toContain("Engine No");
+    expect(wrapper.text()).toContain("Şasi No");
+    expect(wrapper.text()).toContain("Motor No");
   });
 
   it("renders summary sections on default tab", async () => {
@@ -493,5 +505,199 @@ describe("PolicyDetail policy 360 integration", () => {
     await Promise.resolve();
 
     expect(wrapper.text()).toContain("Bu poliçede zaman tüneli kaydı yok.");
+  });
+
+  it("shows upload button when user has write permission on AT Policy", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+      capabilities: { doctypes: { "AT Policy": { write: true } } },
+    });
+
+    const wrapper = mount(PolicyDetail, {
+      props: { name: "POL-001" },
+      global: { stubs: commonStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
+    expect(documentsTab).toBeTruthy();
+    await documentsTab.trigger("click");
+
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    expect(uploadBtn).toBeTruthy();
+  });
+
+  it("hides upload button when user lacks write permission", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: { name: "POL-001" },
+      global: { stubs: commonStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
+    expect(documentsTab).toBeTruthy();
+    await documentsTab.trigger("click");
+
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    expect(uploadBtn).toBeFalsy();
+  });
+
+  it("opens upload modal when upload button is clicked", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+      capabilities: { doctypes: { "AT Policy": { write: true } } },
+    });
+
+    const wrapper = mount(PolicyDetail, {
+      props: { name: "POL-001" },
+      global: { stubs: commonStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
+    await documentsTab.trigger("click");
+
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    expect(uploadBtn).toBeTruthy();
+    await uploadBtn.trigger("click");
+
+    const modalStub = wrapper.find(".upload-modal-stub");
+    expect(modalStub.exists()).toBe(true);
+    expect(modalStub.attributes("data-open")).toBe("true");
+  });
+
+  it("closes upload modal on close event from modal", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+      capabilities: { doctypes: { "AT Policy": { write: true } } },
+    });
+
+    const wrapper = mount(PolicyDetail, {
+      props: { name: "POL-001" },
+      global: { stubs: commonStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
+    await documentsTab.trigger("click");
+
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    await uploadBtn.trigger("click");
+    await Promise.resolve();
+
+    expect(wrapper.find(".upload-modal-stub").attributes("data-open")).toBe("true");
+
+    const closeBtn = wrapper.find(".modal-stub-close");
+    await closeBtn.trigger("click");
+    await Promise.resolve();
+
+    expect(wrapper.find(".upload-modal-stub").attributes("data-open")).toBe("false");
+  });
+
+  it("reloads policy360 resource after successful upload", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+      capabilities: { doctypes: { "AT Policy": { write: true } } },
+    });
+
+    const wrapper = mount(PolicyDetail, {
+      props: { name: "POL-001" },
+      global: { stubs: commonStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const callsBefore = policy360Reload.mock.calls.length;
+
+    const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
+    await documentsTab.trigger("click");
+
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    await uploadBtn.trigger("click");
+    await Promise.resolve();
+
+    const uploadedBtn = wrapper.find(".modal-stub-uploaded");
+    await uploadedBtn.trigger("click");
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(policy360Reload.mock.calls.length).toBeGreaterThan(callsBefore);
+  });
+
+  it("displays file_size in human-readable format on documents tab", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: { name: "POL-001" },
+      global: { stubs: commonStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
+    expect(documentsTab).toBeTruthy();
+    await documentsTab.trigger("click");
+
+    expect(wrapper.text()).toContain("100.0 KB");
+  });
+
+  it("shows private badge for is_private files on documents tab", async () => {
+    const wrapper = mount(PolicyDetail, {
+      props: { name: "POL-001" },
+      global: { stubs: commonStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
+    expect(documentsTab).toBeTruthy();
+    await documentsTab.trigger("click");
+
+    expect(wrapper.text()).toContain("Gizli");
   });
 });

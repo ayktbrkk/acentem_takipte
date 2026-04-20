@@ -35,7 +35,7 @@ export function stripHtml(value) {
 }
 
 export function policyStatusLabel(locale, status) {
-  if (locale !== "tr") return status || "-";
+  if (!String(locale || "").toLowerCase().startsWith("tr")) return status || "-";
   if (status === "Active") return translateText("Active", locale);
   if (status === "KYT") return "KYT";
   if (status === "IPT" || status === "Cancelled") return translateText("Cancelled", locale);
@@ -44,7 +44,7 @@ export function policyStatusLabel(locale, status) {
 }
 
 export function paymentStatusLabel(locale, status) {
-  if (locale !== "tr") return status || "-";
+  if (!String(locale || "").toLowerCase().startsWith("tr")) return status || "-";
   if (status === "Submitted") return translateText("Submitted", locale);
   if (status === "Draft") return translateText("Draft", locale);
   if (status === "Cancelled") return translateText("Cancelled", locale);
@@ -53,7 +53,7 @@ export function paymentStatusLabel(locale, status) {
 }
 
 export function installmentStatusLabel(locale, status) {
-  if (locale !== "tr") return status || "-";
+  if (!String(locale || "").toLowerCase().startsWith("tr")) return status || "-";
   if (status === "Scheduled") return translateText("Scheduled", locale);
   if (status === "Overdue") return translateText("Overdue", locale);
   if (status === "Paid") return translateText("Paid", locale);
@@ -62,7 +62,7 @@ export function installmentStatusLabel(locale, status) {
 }
 
 export function endorsementStatusLabel(locale, status) {
-  if (locale !== "tr") return status || "-";
+  if (!String(locale || "").toLowerCase().startsWith("tr")) return status || "-";
   if (status === "Applied") return translateText("Applied", locale);
   if (status === "Pending") return translateText("Pending", locale);
   if (status === "Cancelled") return translateText("Cancelled", locale);
@@ -70,7 +70,7 @@ export function endorsementStatusLabel(locale, status) {
 }
 
 export function notificationStatusLabel(locale, status) {
-  if (locale !== "tr") return status || "-";
+  if (!String(locale || "").toLowerCase().startsWith("tr")) return status || "-";
   if (status === "Queued") return translateText("Queued", locale);
   if (status === "Processing") return translateText("Processing", locale);
   if (status === "Sent") return translateText("Sent", locale);

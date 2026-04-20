@@ -111,6 +111,8 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
 
   const auxQuickCreate = computed(() => config.quickCreate || null);
 
+  const showWorkbenchUploadModal = ref(false);
+
   const resourceValue = (resource, fallback = null) => {
     const value = unref(resource?.data);
     return value == null ? fallback : value;
@@ -188,7 +190,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
       if (raw === "") continue;
       if (fd.mode === "like") out[fd.field] = ["like", `%${raw}%`];
       else if (fd.type === "number") out[fd.field] = Number(raw);
-      else if (fd.type === "select" && fd.field === "is_active") out[fd.field] = Number(raw);
+      else if (fd.type === "select" && (fd.field === "is_active" || fd.field === "is_private")) out[fd.field] = Number(raw);
       else out[fd.field] = raw;
     }
     return out;
@@ -576,6 +578,11 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     if (!action || typeof action !== "object") return;
     if (action.capabilityPath && !authStore.can(action.capabilityPath)) return;
 
+    if (action.type === "upload") {
+      showWorkbenchUploadModal.value = true;
+      return;
+    }
+
     if (action.type === "route" || action.routeName) {
       router.push({
         name: action.routeName,
@@ -646,6 +653,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     pagination,
     loadError,
     showAuxQuickCreateDialog,
+    showWorkbenchUploadModal,
     rowActionBusyName,
     listResource,
     countResource,

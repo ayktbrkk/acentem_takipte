@@ -302,13 +302,13 @@ def build_dashboard_tab_sections(
             where_clause=due_today_where,
             values=due_today_values,
             limit=20,
-            order_by="due_date asc, modified desc",
+            order_by="due_date asc, p.modified desc",
         )
         previews["overdue_payments"] = get_payment_preview_rows_fn(
             where_clause=overdue_where,
             values=overdue_values,
             limit=20,
-            order_by="due_date asc, modified desc",
+            order_by="due_date asc, p.modified desc",
         )
         previews["payments"] = get_payment_preview_rows_fn(
             where_clause=payment_where,

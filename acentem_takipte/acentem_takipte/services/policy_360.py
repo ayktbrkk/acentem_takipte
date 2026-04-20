@@ -4,8 +4,12 @@ import unicodedata
 
 import frappe
 from frappe import _
+from frappe.utils.logger import get_logger
 
 from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
+
+
+LOGGER = get_logger("acentem_takipte.policy_360")
 
 
 def _fold_ascii(value: str | None) -> str:
@@ -23,7 +27,7 @@ def build_policy_360_payload(name: str) -> dict:
 
     files = _get_rows(
         "File",
-        fields=["name", "file_name", "file_url", "creation"],
+        fields=["name", "file_name", "file_url", "file_size", "is_private", "creation"],
         filters={"attached_to_doctype": "AT Policy", "attached_to_name": policy_name, "is_folder": 0},
         order_by="creation desc",
         limit_page_length=100,
@@ -122,13 +126,66 @@ def _get_customer(customer_name: str | None) -> dict | None:
 
 
 def _get_rows(doctype: str, **kwargs) -> list[dict]:
-    rows = frappe.get_list(doctype, **kwargs)
+    if not frappe.db.exists("DocType", doctype):
+        return []
+
+    safe_kwargs = dict(kwargs or {})
+    requested_fields = safe_kwargs.get("fields")
+    if isinstance(requested_fields, list) and requested_fields:
+        safe_kwargs["fields"] = _filter_existing_fields(doctype, requested_fields)
+
+    try:
+        rows = frappe.get_list(doctype, **safe_kwargs)
+    except Exception:
+        LOGGER.warning(
+            "policy_360 related query failed; doctype=%s kwargs=%s",
+            doctype,
+            {
+                "filters": safe_kwargs.get("filters"),
+                "order_by": safe_kwargs.get("order_by"),
+                "limit_page_length": safe_kwargs.get("limit_page_length"),
+                "fields": safe_kwargs.get("fields"),
+            },
+            exc_info=True,
+        )
+        return []
+
     return [dict(row or {}) for row in (rows or [])]
+
+
+def _filter_existing_fields(doctype: str, fields: list[str]) -> list[str]:
+    try:
+        meta = frappe.get_meta(doctype)
+        meta_fieldnames = {str(df.fieldname or "").strip() for df in (meta.fields or [])}
+    except Exception:
+        meta_fieldnames = set()
+
+    always_available = {
+        "name",
+        "owner",
+        "creation",
+        "modified",
+        "modified_by",
+        "docstatus",
+    }
+
+    allowed = meta_fieldnames | always_available
+    filtered: list[str] = []
+    for field in fields:
+        field_name = str(field or "").strip()
+        if field_name in allowed:
+            filtered.append(field_name)
+
+    if not filtered:
+        return ["name"]
+
+    return filtered
 
 
 def _build_product_profile(policy: dict) -> dict:
     branch_value = str(policy.get("branch") or "").strip()
-    branch_label = str(policy.get("branch") or "").strip() or "-"
+    normalized_branch_value = _fold_ascii(branch_value)
+    branch_label = branch_value or "-"
 
     product_family = "General"
     insured_subject = "Policy"
@@ -139,7 +196,7 @@ def _build_product_profile(policy: dict) -> dict:
         {"key": "end_date", "label": _("End Date"), "value": policy.get("end_date")},
     ]
 
-    if any(token in branch_value for token in ["trafik", "kasko", "vehicle", "motor"]):
+    if any(_fold_ascii(token) in normalized_branch_value for token in ["trafik", "kasko", "vehicle", "motor"]):
         product_family = "Motor"
         insured_subject = "Vehicle"
         coverage_focus = "Motor"
@@ -150,7 +207,7 @@ def _build_product_profile(policy: dict) -> dict:
                 {"key": "vehicle_engine_no", "label": "Engine No", "value": policy.get("vehicle_engine_no") or policy.get("engine_no")},
             ]
         )
-    elif any(token in branch_value for token in ["konut", "dask", "home"]):
+    elif any(_fold_ascii(token) in normalized_branch_value for token in ["konut", "dask", "home"]):
         product_family = "Property"
         insured_subject = "Property"
         coverage_focus = "Home"
@@ -161,7 +218,7 @@ def _build_product_profile(policy: dict) -> dict:
                 {"key": "usage_type", "label": "Usage Type", "value": policy.get("usage_type")},
             ]
         )
-    elif any(_fold_ascii(token) in _fold_ascii(branch_value) for token in ["saglik", "health", "tamamlayici"]):
+    elif any(_fold_ascii(token) in normalized_branch_value for token in ["saglik", "health", "tamamlayici"]):
         product_family = "Health"
         insured_subject = "Person"
         coverage_focus = "Health"
@@ -172,7 +229,7 @@ def _build_product_profile(policy: dict) -> dict:
                 {"key": "provider_network", "label": "Provider Network", "value": policy.get("provider_network")},
             ]
         )
-    elif any(token in branch_value for token in ["seyahat", "travel"]):
+    elif any(_fold_ascii(token) in normalized_branch_value for token in ["seyahat", "travel"]):
         product_family = "Travel"
         insured_subject = "Trip"
         coverage_focus = "Travel"
@@ -183,7 +240,7 @@ def _build_product_profile(policy: dict) -> dict:
                 {"key": "trip_end_date", "label": "Trip End", "value": policy.get("trip_end_date")},
             ]
         )
-    elif any(token in branch_value for token in ["hayat", "life", "bes", "emeklilik"]):
+    elif any(_fold_ascii(token) in normalized_branch_value for token in ["hayat", "life", "bes", "emeklilik"]):
         product_family = "Life"
         insured_subject = "Person"
         coverage_focus = "Life"

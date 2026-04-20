@@ -8,6 +8,7 @@ describe("usePolicyListTableData", () => {
     const rows = ref([
       {
         name: "POL-001",
+        record_name: "AT-POL-2026-000001",
         policy_no: "TR-001",
         customer: "Aykut",
         branch: "Life",
@@ -40,6 +41,8 @@ describe("usePolicyListTableData", () => {
     });
 
     expect(data.policyListMappedRows.value).toHaveLength(2);
+  expect(data.policyListMappedRows.value[0].name).toBe("AT-POL-2026-000001");
+  expect(data.policyListMappedRows.value[0].carrier_policy_no).toBe("TR-001");
     expect(data.policyListFilteredRows.value).toHaveLength(1);
     expect(data.policyListPagedRows.value).toHaveLength(1);
     expect(data.policyListRowsWithUrgency.value[0]._urgency).toBeTruthy();

@@ -94,14 +94,30 @@
     <template v-else>
       <SectionPanel :title="t('documents')">
         <template #trailing>
+          <ActionButton
+            v-if="canUploadDocuments"
+            variant="secondary"
+            size="sm"
+            type="button"
+            @click="openUploadModal"
+          >
+            {{ t("uploadDocument") }}
+          </ActionButton>
           <button class="btn btn-sm" type="button" @click="openPolicyDocuments">{{ t("open") }}</button>
         </template>
         <div v-if="fileLoading" class="card-empty">{{ t("loading") }}</div>
         <div v-else-if="files.length === 0" class="card-empty">{{ t("emptyFiles") }}</div>
         <div v-else class="space-y-3">
           <FieldGroup :fields="documentFieldGroups" :cols="3" />
-          <MetaListCard v-for="f in files" :key="f.name" :title="f.file_name || f.name" :meta="fmtDateTime(f.creation)">
+          <MetaListCard
+            v-for="f in files"
+            :key="f.name"
+            :title="f.file_name || f.name"
+            :description="fmtFileSize(f.file_size)"
+            :meta="fmtDateTime(f.creation)"
+          >
             <template #trailing>
+              <span v-if="f.is_private" class="badge badge-slate">{{ t("private") }}</span>
               <a class="btn btn-sm" :href="f.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
             </template>
           </MetaListCard>
@@ -145,5 +161,8 @@ defineProps({
   endorsementStatusClass: { type: Function, required: true },
   openQuickOwnershipAssignment: { type: Function, required: true },
   openPolicyDocuments: { type: Function, required: true },
+  openUploadModal: { type: Function, required: true },
+  canUploadDocuments: { type: Boolean, default: false },
+  fmtFileSize: { type: Function, required: true },
 });
 </script>

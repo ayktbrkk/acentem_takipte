@@ -89,6 +89,7 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
     return withOfficeBranchFilter({
       doctype: "AT Policy",
       fields: [
+        "name as record_name",
         "name",
         "policy_no",
         "customer",

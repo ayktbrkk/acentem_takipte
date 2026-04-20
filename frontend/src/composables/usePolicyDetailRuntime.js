@@ -1,5 +1,6 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
+import { useAuthStore } from "../stores/auth";
 
 const resourceValue = (resource, fallback = null) => {
   const value = unref(resource?.data);
@@ -9,10 +10,12 @@ const resourceValue = (resource, fallback = null) => {
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
 export function usePolicyDetailRuntime({ props, router, activeTab }) {
+  const authStore = useAuthStore();
   const policy360Resource = createResource({
     url: "acentem_takipte.acentem_takipte.api.dashboard.get_policy_360_payload",
     auto: false,
   });
+  const policyLookupR = createResource({ url: "frappe.client.get_list", auto: false });
   const policyR = createResource({ url: "frappe.client.get", auto: false });
   const customerR = createResource({ url: "frappe.client.get", auto: false });
   const endorsementR = createResource({ url: "frappe.client.get_list", auto: false });
@@ -25,6 +28,7 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
 
   const policy360Data = computed(() => resourceValue(policy360Resource, {}));
   const policy = computed(() => resourceValue(policyR, {}));
+  const activePolicyName = computed(() => String(policy.value?.name || props.name || "").trim());
   const customer = computed(() => resourceValue(customerR, null));
   const endorsements = computed(() => asArray(resourceValue(endorsementR, [])));
   const comments = computed(() => asArray(resourceValue(commentR, [])));
@@ -68,8 +72,9 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
   }
 
   function openDeskPolicy() {
-    if (props.name && typeof window !== "undefined") {
-      window.location.assign(`/app/at-policy/${encodeURIComponent(props.name)}`);
+    const policyName = activePolicyName.value;
+    if (policyName && typeof window !== "undefined") {
+      window.location.assign(`/app/at-policy/${encodeURIComponent(policyName)}`);
     }
   }
 
@@ -78,35 +83,124 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
   }
 
   function openPolicyDocuments() {
-    if (!props.name) return;
+    const policyName = activePolicyName.value;
+    if (!policyName) return;
     router.push({
       name: "files-list",
       query: {
         attached_to_doctype: "AT Policy",
-        attached_to_name: props.name,
+        attached_to_name: policyName,
       },
     });
   }
 
-  async function load() {
-    if (!props.name) return;
+  const showUploadModal = ref(false);
+
+  function openUploadModal() {
+    showUploadModal.value = true;
+  }
+
+  function closeUploadModal() {
+    showUploadModal.value = false;
+  }
+
+  async function handleUploadComplete() {
+    showUploadModal.value = false;
+    const policyName = activePolicyName.value;
+    if (policyName) {
+      const payload = await policy360Resource.reload({ name: policyName });
+      applyPolicyPayload(payload);
+    }
+  }
+
+  function fmtFileSize(bytes) {
+    if (!bytes || bytes === 0) return "-";
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
+    return `${(kb / 1024).toFixed(1)} MB`;
+  }
+
+  const canUploadDocuments = computed(() =>
+    Boolean(authStore.capabilities?.doctypes?.["AT Policy"]?.write)
+  );
+
+  function applyPolicyPayload(data) {
+    const payload = data || {};
+    policyR.setData(payload.policy || {});
+    customerR.setData(payload.customer || null);
+    endorsementR.setData(payload.endorsements || []);
+    commentR.setData(payload.comments || []);
+    communicationR.setData(payload.communications || []);
+    snapshotR.setData(payload.snapshots || []);
+    paymentR.setData(payload.payments || []);
+    fileR.setData(payload.files || []);
+    notificationR.setData(payload.notifications || []);
+    selectedSnapshotName.value = asArray(payload.snapshots).at(-1)?.name || "";
+  }
+
+  async function resolvePolicyNameFromCarrierNo(value) {
+    const carrierPolicyNo = String(value || "").trim();
+    if (!carrierPolicyNo) return "";
 
     try {
-      const payload = await policy360Resource.reload({ name: props.name });
-      const data = payload || {};
-      policyR.setData(data.policy || {});
-      customerR.setData(data.customer || null);
-      endorsementR.setData(data.endorsements || []);
-      commentR.setData(data.comments || []);
-      communicationR.setData(data.communications || []);
-      snapshotR.setData(data.snapshots || []);
-      paymentR.setData(data.payments || []);
-      fileR.setData(data.files || []);
-      notificationR.setData(data.notifications || []);
-      selectedSnapshotName.value = asArray(data.snapshots).at(-1)?.name || "";
+      const rows = await policyLookupR.reload({
+        doctype: "AT Policy",
+        fields: ["name"],
+        filters: { policy_no: carrierPolicyNo },
+        order_by: "modified desc",
+        limit_page_length: 2,
+      });
+      const matches = asArray(rows).map((row) => String(row?.name || "").trim()).filter(Boolean);
+      return matches.length === 1 ? matches[0] : "";
     } catch {
-      policyR.setData({});
-      customerR.setData(null);
+      return "";
+    }
+  }
+
+  async function load() {
+    const requestedPolicyName = String(props.name || "").trim();
+    if (!requestedPolicyName) return;
+
+    try {
+      const payload = await policy360Resource.reload({ name: requestedPolicyName });
+      applyPolicyPayload(payload);
+    } catch {
+      const resolvedPolicyName = await resolvePolicyNameFromCarrierNo(requestedPolicyName);
+      if (resolvedPolicyName && resolvedPolicyName !== requestedPolicyName) {
+        try {
+          const payload = await policy360Resource.reload({ name: resolvedPolicyName });
+          applyPolicyPayload(payload);
+          return;
+        } catch {
+          // fallback below
+        }
+      }
+
+      let fallbackPolicy = null;
+      let fallbackCustomer = null;
+      const fallbackPolicyName = resolvedPolicyName || requestedPolicyName;
+
+      try {
+        fallbackPolicy = await policyR.reload({ doctype: "AT Policy", name: fallbackPolicyName });
+      } catch {
+        fallbackPolicy = null;
+      }
+
+      const safePolicy = fallbackPolicy && typeof fallbackPolicy === "object" ? fallbackPolicy : {};
+      policyR.setData(safePolicy);
+
+      const customerName = String(safePolicy.customer || "").trim();
+      if (customerName) {
+        try {
+          fallbackCustomer = await customerR.reload({ doctype: "AT Customer", name: customerName });
+        } catch {
+          fallbackCustomer = null;
+        }
+      }
+
+      customerR.setData(
+        fallbackCustomer && typeof fallbackCustomer === "object" ? fallbackCustomer : null
+      );
       endorsementR.setData([]);
       commentR.setData([]);
       communicationR.setData([]);
@@ -153,6 +247,12 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
     openDeskPolicy,
     openCustomer,
     openPolicyDocuments,
+    showUploadModal,
+    openUploadModal,
+    closeUploadModal,
+    handleUploadComplete,
+    canUploadDocuments,
+    fmtFileSize,
     load,
     timelineLoading,
     customerLoading,

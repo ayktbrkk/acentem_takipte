@@ -161,6 +161,13 @@
       :after-submit="handleAuxQuickCreateAfterSubmit"
       :success-handlers="auxQuickCreateSuccessHandlers"
     />
+    <WorkbenchFileUploadModal
+      :open="showWorkbenchUploadModal"
+      :attached-to-doctype="filters.attached_to_doctype || ''"
+      :attached-to-name="filters.attached_to_name || ''"
+      @close="showWorkbenchUploadModal = false"
+      @uploaded="refreshList"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -174,6 +181,7 @@ import { useAuxWorkbenchRuntime } from "../composables/useAuxWorkbenchRuntime";
 import { useAuxWorkbenchViewModel } from "../composables/useAuxWorkbenchViewModel";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import AuxWorkbenchActionBar from "../components/aux-workbench/AuxWorkbenchActionBar.vue";
 import AuxWorkbenchMetricsPanel from "../components/aux-workbench/AuxWorkbenchMetricsPanel.vue";
 import AuxWorkbenchFilterPanel from "../components/aux-workbench/AuxWorkbenchFilterPanel.vue";
@@ -336,6 +344,7 @@ const {
   panelCfgForRow,
   openPanel,
   runToolbarAction,
+  showWorkbenchUploadModal,
 } = runtime;
 </script>
 

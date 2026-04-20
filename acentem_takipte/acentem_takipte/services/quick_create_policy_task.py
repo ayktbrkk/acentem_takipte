@@ -124,7 +124,44 @@ def create_quick_policy(
         "notes": normalize_note_text(quick_payload.notes),
     }
 
+    _validate_manual_policy_payload(payload)
+
     return create_policy_service(payload)
+
+
+def _validate_manual_policy_payload(payload: dict) -> None:
+    required_fields = {
+        "customer": _("Customer"),
+        "sales_entity": _("Sales Entity"),
+        "insurance_company": _("Insurance Company"),
+        "branch": _("Branch"),
+        "status": _("Status"),
+        "issue_date": _("Issue Date"),
+        "start_date": _("Start Date"),
+        "end_date": _("End Date"),
+        "currency": _("Currency"),
+    }
+
+    for fieldname, label in required_fields.items():
+        value = payload.get(fieldname)
+        if isinstance(value, str):
+            value = value.strip()
+        if value in {None, ""}:
+            frappe.throw(_("{0} is required for policy creation.").format(label))
+
+    net_premium = shared_safe_float(payload.get("net_premium"))
+    tax_amount = shared_safe_float(payload.get("tax_amount"))
+    commission_amount = shared_safe_float(payload.get("commission_amount"))
+    gross_premium = shared_safe_float(payload.get("gross_premium"))
+
+    if gross_premium <= 0:
+        frappe.throw(_("Gross Premium must be greater than 0."))
+
+    expected_gross = round(net_premium + tax_amount + commission_amount, 2)
+    if abs(round(gross_premium, 2) - expected_gross) > 0.01:
+        frappe.throw(
+            _("Gross Premium must equal Net Premium + Commission + Tax.")
+        )
 
 
 @frappe.whitelist()

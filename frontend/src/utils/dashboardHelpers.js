@@ -84,7 +84,17 @@ export function buildInitialTabPayloadParams(branchStore, selectedRange, tabKey 
 export function buildInitialClaimListParams(branchStore) {
   return withDashboardOfficeBranchFilter(branchStore, {
     doctype: "AT Claim",
-    fields: ["name", "claim_no", "customer", "policy", "claim_status", "approved_amount", "paid_amount", "modified"],
+    fields: [
+      "name",
+      "claim_no",
+      "customer",
+      "customer.full_name as customer_full_name",
+      "policy",
+      "claim_status",
+      "approved_amount",
+      "paid_amount",
+      "modified",
+    ],
     order_by: "modified desc",
     limit_page_length: 12,
   });

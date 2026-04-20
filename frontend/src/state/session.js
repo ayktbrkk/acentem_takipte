@@ -152,9 +152,16 @@ function writeStoredLocale(locale) {
   }
 }
 
+function syncDocumentLanguage(locale) {
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = locale;
+  }
+}
+
 export function setPreferredLocale(locale) {
   const normalized = normalizeLocale(locale);
   sessionState.locale = normalized;
+  syncDocumentLanguage(normalized);
   writeStoredLocale(normalized);
   return normalized;
 }
@@ -173,6 +180,8 @@ export const sessionState = reactive({
   preferredHome: boot.preferred_home || "/at",
   interfaceMode: boot.interface_mode || "spa",
 });
+
+syncDocumentLanguage(sessionState.locale);
 
 async function getJson(url) {
   const response = await fetch(url, {

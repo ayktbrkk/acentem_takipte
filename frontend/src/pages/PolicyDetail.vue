@@ -42,6 +42,9 @@
         :endorsement-status-class="endorsementStatusClass"
         :open-quick-ownership-assignment="openQuickOwnershipAssignment"
         :open-policy-documents="openPolicyDocuments"
+        :open-upload-modal="openUploadModal"
+        :can-upload-documents="canUploadDocuments"
+        :fmt-file-size="fmtFileSize"
       />
 
       <PolicyDetailSidebar
@@ -66,6 +69,14 @@
       v-model:show-ownership-assignment-dialog="showOwnershipAssignmentDialog"
       v-model:show-ownership-assignment-edit-dialog="showOwnershipAssignmentEditDialog"
     />
+    <PolicyDocumentUploadModal
+      :open="showUploadModal"
+      :can-upload="canUploadDocuments"
+      :policy-name="name"
+      :t="t"
+      @close="closeUploadModal"
+      @uploaded="handleUploadComplete"
+    />
   </section>
 </template>
 
@@ -79,6 +90,7 @@ import PolicyDetailTabs from "../components/policy-detail/PolicyDetailTabs.vue";
 import PolicyDetailMainContent from "../components/policy-detail/PolicyDetailMainContent.vue";
 import PolicyDetailSidebar from "../components/policy-detail/PolicyDetailSidebar.vue";
 import PolicyDetailQuickDialogs from "../components/policy-detail/PolicyDetailQuickDialogs.vue";
+import PolicyDocumentUploadModal from "../components/policy-detail/PolicyDocumentUploadModal.vue";
 import { usePolicyDetailRuntime } from "../composables/usePolicyDetailRuntime";
 import { usePolicyDetailQuickDialogs } from "../composables/usePolicyDetailQuickDialogs";
 import { usePolicyDetailSummary } from "../composables/usePolicyDetailSummary";
@@ -87,7 +99,10 @@ import { formatDate, formatDateTime, formatMoney, formatPercent, stripHtml as sh
 const props = defineProps({ name: { type: String, default: "" } });
 const router = useRouter();
 const authStore = useAuthStore();
-const activeLocale = computed(() => unref(authStore.locale) || "en");
+const activeLocale = computed(() => {
+  const rawLocale = String(unref(authStore.locale) || "en").toLowerCase();
+  return rawLocale.startsWith("tr") ? "tr" : "en";
+});
 
 const labels = {
   tr: {
@@ -110,6 +125,9 @@ const labels = {
     endorsementTitle: "Zeyilname Geçmişi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.",
     totalDocuments: "Toplam Doküman", pdfDocuments: "PDF", imageDocuments: "Görsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diğer", lastUploadedOn: "Son Yükleme",
     notifications: "Bildirim Taslakları", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Aç",
+    uploadDocument: "Belge Yükle", chooseFile: "Dosya seçin veya buraya sürükleyin", uploadSuccess: "Belge başarıyla yüklendi",
+    uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.", fileTooLarge: "Dosya çok büyük (maks. 10 MB)", private: "Gizli", fileSize: "Dosya boyutu",
+    cancel: "İptal", upload: "Yükle", uploading: "Yükleniyor...",
     tabSummary: "Özet", tabPremiums: "Prim/Ödeme", tabCoverages: "Teminatlar", tabEndorsements: "Zeyilnameler", tabDocuments: "Dokümanlar",
     typeEndorsement: "Zeyilname", typeCall: "Arama", typeNote: "Not", expired: "Süresi Doldu", noDate: "Tarih yok",
   },
@@ -133,6 +151,9 @@ const labels = {
     endorsementTitle: "Endorsement History", emptyEndorsement: "No endorsements.", documents: "Documents", emptyFiles: "No files.",
     totalDocuments: "Total Documents", pdfDocuments: "PDF", imageDocuments: "Images", spreadsheetDocuments: "Spreadsheets", otherDocuments: "Other", lastUploadedOn: "Last Upload",
     notifications: "Notification Drafts", emptyNotifications: "No notifications.", version: "Version", open: "Open",
+    uploadDocument: "Upload Document", chooseFile: "Choose a file or drag it here", uploadSuccess: "Document uploaded successfully",
+    uploadError: "Upload failed. Please try again.", fileTooLarge: "File is too large (max 10 MB)", private: "Private", fileSize: "File size",
+    cancel: "Cancel", upload: "Upload", uploading: "Uploading...",
     tabSummary: "Summary", tabPremiums: "Premiums/Payments", tabCoverages: "Coverages", tabEndorsements: "Endorsements", tabDocuments: "Documents",
     typeEndorsement: "Endorsement", typeCall: "Call", typeNote: "Note", expired: "Expired", noDate: "No date",
   },
@@ -175,6 +196,12 @@ const {
   openDeskPolicy,
   openCustomer,
   openPolicyDocuments,
+  showUploadModal,
+  openUploadModal,
+  closeUploadModal,
+  handleUploadComplete,
+  canUploadDocuments,
+  fmtFileSize,
   load,
   timelineLoading,
   customerLoading,

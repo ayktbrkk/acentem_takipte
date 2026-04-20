@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { applySessionContextForTest, sessionState } from "./session";
+import { applySessionContextForTest, sessionState, setPreferredLocale } from "./session";
 
 describe("session branch context", () => {
+  it("syncs document.documentElement.lang on locale change", () => {
+    setPreferredLocale("tr");
+    expect(document.documentElement.lang).toBe("tr");
+    setPreferredLocale("en");
+    expect(document.documentElement.lang).toBe("en");
+  });
+
   it("hydrates office branch state from session context", () => {
     applySessionContextForTest({
       user: "agent@example.com",

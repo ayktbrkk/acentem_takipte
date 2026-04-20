@@ -21,13 +21,50 @@ def build_follow_up_sla_payload(
     preview_rows: list[dict[str, Any]] = []
 
     for row in _get_claim_follow_ups(office_branch=office_branch, allowed_customers=allowed_customers):
-        preview_rows.append(_build_preview_row("claim", row.get("name"), row.get("next_follow_up_on"), row.get("customer"), row.get("claim_status")))
+        preview_rows.append(
+            _build_preview_row(
+                "claim",
+                row.get("name"),
+                row.get("next_follow_up_on"),
+                row.get("customer"),
+                row.get("claim_status"),
+                customer_full_name=row.get("customer_full_name"),
+            )
+        )
     for row in _get_renewal_follow_ups(office_branch=office_branch, allowed_customers=allowed_customers):
-        preview_rows.append(_build_preview_row("renewal", row.get("name"), row.get("due_date"), row.get("customer"), row.get("status")))
+        preview_rows.append(
+            _build_preview_row(
+                "renewal",
+                row.get("name"),
+                row.get("due_date"),
+                row.get("customer"),
+                row.get("status"),
+                customer_full_name=row.get("customer_full_name"),
+            )
+        )
     for row in _get_assignment_follow_ups(office_branch=office_branch, allowed_customers=allowed_customers):
-        preview_rows.append(_build_preview_row("assignment", row.get("name"), row.get("due_date"), row.get("customer"), row.get("status"), assignee=row.get("assigned_to")))
+        preview_rows.append(
+            _build_preview_row(
+                "assignment",
+                row.get("name"),
+                row.get("due_date"),
+                row.get("customer"),
+                row.get("status"),
+                assignee=row.get("assigned_to"),
+                customer_full_name=row.get("customer_full_name"),
+            )
+        )
     for row in _get_call_note_follow_ups(office_branch=office_branch, allowed_customers=allowed_customers):
-        preview_rows.append(_build_preview_row("call_note", row.get("name"), row.get("next_follow_up_on"), row.get("customer"), row.get("call_status")))
+        preview_rows.append(
+            _build_preview_row(
+                "call_note",
+                row.get("name"),
+                row.get("next_follow_up_on"),
+                row.get("customer"),
+                row.get("call_status"),
+                customer_full_name=row.get("customer_full_name"),
+            )
+        )
 
     normalized_rows = []
     overdue = 0
@@ -111,12 +148,14 @@ def _build_preview_row(
     status: str | None,
     *,
     assignee: str | None = None,
+    customer_full_name: str | None = None,
 ) -> dict[str, Any]:
     return {
         "source_type": source_type,
         "source_name": source_name,
         "follow_up_on": follow_up_on,
         "customer": customer,
+        "customer_full_name": customer_full_name,
         "status": status,
         "assigned_to": assignee,
     }

@@ -39,7 +39,7 @@ export function usePolicyListTableData({
   const policyListMappedRows = computed(() =>
     unref(rows).map((row) => ({
       ...row,
-      name: row.policy_no || row.name,
+      name: row.record_name || row.name,
       carrier_policy_no: row.carrier_policy_no || row.policy_no || "-",
       customer_label: row.customer_full_name || row.customer_name || row.customer || "-",
       customer_type_label: mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode)),

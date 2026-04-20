@@ -1,5 +1,51 @@
 import { computed } from "vue";
 
+const PRODUCT_FAMILY_TR = {
+  motor: "Motor",
+  property: "Konut",
+  health: "Sağlık",
+  travel: "Seyahat",
+  life: "Hayat",
+  general: "Genel",
+};
+
+const INSURED_SUBJECT_TR = {
+  policy: "Poliçe",
+  vehicle: "Araç",
+  property: "Konut",
+  person: "Kişi",
+  trip: "Seyahat",
+};
+
+const COVERAGE_FOCUS_TR = {
+  motor: "Motor",
+  home: "Konut",
+  health: "Sağlık",
+  travel: "Seyahat",
+  life: "Hayat",
+  general: "Genel",
+};
+
+const PRODUCT_FIELD_LABEL_TR = {
+  "record number": "Kayıt No",
+  "start date": "Başlangıç Tarihi",
+  "end date": "Bitiş Tarihi",
+  "plate no": "Plaka No",
+  "chassis no": "Şasi No",
+  "engine no": "Motor No",
+  "insured address": "Sigortalı Adres",
+  "building area": "Yapı Alanı",
+  "usage type": "Kullanım Türü",
+  "insured count": "Sigortalı Sayısı",
+  "plan name": "Plan Adı",
+  "provider network": "Anlaşmalı Kurum Ağı",
+  "destination": "Varış Ülkesi",
+  "trip start": "Seyahat Başlangıç",
+  "trip end": "Seyahat Bitiş",
+  "insured person": "Sigortalı Kişi",
+  beneficiary: "Lehtar",
+};
+
 export function usePolicyDetailSummary({
   t,
   locale,
@@ -22,6 +68,32 @@ export function usePolicyDetailSummary({
   paymentStatusLabel,
   endorsementStatusLabel,
 }) {
+  const isTrLocale = computed(() => String(locale.value || "").toLowerCase().startsWith("tr"));
+
+  function translateProductFamily(value) {
+    const text = String(value || "").trim();
+    if (!text || !isTrLocale.value) return text || "-";
+    return PRODUCT_FAMILY_TR[text.toLowerCase()] || text;
+  }
+
+  function translateInsuredSubject(value) {
+    const text = String(value || "").trim();
+    if (!text || !isTrLocale.value) return text || "-";
+    return INSURED_SUBJECT_TR[text.toLowerCase()] || text;
+  }
+
+  function translateCoverageFocus(value) {
+    const text = String(value || "").trim();
+    if (!text || !isTrLocale.value) return text || "-";
+    return COVERAGE_FOCUS_TR[text.toLowerCase()] || text;
+  }
+
+  function translateProductFieldLabel(value) {
+    const text = String(value || "").trim();
+    if (!text || !isTrLocale.value) return text || "-";
+    return PRODUCT_FIELD_LABEL_TR[text.toLowerCase()] || text;
+  }
+
   const selectedSnapshot = computed(() => {
     if (!snapshots.value.length) return null;
     if (!selectedSnapshotName.value) return snapshots.value[snapshots.value.length - 1];
@@ -161,9 +233,21 @@ export function usePolicyDetailSummary({
   ]);
 
   const productProfileSummaryItems = computed(() => [
-    { key: "productFamily", label: t("productFamily"), value: productProfile.value.product_family || "-" },
-    { key: "insuredSubject", label: t("insuredSubject"), value: productProfile.value.insured_subject || "-" },
-    { key: "coverageFocus", label: t("coverageFocus"), value: productProfile.value.coverage_focus || productProfile.value.branch_label || "-" },
+    {
+      key: "productFamily",
+      label: t("productFamily"),
+      value: translateProductFamily(productProfile.value.product_family || "-"),
+    },
+    {
+      key: "insuredSubject",
+      label: t("insuredSubject"),
+      value: translateInsuredSubject(productProfile.value.insured_subject || "-"),
+    },
+    {
+      key: "coverageFocus",
+      label: t("coverageFocus"),
+      value: translateCoverageFocus(productProfile.value.coverage_focus || productProfile.value.branch_label || "-"),
+    },
     { key: "policyStatus", label: t("status"), value: policyStatusLabel(productProfile.value.policy_status || policy.value.status) },
   ]);
 
@@ -173,7 +257,12 @@ export function usePolicyDetailSummary({
     { key: "missing", label: t("missingFields"), value: String(productProfile.value.missing_field_count ?? 0) },
   ]);
 
-  const productMissingFieldRows = computed(() => productProfile.value.missing_fields || []);
+  const productMissingFieldRows = computed(() =>
+    (productProfile.value.missing_fields || []).map((item) => ({
+      ...item,
+      label: translateProductFieldLabel(item?.label),
+    }))
+  );
 
   const documentProfileSummaryItems = computed(() => [
     { key: "totalDocuments", label: t("totalDocuments"), value: String(documentProfile.value.total_files ?? files.value.length ?? 0) },
@@ -203,10 +292,11 @@ export function usePolicyDetailSummary({
   const customerInitials = computed(() => {
     const source = String(customer.value?.full_name || customer.value?.name || "").trim();
     if (!source) return "AT";
+    const localeCode = locale.value || "en-US";
     return source
       .split(/\s+/)
       .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
+      .map((part) => String(part.charAt(0) || "").toLocaleUpperCase(localeCode))
       .join("");
   });
 

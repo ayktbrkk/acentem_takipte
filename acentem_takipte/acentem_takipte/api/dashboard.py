@@ -1974,17 +1974,19 @@ def _get_offer_preview_rows(
         rows = frappe.db.sql(
             f"""
             select
-                name,
-                customer,
-                insurance_company,
-                status,
-                currency,
-                valid_until,
-                gross_premium,
-                converted_policy
-            from `tabAT Offer`
+                o.name,
+                o.customer,
+                c.full_name as customer_full_name,
+                o.insurance_company,
+                o.status,
+                o.currency,
+                o.valid_until,
+                o.gross_premium,
+                o.converted_policy
+            from `tabAT Offer` o
+            left join `tabAT Customer` c on c.name = o.customer
             where {where_clause}{extra_ready_filter}
-            order by modified desc
+            order by o.modified desc
             limit %(limit)s
             """,
             values={
@@ -2012,6 +2014,7 @@ def _get_offer_preview_rows(
         fields=[
             "name",
             "customer",
+            "customer.full_name as customer_full_name",
             "insurance_company",
             "status",
             "currency",
@@ -2042,18 +2045,20 @@ def _get_policy_preview_rows(
         return frappe.db.sql(
             f"""
             select
-                name,
-                policy_no,
-                customer,
-                status,
-                currency,
-                issue_date,
-                gross_premium,
-                commission_amount,
-                commission
-            from `tabAT Policy`
+                p.name,
+                p.policy_no,
+                p.customer,
+                c.full_name as customer_full_name,
+                p.status,
+                p.currency,
+                p.issue_date,
+                p.gross_premium,
+                p.commission_amount,
+                p.commission
+            from `tabAT Policy` p
+            left join `tabAT Customer` c on c.name = p.customer
             where {where_clause}
-            order by modified desc
+            order by p.modified desc
             limit %(limit)s
             """,
             values={**(values or {}), "limit": max(cint(limit), 1)},
@@ -2073,6 +2078,7 @@ def _get_policy_preview_rows(
             "name",
             "policy_no",
             "customer",
+            "customer.full_name as customer_full_name",
             "status",
             "currency",
             "issue_date",
@@ -2169,23 +2175,25 @@ def _get_payment_preview_rows(
     office_branch: str | None = None,
     allowed_customers: list[str] | None = None,
     limit: int,
-    order_by: str = "modified desc",
+    order_by: str = "p.modified desc",
 ) -> list[dict]:
     if where_clause:
         return frappe.db.sql(
             f"""
             select
-                name,
-                payment_no,
-                payment_direction,
-                payment_purpose,
-                status,
-                payment_date,
-                due_date,
-                amount_try,
-                customer,
-                policy
-            from `tabAT Payment`
+                p.name,
+                p.payment_no,
+                p.payment_direction,
+                p.payment_purpose,
+                p.status,
+                p.payment_date,
+                p.due_date,
+                p.amount_try,
+                p.customer,
+                c.full_name as customer_full_name,
+                p.policy
+            from `tabAT Payment` p
+            left join `tabAT Customer` c on c.name = p.customer
             where {where_clause}
             order by {order_by}
             limit %(limit)s
@@ -2213,6 +2221,7 @@ def _get_payment_preview_rows(
             "due_date",
             "amount_try",
             "customer",
+            "customer.full_name as customer_full_name",
             "policy",
         ],
         order_by=order_by,
@@ -2250,6 +2259,7 @@ def _get_renewal_task_preview_rows(
             "due_date",
             "renewal_date",
             "customer",
+            "customer.full_name as customer_full_name",
             "assigned_to",
             "outcome_record",
         ],
@@ -2304,12 +2314,14 @@ def _get_offer_waiting_renewal_summary(
             rt.name,
             rt.policy,
             rt.customer,
+            c.full_name as customer_full_name,
             rt.status,
             rt.due_date,
             rt.renewal_date,
             rt.assigned_to,
             rt.outcome_record
         from `tabAT Renewal Task` rt
+        left join `tabAT Customer` c on c.name = rt.customer
         left join `tabAT Renewal Outcome` ro on ro.name = rt.outcome_record
         where {where_clause}
         order by rt.due_date asc, rt.modified desc

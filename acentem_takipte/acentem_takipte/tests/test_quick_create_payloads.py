@@ -197,6 +197,97 @@ def test_create_quick_payment_accepts_payload_dataclass_and_aliases():
     assert result == {"payment": "PAY-0001"}
 
 
+def test_create_quick_policy_blocks_incomplete_payload():
+    payload = QuickPolicyPayload(
+        customer="CUST-001",
+        sales_entity="SE-001",
+        insurance_company="IC-001",
+        branch="BR-001",
+        status="Active",
+        issue_date="2026-03-01",
+        start_date="2026-03-01",
+        end_date="2026-03-31",
+        currency="TRY",
+        net_premium=1000,
+        tax_amount=180,
+        commission_amount=50,
+        gross_premium=1230,
+    )
+
+    def _raise_throw(message):
+        raise RuntimeError(str(message))
+
+    with patch.object(quick_create_policy_task.frappe, "throw", side_effect=_raise_throw):
+        with patch.object(quick_create_policy_task, "_assert_create_permission"):
+            with patch.object(quick_create_policy_task, "_resolve_office_branch", return_value="IST"):
+                with patch.object(
+                    quick_create_policy_task,
+                    "_normalize_link",
+                    side_effect=lambda doctype, value, required=False: value,
+                ):
+                    with patch.object(
+                        quick_create_policy_task,
+                        "_normalize_date",
+                        side_effect=lambda value: value,
+                    ):
+                        with patch.object(
+                            quick_create_policy_task,
+                            "resolve_or_create_quick_customer",
+                            return_value=(None, False),
+                        ):
+                            with patch.object(quick_create_policy_task, "create_policy_service") as service_mock:
+                                with pytest.raises(RuntimeError, match="Customer is required"):
+                                    quick_create_api.create_quick_policy(payload)
+                                service_mock.assert_not_called()
+
+
+def test_create_quick_policy_blocks_financial_mismatch():
+    payload = QuickPolicyPayload(
+        customer="CUST-001",
+        sales_entity="SE-001",
+        insurance_company="IC-001",
+        branch="BR-001",
+        status="Active",
+        issue_date="2026-03-01",
+        start_date="2026-03-01",
+        end_date="2026-03-31",
+        currency="TRY",
+        net_premium=1000,
+        tax_amount=180,
+        commission_amount=50,
+        gross_premium=1000,
+    )
+
+    def _raise_throw(message):
+        raise RuntimeError(str(message))
+
+    with patch.object(quick_create_policy_task.frappe, "throw", side_effect=_raise_throw):
+        with patch.object(quick_create_policy_task, "_assert_create_permission"):
+            with patch.object(quick_create_policy_task, "_resolve_office_branch", return_value="IST"):
+                with patch.object(
+                    quick_create_policy_task,
+                    "_normalize_link",
+                    side_effect=lambda doctype, value, required=False: value,
+                ):
+                    with patch.object(
+                        quick_create_policy_task,
+                        "_normalize_date",
+                        side_effect=lambda value: value,
+                    ):
+                        with patch.object(
+                            quick_create_policy_task,
+                            "resolve_or_create_quick_customer",
+                            return_value=("CUST-001", False),
+                        ):
+                            with patch.object(quick_create_policy_task, "create_policy_service") as service_mock:
+                                with pytest.raises(
+                                    RuntimeError,
+                                    match=r"Gross Premium must equal Net Premium \+ Commission \+ Tax",
+                                ):
+                                    quick_create_api.create_quick_policy(payload)
+                                service_mock.assert_not_called()
+
+
 def test_create_quick_task_accepts_payload_dataclass():
     payload = QuickTaskPayload(
         task_title="Call customer",

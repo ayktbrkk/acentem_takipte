@@ -38,6 +38,7 @@ describe("dashboardHelpers", () => {
     expect(tabParams.tab).toBe("sales");
     expect(tabParams.filters.office_branch).toBe("IST");
     expect(claimParams.filters.office_branch).toBe("IST");
+    expect(claimParams.fields).toContain("customer.full_name as customer_full_name");
   });
 
   it("supports date helpers and permission detection", () => {
