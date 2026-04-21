@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import unicodedata
 import posixpath
@@ -214,14 +215,36 @@ def upload_document(
     at_doc = frappe.get_doc(doc_data)
     at_doc.insert(ignore_permissions=False)
 
-    # Keep File display name consistent with AT Document naming format.
-    frappe.db.set_value(
-        "File",
-        file_doc.name,
-        "file_name",
-        naming_identity["display_name"],
-        update_modified=False,
-    )
+    # Rename the physical file and update File record (file_name + file_url).
+    new_display_name = naming_identity["display_name"]
+    old_file_url = str(file_doc.file_url or "")
+    if old_file_url:
+        # Determine directory portion of the URL path
+        old_url_path = urlparse(old_file_url).path  # e.g. /private/files/foo.PDF
+        url_dir = posixpath.dirname(old_url_path)   # e.g. /private/files
+        new_file_url = posixpath.join(url_dir, new_display_name)  # /private/files/POL-...
+
+        # Rename the actual file on disk
+        site_path = frappe.get_site_path()
+        old_abs = os.path.join(site_path, old_url_path.lstrip("/"))
+        new_abs = os.path.join(site_path, new_file_url.lstrip("/"))
+        if os.path.exists(old_abs) and old_abs != new_abs:
+            os.rename(old_abs, new_abs)
+
+        frappe.db.set_value(
+            "File",
+            file_doc.name,
+            {"file_name": new_display_name, "file_url": new_file_url},
+            update_modified=False,
+        )
+    else:
+        frappe.db.set_value(
+            "File",
+            file_doc.name,
+            "file_name",
+            new_display_name,
+            update_modified=False,
+        )
 
     return {"at_document": at_doc.name}
 
