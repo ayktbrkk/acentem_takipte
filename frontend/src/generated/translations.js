@@ -756,6 +756,21 @@ export const TRANSLATIONS_TR = {
   "Archived": "Arşiv",
   "Document Details": "Belge Detayı",
   "Metadata records for uploaded documents": "Yüklenen belgelerin metadata kayıtları",
+
+  "File": "Dosya",
+  "File Name": "Dosya Adı",
+  "File Type": "Dosya Türü",
+  "File Size": "Dosya Boyutu",
+  "File URL": "Dosya URL",
+  "Attached To": "Bağlı Kayıt Türü",
+  "Attached Record": "Bağlı Kayıt",
+  "Upload Date": "Yükleme Tarihi",
+  "Owner": "Sahip",
+  "Version No": "Versiyon No",
+  "Created On": "Oluşturulma Tarihi",
+  "Endorsement": "Zeyilname",
+  "Other": "Diğer",
+  "Public": "Herkese Açık",
 };
 
 export const TRANSLATIONS_EN = {};

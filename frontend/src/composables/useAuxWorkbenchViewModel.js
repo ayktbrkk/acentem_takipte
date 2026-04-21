@@ -96,6 +96,36 @@ const AUX_FIELD_LABELS = {
     owner: "Owner",
     modified: "Modified",
   },
+  files: {
+    name: "Record",
+    file_name: "File Name",
+    attached_to_doctype: "Attached To",
+    attached_to_name: "Attached Record",
+    file_type: "File Type",
+    file_size: "File Size",
+    is_private: "Private",
+    creation: "Upload Date",
+    modified: "Modified",
+    owner: "Owner",
+    file_url: "File URL",
+  },
+  "at-documents": {
+    name: "Record",
+    file: "File",
+    reference_doctype: "Reference Type",
+    reference_name: "Reference Record",
+    policy: "Policy",
+    customer: "Customer",
+    claim: "Claim",
+    document_kind: "Document Kind",
+    document_date: "Document Date",
+    version_no: "Version No",
+    status: "Status",
+    notes: "Notes",
+    creation: "Created On",
+    modified: "Modified",
+    owner: "Owner",
+  },
 };
 
 function currentLocale(activeLocale) {
@@ -381,6 +411,10 @@ export function useAuxWorkbenchViewModel({
     if (fd.field === "is_active") {
       if (String(opt) === "1") return translateText("Active", locale);
       if (String(opt) === "0") return translateText("Inactive", locale);
+    }
+    if (fd.field === "is_private") {
+      if (String(opt) === "1") return translateText("Private", locale);
+      if (String(opt) === "0") return translateText("Public", locale);
     }
     return translateFieldValue(opt, activeLocale);
   }
