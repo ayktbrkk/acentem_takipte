@@ -314,27 +314,89 @@ def _get_comments(customer_name: str) -> list[dict[str, Any]]:
 
 
 def _get_customer_files(customer_name: str) -> list[dict[str, Any]]:
-    if not frappe.db.exists("DocType", "File"):
+    """Return AT Document records linked to the customer (directly, via policy, or via claim)."""
+    if not frappe.db.exists("DocType", "AT Document"):
         return []
-    return frappe.get_list(
-        "File",
-        fields=[
-            "name",
-            "file_name",
-            "file_url",
-            "file_type",
-            "creation",
-            "attached_to_doctype",
-            "attached_to_name",
-        ],
-        filters={
-            "attached_to_doctype": "AT Customer",
-            "attached_to_name": customer_name,
-            "is_folder": 0,
-        },
+
+    at_doc_fields = [
+        "name",
+        "file",
+        "document_kind",
+        "document_sub_type",
+        "status",
+        "document_date",
+        "is_sensitive",
+        "is_verified",
+        "creation",
+        "reference_doctype",
+        "reference_name",
+        "policy",
+        "customer",
+        "claim",
+        "notes",
+    ]
+
+    # Direct customer AT Documents
+    direct = frappe.get_list(
+        "AT Document",
+        fields=at_doc_fields,
+        filters={"customer": customer_name, "status": "Active"},
         order_by="creation desc",
         limit_page_length=100,
     )
+
+    # Policy AT Documents (customer's policies)
+    policy_names = frappe.get_all(
+        "AT Policy",
+        filters={"customer": customer_name},
+        pluck="name",
+        limit_page_length=50,
+    )
+    policy_docs: list[dict[str, Any]] = []
+    if policy_names:
+        policy_docs = frappe.get_list(
+            "AT Document",
+            fields=at_doc_fields,
+            filters={"policy": ["in", policy_names], "customer": ["!=", customer_name], "status": "Active"},
+            order_by="creation desc",
+            limit_page_length=100,
+        )
+
+    # Claim AT Documents (customer's claims)
+    claim_names = frappe.get_all(
+        "AT Claim",
+        filters={"customer": customer_name},
+        pluck="name",
+        limit_page_length=50,
+    )
+    claim_docs: list[dict[str, Any]] = []
+    if claim_names:
+        claim_docs = frappe.get_list(
+            "AT Document",
+            fields=at_doc_fields,
+            filters={"claim": ["in", claim_names], "customer": ["!=", customer_name], "status": "Active"},
+            order_by="creation desc",
+            limit_page_length=100,
+        )
+
+    # Merge + deduplicate by name, resolve file_name from File record
+    seen: set[str] = set()
+    merged: list[dict[str, Any]] = []
+    for doc in direct + policy_docs + claim_docs:
+        if doc["name"] in seen:
+            continue
+        seen.add(doc["name"])
+        # Resolve human-readable file name
+        if doc.get("file"):
+            doc["file_name"] = frappe.db.get_value("File", doc["file"], "file_name") or doc["file"]
+            doc["file_url"] = frappe.db.get_value("File", doc["file"], "file_url") or ""
+        else:
+            doc["file_name"] = doc["file"] or ""
+            doc["file_url"] = ""
+        merged.append(doc)
+
+    merged.sort(key=lambda d: str(d.get("creation") or ""), reverse=True)
+    return merged[:100]
 
 
 def _get_assignments(*, customer_name: str) -> list[dict[str, Any]]:

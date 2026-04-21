@@ -454,7 +454,7 @@ describe("CustomerDetail customer 360 integration", () => {
     await activateTab(wrapper, "Operasyonlar");
     expect(wrapper.text()).toContain("Atamalar");
     expect(wrapper.text()).toContain("İlişkili Kişiler");
-    expect(wrapper.text()).toContain("Doküman Özeti");
+    expect(wrapper.text()).toContain("Doküman Listesi");
     expect(wrapper.text()).toContain("Sigortalanan Varlıklar");
     expect(wrapper.text()).not.toContain("Özet Panosu");
     expect(wrapper.text()).not.toContain("Portföy Özeti");

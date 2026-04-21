@@ -587,10 +587,34 @@
           :title="t('documentsTitle')"
         >
           <template #trailing>
-            <span class="badge badge-blue">{{ customerDocumentProfile.total_files || 0 }}</span>
+            <span class="badge badge-blue">{{ customerDocumentItems.length }}</span>
           </template>
           <div class="space-y-3">
-            <FieldGroup :fields="documentSummaryFields" :cols="3" />
+            <div v-if="customerDocumentItems.length === 0" class="at-empty-block">
+              {{ t("emptyDocuments") }}
+            </div>
+            <MetaListCard
+              v-for="doc in customerDocumentItems"
+              :key="doc.name"
+              :title="doc.document_sub_type ? `${doc.document_sub_type} | ${doc.file_name || doc.file}` : (doc.file_name || doc.file || doc.name)"
+              :description="doc.reference_name || doc.policy || doc.claim || ''"
+              :meta="doc.document_date ? fmtDate(doc.document_date) : fmtDate(doc.creation)"
+            >
+              <template #trailing>
+                <span v-if="doc.is_sensitive" class="badge badge-orange" :title="t('sensitiveData')">🔒</span>
+                <span v-if="doc.is_verified" class="badge badge-green" :title="t('verified')">✓</span>
+                <span v-if="doc.document_sub_type || doc.document_kind" class="badge" :class="docSubTypeBadgeClass(doc.document_sub_type || doc.document_kind)">
+                  {{ doc.document_sub_type || doc.document_kind }}
+                </span>
+                <a
+                  v-if="doc.file_url"
+                  :href="doc.file_url"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="btn btn-xs btn-secondary"
+                >{{ t("open") }}</a>
+              </template>
+            </MetaListCard>
           </div>
         </SectionPanel>
 
@@ -951,7 +975,11 @@ const copy = {
     grossPremium: "Brüt Prim",
     operationsTitle: "Operasyonlar",
     documents: "Dokümanlar",
-    documentsTitle: "Doküman Özeti",
+    documentsTitle: "Doküman Listesi",
+    emptyDocuments: "Henüz doküman yüklenmedi.",
+    sensitiveData: "Hassas Veri",
+    verified: "Doğrulandı",
+    open: "Aç",
     totalDocuments: "Toplam Doküman",
     pdfDocuments: "PDF",
     imageDocuments: "Görsel",
@@ -1141,7 +1169,11 @@ const copy = {
     grossPremium: "Gross Premium",
     operationsTitle: "Operations",
     documents: "Documents",
-    documentsTitle: "Document Summary",
+    documentsTitle: "Document List",
+    emptyDocuments: "No documents uploaded yet.",
+    sensitiveData: "Sensitive Data",
+    verified: "Verified",
+    open: "Open",
     totalDocuments: "Total Documents",
     pdfDocuments: "PDF",
     imageDocuments: "Images",
@@ -1202,6 +1234,25 @@ const customer360Insights = computed(() => customer360Payload.value.insights || 
 const customer360CrossSell = computed(() => customer360Payload.value.cross_sell || {});
 const customer360Documents = computed(() => customer360Payload.value.documents || {});
 const customerDocumentProfile = computed(() => customer360Documents.value.document_profile || {});
+const customerDocumentItems = computed(() => customer360Documents.value.items || []);
+
+function fmtDate(v) {
+  if (!v) return "";
+  try { return formatDate(v); } catch { return String(v); }
+}
+
+function docSubTypeBadgeClass(subType) {
+  const map = {
+    "Ruhsat": "badge-blue",
+    "Kimlik": "badge-slate",
+    "Poliçe Kopyası": "badge-green",
+    "Hasar Fotoğrafı": "badge-orange",
+    "Policy": "badge-blue",
+    "Endorsement": "badge-violet",
+    "Claim": "badge-orange",
+  };
+  return map[subType] || "badge-gray";
+}
 const policies = computed(() => customer360Portfolio.value.policies || []);
 const offers = computed(() => customer360Portfolio.value.offers || []);
 const payments = computed(() => customer360Portfolio.value.payments || []);
