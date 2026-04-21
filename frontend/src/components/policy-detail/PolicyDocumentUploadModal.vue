@@ -53,10 +53,6 @@
             </select>
           </label>
           <label class="field-row">
-            <span class="field-label">{{ t("documentDate") }}</span>
-            <input v-model="documentDate" type="date" class="field-input" />
-          </label>
-          <label class="field-row">
             <span class="field-label">{{ t("notes") }}</span>
             <textarea v-model="notes" class="field-input field-textarea" rows="2" />
           </label>
@@ -105,7 +101,6 @@ const uploading = ref(false);
 const errorMessage = ref("");
 const documentKind = ref("");
 const documentSubType = ref("");
-const documentDate = ref("");
 const notes = ref("");
 
 function fmtFileSize(bytes) {
@@ -171,7 +166,6 @@ async function submit() {
           attached_to_name: props.policyName,
           document_kind: documentKind.value,
           document_sub_type: documentSubType.value,
-          document_date: documentDate.value,
           notes: notes.value,
           is_private: "1",
         });
@@ -187,7 +181,6 @@ async function submit() {
       selectedFile.value = null;
       documentKind.value = "";
       documentSubType.value = "";
-      documentDate.value = "";
       notes.value = "";
       if (fileInput.value) fileInput.value.value = "";
       emit("uploaded");

@@ -30,6 +30,16 @@
 
         <p v-if="errorMessage" class="upload-error">{{ errorMessage }}</p>
 
+        <!-- Bağlam bilgisi (attachedToDoctype/name verildiğinde) -->
+        <div v-if="contextInfo" class="context-badge">
+          <span class="context-label">{{ contextInfo.record_type }}</span>
+          <span class="context-name">{{ contextInfo.record_name }}</span>
+          <span v-if="contextInfo.customer_name" class="context-customer">
+            → {{ contextInfo.customer_name }}
+            <span v-if="contextInfo.customer_id" class="context-taxid">({{ contextInfo.customer_id }})</span>
+          </span>
+        </div>
+
         <!-- P3.5: prop boşsa bağlantı seçici göster -->
         <div v-if="!props.attachedToDoctype" class="link-section">
           <label class="field-row">
@@ -60,7 +70,8 @@
                   @mousedown.prevent="selectLinkResult(r)"
                 >
                   <span class="link-result-name">{{ r.label || r.name }}</span>
-                  <span v-if="r.label" class="link-result-id">{{ r.name }}</span>
+                  <span v-if="r.taxId" class="link-result-tax">{{ r.taxId }}</span>
+                  <span class="link-result-id">{{ r.name }}</span>
                 </li>
               </ul>
               <p v-if="linkSearching" class="link-searching">{{ t('linkSearching') }}</p>
@@ -90,10 +101,6 @@
               <option value="Hasar Fotoğrafı">{{ t("subHasarFotografi") }}</option>
               <option value="Diğer">{{ t("subDiger") }}</option>
             </select>
-          </label>
-          <label class="field-row">
-            <span class="field-label">{{ t("documentDate") }}</span>
-            <input v-model="documentDate" type="date" class="field-input" />
           </label>
           <label class="field-row field-row-check">
             <input v-model="isSensitive" type="checkbox" class="field-checkbox" />
@@ -130,19 +137,30 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch, onMounted } from "vue";
 import { useAuthStore } from "../../stores/auth";
 
 const props = defineProps({
   open: { type: Boolean, required: true },
   attachedToDoctype: { type: String, default: "" },
   attachedToName: { type: String, default: "" },
+  t: { type: Function, default: null },
 });
 
 const emit = defineEmits(["close", "uploaded"]);
 
+// Bağlam değiştiğinde yeniden yükle
+watch(() => [props.attachedToDoctype, props.attachedToName], () => {
+  loadContextInfo();
+});
+
 const authStore = useAuthStore();
 const locale = computed(() => authStore.locale || "en");
+
+function t(key) {
+  if (props.t) return props.t(key);
+  return copy[locale.value]?.[key] || copy.en[key] || key;
+}
 
 const copy = {
   tr: {
@@ -207,11 +225,6 @@ const copy = {
   },
 };
 
-function t(key) {
-  const lang = locale.value;
-  return copy[lang]?.[key] || copy.en[key] || key;
-}
-
 const fileInput = ref(null);
 const selectedFile = ref(null);
 const isDragging = ref(false);
@@ -219,7 +232,6 @@ const uploading = ref(false);
 const errorMessage = ref("");
 const documentKind = ref("");
 const documentSubType = ref("");
-const documentDate = ref("");
 const isSensitive = ref(false);
 const notes = ref("");
 
@@ -231,10 +243,49 @@ const linkResults = ref([]);
 const linkSearching = ref(false);
 let linkSearchTimer = null;
 
+// Bağlam bilgisi (otomatik yükle)
+const contextInfo = ref(null);
+
+async function loadContextInfo() {
+  if (!props.attachedToDoctype || !props.attachedToName) {
+    contextInfo.value = null;
+    return;
+  }
+  const doctypeLabel = props.attachedToDoctype === "AT Policy" ? "Poliçe" :
+                      props.attachedToDoctype === "AT Claim" ? "Hasar" :
+                      props.attachedToDoctype === "AT Customer" ? "Müşteri" : props.attachedToDoctype;
+  try {
+    const csrfT = (typeof window !== "undefined" && window.csrf_token) || "";
+    const params = new URLSearchParams({
+      doctype: props.attachedToDoctype,
+      docname: props.attachedToName,
+    });
+    const resp = await fetch(`/api/method/acentem_takipte.acentem_takipte.api.documents.get_document_context?${params}`, {
+      headers: csrfT ? { "X-Frappe-CSRF-Token": csrfT } : {},
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      contextInfo.value = {
+        record_type: doctypeLabel,
+        record_name: data.message?.record_name || props.attachedToName,
+        customer_name: data.message?.customer_name || null,
+        customer_id: data.message?.customer_id || null,
+      };
+    }
+  } catch {
+    contextInfo.value = { record_type: doctypeLabel, record_name: props.attachedToName, customer_name: null, customer_id: null };
+  }
+}
+
+// mounted'da bağlamı yükle
+onMounted(() => {
+  loadContextInfo();
+});
+
 const LINK_CFG = {
-  "AT Customer": { searchField: "customer_name", labelField: "customer_name", fields: ["name", "customer_name"] },
-  "AT Policy":   { searchField: "name",          labelField: "name",          fields: ["name"] },
-  "AT Claim":    { searchField: "name",          labelField: "name",          fields: ["name"] },
+  "AT Customer": { searchField: "full_name", labelField: "full_name", fields: ["name", "full_name", "tax_id"] },
+  "AT Policy":   { searchField: "name",       labelField: "name",       fields: ["name"] },
+  "AT Claim":    { searchField: "name",       labelField: "name",       fields: ["name"] },
 };
 
 function onLinkDoctypeChange() {
@@ -275,6 +326,7 @@ async function fetchLinkResults() {
       linkResults.value = (data?.message || []).map(r => ({
         name: r.name,
         label: cfg.labelField !== "name" ? (r[cfg.labelField] || "") : "",
+        taxId: r.tax_id || "",
       }));
     }
   } catch {
@@ -319,7 +371,7 @@ async function submit() {
 
   const maxBytes = 10 * 1024 * 1024;
   if (selectedFile.value.size > maxBytes) {
-    errorMessage.value = props.t("fileTooLarge");
+    errorMessage.value = t("fileTooLarge");
     return;
   }
 
@@ -360,7 +412,6 @@ async function submit() {
           ...(effectiveName ? { attached_to_name: effectiveName } : {}),
           document_kind: documentKind.value,
           document_sub_type: documentSubType.value,
-          document_date: documentDate.value,
           is_sensitive: isSensitive.value ? "1" : "0",
           notes: notes.value,
           is_private: "1",
@@ -377,7 +428,6 @@ async function submit() {
       selectedFile.value = null;
       documentKind.value = "";
       documentSubType.value = "";
-      documentDate.value = "";
       isSensitive.value = false;
       notes.value = "";
       linkDoctype.value = "";
@@ -598,6 +648,12 @@ async function submit() {
   font-size: 0.75rem;
 }
 
+.link-result-tax {
+  color: #6366f1;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .link-searching {
   font-size: 0.75rem;
   color: #94a3b8;
@@ -610,5 +666,34 @@ async function submit() {
   color: #16a34a;
   font-weight: 500;
   margin-top: 0.2rem;
+}
+
+.context-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.context-label {
+  font-weight: 600;
+  color: #166534;
+}
+
+.context-name {
+  color: #1e293b;
+}
+
+.context-customer {
+  color: #64748b;
+}
+
+.context-taxid {
+  color: #6366f1;
+  font-size: 0.75rem;
 }
 </style>

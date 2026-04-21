@@ -94,6 +94,65 @@ def upload_document(
 
 
 @frappe.whitelist()
+def get_document_context(doctype: str, docname: str) -> dict:
+    """
+    Return display info for a linked record (Policy, Claim, Customer)
+    so the upload modal can show the record name + customer name.
+
+    Args:
+        doctype: AT Policy / AT Claim / AT Customer
+        docname: Name of the record
+
+    Returns:
+        {"record_name": str, "customer_name": str | None, "customer_id": str | None}
+    """
+    if not doctype or not docname:
+        return {"record_name": docname, "customer_name": None, "customer_id": None}
+
+    record_name = docname
+    customer_name = None
+    customer_id = None
+
+    if doctype == "AT Policy":
+        row = frappe.db.get_value(
+            "AT Policy", docname, ["name", "customer"], as_dict=True
+        )
+        if row:
+            record_name = row.name
+            if row.customer:
+                customer_id = row.customer
+                customer_name = frappe.db.get_value(
+                    "AT Customer", row.customer, "full_name"
+                ) or ""
+
+    elif doctype == "AT Claim":
+        row = frappe.db.get_value(
+            "AT Claim", docname, ["name", "customer"], as_dict=True
+        )
+        if row:
+            record_name = row.name
+            if row.customer:
+                customer_id = row.customer
+                customer_name = frappe.db.get_value(
+                    "AT Customer", row.customer, "full_name"
+                ) or ""
+
+    elif doctype == "AT Customer":
+        row = frappe.db.get_value(
+            "AT Customer", docname, ["name", "full_name", "tax_id"], as_dict=True
+        )
+        if row:
+            record_name = row.full_name or row.name
+            customer_id = row.tax_id or ""
+
+    return {
+        "record_name": record_name,
+        "customer_name": customer_name,
+        "customer_id": customer_id,
+    }
+
+
+@frappe.whitelist()
 def share_document(docname: str, method: str = "whatsapp") -> dict:
     """
     Return a shareable URL for an AT Document record.

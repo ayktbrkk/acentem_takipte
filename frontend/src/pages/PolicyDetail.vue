@@ -70,10 +70,10 @@
       v-model:show-ownership-assignment-dialog="showOwnershipAssignmentDialog"
       v-model:show-ownership-assignment-edit-dialog="showOwnershipAssignmentEditDialog"
     />
-    <PolicyDocumentUploadModal
+    <WorkbenchFileUploadModal
       :open="showUploadModal"
-      :can-upload="canUploadDocuments"
-      :policy-name="policy?.name || name"
+      :attached-to-doctype="'AT Policy'"
+      :attached-to-name="policy?.name || name"
       :t="t"
       @close="closeUploadModal"
       @uploaded="handleUploadComplete"
@@ -91,7 +91,7 @@ import PolicyDetailTabs from "../components/policy-detail/PolicyDetailTabs.vue";
 import PolicyDetailMainContent from "../components/policy-detail/PolicyDetailMainContent.vue";
 import PolicyDetailSidebar from "../components/policy-detail/PolicyDetailSidebar.vue";
 import PolicyDetailQuickDialogs from "../components/policy-detail/PolicyDetailQuickDialogs.vue";
-import PolicyDocumentUploadModal from "../components/policy-detail/PolicyDocumentUploadModal.vue";
+import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import { usePolicyDetailRuntime } from "../composables/usePolicyDetailRuntime";
 import { usePolicyDetailQuickDialogs } from "../composables/usePolicyDetailQuickDialogs";
 import { usePolicyDetailSummary } from "../composables/usePolicyDetailSummary";
