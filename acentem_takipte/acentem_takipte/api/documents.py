@@ -91,3 +91,46 @@ def upload_document(
     at_doc.insert(ignore_permissions=False)
 
     return {"at_document": at_doc.name}
+
+
+@frappe.whitelist()
+def share_document(docname: str, method: str = "whatsapp") -> dict:
+    """
+    Return a shareable URL for an AT Document record.
+
+    For WhatsApp, returns a wa.me deep-link pre-filled with the file URL.
+    If the document is marked is_sensitive, a warning is included but the
+    link is still returned — the final decision rests with the user.
+
+    Args:
+        docname: Name of the AT Document record.
+        method:  "whatsapp" (default) or "url".
+
+    Returns:
+        {"url": str, "phone": str, "warning": str|None}
+    """
+    doc = frappe.get_doc("AT Document", docname)
+    frappe.has_permission("AT Document", ptype="read", doc=doc, throw=True)
+
+    warning = None
+    if doc.is_sensitive:
+        warning = _("This document is marked as sensitive. Sharing is not recommended.")
+
+    if not doc.file:
+        frappe.throw(_("AT Document has no linked file."))
+
+    file_doc = frappe.get_doc("File", doc.file)
+    file_url = frappe.utils.get_url(file_doc.file_url)
+
+    phone = ""
+    if doc.customer:
+        phone = frappe.db.get_value("AT Customer", doc.customer, "mobile_no") or ""
+    # Normalise: strip non-digit chars (spaces, dashes, parens) for wa.me
+    phone_digits = "".join(c for c in phone if c.isdigit() or c == "+")
+
+    if method == "whatsapp":
+        import urllib.parse
+        wa_url = f"https://wa.me/{phone_digits}?text={urllib.parse.quote(file_url, safe='')}"
+        return {"url": wa_url, "phone": phone_digits, "warning": warning}
+
+    return {"url": file_url, "phone": phone_digits, "warning": warning}

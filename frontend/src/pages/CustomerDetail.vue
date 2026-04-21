@@ -611,6 +611,11 @@
                   class="btn btn-xs btn-secondary"
                   @click.stop="toggleVerified(doc)"
                 >{{ doc.is_verified ? t('removeVerification') : t('toggleVerify') }}</button>
+                <button
+                  class="btn btn-xs btn-secondary"
+                  :title="doc.is_sensitive ? t('sensitiveShareWarning') : t('shareWhatsApp')"
+                  @click.stop="shareDocumentWhatsApp(doc)"
+                >{{ t("shareWhatsApp") }}</button>
                 <a
                   v-if="doc.file_url"
                   :href="doc.file_url"
@@ -986,6 +991,8 @@ const copy = {
     verified: "Doğrulandı",
     toggleVerify: "Doğrula",
     removeVerification: "Doğrulamayı Kaldır",
+    shareWhatsApp: "WhatsApp ile Paylaş",
+    sensitiveShareWarning: "Hassas veri işareti var — paylaşım önerilmez.",
     open: "Aç",
     totalDocuments: "Toplam Doküman",
     pdfDocuments: "PDF",
@@ -1182,6 +1189,8 @@ const copy = {
     verified: "Verified",
     toggleVerify: "Verify",
     removeVerification: "Remove Verification",
+    shareWhatsApp: "Share via WhatsApp",
+    sensitiveShareWarning: "Marked as sensitive — sharing is not recommended.",
     open: "Open",
     totalDocuments: "Total Documents",
     pdfDocuments: "PDF",
@@ -1249,6 +1258,10 @@ const docToggleVerifiedResource = createResource({
   url: "acentem_takipte.acentem_takipte.doctype.at_document.at_document.toggle_verified",
   auto: false,
 });
+const docShareResource = createResource({
+  url: "acentem_takipte.acentem_takipte.api.documents.share_document",
+  auto: false,
+});
 async function toggleVerified(doc) {
   try {
     const result = await docToggleVerifiedResource.submit({ docname: doc.name });
@@ -1260,6 +1273,15 @@ async function toggleVerified(doc) {
         ...(customer360Payload.value || {}),
         documents: { ...(customer360Documents.value || {}), items: updatedItems },
       });
+    }
+  } catch { /* ignore */ }
+}
+
+async function shareDocumentWhatsApp(doc) {
+  try {
+    const result = await docShareResource.submit({ docname: doc.name, method: "whatsapp" });
+    if (result?.url) {
+      window.open(result.url, "_blank", "noopener,noreferrer");
     }
   } catch { /* ignore */ }
 }

@@ -757,6 +757,8 @@ export const TRANSLATIONS_TR = {
   "No documents uploaded yet.": "Henüz doküman yüklenmedi.",
   "Sensitive Data": "Hassas Veri",
   "Verified": "Doğrulandı",
+  "Share via WhatsApp": "WhatsApp ile Paylaş",
+  "Marked as sensitive — sharing is not recommended.": "Hassas veri işareti var — paylaşım önerilmez.",
   "Policy Documents": "Poliçe Dokümanları",
   "Claim Documents": "Hasar Dokümanları",
   "Customer Documents": "Müşteri Dokümanları",
