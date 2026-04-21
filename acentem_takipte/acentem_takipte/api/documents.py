@@ -18,12 +18,12 @@ def _ascii_slug(value: str, default: str = "DOC", keep_case: bool = False) -> st
     return text if keep_case else text.upper()
 
 
-def _title_slug(value: str, default: str = "Diger") -> str:
+def _upper_slug(value: str, default: str = "DIGER") -> str:
     ascii_text = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode("ascii")
     parts = [part for part in re.split(r"[^A-Za-z0-9]+", ascii_text) if part]
     if not parts:
         return default
-    return "-".join(part[:1].upper() + part[1:] for part in parts)
+    return "-".join(p.upper() for p in parts)
 
 
 def _file_extension(file_doc) -> str:
@@ -38,9 +38,9 @@ def _file_extension(file_doc) -> str:
             source_name = from_url
 
     if "." not in source_name:
-        return "bin"
-    ext = source_name.rsplit(".", 1)[-1].strip().lower()
-    return ext or "bin"
+        return "BIN"
+    ext = source_name.rsplit(".", 1)[-1].strip().upper()
+    return ext or "BIN"
 
 
 def _resolve_reference_token(reference_doctype: str, reference_name: str) -> str:
@@ -85,9 +85,9 @@ def _reserve_display_name(
     extension: str,
 ) -> dict:
     ref_token = _resolve_reference_token(reference_doctype, reference_name)
-    subtype_token = _title_slug(document_sub_type or "Diger", "Diger")
+    subtype_token = _upper_slug(document_sub_type or "Diger", "DIGER")
     yyyymmdd = str(upload_date or nowdate()).replace("-", "")
-    ext = str(extension or "bin").strip(".").lower() or "bin"
+    ext = str(extension or "bin").strip(".").upper() or "BIN"
 
     naming_key = f"{ref_token}|{subtype_token}|{yyyymmdd}|{ext}"
     lock_key = f"ATDOC-DISPLAY::{naming_key}"
@@ -99,7 +99,7 @@ def _reserve_display_name(
 
     try:
         for seq in range(1, 1001):
-            candidate = f"{ref_token}{subtype_token}{yyyymmdd}_{str(seq).zfill(3)}.{ext}"
+            candidate = f"{ref_token}_{subtype_token}_{yyyymmdd}_{str(seq).zfill(3)}.{ext}"
             if not frappe.db.exists("AT Document", {"display_name": candidate}):
                 return {
                     "display_name": candidate,
