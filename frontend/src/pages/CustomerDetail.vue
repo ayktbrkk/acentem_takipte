@@ -596,33 +596,42 @@
             <MetaListCard
               v-for="doc in customerDocumentItems"
               :key="doc.name"
-              :title="doc.document_sub_type ? `${doc.document_sub_type} | ${doc.file_name || doc.file}` : (doc.file_name || doc.file || doc.name)"
-              :description="doc.reference_name || doc.policy || doc.claim || ''"
+              :title="doc.display_name || doc.file_name || doc.file || doc.name"
+              :description="`${doc.document_sub_type || doc.document_kind || '-'} ${doc.reference_name ? '(' + doc.reference_name + ')' : ''}`"
               :meta="doc.document_date ? fmtDate(doc.document_date) : fmtDate(doc.creation)"
             >
               <template #trailing>
-                <span v-if="doc.is_sensitive" class="badge badge-orange" :title="t('sensitiveData')">🔒</span>
-                <span v-if="doc.is_verified" class="badge badge-green" :title="t('verified')">✓</span>
-                <span v-if="doc.document_sub_type || doc.document_kind" class="badge" :class="docSubTypeBadgeClass(doc.document_sub_type || doc.document_kind)">
-                  {{ doc.document_sub_type || doc.document_kind }}
-                </span>
-                <button
-                  v-if="canWriteATDocument"
-                  class="btn btn-xs btn-secondary"
-                  @click.stop="toggleVerified(doc)"
-                >{{ doc.is_verified ? t('removeVerification') : t('toggleVerify') }}</button>
-                <button
-                  class="btn btn-xs btn-secondary"
-                  :title="doc.is_sensitive ? t('sensitiveShareWarning') : t('shareWhatsApp')"
-                  @click.stop="shareDocumentWhatsApp(doc)"
-                >{{ t("shareWhatsApp") }}</button>
-                <a
-                  v-if="doc.file_url"
-                  :href="doc.file_url"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="btn btn-xs btn-secondary"
-                >{{ t("open") }}</a>
+                <div class="flex items-center gap-2">
+                  <!-- is_sensitive: Red Lock Icon -->
+                  <span v-if="doc.is_sensitive" class="flex items-center" :title="t('sensitiveData')">
+                    <svg class="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                  <!-- is_verified: Green Check Icon -->
+                  <span v-if="doc.is_verified" class="flex items-center" :title="t('verified')">
+                    <svg class="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                  <button
+                    v-if="canWriteATDocument"
+                    class="btn btn-xs btn-secondary"
+                    @click.stop="toggleVerified(doc)"
+                  >{{ doc.is_verified ? t('removeVerification') : t('toggleVerify') }}</button>
+                  <button
+                    class="btn btn-xs btn-secondary"
+                    :title="doc.is_sensitive ? t('sensitiveShareWarning') : t('shareWhatsApp')"
+                    @click.stop="shareDocumentWhatsApp(doc)"
+                  >{{ t("shareWhatsApp") }}</button>
+                  <a
+                    v-if="doc.file_url"
+                    :href="doc.file_url"
+                    target="_blank"
+                    rel="noreferrer"
+                    class="btn btn-xs btn-secondary"
+                  >{{ t("open") }}</a>
+                </div>
               </template>
             </MetaListCard>
           </div>

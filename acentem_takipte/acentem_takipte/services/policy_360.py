@@ -119,7 +119,7 @@ def _get_at_documents_for_policy(policy_name: str) -> list[dict]:
 
     docs = _get_rows(
         "AT Document",
-        fields=["name", "file", "document_kind", "document_date", "notes", "status", "version_no", "creation", "owner"],
+        fields=["name", "file", "display_name", "document_kind", "document_sub_type", "document_date", "notes", "status", "version_no", "is_sensitive", "is_verified", "creation", "owner"],
         filters={"policy": policy_name, "status": "Active"},
         order_by="creation desc",
         limit_page_length=100,

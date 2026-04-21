@@ -17,23 +17,41 @@ class ATDocument(Document):
 def _build_display_name(doc) -> str:
     """AT Document için okunabilir görünen ad üretir.
 
-    Format: ``{Sub Type} | {dosya_adı}``
-    Sub Type yoksa sadece dosya adı döner.
+    Format: ``[SubType]_[CustomerName]_[Date]``
+    Eksik alanlar varsa fallback yapılır.
     """
-    # Bağlı File kaydından dosya adını çek
-    file_name = ""
-    if doc.file:
-        file_name = frappe.db.get_value("File", doc.file, "file_name") or ""
-
-    sub_type = (doc.document_sub_type or "").strip()
-
-    if sub_type and file_name:
-        return f"{sub_type} | {file_name}"
-    if file_name:
-        return file_name
-    if sub_type:
+    from frappe.utils import getdate
+    
+    sub_type = (doc.document_sub_type or "").strip() or "Document"
+    
+    # Müşteri adını çek (direct müşteri veya poliçe/hasar üzerinden)
+    customer_name = ""
+    if doc.customer:
+        customer_name = frappe.db.get_value("AT Customer", doc.customer, "full_name") or ""
+    elif doc.policy:
+        policy_customer = frappe.db.get_value("AT Policy", doc.policy, "customer")
+        if policy_customer:
+            customer_name = frappe.db.get_value("AT Customer", policy_customer, "full_name") or ""
+    elif doc.claim:
+        claim_customer = frappe.db.get_value("AT Claim", doc.claim, "customer")
+        if claim_customer:
+            customer_name = frappe.db.get_value("AT Customer", claim_customer, "full_name") or ""
+    
+    customer_name = (customer_name or "").replace(" ", "_").replace("-", "_")
+    
+    # Tarih (creation ya da document_date)
+    date_val = doc.document_date or doc.creation or getdate()
+    date_str = str(date_val).split(" ")[0]  # YYYY-MM-DD
+    
+    # Format: [SubType]_[CustomerName]_[Date]
+    if customer_name and date_str:
+        return f"{sub_type}_{customer_name}_{date_str}"
+    elif customer_name:
+        return f"{sub_type}_{customer_name}"
+    elif date_str:
+        return f"{sub_type}_{date_str}"
+    else:
         return sub_type
-    return doc.name or ""  # fallback: autoname değeri
 
 
 @frappe.whitelist()
