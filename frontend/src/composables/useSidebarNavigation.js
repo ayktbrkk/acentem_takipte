@@ -36,7 +36,7 @@ export function useSidebarNavigation() {
       communication: "İletişim Merkezi",
       reports: "Raporlar",
       documentCenter: "Doküman Merkezi",
-      documentRegistry: "Belge Kayıtları",
+      documentRegistry: "Doküman Kayıtları",
       breakGlassRequest: "Acil Erişim Talebi",
       breakGlassApprovals: "Acil Erişim Onayları",
       dataImport: "Veri İçe Aktarma",
