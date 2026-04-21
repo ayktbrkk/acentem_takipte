@@ -42,8 +42,23 @@
             </select>
           </label>
           <label class="field-row">
+            <span class="field-label">{{ t("documentSubType") }}</span>
+            <select v-model="documentSubType" class="field-input">
+              <option value="">—</option>
+              <option value="Ruhsat">{{ t("subRuhsat") }}</option>
+              <option value="Kimlik">{{ t("subKimlik") }}</option>
+              <option value="Poliçe Kopyası">{{ t("subPoliceCopyasi") }}</option>
+              <option value="Hasar Fotoğrafı">{{ t("subHasarFotografi") }}</option>
+              <option value="Diğer">{{ t("subDiger") }}</option>
+            </select>
+          </label>
+          <label class="field-row">
             <span class="field-label">{{ t("documentDate") }}</span>
             <input v-model="documentDate" type="date" class="field-input" />
+          </label>
+          <label class="field-row field-row-check">
+            <input v-model="isSensitive" type="checkbox" class="field-checkbox" />
+            <span class="field-label">{{ t("isSensitive") }}</span>
           </label>
           <label class="field-row">
             <span class="field-label">{{ t("notes") }}</span>
@@ -100,12 +115,19 @@ const copy = {
     upload: "Yükle",
     uploading: "Yükleniyor...",
     documentKind: "Belge Türü",
+    documentSubType: "Belge Alt Türü",
     documentDate: "Belge Tarihi",
+    isSensitive: "Hassas Veri",
     notes: "Notlar",
     kindPolicy: "Poliçe",
     kindEndorsement: "Zeyilname",
     kindClaim: "Hasar",
     kindOther: "Diğer",
+    subRuhsat: "Ruhsat",
+    subKimlik: "Kimlik",
+    subPoliceCopyasi: "Poliçe Kopyası",
+    subHasarFotografi: "Hasar Fotoğrafı",
+    subDiger: "Diğer",
   },
   en: {
     uploadDocument: "Upload Document",
@@ -116,12 +138,19 @@ const copy = {
     upload: "Upload",
     uploading: "Uploading...",
     documentKind: "Document Kind",
+    documentSubType: "Document Sub Type",
     documentDate: "Document Date",
+    isSensitive: "Sensitive Data",
     notes: "Notes",
     kindPolicy: "Policy",
     kindEndorsement: "Endorsement",
     kindClaim: "Claim",
     kindOther: "Other",
+    subRuhsat: "Registration Certificate",
+    subKimlik: "ID / Passport",
+    subPoliceCopyasi: "Policy Copy",
+    subHasarFotografi: "Damage Photo",
+    subDiger: "Other",
   },
 };
 
@@ -136,7 +165,9 @@ const isDragging = ref(false);
 const uploading = ref(false);
 const errorMessage = ref("");
 const documentKind = ref("");
+const documentSubType = ref("");
 const documentDate = ref("");
+const isSensitive = ref(false);
 const notes = ref("");
 
 function fmtFileSize(bytes) {
@@ -204,7 +235,9 @@ async function submit() {
           ...(props.attachedToDoctype ? { attached_to_doctype: props.attachedToDoctype } : {}),
           ...(props.attachedToName ? { attached_to_name: props.attachedToName } : {}),
           document_kind: documentKind.value,
+          document_sub_type: documentSubType.value,
           document_date: documentDate.value,
+          is_sensitive: isSensitive.value ? "1" : "0",
           notes: notes.value,
           is_private: "1",
         });
@@ -219,7 +252,9 @@ async function submit() {
       }
       selectedFile.value = null;
       documentKind.value = "";
+      documentSubType.value = "";
       documentDate.value = "";
+      isSensitive.value = false;
       notes.value = "";
       if (fileInput.value) fileInput.value.value = "";
       emit("uploaded");
@@ -335,6 +370,20 @@ async function submit() {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.field-row-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #6366f1;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .field-label {

@@ -151,6 +151,16 @@ const DOMAIN_MAP = {
     "Synced": "active",
     "Failed": "cancel",
   },
+  document_kind: {
+    "Policy":      "active",
+    "Endorsement": "waiting",
+    "Claim":       "cancel",
+    "Other":       "draft",
+  },
+  at_document_status: {
+    "Active":   "active",
+    "Archived": "draft",
+  },
   };
 
 const DOMAIN_LABELS = {
@@ -248,6 +258,16 @@ const DOMAIN_LABELS = {
     Draft: "Draft",
     Synced: "Synced",
     Failed: "Failed",
+  },
+  document_kind: {
+    Policy:      "Poliçe",
+    Endorsement: "Zeyilname",
+    Claim:       "Hasar",
+    Other:       "Diğer",
+  },
+  at_document_status: {
+    Active:   "Aktif",
+    Archived: "Arşiv",
   },
   claim: {
     Draft: "Draft",
