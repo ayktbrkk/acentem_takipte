@@ -30,6 +30,45 @@
 
         <p v-if="errorMessage" class="upload-error">{{ errorMessage }}</p>
 
+        <!-- P3.5: prop boşsa bağlantı seçici göster -->
+        <div v-if="!props.attachedToDoctype" class="link-section">
+          <label class="field-row">
+            <span class="field-label">{{ t('linkDoctypeLabel') }}</span>
+            <select v-model="linkDoctype" class="field-input" @change="onLinkDoctypeChange">
+              <option value="">—</option>
+              <option value="AT Customer">{{ t('linkCustomer') }}</option>
+              <option value="AT Policy">{{ t('linkPolicy') }}</option>
+              <option value="AT Claim">{{ t('linkClaim') }}</option>
+            </select>
+          </label>
+          <div v-if="linkDoctype" class="field-row">
+            <span class="field-label">{{ t('linkNameLabel') }}</span>
+            <div class="link-input-wrap">
+              <input
+                v-model="linkSearch"
+                type="text"
+                class="field-input"
+                :placeholder="t('linkSearchPlaceholder')"
+                @input="onLinkSearch"
+                autocomplete="off"
+              />
+              <ul v-if="linkResults.length" class="link-results">
+                <li
+                  v-for="r in linkResults"
+                  :key="r.name"
+                  class="link-result-item"
+                  @mousedown.prevent="selectLinkResult(r)"
+                >
+                  <span class="link-result-name">{{ r.label || r.name }}</span>
+                  <span v-if="r.label" class="link-result-id">{{ r.name }}</span>
+                </li>
+              </ul>
+              <p v-if="linkSearching" class="link-searching">{{ t('linkSearching') }}</p>
+            </div>
+            <span v-if="linkName" class="link-selected">✓ {{ linkName }}</span>
+          </div>
+        </div>
+
         <div class="meta-fields">
           <label class="field-row">
             <span class="field-label">{{ t("documentKind") }}</span>
@@ -128,6 +167,13 @@ const copy = {
     subPoliceCopyasi: "Poliçe Kopyası",
     subHasarFotografi: "Hasar Fotoğrafı",
     subDiger: "Diğer",
+    linkDoctypeLabel: "Bağlantı Türü",
+    linkNameLabel: "Bağlı Kayıt",
+    linkCustomer: "Müşteri",
+    linkPolicy: "Poliçe",
+    linkClaim: "Hasar",
+    linkSearchPlaceholder: "Kayıt ara...",
+    linkSearching: "Aranıyor...",
   },
   en: {
     uploadDocument: "Upload Document",
@@ -151,6 +197,13 @@ const copy = {
     subPoliceCopyasi: "Policy Copy",
     subHasarFotografi: "Damage Photo",
     subDiger: "Other",
+    linkDoctypeLabel: "Link Type",
+    linkNameLabel: "Linked Record",
+    linkCustomer: "Customer",
+    linkPolicy: "Policy",
+    linkClaim: "Claim",
+    linkSearchPlaceholder: "Search record...",
+    linkSearching: "Searching...",
   },
 };
 
@@ -169,6 +222,73 @@ const documentSubType = ref("");
 const documentDate = ref("");
 const isSensitive = ref(false);
 const notes = ref("");
+
+// P3.5: Standalone bağlantı seçici state
+const linkDoctype = ref("");
+const linkName = ref("");
+const linkSearch = ref("");
+const linkResults = ref([]);
+const linkSearching = ref(false);
+let linkSearchTimer = null;
+
+const LINK_CFG = {
+  "AT Customer": { searchField: "customer_name", labelField: "customer_name", fields: ["name", "customer_name"] },
+  "AT Policy":   { searchField: "name",          labelField: "name",          fields: ["name"] },
+  "AT Claim":    { searchField: "name",          labelField: "name",          fields: ["name"] },
+};
+
+function onLinkDoctypeChange() {
+  linkName.value = "";
+  linkSearch.value = "";
+  linkResults.value = [];
+}
+
+function onLinkSearch() {
+  linkName.value = "";
+  clearTimeout(linkSearchTimer);
+  if (!linkSearch.value.trim() || !linkDoctype.value) {
+    linkResults.value = [];
+    return;
+  }
+  linkSearchTimer = setTimeout(fetchLinkResults, 300);
+}
+
+async function fetchLinkResults() {
+  const cfg = LINK_CFG[linkDoctype.value];
+  if (!cfg) return;
+  linkSearching.value = true;
+  linkResults.value = [];
+  try {
+    const params = new URLSearchParams({
+      doctype: linkDoctype.value,
+      fields: JSON.stringify(cfg.fields),
+      filters: JSON.stringify([[linkDoctype.value, cfg.searchField, "like", `%${linkSearch.value}%`]]),
+      limit_page_length: "10",
+      order_by: `${cfg.searchField} asc`,
+    });
+    const csrfT = (typeof window !== "undefined" && window.csrf_token) || "";
+    const resp = await fetch(`/api/method/frappe.client.get_list?${params}`, {
+      headers: csrfT ? { "X-Frappe-CSRF-Token": csrfT } : {},
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      linkResults.value = (data?.message || []).map(r => ({
+        name: r.name,
+        label: cfg.labelField !== "name" ? (r[cfg.labelField] || "") : "",
+      }));
+    }
+  } catch {
+    // arama hatalarını sessizce geç
+  } finally {
+    linkSearching.value = false;
+  }
+}
+
+function selectLinkResult(r) {
+  linkName.value = r.name;
+  linkSearch.value = r.label || r.name;
+  linkResults.value = [];
+}
 
 function fmtFileSize(bytes) {
   if (!bytes || bytes === 0) return "";
@@ -209,11 +329,15 @@ async function submit() {
   const fd = new FormData();
   fd.append("file", selectedFile.value);
   fd.append("is_private", "1");
-  if (props.attachedToDoctype) {
-    fd.append("attached_to_doctype", props.attachedToDoctype);
+  // P3.5: prop boşsa seçiciden al
+  const effectiveDoctype = props.attachedToDoctype || linkDoctype.value;
+  const effectiveName = props.attachedToName || (linkDoctype.value ? linkName.value : "");
+
+  if (effectiveDoctype) {
+    fd.append("attached_to_doctype", effectiveDoctype);
   }
-  if (props.attachedToName) {
-    fd.append("attached_to_name", props.attachedToName);
+  if (effectiveName) {
+    fd.append("attached_to_name", effectiveName);
   }
 
   try {
@@ -232,8 +356,8 @@ async function submit() {
         const csrfT = (typeof window !== "undefined" && window.csrf_token) || "";
         const body = new URLSearchParams({
           file_name: frappe_file_name,
-          ...(props.attachedToDoctype ? { attached_to_doctype: props.attachedToDoctype } : {}),
-          ...(props.attachedToName ? { attached_to_name: props.attachedToName } : {}),
+          ...(effectiveDoctype ? { attached_to_doctype: effectiveDoctype } : {}),
+          ...(effectiveName ? { attached_to_name: effectiveName } : {}),
           document_kind: documentKind.value,
           document_sub_type: documentSubType.value,
           document_date: documentDate.value,
@@ -256,6 +380,10 @@ async function submit() {
       documentDate.value = "";
       isSensitive.value = false;
       notes.value = "";
+      linkDoctype.value = "";
+      linkName.value = "";
+      linkSearch.value = "";
+      linkResults.value = [];
       if (fileInput.value) fileInput.value.value = "";
       emit("uploaded");
     } else {
@@ -415,5 +543,72 @@ async function submit() {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+/* P3.5 - bağlantı seçici */
+.link-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.link-input-wrap {
+  position: relative;
+}
+
+.link-results {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  max-height: 12rem;
+  overflow-y: auto;
+  z-index: 100;
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+}
+
+.link-result-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.link-result-item:hover {
+  background: #f0f0ff;
+}
+
+.link-result-name {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.link-result-id {
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.link-searching {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  padding: 0.25rem 0;
+  margin: 0;
+}
+
+.link-selected {
+  font-size: 0.75rem;
+  color: #16a34a;
+  font-weight: 500;
+  margin-top: 0.2rem;
 }
 </style>
