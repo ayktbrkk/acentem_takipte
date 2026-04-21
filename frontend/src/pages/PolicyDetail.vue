@@ -123,7 +123,7 @@ const labels = {
     productFamily: "Ürün Ailesi", insuredSubject: "Sigortalanan Konu", coverageFocus: "Kapsam Odağı",
     readinessScore: "Hazırlık Skoru", completedFields: "Tam Alan", missingFields: "Eksik Alan",
     missingProductFields: "Eksik Ürün Alanları", noMissingProductField: "Eksik zorunlu alan bulunamadı.", missingFieldStatus: "Eksik",
-    endorsementTitle: "Zeyilname Geçmişi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.", emptyDocuments: "Henüz belge yüklenmedi.",
+    endorsementTitle: "Zeyilname Geçmişi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.", emptyDocuments: "Henüz doküman yüklenmedi.",
     totalDocuments: "Toplam Doküman", pdfDocuments: "PDF", imageDocuments: "Görsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diğer", lastUploadedOn: "Son Yükleme",
     notifications: "Bildirim Taslakları", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Aç",
     uploadDocument: "Belge Yükle", chooseFile: "Dosya seçin veya buraya sürükleyin", uploadSuccess: "Belge başarıyla yüklendi",

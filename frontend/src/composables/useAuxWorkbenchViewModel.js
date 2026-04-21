@@ -274,9 +274,9 @@ export function useAuxWorkbenchViewModel({
       deleteEventsHint: "Silme eylemleri",
       runEventsHint: "Çalıştırma eylemleri",
       filesWindowHint: "Mevcut filtreli penceredeki dosyalar",
-      pdfFilesHint: "PDF formatındaki belgeler",
+      pdfFilesHint: "PDF formatındaki dokümanlar",
       imageFilesHint: "Görsel dosyalar",
-      spreadsheetFilesHint: "Tablo belgeleri",
+      spreadsheetFilesHint: "Tablo dokümanları",
       attachedCustomersHint: "AT Müşteri kayıtlarına ekli dosyalar",
       attachedPoliciesHint: "AT Poliçe kayıtlarına ekli dosyalar",
       attachedClaimsHint: "AT Hasar kayıtlarına ekli dosyalar",
@@ -486,6 +486,7 @@ export function useAuxWorkbenchViewModel({
       "direction",
       "call_status",
       "call_outcome",
+      "document_kind",
     ].includes(field)) {
       return translateFieldValue(value, activeLocale);
     }
