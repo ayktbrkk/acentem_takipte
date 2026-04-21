@@ -2,7 +2,7 @@
 
 Tarih: 2026-04-20 | Son Güncelleme: 2026-04-21  
 Kapsam: PolicyDetail Dokümanlar sekmesi + Doküman Merkezi + AT Document Genişletme  
-Öncelik: P0 ✅ → P1 ✅ → P2 ✅ → P2.1 → P2.2 → P2.3 → P2.4  
+Öncelik: P0 ✅ → P1 ✅ → P2 ✅ → P2.1 ✅ → P2.2 ✅ → P2.3 ✅ → P2.4 ✅  
 Referans rehber: `docs/superpowers/guides/2026-04-06-tr-en-localization-implementation-guide.md`
 
 ---
@@ -20,10 +20,10 @@ Referans rehber: `docs/superpowers/guides/2026-04-06-tr-en-localization-implemen
 | Upload endpoint (custom) | `acentem_takipte/acentem_takipte/api/documents.py` | ✅ `upload_document()` — AT Document otomatik oluşturma |
 | Lokalizasyon (AuxWorkbench) | `frontend/src/composables/useAuxWorkbenchViewModel.js` | ✅ files + at-documents sütun etiketleri Türkçe |
 | Lokalizasyon (Doküman std.) | `frontend/src/generated/translations.js` + `registry.js` | ✅ Belge→Doküman standardizasyonu |
-| **AT Document Alan Genişletme** | `at_document.json` + `api/documents.py` | ⏳ P2.1 — planlandı |
-| **Müşteri 360° Doküman Listesi** | `customer_360.py` + `CustomerDetail.vue` | ⏳ P2.2 — planlandı |
-| **Güvenlik UI İndikatörleri** | `at_document.py` + frontend | ⏳ P2.3 — planlandı |
-| **WhatsApp Paylaşım** | `api/documents.py` + frontend | ⏳ P2.4 — planlandı |
+| **AT Document Alan Genişletme** | `at_document.json` + `api/documents.py` | ✅ P2.1 — tamamlandı (commit `775b366`) |
+| **Müşteri 360° Doküman Listesi** | `customer_360.py` + `CustomerDetail.vue` | ✅ P2.2 — tamamlandı (commit `07ebd9f`) |
+| **Güvenlik UI İndikatörleri** | `at_document.py` + frontend | ✅ P2.3 — tamamlandı (commit `f8c83ef`) |
+| **WhatsApp Paylaşım** | `api/documents.py` + frontend | ✅ P2.4 — tamamlandı (commit `8d3ad4f`) |
 
 ---
 
@@ -670,38 +670,38 @@ Not: `is_sensitive` dosyalar için uyarı döndürülür ama paylaşım engellen
 - [x] `npm run build` başarılı
 - [x] `bench build --app acentem_takipte` başarılı
 
-### P2.1 Done Kriterleri
+### P2.1 Done Kriterleri ✅
 
-- [ ] `at_document.json`'a `document_sub_type`, `is_sensitive`, `is_verified` eklendi
-- [ ] `upload_document()` bu 3 alanı kabul ediyor
-- [ ] AuxWorkbench `at-documents`'da yeni alanlar görünüyor
-- [ ] `document_sub_type` ve `is_sensitive` filtresi çalışıyor
-- [ ] `PolicyDocumentUploadModal`'da `document_sub_type` seçilebiliyor
-- [ ] i18n: Alt Tür, Hassas Veri, Doğrulandı çevirileri eklendi
-- [ ] Unit testler pass, build başarılı
+- [x] `at_document.json`'a `document_sub_type`, `is_sensitive`, `is_verified` eklendi
+- [x] `upload_document()` bu 3 alanı kabul ediyor
+- [x] AuxWorkbench `at-documents`'da yeni alanlar görünüyor
+- [x] `document_sub_type` ve `is_sensitive` filtresi çalışıyor
+- [x] `PolicyDocumentUploadModal`'da `document_sub_type` seçilebiliyor
+- [x] i18n: Alt Tür, Hassas Veri, Doğrulandı çevirileri eklendi
+- [x] Unit testler pass, build başarılı
 
-### P2.2 Done Kriterleri
+### P2.2 Done Kriterleri ✅
 
-- [ ] `customer_360.py` AT Document sorgusu döndürüyor (direkt + poliçe + hasar)
-- [ ] CustomerDetail operations tab'ında bireysel doküman kartları görünüyor
-- [ ] Semantik başlık: `{document_sub_type} | {file_name}`
-- [ ] Badge renk haritası uygulandı (Ruhsat=blue, Kimlik=slate…)
-- [ ] `is_sensitive` kilit ikonu, `is_verified` yeşil tik gösteriliyor
-- [ ] Unit testler pass, build başarılı
+- [x] `customer_360.py` AT Document sorgusu döndürüyor (direkt + poliçe + hasar)
+- [x] CustomerDetail operations tab'ında bireysel doküman kartları görünüyor
+- [x] Semantik başlık: `{document_sub_type} | {file_name}`
+- [x] Badge renk haritası uygulandı (Ruhsat=blue, Kimlik=slate…)
+- [x] `is_sensitive` kilit ikonu, `is_verified` yeşil tik gösteriliyor
+- [x] Unit testler pass, build başarılı
 
-### P2.3 Done Kriterleri
+### P2.3 Done Kriterleri ✅
 
-- [ ] `at_document.py`'da `toggle_verified()` whitelist metodu var
-- [ ] Yazma yetkisinde "Doğrula" butonu görünüyor
-- [ ] Toggle aksiyonu reactive olarak güncelleniyor
-- [ ] Unit testler pass, build başarılı
+- [x] `at_document.py`'da `toggle_verified()` whitelist metodu var
+- [x] Yazma yetkisinde "Doğrula" butonu görünüyor
+- [x] Toggle aksiyonu reactive olarak güncelleniyor
+- [x] Unit testler pass, build başarılı
 
-### P2.4 Done Kriterleri
+### P2.4 Done Kriterleri ✅
 
-- [ ] `share_document()` whitelist metodu var
-- [ ] `is_sensitive` belgeler için uyarı döndürülüyor
-- [ ] Frontend'de "WhatsApp ile Paylaş" butonu çalışıyor
-- [ ] Unit testler pass, build başarılı
+- [x] `share_document()` whitelist metodu var
+- [x] `is_sensitive` belgeler için uyarı döndürülüyor
+- [x] Frontend'de "WhatsApp ile Paylaş" butonu çalışıyor
+- [x] Unit testler pass, build başarılı
 
 ---
 
@@ -746,10 +746,10 @@ Bu terimler localization guide §7 sözlüğüne eklenecek:
 | 12 | `AT Document` DocType + upload akışı + at-documents workbench | P2 | Yüksek | Yeni Frappe DocType | ✅ Tamamlandı |
 | 13 | AuxWorkbench sütun etiketleri Türkçe (files + at-documents) | P2 | Orta | Lokalizasyon | ✅ Tamamlandı |
 | 14 | Belge→Doküman standardizasyonu (tüm UI) | P2 | Orta | Lokalizasyon | ✅ Tamamlandı |
-| 15 | `at_document.json` 3 yeni alan: sub_type, is_sensitive, is_verified | P2.1 | Orta | DocType migration | ⏳ Bekliyor |
-| 16 | `upload_document()` yeni alanları kabul et | P2.1 | Düşük | API genişletme | ⏳ Bekliyor |
-| 17 | AuxWorkbench + modal yeni alanlar + filtreler | P2.1 | Orta | Frontend wiring | ⏳ Bekliyor |
-| 18 | `customer_360.py` AT Document sorgusu | P2.2 | Yüksek | Backend sorgu değişikliği | ⏳ Bekliyor |
-| 19 | CustomerDetail bireysel doküman listesi + badge'ler | P2.2 | Yüksek | Frontend bileşen | ⏳ Bekliyor |
-| 20 | `toggle_verified()` whitelist metodu + Doğrula butonu | P2.3 | Orta | Backend + frontend | ⏳ Bekliyor |
-| 21 | `share_document()` whitelist + WhatsApp paylaşım butonu | P2.4 | Orta | Backend + frontend | ⏳ Bekliyor |
+| 15 | `at_document.json` 3 yeni alan: sub_type, is_sensitive, is_verified | P2.1 | Orta | DocType migration | ✅ Tamamlandı |
+| 16 | `upload_document()` yeni alanları kabul et | P2.1 | Düşük | API genişletme | ✅ Tamamlandı |
+| 17 | AuxWorkbench + modal yeni alanlar + filtreler | P2.1 | Orta | Frontend wiring | ✅ Tamamlandı |
+| 18 | `customer_360.py` AT Document sorgusu | P2.2 | Yüksek | Backend sorgu değişikliği | ✅ Tamamlandı |
+| 19 | CustomerDetail bireysel doküman listesi + badge'ler | P2.2 | Yüksek | Frontend bileşen | ✅ Tamamlandı |
+| 20 | `toggle_verified()` whitelist metodu + Doğrula butonu | P2.3 | Orta | Backend + frontend | ✅ Tamamlandı |
+| 21 | `share_document()` whitelist + WhatsApp paylaşım butonu | P2.4 | Orta | Backend + frontend | ✅ Tamamlandı |
