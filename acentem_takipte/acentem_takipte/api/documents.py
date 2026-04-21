@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+import unicodedata
 import posixpath
 from urllib.parse import unquote, urlparse
 
@@ -8,35 +10,87 @@ from frappe import _
 from frappe.utils import nowdate
 
 
-def _resolve_display_base_name(file_doc) -> str:
+def _ascii_slug(value: str, default: str = "DOC", keep_case: bool = False) -> str:
+    text = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode("ascii")
+    text = re.sub(r"[^A-Za-z0-9]+", "-", text).strip("-")
+    if not text:
+        return default
+    return text if keep_case else text.upper()
+
+
+def _title_slug(value: str, default: str = "Diger") -> str:
+    ascii_text = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode("ascii")
+    parts = [part for part in re.split(r"[^A-Za-z0-9]+", ascii_text) if part]
+    if not parts:
+        return default
+    return "-".join(part[:1].upper() + part[1:] for part in parts)
+
+
+def _file_extension(file_doc) -> str:
     file_name = str(getattr(file_doc, "file_name", "") or "").strip()
     file_url = str(getattr(file_doc, "file_url", "") or "").strip()
 
+    source_name = file_name
     if file_url:
         parsed = urlparse(file_url)
-        base_from_url = unquote(posixpath.basename(parsed.path or "")).strip()
-        if base_from_url:
-            return base_from_url
+        from_url = unquote(posixpath.basename(parsed.path or "")).strip()
+        if from_url:
+            source_name = from_url
 
-    if file_name:
-        return file_name
-
-    fallback = str(getattr(file_doc, "name", "") or "").strip()
-    return fallback or "document"
-
-
-def _split_file_name(file_name: str) -> tuple[str, str]:
-    name = str(file_name or "").strip() or "document"
-    if "." not in name:
-        return name, ""
-    stem, ext = name.rsplit(".", 1)
-    stem = stem.strip() or "document"
-    return stem, f".{ext.strip()}" if ext.strip() else ""
+    if "." not in source_name:
+        return "bin"
+    ext = source_name.rsplit(".", 1)[-1].strip().lower()
+    return ext or "bin"
 
 
-def _reserve_display_name(base_name: str) -> dict:
-    clean_base = str(base_name or "").strip() or "document"
-    lock_key = f"ATDOC-DISPLAY::{clean_base}"
+def _resolve_reference_token(reference_doctype: str, reference_name: str) -> str:
+    dt = str(reference_doctype or "").strip()
+    dn = str(reference_name or "").strip()
+
+    if dt == "AT Policy":
+        policy_row = frappe.db.get_value(
+            "AT Policy", dn, ["name", "policy_no"], as_dict=True
+        ) or {}
+        raw = str(policy_row.get("policy_no") or policy_row.get("name") or dn)
+        return f"POL-{_ascii_slug(raw, 'POL')}"
+
+    if dt == "AT Claim":
+        claim_row = frappe.db.get_value(
+            "AT Claim", dn, ["name", "claim_no"], as_dict=True
+        ) or {}
+        raw = str(claim_row.get("claim_no") or claim_row.get("name") or dn)
+        return f"CLM-{_ascii_slug(raw, 'CLM')}"
+
+    if dt == "AT Customer":
+        customer_row = frappe.db.get_value(
+            "AT Customer", dn, ["name", "customer_no", "tax_id"], as_dict=True
+        ) or {}
+        raw = str(
+            customer_row.get("customer_no")
+            or customer_row.get("name")
+            or customer_row.get("tax_id")
+            or dn
+        )
+        return f"CUS-{_ascii_slug(raw, 'CUS')}"
+
+    return f"DOC-{_ascii_slug(dn or dt, 'DOC')}"
+
+
+def _reserve_display_name(
+    *,
+    reference_doctype: str,
+    reference_name: str,
+    document_sub_type: str,
+    upload_date: str,
+    extension: str,
+) -> dict:
+    ref_token = _resolve_reference_token(reference_doctype, reference_name)
+    subtype_token = _title_slug(document_sub_type or "Diger", "Diger")
+    yyyymmdd = str(upload_date or nowdate()).replace("-", "")
+    ext = str(extension or "bin").strip(".").lower() or "bin"
+
+    naming_key = f"{ref_token}|{subtype_token}|{yyyymmdd}|{ext}"
+    lock_key = f"ATDOC-DISPLAY::{naming_key}"
 
     lock_row = frappe.db.sql("SELECT GET_LOCK(%s, 5)", (lock_key,)) or [[0]]
     lock_acquired = int(lock_row[0][0] or 0) == 1
@@ -44,21 +98,13 @@ def _reserve_display_name(base_name: str) -> dict:
         frappe.throw(_("Document naming lock could not be acquired. Please retry."))
 
     try:
-        if not frappe.db.exists("AT Document", {"display_name": clean_base}):
-            return {
-                "display_name": clean_base,
-                "sequence_no": 1,
-                "naming_key": clean_base,
-            }
-
-        stem, ext = _split_file_name(clean_base)
-        for seq in range(2, 1001):
-            candidate = f"{stem}_{str(seq).zfill(3)}{ext}"
+        for seq in range(1, 1001):
+            candidate = f"{ref_token}{subtype_token}{yyyymmdd}_{str(seq).zfill(3)}.{ext}"
             if not frappe.db.exists("AT Document", {"display_name": candidate}):
                 return {
                     "display_name": candidate,
                     "sequence_no": seq,
-                    "naming_key": clean_base,
+                    "naming_key": naming_key,
                 }
     finally:
         frappe.db.sql("SELECT RELEASE_LOCK(%s)", (lock_key,))
@@ -103,15 +149,21 @@ def upload_document(
         frappe.throw(_("File not found: {0}").format(file_name), frappe.DoesNotExistError)
 
     file_doc = frappe.get_doc("File", file_name)
-    base_display_name = _resolve_display_base_name(file_doc)
-    naming_identity = _reserve_display_name(base_display_name)
+    current_upload_date = nowdate()
+    naming_identity = _reserve_display_name(
+        reference_doctype=attached_to_doctype,
+        reference_name=attached_to_name,
+        document_sub_type=document_sub_type,
+        upload_date=current_upload_date,
+        extension=_file_extension(file_doc),
+    )
 
     doc_data: dict = {
         "doctype": "AT Document",
         "file": file_name,
         "display_name": naming_identity["display_name"],
         "status": "Active",
-        "upload_date": nowdate(),
+        "upload_date": current_upload_date,
         "sequence_no": naming_identity["sequence_no"],
         "naming_key": naming_identity["naming_key"],
         "version_no": 1,
@@ -161,6 +213,15 @@ def upload_document(
 
     at_doc = frappe.get_doc(doc_data)
     at_doc.insert(ignore_permissions=False)
+
+    # Keep File display name consistent with AT Document naming format.
+    frappe.db.set_value(
+        "File",
+        file_doc.name,
+        "file_name",
+        naming_identity["display_name"],
+        update_modified=False,
+    )
 
     return {"at_document": at_doc.name}
 
