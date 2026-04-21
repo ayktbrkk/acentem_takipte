@@ -120,40 +120,45 @@ def upsert_customer_segment_snapshot(
         {"customer": customer_name, "snapshot_date": business_date},
         "name",
     )
-    snapshot = (
-        frappe.get_doc("AT Customer Segment Snapshot", existing_name)
-        if existing_name
-        else frappe.get_doc(
+    update_values = {
+        "office_branch": office_branch,
+        "source_version": str(
+            insight_payload.get("source_version") or SNAPSHOT_SOURCE_VERSION
+        ),
+        "score": int(insight_payload.get("score") or 0),
+        "segment": str(insight_payload.get("segment") or ""),
+        "claim_risk": str(insight_payload.get("claim_risk") or ""),
+        "value_band": str(insight_payload.get("value_band") or ""),
+        "strengths_json": json.dumps(
+            insight_payload.get("strengths") or [], ensure_ascii=False
+        ),
+        "risks_json": json.dumps(
+            insight_payload.get("risks") or [], ensure_ascii=False
+        ),
+        "score_reason_json": json.dumps(
+            insight_payload.get("score_reason") or {}, ensure_ascii=False
+        ),
+    }
+
+    if existing_name:
+        # save() optimistic lock can throw TimestampMismatchError under concurrent requests.
+        # Direct update keeps the upsert idempotent and race-tolerant.
+        frappe.db.set_value(
+            "AT Customer Segment Snapshot",
+            existing_name,
+            update_values,
+            update_modified=True,
+        )
+        snapshot = frappe.get_doc("AT Customer Segment Snapshot", existing_name)
+    else:
+        snapshot = frappe.get_doc(
             {
                 "doctype": "AT Customer Segment Snapshot",
                 "customer": customer_name,
                 "snapshot_date": business_date,
+                **update_values,
             }
         )
-    )
-
-    snapshot.office_branch = office_branch
-    snapshot.source_version = str(
-        insight_payload.get("source_version") or SNAPSHOT_SOURCE_VERSION
-    )
-    snapshot.score = int(insight_payload.get("score") or 0)
-    snapshot.segment = str(insight_payload.get("segment") or "")
-    snapshot.claim_risk = str(insight_payload.get("claim_risk") or "")
-    snapshot.value_band = str(insight_payload.get("value_band") or "")
-    snapshot.strengths_json = json.dumps(
-        insight_payload.get("strengths") or [], ensure_ascii=False
-    )
-    snapshot.risks_json = json.dumps(
-        insight_payload.get("risks") or [], ensure_ascii=False
-    )
-    snapshot.score_reason_json = json.dumps(
-        insight_payload.get("score_reason") or {}, ensure_ascii=False
-    )
-
-    if existing_name:
-        # ignore_permissions: Customer segment snapshot; runs from scheduler job.
-        snapshot.save(ignore_permissions=True)
-    else:
         # ignore_permissions: Customer segment snapshot; runs from scheduler job.
         snapshot.insert(ignore_permissions=True)
 

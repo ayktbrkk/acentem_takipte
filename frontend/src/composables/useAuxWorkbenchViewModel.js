@@ -149,6 +149,59 @@ function translateFieldValue(value, activeLocale) {
   return translateText(key, currentLocale(activeLocale));
 }
 
+function normalizeLookupText(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replaceAll("ı", "i")
+    .replaceAll("İ", "i")
+    .replaceAll("ş", "s")
+    .replaceAll("Ş", "s")
+    .replaceAll("ü", "u")
+    .replaceAll("Ü", "u")
+    .replaceAll("ö", "o")
+    .replaceAll("Ö", "o")
+    .replaceAll("ğ", "g")
+    .replaceAll("Ğ", "g")
+    .replaceAll("ç", "c")
+    .replaceAll("Ç", "c");
+}
+
+function normalizeEnumLabel(field, value) {
+  const normalized = normalizeLookupText(value);
+  if (!normalized) return String(value ?? "");
+
+  const maps = {
+    status: {
+      active: "Active",
+      archived: "Archived",
+      arsiv: "Archived",
+      arsivlendi: "Archived",
+    },
+    document_kind: {
+      policy: "Policy",
+      police: "Policy",
+      endorsement: "Endorsement",
+      zeyilname: "Endorsement",
+      claim: "Claim",
+      hasar: "Claim",
+      other: "Other",
+      diger: "Other",
+    },
+    document_sub_type: {
+      ruhsat: "Ruhsat",
+      kimlik: "Kimlik",
+      "police kopyasi": "Poliçe Kopyası",
+      "hasar fotografi": "Hasar Fotoğrafı",
+      diger: "Diğer",
+      other: "Diğer",
+    },
+  };
+
+  const mapped = maps[field]?.[normalized];
+  return mapped || String(value ?? "");
+}
+
 function normalizeBoolStatus(v) {
   if (v === true || String(v) === "1") return "1";
   if (v === false || String(v) === "0") return "0";
@@ -497,7 +550,8 @@ export function useAuxWorkbenchViewModel({
       "document_kind",
       "document_sub_type",
     ].includes(field)) {
-      return translateFieldValue(value, activeLocale);
+      const normalizedLabel = normalizeEnumLabel(field, value);
+      return translateFieldValue(normalizedLabel, activeLocale);
     }
     return String(value);
   }
@@ -517,7 +571,7 @@ export function useAuxWorkbenchViewModel({
   }
 
   function rowTitle(row) {
-    // at-documents: display_name backend'de hesaplanıyor (Sub Type | dosya_adı)
+    // at-documents: display_name backend'de dosya URL/adı bazlı hesaplanır.
     if (config?.key === "at-documents") {
       return String(row?.display_name || row?.file || row?.name || "-");
     }

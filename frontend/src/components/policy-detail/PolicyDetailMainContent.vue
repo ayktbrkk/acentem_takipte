@@ -114,7 +114,7 @@
                 v-for="d in atDocuments"
                 :key="d.name"
                 :title="d.display_name || d.file_name || d.name"
-                :description="`${d.document_sub_type || d.document_kind || '-'}`"
+                :description="documentLabel(d)"
                 :meta="d.document_date ? fmtDate(d.document_date) : fmtDateTime(d.creation)"
               >
                 <template #trailing>
@@ -162,11 +162,52 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import ActionButton from "../app-shell/ActionButton.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import FieldGroup from "../ui/FieldGroup.vue";
 import StepBar from "../ui/StepBar.vue";
+import { useAuthStore } from "../../stores/auth";
+import { translateText } from "../../utils/i18n";
+
+const authStore = useAuthStore();
+const activeLocale = computed(() => {
+  const rawLocale = String(authStore.locale || "en").toLowerCase();
+  return rawLocale.startsWith("tr") ? "tr" : "en";
+});
+
+function documentLabel(doc) {
+  const raw = String(doc?.document_sub_type || doc?.document_kind || "").trim();
+  if (!raw) return "-";
+
+  const map = {
+    Policy: "Policy",
+    policy: "Policy",
+    Endorsement: "Endorsement",
+    endorsement: "Endorsement",
+    Claim: "Claim",
+    claim: "Claim",
+    Other: "Other",
+    other: "Other",
+    Ruhsat: "Ruhsat",
+    ruhsat: "Ruhsat",
+    Kimlik: "Kimlik",
+    kimlik: "Kimlik",
+    "Poliçe Kopyası": "Poliçe Kopyası",
+    "poliçe kopyası": "Poliçe Kopyası",
+    "police kopyasi": "Poliçe Kopyası",
+    "Hasar Fotoğrafı": "Hasar Fotoğrafı",
+    "hasar fotoğrafı": "Hasar Fotoğrafı",
+    "hasar fotografi": "Hasar Fotoğrafı",
+    "Diğer": "Diğer",
+    "diğer": "Diğer",
+    diger: "Diğer",
+  };
+
+  const source = map[raw] || raw;
+  return translateText(source, activeLocale.value);
+}
 
 defineProps({
   t: { type: Function, required: true },

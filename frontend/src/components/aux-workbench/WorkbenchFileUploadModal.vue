@@ -158,8 +158,11 @@ const authStore = useAuthStore();
 const locale = computed(() => authStore.locale || "en");
 
 function t(key) {
-  if (props.t) return props.t(key);
-  return copy[locale.value]?.[key] || copy.en[key] || key;
+  const local = copy[locale.value]?.[key] || copy.en[key] || key;
+  if (!props.t) return local;
+  const translated = props.t(key);
+  if (!translated || translated === key) return local;
+  return translated;
 }
 
 const copy = {

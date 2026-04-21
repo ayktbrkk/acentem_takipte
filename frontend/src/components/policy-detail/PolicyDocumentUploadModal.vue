@@ -94,6 +94,60 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "uploaded"]);
 
+const copy = {
+  tr: {
+    uploadDocument: "Belge Yükle",
+    chooseFile: "Dosya seçin veya buraya sürükleyin",
+    uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.",
+    fileTooLarge: "Dosya çok büyük (maks. 10 MB)",
+    cancel: "İptal",
+    upload: "Yükle",
+    uploading: "Yükleniyor...",
+    documentKind: "Belge Türü",
+    documentSubType: "Belge Alt Türü",
+    notes: "Notlar",
+    kindPolicy: "Poliçe",
+    kindEndorsement: "Zeyilname",
+    kindClaim: "Hasar",
+    kindOther: "Diğer",
+    subTypeRuhsat: "Ruhsat",
+    subTypeKimlik: "Kimlik",
+    subTypePoliceKopyasi: "Poliçe Kopyası",
+    subTypeHasarFotografi: "Hasar Fotoğrafı",
+    subTypeDiger: "Diğer",
+    close: "Kapat",
+  },
+  en: {
+    uploadDocument: "Upload Document",
+    chooseFile: "Choose a file or drag it here",
+    uploadError: "Upload failed. Please try again.",
+    fileTooLarge: "File is too large (max 10 MB)",
+    cancel: "Cancel",
+    upload: "Upload",
+    uploading: "Uploading...",
+    documentKind: "Document Kind",
+    documentSubType: "Document Sub Type",
+    notes: "Notes",
+    kindPolicy: "Policy",
+    kindEndorsement: "Endorsement",
+    kindClaim: "Claim",
+    kindOther: "Other",
+    subTypeRuhsat: "Registration Certificate",
+    subTypeKimlik: "ID / Passport",
+    subTypePoliceKopyasi: "Policy Copy",
+    subTypeHasarFotografi: "Damage Photo",
+    subTypeDiger: "Other",
+    close: "Close",
+  },
+};
+
+function t(key) {
+  const local = copy.tr[key] || copy.en[key] || key;
+  const translated = props.t?.(key);
+  if (!translated || translated === key) return local;
+  return translated;
+}
+
 const fileInput = ref(null);
 const selectedFile = ref(null);
 const isDragging = ref(false);
@@ -132,7 +186,7 @@ async function submit() {
 
   const maxBytes = 10 * 1024 * 1024;
   if (selectedFile.value.size > maxBytes) {
-    errorMessage.value = props.t("fileTooLarge");
+    errorMessage.value = t("fileTooLarge");
     return;
   }
 
@@ -185,10 +239,10 @@ async function submit() {
       if (fileInput.value) fileInput.value.value = "";
       emit("uploaded");
     } else {
-      errorMessage.value = props.t("uploadError");
+      errorMessage.value = t("uploadError");
     }
   } catch {
-    errorMessage.value = props.t("uploadError");
+    errorMessage.value = t("uploadError");
   } finally {
     uploading.value = false;
   }
