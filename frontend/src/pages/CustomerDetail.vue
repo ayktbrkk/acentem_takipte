@@ -606,6 +606,11 @@
                 <span v-if="doc.document_sub_type || doc.document_kind" class="badge" :class="docSubTypeBadgeClass(doc.document_sub_type || doc.document_kind)">
                   {{ doc.document_sub_type || doc.document_kind }}
                 </span>
+                <button
+                  v-if="canWriteATDocument"
+                  class="btn btn-xs btn-secondary"
+                  @click.stop="toggleVerified(doc)"
+                >{{ doc.is_verified ? t('removeVerification') : t('toggleVerify') }}</button>
                 <a
                   v-if="doc.file_url"
                   :href="doc.file_url"
@@ -979,6 +984,8 @@ const copy = {
     emptyDocuments: "Henüz doküman yüklenmedi.",
     sensitiveData: "Hassas Veri",
     verified: "Doğrulandı",
+    toggleVerify: "Doğrula",
+    removeVerification: "Doğrulamayı Kaldır",
     open: "Aç",
     totalDocuments: "Toplam Doküman",
     pdfDocuments: "PDF",
@@ -1173,6 +1180,8 @@ const copy = {
     emptyDocuments: "No documents uploaded yet.",
     sensitiveData: "Sensitive Data",
     verified: "Verified",
+    toggleVerify: "Verify",
+    removeVerification: "Remove Verification",
     open: "Open",
     totalDocuments: "Total Documents",
     pdfDocuments: "PDF",
@@ -1235,6 +1244,25 @@ const customer360CrossSell = computed(() => customer360Payload.value.cross_sell 
 const customer360Documents = computed(() => customer360Payload.value.documents || {});
 const customerDocumentProfile = computed(() => customer360Documents.value.document_profile || {});
 const customerDocumentItems = computed(() => customer360Documents.value.items || []);
+const canWriteATDocument = computed(() => Boolean(authStore.capabilities?.doctypes?.["AT Document"]?.write));
+const docToggleVerifiedResource = createResource({
+  url: "acentem_takipte.acentem_takipte.doctype.at_document.at_document.toggle_verified",
+  auto: false,
+});
+async function toggleVerified(doc) {
+  try {
+    const result = await docToggleVerifiedResource.submit({ docname: doc.name });
+    if (result && typeof result === "object" && "is_verified" in result) {
+      const updatedItems = (customer360Documents.value.items || []).map((d) =>
+        d.name === doc.name ? { ...d, is_verified: result.is_verified } : d
+      );
+      customer360Resource.setData({
+        ...(customer360Payload.value || {}),
+        documents: { ...(customer360Documents.value || {}), items: updatedItems },
+      });
+    }
+  } catch { /* ignore */ }
+}
 
 function fmtDate(v) {
   if (!v) return "";
