@@ -512,11 +512,9 @@ export function useAuxWorkbenchViewModel({
   }
 
   function rowTitle(row) {
-    // at-documents: "Sub Type | file_name" ya da sadece file_name
+    // at-documents: display_name backend'de hesaplanıyor (Sub Type | dosya_adı)
     if (config?.key === "at-documents") {
-      const fileName = String(row?.file_name || row?.file || row?.name || "-");
-      const subType = String(row?.document_sub_type || "").trim();
-      return subType ? `${subType} | ${fileName}` : fileName;
+      return String(row?.display_name || row?.file || row?.name || "-");
     }
     // files: file_name kullan (file_url değil)
     if (config?.key === "files") {
