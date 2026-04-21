@@ -632,6 +632,81 @@ Not: `is_sensitive` dosyalar için uyarı döndürülür ama paylaşım engellen
 
 ---
 
+## FAZ 8 — P3: DMS Naming + Secondary Ad Yönetimi
+
+Bu faz standart doküman adı üretimini merkezi servis ile yapar ve orijinal dosya adını secondary bilgi olarak düzenlenebilir hale getirir.
+
+### Görev 8.1 — Backend: AT Document yeni metadata alanları
+
+**Dosya:** `acentem_takipte/acentem_takipte/doctype/at_document/at_document.json`
+
+Eklenecek alanlar:
+- `secondary_file_name` (Data) → kullanıcı tarafından düzenlenebilir ikincil ad
+- `original_file_name` (Data, read_only) → upload edilen orijinal ad
+- `sequence_no` (Int, read_only) → günlük sayaç
+- `upload_date` (Date, read_only) → sayaç kovası
+- `naming_key` (Data, hidden/index) → yarış durumu için partition anahtarı
+
+`display_name` alanı unique olacak.
+
+### Görev 8.2 — Backend: Merkezi ve sequence-safe isimlendirme servisi
+
+**Dosya:** `acentem_takipte/acentem_takipte/api/documents.py`
+
+`upload_document()` içinde:
+- `AT Document` insert öncesi merkezi isim rezervasyonu yapılır.
+- Format: `[REF]_[SUBTYPE]_[YYYYMMDD]_[SEQ]`
+- `REF` tüm bağlamlarda çalışır: `POL-*`, `CLM-*`, `CUS-*`
+- `GET_LOCK/RELEASE_LOCK` ile race condition korunur.
+
+`original_file_name` upload edilen `File.file_name` ile doldurulur.
+`secondary_file_name` başlangıçta `original_file_name` ile aynı yazılır.
+
+### Görev 8.3 — Backend: Hook davranışı
+
+**Dosya:** `acentem_takipte/acentem_takipte/doctype/at_document/at_document.py`
+
+`before_insert` artık display_name'i her zaman ezmez; yalnızca boşsa fallback üretir.
+Asıl isimlendirme upload servisinde merkezi yapılır.
+
+### Görev 8.4 — Quick Edit ile secondary ad + not güncelleme
+
+**Dosyalar:**
+- `acentem_takipte/acentem_takipte/api/session.py`
+- `acentem_takipte/acentem_takipte/services/quick_create_helpers.py`
+- `acentem_takipte/acentem_takipte/api/aux_edit_registry.py`
+- `frontend/src/config/quickCreate/registry.js`
+- `frontend/src/config/auxWorkbench/registry.js`
+
+`AT Document` quick-edit yetkisi açılır.
+Kullanıcı şu alanları düzenleyebilir:
+- `secondary_file_name`
+- `notes`
+
+### Görev 8.5 — Doküman Merkezi görünümü
+
+**Dosyalar:**
+- `frontend/src/config/auxWorkbench/registry.js`
+- `frontend/src/composables/useAuxWorkbenchViewModel.js`
+
+Liste/Detay görünümünde:
+- Ana başlık: `display_name`
+- Secondary bilgi: `secondary_file_name`
+- Orijinal ad: `original_file_name` (salt okunur)
+
+### Görev 8.6 — P3 Build ve Yayın
+
+1. `npm run test:unit`
+2. `npm run build`
+3. `bench --site at.localhost migrate`
+4. `bench --site at.localhost clear-cache`
+5. `bench build --app acentem_takipte`
+6. Smoke:
+  - aynı gün aynı subtype için artan `_001`, `_002` oluşuyor mu?
+  - quick edit ile `secondary_file_name` ve `notes` kaydedilebiliyor mu?
+
+---
+
 ## Definition of Done
 
 ### P0 Done Kriterleri ✅

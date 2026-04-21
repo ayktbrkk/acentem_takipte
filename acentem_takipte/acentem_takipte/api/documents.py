@@ -1,7 +1,75 @@
 from __future__ import annotations
 
+import re
+import unicodedata
+
 import frappe
 from frappe import _
+from frappe.utils import nowdate
+
+
+def _slug(value: str, fallback: str = "DOC") -> str:
+    text = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode("ascii")
+    text = re.sub(r"[^A-Za-z0-9]+", "-", text).strip("-").upper()
+    return text or fallback
+
+
+def _resolve_reference_token(doctype: str, name: str) -> str:
+    dt = (doctype or "").strip()
+    dn = (name or "").strip()
+    if dt == "AT Policy":
+        policy_no = frappe.db.get_value("AT Policy", dn, "policy_no") or dn
+        return f"POL-{_slug(policy_no, 'POL')}"
+    if dt == "AT Claim":
+        return f"CLM-{_slug(dn, 'CLM')}"
+    if dt == "AT Customer":
+        return f"CUS-{_slug(dn, 'CUS')}"
+    return f"DOC-{_slug(dn or dt, 'DOC')}"
+
+
+def _reserve_document_identity(
+    reference_doctype: str,
+    reference_name: str,
+    document_sub_type: str,
+    upload_date: str,
+) -> dict:
+    """Generate sequence-safe display_name using a DB lock.
+
+    Format: [REF]_[SUBTYPE]_[YYYYMMDD]_[SEQ]
+    """
+    subtype_raw = (document_sub_type or "Diger").strip() or "Diger"
+    subtype = _slug(subtype_raw, "Diger")
+    ref_token = _resolve_reference_token(reference_doctype, reference_name)
+    yyyymmdd = str(upload_date or nowdate()).replace("-", "")
+    lock_key = f"ATDOC-NAME::{reference_doctype}|{reference_name}|{subtype}|{upload_date}"
+
+    lock_row = frappe.db.sql("SELECT GET_LOCK(%s, 5)", (lock_key,)) or [[0]]
+    lock_acquired = int(lock_row[0][0] or 0) == 1
+    if not lock_acquired:
+        frappe.throw(_("Document naming lock could not be acquired. Please retry."))
+
+    try:
+        naming_key = f"{reference_doctype}|{reference_name}|{subtype}|{upload_date}"
+        for _ in range(8):
+            last_seq = frappe.db.get_value(
+                "AT Document",
+                filters={"naming_key": naming_key},
+                fieldname="sequence_no",
+                order_by="sequence_no desc",
+            )
+            new_seq = int(last_seq or 0) + 1
+            display_name = f"{ref_token}_{subtype}_{yyyymmdd}_{str(new_seq).zfill(3)}"
+            if not frappe.db.exists("AT Document", {"display_name": display_name}):
+                return {
+                    "display_name": display_name,
+                    "sequence_no": new_seq,
+                    "upload_date": upload_date,
+                    "naming_key": naming_key,
+                }
+    finally:
+        frappe.db.sql("SELECT RELEASE_LOCK(%s)", (lock_key,))
+
+    frappe.throw(_("Could not generate a unique document name. Please retry."))
 
 
 @frappe.whitelist()
@@ -40,11 +108,15 @@ def upload_document(
     if not frappe.db.exists("File", file_name):
         frappe.throw(_("File not found: {0}").format(file_name), frappe.DoesNotExistError)
 
+    file_doc = frappe.get_doc("File", file_name)
+
     doc_data: dict = {
         "doctype": "AT Document",
         "file": file_name,
         "status": "Active",
         "version_no": 1,
+        "original_file_name": file_doc.file_name,
+        "secondary_file_name": file_doc.file_name,
     }
 
     if document_kind:
@@ -86,6 +158,14 @@ def upload_document(
 
         elif attached_to_doctype == "AT Customer":
             doc_data["customer"] = attached_to_name
+
+    identity = _reserve_document_identity(
+        reference_doctype=doc_data.get("reference_doctype") or "",
+        reference_name=doc_data.get("reference_name") or "",
+        document_sub_type=doc_data.get("document_sub_type") or "Diger",
+        upload_date=nowdate(),
+    )
+    doc_data.update(identity)
 
     at_doc = frappe.get_doc(doc_data)
     at_doc.insert(ignore_permissions=False)

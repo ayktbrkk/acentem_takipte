@@ -23,6 +23,7 @@ SESSION_CAPABILITY_QUICK_CREATE: dict[str, str] = {
 }
 
 SESSION_CAPABILITY_QUICK_EDIT: dict[str, str] = {
+    "document_registry_edit": "AT Document",
     "insurance_company_edit": "AT Insurance Company",
     "branch_master_edit": "AT Branch",
     "sales_entity_master_edit": "AT Sales Entity",

@@ -355,6 +355,10 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
         "resolution_action",
         "notes",
     },
+    "AT Document": {
+        "secondary_file_name",
+        "notes",
+    },
 }
 
 

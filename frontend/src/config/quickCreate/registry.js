@@ -1253,6 +1253,24 @@ addQuickEditVariant("notification_template_master", "notification_template_maste
 addQuickEditVariant("accounting_entry", "accounting_entry_edit", "Edit Accounting Entry", "Update accounting and reconciliation fields");
 addQuickEditVariant("reconciliation_item", "reconciliation_item_edit", "Edit Reconciliation Item", "Update reconciliation mismatch record");
 
+quickCreateRegistry.document_registry_edit = {
+  key: "document_registry_edit",
+  title: i18nLabel("Edit Document"),
+  subtitle: i18nLabel("Update secondary file name and notes"),
+  submitUrl: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+  resultKey: "record",
+  openRouteName: "",
+  successRefreshTargets: ["aux_detail"],
+  defaults: {
+    secondary_file_name: "",
+    notes: "",
+  },
+  fields: [
+    { name: "secondary_file_name", type: "text", label: i18nLabel("Secondary File Name"), required: true, fullWidth: true },
+    { name: "notes", type: "textarea", label: i18nLabel("Notes"), rows: 3, fullWidth: true },
+  ],
+};
+
 const customerQuickCreateConfig = quickCreateRegistry.customer;
 if (customerQuickCreateConfig) {
   customerQuickCreateConfig.defaults = {

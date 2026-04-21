@@ -5,6 +5,11 @@
  "engine": "InnoDB",
  "field_order": [
   "display_name",
+    "secondary_file_name",
+    "original_file_name",
+    "sequence_no",
+    "upload_date",
+    "naming_key",
   "file",
   "reference_doctype",
   "reference_name",
@@ -26,7 +31,41 @@
    "fieldtype": "Data",
    "label": "Display Name",
    "read_only": 1,
-   "in_list_view": 1
+    "in_list_view": 1,
+    "unique": 1
+  },
+  {
+    "fieldname": "secondary_file_name",
+    "fieldtype": "Data",
+    "label": "Secondary File Name",
+    "in_list_view": 1
+  },
+  {
+    "fieldname": "original_file_name",
+    "fieldtype": "Data",
+    "label": "Original File Name",
+    "read_only": 1
+  },
+  {
+    "default": "0",
+    "fieldname": "sequence_no",
+    "fieldtype": "Int",
+    "label": "Sequence No",
+    "read_only": 1
+  },
+  {
+    "fieldname": "upload_date",
+    "fieldtype": "Date",
+    "label": "Upload Date",
+    "read_only": 1
+  },
+  {
+    "fieldname": "naming_key",
+    "fieldtype": "Data",
+    "hidden": 1,
+    "label": "Naming Key",
+    "no_copy": 1,
+    "search_index": 1
   },
   {
    "fieldname": "file",

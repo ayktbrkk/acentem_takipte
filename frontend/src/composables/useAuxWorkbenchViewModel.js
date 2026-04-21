@@ -111,6 +111,9 @@ const AUX_FIELD_LABELS = {
   },
   "at-documents": {
     name: "Record",
+    display_name: "Display Name",
+    secondary_file_name: "Secondary File Name",
+    original_file_name: "Original File Name",
     file: "File",
     reference_doctype: "Reference Type",
     reference_name: "Reference Record",
@@ -122,6 +125,8 @@ const AUX_FIELD_LABELS = {
     is_sensitive: "Sensitive Data",
     is_verified: "Verified",
     document_date: "Document Date",
+    upload_date: "Upload Date",
+    sequence_no: "Sequence No",
     version_no: "Version No",
     status: "Status",
     notes: "Notes",

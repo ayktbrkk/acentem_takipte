@@ -52,6 +52,7 @@ FIELD_REGISTRY: dict[tuple[str, str], tuple] = {
     (_ANY, "whatsapp_body_template"): ("strip",),
     (_ANY, "external_ref"): ("strip",),
     (_ANY, "notes"): ("strip",),
+    (_ANY, "secondary_file_name"): ("strip",),
     (_ANY, "criteria_json"): ("strip",),
     (_ANY, "asset_label"): ("strip",),
     (_ANY, "asset_identifier"): ("strip",),
