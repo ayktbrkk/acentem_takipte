@@ -10,9 +10,12 @@ def upload_document(
     attached_to_doctype: str = "",
     attached_to_name: str = "",
     document_kind: str = "",
+    document_sub_type: str = "",
     document_date: str = "",
     notes: str = "",
     is_private: int = 1,
+    is_sensitive: int = 0,
+    is_verified: int = 0,
 ) -> dict:
     """
     Upload a document and create an AT Document metadata record.
@@ -46,10 +49,16 @@ def upload_document(
 
     if document_kind:
         doc_data["document_kind"] = document_kind
+    if document_sub_type:
+        doc_data["document_sub_type"] = document_sub_type
     if document_date:
         doc_data["document_date"] = document_date
     if notes:
         doc_data["notes"] = notes
+    if is_sensitive:
+        doc_data["is_sensitive"] = 1
+    if is_verified:
+        doc_data["is_verified"] = 1
 
     # Wire reference fields
     if attached_to_doctype and attached_to_name:

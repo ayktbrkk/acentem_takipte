@@ -11,6 +11,9 @@
   "customer",
   "claim",
   "document_kind",
+  "document_sub_type",
+  "is_sensitive",
+  "is_verified",
   "document_date",
   "version_no",
   "status",
@@ -59,6 +62,24 @@
    "fieldtype": "Select",
    "label": "Document Kind",
    "options": "\nPolicy\nEndorsement\nClaim\nOther"
+  },
+  {
+   "fieldname": "document_sub_type",
+   "fieldtype": "Select",
+   "label": "Document Sub Type",
+   "options": "\nRuhsat\nKimlik\nPoli\u00e7e Kopyas\u0131\nHasar Foto\u011fraf\u0131\nDi\u011fer"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_sensitive",
+   "fieldtype": "Check",
+   "label": "Sensitive Data"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_verified",
+   "fieldtype": "Check",
+   "label": "Verified"
   },
   {
    "fieldname": "document_date",

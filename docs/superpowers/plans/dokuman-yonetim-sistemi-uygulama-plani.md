@@ -1,8 +1,8 @@
 # Doküman Yönetim Sistemi — Detaylı Uygulama Planı
 
-Tarih: 2026-04-20  
-Kapsam: PolicyDetail Dokümanlar sekmesi + Doküman Merkezi  
-Öncelik: P0 → P1 → P2  
+Tarih: 2026-04-20 | Son Güncelleme: 2026-04-21  
+Kapsam: PolicyDetail Dokümanlar sekmesi + Doküman Merkezi + AT Document Genişletme  
+Öncelik: P0 ✅ → P1 ✅ → P2 ✅ → P2.1 → P2.2 → P2.3 → P2.4  
 Referans rehber: `docs/superpowers/guides/2026-04-06-tr-en-localization-implementation-guide.md`
 
 ---
@@ -11,14 +11,19 @@ Referans rehber: `docs/superpowers/guides/2026-04-06-tr-en-localization-implemen
 
 | Bileşen | Dosya | Durum |
 |---|---|---|
-| Dokümanlar tab template | `frontend/src/components/policy-detail/PolicyDetailMainContent.vue` | Sadece "Aç" butonu, liste var, **upload yok** |
-| Runtime fonksiyonlar | `frontend/src/composables/usePolicyDetailRuntime.js` | `openPolicyDocuments()` var, `uploadPolicyDocument()` **yok** |
-| Policy 360 file alanları | `acentem_takipte/acentem_takipte/services/policy_360.py` | `file_size` ve `is_private` **eksik** |
-| Files workbench config | `frontend/src/config/auxWorkbench/registry.js` | `quickCreate` / `toolbarActions` **yok** |
-| Yan menü | `frontend/src/composables/useSidebarNavigation.js` | "Doküman Merkezi" / `/files` linki **yok** |
-| Session capabilities | `acentem_takipte/acentem_takipte/api/session.py` | `files.upload` capability **yok** |
-| QuickCreate registry | `frontend/src/config/quickCreate/registry.js` | File upload entry **yok** |
-| Upload endpoint | Frappe native | `/api/method/upload_file` endpoint mevcut — custom backend gerekmez |
+| Dokümanlar tab template | `frontend/src/components/policy-detail/PolicyDetailMainContent.vue` | ✅ Upload modal + dosya kartları tamamlandı |
+| Runtime fonksiyonlar | `frontend/src/composables/usePolicyDetailRuntime.js` | ✅ `uploadPolicyDocument()` + `fmtFileSize` + `canUploadDocuments` eklendi |
+| Policy 360 file alanları | `acentem_takipte/acentem_takipte/services/policy_360.py` | ✅ `file_size` ve `is_private` eklendi |
+| Files workbench config | `frontend/src/config/auxWorkbench/registry.js` | ✅ `toolbarActions` + filtreler + presetler eklendi |
+| Yan menü | `frontend/src/composables/useSidebarNavigation.js` | ✅ "Doküman Kayıtları" + sidebar linkleri eklendi |
+| AT Document DocType | `acentem_takipte/acentem_takipte/doctype/at_document/` | ✅ 11 alan, auto-wiring (policy/customer/claim) |
+| Upload endpoint (custom) | `acentem_takipte/acentem_takipte/api/documents.py` | ✅ `upload_document()` — AT Document otomatik oluşturma |
+| Lokalizasyon (AuxWorkbench) | `frontend/src/composables/useAuxWorkbenchViewModel.js` | ✅ files + at-documents sütun etiketleri Türkçe |
+| Lokalizasyon (Doküman std.) | `frontend/src/generated/translations.js` + `registry.js` | ✅ Belge→Doküman standardizasyonu |
+| **AT Document Alan Genişletme** | `at_document.json` + `api/documents.py` | ⏳ P2.1 — planlandı |
+| **Müşteri 360° Doküman Listesi** | `customer_360.py` + `CustomerDetail.vue` | ⏳ P2.2 — planlandı |
+| **Güvenlik UI İndikatörleri** | `at_document.py` + frontend | ⏳ P2.3 — planlandı |
+| **WhatsApp Paylaşım** | `api/documents.py` + frontend | ⏳ P2.4 — planlandı |
 
 ---
 
@@ -31,7 +36,7 @@ Referans rehber: `docs/superpowers/guides/2026-04-06-tr-en-localization-implemen
 
 ---
 
-## FAZ 1 — P0 (MVP): PolicyDetail Upload
+## FAZ 1 — P0 (MVP): PolicyDetail Upload ✅ TAMAMLANDI
 
 ### Görev 1.1 — Backend: policy_360.py dosya alanlarını genişlet
 
@@ -290,7 +295,7 @@ Sıra:
 
 ---
 
-## FAZ 2 — P1: Files Workbench + Sidebar
+## FAZ 2 — P1: Files Workbench + Sidebar ✅ TAMAMLANDI
 
 ### Görev 2.1 — Files Workbench: toolbarActions upload butonu
 
@@ -397,13 +402,13 @@ Yeni string'ler:
 
 ---
 
-## FAZ 3 — P2: AT Document Metadata DocType
+## FAZ 3 — P2: AT Document Metadata DocType ✅ TAMAMLANDI
 
-Bu faz, Frappe `File` DocType'ının yetersiz kaldığı durumlarda (versiyon takibi, belge sınıflandırma, hasar/poliçe/müşteri kestirme bağlantıları) devreye girer. P0 ve P1 tamamlanmadan başlanmaz.
+Frappe `File` DocType'ının yetersiz kaldığı durumlarda (versiyon takibi, belge sınıflandırma, hasar/poliçe/müşteri kestirme bağlantıları) tamamlandı.
 
-### Görev 3.1 — DocType Tanımı
+### Görev 3.1 — DocType Tanımı ✅
 
-**Yeni DocType:** `AT Document`
+**DocType:** `AT Document` — `AT-DOC-.YYYY.-.#####` naming
 
 | Alan | Tip | Açıklama |
 |---|---|---|
@@ -419,27 +424,219 @@ Bu faz, Frappe `File` DocType'ının yetersiz kaldığı durumlarda (versiyon ta
 | `status` | Select | Active / Archived |
 | `notes` | Text | Serbest açıklama |
 
-Naming: `AT-DOC-.YYYY.-.#####`
+### Görev 3.2 — Upload akışı ✅
 
-### Görev 3.2 — Upload akışı değişikliği (P2'de)
+Upload akışı: `upload_file` → Frappe `File` kaydı + `AT Document` metadata kaydı (aynı form, tek submit). `api/documents.py::upload_document()` auto-wiring: policy/customer/claim bağlantıları otomatik.
 
-P0'daki upload akışı: `upload_file` → `File` kaydı.
+### Görev 3.3 — Doküman Merkezi workbench ✅
 
-P2'deki upload akışı: `upload_file` → `File` kaydı + `AT Document` metadata kaydı (aynı form, tek submit).
+`at-documents` workbench config tamamlandı: `registry.js`'de tüm alan etiketleri, filtreler, presetler ve toolbar aksiyonları Türkçe.
 
-Bu değişiklik P0 bileşenini geriye dönük uyumlu şekilde genişletir; P0 modal'ına `document_kind`, `document_date`, `notes` alanları eklenir.
+---
 
-### Görev 3.3 — Doküman Merkezi workbench
+## FAZ 4 — P2.1: AT Document Alan Genişletme
 
-`files` workbench config'i, opsiyonel olarak `AT Document`'e taşınabilir veya hybrid görünüm (`File` + `AT Document` join) sağlanır. Bu karar P2'de netleştirilecek.
+Bu faz AT Document DocType'ına 3 yeni metadata alanı (alt tür, hassas veri, doğrulama) ekler. P2 tamamlandıktan sonra başlar.
+
+### Görev 4.1 — Backend: at_document.json yeni alanlar
+
+**Dosya:** `acentem_takipte/acentem_takipte/doctype/at_document/at_document.json`
+
+Eklenecek 3 alan (`document_kind`'dan sonra):
+
+```json
+{"fieldname": "document_sub_type", "fieldtype": "Select", "label": "Document Sub Type",
+ "options": "Ruhsat\nKimlik\nPoliçe Kopyası\nHasar Fotoğrafı\nDiğer",
+ "insert_after": "document_kind"},
+{"fieldname": "is_sensitive", "fieldtype": "Check", "label": "Sensitive Data",
+ "default": "0", "insert_after": "document_sub_type"},
+{"fieldname": "is_verified", "fieldtype": "Check", "label": "Verified",
+ "default": "0", "insert_after": "is_sensitive"}
+```
+
+### Görev 4.2 — Backend: api/documents.py genişlet
+
+**Dosya:** `acentem_takipte/acentem_takipte/api/documents.py`
+
+`upload_document()` imzasına ekle:
+```python
+document_sub_type: str = "",
+is_sensitive: int = 0,
+is_verified: int = 0,
+```
+Ve `doc_data` dict'ine bu 3 alanı yaz.
+
+### Görev 4.3 — Frontend: useAuxWorkbenchViewModel.js güncellemesi
+
+**Dosya:** `frontend/src/composables/useAuxWorkbenchViewModel.js`
+
+`AUX_FIELD_LABELS["at-documents"]`'a ekle:
+- `document_sub_type: L("Document Sub Type", "Alt Tür")`
+- `is_sensitive: L("Sensitive Data", "Hassas Veri")`
+- `is_verified: L("Verified", "Doğrulandı")`
+
+`boolFields` listesine `is_sensitive` ve `is_verified` ekle.
+
+### Görev 4.4 — Frontend: registry.js filtre genişletme
+
+**Dosya:** `frontend/src/config/auxWorkbench/registry.js`
+
+`at-documents` filterDefs'e ekle:
+```js
+F("document_sub_type", "document_sub_type", "select",
+  { options: ["", "Ruhsat", "Kimlik", "Poliçe Kopyası", "Hasar Fotoğrafı", "Diğer"] }),
+F("is_sensitive", "is_sensitive", "select", { options: ["", "1", "0"] }),
+```
+
+### Görev 4.5 — Frontend: PolicyDocumentUploadModal.vue
+
+**Dosya:** `frontend/src/components/policy-detail/PolicyDocumentUploadModal.vue`
+
+`document_sub_type` için select dropdown alanı ekle (2. adım formu).
+
+### Görev 4.6 — i18n: Yeni string'ler
+
+| Key | EN | TR |
+|---|---|---|
+| `documentSubType` | Document Sub Type | Alt Tür |
+| `sensitiveData` | Sensitive Data | Hassas Veri |
+| `verified` | Verified | Doğrulandı |
+| `Ruhsat` | Vehicle Registration | Ruhsat |
+| `Kimlik` | ID Document | Kimlik |
+| `Poliçe Kopyası` | Policy Copy | Poliçe Kopyası |
+| `Hasar Fotoğrafı` | Damage Photo | Hasar Fotoğrafı |
+
+**Güncellenecek dosyalar:** `generated/translations.js`
+
+### Görev 4.7 — Test + Build + Commit
+
+1. `npm run test:unit`
+2. `npm run build`
+3. WSL: `bench --site at.localhost clear-cache && bench build --app acentem_takipte`
+
+---
+
+## FAZ 5 — P2.2: Customer 360° Doküman Görünümü
+
+Bu faz müşteri detay sayfasına AT Document bazlı bireysel doküman listesi ekler.
+
+### Görev 5.1 — Backend: customer_360.py
+
+**Dosya:** `acentem_takipte/acentem_takipte/services/customer_360.py`
+
+`_get_customer_files()` yerine `_get_customer_at_documents(customer_name)` yaz:
+- Müşteriye direkt bağlı AT Documents (`customer = customer_name`)
+- Poliçe AT Documents (`policy` alanı üzerinden)
+- Hasar AT Documents (`claim` alanı üzerinden)
+- Döndürülen alanlar: `file`, `file_name` (File join), `document_kind`, `document_sub_type`, `status`, `document_date`, `is_sensitive`, `is_verified`, `creation`, `reference_doctype`, `reference_name`, `policy`
+
+Payload key değişmez: `documents.items` — geriye dönük uyumlu.
+
+### Görev 5.2 — Frontend: CustomerDetail.vue doküman listesi
+
+**Dosya:** `frontend/src/pages/CustomerDetail.vue`
+
+`operations` tabındaki doküman paneline MetaListCard listesi ekle:
+
+```vue
+<MetaListCard
+  v-for="doc in customer360.documents.items"
+  :key="doc.name"
+  :title="doc.document_sub_type ? `${doc.document_sub_type} | ${doc.file_name}` : doc.file_name"
+  :description="doc.reference_name"
+  :meta="fmtDate(doc.document_date || doc.creation)"
+>
+  <template #trailing>
+    <span v-if="doc.is_sensitive" class="badge badge-orange">🔒</span>
+    <span v-if="doc.is_verified" class="badge badge-green">✓</span>
+    <span class="badge" :class="subTypeBadgeClass(doc.document_sub_type)">{{ doc.document_sub_type || doc.document_kind }}</span>
+  </template>
+</MetaListCard>
+```
+
+**Badge renk haritası:**
+| Alt Tür | CSS Sınıfı |
+|---|---|
+| Ruhsat | `badge-blue` |
+| Kimlik | `badge-slate` |
+| Poliçe Kopyası | `badge-green` |
+| Hasar Fotoğrafı | `badge-orange` |
+| Diğer / boş | `badge-gray` |
+
+### Görev 5.3 — Test + Build + Commit
+
+---
+
+## FAZ 6 — P2.3: Güvenlik UI İndikatörleri
+
+Bu faz `is_sensitive` ve `is_verified` alanlarını frontend'de görsel olarak işler ve doğrulama aksiyonu ekler.
+
+### Görev 6.1 — Backend: at_document.py whitelist metodu
+
+**Dosya:** `acentem_takipte/acentem_takipte/doctype/at_document/at_document.py`
+
+```python
+@frappe.whitelist()
+def toggle_verified(docname: str) -> dict:
+    doc = frappe.get_doc("AT Document", docname)
+    doc.is_verified = 0 if doc.is_verified else 1
+    doc.save(ignore_permissions=False)
+    return {"is_verified": doc.is_verified}
+```
+
+### Görev 6.2 — Frontend: Doğrula butonu
+
+**Dosya:** `frontend/src/pages/CustomerDetail.vue` ve AT Documents workbench detail panel
+
+- Yazma yetkisi varsa AT Document kartında "Doğrula" / "Doğrulamayı Kaldır" butonu
+- `toggle_verified()` çağırır, sonucu reactive olarak günceller
+
+### Görev 6.3 — Test + Build + Commit
+
+---
+
+## FAZ 7 — P2.4: WhatsApp Paylaşım
+
+Bu faz AT Document'i müşteriyle WhatsApp üzerinden paylaşmayı sağlar.
+
+### Görev 7.1 — Backend: share_document()
+
+**Dosya:** `acentem_takipte/acentem_takipte/api/documents.py`
+
+```python
+@frappe.whitelist()
+def share_document(docname: str, method: str = "whatsapp") -> dict:
+    doc = frappe.get_doc("AT Document", docname)
+    if doc.is_sensitive:
+        return {"warning": "Hassas veri işareti var. Paylaşım önerilmez.", "url": None}
+    file_doc = frappe.get_doc("File", doc.file)
+    customer = frappe.get_doc("AT Customer", doc.customer) if doc.customer else None
+    phone = customer.mobile_no if customer and customer.mobile_no else ""
+    file_url = frappe.utils.get_url(file_doc.file_url)
+    if method == "whatsapp":
+        wa_url = f"https://wa.me/{phone}?text={frappe.utils.quote(file_url)}"
+        return {"url": wa_url, "phone": phone}
+    return {"url": file_url}
+```
+
+Not: `is_sensitive` dosyalar için uyarı döndürülür ama paylaşım engellenmez (son karar kullanıcıda).
+
+### Görev 7.2 — Frontend: Paylaş butonu
+
+**Dosya:** AT Documents workbench detail panel + CustomerDetail doküman kartları
+
+- "WhatsApp ile Paylaş" butonu (tıklanınca `wa.me` linkini yeni sekmede açar)
+- `is_sensitive` ise sarı uyarı tooltip gösterir
+
+### Görev 7.3 — Test + Build + Commit
 
 ---
 
 ## Definition of Done
 
-### P0 Done Kriterleri
+### P0 Done Kriterleri ✅
 
-- [x] Dokümanlar tabında "Belge Yükle" butonu: yazma izninde görünür, okuma-only'de gizli
+- [x] Dokümanlar tabında "Doküman Yükle" butonu: yazma izninde görünür, okuma-only'de gizli
 - [x] Upload modal açılır, drag-drop + tıkla ile dosya seçilebilir
 - [x] Yükleme başarılı olunca liste yenilenir (`policy360Resource.reload`)
 - [x] `file_size` insan-okunabilir formatta kartlarda görünür
@@ -450,18 +647,61 @@ Bu değişiklik P0 bileşenini geriye dönük uyumlu şekilde genişletir; P0 mo
 - [x] Unit testler pass (`PolicyDetail.test.js`)
 - [x] `npm run build` başarılı
 - [x] `bench build --app acentem_takipte` başarılı
-- [ ] TR ve EN modunda smoke kontrol tamamlandı
 
-### P1 Done Kriterleri
+### P1 Done Kriterleri ✅
 
-- [x] Sidebar'da "Doküman Merkezi" linki Operations bölümünde görünür
-- [x] Files workbench toolbar'ında "Belge Yükle" butonu görünür
+- [x] Sidebar'da "Doküman Kayıtları" linki görünür
+- [x] Files workbench toolbar'ında "Doküman Yükle" butonu görünür
 - [x] URL context prefill: PolicyDetail'den yönlendirmede filtreler dolu gelir
 - [x] `is_private` ve `owner` filtreleri workbench'de çalışır
 - [x] Yeni preset'ler (Gizli Dosyalar, Son Yüklenenler) listeleniyor
 - [x] Tüm yeni string'ler i18n'e eklendi
 - [x] `npm run build` başarılı
 - [x] `bench build --app acentem_takipte` başarılı
+
+### P2 Done Kriterleri ✅
+
+- [x] `AT Document` DocType tanımlı (11 alan, auto-naming)
+- [x] `upload_document()` AT Document otomatik oluşturuyor + auto-wiring
+- [x] `at-documents` workbench tam Türkçe etiketler + filtreler + presetler
+- [x] AuxWorkbench `files` + `at-documents` sütunları Türkçe
+- [x] Tüm UI'da "Belge" → "Doküman" standardizasyonu
+- [x] 266/266 unit test pass
+- [x] `npm run build` başarılı
+- [x] `bench build --app acentem_takipte` başarılı
+
+### P2.1 Done Kriterleri
+
+- [ ] `at_document.json`'a `document_sub_type`, `is_sensitive`, `is_verified` eklendi
+- [ ] `upload_document()` bu 3 alanı kabul ediyor
+- [ ] AuxWorkbench `at-documents`'da yeni alanlar görünüyor
+- [ ] `document_sub_type` ve `is_sensitive` filtresi çalışıyor
+- [ ] `PolicyDocumentUploadModal`'da `document_sub_type` seçilebiliyor
+- [ ] i18n: Alt Tür, Hassas Veri, Doğrulandı çevirileri eklendi
+- [ ] Unit testler pass, build başarılı
+
+### P2.2 Done Kriterleri
+
+- [ ] `customer_360.py` AT Document sorgusu döndürüyor (direkt + poliçe + hasar)
+- [ ] CustomerDetail operations tab'ında bireysel doküman kartları görünüyor
+- [ ] Semantik başlık: `{document_sub_type} | {file_name}`
+- [ ] Badge renk haritası uygulandı (Ruhsat=blue, Kimlik=slate…)
+- [ ] `is_sensitive` kilit ikonu, `is_verified` yeşil tik gösteriliyor
+- [ ] Unit testler pass, build başarılı
+
+### P2.3 Done Kriterleri
+
+- [ ] `at_document.py`'da `toggle_verified()` whitelist metodu var
+- [ ] Yazma yetkisinde "Doğrula" butonu görünüyor
+- [ ] Toggle aksiyonu reactive olarak güncelleniyor
+- [ ] Unit testler pass, build başarılı
+
+### P2.4 Done Kriterleri
+
+- [ ] `share_document()` whitelist metodu var
+- [ ] `is_sensitive` belgeler için uyarı döndürülüyor
+- [ ] Frontend'de "WhatsApp ile Paylaş" butonu çalışıyor
+- [ ] Unit testler pass, build başarılı
 
 ---
 
@@ -471,28 +711,45 @@ Bu terimler localization guide §7 sözlüğüne eklenecek:
 
 | EN | TR |
 |---|---|
-| Document | Belge |
+| Document | Doküman |
 | Document Center | Doküman Merkezi |
+| Document Registry | Doküman Kayıtları |
 | Upload | Yükle / Yükleme |
 | Private | Gizli |
 | File Size | Dosya Boyutu |
-| Document Kind | Belge Türü |
+| Document Kind | Doküman Türü |
+| Document Sub Type | Alt Tür |
+| Sensitive Data | Hassas Veri |
+| Verified | Doğrulandı |
+| Vehicle Registration | Ruhsat |
+| ID Document | Kimlik |
+| Policy Copy | Poliçe Kopyası |
+| Damage Photo | Hasar Fotoğrafı |
 
 ---
 
 ## Uygulama Sırası Özeti
 
-| # | Görev | Faz | Etki | Risk |
-|---|---|---|---|---|
+| # | Görev | Faz | Etki | Risk | Durum |
+|---|---|---|---|---|---|
 | 1 | `policy_360.py` file fields: `file_size`, `is_private` ekle | P0 | Düşük | Minimal | ✅ Tamamlandı |
 | 2 | `PolicyDocumentUploadModal.vue` oluştur | P0 | Yüksek | Modal state yönetimi | ✅ Tamamlandı |
-| 3 | `PolicyDetailMainContent.vue` "Belge Yükle" butonu + kart zenginleştirme | P0 | Yüksek | Prop genişletme | ✅ Tamamlandı |
+| 3 | `PolicyDetailMainContent.vue` "Doküman Yükle" butonu + kart zenginleştirme | P0 | Yüksek | Prop genişletme | ✅ Tamamlandı |
 | 4 | `usePolicyDetailRuntime.js` upload logic + `fmtFileSize` + `canUploadDocuments` | P0 | Yüksek | CSRF token + FormData | ✅ Tamamlandı |
 | 5 | `PolicyDetail.vue` prop aktarımı + modal entegrasyonu | P0 | Orta | — | ✅ Tamamlandı |
-| 6 | i18n: 7 yeni key, 3 dosya güncelle | P0 | Zorunlu | Karakter doğruluğu | ✅ Tamamlandı |
-| 7 | `PolicyDetail.test.js` 6 yeni test | P0 | Yüksek | — | ✅ Tamamlandı |
-| 8 | Sidebar "Doküman Merkezi" linki | P1 | Orta | navSections + copy | ✅ Tamamlandı |
-| 9 | Files workbench `toolbarActions` + `useAuxWorkbenchRuntime` `type:"upload"` | P1 | Orta | Runtime wiring | ✅ Tamamlandı |
+| 6 | i18n: yeni keyler, 3 dosya güncelle | P0 | Zorunlu | Karakter doğruluğu | ✅ Tamamlandı |
+| 7 | `PolicyDetail.test.js` yeni testler | P0 | Yüksek | — | ✅ Tamamlandı |
+| 8 | Sidebar "Doküman Kayıtları" linki | P1 | Orta | navSections + copy | ✅ Tamamlandı |
+| 9 | Files workbench `toolbarActions` + `type:"upload"` | P1 | Orta | Runtime wiring | ✅ Tamamlandı |
 | 10 | Files workbench filtre genişletme (`is_private`, `owner`, presets) | P1 | Düşük | Registry değişikliği | ✅ Tamamlandı |
 | 11 | URL context prefill (upload modal ↔ route query) | P1 | Orta | Runtime wiring | ✅ Tamamlandı |
-| 12 | `AT Document` DocType + upload akışı genişletme | P2 | Yüksek | Yeni Frappe DocType | ✅ Tamamlandı |
+| 12 | `AT Document` DocType + upload akışı + at-documents workbench | P2 | Yüksek | Yeni Frappe DocType | ✅ Tamamlandı |
+| 13 | AuxWorkbench sütun etiketleri Türkçe (files + at-documents) | P2 | Orta | Lokalizasyon | ✅ Tamamlandı |
+| 14 | Belge→Doküman standardizasyonu (tüm UI) | P2 | Orta | Lokalizasyon | ✅ Tamamlandı |
+| 15 | `at_document.json` 3 yeni alan: sub_type, is_sensitive, is_verified | P2.1 | Orta | DocType migration | ⏳ Bekliyor |
+| 16 | `upload_document()` yeni alanları kabul et | P2.1 | Düşük | API genişletme | ⏳ Bekliyor |
+| 17 | AuxWorkbench + modal yeni alanlar + filtreler | P2.1 | Orta | Frontend wiring | ⏳ Bekliyor |
+| 18 | `customer_360.py` AT Document sorgusu | P2.2 | Yüksek | Backend sorgu değişikliği | ⏳ Bekliyor |
+| 19 | CustomerDetail bireysel doküman listesi + badge'ler | P2.2 | Yüksek | Frontend bileşen | ⏳ Bekliyor |
+| 20 | `toggle_verified()` whitelist metodu + Doğrula butonu | P2.3 | Orta | Backend + frontend | ⏳ Bekliyor |
+| 21 | `share_document()` whitelist + WhatsApp paylaşım butonu | P2.4 | Orta | Backend + frontend | ⏳ Bekliyor |

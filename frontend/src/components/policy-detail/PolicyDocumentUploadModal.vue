@@ -42,6 +42,17 @@
             </select>
           </label>
           <label class="field-row">
+            <span class="field-label">{{ t("documentSubType") }}</span>
+            <select v-model="documentSubType" class="field-input">
+              <option value="">—</option>
+              <option value="Ruhsat">{{ t("subTypeRuhsat") }}</option>
+              <option value="Kimlik">{{ t("subTypeKimlik") }}</option>
+              <option value="Poliçe Kopyası">{{ t("subTypePoliceKopyasi") }}</option>
+              <option value="Hasar Fotoğrafı">{{ t("subTypeHasarFotografi") }}</option>
+              <option value="Diğer">{{ t("subTypeDiger") }}</option>
+            </select>
+          </label>
+          <label class="field-row">
             <span class="field-label">{{ t("documentDate") }}</span>
             <input v-model="documentDate" type="date" class="field-input" />
           </label>
@@ -93,6 +104,7 @@ const isDragging = ref(false);
 const uploading = ref(false);
 const errorMessage = ref("");
 const documentKind = ref("");
+const documentSubType = ref("");
 const documentDate = ref("");
 const notes = ref("");
 
@@ -158,6 +170,7 @@ async function submit() {
           attached_to_doctype: "AT Policy",
           attached_to_name: props.policyName,
           document_kind: documentKind.value,
+          document_sub_type: documentSubType.value,
           document_date: documentDate.value,
           notes: notes.value,
           is_private: "1",
@@ -173,6 +186,7 @@ async function submit() {
       }
       selectedFile.value = null;
       documentKind.value = "";
+      documentSubType.value = "";
       documentDate.value = "";
       notes.value = "";
       if (fileInput.value) fileInput.value.value = "";

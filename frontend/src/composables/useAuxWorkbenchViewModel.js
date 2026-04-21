@@ -118,6 +118,9 @@ const AUX_FIELD_LABELS = {
     customer: "Customer",
     claim: "Claim",
     document_kind: "Document Kind",
+    document_sub_type: "Document Sub Type",
+    is_sensitive: "Sensitive Data",
+    is_verified: "Verified",
     document_date: "Document Date",
     version_no: "Version No",
     status: "Status",
@@ -487,6 +490,7 @@ export function useAuxWorkbenchViewModel({
       "call_status",
       "call_outcome",
       "document_kind",
+      "document_sub_type",
     ].includes(field)) {
       return translateFieldValue(value, activeLocale);
     }
