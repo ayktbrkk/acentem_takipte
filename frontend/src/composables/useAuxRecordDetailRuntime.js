@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 
 function isNotFoundError(error) {
@@ -24,13 +24,13 @@ export function useAuxRecordDetailRuntime({ props, config, route, router }) {
   const resolvedDoctype = ref(config.doctype);
   const activeDoctype = computed(() => resolvedDoctype.value || config.doctype);
   const activeResource = computed(() => resource);
-  const activeLoading = computed(() => Boolean(activeResource.value?.loading?.value));
+  const activeLoading = computed(() => Boolean(unref(activeResource.value?.loading)));
   const doc = computed(() => {
-    const payload = resource.data?.value;
+    const payload = unref(resource.data);
     return payload?.docs?.[0] || payload?.message || payload || null;
   });
   const errorText = computed(() => {
-    const err = activeResource.value?.error?.value;
+    const err = unref(activeResource.value?.error);
     return err?.messages?.[0] || err?.message || "";
   });
   const isEmpty = computed(() => !activeLoading.value && !doc.value && !errorText.value);
