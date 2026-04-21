@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 import frappe
+from frappe import _
 
 from .session import resolve_current_user
 
