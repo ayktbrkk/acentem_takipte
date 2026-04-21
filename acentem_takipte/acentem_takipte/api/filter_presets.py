@@ -27,6 +27,20 @@ ALLOWED_SCREENS = {
     "templates",
     "accounting_entries",
     "reconciliation_items",
+    # AuxWorkbench routeSegments (normalized: lowercase, dashes → underscores)
+    "call_notes",
+    "segments",
+    "campaigns",
+    "insurance_companies",
+    "notification_templates",
+    "customer_relations",
+    "insured_assets",
+    "files",
+    "at_documents",
+    "customer_segment_snapshots",
+    "access_logs",
+    "ownership_assignments",
+    "activities",
 }
 DEFAULT_STATE = {"selected_key": "default", "custom_presets": []}
 
