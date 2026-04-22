@@ -200,12 +200,11 @@ def _resolve_reference_token(reference_doctype: str, reference_name: str) -> str
 
     if dt == "AT Customer":
         customer_row = frappe.db.get_value(
-            "AT Customer", dn, ["name", "customer_no", "tax_id"], as_dict=True
+            "AT Customer", dn, ["name", "tax_id"], as_dict=True
         ) or {}
         raw = str(
-            customer_row.get("customer_no")
+            customer_row.get("tax_id")
             or customer_row.get("name")
-            or customer_row.get("tax_id")
             or dn
         )
         return f"CUS-{_ascii_slug(raw, 'CUS')}"
