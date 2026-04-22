@@ -64,6 +64,18 @@ from acentem_takipte.acentem_takipte.services.query_isolation import (
 from acentem_takipte.acentem_takipte.services.customer_360 import (
     build_customer_360_payload,
 )
+from acentem_takipte.acentem_takipte.services.offer_360 import (
+    build_offer_360_payload,
+)
+from acentem_takipte.acentem_takipte.services.lead_360 import (
+    build_lead_360_payload,
+)
+from acentem_takipte.acentem_takipte.services.claim_360 import (
+    get_claim_360_payload,
+)
+from acentem_takipte.acentem_takipte.services.payment_360 import (
+    get_payment_360_payload,
+)
 from acentem_takipte.acentem_takipte.services.follow_up_sla import (
     build_follow_up_sla_payload,
 )
@@ -218,6 +230,76 @@ def _dashboard_tab_cache_key(
         ).encode()
     ).hexdigest()[:24]
     return f"at_dashboard_tab::{cache_digest}"
+
+
+@frappe.whitelist()
+def get_offer_detail_payload(name: str) -> dict[str, Any]:
+    """Expose high-performance offer 360 payload to the dashboard."""
+    if not name:
+        frappe.throw(_("Offer name is required."))
+
+    # Scoping check
+    if not frappe.has_permission("AT Offer", "read", name):
+        frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+    from acentem_takipte.acentem_takipte.services.offer_360 import build_offer_360_payload
+    return build_offer_360_payload(name)
+
+
+@frappe.whitelist()
+def get_lead_detail_payload(name: str) -> dict[str, Any]:
+    """Expose high-performance lead 360 payload to the dashboard."""
+    if not name:
+        frappe.throw(_("Lead name is required."))
+
+    # Scoping check
+    if not frappe.has_permission("AT Lead", "read", name):
+        frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+    from acentem_takipte.acentem_takipte.services.lead_360 import build_lead_360_payload
+    return build_lead_360_payload(name)
+
+
+@frappe.whitelist()
+def get_policy_detail_payload(name: str) -> dict[str, Any]:
+    """Expose high-performance policy 360 payload to the dashboard."""
+    if not name:
+        frappe.throw(_("Policy name is required."))
+
+    # Scoping check
+    if not frappe.has_permission("AT Policy", "read", name):
+        frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+    from acentem_takipte.acentem_takipte.services.policy_360 import build_policy_360_payload
+    return build_policy_360_payload(name)
+
+
+@frappe.whitelist()
+def get_claim_detail_payload(name: str) -> dict[str, Any]:
+    """Expose high-performance claim 360 payload to the dashboard."""
+    if not name:
+        frappe.throw(_("Claim name is required."))
+
+    # Scoping check
+    if not frappe.has_permission("AT Claim", "read", name):
+        frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+    from acentem_takipte.acentem_takipte.services.claim_360 import get_claim_360_payload
+    return get_claim_360_payload(name)
+
+
+@frappe.whitelist()
+def get_payment_detail_payload(name: str) -> dict[str, Any]:
+    """Expose high-performance payment 360 payload to the dashboard."""
+    if not name:
+        frappe.throw(_("Payment name is required."))
+
+    # Scoping check
+    if not frappe.has_permission("AT Payment", "read", name):
+        frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+    from acentem_takipte.acentem_takipte.services.payment_360 import get_payment_360_payload
+    return get_payment_360_payload(name)
 
 
 @frappe.whitelist()
@@ -837,18 +919,7 @@ def get_lead_detail_payload(name: str) -> dict:
     ):
         frappe.throw(_("Not permitted"))
 
-    return dashboard_lead_detail_builder.build_lead_detail_payload(
-        lead,
-        get_offer_link_preview_fn=_get_offer_link_preview,
-        get_policy_link_preview_fn=_get_policy_link_preview,
-        lead_detail_activity_events_fn=_lead_detail_activity_events,
-        access_log_events_fn=_access_log_events,
-        sort_activity_events_fn=_sort_activity_events,
-        get_notification_draft_preview_rows_fn=_get_notification_draft_preview_rows,
-        get_notification_outbox_preview_rows_fn=_get_notification_outbox_preview_rows,
-        get_payment_detail_preview_rows_fn=_get_payment_detail_preview_rows,
-        get_renewal_detail_preview_rows_fn=_get_renewal_detail_preview_rows,
-    )
+    return build_lead_360_payload(lead_name)
 
 
 @frappe.whitelist()
@@ -873,18 +944,59 @@ def get_offer_detail_payload(name: str) -> dict:
     ):
         frappe.throw(_("Not permitted"))
 
-    return dashboard_offer_detail_builder.build_offer_detail_payload(
-        offer,
-        get_lead_link_preview_fn=_get_lead_link_preview,
-        get_policy_link_preview_fn=_get_policy_link_preview,
-        offer_detail_activity_events_fn=_offer_detail_activity_events,
-        access_log_events_fn=_access_log_events,
-        sort_activity_events_fn=_sort_activity_events,
-        get_notification_draft_preview_rows_fn=_get_notification_draft_preview_rows,
-        get_notification_outbox_preview_rows_fn=_get_notification_outbox_preview_rows,
-        get_payment_detail_preview_rows_fn=_get_payment_detail_preview_rows,
-        get_renewal_detail_preview_rows_fn=_get_renewal_detail_preview_rows,
-    )
+    return build_offer_360_payload(offer_name)
+
+
+@frappe.whitelist()
+def get_claim_detail_payload(name: str) -> dict:
+    _assert_dashboard_endpoint_method("get_claim_detail_payload")
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw(_("Authentication required"))
+
+    claim_name = str(name or "").strip()
+    if not claim_name:
+        frappe.throw(_("Claim is required"))
+
+    claim = frappe.get_doc("AT Claim", claim_name)
+    claim.check_permission("read")
+
+    allowed_customers = _allowed_customers_for_user()
+    if (
+        allowed_customers is not None
+        and claim.customer
+        and claim.customer not in set(allowed_customers)
+    ):
+        frappe.throw(_("Not permitted"))
+
+    return get_claim_360_payload(claim_name)
+
+
+
+
+@frappe.whitelist()
+def get_payment_detail_payload(name: str) -> dict:
+    _assert_dashboard_endpoint_method("get_payment_detail_payload")
+    user = frappe.session.user
+    if user == "Guest":
+        frappe.throw(_("Authentication required"))
+
+    payment_name = str(name or "").strip()
+    if not payment_name:
+        frappe.throw(_("Payment is required"))
+
+    payment = frappe.get_doc("AT Payment", payment_name)
+    payment.check_permission("read")
+
+    allowed_customers = _allowed_customers_for_user()
+    if (
+        allowed_customers is not None
+        and payment.customer
+        and payment.customer not in set(allowed_customers)
+    ):
+        frappe.throw(_("Not permitted"))
+
+    return get_payment_360_payload(payment_name)
 
 
 @frappe.whitelist()

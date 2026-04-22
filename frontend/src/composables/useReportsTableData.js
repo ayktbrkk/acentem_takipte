@@ -36,10 +36,25 @@ export function useReportsTableData({
 
   const visibleColumnKeys = ref([]);
   const pendingVisibleColumnKeys = ref([]);
+  const groupByColumn = ref("");
+  const customColumns = ref([]); // [{ key, label, formula: (row) => value }]
+  
   const sortState = reactive({
     column: "",
     direction: "",
   });
+
+  const groupableColumns = new Set([
+    "branch",
+    "insurance_company",
+    "status",
+    "claim_status",
+    "office_branch",
+    "sales_entity",
+    "sales_entity_full_name",
+    "channel",
+    "period_label"
+  ]);
 
   const numberFormatter = computed(() =>
     new Intl.NumberFormat(localeCode.value, {
@@ -438,20 +453,73 @@ export function useReportsTableData({
     return sortState.direction === "desc" ? "v" : "^";
   }
 
+  const visibleColumns = computed(() => {
+    const base = !visibleColumnKeys.value.length
+      ? columns.value
+      : columns.value.filter((column) => visibleColumnKeys.value.includes(column));
+    
+    // Inject custom columns
+    const custom = customColumns.value.map(c => c.key);
+    return [...base, ...custom];
+  });
+
   const sortedRows = computed(() => {
-    if (!sortState.column || !sortState.direction) {
-      return rows.value;
+    let result = [...rows.value];
+
+    // Apply sorting first
+    if (sortState.column && sortState.direction) {
+      const direction = sortState.direction === "desc" ? -1 : 1;
+      result.sort((leftRow, rightRow) => {
+        const left = normalizeSortableValue(leftRow?.[sortState.column]);
+        const right = normalizeSortableValue(rightRow?.[sortState.column]);
+        if (left === right) return 0;
+        return left > right ? direction : -direction;
+      });
     }
 
-    const direction = sortState.direction === "desc" ? -1 : 1;
-    return [...rows.value].sort((leftRow, rightRow) => {
-      const left = normalizeSortableValue(leftRow?.[sortState.column]);
-      const right = normalizeSortableValue(rightRow?.[sortState.column]);
-      if (left === right) {
-        return 0;
-      }
-      return left > right ? direction : -direction;
-    });
+    // Apply grouping if set
+    if (groupByColumn.value) {
+      const groups = {};
+      result.forEach(row => {
+        const groupKey = row[groupByColumn.value] || "N/A";
+        if (!groups[groupKey]) {
+          groups[groupKey] = {
+            isHeader: true,
+            label: groupKey,
+            rows: [],
+            // Aggregate fields
+            gross_premium: 0,
+            commission_amount: 0,
+            policy_count: 0,
+            total_gross_premium: 0,
+            total_commission: 0
+          };
+        }
+        groups[groupKey].rows.push(row);
+        
+        // Accumulate aggregates
+        groups[groupKey].gross_premium += Number(row.gross_premium || 0);
+        groups[groupKey].commission_amount += Number(row.commission_amount || 0);
+        groups[groupKey].total_gross_premium += Number(row.total_gross_premium || 0);
+        groups[groupKey].total_commission += Number(row.total_commission || 0);
+        groups[groupKey].policy_count += 1;
+      });
+
+      const grouped = [];
+      Object.keys(groups).sort().forEach(key => {
+        const group = groups[key];
+        grouped.push({
+          ...group,
+          // Format header label for display
+          is_group_header: true,
+          _group_title: `${getColumnLabel(groupByColumn.value)}: ${formatCellValue(groupByColumn.value, key)} (${group.rows.length})`
+        });
+        grouped.push(...group.rows);
+      });
+      return grouped;
+    }
+
+    return result;
   });
 
   return {
@@ -464,6 +532,9 @@ export function useReportsTableData({
     numberFormatter,
     dateFormatter,
     percentFormatter,
+    groupByColumn,
+    groupableColumns,
+    customColumns,
     visibleColumns,
     hiddenColumns,
     columnsSummaryLabel,
@@ -480,5 +551,8 @@ export function useReportsTableData({
     toggleSort,
     getSortIndicator,
     formatComparisonDelta,
+    toggleGroupBy: (col) => {
+      groupByColumn.value = groupByColumn.value === col ? "" : col;
+    },
   };
 }

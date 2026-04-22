@@ -1,79 +1,54 @@
 <template>
-  <SectionPanel :title="filtersTitle" :count="`${activeFilterCount} ${activeFiltersLabel}`" panel-class="surface-card rounded-2xl p-5">
-    <WorkbenchFilterToolbar
-      :model-value="presetKey"
-      :show-preset="true"
-      :advanced-label="advancedLabel"
-      :collapse-label="hideAdvancedLabel"
-      :active-count="activeFilterCount"
-      :active-count-label="activeFiltersLabel"
-      :preset-label="presetLabel"
-      :preset-options="presetOptions"
-      :can-delete-preset="canDeletePreset"
-      :save-label="savePresetLabel"
-      :delete-label="deletePresetLabel"
-      :apply-label="applyLabel"
-      :reset-label="resetLabel"
-      :disabled="isLoading"
-      @update:modelValue="$emit('update:modelValue', $event)"
-      @presetChange="$emit('presetChange')"
-      @presetSave="$emit('presetSave')"
-      @presetDelete="$emit('presetDelete')"
-      @apply="$emit('apply')"
-      @reset="$emit('reset')"
-    >
-      <input
-        v-model.trim="draft.query"
-        class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-        :placeholder="searchPlaceholder"
-      />
+  <SectionPanel :title="filtersTitle" panel-class="surface-card rounded-2xl p-5">
+    <div class="flex flex-wrap gap-4 items-center">
+      <div class="flex-1 min-w-[200px]">
+        <input
+          v-model.trim="draft.query"
+          class="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+          :placeholder="searchPlaceholder"
+        />
+      </div>
 
       <template v-for="fd in quickFilterDefs" :key="'q-'+fd.key">
-        <component
-          :is="fd.type === 'select' ? 'select' : 'input'"
+        <select
+          v-if="fd.type === 'select'"
           v-model="draft[fd.key]"
-          :type="fd.type === 'select' ? undefined : fd.type === 'number' ? 'number' : 'text'"
-          class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all min-w-[120px]"
         >
-          <template v-if="fd.type === 'select'">
-            <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-              {{ optionLabel(fd, opt) }}
-            </option>
-          </template>
-        </component>
+          <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
+            {{ optionLabel(fd, opt) }}
+          </option>
+        </select>
+        <input
+          v-else
+          v-model="draft[fd.key]"
+          :type="fd.type === 'number' ? 'number' : 'text'"
+          class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all min-w-[120px]"
+          :placeholder="fieldLabel(fd.field)"
+        />
       </template>
 
-      <select v-model="draft.sort" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <div class="h-8 w-px bg-slate-100 hidden md:block mx-1"></div>
+
+      <select v-model="draft.sort" class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all">
         <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
       </select>
-      <select v-model.number="draft.pageLength" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-        <option v-for="n in pageLengths" :key="n" :value="n">{{ n }}</option>
-      </select>
 
-      <template #advanced>
-        <template v-for="fd in advancedFilterDefs" :key="'a-'+fd.key">
-          <component
-            :is="fd.type === 'select' ? 'select' : 'input'"
-            v-model="draft[fd.key]"
-            :type="fd.type === 'select' ? undefined : fd.type === 'number' ? 'number' : 'text'"
-            class="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            :placeholder="fieldLabel(fd.field)"
-          >
-            <template v-if="fd.type === 'select'">
-              <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-                {{ optionLabel(fd, opt) }}
-              </option>
-            </template>
-          </component>
-        </template>
-      </template>
-    </WorkbenchFilterToolbar>
+      <div class="flex items-center gap-2">
+        <ActionButton variant="secondary" size="sm" @click="$emit('reset')">
+          {{ resetLabel }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" @click="$emit('apply')">
+          {{ applyLabel }}
+        </ActionButton>
+      </div>
+    </div>
   </SectionPanel>
 </template>
 
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
-import WorkbenchFilterToolbar from "../app-shell/WorkbenchFilterToolbar.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 
 defineProps({
   filtersTitle: { type: String, default: "" },

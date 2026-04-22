@@ -2,827 +2,258 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
+        <p class="detail-breadcrumb">{{ t("customers_breadcrumb") }}</p>
         <h1 class="detail-title">
           {{ customer.full_name || name }}
-          <StatusBadge domain="customer" :status="customerStatus" />
+          <StatusBadge domain="customer" :status="customer.enabled ? 'active' : 'cancel'" />
         </h1>
-        <p v-if="customerHeaderSubtitle" class="detail-subtitle">
-          {{ customerHeaderSubtitle }}
-        </p>
         <div class="mt-1.5 flex flex-wrap items-center gap-2">
-          <span class="copy-tag">{{ customer.name || name || "-" }}</span>
-          <span v-if="customerTaxIdDisplay !== '-'" class="copy-tag">
-            {{ customerTaxIdLabel }}: {{ customerTaxIdDisplay }}
-          </span>
-          <span class="copy-tag">{{ customerTypeLabel }}</span>
+          <span class="copy-tag">{{ customer.name }}</span>
+          <span class="copy-tag">{{ customer.tax_id }}</span>
+          <span class="copy-tag text-sky-700 font-medium">{{ customer.office_branch }}</span>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <ActionButton variant="secondary" size="sm" @click="router.push('/customers')">
-          {{ t("backList") }}
+        <ActionButton variant="secondary" size="sm" @click="backToList">
+          {{ t("back_to_list") }}
         </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
-          {{ t("communication") }}
-        </ActionButton>
-        <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
-          {{ t("newOffer") }}
+        <ActionButton variant="primary" size="sm">
+          {{ t("new_offer") }}
         </ActionButton>
       </div>
     </div>
 
-    <HeroStrip :cells="heroCells" />
-
-    <div class="nav-tabs-bar">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        :class="['nav-tab', activeTab === tab.key && 'is-active']"
-        @click="activeTab = tab.key"
-      >
-        {{ tab.label }}
-        <span v-if="tab.count" class="ml-1 badge badge-blue">
-          {{ tab.count }}
-        </span>
-      </button>
+    <!-- Loading State -->
+    <div v-if="loading" class="mt-4 space-y-6">
+      <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+        <SkeletonLoader variant="detail" />
+      </div>
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="space-y-6">
+          <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+            <SkeletonLoader variant="card" :count="2" />
+          </div>
+        </div>
+        <div class="lg:col-span-2 space-y-6">
+          <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+            <SkeletonLoader variant="text" :rows="15" />
+          </div>
+        </div>
+      </div>
     </div>
 
-    <SectionPanel class="md:hidden" :title="t('mobileQuickActionsTitle')">
-      <div class="mt-1 grid grid-cols-2 gap-2">
-        <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
-          {{ t("newOffer") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
-          {{ t("communication") }}
-        </ActionButton>
-        <ActionButton v-if="canUploadDocuments" variant="secondary" size="sm" @click="openUploadModal">
-          {{ t("uploadDocument") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="openQuickCustomerRelation">
-          {{ t("newRelation") }}
-        </ActionButton>
-      </div>
-    </SectionPanel>
+    <!-- Ready State -->
+    <template v-else>
+      <HeroStrip :cells="heroCells" />
 
-    <div class="detail-body at-detail-split-wide">
-      <aside class="detail-sidebar at-detail-aside">
-        <SectionPanel :title="t('customerSnapshotTitle')" :meta="customerHeaderSubtitle || t('customerSnapshotHint')">
-          <FieldGroup :fields="customerHeaderSummaryItems" :cols="2" />
-        </SectionPanel>
-
-        <SectionPanel :title="t('customerProfileTitle')" :meta="customerPhoneDisplay">
-          <template #trailing>
-            <div class="flex flex-wrap items-center justify-end gap-2">
-              <ActionButton
-                v-if="!profileEditMode"
-                variant="secondary"
-                size="xs"
-                :disabled="customerLoading"
-                @click="startProfileEdit"
-              >
-                {{ t("editProfile") }}
-              </ActionButton>
-              <template v-else>
-                <ActionButton variant="secondary" size="xs" :disabled="customerProfileUpdateResource.loading" @click="cancelProfileEdit">
-                  {{ t("cancelEdit") }}
-                </ActionButton>
-                <ActionButton variant="primary" size="xs" :disabled="customerProfileUpdateResource.loading" @click="saveProfile">
-                  {{ customerProfileUpdateResource.loading ? t("saving") : t("saveProfile") }}
-                </ActionButton>
-              </template>
-            </div>
-          </template>
-
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <template v-else>
-            <div v-if="profileSaveError && !profileEditMode" class="mb-3 qc-error-banner" role="alert" aria-live="polite">
-              <p class="qc-error-banner__text">{{ profileSaveError }}</p>
-            </div>
-            <div v-if="profileSaveMessage && !profileEditMode" class="mb-3 qc-success-banner" aria-live="polite">
-              <p class="qc-success-banner__text">{{ profileSaveMessage }}</p>
-            </div>
-
-            <div v-if="!profileEditMode" class="space-y-3">
-              <FieldGroup :fields="profileViewFields" :cols="2" />
-            </div>
-
-            <div v-else class="space-y-3">
-              <div v-if="profileSaveError" class="qc-error-banner" role="alert" aria-live="polite">
-                <p class="qc-error-banner__text">{{ profileSaveError }}</p>
-              </div>
-              <div v-else-if="profileSaveMessage" class="qc-success-banner" aria-live="polite">
-                <p class="qc-success-banner__text">{{ profileSaveMessage }}</p>
-              </div>
-
-              <div class="grid gap-3 sm:grid-cols-2">
-                <template v-for="field in profileEditFields" :key="field.key">
-                  <div
-                    v-if="field.type !== 'hidden'"
-                    :class="field.span ? 'sm:col-span-2' : ''"
-                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5"
-                  >
-                    <label class="text-[11px] font-semibold uppercase tracking-wide text-sky-700">
-                      {{ field.label }}
-                    </label>
-                    <p v-if="field.type === 'static'" class="mt-1 text-sm text-slate-800">
-                      {{ field.value }}
-                    </p>
-                    <textarea
-                      v-else-if="field.type === 'textarea'"
-                      :value="profileForm[field.model]"
-                      :rows="field.rows || 3"
-                      class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                      @input="setProfileField(field.model, $event.target.value)"
-                      @change="setProfileField(field.model, $event.target.value)"
-                    />
-                    <select
-                      v-else-if="field.type === 'select'"
-                      :value="profileForm[field.model]"
-                      class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                      :disabled="field.disabled"
-                      @change="setProfileField(field.model, $event.target.value)"
-                    >
-                      <option v-for="option in field.options" :key="option.value" :value="option.value">
-                        {{ option.label }}
-                      </option>
-                    </select>
-                    <input
-                      v-else
-                      :value="profileForm[field.model]"
-                      class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                      :disabled="field.disabled"
-                      :type="field.type"
-                      @input="setProfileField(field.model, $event.target.value)"
-                      @change="setProfileField(field.model, $event.target.value)"
-                    />
-                    <p v-if="field.model && profileFormErrors[field.model]" class="mt-1 qc-inline-error">
-                      {{ profileFormErrors[field.model] }}
-                    </p>
-                  </div>
-                </template>
-              </div>
-            </div>
-          </template>
-        </SectionPanel>
-
-      </aside>
-
-      <div class="detail-main space-y-4">
-        <SectionPanel
-          v-if="activeCustomerTab === 'overview'"
-          :title="t('overviewSummaryTitle')"
-          :meta="t('overviewSummaryHint')"
+      <div class="nav-tabs-bar">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          :class="['nav-tab', activeCustomerTab === tab.key && 'is-active']"
+          @click="activeCustomerTab = tab.key"
         >
-          <div class="grid gap-3">
-            <MetaListCard
-              v-for="card in overviewSummaryCards"
-              :key="card.key"
-              clickable
-              :title="card.title"
-              :subtitle="card.subtitle"
-              @click="activeTab = card.tab"
-            >
+          {{ tab.label }}
+          <span v-if="tab.count" class="ml-1 badge badge-blue">
+            {{ tab.count }}
+          </span>
+        </button>
+      </div>
+
+      <div class="detail-body at-detail-split-wide">
+        <!-- Sidebar -->
+        <aside class="detail-sidebar at-detail-aside">
+          <SectionPanel :title="t('overview')">
+            <FieldGroup :fields="profileFields" :cols="1" />
+          </SectionPanel>
+
+          <SectionPanel :title="t('customer_details')">
+            <FieldGroup :fields="moreProfileFields" :cols="1" />
+          </SectionPanel>
+
+          <SectionPanel :title="t('operations')">
+            <FieldGroup :fields="operationalFields" :cols="1" />
+          </SectionPanel>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="detail-main space-y-4">
+          <!-- Overview Tab -->
+          <template v-if="activeCustomerTab === 'overview'">
+            <SectionPanel :title="t('insights')">
+              <div v-if="!insights.snapshot_date" class="at-empty-block">
+                {{ t("no_activities") }}
+              </div>
+              <div v-else class="space-y-4">
+                 <p class="text-sm text-slate-500">{{ t("records") }}: {{ formatDate(insights.snapshot_date) }}</p>
+                 <FieldGroup :fields="[
+                   { label: t('active_policies'), value: insights.active_policy_count },
+                   { label: t('total_premium'), value: formatCurrency(insights.policy_total_premium) },
+                   { label: t('open_claims'), value: insights.open_claim_count },
+                   { label: t('upcoming_renewals'), value: insights.upcoming_renewal_count }
+                 ]" :cols="2" />
+              </div>
+            </SectionPanel>
+
+            <SectionPanel :title="t('cross_sell')">
+               <div v-if="!crossSell.has_cross_sell_opportunity" class="at-empty-block">
+                 {{ t("no_activities") }}
+               </div>
+               <div v-else class="space-y-2">
+                 <p class="text-sm font-medium text-slate-700">{{ t("cross_sell") }}</p>
+                 <div class="flex flex-wrap gap-2">
+                   <span v-for="opp in crossSell.opportunity_branches" :key="opp.branch" class="badge badge-blue">
+                     {{ opp.branch }}
+                   </span>
+                 </div>
+               </div>
+            </SectionPanel>
+          </template>
+
+          <!-- Portfolio Tab -->
+          <template v-if="activeCustomerTab === 'portfolio'">
+            <SectionPanel :title="t('policies')">
               <template #trailing>
-                <span class="badge badge-blue">{{ card.count }}</span>
+                <span class="badge badge-blue">{{ portfolio.policies?.length || 0 }}</span>
               </template>
-              <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                <div
-                  v-for="fact in card.facts"
-                  :key="fact.key"
-                  class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2"
+              <div v-if="!portfolio.policies?.length" class="at-empty-block">
+                {{ t("no_policies") }}
+              </div>
+              <div v-else class="grid gap-3 md:grid-cols-2">
+                <MetaListCard
+                  v-for="item in portfolio.policies"
+                  :key="item.name"
+                  :title="item.policy_no || item.name"
+                  :subtitle="item.insurance_company"
+                  clickable
+                  @click="openPolicy(item.name)"
                 >
-                  <p class="text-[11px] uppercase tracking-wide text-slate-400">
-                    {{ fact.label }}
-                  </p>
-                  <p class="text-sm font-semibold text-slate-800">
-                    {{ fact.value }}
-                  </p>
-                </div>
+                  <template #trailing>
+                    <StatusBadge domain="policy" :status="normalizeStatus(item.status)" />
+                  </template>
+                  <MiniFactList class="mt-2" :items="policyFacts(item)" />
+                </MetaListCard>
               </div>
-            </MetaListCard>
-          </div>
-        </SectionPanel>
+            </SectionPanel>
 
-        <SectionPanel
-          v-if="activeCustomerTab === 'overview'"
-          :title="t('insightSummaryTitle')"
-        >
-          <div class="space-y-3">
-            <FieldGroup :fields="insightSummaryFields" :cols="4" />
-            <FieldGroup :fields="insightContextFields" :cols="2" />
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'operations'"
-          :title="t('operationsTitle')"
-        >
-          <div class="mt-1 grid gap-2 sm:grid-cols-2">
-            <ActionButton variant="primary" size="sm" @click="openQuickOfferForCustomer">
-              {{ t("newOffer") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
-              {{ t("communication") }}
-            </ActionButton>
-            <ActionButton v-if="canUploadDocuments" variant="secondary" size="sm" @click="openUploadModal">
-              {{ t("uploadDocument") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" :disabled="!activePolicies.length" @click="activePolicies[0] && openPolicyDetail(activePolicies[0].name)">
-              {{ t("openPolicy") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" @click="openCustomerRelations">
-              {{ t("relatedCustomersTitle") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" @click="openInsuredAssets">
-              {{ t("insuredAssetsTitle") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" @click="openQuickCustomerRelation">
-              {{ t("newRelation") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" @click="openQuickInsuredAsset">
-              {{ t("newAsset") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="sm" @click="openQuickOwnershipAssignment">
-              {{ t("newAssignment") }}
-            </ActionButton>
-            <ActionButton
-              v-if="deskActionsEnabled()"
-              variant="secondary"
-              size="sm"
-              @click="openCustomerDesk"
-            >
-              {{ t("openDesk") }}
-            </ActionButton>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'activity'"
-          :title="t('activitiesTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ activityRows.length }}</span>
-          </template>
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="activityRows.length === 0" class="at-empty-block">
-            {{ t("noActivity") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="activity in activityRows"
-              :key="activity.name"
-              :title="activity.activity_title || activity.activity_type || activity.name"
-              :subtitle="activity.activity_type || '-'"
-            >
+            <SectionPanel :title="t('offers')">
               <template #trailing>
-                <StatusBadge domain="activity" :status="activity.status || 'Draft'" />
+                <span class="badge badge-blue">{{ portfolio.offers?.length || 0 }}</span>
               </template>
-              <MiniFactList class="mt-2" :items="activityCardFacts(activity)" />
-            </MetaListCard>
-          </div>
-        </SectionPanel>
+              <div v-if="!portfolio.offers?.length" class="at-empty-block">
+                {{ t("no_offers") }}
+              </div>
+              <div v-else class="grid gap-3 md:grid-cols-2">
+                <MetaListCard
+                  v-for="item in portfolio.offers"
+                  :key="item.name"
+                  :title="item.name"
+                  :subtitle="item.insurance_company"
+                  clickable
+                  @click="openOffer(item.name)"
+                >
+                  <template #trailing>
+                    <StatusBadge domain="offer" :status="normalizeStatus(item.status)" />
+                  </template>
+                  <MiniFactList class="mt-2" :items="offerFacts(item)" />
+                </MetaListCard>
+              </div>
+            </SectionPanel>
 
-        <SectionPanel
-          v-if="activeCustomerTab === 'activity'"
-          :title="t('remindersTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ reminderRows.length }}</span>
-          </template>
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="reminderRows.length === 0" class="at-empty-block">
-            {{ t("noReminder") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="reminder in reminderRows"
-              :key="reminder.name"
-              :title="reminder.reminder_title || reminder.name"
-              :subtitle="reminder.status || '-'"
-            >
+            <SectionPanel :title="t('claims')">
               <template #trailing>
-                <div class="flex flex-wrap items-center justify-end gap-2">
-                  <StatusBadge domain="reminder" :status="reminder.status || 'Draft'" />
-                  <ActionButton
-                    v-if="reminder.status !== 'Done'"
-                    variant="secondary"
-                    size="xs"
-                    @click="markReminderDone(reminder)"
-                  >
-                    {{ t("markDone") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="reminder.status !== 'Cancelled'"
-                    variant="secondary"
-                    size="xs"
-                    @click="cancelReminder(reminder)"
-                  >
-                    {{ t("cancelReminder") }}
-                  </ActionButton>
+                <span class="badge badge-blue">{{ portfolio.claims?.length || 0 }}</span>
+              </template>
+              <div v-if="!portfolio.claims?.length" class="at-empty-block">
+                {{ t("no_claims") }}
+              </div>
+              <div v-else class="grid gap-3 md:grid-cols-2">
+                <MetaListCard
+                  v-for="item in portfolio.claims"
+                  :key="item.name"
+                  :title="item.name"
+                  :subtitle="item.policy"
+                  clickable
+                  @click="openClaim(item.name)"
+                >
+                  <template #trailing>
+                    <StatusBadge domain="claim" :status="normalizeStatus(item.claim_status)" />
+                  </template>
+                  <MiniFactList class="mt-2" :items="claimFacts(item)" />
+                </MetaListCard>
+              </div>
+            </SectionPanel>
+          </template>
+
+          <!-- Timeline Tab -->
+          <template v-if="activeCustomerTab === 'activity'">
+             <SectionPanel :title="t('timeline')">
+                <div v-if="!communications.timeline?.length" class="at-empty-block">
+                  {{ t("no_activities") }}
                 </div>
-              </template>
-              <MiniFactList class="mt-2" :items="reminderCardFacts(reminder)" />
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'portfolio'"
-          :title="t('activePoliciesTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ activePolicies.length }}</span>
-          </template>
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div
-            v-else-if="activePolicies.length === 0"
-            class="at-empty-block"
-          >
-            {{ t("noActivePolicy") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="policy in activePolicies"
-              :key="policy.name"
-              :title="policy.policy_no || policy.name"
-              :subtitle="policy.insurance_company || '-'"
-            >
-              <template #trailing>
-                <StatusBadge domain="policy" :status="normalizeStatus(policy.status)" />
-              </template>
-              <MiniFactList class="mt-2" :items="policyCardFacts(policy)" />
-              <template #footer>
-                <ActionButton variant="secondary" size="xs" @click="openPolicyDetail(policy.name)">
-                  {{ t("openPolicy") }}
-                </ActionButton>
-              </template>
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'portfolio'"
-          :title="t('openOffersTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ openOffers.length }}</span>
-          </template>
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div
-            v-else-if="openOffers.length === 0"
-            class="at-empty-block"
-          >
-            {{ t("noOpenOffer") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2 [&>*:nth-child(n+3)]:hidden md:[&>*:nth-child(n+3)]:block">
-            <MetaListCard
-              v-for="offer in openOffers"
-              :key="offer.name"
-              :title="offer.name"
-              :subtitle="offer.insurance_company || '-'"
-            >
-              <template #trailing>
-                <StatusBadge domain="offer" :status="normalizeStatus(offer.status)" />
-              </template>
-              <MiniFactList class="mt-2" :items="offerCardFacts(offer)" />
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'portfolio'"
-          :title="t('paymentSummaryTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ paymentPreviewRows.length }}</span>
-          </template>
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="paymentPreviewRows.length === 0" class="at-empty-block">
-            {{ t("noPaymentHistory") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2 [&>*:nth-child(n+3)]:hidden md:[&>*:nth-child(n+3)]:block">
-            <MetaListCard
-              v-for="payment in paymentPreviewRows"
-              :key="payment.name"
-              :title="payment.payment_no || payment.name"
-              :subtitle="payment.policy || '-'"
-            >
-              <template #trailing>
-                <StatusBadge domain="payment" :status="payment.status || 'Draft'" />
-              </template>
-              <MiniFactList class="mt-2" :items="paymentCardFacts(payment)" />
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'portfolio'"
-          :title="t('claimsTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ claimPreviewRows.length }}</span>
-          </template>
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="claimPreviewRows.length === 0" class="at-empty-block">
-            {{ t("noClaims") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="claim in claimPreviewRows"
-              :key="claim.name"
-              :title="claim.name"
-              :subtitle="claim.policy || '-'"
-            >
-              <template #trailing>
-                <StatusBadge domain="claim" :status="claim.claim_status || 'Draft'" />
-              </template>
-              <MiniFactList class="mt-2" :items="claimCardFacts(claim)" />
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'portfolio'"
-          :title="t('renewalsTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ renewalPreviewRows.length }}</span>
-          </template>
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="renewalPreviewRows.length === 0" class="at-empty-block">
-            {{ t("noUpcomingRenewal") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="renewal in renewalPreviewRows"
-              :key="renewal.name"
-              :title="renewal.policy || renewal.name"
-              :subtitle="renewal.competitor_name || '-'"
-            >
-              <template #trailing>
-                <StatusBadge domain="renewal" :status="renewal.status || 'Draft'" />
-              </template>
-              <MiniFactList class="mt-2" :items="renewalCardFacts(renewal)" />
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'portfolio'"
-          :title="t('insightSummaryTitle')"
-        >
-          <div class="space-y-3">
-            <FieldGroup :fields="insightSummaryFields" :cols="4" />
-            <FieldGroup :fields="insightContextFields" :cols="2" />
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'operations'"
-          :title="t('assignmentsTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ ownershipAssignmentRows.length }}</span>
-          </template>
-          <div v-if="ownershipAssignmentRows.length === 0" class="at-empty-block">
-            {{ t("noAssignment") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="assignment in ownershipAssignmentRows"
-              :key="assignment.name"
-              :title="assignment.assigned_to || '-'"
-              :description="assignment.assignment_role || '-'"
-              :meta="assignment.priority || '-'"
-            >
-              <template #trailing>
-                <div class="flex items-center gap-2">
-                  <ActionButton
-                    v-if="assignment.status !== 'In Progress'"
-                    variant="secondary"
-                    size="xs"
-                    @click.stop="markAssignmentInProgress(assignment)"
+                <div v-else class="space-y-3">
+                  <MetaListCard
+                    v-for="item in communications.timeline"
+                    :key="item.timestamp"
+                    :title="item.title"
+                    :subtitle="item.meta"
                   >
-                    {{ t("startAssignment") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="assignment.status !== 'Blocked'"
-                    variant="secondary"
-                    size="xs"
-                    @click.stop="markAssignmentBlocked(assignment)"
-                  >
-                    {{ t("blockAssignment") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="assignment.status !== 'Done'"
-                    variant="secondary"
-                    size="xs"
-                    @click.stop="markAssignmentDone(assignment)"
-                  >
-                    {{ t("closeAssignment") }}
-                  </ActionButton>
-                  <ActionButton variant="secondary" size="xs" @click.stop="openEditOwnershipAssignment(assignment)">
-                    {{ t("edit") }}
-                  </ActionButton>
-                  <ActionButton variant="secondary" size="xs" @click.stop="deleteOwnershipAssignment(assignment)">
-                    {{ t("delete") }}
-                  </ActionButton>
+                    <template #trailing>
+                       <p class="text-xs text-slate-500">{{ formatDate(item.timestamp) }}</p>
+                    </template>
+                    <div class="mt-2 text-sm text-slate-600" v-html="item.payload?.content || ''"></div>
+                  </MetaListCard>
                 </div>
-              </template>
-              <p class="mt-2 text-xs text-slate-500">{{ assignmentSummaryLabel(assignment) }}</p>
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'portfolio'"
-          :title="t('crossSellTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ crossSellOpportunityRows.length }}</span>
+             </SectionPanel>
           </template>
-          <div v-if="crossSellOpportunityRows.length === 0" class="at-empty-block">
-            {{ t("noCrossSellOpportunity") }}
-          </div>
-          <div v-else class="space-y-3">
-            <FieldGroup :fields="crossSellSummaryFields" :cols="2" />
-            <FieldGroup :fields="crossSellOpportunityFields" :cols="3" />
-          </div>
-        </SectionPanel>
 
-        <SectionPanel
-          v-if="activeCustomerTab === 'operations'"
-          :title="t('relatedCustomersTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ relatedCustomerRows.length }}</span>
-          </template>
-          <div v-if="relatedCustomerRows.length === 0" class="at-empty-block">
-            {{ t("noRelatedCustomer") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="relation in relatedCustomerRows"
-              :key="relation.name"
-              :title="relation.related_customer_name || relation.related_customer"
-              :description="relation.relation_type || '-'"
-              :meta="relation.is_household ? t('sameHousehold') : '-'"
-            >
+          <!-- Operations Tab -->
+          <template v-if="activeCustomerTab === 'operations'">
+             <SectionPanel :title="t('documents')">
                 <template #trailing>
-                  <div class="flex items-center gap-2">
-                    <ActionButton variant="secondary" size="xs" @click.stop="openEditCustomerRelation(relation)">
-                      {{ t("edit") }}
-                    </ActionButton>
-                    <ActionButton variant="secondary" size="xs" @click.stop="deleteCustomerRelation(relation)">
-                      {{ t("delete") }}
-                    </ActionButton>
-                  </div>
+                  <ActionButton variant="secondary" size="xs" @click="openUploadModal">
+                    {{ t("upload_document") }}
+                  </ActionButton>
                 </template>
-              </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'operations'"
-          :title="t('documentsTitle')"
-        >
-          <div class="mb-3 flex flex-wrap items-center gap-2">
-            <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
-              {{ t("uploadDocument") }}
-            </ActionButton>
-            <ActionButton variant="secondary" size="xs" @click="openCustomerDocuments">
-              {{ t("openDocuments") }}
-            </ActionButton>
-          </div>
-          <template #trailing>
-            <span class="badge badge-blue">{{ customerDocumentItems.length }}</span>
-          </template>
-          <div class="space-y-3">
-            <div v-if="customerDocumentItems.length === 0" class="at-empty-block">
-              {{ t("emptyDocuments") }}
-            </div>
-            <MetaListCard
-              v-for="doc in customerDocumentItems"
-              :key="doc.name"
-              :title="doc.display_name || doc.file_name || doc.file || doc.name"
-              :description="`${doc.document_sub_type || doc.document_kind || '-'} ${doc.reference_name ? '(' + doc.reference_name + ')' : ''}`"
-              :meta="doc.document_date ? fmtDate(doc.document_date) : fmtDate(doc.creation)"
-            >
-              <template #trailing>
-                <div class="flex items-center gap-2">
-                  <!-- is_sensitive: Red Lock Icon -->
-                  <span v-if="doc.is_sensitive" class="flex items-center" :title="t('sensitiveData')">
-                    <svg class="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                  <!-- is_verified: Green Check Icon -->
-                  <span v-if="doc.is_verified" class="flex items-center" :title="t('verified')">
-                    <svg class="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                  <ActionButton v-if="canArchiveDocument?.(doc)" variant="secondary" size="xs" @click.stop="archiveDocument(doc)">
-                    {{ t("archiveDocument") }}
-                  </ActionButton>
-                  <ActionButton v-if="canRestoreDocument?.(doc)" variant="secondary" size="xs" @click.stop="restoreDocument(doc)">
-                    {{ t("restoreDocument") }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canPermanentDeleteDocument?.(doc)"
-                    variant="secondary"
-                    size="xs"
-                    class="text-red-700"
-                    @click.stop="permanentDeleteDocument(doc)"
+                <div v-if="!atDocuments.length" class="at-empty-block">
+                  {{ t("no_documents") }}
+                </div>
+                <div v-else class="grid gap-2">
+                  <MetaListCard
+                    v-for="doc in atDocuments"
+                    :key="doc.name"
+                    :title="doc.display_name || doc.file_name"
+                    :subtitle="doc.document_sub_type || doc.document_kind"
                   >
-                    {{ t("permanentDeleteDocument") }}
-                  </ActionButton>
-                  <button
-                    v-if="canWriteATDocument"
-                    class="btn btn-xs btn-secondary"
-                    @click.stop="toggleVerified(doc)"
-                  >{{ doc.is_verified ? t('removeVerification') : t('toggleVerify') }}</button>
-                  <button
-                    class="btn btn-xs btn-secondary"
-                    :title="doc.is_sensitive ? t('sensitiveShareWarning') : t('shareWhatsApp')"
-                    @click.stop="shareDocumentWhatsApp(doc)"
-                  >{{ t("shareWhatsApp") }}</button>
-                  <a href="#" class="btn btn-xs btn-secondary" @click.prevent="openCustomerDocument(doc, 'AT Document')">{{ t("openDocument") }}</a>
+                    <template #trailing>
+                       <div class="flex items-center gap-2">
+                         <span v-if="doc.is_verified" class="text-green-600">✓</span>
+                         <p class="text-xs text-slate-500">{{ formatDate(doc.creation) }}</p>
+                       </div>
+                    </template>
+                  </MetaListCard>
                 </div>
-              </template>
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'operations'"
-          :title="t('insuredAssetsTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ insuredAssetRows.length }}</span>
+             </SectionPanel>
           </template>
-          <div v-if="insuredAssetRows.length === 0" class="at-empty-block">
-            {{ t("noInsuredAsset") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="asset in insuredAssetRows"
-              :key="asset.policy"
-              :title="asset.asset_label || asset.policy_no || asset.policy"
-              :subtitle="asset.insurance_company || '-'"
-            >
-              <template #trailing>
-                <StatusBadge domain="policy" :status="asset.status || 'Draft'" />
-              </template>
-              <MiniFactList class="mt-2" :items="insuredAssetFacts(asset)" />
-              <template #footer>
-                <div class="flex items-center gap-2">
-                  <ActionButton variant="secondary" size="xs" @click="openEditInsuredAsset(asset)">
-                    {{ t("edit") }}
-                  </ActionButton>
-                  <ActionButton variant="secondary" size="xs" @click="deleteInsuredAsset(asset)">
-                    {{ t("delete") }}
-                  </ActionButton>
-                </div>
-              </template>
-            </MetaListCard>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'activity'"
-          :title="t('communicationSummaryTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ communicationChannelRows.length }}</span>
-          </template>
-          <div v-if="customerLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div v-else-if="communicationChannelRows.length === 0" class="at-empty-block">
-            {{ t("noCommunicationSummary") }}
-          </div>
-          <div v-else class="grid gap-3 md:grid-cols-2">
-            <MetaListCard
-              v-for="channel in communicationChannelRows"
-              :key="channel.channel"
-              :title="channel.channel"
-              :description="t('communicationChannelCount')"
-              :meta="String(channel.total)"
-            />
-          </div>
-        </SectionPanel>
-
-        <SectionPanel
-          v-if="activeCustomerTab === 'activity'"
-          :title="t('timelineTitle')"
-        >
-          <template #trailing>
-            <span class="badge badge-blue">{{ timelineRows.length }}</span>
-          </template>
-          <div v-if="timelineLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-          <div
-            v-else-if="timelineRows.length === 0"
-            class="at-empty-block"
-          >
-            {{ t("noTimeline") }}
-          </div>
-          <ol v-else class="space-y-3">
-            <MetaListCard
-              v-for="item in timelineRows"
-              :key="item.key"
-              :title="item.title"
-              :description="item.body"
-              :meta="item.actor || '-'"
-            >
-              <template #trailing>
-                <div class="flex items-center gap-2">
-                  <span class="h-2.5 w-2.5 rounded-full" :class="item.dotClass" />
-                  <p class="text-xs text-slate-500">{{ formatDateTime(item.date) }}</p>
-                </div>
-              </template>
-            </MetaListCard>
-          </ol>
-        </SectionPanel>
+        </div>
       </div>
-    </div>
+    </template>
 
     <WorkbenchFileUploadModal
       :open="showUploadModal"
-      :attached-to-doctype="'AT Customer'"
-      :attached-to-name="props.name"
-      :t="t"
+      attached-to-doctype="AT Customer"
+      :attached-to-name="name"
       @close="closeUploadModal"
       @uploaded="handleUploadComplete"
-    />
-
-    <QuickCreateManagedDialog
-      v-model="showCustomerRelationDialog"
-      config-key="customer_relation"
-      :locale="activeLocale"
-      :eyebrow="customerRelationEyebrow"
-      :options-map="customer360QuickOptionsMap"
-      :before-open="prepareCustomerRelationDialog"
-      :success-handlers="customer360QuickSuccessHandlers"
-    />
-
-    <QuickCreateManagedDialog
-      v-model="showInsuredAssetDialog"
-      config-key="insured_asset"
-      :locale="activeLocale"
-      :eyebrow="insuredAssetEyebrow"
-      :options-map="customer360QuickOptionsMap"
-      :before-open="prepareInsuredAssetDialog"
-      :success-handlers="customer360QuickSuccessHandlers"
-    />
-
-    <QuickCreateManagedDialog
-      v-model="showCustomerRelationEditDialog"
-      config-key="customer_relation_edit"
-      :locale="activeLocale"
-      :eyebrow="customerRelationEditEyebrow"
-      :options-map="customer360QuickOptionsMap"
-      :before-open="prepareCustomerRelationEditDialog"
-      :success-handlers="customer360QuickSuccessHandlers"
-    />
-
-    <QuickCreateManagedDialog
-      v-model="showInsuredAssetEditDialog"
-      config-key="insured_asset_edit"
-      :locale="activeLocale"
-      :eyebrow="insuredAssetEditEyebrow"
-      :options-map="customer360QuickOptionsMap"
-      :before-open="prepareInsuredAssetEditDialog"
-      :success-handlers="customer360QuickSuccessHandlers"
-    />
-
-    <QuickCreateManagedDialog
-      v-model="showOwnershipAssignmentDialog"
-      config-key="ownership_assignment"
-      :locale="activeLocale"
-      :eyebrow="ownershipAssignmentEyebrow"
-      :options-map="customer360QuickOptionsMap"
-      :before-open="prepareOwnershipAssignmentDialog"
-      :success-handlers="customer360QuickSuccessHandlers"
-    />
-
-    <QuickCreateManagedDialog
-      v-model="showOwnershipAssignmentEditDialog"
-      config-key="ownership_assignment_edit"
-      :locale="activeLocale"
-      :eyebrow="ownershipAssignmentEditEyebrow"
-      :options-map="customer360QuickOptionsMap"
-      :before-open="prepareOwnershipAssignmentEditDialog"
-      :success-handlers="customer360QuickSuccessHandlers"
     />
   </section>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, reactive, ref, unref, watch } from "vue";
-import { useRouter } from "vue-router";
-import { createResource } from "frappe-ui";
-
+import { computed, ref } from "vue";
+import { useCustomerDetailRuntime } from "../composables/useCustomerDetailRuntime";
 import { deskActionsEnabled } from "../utils/deskActions";
-import { useAuthStore } from "../stores/auth";
+
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
@@ -832,1677 +263,84 @@ import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
-import { openDocumentInNewTab } from "../utils/documentOpen";
-import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
-import { useCustomerDetailActions } from "../composables/customerDetail";
-import { useCustomerDetailViewData } from "../composables/customerDetailViewData";
-import { createCustomerDetailFacts, createCustomerDetailFormatters } from "../composables/customerDetailHelpers";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 
 const props = defineProps({
-  name: {
-    type: String,
-    default: "",
-  },
+  name: { type: String, required: true }
 });
 
-const router = useRouter();
-const authStore = useAuthStore();
-const activeLocale = computed(() => unref(authStore.locale) || "en");
 const activeCustomerTab = ref("overview");
 
-const copy = {
-  tr: {
-    breadcrumb: "Operasyonlar / Müşteriler",
-    overview: "Müşteri Detayı",
-    backList: "Listeye Dön",
-    openDesk: "Yönetim Ekranını Aç",
-    newOffer: "Yeni Teklif",
-    communication: "İletişim",
-    newRelation: "Yeni İlişki",
-    newAsset: "Yeni Varlık",
-    newAssignment: "Yeni Atama",
-    editRelation: "İlişkiyi Düzenle",
-    editAsset: "Varlığı Düzenle",
-    editAssignment: "Atamayı Düzenle",
-    edit: "Düzenle",
-    delete: "Sil",
-    deleteRelationConfirm: "Bu ilişki kaydı silinsin mi?",
-    deleteAssetConfirm: "Bu varlık kaydı silinsin mi?",
-    deleteAssignmentConfirm: "Bu atama kaydı silinsin mi?",
-    editProfile: "Düzenle",
-    cancelEdit: "İptal",
-    saveProfile: "Kaydet",
-    saving: "Kaydediliyor...",
-    saveProfileError: "Müşteri bilgileri kaydedilemedi. Lütfen tekrar deneyin.",
-    saveProfileSuccess: "Müşteri bilgileri güncellendi.",
-    validationFullNameRequired: "Ad Soyad zorunludur.",
-    validationEmailInvalid: "Geçerli bir e-posta girin.",
-    validationBirthDateFuture: "Doğum tarihi bugünden ileri olamaz.",
-    validationPhoneInvalid: "Geçerli bir cep telefonu girin.",
-    unassignedAgent: "Atanmadı",
-    loading: "Yükleniyor...",
-    fullName: "Ad Soyad",
-    birthDate: "Doğum Tarihi",
-    gender: "Cinsiyet",
-    maritalStatus: "Medeni Durumu",
-    occupation: "Meslek",
-    riskCard: "Risk Özeti",
-    taxId: "Kimlik / Vergi No",
-    nationalId: "TC Kimlik No",
-    taxNumber: "Vergi No",
-    customerType: "Müşteri Tipi",
-    customerTypeIndividual: "Bireysel",
-    customerTypeCorporate: "Kurumsal",
-    recordId: "Kayıt No",
-    phone: "Telefon",
-    mobilePhone: "Cep Telefonu",
-    email: "E-posta",
-    address: "Adres",
-    assignedAgent: "Temsilci",
-    consentStatus: "İzin Durumu",
-    customerSnapshotTitle: "Müşteri Özeti",
-    customerSnapshotHint: "İletişim ve portföy sinyalleri",
-    customerProfileTitle: "Müşteri Profili",
-    overviewSummaryTitle: "Özet Panosu",
-    overviewSummaryHint: "En önemli sinyaller ve kısa yollar",
-    portfolioOverviewTitle: "Portföy Özeti",
-    paymentOverviewTitle: "Ödeme Özeti",
-    activityOverviewTitle: "Aktivite Özeti",
-    operationsOverviewTitle: "Operasyon Özeti",
-    portfolioOverviewActiveLabel: "Aktif",
-    portfolioOverviewOfferLabel: "Teklif",
-    portfolioOverviewRenewalLabel: "Yenileme",
-    portfolioOverviewClaimLabel: "Hasar",
-    paymentOverviewCountLabel: "Tahsilat",
-    paymentOverviewOverdueLabel: "Geciken Taksit",
-    paymentOverviewOverdueAmountLabel: "Gecikme Tutarı",
-    activityOverviewCountLabel: "Aktivite",
-    activityOverviewReminderLabel: "Hatırlatıcı",
-    activityOverviewChannelLabel: "Kanal",
-    operationsOverviewRelationLabel: "Kişi",
-    operationsOverviewAssetLabel: "Varlık",
-    operationsOverviewAssignmentLabel: "Atama",
-    operationsOverviewDocumentLabel: "Doküman",
-    genderUnknown: "Bilinmiyor",
-    genderMale: "Erkek",
-    genderFemale: "Kadın",
-    genderOther: "Diğer",
-    maritalUnknown: "Bilinmiyor",
-    maritalSingle: "Bekar",
-    maritalMarried: "Evli",
-    maritalDivorced: "Boşanmış",
-    maritalWidowed: "Dul",
-    consentUnknown: "Bilinmiyor",
-    consentGranted: "Onaylı",
-    consentRevoked: "İptal",
-    customerFolder: "Müşteri Klasörü",
-    activePolicyCount: "Aktif Poliçe",
-    openOfferCount: "Açık Teklif",
-    totalRiskLimit: "Toplam Risk Limiti",
-    segment: "Segment",
-    score: "Skor",
-    customerValueScore: "Müşteri değer puanı",
-    claimRisk: "Hasar Riski",
-    claimRiskHint: "Açık risk seviyesi",
-    segmentScore: "Portföy segmenti",
-    valueBand: "Değer Bandı",
-    valueBandHint: "Portföy prim seviyesine göre değer sınıfı",
-    portfolioStrengths: "Güçlü Sinyaller",
-    portfolioRisks: "Risk Sinyalleri",
-    strengthSignalsHint: "Müşteri portföyünü güçlendiren faktörler",
-    riskSignalsHint: "Takip gerektiren risk baskıları",
-    noStrengthSignal: "Belirgin pozitif sinyal bulunamadı.",
-    noRiskSignal: "Belirgin risk sinyali bulunamadı.",
-    snapshotDate: "Snapshot Tarihi",
-    sourceVersion: "Kaynak Sürümü",
-    segmentSnapshotHint: "Segment görünümü son hesaplanan güne aittir",
-    segmentSourceVersionHint: "Skor kuralı sürümü",
-    valueBandHighValue: "Yüksek Değer",
-    valueBandMidValue: "Orta Değer",
-    valueBandStandard: "Standart",
-    insightSignalMultiPolicy: "Çoklu aktif poliçe portföyü",
-    insightSignalActivePortfolio: "Aktif poliçe portföyü",
-    insightSignalHighPremium: "Yüksek premium katkısı",
-    insightSignalMediumPremium: "Orta premium katkısı",
-    insightSignalCleanClaims: "Temiz hasar görünümü",
-    insightSignalRenewalPipeline: "Yaklaşan yenileme fırsatı",
-    insightRiskClaimPressure: "Hasar baskısı yüksek",
-    insightRiskCollectionRisk: "Tahsilat riski yüksek",
-    insightRiskOverduePayment: "Geciken tahsilat var",
-    insightRiskCancellationHistory: "İptal geçmişi dikkat gerektiriyor",
-    activePoliciesTitle: "Aktif Poliçeler",
-    noActivePolicy: "Aktif poliçe kaydı bulunamadı.",
-    paymentSummaryTitle: "Ödeme Özeti",
-    noPaymentHistory: "Ödeme kaydı bulunamadı.",
-    paymentDate: "Ödeme Tarihi",
-    overdueInstallments: "Geciken Taksit",
-    claimsTitle: "Hasarlar",
-    noClaims: "Hasar kaydı bulunamadı.",
-    reportedDate: "Bildirim Tarihi",
-    claimAmount: "Hasar Tutarı",
-    renewalsTitle: "Yaklaşan Yenilemeler",
-    noUpcomingRenewal: "Yaklaşan yenileme bulunamadı.",
-    dueDate: "Vade",
-    lostReason: "Kayıp Sebebi",
-    communicationSummaryTitle: "İletişim Kanal Özeti",
-    noCommunicationSummary: "İletişim özeti bulunamadı.",
-    communicationChannelCount: "Kanal toplam kaydı",
-    insightSummaryTitle: "Müşteri İçgörüleri",
-    crossSellTitle: "Çapraz Satış Fırsatları",
-    noCrossSellOpportunity: "Ek çapraz satış fırsatı bulunamadı.",
-    crossSellOpportunityHint: "Eksik ürün/branş fırsatı",
-    crossSellOpportunityMeta: "Aksiyon önerisi",
-    crossSellOpportunityCount: "Fırsat Sayısı",
-    crossSellOpportunityBranches: "Önerilen Branşlar",
-    relatedCustomersTitle: "İlişkili Kişiler",
-    noRelatedCustomer: "İlişkili kişi kaydı bulunamadı.",
-    sameHousehold: "Aynı hane",
-    insuredAssetsTitle: "Sigortalanan Varlıklar",
-    assignmentsTitle: "Atamalar",
-    activitiesTitle: "Aktiviteler",
-    remindersTitle: "Hatırlatıcılar",
-    noAssignment: "Atama kaydı yok.",
-    noActivity: "Aktivite kaydı yok.",
-    noReminder: "Hatırlatıcı kaydı yok.",
-    reminderAt: "Hatırlatma",
-    reminderPriority: "Öncelik",
-    markDone: "Tamamla",
-    cancelReminder: "İptal",
-    startAssignment: "İşleme Al",
-    blockAssignment: "Bloke Et",
-    closeAssignment: "Kapat",
-    noInsuredAsset: "Sigortalanan varlık bulunamadı.",
-    assetType: "Varlık Turu",
-    assetIdentifier: "Varlık Kimliği",
-    policyBranch: "Branş",
-    endDate: "Bitiş",
-    openPolicy: "Poliçeyi Aç",
-    openOffersTitle: "Açık Teklifler",
-    noOpenOffer: "Açık teklif bulunamadı.",
-    validUntil: "Geçerlilik",
-    grossPremium: "Brüt Prim",
-    operationsTitle: "Operasyonlar",
-    documents: "Dokümanlar",
-    documentsTitle: "Doküman Listesi",
-    uploadDocument: "Doküman Yükle",
-    openDocuments: "Doküman Merkezine Git",
-    openDocument: "Dokümanı Aç",
-    archiveDocument: "Arşivle",
-    restoreDocument: "Geri Yükle",
-    permanentDeleteDocument: "Kalıcı Sil",
-    archiveConfirm: "Bu doküman arşivlensin mi?",
-    restoreConfirm: "Bu doküman geri yüklensin mi?",
-    permanentDeleteConfirm: "Bu doküman ve bağlı dosyası kalıcı olarak silinecek. Devam edilsin mi?",
-    emptyDocuments: "Henüz doküman yüklenmedi.",
-    sensitiveData: "Hassas Veri",
-    verified: "Doğrulandı",
-    toggleVerify: "Doğrula",
-    removeVerification: "Doğrulamayı Kaldır",
-    shareWhatsApp: "WhatsApp ile Paylaş",
-    sensitiveShareWarning: "Hassas veri işareti var — paylaşım önerilmez.",
-    open: "Aç",
-    totalDocuments: "Toplam Doküman",
-    pdfDocuments: "PDF",
-    imageDocuments: "Görsel",
-    spreadsheetDocuments: "Tablo",
-    otherDocuments: "Diğer",
-    lastUpload: "Son Yükleme",
-    mobileQuickActionsTitle: "Hızlı İşlemler",
-    tabOverview: "Özet",
-    tabPortfolio: "Portföy",
-    tabActivity: "Aktivite",
-    tabOperations: "Operasyonlar",
-    timelineTitle: "İletişim Geçmişi",
-    noTimeline: "Zaman tüneli kaydı bulunamadı.",
-    typeCommunication: "Arama/İletişim",
-    typeNote: "Not",
-    typeLead: "Lead Notu",
-  },
-  en: {
-    breadcrumb: "Operations / Customers",
-    overview: "Customer Details",
-    backList: "Back to List",
-    openDesk: "Open Desk",
-    newOffer: "New Offer",
-    communication: "Communication",
-    newRelation: "New Relation",
-    newAsset: "New Asset",
-    newAssignment: "New Assignment",
-    editRelation: "Edit Relation",
-    editAsset: "Edit Asset",
-    editAssignment: "Edit Assignment",
-    edit: "Edit",
-    delete: "Delete",
-    deleteRelationConfirm: "Delete this relation record?",
-    deleteAssetConfirm: "Delete this asset record?",
-    deleteAssignmentConfirm: "Delete this assignment record?",
-    editProfile: "Edit",
-    cancelEdit: "Cancel",
-    saveProfile: "Save",
-    saving: "Saving...",
-    saveProfileError: "Failed to save customer profile. Please try again.",
-    saveProfileSuccess: "Customer profile updated.",
-    validationFullNameRequired: "Full Name is required.",
-    validationEmailInvalid: "Enter a valid email address.",
-    validationBirthDateFuture: "Birth Date cannot be in the future.",
-    validationPhoneInvalid: "Enter a valid mobile phone number.",
-    unassignedAgent: "Unassigned",
-    loading: "Loading...",
-    fullName: "Full Name",
-    birthDate: "Birth Date",
-    gender: "Gender",
-    maritalStatus: "Marital Status",
-    occupation: "Occupation",
-    riskCard: "Risk Summary",
-    taxId: "Identity / Tax Number",
-    nationalId: "National ID Number",
-    taxNumber: "Tax Number",
-    customerType: "Customer Type",
-    customerTypeIndividual: "Individual",
-    customerTypeCorporate: "Corporate",
-    recordId: "Record ID",
-    phone: "Phone",
-    mobilePhone: "Mobile Phone",
-    email: "Email",
-    address: "Address",
-    assignedAgent: "Assigned Agent",
-    consentStatus: "Consent Status",
-    customerSnapshotTitle: "Customer Snapshot",
-    customerSnapshotHint: "Contact and portfolio signals",
-    customerProfileTitle: "Customer Profile",
-    overviewSummaryTitle: "Overview Dashboard",
-    overviewSummaryHint: "Top signals and quick paths",
-    portfolioOverviewTitle: "Portfolio Summary",
-    paymentOverviewTitle: "Payment Summary",
-    activityOverviewTitle: "Activity Summary",
-    operationsOverviewTitle: "Operations Summary",
-    portfolioOverviewActiveLabel: "Active",
-    portfolioOverviewOfferLabel: "Offer",
-    portfolioOverviewRenewalLabel: "Renewal",
-    portfolioOverviewClaimLabel: "Claim",
-    paymentOverviewCountLabel: "Payments",
-    paymentOverviewOverdueLabel: "Overdue Installment",
-    paymentOverviewOverdueAmountLabel: "Overdue Amount",
-    activityOverviewCountLabel: "Activity",
-    activityOverviewReminderLabel: "Reminder",
-    activityOverviewChannelLabel: "Channel",
-    operationsOverviewRelationLabel: "Contact",
-    operationsOverviewAssetLabel: "Asset",
-    operationsOverviewAssignmentLabel: "Assignment",
-    operationsOverviewDocumentLabel: "Document",
-    genderUnknown: "Unknown",
-    genderMale: "Male",
-    genderFemale: "Female",
-    genderOther: "Other",
-    maritalUnknown: "Unknown",
-    maritalSingle: "Single",
-    maritalMarried: "Married",
-    maritalDivorced: "Divorced",
-    maritalWidowed: "Widowed",
-    consentUnknown: "Unknown",
-    consentGranted: "Granted",
-    consentRevoked: "Revoked",
-    customerFolder: "Customer Folder",
-    activePolicyCount: "Active Policies",
-    openOfferCount: "Open Offers",
-    totalRiskLimit: "Total Risk Limit",
-    segment: "Segment",
-    score: "Score",
-    customerValueScore: "Customer value score",
-    claimRisk: "Claim Risk",
-    claimRiskHint: "Current risk level",
-    segmentScore: "Portfolio segment",
-    valueBand: "Value Band",
-    valueBandHint: "Value tier based on portfolio premium level",
-    portfolioStrengths: "Strength Signals",
-    portfolioRisks: "Risk Signals",
-    strengthSignalsHint: "Factors that strengthen the customer portfolio",
-    riskSignalsHint: "Risk pressure points that need follow-up",
-    noStrengthSignal: "No major positive signal found.",
-    noRiskSignal: "No major risk signal found.",
-    snapshotDate: "Snapshot Date",
-    sourceVersion: "Source Version",
-    segmentSnapshotHint: "Segment view reflects the latest calculated business date",
-    segmentSourceVersionHint: "Scoring rule version",
-    valueBandHighValue: "High Value",
-    valueBandMidValue: "Mid Value",
-    valueBandStandard: "Standard",
-    insightSignalMultiPolicy: "Multiple active policies",
-    insightSignalActivePortfolio: "Active policy portfolio",
-    insightSignalHighPremium: "High premium contribution",
-    insightSignalMediumPremium: "Medium premium contribution",
-    insightSignalCleanClaims: "Clean claims outlook",
-    insightSignalRenewalPipeline: "Upcoming renewal opportunity",
-    insightRiskClaimPressure: "High claim pressure",
-    insightRiskCollectionRisk: "High collection risk",
-    insightRiskOverduePayment: "Overdue collection exists",
-    insightRiskCancellationHistory: "Cancellation history needs attention",
-    activePoliciesTitle: "Active Policies",
-    noActivePolicy: "No active policies found.",
-    paymentSummaryTitle: "Payment Summary",
-    noPaymentHistory: "No payment records found.",
-    paymentDate: "Payment Date",
-    overdueInstallments: "Overdue Installments",
-    claimsTitle: "Claims",
-    noClaims: "No claims found.",
-    reportedDate: "Reported Date",
-    claimAmount: "Claim Amount",
-    renewalsTitle: "Upcoming Renewals",
-    noUpcomingRenewal: "No upcoming renewals found.",
-    dueDate: "Due Date",
-    lostReason: "Lost Reason",
-    communicationSummaryTitle: "Communication Channel Summary",
-    noCommunicationSummary: "No communication summary found.",
-    communicationChannelCount: "Channel record count",
-    insightSummaryTitle: "Customer Insights",
-    crossSellTitle: "Cross-Sell Opportunities",
-    noCrossSellOpportunity: "No additional cross-sell opportunity found.",
-    crossSellOpportunityHint: "Missing product/branch opportunity",
-    crossSellOpportunityMeta: "Recommended action",
-    crossSellOpportunityCount: "Opportunity Count",
-    crossSellOpportunityBranches: "Suggested Branches",
-    relatedCustomersTitle: "Related Customers",
-    noRelatedCustomer: "No related customer records found.",
-    sameHousehold: "Same household",
-    insuredAssetsTitle: "Insured Assets",
-    assignmentsTitle: "Assignments",
-    activitiesTitle: "Activities",
-    remindersTitle: "Reminders",
-    noAssignment: "No assignments found.",
-    noActivity: "No activities found.",
-    noReminder: "No reminders found.",
-    reminderAt: "Reminder At",
-    reminderPriority: "Priority",
-    markDone: "Mark Done",
-    cancelReminder: "Cancel",
-    startAssignment: "Start",
-    blockAssignment: "Block",
-    closeAssignment: "Close",
-    noInsuredAsset: "No insured asset found.",
-    assetType: "Asset Type",
-    assetIdentifier: "Asset Identifier",
-    policyBranch: "Branch",
-    endDate: "End Date",
-    openPolicy: "Open Policy",
-    openOffersTitle: "Open Offers",
-    noOpenOffer: "No open offers found.",
-    validUntil: "Valid Until",
-    grossPremium: "Gross Premium",
-    operationsTitle: "Operations",
-    documents: "Documents",
-    documentsTitle: "Document List",
-    uploadDocument: "Upload Document",
-    openDocuments: "Go to Document Center",
-    openDocument: "Open Document",
-    archiveDocument: "Archive",
-    restoreDocument: "Restore",
-    permanentDeleteDocument: "Delete Permanently",
-    archiveConfirm: "Archive this document?",
-    restoreConfirm: "Restore this document?",
-    permanentDeleteConfirm: "This document and its linked file will be permanently deleted. Continue?",
-    emptyDocuments: "No documents uploaded yet.",
-    sensitiveData: "Sensitive Data",
-    verified: "Verified",
-    toggleVerify: "Verify",
-    removeVerification: "Remove Verification",
-    shareWhatsApp: "Share via WhatsApp",
-    sensitiveShareWarning: "Marked as sensitive — sharing is not recommended.",
-    open: "Open",
-    totalDocuments: "Total Documents",
-    pdfDocuments: "PDF",
-    imageDocuments: "Images",
-    spreadsheetDocuments: "Spreadsheets",
-    otherDocuments: "Other",
-    lastUpload: "Last Upload",
-    mobileQuickActionsTitle: "Quick Actions",
-    tabOverview: "Overview",
-    tabPortfolio: "Portfolio",
-    tabActivity: "Activity",
-    tabOperations: "Operations",
-    timelineTitle: "Communication Timeline",
-    noTimeline: "No timeline records found.",
-    typeCommunication: "Communication",
-    typeNote: "Note",
-    typeLead: "Lead Note",
-  },
-};
-
-function t(key) {
-  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
-}
-
-const customerDetailTabs = computed(() => [
-  { value: "overview", label: t("tabOverview") },
-  { value: "portfolio", label: t("tabPortfolio") },
-  { value: "activity", label: t("tabActivity") },
-  { value: "operations", label: t("tabOperations") },
-]);
-
-const customer360Resource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_360_payload",
-  auto: false,
-});
-const customerProfileUpdateResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.dashboard.update_customer_profile",
-  auto: false,
-});
-const customerRelationDeleteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
-  auto: false,
-});
-const insuredAssetDeleteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.delete_quick_aux_record",
-  auto: false,
-});
-const reminderUpdateResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
-  auto: false,
+const {
+  customer,
+  summary,
+  portfolio,
+  communications,
+  atDocuments,
+  insights,
+  crossSell,
+  operations,
+  loading,
+  loadErrorText,
+  t,
+  formatDate,
+  formatCurrency,
+  heroCells,
+  profileFields,
+  moreProfileFields,
+  operationalFields,
+  showUploadModal,
+  openUploadModal,
+  closeUploadModal,
+  handleUploadComplete,
+  canUploadDocuments,
+  atDocumentLifecycle,
+  reload,
+  backToList,
+  openPolicy,
+  openOffer,
+  openClaim,
+} = useCustomerDetailRuntime({
+  name: computed(() => props.name),
+  activeLocale: computed(() => "tr") // Hardcoded for now or get from authStore
 });
 
-const customer360Payload = computed(() => unref(customer360Resource.data) || {});
-const customer = computed(() => customer360Payload.value.customer || {});
-const customer360Summary = computed(() => customer360Payload.value.summary || {});
-const customer360Portfolio = computed(() => customer360Payload.value.portfolio || {});
-const customer360Communication = computed(() => customer360Payload.value.communication || {});
-const customer360Insights = computed(() => customer360Payload.value.insights || {});
-const customer360CrossSell = computed(() => customer360Payload.value.cross_sell || {});
-const customer360Documents = computed(() => customer360Payload.value.documents || {});
-const customerDocumentProfile = computed(() => customer360Documents.value.document_profile || {});
-const customerDocumentItems = computed(() => customer360Documents.value.items || []);
-const canWriteATDocument = computed(() => Boolean(authStore.capabilities?.doctypes?.["AT Document"]?.write));
-const docToggleVerifiedResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.documents.toggle_verified",
-  auto: false,
-});
-const docShareResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.documents.share_document",
-  auto: false,
-});
-async function toggleVerified(doc) {
-  try {
-    const result = await docToggleVerifiedResource.submit({ docname: doc.name });
-    if (result && typeof result === "object" && "is_verified" in result) {
-      const updatedItems = (customer360Documents.value.items || []).map((d) =>
-        d.name === doc.name ? { ...d, is_verified: result.is_verified } : d
-      );
-      customer360Resource.setData({
-        ...(customer360Payload.value || {}),
-        documents: { ...(customer360Documents.value || {}), items: updatedItems },
-      });
-    }
-  } catch { /* ignore */ }
-}
-
-async function shareDocumentWhatsApp(doc) {
-  try {
-    const result = await docShareResource.submit({ docname: doc.name, method: "whatsapp" });
-    if (result?.url) {
-      window.open(result.url, "_blank", "noopener,noreferrer");
-    }
-  } catch { /* ignore */ }
-}
-
-async function openCustomerDocument(doc, referenceDoctype = "AT Document") {
-  const opened = await openDocumentInNewTab(doc || {}, {
-    referenceDoctype,
-    referenceName: doc?.name || "",
-  });
-  if (opened) return;
-  window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
-}
-
-function fmtDate(v) {
-  if (!v) return "";
-  try { return formatDate(v); } catch { return String(v); }
-}
-
-function docSubTypeBadgeClass(subType) {
-  const map = {
-      // English stored values (canonical post-migration)
-      "Vehicle Registration": "badge-blue",
-      "ID Document": "badge-slate",
-      "Policy Copy": "badge-green",
-      "Damage Photo": "badge-orange",
-      // Legacy Turkish stored values (backwards compat)
-    "Ruhsat": "badge-blue",
-    "Kimlik": "badge-slate",
-    "Poliçe Kopyası": "badge-green",
-    "Hasar Fotoğrafı": "badge-orange",
-    "Policy": "badge-blue",
-    "Endorsement": "badge-violet",
-    "Claim": "badge-orange",
-  };
-  return map[subType] || "badge-gray";
-}
-const policies = computed(() => customer360Portfolio.value.policies || []);
-const offers = computed(() => customer360Portfolio.value.offers || []);
-const payments = computed(() => customer360Portfolio.value.payments || []);
-const paymentInstallments = computed(() => customer360Portfolio.value.payment_installments || []);
-const claims = computed(() => customer360Portfolio.value.claims || []);
-const renewals = computed(() => customer360Portfolio.value.renewals || []);
-const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
-
-if (false) {
-const profileEditMode = ref(false);
-const profileSaveError = ref("");
-const profileSaveMessage = ref("");
-const showCustomerRelationDialog = ref(false);
-const showInsuredAssetDialog = ref(false);
-const showCustomerRelationEditDialog = ref(false);
-const showInsuredAssetEditDialog = ref(false);
-const showOwnershipAssignmentDialog = ref(false);
-const showOwnershipAssignmentEditDialog = ref(false);
-const editingCustomerRelation = ref(null);
-const editingInsuredAsset = ref(null);
-const editingOwnershipAssignment = ref(null);
-let profileFlashTimer = null;
-const profileFormErrors = reactive({
-  full_name: "",
-  birth_date: "",
-  email: "",
-});
-const profileForm = reactive({
-  full_name: "",
-  birth_date: "",
-  gender: "Unknown",
-  marital_status: "Unknown",
-  occupation: "",
-  email: "",
-  address: "",
-  consent_status: "Unknown",
-});
-
-}
-
-const customerLoading = computed(() => Boolean(unref(customer360Resource.loading)));
-const timelineLoading = computed(() => Boolean(unref(customer360Resource.loading)));
-
-const customerStatus = computed(() => (Number(customer.value.enabled) === 1 ? "active" : "cancel"));
-
-const heroCells = computed(() => [
-  {
-    label: t("customerType"),
-    value: customerTypeLabel.value,
-    variant: "default",
-  },
-  {
-    label: t("valueBand"),
-    value: valueBandLabel.value || "-",
-    variant: "default",
-  },
-  {
-    label: t("activePolicyCount"),
-    value: String(activePolicies.value?.length || 0),
-    variant: "accent",
-  },
-  {
-    label: t("totalRiskLimit"),
-    value: formatCurrency(totalRiskLimit.value),
-    variant: "lg",
-  },
-]);
-
+// Sync tabs
 const tabs = computed(() => [
-  { key: "overview", label: t("tabOverview") },
-  { key: "portfolio", label: t("tabPortfolio"), count: activePolicies.value?.length },
-  { key: "activity", label: t("tabActivity"), count: activityRows.value?.length },
-  { key: "operations", label: t("tabOperations"), count: ownershipAssignmentRows.value?.length },
+  { key: "overview", label: t("overview") },
+  { key: "portfolio", label: t("portfolio"), count: summary.value.active_policy_count },
+  { key: "activity", label: t("timeline") },
+  { key: "operations", label: t("operations") },
 ]);
 
-const activeTab = computed({
-  get: () => activeCustomerTab.value,
-  set: (value) => {
-    activeCustomerTab.value = value;
-  },
-});
-
-function initials(nameValue = "") {
-  return String(nameValue)
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
+// Helper for status normalization
+function normalizeStatus(val) {
+  const s = String(val || "").toLowerCase();
+  if (["active", "paid", "sent"].includes(s)) return "active";
+  if (["cancelled", "expired", "overdue"].includes(s)) return "cancel";
+  return "draft";
 }
 
-function normalizeStatus(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  if (["active", "open", "waiting", "draft", "cancel"].includes(normalized)) {
-    return normalized;
-  }
-  if (normalized === "ipt" || normalized === "cancelled" || normalized === "canceled") {
-    return "cancel";
-  }
-  return normalized || "draft";
-}
-const auxQuickCustomerResource = createResource({
-  url: "frappe.client.get_list",
-  auto: false,
-});
-const auxQuickPolicyResource = createResource({
-  url: "frappe.client.get_list",
-  auto: false,
-});
-const customerAgentResource = createResource({
-  url: "frappe.client.get_list",
-  auto: true,
-  params: {
-    doctype: "User",
-    fields: ["name", "full_name"],
-    filters: { enabled: 1, user_type: "System User" },
-    order_by: "full_name asc",
-    limit_page_length: 500,
-  },
-});
-const assignedAgentOptions = computed(() => [
-  { value: "", label: t("unassignedAgent") },
-  ...asArray(unref(customerAgentResource.data)).map((row) => ({
-    value: row.name,
-    label: row.full_name || row.name,
-  })),
-]);
-
-const customerDetailActions = useCustomerDetailActions({
-  props,
-  t,
-  activeLocale,
-  router,
-  customer,
-  customer360Payload,
-  customer360Resource,
-  customerProfileUpdateResource,
-  customerRelationDeleteResource,
-  insuredAssetDeleteResource,
-  reminderUpdateResource,
-  auxQuickCustomerResource,
-  auxQuickPolicyResource,
-  authStore,
-});
-
-const {
-  customerRelationEyebrow,
-  insuredAssetEyebrow,
-  customerRelationEditEyebrow,
-  insuredAssetEditEyebrow,
-  ownershipAssignmentEyebrow,
-  ownershipAssignmentEditEyebrow,
-  profileEditMode,
-  profileSaveError,
-  profileSaveMessage,
-  showCustomerRelationDialog,
-  showInsuredAssetDialog,
-  showCustomerRelationEditDialog,
-  showInsuredAssetEditDialog,
-  showOwnershipAssignmentDialog,
-  showOwnershipAssignmentEditDialog,
-  editingCustomerRelation,
-  editingInsuredAsset,
-  editingOwnershipAssignment,
-  profileFormErrors,
-  profileForm,
-  customer360QuickOptionsMap,
-  customer360QuickSuccessHandlers,
-  startProfileEdit,
-  cancelProfileEdit,
-  saveProfile,
-  setProfileField,
-  openQuickOfferForCustomer,
-  openCommunicationCenterForCustomer,
-  openCustomerDocuments,
-  canArchiveDocument,
-  canRestoreDocument,
-  canPermanentDeleteDocument,
-  archiveDocument,
-  restoreDocument,
-  permanentDeleteDocument,
-  openCustomerRelations,
-  openInsuredAssets,
-  openQuickCustomerRelation,
-  openQuickInsuredAsset,
-  openQuickOwnershipAssignment,
-  openEditCustomerRelation,
-  openEditInsuredAsset,
-  openEditOwnershipAssignment,
-  deleteCustomerRelation,
-  deleteInsuredAsset,
-  deleteOwnershipAssignment,
-  markReminderDone,
-  cancelReminder,
-  markAssignmentInProgress,
-  markAssignmentBlocked,
-  markAssignmentDone,
-  prepareCustomerRelationDialog,
-  prepareInsuredAssetDialog,
-  prepareOwnershipAssignmentDialog,
-  prepareCustomerRelationEditDialog,
-  prepareInsuredAssetEditDialog,
-  prepareOwnershipAssignmentEditDialog,
-  openCustomerDesk,
-  openPolicyDetail,
-} = customerDetailActions;
-
-const {
-  describeValueBand,
-  describeInsightSignal,
-  stripHtml,
-  formatDate,
-  formatDateTime,
-  formatCurrency,
-} = createCustomerDetailFormatters({ t, localeCode });
-
-const customerDetailViewData = useCustomerDetailViewData({
-  t,
-  customer,
-  customer360Payload,
-  customer360Summary,
-  customer360Insights,
-  customer360Communication,
-  customer360CrossSell,
-  customerDocumentProfile,
-  policies,
-  offers,
-  payments,
-  paymentInstallments,
-  claims,
-  renewals,
-  formatDate,
-  formatDateTime,
-  formatCurrency,
-  stripHtml,
-  describeValueBand,
-  describeInsightSignal,
-  assignedAgentOptions,
-});
-
-const {
-  activePolicies,
-  openOffers,
-  paymentPreviewRows,
-  paymentOverdueInstallmentCount,
-  paymentOverdueInstallmentAmount,
-  paymentInstallmentsByPayment,
-  claimPreviewRows,
-  renewalPreviewRows,
-  communicationChannelRows,
-  insuredAssetRows,
-  crossSellOpportunityRows,
-  relatedCustomerRows,
-  ownershipAssignmentRows,
-  valueBandLabel,
-  totalRiskLimit,
-  insightStrengthRows,
-  insightRiskRows,
-  customerHeaderSubtitle,
-  riskSummaryItems,
-  customerHeaderSummaryItems,
-  overviewSummaryCards,
-  insightSummaryFields,
-  insightContextFields,
-  crossSellSummaryFields,
-  crossSellOpportunityFields,
-  documentSummaryFields,
-  customerTypeValue,
-  isCorporateCustomer,
-  customerTypeLabel,
-  customerTaxIdLabel,
-  customerTaxIdDisplay,
-  customerPhoneDisplay,
-  genderLabel,
-  maritalStatusLabel,
-  consentStatusLabel,
-  genderOptions,
-  maritalStatusOptions,
-  consentStatusOptions,
-  profileViewFields,
-  profileEditFields,
-  timelineRows,
-  activityRows,
-  reminderRows,
-} = customerDetailViewData;
-
-const {
-  assignmentSummaryLabel,
-  activityCardFacts,
-  reminderCardFacts,
-  policyCardFacts,
-  offerCardFacts,
-  paymentCardFacts,
-  claimCardFacts,
-  renewalCardFacts,
-  insuredAssetFacts,
-} = createCustomerDetailFacts({
-  t,
-  formatDate,
-  formatDateTime,
-  formatCurrency,
-  paymentInstallmentsByPayment,
-});
-
-function resourceValue(resource, fallback) {
-  const value = unref(resource?.data);
-  return value == null ? fallback : value;
-}
-
-function asArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-if (false) {
-const customer360QuickOptionsMap = computed(() => ({
-  customers: asArray(resourceValue(auxQuickCustomerResource, [])).map((row) => ({
-    value: row.name,
-    label: row.full_name || row.name,
-  })),
-  policies: asArray(resourceValue(auxQuickPolicyResource, [])).map((row) => ({
-    value: row.name,
-    label: `${row.policy_no || row.name}${row.customer ? ` - ${row.customer}` : ""}`,
-  })),
-}));
-const customer360QuickSuccessHandlers = {
-  "customer-relations-list": async () => {
-    await loadCustomer360();
-  },
-  "insured-assets-list": async () => {
-    await loadCustomer360();
-  },
-  "ownership-assignments-list": async () => {
-    await loadCustomer360();
-  },
-};
-}
-
-if (false) {
-const totalRiskLimit = computed(() =>
-  Number(customer360Summary.value.total_premium || 0)
-);
-const customerHeaderSubtitle = computed(() =>
-  [customer.value.email || null, customer.value.phone || customer.value.masked_phone || null]
-    .filter(Boolean)
-    .join(" / ")
-);
-const riskSummaryItems = computed(() => [
-  {
-    key: "activePolicyCount",
-    label: t("activePolicyCount"),
-    value: String(customer360Summary.value.active_policy_count || activePolicies.value.length || 0),
-  },
-  {
-    key: "openOfferCount",
-    label: t("openOfferCount"),
-    value: String(customer360Summary.value.open_offer_count || openOffers.value.length || 0),
-  },
-  {
-    key: "segment",
-    label: t("segment"),
-    value: customer360Insights.value.segment || "-",
-  },
-  {
-    key: "totalRiskLimit",
-    label: t("totalRiskLimit"),
-    value: formatCurrency(totalRiskLimit.value, "TRY"),
-  },
-]);
-const customerHeaderSummaryItems = computed(() => [
-  {
-    key: "customerType",
-    label: t("customerType"),
-    value: customerTypeLabel.value,
-  },
-  ...riskSummaryItems.value,
-]);
-const overviewSummaryCards = computed(() => {
-  const firstPolicy = activePolicies.value[0];
-  const firstPayment = paymentPreviewRows.value[0];
-  const firstActivity = activityRows.value[0];
-  const firstRelation = relatedCustomerRows.value[0];
-  const firstAsset = insuredAssetRows.value[0];
-  const firstAssignment = ownershipAssignmentRows.value[0];
-  const totalOperations =
-    relatedCustomerRows.value.length +
-    insuredAssetRows.value.length +
-    ownershipAssignmentRows.value.length +
-    Number(customerDocumentProfile.value.total_files || 0);
-
+// Map facts for list cards
+function policyFacts(p) {
   return [
-    {
-      key: "portfolio",
-      tab: "portfolio",
-      title: t("portfolioOverviewTitle"),
-      subtitle: firstPolicy
-        ? [firstPolicy.policy_no || firstPolicy.name, firstPolicy.branch].filter(Boolean).join(" / ")
-        : t("noActivePolicy"),
-      count: String(activePolicies.value.length || 0),
-      facts: [
-        { key: "activePolicyCount", label: t("portfolioOverviewActiveLabel"), value: String(activePolicies.value.length || 0) },
-        { key: "openOfferCount", label: t("portfolioOverviewOfferLabel"), value: String(openOffers.value.length || 0) },
-        { key: "renewals", label: t("portfolioOverviewRenewalLabel"), value: String(renewals.value.length || 0) },
-        { key: "claims", label: t("portfolioOverviewClaimLabel"), value: String(claims.value.length || 0) },
-      ],
-    },
-    {
-      key: "payment",
-      tab: "portfolio",
-      title: t("paymentOverviewTitle"),
-      subtitle: firstPayment
-        ? [formatDate(firstPayment.payment_date), formatCurrency(firstPayment.amount_try, "TRY")].filter(Boolean).join(" / ")
-        : t("noPaymentHistory"),
-      count: String(payments.value.length || 0),
-      facts: [
-        { key: "paymentRows", label: t("paymentOverviewCountLabel"), value: String(payments.value.length || 0) },
-        {
-          key: "overdueInstallments",
-          label: t("paymentOverviewOverdueLabel"),
-          value: String(paymentOverdueInstallmentCount.value),
-        },
-        {
-          key: "overdueAmount",
-          label: t("paymentOverviewOverdueAmountLabel"),
-          value: formatCurrency(paymentOverdueInstallmentAmount.value, "TRY"),
-        },
-      ],
-    },
-    {
-      key: "activity",
-      tab: "activity",
-      title: t("activityOverviewTitle"),
-      subtitle: firstActivity
-        ? [firstActivity.activity_title || firstActivity.activity_type || firstActivity.name, formatDateTime(firstActivity.activity_at)].filter(Boolean).join(" / ")
-        : t("noActivity"),
-      count: String(
-        asArray(customer360Payload.value?.operations?.activities || []).length +
-          asArray(customer360Payload.value?.operations?.reminders || []).length
-      ),
-      facts: [
-        { key: "activities", label: t("activityOverviewCountLabel"), value: String(activityRows.value.length || 0) },
-        { key: "reminders", label: t("activityOverviewReminderLabel"), value: String(reminderRows.value.length || 0) },
-        { key: "channels", label: t("activityOverviewChannelLabel"), value: String(communicationChannelRows.value.length || 0) },
-      ],
-    },
-    {
-      key: "operations",
-      tab: "operations",
-      title: t("operationsOverviewTitle"),
-      subtitle: firstRelation
-        ? [firstRelation.customer_name || firstRelation.related_customer || firstRelation.name, firstAsset?.asset_identifier || firstAssignment?.assigned_to].filter(Boolean).join(" / ")
-        : t("noRelatedCustomer"),
-      count: String(totalOperations),
-      facts: [
-        { key: "relations", label: t("operationsOverviewRelationLabel"), value: String(relatedCustomerRows.value.length || 0) },
-        { key: "assets", label: t("operationsOverviewAssetLabel"), value: String(insuredAssetRows.value.length || 0) },
-        { key: "assignments", label: t("operationsOverviewAssignmentLabel"), value: String(ownershipAssignmentRows.value.length || 0) },
-        { key: "documents", label: t("operationsOverviewDocumentLabel"), value: String(customerDocumentProfile.value.total_files || 0) },
-      ],
-    },
+    { label: t("branch"), value: p.branch },
+    { label: t("start_date"), value: formatDate(p.start_date) },
+    { label: t("gross_premium"), value: formatCurrency(p.gross_premium) },
   ];
-});
-const insightSummaryFields = computed(() => [
-  {
-    key: "segment",
-    label: t("segmentScore"),
-    value: customer360Insights.value.segment || "-",
-    variant: "default",
-  },
-  {
-    key: "score",
-    label: t("score"),
-    value: String(customer360Insights.value.score ?? "-"),
-    variant: "lg",
-  },
-  {
-    key: "claimRisk",
-    label: t("claimRisk"),
-    value: customer360Insights.value.claim_risk || "-",
-    variant: "default",
-  },
-  {
-    key: "valueBand",
-    label: t("valueBand"),
-    value: valueBandLabel.value || "-",
-    variant: "accent",
-  },
-]);
-const insightContextFields = computed(() => [
-  {
-    key: "strengths",
-    label: t("portfolioStrengths"),
-    variant: "badges",
-    badges: insightStrengthRows.value.length
-      ? insightStrengthRows.value.map((label) => ({ label, color: "green" }))
-      : [{ label: t("noStrengthSignal"), color: "gray" }],
-  },
-  {
-    key: "risks",
-    label: t("portfolioRisks"),
-    variant: "badges",
-    badges: insightRiskRows.value.length
-      ? insightRiskRows.value.map((label) => ({ label, color: "red" }))
-      : [{ label: t("noRiskSignal"), color: "gray" }],
-  },
-  {
-    key: "snapshotDate",
-    label: t("snapshotDate"),
-    value: formatDate(customer360Insights.value.snapshot_date),
-    variant: "default",
-  },
-  {
-    key: "sourceVersion",
-    label: t("sourceVersion"),
-    value: customer360Insights.value.source_version || "-",
-    variant: "default",
-  },
-]);
-const crossSellSummaryFields = computed(() => [
-  {
-    key: "opportunityCount",
-    label: t("crossSellOpportunityCount"),
-    value: String(crossSellOpportunityRows.value.length || 0),
-    variant: "lg",
-  },
-  {
-    key: "portfolioBranches",
-    label: t("crossSellOpportunityBranches"),
-    variant: "badges",
-    badges: crossSellOpportunityRows.value.length
-      ? crossSellOpportunityRows.value.map((item) => ({
-          label: String(item.label || item.branch || "-"),
-          color: "blue",
-        }))
-      : [{ label: t("noCrossSellOpportunity"), color: "gray" }],
-  },
-]);
-const crossSellOpportunityFields = computed(() =>
-  crossSellOpportunityRows.value.map((item, index) => ({
-    key: `${item.branch || item.label || "branch"}:${index}`,
-    label: String(item.label || item.branch || "-"),
-    value: t("crossSellOpportunityMeta"),
-    variant: "default",
-  }))
-);
-const documentSummaryFields = computed(() => [
-  {
-    key: "totalDocuments",
-    label: t("totalDocuments"),
-    value: String(customerDocumentProfile.value.total_files || 0),
-    variant: "lg",
-  },
-  {
-    key: "pdfDocuments",
-    label: t("pdfDocuments"),
-    value: String(customerDocumentProfile.value.pdf_count || 0),
-    variant: "default",
-  },
-  {
-    key: "imageDocuments",
-    label: t("imageDocuments"),
-    value: String(customerDocumentProfile.value.image_count || 0),
-    variant: "default",
-  },
-  {
-    key: "spreadsheetDocuments",
-    label: t("spreadsheetDocuments"),
-    value: String(customerDocumentProfile.value.spreadsheet_count || 0),
-    variant: "default",
-  },
-  {
-    key: "otherDocuments",
-    label: t("otherDocuments"),
-    value: String(customerDocumentProfile.value.other_count || 0),
-    variant: "default",
-  },
-  {
-    key: "lastUpload",
-    label: t("lastUpload"),
-    value: formatDate(customerDocumentProfile.value.last_uploaded_on),
-    variant: "default",
-  },
-]);
-const customerTypeValue = computed(() => normalizeCustomerType(customer.value.customer_type, customer.value.tax_id));
-const isCorporateCustomer = computed(() => customerTypeValue.value === "Corporate");
-const customerTypeLabel = computed(() =>
-  isCorporateCustomer.value ? t("customerTypeCorporate") : t("customerTypeIndividual")
-);
-const customerTaxIdLabel = computed(() => (isCorporateCustomer.value ? t("taxNumber") : t("nationalId")));
-const customerTaxIdDisplay = computed(() => customer.value.tax_id || customer.value.masked_tax_id || "-");
-const customerPhoneDisplay = computed(() => customer.value.phone || customer.value.masked_phone || "-");
-const genderLabel = computed(() => {
-  const value = String(customer.value.gender || "Unknown");
-  if (value === "Male") return t("genderMale");
-  if (value === "Female") return t("genderFemale");
-  if (value === "Other") return t("genderOther");
-  return t("genderUnknown");
-});
-const maritalStatusLabel = computed(() => {
-  const value = String(customer.value.marital_status || "Unknown");
-  if (value === "Single") return t("maritalSingle");
-  if (value === "Married") return t("maritalMarried");
-  if (value === "Divorced") return t("maritalDivorced");
-  if (value === "Widowed") return t("maritalWidowed");
-  return t("maritalUnknown");
-});
-const consentStatusLabel = computed(() => {
-  const status = String(customer.value.consent_status || "Unknown");
-  if (status === "Granted") return t("consentGranted");
-  if (status === "Revoked") return t("consentRevoked");
-  return t("consentUnknown");
-});
-const genderOptions = computed(() => [
-  { value: "Unknown", label: t("genderUnknown") },
-  { value: "Male", label: t("genderMale") },
-  { value: "Female", label: t("genderFemale") },
-  { value: "Other", label: t("genderOther") },
-]);
-const maritalStatusOptions = computed(() => [
-  { value: "Unknown", label: t("maritalUnknown") },
-  { value: "Single", label: t("maritalSingle") },
-  { value: "Married", label: t("maritalMarried") },
-  { value: "Divorced", label: t("maritalDivorced") },
-  { value: "Widowed", label: t("maritalWidowed") },
-]);
-const consentStatusOptions = computed(() => [
-  { value: "Unknown", label: t("consentUnknown") },
-  { value: "Granted", label: t("consentGranted") },
-  { value: "Revoked", label: t("consentRevoked") },
-]);
-const profileViewFields = computed(() => [
-  { key: "full_name", label: t("fullName"), value: customer.value.full_name || "-", variant: "lg", span: 2 },
-  { key: "birth_date", label: t("birthDate"), value: isCorporateCustomer.value ? "-" : formatDate(customer.value.birth_date), variant: "default" },
-  { key: "gender", label: t("gender"), value: isCorporateCustomer.value ? "-" : genderLabel.value, variant: "default" },
-  { key: "marital_status", label: t("maritalStatus"), value: isCorporateCustomer.value ? "-" : maritalStatusLabel.value, variant: "default" },
-  { key: "address", label: t("address"), value: customer.value.address || "-", variant: "muted", span: 2 },
-  { key: "mobile_phone", label: t("mobilePhone"), value: customerPhoneDisplay.value, variant: "default" },
-  { key: "email", label: t("email"), value: customer.value.email || "-", variant: "default" },
-  { key: "occupation", label: t("occupation"), value: isCorporateCustomer.value ? "-" : customer.value.occupation || "-", variant: "default" },
-  { key: "assigned_agent", label: t("assignedAgent"), value: customer.value.assigned_agent || "-", variant: "default" },
-  { key: "consent_status", label: t("consentStatus"), value: consentStatusLabel.value, variant: "default" },
-  { key: "customer_folder", label: t("customerFolder"), value: customer.value.customer_folder || "-", variant: "default" },
-]);
-const profileEditFields = computed(() => [
-  { key: "full_name", label: t("fullName"), model: "full_name", type: "text", span: 2 },
-  { key: "birth_date", label: t("birthDate"), model: "birth_date", type: "date", disabled: isCorporateCustomer.value },
-  { key: "gender", label: t("gender"), model: "gender", type: "select", options: genderOptions.value, disabled: isCorporateCustomer.value },
-  { key: "marital_status", label: t("maritalStatus"), model: "marital_status", type: "select", options: maritalStatusOptions.value, disabled: isCorporateCustomer.value },
-  { key: "address", label: t("address"), model: "address", type: "textarea", span: 2, rows: 3 },
-  { key: "mobile_phone", label: t("mobilePhone"), type: "static", value: customerPhoneDisplay.value },
-  { key: "email", label: t("email"), model: "email", type: "email" },
-  { key: "occupation", label: t("occupation"), model: "occupation", type: "text", disabled: isCorporateCustomer.value },
-  { key: "assigned_agent", label: t("assignedAgent"), type: "static", value: customer.value.assigned_agent || "-" },
-  { key: "consent_status", label: t("consentStatus"), model: "consent_status", type: "select", options: consentStatusOptions.value },
-  { key: "customer_folder", label: t("customerFolder"), type: "static", value: customer.value.customer_folder || "-" },
-]);
-
-function normalizeIdentityNumber(value) {
-  return String(value || "").replace(/\D+/g, "");
 }
 
-function normalizeCustomerType(value, identityNumber = "") {
-  const normalized = String(value || "").trim();
-  if (normalized === "Individual" || normalized === "Corporate") return normalized;
-  return normalizeIdentityNumber(identityNumber).length === 10 ? "Corporate" : "Individual";
+function offerFacts(o) {
+  return [
+    { label: t("offer_date"), value: formatDate(o.offer_date) },
+    { label: t("gross_premium"), value: formatCurrency(o.gross_premium) },
+  ];
 }
 
-function setProfileField(fieldName, value) {
-  if (!fieldName) return;
-  profileForm[fieldName] = String(value ?? "").trim();
+function claimFacts(c) {
+  return [
+    { label: t("reported_date"), value: formatDate(c.reported_date) },
+    { label: t("claim_amount"), value: formatCurrency(c.claim_amount) },
+  ];
 }
-
-function timelineTypeLabel(type) {
-  if (type === "comment") return t("typeNote");
-  if (type === "lead") return t("typeLead");
-  return t("typeCommunication");
-}
-
-const timelineRows = computed(() =>
-  (customer360Communication.value.timeline || [])
-    .map((item, index) => ({
-      key: `${item.type || "timeline"}:${item.payload?.name || index}`,
-      date: item.timestamp,
-      title: timelineTypeLabel(item.type),
-      body: stripHtml(item.meta) || stripHtml(item.title) || "-",
-      actor: item.payload?.comment_by || item.payload?.sender || "-",
-      dotClass: item.type === "comment" ? "bg-amber-500" : "bg-sky-500",
-    }))
-    .filter((item) => Boolean(item.date))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-);
-const activityRows = computed(() => (customer360Payload.value?.operations?.activities || []).slice(0, 6));
-const reminderRows = computed(() => (customer360Payload.value?.operations?.reminders || []).slice(0, 6));
-
-}
-
-const showUploadModal = ref(false);
-function openUploadModal() {
-  showUploadModal.value = true;
-}
-function closeUploadModal() {
-  showUploadModal.value = false;
-}
-async function handleUploadComplete() {
-  showUploadModal.value = false;
-  await customer360Resource.reload({ name: props.name });
-}
-const canUploadDocuments = computed(() => {
-  const caps = authStore.capabilities?.doctypes || {};
-  return Boolean(
-    caps?.["AT Customer"]?.write
-    || caps?.["AT Document"]?.create
-    || caps?.["AT Document"]?.write
-    || caps?.File?.create
-    || caps?.File?.write
-  );
-});
-
-if (false) {
-watch(
-  () => props.name,
-  () => {
-    clearProfileFlashTimer();
-    clearProfileFormErrors();
-    profileEditMode.value = false;
-    profileSaveError.value = "";
-    profileSaveMessage.value = "";
-    loadCustomer360();
-  },
-  { immediate: true }
-);
-
-onBeforeUnmount(() => {
-  clearProfileFlashTimer();
-});
-
-function clearProfileFlashTimer() {
-  if (profileFlashTimer) {
-    window.clearTimeout(profileFlashTimer);
-    profileFlashTimer = null;
-  }
-}
-function clearProfileFormErrors() {
-  profileFormErrors.full_name = "";
-  profileFormErrors.birth_date = "";
-  profileFormErrors.email = "";
-}
-
-function validateProfileForm() {
-  clearProfileFormErrors();
-  let valid = true;
-  if (!String(profileForm.full_name || "").trim()) {
-    profileFormErrors.full_name = t("validationFullNameRequired");
-    valid = false;
-  }
-  const birth = String(profileForm.birth_date || "").trim();
-  if (!isCorporateCustomer.value && birth) {
-    const birthDate = new Date(birth);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (Number.isNaN(birthDate.getTime()) || birthDate > today) {
-      profileFormErrors.birth_date = t("validationBirthDateFuture");
-      valid = false;
-    }
-  }
-  const email = String(profileForm.email || "").trim();
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    profileFormErrors.email = t("validationEmailInvalid");
-    valid = false;
-  }
-  return valid;
-}
-
-function scheduleProfileFlashClear() {
-  clearProfileFlashTimer();
-  profileFlashTimer = window.setTimeout(() => {
-    profileSaveError.value = "";
-    profileSaveMessage.value = "";
-    profileFlashTimer = null;
-  }, 3500);
-}
-
-function syncProfileFormFromCustomer() {
-  profileForm.full_name = String(customer.value.full_name || "");
-  profileForm.birth_date = isCorporateCustomer.value ? "" : customer.value.birth_date ? String(customer.value.birth_date) : "";
-  profileForm.gender = isCorporateCustomer.value ? "Unknown" : String(customer.value.gender || "Unknown") || "Unknown";
-  profileForm.marital_status = isCorporateCustomer.value ? "Unknown" : String(customer.value.marital_status || "Unknown") || "Unknown";
-  profileForm.occupation = isCorporateCustomer.value ? "" : String(customer.value.occupation || "");
-  profileForm.email = String(customer.value.email || "");
-  profileForm.address = String(customer.value.address || "");
-  profileForm.consent_status = String(customer.value.consent_status || "Unknown") || "Unknown";
-}
-
-function startProfileEdit() {
-  clearProfileFlashTimer();
-  clearProfileFormErrors();
-  syncProfileFormFromCustomer();
-  profileSaveError.value = "";
-  profileSaveMessage.value = "";
-  profileEditMode.value = true;
-}
-
-function cancelProfileEdit() {
-  clearProfileFlashTimer();
-  clearProfileFormErrors();
-  profileEditMode.value = false;
-  profileSaveError.value = "";
-  profileSaveMessage.value = "";
-  syncProfileFormFromCustomer();
-}
-
-async function saveProfile() {
-  if (!props.name) return;
-  clearProfileFlashTimer();
-  if (!validateProfileForm()) {
-    profileSaveError.value = "";
-    profileSaveMessage.value = "";
-    return;
-  }
-  profileSaveError.value = "";
-  profileSaveMessage.value = "";
-  try {
-    const result = await customerProfileUpdateResource.submit({
-      name: props.name,
-      values: {
-        full_name: profileForm.full_name,
-        birth_date: isCorporateCustomer.value ? null : profileForm.birth_date || null,
-        gender: isCorporateCustomer.value ? "Unknown" : profileForm.gender || "Unknown",
-        marital_status: isCorporateCustomer.value ? "Unknown" : profileForm.marital_status || "Unknown",
-        occupation: isCorporateCustomer.value ? null : profileForm.occupation,
-        email: profileForm.email,
-        address: profileForm.address,
-        consent_status: profileForm.consent_status || "Unknown",
-      },
-    });
-    if (result && typeof result === "object") {
-      customer360Resource.setData({
-        ...(customer360Payload.value || {}),
-        customer: {
-          ...(customer.value || {}),
-          ...result,
-        },
-      });
-    }
-    profileEditMode.value = false;
-    profileSaveMessage.value = t("saveProfileSuccess");
-    syncProfileFormFromCustomer();
-    scheduleProfileFlashClear();
-  } catch (error) {
-    profileSaveError.value = parseProfileSaveError(error) || t("saveProfileError");
-    scheduleProfileFlashClear();
-  }
-}
-
-function parseProfileSaveError(error) {
-  const serverMessage =
-    error?._server_messages ||
-    error?.messages?.[0] ||
-    error?.response?._server_messages ||
-    error?.response?.message ||
-    error?.message;
-  if (!serverMessage) return "";
-  try {
-    const parsed = typeof serverMessage === "string" ? JSON.parse(serverMessage) : serverMessage;
-    if (Array.isArray(parsed) && parsed.length) {
-      return String(parsed[0]).replace(/<[^>]*>/g, "").trim();
-    }
-  } catch {
-    return String(serverMessage).replace(/<[^>]*>/g, "").trim();
-  }
-  return "";
-}
-
-async function loadCustomer360() {
-  if (!props.name) return;
-
-  await customer360Resource.reload({
-    name: props.name,
-  });
-  syncProfileFormFromCustomer();
-}
-
-function openPolicyDetail(policyName) {
-  router.push({ name: "policy-detail", params: { name: policyName } });
-}
-
-function openCustomerDesk() {
-  if (!props.name) return;
-  window.location.assign(`/app/at-customer/${encodeURIComponent(props.name)}`);
-}
-function openQuickOfferForCustomer() {
-  if (!props.name) return;
-  router.push({
-    name: "offer-board",
-    query: buildQuickCreateIntentQuery({
-      prefills: {
-        customer: props.name,
-        customer_label: String(customer.value.full_name || props.name),
-      },
-      returnTo: router.currentRoute.value?.fullPath || "",
-    }),
-  });
-}
-function openCommunicationCenterForCustomer() {
-  if (!props.name) return;
-  router.push({
-    name: "communication-center",
-    query: {
-      customer: props.name,
-      customer_label: String(customer.value.full_name || props.name),
-      return_to: router.currentRoute.value?.fullPath || "",
-    },
-  });
-}
-
-function openCustomerDocuments() {
-  if (!props.name) return;
-  router.push({
-    name: "at-documents-list",
-    query: {
-      reference_doctype: "AT Customer",
-      reference_name: props.name,
-    },
-  });
-}
-
-function openCustomerRelations() {
-  if (!props.name) return;
-  router.push({
-    name: "customer-relations-list",
-    query: { customer: props.name },
-  });
-}
-
-function openInsuredAssets() {
-  if (!props.name) return;
-  router.push({
-    name: "insured-assets-list",
-    query: { customer: props.name },
-  });
-}
-
-function openQuickCustomerRelation() {
-  showCustomerRelationDialog.value = true;
-}
-
-function openQuickInsuredAsset() {
-  showInsuredAssetDialog.value = true;
-}
-
-function openQuickOwnershipAssignment() {
-  showOwnershipAssignmentDialog.value = true;
-}
-
-function openEditCustomerRelation(relation) {
-  editingCustomerRelation.value = relation || null;
-  showCustomerRelationEditDialog.value = true;
-}
-
-function openEditInsuredAsset(asset) {
-  editingInsuredAsset.value = asset || null;
-  showInsuredAssetEditDialog.value = true;
-}
-
-function openEditOwnershipAssignment(assignment) {
-  editingOwnershipAssignment.value = assignment || null;
-  showOwnershipAssignmentEditDialog.value = true;
-}
-
-
-async function deleteCustomerRelation(relation) {
-  if (!relation?.name) return;
-  if (!globalThis.confirm?.(t("deleteRelationConfirm"))) return;
-  await customerRelationDeleteResource.submit({
-    doctype: "AT Customer Relation",
-    name: relation.name,
-  });
-  await loadCustomer360();
-}
-
-
-async function deleteInsuredAsset(asset) {
-  if (!asset?.name) return;
-  if (!globalThis.confirm?.(t("deleteAssetConfirm"))) return;
-  await insuredAssetDeleteResource.submit({
-    doctype: "AT Insured Asset",
-    name: asset.name,
-  });
-  await loadCustomer360();
-}
-
-async function deleteOwnershipAssignment(assignment) {
-  if (!assignment?.name) return;
-  if (!globalThis.confirm?.(t("deleteAssignmentConfirm"))) return;
-  await insuredAssetDeleteResource.submit({
-    doctype: "AT Ownership Assignment",
-    name: assignment.name,
-  });
-  await loadCustomer360();
-}
-
-async function updateReminderStatus(reminder, status) {
-  if (!reminder?.name) return;
-  await reminderUpdateResource.submit({
-    doctype: "AT Reminder",
-    name: reminder.name,
-    data: {
-      status,
-    },
-  });
-  await loadCustomer360();
-}
-
-async function updateOwnershipAssignmentStatus(assignment, status) {
-  if (!assignment?.name) return;
-  await reminderUpdateResource.submit({
-    doctype: "AT Ownership Assignment",
-    name: assignment.name,
-    data: {
-      status,
-    },
-  });
-  await loadCustomer360();
-}
-
-async function markReminderDone(reminder) {
-  await updateReminderStatus(reminder, "Done");
-}
-
-async function cancelReminder(reminder) {
-  await updateReminderStatus(reminder, "Cancelled");
-}
-
-async function markAssignmentInProgress(assignment) {
-  await updateOwnershipAssignmentStatus(assignment, "In Progress");
-}
-
-async function markAssignmentBlocked(assignment) {
-  await updateOwnershipAssignmentStatus(assignment, "Blocked");
-}
-
-async function markAssignmentDone(assignment) {
-  await updateOwnershipAssignmentStatus(assignment, "Done");
-}
-
-async function ensureCustomer360QuickOptionSources() {
-  await Promise.allSettled([
-    auxQuickCustomerResource.reload({
-      doctype: "AT Customer",
-      fields: ["name", "full_name"],
-      order_by: "modified desc",
-      limit_page_length: 200,
-    }),
-    auxQuickPolicyResource.reload({
-      doctype: "AT Policy",
-      fields: ["name", "policy_no", "customer"],
-      filters: props.name ? { customer: props.name } : {},
-      order_by: "modified desc",
-      limit_page_length: 200,
-    }),
-  ]);
-}
-
-async function prepareCustomerRelationDialog({ form }) {
-  await ensureCustomer360QuickOptionSources();
-  if (!form.customer) form.customer = props.name || "";
-}
-
-async function prepareInsuredAssetDialog({ form }) {
-  await ensureCustomer360QuickOptionSources();
-  if (!form.customer) form.customer = props.name || "";
-  if (!form.policy && activePolicies.value[0]?.name) form.policy = activePolicies.value[0].name;
-}
-
-async function prepareOwnershipAssignmentDialog({ form }) {
-  await ensureCustomer360QuickOptionSources();
-  if (!form.source_doctype) form.source_doctype = "AT Customer";
-  if (!form.source_name) form.source_name = props.name || "";
-  if (!form.customer) form.customer = props.name || "";
-}
-
-async function prepareCustomerRelationEditDialog({ resetForm }) {
-  await ensureCustomer360QuickOptionSources();
-  const relation = editingCustomerRelation.value || {};
-  resetForm({
-    doctype: "AT Customer Relation",
-    name: relation.name || "",
-    customer: relation.customer || props.name || "",
-    related_customer: relation.related_customer || "",
-    relation_type: relation.relation_type || "Other",
-    is_household: Boolean(relation.is_household),
-    notes: relation.notes || "",
-  });
-}
-
-async function prepareInsuredAssetEditDialog({ resetForm }) {
-  await ensureCustomer360QuickOptionSources();
-  const asset = editingInsuredAsset.value || {};
-  resetForm({
-    doctype: "AT Insured Asset",
-    name: asset.name || "",
-    customer: asset.customer || props.name || "",
-    policy: asset.policy || "",
-    asset_type: asset.asset_type || "Other",
-    asset_label: asset.asset_label || asset.policy_no || asset.policy || "",
-    asset_identifier: asset.asset_identifier || asset.insurance_company || "",
-    notes: asset.notes || "",
-  });
-}
-
-async function prepareOwnershipAssignmentEditDialog({ resetForm }) {
-  await ensureCustomer360QuickOptionSources();
-  const assignment = editingOwnershipAssignment.value || {};
-  resetForm({
-    doctype: "AT Ownership Assignment",
-    name: assignment.name || "",
-    source_doctype: assignment.source_doctype || "AT Customer",
-    source_name: assignment.source_name || props.name || "",
-    customer: assignment.customer || props.name || "",
-    policy: assignment.policy || "",
-    assigned_to: assignment.assigned_to || "",
-    assignment_role: assignment.assignment_role || "Owner",
-    status: assignment.status || "Open",
-    priority: assignment.priority || "Normal",
-    due_date: assignment.due_date || "",
-    notes: assignment.notes || "",
-  });
-}
-}
-
 </script>
-

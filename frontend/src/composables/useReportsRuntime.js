@@ -12,6 +12,8 @@ export function useReportsRuntime({
   buildPreviousPeriodFiltersPayload,
   canManageScheduledReports,
   filtersSectionRef,
+  visibleColumnKeys,
+  groupByColumn,
 }) {
   const loading = ref(false);
   const error = ref("");
@@ -103,6 +105,26 @@ export function useReportsRuntime({
       if (!popup) {
         throw new Error("Popup blocked");
       }
+    } catch (err) {
+      error.value = String(err?.message || err || t("exportError"));
+    } finally {
+      exportLoading.value = false;
+    }
+  }
+
+  async function enqueueBackgroundExport(format) {
+    exportLoading.value = true;
+    try {
+      await frappeRequest({
+        url: "/api/method/acentem_takipte.acentem_takipte.services.async_reports.enqueue_report_export",
+        method: "POST",
+        params: {
+          report_key: filters.reportKey,
+          filters: buildFiltersPayload(),
+          export_format: format,
+        },
+      });
+      // In a real app, we'd show a "Job Enqueued" toast here
     } catch (err) {
       error.value = String(err?.message || err || t("exportError"));
     } finally {
@@ -222,6 +244,7 @@ export function useReportsRuntime({
     loadReport,
     scheduleReportLoad,
     downloadReport,
+    enqueueBackgroundExport,
     loadScheduledReports,
     runScheduledReports,
     runCustomerSegmentSnapshots,

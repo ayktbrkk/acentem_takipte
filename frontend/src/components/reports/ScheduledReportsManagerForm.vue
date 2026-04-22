@@ -95,21 +95,69 @@
       </div>
     </div>
 
+    <div class="space-y-3 border-t border-slate-100 pt-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold tracking-[0.12em] text-indigo-600 uppercase">{{ t('alerts') }}</span>
+        <button type="button" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 uppercase" @click="addAlert">
+          + {{ t('addAlert') }}
+        </button>
+      </div>
+
+      <div v-if="form.alerts.length" class="space-y-3">
+        <div v-for="(alert, idx) in form.alerts" :key="idx" class="relative grid gap-2 rounded-xl border border-slate-100 bg-slate-50/30 p-3 md:grid-cols-4">
+          <button 
+            type="button" 
+            class="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm hover:bg-rose-600 transition-colors"
+            @click="removeAlert(idx)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <label class="space-y-1">
+            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertField') }}</span>
+            <input v-model.trim="alert.field" class="input input--sm" type="text" placeholder="e.g. gross_premium" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertOp') }}</span>
+            <select v-model="alert.operator" class="input input--sm">
+              <option value=">">&gt;</option>
+              <option value="<">&lt;</option>
+              <option value="==">==</option>
+              <option value="!=">!=</option>
+            </select>
+          </label>
+          <label class="space-y-1">
+            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertVal') }}</span>
+            <input v-model.trim="alert.value" class="input input--sm" type="text" />
+          </label>
+          <label class="space-y-1">
+            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertLogic') }}</span>
+            <select v-model="alert.logic" class="input input--sm">
+              <option value="any">{{ t('alertLogicAny') }}</option>
+              <option value="all">{{ t('alertLogicAll') }}</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </div>
+
     <div v-if="formError" class="qc-error-banner" role="alert" aria-live="polite">
       <p class="qc-error-banner__text">{{ formError }}</p>
     </div>
 
-    <div class="flex flex-wrap justify-end gap-2">
+    <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-3">
       <button
         type="button"
-        class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+        class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
         @click="$emit('cancel')"
       >
         {{ cancelLabel }}
       </button>
       <button
         type="submit"
-        class="rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 transition hover:border-sky-400 hover:text-sky-900"
+        class="rounded-xl bg-indigo-600 px-6 py-2 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition-all active:scale-95"
       >
         {{ saveLabel }}
       </button>
@@ -148,6 +196,8 @@ defineProps({
   statusLabel: { type: String, required: true },
   fromDateLabel: { type: String, required: true },
   toDateLabel: { type: String, required: true },
+  addAlert: { type: Function, required: true },
+  removeAlert: { type: Function, required: true },
 });
 
 defineEmits(["submit", "cancel"]);

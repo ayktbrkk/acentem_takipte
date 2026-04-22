@@ -5,29 +5,24 @@ import { usePaymentsBoardActions } from "./usePaymentsBoardActions";
 import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { usePaymentsBoardQuickPayment } from "./usePaymentsBoardQuickPayment";
 import { usePaymentsBoardSummary } from "./usePaymentsBoardSummary";
-import { mutedFact, pushMutedFactIf, subtleFact } from "../utils/factItems";
 import { openTabularExport } from "../utils/listExport";
+import { 
+  buildPaymentListParams, 
+  buildPaymentInstallmentListParams, 
+  setPaymentFilterStateFromPayload, 
+  resetPaymentFilterState,
+  currentPaymentPresetPayload as buildPresetPayload
+} from "./paymentsBoard/helpers";
+import { PAYMENT_TRANSLATIONS } from "../config/payment_translations";
 
-function asArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-function resourceValue(resource, fallback = null) {
-  const value = unref(resource?.data);
-  return value == null ? fallback : value;
-}
-
-function normalizePaymentOrderBy(value) {
-  const raw = String(value || "").trim();
-  const match = raw.match(/^modified\s+(asc|desc)$/i);
-  if (match) return `\`tabAT Payment\`.modified ${match[1].toLowerCase()}`;
-  return raw || "`tabAT Payment`.modified desc";
-}
-
-export function usePaymentsBoardRuntime({ t, route, router, authStore, branchStore, paymentStore }) {
+export function usePaymentsBoardRuntime({ route, router, authStore, branchStore, paymentStore }) {
   const activeLocale = computed(() => unref(authStore.locale) || "en");
   const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
   const filters = paymentStore.state.filters;
+
+  function t(key) {
+    return PAYMENT_TRANSLATIONS[activeLocale.value]?.[key] || PAYMENT_TRANSLATIONS.en[key] || key;
+  }
 
   const paymentSortOptions = computed(() => [
     { value: "modified desc", label: t("sortModifiedDesc") },
@@ -39,21 +34,22 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
 
   const paymentsResource = createResource({
     url: "frappe.client.get_list",
-    params: buildPaymentListParams(),
-    auto: true,
+    params: buildPaymentListParams({ filters, officeBranch: branchStore.requestBranch }),
+    auto: false,
   });
   const paymentsLoading = computed(() => Boolean(unref(paymentsResource.loading)));
   const paymentsResourceError = computed(() => unref(paymentsResource.error));
   const paymentInstallmentResource = createResource({
     url: "frappe.client.get_list",
-    params: buildPaymentInstallmentListParams(),
-    auto: true,
+    params: buildPaymentInstallmentListParams(branchStore.requestBranch),
+    auto: false,
   });
 
   const payments = computed(() => paymentStore.filteredItems);
   const installmentSummaryByPayment = computed(() => {
     const grouped = new Map();
-    for (const installment of asArray(resourceValue(paymentInstallmentResource, []))) {
+    const data = unref(paymentInstallmentResource.data) || [];
+    for (const installment of data) {
       if (!installment?.payment) continue;
       const current = grouped.get(installment.payment) || {
         total: 0,
@@ -79,6 +75,7 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     }
     return grouped;
   });
+
   const actionsUi = usePaymentsBoardActions({ t, router, installmentSummaryByPayment });
   const summaryUi = usePaymentsBoardSummary({
     t,
@@ -88,6 +85,7 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     buildPaymentRowActions: actionsUi.buildPaymentRowActions,
     paymentStore,
   });
+
   const paymentsErrorText = computed(() => {
     if (paymentStore.state.error) return paymentStore.state.error;
     const err = paymentsResourceError.value;
@@ -110,164 +108,12 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     presetStorageKey: "at:payments-board:preset",
     presetListStorageKey: "at:payments-board:preset-list",
     t,
-    getCurrentPayload: currentPaymentPresetPayload,
-    setFilterStateFromPayload: setPaymentFilterStateFromPayload,
-    resetFilterState: resetPaymentFilterState,
+    getCurrentPayload: () => buildPresetPayload(filters),
+    setFilterStateFromPayload: (p) => setPaymentFilterStateFromPayload(filters, p),
+    resetFilterState: () => resetPaymentFilterState(paymentStore),
     refresh: reloadPayments,
     getSortLocale: () => localeCode.value,
   });
-
-  function formatCurrency(value) {
-    return new Intl.NumberFormat(localeCode.value, {
-      style: "currency",
-      currency: "TRY",
-      maximumFractionDigits: 0,
-    }).format(Number(value || 0));
-  }
-
-  function formatCount(value) {
-    return new Intl.NumberFormat(localeCode.value).format(Number(value || 0));
-  }
-
-  function formatDate(value) {
-    if (!value) return "-";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "-";
-    return new Intl.DateTimeFormat(localeCode.value, {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).format(date);
-  }
-
-  function parseDateOnly(value) {
-    if (!value) return null;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return null;
-    return date;
-  }
-
-  function isPastDate(value) {
-    const date = parseDateOnly(value);
-    if (!date) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
-    return date < today;
-  }
-
-  function isDueSoon(value) {
-    const date = parseDateOnly(value);
-    if (!date) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const diffDays = Math.floor((date.getTime() - today.getTime()) / 86400000);
-    return diffDays >= 0 && diffDays <= 7;
-  }
-
-  function buildPaymentStatus(payment, collectedAmount, remainingAmount, isOverdue) {
-    const rawStatus = String(payment?.status || "").trim();
-    if (rawStatus === "Cancelled") return rawStatus;
-    if (remainingAmount <= 0 && Number(payment?.amount_try || payment?.amount || 0) > 0) return "Paid";
-    if (isOverdue) return "Overdue";
-    if (collectedAmount > 0 && remainingAmount > 0) return "Partially Paid";
-    if (rawStatus) return rawStatus;
-    return "Outstanding";
-  }
-
-  function buildPaymentSnapshot(payment) {
-    const installmentSummary = installmentSummaryByPayment.value.get(payment?.name) || {};
-    const totalAmount = Number(payment?.amount_try || payment?.amount || 0);
-    const collectedAmount = Number(installmentSummary.paidAmount || 0);
-    const remainingAmount = Math.max(totalAmount - collectedAmount, 0);
-    const dueDate = String(payment?.due_date || payment?.payment_date || "").trim();
-    const isOverdue = Boolean(installmentSummary.overdue > 0) || (isPastDate(dueDate) && remainingAmount > 0);
-    const status = buildPaymentStatus(payment, collectedAmount, remainingAmount, isOverdue);
-    const isCollected = status === "Paid" || collectedAmount >= totalAmount;
-    const isPending = !isCollected && !isOverdue && status !== "Cancelled";
-
-    return {
-      ...payment,
-      status,
-      totalAmount,
-      collectedAmount,
-      remainingAmount,
-      due_date_label: formatDate(dueDate),
-      amount_label: formatCurrency(totalAmount),
-      collected_amount_label: formatCurrency(collectedAmount),
-      remaining_amount_label: formatCurrency(remainingAmount),
-      isOverdue,
-      isCollected,
-      isPending,
-      _urgency: isOverdue ? "row-critical" : remainingAmount > 0 && isDueSoon(dueDate) ? "row-warning" : "",
-    };
-  }
-
-  function buildPaymentRowActions(payment) {
-    return [
-      { key: "collect", label: t("collectPayment"), variant: "primary", onClick: () => openCollectPayment(payment) },
-      { key: "receipt", label: t("addReceipt"), variant: "secondary", onClick: () => addReceipt(payment) },
-      { key: "reminder", label: t("sendReminder"), variant: "secondary", onClick: () => sendReminder(payment) },
-    ];
-  }
-
-  function buildPaymentListParams() {
-    const params = {
-      doctype: "AT Payment",
-      fields: [
-        "name",
-        "payment_no",
-        "status",
-        "payment_direction",
-        "payment_purpose",
-        "amount",
-        "amount_try",
-        "payment_date",
-        "due_date",
-        "customer",
-        "customer.full_name as customer_full_name",
-        "customer.customer_type as customer_customer_type",
-        "customer.masked_tax_id as customer_masked_tax_id",
-        "customer.birth_date as customer_birth_date",
-        "policy",
-        "policy.policy_no as policy_no",
-        "policy.policy_no as carrier_policy_no",
-        "policy.insurance_company as insurance_company",
-        "policy.branch as branch",
-        "reference_no",
-        "installment_count",
-        "office_branch",
-        "sales_entity",
-      ],
-        order_by: normalizePaymentOrderBy(filters.sort),
-      limit_page_length: Number(filters.limit) || 24,
-    };
-    if (filters.direction) {
-      params.filters = { payment_direction: filters.direction };
-    }
-    return withOfficeBranchFilter(params);
-  }
-
-  function buildPaymentInstallmentListParams() {
-    return withOfficeBranchFilter({
-      doctype: "AT Payment Installment",
-      fields: ["payment", "installment_no", "installment_count", "status", "due_date", "amount_try"],
-      order_by: "due_date asc",
-      limit_page_length: 1000,
-    });
-  }
-
-  function withOfficeBranchFilter(params) {
-    const officeBranch = branchStore.requestBranch || "";
-    if (!officeBranch) return params;
-    return {
-      ...params,
-      filters: {
-        ...(params.filters || {}),
-        office_branch: officeBranch,
-      },
-    };
-  }
 
   const quickPaymentUi = usePaymentsBoardQuickPayment({
     t,
@@ -277,12 +123,12 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
   });
 
   function reloadPayments() {
-    paymentsResource.params = buildPaymentListParams();
-    paymentInstallmentResource.params = buildPaymentInstallmentListParams();
+    paymentsResource.params = buildPaymentListParams({ filters, officeBranch: branchStore.requestBranch });
+    paymentInstallmentResource.params = buildPaymentInstallmentListParams(branchStore.requestBranch);
     paymentStore.setLocaleCode(localeCode.value);
     paymentStore.setLoading(true);
     paymentStore.clearError();
-    return Promise.all([paymentsResource.reload(), paymentInstallmentResource.reload()])
+    return Promise.all([paymentsResource.fetch(), paymentInstallmentResource.fetch()])
       .then(([result]) => {
         paymentStore.setItems(result || []);
         paymentStore.setLoading(false);
@@ -301,50 +147,24 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
       permissionDoctypes: ["AT Payment"],
       exportKey: "payments_board",
       title: t("title"),
-      columns: [t("paymentNo"), t("customer"), t("policy"), t("dueDate"), t("amount"), t("collected"), t("remaining"), t("status")],
-      rows: paymentSnapshots.value.map((payment) => ({
-        [t("paymentNo")]: payment.payment_no || payment.name || "-",
+      columns: [t("payment_no"), t("customer"), t("policy"), t("due_date"), t("amount"), t("collected"), t("remaining"), t("status")],
+      rows: summaryUi.paymentSnapshots.value.map((payment) => ({
+        [t("payment_no")]: payment.payment_no || payment.name || "-",
         [t("customer")]: payment.customer_label || payment.customer_full_name || payment.customer_name || payment.customer || "-",
         [t("policy")]: payment.policy || "-",
-        [t("dueDate")]: payment.due_date_label || "-",
-        [t("amount")]: payment.amount_label || formatCurrency(payment.totalAmount),
-        [t("collected")]: payment.collected_amount_label || formatCurrency(payment.collectedAmount),
-        [t("remaining")]: payment.remaining_amount_label || formatCurrency(payment.remainingAmount),
+        [t("due_date")]: payment.due_date_label || "-",
+        [t("amount")]: payment.amount_label || summaryUi.formatCurrency(payment.totalAmount),
+        [t("collected")]: payment.collected_amount_label || summaryUi.formatCurrency(payment.collectedAmount),
+        [t("remaining")]: payment.remaining_amount_label || summaryUi.formatCurrency(payment.remainingAmount),
         [t("status")]: payment.status || "-",
       })),
-      filters: currentPaymentPresetPayload(),
+      filters: buildPresetPayload(filters),
       format,
     });
   }
 
   function applyPaymentFilters() {
     return reloadPayments();
-  }
-
-  function resetPaymentFilterState() {
-    paymentStore.resetFilters();
-  }
-
-  function currentPaymentPresetPayload() {
-    return {
-      query: filters.query,
-      direction: filters.direction,
-      customerQuery: filters.customerQuery,
-      policyQuery: filters.policyQuery,
-      purposeQuery: filters.purposeQuery,
-      sort: filters.sort,
-      limit: Number(filters.limit) || 24,
-    };
-  }
-
-  function setPaymentFilterStateFromPayload(payload) {
-    filters.query = String(payload?.query || "");
-    filters.direction = String(payload?.direction || "");
-    filters.customerQuery = String(payload?.customerQuery || "");
-    filters.policyQuery = String(payload?.policyQuery || "");
-    filters.purposeQuery = String(payload?.purposeQuery || "");
-    filters.sort = String(payload?.sort || "modified desc");
-    filters.limit = Number(payload?.limit || 24) || 24;
   }
 
   function applyRouteFilters() {
@@ -370,60 +190,9 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     return reloadPayments();
   }
 
-  function todayIso() {
-    return new Date().toISOString().slice(0, 10);
-  }
-
-  function paymentIdentityFacts(payment) {
-    return [mutedFact("purpose", t("purpose"), payment?.payment_purpose || "-", "at-clamp-2"), subtleFact("record", t("recordId"), payment?.name || "-")];
-  }
-
-  function paymentDetailFacts(payment) {
-    const items = [
-      mutedFact("date", t("date"), payment?.payment_date || "-"),
-      mutedFact("customer", t("customer"), payment?.customer_label || payment?.customer_full_name || payment?.customer_name || payment?.customer || "-"),
-    ];
-    pushMutedFactIf(items, Boolean(payment?.policy), "policy", t("policy"), payment?.policy);
-    const installmentSummary = installmentSummaryByPayment.value.get(payment?.name);
-    const installmentCount = Number(installmentSummary?.total || payment?.installment_count || 0);
-    pushMutedFactIf(items, installmentCount > 1, "installments", t("installments"), `${installmentCount}`);
-    pushMutedFactIf(items, Number(installmentSummary?.paid || 0) > 0, "paid_installments", t("paidInstallments"), `${installmentSummary?.paid}/${installmentCount || installmentSummary?.paid}`);
-    pushMutedFactIf(items, Number(installmentSummary?.overdue || 0) > 0, "overdue_installments", t("overdueInstallments"), `${installmentSummary?.overdue}`);
-    pushMutedFactIf(items, Boolean(installmentSummary?.nextDue), "next_due", t("nextInstallmentDue"), installmentSummary?.nextDue);
-    return items;
-  }
-
-  function openRelatedRecord(payment) {
-    if (payment?.policy) {
-      window.location.assign(`/at/policies/${encodeURIComponent(payment.policy)}`);
-      return;
-    }
-    if (payment?.customer) {
-      window.location.assign(`/at/customers/${encodeURIComponent(payment.customer)}`);
-    }
-  }
-
   function openPaymentDetail(payment) {
     if (!payment?.name) return;
     router.push({ name: "payment-detail", params: { name: payment.name } });
-  }
-
-  function openCollectPayment(payment) {
-    if (!payment?.name) return;
-    router.push({ name: "payment-detail", params: { name: payment.name }, query: { action: "collect" } });
-  }
-
-  function addReceipt(payment) {
-    if (!payment?.name) return;
-    router.push({ name: "payment-detail", params: { name: payment.name }, query: { action: "receipt" } });
-  }
-
-  function sendReminder(payment) {
-    if (!payment?.name) return;
-    router.push({
-      name: "reminders-list",
-      query: { sourceDoctype: "AT Payment", sourceName: payment.name, customer: payment.customer || "", policy: payment.policy || "" },
-    });
   }
 
   onMounted(() => {
@@ -482,21 +251,11 @@ export function usePaymentsBoardRuntime({ t, route, router, authStore, branchSto
     downloadPaymentExport,
     applyPaymentFilters,
     resetPaymentFilters,
-    currentPaymentPresetPayload,
-    setPaymentFilterStateFromPayload,
     applyRouteFilters,
-    resetPaymentFilterState,
-    todayIso,
+    openPaymentDetail,
     prepareQuickPaymentDialog: quickPaymentUi.prepareQuickPaymentDialog,
-    paymentIdentityFacts: actionsUi.paymentIdentityFacts,
-    paymentDetailFacts: actionsUi.paymentDetailFacts,
-    openRelatedRecord: actionsUi.openRelatedRecord,
-    openPaymentDetail: actionsUi.openPaymentDetail,
-    openCollectPayment: actionsUi.openCollectPayment,
-    addReceipt: actionsUi.addReceipt,
-    sendReminder: actionsUi.sendReminder,
     formatCurrency: summaryUi.formatCurrency,
     formatCount: summaryUi.formatCount,
-    formatDate,
+    t,
   };
 }

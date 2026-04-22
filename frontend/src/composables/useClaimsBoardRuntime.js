@@ -19,7 +19,12 @@ function resourceValue(resource, fallback) {
   return value == null ? fallback : value;
 }
 
-export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, route, activeLocale, localeCode, t }) {
+import { CLAIM_TRANSLATIONS } from "../config/claim_translations";
+
+export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, route, activeLocale, localeCode }) {
+  function t(key) {
+    return CLAIM_TRANSLATIONS[activeLocale.value]?.[key] || CLAIM_TRANSLATIONS.en[key] || key;
+  }
   const ownershipAssignmentEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) ||

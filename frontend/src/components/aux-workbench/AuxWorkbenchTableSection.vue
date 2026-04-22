@@ -1,231 +1,157 @@
 <template>
-  <SectionPanel :title="listLabel" :count="pagination.total" :meta="subtitleLabel" panel-class="surface-card rounded-2xl p-5">
+  <SectionPanel :title="listLabel" :record-count="pagination.total" panel-class="surface-card rounded-2xl p-5">
     <template #trailing>
-      <p class="text-xs text-slate-500">{{ showingLabel }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
+      <p class="text-xs text-slate-500 font-medium">{{ showingLabel }} {{ startRow }}-{{ endRow }} / {{ pagination.total }}</p>
     </template>
 
-    <div v-if="isLoading && rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-      {{ loadingLabel }}
+    <div v-if="isLoading && rows.length === 0" class="mt-4">
+      <SkeletonLoader variant="list" :rows="10" />
     </div>
     <article v-else-if="loadErrorText" class="qc-error-banner mt-4">
       <p class="qc-error-banner__text font-semibold">{{ loadErrorTitle }}</p>
-      <p class="qc-error-banner__text mt-1">{{ loadErrorText }}</p>
+      <p class="qc-error-banner__text mt-1 text-xs opacity-90">{{ loadErrorText }}</p>
     </article>
-    <div v-else-if="rows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-      <EmptyState :title="emptyTitle" :description="emptyDescription" />
+    <div v-else-if="rows.length === 0" class="mt-4 py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+      <div class="mx-auto h-12 w-12 text-slate-300 mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+        </svg>
+      </div>
+      <p class="text-sm text-slate-500 font-semibold">{{ emptyTitle }}</p>
+      <p class="text-xs text-slate-400 mt-1">{{ emptyDescription }}</p>
     </div>
     <template v-else>
-      <div class="at-table-wrap mt-4">
-        <table class="at-table w-full min-w-[980px]">
+      <div class="overflow-x-auto mt-4 -mx-5 px-5">
+        <table class="w-full min-w-[1000px] border-separate border-spacing-0">
           <thead>
-            <tr class="at-table-head-row">
-              <th class="at-table-head-cell">{{ recordLabel }}</th>
-              <th class="at-table-head-cell">{{ detailsLabel }}</th>
-              <th class="at-table-head-cell">{{ statusLabel }}</th>
-              <th class="at-table-head-cell">{{ infoLabel }}</th>
-              <th class="at-table-head-cell">{{ actionsLabel }}</th>
+            <tr>
+              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 pl-4 pr-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ recordLabel }}</th>
+              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ detailsLabel }}</th>
+              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ statusLabel }}</th>
+              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ infoLabel }}</th>
+              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 pl-3 pr-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ actionsLabel }}</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-50 bg-white">
             <tr
               v-for="row in rows"
               :key="row.name"
-              class="at-table-row cursor-pointer"
+              class="group hover:bg-slate-50/50 transition-colors cursor-pointer"
               @click="$emit('open-detail', row)"
             >
-              <DataTableCell>
-                <TableEntityCell :title="rowTitle(row)" :facts="factItems(row, config.primaryFields)">
-                  <p class="text-xs text-slate-500">{{ modifiedLabel }}: {{ formatField(row.modified, 'modified') }}</p>
-                </TableEntityCell>
-              </DataTableCell>
-
-              <TableFactsCell :items="factItems(row, config.detailFields)" />
-
-              <DataTableCell>
-                <div class="flex flex-wrap items-center gap-2">
-                  <StatusBadge v-if="config.statusField && row[config.statusField] !== undefined && row[config.statusField] !== null && row[config.statusField] !== ''" :domain="config.statusType || 'policy'" :status="statusValue(row, config.statusField, config.statusType)" />
-                  <StatusBadge v-if="config.secondaryStatusField && row[config.secondaryStatusField]" :domain="config.secondaryStatusType || 'policy'" :status="statusValue(row, config.secondaryStatusField, config.secondaryStatusType)" />
-                  <span v-if="!config.statusField && !config.secondaryStatusField" class="text-xs text-slate-400">-</span>
+              <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
+                <div class="flex flex-col">
+                  <span class="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{{ rowTitle(row) }}</span>
+                  <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                    <span v-for="fact in factItems(row, config.primaryFields)" :key="fact.label" class="text-[11px] text-slate-500 font-medium">
+                      {{ fact.label }}: <span class="text-slate-700">{{ fact.value }}</span>
+                    </span>
+                  </div>
+                  <span class="mt-1 text-[10px] text-slate-400 font-medium">{{ modifiedLabel }}: {{ formatField(row.modified, 'modified') }}</span>
                 </div>
-              </DataTableCell>
+              </td>
 
-              <TableFactsCell :items="factItems(row, config.metricFields)" />
+              <td class="px-3 py-4 text-sm">
+                <div class="grid grid-cols-1 gap-1">
+                  <div v-for="fact in factItems(row, config.detailFields)" :key="fact.label" class="flex flex-col">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-none">{{ fact.label }}</span>
+                    <span class="text-xs font-semibold text-slate-700 truncate max-w-[200px]">{{ fact.value }}</span>
+                  </div>
+                </div>
+              </td>
 
-              <DataTableCell>
-                <InlineActionRow>
+              <td class="whitespace-nowrap px-3 py-4 text-sm">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <StatusBadge v-if="config.statusField && row[config.statusField] !== undefined" :domain="config.statusType || 'policy'" :status="statusValue(row, config.statusField, config.statusType)" />
+                  <StatusBadge v-if="config.secondaryStatusField && row[config.secondaryStatusField]" :domain="config.secondaryStatusType || 'policy'" :status="statusValue(row, config.secondaryStatusField, config.secondaryStatusType)" />
+                </div>
+              </td>
+
+              <td class="px-3 py-4 text-sm">
+                <div class="flex flex-wrap gap-3">
+                  <div v-for="fact in factItems(row, config.metricFields)" :key="fact.label" class="flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-none">{{ fact.label }}</span>
+                    <span class="text-xs font-black text-slate-900">{{ fact.value }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm">
+                <div class="flex items-center justify-end gap-1.5" @click.stop>
                   <ActionButton
                     v-if="canSendDraftNowRow(row)"
                     variant="secondary"
                     size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('send-draft-now', row)"
+                    :loading="rowActionBusyName === row.name"
+                    @click="$emit('send-draft-now', row)"
                   >
-                    {{ rowActionBusyName === row.name ? runningLabel : sendNowLabel }}
+                    {{ sendNowLabel }}
                   </ActionButton>
                   <ActionButton
                     v-if="canRetryOutboxRow(row)"
                     variant="secondary"
                     size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('retry-outbox', row)"
+                    :loading="rowActionBusyName === row.name"
+                    @click="$emit('retry-outbox', row)"
                   >
-                    {{ rowActionBusyName === row.name ? runningLabel : retryLabel }}
+                    {{ retryLabel }}
                   </ActionButton>
                   <ActionButton
                     v-if="canRequeueOutboxRow(row)"
                     variant="secondary"
                     size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('requeue-outbox', row)"
+                    :loading="rowActionBusyName === row.name"
+                    @click="$emit('requeue-outbox', row)"
                   >
-                    {{ rowActionBusyName === row.name ? runningLabel : requeueLabel }}
+                    {{ requeueLabel }}
                   </ActionButton>
-                  <ActionButton
-                    v-if="canOpenCommunicationContextRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    @click.stop="$emit('open-communication-context', row)"
+                  
+                  <div class="h-6 w-px bg-slate-100 mx-1"></div>
+                  
+                  <ActionButton 
+                    variant="secondary" 
+                    size="xs" 
+                    @click="$emit('open-detail', row)"
                   >
-                    {{ openCommunicationLabel }}
+                    {{ openDetailLabel }}
                   </ActionButton>
-                  <ActionButton
-                    v-if="canStartTaskRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('start-task', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : startTaskLabel }}
+                  
+                  <ActionButton v-if="panelCfgForRow(row)" variant="secondary" size="xs" @click="$emit('open-panel', row)">
+                    <template #icon>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </template>
                   </ActionButton>
-                  <ActionButton
-                    v-if="canBlockTaskRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('block-task', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : blockTaskLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCompleteTaskRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('complete-task', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : completeTaskLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCancelTaskRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('cancel-task', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : cancelTaskLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCompleteReminderRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('complete-reminder', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : completeTaskLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCancelReminderRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('cancel-reminder', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : cancelTaskLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canStartOwnershipAssignmentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('start-ownership-assignment', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : startTaskLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canBlockOwnershipAssignmentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('block-ownership-assignment', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : blockTaskLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canCompleteOwnershipAssignmentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('complete-ownership-assignment', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : completeTaskLabel }}
-                  </ActionButton>
-                  <ActionButton variant="secondary" size="xs" @click.stop="$emit('open-detail', row)">{{ openDetailLabel }}</ActionButton>
-                  <ActionButton
-                    v-if="canOpenDocumentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    @click.stop="$emit('open-document', row)"
-                  >
-                    {{ openDocumentLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canArchiveDocumentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('archive-document', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : archiveDocumentLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canRestoreDocumentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    @click.stop="$emit('restore-document', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : restoreDocumentLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canPermanentDeleteDocumentRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :disabled="rowActionBusyName === row.name"
-                    class="text-red-700"
-                    @click.stop="$emit('permanent-delete-document', row)"
-                  >
-                    {{ rowActionBusyName === row.name ? runningLabel : permanentDeleteDocumentLabel }}
-                  </ActionButton>
-                  <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="$emit('open-panel', row)">{{ panelLabel }}</ActionButton>
-                </InlineActionRow>
-              </DataTableCell>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="mt-4">
-        <TablePagerFooter
-          :page="pagination.page"
-          :total-pages="totalPages"
-          :page-label="pageLabel"
-          :previous-label="prevLabel"
-          :next-label="nextLabel"
-          :prev-disabled="pagination.page <= 1 || isLoading"
-          :next-disabled="!hasNextPage || isLoading"
-          @previous="$emit('previous')"
-          @next="$emit('next')"
-        />
+      <div class="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+          {{ pageLabel }} {{ pagination.page }} / {{ totalPages }}
+        </p>
+        <div class="flex items-center gap-2">
+          <ActionButton
+            variant="secondary"
+            size="xs"
+            :disabled="pagination.page <= 1 || isLoading"
+            @click="$emit('previous')"
+          >
+            ←
+          </ActionButton>
+          <ActionButton
+            variant="secondary"
+            size="xs"
+            :disabled="!hasNextPage || isLoading"
+            @click="$emit('next')"
+          >
+            →
+          </ActionButton>
+        </div>
       </div>
     </template>
   </SectionPanel>
@@ -233,14 +159,9 @@
 
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
-import DataTableCell from "../app-shell/DataTableCell.vue";
-import TableEntityCell from "../app-shell/TableEntityCell.vue";
-import TableFactsCell from "../app-shell/TableFactsCell.vue";
-import TablePagerFooter from "../app-shell/TablePagerFooter.vue";
-import InlineActionRow from "../app-shell/InlineActionRow.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
-import EmptyState from "../app-shell/EmptyState.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
+import SkeletonLoader from "../ui/SkeletonLoader.vue";
 
 defineProps({
   listLabel: { type: String, default: "" },

@@ -4,33 +4,32 @@
     :title="t('title')"
     :subtitle="t('subtitle')"
     :record-count="summaryItems.length ? `${sortedRows.length}` : '0'"
-    :record-count-label="t('recordCount')"
+    :record-count-label="t('record_count')"
   >
     <template #actions>
-      <button class="btn btn-outline btn-sm" type="button" @click="focusFilters">
-        {{ t("focusFilters") }}
-      </button>
-      <button class="btn btn-outline btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
-        {{ t("exportXlsx") }}
-      </button>
-      <button class="btn btn-primary btn-sm" type="button" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
-        {{ t("exportPdf") }}
-      </button>
+      <ActionButton variant="secondary" size="sm" @click="focusFilters">
+        {{ t("focus_filters") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :loading="loading || exportLoading" @click="downloadReport('xlsx')">
+        {{ t("export_xlsx") }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" :loading="loading || exportLoading" @click="downloadReport('pdf')">
+        {{ t("export_pdf") }}
+      </ActionButton>
     </template>
 
     <template #metrics>
-      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div v-if="loading && !heroSummaryCells.length" class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
+      </div>
+      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
         <div
           v-for="item in heroSummaryCells"
           :key="item.label"
-          class="mini-metric"
+          class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center transition-all hover:shadow-md"
         >
-          <p class="mini-metric-label">
-            {{ item.label }}
-          </p>
-          <p class="mini-metric-value" :class="item.valueClass">
-            {{ item.value }}
-          </p>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ item.label }}</p>
+          <p class="text-2xl font-black text-slate-900" :class="item.valueClass">{{ item.value }}</p>
         </div>
       </div>
     </template>
@@ -61,6 +60,16 @@
       @preset-save="savePreset"
       @preset-delete="deletePreset"
       @update:preset-key="presetKey = $event"
+      @enqueue-export="enqueueBackgroundExport"
+    />
+
+    <ReportsChartSection
+      :rows="sortedRows"
+      :report-key="filters.reportKey"
+      :report-catalog="reportCatalog"
+      :filters="filters"
+      :t="t"
+      :locale="activeLocale"
     />
 
     <ReportsTableSection
@@ -83,43 +92,65 @@
       :is-row-clickable="isRowClickable"
       :on-row-click="onRowClick"
       :t="t"
+      :group-by-column="groupByColumn"
+      :groupable-columns="groupableColumns"
+      @on-preview-click="openPreview"
+      @on-group-by-change="toggleGroupBy"
     />
 
-      <ReportsComparisonSection
-        :title="t('comparisonSummaryTitle')"
-        :meta="t('comparisonSummaryHint')"
-        :comparison-summary-items="comparisonSummaryItems"
-        :format-comparison-delta="formatComparisonDelta"
-      />
+    <ReportsComparisonSection
+      v-if="comparisonSummaryItems.length"
+      :title="t('comparison_summary_title')"
+      :meta="t('comparison_summary_hint')"
+      :comparison-summary-items="comparisonSummaryItems"
+      :format-comparison-delta="formatComparisonDelta"
+    />
 
-      <ReportsScheduledSection
-        :t="t"
-        :can-manage-scheduled-reports="canManageScheduledReports"
-        :scheduled-reports="scheduledReports"
-        :scheduled-loading="scheduledLoading"
-        :scheduled-run-loading="scheduledRunLoading"
-        :snapshot-run-loading="snapshotRunLoading"
-        :active-locale="activeLocale"
-        :report-catalog="reportCatalog"
-        :active-office-branch="branchStore.requestBranch"
-        @run="runScheduledReports"
-        @save="saveScheduledReport"
-        @remove="removeScheduledReport"
-        @run-segment-snapshots="runCustomerSegmentSnapshots"
-      />
+    <ReportsScheduledSection
+      :t="t"
+      :can-manage-scheduled-reports="canManageScheduledReports"
+      :scheduled-reports="scheduledReports"
+      :scheduled-loading="scheduledLoading"
+      :scheduled-run-loading="scheduledRunLoading"
+      :snapshot-run-loading="snapshotRunLoading"
+      :active-locale="activeLocale"
+      :report-catalog="reportCatalog"
+      :active-office-branch="branchStore.requestBranch"
+      @run="runScheduledReports"
+      @save="saveScheduledReport"
+      @remove="removeScheduledReport"
+      @run-segment-snapshots="runCustomerSegmentSnapshots"
+    />
   </WorkbenchPageLayout>
+
+  <!-- Side Panel for Record Previews -->
+  <SidePanel
+    :show="showPreview"
+    :title="previewTitle"
+    :subtitle="previewSubtitle"
+    @close="closePreview"
+  >
+    <RecordPreviewer
+      v-if="previewTarget"
+      :doctype="previewTarget.doctype"
+      :name="previewTarget.name"
+    />
+  </SidePanel>
 </template>
 
 <script setup>
 import { computed, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
-import { translateText } from "@/utils/i18n";
-
+import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import SidePanel from "../components/ui/SidePanel.vue";
+import RecordPreviewer from "../components/ui/RecordPreviewer.vue";
 import ReportsFilterSection from "../components/reports/ReportsFilterSection.vue";
 import ReportsComparisonSection from "../components/reports/ReportsComparisonSection.vue";
 import ReportsTableSection from "../components/reports/ReportsTableSection.vue";
+import ReportsChartSection from "../components/reports/ReportsChartSection.vue";
 import ReportsScheduledSection from "../components/reports/ReportsScheduledSection.vue";
 import { reportCatalog } from "../composables/reportsConfig";
 import { useReportsFilters } from "../composables/useReportsFilters";
@@ -132,10 +163,7 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 
 const props = defineProps({
-  initialReportKey: {
-    type: String,
-    default: "policy_list",
-  },
+  initialReportKey: { type: String, default: "policy_list" },
 });
 
 const appPinia = getAppPinia();
@@ -149,110 +177,83 @@ const rows = ref([]);
 const columns = ref([]);
 const comparisonRows = ref([]);
 
-const copy = {
-  breadcrumb: "Control Center / Reports",
-  title: "Reports",
-  subtitle: "Branch-aware BI and export hub",
-  refresh: "Refresh",
-  exportPdf: "PDF",
-  exportXlsx: "Excel",
-  focusFilters: "Filter",
-  recordCount: "records",
-  filtersTitle: "Filters",
-  listSummaryTitle: "List Summary",
-  showingRecords: "records shown",
-  advancedFilters: "Advanced Filters",
-  hideAdvancedFilters: "Hide Advanced Filters",
-  activeFilters: "active filters",
-  presetLabel: "Report Preset",
-  savePreset: "Save",
-  deletePreset: "Delete",
-  applyFilters: "Apply",
-  clearFilters: "Clear",
-  branchFilter: "Insurance branch",
-  companyFilter: "Insurance company",
-  policyNoFilter: "Carrier Policy Number",
-  customerTaxIdFilter: "Tax ID",
-  salesEntityFilter: "Sales entity",
-  statusFilter: "Status",
-  loading: "Loading report...",
-  loadErrorTitle: "Failed to Load Report",
-  emptyTitle: "No records found",
-  emptyDescription: "No report rows matched the selected filters.",
-  totalRows: "Total Rows",
-  scopeAll: "All Branches",
-  scopePrefix: "Office Branch",
-  exportError: "Failed to export report.",
-  exporting: "Exporting...",
-  summaryRows: "Rows",
-  summaryGrossPremium: "Gross Premium",
-  summaryCommission: "Commission",
-  summaryPaidAmount: "Collected",
-  summaryActivePolicies: "Active Policies",
-  summaryAvgConversionRate: "Avg Offer Conversion",
-  summaryOpenRenewals: "Open Renewal Load",
-  summaryLoyalCustomers: "Loyal Customers",
-  summaryClaimCustomers: "Customers With Claims",
-  summaryMatchedCustomers: "Matched Customers",
-  summaryCreatedDrafts: "Created Drafts",
-  summarySuccessfulDeliveries: "Successful Deliveries",
-  summaryOpenReconciliation: "Open Reconciliation",
-  summaryDifferenceAmount: "Difference Amount",
-  summaryResolvedItems: "Resolved Items",
-  summaryOpenClaims: "Open Claims",
-  summaryRejectedClaims: "Rejected Claims",
-  summarySuccessfulNotifications: "Successful Notifications",
-  comparisonSummaryTitle: "Period Comparison",
-  comparisonSummaryHint: "Selected range is compared with the previous equal period",
-  columns: "Columns",
-  columnHint: "Selected columns define the table, hidden columns can be restored with one tap.",
-  selectedColumns: "Selected Columns",
-  hiddenColumns: "Hidden Columns",
-  hiddenColumnsHint: "Hidden columns can be restored with a single tap.",
-  showAllColumns: "Show All",
-  viewStateError: "Failed to save report view.",
-  scheduledSaveError: "Failed to save scheduled report.",
-  scheduledDeleteError: "Failed to delete scheduled report.",
-  scheduledTitle: "Scheduled Reports",
-  scheduledSubtitle: "Report deliveries defined in site config",
-  runScheduledReports: "Run Scheduled Reports",
-  scheduledEmpty: "No scheduled reports configured.",
-  scheduledRecipients: "Recipients",
-  scheduledFilters: "Filters",
-  scheduledFrequency: "Frequency",
-  scheduledFormat: "Format",
-  scheduledLimit: "Limit",
-  scheduledEnabled: "Enabled",
-  scheduledDisabled: "Disabled",
-  scheduledRunError: "Failed to trigger scheduled reports.",
-  scheduledLoadError: "Failed to load scheduled reports.",
-  segmentSnapshotTitle: "Segment Snapshots",
-  segmentSnapshotHint: "Refreshes customer segment scores in batch",
-  runSegmentSnapshots: "Run Snapshots",
-  runningSegmentSnapshots: "Snapshots Running...",
-  segmentSnapshotRunError: "Failed to trigger segment snapshot job.",
-  granularityLabel: "Report Granularity",
-  granularityDaily: "Daily",
-  granularityMonthly: "Monthly",
-  granularityYearly: "Yearly",
-  granularityPlaceholder: "-- Select granularity --",
-  dateRangeLabel: "Select Date Range",
-  datePresetToday: "Today",
-  datePresetThisMonth: "This Month",
-  datePresetThisYear: "This Year",
-  datePresetYesterday: "Yesterday",
-  datePresetLastMonth: "Last Month",
-  datePresetLastYear: "Last Year",
-  dateFrom: "Start Date",
-  dateTo: "End Date",
-};
+const showPreview = ref(false);
+const previewTarget = ref(null);
+const previewTitle = ref("");
+const previewSubtitle = ref("");
 
-function t(key) {
-  return translateText(copy[key] || key, activeLocale.value);
+function openPreview(row) {
+  if (!row) return;
+
+  let doctype = "AT Policy";
+  let name = row.name;
+  
+  const rk = filters.reportKey;
+  if (rk === "customer_segmentation") {
+    doctype = "AT Customer";
+  } else if (rk === "claim_loss_ratio" || rk === "claims_operations") {
+    doctype = "AT Claim";
+  } else if (rk === "payment_status" && row.policy) {
+    name = row.policy;
+  } else if (rk === "renewal_performance" && row.policy) {
+    name = row.policy;
+  }
+
+  if (!name) return;
+
+  previewTarget.value = { doctype, name };
+  previewTitle.value = name;
+  previewSubtitle.value = doctype;
+  showPreview.value = true;
 }
 
-const activeLocale = computed(() => unref(authStore.locale) || "en");
+function closePreview() {
+  showPreview.value = false;
+  previewTarget.value = null;
+}
+
+const activeLocale = computed(() => unref(authStore.locale) || "tr");
+
+function t(key) {
+  const locale = activeLocale.value as "tr" | "en";
+  return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || key;
+}
+
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+
+const reportTableData = useReportsTableData({
+  filters: reactive({ reportKey: props.initialReportKey || "policy_list" }), // temporary for init if needed
+  rows,
+  columns,
+  comparisonRows,
+  activeLocale,
+  localeCode,
+  branchScopeLabel,
+  t,
+});
+
+const {
+  visibleColumnKeys,
+  pendingVisibleColumnKeys,
+  sortState,
+  visibleColumns,
+  columnsSummaryLabel,
+  heroSummaryCells,
+  summaryItems,
+  comparisonSummaryItems,
+  sortedRows,
+  groupByColumn,
+  groupableColumns,
+  toggleGroupBy,
+  getColumnLabel,
+  formatCellValue,
+  isColumnVisible,
+  toggleColumn,
+  showAllColumns,
+  toggleSort,
+  getSortIndicator,
+  formatComparisonDelta,
+} = reportTableData;
 
 const reportFilterComposables = useReportsFilters({
   props,
@@ -263,8 +264,9 @@ const reportFilterComposables = useReportsFilters({
   router,
   authStore,
   branchStore,
-  rows,
   refresh: () => loadReport(),
+  visibleColumnKeys,
+  groupByColumn,
 });
 
 const {
@@ -273,14 +275,11 @@ const {
   activePreset,
   reportOptions,
   activeReportLabel,
-  branchScopeLabel,
   visibleFilters,
-  canManageScheduledReports,
+  canManageScheduledReports: filterCanManage,
   activeFilterCount,
   datePresets,
-  advancedFilterDefinitions,
   visibleAdvancedFilters,
-  comparisonEnabled,
   buildFiltersPayload,
   buildPreviousPeriodFiltersPayload,
   clearHiddenFilters,
@@ -289,12 +288,8 @@ const {
   resetFilters,
   applyDatePreset,
   isActivePresetRange,
-  isFilterVisible,
   getAdvancedFilterOptions,
   presetKey,
-  presetOptions,
-  canDeletePreset,
-  applyPreset,
   onPresetChange,
   savePreset,
   deletePreset,
@@ -312,8 +307,10 @@ const reportsRuntime = useReportsRuntime({
   t,
   buildFiltersPayload,
   buildPreviousPeriodFiltersPayload,
-  canManageScheduledReports,
+  canManageScheduledReports: ref(true),
   filtersSectionRef,
+  visibleColumnKeys,
+  groupByColumn,
 });
 
 const {
@@ -327,6 +324,7 @@ const {
   loadReport,
   scheduleReportLoad,
   downloadReport,
+  enqueueBackgroundExport,
   loadScheduledReports,
   runScheduledReports,
   runCustomerSegmentSnapshots,
@@ -335,50 +333,11 @@ const {
   focusFilters,
 } = reportsRuntime;
 
-const reportTableData = useReportsTableData({
-  filters,
-  rows,
-  columns,
-  comparisonRows,
-  activeLocale,
-  localeCode,
-  branchScopeLabel,
-  t,
-});
+const { branchScopeLabel } = reportFilterComposables;
+
+const { isRowClickable, onRowClick } = useReportsRowActions({ filters, router });
 
 const {
-  visibleColumnKeys,
-  pendingVisibleColumnKeys,
-  sortState,
-  numberFormatter,
-  dateFormatter,
-  percentFormatter,
-  visibleColumns,
-  hiddenColumns,
-  columnsSummaryLabel,
-  heroSummaryCells,
-  summaryItems,
-  comparisonSummaryItems,
-  sortedRows,
-  getColumnLabel,
-  formatCellValue,
-  normalizeSortableValue,
-  isColumnVisible,
-  toggleColumn,
-  showAllColumns,
-  toggleSort,
-  getSortIndicator,
-  formatComparisonDelta,
-} = reportTableData;
-
-const { isRowClickable, onRowClick } = useReportsRowActions({
-  filters,
-  router,
-});
-
-const {
-  applyViewState,
-  buildViewStatePayload,
   persistViewStateToStorage,
   syncViewStateFromStorage,
   syncViewStateFromRoute,
@@ -395,101 +354,54 @@ const {
   t,
 });
 
-watch(
-  () => branchStore.selected,
-  () => {
-    scheduleReportLoad();
-  },
-);
+const canManageScheduledReports = computed(() => Boolean(authStore.isDeskUser));
 
-watch(
-  () => filters.reportKey,
-  () => {
-    clearHiddenFilters();
-    persistReportKeyToRoute();
-    syncViewStateFromStorage();
-    persistViewStateToRoute();
-    scheduleReportLoad();
-  },
-);
+watch(() => branchStore.selected, () => scheduleReportLoad());
 
-watch(
-  [() => filters.fromDate, () => filters.toDate],
-  () => {
-    // Kullanıcı manuel tarih değiştirirse preset seçimini temizle
-    if (!isActivePresetRange()) {
-      activePreset.value = "";
-    }
-    scheduleReportLoad();
-  },
-);
+watch(() => filters.reportKey, () => {
+  clearHiddenFilters();
+  persistReportKeyToRoute();
+  syncViewStateFromStorage();
+  persistViewStateToRoute();
+  scheduleReportLoad();
+});
 
-watch(
-  columns,
-  (nextColumns) => {
-    if (!Array.isArray(nextColumns) || nextColumns.length === 0) {
-      visibleColumnKeys.value = [];
-      pendingVisibleColumnKeys.value = [];
-      sortState.column = "";
-      sortState.direction = "";
-      return;
-    }
+watch([() => filters.fromDate, () => filters.toDate], () => {
+  if (!isActivePresetRange()) activePreset.value = "";
+  scheduleReportLoad();
+});
 
-    if (pendingVisibleColumnKeys.value.length) {
-      visibleColumnKeys.value = nextColumns.filter((column) => pendingVisibleColumnKeys.value.includes(column));
-      if (!visibleColumnKeys.value.length) {
-        visibleColumnKeys.value = [...nextColumns];
-      }
-      pendingVisibleColumnKeys.value = [];
-    } else if (!visibleColumnKeys.value.length) {
-      visibleColumnKeys.value = [...nextColumns];
-    } else {
-      visibleColumnKeys.value = visibleColumnKeys.value.filter((column) => nextColumns.includes(column));
-      if (!visibleColumnKeys.value.length) {
-        visibleColumnKeys.value = [...nextColumns];
-      }
-    }
+watch(columns, (nextColumns) => {
+  if (!Array.isArray(nextColumns) || nextColumns.length === 0) {
+    visibleColumnKeys.value = [];
+    pendingVisibleColumnKeys.value = [];
+    sortState.column = "";
+    sortState.direction = "";
+    return;
+  }
+  if (pendingVisibleColumnKeys.value.length) {
+    visibleColumnKeys.value = nextColumns.filter((column) => pendingVisibleColumnKeys.value.includes(column));
+    if (!visibleColumnKeys.value.length) visibleColumnKeys.value = [...nextColumns];
+    pendingVisibleColumnKeys.value = [];
+  } else if (!visibleColumnKeys.value.length) {
+    visibleColumnKeys.value = [...nextColumns];
+  } else {
+    visibleColumnKeys.value = visibleColumnKeys.value.filter((column) => nextColumns.includes(column));
+    if (!visibleColumnKeys.value.length) visibleColumnKeys.value = [...nextColumns];
+  }
+}, { immediate: true });
 
-    if (sortState.column && !nextColumns.includes(sortState.column)) {
-      sortState.column = "";
-      sortState.direction = "";
-    }
-  },
-  { immediate: true },
-);
-
-watch(
-  [visibleColumnKeys, () => sortState.column, () => sortState.direction],
-  () => {
-    persistViewStateToStorage();
-    persistViewStateToRoute();
-  },
-  { deep: true },
-);
+watch([visibleColumnKeys, () => sortState.column, () => sortState.direction], () => {
+  persistViewStateToStorage();
+  persistViewStateToRoute();
+}, { deep: true });
 
 onMounted(() => {
   syncReportKeyFromRoute();
   persistReportKeyToRoute();
   syncViewStateFromRoute();
-  if (!String(route.query?.report_cols || "") && !String(route.query?.report_sort || "")) {
-    syncViewStateFromStorage();
-  }
+  if (!String(route.query?.report_cols || "") && !String(route.query?.report_sort || "")) syncViewStateFromStorage();
   void loadReport();
   void loadScheduledReports();
 });
 </script>
-
-<style scoped>
-.input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
-}
-
-.report-filter-control {
-  @apply h-8 appearance-none rounded-md border border-gray-200 bg-white px-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-brand-600 focus:outline-none;
-}
-
-.report-filter-control--date {
-  @apply w-[142px] border-transparent px-2;
-}
-</style>
-

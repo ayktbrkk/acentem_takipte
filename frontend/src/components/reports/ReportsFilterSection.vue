@@ -78,6 +78,17 @@
           />
           <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('refresh')">{{ t('refresh') }}</button>
           <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('apply-filters')">{{ t('applyFilters') }}</button>
+          <button
+            class="btn btn-secondary btn-sm flex items-center gap-1.5"
+            type="button"
+            :disabled="loading"
+            @click="$emit('enqueue-export', 'xlsx')"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+            </svg>
+            {{ t('backgroundExport') || 'Background Export' }}
+          </button>
           <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="$emit('clear-filters')">{{ t('clearFilters') }}</button>
         </div>
       </div>
@@ -193,5 +204,6 @@ defineEmits([
   "preset-save",
   "preset-delete",
   "update:preset-key",
+  "enqueue-export",
 ]);
 </script>

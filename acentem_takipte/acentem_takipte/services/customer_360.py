@@ -48,6 +48,12 @@ def _safe_get_list(
 def build_customer_360_payload(
     customer_name: str, *, can_view_sensitive: bool = False
 ) -> dict[str, Any]:
+    # Try to get from cache first
+    cache_key = f"at_customer_360:{customer_name}"
+    cached_payload = frappe.cache().get_value(cache_key)
+    if cached_payload:
+        return cached_payload
+
     customer = frappe.get_doc("AT Customer", customer_name)
     today = getdate(nowdate())
 
@@ -250,6 +256,36 @@ def build_customer_360_payload(
             "reminders": _get_reminders(customer_name=customer_name),
         },
     }
+
+    # Store in cache for 5 minutes
+    frappe.cache().set_value(cache_key, payload, expires_in_sec=300)
+
+    return payload
+
+
+def invalidate_customer_360_cache(customer_name: str):
+    """Invalidate the 360 cache for a specific customer."""
+    if not customer_name:
+        return
+    frappe.cache().delete_value(f"at_customer_360:{customer_name.strip()}")
+
+
+def invalidate_customer_from_doc_event(doc, method=None):
+    """Bridge for hooks.py to invalidate customer cache from related documents."""
+    customer_name = doc.get("customer")
+
+    if not customer_name:
+        if doc.doctype == "AT Customer":
+            customer_name = doc.name
+        elif doc.doctype in ["Communication", "Comment"] and doc.reference_doctype == "AT Customer":
+            customer_name = doc.reference_name
+        elif doc.doctype == "AT Document" and doc.customer:
+            customer_name = doc.customer
+        elif hasattr(doc, "customer") and doc.customer:
+            customer_name = doc.customer
+
+    if customer_name:
+        invalidate_customer_360_cache(customer_name)
 
 
 def _serialize_customer(customer, *, can_view_sensitive: bool) -> dict[str, Any]:

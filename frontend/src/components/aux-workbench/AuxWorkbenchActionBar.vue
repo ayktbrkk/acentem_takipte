@@ -1,42 +1,59 @@
 <template>
-  <button class="btn btn-outline btn-sm" type="button" :disabled="isLoading" @click="$emit('refresh')">
-    {{ refreshLabel }}
-  </button>
-  <button
-    v-if="canExportSnapshotRows"
-    class="btn btn-outline btn-sm"
-    type="button"
-    @click="$emit('export-snapshot-rows')"
-  >
-    {{ exportCsvLabel }}
-  </button>
-  <button class="btn btn-outline btn-sm" type="button" :disabled="isLoading" @click="$emit('download-xlsx')">
-    {{ exportXlsxLabel }}
-  </button>
-  <button class="btn btn-outline btn-sm" type="button" :disabled="isLoading" @click="$emit('download-pdf')">
-    {{ exportPdfLabel }}
-  </button>
-  <QuickCreateLauncher
-    v-if="auxQuickCreateLabel && canLaunchAuxQuickCreate"
-    variant="primary"
-    size="sm"
-    :label="auxQuickCreateLabel"
-    @launch="$emit('launch-quick-create')"
-  />
-  <ActionButton
-    v-for="action in visibleToolbarActions"
-    :key="action.key || action.routeName || localize(action.label)"
-    variant="secondary"
-    size="sm"
-    @click="$emit('run-toolbar-action', action)"
-  >
-    {{ localize(action.label) || panelLabel }}
-  </ActionButton>
+  <div class="flex items-center gap-2">
+    <ActionButton
+      variant="secondary"
+      size="sm"
+      :loading="isLoading"
+      @click="$emit('refresh')"
+    >
+      {{ refreshLabel }}
+    </ActionButton>
+    <ActionButton
+      v-if="canExportSnapshotRows"
+      variant="secondary"
+      size="sm"
+      @click="$emit('export-snapshot-rows')"
+    >
+      {{ exportCsvLabel }}
+    </ActionButton>
+    <ActionButton
+      variant="secondary"
+      size="sm"
+      :disabled="isLoading"
+      @click="$emit('download-xlsx')"
+    >
+      {{ exportXlsxLabel }}
+    </ActionButton>
+    <ActionButton
+      variant="secondary"
+      size="sm"
+      :disabled="isLoading"
+      @click="$emit('download-pdf')"
+    >
+      {{ exportPdfLabel }}
+    </ActionButton>
+    <ActionButton
+      v-if="auxQuickCreateLabel && canLaunchAuxQuickCreate"
+      variant="primary"
+      size="sm"
+      @click="$emit('launch-quick-create')"
+    >
+      + {{ auxQuickCreateLabel }}
+    </ActionButton>
+    <ActionButton
+      v-for="action in visibleToolbarActions"
+      :key="action.key || action.routeName || localize(action.label)"
+      variant="secondary"
+      size="sm"
+      @click="$emit('run-toolbar-action', action)"
+    >
+      {{ localize(action.label) || panelLabel }}
+    </ActionButton>
+  </div>
 </template>
 
 <script setup>
 import ActionButton from "../app-shell/ActionButton.vue";
-import QuickCreateLauncher from "../app-shell/QuickCreateLauncher.vue";
 
 defineProps({
   isLoading: { type: Boolean, default: false },

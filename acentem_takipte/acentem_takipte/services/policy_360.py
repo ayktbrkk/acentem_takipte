@@ -21,6 +21,12 @@ def build_policy_360_payload(name: str) -> dict:
     if not policy_name:
         return {}
 
+    # Try to get from cache first
+    cache_key = f"at_policy_360:{policy_name}"
+    cached_payload = frappe.cache().get_value(cache_key)
+    if cached_payload:
+        return cached_payload
+
     policy_doc = frappe.get_doc("AT Policy", policy_name)
     policy = policy_doc.as_dict(no_default_fields=False)
     customer = _get_customer(policy.get("customer"))
@@ -111,6 +117,44 @@ def build_policy_360_payload(name: str) -> dict:
         ) if frappe.db.exists("DocType", "AT Reminder") else [],
         "product_profile": _build_product_profile(policy),
     }
+
+    # Store in cache for 5 minutes
+    frappe.cache().set_value(cache_key, payload, expires_in_sec=300)
+
+    return payload
+
+
+def invalidate_policy_360_cache(name: str):
+    """Invalidate the 360 cache for a specific policy."""
+    if not name:
+        return
+    frappe.cache().delete_value(f"at_policy_360:{name.strip()}")
+
+
+
+def invalidate_policy_from_doc_event(doc, method=None):
+    """Bridge function for hooks to invalidate policy 360 cache."""
+    if not doc:
+        return
+
+    # Direct target
+    if doc.doctype == "AT Policy":
+        invalidate_policy_360_cache(doc.name)
+        return
+
+    # Reference target
+    policy_name = None
+    if hasattr(doc, "policy") and doc.policy:
+        policy_name = doc.policy
+    elif doc.doctype in ["Communication", "Comment"] and doc.reference_doctype == "AT Policy":
+        policy_name = doc.reference_name
+    elif doc.doctype == "AT Document" and doc.attached_to_doctype == "AT Policy":
+        policy_name = doc.attached_to_name
+    elif doc.doctype == "AT Policy Endorsement" and hasattr(doc, "policy") and doc.policy:
+        policy_name = doc.policy
+
+    if policy_name:
+        invalidate_policy_360_cache(policy_name)
 
 
 def _get_at_documents_for_policy(policy_name: str) -> list[dict]:

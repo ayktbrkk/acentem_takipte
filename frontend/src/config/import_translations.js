@@ -1,0 +1,32 @@
+export const IMPORT_TRANSLATIONS = {
+  tr: {
+    breadcrumb: "Veri Yönetimi → İçe Aktarma",
+    title: "Veri İçe Aktarma Masası",
+    subtitle: "Excel/CSV dosyalarını eşleştirerek toplu veri yükleme ve validasyon merkezi",
+    step_file: "Dosya Seçimi",
+    step_mapping: "Kolon Eşleştirme",
+    step_preview: "Veri Önizleme",
+    select_dataset: "Veri Kümesi",
+    select_file: "Dosya Yükle",
+    excel_column: "Excel Kolonu",
+    system_field: "Sistem Alanı",
+    import_action: "İçe Aktar",
+    cancel: "İptal",
+    import_queued: "İçe aktarma kuyruğa alındı.",
+  },
+  en: {
+    breadcrumb: "Data Management → Import",
+    title: "Data Import Workbench",
+    subtitle: "Bulk-load data by matching Excel/CSV columns and validation hub",
+    step_file: "File Selection",
+    step_mapping: "Column Mapping",
+    step_preview: "Data Preview",
+    select_dataset: "Dataset",
+    select_file: "Upload File",
+    excel_column: "Excel Column",
+    system_field: "System Field",
+    import_action: "Import",
+    cancel: "Cancel",
+    import_queued: "Import queued.",
+  }
+};

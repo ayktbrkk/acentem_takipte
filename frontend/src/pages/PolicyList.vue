@@ -1,489 +1,164 @@
 <template>
   <WorkbenchPageLayout
-    :breadcrumb="t('breadcrumb')"
-    :title="t('title')"
-    :subtitle="t('subtitle')"
-    :record-count="formatCount(policyListTotalCount)"
-    :record-count-label="t('recordCount')"
+    :breadcrumb="t('policies_breadcrumb')"
+    :title="t('policies')"
+    :record-count="summary.total"
+    :record-count-label="t('total_policies')"
   >
     <template #actions>
-      <PolicyListActionBar
-        :policy-loading="policyLoading"
-        :t="t"
-        @focus-filters="focusPolicySearch"
-        @export-xlsx="downloadPolicyExport('xlsx')"
-        @new-policy="openQuickPolicyDialog"
-      />
+      <ActionButton variant="primary" size="sm">
+        + {{ t("new_policy") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="reload">
+        {{ t("refresh") }}
+      </ActionButton>
     </template>
 
     <template #metrics>
-      <PolicyListMetricsPanel :policy-summary="policySummary" :format-count="formatCount" :format-currency="formatCurrency" :t="t" />
+      <div v-if="loading && !rows.length" class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
+      </div>
+      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("total") }}</p>
+          <p class="mini-metric-value">{{ summary.total }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("active") }}</p>
+          <p class="mini-metric-value text-emerald-600">{{ summary.active }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("waiting") }}</p>
+          <p class="mini-metric-value text-amber-600">{{ summary.waiting }}</p>
+        </div>
+        <div class="mini-metric">
+          <p class="mini-metric-label">{{ t("cancelled") }}</p>
+          <p class="mini-metric-value text-rose-600">{{ summary.cancelled }}</p>
+        </div>
+      </div>
     </template>
 
-    <article v-if="policyListError" class="qc-error-banner">
-      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-      <p class="qc-error-banner__text mt-1">{{ policyListError }}</p>
-    </article>
+    <SectionPanel :title="t('filters')">
+      <FilterBar
+        :search="filters.query"
+        :filters="filterConfig"
+        @update:search="v => updateFilter('query', v)"
+        @filter-change="({ key, value }) => updateFilter(key, value)"
+      />
+    </SectionPanel>
 
-    <PolicyListFilterSection
-      v-model:search="policyListSearchQuery"
-      :filters="policyListFilterConfig"
-      :active-count="policyListActiveCount"
-      :policy-loading="policyLoading"
-      :page-length="pagination.pageLength"
-      :t="t"
-      @filter-change="onPolicyListFilterChange"
-      @reset="onPolicyListFilterReset"
-      @refresh="refreshPolicyList"
-      @clear="onPolicyListFilterReset"
-    />
+    <SectionPanel :title="t('policy_list')">
+      <template v-if="loading && !rows.length">
+        <SkeletonLoader variant="list" :rows="10" />
+      </template>
+      <template v-else>
+        <ListTable
+          :columns="columns"
+          :rows="rows"
+          :loading="loading"
+          clickable
+          @row-click="row => openPolicy(row.name)"
+        >
+          <template #cell(gross_premium)="{ row }">
+            <span class="font-medium text-slate-900">{{ formatCurrency(row.gross_premium, row.currency) }}</span>
+          </template>
+          <template #cell(status)="{ row }">
+            <StatusBadge domain="policy" :status="row.status === 'Active' ? 'active' : row.status === 'Cancelled' ? 'cancel' : 'hold'" :label="row.status_label" />
+          </template>
+          <template #cell(end_date)="{ row }">
+            {{ formatDate(row.end_date) }}
+          </template>
+        </ListTable>
 
-    <div class="hidden" aria-hidden="true">
-      <input v-model="filters.query" class="input" type="text" />
-      <input v-model="filters.status" class="input" type="text" />
-      <input v-model="filters.insurance_company" class="input" type="text" />
-      <input v-model="filters.customer" class="input" type="text" />
-      <input v-model="filters.gross_min" class="input" type="text" />
-      <input v-model.number="pagination.pageLength" class="input" type="number" min="1" />
-    </div>
-
-    <PolicyListTableSection
-      :columns="policyListColumns"
-      :rows="policyListRowsWithUrgency"
-      :locale="activeLocale"
-      :loading="policyLoading"
-      :empty-message="t('empty')"
-      :total-count="policyListTotalCount"
-      :total-pages="policyListTotalPages"
-      v-model:page="policyListPage"
-      :format-count="formatCount"
-      :t="t"
-      @row-click="(row) => openPolicyDetail(row.name)"
-    />
-
-    <PolicyListQuickPolicyDialog
-      v-model:show="showQuickPolicyDialog"
-      :dialog-key="quickPolicyDialogKey"
-      :model="quickPolicyForm"
-      :field-errors="quickPolicyFieldErrors"
-      :options-map="policyQuickOptionsMap"
-      :disabled="quickPolicyLoading"
-      :loading="quickPolicyLoading"
-      :has-source-offer="hasQuickPolicySourceOffer"
-      :office-branch="branchStore.requestBranch || ''"
-      :error="quickPolicyError"
-      :eyebrow="quickPolicyUi.eyebrow"
-      :title="quickPolicyUi.title"
-      :subtitle="quickPolicyUi.subtitle"
-      @cancel="cancelQuickPolicyDialog"
-      @submit="submitQuickPolicy(false)"
-    />
+        <div class="mt-4 flex items-center justify-between">
+          <p class="text-xs text-slate-500">
+            {{ t("showing") }} {{ rows.length }} / {{ summary.total }}
+          </p>
+          <div class="flex items-center gap-2">
+            <ActionButton
+              variant="secondary"
+              size="xs"
+              :disabled="pagination.page <= 1"
+              @click="setPage(pagination.page - 1)"
+            >
+              ←
+            </ActionButton>
+            <span class="text-xs font-medium text-slate-700">{{ pagination.page }}</span>
+            <ActionButton
+              variant="secondary"
+              size="xs"
+              :disabled="rows.length < pagination.pageLength"
+              @click="setPage(pagination.page + 1)"
+            >
+              →
+            </ActionButton>
+          </div>
+        </div>
+      </template>
+    </SectionPanel>
   </WorkbenchPageLayout>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, unref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { createResource } from "frappe-ui";
-
+import { computed } from "vue";
 import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
-import { usePolicyStore } from "../stores/policy";
-import { usePolicyListFilters } from "../composables/usePolicyListFilters";
-import { usePolicyListPresetSync } from "../composables/usePolicyListPresetSync";
-import { usePolicyListRuntime } from "../composables/usePolicyListRuntime";
-import { usePolicyListTableData } from "../composables/usePolicyListTableData";
-import { usePolicyListActions } from "../composables/usePolicyListActions";
-import { usePolicyListQuickPolicy } from "../composables/usePolicyListQuickPolicy";
-import DataTableCell from "../components/app-shell/DataTableCell.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import InlineActionRow from "../components/app-shell/InlineActionRow.vue";
-import TableEntityCell from "../components/app-shell/TableEntityCell.vue";
-import TableFactsCell from "../components/app-shell/TableFactsCell.vue";
+import { usePolicyBoardRuntime } from "../composables/usePolicyBoardRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import PolicyListActionBar from "../components/policy-list/PolicyListActionBar.vue";
-import PolicyListMetricsPanel from "../components/policy-list/PolicyListMetricsPanel.vue";
-import PolicyListFilterSection from "../components/policy-list/PolicyListFilterSection.vue";
-import PolicyListTableSection from "../components/policy-list/PolicyListTableSection.vue";
-import PolicyListQuickPolicyDialog from "../components/policy-list/PolicyListQuickPolicyDialog.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
+import ListTable from "../components/ui/ListTable.vue";
+import FilterBar from "../components/ui/FilterBar.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 
-const router = useRouter();
-const route = useRoute();
 const authStore = useAuthStore();
-const branchStore = useBranchStore();
-const policyStore = usePolicyStore();
-
-function buildOfficeBranchLookupFilters() {
-  const officeBranch = branchStore.requestBranch || "";
-  return officeBranch ? { office_branch: officeBranch } : {};
-}
-
-const copy = {
-  tr: {
-    breadcrumb: "Sigorta Operasyonları → Poliçeler",
-    title: "Poliçe Yönetimi",
-    subtitle: "Poliçe listesini filtreleyin, sıralayın ve sayfalayın",
-    recordCount: "kayıt",
-    refresh: "Yenile",
-    exportXlsx: "Excel",
-    exportPdf: "PDF",
-    newPolicy: "+ Yeni Poliçe",
-    focusFilters: "Filtrele",
-    filtersTitle: "Filtreler",
-    policyTableTitle: "Poliçe Listesi",
-    summaryTotal: "Toplam Poliçe",
-    summaryActive: "Aktif",
-    summaryPending: "Beklemede",
-    summaryTotalPremium: "Toplam Prim",
-    statusActive: "Aktif",
-    statusWaiting: "Bekliyor",
-    allCompanies: "Tüm Sigorta Şirketleri",
-    searchPlaceholder: "Poliçe / Müşteri / Kayıt ara",
-    endDateFilter: "Bitiş Tarihi",
-    allStatuses: "Tüm Durumlar",
-    advancedFilters: "Gelişmiş Filtreler",
-    hideAdvancedFilters: "Gelişmiş Filtreleri Gizle",
-    activeFilters: "aktif filtre",
-    presetLabel: "Filtre Şablonu",
-    presetDefault: "Standart",
-    presetActive: "Aktif Poliçeler",
-    presetExpiring30: "30 Gün İçinde Bitecek",
-    presetHighPremium: "Yüksek Prim",
-    savePreset: "Kaydet",
-    deletePreset: "Sil",
-    savePresetPrompt: "Filtre şablonu adı",
-    deletePresetConfirm: "Seçili özel filtre şablonu silinsin mi?",
-    applyFilters: "Uygula",
-    clearFilters: "Filtreleri Temizle",
-    mobileSummaryTitle: "Liste Özeti",
-    pageSize: "Sayfa Boyutu",
-    showingRecords: "kayıt gösteriliyor",
-    customerFilter: "Müşteri (içerir)",
-    grossMinFilter: "Min Brüt Prim",
-    grossMaxFilter: "Max Brüt Prim",
-    showing: "Gösterilen",
-    loading: "Yükleniyor...",
-    emptyTitle: "Poliçe Bulunamadı",
-    empty: "Filtrelere uygun poliçe kaydı bulunamadı.",
-    loadErrorTitle: "Liste Yüklenemedi",
-    loadError: "Poliçe listesi yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
-    openDesk: "Yönetim Ekranını Aç",
-    page: "Sayfa",
-    previous: "Önceki",
-    next: "Sonraki",
-    colPolicy: "Poliçe",
-    recordNo: "Kayıt No",
-    carrierPolicyNo: "Şirket Poliçe No",
-    colCustomer: "Müşteri",
-    colCompany: "Sigorta Şirketi",
-    colEndDate: "Bitiş Tarihi",
-    colDetails: "Detaylar",
-    colStatus: "Poliçe Durumu",
-    colPremiums: "Primler",
-    colGross: "Brüt Prim",
-    colCommission: "Komisyon",
-    colGwpTry: "GWP TRY",
-    colActions: "Aksiyon",
-    sortModifiedDesc: "Son Güncellenen",
-    sortEndDateAsc: "Bitiş Tarihi (Yakın)",
-    sortEndDateDesc: "Bitiş Tarihi (Uzak)",
-    sortGrossDesc: "Brüt Prim (Yüksek)",
-  },
-  en: {
-    breadcrumb: "Insurance Operations → Policies",
-    title: "Policy Workbench",
-    subtitle: "Filter, sort, and paginate the policy list",
-    recordCount: "records",
-    refresh: "Refresh",
-    exportXlsx: "Excel",
-    exportPdf: "PDF",
-    newPolicy: "+ New Policy",
-    focusFilters: "Focus Filters",
-    filtersTitle: "Filters",
-    policyTableTitle: "Policy List",
-    summaryTotal: "Total Policies",
-    summaryActive: "Active",
-    summaryPending: "Pending",
-    summaryTotalPremium: "Total Premium",
-    statusActive: "Active",
-    statusWaiting: "Waiting",
-    allCompanies: "All Insurance Companies",
-    searchPlaceholder: "Search policy / customer / record",
-    endDateFilter: "End Date",
-    allStatuses: "All Statuses",
-    advancedFilters: "Advanced Filters",
-    hideAdvancedFilters: "Hide Advanced Filters",
-    activeFilters: "active filters",
-    presetLabel: "Filter Preset",
-    presetDefault: "Standard",
-    presetActive: "Active Policies",
-    presetExpiring30: "Expiring in 30 Days",
-    presetHighPremium: "High Premium",
-    savePreset: "Save",
-    deletePreset: "Delete",
-    savePresetPrompt: "Filter preset name",
-    deletePresetConfirm: "Delete selected custom filter preset?",
-    applyFilters: "Apply",
-    clearFilters: "Clear Filters",
-    mobileSummaryTitle: "List Summary",
-    pageSize: "Page Size",
-    showingRecords: "records shown",
-    customerFilter: "Customer (contains)",
-    grossMinFilter: "Min Gross Premium",
-    grossMaxFilter: "Max Gross Premium",
-    showing: "Showing",
-    loading: "Loading...",
-    emptyTitle: "No Policies Found",
-    empty: "No policy records found for current filters.",
-    loadErrorTitle: "Failed to Load List",
-    loadError: "An error occurred while loading policies. Please try again.",
-    openDesk: "Open Desk",
-    page: "Page",
-    previous: "Previous",
-    next: "Next",
-    colPolicy: "Policy",
-    recordNo: "Record No",
-    carrierPolicyNo: "Carrier Policy No",
-    colCustomer: "Customer",
-    colCompany: "Insurance Company",
-    colEndDate: "End Date",
-    colDetails: "Details",
-    colStatus: "Policy Status",
-    colPremiums: "Premiums",
-    colGross: "Gross Premium",
-    colCommission: "Commission",
-    colGwpTry: "GWP TRY",
-    colActions: "Actions",
-    sortModifiedDesc: "Last Modified",
-    sortEndDateAsc: "End Date (Soonest)",
-    sortEndDateDesc: "End Date (Latest)",
-    sortGrossDesc: "Gross Premium (High)",
-  },
-};
-
-function t(key) {
-  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
-}
-
-const activeLocale = computed(() => unref(authStore.locale) || "en");
-const filters = policyStore.state.filters;
-const pagination = policyStore.state.pagination;
-let refreshPolicyList = () => Promise.resolve();
-
-const statusOptions = computed(() => [
-  { value: "active", label: t("statusActive") },
-  { value: "waiting", label: t("statusWaiting") },
-]);
-
-const sortOptions = computed(() => [
-  { value: "modified desc", label: t("sortModifiedDesc") },
-  { value: "end_date asc", label: t("sortEndDateAsc") },
-  { value: "end_date desc", label: t("sortEndDateDesc") },
-  { value: "gross_premium desc", label: t("sortGrossDesc") },
-]);
-const policyQuickRuntime = usePolicyListQuickPolicy({
-  t,
-  activeLocale,
-  router,
-  route,
-  branchStore,
-  refreshPolicyList: () => refreshPolicyList(),
-  openPolicyDetail: (policyName) => router.push({ name: "policy-detail", params: { name: policyName } }),
-});
-const {
-  showQuickPolicyDialog,
-  quickPolicyDialogKey,
-  quickPolicyLoading,
-  quickPolicyError,
-  quickPolicyFieldErrors,
-  quickPolicyForm,
-  policyQuickOptionsMap,
-  quickPolicyUi,
-  quickCreateCommon,
-  hasQuickPolicySourceOffer,
-  openQuickPolicyDialog,
-  cancelQuickPolicyDialog,
-  submitQuickPolicy,
-  onPolicyRelatedCreateRequested,
-} = policyQuickRuntime;
-
-const policyPresetServerReadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
-  auto: false,
-});
-const policyPresetServerWriteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
-  auto: false,
-});
-
-const rows = computed(() => policyStore.state.items);
-const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
-const policyActiveFilterCount = computed(() => policyStore.activeFilterCount);
-const policyListHydratingPreset = ref(false);
-let persistPolicyPresetStateToServer = () => Promise.resolve();
+const activeLocale = computed(() => authStore.locale || "tr");
 
 const {
-  POLICY_PRESET_STORAGE_KEY,
-  policyPresetKey,
-  policyCustomPresets,
-  policyPresetOptions,
-  canDeletePolicyPreset,
-  policyListSearchQuery,
-  policyListLocalFilters,
-  policyListActiveCount,
-  currentPolicyPresetPayload,
-  applyPolicyPreset,
-  onPolicyPresetChange,
-  onPolicyListFilterChange,
-  onPolicyListFilterReset,
-  savePolicyPreset,
-  deletePolicyPreset,
-} = usePolicyListFilters({
-  t,
-  localeCode,
   filters,
   pagination,
-  refreshPolicyList,
-  persistPolicyPresetStateToServer: () => persistPolicyPresetStateToServer(),
-});
-const {
-  hydratePolicyPresetStateFromServer,
-  persistPolicyPresetStateToServer: persistPolicyPresetStateToServerImpl,
-} = usePolicyListPresetSync({
-  presetKey: policyPresetKey,
-  customPresets: policyCustomPresets,
-  applyPolicyPreset,
-  policyPresetServerReadResource,
-  policyPresetServerWriteResource,
-});
-persistPolicyPresetStateToServer = persistPolicyPresetStateToServerImpl;
-const policyRuntime = usePolicyListRuntime({
-  t,
-  branchStore,
-  policyStore,
-  filters,
-  pagination,
-});
-const {
-  policyResource,
-  policyCountResource,
-  policyLoading,
-  policyListError,
-  totalPages,
-  hasNextPage,
-  startRow,
-  endRow,
-  isInitialLoading,
-  policyListPage,
-  policyListPageSize,
-  downloadPolicyExport,
-  focusPolicySearch,
-} = policyRuntime;
-refreshPolicyList = policyRuntime.refreshPolicyList;
-const {
-  policyListMappedRows,
-  policyListFilteredRows,
-  policyListTotalCount,
-  policyListTotalPages,
-  policyListPagedRows,
-  policyListRowsWithUrgency,
-  policySummary,
-} = usePolicyListTableData({
+  summary,
   rows,
-  policyStore,
-  policyListSearchQuery,
-  policyListLocalFilters,
-  localeCode,
-  policyListPageSize,
-});
-const {
-  openPolicyDetail,
-  policyIdentityFacts,
-  policyDetailsFacts,
-  policyPremiumFacts,
-  formatDate,
-  formatCurrency,
-  formatCount,
-} = usePolicyListActions({
-  router,
-  localeCode,
+  loading,
   t,
-});
+  reload,
+  setPage,
+  updateFilter,
+  openPolicy,
+} = usePolicyBoardRuntime({ activeLocale });
 
-const policyListColumns = [
-  { key: "name", label: "Poliçe No", width: "160px", type: "mono" },
-  { key: "insurance_company", label: "Sigorta Şirketi", width: "160px" },
-  { key: "branch", label: "Branş", width: "160px" },
-  { key: "status", label: "Durum", width: "100px", type: "status" },
-  { key: "customer_type_label", label: "Müşteri Türü", width: "130px" },
-  { key: "customer_tax_id", label: "TC/VNO", width: "140px", type: "mono" },
-  { key: "customer_label", label: "Müşteri Ad Soyad", width: "220px" },
-  { key: "customer_birth_date", label: "Doğum Tarihi", width: "120px", type: "date" },
-  { key: "carrier_policy_no", label: "Sigorta Şirketi Poliçe No", width: "190px", type: "mono" },
-  { key: "issue_date", label: "Tanzim Tarihi", width: "120px", type: "date" },
-  { key: "start_date", label: "Başlangıç Tarihi", width: "120px", type: "date" },
-  { key: "end_date", label: "Bitiş Tarihi", width: "120px", type: "date" },
-  { key: "remaining_days", label: "Kalan Gün", width: "100px", type: "urgency", align: "right" },
-  { key: "gross_premium", label: "Brüt Prim", width: "120px", type: "amount", align: "right" },
-  { key: "commission", label: "Komisyon", width: "110px", type: "amount", align: "right" },
-];
+const columns = computed(() => [
+  { key: "policy_no", label: t("policy_no"), width: "150px" },
+  { key: "customer", label: t("customer"), width: "200px" },
+  { key: "insurance_company", label: t("insurance_company"), width: "200px" },
+  { key: "branch", label: t("branch"), width: "150px" },
+  { key: "gross_premium", label: t("gross_premium"), width: "150px", align: "right" },
+  { key: "end_date", label: t("end_date"), width: "120px" },
+  { key: "status", label: t("status"), width: "120px" },
+]);
 
-const policyListFilterConfig = computed(() => {
-  const branchOptions = [...new Set(rows.value.map((row) => String(row.branch || "").trim()).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, localeCode.value))
-    .map((value) => ({ value, label: value }));
-  return [
-    {
-      key: "status",
-      label: "Durum",
-      options: [
-        { value: "active", label: "Aktif" },
-        { value: "draft", label: "Taslak" },
-        { value: "cancel", label: "İptal" },
-        { value: "waiting", label: "Bekliyor" },
-      ],
-    },
-    {
-      key: "branch",
-      label: "Branş",
-      options: branchOptions,
-    },
-  ];
-});
+const filterConfig = computed(() => [
+  {
+    key: "status",
+    label: t("status"),
+    options: [
+      { value: "", label: t("all") },
+      { value: "Active", label: t("status_active") },
+      { value: "Waiting", label: t("status_waiting") },
+      { value: "Cancelled", label: t("status_cancelled") },
+    ],
+  },
+]);
 
-applyPolicyPreset(policyPresetKey.value, { refresh: false });
-onMounted(() => {
-  void (async () => {
-    policyListHydratingPreset.value = true;
-    try {
-      await hydratePolicyPresetStateFromServer();
-    } finally {
-      policyListHydratingPreset.value = false;
-    }
-    await refreshPolicyList();
-  })();
-});
-watch(
-  () => pagination.pageLength,
-  () => {
-    if (policyListHydratingPreset.value) return;
-    pagination.page = 1;
-    void refreshPolicyList();
-  }
-);
-
-watch(
-  () => branchStore.selected,
-  () => {
-    pagination.page = 1;
-    void refreshPolicyList();
-  }
-);
-</script>
-
-<style scoped>
-.input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
+function formatCurrency(val, currency = "TRY") {
+  return new Intl.NumberFormat(activeLocale.value === "tr" ? "tr-TR" : "en-US", {
+    style: "currency",
+    currency: currency || "TRY",
+  }).format(Number(val || 0));
 }
-</style>
 
+function formatDate(val) {
+  if (!val) return "-";
+  return new Intl.DateTimeFormat(activeLocale.value === "tr" ? "tr-TR" : "en-US").format(new Date(val));
+}
+</script>

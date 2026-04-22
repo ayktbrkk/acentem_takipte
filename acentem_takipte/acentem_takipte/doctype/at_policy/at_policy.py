@@ -14,6 +14,9 @@ from acentem_takipte.acentem_takipte.policy_documents import (
 )
 from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.acentem_takipte.services.policy_360 import (
+    invalidate_policy_360_cache,
+)
 
 POLICY_SNAPSHOT_FIELDS = [
     "name",
@@ -44,6 +47,12 @@ class ATPolicy(Document):
         if self.name:
             return
         self.name = make_autoname("AT-POL-.YYYY.-.######")
+
+    def on_update(self):
+        invalidate_policy_360_cache(self.name)
+
+    def on_trash(self):
+        invalidate_policy_360_cache(self.name)
 
     def validate(self):
         self.policy_no = (self.policy_no or "").strip() or None

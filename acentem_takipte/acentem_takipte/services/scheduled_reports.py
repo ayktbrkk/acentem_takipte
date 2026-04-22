@@ -4,7 +4,59 @@ import json
 from typing import Any
 
 import frappe
-from frappe.utils import cint, getdate, nowdate
+from frappe.utils import cint, getdate, nowdate, flt
+
+
+def evaluate_report_alerts(rows: list[dict[str, Any]], alerts: list[dict[str, Any]]) -> bool:
+    if not alerts:
+        return True
+
+    results = []
+    for alert in alerts:
+        field = alert.get("field")
+        operator = alert.get("operator")
+        threshold = alert.get("value")
+        logic = alert.get("logic") or "any"
+
+        if not field or not operator:
+            continue
+
+        match_count = 0
+        for row in rows:
+            val = row.get(field)
+            if val is None:
+                continue
+            
+            # Basic comparison logic
+            is_match = False
+            try:
+                # Try numeric comparison
+                f_val = flt(val)
+                f_threshold = flt(threshold)
+                if operator == ">": is_match = f_val > f_threshold
+                elif operator == "<": is_match = f_val < f_threshold
+                elif operator == "==": is_match = f_val == f_threshold
+                elif operator == "!=": is_match = f_val != f_threshold
+            except (ValueError, TypeError):
+                # Fallback to string comparison
+                s_val = str(val).strip()
+                s_threshold = str(threshold).strip()
+                if operator == "==": is_match = s_val == s_threshold
+                elif operator == "!=": is_match = s_val != s_threshold
+                # >, < don't make much sense for non-numeric strings but we can do it
+                elif operator == ">": is_match = s_val > s_threshold
+                elif operator == "<": is_match = s_val < s_threshold
+
+            if is_match:
+                match_count += 1
+
+        if logic == "all":
+            results.append(match_count == len(rows) if rows else False)
+        else:
+            results.append(match_count > 0)
+
+    # Combined logic: All defined alerts must pass (AND between different alerts)
+    return all(results) if results else True
 
 from acentem_takipte.acentem_takipte.communication import enqueue_notification_draft
 from acentem_takipte.acentem_takipte.services.export_payload_utils import (
@@ -17,6 +69,7 @@ from acentem_takipte.acentem_takipte.services.report_exports import (
     build_report_title,
     render_report_pdf,
     render_report_xlsx,
+    render_report_html_summary,
 )
 from acentem_takipte.acentem_takipte.services.report_registry import (
     REPORT_DEFINITIONS,
@@ -136,6 +189,7 @@ def normalize_scheduled_report_config(payload: dict[str, Any]) -> dict[str, Any]
         "last_run_at": payload.get("last_run_at"),
         "last_status": _normalize_last_status(payload.get("last_status")),
         "last_summary": _coerce_summary(payload.get("last_summary")),
+        "alerts": payload.get("alerts") or [],
     }
 
 
@@ -164,6 +218,39 @@ def delete_scheduled_report_config(index: int) -> dict[str, int]:
         configs.pop(target_index)
         save_scheduled_report_configs(configs)
     return {"remaining": len(configs)}
+
+
+def get_scheduled_reports_timeline(days: int = 30) -> list[dict[str, Any]]:
+    from datetime import timedelta
+    configs = [c for c in load_scheduled_report_configs() if cint(c.get("enabled", 1))]
+    start_date = getdate(nowdate())
+    timeline = []
+
+    for i in range(days):
+        current_date = start_date + timedelta(days=i)
+        date_str = current_date.isoformat()
+        day_events = []
+
+        for config in configs:
+            if is_schedule_due(config, business_date=current_date):
+                report_key = str(config.get("report_key") or "").strip()
+                day_events.append({
+                    "report_key": report_key,
+                    "title": build_report_title(report_key, _normalize_locale(config.get("locale"))),
+                    "delivery_channel": _normalize_delivery_channel(config.get("delivery_channel")),
+                    "frequency": _normalize_frequency(config.get("frequency")),
+                    "format": _normalize_export_format(config.get("format")),
+                    "recipients": _normalize_recipients(config.get("recipients")),
+                })
+
+        if day_events:
+            timeline.append({
+                "date": date_str,
+                "events": day_events,
+                "count": len(day_events)
+            })
+
+    return timeline
 
 
 def is_schedule_due(
@@ -198,6 +285,7 @@ def dispatch_scheduled_reports(
     skipped_disabled = 0
     skipped_not_due = 0
     skipped_invalid = 0
+    skipped_alerts = 0
     queued_outboxes: list[str] = []
 
     changed = False
@@ -234,6 +322,23 @@ def dispatch_scheduled_reports(
             report_key, filters=filters, limit=max(cint(config.get("limit")) or 1000, 1)
         )
 
+        # Check Alerts
+        alerts = config.get("alerts") or []
+        if not evaluate_report_alerts(payload["rows"], alerts):
+            skipped_alerts += 1
+            _update_config_run_metadata(
+                config,
+                status="skipped",
+                summary={
+                    "sent": 0,
+                    "queued": 0,
+                    "reason": "alerts_not_met",
+                },
+                business_date=current_date,
+            )
+            changed = True
+            continue
+
         if export_format == "pdf":
             content = render_report_pdf(
                 report_key=report_key,
@@ -256,6 +361,16 @@ def dispatch_scheduled_reports(
         report_title = build_report_title(
             report_key, _normalize_locale(config.get("locale"))
         )
+        
+        # Build HTML Summary
+        html_message = render_report_html_summary(
+            report_key=report_key,
+            columns=payload["columns"],
+            rows=payload["rows"],
+            filters=payload["filters"],
+            locale=_normalize_locale(config.get("locale")),
+        )
+
         if delivery_channel == "notification_outbox":
             queue_result = _queue_scheduled_report_delivery(
                 report_key=report_key,
@@ -286,7 +401,7 @@ def dispatch_scheduled_reports(
         frappe.sendmail(
             recipients=recipients,
             subject=f"{report_title} - {current_date.isoformat()}",
-            message=f"{report_title} ektedir.",
+            message=html_message,
             attachments=[{"fname": filename, "fcontent": content}],
             delayed=False,
         )
@@ -310,6 +425,7 @@ def dispatch_scheduled_reports(
         "skipped_disabled": skipped_disabled,
         "skipped_not_due": skipped_not_due,
         "skipped_invalid": skipped_invalid,
+        "skipped_alerts": skipped_alerts,
         "outboxes": queued_outboxes,
     }
     metric_values = {key: value for key, value in summary.items() if key != "outboxes"}
@@ -501,4 +617,5 @@ def _sanitize_schedule_config(value: dict[str, Any]) -> dict[str, Any]:
         "last_run_at": value.get("last_run_at"),
         "last_status": _normalize_last_status(value.get("last_status")),
         "last_summary": _coerce_summary(value.get("last_summary")),
+        "alerts": value.get("alerts") or [],
     }

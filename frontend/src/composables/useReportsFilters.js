@@ -42,8 +42,9 @@ export function useReportsFilters({
   router,
   authStore,
   branchStore,
-  rows,
   refresh,
+  visibleColumnKeys,
+  groupByColumn,
 }) {
   const filters = reactive({
     reportKey: props.initialReportKey || "policy_list",
@@ -305,7 +306,11 @@ export function useReportsFilters({
       presetStorageKey: "at:reports:preset",
       presetListStorageKey: "at:reports:preset-list",
       t,
-      getCurrentPayload: buildFiltersPayload,
+      getCurrentPayload: () => ({
+        ...filters,
+        visibleColumnKeys: unref(visibleColumnKeys),
+        groupByColumn: unref(groupByColumn),
+      }),
       setFilterStateFromPayload: (payload) => {
         filters.reportKey = String(payload?.reportKey || "policy_list");
         filters.fromDate = String(payload?.fromDate || "");
@@ -315,6 +320,13 @@ export function useReportsFilters({
         filters.salesEntity = String(payload?.salesEntity || "");
         filters.status = String(payload?.status || "");
         filters.granularity = String(payload?.granularity || "");
+        
+        if (Array.isArray(payload?.visibleColumnKeys)) {
+          visibleColumnKeys.value = [...payload.visibleColumnKeys];
+        }
+        if (typeof payload?.groupByColumn === "string") {
+          groupByColumn.value = payload.groupByColumn;
+        }
       },
       resetFilterState: () => {
         filters.reportKey = "policy_list";
@@ -325,6 +337,8 @@ export function useReportsFilters({
         filters.salesEntity = "";
         filters.status = "";
         filters.granularity = "";
+        visibleColumnKeys.value = [];
+        groupByColumn.value = "";
       },
       refresh,
       getSortLocale: () => localeCode.value,

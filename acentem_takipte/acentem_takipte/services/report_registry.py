@@ -50,6 +50,24 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "total_commission",
         ],
         "rows_fn": get_policy_list_report_rows,
+        "charts": [
+            {
+                "id": "premium_by_branch",
+                "title": {"tr": "Branş Bazlı Brüt Prim", "en": "Gross Premium by Branch"},
+                "type": "bar",
+                "label_field": "branch",
+                "value_field": "gross_premium",
+                "aggregate": "sum",
+            },
+            {
+                "id": "premium_trend",
+                "title": {"tr": "Prim Trendi", "en": "Premium Trend"},
+                "type": "line",
+                "label_field": "period_label",
+                "value_field": "total_gross_premium",
+                "condition": "granularity",
+            }
+        ]
     },
     "payment_status": {
         "permission_doctype": "AT Payment",
@@ -69,6 +87,16 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "reference_no",
         ],
         "rows_fn": get_payment_status_report_rows,
+        "charts": [
+            {
+                "id": "payment_status_distribution",
+                "title": {"tr": "Ödeme Durumu Dağılımı", "en": "Payment Status Distribution"},
+                "type": "pie",
+                "label_field": "status",
+                "value_field": "amount",
+                "aggregate": "sum",
+            }
+        ]
     },
     "renewal_performance": {
         "permission_doctype": "AT Renewal Task",
@@ -90,6 +118,16 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "unique_key",
         ],
         "rows_fn": get_renewal_performance_report_rows,
+        "charts": [
+            {
+                "id": "renewal_status_pie",
+                "title": {"tr": "Yenileme Durumları", "en": "Renewal Statuses"},
+                "type": "pie",
+                "label_field": "status",
+                "value_field": "name",
+                "aggregate": "count",
+            }
+        ]
     },
     "claim_loss_ratio": {
         "permission_doctype": "AT Claim",
@@ -109,6 +147,16 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "loss_ratio_percent",
         ],
         "rows_fn": get_claim_loss_ratio_report_rows,
+        "charts": [
+            {
+                "id": "loss_ratio_by_branch",
+                "title": {"tr": "Branş Bazlı Hasar Prim Oranı", "en": "Loss Ratio by Branch"},
+                "type": "bar",
+                "label_field": "branch",
+                "value_field": "loss_ratio_percent",
+                "aggregate": "avg",
+            }
+        ]
     },
     "agent_performance": {
         "permission_doctype": "AT Policy",
@@ -128,6 +176,16 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "renewal_success_rate",
         ],
         "rows_fn": get_agent_performance_report_rows,
+        "charts": [
+            {
+                "id": "premium_by_agent",
+                "title": {"tr": "Acente Bazlı Prim", "en": "Premium by Agent"},
+                "type": "bar",
+                "label_field": "sales_entity",
+                "value_field": "total_gross_premium",
+                "aggregate": "sum",
+            }
+        ]
     },
     "customer_segmentation": {
         "permission_doctype": "AT Customer",
@@ -147,6 +205,16 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "premium_segment",
         ],
         "rows_fn": get_customer_segmentation_report_rows,
+        "charts": [
+            {
+                "id": "segment_distribution",
+                "title": {"tr": "Premium Segment Dağılımı", "en": "Premium Segment Distribution"},
+                "type": "pie",
+                "label_field": "premium_segment",
+                "value_field": "name",
+                "aggregate": "count",
+            }
+        ]
     },
     "communication_operations": {
         "permission_doctype": "AT Campaign",
@@ -167,6 +235,16 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "failed_outbox_count",
         ],
         "rows_fn": get_communication_operations_report_rows,
+        "charts": [
+            {
+                "id": "campaign_sent_stats",
+                "title": {"tr": "Kampanya Gönderim İstatistikleri", "en": "Campaign Send Stats"},
+                "type": "bar",
+                "label_field": "campaign_name",
+                "value_field": "sent_count",
+                "aggregate": "sum",
+            }
+        ]
     },
     "reconciliation_operations": {
         "permission_doctype": "AT Reconciliation Item",
@@ -186,6 +264,16 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "needs_reconciliation",
         ],
         "rows_fn": get_reconciliation_operations_report_rows,
+        "charts": [
+            {
+                "id": "mismatch_types",
+                "title": {"tr": "Uyumsuzluk Tipleri", "en": "Mismatch Types"},
+                "type": "pie",
+                "label_field": "mismatch_type",
+                "value_field": "name",
+                "aggregate": "count",
+            }
+        ]
     },
     "claims_operations": {
         "permission_doctype": "AT Claim",
@@ -211,6 +299,16 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "failed_outbox_count",
         ],
         "rows_fn": get_claims_operations_report_rows,
+        "charts": [
+            {
+                "id": "claims_status_distribution",
+                "title": {"tr": "Hasar Durum Dağılımı", "en": "Claims Status Distribution"},
+                "type": "pie",
+                "label_field": "claim_status",
+                "value_field": "name",
+                "aggregate": "count",
+            }
+        ]
     },
 }
 

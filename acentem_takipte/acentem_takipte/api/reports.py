@@ -21,6 +21,7 @@ from acentem_takipte.acentem_takipte.services.reports_runtime import (
     build_report_download_response,
     build_safe_report_payload,
     get_scheduled_report_config_summary,
+    get_scheduled_reports_timeline as get_timeline_service,
     remove_scheduled_report,
     save_scheduled_report,
 )
@@ -175,6 +176,13 @@ def remove_scheduled_report_config(index: int) -> dict:
     assert_post_request("Only POST requests are allowed for scheduled report changes.")
     assert_roles("System Manager", "Administrator", message="You do not have permission to manage scheduled reports.")
     return _coerce_scheduled_mutation_payload(remove_scheduled_report(_coerce_index(index) or 0))
+
+
+@frappe.whitelist()
+def get_scheduled_reports_timeline(days: int = 30) -> list[dict[str, Any]]:
+    assert_authenticated()
+    assert_roles("System Manager", "Administrator", message="You do not have permission to view report timelines.")
+    return get_timeline_service(days=max(cint(days), 1))
 
 
 def _respond_with_report_file(

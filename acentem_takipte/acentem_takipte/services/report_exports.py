@@ -164,6 +164,89 @@ def render_tabular_xlsx(
     return buffer.getvalue()
 
 
+def render_report_html_summary(
+    *,
+    report_key: str,
+    columns: list[str],
+    rows: list[dict[str, Any]],
+    filters: dict[str, Any],
+    locale: str = "en",
+) -> str:
+    safe_title = build_report_title(report_key, locale)
+    safe_columns = _coerce_columns(columns)
+    safe_rows = _coerce_rows(rows)
+    safe_filters = _coerce_filters(filters)
+    
+    # We only show top 20 rows in HTML summary to keep it readable
+    preview_rows = safe_rows[:20]
+    has_more = len(safe_rows) > 20
+
+    return frappe.render_template(
+        """
+        <div style="font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #1e293b; max-width: 800px; margin: 0 auto; background: #f8fafc; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0;">
+          <div style="background: #ffffff; padding: 24px; border-bottom: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">{{ title }}</h1>
+              <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase;">{{ locale|upper }}</span>
+            </div>
+            <p style="margin: 8px 0 0 0; font-size: 13px; color: #64748b;">{{ date_label }}: <strong>{{ now }}</strong></p>
+          </div>
+          
+          <div style="padding: 24px;">
+            <div style="background: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+              <h2 style="margin: 0 0 8px 0; font-size: 12px; font-weight: 700; color: #1e40af; text-transform: uppercase; letter-spacing: 0.05em;">{{ filters_label }}</h2>
+              <div style="font-size: 13px; color: #1e3a8a; line-height: 1.5;">{{ filters_text }}</div>
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                    {% for col in columns[:6] %}
+                    <th style="padding: 12px 16px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">{{ col }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in rows %}
+                  <tr style="border-bottom: 1px solid #f1f5f9;">
+                    {% for col in columns[:6] %}
+                    <td style="padding: 12px 16px; font-size: 13px; color: #334155;">{{ row.get(col, '-') }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+              {% if has_more %}
+              <div style="padding: 12px; text-align: center; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; font-style: italic;">
+                ... {{ total_count }} {{ records_total_label }} ...
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div style="padding: 16px 24px; background: #f1f5f9; text-align: center; font-size: 11px; color: #94a3b8;">
+            {{ footer_text }}
+          </div>
+        </div>
+        """,
+        {
+            "title": safe_title,
+            "columns": safe_columns,
+            "rows": preview_rows,
+            "has_more": has_more,
+            "total_count": len(safe_rows),
+            "filters_text": str(safe_filters),
+            "now": datetime.now().strftime("%d.%m.%Y %H:%M"),
+            "locale": locale,
+            "date_label": translate_text("Date", locale),
+            "filters_label": translate_text("Active Filters", locale),
+            "records_total_label": translate_text("records in total", locale),
+            "footer_text": "Acentem Takipte - Business Intelligence Engine",
+        },
+    )
+
+
 def render_report_xlsx(
     *,
     report_key: str,

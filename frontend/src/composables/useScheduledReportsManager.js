@@ -65,6 +65,22 @@ export function useScheduledReportsManager(props, emit) {
       formatError: "Geçerli format seçilmelidir.",
       deliveryChannelError: "Teslim kanalı geçersiz.",
       removeConfirm: "Bu zamanlanmış rapor kaydını silmek istediğinize emin misiniz?",
+      calendarView: "Takvim",
+      listView: "Liste",
+      calendarTitle: "Gönderim Takvimi",
+      calendarSubtitle: "Önümüzdeki 30 günün rapor projeksiyonu",
+      next7Days: "7 Gün",
+      next14Days: "14 Gün",
+      next30Days: "30 Gün",
+      noEvents: "Planlanmış gönderim bulunamadı.",
+      alerts: "Akıllı Uyarılar (Opsiyonel)",
+      addAlert: "Uyarı Ekle",
+      alertField: "Alan",
+      alertOp: "Operatör",
+      alertVal: "Eşik Değer",
+      alertLogic: "Mantık",
+      alertLogicAny: "En az bir satır eşleşirse",
+      alertLogicAll: "Tüm satırlar eşleşirse",
     },
     en: {
       title: "Scheduled Reports",
@@ -116,6 +132,22 @@ export function useScheduledReportsManager(props, emit) {
       reportKeyError: "Please select a report.",
       formatError: "Select a valid format.",
       deliveryChannelError: "Invalid delivery channel.",
+      calendarView: "Calendar",
+      listView: "List",
+      calendarTitle: "Delivery Calendar",
+      calendarSubtitle: "Report projections for the next 30 days",
+      next7Days: "7 Days",
+      next14Days: "14 Days",
+      next30Days: "30 Days",
+      noEvents: "No scheduled deliveries found.",
+      alerts: "Smart Alerts (Optional)",
+      addAlert: "Add Alert",
+      alertField: "Field",
+      alertOp: "Operator",
+      alertVal: "Threshold",
+      alertLogic: "Logic",
+      alertLogicAny: "If any row matches",
+      alertLogicAll: "If all rows match",
     },
   };
 
@@ -138,6 +170,7 @@ export function useScheduledReportsManager(props, emit) {
     filterStatus: "",
     filterFromDate: "",
     filterToDate: "",
+    alerts: [],
   });
   const formError = ref("");
   const recipientEmailRegex = /^\S+@\S+\.\S+$/;
@@ -187,6 +220,7 @@ export function useScheduledReportsManager(props, emit) {
     form.filterStatus = "";
     form.filterFromDate = "";
     form.filterToDate = "";
+    form.alerts = [];
     formError.value = "";
   }
 
@@ -217,7 +251,21 @@ export function useScheduledReportsManager(props, emit) {
     form.filterStatus = String(item.filters?.status || "");
     form.filterFromDate = String(item.filters?.from_date || "");
     form.filterToDate = String(item.filters?.to_date || "");
+    form.alerts = Array.isArray(item.alerts) ? JSON.parse(JSON.stringify(item.alerts)) : [];
     formError.value = "";
+  }
+
+  function addAlert() {
+    form.alerts.push({
+      field: "",
+      operator: ">",
+      value: "",
+      logic: "any"
+    });
+  }
+
+  function removeAlert(idx) {
+    form.alerts.splice(idx, 1);
   }
 
   function parseRecipients() {
@@ -343,6 +391,7 @@ export function useScheduledReportsManager(props, emit) {
           limit: Number(form.limit || 1000),
           weekday: Number(form.weekday || 0),
           day_of_month: Number(form.dayOfMonth || 1),
+          alerts: form.alerts.filter(a => a.field && a.value)
         },
       });
       resetForm();
@@ -384,5 +433,7 @@ export function useScheduledReportsManager(props, emit) {
     formatLastRun,
     lastStatusLabel,
     formatFilters,
+    addAlert,
+    removeAlert,
   };
 }

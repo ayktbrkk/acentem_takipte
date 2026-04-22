@@ -1,154 +1,172 @@
-app_name = "acentem_takipte"
-app_title = "Acentem Takipte"
-app_publisher = "Acentem Takipte"
-app_description = "Insurance agency CRM and policy management"
-app_email = "support@acentemtakipte.com"
-app_license = "MIT"
-translated_languages = ["en", "tr"]
+import frappe
+from frappe import _
 
-# Sentry initialization for backend
-try:
-    from acentem_takipte.acentem_takipte.utils.sentry import init_sentry
-    init_sentry()
-except Exception:
-    pass
-
-# /at SPA assets are injected dynamically in www/at.py from latest Vite manifest.
-app_include_js = []
-app_include_css = []
-
-role_home_page = {
-    "Manager": "/at",
-    "Agent": "/at",
-    "Accountant": "/at",
-    "System Manager": "/at",
-    "Administrator": "/at",
-}
-
-doctype_js = {
-    "AT Lead": "public/js/at_lead.js",
-    "AT Offer": "public/js/at_offer.js",
-    "AT Policy": "public/js/at_policy.js",
-    "AT Policy Endorsement": "public/js/at_policy_endorsement.js",
-    "AT Customer": "public/js/at_customer.js",
-    "AT Claim": "public/js/at_claim.js",
-    "AT Payment": "public/js/at_payment.js",
-    "AT Renewal Task": "public/js/at_renewal_task.js",
-    "AT Office Branch": "public/js/at_office_branch.js",
-}
-
-doctype_list_js = {
-    "AT Lead": "public/js/at_listviews.js",
-    "AT Offer": "public/js/at_listviews.js",
-    "AT Policy": "public/js/at_listviews.js",
-    "AT Customer": "public/js/at_listviews.js",
-    "AT Claim": "public/js/at_listviews.js",
-    "AT Payment": "public/js/at_listviews.js",
-    "AT Renewal Task": "public/js/at_listviews.js",
-}
-
-doctype_tree_js = {
-    "AT Office Branch": "public/js/at_office_branch_tree.js",
-}
-
-after_install = "acentem_takipte.acentem_takipte.setup_utils.after_install"
-after_migrate = "acentem_takipte.acentem_takipte.setup_utils.after_migrate"
-on_session_creation = "acentem_takipte.acentem_takipte.setup_utils.precompute_user_scope_on_session_creation"
-on_logout = (
-    "acentem_takipte.acentem_takipte.setup_utils.invalidate_user_scope_on_logout"
+from acentem_takipte.acentem_takipte.services.customer_360 import (
+    invalidate_customer_from_doc_event,
+)
+from acentem_takipte.acentem_takipte.services.offer_360 import (
+    invalidate_offer_360_cache,
+)
+from acentem_takipte.acentem_takipte.services.lead_360 import (
+    invalidate_lead_360_cache,
 )
 
-website_route_rules = [
-    {"from_route": "/at", "to_route": "at"},
-    {"from_route": "/at/<path:app_path>", "to_route": "at"},
-]
+app_name = "acentem_takipte"
+app_title = "Acentem Takipte"
+app_publisher = "ayktbrkk"
+app_description = "Acentem Takipte Core Application"
+app_email = "ayktbrkk@gmail.com"
+app_license = "mit"
 
-permission_query_conditions = {
-    "AT Customer": "acentem_takipte.acentem_takipte.doctype.at_customer.at_customer.get_permission_query_conditions",
-    "AT Lead": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_lead_permission_query_conditions",
-    "AT Offer": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_offer_permission_query_conditions",
-    "AT Policy": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_policy_permission_query_conditions",
-    "AT Policy Endorsement": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_policy_endorsement_permission_query_conditions",
-    "AT Payment": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_payment_permission_query_conditions",
-    "AT Claim": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_claim_permission_query_conditions",
-    "AT Activity": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_activity_permission_query_conditions",
-    "AT Task": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_task_permission_query_conditions",
-    "AT Reminder": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_reminder_permission_query_conditions",
-    "AT Ownership Assignment": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_ownership_assignment_permission_query_conditions",
-    "AT Renewal Task": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_renewal_task_permission_query_conditions",
-    "AT Accounting Entry": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_accounting_entry_permission_query_conditions",
-    "AT Reconciliation Item": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_reconciliation_item_permission_query_conditions",
-    "AT Notification Draft": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_notification_draft_permission_query_conditions",
-    "AT Notification Outbox": "acentem_takipte.acentem_takipte.doctype.branch_permissions.get_notification_outbox_permission_query_conditions",
-}
+# Apps
+# ------------------
 
-has_permission = {
-    "AT Customer": "acentem_takipte.acentem_takipte.doctype.at_customer.at_customer.has_permission",
-    "AT Lead": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_lead_permission",
-    "AT Offer": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_offer_permission",
-    "AT Policy": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_policy_permission",
-    "AT Policy Endorsement": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_policy_endorsement_permission",
-    "AT Payment": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_payment_permission",
-    "AT Claim": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_claim_permission",
-    "AT Activity": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_activity_permission",
-    "AT Task": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_task_permission",
-    "AT Reminder": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_reminder_permission",
-    "AT Ownership Assignment": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_ownership_assignment_permission",
-    "AT Renewal Task": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_renewal_task_permission",
-    "AT Accounting Entry": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_accounting_entry_permission",
-    "AT Reconciliation Item": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_reconciliation_item_permission",
-    "AT Notification Draft": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_notification_draft_permission",
-    "AT Notification Outbox": "acentem_takipte.acentem_takipte.doctype.branch_permissions.has_notification_outbox_permission",
-}
+# required_apps = []
+
+# Each item in the list will be added as a top-level menu in the desk
+# desk_menus = [
+# 	{
+# 		"title": "Acentem Takipte",
+# 		"color": "blue",
+# 		"icon": "octicon octicon-briefcase",
+# 		"type": "module",
+# 		"label": "Acentem Takipte"
+# 	}
+# ]
+
+# Each item in the list will be added as a shortcut in the desk for a specific doctype
+# desk_shortcuts = [
+# 	{
+# 		"title": "Acentem Takipte",
+# 		"target": "/app/acentem-takipte",
+# 		"icon": "octicon octicon-briefcase",
+# 		"type": "module",
+# 		"label": "Acentem Takipte"
+# 	}
+# ]
+
+# website_generators = ["AT Policy", "AT Customer"]
+
+# Includes in <head>
+# ------------------
+
+# include_js = "/assets/acentem_takipte/js/acentem_takipte.js"
+# include_css = "/assets/acentem_takipte/css/acentem_takipte.css"
+
+# include_js = "acentem_takipte.bundle.js"
+
+# Website user home page
+# website_user_home_page = "at"
+
+# Translation
+# ------------------
+
+# Each item in the list will be added as a translation source
+# translation_sources = ["acentem_takipte/translations"]
+
+# Each item in the list will be added as a translation file
+# translation_files = ["acentem_takipte/translations/tr.csv"]
+
+# Generators
+# ----------
+
+# before_install = "acentem_takipte.acentem_takipte.api.smoke.before_install"
+# after_install = "acentem_takipte.acentem_takipte.api.smoke.after_install"
+
+# Integration Setup
+# ------------------
+
+# after_migrate = "acentem_takipte.acentem_takipte.api.smoke.after_migrate"
+
+# Document Events
+# ---------------
 
 doc_events = {
-    "AT User Branch Access": {
-        "on_update": "acentem_takipte.acentem_takipte.services.cache_precomputation.invalidate_user_scope_from_assignment_doc",
-        "on_trash": "acentem_takipte.acentem_takipte.services.cache_precomputation.invalidate_user_scope_from_assignment_doc",
-    },
-    "AT User Sales Entity Access": {
-        "on_update": "acentem_takipte.acentem_takipte.services.cache_precomputation.invalidate_user_scope_from_assignment_doc",
-        "on_trash": "acentem_takipte.acentem_takipte.services.cache_precomputation.invalidate_user_scope_from_assignment_doc",
-    },
-    "AT Office Branch": {
-        "on_update": "acentem_takipte.acentem_takipte.services.sales_entities.handle_office_branch_update",
-    },
-    "AT Sales Entity": {
-        "on_update": "acentem_takipte.acentem_takipte.services.sales_entities.handle_sales_entity_update",
-    },
-    "User": {
-        "on_update": "acentem_takipte.acentem_takipte.services.sales_entities.handle_user_update",
-    },
     "AT Policy": {
         "after_insert": [
             "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
             "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
             "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
         ],
         "on_update": [
             "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
             "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
             "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
         ],
         "on_trash": [
             "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
             "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
+            "acentem_takipte.acentem_takipte.services.customer_360.invalidate_customer_from_doc_event",
         ],
+    },
+    "AT Lead": {
+        "after_insert": [
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+            "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_lead_from_doc_event",
+        ],
+        "on_update": [
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+            "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_lead_from_doc_event",
+        ],
+        "on_trash": [
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+            "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_lead_from_doc_event",
+        ],
+    },
+    "AT Policy Endorsement": {
+        "on_update": "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
+        "on_trash": "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
+    },
+    "AT Policy Snapshot": {
+        "on_update": "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
+        "on_trash": "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
+    },
+    "AT Document": {
+        "on_update": "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
+        "on_trash": "acentem_takipte.acentem_takipte.services.policy_360.invalidate_from_doc_event",
     },
     "AT Payment": {
         "after_insert": [
-            "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
-            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
-            "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_policy_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_customer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_offer_from_doc_event",
         ],
         "on_update": [
-            "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
-            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
-            "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_policy_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_customer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_offer_from_doc_event",
         ],
-        "on_trash": [
-            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
-            "acentem_takipte.acentem_takipte.realtime.on_record_change",
+    },
+    "AT Renewal Task": {
+        "on_update": [
+            "acentem_takipte.acentem_takipte.hooks.invalidate_policy_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_customer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_offer_from_doc_event",
+        ],
+    },
+    "Comment": {
+        "after_insert": [
+            "acentem_takipte.acentem_takipte.hooks.invalidate_policy_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_customer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_offer_from_doc_event",
+        ],
+    },
+    "Communication": {
+        "on_update": [
+            "acentem_takipte.acentem_takipte.hooks.invalidate_policy_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_customer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_offer_from_doc_event",
+        ],
+        "after_insert": [
+            "acentem_takipte.acentem_takipte.hooks.invalidate_policy_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_customer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_offer_from_doc_event",
         ],
     },
     "AT Claim": {
@@ -156,34 +174,42 @@ doc_events = {
             "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
             "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
             "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.services.customer_360.invalidate_customer_from_doc_event",
         ],
         "on_update": [
             "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
             "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
             "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.services.customer_360.invalidate_customer_from_doc_event",
         ],
         "on_trash": [
             "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
             "acentem_takipte.acentem_takipte.realtime.on_record_change",
+            "acentem_takipte.acentem_takipte.services.customer_360.invalidate_customer_from_doc_event",
         ],
     },
-    # audit(perf/P-06): Smart cache invalidation hooks for dashboard data freshness
     "AT Lead": {
         "after_insert": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
         "on_update": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
         "on_trash": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
     },
     "AT Offer": {
-        "after_insert": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
-        "on_update": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
-        "on_trash": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
+        "on_update": [
+            "acentem_takipte.acentem_takipte.hooks.invalidate_offer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_customer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_lead_from_doc_event",
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+            "acentem_takipte.acentem_takipte.realtime.on_record_change",
+        ],
+        "on_trash": [
+            "acentem_takipte.acentem_takipte.hooks.invalidate_offer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_customer_from_doc_event",
+            "acentem_takipte.acentem_takipte.hooks.invalidate_lead_from_doc_event",
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+            "acentem_takipte.acentem_takipte.realtime.on_record_change",
+        ],
     },
     "AT Customer": {
-        "after_insert": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
-        "on_update": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
-        "on_trash": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
-    },
-    "AT Renewal Task": {
         "after_insert": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
         "on_update": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
         "on_trash": ["acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache", "acentem_takipte.acentem_takipte.realtime.on_record_change"],
@@ -202,15 +228,6 @@ doc_events = {
         "after_insert": "acentem_takipte.acentem_takipte.realtime.on_record_change",
         "on_update": "acentem_takipte.acentem_takipte.realtime.on_record_change",
         "on_trash": "acentem_takipte.acentem_takipte.realtime.on_record_change",
-    },
-    "AT Accounting Entry": {
-        "after_insert": "acentem_takipte.acentem_takipte.realtime.on_record_change",
-        "on_update": "acentem_takipte.acentem_takipte.realtime.on_record_change",
-        "on_trash": "acentem_takipte.acentem_takipte.realtime.on_record_change",
-    },
-    "AT Notification Outbox": {
-        "after_insert": "acentem_takipte.acentem_takipte.realtime.on_record_change",
-        "on_update": "acentem_takipte.acentem_takipte.realtime.on_record_change",
     },
 }
 
@@ -237,3 +254,26 @@ scheduler_events = {
         "acentem_takipte.acentem_takipte.services.break_glass.run_break_glass_audit_monitor",
     ],
 }
+
+def invalidate_policy_from_doc_event(doc, method=None):
+    from acentem_takipte.acentem_takipte.services.policy_360 import invalidate_policy_360_cache
+    if doc.doctype == "AT Policy":
+        invalidate_policy_360_cache(doc.name)
+    elif hasattr(doc, "policy") and doc.policy:
+        invalidate_policy_360_cache(doc.policy)
+
+def invalidate_offer_from_doc_event(doc, method=None):
+    if doc.doctype == "AT Offer":
+        invalidate_offer_360_cache(doc.name)
+    elif hasattr(doc, "offer") and doc.offer:
+        invalidate_offer_360_cache(doc.offer)
+    elif doc.doctype in ["Communication", "Comment"] and doc.reference_doctype == "AT Offer":
+        invalidate_offer_360_cache(doc.reference_name)
+
+def invalidate_lead_from_doc_event(doc, method=None):
+    if doc.doctype == "AT Lead":
+        invalidate_lead_360_cache(doc.name)
+    elif doc.doctype == "AT Offer" and doc.source_lead:
+        invalidate_lead_360_cache(doc.source_lead)
+    elif doc.doctype in ["Communication", "Comment"] and doc.reference_doctype == "AT Lead":
+        invalidate_lead_360_cache(doc.reference_name)

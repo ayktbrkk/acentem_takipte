@@ -1,65 +1,56 @@
 <template>
-  <div class="space-y-4">
-    <div v-if="snapshotSummaryCards.length" class="grid grid-cols-1 gap-4 md:grid-cols-4">
-      <article v-for="card in snapshotSummaryCards" :key="card.key" class="mini-metric">
-        <p class="mini-metric-label">{{ card.label }}</p>
-        <p class="mini-metric-value">{{ card.value }}</p>
-        <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-      </article>
-    </div>
-
-    <div v-if="reminderSummaryCards.length" class="grid grid-cols-1 gap-4 md:grid-cols-4">
-      <article v-for="card in reminderSummaryCards" :key="card.key" class="mini-metric">
-        <p class="mini-metric-label">{{ card.label }}</p>
-        <p class="mini-metric-value">{{ card.value }}</p>
-        <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-      </article>
-    </div>
-
-    <div v-if="accessLogSummaryCards.length" class="grid grid-cols-1 gap-4 md:grid-cols-4">
-      <article v-for="card in accessLogSummaryCards" :key="card.key" class="mini-metric">
-        <p class="mini-metric-label">{{ card.label }}</p>
-        <p class="mini-metric-value">{{ card.value }}</p>
-        <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-      </article>
-    </div>
-
-    <div v-if="fileSummaryCards.length" class="grid grid-cols-1 gap-4 md:grid-cols-4">
-      <article v-for="card in fileSummaryCards" :key="card.key" class="mini-metric">
-        <p class="mini-metric-label">{{ card.label }}</p>
-        <p class="mini-metric-value">{{ card.value }}</p>
-        <p class="mt-1 text-xs text-slate-500">{{ card.hint }}</p>
-      </article>
-    </div>
-
-    <article v-if="snapshotTrendRows.length" class="surface-card rounded-2xl p-5">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <p class="text-xs font-semibold tracking-wide text-slate-500">{{ snapshotTrendTitle }}</p>
-          <p class="text-sm text-slate-500">{{ snapshotTrendHint }}</p>
-        </div>
-        <span class="text-xs text-slate-400">{{ showingLabel }} {{ snapshotTrendRows.length }}</span>
+  <div class="space-y-6">
+    <!-- Combined Summary Cards -->
+    <div v-if="allCards.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div 
+        v-for="card in allCards" 
+        :key="card.key" 
+        class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center transition-all hover:shadow-md"
+      >
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ card.label }}</p>
+        <p class="text-2xl font-black text-slate-900">{{ card.value }}</p>
+        <p v-if="card.hint" class="mt-1 text-[10px] text-slate-400 font-medium">{{ card.hint }}</p>
       </div>
-      <div class="mt-4 grid gap-3 md:grid-cols-3">
-        <article
+    </div>
+
+    <!-- Trend Section -->
+    <SectionPanel 
+      v-if="snapshotTrendRows.length" 
+      :title="snapshotTrendTitle" 
+      panel-class="surface-card rounded-2xl p-5"
+    >
+      <div class="grid gap-4 md:grid-cols-3">
+        <div
           v-for="row in snapshotTrendRows"
           :key="row.snapshotDate"
-          class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+          class="rounded-xl border border-slate-100 bg-slate-50/50 p-4"
         >
-          <p class="text-sm font-semibold text-slate-900">{{ row.snapshotDateLabel }}</p>
-          <div class="mt-2 space-y-1 text-xs text-slate-600">
-            <p>{{ totalSnapshotsLabel }}: {{ row.total }}</p>
-            <p>{{ averageScoreLabel }}: {{ row.averageScore }}</p>
-            <p>{{ highRiskSnapshotsLabel }}: {{ row.highRisk }}</p>
+          <p class="text-sm font-bold text-slate-900 mb-3">{{ row.snapshotDateLabel }}</p>
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500">{{ totalSnapshotsLabel }}</span>
+              <span class="font-bold text-slate-700">{{ row.total }}</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500">{{ averageScoreLabel }}</span>
+              <span class="font-bold text-slate-700">{{ row.averageScore }}</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500">{{ highRiskSnapshotsLabel }}</span>
+              <span class="font-bold text-rose-600">{{ row.highRisk }}</span>
+            </div>
           </div>
-        </article>
+        </div>
       </div>
-    </article>
+    </SectionPanel>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from "vue";
+import SectionPanel from "../app-shell/SectionPanel.vue";
+
+const props = defineProps({
   snapshotSummaryCards: { type: Array, default: () => [] },
   reminderSummaryCards: { type: Array, default: () => [] },
   accessLogSummaryCards: { type: Array, default: () => [] },
@@ -72,4 +63,11 @@ defineProps({
   averageScoreLabel: { type: String, default: "" },
   highRiskSnapshotsLabel: { type: String, default: "" },
 });
+
+const allCards = computed(() => [
+  ...props.snapshotSummaryCards,
+  ...props.reminderSummaryCards,
+  ...props.accessLogSummaryCards,
+  ...props.fileSummaryCards,
+]);
 </script>
