@@ -34,7 +34,8 @@
    "fieldtype": "Link",
    "label": "Customer",
    "options": "AT Customer",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "office_branch",
@@ -66,7 +67,8 @@
    "fieldname": "renewal_date",
    "fieldtype": "Date",
    "label": "Renewal Date",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "due_date",
@@ -80,7 +82,8 @@
    "fieldtype": "Select",
    "label": "Status",
    "options": "Open\nIn Progress\nDone\nCancelled",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "lost_reason_code",

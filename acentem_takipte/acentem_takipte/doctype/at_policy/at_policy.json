@@ -36,7 +36,8 @@
    "fieldtype": "Link",
    "label": "Customer",
    "options": "AT Customer",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "office_branch",
@@ -104,7 +105,8 @@
    "fieldtype": "Select",
    "label": "Status",
    "options": "IPT\nKYT\nActive",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "issue_date",
@@ -122,7 +124,8 @@
    "fieldname": "end_date",
    "fieldtype": "Date",
    "label": "End Date",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "default": "TRY",
