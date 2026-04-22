@@ -1440,7 +1440,42 @@ watch(
   { immediate: true }
 );
 
+const selectedFilterValues = computed(() => {
+  return unref(filterStore.activeFilters);
+});
+
+let recordChangeHandler = null;
+
+function bindRecordRealtimeListener() {
+  const realtime = window?.frappe?.realtime;
+  if (!realtime || typeof realtime.on !== "function") {
+    return;
+  }
+
+  recordChangeHandler = (payload) => {
+    // Only reload if the change is relevant to the dashboard (Policy, Payment, Claim)
+    const dashboardDocTypes = ["AT Policy", "AT Payment", "AT Claim", "AT Offer", "AT Lead"];
+    if (dashboardDocTypes.includes(payload?.doctype)) {
+      reloadData();
+    }
+  };
+  realtime.on("at_record_changed", recordChangeHandler);
+}
+
+function unbindRecordRealtimeListener() {
+  const realtime = window?.frappe?.realtime;
+  if (!realtime || typeof realtime.off !== "function" || !recordChangeHandler) {
+    return;
+  }
+  realtime.off("at_record_changed", recordChangeHandler);
+  recordChangeHandler = null;
+}
+
 onMounted(() => {
+  if (unref(isSessionReady)) {
+    initDashboard();
+  }
+  bindRecordRealtimeListener();
   dashboardRouteReady = true;
   if (route.query?.tab) {
     return;
@@ -1456,6 +1491,10 @@ onMounted(() => {
     query: { ...route.query, tab: persistedTab },
     hash: route.hash || "",
   });
+});
+
+onBeforeUnmount(() => {
+  unbindRecordRealtimeListener();
 });
 
 watch(
