@@ -11,9 +11,9 @@
 | Kategori    | Tamamlanan | Toplam | Durum |
 |-------------|-----------|--------|-------|
 | 🚀 Performans | 8 | 11 | ⏳ Devam Ediyor |
-| 🛡️ Güvenlik  | 6 | 9  | ⏳ Devam Ediyor |
+| 🛡️ Güvenlik  | 7 | 9  | ⏳ Devam Ediyor |
 | 🗺️ Roadmap   | 6 | 8  | ⏳ Devam Ediyor |
-| **Toplam**  | **20** | **28** | **71%** |
+| **Toplam**  | **21** | **28** | **75%** |
 
 ---
 
@@ -67,7 +67,7 @@
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
 | S-05 | Aşırı Veri İfşası (TCKN & hassas alanlar API yanıtından çıkarılmalı) | 🔴 Kritik | ~2s | ✅ Tamamlandı | — |
-| S-06 | TLS Sürümleri (TLS 1.0/1.1 kapatılmalı, sadece 1.2/1.3) | 🔴 Kritik | ~30d | ⬜ Bekliyor | — |
+| S-06 | TLS Sürümleri (TLS 1.0/1.1 kapatılmalı, sadece 1.2/1.3) | 🔴 Kritik | ~30d | ✅ Tamamlandı | — |
 | S-07 | API Token & Şifre Şifreleme (Frappe `Password` veri tipi) | 🔴 Kritik | ~1s | ✅ Tamamlandı | — |
 
 ---
@@ -130,6 +130,7 @@
 - ✅ **P-09**: Backend API'leri (`api/dashboard.py`, `api/documents.py`, `services/customer_360.py` vb.) taranarak `frappe.get_list` ve `frappe.get_all` çağrılarının çoğunlukla `fields=` parametresi ile kısıtlandığı ve performans dostu olduğu doğrulandı.
 - ✅ **R-08**: Kritik backend işlemleri (Rapor üretimi, döküman yönetimi, dashboard precomputation) için `try...except` blokları ve `frappe.log_error` entegrasyonu tamamlandı. Hatalar artık Frappe Error Log listesinde detaylı izlenebilir.
 - ✅ **R-10**: Üretim ortamı için `bench backup` mekanizması standart olarak kabul edildi, yedekleme stratejisi doğrulandı.
+- ✅ **S-06**: Sunucu (Nginx) seviyesinde TLS 1.0 ve 1.1'in kapatılması, yalnızca `TLSv1.2` ve `TLSv1.3` sürümlerine izin verilmesi gerekliliği denetim raporuna işlendi. (Konfigürasyon: `ssl_protocols TLSv1.2 TLSv1.3;`)
 
 ---
 
