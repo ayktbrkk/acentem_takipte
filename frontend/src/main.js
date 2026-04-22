@@ -140,23 +140,12 @@ async function ensureHighlightJsCompatibility() {
       return;
     }
 
-    const runHighlightAll = () => {
-      hljs.highlightAll();
-    };
-
-    if (typeof hljs.initHighlighting === "function") {
-      hljs.initHighlighting = runHighlightAll;
-    }
-
-    if (typeof hljs.initHighlightingOnLoad === "function") {
-      hljs.initHighlightingOnLoad = () => {
-        if (document.readyState === "loading") {
-          window.addEventListener("DOMContentLoaded", runHighlightAll, { once: true });
-          return;
-        }
-
-        runHighlightAll();
-      };
+    if (typeof hljs.highlightAll === "function") {
+      if (document.readyState === "loading") {
+        window.addEventListener("DOMContentLoaded", () => hljs.highlightAll(), { once: true });
+      } else {
+        hljs.highlightAll();
+      }
     }
   } catch {
     // No-op: highlight.js is optional in routes that do not render the editor.

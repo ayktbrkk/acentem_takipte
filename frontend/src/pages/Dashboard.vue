@@ -245,7 +245,7 @@
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, onMounted, ref, unref, watch } from "vue";
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
@@ -1472,9 +1472,6 @@ function unbindRecordRealtimeListener() {
 }
 
 onMounted(() => {
-  if (unref(isSessionReady)) {
-    initDashboard();
-  }
   bindRecordRealtimeListener();
   dashboardRouteReady = true;
   if (route.query?.tab) {
