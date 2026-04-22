@@ -113,8 +113,12 @@
 - ✅ **P-01**: Dashboard sekme bileşenleri `defineAsyncComponent` ile lazy-load yapıldı.
 - ✅ **P-02**: Chart.js selective import'a geçirildi ve `rollup-plugin-visualizer` eklendi.
 - ✅ **P-03**: Vue Router linkleri için hover anında `v-prefetch` preloading direktifi eklendi.
-- ✅ **P-04**: `SkeletonLoader` eklendi, Dashboard KPI yükleme sürecine entegre edildi.
-- ✅ **P-05**: Dashboard KPI ve metrik sorguları için Frappe/Redis önbelleklemesi `get_dashboard_kpis` metoduna eklendi.
+- [x] **S-04: Doküman Güvenliği (Private/Public Ayrımı)**
+  - [x] Backend döküman yükleme endpoint'lerinde `/private/files/` zorunluluğu kilitlendi (`documents.py`).
+  - [x] Bağlı dökümanlarda `is_private=0` olan dosyalar reddediliyor.
+- [x] **S-05: Hassas Veri Erişim Loglaması (Access Logging)**
+  - [x] Merkezi döküman açma akışına (`documentOpen.js`) `track_document_view` entegre edildi.
+  - [x] Poliçe, Hasar ve Müşteri detaylarındaki döküman görüntülemeleri `AT Access Log`'a kaydediliyor.
 - ✅ **P-06**: `hooks.py` aracılığıyla Policy, Payment, Claim vb. dökümanlarda veri değiştiğinde Dashboard Cache'in temizlenmesi sağlandı.
 - ✅ **P-08**: `renewal/service.py` içerisinde `remediate_stale_renewal_tasks` fonksiyonunda N+1 query loop problemi `frappe.db.set_value` ve toplu cache temizliği ile çözüldü.
 - ✅ **P-10**: Performans darboğazlarını önlemek için `AT Policy` ve `AT Renewal Task` tablolarında `customer`, `status` ve `end_date`/`renewal_date` alanlarına DB indeks (`search_index`) eklendi.

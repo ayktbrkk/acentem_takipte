@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 from acentem_takipte.acentem_takipte.api.documents import (
     _resolve_reference_token,
     archive_document,
+    track_document_view,
     permanent_delete_document,
     restore_document,
+    upload_document,
 )
 
 
@@ -111,3 +114,38 @@ class TestDocumentsApi(IntegrationTestCase):
         ):
             with self.assertRaises(Exception):
                 permanent_delete_document("AT-DOC-001")
+
+    def test_track_document_view_logs_access(self):
+        calls = []
+
+        with (
+            patch(
+                "acentem_takipte.acentem_takipte.api.documents.assert_doc_permission",
+                return_value=SimpleNamespace(name="AT-DOC-001"),
+            ),
+            patch(
+                "acentem_takipte.acentem_takipte.api.documents.log_access",
+                side_effect=lambda reference_doctype, reference_name, action="View": calls.append(
+                    (reference_doctype, reference_name, action)
+                ),
+            ),
+        ):
+            result = track_document_view("AT Document", "AT-DOC-001")
+
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(calls[0], ("AT Document", "AT-DOC-001", "View"))
+
+    def test_upload_document_rejects_public_files_for_attached_documents(self):
+        file_doc = SimpleNamespace(name="FILE-001", file_name="policy.pdf", file_url="/files/policy.pdf", is_private=0)
+        with (
+            patch("acentem_takipte.acentem_takipte.api.documents._resolve_uploaded_file_name", return_value="FILE-001"),
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.exists", return_value=True),
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", return_value=file_doc),
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.throw", side_effect=RuntimeError),
+        ):
+            with self.assertRaises(RuntimeError):
+                upload_document(
+                    file_name="FILE-001",
+                    attached_to_doctype="AT Policy",
+                    attached_to_name="AT-POL-001",
+                )

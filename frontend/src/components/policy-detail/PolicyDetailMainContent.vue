@@ -146,7 +146,7 @@
                   >
                     {{ t("permanentDeleteDocument") }}
                   </ActionButton>
-                  <button class="btn btn-sm" type="button" @click="openDocument(d)">{{ t("openDocument") }}</button>
+                <button class="btn btn-sm" type="button" @click="openDocument(d, 'AT Document')">{{ t("openDocument") }}</button>
                 </div>
               </template>
                 <p v-if="d.notes" class="mt-1 text-xs text-slate-500">{{ d.notes }}</p>
@@ -164,7 +164,7 @@
               >
                 <template #trailing>
                   <span v-if="f.is_private" class="badge badge-slate">{{ t("private") }}</span>
-                  <button class="btn btn-sm" type="button" @click="openDocument(f)">{{ t("openDocument") }}</button>
+                  <button class="btn btn-sm" type="button" @click="openDocument(f, 'File')">{{ t("openDocument") }}</button>
                 </template>
               </MetaListCard>
             </div>
@@ -225,8 +225,11 @@ function documentLabel(doc) {
   return translateText(source, activeLocale.value);
 }
 
-async function openDocument(doc) {
-  const opened = await openDocumentInNewTab(doc || {});
+async function openDocument(doc, referenceDoctype) {
+  const opened = await openDocumentInNewTab(doc || {}, {
+    referenceDoctype,
+    referenceName: doc?.name || "",
+  });
   if (opened) return;
   window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
 }

@@ -10,7 +10,9 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate
 
+from acentem_takipte.acentem_takipte.api.security import assert_doc_permission
 from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import (
+    log_access,
     log_decision_event,
 )
 
@@ -357,6 +359,22 @@ def permanent_delete_document(docname: str) -> dict:
 
 
 @frappe.whitelist()
+def track_document_view(reference_doctype: str, reference_name: str) -> dict:
+    reference_doctype = str(reference_doctype or "").strip()
+    reference_name = str(reference_name or "").strip()
+    if not reference_doctype or not reference_name:
+        return {"status": "ignored"}
+
+    try:
+        assert_doc_permission(reference_doctype, reference_name, "read")
+    except Exception:
+        return {"status": "ignored"}
+
+    log_access(reference_doctype, reference_name, action="View")
+    return {"status": "success"}
+
+
+@frappe.whitelist()
 def upload_document(
     file_name: str,
     file_url: str = "",
@@ -405,6 +423,17 @@ def upload_document(
         frappe.throw(_("File not found: {0}").format(file_name), frappe.DoesNotExistError)
 
     file_doc = frappe.get_doc("File", resolved_file_name)
+    if attached_to_doctype and not bool(getattr(file_doc, "is_private", 0)):
+        frappe.throw(
+            _("Sensitive documents must be uploaded as private files."),
+            frappe.ValidationError,
+        )
+    file_url_path = urlparse(str(getattr(file_doc, "file_url", "") or "")).path
+    if attached_to_doctype and not file_url_path.startswith("/private/files/"):
+        frappe.throw(
+            _("Sensitive documents must be stored in the private files area."),
+            frappe.ValidationError,
+        )
     canonical_document_kind = _canonicalize_document_taxonomy("document_kind", document_kind)
     canonical_document_sub_type = _canonicalize_document_taxonomy("document_sub_type", document_sub_type)
     stored_document_kind = _coerce_select_value_for_current_meta("document_kind", canonical_document_kind)

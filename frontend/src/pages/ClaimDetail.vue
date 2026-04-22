@@ -84,7 +84,7 @@
                   >
                     {{ t("permanentDeleteDocument") }}
                   </ActionButton>
-                  <a href="#" class="btn btn-xs btn-secondary" @click.prevent="openClaimDocument(doc)">{{ t("openDocument") }}</a>
+                  <a href="#" class="btn btn-xs btn-secondary" @click.prevent="openClaimDocument(doc, 'AT Document')">{{ t("openDocument") }}</a>
                 </div>
               </template>
             </MetaListCard>
@@ -226,8 +226,11 @@ const {
   activeLocale: computed(() => unref(authStore.locale) || "en"),
 });
 
-async function openClaimDocument(doc) {
-  const opened = await openDocumentInNewTab(doc || {});
+async function openClaimDocument(doc, referenceDoctype = "AT Document") {
+  const opened = await openDocumentInNewTab(doc || {}, {
+    referenceDoctype,
+    referenceName: doc?.name || "",
+  });
   if (opened) return;
   window.alert(String(unref(authStore.locale) || "en").startsWith("tr") ? "Dosya bağlantısı bulunamadı" : "File link not found");
 }

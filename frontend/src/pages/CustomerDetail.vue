@@ -647,7 +647,7 @@
                     :title="doc.is_sensitive ? t('sensitiveShareWarning') : t('shareWhatsApp')"
                     @click.stop="shareDocumentWhatsApp(doc)"
                   >{{ t("shareWhatsApp") }}</button>
-                  <a href="#" class="btn btn-xs btn-secondary" @click.prevent="openCustomerDocument(doc)">{{ t("openDocument") }}</a>
+                  <a href="#" class="btn btn-xs btn-secondary" @click.prevent="openCustomerDocument(doc, 'AT Document')">{{ t("openDocument") }}</a>
                 </div>
               </template>
             </MetaListCard>
@@ -1342,8 +1342,11 @@ async function shareDocumentWhatsApp(doc) {
   } catch { /* ignore */ }
 }
 
-async function openCustomerDocument(doc) {
-  const opened = await openDocumentInNewTab(doc || {});
+async function openCustomerDocument(doc, referenceDoctype = "AT Document") {
+  const opened = await openDocumentInNewTab(doc || {}, {
+    referenceDoctype,
+    referenceName: doc?.name || "",
+  });
   if (opened) return;
   window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
 }

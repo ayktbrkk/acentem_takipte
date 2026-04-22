@@ -136,7 +136,10 @@ export function useAuxRecordDetailActions({
 
   async function openDocument() {
     if (!canOpenDocument.value) return;
-    const opened = await openDocumentInNewTab(unref(doc) || {});
+    const opened = await openDocumentInNewTab(unref(doc) || {}, {
+      referenceDoctype: String(unref(config?.doctype) || ""),
+      referenceName: String(unref(doc)?.name || ""),
+    });
     if (opened) return;
     const locale = String(unref(authStore?.locale) || "en").trim();
     window.alert(locale === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");

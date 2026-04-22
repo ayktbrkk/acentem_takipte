@@ -606,7 +606,10 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
 
   async function openDocument(row) {
     if (!canOpenDocumentRow(row)) return;
-    const opened = await openDocumentInNewTab(row);
+    const opened = await openDocumentInNewTab(row, {
+      referenceDoctype: config.key === "at-documents" ? "AT Document" : "File",
+      referenceName: String(row?.name || ""),
+    });
     if (opened) return;
     const locale = String(unref(activeLocale) || "en").trim();
     window.alert(locale === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
