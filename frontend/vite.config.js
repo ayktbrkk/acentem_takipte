@@ -2,6 +2,9 @@ import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import Icons from "unplugin-icons/vite";
+// audit(perf/P-02): Bundle visualizer — run with ANALYZE=true npm run build
+// to generate dist/stats.html for visual bundle inspection.
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
   plugins: [
@@ -9,7 +12,10 @@ export default defineConfig({
     Icons({
       compiler: "vue3",
     }),
-  ],
+    // Only generate the bundle report when explicitly requested
+    process.env.ANALYZE === "true" &&
+      visualizer({ open: true, gzipSize: true, filename: "dist/stats.html" }),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),

@@ -54,7 +54,16 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import Chart from 'chart.js/auto'
+// audit(perf/P-02): Selective chart.js imports for tree-shaking.
+// chart.js/auto imports ALL chart types (~200KB). We only use Doughnut here.
+import {
+  Chart,
+  DoughnutController,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+Chart.register(DoughnutController, ArcElement, Tooltip, Legend)
 
 const props = defineProps({
   title: { type: String, required: true },
