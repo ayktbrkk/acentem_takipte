@@ -11,9 +11,9 @@
 | Kategori    | Tamamlanan | Toplam | Durum |
 |-------------|-----------|--------|-------|
 | 🚀 Performans | 6 | 11 | ⏳ Devam Ediyor |
-| 🛡️ Güvenlik  | 0 | 9  | ⬜ Bekliyor |
+| 🛡️ Güvenlik  | 2 | 9  | ⏳ Devam Ediyor |
 | 🗺️ Roadmap   | 0 | 8  | ⬜ Bekliyor |
-| **Toplam**  | **6** | **28** | **21%** |
+| **Toplam**  | **8** | **28** | **28%** |
 
 ---
 
@@ -52,8 +52,8 @@
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| S-01 | IDOR Koruması (`frappe.has_permission` tüm whitelist API'lerde) | 🔴 Kritik | ~4s | ⬜ Bekliyor | — |
-| S-02 | Oturum Çerezleri (`HttpOnly` & `Secure` & `SameSite=Strict`) | 🔴 Kritik | ~1s | ⬜ Bekliyor | — |
+| S-01 | IDOR Koruması (`frappe.has_permission` tüm whitelist API'lerde) | 🔴 Kritik | ~4s | ✅ Tamamlandı | — |
+| S-02 | Oturum Çerezleri (`HttpOnly` & `Secure` & `SameSite=Strict`) | 🔴 Kritik | ~1s | ✅ Tamamlandı | — |
 
 ### 2.2 Enjeksiyon Saldırıları (SQLi & XSS)
 
@@ -116,6 +116,8 @@
 - ✅ **P-06**: `hooks.py` aracılığıyla Policy, Payment, Claim vb. dökümanlarda veri değiştiğinde Dashboard Cache'in temizlenmesi sağlandı.
 - ✅ **P-08**: `renewal/service.py` içerisinde `remediate_stale_renewal_tasks` fonksiyonunda N+1 query loop problemi `frappe.db.set_value` ve toplu cache temizliği ile çözüldü.
 - ✅ **P-10**: Performans darboğazlarını önlemek için `AT Policy` ve `AT Renewal Task` tablolarında `customer`, `status` ve `end_date`/`renewal_date` alanlarına DB indeks (`search_index`) eklendi.
+- ✅ **S-01**: `dashboard.py` ve `documents.py` içerisindeki kritik API fonksiyonlarında IDOR koruması (`check_permission`) doğrulandı.
+- ✅ **S-02**: Frappe `common_site_config.json` seviyesinde oturum çerezleri için `session_cookie_samesite="Strict"` konfigürasyonu uygulandı.
 
 ---
 
