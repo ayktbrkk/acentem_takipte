@@ -40,9 +40,9 @@
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| P-08 | N+1 Sorgu Problemi (döngü içi `frappe.get_doc` → bulk fetch) | 🔴 Kritik | ~3s | ⬜ Bekliyor | — |
+| P-08 | N+1 Sorgu Problemi (döngü içi `frappe.get_doc` → bulk fetch) | 🔴 Kritik | ~3s | ✅ Tamamlandı | 83f26ed |
 | P-09 | Sadece Gerekli Alanları Çek (`fields=` parametresi zorunlu) | 🟡 Orta | ~2s | ⬜ Bekliyor | — |
-| P-10 | Veritabanı Index'leri (`end_date`, `customer`, `status`) | 🔴 Kritik | ~1s | ⬜ Bekliyor | — |
+| P-10 | Veritabanı Index'leri (`end_date`, `customer`, `status`) | 🔴 Kritik | ~1s | ✅ Tamamlandı | 10f1ada |
 
 ---
 
@@ -114,6 +114,8 @@
 - ✅ **P-04**: `SkeletonLoader` eklendi, Dashboard KPI yükleme sürecine entegre edildi.
 - ✅ **P-05**: Dashboard KPI ve metrik sorguları için Frappe/Redis önbelleklemesi `get_dashboard_kpis` metoduna eklendi.
 - ✅ **P-06**: `hooks.py` aracılığıyla Policy, Payment, Claim vb. dökümanlarda veri değiştiğinde Dashboard Cache'in temizlenmesi sağlandı.
+- ✅ **P-08**: `renewal/service.py` içerisinde `remediate_stale_renewal_tasks` fonksiyonunda N+1 query loop problemi `frappe.db.set_value` ve toplu cache temizliği ile çözüldü.
+- ✅ **P-10**: Performans darboğazlarını önlemek için `AT Policy` ve `AT Renewal Task` tablolarında `customer`, `status` ve `end_date`/`renewal_date` alanlarına DB indeks (`search_index`) eklendi.
 
 ---
 
