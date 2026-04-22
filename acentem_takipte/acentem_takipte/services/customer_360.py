@@ -380,26 +380,33 @@ def _get_customer_files(customer_name: str) -> list[dict[str, Any]]:
             limit_page_length=100,
         )
 
-    # Merge + deduplicate by name, resolve file_name from File record
+    # N+1 önleme: önce merge/deduplicate, sonra tek batch File sorgusu
     seen: set[str] = set()
     merged: list[dict[str, Any]] = []
     for doc in direct + policy_docs + claim_docs:
         if doc["name"] in seen:
             continue
         seen.add(doc["name"])
-        # Resolve human-readable file name from File record
-        if doc.get("file"):
-            file_doc = frappe.db.get_value("File", doc["file"], ["file_name", "file_url", "file_size", "is_private"], as_dict=True) or {}
-            doc["file_name"] = file_doc.get("file_name") or doc["file"]
-            doc["file_url"] = file_doc.get("file_url") or ""
-            doc["file_size"] = file_doc.get("file_size")
-            doc["is_private"] = file_doc.get("is_private")
-        else:
-            doc["file_name"] = doc["file"] or ""
-            doc["file_url"] = ""
-            doc["file_size"] = None
-            doc["is_private"] = None
         merged.append(doc)
+
+    # Batch File lookup
+    file_names = [d["file"] for d in merged if d.get("file")]
+    if file_names:
+        file_rows = frappe.get_all(
+            "File",
+            filters={"name": ["in", file_names]},
+            fields=["name", "file_name", "file_url", "file_size", "is_private"],
+        )
+        file_map: dict[str, Any] = {r["name"]: r for r in file_rows}
+    else:
+        file_map = {}
+
+    for doc in merged:
+        file_rec = file_map.get(doc.get("file") or "") or {}
+        doc["file_name"] = file_rec.get("file_name") or doc.get("file") or ""
+        doc["file_url"] = file_rec.get("file_url") or ""
+        doc["file_size"] = file_rec.get("file_size")
+        doc["is_private"] = file_rec.get("is_private")
 
     merged.sort(key=lambda d: str(d.get("creation") or ""), reverse=True)
     return merged[:100]

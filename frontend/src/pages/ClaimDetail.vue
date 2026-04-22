@@ -13,7 +13,6 @@
       </div>
       <div class="flex items-center gap-2">
         <button class="btn btn-outline btn-sm" @click="backToList">{{ t("back") }}</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openClaimDocuments">{{ t("documents") }}</button>
       </div>
     </div>
 
@@ -39,19 +38,52 @@
 
         <SectionPanel :title="t('documents')">
           <template #trailing>
-            <button class="btn btn-sm" type="button" @click="openClaimDocuments">{{ t("openDocuments") }}</button>
-          </template>
-          <p v-if="!documents.length" class="card-empty">{{ t("noDocuments") }}</p>
-          <div v-else>
-            <div v-for="doc in documents" :key="doc.name" class="timeline-item">
-              <div class="tl-dot" />
-              <div>
-                <p class="tl-text">{{ doc.file_name || doc.name }}</p>
-                <p class="tl-time">{{ formatDate(doc.creation) }}</p>
-              </div>
+            <div class="flex items-center gap-2">
+              <ActionButton v-if="canUploadDocuments" variant="primary" size="xs" @click="openUploadModal">
+                {{ t("uploadDocument") }}
+              </ActionButton>
+              <ActionButton variant="secondary" size="xs" @click="openClaimDocuments">
+                {{ t("openDocuments") }}
+              </ActionButton>
+              <span class="badge badge-blue">{{ atDocuments.length }}</span>
             </div>
+          </template>
+          <div v-if="atDocuments.length === 0" class="at-empty-block">{{ t("emptyDocuments") }}</div>
+          <div v-else class="grid gap-3 md:grid-cols-2">
+            <MetaListCard
+              v-for="doc in atDocuments"
+              :key="doc.name"
+              :title="doc.display_name || doc.file || doc.name"
+              :description="doc.document_sub_type || doc.document_kind || '-'"
+              :meta="doc.document_date || formatDate(doc.creation)"
+            >
+              <template #trailing>
+                <div class="flex items-center gap-2">
+                  <span v-if="doc.is_sensitive" class="flex items-center" :title="t('sensitiveData')">
+                    <svg class="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                  <span v-if="doc.is_verified" class="flex items-center" :title="t('verified')">
+                    <svg class="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                    <a href="#" class="btn btn-xs btn-secondary" @click.prevent="openClaimDocument(doc)">{{ t("openDocument") }}</a>
+                </div>
+              </template>
+            </MetaListCard>
           </div>
         </SectionPanel>
+
+        <WorkbenchFileUploadModal
+          :open="showUploadModal"
+          :attached-to-doctype="'AT Claim'"
+          :attached-to-name="claim.name || String(name)"
+          :t="t"
+          @close="closeUploadModal"
+          @uploaded="handleUploadComplete"
+        />
 
         <SectionPanel :title="t('paymentHistory')">
           <div v-if="!payments.length" class="card-empty">{{ t("noPayments") }}</div>
@@ -131,15 +163,52 @@ import { useAuthStore } from "../stores/auth";
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
+import MetaListCard from "../components/app-shell/MetaListCard.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import FieldGroup from "@/components/ui/FieldGroup.vue";
 import StepBar from "@/components/ui/StepBar.vue";
+import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import { useClaimDetailRuntime } from "../composables/useClaimDetailRuntime";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 
-const props = defineProps({ name: { type: String, required: true } });
+const props = defineProps({ name: { type: String, default: "" } });
 const authStore = useAuthStore();
-const { t, claim, claimStatus, documents, payments, heroCells, processFields, detailFields, claimSteps, peopleFields, reserveFields, paymentFields, expertiseFields, recordMetaFields, formatDate, formatCurrency, backToList, openPolicy, openCustomer, openClaimDocuments } = useClaimDetailRuntime({
+
+const {
+  t,
+  claim,
+  atDocuments,
+  payments,
+  claimStatus,
+  heroCells,
+  processFields,
+  detailFields,
+  claimSteps,
+  peopleFields,
+  reserveFields,
+  paymentFields,
+  expertiseFields,
+  recordMetaFields,
+  formatDate,
+  formatCurrency,
+  backToList,
+  openPolicy,
+  openCustomer,
+  openClaimDocuments,
+  showUploadModal,
+  openUploadModal,
+  closeUploadModal,
+  handleUploadComplete,
+  canUploadDocuments,
+} = useClaimDetailRuntime({
   name: computed(() => props.name || ""),
   activeLocale: computed(() => unref(authStore.locale) || "en"),
 });
+
+async function openClaimDocument(doc) {
+  const opened = await openDocumentInNewTab(doc || {});
+  if (opened) return;
+  window.alert(String(unref(authStore.locale) || "en").startsWith("tr") ? "Dosya bağlantısı bulunamadı" : "File link not found");
+}
 </script>
 

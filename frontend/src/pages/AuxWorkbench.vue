@@ -89,6 +89,7 @@
       :actions-label="t('actions')"
       :modified-label="fieldLabel('modified')"
       :open-detail-label="t('openDetail')"
+      :open-document-label="t('openDocument')"
       :panel-label="t('panel')"
       :send-now-label="t('sendNow')"
       :retry-label="t('retry')"
@@ -130,7 +131,9 @@
       :can-start-ownership-assignment-row="canStartOwnershipAssignmentRow"
       :can-block-ownership-assignment-row="canBlockOwnershipAssignmentRow"
       :can-complete-ownership-assignment-row="canCompleteOwnershipAssignmentRow"
+      :can-open-document-row="canOpenDocumentRow"
       @open-detail="openDetail"
+      @open-document="openDocument"
       @open-panel="openPanel"
       @send-draft-now="sendDraftNowRow"
       @retry-outbox="retryOutboxRow"
@@ -342,6 +345,8 @@ const {
   openDetail,
   panelCfg,
   panelCfgForRow,
+  canOpenDocumentRow,
+  openDocument,
   openPanel,
   runToolbarAction,
   showWorkbenchUploadModal,

@@ -42,7 +42,7 @@ _RATE_LIMIT_TTL_SECS = 172_800  # 48 hours — safely covers day boundary
 
 
 def _daily_rate_limit() -> int:
-    return int((frappe.get_site_config() or {}).get("at_masked_query_daily_limit", 30))
+    return int((frappe.get_site_config() or {}).get("at_masked_query_daily_limit", 100))
 
 
 def _rate_limit_cache_key(user_id: str) -> str:

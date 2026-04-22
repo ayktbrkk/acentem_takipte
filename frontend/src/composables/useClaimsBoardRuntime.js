@@ -276,12 +276,6 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
         onClick: () => openClaimDetail(claim),
       },
       {
-        key: "documents",
-        label: t("openDocuments"),
-        variant: "outline",
-        onClick: () => openClaimDocuments(claim),
-      },
-      {
         key: "payment",
         label: t("createPayment"),
         variant: "primary",

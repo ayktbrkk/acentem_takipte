@@ -20,7 +20,9 @@ def build_follow_up_sla_payload(
     today = getdate(nowdate())
     preview_rows: list[dict[str, Any]] = []
 
-    for row in _get_claim_follow_ups(office_branch=office_branch, allowed_customers=allowed_customers):
+    for row in _get_claim_follow_ups(
+        office_branch=office_branch, allowed_customers=allowed_customers
+    ):
         preview_rows.append(
             _build_preview_row(
                 "claim",
@@ -31,7 +33,9 @@ def build_follow_up_sla_payload(
                 customer_full_name=row.get("customer_full_name"),
             )
         )
-    for row in _get_renewal_follow_ups(office_branch=office_branch, allowed_customers=allowed_customers):
+    for row in _get_renewal_follow_ups(
+        office_branch=office_branch, allowed_customers=allowed_customers
+    ):
         preview_rows.append(
             _build_preview_row(
                 "renewal",
@@ -42,7 +46,9 @@ def build_follow_up_sla_payload(
                 customer_full_name=row.get("customer_full_name"),
             )
         )
-    for row in _get_assignment_follow_ups(office_branch=office_branch, allowed_customers=allowed_customers):
+    for row in _get_assignment_follow_ups(
+        office_branch=office_branch, allowed_customers=allowed_customers
+    ):
         preview_rows.append(
             _build_preview_row(
                 "assignment",
@@ -54,7 +60,9 @@ def build_follow_up_sla_payload(
                 customer_full_name=row.get("customer_full_name"),
             )
         )
-    for row in _get_call_note_follow_ups(office_branch=office_branch, allowed_customers=allowed_customers):
+    for row in _get_call_note_follow_ups(
+        office_branch=office_branch, allowed_customers=allowed_customers
+    ):
         preview_rows.append(
             _build_preview_row(
                 "call_note",
@@ -79,7 +87,11 @@ def build_follow_up_sla_payload(
         except Exception:
             continue
         delta = (follow_up_on - today).days
-        next_row = {**row, "follow_up_on": follow_up_on.isoformat(), "days_delta": delta}
+        next_row = {
+            **row,
+            "follow_up_on": follow_up_on.isoformat(),
+            "days_delta": delta,
+        }
         normalized_rows.append(next_row)
         if delta < 0:
             overdue += 1
@@ -88,7 +100,13 @@ def build_follow_up_sla_payload(
         elif delta <= 7:
             due_soon += 1
 
-    normalized_rows.sort(key=lambda row: (row.get("days_delta", 9999), str(row.get("follow_up_on") or ""), str(row.get("source_type") or "")))
+    normalized_rows.sort(
+        key=lambda row: (
+            row.get("days_delta", 9999),
+            str(row.get("follow_up_on") or ""),
+            str(row.get("source_type") or ""),
+        )
+    )
     return {
         "summary": {
             "total": len(normalized_rows),
@@ -100,36 +118,90 @@ def build_follow_up_sla_payload(
     }
 
 
-def _get_claim_follow_ups(*, office_branch: str | None, allowed_customers: list[str] | None) -> list[dict[str, Any]]:
-    filters: dict[str, Any] = {"claim_status": ["in", sorted(OPEN_CLAIM_STATUSES)], "next_follow_up_on": ["is", "set"]}
+def _get_claim_follow_ups(
+    *, office_branch: str | None, allowed_customers: list[str] | None
+) -> list[dict[str, Any]]:
+    filters: dict[str, Any] = {
+        "claim_status": ["in", sorted(OPEN_CLAIM_STATUSES)],
+        "next_follow_up_on": ["is", "set"],
+    }
     if office_branch:
         filters["office_branch"] = office_branch
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
-    return frappe.get_list("AT Claim", fields=["name", "customer", "customer.full_name as customer_full_name", "claim_status", "next_follow_up_on"], filters=filters, order_by="next_follow_up_on asc, modified desc", limit_page_length=50)
+    return frappe.get_list(
+        "AT Claim",
+        fields=[
+            "name",
+            "customer",
+            "customer.full_name as customer_full_name",
+            "claim_status",
+            "next_follow_up_on",
+        ],
+        filters=filters,
+        order_by="next_follow_up_on asc, `tabAT Claim`.modified desc",
+        limit_page_length=50,
+    )
 
 
-def _get_renewal_follow_ups(*, office_branch: str | None, allowed_customers: list[str] | None) -> list[dict[str, Any]]:
-    filters: dict[str, Any] = {"status": ["in", sorted(OPEN_RENEWAL_STATUSES)], "due_date": ["is", "set"]}
+def _get_renewal_follow_ups(
+    *, office_branch: str | None, allowed_customers: list[str] | None
+) -> list[dict[str, Any]]:
+    filters: dict[str, Any] = {
+        "status": ["in", sorted(OPEN_RENEWAL_STATUSES)],
+        "due_date": ["is", "set"],
+    }
     if office_branch:
         filters["office_branch"] = office_branch
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
-    return frappe.get_list("AT Renewal Task", fields=["name", "customer", "customer.full_name as customer_full_name", "status", "due_date"], filters=filters, order_by="due_date asc, modified desc", limit_page_length=50)
+    return frappe.get_list(
+        "AT Renewal Task",
+        fields=[
+            "name",
+            "customer",
+            "customer.full_name as customer_full_name",
+            "status",
+            "due_date",
+        ],
+        filters=filters,
+        order_by="due_date asc, `tabAT Renewal Task`.modified desc",
+        limit_page_length=50,
+    )
 
 
-def _get_assignment_follow_ups(*, office_branch: str | None, allowed_customers: list[str] | None) -> list[dict[str, Any]]:
+def _get_assignment_follow_ups(
+    *, office_branch: str | None, allowed_customers: list[str] | None
+) -> list[dict[str, Any]]:
     if not frappe.db.exists("DocType", "AT Ownership Assignment"):
         return []
-    filters: dict[str, Any] = {"status": ["in", sorted(OPEN_ASSIGNMENT_STATUSES)], "due_date": ["is", "set"]}
+    filters: dict[str, Any] = {
+        "status": ["in", sorted(OPEN_ASSIGNMENT_STATUSES)],
+        "due_date": ["is", "set"],
+    }
     if office_branch:
         filters["office_branch"] = office_branch
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
-    return frappe.get_list("AT Ownership Assignment", fields=["name", "customer", "customer.full_name as customer_full_name", "status", "assigned_to", "due_date"], filters=filters, order_by="due_date asc, modified desc", limit_page_length=50)
+    return frappe.get_list(
+        "AT Ownership Assignment",
+        fields=[
+            "name",
+            "customer",
+            "customer.full_name as customer_full_name",
+            "status",
+            "assigned_to",
+            "due_date",
+        ],
+        filters=filters,
+        order_by="due_date asc, `tabAT Ownership Assignment`.modified desc",
+        limit_page_length=50,
+    )
 
 
-def _get_call_note_follow_ups(*, office_branch: str | None, allowed_customers: list[str] | None) -> list[dict[str, Any]]:
+def _get_call_note_follow_ups(
+    *, office_branch: str | None, allowed_customers: list[str] | None
+) -> list[dict[str, Any]]:
     if not frappe.db.exists("DocType", "AT Call Note"):
         return []
     filters: dict[str, Any] = {"next_follow_up_on": ["is", "set"]}
@@ -137,7 +209,19 @@ def _get_call_note_follow_ups(*, office_branch: str | None, allowed_customers: l
         filters["office_branch"] = office_branch
     if allowed_customers is not None:
         filters["customer"] = ["in", allowed_customers or ["__none__"]]
-    return frappe.get_list("AT Call Note", fields=["name", "customer", "customer.full_name as customer_full_name", "call_status", "next_follow_up_on"], filters=filters, order_by="next_follow_up_on asc, modified desc", limit_page_length=50)
+    return frappe.get_list(
+        "AT Call Note",
+        fields=[
+            "name",
+            "customer",
+            "customer.full_name as customer_full_name",
+            "call_status",
+            "next_follow_up_on",
+        ],
+        filters=filters,
+        order_by="next_follow_up_on asc, `tabAT Call Note`.modified desc",
+        limit_page_length=50,
+    )
 
 
 def _build_preview_row(

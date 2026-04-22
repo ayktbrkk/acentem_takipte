@@ -1,11 +1,13 @@
-import { computed, onMounted, unref } from "vue";
+import { computed, onMounted, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 
+import { useAuthStore } from "../stores/auth";
 import { formatDate as sharedFormatDate, formatMoney as sharedFormatMoney } from "../utils/detailFormatters";
 
 export function useClaimDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
+  const authStore = useAuthStore();
   const claimName = computed(() => String(unref(name) || "").trim());
   const localeValue = computed(() => String(unref(activeLocale) || "en").trim() || "en");
   const localeCode = computed(() => (localeValue.value.startsWith("tr") ? "tr-TR" : "en-US"));
@@ -18,6 +20,12 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
     details: "Claim Details",
     documents: "Documents",
     openDocuments: "Open Documents",
+    uploadDocument: "Upload Document",
+    openDocument: "Open Document",
+    emptyDocuments: "No documents uploaded yet.",
+    sensitiveData: "Sensitive Data",
+    verified: "Verified",
+    open: "Open",
     timeline: "Timeline",
     noDocuments: "No documents.",
     updated: "Updated",
@@ -69,10 +77,16 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
       "Take Action": "İşlem Yap",
       "Claim Process": "Hasar Süreci",
       "Claim Details": "Hasar Detayları",
-      "Documents": "Belgeler",
-      "Open Documents": "Belgeleri Aç",
+      "Documents": "Dokümanlar",
+      "Open Documents": "Doküman Merkezine Git",
+      "Upload Document": "Doküman Yükle",
+      "Open Document": "Dokümanı Aç",
+      "No documents uploaded yet.": "Henüz doküman yüklenmedi.",
+      "Sensitive Data": "Hassas Veri",
+      "Verified": "Doğrulandı",
+      "Open": "Aç",
       "Timeline": "Zaman Tüneli",
-      "No documents.": "Belge eklenmemiş.",
+      "No documents.": "Henüz doküman yüklenmedi.",
       "Updated": "Güncellendi",
       "Created": "Oluşturuldu",
       "Related Policy": "İlgili Poliçe",
@@ -120,9 +134,15 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
       "Claim Process": "Claim Process",
       "Claim Details": "Claim Details",
       "Documents": "Documents",
-      "Open Documents": "Open Documents",
+      "Open Documents": "Go to Document Center",
+      "Upload Document": "Upload Document",
+      "Open Document": "Open Document",
+      "No documents uploaded yet.": "No documents uploaded yet.",
+      "Sensitive Data": "Sensitive Data",
+      "Verified": "Verified",
+      "Open": "Open",
       "Timeline": "Timeline",
-      "No documents.": "No documents.",
+      "No documents.": "No documents uploaded yet.",
       "Updated": "Updated",
       "Created": "Created",
       "Related Policy": "Related Policy",
@@ -171,12 +191,33 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
   }
 
   const claimResource = createResource({ url: "frappe.client.get", auto: false });
-  const claimFileResource = createResource({ url: "frappe.client.get_list", auto: false });
+  const atDocumentR = createResource({ url: "frappe.client.get_list", auto: false });
   const claimPaymentsResource = createResource({ url: "frappe.client.get_list", auto: false });
 
   const claim = computed(() => unref(claimResource.data) || {});
-  const documents = computed(() => (Array.isArray(unref(claimFileResource.data)) ? unref(claimFileResource.data) : []));
+  const atDocuments = computed(() => (Array.isArray(unref(atDocumentR.data)) ? unref(atDocumentR.data) : []));
   const payments = computed(() => (Array.isArray(unref(claimPaymentsResource.data)) ? unref(claimPaymentsResource.data) : []));
+
+  const showUploadModal = ref(false);
+  function openUploadModal() { showUploadModal.value = true; }
+  function closeUploadModal() { showUploadModal.value = false; }
+  async function handleUploadComplete() { showUploadModal.value = false; reload(); }
+  const canUploadDocuments = computed(() => {
+    const caps = authStore.capabilities?.doctypes || {};
+    return Boolean(
+      caps?.["AT Claim"]?.write
+      || caps?.["AT Document"]?.create
+      || caps?.["AT Document"]?.write
+      || caps?.File?.create
+      || caps?.File?.write
+    );
+  });
+  function fmtFileSize(bytes) {
+    if (!bytes || bytes === 0) return "-";
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
+    return `${(kb / 1024).toFixed(1)} MB`;
+  }
   const claimStatus = computed(() => String(claim.value.claim_status || "Draft"));
 
   const remainingDays = computed(() => {
@@ -284,26 +325,27 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
   }
 
   function openClaimDocuments() {
-    if (!claim.value.name && !claimName.value) return;
-    const query = new URLSearchParams({
-      attached_to_doctype: "AT Claim",
-      attached_to_name: claim.value.name || claimName.value,
+    const cn = claim.value.name || claimName.value;
+    if (!cn) return;
+    router.push({
+      name: "at-documents-list",
+      query: { reference_doctype: "AT Claim", reference_name: cn },
     });
-    window.location.assign(`/at/files?${query.toString()}`);
   }
 
   function reload() {
     claimResource.params = { doctype: "AT Claim", name: claimName.value };
     claimResource.reload();
 
-    claimFileResource.params = {
-      doctype: "File",
-      fields: ["name", "file_name", "creation"],
-      filters: { attached_to_doctype: "AT Claim", attached_to_name: claimName.value },
+    atDocumentR.params = {
+      doctype: "AT Document",
+      fields: ["name", "file", "display_name", "document_kind", "document_sub_type",
+               "document_date", "notes", "status", "is_sensitive", "is_verified", "creation"],
+      filters: { claim: claimName.value },
       order_by: "creation desc",
-      limit_page_length: 20,
+      limit_page_length: 50,
     };
-    claimFileResource.reload();
+    atDocumentR.reload();
 
     claimPaymentsResource.params = {
       doctype: "AT Payment",
@@ -321,7 +363,7 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
     t,
     name: claimName,
     claim,
-    documents,
+    atDocuments,
     payments,
     claimStatus,
     heroCells,
@@ -339,6 +381,12 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
     openPolicy,
     openCustomer,
     openClaimDocuments,
+    showUploadModal,
+    openUploadModal,
+    closeUploadModal,
+    handleUploadComplete,
+    canUploadDocuments,
+    fmtFileSize,
     reload,
   };
 }

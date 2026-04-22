@@ -24,10 +24,10 @@ export function useClaimsBoardClaimActions({
   function openClaimDocuments(claim) {
     if (!claim?.name) return;
     const query = new URLSearchParams({
-      attached_to_doctype: "AT Claim",
-      attached_to_name: claim.name,
+      reference_doctype: "AT Claim",
+      reference_name: claim.name,
     });
-    window.location.assign(`/at/files?${query.toString()}`);
+    window.location.assign(`/at/at-documents?${query.toString()}`);
   }
 
   function openClaimPayment(claim) {
@@ -74,12 +74,6 @@ export function useClaimsBoardClaimActions({
         label: t("viewClaimFile"),
         variant: "outline",
         onClick: () => openClaimDetail(claim),
-      },
-      {
-        key: "documents",
-        label: t("openDocuments"),
-        variant: "outline",
-        onClick: () => openClaimDocuments(claim),
       },
       {
         key: "payment",

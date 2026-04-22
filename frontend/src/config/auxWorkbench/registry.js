@@ -477,7 +477,7 @@ export const AUX_WORKBENCH_CONFIGS = {
       F("reference_doctype", "reference_doctype", "select", { options: ["", "AT Customer", "AT Policy", "AT Claim"] }),
       F("reference_name", "reference_name", "text", { mode: "like" }),
       F("document_kind", "document_kind", "select", { options: ["", "Policy", "Endorsement", "Claim", "Other"] }),
-      F("document_sub_type", "document_sub_type", "select", { options: ["", "Ruhsat", "Kimlik", "Poliçe Kopyası", "Hasar Fotoğrafı", "Diğer"] }),
+      F("document_sub_type", "document_sub_type", "select", { options: ["", "Vehicle Registration", "ID Document", "Policy Copy", "Damage Photo", "Other"] }),
       F("is_sensitive", "is_sensitive", "select", { options: ["", "1", "0"] }),
       F("status", "status", "select", { options: ["", "Active", "Archived"] }),
       F("owner", "owner", "text", { mode: "like" }),

@@ -1,8 +1,8 @@
 # Doküman Yönetim Sistemi — Detaylı Uygulama Planı
 
-Tarih: 2026-04-20 | Son Güncelleme: 2026-04-21  
+Tarih: 2026-04-20 | Son Güncelleme: 2026-04-22  
 Kapsam: PolicyDetail Dokümanlar sekmesi + Doküman Merkezi + AT Document Genişletme  
-Öncelik: P0 ✅ → P1 ✅ → P2 ✅ → P2.1 ✅ → P2.2 ✅ → P2.3 ✅ → P2.4 ✅  
+Öncelik: P0 ✅ → P1 ✅ → P2 ✅ → P2.1 ✅ → P2.2 ✅ → P2.3 ✅ → P2.4 ✅ → P2.5 ⏳  
 Referans rehber: `docs/superpowers/guides/2026-04-06-tr-en-localization-implementation-guide.md`
 
 ---
@@ -828,3 +828,74 @@ Bu terimler localization guide §7 sözlüğüne eklenecek:
 | 19 | CustomerDetail bireysel doküman listesi + badge'ler | P2.2 | Yüksek | Frontend bileşen | ✅ Tamamlandı |
 | 20 | `toggle_verified()` whitelist metodu + Doğrula butonu | P2.3 | Orta | Backend + frontend | ✅ Tamamlandı |
 | 21 | `share_document()` whitelist + WhatsApp paylaşım butonu | P2.4 | Orta | Backend + frontend | ✅ Tamamlandı |
+
+---
+
+## FAZ 9 — P2.5: Dokümanı Aç Aksiyonu (Doküman Merkezi + Doküman Detayı)
+
+Amaç: Kullanıcı, dokümanın metadata kaydına girebildiği gibi gerçek dosyanın kendisini de tek tıkla açabilmeli.
+
+### Görev 9.1 — Frontend: Ortak dosya URL çözümleyici
+
+**Dosya:** `frontend/src/utils/documentOpen.js` *(yeni)*
+
+Ortak yardımcı fonksiyonlar:
+- `resolveDocumentOpenUrl(row)`:
+  - Öncelik 1: `row.file_url`
+  - Öncelik 2: `row.file` bir File name ise `/api/resource/File/{name}` ile `file_url` çekme
+  - Öncelik 3: `row.file` zaten URL ise direkt kullan
+  - Sonuç URL mutlak değilse güvenli şekilde relatif aç
+- `openDocumentInNewTab(row)`:
+  - URL varsa `window.open(url, "_blank", "noopener,noreferrer")`
+  - URL yoksa kullanıcıya lokalize hata mesajı döndürür
+
+Not: Bu yaklaşım private/public dosya davranışını Frappe File izin modeline bırakır.
+
+### Görev 9.2 — Frontend: Doküman Merkezi listesinde "Dokümanı Aç"
+
+**Dosyalar:**
+- `frontend/src/components/aux-workbench/AuxWorkbenchTableSection.vue`
+- `frontend/src/pages/AuxWorkbench.vue`
+- `frontend/src/composables/useAuxWorkbenchRuntime.js`
+- `frontend/src/composables/useAuxWorkbenchViewModel.js`
+
+Yapılacaklar:
+- `at-documents` ve `files` ekranlarında satır aksiyonlarına üçüncü buton ekle: `Dokümanı Aç` / `Open Document`.
+- Emit zinciri: `open-document`.
+- Runtime tarafında `openDocument(row)` implementasyonu ile ortak çözümleyici çağrılır.
+- URL çözülemezse toast/banner ile bilgilendirme: `Dosya bağlantısı bulunamadı` / `File link not found`.
+
+### Görev 9.3 — Frontend: Doküman Detay üst barda "Dokümanı Aç"
+
+**Dosyalar:**
+- `frontend/src/components/aux-record-detail/AuxRecordDetailTopbar.vue`
+- `frontend/src/pages/AuxRecordDetail.vue`
+- `frontend/src/composables/useAuxRecordDetailActions.js`
+
+Yapılacaklar:
+- Mevcut `Detayı Görüntüle` ve `Bağlı Kayda Git` aksiyonlarının yanına `Dokümanı Aç` butonu eklenir.
+- Sadece ekran `files` veya `at-documents` olduğunda görünür.
+- `AT Document` için `doc.file_url` yoksa `doc.file` üzerinden fallback çözümlemesi yapılır.
+
+### Görev 9.4 — i18n ve metinler
+
+**Güncellenecek dosyalar:**
+- `frontend/src/generated/translations.js`
+- (gerekirse) sayfa içi `copy.tr/en` blokları
+
+Yeni metinler:
+- `openDocument`: EN `Open Document` / TR `Dokümanı Aç`
+- `fileLinkNotFound`: EN `File link not found` / TR `Dosya bağlantısı bulunamadı`
+
+### Görev 9.5 — Test ve smoke doğrulama
+
+Unit:
+- `AuxWorkbenchTableSection` yeni buton görünürlüğü
+- `useAuxWorkbenchRuntime.openDocument` URL çözümleme davranışı
+- `AuxRecordDetailTopbar` koşullu buton görünürlüğü
+
+Smoke:
+1. Doküman Merkezi listesinde satırdan `Dokümanı Aç` -> dosya yeni sekmede açılır.
+2. Doküman Detayı üst bardan `Dokümanı Aç` -> dosya yeni sekmede açılır.
+3. `is_private=1` dosyada yetkisiz kullanıcı için Frappe izin davranışı (403/login) korunur.
+4. TR/EN metinler doğru görünür.

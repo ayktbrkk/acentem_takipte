@@ -95,6 +95,10 @@ defineProps({
     type: Object,
     default: null,
   },
+  canOpenDocument: {
+    type: Boolean,
+    default: false,
+  },
   showDeskAction: {
     type: Boolean,
     default: false,
@@ -136,6 +140,10 @@ defineProps({
     required: true,
   },
   openPanel: {
+    type: Function,
+    required: true,
+  },
+  openDocument: {
     type: Function,
     required: true,
   },
@@ -243,6 +251,9 @@ const emit = defineEmits(["open-quick-edit"]);
         @click="emit('open-quick-edit')"
       >
         {{ t('quickEdit') }}
+      </ActionButton>
+      <ActionButton v-if="canOpenDocument" variant="secondary" size="xs" @click="openDocument">
+        {{ t('openDocument') }}
       </ActionButton>
       <ActionButton v-if="panelConfig" variant="link" size="xs" trailing-icon=">" @click="openPanel">
         {{ t('panel') }}

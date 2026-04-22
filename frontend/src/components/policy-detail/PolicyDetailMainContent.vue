@@ -103,7 +103,7 @@
           >
             {{ t("uploadDocument") }}
           </ActionButton>
-          <button class="btn btn-sm" type="button" @click="openPolicyDocuments">{{ t("open") }}</button>
+          <button class="btn btn-sm" type="button" @click="openPolicyDocuments">{{ t("openDocumentCenter") }}</button>
         </template>
         <div v-if="fileLoading" class="card-empty">{{ t("loading") }}</div>
         <template v-else>
@@ -131,7 +131,7 @@
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                       </svg>
                     </span>
-                    <a class="btn btn-sm" :href="d.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
+                    <button class="btn btn-sm" type="button" @click="openDocument(d)">{{ t("openDocument") }}</button>
                   </div>
                 </template>
                 <p v-if="d.notes" class="mt-1 text-xs text-slate-500">{{ d.notes }}</p>
@@ -149,7 +149,7 @@
               >
                 <template #trailing>
                   <span v-if="f.is_private" class="badge badge-slate">{{ t("private") }}</span>
-                  <a class="btn btn-sm" :href="f.file_url || '#'" target="_blank" rel="noreferrer">{{ t("open") }}</a>
+                  <button class="btn btn-sm" type="button" @click="openDocument(f)">{{ t("openDocument") }}</button>
                 </template>
               </MetaListCard>
             </div>
@@ -170,6 +170,7 @@ import FieldGroup from "../ui/FieldGroup.vue";
 import StepBar from "../ui/StepBar.vue";
 import { useAuthStore } from "../../stores/auth";
 import { translateText } from "../../utils/i18n";
+import { openDocumentInNewTab } from "../../utils/documentOpen";
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => {
@@ -207,6 +208,12 @@ function documentLabel(doc) {
 
   const source = map[raw] || raw;
   return translateText(source, activeLocale.value);
+}
+
+async function openDocument(doc) {
+  const opened = await openDocumentInNewTab(doc || {});
+  if (opened) return;
+  window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
 }
 
 defineProps({

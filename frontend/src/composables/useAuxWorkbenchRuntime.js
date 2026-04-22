@@ -7,6 +7,7 @@ import {
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 import { useAuxWorkbenchPresets } from "./useAuxWorkbenchPresets";
 
 const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
@@ -574,6 +575,21 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     navigateToSameOriginPath(cfg.url);
   }
 
+  function canOpenDocumentRow(row) {
+    if (!["files", "at-documents"].includes(String(config.key || ""))) return false;
+    const hasDirect = Boolean(String(row?.file_url || row?.url || "").trim());
+    const hasRef = Boolean(String(row?.file || "").trim());
+    return hasDirect || hasRef;
+  }
+
+  async function openDocument(row) {
+    if (!canOpenDocumentRow(row)) return;
+    const opened = await openDocumentInNewTab(row);
+    if (opened) return;
+    const locale = String(unref(activeLocale) || "en").trim();
+    window.alert(locale === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
+  }
+
   function runToolbarAction(action) {
     if (!action || typeof action !== "object") return;
     if (action.capabilityPath && !authStore.can(action.capabilityPath)) return;
@@ -730,6 +746,8 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     panelCfg,
     panelCfgForRow,
     openPanel,
+    canOpenDocumentRow,
+    openDocument,
     runToolbarAction,
     currentPresetPayload,
     setFilterStateFromPayload,

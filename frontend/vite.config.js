@@ -26,6 +26,8 @@ export default defineConfig({
         manualChunks: {
           vue: ["vue", "vue-router"],
           frappe_ui: ["frappe-ui"],
+          chart: ["chart.js"],
+          ui: ["@iconify-json/lucide"],
         },
       },
     },

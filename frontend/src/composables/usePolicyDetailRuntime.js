@@ -88,10 +88,10 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
     const policyName = activePolicyName.value;
     if (!policyName) return;
     router.push({
-      name: "files-list",
+      name: "at-documents-list",
       query: {
-        attached_to_doctype: "AT Policy",
-        attached_to_name: policyName,
+        reference_doctype: "AT Policy",
+        reference_name: policyName,
       },
     });
   }
@@ -122,9 +122,16 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
     return `${(kb / 1024).toFixed(1)} MB`;
   }
 
-  const canUploadDocuments = computed(() =>
-    Boolean(authStore.capabilities?.doctypes?.["AT Policy"]?.write)
-  );
+  const canUploadDocuments = computed(() => {
+    const caps = authStore.capabilities?.doctypes || {};
+    return Boolean(
+      caps?.["AT Policy"]?.write
+      || caps?.["AT Document"]?.create
+      || caps?.["AT Document"]?.write
+      || caps?.File?.create
+      || caps?.File?.write
+    );
+  });
 
   function applyPolicyPayload(data) {
     const payload = data || {};

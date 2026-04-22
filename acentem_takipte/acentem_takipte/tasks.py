@@ -360,10 +360,6 @@ def run_accounting_reconciliation_job(limit: int = 400) -> dict[str, Any]:
     )
 
 
-def _build_renewal_key(policy_name: str, due_date) -> str:
-    return build_renewal_key(policy_name, due_date)
-
-
 def _payment_notification_exists_today(payment_name: str, business_date) -> bool:
     start_of_day = f"{business_date} 00:00:00"
     end_of_day = f"{business_date} 23:59:59"
@@ -379,10 +375,4 @@ def _payment_notification_exists_today(payment_name: str, business_date) -> bool
         limit_page_length=5,
     )
     return bool(rows)
-
-
-def _load_existing_renewal_keys(policy_names: list[str]) -> set[str]:
-    from acentem_takipte.acentem_takipte.renewal.service import load_existing_renewal_keys as load_existing_renewal_keys_service
-
-    return load_existing_renewal_keys_service(policy_names)
 

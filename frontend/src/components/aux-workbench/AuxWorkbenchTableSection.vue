@@ -170,6 +170,14 @@
                     {{ rowActionBusyName === row.name ? runningLabel : completeTaskLabel }}
                   </ActionButton>
                   <ActionButton variant="secondary" size="xs" @click.stop="$emit('open-detail', row)">{{ openDetailLabel }}</ActionButton>
+                  <ActionButton
+                    v-if="canOpenDocumentRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    @click.stop="$emit('open-document', row)"
+                  >
+                    {{ openDocumentLabel }}
+                  </ActionButton>
                   <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="$emit('open-panel', row)">{{ panelLabel }}</ActionButton>
                 </InlineActionRow>
               </DataTableCell>
@@ -222,6 +230,7 @@ defineProps({
   actionsLabel: { type: String, default: "" },
   modifiedLabel: { type: String, default: "" },
   openDetailLabel: { type: String, default: "" },
+  openDocumentLabel: { type: String, default: "" },
   panelLabel: { type: String, default: "" },
   sendNowLabel: { type: String, default: "" },
   retryLabel: { type: String, default: "" },
@@ -263,10 +272,12 @@ defineProps({
   canStartOwnershipAssignmentRow: { type: Function, required: true },
   canBlockOwnershipAssignmentRow: { type: Function, required: true },
   canCompleteOwnershipAssignmentRow: { type: Function, required: true },
+  canOpenDocumentRow: { type: Function, required: true },
 });
 
 defineEmits([
   "open-detail",
+  "open-document",
   "open-panel",
   "send-draft-now",
   "retry-outbox",

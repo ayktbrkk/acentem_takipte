@@ -1,5 +1,5 @@
 <template>
-  <button :type="type" :class="buttonClass" :disabled="disabled">
+  <button :type="type" :class="buttonClass" :disabled="disabled" @click="handleClick">
     <slot />
     <span v-if="trailingIcon" aria-hidden="true">{{ trailingIcon }}</span>
   </button>
@@ -24,6 +24,14 @@ const props = defineProps({
     default: "",
   },
 });
+
+const emit = defineEmits(["click"]);
+
+function handleClick(e) {
+  if (!props.disabled) {
+    emit("click", e);
+  }
+}
 
 const buttonClass = computed(() => {
   const base = "rounded-lg disabled:cursor-not-allowed disabled:opacity-60";

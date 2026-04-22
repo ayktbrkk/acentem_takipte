@@ -534,7 +534,7 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(documentsTab).toBeTruthy();
     await documentsTab.trigger("click");
 
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
     expect(uploadBtn).toBeTruthy();
   });
 
@@ -551,7 +551,7 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(documentsTab).toBeTruthy();
     await documentsTab.trigger("click");
 
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
     expect(uploadBtn).toBeFalsy();
   });
 
@@ -581,7 +581,7 @@ describe("PolicyDetail policy 360 integration", () => {
     const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
     await documentsTab.trigger("click");
 
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
     expect(uploadBtn).toBeTruthy();
     await uploadBtn.trigger("click");
 
@@ -616,7 +616,7 @@ describe("PolicyDetail policy 360 integration", () => {
     const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
     await documentsTab.trigger("click");
 
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
     await uploadBtn.trigger("click");
     await Promise.resolve();
 
@@ -657,7 +657,7 @@ describe("PolicyDetail policy 360 integration", () => {
     const documentsTab = wrapper.findAll(".nav-tab").find((n) => n.text().includes("Doküman"));
     await documentsTab.trigger("click");
 
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Belge Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
     await uploadBtn.trigger("click");
     await Promise.resolve();
 

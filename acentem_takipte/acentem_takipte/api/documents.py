@@ -10,6 +10,107 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate
 
+# Whitelist: upload_document yalnızca bu DocType'lara bağlanabilir
+_ALLOWED_REFERENCE_DOCTYPES = frozenset({"AT Policy", "AT Customer", "AT Claim", ""})
+
+_DOCUMENT_KIND_CANONICAL_MAP = {
+    "policy": "Policy",
+    "police": "Policy",
+    "endorsement": "Endorsement",
+    "zeyilname": "Endorsement",
+    "claim": "Claim",
+    "hasar": "Claim",
+    "other": "Other",
+    "diger": "Other",
+    "diğer": "Other",
+}
+
+_DOCUMENT_SUB_TYPE_CANONICAL_MAP = {
+    "vehicle registration": "Vehicle Registration",
+    "ruhsat": "Vehicle Registration",
+    "id document": "ID Document",
+    "kimlik": "ID Document",
+    "policy copy": "Policy Copy",
+    "police kopyasi": "Policy Copy",
+    "poliçe kopyası": "Policy Copy",
+    "damage photo": "Damage Photo",
+    "hasar fotografi": "Damage Photo",
+    "hasar fotoğrafı": "Damage Photo",
+    "other": "Other",
+    "diger": "Other",
+    "diğer": "Other",
+}
+
+_LEGACY_SELECT_VALUES = {
+    "document_kind": {
+        "Policy": "Poliçe",
+        "Endorsement": "Zeyilname",
+        "Claim": "Hasar",
+        "Other": "Diğer",
+    },
+    "document_sub_type": {
+        "Vehicle Registration": "Ruhsat",
+        "ID Document": "Kimlik",
+        "Policy Copy": "Poliçe Kopyası",
+        "Damage Photo": "Hasar Fotoğrafı",
+        "Other": "Diğer",
+    },
+}
+
+
+def _resolve_uploaded_file_name(file_name: str = "", file_url: str = "") -> str:
+    """Resolve a File document name from upload_file outputs.
+
+    upload_file response may provide either the File docname, file_url, or user-facing
+    file_name depending on context/version. This helper normalizes those variants.
+    """
+    raw_name = str(file_name or "").strip()
+    raw_url = str(file_url or "").strip()
+
+    if raw_name and frappe.db.exists("File", raw_name):
+        return raw_name
+
+    def _lookup_by_url(url_value: str) -> str:
+        if not url_value:
+            return ""
+        normalized = url_value
+        if url_value.lower().startswith("http://") or url_value.lower().startswith("https://"):
+            normalized = urlparse(url_value).path or ""
+        normalized = str(normalized or "").strip()
+        if not normalized:
+            return ""
+        return str(frappe.db.get_value("File", {"file_url": normalized}, "name") or "")
+
+    # Prefer exact file_url lookup when provided.
+    by_url = _lookup_by_url(raw_url) or _lookup_by_url(raw_name)
+    if by_url:
+        return by_url
+
+    # Fallback: treat raw_name as File.file_name (human-readable). Prioritize current user.
+    if raw_name:
+        owner_filters = {"file_name": raw_name, "owner": frappe.session.user}
+        owner_rows = frappe.get_all(
+            "File",
+            filters=owner_filters,
+            fields=["name"],
+            order_by="creation desc",
+            limit_page_length=1,
+        )
+        if owner_rows:
+            return str(owner_rows[0].name)
+
+        any_rows = frappe.get_all(
+            "File",
+            filters={"file_name": raw_name},
+            fields=["name"],
+            order_by="creation desc",
+            limit_page_length=1,
+        )
+        if any_rows:
+            return str(any_rows[0].name)
+
+    return ""
+
 
 def _ascii_slug(value: str, default: str = "DOC", keep_case: bool = False) -> str:
     text = unicodedata.normalize("NFKD", str(value or "")).encode("ascii", "ignore").decode("ascii")
@@ -42,6 +143,41 @@ def _file_extension(file_doc) -> str:
         return "BIN"
     ext = source_name.rsplit(".", 1)[-1].strip().upper()
     return ext or "BIN"
+
+
+def _canonicalize_document_taxonomy(fieldname: str, value: str) -> str:
+    raw_value = str(value or "").strip()
+    if not raw_value:
+        return ""
+
+    normalized = raw_value.lower()
+    if fieldname == "document_kind":
+        return _DOCUMENT_KIND_CANONICAL_MAP.get(normalized, raw_value)
+    if fieldname == "document_sub_type":
+        return _DOCUMENT_SUB_TYPE_CANONICAL_MAP.get(normalized, raw_value)
+    return raw_value
+
+
+def _coerce_select_value_for_current_meta(fieldname: str, canonical_value: str) -> str:
+    value = str(canonical_value or "").strip()
+    if not value:
+        return ""
+
+    meta = frappe.get_meta("AT Document")
+    field = meta.get_field(fieldname)
+    options = {
+        str(option).strip()
+        for option in str(getattr(field, "options", "") or "").splitlines()
+        if str(option).strip()
+    }
+    if not options or value in options:
+        return value
+
+    legacy_value = _LEGACY_SELECT_VALUES.get(fieldname, {}).get(value)
+    if legacy_value and legacy_value in options:
+        return legacy_value
+
+    return value
 
 
 def _resolve_reference_token(reference_doctype: str, reference_name: str) -> str:
@@ -116,6 +252,7 @@ def _reserve_display_name(
 @frappe.whitelist()
 def upload_document(
     file_name: str,
+    file_url: str = "",
     attached_to_doctype: str = "",
     attached_to_name: str = "",
     document_kind: str = "",
@@ -145,23 +282,38 @@ def upload_document(
     Returns:
         {"at_document": <name of created AT Document record>}
     """
-    # Validate the File record exists and caller has read permission
-    if not frappe.db.exists("File", file_name):
+    # Güvenlik: yalnızca izin verilen DocType'lara bağlanabilir
+    attached_to_doctype = str(attached_to_doctype or "").strip()
+    attached_to_name = str(attached_to_name or "").strip()
+
+    if attached_to_doctype not in _ALLOWED_REFERENCE_DOCTYPES:
+        frappe.throw(
+            _("Invalid reference doctype: {0}").format(attached_to_doctype),
+            frappe.ValidationError,
+        )
+
+    # Validate/resolve the File record from docname, url or uploaded display name.
+    resolved_file_name = _resolve_uploaded_file_name(file_name=file_name, file_url=file_url)
+    if not resolved_file_name:
         frappe.throw(_("File not found: {0}").format(file_name), frappe.DoesNotExistError)
 
-    file_doc = frappe.get_doc("File", file_name)
+    file_doc = frappe.get_doc("File", resolved_file_name)
+    canonical_document_kind = _canonicalize_document_taxonomy("document_kind", document_kind)
+    canonical_document_sub_type = _canonicalize_document_taxonomy("document_sub_type", document_sub_type)
+    stored_document_kind = _coerce_select_value_for_current_meta("document_kind", canonical_document_kind)
+    stored_document_sub_type = _coerce_select_value_for_current_meta("document_sub_type", canonical_document_sub_type)
     current_upload_date = nowdate()
     naming_identity = _reserve_display_name(
         reference_doctype=attached_to_doctype,
         reference_name=attached_to_name,
-        document_sub_type=document_sub_type,
+        document_sub_type=canonical_document_sub_type,
         upload_date=current_upload_date,
         extension=_file_extension(file_doc),
     )
 
     doc_data: dict = {
         "doctype": "AT Document",
-        "file": file_name,
+        "file": resolved_file_name,
         "display_name": naming_identity["display_name"],
         "status": "Active",
         "upload_date": current_upload_date,
@@ -172,10 +324,10 @@ def upload_document(
         "secondary_file_name": naming_identity["display_name"],
     }
 
-    if document_kind:
-        doc_data["document_kind"] = document_kind
-    if document_sub_type:
-        doc_data["document_sub_type"] = document_sub_type
+    if stored_document_kind:
+        doc_data["document_kind"] = stored_document_kind
+    if stored_document_sub_type:
+        doc_data["document_sub_type"] = stored_document_sub_type
     if document_date:
         doc_data["document_date"] = document_date
     if notes:
@@ -212,8 +364,23 @@ def upload_document(
         elif attached_to_doctype == "AT Customer":
             doc_data["customer"] = attached_to_name
 
+    can_create_at_document = bool(frappe.has_permission("AT Document", ptype="create"))
+    allow_via_reference_write = False
+
+    if not can_create_at_document and attached_to_doctype and attached_to_name:
+        reference_doc = frappe.get_doc(attached_to_doctype, attached_to_name)
+        allow_via_reference_write = bool(
+            frappe.has_permission(attached_to_doctype, ptype="write", doc=reference_doc)
+        )
+
+    if not can_create_at_document and not allow_via_reference_write:
+        frappe.throw(
+            _("You are not allowed to create document metadata for this record."),
+            frappe.PermissionError,
+        )
+
     at_doc = frappe.get_doc(doc_data)
-    at_doc.insert(ignore_permissions=False)
+    at_doc.insert(ignore_permissions=allow_via_reference_write)
 
     # Rename the physical file and update File record (file_name + file_url).
     new_display_name = naming_identity["display_name"]
@@ -299,6 +466,7 @@ def get_document_context(doctype: str, docname: str) -> dict:
         )
         if row:
             record_name = row.full_name or row.name
+            customer_name = row.full_name or row.name
             customer_id = row.tax_id or ""
 
     return {
@@ -327,14 +495,17 @@ def share_document(docname: str, method: str = "whatsapp") -> dict:
     doc = frappe.get_doc("AT Document", docname)
     frappe.has_permission("AT Document", ptype="read", doc=doc, throw=True)
 
-    warning = None
-    if doc.is_sensitive:
-        warning = _("This document is marked as sensitive. Sharing is not recommended.")
-
     if not doc.file:
         frappe.throw(_("AT Document has no linked file."))
 
     file_doc = frappe.get_doc("File", doc.file)
+
+    warning = None
+    if doc.is_sensitive:
+        warning = _("This document is marked as sensitive. Sharing is not recommended.")
+    if file_doc.is_private:
+        private_warning = _("This file is private and requires authentication to access. Recipients may not be able to open the shared link.")
+        warning = f"{warning}\n{private_warning}" if warning else private_warning
     file_url = frappe.utils.get_url(file_doc.file_url)
 
     phone = ""
@@ -349,3 +520,17 @@ def share_document(docname: str, method: str = "whatsapp") -> dict:
         return {"url": wa_url, "phone": phone_digits, "warning": warning}
 
     return {"url": file_url, "phone": phone_digits, "warning": warning}
+
+
+@frappe.whitelist()
+def toggle_verified(docname: str) -> dict:
+    """Toggle is_verified flag on an AT Document record.
+
+    Returns:
+        {"is_verified": int}
+    """
+    doc = frappe.get_doc("AT Document", docname)
+    frappe.has_permission("AT Document", ptype="write", doc=doc, throw=True)
+    doc.is_verified = 0 if doc.is_verified else 1
+    doc.save(ignore_permissions=False)
+    return {"is_verified": doc.is_verified}

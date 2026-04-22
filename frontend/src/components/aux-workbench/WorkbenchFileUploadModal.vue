@@ -1,135 +1,135 @@
 <template>
   <Teleport to="body">
-    <div v-if="open" class="modal-backdrop" @click.self="$emit('close')">
-      <div class="modal-box" role="dialog" aria-modal="true">
-        <div class="modal-header">
-          <h2 class="modal-title">{{ t("uploadDocument") }}</h2>
-          <button class="modal-close-btn" type="button" :aria-label="t('close')" @click="$emit('close')">✕</button>
-        </div>
-
-        <div
-          class="drop-zone"
-          :class="{ 'drop-zone-active': isDragging }"
-          @dragover.prevent="isDragging = true"
-          @dragleave.prevent="isDragging = false"
-          @drop.prevent="onDrop"
-          @click="fileInput.click()"
-        >
-          <input
-            ref="fileInput"
-            type="file"
-            class="hidden-input"
-            @change="onFileChange"
-          />
-          <p v-if="!selectedFile" class="drop-zone-text">{{ t("chooseFile") }}</p>
-          <p v-else class="drop-zone-selected">
-            {{ selectedFile.name }}
-            <span class="drop-zone-size">{{ fmtFileSize(selectedFile.size) }}</span>
-          </p>
-        </div>
-
-        <p v-if="errorMessage" class="upload-error">{{ errorMessage }}</p>
-
-        <!-- Bağlam bilgisi (attachedToDoctype/name verildiğinde) -->
-        <div v-if="contextInfo" class="context-badge">
-          <span class="context-label">{{ contextInfo.record_type }}</span>
-          <span class="context-name">{{ contextInfo.record_name }}</span>
-          <span v-if="contextInfo.customer_name" class="context-customer">
-            → {{ contextInfo.customer_name }}
-            <span v-if="contextInfo.customer_id" class="context-taxid">({{ contextInfo.customer_id }})</span>
-          </span>
-        </div>
-
-        <!-- P3.5: prop boşsa bağlantı seçici göster -->
-        <div v-if="!props.attachedToDoctype" class="link-section">
-          <label class="field-row">
-            <span class="field-label">{{ t('linkDoctypeLabel') }}</span>
-            <select v-model="linkDoctype" class="field-input" @change="onLinkDoctypeChange">
-              <option value="">—</option>
-              <option value="AT Customer">{{ t('linkCustomer') }}</option>
-              <option value="AT Policy">{{ t('linkPolicy') }}</option>
-              <option value="AT Claim">{{ t('linkClaim') }}</option>
-            </select>
-          </label>
-          <div v-if="linkDoctype" class="field-row">
-            <span class="field-label">{{ t('linkNameLabel') }}</span>
-            <div class="link-input-wrap">
-              <input
-                v-model="linkSearch"
-                type="text"
-                class="field-input"
-                :placeholder="t('linkSearchPlaceholder')"
-                @input="onLinkSearch"
-                autocomplete="off"
-              />
-              <ul v-if="linkResults.length" class="link-results">
-                <li
-                  v-for="r in linkResults"
-                  :key="r.name"
-                  class="link-result-item"
-                  @mousedown.prevent="selectLinkResult(r)"
-                >
-                  <span class="link-result-name">{{ r.label || r.name }}</span>
-                  <span v-if="r.taxId" class="link-result-tax">{{ r.taxId }}</span>
-                  <span class="link-result-id">{{ r.name }}</span>
-                </li>
-              </ul>
-              <p v-if="linkSearching" class="link-searching">{{ t('linkSearching') }}</p>
-            </div>
-            <span v-if="linkName" class="link-selected">✓ {{ linkName }}</span>
+    <div v-if="open" class="upload-modal-wrapper">
+      <div class="modal-backdrop" @click.self="$emit('close')">
+        <div class="modal-box" role="dialog" aria-modal="true">
+          <div class="modal-header">
+            <h2 class="modal-title">{{ t("uploadDocument") }}</h2>
+            <button class="modal-close-btn" type="button" :aria-label="t('close')" @click="$emit('close')">✕</button>
           </div>
-        </div>
 
-        <div class="meta-fields">
-          <label class="field-row">
-            <span class="field-label">{{ t("documentKind") }}</span>
-            <select v-model="documentKind" class="field-input">
-              <option value="">—</option>
-              <option value="Policy">{{ t("kindPolicy") }}</option>
-              <option value="Endorsement">{{ t("kindEndorsement") }}</option>
-              <option value="Claim">{{ t("kindClaim") }}</option>
-              <option value="Other">{{ t("kindOther") }}</option>
-            </select>
-          </label>
-          <label class="field-row">
-            <span class="field-label">{{ t("documentSubType") }}</span>
-            <select v-model="documentSubType" class="field-input">
-              <option value="">—</option>
-              <option value="Ruhsat">{{ t("subRuhsat") }}</option>
-              <option value="Kimlik">{{ t("subKimlik") }}</option>
-              <option value="Poliçe Kopyası">{{ t("subPoliceCopyasi") }}</option>
-              <option value="Hasar Fotoğrafı">{{ t("subHasarFotografi") }}</option>
-              <option value="Diğer">{{ t("subDiger") }}</option>
-            </select>
-          </label>
-          <label class="field-row field-row-check">
-            <input v-model="isSensitive" type="checkbox" class="field-checkbox" />
-            <span class="field-label">{{ t("isSensitive") }}</span>
-          </label>
-          <label class="field-row">
-            <span class="field-label">{{ t("notes") }}</span>
-            <textarea v-model="notes" class="field-input field-textarea" rows="2" />
-          </label>
-        </div>
+          <div
+            class="drop-zone"
+            :class="{ 'drop-zone-active': isDragging }"
+            @dragover.prevent="isDragging = true"
+            @dragleave.prevent="isDragging = false"
+            @drop.prevent="onDrop"
+            @click="fileInput.click()"
+          >
+            <input
+              ref="fileInput"
+              type="file"
+              class="hidden-input"
+              @change="onFileChange"
+            />
+            <p v-if="!selectedFile" class="drop-zone-text">{{ t("chooseFile") }}</p>
+            <p v-else class="drop-zone-selected">
+              {{ selectedFile.name }}
+              <span class="drop-zone-size">{{ fmtFileSize(selectedFile.size) }}</span>
+            </p>
+          </div>
 
-        <div class="modal-actions">
-          <button
-            class="btn btn-sm btn-secondary"
-            type="button"
-            :disabled="uploading"
-            @click="$emit('close')"
-          >
-            {{ t("cancel") }}
-          </button>
-          <button
-            class="btn btn-sm btn-primary"
-            type="button"
-            :disabled="!selectedFile || uploading"
-            @click="submit"
-          >
-            <span v-if="uploading">{{ t("uploading") }}</span>
-            <span v-else>{{ t("upload") }}</span>
-          </button>
+          <p v-if="errorMessage" class="upload-error">{{ errorMessage }}</p>
+
+          <div v-if="contextInfo" class="context-badge">
+            <span class="context-label">{{ contextInfo.record_type }}</span>
+            <span class="context-name">{{ contextInfo.record_name }}</span>
+            <span v-if="contextInfo.customer_name" class="context-customer">
+              → {{ contextInfo.customer_name }}
+              <span v-if="contextInfo.customer_id" class="context-taxid">({{ contextInfo.customer_id }})</span>
+            </span>
+          </div>
+
+          <div v-if="!props.attachedToDoctype" class="link-section">
+            <label class="field-row">
+              <span class="field-label">{{ t('linkDoctypeLabel') }}</span>
+              <select v-model="linkDoctype" class="field-input" @change="onLinkDoctypeChange">
+                <option value="">—</option>
+                <option value="AT Customer">{{ t('linkCustomer') }}</option>
+                <option value="AT Policy">{{ t('linkPolicy') }}</option>
+                <option value="AT Claim">{{ t('linkClaim') }}</option>
+              </select>
+            </label>
+            <div v-if="linkDoctype" class="field-row">
+              <span class="field-label">{{ t('linkNameLabel') }}</span>
+              <div class="link-input-wrap">
+                <input
+                  v-model="linkSearch"
+                  type="text"
+                  class="field-input"
+                  :placeholder="t('linkSearchPlaceholder')"
+                  @input="onLinkSearch"
+                  autocomplete="off"
+                />
+                <ul v-if="linkResults.length" class="link-results">
+                  <li
+                    v-for="r in linkResults"
+                    :key="r.name"
+                    class="link-result-item"
+                    @mousedown.prevent="selectLinkResult(r)"
+                  >
+                    <span class="link-result-name">{{ r.label || r.name }}</span>
+                    <span v-if="r.taxId" class="link-result-tax">{{ r.taxId }}</span>
+                    <span class="link-result-id">{{ r.name }}</span>
+                  </li>
+                </ul>
+                <p v-if="linkSearching" class="link-searching">{{ t('linkSearching') }}</p>
+              </div>
+              <span v-if="linkName" class="link-selected">✓ {{ linkName }}</span>
+            </div>
+          </div>
+
+          <div class="meta-fields">
+            <label class="field-row">
+              <span class="field-label">{{ t("documentKind") }}</span>
+              <select v-model="documentKind" class="field-input">
+                <option value="">—</option>
+                <option value="Policy">{{ t("kindPolicy") }}</option>
+                <option value="Endorsement">{{ t("kindEndorsement") }}</option>
+                <option value="Claim">{{ t("kindClaim") }}</option>
+                <option value="Other">{{ t("kindOther") }}</option>
+              </select>
+            </label>
+            <label class="field-row">
+              <span class="field-label">{{ t("documentSubType") }}</span>
+              <select v-model="documentSubType" class="field-input">
+                <option value="">—</option>
+                  <option value="Vehicle Registration">{{ t("subRuhsat") }}</option>
+                  <option value="ID Document">{{ t("subKimlik") }}</option>
+                  <option value="Policy Copy">{{ t("subPoliceCopyasi") }}</option>
+                  <option value="Damage Photo">{{ t("subHasarFotografi") }}</option>
+                  <option value="Other">{{ t("subDiger") }}</option>
+              </select>
+            </label>
+            <label class="field-row field-row-check">
+              <input v-model="isSensitive" type="checkbox" class="field-checkbox" />
+              <span class="field-label">{{ t("isSensitive") }}</span>
+            </label>
+            <label class="field-row">
+              <span class="field-label">{{ t("notes") }}</span>
+              <textarea v-model="notes" class="field-input field-textarea" rows="2" />
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button
+              class="btn btn-sm btn-secondary"
+              type="button"
+              :disabled="uploading"
+              @click="$emit('close')"
+            >
+              {{ t("cancel") }}
+            </button>
+            <button
+              class="btn btn-sm btn-primary"
+              type="button"
+              :disabled="!selectedFile || uploading"
+              @click="submit"
+            >
+              <span v-if="uploading">{{ t("uploading") }}</span>
+              <span v-else>{{ t("upload") }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -167,16 +167,17 @@ function t(key) {
 
 const copy = {
   tr: {
-    uploadDocument: "Belge Yükle",
+    uploadDocument: "Doküman Yükle",
     chooseFile: "Dosya seçin veya buraya sürükleyin",
     uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.",
+    fileTypeNotSupported: "Bu dosya tipi desteklenmiyor. PDF, DOC veya JPEG/PNG kullanın.",
     fileTooLarge: "Dosya çok büyük (maks. 10 MB)",
     cancel: "İptal",
     upload: "Yükle",
     uploading: "Yükleniyor...",
-    documentKind: "Belge Türü",
-    documentSubType: "Belge Alt Türü",
-    documentDate: "Belge Tarihi",
+    documentKind: "Doküman Türü",
+    documentSubType: "Doküman Alt Türü",
+    documentDate: "Doküman Tarihi",
     isSensitive: "Hassas Veri",
     notes: "Notlar",
     kindPolicy: "Poliçe",
@@ -200,6 +201,7 @@ const copy = {
     uploadDocument: "Upload Document",
     chooseFile: "Choose a file or drag it here",
     uploadError: "Upload failed. Please try again.",
+    fileTypeNotSupported: "This file type is not supported. Use PDF, DOC or JPEG/PNG.",
     fileTooLarge: "File is too large (max 10 MB)",
     cancel: "Cancel",
     upload: "Upload",
@@ -352,6 +354,35 @@ function fmtFileSize(bytes) {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
+function extractServerErrorMessage(payload) {
+  if (!payload || typeof payload !== "object") return "";
+  const direct = String(payload?.message || payload?.exc_type || "").trim();
+  if (direct) return direct;
+
+  const rawServerMessages = payload?._server_messages;
+  if (rawServerMessages) {
+    try {
+      const parsed = JSON.parse(rawServerMessages);
+      if (Array.isArray(parsed) && parsed.length) {
+        const first = parsed[0];
+        if (typeof first === "string") {
+          try {
+            const inner = JSON.parse(first);
+            const innerMessage = String(inner?.message || "").trim();
+            if (innerMessage) return innerMessage;
+          } catch {
+            const txt = first.replace(/<[^>]*>/g, "").trim();
+            if (txt) return txt;
+          }
+        }
+      }
+    } catch {
+      // ignore parse issues and continue with generic fallback
+    }
+  }
+  return "";
+}
+
 function onFileChange(event) {
   const file = event.target.files?.[0];
   if (file) {
@@ -384,7 +415,6 @@ async function submit() {
   const fd = new FormData();
   fd.append("file", selectedFile.value);
   fd.append("is_private", "1");
-  // P3.5: prop boşsa seçiciden al
   const effectiveDoctype = props.attachedToDoctype || linkDoctype.value;
   const effectiveName = props.attachedToName || (linkDoctype.value ? linkName.value : "");
 
@@ -396,9 +426,8 @@ async function submit() {
   }
 
   try {
-    const csrfToken =
-      (typeof window !== "undefined" && window.csrf_token) || "";
-    const resp = await fetch("/api/method/upload_file", {
+    const csrfToken = (typeof window !== "undefined" && window.csrf_token) || "";
+    const resp = await fetch("/api/method/frappe.client.upload_file", {
       method: "POST",
       body: fd,
       headers: csrfToken ? { "X-Frappe-CSRF-Token": csrfToken } : {},
@@ -407,26 +436,47 @@ async function submit() {
     if (resp.ok) {
       const uploadResult = await resp.json();
       const frappe_file_name = uploadResult?.message?.name || uploadResult?.message?.file_name || "";
-      if (frappe_file_name) {
-        const csrfT = (typeof window !== "undefined" && window.csrf_token) || "";
-        const body = new URLSearchParams({
-          file_name: frappe_file_name,
-          ...(effectiveDoctype ? { attached_to_doctype: effectiveDoctype } : {}),
-          ...(effectiveName ? { attached_to_name: effectiveName } : {}),
-          document_kind: documentKind.value,
-          document_sub_type: documentSubType.value,
-          is_sensitive: isSensitive.value ? "1" : "0",
-          notes: notes.value,
-          is_private: "1",
-        });
-        await fetch("/api/method/acentem_takipte.acentem_takipte.api.documents.upload_document", {
-          method: "POST",
-          body,
-          headers: Object.assign(
-            { "Content-Type": "application/x-www-form-urlencoded" },
-            csrfT ? { "X-Frappe-CSRF-Token": csrfT } : {}
-          ),
-        });
+      const frappe_file_url = uploadResult?.message?.file_url || "";
+      
+      if (!frappe_file_name) {
+        const errMsg = uploadResult?.message || uploadResult?.exception || uploadResult?.error || "";
+        if (typeof errMsg === 'string' && errMsg.toLowerCase().includes('model does not support image')) {
+          errorMessage.value = t("fileTypeNotSupported");
+        } else {
+          errorMessage.value = t("uploadError");
+        }
+        return;
+      }
+      
+      const csrfT = (typeof window !== "undefined" && window.csrf_token) || "";
+      const body = new URLSearchParams({
+        file_name: frappe_file_name,
+        ...(frappe_file_url ? { file_url: frappe_file_url } : {}),
+        ...(effectiveDoctype ? { attached_to_doctype: effectiveDoctype } : {}),
+        ...(effectiveName ? { attached_to_name: effectiveName } : {}),
+        document_kind: documentKind.value,
+        document_sub_type: documentSubType.value,
+        is_sensitive: isSensitive.value ? "1" : "0",
+        notes: notes.value,
+        is_private: "1",
+      });
+      const metaResp = await fetch("/api/method/acentem_takipte.acentem_takipte.api.documents.upload_document", {
+        method: "POST",
+        body,
+        headers: Object.assign(
+          { "Content-Type": "application/x-www-form-urlencoded" },
+          csrfT ? { "X-Frappe-CSRF-Token": csrfT } : {}
+        ),
+      });
+      if (!metaResp.ok) {
+        let detail = "";
+        try {
+          const payload = await metaResp.json();
+          detail = extractServerErrorMessage(payload);
+        } catch {
+        }
+        errorMessage.value = detail ? `${t("uploadError")} (${detail})` : t("uploadError");
+        return;
       }
       selectedFile.value = null;
       documentKind.value = "";
@@ -440,7 +490,13 @@ async function submit() {
       if (fileInput.value) fileInput.value.value = "";
       emit("uploaded");
     } else {
-      errorMessage.value = t("uploadError");
+      let errText = "";
+      try { errText = await resp.text(); } catch {}
+      if (errText.toLowerCase().includes('model does not support image')) {
+        errorMessage.value = "Bu dosya tipi desteklenmiyor. PDF, DOC veya JPEG/PNG kullanın.";
+      } else {
+        errorMessage.value = t("uploadError");
+      }
     }
   } catch {
     errorMessage.value = t("uploadError");
@@ -451,6 +507,12 @@ async function submit() {
 </script>
 
 <style scoped>
+.upload-modal-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;

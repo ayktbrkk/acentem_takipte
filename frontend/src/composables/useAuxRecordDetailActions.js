@@ -3,6 +3,7 @@ import { createResource } from "frappe-ui";
 
 import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 
 export function useAuxRecordDetailActions({
   props,
@@ -40,6 +41,10 @@ export function useAuxRecordDetailActions({
         "AT Renewal Task",
         "AT Ownership Assignment",
       ].includes(String(unref(config?.doctype) || "")) && Boolean(unref(doc)?.name)
+  );
+
+  const canOpenDocument = computed(
+    () => ["files", "at-documents"].includes(String(unref(config?.key) || "")) && Boolean(unref(doc)?.name)
   );
 
   const isTaskDetail = computed(() => ["AT Task", "AT Renewal Task"].includes(String(unref(config?.doctype) || "")));
@@ -115,6 +120,14 @@ export function useAuxRecordDetailActions({
   function openPanel() {
     if (!panelConfig.value?.url) return;
     navigateToSameOriginPath(panelConfig.value.url);
+  }
+
+  async function openDocument() {
+    if (!canOpenDocument.value) return;
+    const opened = await openDocumentInNewTab(unref(doc) || {});
+    if (opened) return;
+    const locale = String(unref(authStore?.locale) || "en").trim();
+    window.alert(locale === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
   }
 
   async function sendDraftLifecycle() {
@@ -196,6 +209,8 @@ export function useAuxRecordDetailActions({
     openCommunicationContext,
     openDesk,
     openPanel,
+    openDocument,
     panelConfig,
+    canOpenDocument,
   };
 }

@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acentem Takipte — Denetim Planı</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent-perf: #00e5a0;
+    --accent-sec: #f97316;
+    --accent-road: #818cf8;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --high: #ef4444;
+    --med: #f59e0b;
+    --low: #22c55e;
+    --tag-bg: #1e2330;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0d1117 0%, #111827 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 40px 36px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .header-title h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  .header-title h1 span {
+    background: linear-gradient(90deg, var(--accent-perf), var(--accent-road));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-title p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── PROGRESS BOARD ── */
+  .progress-board {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .prog-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    min-width: 130px;
+    text-align: center;
+  }
+
+  .prog-card .pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .prog-card .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  .prog-card.perf .pct { color: var(--accent-perf); }
+  .prog-card.sec .pct { color: var(--accent-sec); }
+  .prog-card.road .pct { color: var(--accent-road); }
+  .prog-card.total .pct { color: var(--text); }
+
+  /* ── TABS ── */
+  .tabs-wrap {
+    max-width: 1100px;
+    margin: 32px auto 0;
+    padding: 0 40px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: .3px;
+  }
+
+  .tab-btn .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+
+  .tab-btn.active {
+    color: var(--text);
+    border-bottom-color: currentColor;
+  }
+
+  .tab-btn[data-tab="perf"].active { color: var(--accent-perf); }
+  .tab-btn[data-tab="sec"].active { color: var(--accent-sec); }
+  .tab-btn[data-tab="road"].active { color: var(--accent-road); }
+
+  .tab-btn[data-tab="perf"] .dot { background: var(--accent-perf); }
+  .tab-btn[data-tab="sec"] .dot { background: var(--accent-sec); }
+  .tab-btn[data-tab="road"] .dot { background: var(--accent-road); }
+  .tab-btn[data-tab="all"] .dot { background: var(--text-muted); }
+
+  /* ── MAIN ── */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 40px 0;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── SECTION ── */
+  .section {
+    margin-bottom: 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .section-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: .2px;
+  }
+
+  .section-header .section-count {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* ── ITEM ── */
+  .checklist { display: flex; flex-direction: column; gap: 8px; }
+
+  .item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 14px;
+    align-items: start;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    user-select: none;
+  }
+
+  .item:hover { border-color: #2a3045; background: var(--surface2); }
+
+  .item.done {
+    opacity: .55;
+  }
+
+  .item.done .item-title {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  /* custom checkbox */
+  .cb {
+    width: 20px; height: 20px;
+    border-radius: 5px;
+    border: 1.5px solid var(--border);
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all .15s;
+    background: transparent;
+  }
+
+  .item.done .cb {
+    background: var(--accent-perf);
+    border-color: var(--accent-perf);
+  }
+
+  .item.done .cb::after {
+    content: '';
+    display: block;
+    width: 5px; height: 9px;
+    border: 2px solid var(--bg);
+    border-top: none; border-left: none;
+    transform: rotate(42deg) translateY(-1px);
+  }
+
+  .item-body {}
+
+  .item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .item-title {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+    flex: 1;
+  }
+
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--tag-bg);
+    color: var(--text-muted);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .tag.high { background: rgba(239,68,68,.12); color: var(--high); }
+  .tag.med  { background: rgba(245,158,11,.12); color: var(--med); }
+  .tag.low  { background: rgba(34,197,94,.12);  color: var(--low); }
+
+  .item-detail {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    display: none;
+  }
+
+  .item-detail.open { display: block; }
+
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #a5b4cb;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .code-block .kw  { color: #818cf8; }
+  .code-block .str { color: #86efac; }
+  .code-block .fn  { color: #67e8f9; }
+  .code-block .cm  { color: #475569; font-style: italic; }
+  .code-block .num { color: #fca5a5; }
+
+  .expand-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .expand-hint svg { transition: transform .2s; }
+  .item-detail.open ~ .expand-hint svg { transform: rotate(180deg); }
+
+  /* ── ALL VIEW ── */
+  #tab-all .section { }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    transition: all .15s;
+  }
+
+  .filter-btn.active,
+  .filter-btn:hover {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: #2a3045;
+  }
+
+  /* ── FOOTER STATS ── */
+  .sticky-footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(10,12,16,.9);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .sticky-footer strong { color: var(--text); font-weight: 500; }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    max-width: 300px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-perf), var(--accent-road));
+    border-radius: 2px;
+    transition: width .4s ease;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 28px 20px 24px; }
+    .tabs-wrap, main { padding-left: 20px; padding-right: 20px; }
+    .sticky-footer { padding: 10px 20px; }
+    .header-inner { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>Acentem Takipte<br><span>Performans &amp; Güvenlik Denetimi</span></h1>
+      <p>Frappe (Python) Backend · Vue 3 (Vite) Frontend · 22 Nisan 2026</p>
+    </div>
+    <div class="progress-board">
+      <div class="prog-card total">
+        <div class="pct" id="total-pct">0%</div>
+        <div class="label">Toplam</div>
+      </div>
+      <div class="prog-card perf">
+        <div class="pct" id="perf-pct">0%</div>
+        <div class="label">Performans</div>
+      </div>
+      <div class="prog-card sec">
+        <div class="pct" id="sec-pct">0%</div>
+        <div class="label">Güvenlik</div>
+      </div>
+      <div class="prog-card road">
+        <div class="pct" id="road-pct">0%</div>
+        <div class="label">Roadmap</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="perf"><span class="dot"></span>🚀 Performans</button>
+    <button class="tab-btn" data-tab="sec"><span class="dot"></span>🛡️ Güvenlik</button>
+    <button class="tab-btn" data-tab="road"><span class="dot"></span>🗺️ Roadmap</button>
+    <button class="tab-btn" data-tab="all"><span class="dot"></span>Tümü</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ══════════════════ PERFORMANS ══════════════════ -->
+<div class="tab-content active" id="tab-perf">
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(0,229,160,.08)">⚡</div>
+      <h2 style="color:var(--accent-perf)">1.1 Frontend — Bundle Size &amp; Lazy Loading</h2>
+      <span class="section-count" id="count-fe"></span>
+    </div>
+    <div class="checklist" data-group="perf">
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Component-Level Lazy Loading — <code style="font-size:12px;color:#67e8f9">Dashboard.vue</code> ve <code style="font-size:12px;color:#67e8f9">CustomerDetail.vue</code> içindeki ağır bileşenleri böl</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~2 saat</span><span class="tag">Vue 3</span></div>
+          </div>
+          <div class="item-detail">
+            Sayfa scroll'unun altında kalan chart, modal ve data-table bileşenlerini <strong>defineAsyncComponent</strong> ile sarmalayarak ilk yükleme (TTI) süresini ciddi ölçüde azaltabilirsin.
+            <div class="code-block"><span class="cm">// Dashboard.vue içinde</span>
+<span class="kw">import</span> { defineAsyncComponent } <span class="kw">from</span> <span class="str">'vue'</span>
+
+<span class="kw">const</span> RevenueChart = <span class="fn">defineAsyncComponent</span>(() =>
+  <span class="fn">import</span>(<span class="str">'./charts/RevenueChart.vue'</span>)
+)
+
+<span class="kw">const</span> PolicyModal = <span class="fn">defineAsyncComponent</span>({
+  loader: () => <span class="fn">import</span>(<span class="str">'./modals/PolicyModal.vue'</span>),
+  loadingComponent: LoadingSpinner,
+  delay: <span class="num">200</span>,        <span class="cm">// spinner gecikmesi</span>
+  timeout: <span class="num">5000</span>       <span class="cm">// hata sınırı</span>
+})</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Tree-Shaking Kontrolü — <code style="font-size:12px;color:#67e8f9">chart.js</code> &amp; <code style="font-size:12px;color:#67e8f9">@iconify-json/lucide</code> gereksiz modülleri bundle'dan çıkar</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~1 saat</span><span class="tag">Vite</span></div>
+          </div>
+          <div class="item-detail">
+            <code>rollup-plugin-visualizer</code> ile bundle haritasını görsel inceleyip, kullanılmayan modüllerin neden dahil edildiğini tespit et.
+            <div class="code-block"><span class="cm"># vite.config.ts</span>
+<span class="kw">import</span> { visualizer } <span class="kw">from</span> <span class="str">'rollup-plugin-visualizer'</span>
+
+<span class="kw">export default</span> {
+  plugins: [
+    visualizer({ open: <span class="kw">true</span>, gzipSize: <span class="kw">true</span>, filename: <span class="str">'dist/stats.html'</span> })
+  ]
+}
+
+<span class="cm"># Chart.js — sadece kullanılan bileşenleri import et</span>
+<span class="kw">import</span> { Chart, LineElement, CategoryScale } <span class="kw">from</span> <span class="str">'chart.js'</span>
+Chart.<span class="fn">register</span>(LineElement, CategoryScale)</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Link Prefetching — Router geçişlerinde hover anında arka planda yüklemeyi başlat</span>
+            <div class="tags"><span class="tag med">Orta</span><span class="tag">~1 saat</span><span class="tag">Vue Router</span></div>
+          </div>
+          <div class="item-detail">
+            Vue Router'ın lazy route'larına <code>webpackPrefetch</code> hint'i ekleyerek ya da <code>vite-plugin-prefetch</code> ile hover/focus anında bundle'ı indir.
+            <div class="code-block"><span class="cm">// router/index.ts — magic comment yöntemi</span>
+<span class="kw">const</span> CustomerDetail = () =>
+  <span class="kw">import</span>(
+    <span class="cm">/* webpackPrefetch: true */</span>
+    <span class="str">'../views/CustomerDetail.vue'</span>
+  )
+
+<span class="cm">// Ya da router-link üzerinde özel direktif</span>
+<span class="kw">app</span>.<span class="fn">directive</span>(<span class="str">'prefetch'</span>, {
+  mounted(el, binding) {
+    el.<span class="fn">addEventListener</span>(<span class="str">'mouseenter'</span>, () => {
+      router.<span class="fn">resolve</span>(binding.value) <span class="cm">// preload tetikle</span>
+    }, { once: <span class="kw">true</span> })
+  }
+})</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Skeleton Loader — FCP sonrası beyaz ekranı gizle, algılanan performansı artır</span>
+            <div class="tags"><span class="tag med">Orta</span><span class="tag">~3 saat</span><span class="tag">UX</span></div>
+          </div>
+          <div class="item-detail">
+            Her API çağrısı tamamlanana kadar gerçek içeriğin şeklini yansıtan CSS-only skeleton blokları göster. Lighthouse FCP puanı değişmese bile kullanıcı algısı belirgin iyileşir.
+            <div class="code-block"><span class="cm">/* SkeletonLoader.vue */</span>
+.<span class="fn">skeleton</span> {
+  background: <span class="fn">linear-gradient</span>(<span class="num">90</span>deg,
+    <span class="str">#1e2330 25%</span>, <span class="str">#2a3045 50%</span>, <span class="str">#1e2330 75%</span>);
+  background-size: <span class="num">200%</span> <span class="num">100%</span>;
+  animation: shimmer <span class="num">1.4s</span> infinite;
+  border-radius: <span class="num">6px</span>;
+}
+@keyframes shimmer {
+  <span class="num">0%</span>   { background-position: <span class="num">200%</span> <span class="num">0</span>; }
+  <span class="num">100%</span> { background-position: <span class="str">-200%</span> <span class="num">0</span>; }
+}</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(0,229,160,.08)">🗄️</div>
+      <h2 style="color:var(--accent-perf)">1.2 Backend — Redis Cache Stratejileri</h2>
+      <span class="section-count" id="count-be"></span>
+    </div>
+    <div class="checklist" data-group="perf">
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">KPI/Metrik Cache'leme — <code style="font-size:12px;color:#67e8f9">api/dashboard.py</code> içindeki ağır hesaplamalar Redis'e alınmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~2 saat</span><span class="tag">Redis</span><span class="tag">Frappe</span></div>
+          </div>
+          <div class="item-detail">
+            Dashboard her açıldığında tüm DB'yi tarayan aggregate sorguları Redis'e göm. TTL'yi verinin güncellenme sıklığına göre ayarla.
+            <div class="code-block"><span class="cm"># api/dashboard.py</span>
+<span class="kw">import</span> frappe, json
+
+<span class="kw">def</span> <span class="fn">get_dashboard_kpis</span>():
+    cache_key = <span class="str">"dashboard:kpis:v2"</span>
+    cached = frappe.cache().<span class="fn">get_value</span>(cache_key)
+    <span class="kw">if</span> cached:
+        <span class="kw">return</span> json.<span class="fn">loads</span>(cached)
+
+    data = <span class="fn">_compute_heavy_kpis</span>()  <span class="cm"># ağır SQL sorgusu</span>
+
+    frappe.cache().<span class="fn">set_value</span>(
+        cache_key,
+        json.<span class="fn">dumps</span>(data),
+        expires_in_sec=<span class="num">3600</span>  <span class="cm"># 1 saat TTL</span>
+    )
+    <span class="kw">return</span> data</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Akıllı Cache Invalidation — Veri değiştiğinde tüm cache yerine sadece ilgili anahtar silinmeli</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~2 saat</span><span class="tag">Frappe Hooks</span></div>
+          </div>
+          <div class="item-detail">
+            <code>after_insert</code> ve <code>on_update</code> hook'larında sadece ilgili cache anahtarlarını hedef al.
+            <div class="code-block"><span class="cm"># hooks.py</span>
+doc_events = {
+    <span class="str">"Insurance Policy"</span>: {
+        <span class="str">"after_insert"</span>: <span class="str">"myapp.cache.invalidate_policy_cache"</span>,
+        <span class="str">"on_update"</span>:    <span class="str">"myapp.cache.invalidate_policy_cache"</span>,
+        <span class="str">"on_trash"</span>:     <span class="str">"myapp.cache.invalidate_policy_cache"</span>
+    }
+}
+
+<span class="cm"># myapp/cache.py</span>
+POLICY_KEYS = [<span class="str">"dashboard:kpis:v2"</span>, <span class="str">"policy:list:active"</span>]
+
+<span class="kw">def</span> <span class="fn">invalidate_policy_cache</span>(doc, method):
+    <span class="kw">for</span> key <span class="kw">in</span> POLICY_KEYS:
+        frappe.cache().<span class="fn">delete_value</span>(key)</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Master Data Caching — Şehirler, Poliçe Tipleri gibi statik veriler frontend'de tutulmalı</span>
+            <div class="tags"><span class="tag low">Düşük</span><span class="tag">~1.5 saat</span><span class="tag">IndexedDB</span></div>
+          </div>
+          <div class="item-detail">
+            Stale-while-revalidate: önce önbellekteki veriyi göster, arka planda taze veriyi al.
+            <div class="code-block"><span class="cm">// composables/useMasterData.ts</span>
+<span class="kw">const</span> CACHE_TTL = <span class="num">24</span> * <span class="num">60</span> * <span class="num">60</span> * <span class="num">1000</span> <span class="cm">// 24 saat</span>
+
+<span class="kw">export async function</span> <span class="fn">getCities</span>() {
+  <span class="kw">const</span> cached = <span class="fn">getFromStorage</span>(<span class="str">'master:cities'</span>)
+  <span class="kw">if</span> (cached &amp;&amp; !<span class="fn">isExpired</span>(cached, CACHE_TTL)) {
+    <span class="fn">revalidateInBackground</span>() <span class="cm">// sessizce güncelle</span>
+    <span class="kw">return</span> cached.data
+  }
+  <span class="kw">return</span> <span class="kw">await</span> <span class="fn">fetchAndStore</span>(<span class="str">'/api/master/cities'</span>, <span class="str">'master:cities'</span>)
+}</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(0,229,160,.08)">🔍</div>
+      <h2 style="color:var(--accent-perf)">1.3 Veritabanı — Sorgu Verimliliği</h2>
+    </div>
+    <div class="checklist" data-group="perf">
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">N+1 Sorgu Problemi — Döngü içindeki <code style="font-size:12px;color:#67e8f9">frappe.get_doc</code> çağrıları tek <code style="font-size:12px;color:#67e8f9">IN</code> sorgusuyla değiştirilmeli</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~3 saat</span><span class="tag">SQL</span></div>
+          </div>
+          <div class="item-detail">
+            En yaygın performans katili. 100 kayıt için 100 ayrı sorgu yerine tek seferde çek.
+            <div class="code-block"><span class="cm"># ❌ YANLIŞ — N+1 problemi</span>
+<span class="kw">for</span> policy_name <span class="kw">in</span> policy_names:
+    doc = frappe.<span class="fn">get_doc</span>(<span class="str">"Insurance Policy"</span>, policy_name)
+    results.<span class="fn">append</span>(doc.status)
+
+<span class="cm"># ✅ DOĞRU — tek sorgu</span>
+rows = frappe.db.<span class="fn">get_all</span>(
+    <span class="str">"Insurance Policy"</span>,
+    filters={<span class="str">"name"</span>: [<span class="str">"in"</span>, policy_names]},
+    fields=[<span class="str">"name"</span>, <span class="str">"status"</span>, <span class="str">"end_date"</span>, <span class="str">"customer"</span>]
+)</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Sadece Gerekli Alanları Çek — <code style="font-size:12px;color:#67e8f9">frappe.get_all</code> çağrılarında <code style="font-size:12px;color:#67e8f9">fields</code> parametresi zorunlu tutulmalı</span>
+            <div class="tags"><span class="tag med">Orta</span><span class="tag">~2 saat</span><span class="tag">SQL</span></div>
+          </div>
+          <div class="item-detail">
+            <code>fields</code> belirtilmezse Frappe <code>SELECT *</code> çalıştırır — TCKN gibi hassas alanlar dahil her şeyi çeker ve ağ üzerinden taşır.
+            <div class="code-block"><span class="cm"># ❌ Tüm alanları çeker (SELECT *)</span>
+frappe.db.<span class="fn">get_all</span>(<span class="str">"Customer"</span>)
+
+<span class="cm"># ✅ Yalnızca gereken alanlar</span>
+frappe.db.<span class="fn">get_all</span>(
+    <span class="str">"Customer"</span>,
+    fields=[<span class="str">"name"</span>, <span class="str">"full_name"</span>, <span class="str">"mobile_no"</span>, <span class="str">"status"</span>],
+    filters={<span class="str">"enabled"</span>: <span class="num">1</span>},
+    limit=<span class="num">100</span>
+)</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="perf">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Veritabanı Index'leri — <code style="font-size:12px;color:#67e8f9">end_date</code>, <code style="font-size:12px;color:#67e8f9">customer</code>, <code style="font-size:12px;color:#67e8f9">status</code> alanlarına index eklenmeli</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~1 saat</span><span class="tag">MariaDB</span></div>
+          </div>
+          <div class="item-detail">
+            Frappe'de DocType ayarlarında "Search Index" işaretle veya doğrudan SQL ile oluştur. Her zaman <code>EXPLAIN</code> ile doğrula.
+            <div class="code-block"><span class="cm">-- Frappe bench console'da çalıştır</span>
+ALTER TABLE `tabInsurance Policy`
+  ADD INDEX `idx_status_enddate` (`status`, `end_date`),
+  ADD INDEX `idx_customer` (`customer`);
+
+<span class="cm">-- Ardından sorgu planını doğrula</span>
+EXPLAIN SELECT name, status
+FROM `tabInsurance Policy`
+WHERE status = <span class="str">'Active'</span>
+  AND end_date &lt; <span class="str">'2026-06-01'</span>;</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /tab-perf -->
+
+
+<!-- ══════════════════ GÜVENLİK ══════════════════ -->
+<div class="tab-content" id="tab-sec">
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(249,115,22,.08)">🔑</div>
+      <h2 style="color:var(--accent-sec)">2.1 Kimlik Doğrulama &amp; Yetkilendirme</h2>
+    </div>
+    <div class="checklist" data-group="sec">
+
+      <div class="item" data-group="sec">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">IDOR Koruması — Whitelist API'lerde her kaynak için <code style="font-size:12px;color:#67e8f9">frappe.has_permission</code> kontrolü zorunlu</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~4 saat</span><span class="tag">OWASP A01</span></div>
+          </div>
+          <div class="item-detail">
+            Kullanıcı A, URL'deki ID'yi değiştirerek Kullanıcı B'nin poliçesine erişebilir. Her API endpoint'inde sahiplik doğrulaması şart.
+            <div class="code-block"><span class="kw">@frappe</span>.<span class="fn">whitelist</span>()
+<span class="kw">def</span> <span class="fn">get_policy_detail</span>(policy_name):
+    <span class="cm"># ❌ Sadece varlık kontrolü YETERSİZ</span>
+    <span class="cm"># doc = frappe.get_doc("Insurance Policy", policy_name)</span>
+
+    <span class="cm"># ✅ Yetki kontrolü</span>
+    <span class="kw">if not</span> frappe.<span class="fn">has_permission</span>(
+        doctype=<span class="str">"Insurance Policy"</span>,
+        doc=policy_name,
+        ptype=<span class="str">"read"</span>
+    ):
+        frappe.<span class="fn">throw</span>(<span class="str">"Yetkisiz erişim"</span>, frappe.PermissionError)
+
+    <span class="kw">return</span> frappe.<span class="fn">get_doc</span>(<span class="str">"Insurance Policy"</span>, policy_name)</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="sec">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Oturum Çerezleri — <code style="font-size:12px;color:#67e8f9">HttpOnly</code> &amp; <code style="font-size:12px;color:#67e8f9">Secure</code> &amp; <code style="font-size:12px;color:#67e8f9">SameSite=Strict</code> flag'leri doğrulanmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~1 saat</span><span class="tag">Nginx</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># Nginx site config</span>
+add_header Set-Cookie <span class="str">"sid=...; HttpOnly; Secure; SameSite=Strict"</span>;
+
+<span class="cm"># Doğrulama: browser DevTools → Application → Cookies</span>
+<span class="cm"># HttpOnly: JS ile erişilemez (XSS koruması)</span>
+<span class="cm"># Secure: sadece HTTPS üzerinden gönderilir</span>
+<span class="cm"># SameSite=Strict: CSRF saldırılarını engeller</span></div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(249,115,22,.08)">💉</div>
+      <h2 style="color:var(--accent-sec)">2.2 Enjeksiyon Saldırıları (SQLi &amp; XSS)</h2>
+    </div>
+    <div class="checklist" data-group="sec">
+
+      <div class="item" data-group="sec">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">SQL Injection — <code style="font-size:12px;color:#67e8f9">frappe.db.sql</code> içindeki f-string kullanımları parametrik sorguyla değiştirilmeli</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~3 saat</span><span class="tag">OWASP A03</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># ❌ SQL Injection açığı</span>
+frappe.db.<span class="fn">sql</span>(<span class="fn">f</span><span class="str">"""SELECT * FROM `tabCustomer`
+    WHERE name = '{customer_name}'"""</span>)  <span class="cm"># KESİNLİKLE YAPMA</span>
+
+<span class="cm"># ✅ Parametrik sorgu</span>
+frappe.db.<span class="fn">sql</span>(
+    <span class="str">"""SELECT name, full_name
+       FROM `tabCustomer`
+       WHERE name = %s AND status = %s"""</span>,
+    (customer_name, <span class="str">"Active"</span>),
+    as_dict=<span class="kw">True</span>
+)</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="sec">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">XSS Koruması — <code style="font-size:12px;color:#67e8f9">v-html</code> kullanan tüm yerler DOMPurify ile sanitize edilmeli</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~2 saat</span><span class="tag">OWASP A03</span><span class="tag">Vue 3</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm">// ❌ Kullanıcı verisi doğrudan render ediliyor</span>
+&lt;div v-html="customerNote" /&gt;
+
+<span class="cm">// ✅ DOMPurify ile temizle</span>
+<span class="kw">import</span> DOMPurify <span class="kw">from</span> <span class="str">'dompurify'</span>
+
+<span class="kw">const</span> safeNote = <span class="fn">computed</span>(() =>
+  DOMPurify.<span class="fn">sanitize</span>(props.customerNote, {
+    ALLOWED_TAGS: [<span class="str">'b'</span>, <span class="str">'i'</span>, <span class="str">'em'</span>, <span class="str">'strong'</span>, <span class="str">'br'</span>],
+    ALLOWED_ATTR: []  <span class="cm">// tüm attr'ları engelle</span>
+  })
+)
+<span class="cm">// &lt;div v-html="safeNote" /&gt;</span></div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(249,115,22,.08)">🔒</div>
+      <h2 style="color:var(--accent-sec)">2.3 Veri İfşası &amp; Şifreleme</h2>
+    </div>
+    <div class="checklist" data-group="sec">
+
+      <div class="item" data-group="sec">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Aşırı Veri İfşası — TCKN ve hassas alanlar API yanıtından çıkarılmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~2 saat</span><span class="tag">OWASP A02</span><span class="tag">KVKK</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># ❌ Tüm hassas alanlar frontend'e gidiyor</span>
+<span class="kw">return</span> frappe.<span class="fn">get_doc</span>(<span class="str">"Customer"</span>, name).as_dict()
+
+<span class="cm"># ✅ Sadece izin verilen alanlar</span>
+ALLOWED_FIELDS = [<span class="str">"name"</span>, <span class="str">"full_name"</span>, <span class="str">"mobile_no"</span>, <span class="str">"email"</span>]
+SENSITIVE = [<span class="str">"tckn"</span>, <span class="str">"birth_date"</span>, <span class="str">"bank_iban"</span>]
+
+doc = frappe.<span class="fn">get_doc</span>(<span class="str">"Customer"</span>, name)
+<span class="kw">return</span> {k: v <span class="kw">for</span> k, v <span class="kw">in</span> doc.as_dict().<span class="fn">items</span>()
+        <span class="kw">if</span> k <span class="kw">in</span> ALLOWED_FIELDS}</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="sec">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">TLS Sürümleri — TLS 1.0 &amp; 1.1 kapatılmalı, yalnızca TLS 1.2/1.3 aktif olmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~30 dak</span><span class="tag">Nginx</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># /etc/nginx/sites-available/frappe</span>
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:
+            ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+ssl_prefer_server_ciphers off;
+add_header Strict-Transport-Security <span class="str">"max-age=63072000"</span> always;
+
+<span class="cm"># Test etmek için:</span>
+<span class="cm"># openssl s_client -connect yourdomain.com:443 -tls1</span>
+<span class="cm"># → handshake failure beklenmeli</span></div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="sec">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">API Token &amp; Şifre Şifreleme — Hassas değerler Frappe <code style="font-size:12px;color:#67e8f9">Password</code> veri tipi ile saklanmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~1 saat</span><span class="tag">OWASP A02</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># DocType field tanımı — JSON/Python fixture</span>
+{
+  <span class="str">"fieldname"</span>: <span class="str">"whatsapp_token"</span>,
+  <span class="str">"fieldtype"</span>: <span class="str">"Password"</span>,  <span class="cm">← Frappe şifreli saklar</span>
+  <span class="str">"label"</span>: <span class="str">"WhatsApp API Token"</span>,
+  <span class="str">"hidden"</span>: <span class="num">1</span>               <span class="cm">← frontend'de görünmez</span>
+}
+
+<span class="cm"># Okurken:</span>
+doc = frappe.<span class="fn">get_doc</span>(<span class="str">"Integration Settings"</span>, <span class="str">"WhatsApp"</span>)
+token = doc.<span class="fn">get_password</span>(<span class="str">"whatsapp_token"</span>)  <span class="cm">← çözülmüş değer</span></div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /tab-sec -->
+
+
+<!-- ══════════════════ ROADMAP ══════════════════ -->
+<div class="tab-content" id="tab-road">
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(129,140,248,.08)">🛫</div>
+      <h2 style="color:var(--accent-road)">Faz 1 — Pre-Flight (Canlıya Çıkış Öncesi)</h2>
+    </div>
+    <div class="checklist" data-group="road">
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Production Bundle Analizi — <code style="font-size:12px;color:#67e8f9">npm run build</code> çıktısındaki chunk boyutları incelenmeli</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~1 saat</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block">npm run build -- --mode production
+<span class="cm"># dist/ klasöründe chunk boyutlarını kontrol et</span>
+<span class="cm"># Hedef: her chunk &lt; 250KB (gzip)</span>
+<span class="cm"># Vite uyarıları: "Some chunks are larger than 500 kBs"</span></div>
+          </div>
+          <div class="expand-hint">▾ Komut göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Bağımlılık Zafiyet Taraması — <code style="font-size:12px;color:#67e8f9">npm audit</code> &amp; <code style="font-size:12px;color:#67e8f9">pip-audit</code> çalıştırılmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~1 saat</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block">npm audit --audit-level=high
+
+<span class="cm"># Python tarafı</span>
+pip install pip-audit
+pip-audit --requirement requirements.txt
+
+<span class="cm"># Ya da safety ile</span>
+safety check -r requirements.txt</div>
+          </div>
+          <div class="expand-hint">▾ Komut göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Hardcoded Secret Taraması — Kod içindeki token/şifre sızıntıları git grep ile bulunmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~30 dak</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># Tek komutla tüm repoyu tara</span>
+git grep -iE <span class="str">"(token|secret|password|api_key|whatsapp)\s*=\s*['\"][^'\"]{8,}"</span>
+
+<span class="cm"># Ya da trufflehog ile daha kapsamlı</span>
+trufflehog git file://. --only-verified</div>
+          </div>
+          <div class="expand-hint">▾ Komut göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Debug Modu Kapatma — <code style="font-size:12px;color:#67e8f9">site_config.json</code> ve <code style="font-size:12px;color:#67e8f9">.env</code> production ayarları doğrulanmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~15 dak</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># sites/your-site/site_config.json</span>
+{
+  <span class="str">"developer_mode"</span>: <span class="num">0</span>,
+  <span class="str">"disable_website_cache"</span>: <span class="num">0</span>,
+  <span class="str">"logging"</span>: <span class="num">0</span>
+}
+
+<span class="cm"># .env</span>
+VITE_MODE=production
+VITE_DEBUG=false</div>
+          </div>
+          <div class="expand-hint">▾ Detay göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(129,140,248,.08)">🧪</div>
+      <h2 style="color:var(--accent-road)">Faz 2 — Stres &amp; Güvenlik Testleri</h2>
+    </div>
+    <div class="checklist" data-group="road">
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Yük Testi — Gunicorn worker sayısı optimize edilmeli (CPU × 2 + 1)</span>
+            <div class="tags"><span class="tag med">Orta</span><span class="tag">~3 saat</span><span class="tag">k6 / Locust</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># k6 ile basit yük testi</span>
+<span class="kw">import</span> http <span class="kw">from</span> <span class="str">'k6/http'</span>
+<span class="kw">export const</span> options = {
+  vus: <span class="num">50</span>, duration: <span class="str">'2m'</span>
+}
+<span class="kw">export default</span> () =>
+  http.<span class="fn">get</span>(<span class="str">'https://yourdomain.com/api/dashboard'</span>)
+
+<span class="cm"># Gunicorn: /etc/supervisor/conf.d/frappe.conf</span>
+<span class="cm"># workers = (nproc * 2) + 1</span></div>
+          </div>
+          <div class="expand-hint">▾ Komut göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">OWASP ZAP DAST Taraması — Geliştirme ortamında otomatik güvenlik açığı taraması</span>
+            <div class="tags"><span class="tag med">Orta</span><span class="tag">~4 saat</span><span class="tag">OWASP ZAP</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># Docker ile ZAP baseline taraması</span>
+docker run -t owasp/zap2docker-stable zap-baseline.py \
+  -t https://dev.yourdomain.com \
+  -r zap-report.html \
+  --hook=/zap/auth-hook.py  <span class="cm"># oturum açma hook'u</span></div>
+          </div>
+          <div class="expand-hint">▾ Komut göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(129,140,248,.08)">📡</div>
+      <h2 style="color:var(--accent-road)">Faz 3 — İzleme &amp; Alarm</h2>
+    </div>
+    <div class="checklist" data-group="road">
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Sentry Entegrasyonu — Frontend ve backend hataları anlık yakalanmalı</span>
+            <div class="tags"><span class="tag med">Orta</span><span class="tag">~2 saat</span><span class="tag">APM</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># Python (Frappe hooks.py)</span>
+<span class="kw">import</span> sentry_sdk
+sentry_sdk.<span class="fn">init</span>(
+    dsn=<span class="str">"https://xxx@sentry.io/yyy"</span>,
+    traces_sample_rate=<span class="num">0.2</span>,
+    environment=<span class="str">"production"</span>
+)
+
+<span class="cm">// Vue 3 main.ts</span>
+<span class="kw">import</span> * <span class="kw">as</span> Sentry <span class="kw">from</span> <span class="str">"@sentry/vue"</span>
+Sentry.<span class="fn">init</span>({ app, dsn: <span class="str">"..."</span>, tracesSampleRate: <span class="num">0.2</span> })</div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Frappe Error Logging — Kritik Python hataları <code style="font-size:12px;color:#67e8f9">frappe.log_error</code> ile Error Log tablosuna yazılmalı</span>
+            <div class="tags"><span class="tag low">Düşük</span><span class="tag">~1 saat</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="kw">try</span>:
+    result = <span class="fn">process_policy_renewal</span>(policy)
+<span class="kw">except Exception</span> as e:
+    frappe.<span class="fn">log_error</span>(
+        title=<span class="str">"Policy Renewal Failed"</span>,
+        message=frappe.<span class="fn">get_traceback</span>()
+    )
+    <span class="kw">raise</span></div>
+          </div>
+          <div class="expand-hint">▾ Kod örneği göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(129,140,248,.08)">🚀</div>
+      <h2 style="color:var(--accent-road)">Faz 4 — Kademeli Canlıya Alış</h2>
+    </div>
+    <div class="checklist" data-group="road">
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Canary Release — Sistem önce 1 pilot acenteye açılmalı, metrikler 48 saat izlenmeli</span>
+            <div class="tags"><span class="tag med">Orta</span><span class="tag">48 saat</span></div>
+          </div>
+          <div class="item-detail">
+            Pilot acenteden gelen hata oranı, yanıt süreleri ve kullanıcı geri bildirimi değerlendirildikten sonra tam canlıya geçiş yapılmalı.
+          </div>
+          <div class="expand-hint">▾ Detay göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="item" data-group="road">
+        <div class="cb"></div>
+        <div class="item-body">
+          <div class="item-top">
+            <span class="item-title">Yedekleme Testi — Frappe otomatik yedeğinin alınıp başarıyla geri yüklenebildiği doğrulanmalı</span>
+            <div class="tags"><span class="tag high">Kritik</span><span class="tag">~2 saat</span></div>
+          </div>
+          <div class="item-detail">
+            <div class="code-block"><span class="cm"># Manuel yedek alma</span>
+bench --site your-site backup --with-files
+
+<span class="cm"># Geri yükleme testi (ayrı bir test ortamında)</span>
+bench --site test-site restore \
+  /home/frappe/frappe-bench/sites/your-site/private/backups/latest.sql.gz</div>
+          </div>
+          <div class="expand-hint">▾ Komut göster<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /tab-road -->
+
+
+<!-- ══════════════════ ALL ══════════════════ -->
+<div class="tab-content" id="tab-all">
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">Tümü</button>
+    <button class="filter-btn" data-filter="high">🔴 Kritik</button>
+    <button class="filter-btn" data-filter="med">🟡 Orta</button>
+    <button class="filter-btn" data-filter="low">🟢 Düşük</button>
+    <button class="filter-btn" data-filter="done">✅ Tamamlanan</button>
+    <button class="filter-btn" data-filter="pending">⬜ Bekleyen</button>
+  </div>
+  <div id="all-items-container"></div>
+</div>
+
+</main>
+
+<div class="sticky-footer">
+  <span><strong id="done-count">0</strong> / <span id="total-count">0</span> tamamlandı</span>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="global-bar" style="width:0%"></div>
+  </div>
+  <span style="font-size:12px">Son güncelleme: <strong id="last-update">—</strong></span>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────
+const state = JSON.parse(localStorage.getItem('audit-state') || '{}');
+
+function saveState() {
+  localStorage.setItem('audit-state', JSON.stringify(state));
+}
+
+// ── INIT ITEMS ────────────────────────────
+document.querySelectorAll('.item').forEach((item, i) => {
+  const id = item.dataset.id || 'item-' + i;
+  item.dataset.id = id;
+  if (state[id]) item.classList.add('done');
+
+  item.addEventListener('click', e => {
+    if (e.target.closest('.expand-hint') || e.target.closest('.code-block')) return;
+    item.classList.toggle('done');
+    state[id] = item.classList.contains('done');
+    state['_ts'] = new Date().toLocaleString('tr-TR');
+    saveState();
+    updateStats();
+    rebuildAll();
+  });
+
+  const hint = item.querySelector('.expand-hint');
+  const detail = item.querySelector('.item-detail');
+  if (hint && detail) {
+    hint.addEventListener('click', e => {
+      e.stopPropagation();
+      detail.classList.toggle('open');
+    });
+  }
+});
+
+// ── TABS ──────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'all') rebuildAll();
+  });
+});
+
+// ── ALL TAB ───────────────────────────────
+function rebuildAll(filter = currentFilter) {
+  const container = document.getElementById('all-items-container');
+  container.innerHTML = '';
+  const groups = [
+    { label: '🚀 Performans', tab: 'perf', color: 'var(--accent-perf)' },
+    { label: '🛡️ Güvenlik',   tab: 'sec',  color: 'var(--accent-sec)'  },
+    { label: '🗺️ Roadmap',    tab: 'road', color: 'var(--accent-road)' }
+  ];
+  groups.forEach(g => {
+    const items = [...document.querySelectorAll(`#tab-${g.tab} .item`)];
+    const filtered = items.filter(item => {
+      if (filter === 'all') return true;
+      if (filter === 'done') return item.classList.contains('done');
+      if (filter === 'pending') return !item.classList.contains('done');
+      if (filter === 'high') return item.querySelector('.tag.high');
+      if (filter === 'med')  return item.querySelector('.tag.med');
+      if (filter === 'low')  return item.querySelector('.tag.low');
+      return true;
+    });
+    if (!filtered.length) return;
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.innerHTML = `<div class="section-header">
+      <h2 style="color:${g.color};font-family:'Syne',sans-serif;font-size:15px;font-weight:700">${g.label}</h2>
+    </div>`;
+    const cl = document.createElement('div');
+    cl.className = 'checklist';
+    filtered.forEach(orig => {
+      const clone = orig.cloneNode(true);
+      clone.dataset.id = orig.dataset.id;
+      if (orig.classList.contains('done')) clone.classList.add('done');
+
+      const detail = clone.querySelector('.item-detail');
+      const hint = clone.querySelector('.expand-hint');
+      if (hint && detail) {
+        hint.addEventListener('click', e => {
+          e.stopPropagation();
+          detail.classList.toggle('open');
+        });
+      }
+      clone.addEventListener('click', e => {
+        if (e.target.closest('.expand-hint') || e.target.closest('.code-block')) return;
+        const origItem = document.querySelector(`.item[data-id="${clone.dataset.id}"]`);
+        if (origItem) origItem.click();
+        else {
+          clone.classList.toggle('done');
+          state[clone.dataset.id] = clone.classList.contains('done');
+          state['_ts'] = new Date().toLocaleString('tr-TR');
+          saveState(); updateStats();
+        }
+        rebuildAll();
+      });
+      cl.appendChild(clone);
+    });
+    sec.appendChild(cl);
+    container.appendChild(sec);
+  });
+}
+
+let currentFilter = 'all';
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    rebuildAll();
+  });
+});
+
+// ── STATS ─────────────────────────────────
+function pct(done, total) { return total ? Math.round(done / total * 100) : 0; }
+
+function updateStats() {
+  const all   = [...document.querySelectorAll('.item[data-group]')];
+  const perf  = all.filter(i => i.dataset.group === 'perf');
+  const sec   = all.filter(i => i.dataset.group === 'sec');
+  const road  = all.filter(i => i.dataset.group === 'road');
+
+  const done     = i => i.classList.contains('done');
+  const doneAll  = all.filter(done).length;
+  const donePerf = perf.filter(done).length;
+  const doneSec  = sec.filter(done).length;
+  const doneRoad = road.filter(done).length;
+
+  document.getElementById('total-pct').textContent = pct(doneAll, all.length) + '%';
+  document.getElementById('perf-pct').textContent  = pct(donePerf, perf.length) + '%';
+  document.getElementById('sec-pct').textContent   = pct(doneSec, sec.length) + '%';
+  document.getElementById('road-pct').textContent  = pct(doneRoad, road.length) + '%';
+
+  document.getElementById('done-count').textContent  = doneAll;
+  document.getElementById('total-count').textContent = all.length;
+  document.getElementById('global-bar').style.width  = pct(doneAll, all.length) + '%';
+  document.getElementById('last-update').textContent = state['_ts'] || '—';
+}
+
+updateStats();
+rebuildAll();
+</script>
+</body>
+</html>

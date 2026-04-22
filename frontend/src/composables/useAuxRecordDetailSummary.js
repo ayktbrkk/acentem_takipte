@@ -1,5 +1,4 @@
-import { computed, unref } from "vue";
-
+import { computed, ref, unref, watch } from "vue";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 
@@ -23,8 +22,11 @@ const AUX_DETAIL_VALUE_LABELS = {
     Synced: "Senkron",
     Draft: "Taslak",
     Failed: "Başarısız",
+    Active: "Aktif",
+    Archived: "Arşivlendi",
     Claim: "Hasar",
     Policy: "Poliçe",
+    Endorsement: "Zeyilname",
     Payment: "Ödeme",
     Resolved: "Çözüldü",
     Open: "Açık",
@@ -44,6 +46,12 @@ const AUX_DETAIL_VALUE_LABELS = {
     "AT Customer": "Müşteri",
     "AT Accounting Entry": "Muhasebe Kaydı",
     "AT Reconciliation Item": "Mutabakat Kalemi",
+    Yes: "Evet",
+    No: "Hayır",
+    "Vehicle Registration": "Ruhsat",
+    "ID Document": "Kimlik",
+    "Policy Copy": "Poliçe Kopyası",
+    "Damage Photo": "Hasar Fotoğrafı",
   },
   en: {},
 };
@@ -192,6 +200,9 @@ const AUX_DETAIL_FIELD_LABELS = {
   "at-documents": {
     tr: {
       name: "Kayıt",
+      display_name: "Görünen Ad",
+      secondary_file_name: "İkincil Dosya Adı",
+      original_file_name: "Orijinal Dosya Adı",
       file: "Dosya",
       reference_doctype: "Referans Tipi",
       reference_name: "Referans Kayıt",
@@ -203,6 +214,8 @@ const AUX_DETAIL_FIELD_LABELS = {
       is_sensitive: "Hassas Veri",
       is_verified: "Doğrulandı",
       document_date: "Doküman Tarihi",
+      upload_date: "Yükleme Tarihi",
+      sequence_no: "Sıra No",
       version_no: "Versiyon No",
       status: "Durum",
       notes: "Notlar",
@@ -212,6 +225,9 @@ const AUX_DETAIL_FIELD_LABELS = {
     },
     en: {
       name: "Record",
+      display_name: "Display Name",
+      secondary_file_name: "Secondary File Name",
+      original_file_name: "Original File Name",
       file: "File",
       reference_doctype: "Reference Type",
       reference_name: "Reference Record",
@@ -223,6 +239,8 @@ const AUX_DETAIL_FIELD_LABELS = {
       is_sensitive: "Sensitive Data",
       is_verified: "Verified",
       document_date: "Document Date",
+      upload_date: "Upload Date",
+      sequence_no: "Sequence No",
       version_no: "Version No",
       status: "Status",
       notes: "Notes",
@@ -244,6 +262,52 @@ export function useAuxRecordDetailSummary({
   campaignDraftsResource,
   campaignOutboxResource,
 }) {
+  const customerLabelById = ref({});
+  const _pendingLookups = new Set();
+
+  async function ensureCustomerLabel(customerName) {
+    const key = String(customerName || "").trim();
+    if (!key || customerLabelById.value[key] || _pendingLookups.has(key)) return;
+    _pendingLookups.add(key);
+    try {
+      const csrfToken = (typeof window !== "undefined" && window.csrf_token) || "";
+      const params = new URLSearchParams({
+        doctype: "AT Customer",
+        fields: JSON.stringify(["name", "full_name"]),
+        filters: JSON.stringify({ name: key }),
+        limit_page_length: "1",
+      });
+      const resp = await fetch(`/api/method/frappe.client.get_list?${params}`, {
+        headers: csrfToken ? { "X-Frappe-CSRF-Token": csrfToken } : {},
+      });
+      const data = resp.ok ? await resp.json() : {};
+      const rows = Array.isArray(data?.message) ? data.message : [];
+      const row = rows[0];
+      if (row?.name) {
+        customerLabelById.value = {
+          ...customerLabelById.value,
+          [row.name]: String(row.full_name || row.name),
+        };
+      }
+    } catch {
+      // best-effort lookup; fallback remains record id
+    } finally {
+      _pendingLookups.delete(key);
+    }
+  }
+
+  watch(
+    () => [config.key, doc.value?.customer, doc.value?.reference_doctype, doc.value?.reference_name],
+    ([screenKey, customerName, referenceDoctype, referenceName]) => {
+      if (screenKey !== "at-documents") return;
+      void ensureCustomerLabel(customerName);
+      if (String(referenceDoctype || "").trim() === "AT Customer") {
+        void ensureCustomerLabel(referenceName);
+      }
+    },
+    { immediate: true }
+  );
+
   function translateDetailValue(value) {
     const locale = activeLocale.value || "en";
     const table = AUX_DETAIL_VALUE_LABELS[locale] || {};
@@ -275,7 +339,19 @@ export function useAuxRecordDetailSummary({
 
   function formatValue(field, value) {
     if (value == null) return "-";
-    if (typeof value === "boolean") return value ? "Yes" : "No";
+
+    if (config.key === "at-documents") {
+      const isCustomerReference =
+        field === "customer" ||
+        (field === "reference_name" && String(doc.value?.reference_doctype || "").trim() === "AT Customer");
+      if (isCustomerReference) {
+        const key = String(value || "").trim();
+        if (!key) return "-";
+        return customerLabelById.value[key] || key;
+      }
+    }
+
+    if (typeof value === "boolean") return translateDetailValue(value ? "Yes" : "No");
     if (typeof value === "number") return formatNumber(value);
     if (typeof value === "string" && value.trim() === "") return "-";
 
@@ -311,7 +387,18 @@ export function useAuxRecordDetailSummary({
         /* noop */
       }
     }
-    if (["status", "entry_type", "source_doctype", "mismatch_type", "resolution_action"].includes(field)) {
+    if (
+      [
+        "status",
+        "entry_type",
+        "source_doctype",
+        "mismatch_type",
+        "resolution_action",
+        "reference_doctype",
+        "document_kind",
+        "document_sub_type",
+      ].includes(field)
+    ) {
       return translateDetailValue(value);
     }
     return String(value);

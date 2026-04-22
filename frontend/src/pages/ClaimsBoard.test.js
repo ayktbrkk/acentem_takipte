@@ -216,7 +216,6 @@ describe("ClaimsBoard page store integration", () => {
     expect(claimStore.filteredItems).toHaveLength(2);
     expect(wrapper.text()).toContain("Toplam Hasar");
     expect(wrapper.text()).toContain("Dosya Görüntüle");
-    expect(wrapper.text()).toContain("Dokümanlar");
     expect(wrapper.text()).toContain("Ödeme Yap");
 
     const searchInput = wrapper.find('input[type="text"]');
@@ -477,7 +476,7 @@ describe("ClaimsBoard page store integration", () => {
     window.location = originalLocation;
   });
 
-  it("opens filtered files panel for claim documents", async () => {
+  it("does not render a row-level documents action", async () => {
     const originalLocation = window.location;
     delete window.location;
     window.location = { assign: vi.fn(), href: "" };
@@ -528,14 +527,13 @@ describe("ClaimsBoard page store integration", () => {
     await loadClaimRows(wrapper);
 
     const documentsButton = findButtonByText(wrapper, "Dokümanlar");
-    await documentsButton.trigger("click");
-
-    expect(window.location.assign).toHaveBeenCalledWith("/at/files?attached_to_doctype=AT+Claim&attached_to_name=CLM-001");
+    expect(documentsButton).toBeUndefined();
+    expect(window.location.assign).not.toHaveBeenCalled();
 
     window.location = originalLocation;
   });
 
-  it("opens documents for listed claim row", async () => {
+  it("keeps file and payment actions available", async () => {
     const originalLocation = window.location;
     delete window.location;
     window.location = { assign: vi.fn(), href: "" };
@@ -586,10 +584,10 @@ describe("ClaimsBoard page store integration", () => {
 
     await loadClaimRows(wrapper);
 
-    const documentsButton = findButtonByText(wrapper, "Dokümanlar");
-    await documentsButton.trigger("click");
-
-    expect(window.location.assign).toHaveBeenCalledWith("/at/files?attached_to_doctype=AT+Claim&attached_to_name=CLM-001");
+    const fileButton = findButtonByText(wrapper, "Dosya Görüntüle");
+    const paymentButton = findButtonByText(wrapper, "Ödeme Yap");
+    expect(fileButton).toBeTruthy();
+    expect(paymentButton).toBeTruthy();
 
     window.location = originalLocation;
   });

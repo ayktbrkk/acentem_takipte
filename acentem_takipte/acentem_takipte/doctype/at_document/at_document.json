@@ -114,7 +114,7 @@
    "fieldname": "document_sub_type",
    "fieldtype": "Select",
    "label": "Document Sub Type",
-   "options": "\nRuhsat\nKimlik\nPoli\u00e7e Kopyas\u0131\nHasar Foto\u011fraf\u0131\nDi\u011fer"
+  "options": "\nVehicle Registration\nID Document\nPolicy Copy\nDamage Photo\nOther"
   },
   {
    "default": "0",

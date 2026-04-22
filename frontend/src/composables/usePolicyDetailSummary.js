@@ -56,6 +56,7 @@ export function usePolicyDetailSummary({
   communications,
   snapshots,
   files,
+  atDocuments,
   productProfile,
   documentProfile,
   selectedSnapshotName,
@@ -264,14 +265,42 @@ export function usePolicyDetailSummary({
     }))
   );
 
-  const documentProfileSummaryItems = computed(() => [
-    { key: "totalDocuments", label: t("totalDocuments"), value: String(documentProfile.value.total_files ?? files.value.length ?? 0) },
-    { key: "pdfDocuments", label: t("pdfDocuments"), value: String(documentProfile.value.pdf_count ?? 0) },
-    { key: "imageDocuments", label: t("imageDocuments"), value: String(documentProfile.value.image_count ?? 0) },
-    { key: "spreadsheetDocuments", label: t("spreadsheetDocuments"), value: String(documentProfile.value.spreadsheet_count ?? 0) },
-    { key: "otherDocuments", label: t("otherDocuments"), value: String(documentProfile.value.other_count ?? 0) },
-    { key: "lastUploadedOn", label: t("lastUploadedOn"), value: documentProfile.value.last_uploaded_on ? fmtDateTime(documentProfile.value.last_uploaded_on) : t("noDate") },
-  ]);
+  const documentProfileSummaryItems = computed(() => {
+    const fallbackDocs = Array.isArray(atDocuments?.value) ? atDocuments.value : [];
+    const fallbackTotal = fallbackDocs.length || files.value.length || 0;
+    const profileTotal = Number(documentProfile.value.total_files ?? 0);
+    const useFallback = fallbackTotal > 0 && profileTotal === 0;
+
+    const bucketSource = useFallback ? fallbackDocs : [];
+    const extensionBuckets = bucketSource.reduce(
+      (acc, doc) => {
+        const source = String(doc?.display_name || doc?.file || "").toLowerCase();
+        const ext = source.includes(".") ? source.split(".").pop() : "";
+        if (["pdf"].includes(ext)) acc.pdf += 1;
+        else if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"].includes(ext)) acc.image += 1;
+        else if (["xls", "xlsx", "csv", "ods"].includes(ext)) acc.sheet += 1;
+        else acc.other += 1;
+        return acc;
+      },
+      { pdf: 0, image: 0, sheet: 0, other: 0 }
+    );
+
+    const latestDate =
+      documentProfile.value.last_uploaded_on
+      || bucketSource.reduce((latest, doc) => {
+        const candidate = doc?.creation || doc?.document_date || "";
+        return String(candidate || "") > String(latest || "") ? candidate : latest;
+      }, "");
+
+    return [
+      { key: "totalDocuments", label: t("totalDocuments"), value: String(useFallback ? fallbackTotal : (documentProfile.value.total_files ?? files.value.length ?? 0)) },
+      { key: "pdfDocuments", label: t("pdfDocuments"), value: String(useFallback ? extensionBuckets.pdf : (documentProfile.value.pdf_count ?? 0)) },
+      { key: "imageDocuments", label: t("imageDocuments"), value: String(useFallback ? extensionBuckets.image : (documentProfile.value.image_count ?? 0)) },
+      { key: "spreadsheetDocuments", label: t("spreadsheetDocuments"), value: String(useFallback ? extensionBuckets.sheet : (documentProfile.value.spreadsheet_count ?? 0)) },
+      { key: "otherDocuments", label: t("otherDocuments"), value: String(useFallback ? extensionBuckets.other : (documentProfile.value.other_count ?? 0)) },
+      { key: "lastUploadedOn", label: t("lastUploadedOn"), value: latestDate ? fmtDateTime(latestDate) : t("noDate") },
+    ];
+  });
 
   const premiumFieldGroups = computed(() =>
     premiumSummaryItems.value.map((item) => ({ label: item.label, value: item.value, variant: item.valueClass === remainingClass.value ? "accent" : "default" }))

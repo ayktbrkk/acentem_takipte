@@ -239,7 +239,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, unref, watch } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { Dialog, createResource } from "frappe-ui";
 
@@ -255,17 +255,37 @@ import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import DashboardHeader from "../components/dashboard/DashboardHeader.vue";
-import DashboardAnalyticsRow from "../components/dashboard/DashboardAnalyticsRow.vue";
-import DashboardDailyTab from "../components/dashboard/DashboardDailyTab.vue";
-import DashboardCollectionsTab from "../components/dashboard/DashboardCollectionsTab.vue";
-import DashboardRenewalsTab from "../components/dashboard/DashboardRenewalsTab.vue";
-import DashboardSalesTab from "../components/dashboard/DashboardSalesTab.vue";
-import DashboardQuickActions from "../components/dashboard/DashboardQuickActions.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import PreviewPager from "../components/app-shell/PreviewPager.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
+
+// audit(perf/P-01): Heavy tab components are lazy-loaded with defineAsyncComponent.
+// These are only fetched from the server when the user first activates the respective
+// dashboard tab, significantly reducing the initial Time-to-Interactive (TTI).
+const DashboardAnalyticsRow = defineAsyncComponent(() =>
+  import("../components/dashboard/DashboardAnalyticsRow.vue")
+);
+const DashboardDailyTab = defineAsyncComponent(() =>
+  import("../components/dashboard/DashboardDailyTab.vue")
+);
+const DashboardCollectionsTab = defineAsyncComponent(() =>
+  import("../components/dashboard/DashboardCollectionsTab.vue")
+);
+const DashboardRenewalsTab = defineAsyncComponent(() =>
+  import("../components/dashboard/DashboardRenewalsTab.vue")
+);
+const DashboardSalesTab = defineAsyncComponent(() =>
+  import("../components/dashboard/DashboardSalesTab.vue")
+);
+const DashboardQuickActions = defineAsyncComponent(() =>
+  import("../components/dashboard/DashboardQuickActions.vue")
+);
+const SectionPanel = defineAsyncComponent(() =>
+  import("../components/app-shell/SectionPanel.vue")
+);
+const PreviewPager = defineAsyncComponent(() =>
+  import("../components/app-shell/PreviewPager.vue")
+);
 import { getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { useDashboardPresentation } from "../composables/useDashboardPresentation";
 import { useDashboardFormatters } from "../composables/useDashboardFormatters";

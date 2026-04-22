@@ -24,6 +24,7 @@
       :quick-edit-config="quickEditConfig"
       :can-use-quick-edit="canUseQuickEdit"
       :panel-config="panelConfig"
+      :can-open-document="canOpenDocument"
       :show-desk-action="showDeskAction"
       :go-back="goBack"
       :copy-record-value="copyRecordValue"
@@ -35,6 +36,7 @@
       :mark-reminder-lifecycle="markReminderLifecycle"
       :mark-assignment-lifecycle="markAssignmentLifecycle"
       :open-panel="openPanel"
+      :open-document="openDocument"
       :open-desk="openDesk"
       @open-quick-edit="showQuickEditDialog = true"
     />
@@ -133,7 +135,8 @@ const copy = {
     backToList: "Listeye Dön",
     quickEdit: "Hızlı Düzenle",
     openDesk: "Yönetim Ekranını Aç",
-    panel: "Panel",
+    panel: "Bağlı Kayda Git",
+    openDocument: "Dokümanı Aç",
     saveChanges: "Değişiklikleri Kaydet",
     cancel: "İptal",
     copy: "Kopyala",
@@ -218,7 +221,8 @@ const copy = {
     backToList: "Back to List",
     quickEdit: "Quick Edit",
     openDesk: "Open Desk",
-    panel: "Panel",
+    panel: "Go to Linked Record",
+    openDocument: "Open Document",
     saveChanges: "Save Changes",
     cancel: "Cancel",
     copy: "Copy",
@@ -380,7 +384,9 @@ const {
   openCommunicationContext,
   openDesk,
   openPanel,
+  openDocument,
   panelConfig,
+  canOpenDocument,
   canOpenCommunicationContext,
   isTaskDetail,
   isReminderDetail,
