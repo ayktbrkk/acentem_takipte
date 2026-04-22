@@ -386,10 +386,10 @@ export function useCustomerDetailActions({
   function openCustomerDocuments() {
     if (!props.name) return;
     router.push({
-      name: "files-list",
+      name: "at-documents-list",
       query: {
-        attached_to_doctype: "AT Customer",
-        attached_to_name: props.name,
+        reference_doctype: "AT Customer",
+        reference_name: props.name,
       },
     });
   }

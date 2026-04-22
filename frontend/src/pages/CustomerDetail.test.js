@@ -516,10 +516,10 @@ describe("CustomerDetail customer 360 integration", () => {
 
     await clickByText("Doküman Merkezine Git");
     expect(routerPush).toHaveBeenLastCalledWith({
-      name: "files-list",
+      name: "at-documents-list",
       query: {
-        attached_to_doctype: "AT Customer",
-        attached_to_name: "CUST-001",
+        reference_doctype: "AT Customer",
+        reference_name: "CUST-001",
       },
     });
   });
