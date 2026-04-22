@@ -31,7 +31,13 @@
       </p>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <!-- audit(perf/P-04): Skeleton loader hides the blank white screen while KPIs load -->
+    <SkeletonLoader
+      v-if="dashboardLoading && !visibleQuickStatCards.length"
+      variant="card"
+      :count="4"
+    />
+    <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <DashboardStatCard
         v-for="card in visibleQuickStatCards"
         :key="card.key"
@@ -256,6 +262,7 @@ import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import DashboardHeader from "../components/dashboard/DashboardHeader.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 
