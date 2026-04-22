@@ -2,6 +2,7 @@ import { getCurrentInstance, nextTick, onBeforeUnmount, reactive, ref, unref } f
 
 import { getLocalizedText } from "../config/quickCreateRegistry";
 import { getRelatedQuickCreateActionLabel, supportsRelatedQuickCreateSource } from "../utils/relatedQuickCreate";
+import { getCachedMasterData, setCachedMasterData } from "../utils/masterDataCache";
 
 export function useQuickCreateFormRenderer(props, emit) {
   const instance = getCurrentInstance();
@@ -219,6 +220,20 @@ export function useQuickCreateFormRenderer(props, emit) {
     if (!fieldName) return;
     ensureRemoteState(fieldName);
 
+    const sourceKey = String(field?.optionsSource || "");
+    const cacheableSources = ["insuranceCompanies", "branches", "salesEntities", "segments", "notificationTemplates"];
+    const isCacheable = cacheableSources.includes(sourceKey) && !query && start === 0;
+
+    if (isCacheable && !append) {
+      const cached = getCachedMasterData(sourceKey);
+      if (cached) {
+        remoteOptionsMap[fieldName] = cached.options;
+        remoteHasMoreMap[fieldName] = cached.has_more;
+        remoteNextStartMap[fieldName] = cached.next_start;
+        return;
+      }
+    }
+
     const token = nextRemoteRequestToken(fieldName);
     remoteLoadingMap[fieldName] = true;
 
@@ -239,6 +254,14 @@ export function useQuickCreateFormRenderer(props, emit) {
       remoteQueryMap[fieldName] = query;
       remoteHasMoreMap[fieldName] = normalizedList.length >= Math.min(Math.max(Number(pageSize || REMOTE_DEFAULT_PAGE_SIZE), 1), REMOTE_MAX_PAGE_SIZE);
       remoteNextStartMap[fieldName] = start + normalizedList.length;
+
+      if (isCacheable && !append) {
+        setCachedMasterData(sourceKey, {
+          options: remoteOptionsMap[fieldName],
+          has_more: remoteHasMoreMap[fieldName],
+          next_start: remoteNextStartMap[fieldName],
+        });
+      }
     } finally {
       if (isActiveRemoteRequest(fieldName, token)) {
         remoteLoadingMap[fieldName] = false;

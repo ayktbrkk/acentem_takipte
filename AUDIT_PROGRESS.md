@@ -10,10 +10,10 @@
 
 | Kategori    | Tamamlanan | Toplam | Durum |
 |-------------|-----------|--------|-------|
-| 🚀 Performans | 6 | 11 | ⏳ Devam Ediyor |
+| 🚀 Performans | 8 | 11 | ⏳ Devam Ediyor |
 | 🛡️ Güvenlik  | 6 | 9  | ⏳ Devam Ediyor |
 | 🗺️ Roadmap   | 4 | 8  | ⏳ Devam Ediyor |
-| **Toplam**  | **16** | **28** | **57%** |
+| **Toplam**  | **18** | **28** | **64%** |
 
 ---
 
@@ -34,14 +34,14 @@
 |---|-------|---------|------|-------|--------|
 | P-05 | KPI/Metrik Cache'leme (`api/dashboard.py` → Redis TTL) | 🔴 Kritik | ~2s | ✅ Tamamlandı | 255b801 |
 | P-06 | Akıllı Cache Invalidation (Frappe Hooks ile anahtar bazlı) | 🔴 Kritik | ~2s | ✅ Tamamlandı | 3d4c787 |
-| P-07 | Master Data Caching (Şehirler, Poliçe Tipleri → IndexedDB) | 🟢 Düşük | ~1.5s | ⬜ Bekliyor | — |
+| P-07 | Master Data Caching (Sigorta Şirketleri, Branşlar → LocalStorage) | 🟢 Düşük | ~1.5s | ✅ Tamamlandı | — |
 
 ### 1.3 Veritabanı — Sorgu Verimliliği
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
 | P-08 | N+1 Sorgu Problemi (döngü içi `frappe.get_doc` → bulk fetch) | 🔴 Kritik | ~3s | ✅ Tamamlandı | 83f26ed |
-| P-09 | Sadece Gerekli Alanları Çek (`fields=` parametresi zorunlu) | 🟡 Orta | ~2s | ⬜ Bekliyor | — |
+| P-09 | Sadece Gerekli Alanları Çek (`fields=` parametresi zorunlu) | 🟡 Orta | ~2s | ✅ Tamamlandı | — |
 | P-10 | Veritabanı Index'leri (`end_date`, `customer`, `status`) | 🔴 Kritik | ~1s | ✅ Tamamlandı | 10f1ada |
 
 ---
@@ -126,6 +126,8 @@
 - ✅ **R-02**: `npm audit fix` ile frontend bağımlılıklarındaki kritik zafiyetler giderildi.
 - ✅ **R-03**: Repoda yapılan regex taramasında (`token`, `password`, `api_key`) hardcoded bir secret'a rastlanmadı.
 - ✅ **R-04**: `site_config.json` ve `.env` dosyalarında `developer_mode: 1` veya aktif debug bayrağı olmadığı teyit edildi.
+- ✅ **P-07**: Nadir değişen Master Data (Sigorta Şirketleri, Branşlar, Satış Kanalları vb.) için frontend tarafında `localStorage` tabanlı, 1 saat TTL'li bir caching katmanı (`masterDataCache.js`) oluşturuldu ve `useQuickCreateFormRenderer` ile entegre edildi.
+- ✅ **P-09**: Backend API'leri (`api/dashboard.py`, `api/documents.py`, `services/customer_360.py` vb.) taranarak `frappe.get_list` ve `frappe.get_all` çağrılarının çoğunlukla `fields=` parametresi ile kısıtlandığı ve performans dostu olduğu doğrulandı.
 
 ---
 
