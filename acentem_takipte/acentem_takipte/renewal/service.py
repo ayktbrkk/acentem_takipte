@@ -96,9 +96,9 @@ def get_renewal_candidates(
     for policy in policies:
         if not policy.end_date:
             continue
-        customer = policy.customer or frappe.db.get_value(
-            "AT Policy", policy.name, "customer"
-        )
+        # audit(perf/P-08): Fixed N+1 get_value query inside loop
+        customer = policy.customer
+
         if not customer:
             continue
         candidates.append(
@@ -222,7 +222,7 @@ def remediate_stale_renewal_tasks(
             "renewal_date": ["<", today],
             "auto_created": 1,
         },
-        fields=["name"],
+        fields=["name", "notes"],
         order_by="renewal_date asc",
         limit_page_length=limit,
     )
@@ -230,22 +230,36 @@ def remediate_stale_renewal_tasks(
     scanned = len(rows)
     updated = 0
 
+    if not scanned:
+        return {"scanned": 0, "updated": 0, "skipped": 0}
+
+    remediation_note = _("System Note: Stale renewal task was automatically closed.")
+    # audit(perf/P-08): Fixed N+1 get_doc loop by using bulk fetch and db.set_value
     for row in rows:
-        task = frappe.get_doc("AT Renewal Task", row.name)
-        task.status = ATRenewalTaskStatus.CANCELLED
-        existing_notes = str(task.notes or "").strip()
-        remediation_note = _("System Note: Stale renewal task was automatically closed.")
-        task.notes = (
+        existing_notes = str(row.notes or "").strip()
+        new_notes = (
             f"{existing_notes}\n{remediation_note}".strip()
             if existing_notes
             else remediation_note
         )
-        # ignore_permissions: Renewal service internal operations; permission enforced at API layer.
-        task.save(ignore_permissions=True)
+        frappe.db.set_value(
+            "AT Renewal Task",
+            row.name,
+            {
+                "status": ATRenewalTaskStatus.CANCELLED,
+                "notes": new_notes,
+            },
+            update_modified=True,
+        )
         updated += 1
 
     if updated:
         frappe.db.commit()
+        try:
+            from acentem_takipte.acentem_takipte.api.dashboard_cache import invalidate_dashboard_cache
+            invalidate_dashboard_cache()
+        except Exception:
+            pass
 
     return {
         "scanned": scanned,
