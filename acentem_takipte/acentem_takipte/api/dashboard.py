@@ -172,6 +172,7 @@ def _dashboard_tab_cache_key(
     to_date,
     compare_from_date=None,
     compare_to_date=None,
+    period_comparison=None,
     branch=None,
     office_branch=None,
     months: int,
@@ -185,6 +186,7 @@ def _dashboard_tab_cache_key(
         "to_date": str(to_date or ""),
         "compare_from_date": str(compare_from_date or ""),
         "compare_to_date": str(compare_to_date or ""),
+        "period_comparison": str(period_comparison or ""),
         "branch": str(branch or ""),
         "office_branch": str(office_branch or ""),
         "months": cint(months or 0),
@@ -223,10 +225,44 @@ def get_dashboard_kpis(filters=None) -> dict:
     months = min(max(months, 1), 24)
 
     allowed_customers, scope_meta = _allowed_customers_for_user(include_meta=True)
+    
+    # audit(perf/P-05): Redis caching for KPI metrics
+    # Reuse the same cache mechanism as dashboard tabs
+    cache_key = _dashboard_tab_cache_key(
+        tab_key="kpis",
+        from_date=from_date,
+        to_date=to_date,
+        compare_from_date=compare_from_date,
+        compare_to_date=compare_to_date,
+        period_comparison=period_comparison,
+        branch=branch,
+        office_branch=office_branch,
+        months=months,
+        allowed_customers=allowed_customers,
+        scope_meta=scope_meta,
+    )
+    
+    try:
+        cached_payload = frappe.cache().get_value(cache_key)
+        if cached_payload is not None:
+            return cached_payload
+    except Exception:
+        pass
+
     if allowed_customers is not None:
         if not allowed_customers:
-            return _empty_dashboard_payload(meta=scope_meta)
-    return dashboard_kpi_queries.build_dashboard_kpis_payload(
+            empty_result = _empty_dashboard_payload(meta=scope_meta)
+            try:
+                frappe.cache().set_value(
+                    cache_key,
+                    empty_result,
+                    expires_in_sec=_dashboard_tab_cache_ttl_seconds(),
+                )
+            except Exception:
+                pass
+            return empty_result
+
+    result = dashboard_kpi_queries.build_dashboard_kpis_payload(
         from_date=from_date,
         to_date=to_date,
         compare_from_date=compare_from_date,
@@ -242,6 +278,17 @@ def get_dashboard_kpis(filters=None) -> dict:
         build_lead_where_fn=_build_lead_where,
         monthly_commission_trend_fn=_monthly_commission_trend,
     )
+    
+    try:
+        frappe.cache().set_value(
+            cache_key,
+            result,
+            expires_in_sec=_dashboard_tab_cache_ttl_seconds(),
+        )
+    except Exception:
+        pass
+        
+    return result
 
 
 @frappe.whitelist()
