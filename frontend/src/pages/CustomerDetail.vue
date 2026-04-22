@@ -55,8 +55,8 @@
         <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
           {{ t("communication") }}
         </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="openCustomerDocuments">
-          {{ t("documents") }}
+        <ActionButton variant="secondary" size="sm" @click="openUploadDocModal">
+          {{ t("uploadDocument") }}
         </ActionButton>
         <ActionButton variant="secondary" size="sm" @click="openQuickCustomerRelation">
           {{ t("newRelation") }}
@@ -224,8 +224,8 @@
             <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
               {{ t("communication") }}
             </ActionButton>
-            <ActionButton variant="secondary" size="sm" @click="openCustomerDocuments">
-              {{ t("documents") }}
+            <ActionButton variant="secondary" size="sm" @click="openUploadDocModal">
+              {{ t("uploadDocument") }}
             </ActionButton>
             <ActionButton variant="secondary" size="sm" :disabled="!activePolicies.length" @click="activePolicies[0] && openPolicyDetail(activePolicies[0].name)">
               {{ t("openPolicy") }}
@@ -586,6 +586,14 @@
           v-if="activeCustomerTab === 'operations'"
           :title="t('documentsTitle')"
         >
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <ActionButton variant="secondary" size="xs" @click="openUploadDocModal">
+              {{ t("uploadDocument") }}
+            </ActionButton>
+            <ActionButton variant="secondary" size="xs" @click="openCustomerDocuments">
+              {{ t("openDocuments") }}
+            </ActionButton>
+          </div>
           <template #trailing>
             <span class="badge badge-blue">{{ customerDocumentItems.length }}</span>
           </template>
@@ -624,13 +632,7 @@
                     :title="doc.is_sensitive ? t('sensitiveShareWarning') : t('shareWhatsApp')"
                     @click.stop="shareDocumentWhatsApp(doc)"
                   >{{ t("shareWhatsApp") }}</button>
-                  <a
-                    v-if="doc.file_url"
-                    :href="doc.file_url"
-                    target="_blank"
-                    rel="noreferrer"
-                    class="btn btn-xs btn-secondary"
-                  >{{ t("open") }}</a>
+                  <a href="#" class="btn btn-xs btn-secondary" @click.prevent="openCustomerDocument(doc)">{{ t("openDocument") }}</a>
                 </div>
               </template>
             </MetaListCard>
@@ -727,6 +729,16 @@
         </SectionPanel>
       </div>
     </div>
+
+    <CustomerDocumentUploadModal
+      :open="showUploadDocModal"
+      :can-upload="canUploadDocs"
+      :customer-name="props.name"
+      :t="t"
+      @close="closeUploadDocModal"
+      @uploaded="handleDocUploadComplete"
+    />
+
     <QuickCreateManagedDialog
       v-model="showCustomerRelationDialog"
       config-key="customer_relation"
@@ -800,10 +812,12 @@ import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
+import CustomerDocumentUploadModal from "../components/customer-detail/CustomerDocumentUploadModal.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { useCustomerDetailActions } from "../composables/customerDetail";
 import { useCustomerDetailViewData } from "../composables/customerDetailViewData";
@@ -995,6 +1009,9 @@ const copy = {
     operationsTitle: "Operasyonlar",
     documents: "Dokümanlar",
     documentsTitle: "Doküman Listesi",
+    uploadDocument: "Doküman Yükle",
+    openDocuments: "Doküman Merkezine Git",
+    openDocument: "Dokümanı Aç",
     emptyDocuments: "Henüz doküman yüklenmedi.",
     sensitiveData: "Hassas Veri",
     verified: "Doğrulandı",
@@ -1193,6 +1210,9 @@ const copy = {
     operationsTitle: "Operations",
     documents: "Documents",
     documentsTitle: "Document List",
+    uploadDocument: "Upload Document",
+    openDocuments: "Go to Document Center",
+    openDocument: "Open Document",
     emptyDocuments: "No documents uploaded yet.",
     sensitiveData: "Sensitive Data",
     verified: "Verified",
@@ -1264,7 +1284,7 @@ const customerDocumentProfile = computed(() => customer360Documents.value.docume
 const customerDocumentItems = computed(() => customer360Documents.value.items || []);
 const canWriteATDocument = computed(() => Boolean(authStore.capabilities?.doctypes?.["AT Document"]?.write));
 const docToggleVerifiedResource = createResource({
-  url: "acentem_takipte.acentem_takipte.doctype.at_document.at_document.toggle_verified",
+  url: "acentem_takipte.acentem_takipte.api.documents.toggle_verified",
   auto: false,
 });
 const docShareResource = createResource({
@@ -1295,6 +1315,12 @@ async function shareDocumentWhatsApp(doc) {
   } catch { /* ignore */ }
 }
 
+async function openCustomerDocument(doc) {
+  const opened = await openDocumentInNewTab(doc || {});
+  if (opened) return;
+  window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
+}
+
 function fmtDate(v) {
   if (!v) return "";
   try { return formatDate(v); } catch { return String(v); }
@@ -1302,6 +1328,12 @@ function fmtDate(v) {
 
 function docSubTypeBadgeClass(subType) {
   const map = {
+      // English stored values (canonical post-migration)
+      "Vehicle Registration": "badge-blue",
+      "ID Document": "badge-slate",
+      "Policy Copy": "badge-green",
+      "Damage Photo": "badge-orange",
+      // Legacy Turkish stored values (backwards compat)
     "Ruhsat": "badge-blue",
     "Kimlik": "badge-slate",
     "Poliçe Kopyası": "badge-green",
@@ -2201,13 +2233,35 @@ function openCommunicationCenterForCustomer() {
 function openCustomerDocuments() {
   if (!props.name) return;
   router.push({
-    name: "files-list",
+    name: "at-documents-list",
     query: {
-      attached_to_doctype: "AT Customer",
-      attached_to_name: props.name,
+      reference_doctype: "AT Customer",
+      reference_name: props.name,
     },
   });
 }
+
+const showUploadDocModal = ref(false);
+function openUploadDocModal() {
+  console.log("[CustomerDetail] openUploadDocModal called, customer:", props.name);
+  showUploadDocModal.value = true;
+}
+function closeUploadDocModal() { showUploadDocModal.value = false; }
+async function handleDocUploadComplete() {
+  showUploadDocModal.value = false;
+  customer360Resource.params = { name: props.name };
+  await customer360Resource.reload();
+}
+const canUploadDocs = computed(() => {
+  const caps = authStore.capabilities?.doctypes || {};
+  return Boolean(
+    caps?.["AT Customer"]?.write
+    || caps?.["AT Document"]?.create
+    || caps?.["AT Document"]?.write
+    || caps?.File?.create
+    || caps?.File?.write
+  );
+});
 
 function openCustomerRelations() {
   if (!props.name) return;
