@@ -427,7 +427,7 @@ async function submit() {
 
   try {
     const csrfToken = (typeof window !== "undefined" && window.csrf_token) || "";
-    const resp = await fetch("/api/method/frappe.client.upload_file", {
+    const resp = await fetch("/api/method/upload_file", {
       method: "POST",
       body: fd,
       headers: csrfToken ? { "X-Frappe-CSRF-Token": csrfToken } : {},
@@ -490,12 +490,21 @@ async function submit() {
       if (fileInput.value) fileInput.value.value = "";
       emit("uploaded");
     } else {
-      let errText = "";
-      try { errText = await resp.text(); } catch {}
-      if (errText.toLowerCase().includes('model does not support image')) {
-        errorMessage.value = "Bu dosya tipi desteklenmiyor. PDF, DOC veya JPEG/PNG kullanın.";
+      let detail = "";
+      try {
+        const payload = await resp.json();
+        detail = extractServerErrorMessage(payload);
+      } catch {
+        try {
+          detail = (await resp.text()).trim();
+        } catch {
+          detail = "";
+        }
+      }
+      if (detail.toLowerCase().includes("model does not support image")) {
+        errorMessage.value = t("fileTypeNotSupported");
       } else {
-        errorMessage.value = t("uploadError");
+        errorMessage.value = detail ? `${t("uploadError")} (${detail})` : t("uploadError");
       }
     }
   } catch {

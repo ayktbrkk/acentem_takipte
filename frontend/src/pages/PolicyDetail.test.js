@@ -244,11 +244,11 @@ const QuickCreateManagedDialogStub = {
   }),
 };
 
-const PolicyDocumentUploadModalStub = {
-  props: ["open", "canUpload", "policyName"],
+const WorkbenchFileUploadModalStub = {
+  props: ["open", "attachedToDoctype", "attachedToName"],
   emits: ["close", "uploaded"],
   template: `
-    <div class="upload-modal-stub" :data-open="String(open)" :data-can-upload="String(canUpload)">
+    <div class="upload-modal-stub" :data-open="String(open)" :data-doctype="attachedToDoctype" :data-name="attachedToName">
       <button class="modal-stub-close" @click="$emit('close')">Close</button>
       <button class="modal-stub-uploaded" @click="$emit('uploaded')">Uploaded</button>
     </div>
@@ -291,7 +291,7 @@ const commonStubs = {
   SectionPanel: SectionPanelStub,
   QuickCreateManagedDialog: QuickCreateManagedDialogStub,
   StatusBadge: true,
-  PolicyDocumentUploadModal: PolicyDocumentUploadModalStub,
+  WorkbenchFileUploadModal: WorkbenchFileUploadModalStub,
 };
 
 describe("PolicyDetail policy 360 integration", () => {
@@ -444,7 +444,7 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(wrapper.text()).toContain("hasar-foto.jpg");
   });
 
-  it("routes policy documents action to filtered files list", async () => {
+  it("routes policy documents action to document center", async () => {
     const wrapper = mount(PolicyDetail, {
       props: {
         name: "POL-001",
@@ -461,15 +461,15 @@ describe("PolicyDetail policy 360 integration", () => {
     expect(documentsTab).toBeTruthy();
     await documentsTab.trigger("click");
 
-    const openButton = wrapper.findAll("button").find((node) => node.text().includes("Aç"));
+    const openButton = wrapper.findAll("button").find((node) => node.text().includes("Doküman Merkezine Git"));
     expect(openButton).toBeTruthy();
     await openButton.trigger("click");
 
     expect(routerPush).toHaveBeenLastCalledWith({
-      name: "files-list",
+      name: "at-documents-list",
       query: {
-        attached_to_doctype: "AT Policy",
-        attached_to_name: "POL-001",
+        reference_doctype: "AT Policy",
+        reference_name: "POL-001",
       },
     });
   });

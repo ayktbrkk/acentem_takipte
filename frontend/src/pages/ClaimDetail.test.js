@@ -164,12 +164,12 @@ describe("ClaimDetail page", () => {
 
     expect(wrapper.text()).toContain("Hasar Süreci");
     expect(wrapper.text()).toContain("Hasar Detayları");
-    expect(wrapper.text()).toContain("Belgeler");
+    expect(wrapper.text()).toContain("Dokümanlar");
     expect(wrapper.text()).toContain("Ödeme Geçmişi");
     expect(wrapper.text()).toContain("Ekspertiz Raporları");
     expect(wrapper.text()).toContain("H-001");
     expect(wrapper.text()).toContain("POL-001");
-    expect(wrapper.text()).toContain("rapor.pdf");
+    expect(wrapper.text()).toContain("FILE-001");
 
     const buttons = wrapper.findAll("button");
     await buttons.find((button) => button.text() === "Listeye Dön").trigger("click");
