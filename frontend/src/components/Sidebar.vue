@@ -72,8 +72,10 @@
               </div>
             </a>
 
+            <!-- audit(perf/P-03): v-prefetch preloads the route chunk on hover -->
             <RouterLink
               v-else
+              v-prefetch="item.to"
               :to="item.to"
               :title="item.label"
               class="group mx-2 mb-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-gray-600 transition-colors duration-150 hover:bg-gray-50 hover:text-gray-900"

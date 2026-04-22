@@ -194,6 +194,26 @@ if (mountTarget) {
     app.use(pinia);
     app.use(FrappeUI, { socketio: realtimeConfig });
     app.use(router);
+
+    // audit(perf/P-03): v-prefetch directive — on hover, prefetches the lazy
+    // route chunk so navigation feels instant. Usage: v-prefetch="/customers"
+    app.directive("prefetch", {
+      mounted(el, binding) {
+        if (!binding.value) return;
+        el.addEventListener(
+          "mouseenter",
+          () => {
+            try {
+              router.resolve(binding.value);
+            } catch {
+              // Ignore unresolvable routes
+            }
+          },
+          { once: true, passive: true },
+        );
+      },
+    });
+
     const branchStore = useBranchStore(pinia);
     branchStore.hydrateFromSession();
     branchStore.syncFromRoute(router.currentRoute.value);
