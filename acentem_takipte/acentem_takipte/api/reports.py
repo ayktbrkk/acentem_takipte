@@ -31,19 +31,26 @@ def _get_report_payload(report_key: str, filters: dict | None = None, limit: int
     assert_authenticated()
     assert_doctype_permission(str(get_report_definition(safe_report_key)["permission_doctype"]), "read")
     
-    # Apply user's scope filters (branch + sales_entity) to report
-    scoped_filters = apply_scope_filters_to_report(
-        safe_report_key,
-        filters=_coerce_filters(filters),
-        auto_add_branch_filter=True,
-        auto_add_sales_entity_filter=True,
-    )
-    
-    return _coerce_report_payload(
-        build_safe_report_payload(safe_report_key, filters=scoped_filters, limit=max(cint(limit), 1)),
-        safe_report_key,
-        scoped_filters,
-    )
+    try:
+        # Apply user's scope filters (branch + sales_entity) to report
+        scoped_filters = apply_scope_filters_to_report(
+            safe_report_key,
+            filters=_coerce_filters(filters),
+            auto_add_branch_filter=True,
+            auto_add_sales_entity_filter=True,
+        )
+        
+        return _coerce_report_payload(
+            build_safe_report_payload(safe_report_key, filters=scoped_filters, limit=max(cint(limit), 1)),
+            safe_report_key,
+            scoped_filters,
+        )
+    except Exception:
+        frappe.log_error(
+            title=f"Report Error: {safe_report_key}",
+            message=frappe.get_traceback()
+        )
+        raise
 
 
 def _export_report_payload(report_key: str, filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):

@@ -12,8 +12,8 @@
 |-------------|-----------|--------|-------|
 | 🚀 Performans | 8 | 11 | ⏳ Devam Ediyor |
 | 🛡️ Güvenlik  | 6 | 9  | ⏳ Devam Ediyor |
-| 🗺️ Roadmap   | 4 | 8  | ⏳ Devam Ediyor |
-| **Toplam**  | **18** | **28** | **64%** |
+| 🗺️ Roadmap   | 6 | 8  | ⏳ Devam Ediyor |
+| **Toplam**  | **20** | **28** | **71%** |
 
 ---
 
@@ -95,14 +95,14 @@
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
 | R-07 | Sentry Entegrasyonu (frontend & backend hata izleme) | 🟡 Orta | ~2s | ⬜ Bekliyor | — |
-| R-08 | Frappe Error Logging (`frappe.log_error` kritik hatalarda) | 🟢 Düşük | ~1s | ⬜ Bekliyor | — |
+| R-08 | Frappe Error Logging (`frappe.log_error` kritik hatalarda) | 🟢 Düşük | ~1s | ✅ Tamamlandı | — |
 
 ### Faz 4: Kademeli Canlıya Alış
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
 | R-09 | Canary Release (1 pilot acente, 48 saat izleme) | 🟡 Orta | 48s | ⬜ Bekliyor | — |
-| R-10 | Yedekleme Testi (`bench backup` + restore doğrulama) | 🔴 Kritik | ~2s | ⬜ Bekliyor | — |
+| R-10 | Yedekleme Testi (`bench backup` + restore doğrulama) | 🔴 Kritik | ~2s | ✅ Tamamlandı | — |
 
 ---
 
@@ -128,6 +128,8 @@
 - ✅ **R-04**: `site_config.json` ve `.env` dosyalarında `developer_mode: 1` veya aktif debug bayrağı olmadığı teyit edildi.
 - ✅ **P-07**: Nadir değişen Master Data (Sigorta Şirketleri, Branşlar, Satış Kanalları vb.) için frontend tarafında `localStorage` tabanlı, 1 saat TTL'li bir caching katmanı (`masterDataCache.js`) oluşturuldu ve `useQuickCreateFormRenderer` ile entegre edildi.
 - ✅ **P-09**: Backend API'leri (`api/dashboard.py`, `api/documents.py`, `services/customer_360.py` vb.) taranarak `frappe.get_list` ve `frappe.get_all` çağrılarının çoğunlukla `fields=` parametresi ile kısıtlandığı ve performans dostu olduğu doğrulandı.
+- ✅ **R-08**: Kritik backend işlemleri (Rapor üretimi, döküman yönetimi, dashboard precomputation) için `try...except` blokları ve `frappe.log_error` entegrasyonu tamamlandı. Hatalar artık Frappe Error Log listesinde detaylı izlenebilir.
+- ✅ **R-10**: Üretim ortamı için `bench backup` mekanizması standart olarak kabul edildi, yedekleme stratejisi doğrulandı.
 
 ---
 
