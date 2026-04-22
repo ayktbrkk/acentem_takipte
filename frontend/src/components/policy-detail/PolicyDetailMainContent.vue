@@ -117,23 +117,38 @@
                 :description="documentLabel(d)"
                 :meta="d.document_date ? fmtDate(d.document_date) : fmtDateTime(d.creation)"
               >
-                <template #trailing>
-                  <div class="flex items-center gap-2">
-                    <!-- is_sensitive: Red Lock Icon -->
-                    <span v-if="d.is_sensitive" class="flex items-center" :title="t('sensitiveData')">
+              <template #trailing>
+                <div class="flex items-center gap-2">
+                  <!-- is_sensitive: Red Lock Icon -->
+                  <span v-if="d.is_sensitive" class="flex items-center" :title="t('sensitiveData')">
                       <svg class="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
                       </svg>
                     </span>
                     <!-- is_verified: Green Check Icon -->
                     <span v-if="d.is_verified" class="flex items-center" :title="t('verified')">
-                      <svg class="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                      </svg>
-                    </span>
-                    <button class="btn btn-sm" type="button" @click="openDocument(d)">{{ t("openDocument") }}</button>
-                  </div>
-                </template>
+                    <svg class="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                  <ActionButton v-if="canArchiveDocument?.(d)" variant="secondary" size="xs" @click="archiveDocument(d)">
+                    {{ t("archiveDocument") }}
+                  </ActionButton>
+                  <ActionButton v-if="canRestoreDocument?.(d)" variant="secondary" size="xs" @click="restoreDocument(d)">
+                    {{ t("restoreDocument") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canPermanentDeleteDocument?.(d)"
+                    variant="secondary"
+                    size="xs"
+                    class="text-red-700"
+                    @click="permanentDeleteDocument(d)"
+                  >
+                    {{ t("permanentDeleteDocument") }}
+                  </ActionButton>
+                  <button class="btn btn-sm" type="button" @click="openDocument(d)">{{ t("openDocument") }}</button>
+                </div>
+              </template>
                 <p v-if="d.notes" class="mt-1 text-xs text-slate-500">{{ d.notes }}</p>
               </MetaListCard>
             </div>
@@ -246,6 +261,12 @@ defineProps({
   openPolicyDocuments: { type: Function, required: true },
   openUploadModal: { type: Function, required: true },
   canUploadDocuments: { type: Boolean, default: false },
+  canArchiveDocument: { type: Function, default: null },
+  canRestoreDocument: { type: Function, default: null },
+  canPermanentDeleteDocument: { type: Function, default: null },
+  archiveDocument: { type: Function, default: null },
+  restoreDocument: { type: Function, default: null },
+  permanentDeleteDocument: { type: Function, default: null },
   fmtFileSize: { type: Function, required: true },
 });
 </script>

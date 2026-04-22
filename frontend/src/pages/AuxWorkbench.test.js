@@ -35,7 +35,23 @@ const resourceQueue = [];
 let reminderMutationSubmit;
 
 vi.mock("frappe-ui", () => ({
-  createResource: () => {
+  createResource: (options = {}) => {
+    const url = String(options?.url || "");
+    if (
+      url.includes("api.documents.archive_document") ||
+      url.includes("api.documents.restore_document") ||
+      url.includes("api.documents.permanent_delete_document")
+    ) {
+      return {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData: vi.fn(),
+        reload: vi.fn(async () => []),
+        submit: vi.fn(async () => ({})),
+      };
+    }
     const next = resourceQueue.shift() || {};
     return {
       data: ref(next.data ?? []),

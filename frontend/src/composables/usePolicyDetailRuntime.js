@@ -1,6 +1,7 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
+import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 
 const resourceValue = (resource, fallback = null) => {
   const value = unref(resource?.data);
@@ -11,6 +12,20 @@ const asArray = (value) => (Array.isArray(value) ? value : []);
 
 export function usePolicyDetailRuntime({ props, router, activeTab }) {
   const authStore = useAuthStore();
+  const documentLifecycleLabels = computed(() => {
+    const isTr = String(unref(authStore.locale) || "en").trim().toLowerCase().startsWith("tr");
+    return isTr
+      ? {
+          archiveConfirm: "Bu doküman arşivlensin mi?",
+          restoreConfirm: "Bu doküman geri yüklensin mi?",
+          permanentDeleteConfirm: "Bu doküman ve bağlı dosyası kalıcı olarak silinecek. Devam edilsin mi?",
+        }
+      : {
+          archiveConfirm: "Archive this document?",
+          restoreConfirm: "Restore this document?",
+          permanentDeleteConfirm: "This document and its linked file will be permanently deleted. Continue?",
+        };
+  });
   const policy360Resource = createResource({
     url: "acentem_takipte.acentem_takipte.api.dashboard.get_policy_360_payload",
     auto: false,
@@ -132,6 +147,7 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
       || caps?.File?.write
     );
   });
+  const atDocumentLifecycle = useAtDocumentLifecycle({ authStore, labels: documentLifecycleLabels.value });
 
   function applyPolicyPayload(data) {
     const payload = data || {};
@@ -271,5 +287,11 @@ export function usePolicyDetailRuntime({ props, router, activeTab }) {
     paymentLoading,
     fileLoading,
     endorsementStatusClass,
+    canArchiveDocument: (doc) => atDocumentLifecycle.canArchiveDocument(doc),
+    canRestoreDocument: (doc) => atDocumentLifecycle.canRestoreDocument(doc),
+    canPermanentDeleteDocument: (doc) => atDocumentLifecycle.canPermanentDeleteDocument(doc),
+    archiveDocument: (doc) => atDocumentLifecycle.archiveDocument(doc, load),
+    restoreDocument: (doc) => atDocumentLifecycle.restoreDocument(doc, load),
+    permanentDeleteDocument: (doc) => atDocumentLifecycle.permanentDeleteDocument(doc, load),
   };
 }

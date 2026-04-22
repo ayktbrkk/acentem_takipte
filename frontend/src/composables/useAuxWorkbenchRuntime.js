@@ -9,6 +9,7 @@ import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 import { useAuxWorkbenchPresets } from "./useAuxWorkbenchPresets";
+import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 
 const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
   "AT Renewal Task",
@@ -25,6 +26,20 @@ function asArray(value) {
 
 export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branchStore, route, router }) {
   const localeCode = computed(() => (String(unref(activeLocale) || "").trim() === "tr" ? "tr-TR" : "en-US"));
+  const documentLifecycleLabels = computed(() => {
+    const isTr = String(unref(activeLocale) || "").trim() === "tr";
+    return isTr
+      ? {
+          archiveConfirm: "Bu doküman arşivlensin mi?",
+          restoreConfirm: "Bu doküman geri yüklensin mi?",
+          permanentDeleteConfirm: "Bu doküman ve bağlı dosyası kalıcı olarak silinecek. Devam edilsin mi?",
+        }
+      : {
+          archiveConfirm: "Archive this document?",
+          restoreConfirm: "Restore this document?",
+          permanentDeleteConfirm: "This document and its linked file will be permanently deleted. Continue?",
+        };
+  });
 
   const draft = reactive({ query: "", sort: config.defaultSort || "modified desc", pageLength: 20 });
   const filters = reactive({ query: "", sort: config.defaultSort || "modified desc" });
@@ -37,6 +52,11 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
   const loadError = reactive({ text: "" });
   const showAuxQuickCreateDialog = ref(false);
   const rowActionBusyName = ref("");
+  const { actionBusyName: documentLifecycleBusyName, canArchiveDocument, canRestoreDocument, canPermanentDeleteDocument, archiveDocument, restoreDocument, permanentDeleteDocument } =
+    useAtDocumentLifecycle({
+      authStore,
+      labels: documentLifecycleLabels.value,
+    });
 
   const listResource = createResource({ url: "frappe.client.get_list", auto: false });
   const countResource = createResource({ url: "frappe.client.get_count", auto: false });
@@ -149,10 +169,12 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
   }
 
   function setFilterStateFromPayload(payload = {}) {
-    filters.query = String(payload.query || "");
+    const defaultFilters = config.defaultFilters || {};
+
+    filters.query = String(payload.query ?? defaultFilters.query ?? "");
     draft.query = filters.query;
 
-    const sortValue = String(payload.sort || config.defaultSort || "modified desc");
+    const sortValue = String(payload.sort || defaultFilters.sort || config.defaultSort || "modified desc");
     filters.sort = sortValue;
     draft.sort = sortValue;
 
@@ -161,7 +183,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     draft.pageLength = pageLength;
 
     for (const fd of config.filterDefs || []) {
-      const nextValue = payload[fd.key];
+      const nextValue = Object.prototype.hasOwnProperty.call(payload, fd.key) ? payload[fd.key] : defaultFilters[fd.key];
       const normalized =
         fd.type === "number" && nextValue !== "" && nextValue != null
           ? String(nextValue)
@@ -295,7 +317,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
   function resetFilters() {
     presetKey.value = "default";
     writeFilterPresetKey(PRESET_STORAGE_KEY, "default");
-    setFilterStateFromPayload({});
+    setFilterStateFromPayload(config.defaultFilters || {});
     pagination.page = 1;
     void persistPresetStateToServer();
     refreshList();
@@ -590,6 +612,33 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     window.alert(locale === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
   }
 
+  function canArchiveDocumentRow(row) {
+    return config.key === "at-documents" && canArchiveDocument(row);
+  }
+
+  function canRestoreDocumentRow(row) {
+    return config.key === "at-documents" && canRestoreDocument(row);
+  }
+
+  function canPermanentDeleteDocumentRow(row) {
+    return config.key === "at-documents" && canPermanentDeleteDocument(row);
+  }
+
+  async function archiveDocumentRow(row) {
+    if (!canArchiveDocumentRow(row)) return;
+    await archiveDocument(row, refreshList);
+  }
+
+  async function restoreDocumentRow(row) {
+    if (!canRestoreDocumentRow(row)) return;
+    await restoreDocument(row, refreshList);
+  }
+
+  async function permanentDeleteDocumentRow(row) {
+    if (!canPermanentDeleteDocumentRow(row)) return;
+    await permanentDeleteDocument(row, refreshList);
+  }
+
   function runToolbarAction(action) {
     if (!action || typeof action !== "object") return;
     if (action.capabilityPath && !authStore.can(action.capabilityPath)) return;
@@ -660,7 +709,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     }
   );
 
-  return {
+    return {
     config,
     activeLocale,
     localeCode,
@@ -670,7 +719,7 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     loadError,
     showAuxQuickCreateDialog,
     showWorkbenchUploadModal,
-    rowActionBusyName,
+    rowActionBusyName: computed(() => rowActionBusyName.value || documentLifecycleBusyName.value),
     listResource,
     countResource,
     sendDraftNowRowResource,
@@ -748,6 +797,12 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
     openPanel,
     canOpenDocumentRow,
     openDocument,
+    canArchiveDocumentRow,
+    canRestoreDocumentRow,
+    canPermanentDeleteDocumentRow,
+    archiveDocumentRow,
+    restoreDocumentRow,
+    permanentDeleteDocumentRow,
     runToolbarAction,
     currentPresetPayload,
     setFilterStateFromPayload,

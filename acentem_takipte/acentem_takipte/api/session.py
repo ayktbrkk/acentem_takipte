@@ -103,6 +103,7 @@ def _build_session_capabilities() -> dict:
             "read": _has_permission(doctype, "read"),
             "create": _has_permission(doctype, "create"),
             "write": _has_permission(doctype, "write"),
+            "delete": _has_permission(doctype, "delete"),
         }
         for doctype in capability_doctypes
     }

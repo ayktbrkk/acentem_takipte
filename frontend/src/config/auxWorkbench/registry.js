@@ -473,6 +473,7 @@ export const AUX_WORKBENCH_CONFIGS = {
     detailGroups: [{ key: "document", fields: ["file", "display_name", "secondary_file_name", "original_file_name", "reference_doctype", "reference_name", "policy", "customer", "claim", "document_kind", "document_sub_type", "is_sensitive", "is_verified", "document_date", "upload_date", "sequence_no", "version_no", "status", "notes", "creation", "owner", "modified"] }],
     textFields: ["notes"],
     boolFields: ["is_sensitive", "is_verified"],
+    defaultFilters: { status: "Active" },
     filterDefs: [
       F("reference_doctype", "reference_doctype", "select", { options: ["", "AT Customer", "AT Policy", "AT Claim"] }),
       F("reference_name", "reference_name", "text", { mode: "like" }),

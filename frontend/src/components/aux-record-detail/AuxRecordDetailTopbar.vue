@@ -99,6 +99,18 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  canArchiveDocument: {
+    type: Boolean,
+    default: false,
+  },
+  canRestoreDocument: {
+    type: Boolean,
+    default: false,
+  },
+  canPermanentDeleteDocument: {
+    type: Boolean,
+    default: false,
+  },
   showDeskAction: {
     type: Boolean,
     default: false,
@@ -144,6 +156,18 @@ defineProps({
     required: true,
   },
   openDocument: {
+    type: Function,
+    required: true,
+  },
+  archiveDocument: {
+    type: Function,
+    required: true,
+  },
+  restoreDocument: {
+    type: Function,
+    required: true,
+  },
+  permanentDeleteDocument: {
     type: Function,
     required: true,
   },
@@ -254,6 +278,21 @@ const emit = defineEmits(["open-quick-edit"]);
       </ActionButton>
       <ActionButton v-if="canOpenDocument" variant="secondary" size="xs" @click="openDocument">
         {{ t('openDocument') }}
+      </ActionButton>
+      <ActionButton v-if="canArchiveDocument" variant="secondary" size="xs" @click="archiveDocument">
+        {{ t('archiveDocument') }}
+      </ActionButton>
+      <ActionButton v-if="canRestoreDocument" variant="secondary" size="xs" @click="restoreDocument">
+        {{ t('restoreDocument') }}
+      </ActionButton>
+      <ActionButton
+        v-if="canPermanentDeleteDocument"
+        variant="secondary"
+        size="xs"
+        class="text-red-700"
+        @click="permanentDeleteDocument"
+      >
+        {{ t('permanentDeleteDocument') }}
       </ActionButton>
       <ActionButton v-if="panelConfig" variant="link" size="xs" trailing-icon=">" @click="openPanel">
         {{ t('panel') }}

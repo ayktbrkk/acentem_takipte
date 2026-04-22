@@ -622,6 +622,21 @@
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
                   </span>
+                  <ActionButton v-if="canArchiveDocument?.(doc)" variant="secondary" size="xs" @click.stop="archiveDocument(doc)">
+                    {{ t("archiveDocument") }}
+                  </ActionButton>
+                  <ActionButton v-if="canRestoreDocument?.(doc)" variant="secondary" size="xs" @click.stop="restoreDocument(doc)">
+                    {{ t("restoreDocument") }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canPermanentDeleteDocument?.(doc)"
+                    variant="secondary"
+                    size="xs"
+                    class="text-red-700"
+                    @click.stop="permanentDeleteDocument(doc)"
+                  >
+                    {{ t("permanentDeleteDocument") }}
+                  </ActionButton>
                   <button
                     v-if="canWriteATDocument"
                     class="btn btn-xs btn-secondary"
@@ -1012,6 +1027,12 @@ const copy = {
     uploadDocument: "Doküman Yükle",
     openDocuments: "Doküman Merkezine Git",
     openDocument: "Dokümanı Aç",
+    archiveDocument: "Arşivle",
+    restoreDocument: "Geri Yükle",
+    permanentDeleteDocument: "Kalıcı Sil",
+    archiveConfirm: "Bu doküman arşivlensin mi?",
+    restoreConfirm: "Bu doküman geri yüklensin mi?",
+    permanentDeleteConfirm: "Bu doküman ve bağlı dosyası kalıcı olarak silinecek. Devam edilsin mi?",
     emptyDocuments: "Henüz doküman yüklenmedi.",
     sensitiveData: "Hassas Veri",
     verified: "Doğrulandı",
@@ -1213,6 +1234,12 @@ const copy = {
     uploadDocument: "Upload Document",
     openDocuments: "Go to Document Center",
     openDocument: "Open Document",
+    archiveDocument: "Archive",
+    restoreDocument: "Restore",
+    permanentDeleteDocument: "Delete Permanently",
+    archiveConfirm: "Archive this document?",
+    restoreConfirm: "Restore this document?",
+    permanentDeleteConfirm: "This document and its linked file will be permanently deleted. Continue?",
     emptyDocuments: "No documents uploaded yet.",
     sensitiveData: "Sensitive Data",
     verified: "Verified",
@@ -1487,6 +1514,7 @@ const customerDetailActions = useCustomerDetailActions({
   reminderUpdateResource,
   auxQuickCustomerResource,
   auxQuickPolicyResource,
+  authStore,
 });
 
 const {
@@ -1519,6 +1547,12 @@ const {
   openQuickOfferForCustomer,
   openCommunicationCenterForCustomer,
   openCustomerDocuments,
+  canArchiveDocument,
+  canRestoreDocument,
+  canPermanentDeleteDocument,
+  archiveDocument,
+  restoreDocument,
+  permanentDeleteDocument,
   openCustomerRelations,
   openInsuredAssets,
   openQuickCustomerRelation,

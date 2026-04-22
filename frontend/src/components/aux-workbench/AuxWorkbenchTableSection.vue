@@ -178,6 +178,34 @@
                   >
                     {{ openDocumentLabel }}
                   </ActionButton>
+                  <ActionButton
+                    v-if="canArchiveDocumentRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="$emit('archive-document', row)"
+                  >
+                    {{ rowActionBusyName === row.name ? runningLabel : archiveDocumentLabel }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canRestoreDocumentRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click.stop="$emit('restore-document', row)"
+                  >
+                    {{ rowActionBusyName === row.name ? runningLabel : restoreDocumentLabel }}
+                  </ActionButton>
+                  <ActionButton
+                    v-if="canPermanentDeleteDocumentRow(row)"
+                    variant="secondary"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    class="text-red-700"
+                    @click.stop="$emit('permanent-delete-document', row)"
+                  >
+                    {{ rowActionBusyName === row.name ? runningLabel : permanentDeleteDocumentLabel }}
+                  </ActionButton>
                   <ActionButton v-if="panelCfgForRow(row)" variant="link" size="xs" trailing-icon=">" @click.stop="$emit('open-panel', row)">{{ panelLabel }}</ActionButton>
                 </InlineActionRow>
               </DataTableCell>
@@ -231,6 +259,9 @@ defineProps({
   modifiedLabel: { type: String, default: "" },
   openDetailLabel: { type: String, default: "" },
   openDocumentLabel: { type: String, default: "" },
+  archiveDocumentLabel: { type: String, default: "" },
+  restoreDocumentLabel: { type: String, default: "" },
+  permanentDeleteDocumentLabel: { type: String, default: "" },
   panelLabel: { type: String, default: "" },
   sendNowLabel: { type: String, default: "" },
   retryLabel: { type: String, default: "" },
@@ -273,6 +304,9 @@ defineProps({
   canBlockOwnershipAssignmentRow: { type: Function, required: true },
   canCompleteOwnershipAssignmentRow: { type: Function, required: true },
   canOpenDocumentRow: { type: Function, required: true },
+  canArchiveDocumentRow: { type: Function, required: true },
+  canRestoreDocumentRow: { type: Function, required: true },
+  canPermanentDeleteDocumentRow: { type: Function, required: true },
 });
 
 defineEmits([
@@ -292,6 +326,9 @@ defineEmits([
   "start-ownership-assignment",
   "block-ownership-assignment",
   "complete-ownership-assignment",
+  "archive-document",
+  "restore-document",
+  "permanent-delete-document",
   "previous",
   "next",
 ]);

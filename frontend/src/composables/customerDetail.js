@@ -4,11 +4,13 @@ import { deskActionsEnabled } from "../utils/deskActions";
 import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreate";
+import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 
 export function useCustomerDetailActions({
   props,
   t,
   activeLocale,
+  authStore,
   router,
   customer,
   customer360Payload,
@@ -20,6 +22,7 @@ export function useCustomerDetailActions({
   auxQuickCustomerResource,
   auxQuickPolicyResource,
 }) {
+  const atDocumentLifecycle = useAtDocumentLifecycle({ authStore, t });
 
   const customerRelationEyebrow = computed(
     () =>
@@ -648,6 +651,12 @@ export function useCustomerDetailActions({
     openQuickOfferForCustomer,
     openCommunicationCenterForCustomer,
     openCustomerDocuments,
+    canArchiveDocument: (doc) => atDocumentLifecycle.canArchiveDocument(doc),
+    canRestoreDocument: (doc) => atDocumentLifecycle.canRestoreDocument(doc),
+    canPermanentDeleteDocument: (doc) => atDocumentLifecycle.canPermanentDeleteDocument(doc),
+    archiveDocument: (doc) => atDocumentLifecycle.archiveDocument(doc, loadCustomer360),
+    restoreDocument: (doc) => atDocumentLifecycle.restoreDocument(doc, loadCustomer360),
+    permanentDeleteDocument: (doc) => atDocumentLifecycle.permanentDeleteDocument(doc, loadCustomer360),
     openCustomerRelations,
     openInsuredAssets,
     openQuickCustomerRelation,

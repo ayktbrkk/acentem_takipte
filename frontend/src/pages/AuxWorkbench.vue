@@ -90,6 +90,9 @@
       :modified-label="fieldLabel('modified')"
       :open-detail-label="t('openDetail')"
       :open-document-label="t('openDocument')"
+      :archive-document-label="t('archiveDocument')"
+      :restore-document-label="t('restoreDocument')"
+      :permanent-delete-document-label="t('permanentDeleteDocument')"
       :panel-label="t('panel')"
       :send-now-label="t('sendNow')"
       :retry-label="t('retry')"
@@ -132,8 +135,14 @@
       :can-block-ownership-assignment-row="canBlockOwnershipAssignmentRow"
       :can-complete-ownership-assignment-row="canCompleteOwnershipAssignmentRow"
       :can-open-document-row="canOpenDocumentRow"
+      :can-archive-document-row="canArchiveDocumentRow"
+      :can-restore-document-row="canRestoreDocumentRow"
+      :can-permanent-delete-document-row="canPermanentDeleteDocumentRow"
       @open-detail="openDetail"
       @open-document="openDocument"
+      @archive-document="archiveDocumentRow"
+      @restore-document="restoreDocumentRow"
+      @permanent-delete-document="permanentDeleteDocumentRow"
       @open-panel="openPanel"
       @send-draft-now="sendDraftNowRow"
       @retry-outbox="retryOutboxRow"
@@ -346,7 +355,13 @@ const {
   panelCfg,
   panelCfgForRow,
   canOpenDocumentRow,
+  canArchiveDocumentRow,
+  canRestoreDocumentRow,
+  canPermanentDeleteDocumentRow,
   openDocument,
+  archiveDocumentRow,
+  restoreDocumentRow,
+  permanentDeleteDocumentRow,
   openPanel,
   runToolbarAction,
   showWorkbenchUploadModal,

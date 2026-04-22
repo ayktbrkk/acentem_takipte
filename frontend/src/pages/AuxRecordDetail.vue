@@ -25,6 +25,9 @@
       :can-use-quick-edit="canUseQuickEdit"
       :panel-config="panelConfig"
       :can-open-document="canOpenDocument"
+      :can-archive-document="canArchiveDocument"
+      :can-restore-document="canRestoreDocument"
+      :can-permanent-delete-document="canPermanentDeleteDocument"
       :show-desk-action="showDeskAction"
       :go-back="goBack"
       :copy-record-value="copyRecordValue"
@@ -37,6 +40,9 @@
       :mark-assignment-lifecycle="markAssignmentLifecycle"
       :open-panel="openPanel"
       :open-document="openDocument"
+      :archive-document="archiveDocument"
+      :restore-document="restoreDocument"
+      :permanent-delete-document="permanentDeleteDocument"
       :open-desk="openDesk"
       @open-quick-edit="showQuickEditDialog = true"
     />
@@ -137,6 +143,12 @@ const copy = {
     openDesk: "Yönetim Ekranını Aç",
     panel: "Bağlı Kayda Git",
     openDocument: "Dokümanı Aç",
+    archiveDocument: "Arşivle",
+    restoreDocument: "Geri Yükle",
+    permanentDeleteDocument: "Kalıcı Sil",
+    archiveConfirm: "Bu doküman arşivlensin mi?",
+    restoreConfirm: "Bu doküman geri yüklensin mi?",
+    permanentDeleteConfirm: "Bu doküman ve bağlı dosyası kalıcı olarak silinecek. Devam edilsin mi?",
     saveChanges: "Değişiklikleri Kaydet",
     cancel: "İptal",
     copy: "Kopyala",
@@ -223,6 +235,12 @@ const copy = {
     openDesk: "Open Desk",
     panel: "Go to Linked Record",
     openDocument: "Open Document",
+    archiveDocument: "Archive",
+    restoreDocument: "Restore",
+    permanentDeleteDocument: "Delete Permanently",
+    archiveConfirm: "Archive this document?",
+    restoreConfirm: "Restore this document?",
+    permanentDeleteConfirm: "This document and its linked file will be permanently deleted. Continue?",
     saveChanges: "Save Changes",
     cancel: "Cancel",
     copy: "Copy",
@@ -366,6 +384,7 @@ const detailActions = useAuxRecordDetailActions({
   props,
   config,
   authStore,
+  t,
   route,
   router,
   activeDoctype,
@@ -385,8 +404,14 @@ const {
   openDesk,
   openPanel,
   openDocument,
+  archiveDocument,
+  restoreDocument,
+  permanentDeleteDocument,
   panelConfig,
   canOpenDocument,
+  canArchiveDocument: canArchiveDocumentFn,
+  canRestoreDocument: canRestoreDocumentFn,
+  canPermanentDeleteDocument: canPermanentDeleteDocumentFn,
   canOpenCommunicationContext,
   isTaskDetail,
   isReminderDetail,
@@ -404,6 +429,10 @@ const {
   canBlockAssignmentLifecycle,
   canCloseAssignmentLifecycle,
 } = detailActions;
+
+const canArchiveDocument = computed(() => canArchiveDocumentFn(doc.value));
+const canRestoreDocument = computed(() => canRestoreDocumentFn(doc.value));
+const canPermanentDeleteDocument = computed(() => canPermanentDeleteDocumentFn(doc.value));
 
 const detailQuickDialogs = useAuxRecordDetailQuickDialogs({
   props,

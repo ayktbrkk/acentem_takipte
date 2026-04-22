@@ -4,11 +4,13 @@ import { createResource } from "frappe-ui";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { openDocumentInNewTab } from "../utils/documentOpen";
+import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 
 export function useAuxRecordDetailActions({
   props,
   config,
   authStore,
+  t,
   route,
   router,
   doc,
@@ -30,6 +32,7 @@ export function useAuxRecordDetailActions({
     url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
     auto: false,
   });
+  const atDocumentLifecycle = useAtDocumentLifecycle({ authStore, t });
 
   const canOpenCommunicationContext = computed(
     () =>
@@ -45,6 +48,15 @@ export function useAuxRecordDetailActions({
 
   const canOpenDocument = computed(
     () => ["files", "at-documents"].includes(String(unref(config?.key) || "")) && Boolean(unref(doc)?.name)
+  );
+  const canArchiveDocument = computed(
+    () => String(unref(config?.key) || "") === "at-documents" && atDocumentLifecycle.canArchiveDocument(unref(doc))
+  );
+  const canRestoreDocument = computed(
+    () => String(unref(config?.key) || "") === "at-documents" && atDocumentLifecycle.canRestoreDocument(unref(doc))
+  );
+  const canPermanentDeleteDocument = computed(
+    () => String(unref(config?.key) || "") === "at-documents" && atDocumentLifecycle.canPermanentDeleteDocument(unref(doc))
   );
 
   const isTaskDetail = computed(() => ["AT Task", "AT Renewal Task"].includes(String(unref(config?.doctype) || "")));
@@ -130,6 +142,21 @@ export function useAuxRecordDetailActions({
     window.alert(locale === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
   }
 
+  async function archiveDocument() {
+    if (!canArchiveDocument.value) return;
+    await atDocumentLifecycle.archiveDocument(unref(doc), reloadDetail);
+  }
+
+  async function restoreDocument() {
+    if (!canRestoreDocument.value) return;
+    await atDocumentLifecycle.restoreDocument(unref(doc), reloadDetail);
+  }
+
+  async function permanentDeleteDocument() {
+    if (!canPermanentDeleteDocument.value) return;
+    await atDocumentLifecycle.permanentDeleteDocument(unref(doc), reloadDetail);
+  }
+
   async function sendDraftLifecycle() {
     if (!canSendDraftLifecycle.value || !unref(doc)?.name) return;
     await sendDraftNowResource.submit({ draft_name: unref(doc).name });
@@ -210,7 +237,13 @@ export function useAuxRecordDetailActions({
     openDesk,
     openPanel,
     openDocument,
+    archiveDocument,
+    restoreDocument,
+    permanentDeleteDocument,
     panelConfig,
     canOpenDocument,
+    canArchiveDocument,
+    canRestoreDocument,
+    canPermanentDeleteDocument,
   };
 }

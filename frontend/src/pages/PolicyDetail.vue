@@ -45,6 +45,12 @@
         :open-policy-documents="openPolicyDocuments"
         :open-upload-modal="openUploadModal"
         :can-upload-documents="canUploadDocuments"
+        :can-archive-document="canArchiveDocument"
+        :can-restore-document="canRestoreDocument"
+        :can-permanent-delete-document="canPermanentDeleteDocument"
+        :archive-document="archiveDocument"
+        :restore-document="restoreDocument"
+        :permanent-delete-document="permanentDeleteDocument"
         :fmt-file-size="fmtFileSize"
       />
 
@@ -126,6 +132,8 @@ const labels = {
     endorsementTitle: "Zeyilname Geçmişi", emptyEndorsement: "Zeyilname yok.", documents: "Dokümanlar", emptyFiles: "Dosya yok.", emptyDocuments: "Henüz doküman yüklenmedi.",
     totalDocuments: "Toplam Doküman", pdfDocuments: "PDF", imageDocuments: "Görsel", spreadsheetDocuments: "Tablo", otherDocuments: "Diğer", lastUploadedOn: "Son Yükleme",
     notifications: "Bildirim Taslakları", emptyNotifications: "Bildirim yok.", version: "Versiyon", open: "Aç", openDocument: "Dokümanı Aç", openDocumentCenter: "Doküman Merkezine Git",
+    archiveDocument: "Arşivle", restoreDocument: "Geri Yükle", permanentDeleteDocument: "Kalıcı Sil",
+    archiveConfirm: "Bu doküman arşivlensin mi?", restoreConfirm: "Bu doküman geri yüklensin mi?", permanentDeleteConfirm: "Bu doküman ve bağlı dosyası kalıcı olarak silinecek. Devam edilsin mi?",
     uploadDocument: "Doküman Yükle", chooseFile: "Dosya seçin veya buraya sürükleyin", uploadSuccess: "Doküman başarıyla yüklendi",
     uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.", fileTooLarge: "Dosya çok büyük (maks. 10 MB)", private: "Gizli", fileSize: "Dosya boyutu",
     cancel: "İptal", upload: "Yükle", uploading: "Yükleniyor...",
@@ -155,6 +163,8 @@ const labels = {
     endorsementTitle: "Endorsement History", emptyEndorsement: "No endorsements.", documents: "Documents", emptyFiles: "No files.", emptyDocuments: "No documents uploaded yet.",
     totalDocuments: "Total Documents", pdfDocuments: "PDF", imageDocuments: "Images", spreadsheetDocuments: "Spreadsheets", otherDocuments: "Other", lastUploadedOn: "Last Upload",
     notifications: "Notification Drafts", emptyNotifications: "No notifications.", version: "Version", open: "Open", openDocument: "Open Document", openDocumentCenter: "Open Document Center",
+    archiveDocument: "Archive", restoreDocument: "Restore", permanentDeleteDocument: "Delete Permanently",
+    archiveConfirm: "Archive this document?", restoreConfirm: "Restore this document?", permanentDeleteConfirm: "This document and its linked file will be permanently deleted. Continue?",
     uploadDocument: "Upload Document", chooseFile: "Choose a file or drag it here", uploadSuccess: "Document uploaded successfully",
     uploadError: "Upload failed. Please try again.", fileTooLarge: "File is too large (max 10 MB)", private: "Private", fileSize: "File size",
     cancel: "Cancel", upload: "Upload", uploading: "Uploading...",
@@ -209,6 +219,12 @@ const {
   closeUploadModal,
   handleUploadComplete,
   canUploadDocuments,
+  canArchiveDocument,
+  canRestoreDocument,
+  canPermanentDeleteDocument,
+  archiveDocument,
+  restoreDocument,
+  permanentDeleteDocument,
   fmtFileSize,
   load,
   timelineLoading,

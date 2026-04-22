@@ -10,6 +10,10 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate
 
+from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import (
+    log_decision_event,
+)
+
 # Whitelist: upload_document yalnızca bu DocType'lara bağlanabilir
 _ALLOWED_REFERENCE_DOCTYPES = frozenset({"AT Policy", "AT Customer", "AT Claim", ""})
 
@@ -246,6 +250,110 @@ def _reserve_display_name(
         frappe.db.sql("SELECT RELEASE_LOCK(%s)", (lock_key,))
 
     frappe.throw(_("Could not generate a unique document name. Please retry."))
+
+
+def _load_at_document(docname: str):
+    docname = str(docname or "").strip()
+    if not docname:
+        frappe.throw(_("Document not found."), frappe.DoesNotExistError)
+    return frappe.get_doc("AT Document", docname)
+
+
+def _assert_at_document_write_access(doc) -> None:
+    frappe.has_permission("AT Document", ptype="write", doc=doc, throw=True)
+
+
+def _assert_at_document_delete_access(doc) -> None:
+    if "System Manager" not in set(frappe.get_roles() or []):
+        frappe.throw(_("You do not have permission to delete documents permanently."), frappe.PermissionError)
+    frappe.has_permission("AT Document", ptype="delete", doc=doc, throw=True)
+
+
+def _log_document_decision(doc, action: str, action_summary: str, decision_context: str | None = None) -> None:
+    try:
+        log_decision_event(
+            "AT Document",
+            doc.name,
+            action=action,
+            action_summary=action_summary,
+            decision_context=decision_context,
+        )
+    except Exception:
+        # Audit logging must never block the lifecycle operation.
+        pass
+
+
+@frappe.whitelist()
+def archive_document(docname: str) -> dict:
+    doc = _load_at_document(docname)
+    _assert_at_document_write_access(doc)
+
+    if str(doc.status or "").strip() == "Archived":
+        return {"status": "success", "message": _("Document is already archived.")}
+
+    doc.status = "Archived"
+    doc.save(ignore_permissions=True)
+    _log_document_decision(
+        doc,
+        action="Archive",
+        action_summary=_("Document archived"),
+        decision_context=_("Document status changed from Active to Archived."),
+    )
+    return {"status": "success", "message": _("Document archived.")}
+
+
+@frappe.whitelist()
+def restore_document(docname: str) -> dict:
+    doc = _load_at_document(docname)
+    _assert_at_document_write_access(doc)
+
+    if str(doc.status or "").strip() == "Active":
+        return {"status": "success", "message": _("Document is already active.")}
+
+    doc.status = "Active"
+    doc.save(ignore_permissions=True)
+    _log_document_decision(
+        doc,
+        action="Restore",
+        action_summary=_("Document restored"),
+        decision_context=_("Document status changed from Archived to Active."),
+    )
+    return {"status": "success", "message": _("Document restored.")}
+
+
+@frappe.whitelist()
+def permanent_delete_document(docname: str) -> dict:
+    doc = _load_at_document(docname)
+    _assert_at_document_delete_access(doc)
+
+    linked_file_name = str(doc.file or "").strip()
+    linked_file_url = ""
+    if linked_file_name and frappe.db.exists("File", linked_file_name):
+        linked_file_url = str(frappe.db.get_value("File", linked_file_name, "file_url") or "").strip()
+        frappe.db.set_value("AT Document", doc.name, "file", "", update_modified=False)
+
+    at_document_name = doc.name
+    frappe.delete_doc("AT Document", at_document_name, ignore_permissions=True)
+
+    if linked_file_name and frappe.db.exists("File", linked_file_name):
+        frappe.delete_doc("File", linked_file_name, ignore_permissions=True, force=True)
+
+    _log_document_decision(
+        doc,
+        action="Delete",
+        action_summary=_("Document permanently deleted"),
+        decision_context=_(
+            "File record and physical file removed permanently."
+        )
+        if linked_file_name
+        else _("Document record removed permanently."),
+    )
+    return {
+        "status": "success",
+        "message": _("Document permanently deleted."),
+        "deleted_file": linked_file_name,
+        "deleted_file_url": linked_file_url,
+    }
 
 
 @frappe.whitelist()

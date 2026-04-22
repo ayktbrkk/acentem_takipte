@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 
 import { useAuthStore } from "../stores/auth";
 import { formatDate as sharedFormatDate, formatMoney as sharedFormatMoney } from "../utils/detailFormatters";
+import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 
 export function useClaimDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
@@ -22,6 +23,12 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
     openDocuments: "Open Documents",
     uploadDocument: "Upload Document",
     openDocument: "Open Document",
+    archiveDocument: "Archive",
+    restoreDocument: "Restore",
+    permanentDeleteDocument: "Delete Permanently",
+    archiveConfirm: "Archive this document?",
+    restoreConfirm: "Restore this document?",
+    permanentDeleteConfirm: "This document and its linked file will be permanently deleted. Continue?",
     emptyDocuments: "No documents uploaded yet.",
     sensitiveData: "Sensitive Data",
     verified: "Verified",
@@ -81,6 +88,12 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
       "Open Documents": "Doküman Merkezine Git",
       "Upload Document": "Doküman Yükle",
       "Open Document": "Dokümanı Aç",
+      "Archive": "Arşivle",
+      "Restore": "Geri Yükle",
+      "Delete Permanently": "Kalıcı Sil",
+      "Archive this document?": "Bu doküman arşivlensin mi?",
+      "Restore this document?": "Bu doküman geri yüklensin mi?",
+      "This document and its linked file will be permanently deleted. Continue?": "Bu doküman ve bağlı dosyası kalıcı olarak silinecek. Devam edilsin mi?",
       "No documents uploaded yet.": "Henüz doküman yüklenmedi.",
       "Sensitive Data": "Hassas Veri",
       "Verified": "Doğrulandı",
@@ -193,6 +206,7 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
   const claimResource = createResource({ url: "frappe.client.get", auto: false });
   const atDocumentR = createResource({ url: "frappe.client.get_list", auto: false });
   const claimPaymentsResource = createResource({ url: "frappe.client.get_list", auto: false });
+  const atDocumentLifecycle = useAtDocumentLifecycle({ authStore, t: (key) => labels[localeValue.value]?.[key] || labels.en[key] || key });
 
   const claim = computed(() => unref(claimResource.data) || {});
   const atDocuments = computed(() => (Array.isArray(unref(atDocumentR.data)) ? unref(atDocumentR.data) : []));
@@ -386,6 +400,12 @@ export function useClaimDetailRuntime({ name, activeLocale }) {
     closeUploadModal,
     handleUploadComplete,
     canUploadDocuments,
+    canArchiveDocument: (doc) => atDocumentLifecycle.canArchiveDocument(doc),
+    canRestoreDocument: (doc) => atDocumentLifecycle.canRestoreDocument(doc),
+    canPermanentDeleteDocument: (doc) => atDocumentLifecycle.canPermanentDeleteDocument(doc),
+    archiveDocument: (doc) => atDocumentLifecycle.archiveDocument(doc, reload),
+    restoreDocument: (doc) => atDocumentLifecycle.restoreDocument(doc, reload),
+    permanentDeleteDocument: (doc) => atDocumentLifecycle.permanentDeleteDocument(doc, reload),
     fmtFileSize,
     reload,
   };
