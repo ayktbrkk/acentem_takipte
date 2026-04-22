@@ -56,7 +56,11 @@ app_license = "mit"
 # include_js = "acentem_takipte.bundle.js"
 
 # Website user home page
-# website_user_home_page = "at"
+website_user_home_page = "at"
+
+website_route_rules = [
+    {"from_route": "/at/<path:path>", "to_route": "at"},
+]
 
 # Translation
 # ------------------

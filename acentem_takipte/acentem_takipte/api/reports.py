@@ -21,9 +21,11 @@ from acentem_takipte.acentem_takipte.services.reports_runtime import (
     build_report_download_response,
     build_safe_report_payload,
     get_scheduled_report_config_summary,
-    get_scheduled_reports_timeline as get_timeline_service,
     remove_scheduled_report,
     save_scheduled_report,
+)
+from acentem_takipte.acentem_takipte.services.scheduled_reports import (
+    get_scheduled_reports_timeline as get_timeline_service,
 )
 
 

@@ -1,7 +1,7 @@
 <template>
   <SectionPanel
-    :title="t('filtersTitle')"
-    :count="`${activeFilterCount} ${t('activeFilters')}`"
+    :title="t('filters_title')"
+    :count="`${activeFilterCount} ${t('active_filters')}`"
     :meta="branchScopeLabel"
     panel-class="surface-card rounded-2xl p-4"
   >
@@ -19,7 +19,7 @@
           class="report-filter-control min-w-[210px]"
           @change="$emit('apply-date-preset', $event.target.value)"
         >
-          <option value="">{{ t("dateRangeLabel") }}</option>
+          <option value="">{{ t("date_range_label") }}</option>
           <option v-for="preset in datePresets" :key="preset.value" :value="preset.value">
             {{ preset.label }}
           </option>
@@ -30,16 +30,16 @@
             v-model="filters.fromDate"
             class="report-filter-control report-filter-control--date"
             type="date"
-            :placeholder="t('dateFrom')"
-            :title="t('dateFrom')"
+            :placeholder="t('date_from')"
+            :title="t('date_from')"
           />
           <span class="text-xs text-gray-400">-</span>
           <input
             v-model="filters.toDate"
             class="report-filter-control report-filter-control--date"
             type="date"
-            :placeholder="t('dateTo')"
-            :title="t('dateTo')"
+            :placeholder="t('date_to')"
+            :title="t('date_to')"
           />
         </div>
       </div>
@@ -50,34 +50,34 @@
           class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
           @click="$emit('toggle-advanced')"
         >
-          {{ reportsAdvancedOpen ? t('hideAdvancedFilters') : t('advancedFilters') }}
+          {{ reportsAdvancedOpen ? t('hide_advanced_filters') : t('advanced_filters') }}
         </button>
 
         <span
           v-if="activeFilterCount > 0"
           class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500"
         >
-          {{ activeFilterCount }} {{ t('activeFilters') }}
+          {{ activeFilterCount }} {{ t('active_filters') }}
         </span>
 
         <div class="ml-auto flex flex-wrap items-center gap-2">
           <FilterPresetMenu
             :model-value="presetModelValue"
-            :label="t('presetLabel')"
+            :label="t('preset_label')"
             :options="presetOptionsList"
             :can-delete="canDeletePresetFlag"
             :show-save="true"
             :show-delete="true"
             :disabled="loading"
-            :save-label="t('savePreset')"
-            :delete-label="t('deletePreset')"
+            :save-label="t('save_preset')"
+            :delete-label="t('delete_preset')"
             @update:model-value="$emit('update:preset-key', $event)"
             @change="$emit('preset-change', $event)"
             @save="$emit('preset-save')"
             @delete="$emit('preset-delete')"
           />
           <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('refresh')">{{ t('refresh') }}</button>
-          <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('apply-filters')">{{ t('applyFilters') }}</button>
+          <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('apply-filters')">{{ t('apply_filters') }}</button>
           <button
             class="btn btn-secondary btn-sm flex items-center gap-1.5"
             type="button"
@@ -89,7 +89,7 @@
             </svg>
             {{ t('backgroundExport') || 'Background Export' }}
           </button>
-          <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="$emit('clear-filters')">{{ t('clearFilters') }}</button>
+          <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="$emit('clear-filters')">{{ t('clear_filters') }}</button>
         </div>
       </div>
     </div>
@@ -121,7 +121,7 @@
     </div>
 
     <div class="mt-3 flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
-      <span>{{ t("listSummaryTitle") }}</span>
+      <span>{{ t("list_summary_title") }}</span>
       <span>{{ t("columns") }}: {{ columnsSummaryLabel }}</span>
     </div>
   </SectionPanel>
