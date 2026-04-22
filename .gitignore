@@ -1,6 +1,10 @@
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
+*.egg
+dist/
+build/
 
 node_modules/
 frontend/node_modules/
@@ -9,6 +13,7 @@ frontend/dist/
 frontend/playwright-report/
 frontend/test-results/
 frontend/output/
+frontend/coverage/
 frontend/root.png
 frontend/vite.config.js.timestamp-*.mjs
 frontend/tests/e2e/tmp-*.spec.js
@@ -17,21 +22,36 @@ frontend/tests/e2e/*-debug.spec.js
 frontend/tests/e2e/*-debug.spec.ts
 frontend/tests/e2e/tmp-live-smoke.spec.js
 acentem_takipte/frontend/
-# Frontend build output (generated during build/deploy; never commit)
 acentem_takipte/public/frontend/
 acentem_takipte/translations/*.csv
 !acentem_takipte/translations/en.csv
 !acentem_takipte/translations/tr.csv
+
 .plan/
 .vscode/
 .playwright-cli/
 .pytest_cache/
-.roo/
-.agents/
+.ruff_cache/
+.coverage
+htmlcov/
+results.json
 
 .env
+frontend/.env
+*.local
 .venv/
 env/
+venv/
+ENV/
+
 lint-out.txt
 test-out.txt
 test-results/
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+.DS_Store
+Thumbs.db

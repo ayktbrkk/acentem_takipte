@@ -5,6 +5,10 @@ on:
     branches: [main]
   push:
     branches: [main]
+    paths:
+      - "acentem_takipte/translations/**"
+      - "tools/localization_guard.py"
+      - ".github/workflows/localization-guard.yml"
 
 jobs:
   localization-guard:

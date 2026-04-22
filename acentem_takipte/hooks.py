@@ -2,7 +2,7 @@ app_name = "acentem_takipte"
 app_title = "Acentem Takipte"
 app_publisher = "Acentem Takipte"
 app_description = "Insurance agency CRM and policy management"
-app_email = "dev@acentemtakipte.local"
+app_email = "support@acentemtakipte.com"
 app_license = "MIT"
 translated_languages = ["en", "tr"]
 
