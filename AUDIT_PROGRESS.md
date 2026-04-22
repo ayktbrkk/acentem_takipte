@@ -10,10 +10,10 @@
 
 | Kategori    | Tamamlanan | Toplam | Durum |
 |-------------|-----------|--------|-------|
-| 🚀 Performans | 0 | 11 | ⬜ Bekliyor |
+| 🚀 Performans | 4 | 11 | ⏳ Devam Ediyor |
 | 🛡️ Güvenlik  | 0 | 9  | ⬜ Bekliyor |
 | 🗺️ Roadmap   | 0 | 8  | ⬜ Bekliyor |
-| **Toplam**  | **0** | **28** | **0%** |
+| **Toplam**  | **4** | **28** | **14%** |
 
 ---
 
@@ -23,10 +23,10 @@
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| P-01 | Component-Level Lazy Loading (`Dashboard.vue`, `CustomerDetail.vue`) | 🔴 Kritik | ~2s | ⬜ Bekliyor | — |
-| P-02 | Tree-Shaking Kontrolü (`chart.js` & `@iconify-json/lucide`) | 🔴 Kritik | ~1s | ⬜ Bekliyor | — |
-| P-03 | Link Prefetching (Router hover prefetch) | 🟡 Orta | ~1s | ⬜ Bekliyor | — |
-| P-04 | Skeleton Loader (FCP sonrası beyaz ekran gizleme) | 🟡 Orta | ~3s | ⬜ Bekliyor | — |
+| P-01 | Component-Level Lazy Loading (`Dashboard.vue`, `CustomerDetail.vue`) | 🔴 Kritik | ~2s | ✅ Tamamlandı | c17ea56 |
+| P-02 | Tree-Shaking Kontrolü (`chart.js` & `@iconify-json/lucide`) | 🔴 Kritik | ~1s | ✅ Tamamlandı | e843672 |
+| P-03 | Link Prefetching (Router hover prefetch) | 🟡 Orta | ~1s | ✅ Tamamlandı | 430dea5 |
+| P-04 | Skeleton Loader (FCP sonrası beyaz ekran gizleme) | 🟡 Orta | ~3s | ✅ Tamamlandı | 71d8446 |
 
 ### 1.2 Backend — Redis Cache Stratejileri
 
@@ -108,7 +108,10 @@
 
 ## 📝 Tamamlanan İşlemler (Changelog)
 
-_Henüz tamamlanan işlem yok._
+- ✅ **P-01**: Dashboard sekme bileşenleri `defineAsyncComponent` ile lazy-load yapıldı.
+- ✅ **P-02**: Chart.js selective import'a geçirildi ve `rollup-plugin-visualizer` eklendi.
+- ✅ **P-03**: Vue Router linkleri için hover anında `v-prefetch` preloading direktifi eklendi.
+- ✅ **P-04**: `SkeletonLoader` eklendi, Dashboard KPI yükleme sürecine entegre edildi.
 
 ---
 
