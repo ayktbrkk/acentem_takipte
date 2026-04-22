@@ -55,7 +55,7 @@
         <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
           {{ t("communication") }}
         </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="openUploadDocModal">
+        <ActionButton v-if="canUploadDocuments" variant="secondary" size="sm" @click="openUploadModal">
           {{ t("uploadDocument") }}
         </ActionButton>
         <ActionButton variant="secondary" size="sm" @click="openQuickCustomerRelation">
@@ -224,7 +224,7 @@
             <ActionButton variant="secondary" size="sm" @click="openCommunicationCenterForCustomer">
               {{ t("communication") }}
             </ActionButton>
-            <ActionButton variant="secondary" size="sm" @click="openUploadDocModal">
+            <ActionButton v-if="canUploadDocuments" variant="secondary" size="sm" @click="openUploadModal">
               {{ t("uploadDocument") }}
             </ActionButton>
             <ActionButton variant="secondary" size="sm" :disabled="!activePolicies.length" @click="activePolicies[0] && openPolicyDetail(activePolicies[0].name)">
@@ -587,7 +587,7 @@
           :title="t('documentsTitle')"
         >
           <div class="mb-3 flex flex-wrap items-center gap-2">
-            <ActionButton variant="secondary" size="xs" @click="openUploadDocModal">
+            <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
               {{ t("uploadDocument") }}
             </ActionButton>
             <ActionButton variant="secondary" size="xs" @click="openCustomerDocuments">
@@ -730,13 +730,13 @@
       </div>
     </div>
 
-    <CustomerDocumentUploadModal
-      :open="showUploadDocModal"
-      :can-upload="canUploadDocs"
-      :customer-name="props.name"
+    <WorkbenchFileUploadModal
+      :open="showUploadModal"
+      :attached-to-doctype="'AT Customer'"
+      :attached-to-name="props.name"
       :t="t"
-      @close="closeUploadDocModal"
-      @uploaded="handleDocUploadComplete"
+      @close="closeUploadModal"
+      @uploaded="handleUploadComplete"
     />
 
     <QuickCreateManagedDialog
@@ -812,7 +812,7 @@ import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import CustomerDocumentUploadModal from "../components/customer-detail/CustomerDocumentUploadModal.vue";
+import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "../components/ui/FieldGroup.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
@@ -2033,6 +2033,28 @@ const reminderRows = computed(() => (customer360Payload.value?.operations?.remin
 
 }
 
+const showUploadModal = ref(false);
+function openUploadModal() {
+  showUploadModal.value = true;
+}
+function closeUploadModal() {
+  showUploadModal.value = false;
+}
+async function handleUploadComplete() {
+  showUploadModal.value = false;
+  await customer360Resource.reload({ name: props.name });
+}
+const canUploadDocuments = computed(() => {
+  const caps = authStore.capabilities?.doctypes || {};
+  return Boolean(
+    caps?.["AT Customer"]?.write
+    || caps?.["AT Document"]?.create
+    || caps?.["AT Document"]?.write
+    || caps?.File?.create
+    || caps?.File?.write
+  );
+});
+
 if (false) {
 watch(
   () => props.name,
@@ -2240,28 +2262,6 @@ function openCustomerDocuments() {
     },
   });
 }
-
-const showUploadDocModal = ref(false);
-function openUploadDocModal() {
-  console.log("[CustomerDetail] openUploadDocModal called, customer:", props.name);
-  showUploadDocModal.value = true;
-}
-function closeUploadDocModal() { showUploadDocModal.value = false; }
-async function handleDocUploadComplete() {
-  showUploadDocModal.value = false;
-  customer360Resource.params = { name: props.name };
-  await customer360Resource.reload();
-}
-const canUploadDocs = computed(() => {
-  const caps = authStore.capabilities?.doctypes || {};
-  return Boolean(
-    caps?.["AT Customer"]?.write
-    || caps?.["AT Document"]?.create
-    || caps?.["AT Document"]?.write
-    || caps?.File?.create
-    || caps?.File?.write
-  );
-});
 
 function openCustomerRelations() {
   if (!props.name) return;

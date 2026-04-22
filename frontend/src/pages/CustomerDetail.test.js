@@ -514,7 +514,7 @@ describe("CustomerDetail customer 360 integration", () => {
       },
     });
 
-    await clickByText("Dokümanlar");
+    await clickByText("Doküman Merkezine Git");
     expect(routerPush).toHaveBeenLastCalledWith({
       name: "files-list",
       query: {
