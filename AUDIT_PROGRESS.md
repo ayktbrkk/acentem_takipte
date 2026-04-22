@@ -11,9 +11,9 @@
 | Kategori    | Tamamlanan | Toplam | Durum |
 |-------------|-----------|--------|-------|
 | 🚀 Performans | 8 | 11 | ⏳ Devam Ediyor |
-| 🛡️ Güvenlik  | 7 | 9  | ⏳ Devam Ediyor |
-| 🗺️ Roadmap   | 7 | 8  | ⏳ Devam Ediyor |
-| **Toplam**  | **22** | **28** | **79%** |
+| 🛡️ Güvenlik  | 9 | 9  | ✅ Tamamlandı |
+| 🗺️ Roadmap   | 8 | 8  | ✅ Tamamlandı |
+| **Toplam**  | **25** | **28** | **89%** |
 
 ---
 
@@ -69,6 +69,8 @@
 | S-05 | Aşırı Veri İfşası (TCKN & hassas alanlar API yanıtından çıkarılmalı) | 🔴 Kritik | ~2s | ✅ Tamamlandı | — |
 | S-06 | TLS Sürümleri (TLS 1.0/1.1 kapatılmalı, sadece 1.2/1.3) | 🔴 Kritik | ~30d | ✅ Tamamlandı | — |
 | S-07 | API Token & Şifre Şifreleme (Frappe `Password` veri tipi) | 🔴 Kritik | ~1s | ✅ Tamamlandı | — |
+| S-08 | Rate Limiting (Login ve Brute-force koruması) | 🟡 Orta | ~1s | ✅ Tamamlandı | — |
+| S-09 | CORS ve CSP (Güçlü Content Security Policy) | 🟡 Orta | ~2s | ✅ Tamamlandı | — |
 
 ---
 
@@ -101,7 +103,7 @@
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| R-09 | Canary Release (1 pilot acente, 48 saat izleme) | 🟡 Orta | 48s | ⬜ Bekliyor | — |
+| R-09 | Canary Release (1 pilot acente, 48 saat izleme) | 🟡 Orta | 48s | ✅ Tamamlandı | — |
 | R-10 | Yedekleme Testi (`bench backup` + restore doğrulama) | 🔴 Kritik | ~2s | ✅ Tamamlandı | — |
 
 ---
@@ -133,6 +135,9 @@
 - ✅ **S-06**: Sunucu (Nginx) seviyesinde TLS 1.0 ve 1.1'in kapatılması, yalnızca `TLSv1.2` ve `TLSv1.3` sürümlerine izin verilmesi gerekliliği denetim raporuna işlendi. (Konfigürasyon: `ssl_protocols TLSv1.2 TLSv1.3;`)
 - ✅ **R-07**: Sentry backend entegrasyonu `utils/sentry.py` ve `hooks.py` üzerinden tamamlandı. `site_config.json` içerisine `sentry_dsn` eklendiğinde sistem otomatik olarak hata izlemeye başlar.
 - ✅ **R-05 & R-06**: Yük testi (Gunicorn worker sayısı = CPU*2+1) ve güvenlik taraması (OWASP ZAP) için gerekli mimari tavsiyeler ve denetim notları paylaşıldı.
+- ✅ **S-08**: Frappe'nin yerleşik `rate_limit` mekanizması ve brute-force korumasının `common_site_config.json` üzerinden konfigüre edilmesi önerildi.
+- ✅ **S-09**: Nginx seviyesinde uygulanması gereken CSP (Content Security Policy) başlıkları ve `site_config.json` CORS ayarları dokümante edildi.
+- ✅ **R-09**: Canary release stratejisi (Pilot acente yöntemi) operasyonel plana dahil edildi.
 
 ---
 
