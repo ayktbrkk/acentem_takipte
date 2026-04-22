@@ -5,7 +5,7 @@ import unittest
 import frappe
 from frappe.test_runner import make_test_records
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import security as dashboard_security
+from acentem_takipte.acentem_takipte.api.v2 import dashboard_security
 from acentem_takipte.acentem_takipte.services.query_isolation import (
     build_scope_filter_for_doctype,
     build_scope_filters_dict,

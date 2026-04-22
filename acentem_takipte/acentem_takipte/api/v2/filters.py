@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2.constants import (
+from acentem_takipte.acentem_takipte.api.v2.constants import (
     CUSTOMER_WORKBENCH_QUERY_TEXT_OR_FILTER_FIELDS,
     LEAD_WORKBENCH_QUERY_TEXT_OR_FILTER_FIELDS,
 )

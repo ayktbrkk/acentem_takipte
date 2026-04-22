@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.utils import cint, flt
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     constants as dashboard_constants,
 )
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error

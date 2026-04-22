@@ -1,38 +1,68 @@
 from __future__ import annotations
 
-import importlib
-import sys
+# Modern API modules (v2 native)
+from . import (
+    constants,
+    dashboard_security,
+    details_lead,
+    details_offer,
+    filters,
+    queries_customers,
+    queries_kpis,
+    queries_leads,
+    serializers,
+    tab_payload,
+)
 
-_ALIASES = {
-    "accounting": "acentem_takipte.acentem_takipte.api.accounting",
-    "admin_jobs": "acentem_takipte.acentem_takipte.api.admin_jobs",
-    "break_glass": "acentem_takipte.acentem_takipte.api.break_glass",
-    "branches": "acentem_takipte.acentem_takipte.api.branches",
-    "communication": "acentem_takipte.acentem_takipte.api.communication",
-    "customers": "acentem_takipte.acentem_takipte.api.customers",
-    "dashboard": "acentem_takipte.acentem_takipte.api.dashboard",
-    "filter_presets": "acentem_takipte.acentem_takipte.api.filter_presets",
-    "list_exports": "acentem_takipte.acentem_takipte.api.list_exports",
-    "mutation_access": "acentem_takipte.acentem_takipte.api.mutation_access",
-    "quick_create": "acentem_takipte.acentem_takipte.api.quick_create",
-    "reports": "acentem_takipte.acentem_takipte.api.reports",
-    "security": "acentem_takipte.acentem_takipte.api.security",
-    "seed": "acentem_takipte.acentem_takipte.api.seed",
-    "session": "acentem_takipte.acentem_takipte.api.session",
-    "smoke": "acentem_takipte.acentem_takipte.api.smoke",
-    "versioning": "acentem_takipte.acentem_takipte.api.versioning",
-}
+# Legacy Redirects (Redirects v2 calls to core api modules)
+from acentem_takipte.acentem_takipte.api import (
+    accounting,
+    admin_jobs,
+    branches,
+    break_glass,
+    communication,
+    customers,
+    dashboard,
+    filter_presets,
+    list_exports,
+    mutation_access,
+    quick_create,
+    reports,
+    security,
+    seed,
+    session,
+    smoke,
+    versioning,
+)
 
-
-def _register_alias(alias_name: str, target_module: str):
-    module = importlib.import_module(target_module)
-    sys.modules[f"{__name__}.{alias_name}"] = module
-    globals()[alias_name] = module
-    return module
-
-
-for _alias_name, _target_module in _ALIASES.items():
-    _register_alias(_alias_name, _target_module)
-
-
-__all__ = sorted(_ALIASES)
+__all__ = [
+    # Native
+    "constants",
+    "dashboard_security",
+    "details_lead",
+    "details_offer",
+    "filters",
+    "queries_customers",
+    "queries_kpis",
+    "queries_leads",
+    "serializers",
+    "tab_payload",
+    # Redirects
+    "accounting",
+    "admin_jobs",
+    "branches",
+    "break_glass",
+    "communication",
+    "customers",
+    "dashboard",
+    "filter_presets",
+    "list_exports",
+    "mutation_access",
+    "quick_create",
+    "reports",
+    "security",
+    "seed",
+    "session",
+    "smoke",
+    "versioning",
+]

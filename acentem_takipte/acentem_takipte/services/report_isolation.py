@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import frappe
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import security as dashboard_security
+from acentem_takipte.acentem_takipte.api.v2 import dashboard_security
 from acentem_takipte.acentem_takipte.services.query_isolation import (
     build_scope_filters_dict,
     get_user_scope_metadata,

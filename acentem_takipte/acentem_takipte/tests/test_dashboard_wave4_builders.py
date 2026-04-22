@@ -66,10 +66,10 @@ def _as_date(value):
 class DashboardWave4BuilderTests(unittest.TestCase):
     def tearDown(self):
         for name in [
-            "acentem_takipte.acentem_takipte.api.dashboard_v2.queries_kpis",
-            "acentem_takipte.acentem_takipte.api.dashboard_v2.tab_payload",
-            "acentem_takipte.acentem_takipte.api.dashboard_v2.details_lead",
-            "acentem_takipte.acentem_takipte.api.dashboard_v2.details_offer",
+            "acentem_takipte.acentem_takipte.api.v2.queries_kpis",
+            "acentem_takipte.acentem_takipte.api.v2.tab_payload",
+            "acentem_takipte.acentem_takipte.api.v2.details_lead",
+            "acentem_takipte.acentem_takipte.api.v2.details_offer",
         ]:
             sys.modules.pop(name, None)
 
@@ -92,7 +92,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return responses.pop(0)
 
         _install_frappe_stub(sql_impl=fake_sql)
-        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.queries_kpis")
+        mod = _reload("acentem_takipte.acentem_takipte.api.v2.queries_kpis")
 
         with patch.object(mod, "_get_lead_status_rows", return_value=[{"status": "Open", "total": 3}]):
             payload = mod.build_dashboard_kpis_payload(
@@ -147,7 +147,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return responses.pop(0)
 
         _install_frappe_stub(sql_impl=fake_sql)
-        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.tab_payload")
+        mod = _reload("acentem_takipte.acentem_takipte.api.v2.tab_payload")
 
         payload = mod.build_dashboard_tab_sections(
             tab_key="daily",
@@ -218,7 +218,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return []
 
         _install_frappe_stub(get_all_impl=fake_get_all)
-        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.details_lead")
+        mod = _reload("acentem_takipte.acentem_takipte.api.v2.details_lead")
 
         captured = {}
 
@@ -270,7 +270,7 @@ class DashboardWave4BuilderTests(unittest.TestCase):
             return []
 
         _install_frappe_stub(get_all_impl=fake_get_all)
-        mod = _reload("acentem_takipte.acentem_takipte.api.dashboard_v2.details_offer")
+        mod = _reload("acentem_takipte.acentem_takipte.api.v2.details_offer")
 
         captured = {}
 

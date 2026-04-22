@@ -11,31 +11,31 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     constants as dashboard_constants,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     details_lead as dashboard_lead_detail_builder,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     details_offer as dashboard_offer_detail_builder,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     filters as dashboard_filters,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     queries_customers as dashboard_customer_queries,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     queries_kpis as dashboard_kpi_queries,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     queries_leads as dashboard_lead_queries,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
-    security as dashboard_security,
+from acentem_takipte.acentem_takipte.api.v2 import (
+    dashboard_security,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     serializers as dashboard_serializers,
 )
 from acentem_takipte.acentem_takipte.api.dashboard_scopes import (
@@ -48,7 +48,7 @@ from acentem_takipte.acentem_takipte.api.dashboard_scopes import (
     _get_scoped_policy_names,
     _qualified_field,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     tab_payload as dashboard_tab_sections,
 )
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (

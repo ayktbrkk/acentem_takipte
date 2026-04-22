@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     details_lead as lead_detail_builder,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_v2 import (
+from acentem_takipte.acentem_takipte.api.v2 import (
     details_offer as offer_detail_builder,
 )
 
