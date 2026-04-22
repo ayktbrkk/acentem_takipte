@@ -10,10 +10,10 @@
 
 | Kategori    | Tamamlanan | Toplam | Durum |
 |-------------|-----------|--------|-------|
-| 🚀 Performans | 4 | 11 | ⏳ Devam Ediyor |
+| 🚀 Performans | 6 | 11 | ⏳ Devam Ediyor |
 | 🛡️ Güvenlik  | 0 | 9  | ⬜ Bekliyor |
 | 🗺️ Roadmap   | 0 | 8  | ⬜ Bekliyor |
-| **Toplam**  | **4** | **28** | **14%** |
+| **Toplam**  | **6** | **28** | **21%** |
 
 ---
 
@@ -32,8 +32,8 @@
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| P-05 | KPI/Metrik Cache'leme (`api/dashboard.py` → Redis TTL) | 🔴 Kritik | ~2s | ⬜ Bekliyor | — |
-| P-06 | Akıllı Cache Invalidation (Frappe Hooks ile anahtar bazlı) | 🔴 Kritik | ~2s | ⬜ Bekliyor | — |
+| P-05 | KPI/Metrik Cache'leme (`api/dashboard.py` → Redis TTL) | 🔴 Kritik | ~2s | ✅ Tamamlandı | 255b801 |
+| P-06 | Akıllı Cache Invalidation (Frappe Hooks ile anahtar bazlı) | 🔴 Kritik | ~2s | ✅ Tamamlandı | 3d4c787 |
 | P-07 | Master Data Caching (Şehirler, Poliçe Tipleri → IndexedDB) | 🟢 Düşük | ~1.5s | ⬜ Bekliyor | — |
 
 ### 1.3 Veritabanı — Sorgu Verimliliği
@@ -112,6 +112,8 @@
 - ✅ **P-02**: Chart.js selective import'a geçirildi ve `rollup-plugin-visualizer` eklendi.
 - ✅ **P-03**: Vue Router linkleri için hover anında `v-prefetch` preloading direktifi eklendi.
 - ✅ **P-04**: `SkeletonLoader` eklendi, Dashboard KPI yükleme sürecine entegre edildi.
+- ✅ **P-05**: Dashboard KPI ve metrik sorguları için Frappe/Redis önbelleklemesi `get_dashboard_kpis` metoduna eklendi.
+- ✅ **P-06**: `hooks.py` aracılığıyla Policy, Payment, Claim vb. dökümanlarda veri değiştiğinde Dashboard Cache'in temizlenmesi sağlandı.
 
 ---
 
