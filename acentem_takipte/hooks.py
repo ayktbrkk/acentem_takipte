@@ -6,6 +6,13 @@ app_email = "dev@acentemtakipte.local"
 app_license = "MIT"
 translated_languages = ["en", "tr"]
 
+# Sentry initialization for backend
+try:
+    from acentem_takipte.acentem_takipte.utils.sentry import init_sentry
+    init_sentry()
+except Exception:
+    pass
+
 # /at SPA assets are injected dynamically in www/at.py from latest Vite manifest.
 app_include_js = []
 app_include_css = []

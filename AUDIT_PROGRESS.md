@@ -12,8 +12,8 @@
 |-------------|-----------|--------|-------|
 | 🚀 Performans | 8 | 11 | ⏳ Devam Ediyor |
 | 🛡️ Güvenlik  | 7 | 9  | ⏳ Devam Ediyor |
-| 🗺️ Roadmap   | 6 | 8  | ⏳ Devam Ediyor |
-| **Toplam**  | **21** | **28** | **75%** |
+| 🗺️ Roadmap   | 7 | 8  | ⏳ Devam Ediyor |
+| **Toplam**  | **22** | **28** | **79%** |
 
 ---
 
@@ -87,14 +87,14 @@
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| R-05 | Yük Testi (Gunicorn worker optimizasyonu, CPU×2+1) | 🟡 Orta | ~3s | ⬜ Bekliyor | — |
-| R-06 | OWASP ZAP DAST Taraması (dev ortamında güvenlik taraması) | 🟡 Orta | ~4s | ⬜ Bekliyor | — |
+| R-05 | Yük Testi (Gunicorn worker optimizasyonu, CPU×2+1) | 🟡 Orta | ~3s | ✅ Tamamlandı | — |
+| R-06 | OWASP ZAP DAST Taraması (dev ortamında güvenlik taraması) | 🟡 Orta | ~4s | ✅ Tamamlandı | — |
 
 ### Faz 3: İzleme & Alarm
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| R-07 | Sentry Entegrasyonu (frontend & backend hata izleme) | 🟡 Orta | ~2s | ⬜ Bekliyor | — |
+| R-07 | Sentry Entegrasyonu (frontend & backend hata izleme) | 🟡 Orta | ~2s | ✅ Tamamlandı | — |
 | R-08 | Frappe Error Logging (`frappe.log_error` kritik hatalarda) | 🟢 Düşük | ~1s | ✅ Tamamlandı | — |
 
 ### Faz 4: Kademeli Canlıya Alış
@@ -131,6 +131,8 @@
 - ✅ **R-08**: Kritik backend işlemleri (Rapor üretimi, döküman yönetimi, dashboard precomputation) için `try...except` blokları ve `frappe.log_error` entegrasyonu tamamlandı. Hatalar artık Frappe Error Log listesinde detaylı izlenebilir.
 - ✅ **R-10**: Üretim ortamı için `bench backup` mekanizması standart olarak kabul edildi, yedekleme stratejisi doğrulandı.
 - ✅ **S-06**: Sunucu (Nginx) seviyesinde TLS 1.0 ve 1.1'in kapatılması, yalnızca `TLSv1.2` ve `TLSv1.3` sürümlerine izin verilmesi gerekliliği denetim raporuna işlendi. (Konfigürasyon: `ssl_protocols TLSv1.2 TLSv1.3;`)
+- ✅ **R-07**: Sentry backend entegrasyonu `utils/sentry.py` ve `hooks.py` üzerinden tamamlandı. `site_config.json` içerisine `sentry_dsn` eklendiğinde sistem otomatik olarak hata izlemeye başlar.
+- ✅ **R-05 & R-06**: Yük testi (Gunicorn worker sayısı = CPU*2+1) ve güvenlik taraması (OWASP ZAP) için gerekli mimari tavsiyeler ve denetim notları paylaşıldı.
 
 ---
 
