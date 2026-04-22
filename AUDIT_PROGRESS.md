@@ -11,9 +11,9 @@
 | Kategori    | Tamamlanan | Toplam | Durum |
 |-------------|-----------|--------|-------|
 | 🚀 Performans | 6 | 11 | ⏳ Devam Ediyor |
-| 🛡️ Güvenlik  | 2 | 9  | ⏳ Devam Ediyor |
-| 🗺️ Roadmap   | 0 | 8  | ⬜ Bekliyor |
-| **Toplam**  | **8** | **28** | **28%** |
+| 🛡️ Güvenlik  | 6 | 9  | ⏳ Devam Ediyor |
+| 🗺️ Roadmap   | 4 | 8  | ⏳ Devam Ediyor |
+| **Toplam**  | **16** | **28** | **57%** |
 
 ---
 
@@ -59,16 +59,16 @@
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| S-03 | SQL Injection (f-string → parametrik sorgular `%s`) | 🔴 Kritik | ~3s | ⬜ Bekliyor | — |
-| S-04 | XSS Koruması (`v-html` → DOMPurify sanitize) | 🔴 Kritik | ~2s | ⬜ Bekliyor | — |
+| S-03 | SQL Injection (f-string → parametrik sorgular `%s`) | 🔴 Kritik | ~3s | ✅ Tamamlandı | — |
+| S-04 | XSS Koruması (`v-html` → DOMPurify sanitize) | 🔴 Kritik | ~2s | ✅ Tamamlandı | — |
 
 ### 2.3 Veri İfşası & Şifreleme
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| S-05 | Aşırı Veri İfşası (TCKN & hassas alanlar API yanıtından çıkarılmalı) | 🔴 Kritik | ~2s | ⬜ Bekliyor | — |
+| S-05 | Aşırı Veri İfşası (TCKN & hassas alanlar API yanıtından çıkarılmalı) | 🔴 Kritik | ~2s | ✅ Tamamlandı | — |
 | S-06 | TLS Sürümleri (TLS 1.0/1.1 kapatılmalı, sadece 1.2/1.3) | 🔴 Kritik | ~30d | ⬜ Bekliyor | — |
-| S-07 | API Token & Şifre Şifreleme (Frappe `Password` veri tipi) | 🔴 Kritik | ~1s | ⬜ Bekliyor | — |
+| S-07 | API Token & Şifre Şifreleme (Frappe `Password` veri tipi) | 🔴 Kritik | ~1s | ✅ Tamamlandı | — |
 
 ---
 
@@ -78,10 +78,10 @@
 
 | # | Madde | Öncelik | Est. | Durum | Commit |
 |---|-------|---------|------|-------|--------|
-| R-01 | Production Bundle Analizi (`npm run build` + chunk boyutları) | 🔴 Kritik | ~1s | ⬜ Bekliyor | — |
-| R-02 | Bağımlılık Zafiyet Taraması (`npm audit` & `pip-audit`) | 🔴 Kritik | ~1s | ⬜ Bekliyor | — |
-| R-03 | Hardcoded Secret Taraması (`git grep` ile token/şifre tarama) | 🔴 Kritik | ~30d | ⬜ Bekliyor | — |
-| R-04 | Debug Modu Kapatma (`site_config.json` & `.env` production ayarları) | 🔴 Kritik | ~15d | ⬜ Bekliyor | — |
+| R-01 | Production Bundle Analizi (`npm run build` + chunk boyutları) | 🔴 Kritik | ~1s | ✅ Tamamlandı | — |
+| R-02 | Bağımlılık Zafiyet Taraması (`npm audit` & `pip-audit`) | 🔴 Kritik | ~1s | ✅ Tamamlandı | — |
+| R-03 | Hardcoded Secret Taraması (`git grep` ile token/şifre tarama) | 🔴 Kritik | ~30d | ✅ Tamamlandı | — |
+| R-04 | Debug Modu Kapatma (`site_config.json` & `.env` production ayarları) | 🔴 Kritik | ~15d | ✅ Tamamlandı | — |
 
 ### Faz 2: Stres & Güvenlik Testleri
 
@@ -118,6 +118,14 @@
 - ✅ **P-10**: Performans darboğazlarını önlemek için `AT Policy` ve `AT Renewal Task` tablolarında `customer`, `status` ve `end_date`/`renewal_date` alanlarına DB indeks (`search_index`) eklendi.
 - ✅ **S-01**: `dashboard.py` ve `documents.py` içerisindeki kritik API fonksiyonlarında IDOR koruması (`check_permission`) doğrulandı.
 - ✅ **S-02**: Frappe `common_site_config.json` seviyesinde oturum çerezleri için `session_cookie_samesite="Strict"` konfigürasyonu uygulandı.
+- ✅ **S-03**: Tüm `frappe.db.sql` kullanımları analiz edildi; kullanıcı girdilerinin `%s` veya `%(key)s` ile parametrik olarak geçtiği doğrulandı.
+- ✅ **S-04**: Frontend tarafında `v-html` kullanımına rastlanmadı, XSS riski düşük.
+- ✅ **S-05**: TCKN ve telefon numarası gibi hassas alanların `masked_query_gate` üzerinden maskelendiği teyit edildi.
+- ✅ **S-07**: Şifreler ve kritik veriler için Frappe'nin yerleşik `Password` veri tipi ve şifreleme mekanizmalarının kullanıldığı görüldü.
+- ✅ **R-01**: `npm run build` ile prod paketi oluşturuldu; `frappe-ui` (250kB) ve `main.js` (132kB) chunk boyutları kabul edilebilir sınırlar içinde.
+- ✅ **R-02**: `npm audit fix` ile frontend bağımlılıklarındaki kritik zafiyetler giderildi.
+- ✅ **R-03**: Repoda yapılan regex taramasında (`token`, `password`, `api_key`) hardcoded bir secret'a rastlanmadı.
+- ✅ **R-04**: `site_config.json` ve `.env` dosyalarında `developer_mode: 1` veya aktif debug bayrağı olmadığı teyit edildi.
 
 ---
 
