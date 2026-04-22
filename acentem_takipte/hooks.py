@@ -113,16 +113,58 @@ doc_events = {
         "on_update": "acentem_takipte.acentem_takipte.services.sales_entities.handle_user_update",
     },
     "AT Policy": {
-        "after_insert": "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
-        "on_update": "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+        "after_insert": [
+            "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        ],
+        "on_update": [
+            "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        ],
+        "on_trash": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
     },
     "AT Payment": {
-        "after_insert": "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
-        "on_update": "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+        "after_insert": [
+            "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        ],
+        "on_update": [
+            "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        ],
+        "on_trash": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
     },
     "AT Claim": {
-        "after_insert": "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
-        "on_update": "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+        "after_insert": [
+            "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        ],
+        "on_update": [
+            "acentem_takipte.acentem_takipte.accounting.sync_doc_event",
+            "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        ],
+        "on_trash": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+    },
+    # audit(perf/P-06): Smart cache invalidation hooks for dashboard data freshness
+    "AT Lead": {
+        "after_insert": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        "on_update": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        "on_trash": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+    },
+    "AT Offer": {
+        "after_insert": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        "on_update": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        "on_trash": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+    },
+    "AT Customer": {
+        "after_insert": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        "on_update": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        "on_trash": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+    },
+    "AT Renewal Task": {
+        "after_insert": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        "on_update": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
+        "on_trash": "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache",
     },
 }
 

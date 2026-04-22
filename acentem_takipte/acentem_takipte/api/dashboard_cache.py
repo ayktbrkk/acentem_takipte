@@ -103,3 +103,14 @@ def _dashboard_tab_cache_key(
         ).encode()
     ).hexdigest()[:24]
     return f"at_dashboard_tab::{cache_digest}"
+
+# audit(perf/P-06): Smart cache invalidation hook
+def invalidate_dashboard_cache(doc=None, method=None):
+    """
+    Clears all dashboard tab cache keys.
+    Attached as a hook to Policy, Lead, Offer, Payment, etc.
+    """
+    try:
+        frappe.cache().delete_keys("at_dashboard_tab::")
+    except Exception:
+        pass
