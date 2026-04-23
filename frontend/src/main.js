@@ -62,6 +62,25 @@ function readRealtimeConfig() {
   return false;
 }
 
+function ensureRealtimeSiteName() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const boot = window.AT_SESSION_BOOT || window.__AT_SESSION__ || {};
+  const resolvedSiteName =
+    window.site_name ||
+    boot.site_name ||
+    boot.sitename ||
+    window.frappe?.boot?.site_name ||
+    window.frappe?.boot?.sitename ||
+    "";
+
+  if (resolvedSiteName) {
+    window.site_name = resolvedSiteName;
+  }
+}
+
 const DASHBOARD_READ_ONLY_METHODS = new Set([
   "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
   "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
@@ -181,6 +200,7 @@ if (mountTarget) {
     setAppPinia(pinia);
     setActivePinia(pinia);
     app.use(pinia);
+    ensureRealtimeSiteName();
     app.use(FrappeUI, { socketio: realtimeConfig });
     app.use(router);
 

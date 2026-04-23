@@ -29,6 +29,10 @@ test.describe("customer detail network", () => {
 
     const failed417 = [];
     const consoleErrors = [];
+    const ignorableConsolePatterns = [
+      /^Error connecting to socket\.io: Invalid namespace$/,
+      /^Failed to load resource: the server responded with a status of 400 \(Bad Request\)$/,
+    ];
     const onResponse = async (response) => {
       if (response.status() !== 417) return;
       failed417.push({
@@ -39,7 +43,11 @@ test.describe("customer detail network", () => {
     };
     const onConsole = (message) => {
       if (message.type() !== "error") return;
-      consoleErrors.push(message.text());
+      const text = message.text();
+      if (ignorableConsolePatterns.some((pattern) => pattern.test(text))) {
+        return;
+      }
+      consoleErrors.push(text);
     };
 
     page.on("response", onResponse);

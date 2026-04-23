@@ -797,6 +797,7 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
   return {
     activeLocale,
     localeCode,
+    t,
     ownershipAssignmentEyebrow,
     filters,
     claimStatusOptions,

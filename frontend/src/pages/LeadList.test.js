@@ -13,6 +13,10 @@ const routerReplace = vi.fn();
 const genericStub = {
   template: `<div><slot /><slot name="actions" /><slot name="body-content" /></div>`,
 };
+const ActionButtonStub = {
+  emits: ["click"],
+  template: `<button @click="$emit('click', $event)"><slot /></button>`,
+};
 
 function makeResource(data, reloadResult = data) {
   const resource = reactive({
@@ -88,8 +92,9 @@ describe("LeadList page", () => {
     const wrapper = mount(LeadList, {
       global: {
         stubs: {
-          ActionButton: true,
+          ActionButton: ActionButtonStub,
           FilterBar: true,
+          LeadListQuickLeadDialog: true,
           ListTable: true,
           SectionPanel: genericStub,
           SkeletonLoader: true,
@@ -105,6 +110,9 @@ describe("LeadList page", () => {
     expect(wrapper.vm.rows).toHaveLength(1);
     expect(wrapper.vm.rows[0].full_name).toBe("Ayşe Yılmaz");
     expect(wrapper.vm.rows[0].status_label).toBe("Açık");
+
+    wrapper.vm.openQuickLeadDialog();
+    expect(wrapper.vm.showQuickLeadDialog).toBe(true);
 
     wrapper.vm.openLead("LEAD-001");
     expect(routerPush).toHaveBeenCalledWith({ name: "lead-detail", params: { name: "LEAD-001" } });

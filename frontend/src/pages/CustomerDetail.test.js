@@ -220,7 +220,17 @@ describe("CustomerDetail page", () => {
     await Promise.resolve();
 
     await wrapper.findAll(".action-button-stub")[0].trigger("click");
-    expect(routerPush).toHaveBeenCalledWith({ name: "customers-board" });
+    expect(routerPush).toHaveBeenCalledWith({ name: "customer-list" });
+
+    await wrapper.findAll(".action-button-stub")[1].trigger("click");
+    expect(routerPush).toHaveBeenCalledWith({
+      name: "offer-board",
+      query: {
+        quick_create: "1",
+        prefill_customer: "CUST-001",
+        prefill_customer_label: "Aykut Bekir",
+      },
+    });
 
     await wrapper.findAll(".nav-tab")[1].trigger("click");
     await nextTick();

@@ -30,18 +30,18 @@
       <div class="flex flex-wrap gap-4">
         <input
           v-model.trim="filters.query"
-          class="flex-1 min-w-[200px] h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+          class="input flex-1 min-w-[200px] h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
           type="search"
           :placeholder="t('searchPlaceholder')"
           @keyup.enter="applyRenewalFilters"
         />
-        <select v-model="filters.status" class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all" @change="applyRenewalFilters">
+        <select v-model="filters.status" class="input h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all" @change="applyRenewalFilters">
           <option value="">{{ t("allStatuses") }}</option>
           <option v-for="option in renewalStatusOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </option>
         </select>
-        <select v-model="filters.dueScope" class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all" @change="applyRenewalFilters">
+        <select v-model="filters.dueScope" class="input h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all" @change="applyRenewalFilters">
           <option value="">{{ t("allDueScopes") }}</option>
           <option value="overdue">{{ t("dueScopeOverdue") }}</option>
           <option value="7">{{ t("dueScope7") }}</option>
@@ -93,6 +93,17 @@
                 <p class="flex justify-between"><span>{{ t("policy") }}:</span> <span class="text-slate-700">{{ task.policy || "-" }}</span></p>
                 <p class="flex justify-between"><span>{{ t("due") }}:</span> <span class="text-slate-700">{{ formatDate(task.dueDate) }}</span></p>
               </div>
+
+              <div class="mt-3 flex items-center justify-end gap-2 border-t border-slate-50 pt-3">
+                <ActionButton
+                  v-if="canMoveRenewalToStatus(task, 'In Progress')"
+                  variant="secondary"
+                  size="xs"
+                  @click.stop="updateRenewalStatus(task, 'In Progress')"
+                >
+                  {{ t("markInProgress") }}
+                </ActionButton>
+              </div>
             </article>
           </div>
         </article>
@@ -123,6 +134,7 @@ const copy = {
     recordCount: "kayıt",
     refresh: "Yenile",
     newTask: "Yeni Görev",
+    markInProgress: "Takibe Al",
     searchPlaceholder: "Görev / poliçe ara",
     allStatuses: "Tüm Durumlar",
     allDueScopes: "Tüm Vadeler",
@@ -154,6 +166,7 @@ const copy = {
     recordCount: "records",
     refresh: "Refresh",
     newTask: "New Task",
+    markInProgress: "Start Follow-up",
     searchPlaceholder: "Search task / policy",
     allStatuses: "All Statuses",
     allDueScopes: "All Due Ranges",
@@ -193,6 +206,8 @@ const {
   boardColumns,
   reloadRenewals,
   applyRenewalFilters,
+  canMoveRenewalToStatus,
+  updateRenewalStatus,
   openRenewalDetail,
   formatDate,
 } = useRenewalsBoardRuntime({

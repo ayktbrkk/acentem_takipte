@@ -6,6 +6,7 @@ import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { usePaymentsBoardQuickPayment } from "./usePaymentsBoardQuickPayment";
 import { usePaymentsBoardSummary } from "./usePaymentsBoardSummary";
 import { openTabularExport } from "../utils/listExport";
+import { PAYMENT_TRANSLATIONS } from "../config/payment_translations";
 import { 
   buildPaymentListParams, 
   buildPaymentInstallmentListParams, 
@@ -15,12 +16,22 @@ import {
 } from "./paymentsBoard/helpers";
 import { translateText } from "../utils/i18n";
 
+function runResource(resource) {
+  if (typeof resource?.fetch === "function") return resource.fetch();
+  if (typeof resource?.reload === "function") return resource.reload();
+  return Promise.resolve([]);
+}
+
 export function usePaymentsBoardRuntime({ route, router, authStore, branchStore, paymentStore }) {
   const activeLocale = computed(() => unref(authStore.locale) || "en");
   const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
   const filters = paymentStore.state.filters;
 
   function t(key) {
+    const locale = String(unref(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+    if (PAYMENT_TRANSLATIONS[locale]?.[key]) {
+      return PAYMENT_TRANSLATIONS[locale][key];
+    }
     return translateText(key, activeLocale);
   }
 
@@ -128,7 +139,7 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
     paymentStore.setLocaleCode(localeCode.value);
     paymentStore.setLoading(true);
     paymentStore.clearError();
-    return Promise.all([paymentsResource.fetch(), paymentInstallmentResource.fetch()])
+    return Promise.all([runResource(paymentsResource), runResource(paymentInstallmentResource)])
       .then(([result]) => {
         paymentStore.setItems(result || []);
         paymentStore.setLoading(false);

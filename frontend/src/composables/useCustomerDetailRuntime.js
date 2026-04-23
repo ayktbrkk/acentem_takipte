@@ -6,6 +6,7 @@ import { useAuthStore } from "../stores/auth";
 import { formatDate as sharedFormatDate, formatMoney as sharedFormatMoney } from "../utils/detailFormatters";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 import { translateText } from "../utils/i18n";
+import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 
 export function useCustomerDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
@@ -124,7 +125,21 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   ]);
 
   function backToList() {
-    router.push({ name: "customers-board" });
+    router.push({ name: "customer-list" });
+  }
+
+  function openNewOffer() {
+    const currentCustomerName = String(customer.value.name || customerName.value || "").trim();
+    const currentCustomerLabel = String(customer.value.full_name || currentCustomerName).trim();
+    router.push({
+      name: "offer-board",
+      query: buildQuickCreateIntentQuery({
+        prefills: {
+          customer: currentCustomerName,
+          customer_label: currentCustomerLabel,
+        },
+      }),
+    });
   }
 
   function openPolicy(policyName) {
@@ -186,6 +201,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     formatFileSize,
     reload,
     backToList,
+    openNewOffer,
     openPolicy,
     openOffer,
     openClaim,

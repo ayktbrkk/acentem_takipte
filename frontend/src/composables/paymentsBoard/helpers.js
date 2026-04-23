@@ -150,6 +150,32 @@ export function buildPaymentInstallmentListParams(officeBranch) {
   );
 }
 
+export function currentPaymentPresetPayload(filters) {
+  return {
+    query: String(filters?.query || ""),
+    direction: String(filters?.direction || ""),
+    customerQuery: String(filters?.customerQuery || ""),
+    policyQuery: String(filters?.policyQuery || ""),
+    purposeQuery: String(filters?.purposeQuery || ""),
+    sort: String(filters?.sort || "modified desc"),
+    limit: Number(filters?.limit || 24) || 24,
+  };
+}
+
+export function setPaymentFilterStateFromPayload(filters, payload) {
+  filters.query = String(payload?.query || "");
+  filters.direction = String(payload?.direction || "");
+  filters.customerQuery = String(payload?.customerQuery || "");
+  filters.policyQuery = String(payload?.policyQuery || "");
+  filters.purposeQuery = String(payload?.purposeQuery || "");
+  filters.sort = String(payload?.sort || "modified desc");
+  filters.limit = Number(payload?.limit || 24) || 24;
+}
+
+export function resetPaymentFilterState(paymentStore) {
+  paymentStore?.resetFilters?.();
+}
+
 export function withOfficeBranchFilter(params, officeBranch) {
   if (!officeBranch) return params;
   return {

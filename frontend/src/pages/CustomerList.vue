@@ -6,7 +6,7 @@
     :record-count-label="t('total_customers')"
   >
     <template #actions>
-      <ActionButton variant="primary" size="sm">
+      <ActionButton variant="primary" size="sm" @click="showQuickCreateCustomer = true">
         + {{ t("new_customer") }}
       </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="reload">
@@ -101,11 +101,17 @@
         </div>
       </template>
     </SectionPanel>
+
+    <QuickCreateCustomer
+      v-model="showQuickCreateCustomer"
+      :locale="activeLocale"
+      @created="reload"
+    />
   </WorkbenchPageLayout>
 </template>
 
 <script setup>
-import { computed, unref } from "vue";
+import { computed, ref, unref } from "vue";
 import { useCustomerBoardRuntime } from "../composables/useCustomerBoardRuntime";
 import { useAuthStore } from "../stores/auth";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
@@ -115,9 +121,11 @@ import FilterBar from "../components/ui/FilterBar.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import QuickCreateCustomer from "../components/QuickCreateCustomer.vue";
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
+const showQuickCreateCustomer = ref(false);
 
 const {
   filters,

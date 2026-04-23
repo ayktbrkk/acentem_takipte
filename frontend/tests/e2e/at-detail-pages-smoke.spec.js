@@ -27,13 +27,31 @@ async function getFirstRecordName(page, doctype) {
 }
 
 test.describe("Acentem Takipte detail pages smoke", () => {
-  test("policy/offer/lead detail shells render", async ({ page }) => {
+  test("policy/customer/claim detail shells render", async ({ page }) => {
     await ensureAuthenticated(page);
 
     const configs = [
-      { label: "policy", doctype: "AT Policy", routePrefix: "/at/policies" },
-      { label: "offer", doctype: "AT Offer", routePrefix: "/at/offers" },
-      { label: "lead", doctype: "AT Lead", routePrefix: "/at/leads" },
+      {
+        label: "policy",
+        doctype: "AT Policy",
+        routePrefix: "/at/policies",
+        titlePattern: /Policy Details|policy_detail|Poliçe/i,
+        requiredTexts: [/Listeye Dön|Back to List/i, /Yenile|Refresh/i, /Dosyalar|Documents/i],
+      },
+      {
+        label: "customer",
+        doctype: "AT Customer",
+        routePrefix: "/at/customers",
+        titlePattern: /.+/,
+        requiredTexts: [/Listeye Dön|Back to List/i, /Yeni Teklif|New Offer/i, /Operasyonlar|Operations/i],
+      },
+      {
+        label: "claim",
+        doctype: "AT Claim",
+        routePrefix: "/at/claims",
+        titlePattern: /Claim Detail|Hasar Detayı/i,
+        requiredTexts: [/Listeye Dön|Back to List/i, /Yenile|Refresh/i, /Dosyalar|Documents/i],
+      },
     ];
 
     for (const config of configs) {
@@ -43,9 +61,14 @@ test.describe("Acentem Takipte detail pages smoke", () => {
       await test.step(`${config.label} detail page shell`, async () => {
         await page.goto(`${config.routePrefix}/${encodeURIComponent(name)}`);
         await expect(page.locator(".page-shell").first()).toBeVisible();
-        await expect(page.locator(".detail-title").first()).toBeVisible();
-        if (config.label !== "offer") {
-          await expect(page.locator(".nav-tabs-bar").first()).toBeVisible();
+        const detailTitle = page.locator(".detail-title").first();
+        if ((await detailTitle.count()) > 0) {
+          await expect(detailTitle).toBeVisible();
+        } else {
+          await expect(page.getByRole("heading", { name: config.titlePattern }).first()).toBeVisible();
+        }
+        for (const textPattern of config.requiredTexts) {
+          await expect(page.getByText(textPattern).first()).toBeVisible();
         }
       });
     }

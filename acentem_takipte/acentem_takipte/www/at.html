@@ -28,6 +28,49 @@
 <script>
   window.AT_SESSION_BOOT = {{ at_session | tojson }};
   window["__AT_SESSION__"] = window.AT_SESSION_BOOT;
+
+  if (window.AT_SESSION_BOOT?.realtime?.enabled !== true) {
+    const originalConsoleError = typeof console?.error === "function" ? console.error.bind(console) : null;
+    if (originalConsoleError) {
+      console.error = (...args) => {
+        const first = String(args[0] || "");
+        const second = String(args[1] || "");
+        if (first.includes("Error connecting to socket.io:") && second.includes("Invalid namespace")) {
+          return;
+        }
+        return originalConsoleError(...args);
+      };
+    }
+
+    window.dev_server = 0;
+    window.socketio_port = undefined;
+
+    const disableFrappeRealtime = () => {
+      const realtime = window.frappe?.realtime;
+      if (!realtime || typeof realtime.init !== "function") {
+        return false;
+      }
+
+      realtime.init = () => null;
+      if (realtime.socket && typeof realtime.socket.disconnect === "function") {
+        realtime.socket.disconnect();
+      }
+      if (window.frappe?.boot) {
+        window.frappe.boot.socketio_port = undefined;
+      }
+      return true;
+    };
+
+    if (!disableFrappeRealtime()) {
+      let attempts = 0;
+      const timer = window.setInterval(() => {
+        attempts += 1;
+        if (disableFrappeRealtime() || attempts >= 40) {
+          window.clearInterval(timer);
+        }
+      }, 50);
+    }
+  }
 </script>
 
 {% for css_path in at_css_includes %}

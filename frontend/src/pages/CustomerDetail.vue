@@ -17,7 +17,7 @@
         <ActionButton variant="secondary" size="sm" @click="backToList">
           {{ t("back_to_list") }}
         </ActionButton>
-        <ActionButton variant="primary" size="sm">
+        <ActionButton variant="primary" size="sm" @click="openNewOffer">
           {{ t("new_offer") }}
         </ActionButton>
       </div>
@@ -329,6 +329,7 @@ const {
   formatFileSize,
   reload,
   backToList,
+  openNewOffer,
   openPolicy,
   openOffer,
   openClaim,

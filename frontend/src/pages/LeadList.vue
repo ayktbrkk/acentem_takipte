@@ -6,7 +6,7 @@
     :record-count-label="t('total_leads')"
   >
     <template #actions>
-      <ActionButton variant="primary" size="sm">
+      <ActionButton variant="primary" size="sm" @click="openQuickLeadDialog()">
         + {{ t("new_lead") }}
       </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="reload">
@@ -105,6 +105,23 @@
         </div>
       </template>
     </SectionPanel>
+
+    <LeadListQuickLeadDialog
+      :show-quick-lead-dialog="showQuickLeadDialog"
+      :quick-lead-ui="quickLeadUi"
+      :quick-lead-error="quickLeadError"
+      :quick-create-common="quickCreateCommon"
+      :quick-lead-loading="quickLeadLoading"
+      :quick-lead-form="quickLeadForm"
+      :quick-lead-field-errors="quickLeadFieldErrors"
+      :active-locale="activeLocale"
+      :lead-quick-form-fields="leadQuickFormFields"
+      :lead-quick-options-map="leadQuickOptionsMap"
+      @update:show-quick-lead-dialog="showQuickLeadDialog = $event"
+      @cancel="cancelQuickLeadDialog"
+      @save="submitQuickLead"
+      @request-related-create="onLeadRelatedCreateRequested"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -116,6 +133,7 @@
 import { computed } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useLeadBoardRuntime } from "../composables/useLeadBoardRuntime";
+import { useLeadListQuickLead } from "../composables/useLeadListQuickLead";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ListTable from "../components/ui/ListTable.vue";
@@ -123,6 +141,7 @@ import FilterBar from "../components/ui/FilterBar.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import LeadListQuickLeadDialog from "../components/lead-list/LeadListQuickLeadDialog.vue";
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
@@ -139,6 +158,27 @@ const {
   updateFilter,
   openLead,
 } = useLeadBoardRuntime({ activeLocale });
+
+const {
+  showQuickLeadDialog,
+  quickLeadLoading,
+  quickLeadError,
+  quickLeadFieldErrors,
+  quickLeadForm,
+  leadQuickFormFields,
+  leadQuickOptionsMap,
+  quickLeadUi,
+  quickCreateCommon,
+  openQuickLeadDialog,
+  cancelQuickLeadDialog,
+  submitQuickLead,
+  onLeadRelatedCreateRequested,
+} = useLeadListQuickLead({
+  t,
+  activeLocale,
+  refreshLeadList: reload,
+  openLeadDetail: openLead,
+});
 
 // Standard lead columns - creation date and name fields prioritized
 const columns = computed(() => [
