@@ -1,14 +1,13 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { POLICY_TRANSLATIONS } from "../config/policy_translations";
+import { translateText } from "../utils/i18n";
 
 export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return POLICY_TRANSLATIONS[locale]?.[key] || POLICY_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const policyResource = createResource({
@@ -72,7 +71,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const customerFields = computed(() => [
-    { label: t("customer"), value: customer.value.full_name || policy.value.customer },
+    { label: t("customer"), value: customer.value.full_name || policy.value.customer || "-" },
     { label: t("phone"), value: customer.value.phone || "-" },
     { label: t("email"), value: customer.value.email || "-" },
   ]);
@@ -102,3 +101,4 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     customerFields,
   };
 }
+

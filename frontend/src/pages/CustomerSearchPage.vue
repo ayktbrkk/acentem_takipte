@@ -76,7 +76,7 @@
 import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useCustomerSearchPage } from "../composables/useCustomerSearchPage";
-import { CUSTOMER_SEARCH_TRANSLATIONS } from "../config/customer_search_translations";
+import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
@@ -88,8 +88,7 @@ const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 function t(key: string) {
-  const locale = activeLocale.value as "tr" | "en";
-  return CUSTOMER_SEARCH_TRANSLATIONS[locale]?.[key] || CUSTOMER_SEARCH_TRANSLATIONS.en?.[key] || key;
+  return translateText(key, activeLocale);
 }
 
 const columns = computed(() => [

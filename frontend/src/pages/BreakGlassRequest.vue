@@ -43,7 +43,7 @@
 import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useBreakGlassRequest } from "../composables/useBreakGlassRequest";
-import { BREAK_GLASS_TRANSLATIONS } from "../config/break_glass_translations";
+import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import BreakGlassRequestFormPanel from "../components/break-glass-request/BreakGlassRequestFormPanel.vue";
@@ -53,8 +53,7 @@ const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 function t(key) {
-  const locale = activeLocale.value as "tr" | "en";
-  return BREAK_GLASS_TRANSLATIONS[locale]?.[key] || BREAK_GLASS_TRANSLATIONS.en?.[key] || key;
+  return translateText(key, activeLocale);
 }
 
 const runtime = useBreakGlassRequest({ t });

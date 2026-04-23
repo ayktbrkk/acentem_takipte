@@ -5,8 +5,6 @@ import { nextTick, reactive, ref } from "vue";
 
 import CustomerList from "./CustomerList.vue";
 import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
-import { useCustomerStore } from "../stores/customer";
 
 const routeState = reactive({
   name: "customer-list",
@@ -37,7 +35,7 @@ vi.mock("frappe-ui", () => ({
     const url = String(config?.url || "");
 
     if (url.includes("get_customer_workbench_rows")) {
-      const data = ref({ rows: [], total: 0 });
+      const data = ref({ rows: [], total: 0, active_count: 0, individual_count: 0, corporate_count: 0 });
       return {
         data,
         loading: ref(false),
@@ -48,10 +46,13 @@ vi.mock("frappe-ui", () => ({
         },
         reload: vi.fn(async () => ({
           rows: [
-            { name: "CUST-001", full_name: "Aykut Bekir", active_policy_count: 2, open_offer_count: 1 },
-            { name: "CUST-002", full_name: "Ayse Demir", active_policy_count: 1, open_offer_count: 0 },
+            { name: "CUST-001", full_name: "Aykut Bekir", consent_status: "Granted", customer_type: "Individual" },
+            { name: "CUST-002", full_name: "Ayse Demir", consent_status: "Unknown", customer_type: "Corporate" },
           ],
           total: 2,
+          active_count: 2,
+          individual_count: 1,
+          corporate_count: 1,
         })),
         submit: vi.fn(async () => ({})),
       };
@@ -91,20 +92,13 @@ async function mountCustomerList(locale = "tr") {
   const wrapper = mount(CustomerList, {
     global: {
       stubs: {
-        Dialog: true,
         ActionButton: true,
-        DataTableCell: genericStub,
-        InlineActionRow: genericStub,
-        MiniFactList: true,
-        PageToolbar: genericStub,
-        QuickCreateDialogShell: genericStub,
-        QuickCreateFormRenderer: true,
-        QuickCreateLauncher: true,
-        TableEntityCell: true,
-        TableFactsCell: true,
-        TablePagerFooter: genericStub,
-        WorkbenchFilterToolbar: genericStub,
+        FilterBar: true,
+        ListTable: true,
+        SectionPanel: genericStub,
+        SkeletonLoader: true,
         StatusBadge: true,
+        WorkbenchPageLayout: genericStub,
       },
     },
   });
@@ -113,69 +107,36 @@ async function mountCustomerList(locale = "tr") {
   return wrapper;
 }
 
-describe("CustomerList page store integration", () => {
+describe("CustomerList page", () => {
   beforeEach(() => {
     routerPush.mockReset();
     routerReplace.mockReset();
     routeState.query = {};
     setActivePinia(createPinia());
-
-    const authStore = useAuthStore();
-    authStore.applyContext({
-      user: "agent@example.com",
-      full_name: "Agent",
-      roles: ["Agent"],
-      preferred_home: "/at",
-      interface_mode: "spa",
-      locale: "tr",
-      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
-      default_office_branch: "IST",
-      can_access_all_office_branches: false,
-    });
-
-    const branchStore = useBranchStore();
-    branchStore.hydrateFromSession();
   });
 
-  it("writes list payload and pagination state into customer store", async () => {
+  it("renders the current Turkish customer list contract", async () => {
     const wrapper = await mountCustomerList("tr");
 
-    const customerStore = useCustomerStore();
+    expect(wrapper.vm.summary.total).toBe(2);
+    expect(wrapper.vm.rows).toHaveLength(2);
 
-    expect(customerStore.state.items).toHaveLength(2);
-    expect(customerStore.state.pagination.total).toBe(2);
-    expect(customerStore.startRow).toBe(1);
-    expect(customerStore.endRow).toBe(2);
-    expect(wrapper.text()).toContain("Liste Özeti");
-    expect(wrapper.text()).toContain("Sayfa Boyutu");
-    expect(wrapper.text()).toContain("20");
-    const trColumns = Object.fromEntries(wrapper.vm.customerListColumns.map((col) => [col.key, col.label]));
-    expect(trColumns.name).toBe("Müşteri No");
-    expect(trColumns.full_name).toBe("Müşteri Ad Soyad");
-    expect(trColumns.gender).toBe("Cinsiyet");
-    expect(trColumns.consent_status).toBe("İzin Durumu");
-
-    const inputs = wrapper.findAll(".input");
-    await inputs[0].setValue("aykut");
-    await inputs[4].setValue("50");
-
-    expect(customerStore.state.filters.query).toBe("aykut");
-    expect(customerStore.state.pagination.pageLength).toBe(50);
-    expect(wrapper.text()).toContain("50");
-
-    await wrapper.vm.openQuickCustomerDialog();
-    expect(wrapper.vm.showQuickCustomerDialog).toBe(true);
+    const columns = Object.fromEntries(wrapper.vm.columns.map((col) => [col.key, col.label]));
+    expect(columns.full_name).toBe("Ad Soyad");
+    expect(columns.tax_id).toBe("TCKN/VKN");
+    expect(columns.consent_status).toBe("KVKK Onayı");
+    expect(wrapper.vm.filterConfig[0].label).toBe("KVKK Onayı");
   });
 
-  it("renders English column labels when locale is en", async () => {
+  it("renders the current English customer list contract", async () => {
     const wrapper = await mountCustomerList("en");
 
-    expect(wrapper.text()).toContain("Customer Workbench");
-    const enColumns = Object.fromEntries(wrapper.vm.customerListColumns.map((col) => [col.key, col.label]));
-    expect(enColumns.name).toBe("Customer No");
-    expect(enColumns.full_name).toBe("Customer Full Name");
-    expect(enColumns.gender).toBe("Gender");
-    expect(enColumns.consent_status).toBe("Consent Status");
-    expect(wrapper.vm.customerListFilterConfig[0].label).toBe("Consent Status");
+    expect(wrapper.vm.summary.total).toBe(2);
+
+    const columns = Object.fromEntries(wrapper.vm.columns.map((col) => [col.key, col.label]));
+    expect(columns.full_name).toBe("Full Name");
+    expect(columns.tax_id).toBe("Tax ID");
+    expect(columns.consent_status).toBe("Consent");
+    expect(wrapper.vm.filterConfig[0].label).toBe("Consent");
   });
 });

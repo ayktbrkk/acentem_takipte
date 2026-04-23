@@ -8,7 +8,7 @@
       <input
         :value="search"
         type="text"
-        :placeholder="searchPlaceholder || translateText('Search...', locale)"
+        :placeholder="searchPlaceholder || t('search')"
         class="h-8 w-full rounded-md border border-gray-200 bg-white pl-8 pr-3 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-brand-600 focus:outline-none"
         @input="$emit('update:search', $event.target.value)"
       />
@@ -20,7 +20,7 @@
       class="h-8 appearance-none rounded-md border border-gray-200 bg-white bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJtNSA2IDMgMyAzLTMiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[right_6px_center] bg-no-repeat px-2.5 pr-7 text-sm text-gray-700 transition-colors focus:border-brand-600 focus:outline-none"
       @change="$emit('filter-change', { key: filter.key, value: $event.target.value })"
     >
-      <option value="">{{ filter.label }}: Hepsi</option>
+      <option value="">{{ filter.label }}: {{ t('all') }}</option>
       <option v-for="opt in filter.options" :key="opt.value" :value="opt.value">
         {{ opt.label }}
       </option>
@@ -31,7 +31,7 @@
       class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
       @click="$emit('reset')"
     >
-      {{ translateText('Reset', locale) }}
+      {{ t('reset') }}
       <span class="flex h-4 w-4 items-center justify-center rounded-full bg-gray-200 text-[10px] font-medium text-gray-600">
         {{ activeCount }}
       </span>
@@ -54,13 +54,16 @@ const props = defineProps({
   search: { type: String, default: '' },
   filters: { type: Array, default: () => [] },
   activeCount: { type: Number, default: 0 },
-  locale: { type: String, default: "en" },
+  locale: { type: String, default: "" },
   searchPlaceholder: { type: String, default: "" },
 })
 
 defineEmits(['update:search', 'filter-change', 'reset'])
 
 const authStore = useAuthStore(getAppPinia());
-const locale = computed(() => props.locale || unref(authStore.locale) || "en");
-const searchPlaceholder = computed(() => props.searchPlaceholder || "");
+const activeLocale = computed(() => props.locale || unref(authStore.locale) || "en");
+
+function t(key) {
+  return translateText(key, activeLocale.value);
+}
 </script>

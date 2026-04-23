@@ -1,14 +1,13 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { OFFER_TRANSLATIONS } from "../config/offer_translations";
+import { translateText } from "../utils/i18n";
 
 export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return OFFER_TRANSLATIONS[locale]?.[key] || OFFER_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const offerResource = createResource({
@@ -77,7 +76,7 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const customerFields = computed(() => [
-    { label: t("customer"), value: customer.value.full_name || offer.value.customer },
+    { label: t("customer"), value: customer.value.full_name || offer.value.customer || "-" },
     { label: t("phone"), value: customer.value.phone || "-" },
     { label: t("email"), value: customer.value.email || "-" },
   ]);
@@ -108,3 +107,4 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
     customerFields,
   };
 }
+

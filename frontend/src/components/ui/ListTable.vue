@@ -129,7 +129,8 @@ function formatDateCell(value) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat("tr-TR", {
+  const localeCode = locale.value.toLowerCase().startsWith("tr") ? "tr-TR" : "en-US";
+  return new Intl.DateTimeFormat(localeCode, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

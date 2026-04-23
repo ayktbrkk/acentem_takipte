@@ -56,10 +56,10 @@
 import { computed, unref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
-import { IMPORT_TRANSLATIONS } from "../config/import_translations";
+import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import ActionButton from "../app-shell/ActionButton.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import { useImportDataRuntime } from "../composables/useImportDataRuntime";
 import ImportDataStepMappingPanel from "../components/import-data/ImportDataStepMappingPanel.vue";
 import ImportDataStepPreviewPanel from "../components/import-data/ImportDataStepPreviewPanel.vue";
@@ -70,8 +70,7 @@ const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 function t(key) {
-  const locale = activeLocale.value as "tr" | "en";
-  return IMPORT_TRANSLATIONS[locale]?.[key] || IMPORT_TRANSLATIONS.en?.[key] || key;
+  return translateText(key, activeLocale);
 }
 
 const runtime = useImportDataRuntime({ t, router, authStore });

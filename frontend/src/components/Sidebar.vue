@@ -59,7 +59,14 @@
               :class="linkClass(item)"
               @click="$emit('navigate')"
             >
+              <component
+                v-if="item.icon"
+                :is="item.icon"
+                class="h-5 w-5 shrink-0 text-gray-500 hover:text-gray-900"
+                :class="item.badgeClass"
+              />
               <span
+                v-else
                 class="grid h-6 w-6 shrink-0 place-items-center rounded bg-gray-100 text-[10px] font-semibold text-gray-500"
                 :class="item.badgeClass"
               >
@@ -83,7 +90,14 @@
               active-class="bg-brand-50 text-brand-700 font-medium border-l-2 border-brand-600 !rounded-l-none pl-[10px]"
               @click="$emit('navigate')"
             >
+              <component
+                v-if="item.icon"
+                :is="item.icon"
+                class="h-5 w-5 shrink-0 text-gray-500 [.router-link-active_&]:text-brand-700"
+                :class="item.badgeClass"
+              />
               <span
+                v-else
                 class="grid h-6 w-6 shrink-0 place-items-center rounded bg-gray-100 text-[10px] font-semibold text-gray-500 [.router-link-active_&]:bg-brand-100 [.router-link-active_&]:text-brand-700"
                 :class="item.badgeClass"
               >

@@ -144,8 +144,8 @@ const filterConfig = computed(() => [
     options: [
       { value: "", label: t("all") },
       { value: "Active", label: t("status_active") },
-      { value: "Waiting", label: t("status_waiting") },
-      { value: "Cancelled", label: t("status_cancelled") },
+      { value: "IPT", label: t("status_ipt") },
+      { value: "KYT", label: t("status_kyt") },
     ],
   },
 ]);

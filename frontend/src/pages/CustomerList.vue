@@ -105,8 +105,9 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, unref } from "vue";
 import { useCustomerBoardRuntime } from "../composables/useCustomerBoardRuntime";
+import { useAuthStore } from "../stores/auth";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ListTable from "../components/ui/ListTable.vue";
@@ -114,6 +115,9 @@ import FilterBar from "../components/ui/FilterBar.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+
+const authStore = useAuthStore();
+const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 const {
   filters,
@@ -126,7 +130,7 @@ const {
   setPage,
   updateFilter,
   openCustomer,
-} = useCustomerBoardRuntime();
+} = useCustomerBoardRuntime({ activeLocale });
 
 const columns = computed(() => [
   { key: "full_name", label: t("full_name"), width: "250px" },

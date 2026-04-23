@@ -192,7 +192,7 @@ const authStore = useAuthStore(getAppPinia());
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function t(key: string) {
-  return copy[activeLocale.value as "tr" | "en"]?.[key] || copy.en[key as keyof typeof copy.en] || key;
+  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
 const {

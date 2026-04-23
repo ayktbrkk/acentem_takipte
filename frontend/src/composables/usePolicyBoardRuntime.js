@@ -1,15 +1,14 @@
 import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter, useRoute } from "vue-router";
-import { POLICY_TRANSLATIONS } from "../config/policy_translations";
+import { translateText } from "../utils/i18n";
 
 export function usePolicyBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
   const route = useRoute();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return POLICY_TRANSLATIONS[locale]?.[key] || POLICY_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const filters = reactive({
@@ -37,16 +36,18 @@ export function usePolicyBoardRuntime({ activeLocale = ref("tr") } = {}) {
   });
 
   const summary = computed(() => {
+    unref(activeLocale);
     const rows = unref(policyResource.data) || [];
     return {
       total: rows.length,
       active: rows.filter(r => r.status === "Active").length,
-      waiting: rows.filter(r => r.status === "Waiting").length,
-      cancelled: rows.filter(r => r.status === "Cancelled" || r.status === "Cancel").length,
+      waiting: rows.filter(r => r.status === "KYT").length,
+      cancelled: rows.filter(r => r.status === "IPT").length,
     };
   });
 
   const rows = computed(() => {
+    unref(activeLocale);
     const data = unref(policyResource.data) || [];
     return data.map(row => ({
       ...row,
@@ -124,3 +125,4 @@ export function usePolicyBoardRuntime({ activeLocale = ref("tr") } = {}) {
     openPolicy,
   };
 }
+

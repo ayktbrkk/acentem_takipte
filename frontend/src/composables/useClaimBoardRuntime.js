@@ -1,14 +1,13 @@
 import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { CLAIM_TRANSLATIONS } from "../config/claim_translations";
+import { translateText } from "../utils/i18n";
 
 export function useClaimBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return CLAIM_TRANSLATIONS[locale]?.[key] || CLAIM_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const filters = reactive({
@@ -27,27 +26,33 @@ export function useClaimBoardRuntime({ activeLocale = ref("tr") } = {}) {
     url: "frappe.client.get_list",
     params: {
       doctype: "AT Claim",
-      fields: ["name", "customer", "insurance_company", "policy", "status", "claim_date", "total_amount", "currency"],
+      fields: ["name", "customer", "policy", "claim_status", "incident_date", "estimated_amount", "currency"],
       order_by: "creation desc",
     },
     auto: false,
   });
 
   const summary = computed(() => {
+    unref(activeLocale);
     const rows = unref(claimResource.data) || [];
     return {
       total: rows.length,
-      active: rows.filter(r => r.status === "Open" || r.status === "In Progress").length,
-      closed: rows.filter(r => r.status === "Closed").length,
-      rejected: rows.filter(r => r.status === "Rejected").length,
+      active: rows.filter(r => r.claim_status === "Open" || r.claim_status === "Under Review").length,
+      closed: rows.filter(r => r.claim_status === "Closed").length,
+      rejected: rows.filter(r => r.claim_status === "Rejected").length,
     };
   });
 
   const rows = computed(() => {
+    unref(activeLocale);
     const data = unref(claimResource.data) || [];
     return data.map(row => ({
       ...row,
-      status_label: t(`status_${String(row.status || "Open").toLowerCase().replace(" ", "_")}`),
+      // Map schema fields to UI expected keys if necessary, or update UI
+      status: row.claim_status,
+      claim_date: row.incident_date,
+      total_amount: row.estimated_amount,
+      status_label: t(`status_${String(row.claim_status || "Open").toLowerCase().replace(" ", "_")}`),
     }));
   });
 
@@ -56,7 +61,7 @@ export function useClaimBoardRuntime({ activeLocale = ref("tr") } = {}) {
   async function reload() {
     const params = {
       doctype: "AT Claim",
-      fields: ["name", "customer", "insurance_company", "policy", "status", "claim_date", "total_amount", "currency"],
+      fields: ["name", "customer", "policy", "claim_status", "incident_date", "estimated_amount", "currency"],
       filters: {},
       order_by: filters.sort,
       limit_start: (pagination.page - 1) * pagination.pageLength,
@@ -67,7 +72,7 @@ export function useClaimBoardRuntime({ activeLocale = ref("tr") } = {}) {
       params.filters.name = ["like", `%${filters.query}%`];
     }
     if (filters.status) {
-      params.filters.status = filters.status;
+      params.filters.claim_status = filters.status;
     }
     if (filters.claim_type) {
       params.filters.claim_type = filters.claim_type;
@@ -107,3 +112,4 @@ export function useClaimBoardRuntime({ activeLocale = ref("tr") } = {}) {
     openClaim,
   };
 }
+

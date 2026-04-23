@@ -1,14 +1,13 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { LEAD_TRANSLATIONS } from "../config/lead_translations";
+import { translateText } from "../utils/i18n";
 
 export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return LEAD_TRANSLATIONS[locale]?.[key] || LEAD_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const leadResource = createResource({
@@ -23,6 +22,12 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   const documents = computed(() => data.value.files || []);
   const offers = computed(() => data.value.offers || []);
   const policies = computed(() => data.value.policies || []);
+
+  const leadFullName = computed(() => {
+    const fn = lead.value.first_name || "";
+    const ln = lead.value.last_name || "";
+    return `${fn} ${ln}`.trim() || lead.value.name || "-";
+  });
 
   const loading = computed(() => leadResource.loading);
 
@@ -63,21 +68,21 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const heroCells = computed(() => [
-    { label: t("source"), value: lead.value.source },
+    { label: t("industry"), value: lead.value.industry || "-" },
     { label: t("lead_date"), value: formatDate(lead.value.creation) },
-    { label: t("status"), value: t(`status_${String(lead.value.status || "Lead").toLowerCase()}`), variant: "accent" },
+    { label: t("status"), value: t(`status_${String(lead.value.status || "Draft").toLowerCase()}`), variant: "accent" },
   ]);
 
   const profileFields = computed(() => [
-    { label: t("full_name"), value: lead.value.full_name },
+    { label: t("full_name"), value: leadFullName.value },
     { label: t("phone"), value: lead.value.phone || "-" },
     { label: t("email"), value: lead.value.email || "-" },
-    { label: t("source"), value: lead.value.source },
+    { label: t("tax_id"), value: lead.value.tax_id || "-" },
     { label: t("industry"), value: lead.value.industry || "-" },
   ]);
 
   const customerFields = computed(() => [
-    { label: t("customer"), value: customer.value.full_name || lead.value.customer },
+    { label: t("customer"), value: customer.value.full_name || lead.value.customer || "-" },
     { label: t("phone"), value: customer.value.phone || "-" },
     { label: t("email"), value: customer.value.email || "-" },
   ]);
@@ -108,3 +113,4 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
     customerFields,
   };
 }
+

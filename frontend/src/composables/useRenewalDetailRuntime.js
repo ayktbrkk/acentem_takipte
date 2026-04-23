@@ -1,14 +1,13 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { RENEWAL_TRANSLATIONS } from "../config/renewal_translations";
+import { translateText } from "../utils/i18n";
 
 export function useRenewalDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return RENEWAL_TRANSLATIONS[locale]?.[key] || RENEWAL_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const renewalResource = createResource({

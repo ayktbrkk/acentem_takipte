@@ -1,14 +1,13 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { PAYMENT_TRANSLATIONS } from "../config/payment_translations";
+import { translateText } from "../utils/i18n";
 
 export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return PAYMENT_TRANSLATIONS[locale]?.[key] || PAYMENT_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const paymentResource = createResource({

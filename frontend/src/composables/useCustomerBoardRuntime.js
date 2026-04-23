@@ -1,14 +1,13 @@
 import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { CUSTOMER_TRANSLATIONS } from "../config/customer_translations";
+import { translateText } from "../utils/i18n";
 
 export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return CUSTOMER_TRANSLATIONS[locale]?.[key] || CUSTOMER_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const filters = reactive({
@@ -30,6 +29,7 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   });
 
   const summary = computed(() => {
+    unref(activeLocale);
     const data = unref(customerResource.data) || {};
     return {
       total: data.total || 0,
@@ -40,22 +40,26 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   });
 
   const rows = computed(() => {
+    unref(activeLocale);
     const data = unref(customerResource.data) || {};
     return (data.rows || []).map(row => ({
       ...row,
       customer_type_label: row.customer_type === "Corporate" ? t("corporate") : t("individual"),
-      consent_status_label: t(`consent_${String(row.consent_status || "Unknown").toLowerCase()}`),
+      consent_status_label: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),
     }));
   });
 
-  const loading = computed(() => customerResource.loading);
+  const loading = computed(() => unref(customerResource.loading));
 
   async function reload() {
-    await customerResource.reload({
+    const payload = await customerResource.reload({
       filters: JSON.stringify(filters),
       page: pagination.page,
       page_length: pagination.pageLength,
     });
+    if (payload !== undefined && typeof customerResource.setData === "function") {
+      customerResource.setData(payload);
+    }
   }
 
   function setPage(p) {
@@ -89,3 +93,4 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
     openCustomer,
   };
 }
+

@@ -250,9 +250,10 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, unref } from "vue";
 import { useCustomerDetailRuntime } from "../composables/useCustomerDetailRuntime";
 import { deskActionsEnabled } from "../utils/deskActions";
+import { useAuthStore } from "../stores/auth";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
@@ -270,6 +271,8 @@ const props = defineProps({
 });
 
 const activeCustomerTab = ref("overview");
+const authStore = useAuthStore();
+const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 const {
   customer,
@@ -302,7 +305,7 @@ const {
   openClaim,
 } = useCustomerDetailRuntime({
   name: computed(() => props.name),
-  activeLocale: computed(() => "tr") // Hardcoded for now or get from authStore
+  activeLocale,
 });
 
 // Sync tabs

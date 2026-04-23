@@ -141,6 +141,8 @@ const filterConfig = computed(() => [
       { value: "", label: t("all") },
       { value: "Draft", label: t("status_draft") },
       { value: "Sent", label: t("status_sent") },
+      { value: "Accepted", label: t("status_accepted") },
+      { value: "Rejected", label: t("status_rejected") },
       { value: "Converted", label: t("status_converted") },
       { value: "Cancelled", label: t("status_cancelled") },
     ],

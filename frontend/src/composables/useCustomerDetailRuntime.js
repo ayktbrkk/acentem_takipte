@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { formatDate as sharedFormatDate, formatMoney as sharedFormatMoney } from "../utils/detailFormatters";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
-import { CUSTOMER_TRANSLATIONS } from "../config/customer_translations";
+import { translateText } from "../utils/i18n";
 
 export function useCustomerDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
@@ -15,7 +15,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   const localeCode = computed(() => (localeValue.value.startsWith("tr") ? "tr-TR" : "en-US"));
 
   function t(key) {
-    return CUSTOMER_TRANSLATIONS[localeValue.value]?.[key] || CUSTOMER_TRANSLATIONS.en[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const customer360Resource = createResource({
@@ -37,8 +37,8 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   const crossSell = computed(() => unref(customer360Resource.data)?.cross_sell || {});
   const operations = computed(() => unref(customer360Resource.data)?.operations || {});
   
-  const loading = computed(() => customer360Resource.loading);
-  const loadErrorText = computed(() => customer360Resource.error?.message || "");
+  const loading = computed(() => unref(customer360Resource.loading));
+  const loadErrorText = computed(() => unref(customer360Resource.error)?.message || "");
 
   const showUploadModal = ref(false);
   function openUploadModal() { showUploadModal.value = true; }
@@ -54,11 +54,11 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   });
 
   function formatDate(val) {
-    return sharedFormatDate(val, localeCode.value);
+    return sharedFormatDate(localeCode.value, val);
   }
 
   function formatCurrency(val, currency = "TRY") {
-    return sharedFormatMoney(val, currency, localeCode.value);
+    return sharedFormatMoney(localeCode.value, val, currency);
   }
 
   const heroCells = computed(() => [
@@ -85,7 +85,10 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   const operationalFields = computed(() => [
     { label: t("office_branch"), value: customer.value.office_branch || "-" },
     { label: t("assigned_agent"), value: customer.value.assigned_agent || "-" },
-    { label: t("consent_status"), value: customer.value.consent_status || "-" },
+    {
+      label: t("consent_status"),
+      value: t(`status_${String(customer.value.consent_status || "Unknown").toLowerCase()}`),
+    },
   ]);
 
   function backToList() {
@@ -106,7 +109,13 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
 
   function reload() {
     if (customerName.value) {
-      customer360Resource.fetch({ name: customerName.value });
+      if (typeof customer360Resource.reload === "function") {
+        customer360Resource.reload({ name: customerName.value });
+        return;
+      }
+      if (typeof customer360Resource.fetch === "function") {
+        customer360Resource.fetch({ name: customerName.value });
+      }
     }
   }
 
@@ -145,3 +154,4 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     openClaim,
   };
 }
+

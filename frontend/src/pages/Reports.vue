@@ -139,11 +139,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, unref, watch } from "vue";
+import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
+import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import ActionButton from "../app-shell/ActionButton.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import SidePanel from "../components/ui/SidePanel.vue";
 import RecordPreviewer from "../components/ui/RecordPreviewer.vue";
@@ -173,87 +173,26 @@ const route = useRoute();
 const router = useRouter();
 
 const filtersSectionRef = ref(null);
-const rows = ref([]);
-const columns = ref([]);
-const comparisonRows = ref([]);
-
 const showPreview = ref(false);
 const previewTarget = ref(null);
 const previewTitle = ref("");
 const previewSubtitle = ref("");
 
-function openPreview(row) {
-  if (!row) return;
-
-  let doctype = "AT Policy";
-  let name = row.name;
-  
-  const rk = filters.reportKey;
-  if (rk === "customer_segmentation") {
-    doctype = "AT Customer";
-  } else if (rk === "claim_loss_ratio" || rk === "claims_operations") {
-    doctype = "AT Claim";
-  } else if (rk === "payment_status" && row.policy) {
-    name = row.policy;
-  } else if (rk === "renewal_performance" && row.policy) {
-    name = row.policy;
-  }
-
-  if (!name) return;
-
-  previewTarget.value = { doctype, name };
-  previewTitle.value = name;
-  previewSubtitle.value = doctype;
-  showPreview.value = true;
-}
-
-function closePreview() {
-  showPreview.value = false;
-  previewTarget.value = null;
-}
+// Refs that need to be shared between multiple composables
+const rows = ref([]);
+const columns = ref([]);
+const comparisonRows = ref([]);
+const visibleColumnKeys = ref([]);
+const pendingVisibleColumnKeys = ref([]);
+const groupByColumn = ref("");
+const sortState = reactive({ column: "", direction: "" });
 
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
-
-function t(key) {
-  const locale = activeLocale.value as "tr" | "en";
-  return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || key;
-}
-
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
-const reportTableData = useReportsTableData({
-  filters: reactive({ reportKey: props.initialReportKey || "policy_list" }), // temporary for init if needed
-  rows,
-  columns,
-  comparisonRows,
-  activeLocale,
-  localeCode,
-  branchScopeLabel,
-  t,
-});
-
-const {
-  visibleColumnKeys,
-  pendingVisibleColumnKeys,
-  sortState,
-  visibleColumns,
-  columnsSummaryLabel,
-  heroSummaryCells,
-  summaryItems,
-  comparisonSummaryItems,
-  sortedRows,
-  groupByColumn,
-  groupableColumns,
-  toggleGroupBy,
-  getColumnLabel,
-  formatCellValue,
-  isColumnVisible,
-  toggleColumn,
-  showAllColumns,
-  toggleSort,
-  getSortIndicator,
-  formatComparisonDelta,
-} = reportTableData;
+function t(key) {
+  return translateText(key, activeLocale);
+}
 
 const reportFilterComposables = useReportsFilters({
   props,
@@ -275,6 +214,7 @@ const {
   activePreset,
   reportOptions,
   activeReportLabel,
+  branchScopeLabel,
   visibleFilters,
   canManageScheduledReports: filterCanManage,
   activeFilterCount,
@@ -297,6 +237,40 @@ const {
   presetOptionsList,
   canDeletePresetFlag,
 } = reportFilterComposables;
+
+const reportTableData = useReportsTableData({
+  filters,
+  rows,
+  columns,
+  comparisonRows,
+  activeLocale,
+  localeCode,
+  branchScopeLabel,
+  t,
+  visibleColumnKeys,
+  pendingVisibleColumnKeys,
+  groupByColumn,
+  sortState,
+});
+
+const {
+  visibleColumns,
+  columnsSummaryLabel,
+  heroSummaryCells,
+  summaryItems,
+  comparisonSummaryItems,
+  sortedRows,
+  groupableColumns,
+  toggleGroupBy,
+  getColumnLabel,
+  formatCellValue,
+  isColumnVisible,
+  toggleColumn,
+  showAllColumns,
+  toggleSort,
+  getSortIndicator,
+  formatComparisonDelta,
+} = reportTableData;
 
 const reportsRuntime = useReportsRuntime({
   filters,
@@ -333,7 +307,36 @@ const {
   focusFilters,
 } = reportsRuntime;
 
-const { branchScopeLabel } = reportFilterComposables;
+function openPreview(row) {
+  if (!row) return;
+
+  let doctype = "AT Policy";
+  let name = row.name;
+  
+  const rk = filters.reportKey;
+  if (rk === "customer_segmentation") {
+    doctype = "AT Customer";
+  } else if (rk === "claim_loss_ratio" || rk === "claims_operations") {
+    doctype = "AT Claim";
+  } else if (rk === "payment_status" && row.policy) {
+    name = row.policy;
+  } else if (rk === "renewal_performance" && row.policy) {
+    name = row.policy;
+  }
+
+  if (!name) return;
+
+  previewTarget.value = { doctype, name };
+  previewTitle.value = name;
+  previewSubtitle.value = doctype;
+  showPreview.value = true;
+}
+
+function closePreview() {
+  showPreview.value = false;
+  previewTarget.value = null;
+}
+
 
 const { isRowClickable, onRowClick } = useReportsRowActions({ filters, router });
 

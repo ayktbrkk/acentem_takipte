@@ -71,7 +71,11 @@
             </div>
           </template>
           <template #cell(status)="{ row }">
-            <StatusBadge domain="lead" :status="row.status === 'Converted' ? 'active' : row.status === 'Lost' ? 'cancel' : 'hold'" :label="row.status_label" />
+            <StatusBadge
+              domain="lead"
+              :status="row.status === 'Closed' ? 'cancel' : row.status === 'Replied' ? 'active' : 'hold'"
+              :label="row.status_label"
+            />
           </template>
         </ListTable>
 
@@ -105,6 +109,10 @@
 </template>
 
 <script setup>
+/**
+ * Lead List Page (Version 2.2)
+ * Synchronized with AT Lead doctype (first_name, last_name)
+ */
 import { computed } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useLeadBoardRuntime } from "../composables/useLeadBoardRuntime";
@@ -132,10 +140,10 @@ const {
   openLead,
 } = useLeadBoardRuntime({ activeLocale });
 
+// Standard lead columns - creation date and name fields prioritized
 const columns = computed(() => [
   { key: "full_name", label: t("full_name"), width: "250px" },
   { key: "phone", label: t("phone"), width: "150px" },
-  { key: "source", label: t("source"), width: "150px" },
   { key: "status", label: t("status"), width: "120px" },
   { key: "creation", label: t("lead_date"), width: "150px", type: "date" },
 ]);
@@ -146,10 +154,10 @@ const filterConfig = computed(() => [
     label: t("status"),
     options: [
       { value: "", label: t("all") },
-      { value: "Lead", label: t("status_lead") },
-      { value: "Qualified", label: t("status_qualified") },
-      { value: "Converted", label: t("status_converted") },
-      { value: "Lost", label: t("status_lost") },
+      { value: "Draft", label: t("status_draft") },
+      { value: "Open", label: t("status_open") },
+      { value: "Replied", label: t("status_replied") },
+      { value: "Closed", label: t("status_closed") },
     ],
   },
 ]);

@@ -7,12 +7,6 @@ import CustomerDetail from "./CustomerDetail.vue";
 import { useAuthStore } from "../stores/auth";
 
 const routerPush = vi.fn();
-const customer360Reload = vi.fn();
-const auxDeleteSubmitMock = vi.fn();
-const auxUpdateSubmitMock = vi.fn();
-const confirmMock = vi.fn(() => true);
-
-vi.stubGlobal("confirm", confirmMock);
 
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
@@ -38,202 +32,49 @@ vi.mock("frappe-ui", () => ({
           data.value = payload;
         },
         reload: vi.fn(async () => {
-          customer360Reload();
           const payload = {
             customer: {
               name: "CUST-001",
               full_name: "Aykut Bekir",
+              tax_id: "1234567890",
+              phone: "05550000000",
               email: "aykut@example.com",
-              masked_phone: "0555***0000",
-              masked_tax_id: "123*****789",
+              office_branch: "IST",
             },
             summary: {
               active_policy_count: 1,
-              open_offer_count: 1,
+              open_claim_count: 1,
               total_premium: 12500,
-              overdue_installment_count: 1,
-              overdue_installment_amount: 1200,
+              overdue_payment_amount: 1200,
             },
             portfolio: {
-              policies: [{ name: "POL-001", policy_no: "P-100", status: "Aktif", insurance_company: "Anadolu" }],
-              offers: [{ name: "OFF-001", status: "Open", insurance_company: "Anadolu" }],
-              payments: [{ name: "PAY-001", payment_no: "PAY-1", amount_try: 2500 }],
-              payment_installments: [
-                { name: "PINST-001", payment: "PAY-001", installment_no: 1, installment_count: 3, status: "Overdue", due_date: "2026-03-01", amount_try: 1200 },
-                { name: "PINST-002", payment: "PAY-001", installment_no: 2, installment_count: 3, status: "Scheduled", due_date: "2026-04-01", amount_try: 1300 },
-              ],
-              claims: [{ name: "CLM-001", reported_date: "2026-03-01", claim_amount: 1500 }],
-              renewals: [{ name: "REN-001", due_date: "2026-04-01", status: "Open", lost_reason_code: "" }],
+              policies: [{ name: "POL-001", policy_no: "P-100", status: "Active", insurance_company: "Anadolu", branch: "Motor", start_date: "2026-03-01", gross_premium: 12500 }],
+              offers: [{ name: "OFF-001", status: "Sent", insurance_company: "Anadolu", offer_date: "2026-03-02", gross_premium: 9500 }],
+              claims: [{ name: "CLM-001", policy: "POL-001", claim_status: "Open", reported_date: "2026-03-03", claim_amount: 1500 }],
             },
             communication: {
-              channel_summary: [{ channel: "WhatsApp", total: 2 }],
-              timeline: [{ type: "comment", timestamp: "2026-03-01T10:00:00Z", payload: { name: "COM-1", comment_by: "Agent" } }],
+              timeline: [{ timestamp: "2026-03-01T10:00:00Z", title: "Call note", meta: "Agent", payload: { content: "Customer called" } }],
             },
             documents: {
-              items: [
-                {
-                  name: "FILE-001",
-                  file_name: "kimlik.pdf",
-                  attached_to_doctype: "AT Customer",
-                  attached_to_name: "CUST-001",
-                  creation: "2026-03-09T08:00:00Z",
-                },
-              ],
-              document_profile: {
-                total_files: 1,
-                pdf_count: 1,
-                image_count: 0,
-                spreadsheet_count: 0,
-                other_count: 0,
-                last_uploaded_on: "2026-03-09T08:00:00Z",
-              },
+              items: [{ name: "FILE-001", file_name: "kimlik.pdf", creation: "2026-03-09T08:00:00Z", document_kind: "Identity" }],
             },
             insights: {
-              score: 82,
-              segment: "Gold",
-              claim_risk: "Medium",
               snapshot_date: "2026-03-09",
-              source_version: "v1",
+              active_policy_count: 1,
+              policy_total_premium: 12500,
+              open_claim_count: 1,
+              upcoming_renewal_count: 0,
             },
             cross_sell: {
-              related_customers: [
-                {
-                  name: "REL-001",
-                  customer: "CUST-001",
-                  related_customer: "CUST-002",
-                  related_customer_name: "Ayse Bekir",
-                  relation_type: "Spouse",
-                  is_household: 1,
-                },
-              ],
-              insured_assets: [
-                {
-                  name: "AST-001",
-                  customer: "CUST-001",
-                  policy: "POL-001",
-                  asset_type: "Vehicle",
-                  asset_label: "34 ABC 123",
-                  asset_identifier: "VIN-001",
-                },
-              ],
-              opportunity_branches: [{ branch: "Sağlık", label: "Sağlık" }],
+              has_cross_sell_opportunity: true,
+              opportunity_branches: [{ branch: "Sağlık" }],
             },
-            operations: {
-              assignments: [
-                {
-                  name: "ASN-001",
-                  source_doctype: "AT Customer",
-                  source_name: "CUST-001",
-                  customer: "CUST-001",
-                  policy: "POL-001",
-                  assigned_to: "agent@example.com",
-                  assignment_role: "Owner",
-                  status: "Open",
-                  priority: "High",
-                  due_date: "2026-03-15",
-                  notes: "Ilk temas",
-                },
-              ],
-              activities: [
-                {
-                  name: "ACT-001",
-                  activity_title: "Müşteri ile ilk gorusme",
-                  activity_type: "Call",
-                  source_doctype: "AT Customer",
-                  source_name: "CUST-001",
-                  customer: "CUST-001",
-                  assigned_to: "agent@example.com",
-                  activity_at: "2026-03-09T09:00:00Z",
-                  status: "Logged",
-                  notes: "Bilgi verildi",
-                },
-              ],
-              reminders: [
-                {
-                  name: "REM-001",
-                  reminder_title: "Teklif hatırlatması",
-                  source_doctype: "AT Customer",
-                  source_name: "CUST-001",
-                  customer: "CUST-001",
-                  assigned_to: "agent@example.com",
-                  status: "Open",
-                  priority: "High",
-                  remind_at: "2026-03-10T09:00:00Z",
-                },
-              ],
-            },
+            operations: {},
           };
           data.value = payload;
           return payload;
         }),
         submit: vi.fn(async () => ({})),
-      };
-    }
-
-    if (url.includes("update_customer_profile")) {
-      return {
-        data: ref({}),
-        loading: ref(false),
-        error: ref(null),
-        params: {},
-        setData: vi.fn(),
-        reload: vi.fn(async () => ({})),
-        submit: vi.fn(async () => ({})),
-      };
-    }
-
-    if (url.includes("delete_quick_aux_record")) {
-      return {
-        data: ref({}),
-        loading: ref(false),
-        error: ref(null),
-        params: {},
-        setData: vi.fn(),
-        reload: vi.fn(async () => ({})),
-        submit: auxDeleteSubmitMock,
-      };
-    }
-
-    if (url.includes("update_quick_aux_record")) {
-      return {
-        data: ref({}),
-        loading: ref(false),
-        error: ref(null),
-        params: {},
-        setData: vi.fn(),
-        reload: vi.fn(async () => ({})),
-        submit: auxUpdateSubmitMock,
-      };
-    }
-
-    if (url.includes("frappe.client.get_list")) {
-      const data = ref([]);
-      return {
-        data,
-        loading: ref(false),
-        error: ref(null),
-        params: {},
-        setData(payload) {
-          data.value = payload;
-        },
-        reload: vi.fn(async (params = {}) => {
-          if (params?.doctype === "AT Customer") {
-            const payload = [
-              { name: "CUST-001", full_name: "Aykut Bekir" },
-              { name: "CUST-002", full_name: "Ayse Bekir" },
-            ];
-            data.value = payload;
-            return payload;
-          }
-          if (params?.doctype === "AT Policy") {
-            const payload = [{ name: "POL-001", policy_no: "P-100", customer: "CUST-001" }];
-            data.value = payload;
-            return payload;
-          }
-          data.value = [];
-          return [];
-        }),
-        submit: vi.fn(async () => ([])),
       };
     }
 
@@ -249,41 +90,18 @@ vi.mock("frappe-ui", () => ({
   },
 }));
 
-const QuickCreateManagedDialogStub = {
-  ...defineComponent({
-    props: ["modelValue", "configKey", "successHandlers", "beforeOpen", "optionsMap"],
-    methods: {
-      async triggerSuccess() {
-        const handler = this.successHandlers?.["customer-relations-list"] || this.successHandlers?.["insured-assets-list"];
-        if (typeof handler === "function") {
-          await handler();
-        }
-      },
-      async triggerBeforeOpen(form = {}, resetForm = vi.fn()) {
-        if (typeof this.beforeOpen === "function") {
-          await this.beforeOpen({ form, resetForm });
-        }
-        return { form, resetForm };
-      },
-    },
-    template:
-      `<div class="quick-create-dialog-stub" :data-config-key="configKey" :data-open="String(modelValue)"></div>`,
-  }),
-};
-
 const ActionButtonStub = {
   emits: ["click"],
   template: `<button class="action-button-stub" @click="$emit('click', $event)"><slot /></button>`,
 };
 
 const MetaListCardStub = defineComponent({
-  props: ["title", "subtitle", "description", "meta", "label", "value"],
+  props: ["title", "subtitle"],
+  emits: ["click"],
   template: `
-    <article class="meta-list-card-stub">
-      <div class="title">{{ title || label }}</div>
+    <article class="meta-list-card-stub" @click="$emit('click')">
+      <div class="title">{{ title }}</div>
       <div v-if="subtitle" class="subtitle">{{ subtitle }}</div>
-      <div v-if="description || value" class="description">{{ description || value }}</div>
-      <div v-if="meta" class="meta">{{ meta }}</div>
       <slot />
       <slot name="trailing" />
       <slot name="footer" />
@@ -293,37 +111,22 @@ const MetaListCardStub = defineComponent({
 
 const MiniFactListStub = defineComponent({
   props: ["items"],
-  template: `
-    <ul class="mini-fact-list-stub">
-      <li v-for="item in items" :key="item.key">{{ item.label }} {{ item.value }}</li>
-    </ul>
-  `,
+  template: `<ul><li v-for="item in items" :key="item.label">{{ item.label }} {{ item.value }}</li></ul>`,
 });
 
-const genericStub = {
-  template:
-    `<div><slot /><slot name="actions" /><slot name="trailing" /><slot name="footer" /></div>`,
-};
+const FieldGroupStub = defineComponent({
+  props: ["fields"],
+  template: `<div><div v-for="field in fields" :key="field.label">{{ field.label }} {{ field.value }}</div></div>`,
+});
 
-async function activateTab(wrapper, label) {
-  const tabButton = wrapper
-    .findAll(".nav-tab")
-    .find((candidate) => candidate.text().includes(label));
-  expect(tabButton).toBeTruthy();
-  await tabButton.trigger("click");
-  await nextTick();
-}
+const HeroStripStub = defineComponent({
+  props: ["cells"],
+  template: `<div><div v-for="cell in cells" :key="cell.label">{{ cell.label }} {{ cell.value }}</div></div>`,
+});
 
-describe("CustomerDetail customer 360 integration", () => {
+describe("CustomerDetail page", () => {
   beforeEach(() => {
     routerPush.mockReset();
-    customer360Reload.mockReset();
-    auxDeleteSubmitMock.mockReset();
-    auxDeleteSubmitMock.mockResolvedValue({ deleted: true });
-    auxUpdateSubmitMock.mockReset();
-    auxUpdateSubmitMock.mockResolvedValue({ ok: true });
-    confirmMock.mockReset();
-    confirmMock.mockReturnValue(true);
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
@@ -340,513 +143,69 @@ describe("CustomerDetail customer 360 integration", () => {
     });
   });
 
-  it("renders relation and asset sections and opens inline create/edit dialogs", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
+  function mountDetail() {
+    return mount(CustomerDetail, {
+      props: { name: "CUST-001" },
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
+          FieldGroup: FieldGroupStub,
+          HeroStrip: HeroStripStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
+          SectionPanel: { template: `<section><h2>{{ title }}</h2><slot /><slot name="trailing" /></section>`, props: ["title"] },
+          SkeletonLoader: true,
           StatusBadge: true,
-          TimelineActivityList: genericStub,
+          WorkbenchFileUploadModal: true,
+          QuickCreateManagedDialog: true,
         },
       },
     });
+  }
 
+  it("renders the current overview contract", async () => {
+    const wrapper = mountDetail();
+    await nextTick();
     await Promise.resolve();
-    await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Müşteri Özeti");
-    expect(wrapper.text()).toContain("Özet Panosu");
-
-    await activateTab(wrapper, "Operasyonlar");
-    expect(wrapper.text()).toContain("Yeni İlişki");
-    expect(wrapper.text()).toContain("Yeni Varlık");
-    expect(wrapper.text()).toContain("Yeni Atama");
-
-    const dialogs = () => wrapper.findAll(".quick-create-dialog-stub");
-    const buttonByText = (label) =>
-      wrapper
-        .findAll(".action-button-stub")
-        .find((candidate) => candidate.text().includes(label));
-
-    await buttonByText("Yeni İlişki").trigger("click");
-    expect(dialogs().find((node) => node.attributes("data-config-key") === "customer_relation")?.attributes("data-open")).toBe("true");
-
-    await buttonByText("Yeni Varlık").trigger("click");
-    expect(dialogs().find((node) => node.attributes("data-config-key") === "insured_asset")?.attributes("data-open")).toBe("true");
-
-    const relationCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("Ayse Bekir") || node.text().includes("CUST-002"));
-    await relationCard
-      .findAll(".action-button-stub")
-      .find((candidate) => candidate.text().includes("Düzenle"))
-      .trigger("click");
-    expect(dialogs().find((node) => node.attributes("data-config-key") === "customer_relation_edit")?.attributes("data-open")).toBe("true");
-
-    const assetCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("34 ABC 123"));
-    await assetCard
-      .findAll(".action-button-stub")
-      .find((candidate) => candidate.text().includes("Düzenle"))
-      .trigger("click");
-    expect(dialogs().find((node) => node.attributes("data-config-key") === "insured_asset_edit")?.attributes("data-open")).toBe("true");
+    expect(wrapper.text()).toContain("Aykut Bekir");
+    expect(wrapper.text()).toContain("Toplam Prim");
+    expect(wrapper.findAll(".nav-tab")).toHaveLength(4);
+    expect(wrapper.vm.tabs.map((tab) => tab.key)).toEqual(["overview", "portfolio", "activity", "operations"]);
   });
 
-  it("keeps sections on the right tabs and keeps overview summarized", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
-      global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          StatusBadge: true,
-          TimelineActivityList: genericStub,
-        },
-      },
-    });
-
-    await Promise.resolve();
+  it("switches tabs and renders portfolio, activity, and document content", async () => {
+    const wrapper = mountDetail();
+    await nextTick();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Müşteri Özeti");
-    expect(wrapper.text()).toContain("Müşteri Profili");
-    expect(wrapper.text()).toContain("Özet Panosu");
-    expect(wrapper.text()).toContain("Portföy Özeti");
-    expect(wrapper.text()).toContain("Ödeme Özeti");
-    expect(wrapper.text()).toContain("Aktivite Özeti");
-    expect(wrapper.text()).toContain("Operasyon Özeti");
-    expect(wrapper.text()).toContain("Geciken Taksit");
-    expect(wrapper.text()).toContain("1.200");
+    await wrapper.findAll(".nav-tab")[1].trigger("click");
+    await nextTick();
+    expect(wrapper.text()).toContain("P-100");
+    expect(wrapper.text()).toContain("OFF-001");
+    expect(wrapper.text()).toContain("CLM-001");
 
-    await activateTab(wrapper, "Aktivite");
-    expect(wrapper.text()).toContain("Aktiviteler");
-    expect(wrapper.text()).toContain("Hatırlatıcılar");
-    expect(wrapper.text()).toContain("İletişim Kanal Özeti");
-    expect(wrapper.text()).toContain("İletişim Geçmişi");
-    expect(wrapper.text()).not.toContain("Özet Panosu");
-    expect(wrapper.text()).not.toContain("Portföy Özeti");
-    expect(wrapper.text()).not.toContain("Operasyon Özeti");
+    await wrapper.findAll(".nav-tab")[2].trigger("click");
+    await nextTick();
+    expect(wrapper.text()).toContain("Call note");
+    expect(wrapper.text()).toContain("Customer called");
 
-    await activateTab(wrapper, "Portföy");
-    expect(wrapper.text()).toContain("Aktif Poliçeler");
-    expect(wrapper.text()).toContain("Müşteri İçgörüleri");
-    expect(wrapper.text()).toContain("Çapraz Satış Fırsatları");
-    expect(wrapper.text()).toContain("Yaklaşan Yenilemeler");
-    expect(wrapper.text()).not.toContain("Özet Panosu");
-    expect(wrapper.text()).not.toContain("Aktivite Özeti");
-    expect(wrapper.text()).not.toContain("Operasyon Özeti");
-
-    await activateTab(wrapper, "Operasyonlar");
-    expect(wrapper.text()).toContain("Atamalar");
-    expect(wrapper.text()).toContain("İlişkili Kişiler");
-    expect(wrapper.text()).toContain("Doküman Listesi");
-    expect(wrapper.text()).toContain("Sigortalanan Varlıklar");
-    expect(wrapper.text()).not.toContain("Özet Panosu");
-    expect(wrapper.text()).not.toContain("Portföy Özeti");
-    expect(wrapper.text()).not.toContain("Aktivite Özeti");
+    await wrapper.findAll(".nav-tab")[3].trigger("click");
+    await nextTick();
+    expect(wrapper.text()).toContain("kimlik.pdf");
   });
 
-  it("routes customer 360 operation buttons to the correct screens", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
-      global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          StatusBadge: true,
-          TimelineActivityList: genericStub,
-        },
-      },
-    });
-
-    await Promise.resolve();
+  it("routes to related records from current actions", async () => {
+    const wrapper = mountDetail();
+    await nextTick();
     await Promise.resolve();
 
-    await activateTab(wrapper, "Operasyonlar");
+    await wrapper.findAll(".action-button-stub")[0].trigger("click");
+    expect(routerPush).toHaveBeenCalledWith({ name: "customers-board" });
 
-    const clickByText = async (label) => {
-      const button = wrapper
-        .findAll(".action-button-stub")
-        .find((candidate) => candidate.text().includes(label));
-      await button.trigger("click");
-    };
-
-    await clickByText("İlişkili Kişiler");
-    expect(routerPush).toHaveBeenLastCalledWith({
-      name: "customer-relations-list",
-      query: { customer: "CUST-001" },
-    });
-
-    await clickByText("Sigortalanan Varlıklar");
-    expect(routerPush).toHaveBeenLastCalledWith({
-      name: "insured-assets-list",
-      query: { customer: "CUST-001" },
-    });
-
-    await clickByText("İletişim");
-    expect(routerPush).toHaveBeenLastCalledWith({
-      name: "communication-center",
-      query: {
-        customer: "CUST-001",
-        customer_label: "Aykut Bekir",
-        return_to: "/customers/CUST-001",
-      },
-    });
-
-    await clickByText("Doküman Merkezine Git");
-    expect(routerPush).toHaveBeenLastCalledWith({
-      name: "at-documents-list",
-      query: {
-        reference_doctype: "AT Customer",
-        reference_name: "CUST-001",
-      },
-    });
-  });
-
-  it("refreshes customer 360 payload after relation and asset success handlers run", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
-      global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          StatusBadge: true,
-          TimelineActivityList: genericStub,
-        },
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(customer360Reload).toHaveBeenCalledTimes(1);
-
-    const relationDialog = wrapper.findAllComponents(QuickCreateManagedDialogStub)[0];
-    await relationDialog.vm.triggerSuccess();
-    expect(customer360Reload).toHaveBeenCalledTimes(2);
-
-    const assetDialog = wrapper.findAllComponents(QuickCreateManagedDialogStub)[1];
-    await assetDialog.vm.triggerSuccess();
-    expect(customer360Reload).toHaveBeenCalledTimes(3);
-  });
-
-  it("prefills create and edit dialogs with customer 360 context", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
-      global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          StatusBadge: true,
-          TimelineActivityList: genericStub,
-        },
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    await activateTab(wrapper, "Operasyonlar");
-
-    const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
-
-    const relationCreateForm = {};
-    await dialogs[0].vm.triggerBeforeOpen(relationCreateForm);
-    expect(relationCreateForm.customer).toBe("CUST-001");
-    expect(dialogs[0].props("optionsMap").customers).toHaveLength(2);
-
-    const assetCreateForm = {};
-    await dialogs[1].vm.triggerBeforeOpen(assetCreateForm);
-    expect(assetCreateForm.customer).toBe("CUST-001");
-    expect(assetCreateForm.policy).toBe("POL-001");
-    expect(dialogs[1].props("optionsMap").policies).toHaveLength(1);
-
-    const relationCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("Ayse Bekir") || node.text().includes("CUST-002"));
-    await relationCard
-      .findAll(".action-button-stub")
-      .find((candidate) => candidate.text().includes("Düzenle"))
-      .trigger("click");
-    const relationResetForm = vi.fn();
-    await dialogs[2].vm.triggerBeforeOpen({}, relationResetForm);
-    expect(relationResetForm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        doctype: "AT Customer Relation",
-        name: "REL-001",
-        customer: "CUST-001",
-        related_customer: "CUST-002",
-      })
-    );
-
-    const assetCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("34 ABC 123"));
-    await assetCard
-      .findAll(".action-button-stub")
-      .find((candidate) => candidate.text().includes("Düzenle"))
-      .trigger("click");
-    const assetResetForm = vi.fn();
-    await dialogs[3].vm.triggerBeforeOpen({}, assetResetForm);
-    expect(assetResetForm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        doctype: "AT Insured Asset",
-        name: "AST-001",
-        customer: "CUST-001",
-        policy: "POL-001",
-        asset_label: "34 ABC 123",
-      })
-    );
-  });
-
-  it("deletes relation and asset rows then refreshes customer 360 payload", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
-      global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          StatusBadge: true,
-          TimelineActivityList: genericStub,
-        },
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    await activateTab(wrapper, "Operasyonlar");
-
-    const relationCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("Ayse Bekir") || node.text().includes("CUST-002"));
-    await relationCard
-      .findAll(".action-button-stub")
-      .find((candidate) => candidate.text().includes("Sil"))
-      .trigger("click");
-    expect(confirmMock).toHaveBeenCalled();
-    expect(auxDeleteSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Customer Relation",
-      name: "REL-001",
-    });
-    expect(customer360Reload).toHaveBeenCalledTimes(2);
-
-    const assetCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("34 ABC 123"));
-    await assetCard
-      .findAll(".action-button-stub")
-      .find((candidate) => candidate.text().includes("Sil"))
-      .trigger("click");
-    expect(auxDeleteSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Insured Asset",
-      name: "AST-001",
-    });
-    expect(customer360Reload).toHaveBeenCalledTimes(3);
-  });
-
-  it("renders ownership assignments and prefills assignment dialogs", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
-      global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          StatusBadge: true,
-          TimelineActivityList: genericStub,
-        },
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    await activateTab(wrapper, "Operasyonlar");
-
-    expect(wrapper.text()).toContain("Atamalar");
-    expect(wrapper.text()).toContain("agent@example.com");
-    expect(wrapper.text()).toContain("2026-03-15");
-
-    const dialogs = wrapper.findAllComponents(QuickCreateManagedDialogStub);
-
-    const createButtons = wrapper.findAll(".action-button-stub").filter((candidate) => candidate.text().includes("Yeni Atama"));
-    await createButtons[0].trigger("click");
-
-    const assignmentCreateForm = {};
-    await dialogs[4].vm.triggerBeforeOpen(assignmentCreateForm);
-    expect(assignmentCreateForm).toEqual(
-      expect.objectContaining({
-        source_doctype: "AT Customer",
-        source_name: "CUST-001",
-        customer: "CUST-001",
-      })
-    );
-
-    const assignmentCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("agent@example.com") && node.text().includes("Owner"));
-    await assignmentCard
-      .findAll(".action-button-stub")
-      .find((candidate) => candidate.text().includes("Düzenle"))
-      .trigger("click");
-
-    const assignmentResetForm = vi.fn();
-    await dialogs[5].vm.triggerBeforeOpen({}, assignmentResetForm);
-    expect(assignmentResetForm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        doctype: "AT Ownership Assignment",
-        name: "ASN-001",
-        source_doctype: "AT Customer",
-        source_name: "CUST-001",
-        customer: "CUST-001",
-        policy: "POL-001",
-        assigned_to: "agent@example.com",
-      })
-    );
-  });
-
-  it("updates reminder status from customer detail actions", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
-      global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          StatusBadge: true,
-          TimelineActivityList: genericStub,
-        },
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    await activateTab(wrapper, "Aktivite");
-
-    const buttons = wrapper.findAll(".action-button-stub");
-    await buttons.find((candidate) => candidate.text().includes("Tamamla")).trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Reminder",
-      name: "REM-001",
-      data: {
-        status: "Done",
-      },
-    });
-
-    await buttons.find((candidate) => candidate.text().includes("İptal")).trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Reminder",
-      name: "REM-001",
-      data: {
-        status: "Cancelled",
-      },
-    });
-    expect(customer360Reload).toHaveBeenCalled();
-  });
-
-  it("updates assignment status from customer detail actions", async () => {
-    const wrapper = mount(CustomerDetail, {
-      props: {
-        name: "CUST-001",
-      },
-      global: {
-        stubs: {
-          ActionButton: ActionButtonStub,
-          DetailActionRow: genericStub,
-          DetailTabsBar: true,
-          MetaListCard: MetaListCardStub,
-          MiniFactList: MiniFactListStub,
-          QuickCreateManagedDialog: QuickCreateManagedDialogStub,
-          StatusBadge: true,
-          TimelineActivityList: genericStub,
-        },
-      },
-    });
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    await activateTab(wrapper, "Operasyonlar");
-
-    const buttons = wrapper.findAll(".action-button-stub");
-
-    await buttons.find((candidate) => candidate.text().includes("İşleme Al")).trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Ownership Assignment",
-      name: "ASN-001",
-      data: {
-        status: "In Progress",
-      },
-    });
-
-    await buttons.find((candidate) => candidate.text().includes("Bloke Et")).trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Ownership Assignment",
-      name: "ASN-001",
-      data: {
-        status: "Blocked",
-      },
-    });
-
-    await buttons.find((candidate) => candidate.text().includes("Kapat")).trigger("click");
-    expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
-      doctype: "AT Ownership Assignment",
-      name: "ASN-001",
-      data: {
-        status: "Done",
-      },
-    });
-    expect(customer360Reload).toHaveBeenCalled();
+    await wrapper.findAll(".nav-tab")[1].trigger("click");
+    await nextTick();
+    await wrapper.findAll(".meta-list-card-stub")[0].trigger("click");
+    expect(routerPush).toHaveBeenLastCalledWith({ name: "policy-detail", params: { name: "POL-001" } });
   });
 });

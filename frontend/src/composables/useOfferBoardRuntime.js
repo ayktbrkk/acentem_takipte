@@ -1,14 +1,13 @@
 import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { OFFER_TRANSLATIONS } from "../config/offer_translations";
+import { translateText } from "../utils/i18n";
 
 export function useOfferBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return OFFER_TRANSLATIONS[locale]?.[key] || OFFER_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const filters = reactive({
@@ -35,6 +34,7 @@ export function useOfferBoardRuntime({ activeLocale = ref("tr") } = {}) {
   });
 
   const summary = computed(() => {
+    unref(activeLocale);
     const rows = unref(offerResource.data) || [];
     return {
       total: rows.length,
@@ -45,6 +45,7 @@ export function useOfferBoardRuntime({ activeLocale = ref("tr") } = {}) {
   });
 
   const rows = computed(() => {
+    unref(activeLocale);
     const data = unref(offerResource.data) || [];
     return data.map(row => ({
       ...row,
@@ -111,3 +112,4 @@ export function useOfferBoardRuntime({ activeLocale = ref("tr") } = {}) {
     openOffer,
   };
 }
+

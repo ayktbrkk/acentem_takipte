@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { reactive, ref } from "vue";
+import { reactive } from "vue";
 
 import LeadList from "./LeadList.vue";
 import { useAuthStore } from "../stores/auth";
@@ -45,7 +45,7 @@ vi.mock("vue-router", () => ({
   }),
 }));
 
-describe("LeadList runtime integration", () => {
+describe("LeadList page", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
     routeState.query = {};
@@ -67,67 +67,46 @@ describe("LeadList runtime integration", () => {
     });
   });
 
-  it("loads lead rows and opens the quick lead dialog", async () => {
+  it("loads rows from the validated lead schema and routes to detail", async () => {
     const leadRows = {
       rows: [
         {
           name: "LEAD-001",
           first_name: "Ayşe",
           last_name: "Yılmaz",
-          customer: "CUS-001",
-          branch: "Motor",
-          sales_entity: "SE-001",
-          insurance_company: "COMP-001",
           status: "Open",
-          converted_offer: "",
-          converted_policy: "",
-          estimated_gross_premium: 1200,
-          modified: "2026-03-25T10:00:00Z",
+          phone: "05550000000",
+          email: "ayse@example.com",
+          creation: "2026-03-25T10:00:00Z",
         },
       ],
       total: 1,
     };
 
-    resourceQueue.push(
-      makeResource(leadRows, leadRows),
-      makeResource({ lead: "LEAD-NEW" }, { lead: "LEAD-NEW" }),
-      makeResource({}),
-      makeResource([]),
-      makeResource([]),
-      makeResource([]),
-      makeResource([]),
-      makeResource({ selected_key: "default", custom_presets: [] }, { selected_key: "default", custom_presets: [] }),
-      makeResource({}),
-    );
+    resourceQueue.push(makeResource(leadRows, leadRows));
 
     const wrapper = mount(LeadList, {
       global: {
         stubs: {
           ActionButton: true,
-          DataTableCell: true,
           FilterBar: true,
-          InlineActionRow: true,
           ListTable: true,
-          MiniFactList: true,
-          QuickCreateDialogShell: genericStub,
-          QuickCreateFormRenderer: genericStub,
-          QuickCustomerPicker: true,
           SectionPanel: genericStub,
+          SkeletonLoader: true,
           StatusBadge: true,
-          TableEntityCell: true,
-          TableFactsCell: true,
           WorkbenchPageLayout: genericStub,
           Dialog: genericStub,
         },
       },
     });
 
-    expect(wrapper.vm.leadPageSummary.open).toBe(1);
-    expect(wrapper.vm.leadListRows).toHaveLength(1);
-    expect(wrapper.vm.leadListRows[0].name).toBe("LEAD-001");
-    expect(wrapper.vm.leadListRows[0].customer).toBe("CUS-001");
+    expect(wrapper.vm.summary.total).toBe(1);
+    expect(wrapper.vm.summary.active).toBe(1);
+    expect(wrapper.vm.rows).toHaveLength(1);
+    expect(wrapper.vm.rows[0].full_name).toBe("Ayşe Yılmaz");
+    expect(wrapper.vm.rows[0].status_label).toBe("Açık");
 
-    await wrapper.vm.openQuickLeadDialog();
-    expect(wrapper.vm.showQuickLeadDialog).toBe(true);
+    wrapper.vm.openLead("LEAD-001");
+    expect(routerPush).toHaveBeenCalledWith({ name: "lead-detail", params: { name: "LEAD-001" } });
   });
 });

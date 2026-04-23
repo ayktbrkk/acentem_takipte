@@ -13,7 +13,7 @@ import {
   resetPaymentFilterState,
   currentPaymentPresetPayload as buildPresetPayload
 } from "./paymentsBoard/helpers";
-import { PAYMENT_TRANSLATIONS } from "../config/payment_translations";
+import { translateText } from "../utils/i18n";
 
 export function usePaymentsBoardRuntime({ route, router, authStore, branchStore, paymentStore }) {
   const activeLocale = computed(() => unref(authStore.locale) || "en");
@@ -21,7 +21,7 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
   const filters = paymentStore.state.filters;
 
   function t(key) {
-    return PAYMENT_TRANSLATIONS[activeLocale.value]?.[key] || PAYMENT_TRANSLATIONS.en[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const paymentSortOptions = computed(() => [

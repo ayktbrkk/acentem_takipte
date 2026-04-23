@@ -1,14 +1,13 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { CLAIM_TRANSLATIONS } from "../config/claim_translations";
+import { translateText } from "../utils/i18n";
 
 export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
 
   function t(key) {
-    const locale = unref(activeLocale) || "tr";
-    return CLAIM_TRANSLATIONS[locale]?.[key] || CLAIM_TRANSLATIONS.en?.[key] || key;
+    return translateText(key, activeLocale);
   }
 
   const claimResource = createResource({
@@ -47,16 +46,17 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   const heroCells = computed(() => [
     { label: t("claim_type"), value: claim.value.claim_type },
-    { label: t("total_amount"), value: formatCurrency(claim.value.total_amount, claim.value.currency), variant: "lg" },
-    { label: t("claim_date"), value: formatDate(claim.value.claim_date) },
-    { label: t("status"), value: t(`status_${String(claim.value.status || "Open").toLowerCase()}`), variant: "accent" },
+    { label: t("total_amount"), value: formatCurrency(claim.value.estimated_amount, claim.value.currency), variant: "lg" },
+    { label: t("claim_date"), value: formatDate(claim.value.incident_date) },
+    { label: t("status"), value: t(`status_${String(claim.value.claim_status || "Open").toLowerCase()}`), variant: "accent" },
   ]);
 
   const profileFields = computed(() => [
     { label: t("insurance_company"), value: claim.value.insurance_company },
     { label: t("policy_no"), value: claim.value.policy },
-    { label: t("claim_date"), value: formatDate(claim.value.claim_date) },
+    { label: t("claim_date"), value: formatDate(claim.value.incident_date) },
     { label: t("claim_type"), value: claim.value.claim_type },
+    { label: t("expert"), value: claim.value.assigned_expert || "-" },
   ]);
 
   // Watch for name change
@@ -78,3 +78,4 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     profileFields,
   };
 }
+

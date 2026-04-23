@@ -130,7 +130,6 @@ const {
 const columns = computed(() => [
   { key: "name", label: t("claim_id"), width: "150px" },
   { key: "customer", label: t("customer"), width: "200px" },
-  { key: "insurance_company", label: t("insurance_company"), width: "200px" },
   { key: "policy", label: t("policy_no"), width: "150px" },
   { key: "total_amount", label: t("total_amount"), width: "150px", align: "right" },
   { key: "claim_date", label: t("claim_date"), width: "120px" },

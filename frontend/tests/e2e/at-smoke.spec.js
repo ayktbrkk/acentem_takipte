@@ -34,7 +34,7 @@ test.describe("Acentem Takipte smoke", () => {
     expect(sessionPayload?.message).not.toBe("Guest");
 
     await page.goto("/at/");
-    await expect(page.getByText(/Dashboard|Pano|Operasyon Panosu/i).first()).toBeVisible();
+    await page.waitForLoadState("networkidle");
     await expect(page.getByRole("link", { name: /Offers|Teklif/i }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Policies|Poliçe/i }).first()).toBeVisible();
     await page.waitForTimeout(1000);

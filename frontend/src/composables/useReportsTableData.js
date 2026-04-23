@@ -16,6 +16,10 @@ export function useReportsTableData({
   localeCode,
   branchScopeLabel,
   t,
+  visibleColumnKeys: existingVisibleColumnKeys,
+  pendingVisibleColumnKeys: existingPendingVisibleColumnKeys,
+  groupByColumn: existingGroupByColumn,
+  sortState: existingSortState,
 }) {
   const translatableCategoricalColumns = new Set([
     "status",
@@ -34,12 +38,12 @@ export function useReportsTableData({
     "purpose",
   ]);
 
-  const visibleColumnKeys = ref([]);
-  const pendingVisibleColumnKeys = ref([]);
-  const groupByColumn = ref("");
+  const visibleColumnKeys = existingVisibleColumnKeys || ref([]);
+  const pendingVisibleColumnKeys = existingPendingVisibleColumnKeys || ref([]);
+  const groupByColumn = existingGroupByColumn || ref("");
   const customColumns = ref([]); // [{ key, label, formula: (row) => value }]
-  
-  const sortState = reactive({
+
+  const sortState = existingSortState || reactive({
     column: "",
     direction: "",
   });
@@ -84,12 +88,7 @@ export function useReportsTableData({
       && Boolean(filters.toDate),
   );
 
-  const visibleColumns = computed(() => {
-    if (!visibleColumnKeys.value.length) {
-      return columns.value;
-    }
-    return columns.value.filter((column) => visibleColumnKeys.value.includes(column));
-  });
+
 
   const hiddenColumns = computed(() => columns.value.filter((column) => !visibleColumns.value.includes(column)));
   const columnsSummaryLabel = computed(() => `${visibleColumns.value.length}/${columns.value.length}`);
