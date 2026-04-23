@@ -35,6 +35,9 @@ export const COMMON_TRANSLATIONS = {
     other: "Diğer",
     granted: "Verildi",
     revoked: "Geri Çekildi",
+    bootstrap_error_title: "Acentem Takipte yüklenemedi",
+    bootstrap_error_msg: "/at sayfası başlatılırken bir istemci hatası oluştu.",
+    bootstrap_error_hint: "Tarayıcı konsolunu kontrol edin. Gerekirse frontend build'ini yenileyip cache temizleyin.",
   },
   en: {
     all: "All",
@@ -72,6 +75,9 @@ export const COMMON_TRANSLATIONS = {
     other: "Other",
     granted: "Granted",
     revoked: "Revoked",
+    bootstrap_error_title: "Acentem Takipte failed to load",
+    bootstrap_error_msg: "A client-side error occurred while initializing the /at page.",
+    bootstrap_error_hint: "Check the browser console. If necessary, rebuild the frontend and clear the cache.",
   }
 };
 

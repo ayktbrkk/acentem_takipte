@@ -2,7 +2,7 @@
   <section class="page-shell space-y-4">
     <div class="detail-topbar">
       <div>
-        <p class="detail-breadcrumb">{{ t("breadcrumb") }}</p>
+        <p class="detail-breadcrumb">{{ t("detailBreadcrumb") }}</p>
         <h1 class="detail-title">
           {{ item.name || name }}
           <StatusBadge domain="reconciliation" :status="statusLabel" />
@@ -98,6 +98,7 @@ import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
+import { translateText } from "../utils/i18n";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import HeroStrip from "@/components/ui/HeroStrip.vue";
@@ -111,89 +112,8 @@ const router = useRouter();
 const authStore = useAuthStore(getAppPinia());
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 
-const copy = {
-  tr: {
-    breadcrumb: "Kontrol Merkezi / Mutabakat Detayı",
-    back: "Listeye Dön",
-    openWorkbench: "Mutabakat Masası",
-    reconciliationNo: "Mutabakat No",
-    period: "Dönem",
-    summary: "Özet Bilgiler",
-    policyList: "Poliçe Listesi",
-    unmatchedRecords: "Eşleşmeyen Kayıtlar",
-    notes: "Mutabakat Notları",
-    timeline: "Geçmiş",
-    companyInfo: "Şirket Bilgileri",
-    periodInfo: "Dönem Bilgisi",
-    statusInfo: "Durum",
-    noPolicyRows: "Bağlı poliçe kaydı bulunamadı.",
-    noUnmatchedRows: "Eşleşmeyen kayıt bulunamadı.",
-    noNotes: "Not veya detay bulunamadı.",
-    accountingEntry: "Muhasebe Kaydı",
-    source: "Kaynak",
-    company: "Şirket",
-    policy: "Poliçe",
-    customer: "Müşteri",
-    sourceName: "Kaynak No",
-    status: "Durum",
-    difference: "Fark",
-    resolution: "Çözüm",
-    sourceDoctype: "Kaynak Tipi",
-    entryStatus: "Kayıt Durumu",
-    mismatchType: "Uyumsuzluk Tipi",
-    localTry: "Yerel TRY",
-    externalTry: "Harici TRY",
-    resolvedOn: "Çözüm Tarihi",
-    resolvedBy: "Çözen",
-    resolvedAction: "Çözüm Aksiyonu",
-    created: "Oluşturuldu",
-    updated: "Güncellendi",
-    synced: "Son Sync",
-    rawDetails: "Ham JSON",
-  },
-  en: {
-    breadcrumb: "Control Center / Reconciliation Details",
-    back: "Back to list",
-    openWorkbench: "Reconciliation Workbench",
-    reconciliationNo: "Reconciliation No",
-    period: "Period",
-    summary: "Summary",
-    policyList: "Policy List",
-    unmatchedRecords: "Unmatched Records",
-    notes: "Reconciliation Notes",
-    timeline: "History",
-    companyInfo: "Company Info",
-    periodInfo: "Period Info",
-    statusInfo: "Status",
-    noPolicyRows: "No linked policy rows found.",
-    noUnmatchedRows: "No unmatched rows found.",
-    noNotes: "No notes or details found.",
-    accountingEntry: "Accounting Entry",
-    source: "Source",
-    company: "Company",
-    policy: "Policy",
-    customer: "Customer",
-    sourceName: "Source No",
-    status: "Status",
-    difference: "Difference",
-    resolution: "Resolution",
-    sourceDoctype: "Source Type",
-    entryStatus: "Entry Status",
-    mismatchType: "Mismatch Type",
-    localTry: "Local TRY",
-    externalTry: "External TRY",
-    resolvedOn: "Resolved On",
-    resolvedBy: "Resolved By",
-    resolvedAction: "Resolution Action",
-    created: "Created",
-    updated: "Updated",
-    synced: "Last Sync",
-    rawDetails: "Raw JSON",
-  },
-};
-
 function t(key) {
-  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
+  return translateText(key, activeLocale);
 }
 
 const itemResource = createResource({ url: "frappe.client.get", auto: false });

@@ -396,7 +396,7 @@ async function openDocument(doc) {
     referenceName: doc?.name || "",
   });
   if (opened) return;
-  window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
+  window.alert(t("file_link_not_found"));
 }
 
 function canArchiveDocument(doc) {

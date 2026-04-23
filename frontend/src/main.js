@@ -178,12 +178,21 @@ function renderBootstrapError(target, error) {
     return;
   }
 
+  const isTr = String(window.navigator.language || "").startsWith("tr");
+  const title = isTr ? "Acentem Takipte yüklenemedi" : "Acentem Takipte failed to load";
+  const msg = isTr 
+    ? "/at sayfası başlatılırken bir istemci hatası oluştu." 
+    : "A client-side error occurred while initializing the /at page.";
+  const hint = isTr
+    ? "Tarayıcı konsolunu kontrol edin. Gerekirse frontend build'ini yenileyip cache temizleyin."
+    : "Check the browser console. If necessary, rebuild the frontend and clear the cache.";
+
   console.error("Acentem Takipte bootstrap failed", error);
   target.innerHTML = `
     <div style="max-width:48rem;margin:2rem auto;padding:1rem 1.25rem;border:1px solid #f5c2c7;border-radius:.75rem;background:#fff5f5;color:#842029;">
-      <h2 style="margin:0 0 .5rem;font-size:1.125rem;font-weight:700;">Acentem Takipte yuklenemedi</h2>
-      <p style="margin:0 0 .5rem;">/at sayfasi baslatilirken bir istemci hatasi olustu.</p>
-      <p style="margin:0;">Tarayici konsolunu kontrol edin. Gerekirse frontend build'ini yenileyip cache temizleyin.</p>
+      <h2 style="margin:0 0 .5rem;font-size:1.125rem;font-weight:700;">${title}</h2>
+      <p style="margin:0 0 .5rem;">${msg}</p>
+      <p style="margin:0;">${hint}</p>
     </div>
   `;
 }

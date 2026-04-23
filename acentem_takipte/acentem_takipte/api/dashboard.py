@@ -135,7 +135,7 @@ def _assert_dashboard_endpoint_method(action: str) -> None:
         return
 
     allowed_label = " / ".join(allowed_methods)
-    frappe.throw(_(f"Only {allowed_label} requests are allowed for this action."))
+    frappe.throw(_("Only {0} requests are allowed for this action.").format(allowed_label))
 
 
 def _safe_session_user() -> str:

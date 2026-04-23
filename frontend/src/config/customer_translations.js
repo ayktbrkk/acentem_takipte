@@ -85,6 +85,7 @@ export const CUSTOMER_TRANSLATIONS = {
     // Tooltips/Status
     load_error_title: "Veri Yüklenemedi",
     load_error_msg: "Müşteri verileri yüklenirken bir hata oluştu.",
+    file_link_not_found: "Dosya bağlantısı bulunamadı.",
   },
   en: {
     customers: "Customers",
@@ -172,5 +173,6 @@ export const CUSTOMER_TRANSLATIONS = {
     // Tooltips/Status
     load_error_title: "Failed to Load",
     load_error_msg: "An error occurred while loading customer data.",
+    file_link_not_found: "File link not found.",
   }
 };

@@ -47,7 +47,12 @@ class ATPolicy(Document):
 
     def on_update(self):
         # Cache invalidation handled by hooks.py (_p360) — no direct call needed.
-        pass
+        if self.currency != "TRY" and (not self.fx_rate or self.is_new()):
+            frappe.enqueue(
+                "acentem_takipte.acentem_takipte.doctype.at_policy.at_policy.update_policy_fx_rate_async",
+                policy_name=self.name,
+                now=frappe.flags.in_test,
+            )
 
     def on_trash(self):
         # Cache invalidation handled by hooks.py (_p360) — no direct call needed.
@@ -84,6 +89,7 @@ class ATPolicy(Document):
             else 0
         )
         self._set_exchange_rate()
+        # gwp_try will be recalculated in background if fx_rate is updated
         self.gwp_try = self.gross_premium * flt(self.fx_rate)
 
     def _validate_company_policy_number_uniqueness(self) -> None:
@@ -112,11 +118,11 @@ class ATPolicy(Document):
         try:
             baseline_snapshot = create_policy_snapshot(
                 self,
-                snapshot_type="Baseline",
+                snapshot_type=_("Baseline"),
                 source_doctype=self.doctype,
                 source_name=self.name,
                 snapshot_version=1,
-                notes="Baseline snapshot",
+                notes=_("Baseline snapshot"),
             )
             self.db_set(
                 "current_version",
@@ -181,7 +187,8 @@ class ATPolicy(Document):
 
         if self.currency == "TRY":
             self.fx_rate = 1
-            self.fx_date = self.start_date or self.issue_date or nowdate()
+            if not self.fx_date:
+                self.fx_date = self.start_date or self.issue_date or nowdate()
             return
 
         if self.fx_rate > 0:
@@ -189,16 +196,47 @@ class ATPolicy(Document):
                 self.fx_date = self.start_date or self.issue_date or nowdate()
             return
 
-        reference_date = getdate(self.start_date or self.issue_date or nowdate())
-        rate, rate_date = fetch_tcmb_rate(self.currency, reference_date)
+        # If currency is not TRY and rate is not set, we don't block validation.
+        # It will be fetched asynchronously in on_update/after_insert.
+        if not self.fx_date:
+            self.fx_date = self.start_date or self.issue_date or nowdate()
 
-        if not rate:
-            frappe.throw(
-                _("TCMB exchange rate is unavailable. Enter FX Rate manually.")
-            )
+def update_policy_fx_rate_async(policy_name: str):
+    """
+    Background job to fetch FX rate from TCMB and update policy financials.
+    """
+    if not policy_name:
+        return
 
-        self.fx_rate = rate
-        self.fx_date = rate_date
+    # Use db_get to avoid loading the whole doc if not needed yet
+    currency, fx_rate, fx_date = frappe.db.get_value(
+        "AT Policy", policy_name, ["currency", "fx_rate", "fx_date"]
+    )
+
+    if currency == "TRY" or flt(fx_rate) > 0:
+        return
+
+    # Fetch rate
+    reference_date = getdate(fx_date or nowdate())
+    rate, rate_date = fetch_tcmb_rate(currency, reference_date)
+
+    if rate:
+        # Update policy with new rate and recalculate gwp_try
+        # We use frappe.get_doc to trigger any side effects if needed,
+        # but since this is a background sync, db_set might be enough.
+        # To be safe and ensure all calculated fields are correct, we load and save.
+        doc = frappe.get_doc("AT Policy", policy_name)
+        doc.fx_rate = rate
+        doc.fx_date = rate_date
+        doc.gwp_try = doc.gross_premium * flt(rate)
+        doc.save(ignore_permissions=True)
+        # Notify user via realtime if possible
+        frappe.publish_realtime(
+            "at_policy_fx_updated",
+            {"policy": policy_name, "fx_rate": rate, "gwp_try": doc.gwp_try},
+            user=doc.owner,
+        )
+
 
 
 def fetch_tcmb_rate(currency: str, reference_date):

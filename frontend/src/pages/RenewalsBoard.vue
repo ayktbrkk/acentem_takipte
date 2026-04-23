@@ -116,6 +116,7 @@
 import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useRenewalsBoardRuntime } from "../composables/useRenewalsBoardRuntime";
+import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
@@ -126,75 +127,8 @@ const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
-const copy = {
-  tr: {
-    breadcrumb: "Operasyonlar → Yenilemeler",
-    title: "Yenilemeler",
-    subtitle: "Bitişe yakın poliçeler",
-    recordCount: "kayıt",
-    refresh: "Yenile",
-    newTask: "Yeni Görev",
-    markInProgress: "Takibe Al",
-    searchPlaceholder: "Görev / poliçe ara",
-    allStatuses: "Tüm Durumlar",
-    allDueScopes: "Tüm Vadeler",
-    dueScopeOverdue: "Gecikmiş",
-    dueScope7: "7 Gün",
-    dueScope30: "30 Gün",
-    policy: "Poliçe",
-    due: "Vade",
-    emptyColumn: "Kart yok",
-    columnOpen: "Açık",
-    columnOpenHint: "Yeni yenilemeler",
-    columnInProgress: "Takipte",
-    columnInProgressHint: "İşlemdeki kayıtlar",
-    columnDone: "Tamamlandı",
-    columnDoneHint: "Biten kayıtlar",
-    columnCancelled: "İptal",
-    columnCancelledHint: "İptal edilenler",
-    metricTotal: "Toplam",
-    metricOpen: "Açık",
-    metricDone: "Biten",
-    metricCancelled: "İptal",
-    metricDue: "Vadesi Gelen",
-    filters: "Filtreler",
-  },
-  en: {
-    breadcrumb: "Operations → Renewals",
-    title: "Renewals",
-    subtitle: "Near-expiry policies",
-    recordCount: "records",
-    refresh: "Refresh",
-    newTask: "New Task",
-    markInProgress: "Start Follow-up",
-    searchPlaceholder: "Search task / policy",
-    allStatuses: "All Statuses",
-    allDueScopes: "All Due Ranges",
-    dueScopeOverdue: "Overdue",
-    dueScope7: "7 Days",
-    dueScope30: "30 Days",
-    policy: "Policy",
-    due: "Due",
-    emptyColumn: "No cards",
-    columnOpen: "Open",
-    columnOpenHint: "New renewals",
-    columnInProgress: "In Progress",
-    columnInProgressHint: "Ongoing tasks",
-    columnDone: "Done",
-    columnDoneHint: "Completed tasks",
-    columnCancelled: "Cancelled",
-    columnCancelledHint: "Cancelled tasks",
-    metricTotal: "Total",
-    metricOpen: "Open",
-    metricDone: "Done",
-    metricCancelled: "Cancelled",
-    metricDue: "Due Soon",
-    filters: "Filters",
-  }
-};
-
 function t(key) {
-  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
+  return translateText(key, activeLocale);
 }
 
 const {

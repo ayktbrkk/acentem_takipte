@@ -46,3 +46,29 @@ export function translateText(source, locale = "en") {
   return translateCatalogText(source, loc);
 }
 
+/**
+ * Standardized locale-aware uppercase conversion.
+ * Ensures Turkish "i" becomes "İ" correctly in JavaScript-driven text.
+ */
+export function uppercaseText(text, locale = "en") {
+  if (text == null) return "";
+  const locVal = unref(locale);
+  if (String(locVal || "").startsWith("tr")) {
+    return String(text).toLocaleUpperCase("tr-TR");
+  }
+  return String(text).toUpperCase();
+}
+
+/**
+ * Standardized locale-aware lowercase conversion.
+ */
+export function lowercaseText(text, locale = "en") {
+  if (text == null) return "";
+  const locVal = unref(locale);
+  if (String(locVal || "").startsWith("tr")) {
+    return String(text).toLocaleLowerCase("tr-TR");
+  }
+  return String(text).toLowerCase();
+}
+
+

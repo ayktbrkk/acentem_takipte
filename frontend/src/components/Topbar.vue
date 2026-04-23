@@ -67,7 +67,7 @@ import { createResource } from "frappe-ui";
 
 import OfficeBranchSelect from "./app-shell/OfficeBranchSelect.vue";
 import { useAuthStore } from "../stores/auth";
-import { translateText } from "@/utils/i18n";
+import { translateText, uppercaseText } from "@/utils/i18n";
 
 defineEmits(["toggle-sidebar"]);
 
@@ -108,11 +108,7 @@ const sectionLabel = computed(() => {
 });
 
 function upperLabel(value) {
-  const text = value == null ? "" : String(value);
-  if (!text) return text;
-  return String(authStore.locale || "en").toLowerCase().startsWith("tr")
-    ? text.toLocaleUpperCase("tr-TR")
-    : text.toUpperCase();
+  return uppercaseText(value, authStore.locale);
 }
 
 const localeLabel = computed(() => (authStore.locale === "tr" ? "TR" : "EN"));
@@ -128,9 +124,9 @@ const userInitials = computed(() => {
     .filter(Boolean);
 
   if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return uppercaseText(`${parts[0][0]}${parts[1][0]}`, authStore.locale);
   }
-  return source[0].toUpperCase();
+  return uppercaseText(source[0], authStore.locale);
 });
 const accountMenuItems = computed(() => [
   { key: "account", label: t("account"), action: "account" },

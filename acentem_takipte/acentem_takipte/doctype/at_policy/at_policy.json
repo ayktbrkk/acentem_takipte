@@ -105,7 +105,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "IPT\nKYT\nActive",
+   "options": "Cancelled\nDraft\nActive",
    "reqd": 1,
    "search_index": 1
   },

@@ -113,101 +113,14 @@ import StepBar from '@/components/ui/StepBar.vue';
 import SectionPanel from '../components/app-shell/SectionPanel.vue';
 import { getAppPinia } from '../pinia';
 import { useAuthStore } from '../stores/auth';
+import { translateText } from '../utils/i18n';
 
 const _appPinia = getAppPinia();
 const _authStore = useAuthStore(_appPinia);
 const activeLocale = computed(() => unref(_authStore.locale) || 'en');
 
-const copy = {
-  tr: {
-    breadcrumb: 'Yenilemeler',
-    backList: 'Listeye Dön',
-    openPolicy: 'Poliçeyi Aç',
-    renewalProcess: 'Yenileme Süreci',
-    previousPolicy: 'Eski Poliçe Bilgileri',
-    newOffers: 'Yeni Teklifler',
-    communicationHistory: 'Müşteri İletişim Geçmişi',
-    reminders: 'Hatırlatıcılar',
-    people: 'İlgili Kişiler',
-    statusInfo: 'Durum Bilgisi',
-    recordMeta: 'Kayıt Meta',
-    noPolicy: 'Poliçe bilgisi bulunamadı.',
-    noOffers: 'Bu poliçe için teklif bulunamadı.',
-    noCommunication: 'İletişim kaydı bulunamadı.',
-    noReminders: 'Hatırlatıcı kaydı bulunamadı.',
-    openOfferDetail: 'Teklif Detayını Aç',
-    stepNotified: 'Bildirim',
-    stepOfferSent: 'Teklif',
-    stepDecision: 'Karar',
-    stepRenewed: 'Poliçe',
-    lblPolicy: 'Poliçe',
-    lblDue: 'Vade',
-    lblRenewalDate: 'Yenileme Tarihi',
-    lblStatus: 'Durum',
-    fldPolicyNo: 'Poliçe No',
-    fldCustomer: 'Müşteri',
-    fldBranch: 'Branş',
-    fldEndDate: 'Bitiş',
-    fldAgent: 'Temsilci',
-    fldPriority: 'Öncelik',
-    fldLostReason: 'Kayıp Nedeni',
-    fldCreatedBy: 'Oluşturan',
-    fldCreated: 'Oluşturma',
-    fldModifiedBy: 'Güncelleyen',
-    fldModified: 'Güncelleme',
-    fldDueDate: 'Son Tarih',
-    fldRenewalDateLbl: 'Yenileme Tarihi',
-    fldNextContact: 'Sonraki İletişim',
-    priorityHigh: 'Yüksek',
-    priorityMedium: 'Orta',
-    priorityLow: 'Düşük',
-  },
-  en: {
-    breadcrumb: 'Renewals',
-    backList: 'Back to List',
-    openPolicy: 'Open Policy',
-    renewalProcess: 'Renewal Process',
-    previousPolicy: 'Previous Policy',
-    newOffers: 'New Offers',
-    communicationHistory: 'Communication History',
-    reminders: 'Reminders',
-    people: 'People',
-    statusInfo: 'Status',
-    recordMeta: 'Record Info',
-    noPolicy: 'No policy information found.',
-    noOffers: 'No offers found for this policy.',
-    noCommunication: 'No communication records found.',
-    noReminders: 'No reminder records found.',
-    openOfferDetail: 'Open Offer Detail',
-    stepNotified: 'Notified',
-    stepOfferSent: 'Offer',
-    stepDecision: 'Decision',
-    stepRenewed: 'Policy',
-    lblPolicy: 'Policy',
-    lblDue: 'Due',
-    lblRenewalDate: 'Renewal Date',
-    lblStatus: 'Status',
-    fldPolicyNo: 'Policy No',
-    fldCustomer: 'Customer',
-    fldBranch: 'Branch',
-    fldEndDate: 'End Date',
-    fldAgent: 'Agent',
-    fldPriority: 'Priority',
-    fldLostReason: 'Lost Reason',
-    fldCreatedBy: 'Created By',
-    fldCreated: 'Created',
-    fldModifiedBy: 'Modified By',
-    fldModified: 'Modified',
-    fldDueDate: 'Due Date',
-    fldRenewalDateLbl: 'Renewal Date',
-    fldNextContact: 'Next Contact',
-    priorityHigh: 'High',
-    priorityMedium: 'Medium',
-    priorityLow: 'Low',
-  },
-};
 function t(key) {
-  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
+  return translateText(key, activeLocale);
 }
 
 const props = defineProps({ name: { type: String, required: true } });
@@ -307,7 +220,8 @@ function formatDate(value) {
   if (!value) return '-';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '-';
-  return new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+  const locale = activeLocale.value === 'tr' ? 'tr-TR' : 'en-US';
+  return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 }
 
 function openOffer(offerName) {

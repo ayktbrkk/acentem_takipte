@@ -100,6 +100,18 @@ function unbindScopeRealtimeListener() {
 }
 
 watch(
+  () => locale.value,
+  (newLocale) => {
+    // Standard solution for Turkish case conversion (i -> İ) with CSS uppercase.
+    // Browsers rely on the HTML lang attribute to apply correct locale-specific 
+    // transformations. Setting this dynamically ensures consistency across 
+    // the entire application shell.
+    document.documentElement.lang = newLocale || "en";
+  },
+  { immediate: true }
+);
+
+watch(
   () => route.fullPath,
   () => {
     // Keep mobile navigation predictable: any route transition closes the drawer.

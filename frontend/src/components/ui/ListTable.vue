@@ -98,7 +98,7 @@
 import { computed } from "vue";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
-import { translateText } from "@/utils/i18n";
+import { translateText, uppercaseText } from "@/utils/i18n";
 
 const props = defineProps({
   columns: { type: Array, required: true },
@@ -138,10 +138,6 @@ function formatDateCell(value) {
 }
 
 function formatHeaderLabel(value) {
-  const text = value == null ? "" : String(value);
-  if (!text) return text;
-  return locale.value.toLowerCase().startsWith("tr")
-    ? text.toLocaleUpperCase("tr-TR")
-    : text.toUpperCase();
+  return uppercaseText(value, locale);
 }
 </script>
