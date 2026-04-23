@@ -53,12 +53,44 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     );
   });
 
+  function openCustomerDocuments() {
+    if (!customerName.value) return;
+    router.push({
+      name: "at-documents-list",
+      query: {
+        reference_doctype: "AT Customer",
+        reference_name: customerName.value,
+      },
+    });
+  }
+
   function formatDate(val) {
     return sharedFormatDate(localeCode.value, val);
   }
 
   function formatCurrency(val, currency = "TRY") {
     return sharedFormatMoney(localeCode.value, val, currency);
+  }
+
+  function formatFileSize(bytes) {
+    if (!bytes || Number(bytes) <= 0) return "-";
+    const kilobytes = Number(bytes) / 1024;
+    if (kilobytes < 1024) {
+      return `${kilobytes.toFixed(1)} KB`;
+    }
+    return `${(kilobytes / 1024).toFixed(1)} MB`;
+  }
+
+  async function archiveDocument(doc) {
+    return atDocumentLifecycle.archiveDocument(doc, reload);
+  }
+
+  async function restoreDocument(doc) {
+    return atDocumentLifecycle.restoreDocument(doc, reload);
+  }
+
+  async function permanentDeleteDocument(doc) {
+    return atDocumentLifecycle.permanentDeleteDocument(doc, reload);
   }
 
   const heroCells = computed(() => [
@@ -147,6 +179,11 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     handleUploadComplete,
     canUploadDocuments,
     atDocumentLifecycle,
+    openCustomerDocuments,
+    archiveDocument,
+    restoreDocument,
+    permanentDeleteDocument,
+    formatFileSize,
     reload,
     backToList,
     openPolicy,

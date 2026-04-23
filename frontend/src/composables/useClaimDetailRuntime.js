@@ -2,9 +2,12 @@ import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
+import { useAuthStore } from "../stores/auth";
+import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 
 export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
+  const authStore = useAuthStore();
 
   function t(key) {
     return translateText(key, activeLocale);
@@ -19,6 +22,12 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   const claim = computed(() => data.value.claim || {});
   const documents = computed(() => data.value.documents || []);
   const payments = computed(() => data.value.payments || []);
+  const showUploadModal = ref(false);
+
+  const atDocumentLifecycle = useAtDocumentLifecycle({
+    authStore,
+    t,
+  });
 
   const loading = computed(() => claimResource.loading);
 
@@ -32,6 +41,37 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     router.push({ name: "claims-board" });
   }
 
+  function openClaimDocuments() {
+    const claimName = String(unref(name) || "").trim();
+    if (!claimName) return;
+    router.push({
+      name: "at-documents-list",
+      query: {
+        reference_doctype: "AT Claim",
+        reference_name: claimName,
+      },
+    });
+  }
+
+  function openUploadModal() {
+    showUploadModal.value = true;
+  }
+
+  function closeUploadModal() {
+    showUploadModal.value = false;
+  }
+
+  async function handleUploadComplete() {
+    showUploadModal.value = false;
+    await reload();
+  }
+
+  const canUploadDocuments = computed(() =>
+    Boolean(
+      authStore.can(["doctypes", "AT Claim", "write"]) || authStore.can(["doctypes", "AT Document", "create"])
+    )
+  );
+
   function formatDate(val) {
     if (!val) return "-";
     return new Intl.DateTimeFormat(unref(activeLocale) === "tr" ? "tr-TR" : "en-US").format(new Date(val));
@@ -42,6 +82,18 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
       style: "currency",
       currency: currency || "TRY",
     }).format(Number(val || 0));
+  }
+
+  async function archiveDocument(doc) {
+    return atDocumentLifecycle.archiveDocument(doc, reload);
+  }
+
+  async function restoreDocument(doc) {
+    return atDocumentLifecycle.restoreDocument(doc, reload);
+  }
+
+  async function permanentDeleteDocument(doc) {
+    return atDocumentLifecycle.permanentDeleteDocument(doc, reload);
   }
 
   const heroCells = computed(() => [
@@ -72,6 +124,16 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     t,
     reload,
     backToList,
+    openClaimDocuments,
+    showUploadModal,
+    openUploadModal,
+    closeUploadModal,
+    handleUploadComplete,
+    canUploadDocuments,
+    atDocumentLifecycle,
+    archiveDocument,
+    restoreDocument,
+    permanentDeleteDocument,
     formatDate,
     formatCurrency,
     heroCells,

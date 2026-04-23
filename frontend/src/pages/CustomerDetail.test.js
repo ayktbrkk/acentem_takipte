@@ -8,6 +8,10 @@ import { useAuthStore } from "../stores/auth";
 
 const routerPush = vi.fn();
 
+vi.mock("../utils/documentOpen", () => ({
+  openDocumentInNewTab: vi.fn(async () => true),
+}));
+
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
@@ -56,7 +60,7 @@ vi.mock("frappe-ui", () => ({
               timeline: [{ timestamp: "2026-03-01T10:00:00Z", title: "Call note", meta: "Agent", payload: { content: "Customer called" } }],
             },
             documents: {
-              items: [{ name: "FILE-001", file_name: "kimlik.pdf", creation: "2026-03-09T08:00:00Z", document_kind: "Identity" }],
+              items: [{ name: "FILE-001", file: "FILE-001", file_name: "kimlik.pdf", file_url: "/private/files/kimlik.pdf", file_size: 102400, is_private: 1, is_verified: 1, creation: "2026-03-09T08:00:00Z", document_kind: "Identity", status: "Active", reference_doctype: "AT Customer" }],
             },
             insights: {
               snapshot_date: "2026-03-09",
@@ -96,12 +100,13 @@ const ActionButtonStub = {
 };
 
 const MetaListCardStub = defineComponent({
-  props: ["title", "subtitle"],
+  props: ["title", "subtitle", "description"],
   emits: ["click"],
   template: `
     <article class="meta-list-card-stub" @click="$emit('click')">
       <div class="title">{{ title }}</div>
       <div v-if="subtitle" class="subtitle">{{ subtitle }}</div>
+      <div v-if="description" class="description">{{ description }}</div>
       <slot />
       <slot name="trailing" />
       <slot name="footer" />
@@ -122,6 +127,17 @@ const FieldGroupStub = defineComponent({
 const HeroStripStub = defineComponent({
   props: ["cells"],
   template: `<div><div v-for="cell in cells" :key="cell.label">{{ cell.label }} {{ cell.value }}</div></div>`,
+});
+
+const WorkbenchFileUploadModalStub = defineComponent({
+  props: ["open"],
+  emits: ["close", "uploaded"],
+  template: `
+    <div class="upload-modal-stub" :data-open="String(open)">
+      <button class="modal-stub-close" @click="$emit('close')">Close</button>
+      <button class="modal-stub-uploaded" @click="$emit('uploaded')">Uploaded</button>
+    </div>
+  `,
 });
 
 describe("CustomerDetail page", () => {
@@ -156,7 +172,7 @@ describe("CustomerDetail page", () => {
           SectionPanel: { template: `<section><h2>{{ title }}</h2><slot /><slot name="trailing" /></section>`, props: ["title"] },
           SkeletonLoader: true,
           StatusBadge: true,
-          WorkbenchFileUploadModal: true,
+          WorkbenchFileUploadModal: WorkbenchFileUploadModalStub,
           QuickCreateManagedDialog: true,
         },
       },
@@ -193,6 +209,9 @@ describe("CustomerDetail page", () => {
     await wrapper.findAll(".nav-tab")[3].trigger("click");
     await nextTick();
     expect(wrapper.text()).toContain("kimlik.pdf");
+    expect(wrapper.text()).toContain("100.0 KB");
+    expect(wrapper.text()).toContain("Gizli");
+    expect(wrapper.text()).toContain("Doğrulandı");
   });
 
   it("routes to related records from current actions", async () => {
@@ -207,5 +226,56 @@ describe("CustomerDetail page", () => {
     await nextTick();
     await wrapper.findAll(".meta-list-card-stub")[0].trigger("click");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "policy-detail", params: { name: "POL-001" } });
+  });
+
+  it("routes operations documents action to document center", async () => {
+    const wrapper = mountDetail();
+    await nextTick();
+    await Promise.resolve();
+
+    await wrapper.findAll(".nav-tab")[3].trigger("click");
+    await nextTick();
+
+    const documentCenterButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Doküman Merkezine Git"));
+    expect(documentCenterButton).toBeTruthy();
+    await documentCenterButton.trigger("click");
+
+    expect(routerPush).toHaveBeenLastCalledWith({
+      name: "at-documents-list",
+      query: {
+        reference_doctype: "AT Customer",
+        reference_name: "CUST-001",
+      },
+    });
+  });
+
+  it("shows upload action only when customer document write permission exists", async () => {
+    const wrapperWithoutPermission = mountDetail();
+    await nextTick();
+    await Promise.resolve();
+    await wrapperWithoutPermission.findAll(".nav-tab")[3].trigger("click");
+    await nextTick();
+    expect(wrapperWithoutPermission.findAll(".action-button-stub").some((node) => node.text().includes("Doküman Yükle"))).toBe(false);
+
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+      capabilities: { doctypes: { "AT Customer": { write: true } } },
+    });
+
+    const wrapperWithPermission = mountDetail();
+    await nextTick();
+    await Promise.resolve();
+    await wrapperWithPermission.findAll(".nav-tab")[3].trigger("click");
+    await nextTick();
+    expect(wrapperWithPermission.findAll(".action-button-stub").some((node) => node.text().includes("Doküman Yükle"))).toBe(true);
   });
 });

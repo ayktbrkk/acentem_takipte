@@ -72,6 +72,11 @@
       <!-- Sidebar -->
       <div class="space-y-6">
         <SectionPanel :title="t('customer_details')">
+          <template #trailing>
+            <ActionButton variant="secondary" size="xs" @click="openCustomer">
+              {{ t("customer_details") }}
+            </ActionButton>
+          </template>
           <SkeletonLoader v-if="loading" variant="card" />
           <div v-else @click="openCustomer" class="cursor-pointer group">
             <div class="flex items-center gap-4 mb-4">
@@ -93,30 +98,79 @@
         </SectionPanel>
 
         <SectionPanel :title="t('documents')">
+          <template #trailing>
+            <div class="flex flex-wrap items-center gap-2">
+              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                {{ t("uploadDocument") }}
+              </ActionButton>
+              <ActionButton variant="secondary" size="xs" @click="openPolicyDocuments">
+                {{ t("openDocumentCenter") }}
+              </ActionButton>
+            </div>
+          </template>
           <div v-if="!documents.length && !atDocuments.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
           <div v-else class="space-y-2">
-            <a 
+            <MetaListCard
               v-for="doc in documents" 
               :key="doc.name"
-              :href="doc.file_url"
-              target="_blank"
-              class="flex items-center gap-2 p-2 rounded hover:bg-slate-50 text-sm text-slate-600 transition-colors"
+              :title="doc.file_name || doc.name"
+              :description="formatFileSize(doc.file_size)"
+              :meta="formatDate(doc.creation)"
             >
-              <span class="truncate">{{ doc.file_name }}</span>
-            </a>
-            <a 
+              <template #trailing>
+                <div class="flex items-center gap-2">
+                  <span v-if="isPrivateDocument(doc)" class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                    {{ t("private") }}
+                  </span>
+                  <ActionButton variant="secondary" size="xs" @click="openDocument(doc, 'File')">
+                    {{ t("openDocument") }}
+                  </ActionButton>
+                </div>
+              </template>
+            </MetaListCard>
+            <MetaListCard
               v-for="doc in atDocuments" 
               :key="doc.name"
-              :href="doc.file_url"
-              target="_blank"
-              class="flex items-center gap-2 p-2 rounded hover:bg-slate-50 text-sm text-slate-600 transition-colors"
+              :title="doc.display_name || doc.file_name || doc.name"
+              :subtitle="doc.document_sub_type || doc.document_kind || ''"
+              :description="formatFileSize(doc.file_size)"
+              :meta="formatDate(doc.document_date || doc.creation)"
             >
-              <span class="truncate">{{ doc.display_name || doc.file_name }}</span>
-            </a>
+              <template #trailing>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span v-if="isPrivateDocument(doc)" class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                    {{ t("private") }}
+                  </span>
+                  <span v-if="isVerifiedDocument(doc)" class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+                    {{ t("status_verified") }}
+                  </span>
+                  <ActionButton v-if="canArchiveDocument(doc)" variant="secondary" size="xs" @click="archiveDocument(doc)">
+                    {{ t("archiveDocument") }}
+                  </ActionButton>
+                  <ActionButton v-if="canRestoreDocument(doc)" variant="secondary" size="xs" @click="restoreDocument(doc)">
+                    {{ t("restoreDocument") }}
+                  </ActionButton>
+                  <ActionButton v-if="canPermanentDeleteDocument(doc)" variant="secondary" size="xs" @click="permanentDeleteDocument(doc)">
+                    {{ t("permanentDeleteDocument") }}
+                  </ActionButton>
+                  <ActionButton variant="secondary" size="xs" @click="openDocument(doc, 'AT Document')">
+                    {{ t("openDocument") }}
+                  </ActionButton>
+                </div>
+              </template>
+            </MetaListCard>
           </div>
         </SectionPanel>
       </div>
     </div>
+
+    <WorkbenchFileUploadModal
+      :open="showUploadModal"
+      attached-to-doctype="AT Policy"
+      :attached-to-name="name"
+      @close="closeUploadModal"
+      @uploaded="handleUploadComplete"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -131,6 +185,8 @@ import HeroStrip from "../components/ui/HeroStrip.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -151,8 +207,19 @@ const {
   reload,
   backToList,
   openCustomer,
+  openPolicyDocuments,
+  showUploadModal,
+  openUploadModal,
+  closeUploadModal,
+  handleUploadComplete,
+  canUploadDocuments,
+  atDocumentLifecycle,
+  archiveDocument,
+  restoreDocument,
+  permanentDeleteDocument,
   formatDate,
   formatCurrency,
+  formatFileSize,
   heroCells,
   profileFields,
   customerFields,
@@ -173,4 +240,34 @@ const paymentColumns = computed(() => [
   { key: "amount", label: t("amount"), width: "120px", align: "right" },
   { key: "status", label: t("status"), width: "100px" },
 ]);
+
+async function openDocument(doc, referenceDoctype) {
+  const opened = await openDocumentInNewTab(doc || {}, {
+    referenceDoctype,
+    referenceName: doc?.name || "",
+  });
+
+  if (opened) return;
+  window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
+}
+
+function isPrivateDocument(doc) {
+  return Boolean(doc?.is_private);
+}
+
+function isVerifiedDocument(doc) {
+  return Boolean(doc?.is_verified);
+}
+
+function canArchiveDocument(doc) {
+  return atDocumentLifecycle.canArchiveDocument(doc);
+}
+
+function canRestoreDocument(doc) {
+  return atDocumentLifecycle.canRestoreDocument(doc);
+}
+
+function canPermanentDeleteDocument(doc) {
+  return atDocumentLifecycle.canPermanentDeleteDocument(doc);
+}
 </script>

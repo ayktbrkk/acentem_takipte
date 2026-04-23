@@ -211,9 +211,14 @@
           <template v-if="activeCustomerTab === 'operations'">
              <SectionPanel :title="t('documents')">
                 <template #trailing>
-                  <ActionButton variant="secondary" size="xs" @click="openUploadModal">
-                    {{ t("upload_document") }}
-                  </ActionButton>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                      {{ t("uploadDocument") }}
+                    </ActionButton>
+                    <ActionButton variant="secondary" size="xs" @click="openCustomerDocuments">
+                      {{ t("openDocumentCenter") }}
+                    </ActionButton>
+                  </div>
                 </template>
                 <div v-if="!atDocuments.length" class="at-empty-block">
                   {{ t("no_documents") }}
@@ -224,12 +229,30 @@
                     :key="doc.name"
                     :title="doc.display_name || doc.file_name"
                     :subtitle="doc.document_sub_type || doc.document_kind"
+                    :description="formatFileSize(doc.file_size)"
                   >
                     <template #trailing>
-                       <div class="flex items-center gap-2">
-                         <span v-if="doc.is_verified" class="text-green-600">✓</span>
-                         <p class="text-xs text-slate-500">{{ formatDate(doc.creation) }}</p>
-                       </div>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span v-if="doc.is_private" class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                          {{ t("private") }}
+                        </span>
+                        <span v-if="doc.is_verified" class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+                          {{ t("status_verified") }}
+                        </span>
+                        <p class="text-xs text-slate-500">{{ formatDate(doc.creation) }}</p>
+                        <ActionButton v-if="canArchiveDocument(doc)" variant="secondary" size="xs" @click="archiveDocument(doc)">
+                          {{ t("archiveDocument") }}
+                        </ActionButton>
+                        <ActionButton v-if="canRestoreDocument(doc)" variant="secondary" size="xs" @click="restoreDocument(doc)">
+                          {{ t("restoreDocument") }}
+                        </ActionButton>
+                        <ActionButton v-if="canPermanentDeleteDocument(doc)" variant="secondary" size="xs" @click="permanentDeleteDocument(doc)">
+                          {{ t("permanentDeleteDocument") }}
+                        </ActionButton>
+                        <ActionButton variant="secondary" size="xs" @click="openDocument(doc)">
+                          {{ t("openDocument") }}
+                        </ActionButton>
+                      </div>
                     </template>
                   </MetaListCard>
                 </div>
@@ -265,6 +288,7 @@ import FieldGroup from "../components/ui/FieldGroup.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 
 const props = defineProps({
   name: { type: String, required: true }
@@ -298,6 +322,11 @@ const {
   handleUploadComplete,
   canUploadDocuments,
   atDocumentLifecycle,
+  openCustomerDocuments,
+  archiveDocument,
+  restoreDocument,
+  permanentDeleteDocument,
+  formatFileSize,
   reload,
   backToList,
   openPolicy,
@@ -345,5 +374,26 @@ function claimFacts(c) {
     { label: t("reported_date"), value: formatDate(c.reported_date) },
     { label: t("claim_amount"), value: formatCurrency(c.claim_amount) },
   ];
+}
+
+async function openDocument(doc) {
+  const opened = await openDocumentInNewTab(doc || {}, {
+    referenceDoctype: doc?.reference_doctype || "AT Document",
+    referenceName: doc?.name || "",
+  });
+  if (opened) return;
+  window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
+}
+
+function canArchiveDocument(doc) {
+  return atDocumentLifecycle.canArchiveDocument(doc);
+}
+
+function canRestoreDocument(doc) {
+  return atDocumentLifecycle.canRestoreDocument(doc);
+}
+
+function canPermanentDeleteDocument(doc) {
+  return atDocumentLifecycle.canPermanentDeleteDocument(doc);
 }
 </script>

@@ -16,7 +16,7 @@ from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import convert_to
 from acentem_takipte.acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement import (
     apply_endorsement,
 )
-from acentem_takipte.acentem_takipte.api.dashboard import get_dashboard_kpis
+# Moved local import inside run_backend_smoke_test to avoid circular dependency
 from acentem_takipte.acentem_takipte.tasks import run_renewal_task_job
 from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access
 
@@ -322,6 +322,8 @@ def run_backend_smoke_test() -> dict:
 
         customer.reload()
         policy.reload()
+
+        from acentem_takipte.acentem_takipte.api.dashboard import get_dashboard_kpis
         dashboard = get_dashboard_kpis({"months": 3})
 
         result["created"] = {
