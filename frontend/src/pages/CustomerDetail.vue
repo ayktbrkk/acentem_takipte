@@ -273,7 +273,7 @@
 </template>
 
 <script setup>
-import { computed, ref, unref } from "vue";
+import { computed, defineAsyncComponent, ref, unref } from "vue";
 import { useCustomerDetailRuntime } from "../composables/useCustomerDetailRuntime";
 import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
@@ -281,13 +281,26 @@ import { useAuthStore } from "../stores/auth";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
-import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import FieldGroup from "../components/ui/FieldGroup.vue";
-import HeroStrip from "../components/ui/HeroStrip.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+
+// audit(perf/P-01): Heavy components in the detail view are lazy-loaded to speed up initial route transition.
+const WorkbenchFileUploadModal = defineAsyncComponent(() =>
+  import("../components/aux-workbench/WorkbenchFileUploadModal.vue")
+);
+const SectionPanel = defineAsyncComponent(() =>
+  import("../components/app-shell/SectionPanel.vue")
+);
+const FieldGroup = defineAsyncComponent(() =>
+  import("../components/ui/FieldGroup.vue")
+);
+const HeroStrip = defineAsyncComponent(() =>
+  import("../components/ui/HeroStrip.vue")
+);
+const StatusBadge = defineAsyncComponent(() =>
+  import("../components/ui/StatusBadge.vue")
+);
+const SkeletonLoader = defineAsyncComponent(() =>
+  import("../components/ui/SkeletonLoader.vue")
+);
 import { openDocumentInNewTab } from "../utils/documentOpen";
 
 const props = defineProps({
