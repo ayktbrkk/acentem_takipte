@@ -39,7 +39,7 @@ def build_policy_360_payload(name: str) -> dict:
         limit_page_length=100,
     )
 
-    return {
+    payload = {
         "policy": policy,
         "customer": customer,
         "endorsements": _get_rows(

@@ -209,7 +209,7 @@ def build_customer_360_payload(
         insight_payload=insights_payload,
     )
 
-    return {
+    payload = {
         "customer": _serialize_customer(
             customer, can_view_sensitive=can_view_sensitive
         ),
