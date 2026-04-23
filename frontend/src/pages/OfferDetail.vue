@@ -104,21 +104,40 @@
         </SectionPanel>
 
         <SectionPanel :title="t('documents')">
+          <template #trailing>
+            <div class="flex flex-wrap items-center gap-2">
+              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                {{ t("uploadDocument") }}
+              </ActionButton>
+              <ActionButton variant="secondary" size="xs" @click="openOfferDocuments">
+                {{ t("openDocumentCenter") }}
+              </ActionButton>
+            </div>
+          </template>
           <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
           <div v-else class="space-y-2">
-            <a 
+            <div 
               v-for="doc in documents" 
               :key="doc.name"
-              :href="doc.file_url"
-              target="_blank"
-              class="flex items-center gap-2 p-2 rounded hover:bg-slate-50 text-sm text-slate-600 transition-colors"
+              class="flex items-center justify-between gap-3 p-2 rounded hover:bg-slate-50 text-sm text-slate-600 transition-colors"
             >
               <span class="truncate">{{ doc.file_name }}</span>
-            </a>
+              <ActionButton variant="secondary" size="xs" @click="openDocument(doc)">
+                {{ t("openDocument") }}
+              </ActionButton>
+            </div>
           </div>
         </SectionPanel>
       </div>
     </div>
+
+    <WorkbenchFileUploadModal
+      :open="showUploadModal"
+      attached-to-doctype="AT Offer"
+      :attached-to-name="name"
+      @close="closeUploadModal"
+      @uploaded="handleUploadComplete"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -131,6 +150,8 @@ import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import HeroStrip from "../components/ui/HeroStrip.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -146,10 +167,16 @@ const {
   documents,
   relatedOffers,
   relatedPolicies,
+  showUploadModal,
   loading,
   t,
   reload,
   backToList,
+  openOfferDocuments,
+  openUploadModal,
+  closeUploadModal,
+  handleUploadComplete,
+  canUploadDocuments,
   openPolicy,
   openOffer,
   openCustomer,
@@ -162,4 +189,11 @@ const {
   name: computed(() => props.name),
   activeLocale 
 });
+
+async function openDocument(doc) {
+  await openDocumentInNewTab(doc || {}, {
+    referenceDoctype: "AT Offer",
+    referenceName: props.name,
+  });
+}
 </script>

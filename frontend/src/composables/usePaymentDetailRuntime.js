@@ -2,9 +2,11 @@ import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
+import { useAuthStore } from "../stores/auth";
 
 export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
+  const authStore = useAuthStore();
 
   function t(key) {
     return translateText(key, activeLocale);
@@ -18,7 +20,8 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   const data = computed(() => unref(paymentResource.data) || {});
   const payment = computed(() => data.value.payment || {});
   const installments = computed(() => data.value.installments || []);
-  const documents = computed(() => data.value.documents || []);
+  const documents = computed(() => data.value.documents || data.value.files || []);
+  const showUploadModal = ref(false);
 
   const loading = computed(() => paymentResource.loading);
 
@@ -29,8 +32,60 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   function backToList() {
-    router.push({ name: "payments-board" });
+    router.push("/payments");
   }
+
+  function openCustomer() {
+    const customerName = String(payment.value.customer || "").trim();
+    if (!customerName) return;
+    router.push({ name: "customer-detail", params: { name: customerName } });
+  }
+
+  function openReminder() {
+    const paymentName = String(unref(name) || payment.value.name || "").trim();
+    if (!paymentName) return;
+    router.push({
+      name: "communication-center",
+      query: {
+        payment: paymentName,
+        mode: "reminder",
+      },
+    });
+  }
+
+  function openPaymentDocuments() {
+    const paymentName = String(unref(name) || payment.value.name || "").trim();
+    if (!paymentName) return;
+    router.push({
+      name: "at-documents-list",
+      query: {
+        reference_doctype: "AT Payment",
+        reference_name: paymentName,
+      },
+    });
+  }
+
+  function openCollectPayment() {
+    const paymentName = String(unref(name) || payment.value.name || "").trim();
+    router.push({ name: "payments-board", query: paymentName ? { collect: paymentName } : {} });
+  }
+
+  function openUploadModal() {
+    showUploadModal.value = true;
+  }
+
+  function closeUploadModal() {
+    showUploadModal.value = false;
+  }
+
+  async function handleUploadComplete() {
+    showUploadModal.value = false;
+    await reload();
+  }
+
+  const canUploadDocuments = computed(() =>
+    Boolean(authStore.can(["doctypes", "AT Payment", "write"]) || authStore.can(["doctypes", "AT Document", "create"]))
+  );
 
   function formatDate(val) {
     if (!val) return "-";
@@ -67,10 +122,19 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
     payment,
     installments,
     documents,
+    showUploadModal,
     loading,
     t,
     reload,
     backToList,
+    openCustomer,
+    openReminder,
+    openPaymentDocuments,
+    openCollectPayment,
+    openUploadModal,
+    closeUploadModal,
+    handleUploadComplete,
+    canUploadDocuments,
     formatDate,
     formatCurrency,
     heroCells,

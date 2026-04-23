@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
 import { nextTick, ref } from "vue";
 
 import PaymentDetail from "./PaymentDetail.vue";
+import { useAuthStore } from "../stores/auth";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 
 const resourceQueue = [];
 const routerPush = vi.fn();
@@ -11,6 +14,10 @@ vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
   createWebHistory: vi.fn(() => ({})),
   useRouter: () => ({ push: routerPush }),
+}));
+
+vi.mock("../utils/documentOpen", () => ({
+  openDocumentInNewTab: vi.fn(async () => true),
 }));
 
 vi.mock("frappe-ui", () => ({
@@ -63,63 +70,85 @@ describe("PaymentDetail page", () => {
   beforeEach(() => {
     resourceQueue.length = 0;
     routerPush.mockReset();
+    setActivePinia(createPinia());
+    vi.mocked(openDocumentInNewTab).mockClear();
 
-    const paymentData = ref({
-      name: "PAY-001",
-      payment_no: "T-001",
-      customer: "CUST-001",
-      policy: "POL-001",
-      claim: "CLM-001",
-      office_branch: "IST",
-      sales_entity: "S-001",
-      payment_direction: "Inbound",
-      payment_purpose: "Premium Collection",
-      status: "Draft",
-      payment_date: "2026-03-18",
-      due_date: "2026-04-01",
-      installment_count: 3,
-      installment_interval_days: 30,
-      currency: "TRY",
-      fx_rate: 1,
-      fx_date: "2026-03-17",
-      amount: 3000,
-      amount_try: 3000,
-      reference_no: "REF-001",
-      notes: "Açıklama notu",
-      owner: "agent@example.com",
-      creation: "2026-03-10T08:00:00Z",
-      modified: "2026-03-18T10:00:00Z",
-      modified_by: "agent@example.com",
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      capabilities: {
+        doctypes: {
+          "AT Payment": { write: true },
+          "AT Document": { create: true },
+        },
+      },
     });
 
-    const installmentData = ref([
-      {
-        name: "PINST-001",
-        installment_no: 1,
+    const paymentData = ref({
+      payment: {
+        name: "PAY-001",
+        payment_no: "T-001",
+        customer: "CUST-001",
+        customer_name: "Aykut Bekir",
+        policy: "POL-001",
+        claim: "CLM-001",
+        office_branch: "IST",
+        sales_entity: "S-001",
+        payment_direction: "Inbound",
+        payment_purpose: "Premium Collection",
+        status: "Draft",
+        payment_date: "2026-03-18",
+        due_date: "2026-04-01",
         installment_count: 3,
-        status: "Paid",
-        due_date: "2026-03-18",
-        paid_on: "2026-03-18",
-        amount_try: 1000,
+        installment_interval_days: 30,
+        currency: "TRY",
+        fx_rate: 1,
+        fx_date: "2026-03-17",
+        amount: 3000,
+        amount_try: 3000,
+        reference_no: "REF-001",
+        notes: "Açıklama notu",
+        owner: "agent@example.com",
+        creation: "2026-03-10T08:00:00Z",
+        modified: "2026-03-18T10:00:00Z",
+        modified_by: "agent@example.com",
       },
-      {
-        name: "PINST-002",
-        installment_no: 2,
-        installment_count: 3,
-        status: "Scheduled",
-        due_date: "2026-04-18",
-        paid_on: null,
-        amount_try: 1000,
-      },
-    ]);
-
-    const documentData = ref([
-      {
-        name: "FILE-001",
-        file_name: "dekont.pdf",
-        creation: "2026-03-18T09:00:00Z",
-      },
-    ]);
+      installments: [
+        {
+          name: "PINST-001",
+          installment_no: 1,
+          installment_count: 3,
+          status: "Paid",
+          due_date: "2026-03-18",
+          paid_on: "2026-03-18",
+          amount: 1000,
+          currency: "TRY",
+        },
+        {
+          name: "PINST-002",
+          installment_no: 2,
+          installment_count: 3,
+          status: "Scheduled",
+          due_date: "2026-04-18",
+          paid_on: null,
+          amount: 1000,
+          currency: "TRY",
+        },
+      ],
+      documents: [
+        {
+          name: "FILE-001",
+          file_name: "dekont.pdf",
+          file_url: "/files/dekont.pdf",
+          creation: "2026-03-18T09:00:00Z",
+        },
+      ],
+    });
 
     resourceQueue.push(
       {
@@ -128,21 +157,7 @@ describe("PaymentDetail page", () => {
         error: ref(null),
         params: {},
         reload: vi.fn(async () => paymentData.value),
-      },
-      {
-        data: installmentData,
-        loading: ref(false),
-        error: ref(null),
-        params: {},
-        reload: vi.fn(async () => installmentData.value),
-      },
-      {
-        data: documentData,
-        loading: ref(false),
-        error: ref(null),
-        params: {},
-        reload: vi.fn(async () => documentData.value),
-      },
+      }
     );
   });
 
@@ -155,6 +170,8 @@ describe("PaymentDetail page", () => {
           HeroStrip: HeroStripStub,
           SectionPanel: SectionPanelStub,
           FieldGroup: FieldGroupStub,
+          SkeletonLoader: true,
+          WorkbenchFileUploadModal: { template: `<div class="upload-modal-stub"></div>` },
         },
       },
     });
@@ -195,5 +212,11 @@ describe("PaymentDetail page", () => {
         name: "CUST-001",
       },
     });
+
+    await buttons.find((button) => button.text().includes("Dokümanı Aç")).trigger("click");
+    expect(openDocumentInNewTab).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "FILE-001", file_name: "dekont.pdf" }),
+      expect.objectContaining({ referenceDoctype: "AT Payment", referenceName: "PAY-001" })
+    );
   });
 });

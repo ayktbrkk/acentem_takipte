@@ -1,7 +1,7 @@
 <template>
   <WorkbenchPageLayout
     :breadcrumb="t('payments_breadcrumb')"
-    :title="t('payment_detail')"
+    :title="detailCopy.paymentTitle"
     :subtitle="payment.payment_no || payment.name"
   >
     <template #actions>
@@ -23,7 +23,7 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-6">
-        <SectionPanel :title="t('overview')">
+        <SectionPanel :title="detailCopy.paymentInfoTitle">
           <SkeletonLoader v-if="loading" variant="text" :rows="8" />
           <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div v-for="field in profileFields" :key="field.label">
@@ -33,7 +33,28 @@
           </div>
         </SectionPanel>
 
-        <SectionPanel v-if="installments.length" :title="t('installments')">
+        <SectionPanel :title="detailCopy.financialSummaryTitle">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p class="text-sm font-medium text-slate-500">{{ t("amount") }}</p>
+              <p class="mt-1 text-base font-semibold text-slate-900">{{ formatCurrency(payment.amount, payment.currency) }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-500">{{ t("status") }}</p>
+              <p class="mt-1 text-base font-semibold text-slate-900">{{ payment.status || "-" }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-500">{{ t("policy") }}</p>
+              <p class="mt-1 text-base font-semibold text-slate-900">{{ payment.policy || "-" }}</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-500">{{ t("claim_detail") }}</p>
+              <p class="mt-1 text-base font-semibold text-slate-900">{{ payment.claim || "-" }}</p>
+            </div>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel v-if="installments.length" :title="detailCopy.paymentPlanTitle">
           <ListTable
             :columns="installmentColumns"
             :rows="installments"
@@ -55,6 +76,11 @@
       <!-- Sidebar -->
       <div class="space-y-6">
         <SectionPanel :title="t('customer_details')">
+          <template #trailing>
+            <ActionButton variant="secondary" size="xs" @click="openCustomer">
+              {{ detailCopy.openCustomerLabel }}
+            </ActionButton>
+          </template>
           <SkeletonLoader v-if="loading" variant="card" />
           <div v-else class="space-y-4">
             <div class="flex items-center gap-4">
@@ -69,22 +95,47 @@
           </div>
         </SectionPanel>
 
-        <SectionPanel :title="t('documents')">
+        <SectionPanel :title="detailCopy.receiptTitle">
+          <template #trailing>
+            <div class="flex flex-wrap items-center gap-2">
+              <ActionButton variant="secondary" size="xs" @click="openCollectPayment">
+                {{ t("collectPayment") }}
+              </ActionButton>
+              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                {{ t("addReceipt") }}
+              </ActionButton>
+              <ActionButton variant="secondary" size="xs" @click="openReminder">
+                {{ t("sendReminder") }}
+              </ActionButton>
+              <ActionButton variant="secondary" size="xs" @click="openPaymentDocuments">
+                {{ t("openDocumentCenter") }}
+              </ActionButton>
+            </div>
+          </template>
           <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
           <div v-else class="space-y-2">
-            <a 
+            <div 
               v-for="doc in documents" 
               :key="doc.name"
-              :href="doc.file_url"
-              target="_blank"
-              class="flex items-center gap-2 p-2 rounded hover:bg-slate-50 text-sm text-slate-600 transition-colors"
+              class="flex items-center justify-between gap-3 p-2 rounded hover:bg-slate-50 text-sm text-slate-600 transition-colors"
             >
               <span class="truncate">{{ doc.display_name || doc.file_name }}</span>
-            </a>
+              <ActionButton variant="secondary" size="xs" @click="openDocument(doc)">
+                {{ t("openDocument") }}
+              </ActionButton>
+            </div>
           </div>
         </SectionPanel>
       </div>
     </div>
+
+    <WorkbenchFileUploadModal
+      :open="showUploadModal"
+      attached-to-doctype="AT Payment"
+      :attached-to-name="name"
+      @close="closeUploadModal"
+      @uploaded="handleUploadComplete"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -99,6 +150,8 @@ import HeroStrip from "../components/ui/HeroStrip.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
+import { openDocumentInNewTab } from "../utils/documentOpen";
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -106,15 +159,44 @@ const props = defineProps({
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
+const detailCopy = computed(() => {
+  const isTurkish = String(activeLocale.value || "tr").toLowerCase().startsWith("tr");
+  return isTurkish
+    ? {
+        paymentTitle: "Ödeme Bilgileri",
+        paymentInfoTitle: "Ödeme Bilgileri",
+        financialSummaryTitle: "Finansal Özet",
+        paymentPlanTitle: "Ödeme Planı",
+        receiptTitle: "Dekont / Fatura",
+        openCustomerLabel: "Müşteri kaydını aç",
+      }
+    : {
+        paymentTitle: "Payment Details",
+        paymentInfoTitle: "Payment Information",
+        financialSummaryTitle: "Financial Summary",
+        paymentPlanTitle: "Payment Plan",
+        receiptTitle: "Receipt / Invoice",
+        openCustomerLabel: "Open customer record",
+      };
+});
 
 const {
   payment,
   installments,
   documents,
+  showUploadModal,
   loading,
   t,
   reload,
   backToList,
+  openCustomer,
+  openReminder,
+  openPaymentDocuments,
+  openCollectPayment,
+  openUploadModal,
+  closeUploadModal,
+  handleUploadComplete,
+  canUploadDocuments,
   formatDate,
   formatCurrency,
   heroCells,
@@ -123,6 +205,13 @@ const {
   name: computed(() => props.name),
   activeLocale 
 });
+
+async function openDocument(doc) {
+  await openDocumentInNewTab(doc || {}, {
+    referenceDoctype: "AT Payment",
+    referenceName: props.name,
+  });
+}
 
 const installmentColumns = computed(() => [
   { key: "installment_no", label: t("installment_no"), width: "100px" },

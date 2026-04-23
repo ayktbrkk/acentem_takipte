@@ -2,9 +2,85 @@ import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
+import { useAuthStore } from "../stores/auth";
+
+// --- Exported helper functions ---
+
+export function leadAgeDays(dateStr) {
+  if (!dateStr) return 0;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+export function leadStaleState(lead) {
+  const days = leadAgeDays(lead?.modified || lead?.creation);
+  if (days < 7) return "Fresh";
+  if (days < 14) return "FollowUp";
+  if (days < 30) return "Aging";
+  return "Stale";
+}
+
+export function leadStaleLabel(state, locale = "tr") {
+  const labels = {
+    tr: { Fresh: "Güncel", FollowUp: "Takip Et", Aging: "Eskiyor", Stale: "Eski" },
+    en: { Fresh: "Fresh", FollowUp: "Follow Up", Aging: "Aging", Stale: "Stale" },
+  };
+  return (labels[locale] || labels.en)[state] || state;
+}
+
+export function canConvertLead(lead) {
+  if (!lead) return false;
+  if (lead.status !== "Open") return false;
+  return !!(
+    lead.customer &&
+    lead.sales_entity &&
+    lead.insurance_company &&
+    lead.branch &&
+    Number(lead.estimated_gross_premium) > 0
+  );
+}
+
+export function leadConversionState(lead) {
+  if (!lead) return "None";
+  if (lead.converted_policy) return "Policy";
+  if (lead.converted_offer) return "Offer";
+  if (lead.status === "Closed") return "Closed";
+  return "None";
+}
+
+export function leadConversionMissingFields(lead, t = (k) => k) {
+  const required = ["customer", "sales_entity", "insurance_company", "branch", "estimated_gross_premium"];
+  return required.filter((f) => !lead[f]);
+}
+
+export function mapLeadStatusTone(status) {
+  const map = {
+    Open: "waiting",
+    Converted: "active",
+    Closed: "default",
+    Lost: "warning",
+  };
+  return map[status] || "default";
+}
+
+export function mapLeadStaleTone(state) {
+  const map = { Fresh: "active", FollowUp: "waiting", Aging: "warning", Stale: "waiting" };
+  return map[state] || "default";
+}
+
+export function parseLeadActionError(err) {
+  if (!err) return "";
+  if (err.response?.message) {
+    return err.response.message.replace(/<[^>]+>/g, "").trim();
+  }
+  return err.message || String(err);
+}
+
+// --- Composable ---
 
 export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
+  const authStore = useAuthStore();
 
   function t(key) {
     return translateText(key, activeLocale);
@@ -19,7 +95,7 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   const lead = computed(() => data.value.lead || {});
   const customer = computed(() => data.value.customer || {});
   const activity = computed(() => data.value.activity || []);
-  const documents = computed(() => data.value.files || []);
+  const documents = computed(() => data.value.documents || data.value.files || []);
   const offers = computed(() => data.value.offers || []);
   const policies = computed(() => data.value.policies || []);
 
@@ -53,6 +129,32 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
     if (lead.value.customer) {
       router.push({ name: "customer-detail", params: { name: lead.value.customer } });
     }
+  }
+
+  // Document actions
+  const showUploadModal = ref(false);
+
+  const canUploadDocuments = computed(() => {
+    return authStore.can("AT Lead", "write");
+  });
+
+  function openLeadDocuments() {
+    const leadName = unref(name);
+    if (!leadName) return;
+    router.push({ name: "at-documents-list", query: { reference_doctype: "AT Lead", reference_name: leadName } });
+  }
+
+  function openUploadModal() {
+    showUploadModal.value = true;
+  }
+
+  function closeUploadModal() {
+    showUploadModal.value = false;
+  }
+
+  async function handleUploadComplete() {
+    closeUploadModal();
+    await reload();
   }
 
   function formatDate(val) {
@@ -111,6 +213,12 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
     heroCells,
     profileFields,
     customerFields,
+    showUploadModal,
+    canUploadDocuments,
+    openLeadDocuments,
+    openUploadModal,
+    closeUploadModal,
+    handleUploadComplete,
   };
 }
 

@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { defineComponent, nextTick, ref } from "vue";
 
-import OfferDetail from "./OfferDetail.vue";
+import LeadDetail from "./LeadDetail.vue";
 import { useAuthStore } from "../stores/auth";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 
@@ -17,7 +17,7 @@ vi.mock("../utils/documentOpen", () => ({
 vi.mock("vue-router", () => ({
   useRouter: () => ({
     push: routerPush,
-    currentRoute: ref({ fullPath: "/at/offers/OF-001" }),
+    currentRoute: ref({ fullPath: "/at/leads/LEAD-001" }),
   }),
 }));
 
@@ -38,23 +38,21 @@ vi.mock("frappe-ui", () => ({
       ...extra,
     });
 
-    if (url.includes("get_offer_detail_payload")) {
+    if (url.includes("get_lead_detail_payload")) {
       return makeResource({
         reload: vi.fn(async () => {
           payloadReload();
           const payload = {
-            offer: {
-              name: "OF-001",
-              offer_no: "OFF-1001",
+            lead: {
+              name: "LEAD-001",
+              first_name: "Aykut",
+              last_name: "Bekir",
               customer: "CUST-001",
-              customer_name: "Aykut Bekir",
-              branch: "Kasko",
-              insurance_company: "Anadolu",
-              status: "Sent",
-              offer_date: "2026-03-10",
-              valid_until: "2026-03-25",
-              currency: "TRY",
-              gross_premium: 12500,
+              phone: "05550000000",
+              email: "aykut@example.com",
+              industry: "Finance",
+              status: "Open",
+              creation: "2026-01-01",
             },
             customer: {
               name: "CUST-001",
@@ -62,30 +60,15 @@ vi.mock("frappe-ui", () => ({
               phone: "05550000000",
               email: "aykut@example.com",
             },
-            related_offers: [
-              { name: "OF-002", status: "Sent", gross_premium: 1234, currency: "TRY" },
-            ],
-            related_policies: [
-              { name: "POL-001", status: "Active", gross_premium: 5555, currency: "TRY" },
-            ],
-            notification_drafts: [{ name: "ND-001" }],
-            notification_outbox: [{ name: "NO-001" }],
-            payments: [{ name: "PAY-001" }],
-            renewals: [{ name: "REN-001" }],
+            offers: [],
+            policies: [],
             activity: [],
-            source_lead: { name: "LEAD-001", display_name: "Lead One" },
-            linked_policy: { name: "POL-001", policy_no: "P-100" },
-            coverages: [{ name: "COV-001", coverage_name: "Collision", limit: 25000, premium: 250 }],
-            documents: [{ name: "FILE-001", file_name: "offer.pdf", file_url: "/files/offer.pdf" }],
+            documents: [{ name: "FILE-001", file_name: "lead.pdf", file_url: "/files/lead.pdf" }],
           };
           data.value = payload;
           return payload;
         }),
       });
-    }
-
-    if (url.includes("frappe.client.get_list")) {
-      return makeResource();
     }
 
     return makeResource();
@@ -98,7 +81,7 @@ const ActionButtonStub = {
 };
 
 const GenericStub = {
-  template: `<div><slot /><slot name="trailing" /></div>`,
+  template: `<div><slot /><slot name="actions" /><slot name="trailing" /></div>`,
 };
 
 const HeroStripStub = defineComponent({
@@ -117,7 +100,7 @@ const WorkbenchFileUploadModalStub = defineComponent({
   `,
 });
 
-describe("OfferDetail", () => {
+describe("LeadDetail", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     routerPush.mockReset();
@@ -133,7 +116,7 @@ describe("OfferDetail", () => {
       locale: "en",
       capabilities: {
         doctypes: {
-          "AT Offer": { write: true },
+          "AT Lead": { write: true },
           "AT Document": { create: true },
         },
       },
@@ -141,8 +124,8 @@ describe("OfferDetail", () => {
   });
 
   function mountDetail() {
-    return mount(OfferDetail, {
-      props: { name: "OF-001" },
+    return mount(LeadDetail, {
+      props: { name: "LEAD-001" },
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
@@ -156,43 +139,42 @@ describe("OfferDetail", () => {
     });
   }
 
-  it("renders offer detail data and document actions", async () => {
+  it("renders lead detail data and document actions", async () => {
     const wrapper = mountDetail();
 
     await nextTick();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Offer Detail");
-    expect(wrapper.text()).toContain("offer.pdf");
+    expect(wrapper.text()).toContain("lead.pdf");
     expect(wrapper.text()).toContain("Upload Document");
     expect(wrapper.text()).toContain("Open Document Center");
     expect(wrapper.text()).toContain("Open Document");
     expect(payloadReload).toHaveBeenCalled();
   });
 
-  it("routes offer documents action and opens document records", async () => {
+  it("routes lead documents action and opens document records", async () => {
     const wrapper = mountDetail();
 
     await nextTick();
     await Promise.resolve();
 
     const buttons = wrapper.findAll(".action-button-stub");
-    const documentCenterButton = buttons.find((button) => button.text().includes("Open Document Center"));
-    const openDocumentButton = buttons.find((button) => button.text().includes("Open Document"));
+    const documentCenterButton = buttons.find((btn) => btn.text().includes("Open Document Center"));
+    const openDocumentButton = buttons.find((btn) => btn.text().includes("Open Document") && !btn.text().includes("Center"));
 
     await documentCenterButton.trigger("click");
     expect(routerPush).toHaveBeenCalledWith({
       name: "at-documents-list",
       query: {
-        reference_doctype: "AT Offer",
-        reference_name: "OF-001",
+        reference_doctype: "AT Lead",
+        reference_name: "LEAD-001",
       },
     });
 
     await openDocumentButton.trigger("click");
     expect(openDocumentInNewTab).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "FILE-001", file_name: "offer.pdf" }),
-      expect.objectContaining({ referenceDoctype: "AT Offer", referenceName: "OF-001" })
+      expect.objectContaining({ name: "FILE-001", file_name: "lead.pdf" }),
+      expect.objectContaining({ referenceDoctype: "AT Lead", referenceName: "LEAD-001" })
     );
   });
 
@@ -202,7 +184,7 @@ describe("OfferDetail", () => {
     await nextTick();
     await Promise.resolve();
 
-    const uploadButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Upload Document"));
+    const uploadButton = wrapper.findAll(".action-button-stub").find((btn) => btn.text().includes("Upload"));
     await uploadButton.trigger("click");
     await nextTick();
 

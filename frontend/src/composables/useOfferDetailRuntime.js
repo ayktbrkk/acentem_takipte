@@ -2,9 +2,11 @@ import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
+import { useAuthStore } from "../stores/auth";
 
 export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
+  const authStore = useAuthStore();
 
   function t(key) {
     return translateText(key, activeLocale);
@@ -19,9 +21,10 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   const offer = computed(() => data.value.offer || {});
   const customer = computed(() => data.value.customer || {});
   const activity = computed(() => data.value.activity || []);
-  const documents = computed(() => data.value.files || []);
+  const documents = computed(() => data.value.documents || data.value.files || []);
   const relatedOffers = computed(() => data.value.related_offers || []);
   const relatedPolicies = computed(() => data.value.related_policies || []);
+  const showUploadModal = ref(false);
 
   const loading = computed(() => offerResource.loading);
 
@@ -34,6 +37,35 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   function backToList() {
     router.push({ name: "offer-board" });
   }
+
+  function openOfferDocuments() {
+    const offerName = String(unref(name) || "").trim();
+    if (!offerName) return;
+    router.push({
+      name: "at-documents-list",
+      query: {
+        reference_doctype: "AT Offer",
+        reference_name: offerName,
+      },
+    });
+  }
+
+  function openUploadModal() {
+    showUploadModal.value = true;
+  }
+
+  function closeUploadModal() {
+    showUploadModal.value = false;
+  }
+
+  async function handleUploadComplete() {
+    showUploadModal.value = false;
+    await reload();
+  }
+
+  const canUploadDocuments = computed(() =>
+    Boolean(authStore.can(["doctypes", "AT Offer", "write"]) || authStore.can(["doctypes", "AT Document", "create"]))
+  );
 
   function openPolicy(policyName) {
     router.push({ name: "policy-detail", params: { name: policyName } });
@@ -93,10 +125,16 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
     documents,
     relatedOffers,
     relatedPolicies,
+    showUploadModal,
     loading,
     t,
     reload,
     backToList,
+    openOfferDocuments,
+    openUploadModal,
+    closeUploadModal,
+    handleUploadComplete,
+    canUploadDocuments,
     openPolicy,
     openOffer,
     openCustomer,
