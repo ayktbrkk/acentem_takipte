@@ -19,9 +19,6 @@ from acentem_takipte.acentem_takipte.services.branches import (
     user_can_access_all_office_branches,
 )
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
-from acentem_takipte.acentem_takipte.services.customer_360 import (
-    invalidate_customer_360_cache,
-)
 
 SENSITIVE_ROLES = {"System Manager", "Manager", "Accountant"}
 CUSTOMER_TYPES = {"Individual", "Corporate"}
@@ -34,10 +31,12 @@ class ATCustomer(Document):
         self.name = make_autoname("AT-CUST-.YYYY.-.######")
 
     def on_update(self):
-        invalidate_customer_360_cache(self.name)
+        # Cache invalidation handled by hooks.py (_c360) — no direct call needed.
+        pass
 
     def on_trash(self):
-        invalidate_customer_360_cache(self.name)
+        # Cache invalidation handled by hooks.py (_c360) — no direct call needed.
+        pass
 
     def validate(self):
         self.customer_type = normalize_customer_type(self.customer_type, self.tax_id)

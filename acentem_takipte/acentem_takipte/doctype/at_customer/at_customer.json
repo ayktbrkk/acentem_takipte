@@ -38,6 +38,7 @@
    "label": "TC Kimlik No / Vergi No",
    "permlevel": 1,
    "reqd": 1,
+   "search_index": 1,
    "unique": 1
   },
   {
