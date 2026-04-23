@@ -14,9 +14,6 @@ from acentem_takipte.acentem_takipte.policy_documents import (
 )
 from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
-from acentem_takipte.acentem_takipte.services.policy_360 import (
-    invalidate_policy_360_cache,
-)
 
 POLICY_SNAPSHOT_FIELDS = [
     "name",
@@ -49,10 +46,12 @@ class ATPolicy(Document):
         self.name = make_autoname("AT-POL-.YYYY.-.######")
 
     def on_update(self):
-        invalidate_policy_360_cache(self.name)
+        # Cache invalidation handled by hooks.py (_p360) — no direct call needed.
+        pass
 
     def on_trash(self):
-        invalidate_policy_360_cache(self.name)
+        # Cache invalidation handled by hooks.py (_p360) — no direct call needed.
+        pass
 
     def validate(self):
         self.policy_no = (self.policy_no or "").strip() or None
@@ -203,7 +202,8 @@ class ATPolicy(Document):
 
 
 def fetch_tcmb_rate(currency: str, reference_date):
-    for day_offset in range(0, 8):
+    # 5-day window covers weekends + 1 holiday buffer; 8 was excessive.
+    for day_offset in range(0, 5):
         lookup_date = add_days(reference_date, -day_offset)
         rate = _fetch_tcmb_rate_for_day(currency, lookup_date)
         if rate:
@@ -222,7 +222,7 @@ def _fetch_tcmb_rate_for_day(currency: str, lookup_date):
     url = f"https://www.tcmb.gov.tr/kurlar/{monthly_folder}/{daily_file}.xml"
 
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=3)
         response.raise_for_status()
         xml_payload = response.content
     except requests.exceptions.RequestException:

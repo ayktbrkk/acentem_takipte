@@ -71,7 +71,8 @@
    "fieldtype": "Link",
    "label": "Insurance Company",
    "options": "AT Insurance Company",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "branch",
