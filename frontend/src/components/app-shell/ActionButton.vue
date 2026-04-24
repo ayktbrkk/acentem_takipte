@@ -46,7 +46,7 @@ const buttonClass = computed(() => {
   }
 
   if (props.variant === "primary") {
-    return `${base} bg-slate-900 text-white hover:bg-slate-800${sizeClass}`;
+    return `${base} bg-brand-600 text-white hover:bg-brand-700 shadow-sm active:scale-95 transition-all duration-200${sizeClass}`;
   }
 
   return `${base} border border-slate-300 text-slate-700 hover:bg-slate-100${sizeClass}`;

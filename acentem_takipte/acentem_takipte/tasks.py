@@ -22,14 +22,15 @@ from acentem_takipte.acentem_takipte.services.payments import build_payment_remi
 from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_scheduled_reports
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
+from acentem_takipte.acentem_takipte.renewal.service import (
+    build_renewal_key,
+    RENEWAL_LOOKAHEAD_DAYS,
+    MAX_POLICIES_PER_RUN,
+    MAX_PAYMENTS_PER_RUN,
+)
 
-RENEWAL_LOOKAHEAD_DAYS = 90
-MAX_POLICIES_PER_RUN = 2000
-MAX_PAYMENTS_PER_RUN = 2000
-
-
-def build_renewal_key(policy_name: str, due_date) -> str:
-    return f"{policy_name}::{getdate(due_date).isoformat()}"
+# RENEWAL_LOOKAHEAD_DAYS and build_renewal_key are now imported from renewal.service
+# to avoid duplication across the task runner and the service layer.
 
 
 def _extract_job_id(job: Any) -> str | None:

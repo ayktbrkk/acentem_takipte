@@ -253,13 +253,6 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useDashboardStore } from "../stores/dashboard";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import ActionToolbarGroup from "../components/app-shell/ActionToolbarGroup.vue";
-import FilterChipButton from "../components/app-shell/FilterChipButton.vue";
-import ProgressMetricRow from "../components/app-shell/ProgressMetricRow.vue";
-import TrendMetricRow from "../components/app-shell/TrendMetricRow.vue";
-import EntityPreviewCard from "../components/app-shell/EntityPreviewCard.vue";
-import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import DashboardHeader from "../components/dashboard/DashboardHeader.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
@@ -328,7 +321,6 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const dashboardStore = useDashboardStore();
 const DASHBOARD_TAB_STORAGE_KEY = "at.dashboard.active-tab";
-let dashboardRouteReady = false;
 
 function readPersistedDashboardTab() {
   if (typeof window === "undefined") {
@@ -365,13 +357,6 @@ const quickLeadDialogTitle = computed(() => getLocalizedText(quickLeadConfig?.ti
 // i18n: Local copy removed, using centralized i18n util.
 function t(key) {
   return translateText(key, activeLocale);
-}
-
-
-};
-
-function t(key) {
-  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
 }
 
 const rangeOptions = [1, 7, 15, 30];
@@ -519,7 +504,6 @@ const createLeadResource = createResource({
 const localeCode = computed(() => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"));
 const dashboardTabPayload = computed(() => dashboardStore.state.tabPayload || {});
 const dashboardTabCards = computed(() => dashboardTabPayload.value.cards || {});
-const dashboardTabCompareCards = computed(() => dashboardTabPayload.value.compare_cards || {});
 const dashboardTabMetrics = computed(() => dashboardTabPayload.value.metrics || {});
 const dashboardTabSeries = computed(() => dashboardTabPayload.value.series || {});
 const dashboardTabPreviews = computed(() => dashboardTabPayload.value.previews || {});
@@ -581,7 +565,6 @@ const {
   myActivitiesLoading,
   myRemindersLoading,
   myTasksLoading,
-  readyOfferCount,
 } = useDashboardStatus({
   dashboardAccessReason,
   dashboardAccessScope,

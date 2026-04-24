@@ -14,9 +14,6 @@
     @apply flex items-center gap-2.5 text-xl font-medium text-gray-900;
   }
 
-  .detail-subtitle {
-    @apply mt-1 text-xs text-gray-400;
-  }
 
   .hero-strip {
     @apply grid divide-x divide-gray-200 border-b border-gray-200 bg-white;
@@ -75,7 +72,7 @@
   }
 
   .card {
-    @apply overflow-hidden rounded-lg border border-gray-200 bg-white;
+    @apply overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm;
   }
 
   .card-head {
@@ -271,9 +268,6 @@
     box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
   }
 
-  .chart-container {
-    @apply relative h-64 md:h-80;
-  }
 
   .btn.justify-start {
     justify-content: flex-start;
@@ -482,4 +476,25 @@
 
   .dialog-footer {
     @apply flex items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-3;
+  }
+
+  /* --- Auditor Refactor: Unified Metric Card System --- */
+  .at-metric-card {
+    @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .at-metric-label {
+    @apply text-2xs font-semibold uppercase tracking-widest text-slate-400 mb-1;
+  }
+
+  .at-metric-value {
+    @apply text-2xl font-bold text-slate-900;
+  }
+
+  .at-metric-icon {
+    @apply rounded-lg bg-brand-50 p-2 text-brand-600;
+  }
+
+  .at-metric-hint {
+    @apply mt-3 pt-3 border-t border-slate-50;
   }

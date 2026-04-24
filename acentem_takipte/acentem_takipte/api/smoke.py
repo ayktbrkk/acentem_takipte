@@ -3,6 +3,7 @@ from __future__ import annotations
 from frappe.utils import add_days, now_datetime, nowdate
 
 import frappe
+import time
 
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
@@ -90,10 +91,19 @@ def run_backend_smoke_test() -> dict:
 
     marker = now_datetime().strftime("%Y%m%d%H%M%S")
     created_docs = []
+    metrics = {}
     result = {
         "doctype_exists": doctype_exists,
         "created": {},
+        "performance_metrics": metrics,
     }
+
+    def _timed_run(key, func, *args, **kwargs):
+        start = time.perf_counter()
+        res = func(*args, **kwargs)
+        end = time.perf_counter()
+        metrics[key] = f"{((end - start) * 1000):.2f}ms"
+        return res
 
     try:
         company = frappe.get_doc(
@@ -179,12 +189,14 @@ def run_backend_smoke_test() -> dict:
         ).insert()
         created_docs.append(("AT Lead", lead.name))
 
-        offer_result = convert_to_offer(lead.name)
+        offer_result = _timed_run("lead_to_offer_conversion", convert_to_offer, lead.name)
         offer_name = offer_result["offer"]
         offer = frappe.get_doc("AT Offer", offer_name)
         created_docs.append(("AT Offer", offer.name))
 
-        policy_result = convert_to_policy(
+        policy_result = _timed_run(
+            "offer_to_policy_conversion",
+            convert_to_policy,
             offer_name=offer.name,
             start_date=nowdate(),
             end_date=add_days(nowdate(), 30),
@@ -324,7 +336,7 @@ def run_backend_smoke_test() -> dict:
         policy.reload()
 
         from acentem_takipte.acentem_takipte.api.dashboard import get_dashboard_kpis
-        dashboard = get_dashboard_kpis({"months": 3})
+        dashboard = _timed_run("dashboard_kpi_load", get_dashboard_kpis, {"months": 3})
 
         result["created"] = {
             "company": company.name,

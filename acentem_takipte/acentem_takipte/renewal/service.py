@@ -18,6 +18,10 @@ from acentem_takipte.acentem_takipte.utils.statuses import (
     ATRenewalTaskStatus,
 )
 
+RENEWAL_LOOKAHEAD_DAYS = 90
+MAX_POLICIES_PER_RUN = 2000
+MAX_PAYMENTS_PER_RUN = 2000
+
 
 @dataclass(frozen=True)
 class RenewalCandidate:

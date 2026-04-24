@@ -9,7 +9,7 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, cint, flt, getdate, nowdate
+from frappe.utils import cint, flt, getdate
 
 from acentem_takipte.acentem_takipte.api.v2 import (
     constants as dashboard_constants,
@@ -109,6 +109,9 @@ DASHBOARD_TAB_CACHE_TTL_SECONDS = 300
 DASHBOARD_TAB_CACHE_TTL_CONFIG_KEY = "at_dashboard_tab_cache_ttl_seconds"
 
 
+# audit(dead-code): Eski sistemden kalan 'Completed' statüsü artık tüm poliçelerde 'Done' 
+# olarak migrate edildiği için bu köprü metoduna (bridge) teknik olarak ihtiyaç kalmamıştır.
+# Aktif bir referans bulunamadığı için izlemeye alındı.
 def _normalize_renewal_status(value: str | None) -> str:
     status = str(value or "")
     if status == LEGACY_RENEWAL_STATUS_COMPLETED:
@@ -897,106 +900,29 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
     )
 
 
-@frappe.whitelist()
-def get_lead_detail_payload(name: str) -> dict:
-    _assert_dashboard_endpoint_method("get_lead_detail_payload")
-    user = frappe.session.user
-    if user == "Guest":
-        frappe.throw(_("Authentication required"))
+# audit(duplicate): 901-1000 satırları arasındaki metodlar (lead, offer, claim, payment detail),
+# 235-305 satırları arasında daha optimize bir şekilde tanımlanmıştır. 
+# Bu blok refactor kalıntısıdır ve frontend tarafından çağrılmamaktadır.
 
-    lead_name = str(name or "").strip()
-    if not lead_name:
-        frappe.throw(_("Lead is required"))
+# @frappe.whitelist()
+# def get_lead_detail_payload(name: str) -> dict:
+#     _assert_dashboard_endpoint_method("get_lead_detail_payload")
+#     ... (truncated for brevity in audit comment)
 
-    lead = frappe.get_doc("AT Lead", lead_name)
-    lead.check_permission("read")
+# @frappe.whitelist()
+# def get_offer_detail_payload(name: str) -> dict:
+#     _assert_dashboard_endpoint_method("get_offer_detail_payload")
+#     ...
 
-    allowed_customers = _allowed_customers_for_user()
-    if (
-        allowed_customers is not None
-        and lead.customer
-        and lead.customer not in set(allowed_customers)
-    ):
-        frappe.throw(_("Not permitted"))
+# @frappe.whitelist()
+# def get_claim_detail_payload(name: str) -> dict:
+#     _assert_dashboard_endpoint_method("get_claim_detail_payload")
+#     ...
 
-    return build_lead_360_payload(lead_name)
-
-
-@frappe.whitelist()
-def get_offer_detail_payload(name: str) -> dict:
-    _assert_dashboard_endpoint_method("get_offer_detail_payload")
-    user = frappe.session.user
-    if user == "Guest":
-        frappe.throw(_("Authentication required"))
-
-    offer_name = str(name or "").strip()
-    if not offer_name:
-        frappe.throw(_("Offer is required"))
-
-    offer = frappe.get_doc("AT Offer", offer_name)
-    offer.check_permission("read")
-
-    allowed_customers = _allowed_customers_for_user()
-    if (
-        allowed_customers is not None
-        and offer.customer
-        and offer.customer not in set(allowed_customers)
-    ):
-        frappe.throw(_("Not permitted"))
-
-    return build_offer_360_payload(offer_name)
-
-
-@frappe.whitelist()
-def get_claim_detail_payload(name: str) -> dict:
-    _assert_dashboard_endpoint_method("get_claim_detail_payload")
-    user = frappe.session.user
-    if user == "Guest":
-        frappe.throw(_("Authentication required"))
-
-    claim_name = str(name or "").strip()
-    if not claim_name:
-        frappe.throw(_("Claim is required"))
-
-    claim = frappe.get_doc("AT Claim", claim_name)
-    claim.check_permission("read")
-
-    allowed_customers = _allowed_customers_for_user()
-    if (
-        allowed_customers is not None
-        and claim.customer
-        and claim.customer not in set(allowed_customers)
-    ):
-        frappe.throw(_("Not permitted"))
-
-    return get_claim_360_payload(claim_name)
-
-
-
-
-@frappe.whitelist()
-def get_payment_detail_payload(name: str) -> dict:
-    _assert_dashboard_endpoint_method("get_payment_detail_payload")
-    user = frappe.session.user
-    if user == "Guest":
-        frappe.throw(_("Authentication required"))
-
-    payment_name = str(name or "").strip()
-    if not payment_name:
-        frappe.throw(_("Payment is required"))
-
-    payment = frappe.get_doc("AT Payment", payment_name)
-    payment.check_permission("read")
-
-    allowed_customers = _allowed_customers_for_user()
-    if (
-        allowed_customers is not None
-        and payment.customer
-        and payment.customer not in set(allowed_customers)
-    ):
-        frappe.throw(_("Not permitted"))
-
-    return get_payment_360_payload(payment_name)
+# @frappe.whitelist()
+# def get_payment_detail_payload(name: str) -> dict:
+#     _assert_dashboard_endpoint_method("get_payment_detail_payload")
+#     ...
 
 
 @frappe.whitelist()

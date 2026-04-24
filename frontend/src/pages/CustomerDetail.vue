@@ -275,7 +275,6 @@
 <script setup>
 import { computed, defineAsyncComponent, ref, unref } from "vue";
 import { useCustomerDetailRuntime } from "../composables/useCustomerDetailRuntime";
-import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuthStore } from "../stores/auth";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
@@ -311,7 +310,6 @@ const activeCustomerTab = ref("overview");
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
-const {
   customer,
   summary,
   portfolio,
@@ -319,9 +317,7 @@ const {
   atDocuments,
   insights,
   crossSell,
-  operations,
   loading,
-  loadErrorText,
   t,
   formatDate,
   formatCurrency,
@@ -340,7 +336,6 @@ const {
   restoreDocument,
   permanentDeleteDocument,
   formatFileSize,
-  reload,
   backToList,
   openNewOffer,
   openPolicy,
