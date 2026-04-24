@@ -5,20 +5,20 @@
     :subtitle="policy.policy_no || policy.name"
   >
     <template #actions>
+      <ActionButton variant="primary" size="sm" @click="reload">
+        {{ t("refresh") }}
+      </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="handleExportPdf">
         {{ t("exportPdf") }}
       </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="handleShareWhatsApp">
         {{ t("shareWhatsApp") }}
       </ActionButton>
-      <ActionButton variant="primary" size="sm" @click="handleCreateEndorsement">
+      <ActionButton variant="secondary" size="sm" @click="handleCreateEndorsement">
         {{ t("newEndorsement") }}
       </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="backToList">
+      <ActionButton variant="link" size="sm" @click="backToList">
         {{ t("back_to_list") }}
-      </ActionButton>
-      <ActionButton variant="primary" size="sm" @click="reload">
-        {{ t("refresh") }}
       </ActionButton>
     </template>
 
@@ -283,7 +283,7 @@ async function openDocument(doc, referenceDoctype) {
   });
 
   if (opened) return;
-  window.alert(activeLocale.value === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
+  window.alert(t("fileLinkNotFound"));
 }
 
 function isPrivateDocument(doc) {

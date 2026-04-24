@@ -3,15 +3,19 @@
   }
 
   .detail-topbar {
-    @apply flex items-start justify-between border-b border-gray-200 bg-white px-5 py-3.5;
+    @apply flex items-start justify-between border-b border-gray-200 bg-white px-5 py-4;
   }
 
   .detail-breadcrumb {
-    @apply mb-1 text-xs text-gray-500;
+    @apply mb-2 text-xs text-gray-500;
   }
 
   .detail-title {
     @apply flex items-center gap-2.5 text-xl font-medium text-gray-900;
+  }
+
+  .detail-subtitle {
+    @apply mt-1 text-base font-medium tracking-[0.01em] text-slate-700;
   }
 
 
@@ -29,10 +33,14 @@
 
   .hero-value {
     @apply text-sm font-medium text-gray-900;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
   }
 
   .hero-value-lg {
     @apply text-xl font-medium text-gray-900;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
   }
 
   .hero-value-accent {
@@ -78,8 +86,29 @@
   .policy-equal-card {
     display: flex;
     flex-direction: column;
-    min-height: 20rem;
+    min-height: 22rem;
     height: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background: white;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .hero-value-pill {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+
+  .hero-value-pill-success {
+    background: #e6fffa;
+    color: #2c7a7b;
+  }
+
+  .hero-value-pill-waiting {
+    @apply bg-status-waiting-bg text-status-waiting-text;
+  }
+
+  .hero-value-pill-cancel {
+    @apply bg-status-cancel-bg text-status-cancel-text;
   }
 
   .card-head {

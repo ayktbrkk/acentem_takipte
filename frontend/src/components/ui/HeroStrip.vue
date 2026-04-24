@@ -24,6 +24,9 @@ function valueClass(variant) {
       accent: "hero-value-accent",
       warn: "hero-value-warn",
       success: "hero-value text-green-700 font-medium",
+      "success-pill": "hero-value-pill hero-value-pill-success",
+      "waiting-pill": "hero-value-pill hero-value-pill-waiting",
+      "cancel-pill": "hero-value-pill hero-value-pill-cancel",
     }[variant] ?? "hero-value"
   );
 }

@@ -2,7 +2,7 @@ import { computed } from "vue";
 
 const DASHBOARD_TABS = ["daily", "sales", "collections", "renewals"];
 
-export function useDashboardPresentation({ t, isDailyTab, isSalesTab, isCollectionsTab, isRenewalsTab }) {
+export function useDashboardPresentation({ t, isDailyTab, isSalesTab, isCollectionsTab, isRenewalsTab, authStore }) {
   const showNewLeadAction = computed(() => !isCollectionsTab.value && !isRenewalsTab.value);
   const showRenewalAlertsTopRow = computed(() => isDailyTab.value || isRenewalsTab.value);
   const showAnalyticsRow = computed(() => isSalesTab.value);
@@ -16,11 +16,19 @@ export function useDashboardPresentation({ t, isDailyTab, isSalesTab, isCollecti
   ]);
 
   const dashboardHeroTitle = computed(() => {
-    if (isDailyTab.value) return t("heroTitleDaily");
-    if (isSalesTab.value) return t("heroTitleSales");
-    if (isCollectionsTab.value) return t("heroTitleCollections");
-    if (isRenewalsTab.value) return t("heroTitleRenewals");
-    return t("heroTitleDaily");
+    const baseTitle = (() => {
+      if (isDailyTab.value) return t("heroTitleDaily");
+      if (isSalesTab.value) return t("heroTitleSales");
+      if (isCollectionsTab.value) return t("heroTitleCollections");
+      if (isRenewalsTab.value) return t("heroTitleRenewals");
+      return t("heroTitleDaily");
+    })();
+
+    // For daily tab, append user's full name (if available)
+    if (isDailyTab.value && authStore?.user?.value?.full_name) {
+      return `${baseTitle}, ${authStore.user.value.full_name.split(" ")[0]}`;
+    }
+    return baseTitle;
   });
 
   const dashboardHeroSubtitle = computed(() => {

@@ -600,6 +600,7 @@ const {
   isSalesTab,
   isCollectionsTab,
   isRenewalsTab,
+  authStore,
 });
 
 const {

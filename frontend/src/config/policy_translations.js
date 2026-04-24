@@ -97,6 +97,11 @@ export const POLICY_TRANSLATIONS = {
     sortGrossDesc: "Brüt Prim (Yüksek)",
 
     // Detail Page
+    policyDetailTitle: "Poliçe Detayları",
+    overviewTitle: "Genel Bakış",
+    back_to_list: "Listeye Dön",
+    shareWhatsApp: "WhatsApp ile Paylaş",
+    newEndorsement: "Yeni Zeyil Oluştur",
     overview: "Poliçe Detayı",
     backList: "Listeye Dön",
     copy: "Kopyala",
@@ -195,6 +200,7 @@ export const POLICY_TRANSLATIONS = {
     chooseFile: "Dosya seçin veya buraya sürükleyin",
     uploadSuccess: "Doküman başarıyla yüklendi",
     uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.",
+    fileLinkNotFound: "Dosya bağlantısı bulunamadı",
     fileTooLarge: "Dosya çok büyük (maks. 10 MB)",
     private: "Gizli",
     fileSize: "Dosya boyutu",
@@ -426,6 +432,7 @@ export const POLICY_TRANSLATIONS = {
     chooseFile: "Choose a file or drag it here",
     uploadSuccess: "Document uploaded successfully",
     uploadError: "Upload failed. Please try again.",
+    fileLinkNotFound: "File link not found",
     fileTooLarge: "File is too large (max 10 MB)",
     private: "Private",
     fileSize: "File size",

@@ -5,6 +5,30 @@ import { translateText } from "../utils/i18n";
 import { useAuthStore } from "../stores/auth";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 
+function resolvePolicyStatusPresentation(status, t) {
+  const normalized = String(status || "Active").trim().toLowerCase();
+
+  if (normalized === "active") {
+    return { label: t("status_active"), variant: "success-pill" };
+  }
+
+  if (["kyt", "waiting", "pending", "draft"].includes(normalized)) {
+    return {
+      label: normalized === "draft" ? t("status_draft") : t("status_waiting"),
+      variant: "waiting-pill",
+    };
+  }
+
+  if (["ipt", "cancelled", "expired"].includes(normalized)) {
+    return {
+      label: normalized === "expired" ? t("expired") : t("status_cancelled"),
+      variant: "cancel-pill",
+    };
+  }
+
+  return { label: status || "-", variant: "waiting-pill" };
+}
+
 export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
   const authStore = useAuthStore();
@@ -114,11 +138,13 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     return atDocumentLifecycle.permanentDeleteDocument(doc, reload);
   }
 
+  const policyStatusPresentation = computed(() => resolvePolicyStatusPresentation(policy.value.status, t));
+
   const heroCells = computed(() => [
     { label: t("branch"), value: policy.value.branch },
     { label: t("gross_premium"), value: formatCurrency(policy.value.gross_premium, policy.value.currency), variant: "lg" },
     { label: t("end_date"), value: formatDate(policy.value.end_date) },
-    { label: t("status"), value: t(`status_${String(policy.value.status || "Active").toLowerCase()}`), variant: "success" },
+    { label: t("status"), value: policyStatusPresentation.value.label, variant: policyStatusPresentation.value.variant },
   ]);
 
   const profileFields = computed(() => [
