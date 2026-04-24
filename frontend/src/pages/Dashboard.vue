@@ -565,6 +565,7 @@ const {
   myActivitiesLoading,
   myRemindersLoading,
   myTasksLoading,
+  readyOfferCount,
 } = useDashboardStatus({
   dashboardAccessReason,
   dashboardAccessScope,
