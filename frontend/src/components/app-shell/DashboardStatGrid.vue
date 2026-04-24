@@ -5,10 +5,8 @@
       :key="card.key"
       :title="card.title"
       :value="card.value"
-      :trend-text="card.trendText"
-      :trend-class="card.trendClass"
-      :trend-hint="card.trendHint"
       :icon="card.icon"
+      :t="t"
     />
   </div>
 </template>
@@ -20,6 +18,10 @@ defineProps({
   cards: {
     type: Array,
     default: () => [],
+  },
+  t: {
+    type: Function,
+    required: true,
   },
 });
 </script>
