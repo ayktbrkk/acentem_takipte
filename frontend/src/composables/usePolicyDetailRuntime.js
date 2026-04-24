@@ -118,7 +118,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     { label: t("branch"), value: policy.value.branch },
     { label: t("gross_premium"), value: formatCurrency(policy.value.gross_premium, policy.value.currency), variant: "lg" },
     { label: t("end_date"), value: formatDate(policy.value.end_date) },
-    { label: t("status"), value: t(`status_${String(policy.value.status || "Active").toLowerCase()}`), variant: "accent" },
+    { label: t("status"), value: t(`status_${String(policy.value.status || "Active").toLowerCase()}`), variant: "success" },
   ]);
 
   const profileFields = computed(() => [

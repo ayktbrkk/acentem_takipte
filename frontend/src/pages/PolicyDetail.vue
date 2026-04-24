@@ -1,10 +1,19 @@
 <template>
   <WorkbenchPageLayout
     :breadcrumb="t('policies_breadcrumb')"
-    :title="t('policy_detail')"
+    :title="t('policyDetailTitle')"
     :subtitle="policy.policy_no || policy.name"
   >
     <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="handleExportPdf">
+        {{ t("exportPdf") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="handleShareWhatsApp">
+        {{ t("shareWhatsApp") }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="handleCreateEndorsement">
+        {{ t("newEndorsement") }}
+      </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="backToList">
         {{ t("back_to_list") }}
       </ActionButton>
@@ -20,10 +29,10 @@
       </div>
     </template>
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-6">
-        <SectionPanel :title="t('overview')">
+        <SectionPanel :title="t('overviewTitle')" panel-class="surface-card rounded-xl p-5 policy-equal-card">
           <SkeletonLoader v-if="loading" variant="text" :rows="10" />
           <div v-else class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -45,7 +54,7 @@
               {{ formatDate(row.endorsement_date) }}
             </template>
             <template #cell(status)="{ row }">
-              <StatusBadge domain="policy" :status="row.status === 'Applied' ? 'active' : 'hold'" :label="row.status" />
+              <StatusBadge domain="policy" :status="row.status === 'Applied' ? 'active' : 'waiting'" :label="row.status" />
             </template>
           </ListTable>
         </SectionPanel>
@@ -63,7 +72,7 @@
               {{ formatCurrency(row.amount, row.currency) }}
             </template>
             <template #cell(status)="{ row }">
-              <StatusBadge domain="payment" :status="row.status === 'Paid' ? 'active' : 'hold'" :label="row.status" />
+              <StatusBadge domain="payment" :status="row.status === 'Paid' ? 'active' : 'waiting'" :label="row.status" />
             </template>
           </ListTable>
         </SectionPanel>
@@ -71,7 +80,7 @@
 
       <!-- Sidebar -->
       <div class="space-y-6">
-        <SectionPanel :title="t('customer_details')">
+        <SectionPanel :title="t('customer_details')" panel-class="surface-card rounded-xl p-5 policy-equal-card">
           <template #trailing>
             <ActionButton variant="secondary" size="xs" @click="openCustomer">
               {{ t("customer_details") }}
@@ -176,6 +185,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { uppercaseText } from "../utils/i18n";
 import { usePolicyDetailRuntime } from "../composables/usePolicyDetailRuntime";
@@ -193,6 +203,7 @@ const props = defineProps({
   name: { type: String, required: true },
 });
 
+const router = useRouter();
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
 
@@ -241,6 +252,29 @@ const paymentColumns = computed(() => [
   { key: "amount", label: t("amount"), width: "120px", align: "right" },
   { key: "status", label: t("status"), width: "100px" },
 ]);
+
+function handleExportPdf() {
+  window.print();
+}
+
+function handleShareWhatsApp() {
+  const policyRef = policy.value?.policy_no || policy.value?.name || props.name;
+  const customerRef = customer.value?.full_name || customer.value?.name || "-";
+  const message = activeLocale.value === "tr"
+    ? `Poliçe: ${policyRef}\nMüşteri: ${customerRef}`
+    : `Policy: ${policyRef}\nCustomer: ${customerRef}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+}
+
+function handleCreateEndorsement() {
+  router.push({
+    name: "offer-board",
+    query: {
+      from_policy: policy.value?.name || props.name,
+      intent: "endorsement",
+    },
+  });
+}
 
 async function openDocument(doc, referenceDoctype) {
   const opened = await openDocumentInNewTab(doc || {}, {

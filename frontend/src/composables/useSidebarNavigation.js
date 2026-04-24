@@ -70,7 +70,7 @@ export function useSidebarNavigation() {
       notificationDrafts: "Bildirim Taslakları",
       notificationOutbox: "Gönderilen Bildirimler",
       companies: "Sigorta Şirketleri",
-      branches: "Şubeler",
+      branches: "Branşlar",
       salesEntities: "Satış Birimleri",
       templates: "Bildirim Şablonları",
       accountingEntries: "Muhasebe Kayıtları",

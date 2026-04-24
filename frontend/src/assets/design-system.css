@@ -7,7 +7,7 @@
   }
 
   .detail-breadcrumb {
-    @apply mb-1 text-xs text-gray-400;
+    @apply mb-1 text-xs text-gray-500;
   }
 
   .detail-title {
@@ -73,6 +73,13 @@
 
   .card {
     @apply overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm;
+  }
+
+  .policy-equal-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 20rem;
+    height: 100%;
   }
 
   .card-head {

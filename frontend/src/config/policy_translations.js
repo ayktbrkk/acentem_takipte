@@ -323,6 +323,11 @@ export const POLICY_TRANSLATIONS = {
     sortGrossDesc: "Gross Premium (High)",
 
     // Detail Page
+    policyDetailTitle: "Policy Details",
+    overviewTitle: "Overview",
+    back_to_list: "Back to List",
+    shareWhatsApp: "Share on WhatsApp",
+    newEndorsement: "Create Endorsement",
     overview: "Policy Details",
     backList: "Back to List",
     copy: "Copy",
@@ -452,3 +457,5 @@ export const POLICY_TRANSLATIONS = {
     noDate: "No date",
   },
 };
+
+
