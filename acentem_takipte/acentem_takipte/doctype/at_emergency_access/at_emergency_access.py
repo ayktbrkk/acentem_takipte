@@ -47,6 +47,7 @@ class ATEmergencyAccess(Document):
 
     def after_insert(self) -> None:
         _write_audit_entry(self, action="Granted")
+        _notify_realtime_grant(self)
 
     def on_update(self) -> None:
         if self.status in ("Expired", "Revoked"):
@@ -106,6 +107,23 @@ def _write_audit_entry(doc: ATEmergencyAccess, *, action: str) -> None:
                 f"status={doc.status} "
                 f"ip={doc.grant_ip or 'unknown'}"
             ),
+        )
+    except Exception:
+        pass
+
+
+def _notify_realtime_grant(doc: ATEmergencyAccess) -> None:
+    """Publish a realtime alert to System Managers about a new emergency access grant."""
+    try:
+        frappe.publish_realtime(
+            event="at_emergency_access_granted",
+            message={
+                "beneficiary": doc.beneficiary,
+                "scope": doc.scope_doctype,
+                "granted_by": doc.granted_by,
+                "valid_until": doc.valid_until,
+            },
+            after_commit=True,
         )
     except Exception:
         pass

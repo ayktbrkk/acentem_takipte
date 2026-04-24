@@ -69,6 +69,19 @@ function handleScopeChanged(payload) {
     : "Your access permissions have been updated. Refresh to continue with the latest permissions.";
 }
 
+function handleEmergencyAccessGranted(payload) {
+  // Only show to System Managers (Role check happens here)
+  const userRoles = authStore.roles || [];
+  if (!userRoles.includes("System Manager")) {
+    return;
+  }
+
+  const { beneficiary, scope } = payload;
+  scopeRefreshNotice.value = locale.value === "tr"
+    ? `DİKKAT: ${beneficiary} kullanıcısına ${scope} için acil erişim yetkisi verildi.`
+    : `NOTICE: Emergency access granted to ${beneficiary} for ${scope}.`;
+}
+
 function confirmScopeRefresh() {
   scopeRefreshNotice.value = "";
   window.location.reload();
@@ -87,7 +100,13 @@ function bindScopeRealtimeListener() {
   scopeChangeHandler = (payload) => {
     handleScopeChanged(payload || {});
   };
+  
+  const emergencyHandler = (payload) => {
+    handleEmergencyAccessGranted(payload || {});
+  };
+
   realtime.on("at_scope_changed", scopeChangeHandler);
+  realtime.on("at_emergency_access_granted", emergencyHandler);
 }
 
 function unbindScopeRealtimeListener() {
