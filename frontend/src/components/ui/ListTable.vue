@@ -84,6 +84,13 @@
               </button>
             </div>
 
+            <div v-else-if="col.type === 'stacked'" class="flex flex-col">
+              <span class="text-sm font-medium text-gray-900">{{ row[col.key] ?? '-' }}</span>
+              <span v-if="col.secondaryKey" class="text-[10.5px] text-gray-400 leading-tight mt-0.5">
+                {{ row[col.secondaryKey] ?? '-' }}
+              </span>
+            </div>
+
             <span v-else class="text-sm text-gray-900">
               {{ row[col.key] ?? '-' }}
             </span>

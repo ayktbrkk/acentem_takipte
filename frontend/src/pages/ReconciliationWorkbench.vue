@@ -125,9 +125,8 @@ import ReconciliationWorkbenchPreviewSections from "../components/reconciliation
 import ReconciliationWorkbenchTableSection from "../components/reconciliation-workbench/ReconciliationWorkbenchTableSection.vue";
 import { translateText } from "../utils/i18n";
 
-// i18n copy removed and moved to central config
-
-
+// i18n copy — translations for this page
+const copy = {
 
   en: {
     breadcrumb: "Control Center → Reconciliation",

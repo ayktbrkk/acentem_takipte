@@ -2,7 +2,7 @@
   <div>
     <button
       v-if="mobileOpen"
-      class="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-[1px] lg:hidden"
+      class="fixed inset-0 z-30 bg-brand-600/40 backdrop-blur-[1px] lg:hidden"
       type="button"
       @click="$emit('close')"
     />
@@ -67,7 +67,7 @@
               />
               <span
                 v-else
-                class="grid h-6 w-6 shrink-0 place-items-center rounded bg-gray-100 text-[10px] font-semibold text-gray-500"
+                class="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-gray-100 text-[10px] font-semibold text-gray-500"
                 :class="item.badgeClass"
               >
                 {{ item.short }}
@@ -98,7 +98,7 @@
               />
               <span
                 v-else
-                class="grid h-6 w-6 shrink-0 place-items-center rounded bg-gray-100 text-[10px] font-semibold text-gray-500 [.router-link-active_&]:bg-brand-100 [.router-link-active_&]:text-brand-700"
+                class="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-gray-100 text-[10px] font-semibold text-gray-500 [.router-link-active_&]:bg-brand-100 [.router-link-active_&]:text-brand-700"
                 :class="item.badgeClass"
               >
                 {{ item.short }}

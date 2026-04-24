@@ -17,7 +17,7 @@
         </tbody>
       </table>
     </div>
-    <p v-if="importMessage" class="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-700">
+    <p v-if="importMessage" class="mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-brand-700">
       {{ importMessage }}
     </p>
   </SectionPanel>

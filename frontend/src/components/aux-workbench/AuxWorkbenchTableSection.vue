@@ -41,7 +41,7 @@
             >
               <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
                 <div class="flex flex-col">
-                  <span class="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{{ rowTitle(row) }}</span>
+                  <span class="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{{ rowTitle(row) }}</span>
                   <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
                     <span v-for="fact in factItems(row, config.primaryFields)" :key="fact.label" class="text-[11px] text-slate-500 font-medium">
                       {{ fact.label }}: <span class="text-slate-700">{{ fact.value }}</span>

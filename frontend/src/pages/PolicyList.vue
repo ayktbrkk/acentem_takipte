@@ -248,12 +248,12 @@ const {
 });
 
 const columns = computed(() => [
-  { key: "carrier_policy_no", label: t("carrierPolicyNo") },
-  { key: "customer_label", label: t("colCustomer") },
-  { key: "insurance_company", label: t("colCompany") },
-  { key: "end_date", label: t("colEndDate") },
-  { key: "gross_premium", label: t("colGross") },
-  { key: "status", label: t("colStatus") },
+  { key: "policy_primary", secondaryKey: "policy_secondary", label: t("colPolicy"), type: "stacked" },
+  { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
+  { key: "product_primary", secondaryKey: "product_secondary", label: t("colProduct"), type: "stacked" },
+  { key: "vade_primary", secondaryKey: "vade_secondary", label: t("colVade"), type: "stacked" },
+  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked" },
+  { key: "status", label: t("colStatus"), type: "status", domain: "AT Policy" },
 ]);
 
 function clearFilters() {

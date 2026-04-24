@@ -34,7 +34,7 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
     url: "frappe.client.get_list",
     params: {
       doctype: "AT Lead",
-      fields: ["name", "first_name", "last_name", "status", "phone", "email", "creation"],
+      fields: ["name", "first_name", "last_name", "status", "phone", "email", "creation", "branch", "estimated_gross_premium"],
       order_by: "creation desc",
     },
     auto: false,
@@ -66,7 +66,7 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
   async function reload() {
     const params = {
       doctype: "AT Lead",
-      fields: ["name", "first_name", "last_name", "status", "phone", "email", "creation"],
+      fields: ["name", "first_name", "last_name", "status", "phone", "email", "creation", "branch", "estimated_gross_premium"],
       filters: {},
       order_by: filters.sort,
       limit_start: (pagination.page - 1) * pagination.pageLength,

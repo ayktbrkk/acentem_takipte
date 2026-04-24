@@ -1,3 +1,4 @@
+// audit(ui/U-01): Modernized stacked list views - v1.0.1
 import { createApp } from "vue";
 import { setActivePinia } from "pinia";
 import { FrappeUI, frappeRequest, setConfig } from "frappe-ui";

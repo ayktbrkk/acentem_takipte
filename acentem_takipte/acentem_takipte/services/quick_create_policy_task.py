@@ -14,7 +14,7 @@ from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
 from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import (
     convert_to_policy as convert_offer_to_policy,
 )
-from acentem_takipte.acentem_takipte.services.quick_create import (
+from acentem_takipte.acentem_takipte.services.quick_create_core import (
     create_policy as create_policy_service,
     create_task as create_task_service,
 )

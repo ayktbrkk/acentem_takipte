@@ -82,25 +82,21 @@ from acentem_takipte.acentem_takipte.services.quick_create_common import (  # no
     _split_full_name,
 )
 
-from acentem_takipte.acentem_takipte.services.quick_create_customers import (  # noqa: E402
+from acentem_takipte.acentem_takipte.services.quick_create_customer_flow import (  # noqa: E402
     create_quick_customer,
-    create_quick_customer_relation,
-    create_quick_insured_asset,
-)
-from acentem_takipte.acentem_takipte.services.quick_create_leads import (  # noqa: E402
     create_quick_claim,
     create_quick_lead,
-)
-from acentem_takipte.acentem_takipte.services.quick_create_payments import (  # noqa: E402
     create_quick_payment,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_policies import (  # noqa: E402
+from acentem_takipte.acentem_takipte.services.quick_create_policy_task import (  # noqa: E402
     create_quick_policy,
     create_quick_task,
 )
 from acentem_takipte.acentem_takipte.services.quick_create_auxiliary import (  # noqa: E402
     create_quick_call_note,
     create_quick_campaign,
+    create_quick_customer_relation,
+    create_quick_insured_asset,
     create_quick_ownership_assignment,
     create_quick_renewal_task,
     create_quick_segment,

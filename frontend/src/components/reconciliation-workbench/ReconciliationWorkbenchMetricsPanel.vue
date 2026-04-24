@@ -18,7 +18,7 @@
     </div>
     <div class="mini-metric">
       <p class="mini-metric-label">{{ props.t("summaryDifference") }}</p>
-      <p class="mini-metric-value text-sky-600">{{ props.formatMoney(props.summary.totalDifference) }}</p>
+      <p class="mini-metric-value text-brand-600">{{ props.formatMoney(props.summary.totalDifference) }}</p>
     </div>
   </div>
 </template>

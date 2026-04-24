@@ -17,6 +17,6 @@ defineProps({
   count: { type: [String, Number], default: "" },
   meta: { type: String, default: "" },
   showCount: { type: Boolean, default: true },
-  panelClass: { type: String, default: "surface-card rounded-2xl p-5" },
+  panelClass: { type: String, default: "surface-card rounded-xl p-5" },
 });
 </script>

@@ -44,6 +44,14 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
     const data = unref(customerResource.data) || {};
     return (data.rows || []).map(row => ({
       ...row,
+      identity_primary: row.full_name || "-",
+      identity_secondary: `${row.name} | ${row.customer_type === "Corporate" ? t("corporate") : t("individual")} | ${row.tax_id || "-"}`,
+      contact_primary: row.phone || "-",
+      contact_secondary: row.email || "-",
+      personal_primary: row.job_title || "-",
+      personal_secondary: `${t(row.gender || "Unknown")} | ${row.birth_date || "-"}`,
+      mgmt_primary: row.sales_entity || "-",
+      mgmt_secondary: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),
       customer_type_label: row.customer_type === "Corporate" ? t("corporate") : t("individual"),
       consent_status_label: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),
     }));

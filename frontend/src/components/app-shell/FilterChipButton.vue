@@ -31,13 +31,13 @@ const chipClass = computed(() => {
     return `${base}${sizeClass} ${
       props.active
         ? " border-white/40 bg-white/20 text-white"
-        : " border-white/20 bg-slate-900/20 text-white/80 hover:bg-slate-900/35"
+        : " border-white/20 bg-brand-600/20 text-white/80 hover:bg-brand-600/35"
     }`;
   }
 
   return `${base}${sizeClass} ${
     props.active
-      ? " border-slate-900 bg-slate-900 text-white"
+      ? " border-slate-900 bg-brand-600 text-white"
       : " border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
   }`;
 });

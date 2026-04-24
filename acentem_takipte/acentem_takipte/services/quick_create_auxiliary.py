@@ -7,7 +7,7 @@ from frappe.utils import add_days, nowdate
 from acentem_takipte.acentem_takipte.api.quick_payloads import (
     QuickOwnershipAssignmentPayload,
 )
-from acentem_takipte.acentem_takipte.services.quick_create import (
+from acentem_takipte.acentem_takipte.services.quick_create_core import (
     create_campaign as create_campaign_service,
     create_call_note as create_call_note_service,
     create_customer_relation as create_customer_relation_service,

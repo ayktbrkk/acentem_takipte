@@ -39,7 +39,7 @@
             @dragend="$emit('drag-end')"
           >
             <div class="flex items-start justify-between gap-2">
-              <button class="text-left text-sm font-semibold text-slate-900 hover:text-sky-700" type="button" @click.stop="$emit('open-offer', offer.name)">
+              <button class="text-left text-sm font-semibold text-slate-900 hover:text-brand-700" type="button" @click.stop="$emit('open-offer', offer.name)">
                 {{ offer.name }}
               </button>
               <StatusBadge domain="offer" :status="offer.status" />

@@ -4,7 +4,7 @@
       <div class="flex-1 min-w-[200px]">
         <input
           v-model.trim="filters.customer"
-          class="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+          class="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 transition-all"
           type="search"
           :placeholder="t('customerFilter')"
           @keyup.enter="runtime.applySnapshotFilters"
@@ -48,14 +48,14 @@
 
   <article
     v-if="hasContextFilters"
-    class="surface-card rounded-2xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm"
+    class="surface-card rounded-2xl border border-brand-100 bg-brand-50/50 p-5 shadow-sm"
   >
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="space-y-1">
         <div class="flex items-center gap-2">
-          <div class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></div>
+          <div class="h-2 w-2 rounded-full bg-brand-500 animate-pulse"></div>
           <p v-if="filters.customer" class="text-sm font-bold text-slate-900">
-            {{ t('customerContext') }}: <span class="text-blue-600">{{ customerContextLabel }}</span>
+            {{ t('customerContext') }}: <span class="text-brand-600">{{ customerContextLabel }}</span>
           </p>
         </div>
         <p v-if="referenceContextLabel" class="text-xs font-medium text-slate-500 pl-4">

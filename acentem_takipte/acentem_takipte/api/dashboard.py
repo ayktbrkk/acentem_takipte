@@ -7,9 +7,10 @@ from __future__ import annotations
 import hashlib
 import json
 
+from typing import Any
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, getdate
+from frappe.utils import cint, flt, getdate, add_days, nowdate
 
 from acentem_takipte.acentem_takipte.api.v2 import (
     constants as dashboard_constants,

@@ -223,10 +223,18 @@ export function useOfferBoardState({
   const offerListRowsWithUrgency = computed(() =>
     pagedOfferRows.value.map((row) => {
       const remainingDays = computeOfferRemainingDays(row.valid_until);
+      const custType = translateText(row.customer_customer_type || "-", activeLocale.value);
       return {
         ...row,
+        offer_primary: row.name,
+        offer_secondary: row.insurance_company || "-",
         customer_label: customerDisplayLabel(row),
-        customer_type_label: translateText(row.customer_customer_type || "-", activeLocale.value),
+        customer_secondary: `${custType} | ${row.customer_masked_tax_id || "-"}`,
+        validity_primary: formatDisplayDate(row.valid_until),
+        validity_secondary: remainingDays != null ? `${remainingDays} ${t("daysRemaining")}` : "-",
+        finance_primary: formatCurrency(row.gross_premium || 0, row.currency),
+        finance_secondary: formatCurrency(row.commission_amount || 0, row.currency),
+        customer_type_label: custType,
         customer_tax_id: row.customer_masked_tax_id || "-",
         customer_birth_date: row.customer_birth_date || null,
         remaining_days: remainingDays,

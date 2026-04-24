@@ -34,7 +34,7 @@
         <template #trailing>
           <div class="text-right">
             <p class="text-xs text-slate-500">{{ row.office_branch || "-" }}</p>
-            <p class="text-xs text-sky-700">{{ statusLabel(row.status) }}</p>
+            <p class="text-xs text-brand-700">{{ statusLabel(row.status) }}</p>
           </div>
         </template>
       </MetaListCard>

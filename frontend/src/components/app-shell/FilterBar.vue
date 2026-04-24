@@ -23,7 +23,7 @@
         </button>
         <span
           v-if="Number(activeCount || 0) > 0"
-          class="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700"
+          class="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-brand-700"
         >
           {{ activeCountText }}
         </span>

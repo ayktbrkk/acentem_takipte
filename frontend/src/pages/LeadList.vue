@@ -25,7 +25,7 @@
         </div>
         <div class="mini-metric">
           <p class="mini-metric-label">{{ t("active") }}</p>
-          <p class="mini-metric-value text-blue-600">{{ summary.active }}</p>
+          <p class="mini-metric-value text-brand-600">{{ summary.active }}</p>
         </div>
         <div class="mini-metric">
           <p class="mini-metric-label">{{ t("individual") }}</p>
@@ -182,10 +182,12 @@ const {
 
 // Standard lead columns - creation date and name fields prioritized
 const columns = computed(() => [
-  { key: "full_name", label: t("full_name"), width: "250px" },
-  { key: "phone", label: t("phone"), width: "150px" },
-  { key: "status", label: t("status"), width: "120px" },
-  { key: "creation", label: t("lead_date"), width: "150px", type: "date" },
+  { key: "full_name", label: t("full_name"), width: "220px" },
+  { key: "branch", label: t("branch"), width: "120px" },
+  { key: "phone", label: t("phone"), width: "140px" },
+  { key: "status", label: t("status"), width: "110px" },
+  { key: "creation", label: t("lead_date"), width: "130px", type: "date" },
+  { key: "estimated_gross_premium", label: t("estimated_gross_premium"), width: "160px", type: "currency" },
 ]);
 
 const filterConfig = computed(() => [

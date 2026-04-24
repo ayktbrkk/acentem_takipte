@@ -338,6 +338,12 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
       office_branch_label: claim.office_branch || "-",
       reserve_amount_label: formatCurrency(claim.estimated_amount || 0),
       paid_amount_label: formatCurrency(claim.paid_amount || 0),
+      claim_primary: claim.claim_no || claim.name || "-",
+      claim_secondary: claim.policy_no || claim.policy || "-",
+      type_primary: claim.claim_type || "-",
+      type_secondary: claim.branch || claim.office_branch || "-",
+      finance_primary: formatCurrency(claim.estimated_amount || 0),
+      finance_secondary: formatCurrency(claim.paid_amount || 0),
       _urgency: claim.remaining_days <= 0 ? "row-critical" : claim.remaining_days <= 7 ? "row-warning" : "",
       _actions: buildClaimRowActions(claim),
     }))

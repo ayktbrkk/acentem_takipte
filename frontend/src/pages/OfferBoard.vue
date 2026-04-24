@@ -396,12 +396,11 @@ const quickOfferLabels = computed(() => ({
 }));
 
 const offerListColumns = computed(() => [
-  { key: "name", label: t("offer_no") },
-  { key: "customer_label", label: t("customer") },
-  { key: "insurance_company", label: t("insurance_company") },
-  { key: "valid_until", label: t("valid_until") },
-  { key: "gross_premium", label: t("gross_premium") },
-  { key: "status", label: t("status") },
+  { key: "offer_primary", secondaryKey: "offer_secondary", label: t("colOffer"), type: "stacked" },
+  { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
+  { key: "validity_primary", secondaryKey: "validity_secondary", label: t("colValidity"), type: "stacked" },
+  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked" },
+  { key: "status", label: t("colStatus"), type: "status", domain: "AT Offer" },
 ]);
 
 function focusOfferSearch() {

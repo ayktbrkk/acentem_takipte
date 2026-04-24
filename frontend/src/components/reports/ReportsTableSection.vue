@@ -40,7 +40,7 @@
             :key="`all-${column}`"
             type="button"
             :class="isColumnVisible(column)
-              ? 'inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 transition hover:bg-sky-100'
+              ? 'inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-brand-700 transition hover:bg-sky-100'
               : 'inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100'"
             @click="onToggleColumn(column)"
           >
@@ -137,7 +137,7 @@
                     <button
                       v-if="row.name || row.policy || row.customer"
                       type="button"
-                      class="rounded-full p-1.5 text-slate-400 opacity-0 transition-all hover:bg-slate-100 hover:text-blue-600 group-hover:opacity-100"
+                      class="rounded-full p-1.5 text-slate-400 opacity-0 transition-all hover:bg-slate-100 hover:text-brand-600 group-hover:opacity-100"
                       title="Preview"
                       @click.stop="$emit('on-preview-click', row)"
                     >

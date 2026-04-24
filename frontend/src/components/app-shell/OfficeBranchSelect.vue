@@ -120,7 +120,7 @@
         </span>
         <span
           v-if="String(option.value ?? '') === selectedValue"
-          class="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-sky-700"
+          class="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700"
         >
           {{ t("selected") }}
         </span>

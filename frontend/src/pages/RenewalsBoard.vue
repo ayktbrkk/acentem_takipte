@@ -30,7 +30,7 @@
       <div class="flex flex-wrap gap-4">
         <input
           v-model.trim="filters.query"
-          class="input flex-1 min-w-[200px] h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+          class="input flex-1 min-w-[200px] h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 transition-all"
           type="search"
           :placeholder="t('searchPlaceholder')"
           @keyup.enter="applyRenewalFilters"
@@ -177,7 +177,7 @@ const {
 }
 
 .kanban-column-count {
-  @apply inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-slate-900 px-2 text-[10px] font-bold text-white;
+  @apply inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-600 px-2 text-[10px] font-bold text-white;
 }
 
 .kanban-column-body {
@@ -189,7 +189,7 @@ const {
 }
 
 .kanban-card {
-  @apply cursor-pointer rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 active:scale-[0.98];
+  @apply cursor-pointer rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-brand-200 hover:-translate-y-0.5 active:scale-[0.98];
 }
 
 .mini-metric {

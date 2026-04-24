@@ -79,6 +79,15 @@ export const CLAIM_TRANSLATIONS = {
     paid: "Ödenen Tutar",
     empty: "Hasar kaydı bulunamadı.",
     loadError: "Hasar listesi yüklenemedi.",
+    colClaim: "Hasar Bilgisi",
+    colCustomer: "Müşteri",
+    colDetail: "Detay",
+    colFinance: "Finansal",
+    colIncidentDate: "Hasar Tarihi",
+    colStatus: "Durum",
+    reserve_amount: "Rezerv Tutar",
+    paid_amount_col: "Ödenen",
+    branch: "Branş",
   },
   en: {
     claims: "Claims",
@@ -160,6 +169,15 @@ export const CLAIM_TRANSLATIONS = {
     paid: "Paid Amount",
     empty: "No claim records found.",
     loadError: "Claim list could not be loaded.",
+    colClaim: "Claim Info",
+    colCustomer: "Customer",
+    colDetail: "Detail",
+    colFinance: "Financials",
+    colIncidentDate: "Incident Date",
+    colStatus: "Status",
+    reserve_amount: "Reserve",
+    paid_amount_col: "Paid",
+    branch: "Branch",
   }
 };
 

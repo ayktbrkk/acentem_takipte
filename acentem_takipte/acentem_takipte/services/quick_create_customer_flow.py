@@ -8,7 +8,7 @@ from acentem_takipte.acentem_takipte.api.quick_payloads import QuickPaymentPaylo
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     normalize_customer_type,
 )
-from acentem_takipte.acentem_takipte.services.quick_create import (
+from acentem_takipte.acentem_takipte.services.quick_create_core import (
     create_claim as create_claim_service,
     create_customer as create_customer_service,
     create_lead as create_lead_service,

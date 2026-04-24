@@ -15,7 +15,7 @@
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.due_today) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-sky-700">{{ upperLabel(t("followUpSoon")) }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-brand-700">{{ upperLabel(t("followUpSoon")) }}</p>
               <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(followUpSummary.due_soon) }}</p>
             </div>
           </div>
@@ -59,7 +59,7 @@
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-sky-700">{{ upperLabel(t("taskSoon")) }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-brand-700">{{ upperLabel(t("taskSoon")) }}</p>
               <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
             </div>
           </div>

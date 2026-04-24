@@ -192,7 +192,7 @@ const {
 }
 
 .input.qc-control:focus {
-  @apply border-blue-500 ring-1 ring-blue-500 outline-none;
+  @apply border-brand-500 ring-1 ring-brand-500 outline-none;
 }
 
 .qc-remote-select {
@@ -242,7 +242,7 @@ const {
 }
 
 .qc-remote-create-action {
-  @apply w-full px-3 py-2 text-left text-xs font-semibold text-sky-700 hover:bg-sky-50;
+  @apply w-full px-3 py-2 text-left text-xs font-semibold text-brand-700 hover:bg-sky-50;
 }
 </style>
 

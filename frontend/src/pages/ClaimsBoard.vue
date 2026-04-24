@@ -90,12 +90,12 @@ const {
 });
 
 const claimsTableColumns = computed(() => [
-  { key: "claim_no", label: t("claim_id"), width: "150px" },
-  { key: "customer_label", label: t("customer"), width: "200px" },
-  { key: "policy_no_display", label: t("policy_no"), width: "150px" },
-  { key: "approved_amount", label: t("total_amount"), width: "150px", align: "right" },
-  { key: "incident_date_label", label: t("claim_date"), width: "120px" },
-  { key: "claim_status", label: t("status"), width: "120px", type: "status", domain: "claim" },
+  { key: "claim_primary", secondaryKey: "claim_secondary", label: t("colClaim"), type: "stacked" },
+  { key: "customer_label", label: t("colCustomer"), width: "180px" },
+  { key: "type_primary", secondaryKey: "type_secondary", label: t("colDetail"), type: "stacked" },
+  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colFinance"), type: "stacked" },
+  { key: "incident_date_label", label: t("colIncidentDate"), width: "120px" },
+  { key: "claim_status", label: t("colStatus"), width: "120px", type: "status", domain: "claim" },
   { key: "_actions", label: t("payments"), width: "240px", type: "actions", align: "right" },
 ]);
 

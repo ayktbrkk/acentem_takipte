@@ -16,15 +16,15 @@
         <SectionPanel :title="t('how_to_use')">
           <div class="space-y-4">
             <div class="flex items-start gap-3">
-              <div class="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold shrink-0">1</div>
+              <div class="h-6 w-6 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold shrink-0">1</div>
               <p class="text-sm text-slate-600 leading-relaxed">{{ t("help_tax_id") }}</p>
             </div>
             <div class="flex items-start gap-3">
-              <div class="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold shrink-0">2</div>
+              <div class="h-6 w-6 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold shrink-0">2</div>
               <p class="text-sm text-slate-600 leading-relaxed">{{ t("help_masked") }}</p>
             </div>
             <div class="flex items-start gap-3">
-              <div class="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold shrink-0">3</div>
+              <div class="h-6 w-6 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-xs font-bold shrink-0">3</div>
               <p class="text-sm text-slate-600 leading-relaxed">{{ t("help_request") }}</p>
             </div>
           </div>

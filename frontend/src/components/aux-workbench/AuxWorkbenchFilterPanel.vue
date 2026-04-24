@@ -4,7 +4,7 @@
       <div class="flex-1 min-w-[200px]">
         <input
           v-model.trim="draft.query"
-          class="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+          class="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 transition-all"
           :placeholder="searchPlaceholder"
         />
       </div>

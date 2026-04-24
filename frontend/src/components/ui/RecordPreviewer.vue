@@ -17,7 +17,7 @@
       <div 
         v-for="metric in preview.metrics" 
         :key="metric.label"
-        class="rounded-2xl bg-blue-50/50 p-4 border border-blue-100"
+        class="rounded-2xl bg-brand-50/50 p-4 border border-brand-100"
       >
         <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{{ metric.label }}</p>
         <p class="text-xl font-black text-blue-900 mt-1">

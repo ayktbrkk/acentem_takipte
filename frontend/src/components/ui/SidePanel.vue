@@ -54,7 +54,7 @@
   >
     <div
       v-if="show"
-      class="fixed inset-0 z-[55] bg-slate-900/40 backdrop-blur-sm"
+      class="fixed inset-0 z-[55] bg-brand-600/40 backdrop-blur-sm"
       @click="$emit('close')"
     ></div>
   </Transition>

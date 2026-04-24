@@ -10,7 +10,7 @@
         <div class="mt-1.5 flex flex-wrap items-center gap-2">
           <span class="copy-tag">{{ customer.name }}</span>
           <span class="copy-tag">{{ customer.tax_id }}</span>
-          <span class="copy-tag text-sky-700 font-medium">{{ customer.office_branch }}</span>
+          <span class="copy-tag text-brand-700 font-medium">{{ customer.office_branch }}</span>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -310,6 +310,7 @@ const activeCustomerTab = ref("overview");
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
+const {
   customer,
   summary,
   portfolio,

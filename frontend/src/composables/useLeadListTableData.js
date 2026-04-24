@@ -102,6 +102,14 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
     rows.value.map((row) => ({
       ...row,
       name: row.name,
+      lead_primary: row.name,
+      lead_secondary: row.branch || "-",
+      customer_primary: row.customer_full_name || row.customer_name || row.customer || "-",
+      customer_secondary: `${translateText(row.customer_customer_type || "-", activeLocale.value)} | ${row.customer_masked_tax_id || "-"}`,
+      process_primary: t(row.status === "Open" ? "statusOpen" : row.status === "Draft" ? "statusDraft" : row.status),
+      process_secondary: t(leadStaleState(row)),
+      potential_primary: fmtCurrency(row.estimated_gross_premium || 0),
+      potential_secondary: fmtDateTime(row.creation),
       customer_type_label: translateText(row.customer_customer_type || "-", activeLocale.value),
       customer_tax_id: row.customer_masked_tax_id || "-",
       customer_label: row.customer_full_name || row.customer_name || row.customer || "-",
@@ -184,18 +192,11 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
     },
   ]);
   const leadListColumns = [
-    { key: "name", label: "Fırsat No", width: "160px", type: "mono" },
-    { key: "insurance_company", label: "Sigorta Şirketi", width: "180px" },
-    { key: "branch", label: "Branş", width: "160px" },
-    { key: "status", label: "Durum", width: "100px", type: "status" },
-    { key: "customer_type_label", label: "Müşteri Türü", width: "130px" },
-    { key: "customer_tax_id", label: "TC/VNO", width: "140px", type: "mono" },
-    { key: "customer_label", label: "Müşteri Ad Soyad", width: "220px" },
-    { key: "customer_birth_date", label: "Doğum Tarihi", width: "120px", type: "date" },
-    { key: "issue_date", label: "Tanzim Tarihi", width: "120px", type: "date" },
-    { key: "stale_state", label: "Takip Durumu", width: "120px", type: "status" },
-    { key: "conversion_state", label: "Dönüşüm", width: "140px", type: "status" },
-    { key: "estimated_gross_premium", label: "Tahmini Brüt Prim", width: "140px", type: "amount", align: "right" },
+    { key: "lead_primary", secondaryKey: "lead_secondary", label: t("colLead"), type: "stacked" },
+    { key: "customer_primary", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
+    { key: "process_primary", secondaryKey: "process_secondary", label: t("colProcess"), type: "stacked" },
+    { key: "potential_primary", secondaryKey: "potential_secondary", label: t("colPotential"), type: "stacked" },
+    { key: "conversion_state", label: t("colConversion"), type: "status", domain: "AT Lead" },
   ];
 
   return {

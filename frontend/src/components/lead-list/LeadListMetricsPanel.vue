@@ -14,7 +14,7 @@
     </div>
     <div class="mini-metric">
       <p class="mini-metric-label">{{ t("summaryActionable") }}</p>
-      <p class="mini-metric-value text-blue-600">{{ formatCount(leadPageSummary.actionable) }}</p>
+      <p class="mini-metric-value text-brand-600">{{ formatCount(leadPageSummary.actionable) }}</p>
     </div>
     <div class="mini-metric">
       <p class="mini-metric-label">{{ t("summaryConversion") }}</p>

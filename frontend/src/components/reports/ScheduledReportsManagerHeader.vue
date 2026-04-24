@@ -15,7 +15,7 @@
       </button>
       <button
         type="button"
-        class="rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 transition hover:border-sky-400 hover:text-sky-900"
+        class="rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-brand-700 transition hover:border-sky-400 hover:text-sky-900"
         :disabled="loading || running"
         @click="$emit('new')"
       >

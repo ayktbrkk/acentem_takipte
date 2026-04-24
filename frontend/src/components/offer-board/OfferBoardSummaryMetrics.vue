@@ -10,7 +10,7 @@
     </div>
     <div class="mini-metric">
       <p class="mini-metric-label">{{ labels.sent }}</p>
-      <p class="mini-metric-value text-blue-600">{{ formatCount(summary.sent) }}</p>
+      <p class="mini-metric-value text-brand-600">{{ formatCount(summary.sent) }}</p>
     </div>
     <div class="mini-metric">
       <p class="mini-metric-label">{{ labels.accepted }}</p>

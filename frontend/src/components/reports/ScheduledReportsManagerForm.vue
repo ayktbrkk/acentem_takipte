@@ -51,7 +51,7 @@
         <input v-model.number="form.dayOfMonth" class="input" type="number" min="1" max="31" step="1" />
       </label>
       <label class="flex items-center gap-2 pt-6 text-sm text-slate-700">
-        <input v-model="form.enabled" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+        <input v-model="form.enabled" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-sky-500" />
         <span>{{ enabledLabel }}</span>
       </label>
     </div>

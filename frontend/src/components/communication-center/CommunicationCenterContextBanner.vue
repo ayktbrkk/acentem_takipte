@@ -8,10 +8,10 @@
         <p v-if="filters.customer" class="text-sm font-medium text-sky-800">
           {{ t("customerContext") }}: {{ customerContextLabel }}
         </p>
-        <p v-if="referenceContextLabel" class="text-xs font-medium text-sky-700">
+        <p v-if="referenceContextLabel" class="text-xs font-medium text-brand-700">
           {{ t("referenceContext") }}: {{ referenceContextLabel }}
         </p>
-        <p v-if="channelStatusContextLabel" class="text-xs text-sky-700">
+        <p v-if="channelStatusContextLabel" class="text-xs text-brand-700">
           {{ channelStatusContextLabel }}
         </p>
       </div>

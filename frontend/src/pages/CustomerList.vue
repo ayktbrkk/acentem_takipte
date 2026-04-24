@@ -29,7 +29,7 @@
         </div>
         <div class="mini-metric">
           <p class="mini-metric-label">{{ t("individual") }}</p>
-          <p class="mini-metric-value text-blue-600">{{ summary.individual }}</p>
+          <p class="mini-metric-value text-brand-600">{{ summary.individual }}</p>
         </div>
         <div class="mini-metric">
           <p class="mini-metric-label">{{ t("corporate") }}</p>
@@ -58,22 +58,7 @@
           :loading="loading"
           clickable
           @row-click="row => openCustomer(row.name)"
-        >
-          <template #cell(full_name)="{ row }">
-            <div class="flex items-center gap-3">
-              <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600">
-                {{ (row.full_name || "?").charAt(0).toUpperCase() }}
-              </div>
-              <div>
-                <p class="font-medium text-slate-900">{{ row.full_name }}</p>
-                <p class="text-xs text-slate-500">{{ row.name }}</p>
-              </div>
-            </div>
-          </template>
-          <template #cell(consent_status)="{ row }">
-            <StatusBadge domain="customer" :status="row.consent_status === 'Granted' ? 'active' : 'cancel'" :label="row.consent_status_label" />
-          </template>
-        </ListTable>
+        />
 
         <div class="mt-4 flex items-center justify-between">
           <p class="text-xs text-slate-500">
@@ -141,12 +126,10 @@ const {
 } = useCustomerBoardRuntime({ activeLocale });
 
 const columns = computed(() => [
-  { key: "full_name", label: t("full_name"), width: "250px" },
-  { key: "tax_id", label: t("tax_id"), width: "150px" },
-  { key: "customer_type_label", label: t("type"), width: "120px" },
-  { key: "phone", label: t("phone"), width: "150px" },
-  { key: "office_branch", label: t("branch"), width: "150px" },
-  { key: "consent_status", label: t("consent"), width: "120px" },
+  { key: "identity_primary", secondaryKey: "identity_secondary", label: t("colIdentity"), type: "stacked" },
+  { key: "contact_primary", secondaryKey: "contact_secondary", label: t("colContact"), type: "stacked" },
+  { key: "personal_primary", secondaryKey: "personal_secondary", label: t("colPersonal"), type: "stacked" },
+  { key: "mgmt_primary", secondaryKey: "mgmt_secondary", label: t("colManagement"), type: "stacked" },
 ]);
 
 const filterConfig = computed(() => [

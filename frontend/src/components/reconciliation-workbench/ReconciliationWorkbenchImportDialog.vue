@@ -38,7 +38,7 @@
             </article>
             <article class="at-metric-card">
               <p class="at-metric-label">{{ props.t("importAmount") }}</p>
-              <p class="at-metric-value !text-sky-700">{{ props.formatMoney(props.summary.total_amount_try || 0) }}</p>
+              <p class="at-metric-value !text-brand-700">{{ props.formatMoney(props.summary.total_amount_try || 0) }}</p>
             </article>
           </div>
           <div v-if="props.rows.length" class="flex justify-end">

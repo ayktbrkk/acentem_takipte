@@ -42,7 +42,7 @@
           </div>
           <div v-else class="space-y-4">
             <div v-for="event in activity" :key="event.timestamp" class="flex gap-4">
-              <div class="mt-1 h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+              <div class="mt-1 h-2 w-2 rounded-full bg-brand-500 shrink-0" />
               <div>
                 <p class="text-sm font-medium text-slate-900">{{ event.meta }}</p>
                 <p class="text-xs text-slate-500">{{ formatDate(event.timestamp) }} · {{ event.owner }}</p>
@@ -58,11 +58,11 @@
           <SkeletonLoader v-if="loading" variant="card" />
           <div v-else @click="openCustomer" class="cursor-pointer group">
             <div class="flex items-center gap-4 mb-4">
-              <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+              <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-600 group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
                 {{ (customer.full_name || "?").charAt(0).toUpperCase() }}
               </div>
               <div>
-                <p class="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{{ customer.full_name || t("all") }}</p>
+                <p class="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{{ customer.full_name || t("all") }}</p>
                 <p class="text-sm text-slate-500">{{ customer.name }}</p>
               </div>
             </div>
@@ -81,7 +81,7 @@
               v-for="policy in relatedPolicies" 
               :key="policy.name"
               @click="openPolicy(policy.name)"
-              class="p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 cursor-pointer transition-all"
+              class="p-3 rounded-lg border border-slate-100 hover:border-brand-200 hover:bg-brand-50/30 cursor-pointer transition-all"
             >
               <p class="text-sm font-bold text-slate-900">{{ policy.policy_no || policy.name }}</p>
               <p class="text-xs text-slate-500 mt-1">{{ policy.status }} · {{ formatCurrency(policy.gross_premium, policy.currency) }}</p>
@@ -95,7 +95,7 @@
               v-for="relOffer in relatedOffers" 
               :key="relOffer.name"
               @click="openOffer(relOffer.name)"
-              class="p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 cursor-pointer transition-all"
+              class="p-3 rounded-lg border border-slate-100 hover:border-brand-200 hover:bg-brand-50/30 cursor-pointer transition-all"
             >
               <p class="text-sm font-bold text-slate-900">{{ relOffer.name }}</p>
               <p class="text-xs text-slate-500 mt-1">{{ relOffer.status }} · {{ formatCurrency(relOffer.gross_premium, relOffer.currency) }}</p>
