@@ -1,5 +1,5 @@
 <template>
-  <SectionPanel :title="title" :count="count" panel-class="surface-card rounded-2xl p-5">
+  <div class="mt-8 space-y-4">
     <ListTable
       :columns="columns"
       :rows="rows"
@@ -8,19 +8,23 @@
       :empty-message="emptyMessage"
       @row-click="$emit('row-click', $event)"
     />
-    <div class="mt-4 flex items-center justify-between">
-      <p class="text-xs text-gray-400">{{ rowCount }} / {{ total }} {{ showingLabel }}</p>
-      <div class="flex items-center gap-1">
-        <button class="btn btn-sm" :disabled="page <= 1" @click="$emit('previous-page')">←</button>
-        <span class="px-2 text-xs text-gray-600">{{ page }}</span>
-        <button class="btn btn-sm" :disabled="!hasNextPage" @click="$emit('next-page')">→</button>
+    <div class="mt-4 flex items-center justify-between px-2">
+      <p class="text-xs font-medium text-slate-400">{{ rowCount }} / {{ total }} {{ showingLabel }}</p>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-outline btn-sm" :disabled="page <= 1" @click="$emit('previous-page')">
+          <FeatherIcon name="chevron-left" class="h-3 w-3" />
+        </button>
+        <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ page }}</span>
+        <button class="btn btn-outline btn-sm" :disabled="!hasNextPage" @click="$emit('next-page')">
+          <FeatherIcon name="chevron-right" class="h-3 w-3" />
+        </button>
       </div>
     </div>
-  </SectionPanel>
+  </div>
 </template>
 
 <script setup>
-import SectionPanel from "../app-shell/SectionPanel.vue";
+import { FeatherIcon } from "frappe-ui";
 import ListTable from "../ui/ListTable.vue";
 
 defineProps({

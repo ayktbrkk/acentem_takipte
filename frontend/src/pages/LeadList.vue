@@ -6,48 +6,54 @@
     :record-count-label="t('total_leads')"
   >
     <template #actions>
-      <ActionButton variant="primary" size="sm" @click="openQuickLeadDialog()">
-        + {{ t("new_lead") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="reload">
+      <button class="btn btn-primary" @click="openQuickLeadDialog()">
+        <FeatherIcon name="plus" class="h-4 w-4" />
+        {{ t("new_lead") }}
+      </button>
+      <button class="btn btn-outline" @click="reload">
+        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t("refresh") }}
-      </ActionButton>
+      </button>
     </template>
 
     <template #metrics>
-      <div v-if="loading && !rows.length" class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div v-if="loading && !rows.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
       </div>
-      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("total") }}</p>
-          <p class="mini-metric-value">{{ summary.total }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("active") }}</p>
-          <p class="mini-metric-value text-brand-600">{{ summary.active }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("individual") }}</p>
-          <p class="mini-metric-value text-emerald-600">{{ summary.individual }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("corporate") }}</p>
-          <p class="mini-metric-value text-violet-600">{{ summary.corporate }}</p>
-        </div>
+      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SaaSMetricCard :label="t('total')" :value="summary.total" />
+        <SaaSMetricCard :label="t('active')" :value="summary.active" value-class="text-brand-600" />
+        <SaaSMetricCard :label="t('individual')" :value="summary.individual" value-class="text-emerald-600" />
+        <SaaSMetricCard :label="t('corporate')" :value="summary.corporate" value-class="text-violet-600" />
       </div>
     </template>
 
-    <SectionPanel :title="t('filters')">
-      <FilterBar
-        :search="filters.query"
-        :filters="filterConfig"
-        @update:search="v => updateFilter('query', v)"
-        @filter-change="({ key, value }) => updateFilter(key, value)"
-      />
-    </SectionPanel>
+    <div class="space-y-4">
+      <SmartFilterBar
+        v-model="filters.query"
+        :placeholder="t('search')"
+        :advanced-label="t('filters')"
+        @open-advanced="showAdvancedFilters = !showAdvancedFilters"
+      >
+        <template #primary-filters>
+          <select
+            class="input h-9 py-1 text-sm"
+            @change="updateFilter('status', $event.target.value)"
+          >
+            <option value="">{{ t("status") }}: {{ t("all") }}</option>
+            <option v-for="opt in filterConfig[0].options" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </template>
+      </SmartFilterBar>
 
-    <SectionPanel :title="t('lead_list')">
+      <div v-if="showAdvancedFilters" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <p class="text-sm text-gray-500">{{ t("advanced_filters_placeholder") || 'Gelişmiş filtreleme seçenekleri yakında eklenecek.' }}</p>
+      </div>
+    </div>
+
+    <div class="mt-8 space-y-4">
       <template v-if="loading && !rows.length">
         <SkeletonLoader variant="list" :rows="10" />
       </template>
@@ -60,32 +66,30 @@
           @row-click="row => openLead(row.name)"
         />
 
-        <div class="mt-4 flex items-center justify-between">
-          <p class="text-xs text-slate-500">
-            {{ t("showing") }} {{ rows.length }} / {{ summary.total }}
+        <div class="mt-4 flex items-center justify-between px-2">
+          <p class="text-xs font-medium text-slate-400">
+            {{ t("showing") }} {{ rows.length }} / {{ summary.total }} {{ t('total_leads') }}
           </p>
           <div class="flex items-center gap-2">
-            <ActionButton
-              variant="secondary"
-              size="xs"
+            <button
+              class="btn btn-outline btn-sm"
               :disabled="pagination.page <= 1"
               @click="setPage(pagination.page - 1)"
             >
-              ←
-            </ActionButton>
-            <span class="text-xs font-medium text-slate-700">{{ pagination.page }}</span>
-            <ActionButton
-              variant="secondary"
-              size="xs"
+              <FeatherIcon name="chevron-left" class="h-3 w-3" />
+            </button>
+            <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ pagination.page }}</span>
+            <button
+              class="btn btn-outline btn-sm"
               :disabled="rows.length < pagination.pageLength"
               @click="setPage(pagination.page + 1)"
             >
-              →
-            </ActionButton>
+              <FeatherIcon name="chevron-right" class="h-3 w-3" />
+            </button>
           </div>
         </div>
       </template>
-    </SectionPanel>
+    </div>
 
     <LeadListQuickLeadDialog
       :show-quick-lead-dialog="showQuickLeadDialog"
@@ -117,15 +121,19 @@ import { useLeadBoardRuntime } from "../composables/useLeadBoardRuntime";
 import { useLeadListQuickLead } from "../composables/useLeadListQuickLead";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import ListTable from "../components/ui/ListTable.vue";
-import FilterBar from "../components/ui/FilterBar.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import LeadListQuickLeadDialog from "../components/lead-list/LeadListQuickLeadDialog.vue";
+import { FeatherIcon } from "frappe-ui";
+import { ref } from "vue";
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
+const showAdvancedFilters = ref(false);
 
 const {
   filters,
@@ -166,7 +174,7 @@ const columns = computed(() => [
   { key: "lead_primary", secondaryKey: "lead_secondary", label: t("colLead"), type: "stacked" },
   { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
   { key: "status_label", secondaryKey: "takip_label", label: t("colStatus"), type: "stacked" },
-  { key: "finance_primary", secondaryKey: "date_secondary", label: t("colPotential"), type: "stacked" },
+  { key: "finance_primary", secondaryKey: "date_secondary", label: t("colPotential"), type: "stacked", align: "right" },
 ]);
 
 const filterConfig = computed(() => [

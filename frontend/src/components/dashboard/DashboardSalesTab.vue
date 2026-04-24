@@ -44,14 +44,14 @@
             @click="openOfferItem(offer)"
           >
             <template #trailing>
-              <ActionButton
+              <button
                 v-if="offer.converted_policy"
-                variant="ghost"
-                size="sm"
+                class="btn btn-outline btn-sm"
                 @click.stop="openConvertedPolicyItem(offer)"
               >
+                <FeatherIcon name="external-link" class="h-3 w-3" />
                 {{ t("openPolicyAction") }}
-              </ActionButton>
+              </button>
             </template>
             <MiniFactList :items="recentOfferFacts(offer)" />
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
@@ -168,7 +168,7 @@
 </template>
 
 <script setup>
-import ActionButton from "../app-shell/ActionButton.vue";
+import { FeatherIcon } from "frappe-ui";
 import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";

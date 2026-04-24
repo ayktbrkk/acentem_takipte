@@ -1,30 +1,24 @@
 <template>
-  <SectionPanel
-    :title="t('filtersTitle')"
-    :count="`${claimsListActiveCount} ${t('activeFilters')}`"
-    panel-class="surface-card rounded-2xl p-4"
-  >
-    <FilterBar
-      v-model:search="searchProxy"
-      :filters="claimsListFilterConfig"
-      :active-count="claimsListActiveCount"
-      :search-placeholder="t('searchPlaceholder')"
-      @filter-change="$emit('filter-change', $event)"
-      @reset="$emit('reset')"
+  <div class="mb-6">
+    <SmartFilterBar
+      v-model="searchProxy"
+      :placeholder="t('searchPlaceholder')"
+      @open-advanced="showAdvanced = !showAdvanced"
     >
-      <template #actions>
-        <button class="btn btn-outline btn-sm" @click="$emit('reset')">{{ t("clearFilters") }}</button>
-        <button class="btn btn-outline btn-sm" @click="$emit('focus-search')">{{ t("searchPlaceholder") }}</button>
+      <template #primary-filters>
+        <button class="btn btn-outline" @click="$emit('reset')">
+          <FeatherIcon name="x" class="h-4 w-4" />
+          {{ t("clearFilters") }}
+        </button>
       </template>
-    </FilterBar>
-  </SectionPanel>
+    </SmartFilterBar>
+  </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
-
-import SectionPanel from "../app-shell/SectionPanel.vue";
-import FilterBar from "../ui/FilterBar.vue";
+import { computed, ref } from "vue";
+import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
+import { FeatherIcon } from "frappe-ui";
 
 const props = defineProps({
   claimsListActiveCount: {
@@ -46,6 +40,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:searchQuery", "filter-change", "reset", "focus-search"]);
+
+const showAdvanced = ref(false);
 
 const searchProxy = computed({
   get: () => props.searchQuery,

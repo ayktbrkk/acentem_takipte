@@ -19,6 +19,7 @@
           >
             {{ formatHeaderLabel(col.label) }}
           </th>
+          <th v-if="clickable" class="w-10 bg-gray-50 px-4 py-2.5"></th>
         </tr>
       </thead>
       <tbody>
@@ -41,7 +42,7 @@
             :key="col.key"
             :class="[
               'px-4 py-3',
-              col.align === 'right' && 'text-right',
+              (col.align === 'right' || col.type === 'amount' || col.type === 'finance') && 'text-right',
               col.align === 'center' && 'text-center',
               resolveCellClass(col, row),
             ]"
@@ -91,9 +92,10 @@
               </span>
             </div>
 
-            <span v-else class="text-sm text-gray-900">
-              {{ row[col.key] ?? '-' }}
             </span>
+          </td>
+          <td v-if="clickable" class="px-4 py-3 text-right">
+            <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-gray-300 group-hover:text-gray-400" />
           </td>
         </tr>
       </tbody>
@@ -103,6 +105,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { FeatherIcon } from "frappe-ui";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import { translateText, uppercaseText } from "@/utils/i18n";
@@ -114,6 +117,7 @@ const props = defineProps({
   columns: { type: Array, required: true },
   rows: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
+  clickable: { type: Boolean, default: false },
   emptyMessage: { type: String, default: "No records found." },
   locale: { type: String, default: "" },
 });

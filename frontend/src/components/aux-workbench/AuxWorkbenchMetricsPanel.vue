@@ -2,15 +2,13 @@
   <div class="space-y-6">
     <!-- Combined Summary Cards -->
     <div v-if="allCards.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div 
+      <SaaSMetricCard 
         v-for="card in allCards" 
         :key="card.key" 
-        class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center transition-all hover:shadow-md"
-      >
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ card.label }}</p>
-        <p class="text-2xl font-black text-slate-900">{{ card.value }}</p>
-        <p v-if="card.hint" class="mt-1 text-[10px] text-slate-400 font-medium">{{ card.hint }}</p>
-      </div>
+        :label="card.label"
+        :value="card.value"
+        :trend="card.hint"
+      />
     </div>
 
     <!-- Trend Section -->
@@ -49,6 +47,7 @@
 <script setup>
 import { computed } from "vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
+import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 
 const props = defineProps({
   snapshotSummaryCards: { type: Array, default: () => [] },

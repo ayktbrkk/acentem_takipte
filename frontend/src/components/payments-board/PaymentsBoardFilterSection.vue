@@ -1,77 +1,87 @@
 <template>
-  <article class="surface-card rounded-2xl p-5">
-    <WorkbenchFilterToolbar
-      v-model="presetModel"
-      :advanced-label="t('advancedFilters')"
-      :collapse-label="t('hideAdvancedFilters')"
-      :active-count="activeCount"
-      :active-count-label="t('activeFilters')"
-      :preset-label="t('presetLabel')"
-      :preset-options="presetOptions"
-      :can-delete-preset="canDeletePreset"
-      :save-label="t('savePreset')"
-      :delete-label="t('deletePreset')"
-      :apply-label="t('applyFilters')"
-      :reset-label="t('clearFilters')"
-      @preset-change="$emit('preset-change', $event)"
-      @preset-save="$emit('preset-save', $event)"
-      @preset-delete="$emit('preset-delete')"
-      @apply="$emit('apply')"
-      @reset="$emit('reset')"
+  <div class="mb-6">
+    <SmartFilterBar
+      v-model="filters.query"
+      :placeholder="t('searchPlaceholder')"
+      @open-advanced="showAdvanced = !showAdvanced"
     >
-      <input
-        v-model.trim="filters.query"
-        class="input"
-        type="search"
-        :placeholder="t('searchPlaceholder')"
-        @keyup.enter="$emit('apply')"
-      />
-      <select v-model="filters.direction" class="input">
-        <option value="">{{ t("allDirections") }}</option>
-        <option value="Inbound">{{ t("inbound") }}</option>
-        <option value="Outbound">{{ t("outbound") }}</option>
-      </select>
-      <select v-model="filters.sort" class="input">
-        <option v-for="option in paymentSortOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-      <select v-model.number="filters.limit" class="input">
-        <option :value="24">24</option>
-        <option :value="50">50</option>
-        <option :value="100">100</option>
-      </select>
-      <template #advanced>
-        <input
-          v-model.trim="filters.customerQuery"
-          class="input"
-          type="search"
-          :placeholder="t('customerFilter')"
-          @keyup.enter="$emit('apply')"
+      <template #primary-filters>
+        <select v-model="filters.direction" class="input h-9 py-1 text-sm min-w-[140px]" @change="$emit('apply')">
+          <option value="">{{ t("allDirections") }}</option>
+          <option value="Inbound">{{ t("inbound") }}</option>
+          <option value="Outbound">{{ t("outbound") }}</option>
+        </select>
+        <select v-model="filters.sort" class="input h-9 py-1 text-sm min-w-[160px]" @change="$emit('apply')">
+          <option v-for="option in paymentSortOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <div class="h-4 w-px bg-gray-200 mx-1"></div>
+        <FilterPresetMenu
+          :model-value="presetModel"
+          :label="t('presetLabel')"
+          :options="presetOptions"
+          :can-delete="canDeletePreset"
+          :show-save="true"
+          :show-delete="true"
+          :save-label="t('savePreset')"
+          :delete-label="t('deletePreset')"
+          @update:model-value="presetModel = $event"
+          @change="$emit('preset-change', $event)"
+          @save="$emit('preset-save', $event)"
+          @delete="$emit('preset-delete')"
         />
-        <input
-          v-model.trim="filters.policyQuery"
-          class="input"
-          type="search"
-          :placeholder="t('policyFilter')"
-          @keyup.enter="$emit('apply')"
-        />
-        <input
-          v-model.trim="filters.purposeQuery"
-          class="input"
-          type="search"
-          :placeholder="t('purposeFilter')"
-          @keyup.enter="$emit('apply')"
-        />
+        <button class="btn btn-primary" @click="$emit('apply')">
+          {{ t('applyFilters') }}
+        </button>
+        <button class="btn btn-outline" @click="$emit('reset')">
+          <FeatherIcon name="x" class="h-4 w-4" />
+        </button>
       </template>
-    </WorkbenchFilterToolbar>
-  </article>
+
+      <template #advanced>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3 pt-2">
+          <label class="flex flex-col gap-1">
+            <span class="text-xs font-medium text-gray-600">{{ t('customerFilter') }}</span>
+            <input
+              v-model.trim="filters.customerQuery"
+              class="input"
+              type="search"
+              :placeholder="t('customerFilter')"
+              @keyup.enter="$emit('apply')"
+            />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs font-medium text-gray-600">{{ t('policyFilter') }}</span>
+            <input
+              v-model.trim="filters.policyQuery"
+              class="input"
+              type="search"
+              :placeholder="t('policyFilter')"
+              @keyup.enter="$emit('apply')"
+            />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs font-medium text-gray-600">{{ t('purposeFilter') }}</span>
+            <input
+              v-model.trim="filters.purposeQuery"
+              class="input"
+              type="search"
+              :placeholder="t('purposeFilter')"
+              @keyup.enter="$emit('apply')"
+            />
+          </label>
+        </div>
+      </template>
+    </SmartFilterBar>
+  </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
-
-import WorkbenchFilterToolbar from "../app-shell/WorkbenchFilterToolbar.vue";
+import { computed, ref } from "vue";
+import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
+import FilterPresetMenu from "../app-shell/FilterPresetMenu.vue";
+import { FeatherIcon } from "frappe-ui";
 
 const props = defineProps({
   modelValue: {
@@ -105,6 +115,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:modelValue", "preset-change", "preset-save", "preset-delete", "apply", "reset"]);
+
+const showAdvanced = ref(false);
 
 const presetModel = computed({
   get: () => props.modelValue,

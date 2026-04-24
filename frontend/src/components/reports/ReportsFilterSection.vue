@@ -76,20 +76,24 @@
             @save="$emit('preset-save')"
             @delete="$emit('preset-delete')"
           />
-          <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('refresh')">{{ t('refresh') }}</button>
-          <button class="btn btn-sm" type="button" :disabled="loading" @click="$emit('apply-filters')">{{ t('apply_filters') }}</button>
+          <button class="btn btn-outline" type="button" :disabled="loading" @click="$emit('refresh')">
+            <FeatherIcon name="refresh-cw" :class="['h-4 w-4', loading && 'animate-spin']" />
+          </button>
+          <button class="btn btn-primary" type="button" :disabled="loading" @click="$emit('apply-filters')">
+            {{ t('apply_filters') }}
+          </button>
           <button
-            class="btn btn-secondary btn-sm flex items-center gap-1.5"
+            class="btn btn-outline"
             type="button"
             :disabled="loading"
             @click="$emit('enqueue-export', 'xlsx')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-            </svg>
+            <FeatherIcon name="cloud-lightning" class="h-4 w-4" />
             {{ t('backgroundExport') || 'Background Export' }}
           </button>
-          <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="$emit('clear-filters')">{{ t('clear_filters') }}</button>
+          <button class="btn btn-outline" type="button" :disabled="loading" @click="$emit('clear-filters')">
+             <FeatherIcon name="x" class="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>
@@ -130,6 +134,7 @@
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import FilterPresetMenu from "../app-shell/FilterPresetMenu.vue";
+import { FeatherIcon } from "frappe-ui";
 
 defineProps({
   filters: {

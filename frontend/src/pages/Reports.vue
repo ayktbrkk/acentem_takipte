@@ -7,15 +7,20 @@
     :record-count-label="t('record_count')"
   >
     <template #actions>
-      <ActionButton variant="secondary" size="sm" @click="focusFilters">
+    <template #actions>
+      <button class="btn btn-outline" @click="focusFilters">
+        <FeatherIcon name="search" class="h-4 w-4" />
         {{ t("focus_filters") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" :loading="loading || exportLoading" @click="downloadReport('xlsx')">
+      </button>
+      <button class="btn btn-outline" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
+        <FeatherIcon name="download" class="h-4 w-4" />
         {{ t("export_xlsx") }}
-      </ActionButton>
-      <ActionButton variant="primary" size="sm" :loading="loading || exportLoading" @click="downloadReport('pdf')">
+      </button>
+      <button class="btn btn-primary px-4" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
+        <FeatherIcon name="file-text" class="h-4 w-4" />
         {{ t("export_pdf") }}
-      </ActionButton>
+      </button>
+    </template>
     </template>
 
     <template #metrics>
@@ -23,14 +28,13 @@
         <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
       </div>
       <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div
+        <SaaSMetricCard
           v-for="item in heroSummaryCells"
           :key="item.label"
-          class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center transition-all hover:shadow-md"
-        >
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ item.label }}</p>
-          <p class="text-2xl font-black text-slate-900" :class="item.valueClass">{{ item.value }}</p>
-        </div>
+          :label="item.label"
+          :value="item.value"
+          :value-class="item.valueClass"
+        />
       </div>
     </template>
 
@@ -143,8 +147,8 @@ import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import { FeatherIcon } from "frappe-ui";
 import SidePanel from "../components/ui/SidePanel.vue";
 import RecordPreviewer from "../components/ui/RecordPreviewer.vue";
 import ReportsFilterSection from "../components/reports/ReportsFilterSection.vue";

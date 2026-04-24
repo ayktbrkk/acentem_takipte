@@ -6,12 +6,13 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <ActionButton variant="primary" size="sm">
-        + {{ t("newTask") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="reloadRenewals">
-        {{ t("refresh") }}
-      </ActionButton>
+      <button class="btn btn-primary px-4">
+        <FeatherIcon name="plus" class="h-4 w-4" />
+        {{ t("newTask") }}
+      </button>
+      <button class="btn btn-outline" @click="reloadRenewals">
+        <FeatherIcon name="refresh-cw" :class="['h-4 w-4', renewalsLoading && 'animate-spin']" />
+      </button>
     </template>
 
     <template #metrics>
@@ -19,36 +20,38 @@
         <SkeletonLoader v-for="i in 5" :key="i" variant="card" />
       </div>
       <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-        <div v-for="item in renewalSummaryItems" :key="item.key" class="mini-metric">
-          <p class="mini-metric-label">{{ item.label }}</p>
-          <p class="mini-metric-value" :class="item.valueClass">{{ item.value }}</p>
-        </div>
+        <SaaSMetricCard
+          v-for="item in renewalSummaryItems"
+          :key="item.key"
+          :label="item.label"
+          :value="item.value"
+          :value-class="item.valueClass"
+        />
       </div>
     </template>
 
-    <SectionPanel :title="t('filters')">
-      <div class="flex flex-wrap gap-4">
-        <input
-          v-model.trim="filters.query"
-          class="input flex-1 min-w-[200px] h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 transition-all"
-          type="search"
-          :placeholder="t('searchPlaceholder')"
-          @keyup.enter="applyRenewalFilters"
-        />
-        <select v-model="filters.status" class="input h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all" @change="applyRenewalFilters">
-          <option value="">{{ t("allStatuses") }}</option>
-          <option v-for="option in renewalStatusOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        <select v-model="filters.dueScope" class="input h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all" @change="applyRenewalFilters">
-          <option value="">{{ t("allDueScopes") }}</option>
-          <option value="overdue">{{ t("dueScopeOverdue") }}</option>
-          <option value="7">{{ t("dueScope7") }}</option>
-          <option value="30">{{ t("dueScope30") }}</option>
-        </select>
-      </div>
-    </SectionPanel>
+    <div class="mb-6">
+      <SmartFilterBar
+        v-model="filters.query"
+        :placeholder="t('searchPlaceholder')"
+        @open-advanced="showAdvanced = !showAdvanced"
+      >
+        <template #primary-filters>
+          <select v-model="filters.status" class="input h-9 py-1 text-sm min-w-[140px]" @change="applyRenewalFilters">
+            <option value="">{{ t("allStatuses") }}</option>
+            <option v-for="option in renewalStatusOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <select v-model="filters.dueScope" class="input h-9 py-1 text-sm min-w-[140px]" @change="applyRenewalFilters">
+            <option value="">{{ t("allDueScopes") }}</option>
+            <option value="overdue">{{ t("dueScopeOverdue") }}</option>
+            <option value="7">{{ t("dueScope7") }}</option>
+            <option value="30">{{ t("dueScope30") }}</option>
+          </select>
+        </template>
+      </SmartFilterBar>
+    </div>
 
     <section class="kanban-board mt-6">
       <div v-if="renewalsLoading && !renewals.length" class="p-10 text-center">
@@ -118,10 +121,14 @@ import { useAuthStore } from "../stores/auth";
 import { useRenewalsBoardRuntime } from "../composables/useRenewalsBoardRuntime";
 import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
+import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { FeatherIcon } from "frappe-ui";
+import { ref } from "vue";
+
+const showAdvanced = ref(false);
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
@@ -190,17 +197,5 @@ const {
 
 .kanban-card {
   @apply cursor-pointer rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-brand-200 hover:-translate-y-0.5 active:scale-[0.98];
-}
-
-.mini-metric {
-  @apply bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center;
-}
-
-.mini-metric-label {
-  @apply text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1;
-}
-
-.mini-metric-value {
-  @apply text-xl font-black text-slate-900;
 }
 </style>

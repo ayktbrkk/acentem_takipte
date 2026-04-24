@@ -1,59 +1,35 @@
-<template>
   <div class="flex items-center gap-2">
-    <ActionButton
-      variant="secondary"
-      size="sm"
-      :loading="isLoading"
-      @click="$emit('refresh')"
-    >
-      {{ refreshLabel }}
-    </ActionButton>
-    <ActionButton
-      v-if="canExportSnapshotRows"
-      variant="secondary"
-      size="sm"
-      @click="$emit('export-snapshot-rows')"
-    >
-      {{ exportCsvLabel }}
-    </ActionButton>
-    <ActionButton
-      variant="secondary"
-      size="sm"
-      :disabled="isLoading"
-      @click="$emit('download-xlsx')"
-    >
+    <button class="btn btn-outline" :disabled="isLoading" @click="$emit('download-xlsx')">
+      <FeatherIcon name="download" class="h-4 w-4" />
       {{ exportXlsxLabel }}
-    </ActionButton>
-    <ActionButton
-      variant="secondary"
-      size="sm"
-      :disabled="isLoading"
-      @click="$emit('download-pdf')"
-    >
-      {{ exportPdfLabel }}
-    </ActionButton>
-    <ActionButton
+    </button>
+    <button
       v-if="auxQuickCreateLabel && canLaunchAuxQuickCreate"
-      variant="primary"
-      size="sm"
+      class="btn btn-primary"
       @click="$emit('launch-quick-create')"
     >
-      + {{ auxQuickCreateLabel }}
-    </ActionButton>
-    <ActionButton
+      <FeatherIcon name="plus" class="h-4 w-4" />
+      {{ auxQuickCreateLabel }}
+    </button>
+    <button class="btn btn-outline" :disabled="isLoading" @click="$emit('refresh')">
+      <FeatherIcon name="refresh-cw" :class="['h-4 w-4', isLoading && 'animate-spin']" />
+    </button>
+
+    <div v-if="visibleToolbarActions.length > 0" class="h-4 w-px bg-gray-200 mx-1"></div>
+
+    <button
       v-for="action in visibleToolbarActions"
       :key="action.key || action.routeName || localize(action.label)"
-      variant="secondary"
-      size="sm"
+      class="btn btn-outline"
       @click="$emit('run-toolbar-action', action)"
     >
       {{ localize(action.label) || panelLabel }}
-    </ActionButton>
+    </button>
   </div>
 </template>
 
 <script setup>
-import ActionButton from "../app-shell/ActionButton.vue";
+import { FeatherIcon } from "frappe-ui";
 
 defineProps({
   isLoading: { type: Boolean, default: false },

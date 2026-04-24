@@ -196,47 +196,62 @@
       :options="{ title: quickLeadDialogTitle, size: 'xl' }"
     >
       <template #body-content>
-        <div class="grid gap-3 p-4">
-          <div v-if="leadDialogError" class="qc-error-banner" role="alert" aria-live="polite">
+        <div class="grid gap-5 p-6 bg-slate-50/50">
+          <div v-if="leadDialogError" class="qc-error-banner shadow-sm" role="alert" aria-live="polite">
             <p class="qc-error-banner__text">{{ leadDialogError }}</p>
           </div>
-          <QuickCustomerPicker
-            :model="newLead"
-            :field-errors="leadDialogFieldErrors"
-            :disabled="isSubmitting"
-            :locale="activeLocale"
-            :office-branch="branchStore.requestBranch || ''"
-            :customer-label="{ tr: 'Müşteri / Ad Soyad', en: 'Customer / Full Name' }"
-          />
-          <input
-            v-model="newLead.estimated_gross_premium"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            :placeholder="t('estPremiumInput')"
-            min="0"
-            step="0.01"
-            type="number"
-          />
-          <textarea
-            v-model="newLead.notes"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            :placeholder="t('note')"
-            rows="3"
-          />
+          
+          <div class="space-y-4">
+            <QuickCustomerPicker
+              :model="newLead"
+              :field-errors="leadDialogFieldErrors"
+              :disabled="isSubmitting"
+              :locale="activeLocale"
+              :office-branch="branchStore.requestBranch || ''"
+              :customer-label="{ tr: 'Müşteri / Ad Soyad', en: 'Customer / Full Name' }"
+            />
+            
+            <div class="grid gap-1.5">
+              <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 pl-1">{{ t('estPremiumInput') }}</label>
+              <div class="relative group">
+                <input
+                  v-model="newLead.estimated_gross_premium"
+                  class="input pl-8"
+                  :placeholder="t('estPremiumInput')"
+                  min="0"
+                  step="0.01"
+                  type="number"
+                />
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₺</div>
+              </div>
+            </div>
+
+            <div class="grid gap-1.5">
+              <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 pl-1">{{ t('note') }}</label>
+              <textarea
+                v-model="newLead.notes"
+                class="input min-h-[100px] py-3"
+                :placeholder="t('note')"
+                rows="3"
+              />
+            </div>
+          </div>
         </div>
       </template>
       <template #actions>
-        <ActionButton variant="secondary" size="sm" @click="resetLeadForm(); showLeadDialog = false">
-          {{ t("cancel") }}
-        </ActionButton>
-        <ActionButton
-          variant="primary"
-          size="sm"
-          class="!bg-brand-700 hover:!bg-brand-600"
-          :disabled="isSubmitting"
-          @click="createLead"
-        >
-          {{ t("save") }}
-        </ActionButton>
+        <div class="flex items-center gap-3 p-4 bg-white border-t border-slate-100 w-full justify-end">
+          <button class="btn btn-outline px-6" @click="resetLeadForm(); showLeadDialog = false">
+            {{ t("cancel") }}
+          </button>
+          <button
+            class="btn btn-primary px-8"
+            :disabled="isSubmitting"
+            @click="createLead"
+          >
+            <FeatherIcon v-if="isSubmitting" name="loader" class="h-4 w-4 animate-spin mr-2" />
+            {{ t("save") }}
+          </button>
+        </div>
       </template>
     </Dialog>
   </section>

@@ -11,33 +11,32 @@
       </div>
 
     <ActionToolbarGroup>
-      <FilterChipButton
+      <button
         v-for="days in rangeOptions"
         :key="days"
-        theme="light"
-        :active="selectedRange === days"
+        class="btn btn-sm"
+        :class="selectedRange === days ? 'btn-primary' : 'btn-outline'"
         @click="$emit('apply-range', days)"
       >
         {{ rangeLabel(days) }}
-      </FilterChipButton>
+      </button>
 
-      <ActionButton
-        variant="secondary"
-        size="sm"
-        class="border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+      <div class="h-4 w-px bg-gray-200 mx-1"></div>
+
+      <button
+        class="btn btn-outline"
         @click="$emit('reload')"
       >
-        {{ refreshLabel }}
-      </ActionButton>
-      <ActionButton
+        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+      </button>
+      <button
         v-if="showNewLeadAction"
-        variant="primary"
-        size="sm"
-        class="!bg-brand-600 hover:!bg-brand-700"
+        class="btn btn-primary"
         @click="$emit('new-lead')"
       >
+        <FeatherIcon name="plus" class="h-4 w-4" />
         {{ newLeadLabel }}
-      </ActionButton>
+      </button>
     </ActionToolbarGroup>
   </div>
 </div>
@@ -59,9 +58,8 @@
 </template>
 
 <script setup>
-import ActionButton from "../app-shell/ActionButton.vue";
+import { FeatherIcon } from "frappe-ui";
 import ActionToolbarGroup from "../app-shell/ActionToolbarGroup.vue";
-import FilterChipButton from "../app-shell/FilterChipButton.vue";
 
 defineProps({
   activeDashboardTab: { type: String, required: true },

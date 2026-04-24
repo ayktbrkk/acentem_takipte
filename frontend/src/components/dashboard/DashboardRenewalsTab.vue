@@ -81,9 +81,9 @@
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="renewalOutcomeSummary.length === 0" :title="t('noRenewalOutcome')" />
         <div v-else class="space-y-3">
-          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("kpiRenewalRetention") }}</p>
-            <p class="mt-1 text-lg font-semibold text-slate-900">{{ formatNumber(renewalRetentionRate) }}%</p>
+          <div class="at-mini-stat">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t("kpiRenewalRetention") }}</p>
+            <p class="mt-1 text-2xl font-black text-slate-900 tracking-tight">{{ formatNumber(renewalRetentionRate) }}%</p>
           </div>
           <ProgressMetricRow
             v-for="item in renewalOutcomeSummary"

@@ -8,16 +8,16 @@
         <div v-else class="space-y-3">
           <div class="grid grid-cols-3 gap-2">
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ t("followUpOverdue") }}</p>
-              <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.overdue) }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/70">{{ t("followUpOverdue") }}</p>
+              <p class="mt-1 text-2xl font-black text-amber-900 tracking-tight">{{ formatNumber(followUpSummary.overdue) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ t("followUpToday") }}</p>
-              <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.due_today) }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/70">{{ t("followUpToday") }}</p>
+              <p class="mt-1 text-2xl font-black text-amber-900 tracking-tight">{{ formatNumber(followUpSummary.due_today) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-brand-700">{{ t("followUpSoon") }}</p>
-              <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(followUpSummary.due_soon) }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-brand-700/70">{{ t("followUpSoon") }}</p>
+              <p class="mt-1 text-2xl font-black text-brand-900 tracking-tight">{{ formatNumber(followUpSummary.due_soon) }}</p>
             </div>
           </div>
           <ul v-if="prioritizedFollowUpItems.length > 0" class="space-y-2">
@@ -83,16 +83,16 @@
         <div v-else class="space-y-3">
           <div class="grid grid-cols-3 gap-2">
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ t("taskOverdue") }}</p>
-              <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.overdue) }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/70">{{ t("taskOverdue") }}</p>
+              <p class="mt-1 text-2xl font-black text-amber-900 tracking-tight">{{ formatNumber(myTaskSummary.overdue) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ t("taskToday") }}</p>
-              <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/70">{{ t("taskToday") }}</p>
+              <p class="mt-1 text-2xl font-black text-amber-900 tracking-tight">{{ formatNumber(myTaskSummary.due_today) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-brand-700">{{ t("taskSoon") }}</p>
-              <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-brand-700/70">{{ t("taskSoon") }}</p>
+              <p class="mt-1 text-2xl font-black text-brand-900 tracking-tight">{{ formatNumber(myTaskSummary.due_soon) }}</p>
             </div>
           </div>
           <ul v-if="priorityTaskItems.length > 0" class="space-y-2">

@@ -1,54 +1,55 @@
-<template>
-  <SectionPanel :title="filtersTitle" panel-class="surface-card rounded-2xl p-5">
-    <div class="flex flex-wrap gap-4 items-center">
-      <div class="flex-1 min-w-[200px]">
-        <input
-          v-model.trim="draft.query"
-          class="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 transition-all"
-          :placeholder="searchPlaceholder"
-        />
-      </div>
-
-      <template v-for="fd in quickFilterDefs" :key="'q-'+fd.key">
-        <select
-          v-if="fd.type === 'select'"
-          v-model="draft[fd.key]"
-          class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all min-w-[120px]"
-        >
-          <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
-            {{ optionLabel(fd, opt) }}
-          </option>
+  <div class="mb-4">
+    <SmartFilterBar
+      v-model="draft.query"
+      :placeholder="searchPlaceholder"
+      :advanced-label="advancedLabel"
+      @open-advanced="showAdvanced = !showAdvanced"
+    >
+      <template #primary-filters>
+        <template v-for="fd in quickFilterDefs" :key="'q-'+fd.key">
+          <select
+            v-if="fd.type === 'select'"
+            v-model="draft[fd.key]"
+            class="input h-9 py-1 text-sm min-w-[120px]"
+          >
+            <option v-for="opt in fd.options || []" :key="String(opt)" :value="String(opt)">
+              {{ optionLabel(fd, opt) }}
+            </option>
+          </select>
+        </template>
+        <select v-model="draft.sort" class="input h-9 py-1 text-sm min-w-[140px]">
+          <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
         </select>
-        <input
-          v-else
-          v-model="draft[fd.key]"
-          :type="fd.type === 'number' ? 'number' : 'text'"
-          class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all min-w-[120px]"
-          :placeholder="fieldLabel(fd.field)"
-        />
       </template>
+    </SmartFilterBar>
 
-      <div class="h-8 w-px bg-slate-100 hidden md:block mx-1"></div>
-
-      <select v-model="draft.sort" class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all">
-        <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-      </select>
-
-      <div class="flex items-center gap-2">
-        <ActionButton variant="secondary" size="sm" @click="$emit('reset')">
-          {{ resetLabel }}
-        </ActionButton>
-        <ActionButton variant="primary" size="sm" @click="$emit('apply')">
-          {{ applyLabel }}
-        </ActionButton>
+    <div v-if="showAdvanced" class="mt-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <template v-for="fd in advancedFilterDefs" :key="'adv-'+fd.key">
+           <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+             <span>{{ fieldLabel(fd.field) }}</span>
+             <input
+               v-model="draft[fd.key]"
+               :type="fd.type === 'number' ? 'number' : 'text'"
+               class="input"
+               :placeholder="fieldLabel(fd.field)"
+             />
+           </label>
+        </template>
+      </div>
+      <div class="mt-5 flex items-center justify-end gap-2 border-t pt-4">
+        <button class="btn btn-outline btn-sm" type="button" @click="$emit('reset')">{{ resetLabel }}</button>
+        <button class="btn btn-primary btn-sm px-6" type="button" @click="$emit('apply')">{{ applyLabel }}</button>
       </div>
     </div>
-  </SectionPanel>
+  </div>
 </template>
 
 <script setup>
-import SectionPanel from "../app-shell/SectionPanel.vue";
-import ActionButton from "../app-shell/ActionButton.vue";
+import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
+import { ref } from "vue";
+
+const showAdvanced = ref(false);
 
 defineProps({
   filtersTitle: { type: String, default: "" },

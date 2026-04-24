@@ -6,82 +6,68 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <button class="btn btn-outline btn-sm" type="button" @click="focusPolicySearch">
-        {{ t("focusFilters") }}
-      </button>
-      <button class="btn btn-outline btn-sm" type="button" :disabled="policyLoading" @click="downloadPolicyExport('xlsx')">
+      <button class="btn btn-outline" type="button" @click="downloadPolicyExport('xlsx')">
+        <FeatherIcon name="download" class="h-4 w-4" />
         {{ t("exportXlsx") }}
       </button>
-      <button class="btn btn-primary btn-sm" type="button" @click="openQuickPolicyDialog()">
+      <button class="btn btn-primary" type="button" @click="openQuickPolicyDialog()">
+        <FeatherIcon name="plus" class="h-4 w-4" />
         {{ t("newPolicy") }}
       </button>
     </template>
 
     <template #metrics>
-      <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-          <p class="mini-metric-value">{{ formatCount(policySummary.total) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryActive") }}</p>
-          <p class="mini-metric-value text-brand-600">{{ formatCount(policySummary.active) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryPending") }}</p>
-          <p class="mini-metric-value text-amber-600">{{ formatCount(policySummary.pending) }}</p>
-        </div>
-        <div class="mini-metric">
-          <p class="mini-metric-label">{{ t("summaryTotalPremium") }}</p>
-          <p class="mini-metric-value text-green-600">{{ formatCurrency(policySummary.totalPremium, "TRY") }}</p>
-        </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SaaSMetricCard :label="t('summaryTotal')" :value="formatCount(policySummary.total)" />
+        <SaaSMetricCard :label="t('summaryActive')" :value="formatCount(policySummary.active)" value-class="text-brand-600" />
+        <SaaSMetricCard :label="t('summaryPending')" :value="formatCount(policySummary.pending)" value-class="text-amber-600" />
+        <SaaSMetricCard :label="t('summaryTotalPremium')" :value="formatCurrency(policySummary.totalPremium, 'TRY')" value-class="text-green-600" />
       </div>
     </template>
 
-    <SectionPanel :title="t('filtersTitle')" :count="`${policyListActiveCount} ${t('activeFilters')}`">
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <label class="flex flex-col gap-1 text-sm text-slate-600">
-          <span>{{ t("searchPlaceholder") }}</span>
-          <input v-model="policyListSearchQuery" class="input" type="text" :placeholder="t('searchPlaceholder')" />
-        </label>
-        <label class="flex flex-col gap-1 text-sm text-slate-600">
-          <span>{{ t("insurance_company") }}</span>
-          <input v-model="filters.insurance_company" class="input" type="text" @change="applyFilters" />
-        </label>
-        <label class="flex flex-col gap-1 text-sm text-slate-600">
-          <span>{{ t("endDateFilter") }}</span>
-          <input v-model="filters.end_date" class="input" type="date" @change="applyFilters" />
-        </label>
-        <label class="flex flex-col gap-1 text-sm text-slate-600">
-          <span>{{ t("status") }}</span>
-          <select v-model="filters.status" class="input" @change="applyFilters">
-            <option value="">{{ t("allStatuses") }}</option>
-            <option value="Active">{{ t("statusActive") }}</option>
-            <option value="KYT">{{ t("statusWaiting") }}</option>
-            <option value="IPT">{{ t("cancelled") }}</option>
-          </select>
-        </label>
-        <label class="flex flex-col gap-1 text-sm text-slate-600">
-          <span>{{ t("customerFilter") }}</span>
-          <input v-model="filters.customer" class="input" type="text" @change="applyFilters" />
-        </label>
-        <label class="flex flex-col gap-1 text-sm text-slate-600">
-          <span>{{ t("pageSize") }}</span>
-          <input v-model.number="pagination.pageLength" class="input" type="number" min="1" step="1" @change="onPageLengthChange" />
-        </label>
-      </div>
-      <div class="mt-3 flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
-        <span>{{ t("mobileSummaryTitle") }}</span>
-        <span>{{ t("pageSize") }}: {{ pagination.pageLength }}</span>
-      </div>
-      <div class="mt-3 flex items-center gap-2">
-        <button class="btn btn-sm" type="button" :disabled="policyLoading" @click="applyFilters">{{ t("applyFilters") }}</button>
-        <button class="btn btn-outline btn-sm" type="button" @click="clearFilters">{{ t("clearFilters") }}</button>
-      </div>
-    </SectionPanel>
+    <div class="space-y-4">
+      <SmartFilterBar
+        v-model="policyListSearchQuery"
+        :placeholder="t('searchPlaceholder')"
+        :advanced-label="t('filtersTitle')"
+        @open-advanced="showAdvancedFilters = !showAdvancedFilters"
+      >
+        <template #primary-filters>
+          <div class="flex items-center gap-2">
+            <select v-model="filters.status" class="input h-9 py-1 text-sm" @change="applyFilters">
+              <option value="">{{ t("allStatuses") }}</option>
+              <option value="Active">{{ t("statusActive") }}</option>
+              <option value="KYT">{{ t("statusWaiting") }}</option>
+              <option value="IPT">{{ t("cancelled") }}</option>
+            </select>
+          </div>
+        </template>
+      </SmartFilterBar>
 
-    <SectionPanel :title="t('policyTableTitle')" :count="formatCount(policyListTotalCount)">
-      <div v-if="policyListError" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+      <div v-if="showAdvancedFilters" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            <span>{{ t("insurance_company") }}</span>
+            <input v-model="filters.insurance_company" class="input" type="text" @change="applyFilters" />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            <span>{{ t("endDateFilter") }}</span>
+            <input v-model="filters.end_date" class="input" type="date" @change="applyFilters" />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            <span>{{ t("customerFilter") }}</span>
+            <input v-model="filters.customer" class="input" type="text" @change="applyFilters" />
+          </label>
+        </div>
+        <div class="mt-5 flex items-center justify-end gap-2 border-t pt-4">
+          <button class="btn btn-outline btn-sm" type="button" @click="clearFilters">{{ t("clearFilters") }}</button>
+          <button class="btn btn-primary btn-sm px-6" type="button" @click="applyFilters">{{ t("applyFilters") }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 space-y-4">
+      <div v-if="policyListError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm">
         {{ policyListError }}
       </div>
       <template v-else-if="isInitialLoading">
@@ -96,16 +82,20 @@
           clickable
           @row-click="(row) => openPolicyDetail(row.name)"
         />
-        <div class="mt-4 flex items-center justify-between">
-          <p class="text-xs text-gray-400">{{ policyListRowsWithUrgency.length }} / {{ policyListTotalCount }} {{ t("showingRecords") }}</p>
-          <div class="flex items-center gap-1">
-            <button class="btn btn-sm" type="button" :disabled="policyListPage <= 1" @click="previousPage">{{ t("previous") }}</button>
-            <span class="px-2 text-xs text-gray-600">{{ policyListPage }}</span>
-            <button class="btn btn-sm" type="button" :disabled="!hasNextPage" @click="nextPage">{{ t("next") }}</button>
+        <div class="mt-4 flex items-center justify-between px-2">
+          <p class="text-xs font-medium text-slate-400">{{ policyListRowsWithUrgency.length }} / {{ policyListTotalCount }} {{ t("showingRecords") }}</p>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-outline btn-sm" type="button" :disabled="policyListPage <= 1" @click="previousPage">
+              <FeatherIcon name="chevron-left" class="h-3 w-3" />
+            </button>
+            <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ policyListPage }}</span>
+            <button class="btn btn-outline btn-sm" type="button" :disabled="!hasNextPage" @click="nextPage">
+              <FeatherIcon name="chevron-right" class="h-3 w-3" />
+            </button>
           </div>
         </div>
       </template>
-    </SectionPanel>
+    </div>
 
     <PolicyListQuickPolicyDialog
       :show="showQuickPolicyDialog"
@@ -142,9 +132,13 @@ import { usePolicyListRuntime } from "../composables/usePolicyListRuntime";
 import { usePolicyListTableData } from "../composables/usePolicyListTableData";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import PolicyListQuickPolicyDialog from "../components/policy-list/PolicyListQuickPolicyDialog.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { FeatherIcon } from "frappe-ui";
+import { ref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { usePolicyStore } from "../stores/policy";
@@ -157,6 +151,7 @@ const route = useRoute();
 
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+const showAdvancedFilters = ref(false);
 
 function t(key) {
   return POLICY_TRANSLATIONS[activeLocale.value]?.[key] || POLICY_TRANSLATIONS.en?.[key] || translateText(key, activeLocale.value) || key;
@@ -253,7 +248,7 @@ const columns = computed(() => [
   { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
   { key: "product_primary", secondaryKey: "product_secondary", label: t("colProduct"), type: "stacked" },
   { key: "vade_primary", secondaryKey: "vade_secondary", label: t("colVade"), type: "stacked" },
-  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked" },
+  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked", align: "right" },
   { key: "status", label: t("colStatus"), type: "status", domain: "AT Policy" },
 ]);
 

@@ -1,54 +1,46 @@
 <template>
-  <SectionPanel :title="t('filtersTitle')" panel-class="surface-card rounded-2xl p-5">
-    <div class="flex flex-wrap gap-4 items-center">
-      <div class="flex-1 min-w-[200px]">
-        <input
-          v-model.trim="filters.customer"
-          class="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white focus:ring-2 focus:ring-brand-500 transition-all"
-          type="search"
-          :placeholder="t('customerFilter')"
-          @keyup.enter="runtime.applySnapshotFilters"
-        />
-      </div>
-      <select v-model="filters.status" class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all min-w-[140px]">
-        <option value="">{{ t('allStatuses') }}</option>
-        <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-      <select v-model="filters.channel" class="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:bg-white transition-all min-w-[140px]">
-        <option value="">{{ t('allChannels') }}</option>
-        <option v-for="option in channelOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-
-      <div class="flex items-center gap-2">
-        <ActionButton variant="secondary" size="sm" @click="runtime.resetSnapshotFilters">
-          {{ t('clearFilters') }}
-        </ActionButton>
-        <ActionButton variant="primary" size="sm" @click="runtime.applySnapshotFilters">
+  <div class="mb-6">
+    <SmartFilterBar
+      v-model="filters.customer"
+      :placeholder="t('customerFilter')"
+      @open-advanced="showAdvanced = !showAdvanced"
+    >
+      <template #primary-filters>
+        <select v-model="filters.status" class="input h-9 py-1 text-sm min-w-[140px]" @change="runtime.applySnapshotFilters">
+          <option value="">{{ t('allStatuses') }}</option>
+          <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <select v-model="filters.channel" class="input h-9 py-1 text-sm min-w-[140px]" @change="runtime.applySnapshotFilters">
+          <option value="">{{ t('allChannels') }}</option>
+          <option v-for="option in channelOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <div class="h-4 w-px bg-gray-200 mx-1"></div>
+        <button class="btn btn-primary" @click="runtime.applySnapshotFilters">
           {{ t('applyFilters') }}
-        </ActionButton>
-      </div>
-    </div>
+        </button>
+        <button class="btn btn-outline" @click="runtime.resetSnapshotFilters">
+          <FeatherIcon name="x" class="h-4 w-4" />
+        </button>
+      </template>
+    </SmartFilterBar>
+  </div>
 
-    <!-- Metrics Inside Panel -->
-    <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 border-t border-slate-50 pt-6">
-      <div 
-        v-for="card in statusCards" 
-        :key="card.key" 
-        class="bg-slate-50/50 p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center"
-      >
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ card.label }}</p>
-        <p class="text-lg font-black text-slate-900">{{ card.value }}</p>
-      </div>
-    </div>
-  </SectionPanel>
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <SaaSMetricCard
+      v-for="card in statusCards"
+      :key="card.key"
+      :label="card.label"
+      :value="card.value"
+    />
+  </div>
 
   <article
     v-if="hasContextFilters"
-    class="surface-card rounded-2xl border border-brand-100 bg-brand-50/50 p-5 shadow-sm"
+    class="mb-6 surface-card rounded-2xl border border-brand-100 bg-brand-50/50 p-5 shadow-sm"
   >
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="space-y-1">
@@ -66,75 +58,69 @@
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <ActionButton
+        <button
           v-if="canStartAssignmentContext"
-          variant="secondary"
-          size="xs"
+          class="btn btn-outline btn-sm"
           @click="runtime.startAssignmentContext"
         >
           {{ t('startAssignmentContext') }}
-        </ActionButton>
-        <ActionButton
+        </button>
+        <button
           v-if="canBlockAssignmentContext"
-          variant="secondary"
-          size="xs"
+          class="btn btn-outline btn-sm"
           @click="runtime.blockAssignmentContext"
         >
           {{ t('blockAssignmentContext') }}
-        </ActionButton>
-        <ActionButton
+        </button>
+        <button
           v-if="canCloseAssignmentContext"
-          variant="secondary"
-          size="xs"
+          class="btn btn-outline btn-sm"
           @click="runtime.closeAssignmentContext"
         >
           {{ t('closeAssignmentContext') }}
-        </ActionButton>
-        <ActionButton
+        </button>
+        <button
           v-if="canClearCallNoteContext"
-          variant="secondary"
-          size="xs"
+          class="btn btn-outline btn-sm"
           @click="runtime.clearCallNoteContext"
         >
           {{ t('clearCallFollowUpContext') }}
-        </ActionButton>
-        <ActionButton
+        </button>
+        <button
           v-if="canCompleteReminderContext"
-          variant="secondary"
-          size="xs"
+          class="btn btn-outline btn-sm"
           @click="runtime.completeReminderContext"
         >
           {{ t('completeReminderContext') }}
-        </ActionButton>
-        <ActionButton
+        </button>
+        <button
           v-if="canCancelReminderContext"
-          variant="secondary"
-          size="xs"
+          class="btn btn-outline btn-sm"
           @click="runtime.cancelReminderContext"
         >
           {{ t('cancelReminderContext') }}
-        </ActionButton>
-        <ActionButton
+        </button>
+        <button
           v-if="canReturnToContext"
-          variant="secondary"
-          size="xs"
+          class="btn btn-outline btn-sm"
           @click="runtime.returnToContext"
         >
           {{ state.returnToLabel }}
-        </ActionButton>
+        </button>
         <div class="h-6 w-px bg-slate-200 mx-1"></div>
-        <ActionButton variant="link" size="xs" @click="runtime.clearContextFilters">
-          <span class="text-rose-600 font-bold">{{ t('clearContext') }}</span>
-        </ActionButton>
+        <button class="btn btn-outline btn-sm text-rose-600 border-rose-100 hover:bg-rose-50" @click="runtime.clearContextFilters">
+          {{ t('clearContext') }}
+        </button>
       </div>
     </div>
   </article>
 </template>
 
 <script setup>
-import { computed, unref } from "vue";
-import ActionButton from "../app-shell/ActionButton.vue";
-import SectionPanel from "../app-shell/SectionPanel.vue";
+import { computed, ref, unref } from "vue";
+import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
+import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
+import { FeatherIcon } from "frappe-ui";
 
 const props = defineProps({
   filters: {
@@ -154,6 +140,8 @@ const props = defineProps({
     required: true,
   },
 });
+
+const showAdvanced = ref(false);
 
 const statusOptions = computed(() => unref(props.state.statusOptions));
 const channelOptions = computed(() => unref(props.state.channelOptions));

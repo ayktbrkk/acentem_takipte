@@ -1,29 +1,16 @@
 <template>
   <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ t("summaryTotal") }}</p>
-      <p class="mini-metric-value">{{ formatCount(paymentSummary.total) }}</p>
-    </div>
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ t("summaryPending") }}</p>
-      <p class="mini-metric-value text-amber-600">{{ formatCount(paymentSummary.pending) }}</p>
-    </div>
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ t("summaryCollected") }}</p>
-      <p class="mini-metric-value text-green-600">{{ formatCount(paymentSummary.collected) }}</p>
-    </div>
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ t("summaryOverdue") }}</p>
-      <p class="mini-metric-value text-amber-700">{{ formatCount(paymentSummary.overdue) }}</p>
-    </div>
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ t("summaryTotalAmount") }}</p>
-      <p class="mini-metric-value text-slate-900">{{ formatCurrency(paymentSummary.totalAmount) }}</p>
-    </div>
+    <SaaSMetricCard :label="t('summaryTotal')" :value="formatCount(paymentSummary.total)" />
+    <SaaSMetricCard :label="t('summaryPending')" :value="formatCount(paymentSummary.pending)" value-class="text-amber-600" />
+    <SaaSMetricCard :label="t('summaryCollected')" :value="formatCount(paymentSummary.collected)" value-class="text-green-600" />
+    <SaaSMetricCard :label="t('summaryOverdue')" :value="formatCount(paymentSummary.overdue)" value-class="text-amber-700" />
+    <SaaSMetricCard :label="t('summaryTotalAmount')" :value="formatCurrency(paymentSummary.totalAmount)" />
   </div>
 </template>
 
 <script setup>
+import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
+
 defineProps({
   paymentSummary: {
     type: Object,

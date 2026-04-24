@@ -7,47 +7,67 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <OfferBoardToolbar
-        :is-list-view="isListView"
-        :loading="Boolean(offersResource.loading) || Boolean(offerListResource.loading)"
-        :labels="toolbarLabels"
-        @view-list="setOfferViewMode('list')"
-        @view-board="setOfferViewMode('board')"
-        @new-offer="openQuickOfferDialog"
-        @refresh="refreshOffers"
-        @focus-filters="focusOfferSearch"
-        @export-xlsx="downloadOfferExport('xlsx')"
-      />
+      <div class="flex items-center gap-2">
+        <div class="mr-2 flex rounded-lg border border-gray-200 bg-white p-1">
+          <button
+            class="rounded px-3 py-1 text-xs font-medium transition-all"
+            :class="isListView ? 'bg-brand-50 text-brand-600' : 'text-gray-500 hover:text-gray-700'"
+            @click="setOfferViewMode('list')"
+          >
+            {{ t('viewList') }}
+          </button>
+          <button
+            class="rounded px-3 py-1 text-xs font-medium transition-all"
+            :class="!isListView ? 'bg-brand-50 text-brand-600' : 'text-gray-500 hover:text-gray-700'"
+            @click="setOfferViewMode('board')"
+          >
+            {{ t('viewBoard') }}
+          </button>
+        </div>
+        <button class="btn btn-primary" @click="openQuickOfferDialog">
+          <FeatherIcon name="plus" class="h-4 w-4" />
+          {{ t("newOffer") }}
+        </button>
+        <button class="btn btn-outline" @click="refreshOffers">
+          <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+        </button>
+      </div>
     </template>
 
     <template #metrics>
-      <OfferBoardSummaryMetrics
-        v-if="isListView"
-        :summary="offerSummary"
-        :conversion-rate="offerConversionRate"
-        :labels="summaryLabels"
-        :format-count="formatCount"
-      />
+      <div v-if="isListView" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <SaaSMetricCard :label="t('summaryTotal')" :value="formatCount(offerSummary.total)" />
+        <SaaSMetricCard :label="t('summaryDraft')" :value="formatCount(offerSummary.draft)" value-class="text-gray-500" />
+        <SaaSMetricCard :label="t('summarySent')" :value="formatCount(offerSummary.sent)" value-class="text-amber-600" />
+        <SaaSMetricCard :label="t('summaryAccepted')" :value="formatCount(offerSummary.accepted)" value-class="text-green-600" />
+        <SaaSMetricCard :label="t('summaryConversion')" :value="`${offerConversionRate}%`" value-class="text-brand-600" />
+      </div>
     </template>
 
-    <OfferBoardFilterSection
-      v-if="isListView"
-      :search="offerListSearchQuery"
-      :title="t('filtersTitle')"
-      :count="`${offerListFilterBarActiveCount} ${t('activeFilters')}`"
-      :filters="offerListFilterConfig"
-      :active-count="offerListFilterBarActiveCount"
-      @update:search="onOfferSearchChange"
-      @filter-change="onOfferListFilterBarChange"
-      @reset="onOfferListFilterBarReset"
-    >
-      <template #actions>
-        <button class="btn btn-sm" type="button" @click="refreshOffers">{{ t("refresh") }}</button>
-        <button v-if="offerListFilterBarActiveCount > 0" class="btn btn-outline btn-sm" type="button" @click="onOfferListFilterBarReset">
-          {{ t("clearFilters") }}
-        </button>
-      </template>
-    </OfferBoardFilterSection>
+    <div v-if="isListView" class="space-y-4">
+      <SmartFilterBar
+        v-model="offerListSearchQuery"
+        :placeholder="t('searchPlaceholder')"
+        :advanced-label="t('filtersTitle')"
+        @open-advanced="showAdvancedFilters = !showAdvancedFilters"
+      >
+        <template #primary-filters>
+          <select
+            class="input h-9 py-1 text-sm"
+            @change="onOfferListFilterBarChange({ key: 'status', value: $event.target.value })"
+          >
+            <option value="">{{ t("colStatus") }}: {{ t("all") || 'Hepsi' }}</option>
+            <option v-for="opt in offerListFilterConfig[0].options" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </template>
+      </SmartFilterBar>
+
+      <div v-if="showAdvancedFilters" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <p class="text-sm text-gray-500">{{ t("advanced_filters_placeholder") || 'Gelişmiş filtreleme seçenekleri yakında eklenecek.' }}</p>
+      </div>
+    </div>
 
     <OfferBoardListSection
       v-if="isListView"
@@ -139,12 +159,12 @@ import { createResource } from "frappe-ui";
 
 import QuickCreateOffer from "../components/QuickCreateOffer.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import OfferBoardConvertDialog from "../components/offer-board/OfferBoardConvertDialog.vue";
-import OfferBoardFilterSection from "../components/offer-board/OfferBoardFilterSection.vue";
 import OfferBoardListSection from "../components/offer-board/OfferBoardListSection.vue";
 import OfferBoardPipelineSection from "../components/offer-board/OfferBoardPipelineSection.vue";
-import OfferBoardSummaryMetrics from "../components/offer-board/OfferBoardSummaryMetrics.vue";
-import OfferBoardToolbar from "../components/offer-board/OfferBoardToolbar.vue";
+import { FeatherIcon } from "frappe-ui";
 import { useOfferBoardConversion } from "../composables/offerBoard/conversion";
 import { useOfferBoardFilters } from "../composables/offerBoard/filters";
 import { useOfferBoardQuickOffer } from "../composables/offerBoard/quickOffer";
@@ -244,6 +264,7 @@ const PAGE_COPY = {
 
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
+const showAdvancedFilters = ref(false);
 
 function t(key) {
   return PAGE_COPY[activeLocale.value]?.[key] || OFFER_TRANSLATIONS[activeLocale.value]?.[key] || translateText(key, activeLocale.value) || key;
@@ -400,7 +421,7 @@ const offerListColumns = computed(() => [
   { key: "offer_primary", secondaryKey: "offer_secondary", label: t("colOffer"), type: "stacked" },
   { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
   { key: "validity_primary", secondaryKey: "validity_secondary", label: t("colValidity"), type: "stacked" },
-  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked" },
+  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked", align: "right" },
   { key: "status", label: t("colStatus"), type: "status", domain: "AT Offer" },
 ]);
 

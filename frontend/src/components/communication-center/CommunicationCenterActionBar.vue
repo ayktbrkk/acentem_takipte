@@ -1,89 +1,79 @@
 <template>
-  <QuickCreateLauncher
-    variant="secondary"
-    size="sm"
-    :label="t('quickSegment')"
-    @launch="runtime.openSegmentDialog()"
-  />
-  <QuickCreateLauncher
-    variant="secondary"
-    size="sm"
-    :label="t('quickCampaign')"
-    @launch="runtime.openCampaignDialog()"
-  />
-  <QuickCreateLauncher
-    variant="secondary"
-    size="sm"
-    :label="t('runCampaign')"
-    @launch="runtime.openCampaignRunDialog()"
-  />
-  <QuickCreateLauncher
-    variant="secondary"
-    size="sm"
-    :label="t('previewSegment')"
-    @launch="runtime.openSegmentPreviewDialog()"
-  />
-  <QuickCreateLauncher
-    variant="secondary"
-    size="sm"
-    :label="t('quickCallNote')"
-    @launch="runtime.openCallNoteDialog()"
-  />
-  <QuickCreateLauncher
-    variant="secondary"
-    size="sm"
-    :label="t('quickReminder')"
-    @launch="runtime.openReminderDialog()"
-  />
-  <QuickCreateLauncher
-    v-if="canCreateQuickMessage"
-    variant="primary"
-    size="sm"
-    :label="t('quickMessage')"
-    @launch="runtime.openQuickMessageDialog()"
-  />
-  <ActionButton
-    v-if="canReturnToContext"
-    variant="secondary"
-    size="sm"
-    @click="runtime.returnToContext()"
-  >
-    {{ returnToLabel }}
-  </ActionButton>
-  <ActionButton variant="secondary" size="sm" @click="runtime.reloadSnapshot">
-    {{ t('refresh') }}
-  </ActionButton>
-  <ActionButton
-    variant="secondary"
-    size="sm"
-    :disabled="runtime.snapshotResource.loading"
-    @click="runtime.downloadCommunicationExport('xlsx')"
-  >
-    {{ t('exportXlsx') }}
-  </ActionButton>
-  <ActionButton
-    variant="primary"
-    size="sm"
-    :disabled="runtime.snapshotResource.loading"
-    @click="runtime.downloadCommunicationExport('pdf')"
-  >
-    {{ t('exportPdf') }}
-  </ActionButton>
-  <ActionButton
-    v-if="canRunDispatchCycle"
-    variant="primary"
-    size="sm"
-    :disabled="dispatching"
-    @click="runtime.runDispatchCycle"
-  >
-    {{ dispatching ? t('dispatching') : t('dispatch') }}
-  </ActionButton>
+  <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center gap-1.5 mr-2">
+      <button class="btn btn-outline" @click="runtime.openSegmentDialog()">
+        <FeatherIcon name="users" class="h-4 w-4" />
+        {{ t('quickSegment') }}
+      </button>
+      <button class="btn btn-outline" @click="runtime.openCampaignDialog()">
+        <FeatherIcon name="layers" class="h-4 w-4" />
+        {{ t('quickCampaign') }}
+      </button>
+      <button class="btn btn-outline" @click="runtime.openCampaignRunDialog()">
+        <FeatherIcon name="play" class="h-4 w-4" />
+        {{ t('runCampaign') }}
+      </button>
+      <button class="btn btn-outline" @click="runtime.openSegmentPreviewDialog()">
+        <FeatherIcon name="eye" class="h-4 w-4" />
+        {{ t('previewSegment') }}
+      </button>
+      <button class="btn btn-outline" @click="runtime.openCallNoteDialog()">
+        <FeatherIcon name="phone" class="h-4 w-4" />
+        {{ t('quickCallNote') }}
+      </button>
+      <button class="btn btn-outline" @click="runtime.openReminderDialog()">
+        <FeatherIcon name="bell" class="h-4 w-4" />
+        {{ t('quickReminder') }}
+      </button>
+    </div>
+
+    <div class="h-6 w-px bg-gray-200 mx-1"></div>
+
+    <button
+      v-if="canCreateQuickMessage"
+      class="btn btn-primary"
+      @click="runtime.openQuickMessageDialog()"
+    >
+      <FeatherIcon name="message-square" class="h-4 w-4" />
+      {{ t('quickMessage') }}
+    </button>
+
+    <button
+      v-if="canReturnToContext"
+      class="btn btn-outline"
+      @click="runtime.returnToContext()"
+    >
+      <FeatherIcon name="arrow-left" class="h-4 w-4" />
+      {{ returnToLabel }}
+    </button>
+
+    <button class="btn btn-outline" @click="runtime.reloadSnapshot">
+      <FeatherIcon name="refresh-cw" :class="['h-4 w-4', runtime.snapshotResource.loading && 'animate-spin']" />
+    </button>
+
+    <button
+      class="btn btn-outline"
+      :disabled="runtime.snapshotResource.loading"
+      @click="runtime.downloadCommunicationExport('xlsx')"
+    >
+      <FeatherIcon name="download" class="h-4 w-4" />
+    </button>
+
+    <button
+      v-if="canRunDispatchCycle"
+      class="btn btn-primary px-6"
+      :disabled="dispatching"
+      @click="runtime.runDispatchCycle"
+    >
+      <FeatherIcon :name="dispatching ? 'loader' : 'send'" :class="['h-4 w-4', dispatching && 'animate-spin']" />
+      {{ dispatching ? t('dispatching') : t('dispatch') }}
+    </button>
+  </div>
 </template>
 
 <script setup>
 import { computed, unref } from "vue";
-import ActionButton from "../app-shell/ActionButton.vue";
-import QuickCreateLauncher from "../app-shell/QuickCreateLauncher.vue";
+import { FeatherIcon } from "frappe-ui";
 
 const props = defineProps({
   runtime: {

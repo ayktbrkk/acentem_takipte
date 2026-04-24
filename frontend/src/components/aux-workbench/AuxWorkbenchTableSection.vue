@@ -24,106 +24,60 @@
       <div class="overflow-x-auto mt-4 -mx-5 px-5">
         <table class="w-full min-w-[1000px] border-separate border-spacing-0">
           <thead>
-            <tr>
-              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 pl-4 pr-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ recordLabel }}</th>
-              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ detailsLabel }}</th>
-              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ statusLabel }}</th>
-              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 px-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ infoLabel }}</th>
-              <th class="sticky top-0 z-10 border-b border-slate-100 bg-white/80 py-3.5 pl-3 pr-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-400 backdrop-blur">{{ actionsLabel }}</th>
+            <tr class="bg-gray-50 border-b border-gray-200">
+              <th class="px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-wider text-gray-400 uppercase">{{ recordLabel }}</th>
+              <th class="px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-wider text-gray-400 uppercase">{{ detailsLabel }}</th>
+              <th class="px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-wider text-gray-400 uppercase">{{ statusLabel }}</th>
+              <th class="px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-wider text-gray-400 uppercase">{{ infoLabel }}</th>
+              <th class="w-10 bg-gray-50 px-4 py-2.5"></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-50 bg-white">
+          <tbody class="divide-y divide-gray-100 bg-white">
             <tr
               v-for="row in rows"
               :key="row.name"
-              class="group hover:bg-slate-50/50 transition-colors cursor-pointer"
+              class="group hover:bg-gray-50 transition-colors cursor-pointer"
               @click="$emit('open-detail', row)"
             >
-              <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
+              <td class="px-4 py-4">
                 <div class="flex flex-col">
-                  <span class="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{{ rowTitle(row) }}</span>
+                  <span class="text-sm font-bold text-gray-900 group-hover:text-brand-600 transition-colors">{{ rowTitle(row) }}</span>
                   <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
-                    <span v-for="fact in factItems(row, config.primaryFields)" :key="fact.label" class="text-[11px] text-slate-500 font-medium">
-                      {{ fact.label }}: <span class="text-slate-700">{{ fact.value }}</span>
+                    <span v-for="fact in factItems(row, config.primaryFields)" :key="fact.label" class="text-[11px] text-gray-500 font-medium">
+                      {{ fact.label }}: <span class="text-gray-700">{{ fact.value }}</span>
                     </span>
                   </div>
-                  <span class="mt-1 text-[10px] text-slate-400 font-medium">{{ modifiedLabel }}: {{ formatField(row.modified, 'modified') }}</span>
+                  <span class="mt-1 text-[10px] text-gray-400 font-medium">{{ modifiedLabel }}: {{ formatField(row.modified, 'modified') }}</span>
                 </div>
               </td>
 
-              <td class="px-3 py-4 text-sm">
+              <td class="px-4 py-4">
                 <div class="grid grid-cols-1 gap-1">
                   <div v-for="fact in factItems(row, config.detailFields)" :key="fact.label" class="flex flex-col">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-none">{{ fact.label }}</span>
-                    <span class="text-xs font-semibold text-slate-700 truncate max-w-[200px]">{{ fact.value }}</span>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter leading-none">{{ fact.label }}</span>
+                    <span class="text-xs font-semibold text-gray-700 truncate max-w-[200px]">{{ fact.value }}</span>
                   </div>
                 </div>
               </td>
 
-              <td class="whitespace-nowrap px-3 py-4 text-sm">
+              <td class="px-4 py-4">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <StatusBadge v-if="config.statusField && row[config.statusField] !== undefined" :domain="config.statusType || 'policy'" :status="statusValue(row, config.statusField, config.statusType)" />
                   <StatusBadge v-if="config.secondaryStatusField && row[config.secondaryStatusField]" :domain="config.secondaryStatusType || 'policy'" :status="statusValue(row, config.secondaryStatusField, config.secondaryStatusType)" />
                 </div>
               </td>
 
-              <td class="px-3 py-4 text-sm">
+              <td class="px-4 py-4">
                 <div class="flex flex-wrap gap-3">
                   <div v-for="fact in factItems(row, config.metricFields)" :key="fact.label" class="flex flex-col items-center">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-none">{{ fact.label }}</span>
-                    <span class="text-xs font-black text-slate-900">{{ fact.value }}</span>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter leading-none">{{ fact.label }}</span>
+                    <span class="text-xs font-black text-gray-900">{{ fact.value }}</span>
                   </div>
                 </div>
               </td>
 
-              <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm">
-                <div class="flex items-center justify-end gap-1.5" @click.stop>
-                  <ActionButton
-                    v-if="canSendDraftNowRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :loading="rowActionBusyName === row.name"
-                    @click="$emit('send-draft-now', row)"
-                  >
-                    {{ sendNowLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canRetryOutboxRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :loading="rowActionBusyName === row.name"
-                    @click="$emit('retry-outbox', row)"
-                  >
-                    {{ retryLabel }}
-                  </ActionButton>
-                  <ActionButton
-                    v-if="canRequeueOutboxRow(row)"
-                    variant="secondary"
-                    size="xs"
-                    :loading="rowActionBusyName === row.name"
-                    @click="$emit('requeue-outbox', row)"
-                  >
-                    {{ requeueLabel }}
-                  </ActionButton>
-                  
-                  <div class="h-6 w-px bg-slate-100 mx-1"></div>
-                  
-                  <ActionButton 
-                    variant="secondary" 
-                    size="xs" 
-                    @click="$emit('open-detail', row)"
-                  >
-                    {{ openDetailLabel }}
-                  </ActionButton>
-                  
-                  <ActionButton v-if="panelCfgForRow(row)" variant="secondary" size="xs" @click="$emit('open-panel', row)">
-                    <template #icon>
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </template>
-                  </ActionButton>
-                </div>
+              <td class="px-4 py-4 text-right">
+                <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-gray-300 group-hover:text-gray-400" />
               </td>
             </tr>
           </tbody>
@@ -135,22 +89,20 @@
           {{ pageLabel }} {{ pagination.page }} / {{ totalPages }}
         </p>
         <div class="flex items-center gap-2">
-          <ActionButton
-            variant="secondary"
-            size="xs"
+          <button
+            class="btn btn-outline btn-sm"
             :disabled="pagination.page <= 1 || isLoading"
             @click="$emit('previous')"
           >
-            ←
-          </ActionButton>
-          <ActionButton
-            variant="secondary"
-            size="xs"
+            <FeatherIcon name="chevron-left" class="h-4 w-4" />
+          </button>
+          <button
+            class="btn btn-outline btn-sm"
             :disabled="!hasNextPage || isLoading"
             @click="$emit('next')"
           >
-            →
-          </ActionButton>
+            <FeatherIcon name="chevron-right" class="h-4 w-4" />
+          </button>
         </div>
       </div>
     </template>
@@ -159,9 +111,9 @@
 
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
-import ActionButton from "../app-shell/ActionButton.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 import SkeletonLoader from "../ui/SkeletonLoader.vue";
+import { FeatherIcon } from "frappe-ui";
 
 defineProps({
   listLabel: { type: String, default: "" },
