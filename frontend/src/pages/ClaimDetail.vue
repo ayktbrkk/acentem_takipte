@@ -63,7 +63,7 @@
           <div v-else class="space-y-4">
             <div class="flex items-center gap-4">
               <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-600">
-                {{ (claim.customer_name || "?").charAt(0).toUpperCase() }}
+                {{ (claim.customer_name || "?").charAt(0).toLocaleUpperCase('tr-TR') }}
               </div>
               <div>
                 <p class="font-bold text-slate-900">{{ claim.customer_name || t("all") }}</p>

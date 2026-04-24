@@ -112,7 +112,7 @@ const props = defineProps({
   rows: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
   emptyMessage: { type: String, default: "No records found." },
-  locale: { type: String, default: "en" },
+  locale: { type: String, default: "tr" },
 });
 
 defineEmits(["row-click"]);

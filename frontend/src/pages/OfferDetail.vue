@@ -59,7 +59,7 @@
           <div v-else @click="openCustomer" class="cursor-pointer group">
             <div class="flex items-center gap-4 mb-4">
               <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-600 group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
-                {{ (customer.full_name || "?").charAt(0).toUpperCase() }}
+                {{ (customer.full_name || "?").charAt(0).toLocaleUpperCase('tr-TR') }}
               </div>
               <div>
                 <p class="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{{ customer.full_name || t("all") }}</p>
