@@ -13,6 +13,9 @@ import "@/assets/design-system.css";
 import "@/assets/frappe-overrides.css";
 import "vue3-select-component/styles";
 
+// Cache bust marker: ensures a new main bundle hash after critical UI deployments.
+window.__AT_BUILD_STAMP__ = "2026-04-24T15:45-dashboard-refresh";
+
 function readCookie(name) {
   if (typeof document === "undefined") return "";
   const prefix = `${name}=`;
