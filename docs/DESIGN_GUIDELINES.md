@@ -1,6 +1,44 @@
-# 🎨 Acentem Takipte (AT) Tasarım Kılavuzu & UI Standartları
+# 🎨 Acentem Takipte (AT) Tasarım Kılavuzu, UI Standartları & Manifesto
 
-Bu döküman, "Acentem Takipte" uygulamasının UI/UX tutarlılığını korumak için Senior Design System Engineer tarafından oluşturulmuştur. Yeni geliştirilecek tüm modüllerde bu kurallara uyulması zorunludur.
+Bu döküman, "Acentem Takipte" uygulamasının UI/UX tutarlılığını korumak ve geliştirme kurallarını tanımlamak için oluşturulmuştur. Yeni geliştirilecek tüm modüllerde bu kurallara uyulması zorunludur.
+
+---
+
+## 0. AT Manifestosu (Kimlik, i18n ve Kod Kalitesi)
+
+### 1. Kimlik ve Mimari (Identity & Architecture)
+
+**Proje Adı:** Acentem Takipte (Kısaltma: **AT**)
+
+**Teknoloji Yığını:** Frappe Framework (Backend/Python), Vue 3 (Frontend/JS), MariaDB.
+
+**İsimlendirme Standardı:** Tüm yeni klasörler, dosyalar, DocType'lar ve metotlar `at_` veya `AT` ön ekiyle başlamalıdır (Örn: `at_policy.py`, `AT Insurance Dashboard`).
+
+### 2. Çok Dillilik (i18n) - KESİN KURAL
+
+**Kaynak Dil:** Tüm kod tabanı, değişkenler ve yorum satırları **İngilizce** olmalıdır.
+
+**UI Dili:** Kullanıcının gördüğü her metin çift dilli (EN/TR) olmalıdır.
+
+**Sarmalama (Wrapping):**
+- **Python:** Tüm stringler `_("Metin")` içinde olmalıdır.
+- **Javascript/Vue:** Tüm stringler `__("Metin")` veya `this.__("Metin")` içinde olmalıdır.
+
+**Hardcoded Yasak:** Kod bloğu içinde çıplak string (Örn: `msg = "Hata"`) kullanımı doğrudan bir kural ihlalidir.
+
+### 3. Kod Kalitesi ve Güvenlik
+
+**Frappe Standartları:** Database sorgularında her zaman `frappe.db.get_value` veya `frappe.get_doc` gibi yerel metotlar kullanılmalı; raw SQL'den kaçınılmalıdır.
+
+**Validation:** Tüm veri girişleri server-side tarafında `validate()` metodu ile kontrol edilmelidir.
+
+**Hata Yönetimi:** Kullanıcıya dönen hatalar `frappe.throw(_("Error Message"))` ile i18n uyumlu verilmelidir.
+
+### 4. Çıktı Formatı
+
+Bir kod bloğu paylaşıldığında, eğer içinde yeni metinler varsa, en alta bu metinlerin `tr.csv` dosyasına eklenmesi gereken halleri (Key, Translation) tablo veya liste olarak eklenmelidir.
+
+---
 
 ## 1. Renk Paleti (Color Tokens)
 

@@ -42,7 +42,7 @@ export function usePolicyListTableData({
       name: row.record_name || row.name,
       carrier_policy_no: row.carrier_policy_no || row.policy_no || "-",
       customer_label: row.customer_full_name || row.customer_name || row.customer || "-",
-      customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode))} | ${row.customer_tax_id || "-"}`,
+      customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode))} | ${row.customer_masked_tax_id || "-"}`,
       policy_primary: row.record_name || row.name,
       policy_secondary: row.policy_no || "-",
       product_primary: row.branch || "-",
