@@ -23,7 +23,7 @@ import { CLAIM_TRANSLATIONS } from "../config/claim_translations";
 
 export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, route, activeLocale, localeCode }) {
   function t(key) {
-    return CLAIM_TRANSLATIONS[activeLocale.value]?.[key] || CLAIM_TRANSLATIONS.en[key] || key;
+    return CLAIM_TRANSLATIONS[activeLocale.value]?.[key] || CLAIM_TRANSLATIONS.en[key] || translateText(key, activeLocale.value) || key;
   }
   const ownershipAssignmentEyebrow = computed(
     () =>

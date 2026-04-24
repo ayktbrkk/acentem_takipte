@@ -133,6 +133,7 @@ import { computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { POLICY_TRANSLATIONS } from "../config/policy_translations";
+import { translateText } from "../utils/i18n";
 import { usePolicyListActions } from "../composables/usePolicyListActions";
 import { usePolicyListFilters } from "../composables/usePolicyListFilters";
 import { usePolicyListPresetSync } from "../composables/usePolicyListPresetSync";
@@ -158,7 +159,7 @@ const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCas
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
 function t(key) {
-  return POLICY_TRANSLATIONS[activeLocale.value]?.[key] || POLICY_TRANSLATIONS.en?.[key] || key;
+  return POLICY_TRANSLATIONS[activeLocale.value]?.[key] || POLICY_TRANSLATIONS.en?.[key] || translateText(key, activeLocale.value) || key;
 }
 
 const filters = policyStore.state.filters;

@@ -150,6 +150,7 @@ import { useOfferBoardFilters } from "../composables/offerBoard/filters";
 import { useOfferBoardQuickOffer } from "../composables/offerBoard/quickOffer";
 import { useOfferBoardState } from "../composables/offerBoard/state";
 import { OFFER_TRANSLATIONS } from "../config/offer_translations";
+import { translateText } from "../utils/i18n";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 
@@ -245,7 +246,7 @@ const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCas
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
 function t(key) {
-  return PAGE_COPY[activeLocale.value]?.[key] || OFFER_TRANSLATIONS[activeLocale.value]?.[key] || key;
+  return PAGE_COPY[activeLocale.value]?.[key] || OFFER_TRANSLATIONS[activeLocale.value]?.[key] || translateText(key, activeLocale.value) || key;
 }
 
 function buildOfficeBranchLookupFilters() {
