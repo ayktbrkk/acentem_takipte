@@ -58,26 +58,7 @@
           :loading="loading"
           clickable
           @row-click="row => openLead(row.name)"
-        >
-          <template #cell(full_name)="{ row }">
-            <div class="flex items-center gap-3">
-              <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600">
-                {{ (row.full_name || "?").charAt(0).toUpperCase() }}
-              </div>
-              <div>
-                <p class="font-medium text-slate-900">{{ row.full_name }}</p>
-                <p class="text-xs text-slate-500">{{ row.name }}</p>
-              </div>
-            </div>
-          </template>
-          <template #cell(status)="{ row }">
-            <StatusBadge
-              domain="lead"
-              :status="row.status === 'Closed' ? 'cancel' : row.status === 'Replied' ? 'active' : 'hold'"
-              :label="row.status_label"
-            />
-          </template>
-        </ListTable>
+        />
 
         <div class="mt-4 flex items-center justify-between">
           <p class="text-xs text-slate-500">
@@ -182,12 +163,10 @@ const {
 
 // Standard lead columns - creation date and name fields prioritized
 const columns = computed(() => [
-  { key: "full_name", label: t("full_name"), width: "220px" },
-  { key: "branch", label: t("branch"), width: "120px" },
-  { key: "phone", label: t("phone"), width: "140px" },
-  { key: "status", label: t("status"), width: "110px" },
-  { key: "creation", label: t("lead_date"), width: "130px", type: "date" },
-  { key: "estimated_gross_premium", label: t("estimated_gross_premium"), width: "160px", type: "currency" },
+  { key: "lead_primary", secondaryKey: "lead_secondary", label: t("colLead"), type: "stacked" },
+  { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
+  { key: "status_label", secondaryKey: "takip_label", label: t("colStatus"), type: "stacked" },
+  { key: "finance_primary", secondaryKey: "date_secondary", label: t("colPotential"), type: "stacked" },
 ]);
 
 const filterConfig = computed(() => [

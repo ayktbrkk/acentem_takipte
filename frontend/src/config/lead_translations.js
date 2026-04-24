@@ -38,6 +38,10 @@ export const LEAD_TRANSLATIONS = {
     active: "Aktif",
     individual: "Bireysel",
     corporate: "Kurumsal",
+    colLead: "Fırsat",
+    colCustomer: "Müşteri",
+    colStatus: "Durum",
+    colPotential: "Potansiyel",
   },
   en: {
     leads: "Leads",
@@ -78,6 +82,10 @@ export const LEAD_TRANSLATIONS = {
     active: "Active",
     individual: "Individual",
     corporate: "Corporate",
+    colLead: "Lead",
+    colCustomer: "Customer",
+    colStatus: "Status",
+    colPotential: "Potential",
   }
 };
 

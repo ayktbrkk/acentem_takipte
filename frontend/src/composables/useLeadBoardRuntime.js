@@ -34,7 +34,7 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
     url: "frappe.client.get_list",
     params: {
       doctype: "AT Lead",
-      fields: ["name", "first_name", "last_name", "status", "phone", "email", "creation", "branch", "estimated_gross_premium"],
+      fields: ["name", "first_name", "last_name", "status", "phone", "email", "creation", "branch", "estimated_gross_premium", "sales_entity"],
       order_by: "creation desc",
     },
     auto: false,
@@ -58,6 +58,13 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
       ...row,
       full_name: [row.first_name, row.last_name].filter(Boolean).join(" "),
       status_label: t(`status_${String(row.status || "Draft").toLowerCase()}`),
+      lead_primary: row.name,
+      lead_secondary: row.branch || "-",
+      customer_label: [row.first_name, row.last_name].filter(Boolean).join(" ") || "-",
+      customer_secondary: row.phone || "-",
+      takip_label: row.sales_entity || "-",
+      finance_primary: row.estimated_gross_premium || 0,
+      date_secondary: row.creation ? String(row.creation).slice(0, 10) : "-",
     }));
   });
 
@@ -66,7 +73,7 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
   async function reload() {
     const params = {
       doctype: "AT Lead",
-      fields: ["name", "first_name", "last_name", "status", "phone", "email", "creation", "branch", "estimated_gross_premium"],
+      fields: ["name", "first_name", "last_name", "status", "phone", "email", "creation", "branch", "estimated_gross_premium", "sales_entity"],
       filters: {},
       order_by: filters.sort,
       limit_start: (pagination.page - 1) * pagination.pageLength,
