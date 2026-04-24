@@ -504,7 +504,7 @@ export function useDashboardFacts({
     const delta = Number(item?.days_delta ?? 0);
     if (delta < 0) return `${t("followUpDeltaOverdue")} ${Math.abs(delta)} ${t("followUpDeltaDays")}`;
     if (delta === 0) return t("followUpDeltaToday");
-    return `${delta} ${t("followUpDeltaDays")}`;
+    return `${t("followUpDeltaSoon")} ${delta} ${t("followUpDeltaDays")}`;
   }
 
   function followUpFacts(item) {

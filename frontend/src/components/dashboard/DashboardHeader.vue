@@ -1,17 +1,20 @@
 <template>
-  <div class="detail-topbar">
-    <div>
-      <p class="detail-breadcrumb">{{ heroTag }}</p>
-      <h1 class="detail-title">{{ heroTitle }}</h1>
-      <p class="detail-subtitle">{{ heroSubtitle }}</p>
-      <p class="detail-meta">{{ rangeLabelText }}: {{ visibleRange }}</p>
-    </div>
+  <div class="flex flex-col border-b border-gray-100 bg-white px-5 py-6">
+    <div class="flex items-start justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">{{ heroTitle }}</h1>
+        <p class="mt-1 text-sm font-medium text-gray-500">{{ heroSubtitle }}</p>
+        <p class="mt-4 flex items-center gap-2 text-xs font-medium text-gray-400">
+          <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand-500"></span>
+          {{ rangeLabelText }}: <span class="text-gray-600">{{ visibleRange }}</span>
+        </p>
+      </div>
 
     <ActionToolbarGroup>
       <FilterChipButton
         v-for="days in rangeOptions"
         :key="days"
-        theme="hero"
+        theme="light"
         :active="selectedRange === days"
         @click="$emit('apply-range', days)"
       >
@@ -21,22 +24,23 @@
       <ActionButton
         variant="secondary"
         size="sm"
-        class="!border-white/30 !bg-white/10 !text-white hover:!bg-white/20"
+        class="border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
         @click="$emit('reload')"
       >
         {{ refreshLabel }}
       </ActionButton>
       <ActionButton
         v-if="showNewLeadAction"
-        variant="secondary"
+        variant="primary"
         size="sm"
-        class="!border-white/30 !bg-white !text-slate-900 hover:!bg-slate-100"
+        class="!bg-brand-600 hover:!bg-brand-700"
         @click="$emit('new-lead')"
       >
         {{ newLeadLabel }}
       </ActionButton>
     </ActionToolbarGroup>
   </div>
+</div>
 
   <div class="surface-card rounded-2xl p-2">
     <div class="flex gap-2 overflow-x-auto whitespace-nowrap px-1 py-1">

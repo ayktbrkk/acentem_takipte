@@ -38,7 +38,7 @@ export function useDashboardFormatters({ dashboardComparisonTrendHint, localeCod
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return `${day}.${month}.${year}`;
   }
 
   function formatMonthKey(monthKey) {
@@ -110,7 +110,7 @@ export function useDashboardFormatters({ dashboardComparisonTrendHint, localeCod
     const trend = buildTrend(current, previous, reverseTrend);
     return {
       key,
-      title: upperLabel(title),
+      title,
       value,
       trendText: trend.text,
       trendClass: trend.className,

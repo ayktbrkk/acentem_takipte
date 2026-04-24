@@ -7,15 +7,15 @@
         <div v-else class="space-y-3">
           <div class="grid grid-cols-3 gap-2">
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ upperLabel(t("followUpOverdue")) }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ t("followUpOverdue") }}</p>
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.overdue) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ upperLabel(t("followUpToday")) }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ t("followUpToday") }}</p>
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(followUpSummary.due_today) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-brand-700">{{ upperLabel(t("followUpSoon")) }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-brand-700">{{ t("followUpSoon") }}</p>
               <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(followUpSummary.due_soon) }}</p>
             </div>
           </div>
@@ -51,15 +51,15 @@
         <div v-else class="space-y-3">
           <div class="grid grid-cols-3 gap-2">
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ upperLabel(t("taskOverdue")) }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ t("taskOverdue") }}</p>
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.overdue) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ upperLabel(t("taskToday")) }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-amber-700">{{ t("taskToday") }}</p>
               <p class="mt-1 text-lg font-semibold text-amber-800">{{ formatNumber(myTaskSummary.due_today) }}</p>
             </div>
             <div class="qc-warning-card">
-              <p class="text-[11px] font-semibold tracking-wide text-brand-700">{{ upperLabel(t("taskSoon")) }}</p>
+              <p class="text-[11px] font-semibold tracking-wide text-brand-700">{{ t("taskSoon") }}</p>
               <p class="mt-1 text-lg font-semibold text-sky-800">{{ formatNumber(myTaskSummary.due_soon) }}</p>
             </div>
           </div>
