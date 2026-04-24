@@ -1,27 +1,33 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <p class="detail-breadcrumb">{{ t("customers_breadcrumb") }}</p>
-        <h1 class="detail-title">
-          {{ customer.full_name || name }}
-          <StatusBadge domain="customer" :status="customer.enabled ? 'active' : 'cancel'" />
-        </h1>
-        <div class="mt-1.5 flex flex-wrap items-center gap-2">
-          <span class="copy-tag">{{ customer.name }}</span>
-          <span class="copy-tag">{{ customer.tax_id }}</span>
-          <span class="copy-tag text-brand-700 font-medium">{{ customer.office_branch }}</span>
-        </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('customers_breadcrumb')"
+    :title="customer.full_name || name"
+    :subtitle="customer.name"
+  >
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="backToList">
+        {{ t("back_to_list") }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="openNewOffer">
+        <FeatherIcon name="plus" class="h-4 w-4" />
+        {{ t("new_offer") }}
+      </ActionButton>
+    </template>
+
+    <template #metrics>
+      <div v-if="!loading" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SaaSMetricCard
+          v-for="cell in heroCells"
+          :key="cell.label"
+          :label="cell.label"
+          :value="cell.value"
+          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : 'text-gray-900'"
+        />
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <ActionButton variant="secondary" size="sm" @click="backToList">
-          {{ t("back_to_list") }}
-        </ActionButton>
-        <ActionButton variant="primary" size="sm" @click="openNewOffer">
-          {{ t("new_offer") }}
-        </ActionButton>
+      <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SkeletonLoader variant="card" :count="4" />
       </div>
-    </div>
+    </template>
 
     <!-- Loading State -->
     <div v-if="loading" class="mt-4 space-y-6">
@@ -44,7 +50,6 @@
 
     <!-- Ready State -->
     <template v-else>
-      <HeroStrip :cells="heroCells" />
 
       <div class="nav-tabs-bar">
         <button
@@ -269,7 +274,7 @@
       @close="closeUploadModal"
       @uploaded="handleUploadComplete"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -277,9 +282,12 @@ import { computed, defineAsyncComponent, ref, unref } from "vue";
 import { useCustomerDetailRuntime } from "../composables/useCustomerDetailRuntime";
 import { useAuthStore } from "../stores/auth";
 
+import { FeatherIcon } from "frappe-ui";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 
 // audit(perf/P-01): Heavy components in the detail view are lazy-loaded to speed up initial route transition.
 const WorkbenchFileUploadModal = defineAsyncComponent(() =>
@@ -290,9 +298,6 @@ const SectionPanel = defineAsyncComponent(() =>
 );
 const FieldGroup = defineAsyncComponent(() =>
   import("../components/ui/FieldGroup.vue")
-);
-const HeroStrip = defineAsyncComponent(() =>
-  import("../components/ui/HeroStrip.vue")
 );
 const StatusBadge = defineAsyncComponent(() =>
   import("../components/ui/StatusBadge.vue")

@@ -1,34 +1,33 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <p class="detail-breadcrumb">{{ t('breadcrumb') }}</p>
-        <h1 class="detail-title">
-          {{ renewal.name || name }}
-          <StatusBadge domain="renewal" :status="renewal.status || 'Open'" />
-        </h1>
-        <div class="mt-1.5 flex items-center gap-2">
-          <span class="copy-tag">{{ renewal.policy || '-' }}</span>
-          <span
-            v-if="renewal.priority"
-            :class="[
-              'badge',
-              renewal.priority === 'high' && 'badge-red',
-              renewal.priority === 'medium' && 'badge-amber',
-              renewal.priority === 'low' && 'badge-gray',
-            ]"
-          >
-            {{ priorityLabel(renewal.priority) }}
-          </span>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="goBack">{{ t('backList') }}</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openPolicy">{{ t('openPolicy') }}</button>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('breadcrumb')"
+    :title="renewal.name || name"
+    :subtitle="renewal.policy"
+  >
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="goBack">
+        {{ t('backList') }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="openPolicy">
+        <FeatherIcon name="external-link" class="h-4 w-4" />
+        {{ t('openPolicy') }}
+      </ActionButton>
+    </template>
 
-    <HeroStrip :cells="heroCells" />
+    <template #metrics>
+      <div v-if="renewal.name" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SaaSMetricCard
+          v-for="cell in heroCells"
+          :key="cell.label"
+          :label="cell.label"
+          :value="cell.value"
+          :value-class="cell.variant === 'lg' ? 'text-gray-900 font-bold' : 'text-gray-600'"
+        />
+      </div>
+      <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
+      </div>
+    </template>
 
     <SectionPanel :title="t('renewalProcess')" panel-class="surface-card rounded-2xl p-5">
       <StepBar :steps="renewalSteps" />
@@ -98,7 +97,7 @@
         </SectionPanel>
       </aside>
     </div>
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -106,11 +105,15 @@ import { computed, onMounted, unref } from 'vue';
 import { createResource } from 'frappe-ui';
 import { useRouter } from 'vue-router';
 
+import { FeatherIcon } from 'frappe-ui';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
-import HeroStrip from '@/components/ui/HeroStrip.vue';
+import SaaSMetricCard from '@/components/app-shell/SaaSMetricCard.vue';
+import ActionButton from '@/components/app-shell/ActionButton.vue';
+import WorkbenchPageLayout from '@/components/app-shell/WorkbenchPageLayout.vue';
 import FieldGroup from '@/components/ui/FieldGroup.vue';
 import StepBar from '@/components/ui/StepBar.vue';
 import SectionPanel from '../components/app-shell/SectionPanel.vue';
+import SkeletonLoader from '@/components/ui/SkeletonLoader.vue';
 import { getAppPinia } from '../pinia';
 import { useAuthStore } from '../stores/auth';
 import { translateText } from '../utils/i18n';

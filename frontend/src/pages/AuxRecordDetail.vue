@@ -1,53 +1,62 @@
 <template>
-  <section class="page-shell space-y-4">
-    <AuxRecordDetailTopbar
-      :config="config"
-      :doc="doc"
-      :record-title="recordTitle"
-      :record-subtitle="recordSubtitle"
-      :list-label="localize(config.labels?.list)"
-      :copied-record-key="copiedRecordKey"
-      :t="t"
-      :can-open-communication-context="canOpenCommunicationContext"
-      :can-send-draft-lifecycle="canSendDraftLifecycle"
-      :can-retry-outbox-lifecycle="canRetryOutboxLifecycle"
-      :can-requeue-outbox-lifecycle="canRequeueOutboxLifecycle"
-      :can-start-task-lifecycle="canStartTaskLifecycle"
-      :can-block-task-lifecycle="canBlockTaskLifecycle"
-      :can-complete-task-lifecycle="canCompleteTaskLifecycle"
-      :can-cancel-task-lifecycle="canCancelTaskLifecycle"
-      :can-complete-reminder-lifecycle="canCompleteReminderLifecycle"
-      :can-cancel-reminder-lifecycle="canCancelReminderLifecycle"
-      :can-start-assignment-lifecycle="canStartAssignmentLifecycle"
-      :can-block-assignment-lifecycle="canBlockAssignmentLifecycle"
-      :can-close-assignment-lifecycle="canCloseAssignmentLifecycle"
-      :quick-edit-config="quickEditConfig"
-      :can-use-quick-edit="canUseQuickEdit"
-      :panel-config="panelConfig"
-      :can-open-document="canOpenDocument"
-      :can-archive-document="canArchiveDocument"
-      :can-restore-document="canRestoreDocument"
-      :can-permanent-delete-document="canPermanentDeleteDocument"
-      :show-desk-action="showDeskAction"
-      :go-back="goBack"
-      :copy-record-value="copyRecordValue"
-      :open-communication-context="openCommunicationContext"
-      :send-draft-lifecycle="sendDraftLifecycle"
-      :retry-outbox-lifecycle="retryOutboxLifecycle"
-      :requeue-outbox-lifecycle="requeueOutboxLifecycle"
-      :mark-task-lifecycle="markTaskLifecycle"
-      :mark-reminder-lifecycle="markReminderLifecycle"
-      :mark-assignment-lifecycle="markAssignmentLifecycle"
-      :open-panel="openPanel"
-      :open-document="openDocument"
-      :archive-document="archiveDocument"
-      :restore-document="restoreDocument"
-      :permanent-delete-document="permanentDeleteDocument"
-      :open-desk="openDesk"
-      @open-quick-edit="showQuickEditDialog = true"
-    />
+  <WorkbenchPageLayout
+    :breadcrumb="listLabel"
+    :title="recordTitle"
+    :subtitle="recordSubtitle"
+  >
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="goBack">
+        {{ t('backToList') }}
+      </ActionButton>
+      <ActionButton
+        v-if="canOpenCommunicationContext"
+        variant="secondary"
+        size="sm"
+        @click="openCommunicationContext"
+      >
+        <FeatherIcon name="message-square" class="h-4 w-4" />
+        {{ t('openCommunication') }}
+      </ActionButton>
+      <ActionButton v-if="canSendDraftLifecycle" variant="secondary" size="sm" @click="sendDraftLifecycle">
+        <FeatherIcon name="send" class="h-4 w-4" />
+        {{ t('sendNow') }}
+      </ActionButton>
+      <ActionButton v-if="canRetryOutboxLifecycle" variant="secondary" size="sm" @click="retryOutboxLifecycle">
+        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+        {{ t('retry') }}
+      </ActionButton>
+      <ActionButton
+        v-if="quickEditConfig && canUseQuickEdit"
+        variant="secondary"
+        size="sm"
+        @click="showQuickEditDialog = true"
+      >
+        <FeatherIcon name="edit-3" class="h-4 w-4" />
+        {{ t('quickEdit') }}
+      </ActionButton>
+      <ActionButton v-if="canOpenDocument" variant="secondary" size="sm" @click="openDocument">
+        <FeatherIcon name="file-text" class="h-4 w-4" />
+        {{ t('openDocument') }}
+      </ActionButton>
+      <ActionButton v-if="showDeskAction" variant="secondary" size="sm" @click="openDesk">
+        <FeatherIcon name="external-link" class="h-4 w-4" />
+        {{ t('openDesk') }}
+      </ActionButton>
+    </template>
 
-    <AuxRecordDetailHero :cells="summaryItems" />
+    <template #metrics>
+      <div v-if="!activeLoading" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SaaSMetricCard
+          v-for="cell in summaryItems"
+          :key="cell.label"
+          :label="cell.label"
+          :value="cell.value"
+        />
+      </div>
+      <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
+      </div>
+    </template>
 
     <div v-if="activeLoading && !doc" class="surface-card rounded-2xl p-5">
       <div class="card-empty">{{ t("loading") }}</div>
@@ -98,7 +107,7 @@
       :quick-edit-success-handlers="quickEditSuccessHandlers"
       :labels="{ save: t('saveChanges'), cancel: t('cancel') }"
     />
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -110,13 +119,16 @@ import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
 import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuxRecordDetailRuntime } from "../composables/useAuxRecordDetailRuntime";
 import { useAuxRecordDetailSummary } from "../composables/useAuxRecordDetailSummary";
-import { useAuxRecordDetailActions } from "../composables/useAuxRecordDetailActions";
-import { useAuxRecordDetailQuickDialogs } from "../composables/useAuxRecordDetailQuickDialogs";
-import AuxRecordDetailTopbar from "../components/aux-record-detail/AuxRecordDetailTopbar.vue";
-import AuxRecordDetailHero from "../components/aux-record-detail/AuxRecordDetailHero.vue";
 import AuxRecordDetailContent from "../components/aux-record-detail/AuxRecordDetailContent.vue";
 import AuxRecordDetailSidebar from "../components/aux-record-detail/AuxRecordDetailSidebar.vue";
 import AuxRecordDetailQuickEditDialog from "../components/aux-record-detail/AuxRecordDetailQuickEditDialog.vue";
+import { useAuxRecordDetailActions } from "../composables/useAuxRecordDetailActions";
+import { useAuxRecordDetailQuickDialogs } from "../composables/useAuxRecordDetailQuickDialogs";
+import { FeatherIcon } from "frappe-ui";
+import ActionButton from "../components/app-shell/ActionButton.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import { translateText } from "../utils/i18n";
 
 const props = defineProps({
@@ -144,6 +156,8 @@ function t(key) {
 function localize(v) {
   return typeof v === "string" ? v : v?.[activeLocale.value] || v?.en || v?.tr || "";
 }
+
+const listLabel = computed(() => localize(config.labels?.list));
 
 const detailRuntime = useAuxRecordDetailRuntime({
   props,

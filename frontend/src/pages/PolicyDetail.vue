@@ -5,16 +5,20 @@
     :subtitle="policy.policy_no || policy.name"
   >
     <template #actions>
-      <ActionButton variant="primary" size="sm" @click="reload">
+      <ActionButton variant="secondary" size="sm" @click="reload">
+        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t("refresh") }}
       </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="handleExportPdf">
+        <FeatherIcon name="printer" class="h-4 w-4" />
         {{ t("exportPdf") }}
       </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="handleShareWhatsApp">
+        <FeatherIcon name="share-2" class="h-4 w-4" />
         {{ t("shareWhatsApp") }}
       </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="handleCreateEndorsement">
+      <ActionButton variant="primary" size="sm" @click="handleCreateEndorsement">
+        <FeatherIcon name="plus" class="h-4 w-4" />
         {{ t("newEndorsement") }}
       </ActionButton>
       <ActionButton variant="link" size="sm" @click="backToList">
@@ -23,7 +27,15 @@
     </template>
 
     <template #metrics>
-      <HeroStrip v-if="!loading" :cells="heroCells" />
+      <div v-if="!loading" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SaaSMetricCard
+          v-for="(cell, idx) in heroCells"
+          :key="cell.label"
+          :label="cell.label"
+          :value="cell.value"
+          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : cell.variant === 'cancel-pill' ? 'text-rose-600' : 'text-gray-900'"
+        />
+      </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
         <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
       </div>
@@ -186,13 +198,14 @@
 <script setup>
 import { computed } from "vue";
 import { useRouter } from "vue-router";
+import { Dialog, createResource, FeatherIcon } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
 import { uppercaseText } from "../utils/i18n";
 import { usePolicyDetailRuntime } from "../composables/usePolicyDetailRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import HeroStrip from "../components/ui/HeroStrip.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";

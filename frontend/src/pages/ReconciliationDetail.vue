@@ -1,25 +1,33 @@
 <template>
-  <section class="page-shell space-y-4">
-    <div class="detail-topbar">
-      <div>
-        <p class="detail-breadcrumb">{{ t("detailBreadcrumb") }}</p>
-        <h1 class="detail-title">
-          {{ item.name || name }}
-          <StatusBadge domain="reconciliation" :status="statusLabel" />
-        </h1>
-        <div class="mt-1.5 flex flex-wrap items-center gap-2">
-          <span class="copy-tag">{{ entry.insurance_company || item.accounting_entry || "-" }}</span>
-          <span class="copy-tag">{{ entry.policy || item.source_name || "-" }}</span>
-          <span class="copy-tag">{{ item.mismatch_type || "-" }}</span>
-        </div>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button class="btn btn-outline btn-sm" type="button" @click="goBack">{{ t("back") }}</button>
-        <button class="btn btn-primary btn-sm" type="button" @click="openWorkbench">{{ t("openWorkbench") }}</button>
-      </div>
-    </div>
+  <WorkbenchPageLayout
+    :breadcrumb="t('detailBreadcrumb')"
+    :title="item.name || name"
+    :subtitle="entry.insurance_company || item.accounting_entry"
+  >
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="goBack">
+        {{ t("back") }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="openWorkbench">
+        <FeatherIcon name="external-link" class="h-4 w-4" />
+        {{ t("openWorkbench") }}
+      </ActionButton>
+    </template>
 
-    <HeroStrip :cells="heroCells" />
+    <template #metrics>
+      <div v-if="!loading" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SaaSMetricCard
+          v-for="cell in heroCells"
+          :key="cell.label"
+          :label="cell.label"
+          :value="cell.value"
+          :value-class="cell.variant === 'warn' ? 'text-amber-600 font-bold' : cell.variant === 'success' ? 'text-emerald-600 font-bold' : 'text-gray-900'"
+        />
+      </div>
+      <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
+      </div>
+    </template>
 
     <div class="detail-body">
       <div class="detail-main space-y-4">
@@ -89,7 +97,7 @@
         </SectionPanel>
       </aside>
     </div>
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -100,11 +108,15 @@ import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { translateText } from "../utils/i18n";
 
+import { FeatherIcon } from "frappe-ui";
 import StatusBadge from "@/components/ui/StatusBadge.vue";
-import HeroStrip from "@/components/ui/HeroStrip.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import FieldGroup from "@/components/ui/FieldGroup.vue";
 import ListTable from "@/components/ui/ListTable.vue";
+import SkeletonLoader from "@/components/ui/SkeletonLoader.vue";
 
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || "");
