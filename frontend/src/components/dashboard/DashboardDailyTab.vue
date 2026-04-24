@@ -227,7 +227,7 @@ import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 import DashboardQuickActions from "./DashboardQuickActions.vue";
 
-import { translateText } from "@/generated/translations";
+
 
 const props = defineProps({
   activityFacts: { type: Function, required: true },
@@ -280,6 +280,6 @@ function upperLabel(text) {
 function localizeStatus(rawStatus) {
   const s = String(rawStatus || "").trim();
   if (!s || s === "-") return s || "-";
-  return translateText(s, props.locale) || s;
+  return props.t(s) || s;
 }
 </script>

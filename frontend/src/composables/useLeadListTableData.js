@@ -196,7 +196,7 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
     { key: "customer_primary", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
     { key: "process_primary", secondaryKey: "process_secondary", label: t("colProcess"), type: "stacked" },
     { key: "potential_primary", secondaryKey: "potential_secondary", label: t("colPotential"), type: "stacked" },
-    { key: "conversion_state", label: t("colConversion"), type: "status", domain: "AT Lead" },
+    { key: "conversion_state", label: t("colConversion"), type: "status", domain: "lead" },
   ];
 
   return {

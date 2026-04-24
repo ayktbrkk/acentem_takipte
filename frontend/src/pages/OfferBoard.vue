@@ -422,7 +422,7 @@ const offerListColumns = computed(() => [
   { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
   { key: "validity_primary", secondaryKey: "validity_secondary", label: t("colValidity"), type: "stacked" },
   { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked", align: "right" },
-  { key: "status", label: t("colStatus"), type: "status", domain: "AT Offer" },
+  { key: "status", label: t("colStatus"), type: "status", domain: "offer" },
 ]);
 
 function focusOfferSearch() {

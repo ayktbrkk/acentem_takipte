@@ -249,7 +249,7 @@ const columns = computed(() => [
   { key: "product_primary", secondaryKey: "product_secondary", label: t("colProduct"), type: "stacked" },
   { key: "vade_primary", secondaryKey: "vade_secondary", label: t("colVade"), type: "stacked" },
   { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked", align: "right" },
-  { key: "status", label: t("colStatus"), type: "status", domain: "AT Policy" },
+  { key: "status", label: t("colStatus"), type: "status", domain: "policy" },
 ]);
 
 function clearFilters() {
