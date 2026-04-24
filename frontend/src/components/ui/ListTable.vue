@@ -106,18 +106,22 @@ import { computed } from "vue";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
 import { translateText, uppercaseText } from "@/utils/i18n";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
 
 const props = defineProps({
   columns: { type: Array, required: true },
   rows: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
   emptyMessage: { type: String, default: "No records found." },
-  locale: { type: String, default: "tr" },
+  locale: { type: String, default: "" },
 });
 
 defineEmits(["row-click"]);
 
-const locale = computed(() => props.locale || "en");
+// Prefer explicit prop, then fall back to the user's actual locale from auth store.
+const locale = computed(() => props.locale || authStore.locale || "en");
 
 function urgencyClass(days) {
   if (days == null) return "text-sm text-gray-400";

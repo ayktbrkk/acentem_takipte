@@ -63,7 +63,7 @@
           <div v-else class="space-y-4">
             <div class="flex items-center gap-4">
               <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-600">
-                {{ (claim.customer_name || "?").charAt(0).toLocaleUpperCase('tr-TR') }}
+                {{ uppercaseText((claim.customer_name || "?").charAt(0), activeLocale) }}
               </div>
               <div>
                 <p class="font-bold text-slate-900">{{ claim.customer_name || t("all") }}</p>
@@ -131,6 +131,7 @@
 <script setup>
 import { computed } from "vue";
 import { useAuthStore } from "../stores/auth";
+import { uppercaseText } from "../utils/i18n";
 import { useClaimDetailRuntime } from "../composables/useClaimDetailRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
