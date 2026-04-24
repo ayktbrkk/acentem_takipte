@@ -43,10 +43,8 @@
         :key="card.key"
         :title="card.title"
         :value="card.value"
-        :trend-text="card.trendText"
-        :trend-class="card.trendClass"
-        :trend-hint="card.trendHint"
         :icon="card.icon"
+        :t="t"
       />
     </div>
 

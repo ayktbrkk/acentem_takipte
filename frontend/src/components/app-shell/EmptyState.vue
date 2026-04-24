@@ -1,31 +1,23 @@
 <template>
-  <div class="at-empty-state">
-    <div class="mx-auto max-w-xl">
-      <h3 class="text-sm font-semibold text-slate-800">{{ title }}</h3>
-      <p v-if="description" class="mt-1 text-sm text-slate-500">
-        {{ description }}
-      </p>
-      <div v-if="$slots.actions || actionLabel" class="mt-4 flex justify-center gap-2">
-        <slot name="actions">
-          <button
-            class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-            type="button"
-            @click="$emit('action')"
-          >
-            {{ actionLabel }}
-          </button>
-        </slot>
-      </div>
+  <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50 py-12 text-center">
+    <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+      <slot name="icon">
+        <component :is="LucideInbox" class="h-8 w-8" />
+      </slot>
+    </div>
+    <h4 class="text-sm font-semibold text-gray-900">{{ title }}</h4>
+    <p class="mt-1 text-xs text-gray-500">{{ description }}</p>
+    <div v-if="$slots.actions" class="mt-4">
+      <slot name="actions" />
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
-  title: { type: String, default: "" },
-  description: { type: String, default: "" },
-  actionLabel: { type: String, default: "" },
-});
+import { Inbox as LucideInbox } from "lucide-vue-next";
 
-defineEmits(["action"]);
+defineProps({
+  title: { type: String, default: "Kayıt bulunamadı" },
+  description: { type: String, default: "Şu an takip edilecek bir kayıt yok." },
+});
 </script>

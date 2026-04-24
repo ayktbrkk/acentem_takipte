@@ -1,9 +1,10 @@
 <template>
-  <div v-if="isRenewalsTab" class="grid gap-4 xl:grid-cols-3">
-    <div class="space-y-4 xl:col-span-2">
+  <div v-if="isRenewalsTab" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <!-- Left: Renewals Pipeline (8 units) -->
+    <div class="space-y-6 xl:col-span-8">
       <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="offerWaitingRenewals.length === 0" class="at-empty-block">{{ t("noOfferWaitingRenewals") }}</div>
+        <EmptyState v-else-if="offerWaitingRenewals.length === 0" :title="t('noOfferWaitingRenewals')" />
         <ul v-else class="space-y-3">
           <MetaListCard
             v-for="task in pagedPreviewItems(offerWaitingRenewals, 'renewalsOfferWaiting')"
@@ -31,7 +32,7 @@
 
       <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="displayRenewalTasks.length === 0" class="at-empty-block">{{ t("noRenewal") }}</div>
+        <EmptyState v-else-if="displayRenewalTasks.length === 0" :title="t('noRenewal')" />
         <ul v-else class="space-y-3">
           <MetaListCard
             v-for="task in pagedPreviewItems(displayRenewalTasks, 'renewalsQueue')"
@@ -58,10 +59,11 @@
       </SectionPanel>
     </div>
 
-    <div class="space-y-4">
+    <!-- Right: Metrics & Linked Records (4 units) -->
+    <div class="space-y-6 xl:col-span-4">
       <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="renewalStatusSummary.length === 0" class="at-empty-block">{{ t("noRenewalStatus") }}</div>
+        <EmptyState v-else-if="renewalStatusSummary.length === 0" :title="t('noRenewalStatus')" />
         <div v-else class="space-y-3">
           <ProgressMetricRow
             v-for="item in renewalStatusSummary"
@@ -77,7 +79,7 @@
       <SectionPanel :title="t('renewalOutcomeTitle')" :show-count="false">
         <p class="mb-3 text-xs text-slate-500">{{ t("renewalOutcomeHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="renewalOutcomeSummary.length === 0" class="at-empty-block">{{ t("noRenewalOutcome") }}</div>
+        <EmptyState v-else-if="renewalOutcomeSummary.length === 0" :title="t('noRenewalOutcome')" />
         <div v-else class="space-y-3">
           <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
             <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("kpiRenewalRetention") }}</p>
@@ -96,7 +98,7 @@
 
       <SectionPanel :title="t('linkedPoliciesTitle')" :count="formatNumber(renewalLinkedPolicies.length)">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="renewalLinkedPolicies.length === 0" class="at-empty-block">{{ t("noLinkedPolicies") }}</div>
+        <EmptyState v-else-if="renewalLinkedPolicies.length === 0" :title="t('noLinkedPolicies')" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="policy in pagedPreviewItems(renewalLinkedPolicies, 'renewalsPolicies')"
@@ -131,6 +133,7 @@
 </template>
 
 <script setup>
+import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import MiniFactList from "../app-shell/MiniFactList.vue";

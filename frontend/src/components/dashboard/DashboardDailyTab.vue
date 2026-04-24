@@ -1,6 +1,7 @@
 <template>
-  <div v-if="isDailyTab" class="grid gap-4 xl:grid-cols-3">
-    <div class="space-y-4">
+  <div v-if="isDailyTab" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <!-- Main Content: Detailed Lists (8 units) -->
+    <div class="space-y-6 xl:col-span-8">
       <SectionPanel :title="t('followUpSlaTitle')" :count="formatNumber(prioritizedFollowUpItems.length)">
         <p class="mb-3 text-xs text-slate-500">{{ t("followUpSlaHint") }}</p>
         <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
@@ -32,7 +33,7 @@
               <MiniFactList :items="followUpFacts(item)" />
             </MetaListCard>
           </ul>
-          <div v-else class="at-empty-block text-sm">{{ t("noFollowUpItems") }}</div>
+          <EmptyState v-else />
           <PreviewPager
             v-if="prioritizedFollowUpItems.length > 0"
             :current-page="previewResolvedPage('dailyFollowUp', prioritizedFollowUpItems)"
@@ -43,6 +44,37 @@
             @view-all="openPreviewList('communication')"
           />
         </div>
+      </SectionPanel>
+
+      <SectionPanel :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length">
+        <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
+          <MetaListCard
+            v-for="task in pagedPreviewItems(displayRenewalAlertItems, 'dailyRenewalAlerts')"
+            :key="task.name"
+            :title="task.policy || '-'"
+            :description="formatDaysToDue(task.due_date)"
+            description-class="mt-2 text-xs font-semibold text-amber-700"
+            clickable
+            @click="openRenewalTaskItem(task)"
+          >
+            <template #trailing>
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
+            </template>
+            <MiniFactList :items="renewalAlertFacts(task)" />
+          </MetaListCard>
+        </ul>
+        <EmptyState v-else />
+        <PreviewPager
+          v-if="displayRenewalAlertItems.length > 0"
+          :current-page="previewResolvedPage('dailyRenewalAlerts', displayRenewalAlertItems)"
+          :total-pages="previewPageCount(displayRenewalAlertItems)"
+          :show-view-all="shouldShowViewAll(displayRenewalAlertItems)"
+          :view-all-label="t('viewAllItems')"
+          @change-page="setPreviewPage('dailyRenewalAlerts', $event, displayRenewalAlertItems)"
+          @view-all="openPreviewList('renewals')"
+        />
       </SectionPanel>
 
       <SectionPanel :title="t('todayTasksTitle')" :count="formatNumber(priorityTaskItems.length)">
@@ -76,7 +108,7 @@
               <MiniFactList :items="taskFacts(task)" />
             </MetaListCard>
           </ul>
-          <div v-else class="at-empty-block text-sm">{{ t("noMyTasks") }}</div>
+          <EmptyState v-else />
           <PreviewPager
             v-if="priorityTaskItems.length > 0"
             :current-page="previewResolvedPage('dailyTasks', priorityTaskItems)"
@@ -90,51 +122,19 @@
       </SectionPanel>
     </div>
 
-    <div class="space-y-4">
-      <SectionPanel :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length">
-        <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
-          <MetaListCard
-            v-for="task in pagedPreviewItems(displayRenewalAlertItems, 'dailyRenewalAlerts')"
-            :key="task.name"
-            :title="task.policy || '-'"
-            :description="formatDaysToDue(task.due_date)"
-            description-class="mt-2 text-xs font-semibold text-amber-700"
-            clickable
-            @click="openRenewalTaskItem(task)"
-          >
-            <template #trailing>
-              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
-            </template>
-            <MiniFactList :items="renewalAlertFacts(task)" />
-          </MetaListCard>
-        </ul>
-        <div v-else class="at-empty-block text-sm">{{ t("noRenewalAlert") }}</div>
-        <PreviewPager
-          v-if="displayRenewalAlertItems.length > 0"
-          :current-page="previewResolvedPage('dailyRenewalAlerts', displayRenewalAlertItems)"
-          :total-pages="previewPageCount(displayRenewalAlertItems)"
-          :show-view-all="shouldShowViewAll(displayRenewalAlertItems)"
-          :view-all-label="t('viewAllItems')"
-          @change-page="setPreviewPage('dailyRenewalAlerts', $event, displayRenewalAlertItems)"
-          @view-all="openPreviewList('renewals')"
-        />
-      </SectionPanel>
-
+    <!-- Sidebar: Actions & Summaries (4 units) -->
+    <div class="space-y-6 xl:col-span-4">
       <DashboardQuickActions :actions="visibleQuickActions" :open-page="openPage" :t="t" />
-    </div>
 
-    <div class="space-y-4">
       <SectionPanel :title="t('recentActivitiesTitle')" :count="formatNumber(recentActivityItems.length)">
         <div v-if="myActivitiesLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="recentActivityItems.length === 0" class="at-empty-block">{{ t("recentActivitiesEmpty") }}</div>
+        <EmptyState v-else-if="recentActivityItems.length === 0" />
         <ul v-else class="space-y-2">
           <MetaListCard
             v-for="activity in pagedPreviewItems(recentActivityItems, 'dailyActivities')"
             :key="activity.name"
             :title="activity.activity_title || activity.activity_type || activity.name || '-'"
-              :description="localizeStatus(activity.status)"
+            :description="localizeStatus(activity.status)"
             description-class="mt-2 text-xs font-semibold text-slate-600"
             clickable
             @click="openActivityItem(activity)"
@@ -154,12 +154,8 @@
       </SectionPanel>
 
       <SectionPanel :title="t('openClaimsTitle')" :count="formatNumber(openClaimsPreviewRows.length)">
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div v-else-if="openClaimsPreviewRows.length === 0" class="at-empty-block">
-          {{ t("noOpenClaims") }}
-        </div>
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <EmptyState v-else-if="openClaimsPreviewRows.length === 0" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="claim in pagedPreviewItems(openClaimsPreviewRows, 'dailyClaims')"
@@ -186,12 +182,8 @@
       </SectionPanel>
 
       <SectionPanel :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)">
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div v-else-if="displayRecentPolicies.length === 0" class="at-empty-block">
-          {{ t("noPolicy") }}
-        </div>
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <EmptyState v-else-if="displayRecentPolicies.length === 0" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="policy in pagedPreviewItems(displayRecentPolicies, 'dailyPolicies')"
@@ -226,6 +218,7 @@
 </template>
 
 <script setup>
+import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import MiniFactList from "../app-shell/MiniFactList.vue";

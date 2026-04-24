@@ -1,12 +1,11 @@
 <template>
-  <div v-if="isSalesTab" class="grid gap-4 xl:grid-cols-3">
-    <div class="space-y-4">
+  <div v-if="isSalesTab" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <!-- Left: Pipelines (8 units) -->
+    <div class="space-y-6 xl:col-span-8">
       <SectionPanel :title="t('offerPipeline')" :count="formatNumber(salesPipelineOffers.length)">
         <p class="mb-3 text-xs text-slate-500">{{ t("salesPipelineHint") }}</p>
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div v-else-if="salesPipelineOffers.length === 0" class="at-empty-block">{{ t("noOffer") }}</div>
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <EmptyState v-else-if="salesPipelineOffers.length === 0" :title="t('noOffer')" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="offer in pagedPreviewItems(salesPipelineOffers, 'salesOffers')"
@@ -32,14 +31,10 @@
           @view-all="openPreviewList('offers')"
         />
       </SectionPanel>
-    </div>
 
-    <div class="space-y-4">
       <SectionPanel :title="t('convertedOffersTitle')" :count="formatNumber(convertedSalesOffers.length)">
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div v-else-if="convertedSalesOffers.length === 0" class="at-empty-block">{{ t("noConvertedOffers") }}</div>
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <EmptyState v-else-if="convertedSalesOffers.length === 0" :title="t('noConvertedOffers')" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="offer in pagedPreviewItems(convertedSalesOffers, 'salesConvertedOffers')"
@@ -77,14 +72,11 @@
       </SectionPanel>
     </div>
 
-    <div class="space-y-4">
+    <!-- Right: Context & Actions (4 units) -->
+    <div class="space-y-6 xl:col-span-4">
       <SectionPanel :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)">
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div v-else-if="displayRecentLeads.length === 0" class="at-empty-block text-center">
-          {{ t("noLead") }}
-        </div>
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <EmptyState v-else-if="displayRecentLeads.length === 0" :title="t('noLead')" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="lead in pagedPreviewItems(displayRecentLeads, 'salesLeads')"
@@ -112,12 +104,8 @@
       </SectionPanel>
 
       <SectionPanel :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)">
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">
-          {{ t("loading") }}
-        </div>
-        <div v-else-if="displayRecentPolicies.length === 0" class="at-empty-block">
-          {{ t("noPolicy") }}
-        </div>
+        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
+        <EmptyState v-else-if="displayRecentPolicies.length === 0" :title="t('noPolicy')" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="policy in pagedPreviewItems(displayRecentPolicies, 'salesPolicies')"
@@ -151,7 +139,7 @@
       <SectionPanel :title="t('salesCandidateActionTitle')" :count="formatNumber(salesCandidateActions.length)">
         <p class="mb-3 text-xs text-slate-500">{{ t("salesCandidateActionHint") }}</p>
         <div v-if="myTasksLoading || myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="salesCandidateActions.length === 0" class="at-empty-block">{{ t("noSalesCandidateAction") }}</div>
+        <EmptyState v-else-if="salesCandidateActions.length === 0" :title="t('noSalesCandidateAction')" />
         <ul v-else class="space-y-2">
           <MetaListCard
             v-for="action in pagedPreviewItems(salesCandidateActions, 'salesActions')"
@@ -181,6 +169,7 @@
 
 <script setup>
 import ActionButton from "../app-shell/ActionButton.vue";
+import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import MiniFactList from "../app-shell/MiniFactList.vue";

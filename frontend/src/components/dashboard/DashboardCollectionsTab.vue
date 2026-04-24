@@ -1,9 +1,10 @@
 <template>
-  <div v-if="isCollectionsTab" class="grid gap-4 xl:grid-cols-3">
-    <div class="space-y-4 xl:col-span-2">
-      <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)" panel-class="surface-card rounded-2xl p-5">
+  <div v-if="isCollectionsTab" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <!-- Left: Collections Queue (8 units) -->
+    <div class="space-y-6 xl:col-span-8">
+      <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="dueTodayCollectionPayments.length === 0" class="at-empty-block">{{ t("noTodayCollections") }}</div>
+        <EmptyState v-else-if="dueTodayCollectionPayments.length === 0" :title="t('noTodayCollections')" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="payment in pagedPreviewItems(dueTodayCollectionPayments, 'collectionsDueToday')"
@@ -30,9 +31,9 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('overdueCollectionsTitle')" :count="formatNumber(overdueCollectionPayments.length)" panel-class="surface-card rounded-2xl p-5">
+      <SectionPanel :title="t('overdueCollectionsTitle')" :count="formatNumber(overdueCollectionPayments.length)">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="overdueCollectionPayments.length === 0" class="at-empty-block">{{ t("noOverdueCollections") }}</div>
+        <EmptyState v-else-if="overdueCollectionPayments.length === 0" :title="t('noOverdueCollections')" />
         <ul v-else class="space-y-3">
           <EntityPreviewCard
             v-for="payment in pagedPreviewItems(overdueCollectionPayments, 'collectionsOverdue')"
@@ -60,16 +61,15 @@
       </SectionPanel>
     </div>
 
-    <div class="space-y-4">
+    <!-- Right: Metrics & Risk (4 units) -->
+    <div class="space-y-6 xl:col-span-4">
       <SectionPanel :title="t('collectionsPerformanceTitle')" :show-count="false">
         <p class="mb-3 text-xs text-slate-500">{{ t("collectionsPerformanceHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div
+        <EmptyState
           v-else-if="collectionPaymentStatusSummary.length === 0 && collectionPaymentDirectionSummary.length === 0"
-          class="at-empty-block"
-        >
-          {{ t("noCollectionPerformance") }}
-        </div>
+          :title="t('noCollectionPerformance')"
+        />
         <div v-else class="space-y-4">
           <div>
             <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("paymentStatusBreakdownTitle") }}</p>
@@ -107,7 +107,7 @@
       <SectionPanel :title="t('collectionsRiskTitle')" :count="formatNumber(collectionRiskRows.length)">
         <p class="mb-3 text-xs text-slate-500">{{ t("collectionsRiskHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="collectionRiskRows.length === 0" class="at-empty-block">{{ t("noCollectionsRisk") }}</div>
+        <EmptyState v-else-if="collectionRiskRows.length === 0" :title="t('noCollectionsRisk')" />
         <ul v-else class="space-y-2">
           <MetaListCard
             v-for="row in pagedPreviewItems(collectionRiskRows, 'collectionsRisk')"
@@ -134,7 +134,7 @@
 
       <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <div v-else-if="reconciliationPreviewRows.length === 0" class="at-empty-block">{{ t("noReconciliationPreview") }}</div>
+        <EmptyState v-else-if="reconciliationPreviewRows.length === 0" :title="t('noReconciliationPreview')" />
         <div v-else class="space-y-3">
           <div class="grid grid-cols-2 gap-2">
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -176,6 +176,7 @@
 </template>
 
 <script setup>
+import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import MiniFactList from "../app-shell/MiniFactList.vue";

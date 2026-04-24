@@ -66,7 +66,7 @@ const DOMAIN_MAP = {
     "Draft": "draft",
     "Open": "open",
     "Under Review": "waiting",
-    "Approved": "waiting",
+    "Approved": "active",
     "Paid": "active",
     "Closed": "active",
     "Rejected": "cancel",
