@@ -1,45 +1,55 @@
 <template>
-  <div class="flex flex-col border-b border-gray-100 bg-white px-5 py-6">
-    <div class="flex items-start justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">{{ heroTitle }}</h1>
-        <p class="mt-1 text-sm font-medium text-gray-500">{{ heroSubtitle }}</p>
-        <p class="mt-4 flex items-center gap-2 text-xs font-medium text-gray-400">
-          <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand-500"></span>
-          {{ rangeLabelText }}: <span class="text-gray-600">{{ visibleRange }}</span>
-        </p>
+  <div class="dashboard-hero flex flex-col rounded-3xl px-8 py-10 text-white shadow-lg overflow-hidden relative mb-6">
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl"></div>
+
+    <div class="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <div class="min-w-0">
+        <p class="at-hero-tag mb-2">{{ heroTag }}</p>
+        <h1 class="at-hero-title tracking-tight">{{ heroTitle }}</h1>
+        <p class="at-hero-subtitle mt-2 opacity-90 font-medium">{{ heroSubtitle }}</p>
+        <div class="mt-6 flex items-center gap-3">
+          <div class="flex h-6 items-center gap-2 rounded-full bg-white/10 px-3 text-[10px] font-bold uppercase tracking-widest text-emerald-100 backdrop-blur-md border border-white/10">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            {{ rangeLabelText }}: {{ visibleRange }}
+          </div>
+        </div>
       </div>
 
-    <ActionToolbarGroup>
-      <button
-        v-for="days in rangeOptions"
-        :key="days"
-        class="btn btn-sm"
-        :class="selectedRange === days ? 'btn-primary' : 'btn-outline'"
-        @click="$emit('apply-range', days)"
-      >
-        {{ rangeLabel(days) }}
-      </button>
+      <ActionToolbarGroup class="flex-nowrap">
+        <div class="flex items-center gap-1.5 rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/10">
+          <button
+            v-for="days in rangeOptions"
+            :key="days"
+            class="rounded-lg px-4 py-1.5 text-xs font-bold transition-all"
+            :class="selectedRange === days ? 'bg-white text-brand-900 shadow-sm' : 'text-white hover:bg-white/10'"
+            @click="$emit('apply-range', days)"
+          >
+            {{ rangeLabel(days) }}
+          </button>
+        </div>
 
-      <div class="h-4 w-px bg-gray-200 mx-1"></div>
-
-      <button
-        class="btn btn-outline"
-        @click="$emit('reload')"
-      >
-        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
-      </button>
-      <button
-        v-if="showNewLeadAction"
-        class="btn btn-primary"
-        @click="$emit('new-lead')"
-      >
-        <FeatherIcon name="plus" class="h-4 w-4" />
-        {{ newLeadLabel }}
-      </button>
-    </ActionToolbarGroup>
+        <div class="flex items-center gap-2">
+          <button
+            class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white border border-white/10 transition-all hover:bg-white/20 hover:scale-105 active:scale-95"
+            @click="$emit('reload')"
+          >
+            <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+          </button>
+          
+          <button
+            v-if="showNewLeadAction"
+            class="flex h-9 items-center gap-2 rounded-xl bg-emerald-500 px-5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 hover:scale-105 active:scale-95"
+            @click="$emit('new-lead')"
+          >
+            <FeatherIcon name="plus" class="h-4 w-4" />
+            {{ newLeadLabel }}
+          </button>
+        </div>
+      </ActionToolbarGroup>
+    </div>
   </div>
-</div>
 
   <div class="surface-card rounded-2xl p-2">
     <div class="flex gap-2 overflow-x-auto whitespace-nowrap px-1 py-1">
