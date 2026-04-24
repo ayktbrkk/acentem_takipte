@@ -92,7 +92,6 @@
               </span>
             </div>
 
-            </span>
           </td>
           <td v-if="clickable" class="px-4 py-3 text-right">
             <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-gray-300 group-hover:text-gray-400" />

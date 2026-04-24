@@ -1,3 +1,4 @@
+<template>
   <div class="flex items-center gap-2">
     <button class="btn btn-outline" :disabled="isLoading" @click="$emit('download-xlsx')">
       <FeatherIcon name="download" class="h-4 w-4" />

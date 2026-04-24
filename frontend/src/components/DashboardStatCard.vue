@@ -1,3 +1,4 @@
+<template>
   <article class="relative overflow-hidden bg-white rounded-2xl border border-gray-100 p-5 shadow-sm transition-all hover:shadow-md hover:border-brand-200 active:scale-[0.98]">
     <div class="flex items-start justify-between">
       <div>

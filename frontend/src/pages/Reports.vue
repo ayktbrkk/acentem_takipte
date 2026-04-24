@@ -7,7 +7,6 @@
     :record-count-label="t('record_count')"
   >
     <template #actions>
-    <template #actions>
       <button class="btn btn-outline" @click="focusFilters">
         <FeatherIcon name="search" class="h-4 w-4" />
         {{ t("focus_filters") }}
@@ -20,7 +19,6 @@
         <FeatherIcon name="file-text" class="h-4 w-4" />
         {{ t("export_pdf") }}
       </button>
-    </template>
     </template>
 
     <template #metrics>

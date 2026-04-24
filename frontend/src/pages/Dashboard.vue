@@ -260,7 +260,7 @@
 <script setup>
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { Dialog, createResource } from "frappe-ui";
+import { Dialog, createResource, FeatherIcon } from "frappe-ui";
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";

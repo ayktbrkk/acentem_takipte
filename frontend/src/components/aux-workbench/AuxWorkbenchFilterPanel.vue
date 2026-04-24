@@ -1,3 +1,4 @@
+<template>
   <div class="mb-4">
     <SmartFilterBar
       v-model="draft.query"
