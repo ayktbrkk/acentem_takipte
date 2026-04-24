@@ -1,3 +1,4 @@
+<template>
   <article class="surface-card flex min-h-[160px] flex-col justify-between rounded-xl p-5 shadow-sm">
     <div>
       <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
@@ -11,6 +12,7 @@
       {{ t("quickStatStatusLabel") }}
     </div>
   </article>
+</template>
 
 <script setup>
 import { FeatherIcon } from "frappe-ui";
