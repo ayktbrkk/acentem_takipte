@@ -90,13 +90,7 @@
             :t="t"
             :saving="saving"
             @save="updateCustomer"
-          >
-            <template #header-actions>
-              <ActionButton variant="ghost" size="xs">
-                {{ t('manage') }}
-              </ActionButton>
-            </template>
-          </EditableCard>
+          />
         </aside>
 
         <!-- Main Content -->
