@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, unref } from "vue";
+import { computed, onMounted, reactive, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 
@@ -47,6 +47,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   });
 
   const saving = ref(false);
+  const showUploadModal = ref(false);
   const notification = reactive({ show: false, message: "", type: "success" });
 
   function showNotification(message, type = "success") {
@@ -323,6 +324,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     openPolicy,
     openOffer,
     openClaim,
+    showUploadModal,
   };
 }
 
