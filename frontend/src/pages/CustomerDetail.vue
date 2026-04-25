@@ -67,18 +67,30 @@
 
       <div class="detail-body at-detail-split-wide">
         <!-- Sidebar -->
-        <aside class="detail-sidebar at-detail-aside">
-          <SectionPanel :title="t('overview')">
-            <FieldGroup :fields="profileFields" :cols="1" />
-          </SectionPanel>
+        <aside class="detail-sidebar at-detail-aside space-y-6">
+          <EditableCard
+            :title="t('overview')"
+            :fields="profileFields"
+            :t="t"
+            :saving="saving"
+            @save="updateCustomer"
+          />
 
-          <SectionPanel :title="t('customer_details')">
-            <FieldGroup :fields="moreProfileFields" :cols="1" />
-          </SectionPanel>
+          <EditableCard
+            :title="t('customer_details')"
+            :fields="moreProfileFields"
+            :t="t"
+            :saving="saving"
+            @save="updateCustomer"
+          />
 
-          <SectionPanel :title="t('operations')">
-            <FieldGroup :fields="operationalFields" :cols="1" />
-          </SectionPanel>
+          <EditableCard
+            :title="t('operations')"
+            :fields="operationalFields"
+            :t="t"
+            :saving="saving"
+            @save="updateCustomer"
+          />
         </aside>
 
         <!-- Main Content -->
@@ -274,6 +286,16 @@
       @close="closeUploadModal"
       @uploaded="handleUploadComplete"
     />
+
+    <!-- Notifications -->
+    <div class="fixed right-6 top-24 z-[100] w-full max-w-sm pointer-events-none">
+      <ToastNotification
+        :show="notification.show"
+        :message="notification.message"
+        :type="notification.type"
+        @close="notification.show = false"
+      />
+    </div>
   </WorkbenchPageLayout>
 </template>
 
@@ -284,9 +306,11 @@ import { useAuthStore } from "../stores/auth";
 
 import { FeatherIcon } from "frappe-ui";
 import ActionButton from "../components/app-shell/ActionButton.vue";
+import EditableCard from "../components/app-shell/EditableCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import MiniFactList from "../components/app-shell/MiniFactList.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import ToastNotification from "../components/ui/ToastNotification.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 
 // audit(perf/P-01): Heavy components in the detail view are lazy-loaded to speed up initial route transition.
@@ -331,6 +355,9 @@ const {
   profileFields,
   moreProfileFields,
   operationalFields,
+  saving,
+  notification,
+  updateCustomer,
   showUploadModal,
   openUploadModal,
   closeUploadModal,

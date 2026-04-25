@@ -58,6 +58,14 @@ export const COMMON_TRANSLATIONS = {
     colOffer: "Teklif",
     colValidity: "Geçerlilik",
     daysRemaining: "Gün Kaldı",
+    save_success: "Değişiklikler başarıyla kaydedildi.",
+    save_failed: "Kaydetme işlemi başarısız oldu.",
+    field_required: "Bu alan zorunludur.",
+    invalid_email: "Geçersiz e-posta adresi.",
+    select_option: "Bir seçenek belirleyin",
+    updating: "Güncelleniyor",
+    active: "Aktif",
+    passive: "Pasif",
   },
   en: {
     all: "All",
@@ -118,6 +126,14 @@ export const COMMON_TRANSLATIONS = {
     colOffer: "Offer",
     colValidity: "Validity",
     daysRemaining: "Days Left",
+    save_success: "Changes saved successfully.",
+    save_failed: "Failed to save changes.",
+    field_required: "This field is required.",
+    invalid_email: "Invalid email address.",
+    select_option: "Select an option",
+    updating: "Updating",
+    active: "Active",
+    passive: "Passive",
   }
 };
 

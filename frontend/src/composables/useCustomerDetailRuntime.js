@@ -41,7 +41,22 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   const loading = computed(() => unref(customer360Resource.loading));
   const loadErrorText = computed(() => unref(customer360Resource.error)?.message || "");
 
-  const showUploadModal = ref(false);
+  const updateResource = createResource({
+    url: "frappe.client.set_value",
+    auto: false,
+  });
+
+  const saving = ref(false);
+  const notification = reactive({ show: false, message: "", type: "success" });
+
+  function showNotification(message, type = "success") {
+    notification.message = message;
+    notification.type = type;
+    notification.show = true;
+    setTimeout(() => {
+      notification.show = false;
+    }, 4000);
+  }
   function openUploadModal() { showUploadModal.value = true; }
   function closeUploadModal() { showUploadModal.value = false; }
   async function handleUploadComplete() { showUploadModal.value = false; reload(); }
@@ -102,27 +117,127 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   ]);
 
   const profileFields = computed(() => [
-    { label: t("full_name"), value: customer.value.full_name || "-" },
-    { label: t("tax_id"), value: customer.value.tax_id || "-" },
-    { label: t("phone"), value: customer.value.phone || "-" },
-    { label: t("email"), value: customer.value.email || "-" },
+    {
+      key: "full_name",
+      label: t("full_name"),
+      value: customer.value.full_name,
+      type: "text",
+      required: true,
+    },
+    {
+      key: "tax_id",
+      label: t("tax_id"),
+      value: customer.value.tax_id,
+      type: "tckn",
+      required: true,
+    },
+    {
+      key: "phone",
+      label: t("phone"),
+      value: customer.value.phone,
+      type: "phone",
+    },
+    {
+      key: "email",
+      label: t("email"),
+      value: customer.value.email,
+      type: "email",
+    },
   ]);
 
   const moreProfileFields = computed(() => [
-    { label: t("birth_date"), value: formatDate(customer.value.birth_date) },
-    { label: t("gender"), value: t(customer.value.gender?.toLowerCase()) || customer.value.gender || "-" },
-    { label: t("marital_status"), value: t(customer.value.marital_status?.toLowerCase()) || customer.value.marital_status || "-" },
-    { label: t("occupation"), value: customer.value.occupation || "-" },
+    {
+      key: "birth_date",
+      label: t("birth_date"),
+      value: customer.value.birth_date,
+      displayValue: formatDate(customer.value.birth_date),
+      type: "date",
+    },
+    {
+      key: "gender",
+      label: t("gender"),
+      value: customer.value.gender,
+      displayValue: t(customer.value.gender?.toLowerCase()) || customer.value.gender || "-",
+      type: "select",
+      options: [
+        { label: t("male"), value: "Male" },
+        { label: t("female"), value: "Female" },
+        { label: t("other"), value: "Other" },
+      ],
+    },
+    {
+      key: "marital_status",
+      label: t("marital_status"),
+      value: customer.value.marital_status,
+      displayValue: t(customer.value.marital_status?.toLowerCase()) || customer.value.marital_status || "-",
+      type: "select",
+      options: [
+        { label: t("single"), value: "Single" },
+        { label: t("married"), value: "Married" },
+        { label: t("divorced"), value: "Divorced" },
+        { label: t("widowed"), value: "Widowed" },
+      ],
+    },
+    {
+      key: "occupation",
+      label: t("occupation"),
+      value: customer.value.occupation,
+      type: "text",
+    },
   ]);
 
   const operationalFields = computed(() => [
-    { label: t("office_branch"), value: customer.value.office_branch || "-" },
-    { label: t("assigned_agent"), value: customer.value.assigned_agent || "-" },
     {
+      key: "office_branch",
+      label: t("office_branch"),
+      value: customer.value.office_branch,
+      type: "text", // Should be a link ideally, but for now text
+      disabled: true, // Typically branch shouldn't be edited inline easily without a search
+    },
+    {
+      key: "assigned_agent",
+      label: t("assigned_agent"),
+      value: customer.value.assigned_agent,
+      type: "text", // Link would be better
+      disabled: true,
+    },
+    {
+      key: "consent_status",
       label: t("consent_status"),
-      value: t(`status_${String(customer.value.consent_status || "Unknown").toLowerCase()}`),
+      value: customer.value.consent_status === "Granted",
+      displayValue: t(`status_${String(customer.value.consent_status || "Unknown").toLowerCase()}`),
+      type: "toggle",
     },
   ]);
+
+  async function updateCustomer(data, onSuccess) {
+    if (!customerName.value) return;
+    
+    saving.value = true;
+    try {
+      // Map toggle back to Frappe values
+      const payload = { ...data };
+      if (Object.prototype.hasOwnProperty.call(payload, 'consent_status')) {
+        payload.consent_status = payload.consent_status ? "Granted" : "Revoked";
+      }
+
+      await updateResource.submit({
+        doctype: "AT Customer",
+        name: customerName.value,
+        fieldname: payload,
+      });
+      
+      // Success
+      if (onSuccess) onSuccess();
+      showNotification(t("save_success"), "success");
+      reload();
+    } catch (err) {
+      console.error("Failed to update customer:", err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      saving.value = false;
+    }
+  }
 
   function backToList() {
     router.push({ name: "customer-list" });
@@ -188,6 +303,9 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     profileFields,
     moreProfileFields,
     operationalFields,
+    saving,
+    notification,
+    updateCustomer,
     showUploadModal,
     openUploadModal,
     closeUploadModal,
