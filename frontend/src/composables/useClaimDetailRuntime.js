@@ -217,6 +217,7 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     archiveDocument,
     restoreDocument,
     permanentDeleteDocument,
+    formatDate,
     formatCurrency,
     heroCells,
     profileFields,

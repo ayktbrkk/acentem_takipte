@@ -19,16 +19,16 @@
       <label class="space-y-1">
         <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ frequencyLabel }}</span>
         <select v-model="form.frequency" class="input">
-          <option value="daily">daily</option>
-          <option value="weekly">weekly</option>
-          <option value="monthly">monthly</option>
+          <option value="daily">{{ t('daily') }}</option>
+          <option value="weekly">{{ t('weekly') }}</option>
+          <option value="monthly">{{ t('monthly') }}</option>
         </select>
       </label>
       <label class="space-y-1">
         <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ formatLabel }}</span>
         <select v-model="form.format" class="input">
-          <option value="xlsx">xlsx</option>
-          <option value="pdf">pdf</option>
+          <option value="xlsx">{{ t('xlsx') }}</option>
+          <option value="pdf">{{ t('pdf') }}</option>
         </select>
       </label>
       <label class="space-y-1">
@@ -116,8 +116,8 @@
           </button>
           
           <label class="space-y-1">
-            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertField') }}</span>
-            <input v-model.trim="alert.field" class="input input--sm" type="text" placeholder="e.g. gross_premium" />
+            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alert_field') }}</span>
+            <input v-model.trim="alert.field" class="input input--sm" type="text" :placeholder="t('eg_gross_premium')" />
           </label>
           <label class="space-y-1">
             <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertOp') }}</span>

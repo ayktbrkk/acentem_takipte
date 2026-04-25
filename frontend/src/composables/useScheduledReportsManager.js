@@ -1,4 +1,5 @@
 import { computed, reactive, ref, watch } from "vue";
+import { translateText } from "../utils/i18n";
 
 export function useScheduledReportsManager(props, emit) {
   const reportFilterConfig = {
@@ -11,144 +12,6 @@ export function useScheduledReportsManager(props, emit) {
     communication_operations: ["office_branch", "status", "from_date", "to_date"],
     reconciliation_operations: ["office_branch", "status", "from_date", "to_date"],
     claims_operations: ["office_branch", "branch", "insurance_company", "status", "from_date", "to_date"],
-  };
-
-  const copy = {
-    tr: {
-      title: "Zamanlanmış Raporlar",
-      subtitle: "Site konfigürasyonu ile tanımlı rapor teslimleri",
-      run: "Zamanlanmış Raporları Çalıştır",
-      new: "Yeni Kural",
-      loading: "Raporlar yükleniyor...",
-      empty: "Tanımlı zamanlanmış rapor yok.",
-      recipients: "Alıcılar",
-      filters: "Filtreler",
-      frequency: "Frekans",
-      format: "Format",
-      limit: "Limit",
-      deliveryChannel: "Teslim Kanalı",
-      deliveryEmail: "Doğrudan E-posta",
-      deliveryOutbox: "Notification Outbox",
-      lastRun: "Son Çalışma",
-      lastStatus: "Son Durum",
-      statusSent: "Gönderildi",
-      statusQueued: "Kuyruğa Alındı",
-      statusInvalid: "Geçersiz",
-      statusSkipped: "Atlandı",
-      statusUnknown: "Bilinmiyor",
-      enabled: "Etkin",
-      disabled: "Pasif",
-      edit: "Düzenle",
-      remove: "Sil",
-      createTitle: "Yeni Zamanlanmış Rapor",
-      editTitle: "Zamanlanmış Raporu Düzenle",
-      cancel: "İptal",
-      save: "Kaydet",
-      reportKey: "Rapor",
-      weekday: "Haftanın Günü",
-      dayOfMonth: "Ayın Günü",
-      officeBranch: "Ofis Şube",
-      insuranceBranch: "Sigorta Branşı",
-      insuranceCompany: "Sigorta Şirketi",
-      salesEntity: "Satış Birimi",
-      status: "Durum",
-      fromDate: "Başlangıç Tarihi",
-      toDate: "Bitiş Tarihi",
-      recipientsPlaceholder: "ops@example.com, manager@example.com",
-      recipientsError: "En az bir alıcı girilmelidir.",
-      recipientsInvalid: "Geçersiz alıcı adresi: {{value}}",
-      frequencyError: "Geçerli frekans seçilmelidir.",
-      weekdayError: "Haftalık rapor için 0-6 arasında hafta günü girin (0=Pazar, 6=Cumartesi).",
-      dayOfMonthError: "Aylık rapor için 1-31 arasında ay günü girin.",
-      limitError: "Limit en az 1 olmalıdır.",
-      reportKeyError: "Rapor seçilmelidir.",
-      formatError: "Geçerli format seçilmelidir.",
-      deliveryChannelError: "Teslim kanalı geçersiz.",
-      removeConfirm: "Bu zamanlanmış rapor kaydını silmek istediğinize emin misiniz?",
-      calendarView: "Takvim",
-      listView: "Liste",
-      calendarTitle: "Gönderim Takvimi",
-      calendarSubtitle: "Önümüzdeki 30 günün rapor projeksiyonu",
-      next7Days: "7 Gün",
-      next14Days: "14 Gün",
-      next30Days: "30 Gün",
-      noEvents: "Planlanmış gönderim bulunamadı.",
-      alerts: "Akıllı Uyarılar (Opsiyonel)",
-      addAlert: "Uyarı Ekle",
-      alertField: "Alan",
-      alertOp: "Operatör",
-      alertVal: "Eşik Değer",
-      alertLogic: "Mantık",
-      alertLogicAny: "En az bir satır eşleşirse",
-      alertLogicAll: "Tüm satırlar eşleşirse",
-    },
-    en: {
-      title: "Scheduled Reports",
-      subtitle: "Report deliveries defined in site config",
-      run: "Run Scheduled Reports",
-      new: "New Rule",
-      loading: "Loading scheduled reports...",
-      empty: "No scheduled reports configured.",
-      recipients: "Recipients",
-      filters: "Filters",
-      frequency: "Frequency",
-      format: "Format",
-      limit: "Limit",
-      deliveryChannel: "Delivery Channel",
-      deliveryEmail: "Direct Email",
-      deliveryOutbox: "Notification Outbox",
-      lastRun: "Last Run",
-      lastStatus: "Last Status",
-      statusSent: "Sent",
-      statusQueued: "Queued",
-      statusInvalid: "Invalid",
-      statusSkipped: "Skipped",
-      statusUnknown: "Unknown",
-      enabled: "Enabled",
-      disabled: "Disabled",
-      edit: "Edit",
-      remove: "Remove",
-      createTitle: "New Scheduled Report",
-      editTitle: "Edit Scheduled Report",
-      cancel: "Cancel",
-      save: "Save",
-      reportKey: "Report",
-      weekday: "Weekday",
-      dayOfMonth: "Day of Month",
-      officeBranch: "Office Branch",
-      insuranceBranch: "Insurance Branch",
-      insuranceCompany: "Insurance Company",
-      salesEntity: "Sales Entity",
-      status: "Status",
-      fromDate: "From Date",
-      toDate: "To Date",
-      recipientsPlaceholder: "ops@example.com, manager@example.com",
-      recipientsError: "At least one recipient is required.",
-      recipientsInvalid: "Invalid recipient email: {{value}}",
-      frequencyError: "Select a valid frequency.",
-      weekdayError: "For weekly reports, weekday must be 0-6 (0=Sunday, 6=Saturday).",
-      dayOfMonthError: "For monthly reports, day of month must be 1-31.",
-      limitError: "Limit must be at least 1.",
-      reportKeyError: "Please select a report.",
-      formatError: "Select a valid format.",
-      deliveryChannelError: "Invalid delivery channel.",
-      calendarView: "Calendar",
-      listView: "List",
-      calendarTitle: "Delivery Calendar",
-      calendarSubtitle: "Report projections for the next 30 days",
-      next7Days: "7 Days",
-      next14Days: "14 Days",
-      next30Days: "30 Days",
-      noEvents: "No scheduled deliveries found.",
-      alerts: "Smart Alerts (Optional)",
-      addAlert: "Add Alert",
-      alertField: "Field",
-      alertOp: "Operator",
-      alertVal: "Threshold",
-      alertLogic: "Logic",
-      alertLogicAny: "If any row matches",
-      alertLogicAll: "If all rows match",
-    },
   };
 
   const form = reactive({
@@ -184,7 +47,7 @@ export function useScheduledReportsManager(props, emit) {
   const visibleFilters = computed(() => new Set(reportFilterConfig[form.reportKey] || []));
 
   function t(key) {
-    return copy[props.locale]?.[key] || copy.en[key] || key;
+    return translateText(key, props.locale);
   }
 
   function isFilterVisible(key) {
@@ -300,7 +163,7 @@ export function useScheduledReportsManager(props, emit) {
   }
 
   function deliveryChannelLabel(value) {
-    return value === "notification_outbox" ? t("deliveryOutbox") : t("deliveryEmail");
+    return value === "notification_outbox" ? t("delivery_outbox") : t("delivery_email");
   }
 
   function formatLastRun(value) {
@@ -322,11 +185,11 @@ export function useScheduledReportsManager(props, emit) {
 
   function lastStatusLabel(value) {
     const normalized = String(value || "").trim().toLowerCase();
-    if (normalized === "sent") return t("statusSent");
-    if (normalized === "queued") return t("statusQueued");
-    if (normalized === "invalid") return t("statusInvalid");
-    if (normalized === "skipped") return t("statusSkipped");
-    return value ? String(value) : t("statusUnknown");
+    if (normalized === "sent") return t("status_sent");
+    if (normalized === "queued") return t("status_queued");
+    if (normalized === "invalid") return t("status_invalid");
+    if (normalized === "skipped") return t("status_skipped");
+    return value ? String(value) : t("status_unknown");
   }
 
   function formatFilters(filtersPayload) {
@@ -344,37 +207,37 @@ export function useScheduledReportsManager(props, emit) {
     try {
       const recipients = parseRecipients();
       if (!recipients.length) {
-        throw new Error(t("recipientsError"));
+        throw new Error(t("recipients_error"));
       }
       if (!recipients.every(isRecipientListValid)) {
         const invalid = recipients.find((recipient) => !recipientEmailRegex.test(recipient));
-        throw new Error(t("recipientsInvalid").replace("{{value}}", invalid || ""));
+        throw new Error(t("recipients_invalid").replace("{{value}}", invalid || ""));
       }
       if (!isValidReportKey(form.reportKey)) {
-        throw new Error(t("reportKeyError"));
+        throw new Error(t("report_key_error"));
       }
       if (!["daily", "weekly", "monthly"].includes(form.frequency)) {
-        throw new Error(t("frequencyError"));
+        throw new Error(t("frequency_error"));
       }
       if (!["pdf", "xlsx"].includes(form.format)) {
-        throw new Error(t("formatError"));
+        throw new Error(t("format_error"));
       }
       if (!["email", "notification_outbox"].includes(form.deliveryChannel)) {
-        throw new Error(t("deliveryChannelError"));
+        throw new Error(t("delivery_channel_error"));
       }
       if (!Number.isInteger(Number(form.limit)) || form.limit < 1) {
-        throw new Error(t("limitError"));
+        throw new Error(t("limit_error"));
       }
       if (form.frequency === "weekly") {
         const normalizedWeekday = Number(form.weekday);
         if (!Number.isInteger(normalizedWeekday) || normalizedWeekday < 0 || normalizedWeekday > 6) {
-          throw new Error(t("weekdayError"));
+          throw new Error(t("weekday_error"));
         }
       }
       if (form.frequency === "monthly") {
         const normalizedDay = Number(form.dayOfMonth);
         if (!Number.isInteger(normalizedDay) || normalizedDay < 1 || normalizedDay > 31) {
-          throw new Error(t("dayOfMonthError"));
+          throw new Error(t("day_of_month_error"));
         }
       }
 
@@ -401,7 +264,7 @@ export function useScheduledReportsManager(props, emit) {
   }
 
   function askRemove(item) {
-    if (!window.confirm(t("removeConfirm"))) {
+    if (!window.confirm(t("remove_confirm"))) {
       return;
     }
     emit("remove", item.index);
