@@ -118,10 +118,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <EditableCard
             :title="t('policy_technical_details')"
+            :icon="branchIcon"
             :fields="profileFields"
             :t="t"
             :saving="saving"
-            :cols="1"
+            layout="list"
             @save="updatePolicy"
           />
 
@@ -227,6 +228,14 @@ const props = defineProps({
 const router = useRouter();
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
+
+const branchIcon = computed(() => {
+  const branch = String(policy.value.branch || "").toLowerCase();
+  if (branch.includes("kasko") || branch.includes("trafik") || branch.includes("oto") || branch.includes("araç")) return "truck";
+  if (branch.includes("konut") || branch.includes("dask") || branch.includes("ev") || branch.includes("işyeri")) return "home";
+  if (branch.includes("sağlık") || branch.includes("saglik") || branch.includes("health")) return "heart";
+  return "shield";
+});
 
 const {
   policy,

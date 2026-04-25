@@ -1,5 +1,5 @@
 <template>
-  <SectionPanel :title="title" :panel-class="panelClass" class="group">
+  <SectionPanel :title="title" :icon="icon" :panel-class="panelClass" class="group">
     <template #trailing>
       <div class="flex items-center gap-2">
         <slot name="header-actions" />
@@ -110,7 +110,12 @@
       </form>
 
       <div v-else class="animate-in fade-in slide-in-from-top-1 duration-300">
-        <FieldGroup :fields="displayFields" :cols="cols" :layout="layout" />
+        <FieldGroup 
+          :fields="displayFields" 
+          :cols="cols" 
+          :layout="layout" 
+          @copy="handleCopy"
+        />
       </div>
 
       <!-- Saving Overlay -->
@@ -135,6 +140,7 @@ import FieldGroup from '../ui/FieldGroup.vue';
 
 const props = defineProps({
   title: { type: String, required: true },
+  icon: { type: String, default: '' },
   fields: { type: Array, required: true }, // Array of { key, label, value, type, options, required, placeholder, displayValue }
   isEditable: { type: Boolean, default: true },
   cols: { type: Number, default: 1 },
@@ -201,6 +207,13 @@ async function handleSave() {
   emit('save', { ...editData }, () => {
     // Callback to call when save is successful
     isEditing.value = false;
+  });
+}
+
+function handleCopy(value) {
+  if (!value) return;
+  navigator.clipboard.writeText(String(value)).then(() => {
+    // Optional: add a tiny toast or transient state here if needed
   });
 }
 

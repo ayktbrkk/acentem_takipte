@@ -29,6 +29,24 @@ function resolvePolicyStatusPresentation(status, t) {
   return { label: status || "-", variant: "waiting-pill" };
 }
 
+function getDateClass(dateStr) {
+  if (!dateStr) return "";
+  try {
+    const end = new Date(dateStr);
+    const now = new Date();
+    // Reset hours to compare dates only
+    now.setHours(0, 0, 0, 0);
+    const diffTime = end - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return "text-rose-600 font-bold animate-pulse-subtle";
+    if (diffDays <= 30) return "text-amber-600 font-bold";
+  } catch (e) {
+    return "";
+  }
+  return "";
+}
+
 export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
   const authStore = useAuthStore();
@@ -164,15 +182,56 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     { label: t("status"), value: policyStatusPresentation.value.label, variant: policyStatusPresentation.value.variant },
   ]);
 
-  const profileFields = computed(() => [
-    { key: "policy_no", label: t("carrier_policy_no"), value: policy.value.policy_no, type: "text", required: true },
-    { key: "insurance_company", label: t("insurance_company"), value: policy.value.insurance_company, type: "text", disabled: true },
-    { key: "branch", label: t("branch"), value: policy.value.branch, type: "text", disabled: true },
-    { key: "issue_date", label: t("issue_date"), value: policy.value.issue_date, displayValue: formatDate(policy.value.issue_date), type: "date", required: true },
-    { key: "start_date", label: t("start_date"), value: policy.value.start_date, displayValue: formatDate(policy.value.start_date), type: "date", required: true },
-    { key: "end_date", label: t("end_date"), value: policy.value.end_date, displayValue: formatDate(policy.value.end_date), type: "date", required: true },
-    { key: "sales_entity", label: t("sales_entity"), value: policy.value.sales_entity, type: "text", disabled: true },
-  ]);
+  const profileFields = computed(() => {
+    const fields = [
+      { key: "policy_no", label: t("carrier_policy_no"), value: policy.value.policy_no, type: "text", required: true, copyable: true, unspecifiedLabel: t("unspecified") },
+      { key: "insurance_company", label: t("insurance_company"), value: policy.value.insurance_company, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+      { key: "branch", label: t("branch"), value: policy.value.branch, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+      { key: "issue_date", label: t("issue_date"), value: policy.value.issue_date, displayValue: formatDate(policy.value.issue_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
+      { key: "start_date", label: t("start_date"), value: policy.value.start_date, displayValue: formatDate(policy.value.start_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
+      { 
+        key: "end_date", 
+        label: t("end_date"), 
+        value: policy.value.end_date, 
+        displayValue: formatDate(policy.value.end_date), 
+        type: "date", 
+        required: true, 
+        unspecifiedLabel: t("unspecified"),
+        valueClass: getDateClass(policy.value.end_date)
+      },
+      { key: "sales_entity", label: t("sales_entity"), value: policy.value.sales_entity, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    ];
+
+    const branch = String(policy.value.branch || "").toLowerCase();
+    const riskFields = [];
+
+    if (branch.includes("kasko") || branch.includes("trafik")) {
+      riskFields.push(
+        { key: "plate", label: t("plate"), value: policy.value.plate, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "vehicle_make_model", label: t("vehicle_make_model"), value: policy.value.vehicle_make_model, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "chassis_no", label: t("chassis_no"), value: policy.value.chassis_no, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "motor_no", label: t("motor_no"), value: policy.value.motor_no, type: "text", unspecifiedLabel: t("unspecified") }
+      );
+    } else if (branch.includes("konut") || branch.includes("dask")) {
+      riskFields.push(
+        { key: "uavt_code", label: t("uavt_code"), value: policy.value.uavt_code, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "floor_count", label: t("floor_count"), value: policy.value.floor_count, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "structure_type", label: t("structure_type"), value: policy.value.structure_type, type: "text", unspecifiedLabel: t("unspecified") }
+      );
+    } else if (branch.includes("sağlık") || branch.includes("saglik") || branch.includes("health")) {
+      riskFields.push(
+        { key: "coverage_type", label: t("coverage_type"), value: policy.value.coverage_type, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "network_type", label: t("network_type"), value: policy.value.network_type, type: "text", unspecifiedLabel: t("unspecified") }
+      );
+    }
+
+    if (riskFields.length > 0) {
+      fields.push({ type: "divider", label: t("risk_info") });
+      fields.push(...riskFields);
+    }
+
+    return fields;
+  });
 
   const premiumFields = computed(() => [
     { key: "net_premium", label: t("net_premium"), value: policy.value.net_premium, displayValue: formatCurrency(policy.value.net_premium, policy.value.currency), type: "text" },
