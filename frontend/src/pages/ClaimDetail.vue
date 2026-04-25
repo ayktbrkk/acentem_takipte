@@ -111,11 +111,11 @@
         </SectionPanel>
 
         <SectionPanel :title="t('activity_timeline')">
-          <div class="at-empty-block text-center py-8">
-            <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-300 mb-3">
+          <div class="card-empty">
+            <div class="card-empty-icon">
               <FeatherIcon name="activity" class="h-6 w-6" />
             </div>
-            <p class="text-sm text-slate-500">{{ t('no_recent_activity') }}</p>
+            <p class="card-empty-text">{{ t('no_recent_activity') }}</p>
           </div>
         </SectionPanel>
       </div>

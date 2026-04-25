@@ -25,7 +25,7 @@
       <Sidebar :mobile-open="uiStore.sidebarOpen" @close="uiStore.closeSidebar" @navigate="uiStore.closeSidebar" />
       <div class="at-shell-content flex min-w-0 flex-1 flex-col overflow-x-hidden">
         <Topbar @toggle-sidebar="uiStore.toggleSidebar" />
-        <main class="at-shell-main flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 xl:px-8 2xl:px-10">
+        <main class="at-shell-main flex-1 overflow-y-auto overflow-x-hidden p-5 lg:p-6 xl:p-8 2xl:p-10">
           <RouterView v-slot="{ Component, route }">
             <component
               :is="Component"

@@ -73,7 +73,7 @@
         <div v-else class="space-y-4">
           <div>
             <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("paymentStatusBreakdownTitle") }}</p>
-            <div v-if="collectionPaymentStatusSummary.length === 0" class="at-empty-block text-sm">{{ t("noCollectionPerformance") }}</div>
+            <div v-if="collectionPaymentStatusSummary.length === 0" class="card-empty-compact text-sm">{{ t("noCollectionPerformance") }}</div>
             <div v-else class="space-y-2">
               <ProgressMetricRow
                 v-for="item in collectionPaymentStatusSummary"
@@ -88,7 +88,7 @@
 
           <div>
             <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("paymentDirectionBreakdownTitle") }}</p>
-            <div v-if="collectionPaymentDirectionSummary.length === 0" class="at-empty-block text-sm">{{ t("noCollectionPerformance") }}</div>
+            <div v-if="collectionPaymentDirectionSummary.length === 0" class="card-empty-compact text-sm">{{ t("noCollectionPerformance") }}</div>
             <div v-else class="space-y-2">
               <ProgressMetricRow
                 v-for="item in collectionPaymentDirectionSummary"

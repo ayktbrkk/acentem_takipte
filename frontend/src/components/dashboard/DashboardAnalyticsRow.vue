@@ -20,7 +20,7 @@
       <div v-if="dashboardLoading" class="text-sm text-slate-500">
         {{ t("loading") }}
       </div>
-      <div v-else-if="salesOfferStatusSummary.length === 0" class="at-empty-block text-sm">
+      <div v-else-if="salesOfferStatusSummary.length === 0" class="card-empty-compact text-sm">
         {{ t("noOfferStatus") }}
       </div>
       <div v-else class="space-y-4">
@@ -38,7 +38,7 @@
     <SectionPanel :title="t('commissionTrend')" :show-count="false" :meta="t('lastMonths')">
       <div
         v-if="commissionTrend.length === 0"
-        class="at-empty-block text-center"
+        class="card-empty-compact text-center"
       >
         {{ t("noTrendData") }}
       </div>

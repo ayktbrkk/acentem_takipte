@@ -104,8 +104,11 @@
           <!-- Overview Tab -->
           <template v-if="activeCustomerTab === 'overview'">
             <SectionPanel :title="t('insights')">
-              <div v-if="!insights.snapshot_date" class="at-empty-block">
-                {{ t("no_activities") }}
+              <div v-if="!insights.snapshot_date" class="card-empty">
+                <div class="card-empty-icon">
+                  <FeatherIcon name="info" class="h-6 w-6" />
+                </div>
+                <p class="card-empty-text">{{ t("no_activities") }}</p>
               </div>
               <div v-else class="space-y-4">
                  <p class="text-sm text-slate-500">{{ t("records") }}: {{ formatDate(insights.snapshot_date) }}</p>
@@ -119,8 +122,11 @@
             </SectionPanel>
 
             <SectionPanel :title="t('cross_sell')">
-               <div v-if="!crossSell.has_cross_sell_opportunity" class="at-empty-block">
-                 {{ t("no_activities") }}
+               <div v-if="!crossSell.has_cross_sell_opportunity" class="card-empty">
+                 <div class="card-empty-icon">
+                   <FeatherIcon name="zap" class="h-6 w-6" />
+                 </div>
+                 <p class="card-empty-text">{{ t("no_activities") }}</p>
                </div>
                <div v-else class="space-y-2">
                  <p class="text-sm font-medium text-slate-700">{{ t("cross_sell") }}</p>
@@ -139,8 +145,11 @@
               <template #trailing>
                 <span class="badge badge-brand">{{ portfolio.policies?.length || 0 }}</span>
               </template>
-              <div v-if="!portfolio.policies?.length" class="at-empty-block">
-                {{ t("no_policies") }}
+              <div v-if="!portfolio.policies?.length" class="card-empty">
+                <div class="card-empty-icon">
+                  <FeatherIcon name="file-text" class="h-6 w-6" />
+                </div>
+                <p class="card-empty-text">{{ t("no_policies") }}</p>
               </div>
               <div v-else class="grid gap-3 md:grid-cols-2">
                 <MetaListCard
@@ -163,8 +172,11 @@
               <template #trailing>
                 <span class="badge badge-brand">{{ portfolio.offers?.length || 0 }}</span>
               </template>
-              <div v-if="!portfolio.offers?.length" class="at-empty-block">
-                {{ t("no_offers") }}
+              <div v-if="!portfolio.offers?.length" class="card-empty">
+                <div class="card-empty-icon">
+                  <FeatherIcon name="file" class="h-6 w-6" />
+                </div>
+                <p class="card-empty-text">{{ t("no_offers") }}</p>
               </div>
               <div v-else class="grid gap-3 md:grid-cols-2">
                 <MetaListCard
@@ -187,8 +199,11 @@
               <template #trailing>
                 <span class="badge badge-blue">{{ portfolio.claims?.length || 0 }}</span>
               </template>
-              <div v-if="!portfolio.claims?.length" class="at-empty-block">
-                {{ t("no_claims") }}
+              <div v-if="!portfolio.claims?.length" class="card-empty">
+                <div class="card-empty-icon">
+                  <FeatherIcon name="alert-circle" class="h-6 w-6" />
+                </div>
+                <p class="card-empty-text">{{ t("no_claims") }}</p>
               </div>
               <div v-else class="grid gap-3 md:grid-cols-2">
                 <MetaListCard
@@ -211,8 +226,11 @@
           <!-- Timeline Tab -->
           <template v-if="activeCustomerTab === 'activity'">
              <SectionPanel :title="t('timeline')">
-                <div v-if="!communications.timeline?.length" class="at-empty-block">
-                  {{ t("no_activities") }}
+                <div v-if="!communications.timeline?.length" class="card-empty">
+                  <div class="card-empty-icon">
+                    <FeatherIcon name="message-square" class="h-6 w-6" />
+                  </div>
+                  <p class="card-empty-text">{{ t("no_activities") }}</p>
                 </div>
                 <div v-else class="space-y-3">
                   <MetaListCard
@@ -243,8 +261,11 @@
                     </ActionButton>
                   </div>
                 </template>
-                <div v-if="!atDocuments.length" class="at-empty-block">
-                  {{ t("no_documents") }}
+                <div v-if="!atDocuments.length" class="card-empty">
+                  <div class="card-empty-icon">
+                    <FeatherIcon name="folder" class="h-6 w-6" />
+                  </div>
+                  <p class="card-empty-text">{{ t("no_documents") }}</p>
                 </div>
                 <div v-else class="grid gap-2">
                   <MetaListCard

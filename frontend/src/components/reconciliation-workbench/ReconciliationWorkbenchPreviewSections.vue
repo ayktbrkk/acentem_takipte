@@ -1,7 +1,7 @@
 <template>
   <SectionPanel :title="props.t('collectionPreviewTitle')" :count="props.collectionPreviewRows.length">
     <div v-if="props.workbenchLoading" class="text-sm text-slate-500">{{ props.t("loading") }}</div>
-    <div v-else-if="props.collectionPreviewRows.length === 0" class="at-empty-block">{{ props.t("emptyCollectionPreview") }}</div>
+    <div v-else-if="props.collectionPreviewRows.length === 0" class="card-empty-compact">{{ props.t("emptyCollectionPreview") }}</div>
     <ul v-else class="space-y-2 text-sm">
       <MetaListCard
         v-for="row in props.collectionPreviewRows"
@@ -22,7 +22,7 @@
 
   <SectionPanel :title="props.t('commissionPreviewTitle')" :count="props.commissionPreviewRows.length">
     <div v-if="props.workbenchLoading" class="text-sm text-slate-500">{{ props.t("loading") }}</div>
-    <div v-else-if="props.commissionPreviewRows.length === 0" class="at-empty-block">{{ props.t("emptyCommissionPreview") }}</div>
+    <div v-else-if="props.commissionPreviewRows.length === 0" class="card-empty-compact">{{ props.t("emptyCommissionPreview") }}</div>
     <ul v-else class="space-y-2 text-sm">
       <MetaListCard
         v-for="row in props.commissionPreviewRows"

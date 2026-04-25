@@ -106,6 +106,7 @@ export const COMMON_TRANSLATIONS = {
     fileLinkNotFound: "Dosya bağlantısı bulunamadı.",
     policyDetailTitle: "Poliçe Detayı",
     manage: "Yönet",
+    whatsapp_share_message: "Poliçe: {policy}\nMüşteri: {customer}",
   },
   en: {
     all: "All",
@@ -214,6 +215,7 @@ export const COMMON_TRANSLATIONS = {
     fileLinkNotFound: "File link not found.",
     policyDetailTitle: "Policy Detail",
     manage: "Manage",
+    whatsapp_share_message: "Policy: {policy}\nCustomer: {customer}",
   }
 };
 
