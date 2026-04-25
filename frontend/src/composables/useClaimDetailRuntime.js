@@ -55,10 +55,6 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     await claimResource.reload({ name: claimName });
   }
 
-  function backToList() {
-    router.push({ name: "claims-board" });
-  }
-
   function openClaimDocuments() {
     const claimName = String(unref(name) || "").trim();
     if (!claimName) return;
@@ -69,6 +65,16 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
         reference_name: claimName,
       },
     });
+  }
+
+  function openCustomer() {
+    if (claim.value.customer) {
+      router.push({ name: "customer-detail", params: { name: claim.value.customer } });
+    }
+  }
+
+  function backToList() {
+    router.push({ name: "claims-board" });
   }
 
   function openUploadModal() {
@@ -196,6 +202,7 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     reload,
     backToList,
     openClaimDocuments,
+    openCustomer,
     showUploadModal,
     openUploadModal,
     closeUploadModal,

@@ -1,13 +1,14 @@
 <template>
   <SectionPanel :title="title" class="group relative overflow-hidden">
     <template #trailing>
-      <button
-        v-if="!isEditing"
-        class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-slate-100 hover:text-brand-600 focus:outline-none"
-        @click="startEditing"
-      >
-        <FeatherIcon name="edit-2" class="h-4 w-4" />
-      </button>
+        <button
+          v-if="!isEditing"
+          class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50/50 text-slate-400 opacity-60 transition-all hover:opacity-100 hover:bg-white hover:text-brand-600 hover:border-brand-200 shadow-sm active:scale-95"
+          :title="t('edit')"
+          @click="startEditing"
+        >
+          <FeatherIcon name="edit-2" class="h-3.5 w-3.5" />
+        </button>
     </template>
 
     <div v-if="!isEditing" class="space-y-6">
@@ -44,7 +45,7 @@
           class="btn btn-full btn-outline btn-sm font-bold text-slate-500 hover:text-brand-600 group/btn"
           @click="$emit('view-full')"
         >
-          {{ t('view_profile') }}
+          {{ t('view_full_profile') }}
           <FeatherIcon name="arrow-right" class="h-3 w-3 ml-1 transition-transform group-hover/btn:translate-x-0.5" />
         </button>
       </div>

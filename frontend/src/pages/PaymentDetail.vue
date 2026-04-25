@@ -1,7 +1,7 @@
 <template>
   <WorkbenchPageLayout
     :breadcrumb="t('payments_breadcrumb')"
-    :title="detailCopy.paymentTitle"
+    :title="t('payment_detail')"
     :subtitle="payment.payment_no || payment.name"
   >
     <template #actions>
@@ -32,7 +32,7 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-6">
-        <SectionPanel :title="detailCopy.paymentInfoTitle">
+        <SectionPanel :title="t('payment_info')">
           <SkeletonLoader v-if="loading" variant="text" :rows="8" />
           <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div v-for="field in profileFields" :key="field.label">
@@ -42,7 +42,7 @@
           </div>
         </SectionPanel>
 
-        <SectionPanel :title="detailCopy.financialSummaryTitle">
+        <SectionPanel :title="t('financial_summary')">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <p class="text-sm font-medium text-slate-500">{{ t("amount") }}</p>
@@ -63,7 +63,7 @@
           </div>
         </SectionPanel>
 
-        <SectionPanel v-if="installments.length" :title="detailCopy.paymentPlanTitle">
+        <SectionPanel v-if="installments.length" :title="t('payment_plan')">
           <ListTable
             :columns="installmentColumns"
             :rows="installments"
@@ -87,7 +87,7 @@
         <SectionPanel :title="t('customer_details')">
           <template #trailing>
             <ActionButton variant="secondary" size="xs" @click="openCustomer">
-              {{ detailCopy.openCustomerLabel }}
+              {{ t('view_full_profile') }}
             </ActionButton>
           </template>
           <SkeletonLoader v-if="loading" variant="card" />
@@ -170,26 +170,6 @@ const props = defineProps({
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
-const detailCopy = computed(() => {
-  const isTurkish = String(activeLocale.value || "tr").toLowerCase().startsWith("tr");
-  return isTurkish
-    ? {
-        paymentTitle: "Ödeme Bilgileri",
-        paymentInfoTitle: "Ödeme Bilgileri",
-        financialSummaryTitle: "Finansal Özet",
-        paymentPlanTitle: "Ödeme Planı",
-        receiptTitle: "Dekont / Fatura",
-        openCustomerLabel: "Müşteri kaydını aç",
-      }
-    : {
-        paymentTitle: "Payment Details",
-        paymentInfoTitle: "Payment Information",
-        financialSummaryTitle: "Financial Summary",
-        paymentPlanTitle: "Payment Plan",
-        receiptTitle: "Receipt / Invoice",
-        openCustomerLabel: "Open customer record",
-      };
-});
 
 const {
   payment,

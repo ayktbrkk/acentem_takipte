@@ -38,6 +38,7 @@
           :saving="customerSaving"
           :t="t"
           @save="updateCustomer"
+          @view-full="openCustomer"
         />
 
         <SectionPanel :title="t('documents')">

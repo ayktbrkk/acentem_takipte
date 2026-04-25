@@ -5,11 +5,11 @@
         <slot name="header-actions" />
         <button
           v-if="isEditable && !isEditing"
-          class="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-slate-100 hover:text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-          :aria-label="t('edit')"
+          class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50/50 text-slate-400 opacity-60 transition-all hover:opacity-100 hover:bg-white hover:text-brand-600 hover:border-brand-200 shadow-sm active:scale-95"
+          :title="t('edit')"
           @click="startEditing"
         >
-          <FeatherIcon name="edit-2" class="h-4 w-4" />
+          <FeatherIcon name="edit-2" class="h-3.5 w-3.5" />
         </button>
       </div>
     </template>

@@ -106,6 +106,10 @@ export const COMMON_TRANSLATIONS = {
     fileLinkNotFound: "Dosya bağlantısı bulunamadı.",
     policyDetailTitle: "Poliçe Detayı",
     manage: "Yönet",
+    payment_detail: "Ödeme Detayı",
+    payment_info: "Ödeme Bilgileri",
+    payment_plan: "Ödeme Planı",
+    receipt_title: "Dekont / Fatura",
     whatsapp_share_message: "Poliçe: {policy}\nMüşteri: {customer}",
   },
   en: {
@@ -215,6 +219,10 @@ export const COMMON_TRANSLATIONS = {
     fileLinkNotFound: "File link not found.",
     policyDetailTitle: "Policy Detail",
     manage: "Manage",
+    payment_detail: "Payment Detail",
+    payment_info: "Payment Information",
+    payment_plan: "Payment Plan",
+    receipt_title: "Receipt / Invoice",
     whatsapp_share_message: "Policy: {policy}\nCustomer: {customer}",
   }
 };
