@@ -105,7 +105,7 @@
                 <p class="card-empty-text">{{ t("no_activities") }}</p>
               </div>
               <div v-else class="space-y-4">
-                 <p class="text-sm text-slate-500">{{ t("records") }}: {{ formatDate(insights.snapshot_date) }}</p>
+                 <p class="text-sm text-slate-500">{{ t("snapshot_date") }}: {{ formatDate(insights.snapshot_date) }}</p>
                  <FieldGroup :fields="[
                    { label: t('active_policies'), value: insights.active_policy_count },
                    { label: t('total_premium'), value: formatCurrency(insights.policy_total_premium) },

@@ -179,95 +179,12 @@ const route = useRoute();
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
 
-const PAGE_COPY = {
-  tr: {
-    breadcrumb: "Sigorta Operasyonları → Teklifler",
-    recordCount: "kayıt",
-    title: "Teklif Panosu",
-    subtitle: "Teklifleri liste ve pano görünümünde yönetin",
-    viewList: "Liste",
-    viewBoard: "Pano",
-    newOffer: "Yeni Teklif",
-    focusFilters: "Filtrele",
-    exportXlsx: "Excel",
-    filtersTitle: "Filtreler",
-    offerTableTitle: "Teklif Listesi",
-    pipelineTitle: "Teklif Panosu",
-    summaryTotal: "Toplam Teklif",
-    summaryDraft: "Taslak",
-    summarySent: "Gönderildi",
-    summaryAccepted: "Kabul Edildi",
-    summaryConversion: "Dönüşüm Oranı",
-    activeFilters: "aktif filtre",
-    clearFilters: "Filtreleri Temizle",
-    showingRecords: "kayıt gösteriliyor",
-    emptyTitle: "Teklif Bulunamadı",
-    empty: "Teklif kaydı bulunamadı.",
-    loading: "Yükleniyor...",
-    loadErrorTitle: "Teklifler Yüklenemedi",
-    stage: "Aşama",
-    emptyLane: "Bu aşamada teklif yok.",
-    convert: "Poliçeye Çevir",
-    openPolicy: "Poliçeyi Aç",
-    quickOfferTitle: "Hızlı Teklif Oluştur",
-    cancel: "İptal",
-    createQuickOffer: "Teklif Oluştur",
-    createQuickOfferAndOpen: "Kaydet ve Aç",
-    convertDialogTitle: "Tekliften Poliçeye",
-    selectedOffer: "Seçili Teklif",
-    createPolicy: "Poliçe Oluştur",
-    taxAmount: "Vergi Tutarı",
-    commissionAmount: "Komisyon Tutarı",
-    policyNo: "Sigorta Şirketi Poliçe No",
-  },
-  en: {
-    breadcrumb: "Insurance Operations → Offers",
-    recordCount: "records",
-    title: "Offer Board",
-    subtitle: "Manage offers in list and board views",
-    viewList: "List",
-    viewBoard: "Board",
-    newOffer: "New Offer",
-    focusFilters: "Focus Filters",
-    exportXlsx: "Excel",
-    filtersTitle: "Filters",
-    offerTableTitle: "Offer List",
-    pipelineTitle: "Offer Pipeline",
-    summaryTotal: "Total Offers",
-    summaryDraft: "Draft",
-    summarySent: "Sent",
-    summaryAccepted: "Accepted",
-    summaryConversion: "Conversion Rate",
-    activeFilters: "active filters",
-    clearFilters: "Clear Filters",
-    showingRecords: "records shown",
-    emptyTitle: "No Offers Found",
-    empty: "No offers found.",
-    loading: "Loading...",
-    loadErrorTitle: "Offers Could Not Load",
-    stage: "Stage",
-    emptyLane: "No offers in this lane.",
-    convert: "Convert to Policy",
-    openPolicy: "Open Policy",
-    quickOfferTitle: "Create Quick Offer",
-    cancel: "Cancel",
-    createQuickOffer: "Create Offer",
-    createQuickOfferAndOpen: "Save and Open",
-    convertDialogTitle: "Offer to Policy",
-    selectedOffer: "Selected Offer",
-    createPolicy: "Create Policy",
-    taxAmount: "Tax Amount",
-    commissionAmount: "Commission Amount",
-    policyNo: "Carrier Policy No",
-  },
-};
-
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 const showAdvancedFilters = ref(false);
 
 function t(key) {
-  return PAGE_COPY[activeLocale.value]?.[key] || OFFER_TRANSLATIONS[activeLocale.value]?.[key] || translateText(key, activeLocale.value) || key;
+  return translateText(key, activeLocale.value);
 }
 
 function buildOfficeBranchLookupFilters() {

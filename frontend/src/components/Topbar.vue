@@ -76,20 +76,8 @@ const authStore = useAuthStore();
 const accountMenuOpen = ref(false);
 const accountMenuRef = ref(null);
 
-const copy = {
-  menu: "Menu",
-  user: "User",
-  defaultPage: "Dashboard",
-  defaultSection: "Acentem Takipte",
-  scope: "Scope",
-  allBranches: "All Branches",
-  account: "My Account",
-  logout: "Logout",
-  desk: "Open Desk",
-};
-
 function t(key) {
-  return translateText(copy[key] || key, authStore.locale);
+  return translateText(key, authStore.locale);
 }
 
 const pageTitle = computed(() => {

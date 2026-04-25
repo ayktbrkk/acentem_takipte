@@ -14,6 +14,7 @@ import { RENEWAL_TRANSLATIONS } from "@/config/renewal_translations";
 import { BREAK_GLASS_TRANSLATIONS } from "@/config/break_glass_translations";
 import { CUSTOMER_SEARCH_TRANSLATIONS } from "@/config/customer_search_translations";
 import { DASHBOARD_TRANSLATIONS } from "@/config/dashboard_translations";
+import { SIDEBAR_TRANSLATIONS } from "@/config/sidebar_translations";
 
 const ALL_TRANSLATIONS = {
   common: COMMON_TRANSLATIONS,
@@ -30,6 +31,7 @@ const ALL_TRANSLATIONS = {
   break_glass: BREAK_GLASS_TRANSLATIONS,
   customer_search: CUSTOMER_SEARCH_TRANSLATIONS,
   dashboard: DASHBOARD_TRANSLATIONS,
+  sidebar: SIDEBAR_TRANSLATIONS,
 };
 
 
