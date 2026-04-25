@@ -43,6 +43,13 @@ export const OFFER_TRANSLATIONS = {
     open: "Açık",
     converted: "Poliçeleşen",
     cancelled: "İptal",
+    offer_profile: "Teklif Profili",
+    financial_details: "Finansal Detaylar",
+    tax_amount: "Vergi Tutarı",
+    commission_amount: "Komisyon Tutarı",
+    validity: "Geçerlilik",
+    unspecified: "Belirtilmemiş",
+    offer_details: "Teklif Detayları",
   },
   en: {
     offers: "Offers",
@@ -88,6 +95,13 @@ export const OFFER_TRANSLATIONS = {
     open: "Open",
     converted: "Converted",
     cancelled: "Cancelled",
+    offer_profile: "Offer Profile",
+    financial_details: "Financial Details",
+    tax_amount: "Tax Amount",
+    commission_amount: "Commission Amount",
+    validity: "Validity",
+    unspecified: "Unspecified",
+    offer_details: "Offer Details",
   }
 };
 

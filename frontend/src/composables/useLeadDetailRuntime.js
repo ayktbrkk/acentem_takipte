@@ -193,17 +193,21 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => [
-    { key: "full_name", label: t("full_name"), value: leadFullName.value, type: "text", required: true },
-    { key: "phone", label: t("phone"), value: lead.value.phone, type: "text" },
-    { key: "email", label: t("email"), value: lead.value.email, type: "text" },
-    { key: "tax_id", label: t("tax_id"), value: lead.value.tax_id, type: "text" },
-    { key: "industry", label: t("industry"), value: lead.value.industry, type: "text" },
+    { key: "full_name", label: t("full_name"), value: leadFullName.value, type: "text", required: true, unspecifiedLabel: t("unspecified") },
+    { key: "phone", label: t("phone"), value: lead.value.phone, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "email", label: t("email"), value: lead.value.email, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "tax_id", label: t("tax_id"), value: lead.value.tax_id, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "industry", label: t("industry"), value: lead.value.industry, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "lead_type", label: t("lead_type"), value: lead.value.lead_type, type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const estimationFields = computed(() => [
-    { key: "estimated_gross_premium", label: t("estimated_gross_premium"), value: lead.value.estimated_gross_premium, displayValue: formatCurrency(lead.value.estimated_gross_premium, lead.value.currency), type: "text" },
-    { key: "probability", label: t("probability"), value: lead.value.probability, displayValue: `${lead.value.probability || 0}%`, type: "text" },
-    { key: "branch", label: t("branch"), value: lead.value.branch, type: "text", disabled: true },
+    { key: "branch", label: t("branch"), value: lead.value.branch, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    { key: "estimated_gross_premium", label: t("estimated_gross_premium"), value: lead.value.estimated_gross_premium, displayValue: formatCurrency(lead.value.estimated_gross_premium, lead.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "probability", label: t("probability"), value: lead.value.probability, displayValue: `${lead.value.probability || 0}%`, type: "text", unspecifiedLabel: t("unspecified"), valueClass: "text-brand-600 font-bold" },
+    { type: "divider", label: t("next_step") },
+    { key: "expected_closing", label: t("expected_closing"), value: lead.value.expected_closing, displayValue: formatDate(lead.value.expected_closing), type: "date", unspecifiedLabel: t("unspecified") },
+    { key: "next_step", label: t("next_step"), value: lead.value.next_step, type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const customerFields = computed(() => [

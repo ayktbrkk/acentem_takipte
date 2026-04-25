@@ -88,6 +88,14 @@ export const CLAIM_TRANSLATIONS = {
     reserve_amount: "Rezerv Tutar",
     paid_amount_col: "Ödenen",
     branch: "Branş",
+    claim_profile: "Hasar Dosya Profili",
+    financial_summary: "Finansal Özet",
+    expert_name: "Eksper Adı",
+    incident_location: "Hasar Yeri",
+    claim_amount: "Hasar Tutarı",
+    reserve_amount: "Rezerv Tutar",
+    paid_amount: "Ödenen Tutar",
+    unspecified: "Belirtilmemiş",
   },
   en: {
     claims: "Claims",
@@ -178,6 +186,14 @@ export const CLAIM_TRANSLATIONS = {
     reserve_amount: "Reserve",
     paid_amount_col: "Paid",
     branch: "Branch",
+    claim_profile: "Claim File Profile",
+    financial_summary: "Financial Summary",
+    expert_name: "Expert Name",
+    incident_location: "Incident Location",
+    claim_amount: "Claim Amount",
+    reserve_amount: "Reserve Amount",
+    paid_amount: "Paid Amount",
+    unspecified: "Unspecified",
   }
 };
 

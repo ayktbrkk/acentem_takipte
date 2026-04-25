@@ -128,17 +128,22 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => [
-    { key: "insurance_company", label: t("insurance_company"), value: claim.value.insurance_company, type: "text", disabled: true },
-    { key: "policy", label: t("policy_no"), value: claim.value.policy, type: "text", disabled: true },
-    { key: "incident_date", label: t("claim_date"), value: claim.value.incident_date, displayValue: formatDate(claim.value.incident_date), type: "date", required: true },
-    { key: "claim_type", label: t("claim_type"), value: claim.value.claim_type, type: "text" },
-    { key: "assigned_expert", label: t("expert"), value: claim.value.assigned_expert, type: "text" },
+    { key: "claim_no", label: t("claim_no"), value: claim.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "policy", label: t("policy_no"), value: claim.value.policy, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "insurance_company", label: t("insurance_company"), value: claim.value.insurance_company, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { type: "divider", label: t("incident_details") },
+    { key: "incident_date", label: t("claim_date"), value: claim.value.incident_date, displayValue: formatDate(claim.value.incident_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
+    { key: "claim_type", label: t("claim_type"), value: claim.value.claim_type, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "assigned_expert", label: t("expert_name"), value: claim.value.assigned_expert, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "incident_location", label: t("incident_location"), value: claim.value.incident_location, type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const financialFields = computed(() => [
-    { key: "estimated_amount", label: t("estimated_amount"), value: claim.value.estimated_amount, displayValue: formatCurrency(claim.value.estimated_amount, claim.value.currency), type: "text" },
-    { key: "paid_amount", label: t("paid_amount"), value: claim.value.paid_amount, displayValue: formatCurrency(claim.value.paid_amount, claim.value.currency), type: "text", disabled: true },
-    { key: "total_amount", label: t("total_amount"), value: claim.value.total_amount, displayValue: formatCurrency(claim.value.total_amount, claim.value.currency), type: "text", required: true },
+    { key: "claim_amount", label: t("claim_amount"), value: claim.value.estimated_amount, displayValue: formatCurrency(claim.value.estimated_amount, claim.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "reserve_amount", label: t("reserve_amount"), value: claim.value.reserve_amount, displayValue: formatCurrency(claim.value.reserve_amount, claim.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "paid_amount", label: t("paid_amount"), value: claim.value.paid_amount, displayValue: formatCurrency(claim.value.paid_amount, claim.value.currency), type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    { type: "divider" },
+    { key: "total_amount", label: t("total_amount"), value: claim.value.estimated_amount, displayValue: formatCurrency(claim.value.estimated_amount, claim.value.currency), type: "text", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-brand-600 font-bold" },
   ]);
 
   const customerFields = computed(() => [

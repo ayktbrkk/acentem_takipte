@@ -108,20 +108,22 @@
       <div class="detail-main space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <EditableCard
-            :title="t('offer_details')"
+            :title="t('offer_profile')"
+            icon="file-text"
             :fields="profileFields"
             :t="t"
             :saving="saving"
-            :cols="1"
+            layout="list"
             @save="updateOffer"
           />
 
           <EditableCard
             :title="t('financial_details')"
+            icon="dollar-sign"
             :fields="premiumFields"
             :t="t"
             :saving="saving"
-            :cols="1"
+            layout="list"
             @save="updateOffer"
           />
         </div>

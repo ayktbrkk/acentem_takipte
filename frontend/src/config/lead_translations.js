@@ -42,6 +42,14 @@ export const LEAD_TRANSLATIONS = {
     colCustomer: "Müşteri",
     colStatus: "Durum",
     colPotential: "Potansiyel",
+    lead_profile: "Fırsat Profili",
+    estimation_and_targets: "Tahmin ve Hedefler",
+    probability: "Olasılık",
+    expected_closing: "Tahmini Kapanış",
+    lead_type: "Fırsat Tipi",
+    campaign: "Kampanya",
+    next_step: "Sonraki Adım",
+    unspecified: "Belirtilmemiş",
   },
   en: {
     leads: "Leads",
@@ -86,6 +94,14 @@ export const LEAD_TRANSLATIONS = {
     colCustomer: "Customer",
     colStatus: "Status",
     colPotential: "Potential",
+    lead_profile: "Lead Profile",
+    estimation_and_targets: "Estimation & Targets",
+    probability: "Probability",
+    expected_closing: "Expected Closing",
+    lead_type: "Lead Type",
+    campaign: "Campaign",
+    next_step: "Next Step",
+    unspecified: "Unspecified",
   }
 };
 

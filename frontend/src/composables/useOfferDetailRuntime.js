@@ -118,15 +118,20 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => [
-    { key: "insurance_company", label: t("insurance_company"), value: offer.value.insurance_company, type: "text", disabled: true },
-    { key: "branch", label: t("branch"), value: offer.value.branch, type: "text", disabled: true },
-    { key: "offer_date", label: t("offer_date"), value: offer.value.offer_date, displayValue: formatDate(offer.value.offer_date), type: "date", required: true },
-    { key: "valid_until", label: t("valid_until"), value: offer.value.valid_until, displayValue: formatDate(offer.value.valid_until), type: "date", required: true },
+    { key: "offer_no", label: t("offer_no"), value: offer.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "insurance_company", label: t("insurance_company"), value: offer.value.insurance_company, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "branch", label: t("branch"), value: offer.value.branch, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    { type: "divider", label: t("validity") },
+    { key: "offer_date", label: t("offer_date"), value: offer.value.offer_date, displayValue: formatDate(offer.value.offer_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
+    { key: "valid_until", label: t("valid_until"), value: offer.value.valid_until, displayValue: formatDate(offer.value.valid_until), type: "date", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-amber-600 font-bold" },
   ]);
 
   const premiumFields = computed(() => [
-    { key: "gross_premium", label: t("gross_premium"), value: offer.value.gross_premium, displayValue: formatCurrency(offer.value.gross_premium, offer.value.currency), type: "text", required: true },
-    { key: "currency", label: t("currency"), value: offer.value.currency, type: "text", disabled: true },
+    { key: "net_premium", label: t("net_premium"), value: offer.value.net_premium, displayValue: formatCurrency(offer.value.net_premium, offer.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "tax_amount", label: t("tax_amount"), value: offer.value.tax_amount, displayValue: formatCurrency(offer.value.tax_amount, offer.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "commission_amount", label: t("commission_amount"), value: offer.value.commission_amount, displayValue: formatCurrency(offer.value.commission_amount, offer.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
+    { type: "divider" },
+    { key: "gross_premium", label: t("gross_premium"), value: offer.value.gross_premium, displayValue: formatCurrency(offer.value.gross_premium, offer.value.currency), type: "text", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-brand-600 font-bold" },
   ]);
 
   const customerFields = computed(() => [

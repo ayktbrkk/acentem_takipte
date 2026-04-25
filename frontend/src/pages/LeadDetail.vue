@@ -109,19 +109,21 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <EditableCard
             :title="t('lead_profile')"
+            icon="user-check"
             :fields="profileFields"
             :t="t"
             :saving="saving"
-            :cols="1"
+            layout="list"
             @save="updateLead"
           />
 
           <EditableCard
             :title="t('estimation_and_targets')"
+            icon="trending-up"
             :fields="estimationFields"
             :t="t"
             :saving="saving"
-            :cols="1"
+            layout="list"
             @save="updateLead"
           />
         </div>
