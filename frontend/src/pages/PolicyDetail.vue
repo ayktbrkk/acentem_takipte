@@ -130,7 +130,7 @@
             :fields="premiumFields"
             :t="t"
             :saving="saving"
-            :cols="1"
+            layout="list"
             @save="updatePolicy"
           />
         </div>

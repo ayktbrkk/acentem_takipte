@@ -1,11 +1,15 @@
 <template>
-  <div class="grid gap-3" :style="`grid-template-columns: repeat(${cols}, minmax(0,1fr))`">
+  <div 
+    class="grid gap-3" 
+    :style="layout === 'list' ? 'grid-template-columns: 1fr' : `grid-template-columns: repeat(${cols}, minmax(0,1fr))`"
+  >
     <div
       v-for="(field, fieldIndex) in normalizedFields"
       :key="field.key || field.label || fieldIndex"
       :style="field.span ? { gridColumn: `span ${field.span} / span ${field.span}` } : undefined"
+      :class="[layout === 'list' && 'flex items-center justify-between border-b border-slate-50 pb-2 last:border-0 last:pb-0']"
     >
-      <div class="field-label">{{ field.label }}</div>
+      <div class="field-label" :class="[layout === 'list' && 'mb-0']">{{ field.label }}</div>
 
       <div v-if="field.variant === 'badges'" class="mt-1 flex flex-wrap gap-1.5">
         <span
@@ -17,7 +21,7 @@
         </span>
       </div>
 
-      <div v-else :class="fieldValueClass(field.variant)">
+      <div v-else :class="[fieldValueClass(field.variant), layout === 'list' && 'text-right font-semibold']">
         {{ field.value ?? '—' }}
       </div>
     </div>
@@ -30,6 +34,7 @@ import { computed } from "vue";
 const props = defineProps({
   fields: { type: Array, default: () => [] },
   cols: { type: Number, default: 2 },
+  layout: { type: String, default: "grid" }, // 'grid' or 'list'
 });
 
 const normalizedFields = computed(() => (Array.isArray(props.fields) ? props.fields : []));

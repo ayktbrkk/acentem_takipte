@@ -110,7 +110,7 @@
       </form>
 
       <div v-else class="animate-in fade-in slide-in-from-top-1 duration-300">
-        <FieldGroup :fields="displayFields" :cols="cols" />
+        <FieldGroup :fields="displayFields" :cols="cols" :layout="layout" />
       </div>
 
       <!-- Saving Overlay -->
@@ -138,6 +138,7 @@ const props = defineProps({
   fields: { type: Array, required: true }, // Array of { key, label, value, type, options, required, placeholder, displayValue }
   isEditable: { type: Boolean, default: true },
   cols: { type: Number, default: 1 },
+  layout: { type: String, default: 'grid' },
   saving: { type: Boolean, default: false },
   panelClass: { type: String, default: 'surface-card rounded-xl p-5 transition-all duration-300' },
   t: { type: Function, required: true }
