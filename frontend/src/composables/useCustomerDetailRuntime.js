@@ -324,7 +324,6 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     openPolicy,
     openOffer,
     openClaim,
-    showUploadModal,
   };
 }
 

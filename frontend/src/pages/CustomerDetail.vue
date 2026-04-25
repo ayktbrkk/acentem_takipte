@@ -347,6 +347,7 @@ const {
   atDocuments,
   insights,
   crossSell,
+  operations,
   loading,
   t,
   formatDate,
