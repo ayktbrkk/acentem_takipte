@@ -100,6 +100,12 @@ export const COMMON_TRANSLATIONS = {
     endorsements: "Zeyilnameler",
     payments: "Ödemeler",
     no_activities: "Dosya kaydı bulunamadı.",
+    exportPdf: "PDF Olarak Dışa Aktar",
+    shareWhatsApp: "WhatsApp ile Paylaş",
+    newEndorsement: "Yeni Zeyilname",
+    fileLinkNotFound: "Dosya bağlantısı bulunamadı.",
+    policyDetailTitle: "Poliçe Detayı",
+    manage: "Yönet",
   },
   en: {
     all: "All",
@@ -202,6 +208,12 @@ export const COMMON_TRANSLATIONS = {
     endorsements: "Endorsements",
     payments: "Payments",
     no_activities: "No records found for this file.",
+    exportPdf: "Export as PDF",
+    shareWhatsApp: "Share via WhatsApp",
+    newEndorsement: "New Endorsement",
+    fileLinkNotFound: "File link not found.",
+    policyDetailTitle: "Policy Detail",
+    manage: "Manage",
   }
 };
 

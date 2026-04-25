@@ -54,6 +54,11 @@
         />
 
         <SectionPanel :title="t('operations')">
+          <template #trailing>
+            <ActionButton variant="ghost" size="xs">
+              {{ t('manage') }}
+            </ActionButton>
+          </template>
           <div class="space-y-4">
              <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                <div class="flex items-center gap-3">

@@ -59,7 +59,7 @@
           @click="activeCustomerTab = tab.key"
         >
           {{ tab.label }}
-          <span v-if="tab.count" class="ml-2 inline-flex items-center rounded-md bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700 ring-1 ring-inset ring-brand-700/10">
+          <span v-if="tab.count" class="ml-2 badge badge-brand">
             {{ tab.count }}
           </span>
         </button>
@@ -90,7 +90,13 @@
             :t="t"
             :saving="saving"
             @save="updateCustomer"
-          />
+          >
+            <template #header-actions>
+              <ActionButton variant="ghost" size="xs">
+                {{ t('manage') }}
+              </ActionButton>
+            </template>
+          </EditableCard>
         </aside>
 
         <!-- Main Content -->
@@ -118,11 +124,11 @@
                </div>
                <div v-else class="space-y-2">
                  <p class="text-sm font-medium text-slate-700">{{ t("cross_sell") }}</p>
-                 <div class="flex flex-wrap gap-2">
-                   <span v-for="opp in crossSell.opportunity_branches" :key="opp.branch" class="badge badge-blue">
-                     {{ opp.branch }}
-                   </span>
-                 </div>
+                  <div class="flex flex-wrap gap-2">
+                    <span v-for="opp in crossSell.opportunity_branches" :key="opp.branch" class="badge badge-brand">
+                      {{ opp.branch }}
+                    </span>
+                  </div>
                </div>
             </SectionPanel>
           </template>
@@ -131,7 +137,7 @@
           <template v-if="activeCustomerTab === 'portfolio'">
             <SectionPanel :title="t('policies')">
               <template #trailing>
-                <span class="badge badge-blue">{{ portfolio.policies?.length || 0 }}</span>
+                <span class="badge badge-brand">{{ portfolio.policies?.length || 0 }}</span>
               </template>
               <div v-if="!portfolio.policies?.length" class="at-empty-block">
                 {{ t("no_policies") }}
@@ -155,7 +161,7 @@
 
             <SectionPanel :title="t('offers')">
               <template #trailing>
-                <span class="badge badge-blue">{{ portfolio.offers?.length || 0 }}</span>
+                <span class="badge badge-brand">{{ portfolio.offers?.length || 0 }}</span>
               </template>
               <div v-if="!portfolio.offers?.length" class="at-empty-block">
                 {{ t("no_offers") }}

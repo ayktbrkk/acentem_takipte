@@ -213,11 +213,5 @@ watch(() => props.saving, (newVal, oldVal) => {
 </script>
 
 <style scoped>
-.at-input {
-  @apply rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-900 transition-all focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 outline-none;
-}
-
-.field-label {
-  @apply text-[11px] font-bold uppercase tracking-wider text-slate-400;
-}
+/* Scoped styles removed in favor of global .at-input and .field-label in style.css */
 </style>

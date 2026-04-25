@@ -183,7 +183,6 @@ import ToastNotification from "../components/ui/ToastNotification.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
-import { openDocumentInNewTab } from "../utils/documentOpen";
 
 const props = defineProps({
   name: { type: String, required: true },

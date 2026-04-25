@@ -129,6 +129,8 @@
         :type="notification.type"
         @close="notification.show = false"
       />
+    </div>
+
     <WorkbenchFileUploadModal
       :open="showUploadModal"
       attached-to-doctype="AT Claim"

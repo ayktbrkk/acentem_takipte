@@ -1,0 +1,29 @@
+
+> acentem-takipte-frontend@0.0.1 build
+> vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 19 modules transformed.
+[31mx[39m Build failed in 539ms
+[31merror during build:
+[31m[vite:vue] [vue/compiler-sfc] Identifier 'openDocumentInNewTab' has already been declared. (18:9)
+
+C:/Users/Aykut/Documents/GitHub/acentem_takipte/frontend/src/pages/LeadDetail.vue
+184|  import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+185|  import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
+186|  import { openDocumentInNewTab } from "../utils/documentOpen";
+   |           ^
+187|  
+188|  const props = defineProps({[31m
+file: [36mC:/Users/Aykut/Documents/GitHub/acentem_takipte/frontend/src/pages/LeadDetail.vue:18:9[31m
+    at constructor (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+    at Parser.raise (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+    at ScopeHandler.checkRedeclarationInScope (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:1619:19)
+    at ScopeHandler.declareName (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:1585:12)
+    at Parser.declareNameFromIdentifier (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:7567:16)
+    at Parser.checkIdentifier (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:7563:12)
+    at Parser.checkLVal (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:7500:12)
+    at Parser.finishImportSpecifier (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:14266:10)
+    at Parser.parseImportSpecifier (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:14419:17)
+    at Parser.parseNamedImportSpecifiers (C:\Users\Aykut\Documents\GitHub\acentem_takipte\frontend\node_modules\@babel\parser\lib\index.js:14398:36)[39m

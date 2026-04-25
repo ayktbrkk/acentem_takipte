@@ -16,10 +16,11 @@
   }
 
   body {
-    @apply min-h-screen bg-slate-100 text-slate-900 antialiased;
-    background-image: radial-gradient(circle at 12% 18%, #dff6f0 0, transparent 36%),
-      radial-gradient(circle at 88% 2%, #e5edf8 0, transparent 30%),
-      linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    @apply min-h-screen bg-slate-50 text-slate-900 antialiased;
+    background-image: 
+      radial-gradient(circle at 0% 0%, #ebf3ff 0%, transparent 40%),
+      radial-gradient(circle at 100% 100%, #f0fdfa 0%, transparent 40%),
+      linear-gradient(180deg, #ffffff 0%, #f3f6fb 100%);
   }
 
   .at-webapp-breakout #app {
@@ -298,7 +299,73 @@
   }
 
   .at-tab-chip-idle {
-    @apply border-transparent bg-gray-100/50 text-gray-500 hover:bg-gray-100 hover:text-gray-900 hover:border-gray-200;
+    @apply border-transparent bg-slate-100/50 text-slate-500 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-200;
+  }
+
+  /* --- Standardized Buttons --- */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs font-semibold;
+  }
+
+  .btn-xs {
+    @apply px-2 py-1 text-[11px] font-bold uppercase tracking-wider;
+  }
+
+  .btn-primary {
+    @apply bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-600/10;
+  }
+
+  .btn-secondary {
+    @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+
+  .btn-ghost {
+    @apply text-slate-500 hover:bg-slate-100 hover:text-brand-600;
+  }
+
+  .btn-outline {
+    @apply border border-slate-200 bg-transparent text-slate-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-600;
+  }
+
+  .btn-full {
+    @apply w-full;
+  }
+
+  /* --- Standardized Badges --- */
+  .badge {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ring-1 ring-inset;
+  }
+
+  .badge-brand {
+    @apply bg-brand-50 text-brand-700 ring-brand-700/10;
+  }
+
+  .badge-blue {
+    @apply bg-blue-50 text-blue-700 ring-blue-700/10;
+  }
+
+  .badge-emerald {
+    @apply bg-emerald-50 text-emerald-700 ring-emerald-700/10;
+  }
+
+  .badge-amber {
+    @apply bg-amber-50 text-amber-700 ring-amber-700/10;
+  }
+
+  .badge-rose {
+    @apply bg-rose-50 text-rose-700 ring-rose-700/10;
+  }
+
+  .at-input {
+    @apply rounded-lg border border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-900 transition-all focus:border-brand-600 focus:bg-white focus:ring-4 focus:ring-brand-600/10 outline-none;
+  }
+
+  .field-label {
+    @apply text-[10.5px] font-bold uppercase tracking-[0.05em] text-slate-400;
   }
 
   .at-btn-sm {
