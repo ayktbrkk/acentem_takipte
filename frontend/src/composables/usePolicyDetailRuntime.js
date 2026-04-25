@@ -51,6 +51,23 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const atDocuments = computed(() => data.value.at_documents || []);
   const productProfile = computed(() => data.value.product_profile || {});
   const showUploadModal = ref(false);
+  const saving = ref(false);
+  const customerSaving = ref(false);
+  const notification = reactive({ show: false, message: "", type: "success" });
+
+  const updateResource = createResource({
+    url: "frappe.client.set_value",
+    auto: false,
+  });
+
+  function showNotification(message, type = "success") {
+    notification.message = message;
+    notification.type = type;
+    notification.show = true;
+    setTimeout(() => {
+      notification.show = false;
+    }, 4000);
+  }
 
   const atDocumentLifecycle = useAtDocumentLifecycle({
     authStore,
@@ -148,19 +165,69 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => [
-    { label: t("policy_no"), value: policy.value.policy_no },
-    { label: t("insurance_company"), value: policy.value.insurance_company },
-    { label: t("branch"), value: policy.value.branch },
-    { label: t("issue_date"), value: formatDate(policy.value.issue_date) },
-    { label: t("start_date"), value: formatDate(policy.value.start_date) },
-    { label: t("end_date"), value: formatDate(policy.value.end_date) },
+    { key: "policy_no", label: t("carrier_policy_no"), value: policy.value.policy_no, type: "text", required: true },
+    { key: "insurance_company", label: t("insurance_company"), value: policy.value.insurance_company, type: "text", disabled: true },
+    { key: "branch", label: t("branch"), value: policy.value.branch, type: "text", disabled: true },
+    { key: "issue_date", label: t("issue_date"), value: policy.value.issue_date, displayValue: formatDate(policy.value.issue_date), type: "date", required: true },
+    { key: "start_date", label: t("start_date"), value: policy.value.start_date, displayValue: formatDate(policy.value.start_date), type: "date", required: true },
+    { key: "end_date", label: t("end_date"), value: policy.value.end_date, displayValue: formatDate(policy.value.end_date), type: "date", required: true },
+    { key: "sales_entity", label: t("sales_entity"), value: policy.value.sales_entity, type: "text", disabled: true },
+  ]);
+
+  const premiumFields = computed(() => [
+    { key: "net_premium", label: t("net_premium"), value: policy.value.net_premium, displayValue: formatCurrency(policy.value.net_premium, policy.value.currency), type: "text" },
+    { key: "tax_amount", label: t("tax_amount"), value: policy.value.tax_amount, displayValue: formatCurrency(policy.value.tax_amount, policy.value.currency), type: "text" },
+    { key: "commission_amount", label: t("commission_amount"), value: policy.value.commission_amount, displayValue: formatCurrency(policy.value.commission_amount, policy.value.currency), type: "text" },
+    { key: "gross_premium", label: t("gross_premium"), value: policy.value.gross_premium, displayValue: formatCurrency(policy.value.gross_premium, policy.value.currency), type: "text", required: true },
+    { key: "commission_rate", label: t("commission_rate"), value: policy.value.commission_rate, displayValue: `${policy.value.commission_rate || 0}%`, type: "text", disabled: true },
   ]);
 
   const customerFields = computed(() => [
     { label: t("customer"), value: customer.value.full_name || policy.value.customer || "-" },
+    { label: t("tax_id"), value: customer.value.tax_id || "-" },
     { label: t("phone"), value: customer.value.phone || "-" },
     { label: t("email"), value: customer.value.email || "-" },
   ]);
+
+  async function updatePolicy(values, onSuccess) {
+    if (!unref(name)) return;
+    saving.value = true;
+    try {
+      await updateResource.submit({
+        doctype: "AT Policy",
+        name: unref(name),
+        fieldname: values,
+      });
+      showNotification(t("save_success"));
+      if (onSuccess) onSuccess();
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  async function updateCustomer(values, onSuccess) {
+    if (!customer.value.name) return;
+    customerSaving.value = true;
+    try {
+      await updateResource.submit({
+        doctype: "AT Customer",
+        name: customer.value.name,
+        fieldname: values,
+      });
+      showNotification(t("save_success"));
+      if (onSuccess) onSuccess();
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      customerSaving.value = false;
+    }
+  }
 
   // Watch for name change
   watch(() => unref(name), (newVal) => {
@@ -195,7 +262,13 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     formatFileSize,
     heroCells,
     profileFields,
+    premiumFields,
     customerFields,
+    saving,
+    customerSaving,
+    notification,
+    updatePolicy,
+    updateCustomer,
   };
 }
 

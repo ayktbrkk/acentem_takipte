@@ -22,7 +22,25 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   const claim = computed(() => data.value.claim || {});
   const documents = computed(() => data.value.documents || []);
   const payments = computed(() => data.value.payments || []);
+  const customer = computed(() => data.value.customer || {});
   const showUploadModal = ref(false);
+  const saving = ref(false);
+  const customerSaving = ref(false);
+  const notification = reactive({ show: false, message: "", type: "success" });
+
+  const updateResource = createResource({
+    url: "frappe.client.set_value",
+    auto: false,
+  });
+
+  function showNotification(message, type = "success") {
+    notification.message = message;
+    notification.type = type;
+    notification.show = true;
+    setTimeout(() => {
+      notification.show = false;
+    }, 4000);
+  }
 
   const atDocumentLifecycle = useAtDocumentLifecycle({
     authStore,
@@ -104,12 +122,65 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => [
-    { label: t("insurance_company"), value: claim.value.insurance_company },
-    { label: t("policy_no"), value: claim.value.policy },
-    { label: t("claim_date"), value: formatDate(claim.value.incident_date) },
-    { label: t("claim_type"), value: claim.value.claim_type },
-    { label: t("expert"), value: claim.value.assigned_expert || "-" },
+    { key: "insurance_company", label: t("insurance_company"), value: claim.value.insurance_company, type: "text", disabled: true },
+    { key: "policy", label: t("policy_no"), value: claim.value.policy, type: "text", disabled: true },
+    { key: "incident_date", label: t("claim_date"), value: claim.value.incident_date, displayValue: formatDate(claim.value.incident_date), type: "date", required: true },
+    { key: "claim_type", label: t("claim_type"), value: claim.value.claim_type, type: "text" },
+    { key: "assigned_expert", label: t("expert"), value: claim.value.assigned_expert, type: "text" },
   ]);
+
+  const financialFields = computed(() => [
+    { key: "estimated_amount", label: t("estimated_amount"), value: claim.value.estimated_amount, displayValue: formatCurrency(claim.value.estimated_amount, claim.value.currency), type: "text" },
+    { key: "paid_amount", label: t("paid_amount"), value: claim.value.paid_amount, displayValue: formatCurrency(claim.value.paid_amount, claim.value.currency), type: "text", disabled: true },
+    { key: "total_amount", label: t("total_amount"), value: claim.value.total_amount, displayValue: formatCurrency(claim.value.total_amount, claim.value.currency), type: "text", required: true },
+  ]);
+
+  const customerFields = computed(() => [
+    { label: t("customer"), value: customer.value.full_name || claim.value.customer_name || "-" },
+    { label: t("tax_id"), value: customer.value.tax_id || "-" },
+    { label: t("phone"), value: customer.value.phone || "-" },
+    { label: t("email"), value: customer.value.email || "-" },
+  ]);
+
+  async function updateClaim(values, onSuccess) {
+    if (!unref(name)) return;
+    saving.value = true;
+    try {
+      await updateResource.submit({
+        doctype: "AT Claim",
+        name: unref(name),
+        fieldname: values,
+      });
+      showNotification(t("save_success"));
+      if (onSuccess) onSuccess();
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  async function updateCustomer(values, onSuccess) {
+    if (!customer.value.name) return;
+    customerSaving.value = true;
+    try {
+      await updateResource.submit({
+        doctype: "AT Customer",
+        name: customer.value.name,
+        fieldname: values,
+      });
+      showNotification(t("save_success"));
+      if (onSuccess) onSuccess();
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      customerSaving.value = false;
+    }
+  }
 
   // Watch for name change
   watch(() => unref(name), (newVal) => {
@@ -134,10 +205,17 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     archiveDocument,
     restoreDocument,
     permanentDeleteDocument,
-    formatDate,
     formatCurrency,
     heroCells,
     profileFields,
+    financialFields,
+    customerFields,
+    saving,
+    customerSaving,
+    notification,
+    updateClaim,
+    updateCustomer,
+    customer,
   };
 }
 

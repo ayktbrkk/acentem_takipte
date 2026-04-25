@@ -98,6 +98,23 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   const documents = computed(() => data.value.documents || data.value.files || []);
   const offers = computed(() => data.value.offers || []);
   const policies = computed(() => data.value.policies || []);
+  const saving = ref(false);
+  const customerSaving = ref(false);
+  const notification = reactive({ show: false, message: "", type: "success" });
+
+  const updateResource = createResource({
+    url: "frappe.client.set_value",
+    auto: false,
+  });
+
+  function showNotification(message, type = "success") {
+    notification.message = message;
+    notification.type = type;
+    notification.show = true;
+    setTimeout(() => {
+      notification.show = false;
+    }, 4000);
+  }
 
   const leadFullName = computed(() => {
     const fn = lead.value.first_name || "";
@@ -176,18 +193,65 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => [
-    { label: t("full_name"), value: leadFullName.value },
-    { label: t("phone"), value: lead.value.phone || "-" },
-    { label: t("email"), value: lead.value.email || "-" },
-    { label: t("tax_id"), value: lead.value.tax_id || "-" },
-    { label: t("industry"), value: lead.value.industry || "-" },
+    { key: "full_name", label: t("full_name"), value: leadFullName.value, type: "text", required: true },
+    { key: "phone", label: t("phone"), value: lead.value.phone, type: "text" },
+    { key: "email", label: t("email"), value: lead.value.email, type: "text" },
+    { key: "tax_id", label: t("tax_id"), value: lead.value.tax_id, type: "text" },
+    { key: "industry", label: t("industry"), value: lead.value.industry, type: "text" },
+  ]);
+
+  const estimationFields = computed(() => [
+    { key: "estimated_gross_premium", label: t("estimated_gross_premium"), value: lead.value.estimated_gross_premium, displayValue: formatCurrency(lead.value.estimated_gross_premium, lead.value.currency), type: "text" },
+    { key: "probability", label: t("probability"), value: lead.value.probability, displayValue: `${lead.value.probability || 0}%`, type: "text" },
+    { key: "branch", label: t("branch"), value: lead.value.branch, type: "text", disabled: true },
   ]);
 
   const customerFields = computed(() => [
     { label: t("customer"), value: customer.value.full_name || lead.value.customer || "-" },
+    { label: t("tax_id"), value: customer.value.tax_id || "-" },
     { label: t("phone"), value: customer.value.phone || "-" },
     { label: t("email"), value: customer.value.email || "-" },
   ]);
+
+  async function updateLead(values, onSuccess) {
+    if (!unref(name)) return;
+    saving.value = true;
+    try {
+      await updateResource.submit({
+        doctype: "AT Lead",
+        name: unref(name),
+        fieldname: values,
+      });
+      showNotification(t("save_success"));
+      if (onSuccess) onSuccess();
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  async function updateCustomer(values, onSuccess) {
+    if (!customer.value.name) return;
+    customerSaving.value = true;
+    try {
+      await updateResource.submit({
+        doctype: "AT Customer",
+        name: customer.value.name,
+        fieldname: values,
+      });
+      showNotification(t("save_success"));
+      if (onSuccess) onSuccess();
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      customerSaving.value = false;
+    }
+  }
 
   // Watch for name change
   watch(() => unref(name), (newVal) => {
@@ -212,7 +276,13 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
     formatCurrency,
     heroCells,
     profileFields,
+    estimationFields,
     customerFields,
+    saving,
+    customerSaving,
+    notification,
+    updateLead,
+    updateCustomer,
     showUploadModal,
     canUploadDocuments,
     openLeadDocuments,

@@ -29,24 +29,70 @@
       </div>
     </template>
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <!-- Main Content -->
-      <div class="lg:col-span-2 space-y-6">
-        <SectionPanel :title="t('overview')">
-          <SkeletonLoader v-if="loading" variant="text" :rows="8" />
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div v-for="field in profileFields" :key="field.label">
-              <p class="text-sm font-medium text-slate-500">{{ field.label }}</p>
-              <p class="mt-1 text-base font-semibold text-slate-900">{{ field.value || "-" }}</p>
+    <div class="detail-body at-detail-split-wide">
+      <!-- Sidebar (Sol Kolon - 4) -->
+      <aside class="detail-sidebar at-detail-aside space-y-6">
+        <StandardCustomerCard
+          :title="t('customer_details')"
+          :customer="customer"
+          :saving="customerSaving"
+          :t="t"
+          @save="updateCustomer"
+        />
+
+        <SectionPanel :title="t('documents')">
+          <template #trailing>
+            <div class="flex flex-wrap items-center gap-2">
+              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                {{ t("upload") }}
+              </ActionButton>
             </div>
-            <div>
-              <p class="text-sm font-medium text-slate-500">{{ t("total_amount") }}</p>
-              <p class="mt-1 text-base font-bold text-slate-900">{{ formatCurrency(claim.total_amount, claim.currency) }}</p>
-            </div>
+          </template>
+          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
+          <div v-else class="space-y-2">
+            <MetaListCard
+              v-for="doc in documents.slice(0, 5)" 
+              :key="doc.name"
+              :title="doc.display_name || doc.file_name || doc.name"
+              :subtitle="doc.document_sub_type || doc.document_kind || ''"
+              class="!p-3"
+            >
+              <template #trailing>
+                 <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc)">
+                  <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
+                </button>
+              </template>
+            </MetaListCard>
+            <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openClaimDocuments">
+              {{ t("view_all_documents") }}
+            </ActionButton>
           </div>
         </SectionPanel>
+      </aside>
 
-        <SectionPanel v-if="payments.length" :title="t('payments')">
+      <!-- Main Content (Sağ Kolon - 8) -->
+      <div class="detail-main space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <EditableCard
+            :title="t('claim_profile')"
+            :fields="profileFields"
+            :t="t"
+            :saving="saving"
+            :cols="1"
+            @save="updateClaim"
+          />
+
+          <EditableCard
+            :title="t('financial_summary')"
+            :fields="financialFields"
+            :t="t"
+            :saving="saving"
+            :cols="1"
+            @save="updateClaim"
+          />
+        </div>
+
+        <SectionPanel v-if="payments.length" :title="t('claim_payments')">
           <ListTable
             :columns="paymentColumns"
             :rows="payments"
@@ -63,70 +109,26 @@
             </template>
           </ListTable>
         </SectionPanel>
-      </div>
 
-      <!-- Sidebar -->
-      <div class="space-y-6">
-        <SectionPanel :title="t('customer_details')">
-          <SkeletonLoader v-if="loading" variant="card" />
-          <div v-else class="space-y-4">
-            <div class="flex items-center gap-4">
-              <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-600">
-                {{ uppercaseText((claim.customer_name || "?").charAt(0), activeLocale) }}
-              </div>
-              <div>
-                <p class="font-bold text-slate-900">{{ claim.customer_name || t("all") }}</p>
-                <p class="text-sm text-slate-500">{{ claim.customer }}</p>
-              </div>
+        <SectionPanel :title="t('activity_timeline')">
+          <div class="at-empty-block text-center py-8">
+            <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-300 mb-3">
+              <FeatherIcon name="activity" class="h-6 w-6" />
             </div>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel :title="t('documents')">
-          <template #trailing>
-            <div class="flex flex-wrap items-center gap-2">
-              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
-                {{ t("uploadDocument") }}
-              </ActionButton>
-              <ActionButton variant="secondary" size="xs" @click="openClaimDocuments">
-                {{ t("openDocumentCenter") }}
-              </ActionButton>
-            </div>
-          </template>
-          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
-          <div v-else class="space-y-2">
-            <MetaListCard
-              v-for="doc in documents" 
-              :key="doc.name"
-              :title="doc.display_name || doc.file_name || doc.name"
-              :subtitle="doc.document_sub_type || doc.document_kind || ''"
-              :meta="formatDate(doc.document_date || doc.creation)"
-            >
-              <template #trailing>
-                <div class="flex flex-wrap items-center gap-2">
-                  <span v-if="doc.is_verified" class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
-                    {{ t("status_verified") }}
-                  </span>
-                  <ActionButton v-if="canArchiveDocument(doc)" variant="secondary" size="xs" @click="archiveDocument(doc)">
-                    {{ t("archiveDocument") }}
-                  </ActionButton>
-                  <ActionButton v-if="canRestoreDocument(doc)" variant="secondary" size="xs" @click="restoreDocument(doc)">
-                    {{ t("restoreDocument") }}
-                  </ActionButton>
-                  <ActionButton v-if="canPermanentDeleteDocument(doc)" variant="secondary" size="xs" @click="permanentDeleteDocument(doc)">
-                    {{ t("permanentDeleteDocument") }}
-                  </ActionButton>
-                  <ActionButton variant="secondary" size="xs" @click="openDocument(doc)">
-                    {{ t("openDocument") }}
-                  </ActionButton>
-                </div>
-              </template>
-            </MetaListCard>
+            <p class="text-sm text-slate-500">{{ t('no_recent_activity') }}</p>
           </div>
         </SectionPanel>
       </div>
     </div>
 
+    <!-- Notifications -->
+    <div class="fixed right-6 top-24 z-[100] w-full max-w-sm pointer-events-none">
+      <ToastNotification
+        :show="notification.show"
+        :message="notification.message"
+        :type="notification.type"
+        @close="notification.show = false"
+      />
     <WorkbenchFileUploadModal
       :open="showUploadModal"
       attached-to-doctype="AT Claim"
@@ -146,8 +148,11 @@ import { useClaimDetailRuntime } from "../composables/useClaimDetailRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
+import EditableCard from "../components/app-shell/EditableCard.vue";
+import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
 import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import ToastNotification from "../components/ui/ToastNotification.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
@@ -183,6 +188,14 @@ const {
   formatCurrency,
   heroCells,
   profileFields,
+  financialFields,
+  customerFields,
+  saving,
+  customerSaving,
+  notification,
+  updateClaim,
+  updateCustomer,
+  customer,
 } = useClaimDetailRuntime({ 
   name: computed(() => props.name),
   activeLocale 

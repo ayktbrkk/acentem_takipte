@@ -41,20 +41,99 @@
       </div>
     </template>
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
-      <!-- Main Content -->
-      <div class="lg:col-span-2 space-y-6">
-        <SectionPanel :title="t('overviewTitle')" panel-class="surface-card rounded-xl p-5 policy-equal-card">
-          <SkeletonLoader v-if="loading" variant="text" :rows="10" />
-          <div v-else class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div v-for="field in profileFields" :key="field.label">
-                <p class="text-sm font-medium text-slate-500">{{ field.label }}</p>
-                <p class="mt-1 text-base font-semibold text-slate-900">{{ field.value || "-" }}</p>
-              </div>
-            </div>
+    <div class="detail-body at-detail-split-wide">
+      <!-- Sidebar (Sol Kolon - 4) -->
+      <aside class="detail-sidebar at-detail-aside space-y-6">
+        <StandardCustomerCard
+          :title="t('customer_details')"
+          :customer="customer"
+          :saving="customerSaving"
+          :t="t"
+          @save="updateCustomer"
+          @view-full="openCustomer"
+        />
+
+        <SectionPanel :title="t('operations')">
+          <div class="space-y-4">
+             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+               <div class="flex items-center gap-3">
+                 <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm">
+                   <FeatherIcon name="check-circle" class="h-4 w-4" />
+                 </div>
+                 <div>
+                   <p class="text-xs font-bold text-slate-800">{{ t('tasks') }}</p>
+                   <p class="text-[10px] text-slate-500">{{ t('active_tasks_hint') }}</p>
+                 </div>
+               </div>
+               <span class="badge badge-blue">0</span>
+             </div>
+
+             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+               <div class="flex items-center gap-3">
+                 <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm">
+                   <FeatherIcon name="bell" class="h-4 w-4" />
+                 </div>
+                 <div>
+                   <p class="text-xs font-bold text-slate-800">{{ t('reminders') }}</p>
+                   <p class="text-[10px] text-slate-500">{{ t('active_reminders_hint') }}</p>
+                 </div>
+               </div>
+               <span class="badge badge-amber">0</span>
+             </div>
           </div>
         </SectionPanel>
+
+        <SectionPanel :title="t('documents')">
+          <template #trailing>
+            <div class="flex flex-wrap items-center gap-2">
+              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                {{ t("upload") }}
+              </ActionButton>
+            </div>
+          </template>
+          <div v-if="!documents.length && !atDocuments.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
+          <div v-else class="space-y-2">
+            <MetaListCard
+              v-for="doc in atDocuments.slice(0, 5)" 
+              :key="doc.name"
+              :title="doc.display_name || doc.file_name || doc.name"
+              :subtitle="doc.document_sub_type || doc.document_kind || ''"
+              class="!p-3"
+            >
+              <template #trailing>
+                <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc, 'AT Document')">
+                  <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
+                </button>
+              </template>
+            </MetaListCard>
+            <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openPolicyDocuments">
+              {{ t("view_all_documents") }}
+            </ActionButton>
+          </div>
+        </SectionPanel>
+      </aside>
+
+      <!-- Main Content (Sağ Kolon - 8) -->
+      <div class="detail-main space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <EditableCard
+            :title="t('policy_technical_details')"
+            :fields="profileFields"
+            :t="t"
+            :saving="saving"
+            :cols="1"
+            @save="updatePolicy"
+          />
+
+          <EditableCard
+            :title="t('premium_and_financial_details')"
+            :fields="premiumFields"
+            :t="t"
+            :saving="saving"
+            :cols="1"
+            @save="updatePolicy"
+          />
+        </div>
 
         <SectionPanel v-if="endorsements.length" :title="t('endorsements')">
           <ListTable
@@ -88,101 +167,27 @@
             </template>
           </ListTable>
         </SectionPanel>
-      </div>
 
-      <!-- Sidebar -->
-      <div class="space-y-6">
-        <SectionPanel :title="t('customer_details')" panel-class="surface-card rounded-xl p-5 policy-equal-card">
-          <template #trailing>
-            <ActionButton variant="secondary" size="xs" @click="openCustomer">
-              {{ t("customer_details") }}
-            </ActionButton>
-          </template>
-          <SkeletonLoader v-if="loading" variant="card" />
-          <div v-else @click="openCustomer" class="cursor-pointer group">
-            <div class="flex items-center gap-4 mb-4">
-              <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-600 group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
-                {{ uppercaseText((customer.full_name || "?").charAt(0), activeLocale) }}
-              </div>
-              <div>
-                <p class="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{{ customer.full_name || t("all") }}</p>
-                <p class="text-sm text-slate-500">{{ customer.name }}</p>
-              </div>
+        <!-- New Section: Activities / Timeline -->
+        <SectionPanel :title="t('activity_timeline')">
+          <div class="at-empty-block text-center py-8">
+            <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-300 mb-3">
+              <FeatherIcon name="activity" class="h-6 w-6" />
             </div>
-            <div class="space-y-3">
-              <div v-for="field in customerFields" :key="field.label">
-                <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ field.label }}</p>
-                <p class="text-sm font-medium text-slate-700">{{ field.value || "-" }}</p>
-              </div>
-            </div>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel :title="t('documents')">
-          <template #trailing>
-            <div class="flex flex-wrap items-center gap-2">
-              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
-                {{ t("uploadDocument") }}
-              </ActionButton>
-              <ActionButton variant="secondary" size="xs" @click="openPolicyDocuments">
-                {{ t("openDocumentCenter") }}
-              </ActionButton>
-            </div>
-          </template>
-          <div v-if="!documents.length && !atDocuments.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
-          <div v-else class="space-y-2">
-            <MetaListCard
-              v-for="doc in documents" 
-              :key="doc.name"
-              :title="doc.file_name || doc.name"
-              :description="formatFileSize(doc.file_size)"
-              :meta="formatDate(doc.creation)"
-            >
-              <template #trailing>
-                <div class="flex items-center gap-2">
-                  <span v-if="isPrivateDocument(doc)" class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-                    {{ t("private") }}
-                  </span>
-                  <ActionButton variant="secondary" size="xs" @click="openDocument(doc, 'File')">
-                    {{ t("openDocument") }}
-                  </ActionButton>
-                </div>
-              </template>
-            </MetaListCard>
-            <MetaListCard
-              v-for="doc in atDocuments" 
-              :key="doc.name"
-              :title="doc.display_name || doc.file_name || doc.name"
-              :subtitle="doc.document_sub_type || doc.document_kind || ''"
-              :description="formatFileSize(doc.file_size)"
-              :meta="formatDate(doc.document_date || doc.creation)"
-            >
-              <template #trailing>
-                <div class="flex flex-wrap items-center gap-2">
-                  <span v-if="isPrivateDocument(doc)" class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-                    {{ t("private") }}
-                  </span>
-                  <span v-if="isVerifiedDocument(doc)" class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
-                    {{ t("status_verified") }}
-                  </span>
-                  <ActionButton v-if="canArchiveDocument(doc)" variant="secondary" size="xs" @click="archiveDocument(doc)">
-                    {{ t("archiveDocument") }}
-                  </ActionButton>
-                  <ActionButton v-if="canRestoreDocument(doc)" variant="secondary" size="xs" @click="restoreDocument(doc)">
-                    {{ t("restoreDocument") }}
-                  </ActionButton>
-                  <ActionButton v-if="canPermanentDeleteDocument(doc)" variant="secondary" size="xs" @click="permanentDeleteDocument(doc)">
-                    {{ t("permanentDeleteDocument") }}
-                  </ActionButton>
-                  <ActionButton variant="secondary" size="xs" @click="openDocument(doc, 'AT Document')">
-                    {{ t("openDocument") }}
-                  </ActionButton>
-                </div>
-              </template>
-            </MetaListCard>
+            <p class="text-sm text-slate-500">{{ t('no_recent_activity') }}</p>
           </div>
         </SectionPanel>
       </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="fixed right-6 top-24 z-[100] w-full max-w-sm pointer-events-none">
+      <ToastNotification
+        :show="notification.show"
+        :message="notification.message"
+        :type="notification.type"
+        @close="notification.show = false"
+      />
     </div>
 
     <WorkbenchFileUploadModal
@@ -205,7 +210,11 @@ import { usePolicyDetailRuntime } from "../composables/usePolicyDetailRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
+import EditableCard from "../components/app-shell/EditableCard.vue";
+import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
+import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import ToastNotification from "../components/ui/ToastNotification.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
@@ -247,7 +256,13 @@ const {
   formatFileSize,
   heroCells,
   profileFields,
+  premiumFields,
   customerFields,
+  saving,
+  customerSaving,
+  notification,
+  updatePolicy,
+  updateCustomer,
 } = usePolicyDetailRuntime({ 
   name: computed(() => props.name),
   activeLocale 
