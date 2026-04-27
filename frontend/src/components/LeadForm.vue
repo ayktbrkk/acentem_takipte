@@ -1,24 +1,23 @@
 <template>
-  <QuickCreateDialogShell
+  <ATQuickEntryModal
+    v-model="show"
     :error="error"
-    :eyebrow="eyebrow"
-    :subtitle="subtitle"
-    :show-eyebrow="Boolean(eyebrow)"
-    :show-subtitle="Boolean(subtitle)"
+    :title="translateText('quick_lead', locale)"
+    :subtitle="translateText('quick_lead_subtitle', locale)"
     :loading="loading"
-    :save-disabled="loading || disabled"
+    :disabled="loading || disabled"
+    :locale="locale"
     :show-save-and-open="true"
-    :labels="labels"
     @cancel="emit('cancel')"
     @save="emit('save', false)"
-    @saveAndOpen="emit('save', true)"
+    @save-and-open="emit('save', true)"
   >
-    <div class="space-y-5 py-2">
+    <div class="space-y-6 py-2">
       <!-- Section: Customer -->
-      <section class="policy-form-section">
-        <header class="flex items-center gap-3 mb-5 px-1">
-          <span class="qc-accent-label shrink-0 text-brand-700">{{ translateText('customer_details', locale) }}</span>
-          <div class="h-px flex-1 bg-brand-100/50"></div>
+      <section class="at-card-premium">
+        <header class="flex items-center gap-3 mb-6">
+          <span class="at-label shrink-0 text-brand-600">{{ translateText('customer_details', locale) }}</span>
+          <div class="h-px flex-1 bg-slate-100"></div>
         </header>
         
         <QuickCustomerPicker
@@ -35,10 +34,10 @@
       </section>
 
       <!-- Section: Lead Details -->
-      <section class="policy-form-section">
-        <header class="flex items-center gap-3 mb-5 px-1">
-          <span class="qc-accent-label shrink-0 text-brand-700">{{ translateText('lead_technical_details', locale) }}</span>
-          <div class="h-px flex-1 bg-brand-100/50"></div>
+      <section class="at-card-premium">
+        <header class="flex items-center gap-3 mb-6">
+          <span class="at-label shrink-0 text-brand-600">{{ translateText('lead_technical_details', locale) }}</span>
+          <div class="h-px flex-1 bg-slate-100"></div>
         </header>
 
         <QuickCreateFormRenderer
@@ -53,7 +52,7 @@
       </section>
 
       <!-- Section: Notes -->
-      <section v-if="noteFields.length" class="policy-form-section">
+      <section v-if="noteFields.length" class="at-card-premium">
         <QuickCreateFormRenderer
           :fields="noteFields"
           :model="model"
@@ -65,12 +64,12 @@
         />
       </section>
     </div>
-  </QuickCreateDialogShell>
+  </ATQuickEntryModal>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import QuickCreateDialogShell from "./app-shell/QuickCreateDialogShell.vue";
+import { computed, ref } from "vue";
+import ATQuickEntryModal from "./app-shell/ATQuickEntryModal.vue";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import QuickCustomerPicker from "./app-shell/QuickCustomerPicker.vue";
 import { translateText } from "../utils/i18n";
@@ -91,6 +90,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["cancel", "save"]);
+
+const show = ref(true);
 
 const CUSTOMER_INTERNAL_FIELDS = [
   "customer",
@@ -115,9 +116,3 @@ const noteFields = computed(() =>
   filteredFields.value.filter(f => f.name === 'notes')
 );
 </script>
-
-<style scoped>
-.policy-form-section {
-  @apply relative;
-}
-</style>

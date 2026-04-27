@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+  <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
     <div 
       v-for="field in fields" 
       :key="field.name"
@@ -7,8 +7,8 @@
     >
       <slot v-if="field.type === 'custom'" :name="`field-${field.name}`" :field="field" />
 
-      <div v-else>
-        <label class="field-label block">
+      <div v-else class="at-input-group">
+        <label class="at-label block">
           {{ fieldLabel(field) }}
           <span v-if="isFieldRequired(field)" class="text-amber-500">*</span>
         </label>
@@ -17,7 +17,7 @@
           <VueSelect
             v-if="isRemoteSelect(field)"
             v-model="model[field.name]"
-            :class="controlClass(field, 'qc-remote-select qc-control')"
+            :class="controlClass(field, 'at-control-premium')"
             :is-disabled="isFieldDisabled(field)"
             :is-loading="Boolean(remoteLoadingMap[field.name])"
             :is-searchable="true"
@@ -28,34 +28,12 @@
             :options="resolveRemoteSelectOptions(field)"
             :classes="{ menuContainer: remoteMenuClass(field) }"
             @search="onRemoteSelectSearch(field, $event)"
-            @menu-opened="onRemoteMenuOpened(field)"
-            @menu-closed="onRemoteMenuClosed(field)"
-            @option-created="onRelatedCreateRequested(field, $event)"
-          >
-            <template #no-options>
-              <div class="qc-remote-no-options">
-                {{ remoteNoResultsText(field) }}
-              </div>
-            </template>
-
-            <template #taggable-no-options>
-              <button
-                v-if="showRelatedCreateAction(field)"
-                type="button"
-                class="qc-remote-create-action"
-                :disabled="isFieldDisabled(field)"
-                @mousedown.prevent
-                @click="onRelatedCreateButton(field)"
-              >
-                {{ relatedCreateActionText(field) }}
-              </button>
-            </template>
-          </VueSelect>
+          />
 
           <select
             v-else
             v-model="model[field.name]"
-            :class="controlClass(field, 'qc-control')"
+            :class="controlClass(field, 'at-control-premium')"
             :disabled="isFieldDisabled(field)"
           >
             <option value="">{{ text(field.placeholder) || text(defaultSelectPlaceholder) }}</option>
@@ -71,59 +49,39 @@
 
         <label
           v-else-if="field.type === 'checkbox'"
-          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 hover:bg-white transition-colors cursor-pointer"
+          class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13px] font-semibold text-slate-900 hover:bg-white transition-all cursor-pointer shadow-sm"
         >
           <input v-model="model[field.name]" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" type="checkbox" :disabled="isFieldDisabled(field)" />
-          <span class="font-medium">{{ text(field.checkboxLabel || field.label) }}</span>
+          <span>{{ text(field.checkboxLabel || field.label) }}</span>
         </label>
 
         <textarea
           v-else-if="field.type === 'textarea'"
           v-model="model[field.name]"
-          :class="controlClass(field, 'qc-textarea min-h-[90px]')"
+          :class="controlClass(field, 'at-control-premium min-h-[100px] py-3')"
           :rows="field.rows || 3"
           :placeholder="text(field.placeholder)"
           :disabled="isFieldDisabled(field)"
         />
 
-        <div v-else-if="field.type === 'autocomplete'">
-          <input
-            v-model="model[field.name]"
-            :class="controlClass(field, 'qc-control')"
-            type="text"
-            :list="autocompleteListId(field)"
-            :placeholder="text(field.placeholder)"
-            :disabled="isFieldDisabled(field)"
-            @keyup.enter="emit('submit')"
-          />
-          <datalist :id="autocompleteListId(field)">
-            <option
-              v-for="option in resolveOptions(field)"
-              :key="String(option.value ?? option.label)"
-              :value="autocompleteOptionValue(option, field)"
-            >
-              {{ text(option.label) || option.label || option.value }}
-            </option>
-          </datalist>
-        </div>
-
         <input
           v-else
           v-model="model[field.name]"
-          :class="controlClass(field, ['qc-control', field.type === 'number' ? 'form-input-number' : ''])"
+          :class="controlClass(field, [
+            'at-control-premium', 
+            isFinancialField(field) ? 'at-control-right' : ''
+          ])"
           :type="normalizeInputType(field.type)"
           :placeholder="text(field.placeholder)"
           :disabled="isFieldDisabled(field)"
-          :min="field.min"
-          :max="field.max"
-          :step="field.step"
+          @input="handleInput($event, field)"
           @keyup.enter="emit('submit')"
         />
 
-        <p v-if="fieldErrors?.[field.name]" class="form-error">
+        <p v-if="fieldErrors?.[field.name]" class="form-error font-medium text-xs">
           {{ fieldErrors[field.name] }}
         </p>
-        <p v-else-if="fieldHelp(field)" class="mt-1 text-xs text-slate-500">
+        <p v-else-if="fieldHelp(field)" class="mt-1 text-[10px] font-medium text-slate-400 italic">
           {{ fieldHelp(field) }}
         </p>
       </div>
@@ -134,6 +92,7 @@
 <script setup>
 import VueSelect from "vue3-select-component";
 import { useQuickCreateFormRenderer } from "../../composables/useQuickCreateFormRenderer";
+import { applyTCMask, applyPhoneMask } from "../../utils/atMasks";
 
 const props = defineProps({
   fields: { type: Array, default: () => [] },
@@ -157,27 +116,31 @@ const {
   fieldWrapClass,
   controlClass,
   normalizeInputType,
-  autocompleteListId,
-  autocompleteOptionValue,
-  resolveOptions,
   resolveSelectOptions,
   resolveRemoteSelectOptions,
   remoteMenuClass,
-  remoteNoResultsText,
   isRemoteSelect,
   canCreateRelated,
-  showRelatedCreateAction,
-  relatedCreateActionText,
-  onRelatedCreateRequested,
-  onRelatedCreateButton,
-  remoteLoadingMap,
   onRemoteSelectSearch,
-  onRemoteMenuOpened,
-  onRemoteMenuClosed,
-  onRemoteMenuRef,
-  setOptionRef,
-  getHighlightedParts,
+  remoteLoadingMap,
 } = useQuickCreateFormRenderer(props, emit);
+
+function isFinancialField(field) {
+  const names = ["gross_premium", "net_premium", "tax_amount", "commission_amount", "potential_amount", "amount"];
+  return names.includes(field.name) || field.type === "currency" || field.type === "number";
+}
+
+function handleInput(event, field) {
+  const value = event.target.value;
+  
+  if (field.name === "customer_tax_id" || field.name === "tax_id") {
+    props.model[field.name] = applyTCMask(value);
+  } else if (field.name === "customer_phone" || field.name === "phone") {
+    props.model[field.name] = applyPhoneMask(value);
+  } else {
+    props.model[field.name] = value;
+  }
+}
 </script>
 
 <style scoped>

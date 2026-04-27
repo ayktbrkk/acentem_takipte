@@ -1,24 +1,23 @@
 <template>
-  <QuickCreateDialogShell
+  <ATQuickEntryModal
+    v-model="show"
     :error="error"
-    :eyebrow="eyebrow"
-    :subtitle="subtitle"
-    :show-eyebrow="Boolean(eyebrow)"
-    :show-subtitle="Boolean(subtitle)"
+    :title="translateText('quick_customer', locale)"
+    :subtitle="translateText('quick_customer_subtitle', locale)"
     :loading="loading"
-    :save-disabled="loading || disabled"
+    :disabled="loading || disabled"
+    :locale="locale"
     :show-save-and-open="true"
-    :labels="labels"
     @cancel="emit('cancel')"
     @save="emit('save', false)"
-    @saveAndOpen="emit('save', true)"
+    @save-and-open="emit('save', true)"
   >
-    <div class="space-y-5 py-2">
+    <div class="space-y-6 py-2">
       <!-- Section: Identity -->
-      <section class="policy-form-section">
-        <header class="flex items-center gap-3 mb-5 px-1">
-          <span class="qc-accent-label shrink-0 text-brand-700">{{ translateText('identity_information', locale) }}</span>
-          <div class="h-px flex-1 bg-brand-100/50"></div>
+      <section class="at-card-premium">
+        <header class="flex items-center gap-3 mb-6">
+          <span class="at-label shrink-0 text-brand-600">{{ translateText('identity_information', locale) }}</span>
+          <div class="h-px flex-1 bg-slate-100"></div>
         </header>
         
         <QuickCreateFormRenderer
@@ -33,10 +32,10 @@
       </section>
 
       <!-- Section: Contact -->
-      <section class="policy-form-section">
-        <header class="flex items-center gap-3 mb-5 px-1">
-          <span class="qc-accent-label shrink-0 text-brand-700">{{ translateText('contact_details', locale) }}</span>
-          <div class="h-px flex-1 bg-brand-100/50"></div>
+      <section class="at-card-premium">
+        <header class="flex items-center gap-3 mb-6">
+          <span class="at-label shrink-0 text-brand-600">{{ translateText('contact_details', locale) }}</span>
+          <div class="h-px flex-1 bg-slate-100"></div>
         </header>
 
         <QuickCreateFormRenderer
@@ -51,10 +50,10 @@
       </section>
 
       <!-- Section: Professional & Demographic -->
-      <section class="policy-form-section">
-        <header class="flex items-center gap-3 mb-5 px-1">
-          <span class="qc-accent-label shrink-0 text-brand-700">{{ translateText('demographic_details', locale) }}</span>
-          <div class="h-px flex-1 bg-brand-100/50"></div>
+      <section class="at-card-premium">
+        <header class="flex items-center gap-3 mb-6">
+          <span class="at-label shrink-0 text-brand-600">{{ translateText('demographic_details', locale) }}</span>
+          <div class="h-px flex-1 bg-slate-100"></div>
         </header>
 
         <QuickCreateFormRenderer
@@ -68,12 +67,12 @@
         />
       </section>
     </div>
-  </QuickCreateDialogShell>
+  </ATQuickEntryModal>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import QuickCreateDialogShell from "./app-shell/QuickCreateDialogShell.vue";
+import { computed, ref } from "vue";
+import ATQuickEntryModal from "./app-shell/ATQuickEntryModal.vue";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import { translateText } from "../utils/i18n";
 
@@ -93,6 +92,8 @@ const props = defineProps({
 
 const emit = defineEmits(["cancel", "save"]);
 
+const show = ref(true);
+
 const identityFields = computed(() => 
   props.fields.filter(f => ['full_name', 'tax_id', 'birth_date'].includes(f.name))
 );
@@ -105,9 +106,3 @@ const otherFields = computed(() =>
   props.fields.filter(f => ['gender', 'marital_status', 'consent_status', 'assigned_agent', 'occupation'].includes(f.name))
 );
 </script>
-
-<style scoped>
-.policy-form-section {
-  @apply relative;
-}
-</style>
