@@ -1,5 +1,5 @@
 <template>
-  <article class="surface-card rounded-xl border-[0.5px] border-slate-200 p-5 shadow-sm">
+  <article class="surface-card p-5">
     <div class="flex items-center justify-between gap-3">
       <div>
         <h3 class="text-base font-semibold text-slate-900">{{ t("title") }}</h3>

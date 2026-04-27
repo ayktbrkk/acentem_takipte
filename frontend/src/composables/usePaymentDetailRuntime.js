@@ -111,10 +111,24 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => [
-    { label: t("payment_no"), value: payment.value.payment_no },
-    { label: t("payment_date"), value: formatDate(payment.value.payment_date) },
-    { label: t("payment_direction"), value: payment.value.payment_direction },
-    { label: t("payment_purpose"), value: payment.value.payment_purpose },
+    { key: "payment_no", label: t("payment_no"), value: payment.value.payment_no, type: "text", disabled: true },
+    { key: "payment_date", label: t("payment_date"), value: payment.value.payment_date, displayValue: formatDate(payment.value.payment_date), type: "date" },
+    { key: "payment_direction", label: t("payment_direction"), value: payment.value.payment_direction, type: "select", options: [
+      { label: t("inbound"), value: "Inbound" },
+      { label: t("outbound"), value: "Outbound" }
+    ]},
+    { key: "payment_purpose", label: t("payment_purpose"), value: payment.value.payment_purpose, type: "text" },
+  ]);
+
+  const financialFields = computed(() => [
+    { key: "amount", label: t("amount"), value: payment.value.amount, displayValue: formatCurrency(payment.value.amount, payment.value.currency), type: "text" },
+    { key: "status", label: t("status"), value: payment.value.status, displayValue: t('status_' + String(payment.value.status || 'Unpaid').toLowerCase()), type: "select", options: [
+      { label: t("status_paid"), value: "Paid" },
+      { label: t("status_unpaid"), value: "Unpaid" },
+      { label: t("status_cancelled"), value: "Cancelled" }
+    ]},
+    { key: "policy", label: t("policy"), value: payment.value.policy, type: "text" },
+    { key: "claim", label: t("claim_detail"), value: payment.value.claim, type: "text" },
   ]);
 
   // Watch for name change
@@ -143,5 +157,6 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
     formatCurrency,
     heroCells,
     profileFields,
+    financialFields,
   };
 }

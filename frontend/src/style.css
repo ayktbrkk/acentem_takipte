@@ -62,7 +62,7 @@
   }
 
   .surface-card {
-    @apply border border-slate-200/70 bg-white/90 backdrop-blur-sm shadow-sm;
+    @apply border border-slate-100 bg-white shadow-sm;
   }
 
   .dashboard-hero {
@@ -350,7 +350,7 @@
 
   /* --- Standardized Badges --- */
   .badge {
-    @apply inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.05em] ring-1 ring-inset;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.05em] ring-1 ring-inset;
   }
 
   .badge-brand {
@@ -378,7 +378,7 @@
   }
 
   .field-label {
-    @apply text-[10.5px] font-bold uppercase tracking-[0.05em] text-slate-400;
+    @apply text-[11px] font-normal uppercase tracking-wider text-slate-400;
   }
 
   .at-btn-sm {
@@ -457,11 +457,11 @@
   }
 
   .at-metric-card {
-    @apply rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-brand-200;
+    @apply rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-brand-200;
   }
 
   .at-metric-label {
-    @apply text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2;
+    @apply text-[11px] font-normal uppercase tracking-wider text-slate-400 mb-2;
   }
 
   .at-metric-value {

@@ -58,17 +58,20 @@ export default {
           800: "#0E3C7A",
           900: "#082754"
         },
+        "at-green": "#10B981",
+        "at-amber": "#F59E0B",
+        "at-red": "#EF4444",
         status: {
-          "active-bg": "#E4F5EB",
-          "active-text": "#145E2F",
-          "draft-bg": "#F1EFE8",
-          "draft-text": "#5F5E5A",
-          "waiting-bg": "#FEF3DC",
-          "waiting-text": "#7A4A00",
-          "open-bg": "#EBF3FF",
-          "open-text": "#1B5DB8",
-          "cancel-bg": "#FEE9E8",
-          "cancel-text": "#8B1C1C"
+          "active-bg": "#ECFDF5",
+          "active-text": "#065F46",
+          "draft-bg": "#F8FAFC",
+          "draft-text": "#475569",
+          "waiting-bg": "#FFFBEB",
+          "waiting-text": "#92400E",
+          "open-bg": "#EFF6FF",
+          "open-text": "#1E40AF",
+          "cancel-bg": "#FEF2F2",
+          "cancel-text": "#991B1B"
         }
       },
       fontSize: {

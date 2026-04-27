@@ -21,7 +21,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : cell.variant === 'cancel-pill' ? 'text-rose-600' : 'text-slate-900'"
+          :value-class="cell.variant === 'success-pill' ? 'text-at-green' : cell.variant === 'cancel-pill' ? 'text-at-red' : 'text-slate-900'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -32,36 +32,21 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-6">
-        <SectionPanel :title="t('payment_info')">
-          <SkeletonLoader v-if="loading" variant="text" :rows="8" />
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div v-for="field in profileFields" :key="field.label">
-              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ field.label }}</p>
-              <p class="mt-1 text-sm font-semibold text-slate-900">{{ field.value || "-" }}</p>
-            </div>
-          </div>
-        </SectionPanel>
+        <EditableCard
+          :title="t('payment_info')"
+          :fields="profileFields"
+          layout="list"
+          :t="t"
+          :saving="loading"
+        />
 
-        <SectionPanel :title="t('financial_summary')">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t("amount") }}</p>
-              <p class="mt-1 text-sm font-semibold text-slate-900">{{ formatCurrency(payment.amount, payment.currency) }}</p>
-            </div>
-            <div>
-              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t("status") }}</p>
-              <p class="mt-1 text-sm font-semibold text-slate-900">{{ t('status_' + String(payment.status || 'Unpaid').toLowerCase()) }}</p>
-            </div>
-            <div>
-              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t("policy") }}</p>
-              <p class="mt-1 text-sm font-semibold text-slate-900">{{ payment.policy || "-" }}</p>
-            </div>
-            <div>
-              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t("claim_detail") }}</p>
-              <p class="mt-1 text-sm font-semibold text-slate-900">{{ payment.claim || "-" }}</p>
-            </div>
-          </div>
-        </SectionPanel>
+        <EditableCard
+          :title="t('financial_summary')"
+          :fields="financialFields"
+          layout="list"
+          :t="t"
+          :saving="loading"
+        />
 
         <SectionPanel v-if="installments.length" :title="t('payment_plan')">
           <ListTable
@@ -173,6 +158,7 @@ import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import EditableCard from "../components/app-shell/EditableCard.vue";
 import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 
@@ -204,6 +190,7 @@ const {
   formatCurrency,
   heroCells,
   profileFields,
+  financialFields,
 } = usePaymentDetailRuntime({ 
   name: computed(() => props.name),
   activeLocale 

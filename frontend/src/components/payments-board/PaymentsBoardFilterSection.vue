@@ -6,7 +6,7 @@
       @open-advanced="showAdvanced = !showAdvanced"
     >
       <template #primary-filters>
-        <select v-model="filters.direction" class="input h-9 py-1 text-sm min-w-[140px]" @change="$emit('apply')">
+        <select v-model="filters.direction" class="form-input h-9 py-1 text-sm min-w-[140px]" @change="$emit('apply')">
           <option value="">{{ t("allDirections") }}</option>
           <option value="Inbound">{{ t("inbound") }}</option>
           <option value="Outbound">{{ t("outbound") }}</option>
@@ -42,7 +42,7 @@
       <template #advanced>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3 pt-2">
           <label class="flex flex-col gap-1">
-            <span class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t('customerFilter') }}</span>
+            <span class="field-label">{{ t('customerFilter') }}</span>
             <input
               v-model.trim="filters.customerQuery"
               class="input"
@@ -52,7 +52,7 @@
             />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t('policyFilter') }}</span>
+            <span class="field-label">{{ t('policyFilter') }}</span>
             <input
               v-model.trim="filters.policyQuery"
               class="input"
@@ -62,7 +62,7 @@
             />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t('purposeFilter') }}</span>
+            <span class="field-label">{{ t('purposeFilter') }}</span>
             <input
               v-model.trim="filters.purposeQuery"
               class="input"

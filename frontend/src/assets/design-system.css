@@ -184,12 +184,7 @@
   }
 
   .status-badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
-  }
-
-  .status-badge::before {
-    content: "";
-    @apply h-1.5 w-1.5 rounded-full bg-current;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
   }
 
   .status-active {
