@@ -20,30 +20,21 @@
       </div>
 
       <form class="qc-managed-dialog__body" @submit.prevent="submit(false)">
-        <QuickCreateDialogShell
+        <CustomerForm
+          :model="form"
+          :field-errors="fieldErrors"
+          :options-map="optionsMap"
+          :disabled="loading"
+          :loading="loading"
           :error="errorText"
-          :show-eyebrow="false"
-          :show-subtitle="false"
           :eyebrow="resolvedEyebrow"
           :subtitle="resolvedSubtitle"
-          :loading="loading"
-          :save-disabled="saveDisabledComputed"
-          :show-save-and-open="true"
+          :locale="locale"
           :labels="resolvedLabels"
+          :fields="fields"
           @cancel="close"
-          @save="submit(false)"
-          @save-and-open="submit(true)"
-        >
-          <QuickCreateFormRenderer
-            :fields="fields"
-            :model="form"
-            :field-errors="fieldErrors"
-            :disabled="loading"
-            :locale="locale"
-            :options-map="optionsMap"
-            @submit="submit(false)"
-          />
-        </QuickCreateDialogShell>
+          @save="submit($event)"
+        />
       </form>
     </div>
   </div>
@@ -54,7 +45,7 @@ import { computed, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
-import QuickCreateDialogShell from "./app-shell/QuickCreateDialogShell.vue";
+import CustomerForm from "./CustomerForm.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { translateText } from "../utils/i18n";

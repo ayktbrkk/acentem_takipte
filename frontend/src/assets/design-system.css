@@ -516,3 +516,36 @@
   .dialog-footer {
     @apply flex items-center justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-3;
   }
+
+  /* Quick Create Shell Premium Styles */
+  .at-quick-create-shell {
+    @apply relative flex flex-col;
+  }
+
+  .at-quick-create-shell__accent {
+    @apply absolute inset-x-0 -top-8 h-32 bg-gradient-to-b from-brand-50/50 to-transparent pointer-events-none;
+  }
+
+  .at-quick-create-shell__body {
+    @apply flex-1 p-6 space-y-6;
+  }
+
+  .at-quick-create-shell__footer {
+    @apply flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4 rounded-b-xl;
+  }
+
+  .qc-accent-label {
+    @apply text-[11px] font-bold uppercase tracking-wider text-slate-400;
+  }
+
+  .qc-error-banner {
+    @apply rounded-xl bg-red-50 border border-red-100 p-4 mt-4;
+  }
+
+  .qc-error-banner__text {
+    @apply text-sm font-medium text-red-700;
+  }
+
+  .policy-form-section {
+    @apply relative p-5 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm ring-1 ring-slate-200/50 transition-all duration-200 hover:shadow-md hover:ring-slate-300/50;
+  }

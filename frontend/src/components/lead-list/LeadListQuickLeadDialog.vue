@@ -1,35 +1,22 @@
 <template>
   <Dialog v-model="showDialogProxy" :options="{ title: quickLeadUi.title, size: 'xl' }">
     <template #body-content>
-      <QuickCreateDialogShell
+      <LeadForm
+        :model="quickLeadForm"
+        :field-errors="quickLeadFieldErrors"
+        :options-map="leadQuickOptionsMap"
+        :disabled="quickLeadLoading"
+        :loading="quickLeadLoading"
         :error="quickLeadError"
         :eyebrow="quickLeadUi.eyebrow"
         :subtitle="quickLeadUi.subtitle"
+        :locale="activeLocale"
+        :office-branch="officeBranch"
         :labels="quickCreateCommon"
-        :loading="quickLeadLoading"
+        :fields="leadQuickFormFields"
         @cancel="$emit('cancel')"
-        @save="$emit('save', false)"
-        @save-and-open="$emit('save', true)"
-      >
-        <QuickCustomerPicker
-          :model="quickLeadForm"
-          :field-errors="quickLeadFieldErrors"
-          :disabled="quickLeadLoading"
-          :locale="activeLocale"
-          :office-branch="officeBranch"
-          :customer-label="{ tr: 'Müşteri / Ad Soyad', en: 'Customer / Full Name' }"
-        />
-        <QuickCreateFormRenderer
-          :fields="leadQuickFormFields"
-          :model="quickLeadForm"
-          :field-errors="quickLeadFieldErrors"
-          :disabled="quickLeadLoading"
-          :locale="activeLocale"
-          :options-map="leadQuickOptionsMap"
-          @submit="$emit('save', false)"
-          @request-related-create="$emit('request-related-create', $event)"
-        />
-      </QuickCreateDialogShell>
+        @save="$emit('save', $event)"
+      />
     </template>
   </Dialog>
 </template>
@@ -38,9 +25,7 @@
 import { computed } from "vue";
 import { Dialog } from "frappe-ui";
 
-import QuickCustomerPicker from "../app-shell/QuickCustomerPicker.vue";
-import QuickCreateDialogShell from "../app-shell/QuickCreateDialogShell.vue";
-import QuickCreateFormRenderer from "../app-shell/QuickCreateFormRenderer.vue";
+import LeadForm from "../LeadForm.vue";
 
 const props = defineProps({
   showQuickLeadDialog: {
