@@ -4,7 +4,7 @@
       <div :class="fieldWrapClass(field)">
         <slot v-if="field.type === 'custom'" :name="`field-${field.name}`" :field="field" />
 
-        <template v-else>
+        <div v-else>
           <label class="field-label block">
             {{ fieldLabel(field) }}
             <span v-if="isFieldRequired(field)" class="text-amber-500">*</span>
@@ -83,7 +83,7 @@
             :disabled="isFieldDisabled(field)"
           />
 
-          <template v-else-if="field.type === 'autocomplete'">
+          <div v-else-if="field.type === 'autocomplete'">
             <input
               v-model="model[field.name]"
               :class="controlClass(field, 'qc-control')"
@@ -102,20 +102,20 @@
                 {{ text(option.label) || option.label || option.value }}
               </option>
             </datalist>
-          </template>
+          </div>
 
-            <input
-              v-else
-              v-model="model[field.name]"
-              :class="controlClass(field, ['qc-control', field.type === 'number' ? 'form-input-number' : ''])"
-              :type="normalizeInputType(field.type)"
-              :placeholder="text(field.placeholder)"
-              :disabled="isFieldDisabled(field)"
-              :min="field.min"
-              :max="field.max"
-              :step="field.step"
-              @keyup.enter="emit('submit')"
-            />
+          <input
+            v-else
+            v-model="model[field.name]"
+            :class="controlClass(field, ['qc-control', field.type === 'number' ? 'form-input-number' : ''])"
+            :type="normalizeInputType(field.type)"
+            :placeholder="text(field.placeholder)"
+            :disabled="isFieldDisabled(field)"
+            :min="field.min"
+            :max="field.max"
+            :step="field.step"
+            @keyup.enter="emit('submit')"
+          />
 
           <p v-if="fieldErrors?.[field.name]" class="form-error">
             {{ fieldErrors[field.name] }}
@@ -123,7 +123,7 @@
           <p v-else-if="fieldHelp(field)" class="mt-1 text-xs text-slate-500">
             {{ fieldHelp(field) }}
           </p>
-        </template>
+        </div>
       </div>
     </template>
   </div>
