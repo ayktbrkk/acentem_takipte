@@ -21,8 +21,10 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   const payment = computed(() => data.value.payment || {});
   const installments = computed(() => data.value.installments || []);
   const documents = computed(() => data.value.documents || data.value.files || []);
+  const customer = computed(() => data.value.customer || {});
   const showUploadModal = ref(false);
   const saving = ref(false);
+  const customerSaving = ref(false);
   const notification = reactive({ show: false, message: "", type: "success" });
 
   const updateResource = createResource({
@@ -169,6 +171,26 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
     }
   }
 
+  async function updateCustomer(values, onSuccess) {
+    if (!customer.value.name) return;
+    customerSaving.value = true;
+    try {
+      await updateResource.submit({
+        doctype: "AT Customer",
+        name: customer.value.name,
+        fieldname: values,
+      });
+      showNotification(t("save_success"));
+      if (onSuccess) onSuccess();
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      customerSaving.value = false;
+    }
+  }
+
   // Watch for name change
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
@@ -197,7 +219,10 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
     profileFields,
     financialFields,
     saving,
+    customerSaving,
     notification,
     savePayment,
+    updateCustomer,
+    customer,
   };
 }
