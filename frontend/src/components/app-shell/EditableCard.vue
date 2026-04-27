@@ -24,11 +24,11 @@
             </label>
 
             <!-- Text / Phone / TCKN Input -->
-            <div v-if="['text', 'phone', 'tckn', 'email'].includes(field.type || 'text')" class="relative">
+            <div v-if="['text', 'phone', 'tckn', 'email', 'number', 'tel'].includes(field.type || 'text')" class="relative">
               <input
                 :id="field.key"
                 v-model="editData[field.key]"
-                :type="field.type === 'email' ? 'email' : 'text'"
+                :type="field.type === 'email' ? 'email' : (field.type || 'text')"
                 class="at-input w-full"
                 :class="{ 'border-rose-500 focus:ring-rose-500/20': errors[field.key], 'bg-slate-50 cursor-not-allowed': field.disabled }"
                 :placeholder="field.placeholder || field.label"

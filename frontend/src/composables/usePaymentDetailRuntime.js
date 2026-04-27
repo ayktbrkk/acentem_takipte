@@ -137,7 +137,7 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const financialFields = computed(() => [
-    { key: "amount", label: t("amount"), value: payment.value.amount, displayValue: formatCurrency(payment.value.amount, payment.value.currency), type: "text" },
+    { key: "amount", label: t("amount"), value: payment.value.amount, displayValue: formatCurrency(payment.value.amount, payment.value.currency), type: "number" },
     { key: "status", label: t("status"), value: payment.value.status, displayValue: t('status_' + String(payment.value.status || 'Unpaid').toLowerCase()), type: "select", options: [
       { label: t("status_paid"), value: "Paid" },
       { label: t("status_unpaid"), value: "Unpaid" },
