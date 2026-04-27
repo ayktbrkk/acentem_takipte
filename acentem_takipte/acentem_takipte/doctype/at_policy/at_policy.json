@@ -28,6 +28,18 @@
   "commission",
   "commission_rate",
   "gwp_try",
+  "plate",
+  "document_serial_no",
+  "brand_code",
+  "model_year",
+  "vehicle_make_model",
+  "motor_no",
+  "chassis_no",
+  "uavt_code",
+  "floor_count",
+  "structure_type",
+  "coverage_type",
+  "network_type",
   "notes"
  ],
  "fields": [
@@ -189,6 +201,66 @@
    "fieldtype": "Currency",
    "label": "GWP TRY",
    "read_only": 1
+  },
+  {
+   "fieldname": "plate",
+   "fieldtype": "Data",
+   "label": "Plate"
+  },
+  {
+   "fieldname": "document_serial_no",
+   "fieldtype": "Data",
+   "label": "Document Serial Number"
+  },
+  {
+   "fieldname": "brand_code",
+   "fieldtype": "Data",
+   "label": "Brand Code"
+  },
+  {
+   "fieldname": "model_year",
+   "fieldtype": "Data",
+   "label": "Model Year"
+  },
+  {
+   "fieldname": "vehicle_make_model",
+   "fieldtype": "Data",
+   "label": "Vehicle Make/Model"
+  },
+  {
+   "fieldname": "motor_no",
+   "fieldtype": "Data",
+   "label": "Motor Number"
+  },
+  {
+   "fieldname": "chassis_no",
+   "fieldtype": "Data",
+   "label": "Chassis Number"
+  },
+  {
+   "fieldname": "uavt_code",
+   "fieldtype": "Data",
+   "label": "UAVT Code"
+  },
+  {
+   "fieldname": "floor_count",
+   "fieldtype": "Data",
+   "label": "Floor Count"
+  },
+  {
+   "fieldname": "structure_type",
+   "fieldtype": "Data",
+   "label": "Structure Type"
+  },
+  {
+   "fieldname": "coverage_type",
+   "fieldtype": "Data",
+   "label": "Coverage Type"
+  },
+  {
+   "fieldname": "network_type",
+   "fieldtype": "Data",
+   "label": "Network Type"
   },
   {
    "fieldname": "notes",

@@ -208,7 +208,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => {
-    const fields = [
+    return [
       { key: "name", label: t("record_no") || "Kayıt No", value: policy.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
       { key: "policy_no", label: t("carrier_policy_no"), value: policy.value.policy_no, type: "text", required: true, copyable: true, unspecifiedLabel: t("unspecified") },
       { 
@@ -264,12 +264,14 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
         unspecifiedLabel: t("unspecified") 
       },
     ];
+  });
 
+  const riskFields = computed(() => {
     const branch = String(policy.value.branch || "").toLowerCase();
-    const riskFields = [];
+    const fields = [];
 
     if (branch.includes("kasko") || branch.includes("trafik")) {
-      riskFields.push(
+      fields.push(
         { key: "plate", label: t("plate"), value: policy.value.plate, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "document_serial_no", label: t("document_serial_no") || "Belge Seri-No", value: policy.value.document_serial_no, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "brand_code", label: t("brand_code") || "Marka Kodu", value: policy.value.brand_code, type: "text", unspecifiedLabel: t("unspecified") },
@@ -279,32 +281,27 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
         { key: "chassis_no", label: t("chassis_no"), value: policy.value.chassis_no, type: "text", unspecifiedLabel: t("unspecified") }
       );
     } else if (branch.includes("konut") || branch.includes("dask")) {
-      riskFields.push(
+      fields.push(
         { key: "uavt_code", label: t("uavt_code"), value: policy.value.uavt_code, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "floor_count", label: t("floor_count"), value: policy.value.floor_count, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "structure_type", label: t("structure_type"), value: policy.value.structure_type, type: "text", unspecifiedLabel: t("unspecified") }
       );
     } else if (branch.includes("sağlık") || branch.includes("saglik") || branch.includes("health")) {
-      riskFields.push(
+      fields.push(
         { key: "coverage_type", label: t("coverage_type"), value: policy.value.coverage_type, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "network_type", label: t("network_type"), value: policy.value.network_type, type: "text", unspecifiedLabel: t("unspecified") }
       );
-    }
-
-    if (riskFields.length > 0) {
-      fields.push({ type: "divider", label: t("risk_info") });
-      fields.push(...riskFields);
     }
 
     return fields;
   });
 
   const premiumFields = computed(() => [
-    { key: "net_premium", label: t("net_premium"), value: policy.value.net_premium, displayValue: formatCurrency(policy.value.net_premium, policy.value.currency), type: "text" },
-    { key: "tax_amount", label: t("tax_amount"), value: policy.value.tax_amount, displayValue: formatCurrency(policy.value.tax_amount, policy.value.currency), type: "text" },
-    { key: "commission_amount", label: t("commission_amount"), value: policy.value.commission_amount, displayValue: formatCurrency(policy.value.commission_amount, policy.value.currency), type: "text" },
-    { key: "gross_premium", label: t("gross_premium"), value: policy.value.gross_premium, displayValue: formatCurrency(policy.value.gross_premium, policy.value.currency), type: "text", required: true },
-    { key: "commission_rate", label: t("commission_rate"), value: policy.value.commission_rate, displayValue: formatPercent(policy.value.commission_rate), type: "text" },
+    { key: "net_premium", label: t("net_premium"), value: policy.value.net_premium, displayValue: formatCurrency(policy.value.net_premium, policy.value.currency), type: "number", step: "0.01" },
+    { key: "tax_amount", label: t("tax_amount"), value: policy.value.tax_amount, displayValue: formatCurrency(policy.value.tax_amount, policy.value.currency), type: "number", step: "0.01" },
+    { key: "commission_amount", label: t("commission_amount"), value: policy.value.commission_amount, displayValue: formatCurrency(policy.value.commission_amount, policy.value.currency), type: "number", step: "0.01" },
+    { key: "gross_premium", label: t("gross_premium"), value: policy.value.gross_premium, displayValue: formatCurrency(policy.value.gross_premium, policy.value.currency), type: "number", step: "0.01", required: true },
+    { key: "commission_rate", label: t("commission_rate"), value: policy.value.commission_rate, displayValue: formatPercent(policy.value.commission_rate), type: "number", step: "0.01", disabled: true },
   ]);
 
   const customerFields = computed(() => [
@@ -387,6 +384,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     formatFileSize,
     heroCells,
     profileFields,
+    riskFields,
     premiumFields,
     customerFields,
     saving,

@@ -63,6 +63,17 @@
             layout="list"
             @save="updatePolicy"
           />
+
+          <EditableCard
+            v-if="riskFields.length"
+            :title="t('risk_info')"
+            :fields="riskFields"
+            :t="t"
+            :saving="saving"
+            layout="list"
+            class="md:col-span-2"
+            @save="updatePolicy"
+          />
         </div>
 
         <SectionPanel v-if="endorsements.length" :title="t('endorsements')">
@@ -272,6 +283,7 @@ const {
   formatFileSize,
   heroCells,
   profileFields,
+  riskFields,
   premiumFields,
   customerFields,
   saving,

@@ -36,6 +36,18 @@ POLICY_SNAPSHOT_FIELDS = [
     "commission",
     "commission_rate",
     "gwp_try",
+    "plate",
+    "document_serial_no",
+    "brand_code",
+    "model_year",
+    "vehicle_make_model",
+    "motor_no",
+    "chassis_no",
+    "uavt_code",
+    "floor_count",
+    "structure_type",
+    "coverage_type",
+    "network_type",
 ]
 
 

@@ -29,6 +29,7 @@
                 :id="field.key"
                 v-model="editData[field.key]"
                 :type="field.type === 'email' ? 'email' : (field.type || 'text')"
+                :step="field.step"
                 class="at-input w-full"
                 :class="{ 'border-rose-500 focus:ring-rose-500/20': errors[field.key], 'bg-slate-50 cursor-not-allowed': field.disabled }"
                 :placeholder="field.placeholder || field.label"
