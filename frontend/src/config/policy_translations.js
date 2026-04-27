@@ -28,6 +28,8 @@ export const POLICY_TRANSLATIONS = {
     start_date: "Başlangıç Tarihi",
     end_date: "Bitiş Tarihi",
     status: "Durum",
+    quick_policy_entry: "Hızlı Poliçe Girişi",
+    "create_a_policy_with_an_auto-generated_record_number_and_an_optional_carrier_policy_number": "Otomatik kayıt numarası ve isteğe bağlı şirket poliçe numarasıyla poliçe oluşturun",
 
     breadcrumb: "Sigorta Operasyonları → Poliçeler",
     title: "Poliçe Yönetimi",

@@ -12,7 +12,7 @@
         </label>
 
         <input
-          class="form-input qc-control"
+          class="qc-control"
           :value="queryText"
           :placeholder="text(searchPlaceholder)"
           type="text"
@@ -83,7 +83,7 @@
             {{ text(customerTypeLabel) }}
             <span class="text-amber-500">*</span>
           </label>
-          <select v-model="model[customerTypeFieldName]" class="form-input h-10 bg-white" :disabled="disabled">
+          <select v-model="model[customerTypeFieldName]" class="qc-control bg-white" :disabled="disabled">
             <option value="Individual">{{ text(individualLabel) }}</option>
             <option value="Corporate">{{ text(corporateLabel) }}</option>
           </select>
@@ -99,7 +99,7 @@
           </label>
           <input
             v-model="model[identityFieldName]"
-            class="form-input h-10"
+            class="qc-control"
             type="text"
             inputmode="numeric"
             :disabled="disabled"
@@ -118,7 +118,7 @@
           </label>
           <input
             v-model="model[birthDateFieldName]"
-            class="form-input h-10"
+            class="qc-control"
             type="date"
             :disabled="disabled || isBirthDateLocked"
             :readonly="isBirthDateLocked"
@@ -132,7 +132,7 @@
           <label class="field-label block">
             {{ text(phoneLabel) }}
           </label>
-          <input v-model="model[phoneFieldName]" class="form-input h-10" type="text" :disabled="disabled" />
+          <input v-model="model[phoneFieldName]" class="qc-control" type="text" :disabled="disabled" />
           <p v-if="fieldErrors?.[phoneFieldName]" class="form-error">
             {{ fieldErrors[phoneFieldName] }}
           </p>
@@ -142,7 +142,7 @@
           <label class="field-label block">
             {{ text(emailLabel) }}
           </label>
-          <input v-model="model[emailFieldName]" class="form-input h-10" type="email" :disabled="disabled" />
+          <input v-model="model[emailFieldName]" class="qc-control" type="email" :disabled="disabled" />
           <p v-if="fieldErrors?.[emailFieldName]" class="form-error">
             {{ fieldErrors[emailFieldName] }}
           </p>

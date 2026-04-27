@@ -52,7 +52,7 @@
             <select
               v-else
               v-model="model[field.name]"
-              :class="controlClass(field, 'input qc-control form-input')"
+              :class="controlClass(field, 'qc-control')"
               :disabled="isFieldDisabled(field)"
             >
               <option value="">{{ text(field.placeholder) || text(defaultSelectPlaceholder) }}</option>
@@ -68,16 +68,16 @@
 
           <label
             v-else-if="field.type === 'checkbox'"
-            class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+            class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 hover:bg-white transition-colors cursor-pointer"
           >
-            <input v-model="model[field.name]" class="h-4 w-4" type="checkbox" :disabled="isFieldDisabled(field)" />
-            <span>{{ text(field.checkboxLabel || field.label) }}</span>
+            <input v-model="model[field.name]" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" type="checkbox" :disabled="isFieldDisabled(field)" />
+            <span class="font-medium">{{ text(field.checkboxLabel || field.label) }}</span>
           </label>
 
           <textarea
             v-else-if="field.type === 'textarea'"
             v-model="model[field.name]"
-            :class="controlClass(field, 'input qc-textarea min-h-[90px] form-input')"
+            :class="controlClass(field, 'qc-textarea min-h-[90px]')"
             :rows="field.rows || 3"
             :placeholder="text(field.placeholder)"
             :disabled="isFieldDisabled(field)"
@@ -86,7 +86,7 @@
           <template v-else-if="field.type === 'autocomplete'">
             <input
               v-model="model[field.name]"
-              :class="controlClass(field, 'input qc-control form-input')"
+              :class="controlClass(field, 'qc-control')"
               type="text"
               :list="autocompleteListId(field)"
               :placeholder="text(field.placeholder)"
@@ -107,7 +107,7 @@
             <input
               v-else
               v-model="model[field.name]"
-              :class="controlClass(field, ['input qc-control form-input', field.type === 'number' ? 'form-input-number' : ''])"
+              :class="controlClass(field, ['qc-control', field.type === 'number' ? 'form-input-number' : ''])"
               :type="normalizeInputType(field.type)"
               :placeholder="text(field.placeholder)"
               :disabled="isFieldDisabled(field)"

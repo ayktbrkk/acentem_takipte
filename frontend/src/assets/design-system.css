@@ -128,7 +128,7 @@
   }
 
   .field-label {
-    @apply mb-1 text-[11px] font-normal uppercase tracking-wider text-slate-400;
+    @apply mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400;
   }
 
   .field-value {
@@ -161,6 +161,14 @@
 
   .qc-accent-label {
     @apply text-xs font-semibold uppercase tracking-[0.22em] text-brand-700;
+  }
+
+  .qc-control {
+    @apply w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10;
+  }
+
+  .qc-textarea {
+    @apply w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10;
   }
 
   .qc-selection-banner {
