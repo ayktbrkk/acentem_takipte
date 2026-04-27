@@ -259,6 +259,7 @@ export function usePolicyQuickCreateRuntime({
     clearQuickPolicyFieldErrors();
     quickPolicyError.value = "";
     let valid = true;
+    const validLabels = [];
     const hasSourceOffer = hasQuickPolicySourceOffer.value;
     const statusValue = String(quickPolicyForm.status || "").trim();
     if (!hasSourceOffer && statusValue && !policyQuickAllowedStatuses.has(statusValue)) {
@@ -273,7 +274,10 @@ export function usePolicyQuickCreateRuntime({
     for (const field of policyQuickFormFields.value) {
       if (!isFieldRequired(field, quickPolicyForm, activeLocale.value)) continue;
       if (String(quickPolicyForm[field.name] ?? "").trim() === "") {
-        quickPolicyFieldErrors[field.name] = getLocalizedText(field.label, activeLocale.value);
+        quickPolicyFieldErrors[field.name] = translateText("field_required", activeLocale.value);
+        // We'll use the label for the top error banner summary
+        const label = getLocalizedText(field.label, activeLocale.value);
+        if (!validLabels.includes(label)) validLabels.push(label);
         valid = false;
       }
     }
@@ -287,13 +291,15 @@ export function usePolicyQuickCreateRuntime({
         valid = false;
       } else if (!customerName) {
         quickPolicyFieldErrors.customer = quickPolicyValidation.value.newCustomerNameRequired;
+        validLabels.push(translateText("new_customer_name", activeLocale.value));
         valid = false;
       }
       if (shouldCreateCustomer && !identityNumber) {
-        quickPolicyFieldErrors.customer_tax_id = getLocalizedText(
-          policyQuickFields.value.find((field) => field.name === "customer_tax_id")?.label,
-          activeLocale.value
-        );
+        const label = quickPolicyForm.customer_type === "Corporate"
+          ? translateText("Tax Number", activeLocale.value)
+          : translateText("National ID Number", activeLocale.value);
+        quickPolicyFieldErrors.customer_tax_id = translateText("field_required", activeLocale.value);
+        validLabels.push(label);
         valid = false;
       } else if (shouldCreateCustomer && customerType === "Corporate") {
         if (identityNumber.length !== 10) {
@@ -319,7 +325,11 @@ export function usePolicyQuickCreateRuntime({
       }
     }
     if (!valid) {
-      quickPolicyError.value = quickCreateCommon.value.validation;
+      if (validLabels.length > 0 && validLabels.length <= 3) {
+        quickPolicyError.value = `${quickCreateCommon.value.validation} (${validLabels.join(", ")})`;
+      } else {
+        quickPolicyError.value = quickCreateCommon.value.validation;
+      }
       return false;
     }
     const issueDate = parseDateOnly(quickPolicyForm.issue_date);

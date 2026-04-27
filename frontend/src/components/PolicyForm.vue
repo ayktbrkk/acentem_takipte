@@ -27,6 +27,11 @@
           :office-branch="officeBranch"
           :locked="hasSourceOffer"
           :locale="locale"
+          identity-field-name="customer_tax_id"
+          birth-date-field-name="customer_birth_date"
+          phone-field-name="customer_phone"
+          email-field-name="customer_email"
+          customer-type-field-name="customer_type"
         />
       </section>
 
