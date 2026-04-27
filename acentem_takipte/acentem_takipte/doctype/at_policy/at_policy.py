@@ -358,7 +358,7 @@ def create_policy_snapshot(
         }
     )
     # ignore_permissions: Snapshot creation during policy update; internal operation.
-    doc.insert(ignore_permissions=True)
+    snapshot_doc.insert(ignore_permissions=True)
     return snapshot_doc
 
 
