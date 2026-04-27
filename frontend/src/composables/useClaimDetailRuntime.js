@@ -124,7 +124,11 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     { label: t("claim_type"), value: claim.value.claim_type },
     { label: t("total_amount"), value: formatCurrency(claim.value.estimated_amount, claim.value.currency), variant: "lg" },
     { label: t("claim_date"), value: formatDate(claim.value.incident_date) },
-    { label: t("status"), value: t(`status_${String(claim.value.claim_status || "Open").toLowerCase()}`), variant: "accent" },
+    { 
+      label: t("status"), 
+      value: t(`status_${String(claim.value.claim_status || "Open").toLowerCase()}`),
+      variant: claim.value.claim_status === "Closed" ? "success-pill" : claim.value.claim_status === "Rejected" ? "cancel-pill" : "default"
+    },
   ]);
 
   const profileFields = computed(() => [
@@ -139,11 +143,17 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const financialFields = computed(() => [
-    { key: "claim_amount", label: t("claim_amount"), value: claim.value.estimated_amount, displayValue: formatCurrency(claim.value.estimated_amount, claim.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
-    { key: "reserve_amount", label: t("reserve_amount"), value: claim.value.reserve_amount, displayValue: formatCurrency(claim.value.reserve_amount, claim.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
-    { key: "paid_amount", label: t("paid_amount"), value: claim.value.paid_amount, displayValue: formatCurrency(claim.value.paid_amount, claim.value.currency), type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    { key: "claim_amount", label: t("claim_amount"), value: claim.value.estimated_amount, displayValue: formatCurrency(claim.value.estimated_amount, claim.value.currency), type: "number", unspecifiedLabel: t("unspecified") },
+    { key: "reserve_amount", label: t("reserve_amount"), value: claim.value.reserve_amount, displayValue: formatCurrency(claim.value.reserve_amount, claim.value.currency), type: "number", unspecifiedLabel: t("unspecified") },
+    { key: "paid_amount", label: t("paid_amount"), value: claim.value.paid_amount, displayValue: formatCurrency(claim.value.paid_amount, claim.value.currency), type: "number", disabled: true, unspecifiedLabel: t("unspecified") },
+    { key: "claim_status", label: t("status"), value: claim.value.claim_status, displayValue: t('status_' + String(claim.value.claim_status || 'Open').toLowerCase()), type: "select", options: [
+      { label: t("status_open"), value: "Open" },
+      { label: t("status_closed"), value: "Closed" },
+      { label: t("status_rejected"), value: "Rejected" },
+      { label: t("status_reopened"), value: "Reopened" }
+    ]},
     { type: "divider" },
-    { key: "total_amount", label: t("total_amount"), value: claim.value.estimated_amount, displayValue: formatCurrency(claim.value.estimated_amount, claim.value.currency), type: "text", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-brand-600 font-bold" },
+    { key: "estimated_amount", label: t("total_amount"), value: claim.value.estimated_amount, displayValue: formatCurrency(claim.value.estimated_amount, claim.value.currency), type: "number", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-brand-600 font-bold" },
   ]);
 
   const customerFields = computed(() => [
