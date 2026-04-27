@@ -14,6 +14,7 @@
         :eyebrow="eyebrow"
         :title="title"
         :subtitle="subtitle"
+        :locale="activeLocale"
         @cancel="emit('cancel')"
         @submit="emit('submit')"
       />
@@ -26,6 +27,10 @@ import { computed } from "vue";
 import { Dialog } from "frappe-ui";
 
 import PolicyForm from "../PolicyForm.vue";
+import { useAuthStore } from "../../stores/auth";
+
+const authStore = useAuthStore();
+const activeLocale = computed(() => authStore.locale || "en");
 
 const props = defineProps({
   show: {

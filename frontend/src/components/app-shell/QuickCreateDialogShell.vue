@@ -2,12 +2,12 @@
   <div class="at-quick-create-shell">
     <div class="at-quick-create-shell__accent" aria-hidden="true"></div>
     <div class="at-quick-create-shell__body">
-      <header v-if="(showEyebrow && eyebrow) || (showSubtitle && subtitle)" class="at-quick-create-shell__intro">
-        <div class="at-quick-create-shell__meta">
+      <header v-if="(showEyebrow && eyebrow) || (showSubtitle && subtitle)" class="mb-6 px-1">
+        <div class="flex flex-col gap-1">
           <p v-if="showEyebrow && eyebrow" class="qc-accent-label">
             {{ eyebrow }}
           </p>
-          <p v-if="showSubtitle && subtitle" class="at-quick-create-shell__subtitle">{{ subtitle }}</p>
+          <p v-if="showSubtitle && subtitle" class="text-lg font-bold text-slate-900">{{ subtitle }}</p>
         </div>
       </header>
       <slot />
@@ -19,7 +19,7 @@
 
     <div v-if="showFooter" class="at-quick-create-shell__footer">
       <button
-        class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 disabled:opacity-60"
+        class="btn btn-outline"
         type="button"
         :disabled="loading"
         @click="$emit('cancel')"
@@ -27,7 +27,7 @@
         {{ labels.cancel || fallbackLabels.cancel }}
       </button>
       <button
-        :class="saveButtonClass"
+        class="btn btn-primary"
         type="button"
         :disabled="loading || saveDisabled"
         @click="$emit('save')"
@@ -36,7 +36,7 @@
       </button>
       <button
         v-if="showSaveAndOpen"
-        class="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+        class="btn btn-primary bg-brand-700"
         type="button"
         :disabled="loading || saveAndOpenDisabled"
         @click="$emit('saveAndOpen')"

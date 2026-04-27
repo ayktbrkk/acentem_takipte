@@ -5,7 +5,7 @@
         <slot v-if="field.type === 'custom'" :name="`field-${field.name}`" :field="field" />
 
         <template v-else>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label class="field-label block">
             {{ fieldLabel(field) }}
             <span v-if="isFieldRequired(field)" class="text-amber-500">*</span>
           </label>
@@ -104,18 +104,18 @@
             </datalist>
           </template>
 
-          <input
-            v-else
-            v-model="model[field.name]"
-            :class="controlClass(field, 'input qc-control form-input')"
-            :type="normalizeInputType(field.type)"
-            :placeholder="text(field.placeholder)"
-            :disabled="isFieldDisabled(field)"
-            :min="field.min"
-            :max="field.max"
-            :step="field.step"
-            @keyup.enter="emit('submit')"
-          />
+            <input
+              v-else
+              v-model="model[field.name]"
+              :class="controlClass(field, ['input qc-control form-input', field.type === 'number' ? 'form-input-number' : ''])"
+              :type="normalizeInputType(field.type)"
+              :placeholder="text(field.placeholder)"
+              :disabled="isFieldDisabled(field)"
+              :min="field.min"
+              :max="field.max"
+              :step="field.step"
+              @keyup.enter="emit('submit')"
+            />
 
           <p v-if="fieldErrors?.[field.name]" class="form-error">
             {{ fieldErrors[field.name] }}
@@ -140,8 +140,8 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   locale: { type: String, default: "en" },
   optionsMap: { type: Object, default: () => ({}) },
-  defaultSelectPlaceholder: { type: [String, Object], default: "Select" },
-  defaultSearchPlaceholder: { type: [String, Object], default: "Search in list..." },
+  defaultSelectPlaceholder: { type: [String, Object], default: () => ({ tr: "Seçiniz", en: "Select" }) },
+  defaultSearchPlaceholder: { type: [String, Object], default: () => ({ tr: "Listede ara...", en: "Search in list..." }) },
 });
 
 const emit = defineEmits(["submit", "request-related-create"]);
@@ -179,20 +179,12 @@ const {
 </script>
 
 <style scoped>
-.input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800;
-}
-
 .qc-control {
   @apply h-10;
 }
 
 .qc-textarea {
   @apply h-auto py-2;
-}
-
-.input.qc-control:focus {
-  @apply border-brand-500 ring-1 ring-brand-500 outline-none;
 }
 
 .qc-remote-select {

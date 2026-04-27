@@ -79,6 +79,7 @@
           :rows="policyListRowsWithUrgency"
           :loading="policyLoading"
           :empty-message="t('empty')"
+          :locale="activeLocale"
           clickable
           @row-click="(row) => openPolicyDetail(row.name)"
         />

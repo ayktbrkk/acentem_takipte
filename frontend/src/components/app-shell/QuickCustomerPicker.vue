@@ -6,13 +6,13 @@
 
     <template v-else>
       <div class="space-y-2">
-        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <label class="field-label block">
           {{ text(customerLabel) }}
           <span class="text-amber-500">*</span>
         </label>
 
         <input
-          class="input qc-control"
+          class="form-input qc-control"
           :value="queryText"
           :placeholder="text(searchPlaceholder)"
           type="text"
@@ -23,50 +23,51 @@
 
         <div
           v-if="showCustomerSuggestions"
-          class="max-h-44 overflow-y-auto rounded-lg border border-slate-200 bg-white"
+          class="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm"
         >
           <button
             v-for="option in customerOptions"
             :key="option.value"
-            class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50"
+            class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50 transition-colors"
             type="button"
             :disabled="disabled"
             @mousedown.prevent="selectCustomerOption(option)"
           >
-            <span class="truncate text-slate-800">{{ option.label }}</span>
-            <span v-if="option.description" class="ml-3 shrink-0 text-xs text-slate-500">
+            <span class="truncate text-slate-800 font-medium">{{ option.label }}</span>
+            <span v-if="option.description" class="ml-3 shrink-0 text-xs text-slate-400 font-mono">
               {{ option.description }}
             </span>
           </button>
         </div>
 
-        <p v-else-if="showCustomerNoResults" class="text-xs text-slate-500">
+        <p v-else-if="showCustomerNoResults" class="px-1 text-xs text-slate-400">
           {{ text(noResultsText) }}
         </p>
 
-        <p v-if="customerErrorText" class="qc-inline-error">
+        <p v-if="customerErrorText" class="form-error">
           {{ customerErrorText }}
         </p>
-        <p v-else-if="fieldErrors?.customer" class="qc-inline-error">
+        <p v-else-if="fieldErrors?.customer" class="form-error">
           {{ fieldErrors.customer }}
         </p>
 
         <button
           v-if="showCreateAction"
           type="button"
-          class="inline-flex items-center rounded-lg border border-dashed border-brand-300 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-400 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-brand-200 py-2.5 text-[11px] font-bold uppercase tracking-wider text-brand-600 hover:border-brand-400 hover:bg-brand-50 transition-all disabled:opacity-50"
           :disabled="disabled"
           @click="enableCreateMode"
         >
+          <FeatherIcon name="user-plus" class="h-3.5 w-3.5" />
           {{ createActionText }}
         </button>
 
-        <div v-if="selectedCustomerOption?.value" class="qc-selection-banner">
-          <span class="truncate font-medium">
+        <div v-if="selectedCustomerOption?.value" class="qc-selection-banner shadow-sm ring-1 ring-brand-100/50">
+          <span class="truncate font-semibold text-brand-900">
             {{ text(selectedCustomerLabel) }}: {{ selectedCustomerOption.label || selectedCustomerOption.value }}
           </span>
           <button
-            class="qc-selection-banner__clear"
+            class="qc-selection-banner__clear font-bold uppercase tracking-tighter"
             type="button"
             :disabled="disabled"
             @click="clearSelectedCustomer"
@@ -76,73 +77,73 @@
         </div>
       </div>
 
-      <div v-if="showInlineFields" class="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div v-if="showInlineFields" class="grid grid-cols-1 gap-x-4 gap-y-3.5 md:grid-cols-2 p-5 bg-brand-50/20 rounded-2xl border border-brand-100/30">
         <div class="md:col-span-2">
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label class="field-label block">
             {{ text(customerTypeLabel) }}
             <span class="text-amber-500">*</span>
           </label>
-          <select v-model="model[customerTypeFieldName]" class="input qc-control" :disabled="disabled">
+          <select v-model="model[customerTypeFieldName]" class="form-input h-10 bg-white" :disabled="disabled">
             <option value="Individual">{{ text(individualLabel) }}</option>
             <option value="Corporate">{{ text(corporateLabel) }}</option>
           </select>
-          <p v-if="fieldErrors?.[customerTypeFieldName]" class="mt-1 qc-inline-error">
+          <p v-if="fieldErrors?.[customerTypeFieldName]" class="form-error">
             {{ fieldErrors[customerTypeFieldName] }}
           </p>
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label class="field-label block">
             {{ identityLabel }}
             <span class="text-amber-500">*</span>
           </label>
           <input
             v-model="model[identityFieldName]"
-            class="input qc-control"
+            class="form-input h-10"
             type="text"
             inputmode="numeric"
             :disabled="disabled"
           />
-          <p v-if="fieldErrors?.[identityFieldName]" class="mt-1 qc-inline-error">
+          <p v-if="fieldErrors?.[identityFieldName]" class="form-error">
             {{ fieldErrors[identityFieldName] }}
           </p>
-          <p v-else class="mt-1 text-xs text-slate-500">
+          <p v-else class="px-1 mt-1 text-[10px] text-slate-400 leading-tight">
             {{ identityHelp }}
           </p>
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label class="field-label block">
             {{ text(birthDateLabel) }}
           </label>
           <input
             v-model="model[birthDateFieldName]"
-            class="input qc-control"
+            class="form-input h-10"
             type="date"
             :disabled="disabled || isBirthDateLocked"
             :readonly="isBirthDateLocked"
           />
-          <p v-if="fieldErrors?.[birthDateFieldName]" class="mt-1 qc-inline-error">
+          <p v-if="fieldErrors?.[birthDateFieldName]" class="form-error">
             {{ fieldErrors[birthDateFieldName] }}
           </p>
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label class="field-label block">
             {{ text(phoneLabel) }}
           </label>
-          <input v-model="model[phoneFieldName]" class="input qc-control" type="text" :disabled="disabled" />
-          <p v-if="fieldErrors?.[phoneFieldName]" class="mt-1 qc-inline-error">
+          <input v-model="model[phoneFieldName]" class="form-input h-10" type="text" :disabled="disabled" />
+          <p v-if="fieldErrors?.[phoneFieldName]" class="form-error">
             {{ fieldErrors[phoneFieldName] }}
           </p>
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label class="field-label block">
             {{ text(emailLabel) }}
           </label>
-          <input v-model="model[emailFieldName]" class="input qc-control" type="email" :disabled="disabled" />
-          <p v-if="fieldErrors?.[emailFieldName]" class="mt-1 qc-inline-error">
+          <input v-model="model[emailFieldName]" class="form-input h-10" type="email" :disabled="disabled" />
+          <p v-if="fieldErrors?.[emailFieldName]" class="form-error">
             {{ fieldErrors[emailFieldName] }}
           </p>
         </div>
@@ -152,6 +153,7 @@
 </template>
 
 <script setup>
+import { FeatherIcon } from "frappe-ui";
 import { useQuickCustomerPicker } from "../../composables/useQuickCustomerPicker";
 
 const props = defineProps({
@@ -174,9 +176,11 @@ const props = defineProps({
   identityFieldName: { type: String, default: "tax_id" },
   phoneFieldName: { type: String, default: "phone" },
   emailFieldName: { type: String, default: "email" },
+  defaultSelectPlaceholder: { type: [String, Object], default: () => ({ tr: "Seçiniz", en: "Select" }) },
+  defaultSearchPlaceholder: { type: [String, Object], default: () => ({ tr: "Listede ara...", en: "Search in list..." }) },
   customerLabel: {
     type: [String, Object],
-    default: "Customer",
+    default: "customer",
   },
   searchPlaceholder: {
     type: [String, Object],

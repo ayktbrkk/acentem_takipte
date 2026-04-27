@@ -11,38 +11,38 @@
         </button>
     </template>
 
-    <div v-if="!isEditing" class="space-y-6">
+    <div v-if="!isEditing" class="space-y-5">
       <!-- Profile Header -->
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <div 
-          class="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 transition-colors group-hover:bg-brand-50 group-hover:text-brand-600 shadow-sm"
+          class="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-brand-50 group-hover:text-brand-600 shadow-sm"
         >
           <FeatherIcon 
             :name="customer.customer_type === 'Corporate' ? 'briefcase' : 'user'" 
-            class="h-7 w-7" 
+            class="h-5 w-5" 
           />
         </div>
         <div class="min-w-0">
           <h3 class="font-bold text-slate-900 truncate leading-tight group-hover:text-brand-600 transition-colors">
             {{ customer.full_name || '-' }}
           </h3>
-          <p class="text-xs font-medium text-slate-400 mt-1 uppercase tracking-wider">
+          <p class="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
             {{ customer.customer_type === 'Corporate' ? t('corporate') : t('individual') }}
           </p>
         </div>
       </div>
 
       <!-- Quick Fields -->
-      <div class="grid gap-4">
-        <div v-for="f in displayFields" :key="f.key" class="space-y-1">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ f.label }}</p>
-          <p class="text-sm font-semibold text-slate-700">{{ f.value || '—' }}</p>
+      <div class="grid gap-3.5 border-t border-slate-50 pt-4">
+        <div v-for="f in displayFields" :key="f.key" class="flex items-center justify-between">
+          <p class="field-label !mb-0">{{ f.label }}</p>
+          <p class="text-[13px] font-bold text-slate-900">{{ f.value || '—' }}</p>
         </div>
       </div>
 
-      <div class="pt-2">
+      <div class="pt-1">
         <button 
-          class="btn btn-full btn-outline btn-sm font-bold text-slate-500 hover:text-brand-600 group/btn"
+          class="btn btn-full btn-outline btn-sm font-bold text-slate-500 hover:text-brand-600 group/btn !py-1.5"
           @click="$emit('view-full')"
         >
           {{ t('view_full_profile') }}

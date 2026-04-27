@@ -50,6 +50,7 @@
             :icon="branchIcon"
             :fields="profileFields"
             :t="t"
+            :locale="activeLocale"
             :saving="saving"
             layout="list"
             @save="updatePolicy"
@@ -59,6 +60,7 @@
             :title="t('premium_and_financial_details')"
             :fields="premiumFields"
             :t="t"
+            :locale="activeLocale"
             :saving="saving"
             layout="list"
             @save="updatePolicy"
@@ -69,6 +71,7 @@
             :title="t('risk_info')"
             :fields="riskFields"
             :t="t"
+            :locale="activeLocale"
             :saving="saving"
             layout="list"
             class="md:col-span-2"
@@ -81,6 +84,7 @@
             :columns="endorsementColumns"
             :rows="endorsements"
             :loading="loading"
+            :locale="activeLocale"
           >
             <template #cell(endorsement_date)="{ row }">
               {{ formatDate(row.endorsement_date) }}
@@ -100,19 +104,16 @@
             :columns="paymentColumns"
             :rows="payments"
             :loading="loading"
+            :locale="activeLocale"
           >
             <template #cell(payment_date)="{ row }">
               {{ formatDate(row.payment_date) }}
             </template>
             <template #cell(amount)="{ row }">
-              {{ formatCurrency(row.amount, row.currency) }}
+              <span class="font-bold">{{ formatCurrency(row.amount, row.currency) }}</span>
             </template>
             <template #cell(status)="{ row }">
-              <StatusBadge 
-                domain="payment" 
-                :status="row.status === 'Paid' ? 'active' : 'waiting'" 
-                :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
-              />
+              <StatusBadge domain="payment" :status="row.status" />
             </template>
           </ListTable>
         </SectionPanel>

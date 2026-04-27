@@ -69,7 +69,7 @@ export function usePolicyQuickCreateRuntime({
     auto: true,
     params: {
       doctype: "AT Sales Entity",
-      fields: ["name", "full_name"],
+      fields: ["name", "full_name", "office_branch"],
       order_by: "full_name asc",
       limit_page_length: QUICK_OPTION_LIMIT,
     },
@@ -130,7 +130,7 @@ export function usePolicyQuickCreateRuntime({
     customers: policyQuickCustomerOptions.value,
     salesEntities: asArray(resourceValue(policyQuickSalesEntityResource, [])).map((row) => ({
       value: row.name,
-      label: row.full_name || row.name,
+      label: row.office_branch ? `${row.full_name} (${row.office_branch})` : row.full_name || row.name,
     })),
     insuranceCompanies: asArray(resourceValue(companyResource, [])).map((row) => ({ value: row.name, label: row.company_name || row.name })),
     branches: asArray(resourceValue(policyQuickBranchResource, [])).map((row) => ({ value: row.name, label: row.branch_name || row.name })),
