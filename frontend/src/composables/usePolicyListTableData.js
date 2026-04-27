@@ -1,4 +1,5 @@
 import { computed, unref } from "vue";
+import { useAtFormatting } from "./useAtFormatting";
 
 function normalizePolicyListStatus(value) {
   const raw = String(value || "").trim().toLowerCase();
@@ -36,6 +37,8 @@ export function usePolicyListTableData({
   localeCode,
   policyListPageSize,
 }) {
+  const { formatDate, formatCurrency } = useAtFormatting(computed(() => (unref(localeCode) === "tr-TR" ? "tr" : "en")));
+
   const policyListMappedRows = computed(() =>
     unref(rows).map((row) => ({
       ...row,
@@ -47,10 +50,10 @@ export function usePolicyListTableData({
       policy_secondary: row.policy_no || "-",
       product_primary: row.branch || "-",
       product_secondary: row.insurance_company || "-",
-      vade_primary: row.end_date || "-",
-      vade_secondary: row.issue_date || "-",
-      finance_primary: row.gross_premium || 0,
-      finance_secondary: `${row.commission_amount || 0} (${row.currency || "TRY"})`,
+      vade_primary: formatDate(row.end_date),
+      vade_secondary: formatDate(row.issue_date),
+      finance_primary: formatCurrency(row.gross_premium, row.currency || "TRY"),
+      finance_secondary: `${formatCurrency(row.commission_amount || 0, row.currency || "TRY")} (${row.currency || "TRY"})`,
       customer_type_label: mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode)),
       customer_tax_id: row.customer_masked_tax_id || "-",
       customer_birth_date: row.customer_birth_date || null,

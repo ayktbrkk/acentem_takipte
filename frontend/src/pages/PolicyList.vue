@@ -20,8 +20,8 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SaaSMetricCard :label="t('summaryTotal')" :value="formatCount(policySummary.total)" />
         <SaaSMetricCard :label="t('summaryActive')" :value="formatCount(policySummary.active)" value-class="text-brand-600" />
-        <SaaSMetricCard :label="t('summaryPending')" :value="formatCount(policySummary.pending)" value-class="text-amber-600" />
-        <SaaSMetricCard :label="t('summaryTotalPremium')" :value="formatCurrency(policySummary.totalPremium, 'TRY')" value-class="text-green-600" />
+        <SaaSMetricCard :label="t('summaryPending')" :value="formatCount(policySummary.pending)" value-class="text-at-amber" />
+        <SaaSMetricCard :label="t('summaryTotalPremium')" :value="formatCurrency(policySummary.totalPremium, 'TRY')" value-class="text-at-green" />
       </div>
     </template>
 
@@ -67,7 +67,7 @@
     </div>
 
     <div class="mt-8 space-y-4">
-      <div v-if="policyListError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm">
+      <div v-if="policyListError" class="rounded-xl border border-at-red/20 bg-at-red/5 px-4 py-3 text-sm text-at-red shadow-sm">
         {{ policyListError }}
       </div>
       <template v-else-if="isInitialLoading">

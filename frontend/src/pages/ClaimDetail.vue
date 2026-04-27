@@ -30,77 +30,6 @@
     </template>
 
     <div class="detail-body at-detail-split-wide">
-      <!-- Sidebar (4) -->
-      <aside class="detail-sidebar at-detail-aside space-y-6">
-        <StandardCustomerCard
-          :title="t('customer_details')"
-          :customer="customer"
-          :saving="customerSaving"
-          :t="t"
-          @save="updateCustomer"
-          @view-full="openCustomer"
-        />
-
-        <SectionPanel :title="t('operations')">
-          <div class="space-y-4">
-             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-               <div class="flex items-center gap-3">
-                 <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm">
-                   <FeatherIcon name="check-circle" class="h-4 w-4" />
-                 </div>
-                 <div>
-                   <p class="text-xs font-bold text-slate-800">{{ t('tasks') }}</p>
-                   <p class="text-[10px] text-slate-500">{{ t('active_tasks_hint') }}</p>
-                 </div>
-               </div>
-               <span class="badge badge-blue">0</span>
-             </div>
-
-             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-               <div class="flex items-center gap-3">
-                 <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm">
-                   <FeatherIcon name="bell" class="h-4 w-4" />
-                 </div>
-                 <div>
-                   <p class="text-xs font-bold text-slate-800">{{ t('reminders') }}</p>
-                   <p class="text-[10px] text-slate-500">{{ t('active_reminders_hint') }}</p>
-                 </div>
-               </div>
-               <span class="badge badge-amber">0</span>
-             </div>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel :title="t('documents')">
-          <template #trailing>
-            <div class="flex flex-wrap items-center gap-2">
-              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
-                {{ t("upload") }}
-              </ActionButton>
-            </div>
-          </template>
-          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
-          <div v-else class="space-y-2">
-            <MetaListCard
-              v-for="doc in documents.slice(0, 5)" 
-              :key="doc.name"
-              :title="doc.display_name || doc.file_name || doc.name"
-              :subtitle="doc.document_sub_type || doc.document_kind || ''"
-              class="!p-3"
-            >
-              <template #trailing>
-                 <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc)">
-                  <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
-                </button>
-              </template>
-            </MetaListCard>
-            <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openClaimDocuments">
-              {{ t("view_all_documents") }}
-            </ActionButton>
-          </div>
-        </SectionPanel>
-      </aside>
-
       <!-- Main Content (8) -->
       <div class="detail-main space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -156,6 +85,47 @@
           </div>
         </SectionPanel>
       </div>
+
+      <!-- Sidebar (4) -->
+      <aside class="detail-sidebar at-detail-aside space-y-6">
+        <StandardCustomerCard
+          :title="t('customer_details')"
+          :customer="customer"
+          :saving="customerSaving"
+          :t="t"
+          @save="updateCustomer"
+          @view-full="openCustomer"
+        />
+
+        <SectionPanel :title="t('documents')">
+          <template #trailing>
+            <div class="flex flex-wrap items-center gap-2">
+              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                {{ t("upload") }}
+              </ActionButton>
+            </div>
+          </template>
+          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
+          <div v-else class="space-y-2">
+            <MetaListCard
+              v-for="doc in documents.slice(0, 5)" 
+              :key="doc.name"
+              :title="doc.display_name || doc.file_name || doc.name"
+              :subtitle="doc.document_sub_type || doc.document_kind || ''"
+              class="!p-3"
+            >
+              <template #trailing>
+                 <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc)">
+                  <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
+                </button>
+              </template>
+            </MetaListCard>
+            <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openClaimDocuments">
+              {{ t("view_all_documents") }}
+            </ActionButton>
+          </div>
+        </SectionPanel>
+      </aside>
     </div>
 
     <!-- Notifications -->

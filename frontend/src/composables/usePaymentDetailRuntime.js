@@ -21,10 +21,8 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   const payment = computed(() => data.value.payment || {});
   const installments = computed(() => data.value.installments || []);
   const documents = computed(() => data.value.documents || data.value.files || []);
-  const customer = computed(() => data.value.customer || {});
   const showUploadModal = ref(false);
   const saving = ref(false);
-  const customerSaving = ref(false);
   const notification = reactive({ show: false, message: "", type: "success" });
 
   const updateResource = createResource({
@@ -139,7 +137,7 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const financialFields = computed(() => [
-    { key: "amount", label: t("amount"), value: payment.value.amount, displayValue: formatCurrency(payment.value.amount, payment.value.currency), type: "number" },
+    { key: "amount", label: t("amount"), value: payment.value.amount, displayValue: formatCurrency(payment.value.amount, payment.value.currency), type: "text" },
     { key: "status", label: t("status"), value: payment.value.status, displayValue: t('status_' + String(payment.value.status || 'Unpaid').toLowerCase()), type: "select", options: [
       { label: t("status_paid"), value: "Paid" },
       { label: t("status_unpaid"), value: "Unpaid" },
@@ -171,26 +169,6 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
     }
   }
 
-  async function updateCustomer(values, onSuccess) {
-    if (!customer.value.name) return;
-    customerSaving.value = true;
-    try {
-      await updateResource.submit({
-        doctype: "AT Customer",
-        name: customer.value.name,
-        fieldname: values,
-      });
-      showNotification(t("save_success"));
-      if (onSuccess) onSuccess();
-      await reload();
-    } catch (err) {
-      console.error(err);
-      showNotification(t("save_failed"), "error");
-    } finally {
-      customerSaving.value = false;
-    }
-  }
-
   // Watch for name change
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
@@ -219,10 +197,7 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
     profileFields,
     financialFields,
     saving,
-    customerSaving,
     notification,
     savePayment,
-    updateCustomer,
-    customer,
   };
 }

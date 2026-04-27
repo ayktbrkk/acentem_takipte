@@ -29,6 +29,13 @@ def build_policy_360_payload(name: str) -> dict:
 
     policy_doc = frappe.get_doc("AT Policy", policy_name)
     policy = policy_doc.as_dict(no_default_fields=False)
+    
+    if policy.get("sales_entity"):
+        se_info = frappe.db.get_value("AT Sales Entity", policy["sales_entity"], ["full_name", "office_branch"], as_dict=True)
+        if se_info:
+            policy["sales_entity_full_name"] = se_info.full_name
+            policy["sales_entity_office"] = se_info.office_branch
+
     customer = _get_customer(policy.get("customer"))
 
     files = _get_rows(

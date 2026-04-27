@@ -57,6 +57,71 @@
               </select>
             </div>
 
+            <!-- Autocomplete / Searchable Select -->
+            <div v-else-if="field.type === 'autocomplete'" class="relative">
+              <div class="relative">
+                <input
+                  :id="field.key"
+                  v-model="searchQueries[field.key]"
+                  type="text"
+                  class="at-input w-full pr-10"
+                  :class="{ 'border-rose-500 focus:ring-rose-500/20': errors[field.key], 'bg-slate-50 cursor-not-allowed': field.disabled }"
+                  :placeholder="field.placeholder || t('search_records') || 'Ara...'"
+                  :disabled="field.disabled"
+                  @focus="activeDropdown = field.key"
+                  @input="handleAutocompleteInput(field.key)"
+                  @keydown.down.prevent="moveHighlight(field.key, 1)"
+                  @keydown.up.prevent="moveHighlight(field.key, -1)"
+                  @keydown.enter.prevent="selectHighlighted(field.key)"
+                />
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <FeatherIcon name="search" class="h-3.5 w-3.5 text-slate-400" />
+                </div>
+              </div>
+
+              <!-- Dropdown -->
+              <div 
+                v-if="activeDropdown === field.key" 
+                class="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200"
+              >
+                <div v-if="filteredOptions(field).length === 0" class="px-4 py-8 text-center">
+                  <p class="text-xs font-medium text-slate-400">{{ t('no_records_found') || 'Kayıt bulunamadı' }}</p>
+                </div>
+                <button
+                  v-for="(opt, idx) in filteredOptions(field)"
+                  :key="opt.value"
+                  type="button"
+                  class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all"
+                  :class="[
+                    idx === highlightIndex ? 'bg-brand-50 text-brand-700 font-semibold' : 'text-slate-600 hover:bg-slate-50',
+                    editData[field.key] === opt.value ? 'bg-brand-50/50' : ''
+                  ]"
+                  @click="selectOption(field.key, opt)"
+                  @mouseenter="highlightIndex = idx"
+                >
+                  <div 
+                    class="h-1.5 w-1.5 rounded-full" 
+                    :class="editData[field.key] === opt.value ? 'bg-brand-500 shadow-[0_0_8px_rgba(var(--at-brand-500),0.5)]' : 'bg-transparent'"
+                  ></div>
+                  <span class="flex-1 truncate">{{ opt.label }}</span>
+                  <FeatherIcon v-if="editData[field.key] === opt.value" name="check" class="h-3.5 w-3.5 text-brand-500" />
+                </button>
+              </div>
+              
+              <!-- Selected Value Hint -->
+              <div v-if="editData[field.key] && !activeDropdown" class="mt-1.5 flex items-center gap-2 px-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600">{{ t('selected') || 'Seçili' }}:</span>
+                <span class="text-[11px] font-semibold text-slate-900 truncate max-w-[200px]">{{ getOptionLabel(field) }}</span>
+                <button type="button" @click="clearSelection(field.key)" class="text-slate-400 hover:text-rose-500 transition-colors">
+                  <FeatherIcon name="x" class="h-3 w-3" />
+                </button>
+              </div>
+
+              <p v-if="errors[field.key]" class="mt-1 text-xs font-medium text-rose-500">
+                {{ errors[field.key] }}
+              </p>
+            </div>
+
             <!-- Date Input -->
             <div v-else-if="field.type === 'date'">
               <input
@@ -156,6 +221,11 @@ const isEditing = ref(false);
 const editData = reactive({});
 const errors = reactive({});
 
+// Autocomplete State
+const searchQueries = reactive({});
+const activeDropdown = ref(null);
+const highlightIndex = ref(0);
+
 const displayFields = computed(() => {
   return props.fields.map(f => ({
     label: f.label,
@@ -169,8 +239,68 @@ function startEditing() {
   props.fields.forEach(f => {
     editData[f.key] = f.value;
     errors[f.key] = '';
+    
+    // Initialize search query for autocomplete fields
+    if (f.type === 'autocomplete') {
+      const option = (f.options || []).find(o => o.value === f.value);
+      searchQueries[f.key] = option ? option.label : '';
+    }
   });
   isEditing.value = true;
+}
+
+function handleAutocompleteInput(key) {
+  clearError(key);
+  activeDropdown.value = key;
+  highlightIndex.value = 0;
+}
+
+function filteredOptions(field) {
+  const query = (searchQueries[field.key] || '').toLowerCase();
+  const options = field.options || [];
+  if (!query) return options.slice(0, 50);
+  return options.filter(o => o.label.toLowerCase().includes(query)).slice(0, 50);
+}
+
+function getOptionLabel(field) {
+  const option = (field.options || []).find(o => o.value === editData[field.key]);
+  return option ? option.label : editData[field.key];
+}
+
+function selectOption(key, option) {
+  editData[key] = option.value;
+  searchQueries[key] = option.label;
+  activeDropdown.value = null;
+  clearError(key);
+}
+
+function clearSelection(key) {
+  editData[key] = '';
+  searchQueries[key] = '';
+}
+
+function moveHighlight(key, delta) {
+  const field = props.fields.find(f => f.key === key);
+  const options = filteredOptions(field);
+  if (!options.length) return;
+  highlightIndex.value = (highlightIndex.value + delta + options.length) % options.length;
+}
+
+function selectHighlighted(key) {
+  const field = props.fields.find(f => f.key === key);
+  const options = filteredOptions(field);
+  if (options[highlightIndex.value]) {
+    selectOption(key, options[highlightIndex.value]);
+  }
+}
+
+// Close dropdown on click outside
+if (typeof window !== 'undefined') {
+  window.addEventListener('click', (e) => {
+    if (!e.target.closest('.relative')) {
+      activeDropdown.value = null;
+    }
+  });
 }
 
 function handleCancel() {

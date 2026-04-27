@@ -12,7 +12,7 @@
             :key="col.key"
             :style="col.width ? `width: ${col.width}` : ''"
             :class="[
-              'px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-wider text-gray-400',
+              'px-4 py-2.5 text-left text-[11px] font-semibold tracking-wider text-slate-400',
               col.align === 'right' && 'text-right',
               col.align === 'center' && 'text-center',
             ]"
@@ -49,7 +49,7 @@
           >
             <StatusBadge v-if="col.type === 'status'" :status="row[col.key]" :domain="col.domain || null" />
 
-            <span v-else-if="col.type === 'badge'" :class="['badge', `badge-${row[col.key + '_color'] ?? 'gray'}`]">
+            <span v-else-if="col.type === 'badge'" :class="['badge', 'badge-' + (row[col.key + '_color'] ?? 'gray')]">
               {{ row[col.key] }}
             </span>
 
@@ -57,15 +57,15 @@
               {{ row[col.key] ?? '-' }}
             </span>
 
-            <span v-else-if="col.type === 'amount'" :class="['text-sm font-medium', row[`${col.key}_class`] || 'text-gray-900']">
+            <span v-else-if="col.type === 'amount'" :class="['text-[13px] font-semibold', row[col.key + '_class'] || 'text-slate-900']">
               {{ row[col.key] ?? '-' }}
             </span>
 
             <span v-else-if="col.type === 'urgency'" :class="urgencyClass(row[col.key])">
-              {{ row[col.key] != null ? `${row[col.key]} ${translateText('days', locale)}` : '-' }}
+              {{ row[col.key] != null ? row[col.key] + ' ' + translateText('days', locale) : '-' }}
             </span>
 
-            <span v-else-if="col.type === 'date'" class="text-sm text-gray-600">
+            <span v-else-if="col.type === 'date'" class="text-[13px] text-slate-600">
               {{ formatDateCell(row[col.key]) }}
             </span>
 
@@ -86,8 +86,8 @@
             </div>
 
             <div v-else-if="col.type === 'stacked'" class="flex flex-col">
-              <span class="text-sm font-medium text-gray-900">{{ row[col.key] ?? '-' }}</span>
-              <span v-if="col.secondaryKey" class="text-[10.5px] text-gray-400 leading-tight mt-0.5">
+              <span class="text-[13px] font-semibold text-slate-900">{{ row[col.key] ?? '-' }}</span>
+              <span v-if="col.secondaryKey" class="text-[11px] text-slate-400 leading-tight mt-0.5">
                 {{ row[col.secondaryKey] ?? '-' }}
               </span>
             </div>

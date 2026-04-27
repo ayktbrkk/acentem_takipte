@@ -38,21 +38,11 @@ def get_payment_360_payload(payment_name):
         order_by="creation desc"
     )
 
-    # Fetch customer data if available
-    customer = {}
-    if payment.customer:
-        try:
-            customer_doc = frappe.get_doc("AT Customer", payment.customer)
-            customer = customer_doc.as_dict()
-        except frappe.DoesNotExistError:
-            pass
-
     # Build payload
     payload = {
         "payment": payment.as_dict(),
         "installments": installments,
         "documents": documents,
-        "customer": customer,
         "metadata": {
             "is_claim_payment": bool(payment.claim),
             "is_policy_payment": bool(payment.policy),

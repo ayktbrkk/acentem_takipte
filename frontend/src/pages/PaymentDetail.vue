@@ -30,44 +30,68 @@
     </template>
 
     <div class="detail-body at-detail-split-wide">
-      <!-- Sidebar (4) -->
-      <aside class="detail-sidebar at-detail-aside space-y-6">
-        <StandardCustomerCard
-          :title="t('customer_details')"
-          :customer="customer"
-          :saving="customerSaving"
+      <!-- Main Content (8) -->
+      <div class="detail-main space-y-6">
+        <EditableCard
+          :title="t('payment_info')"
+          :fields="profileFields"
+          layout="list"
           :t="t"
-          @save="updateCustomer"
-          @view-full="openCustomer"
+          :saving="saving"
+          @save="savePayment"
         />
 
-        <SectionPanel :title="t('operations')">
-          <div class="space-y-4">
-             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-               <div class="flex items-center gap-3">
-                 <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm">
-                   <FeatherIcon name="check-circle" class="h-4 w-4" />
-                 </div>
-                 <div>
-                   <p class="text-xs font-bold text-slate-800">{{ t('tasks') }}</p>
-                   <p class="text-[10px] text-slate-500">{{ t('active_tasks_hint') }}</p>
-                 </div>
-               </div>
-               <span class="badge badge-blue">0</span>
-             </div>
+        <EditableCard
+          :title="t('financial_summary')"
+          :fields="financialFields"
+          layout="list"
+          :t="t"
+          :saving="saving"
+          @save="savePayment"
+        />
 
-             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-               <div class="flex items-center gap-3">
-                 <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm">
-                   <FeatherIcon name="bell" class="h-4 w-4" />
-                 </div>
-                 <div>
-                   <p class="text-xs font-bold text-slate-800">{{ t('reminders') }}</p>
-                   <p class="text-[10px] text-slate-500">{{ t('active_reminders_hint') }}</p>
-                 </div>
-               </div>
-               <span class="badge badge-amber">0</span>
-             </div>
+        <SectionPanel v-if="installments.length" :title="t('payment_plan')">
+          <ListTable
+            :columns="installmentColumns"
+            :rows="installments"
+            :loading="loading"
+          >
+            <template #cell(due_date)="{ row }">
+              {{ formatDate(row.due_date) }}
+            </template>
+            <template #cell(amount)="{ row }">
+              {{ formatCurrency(row.amount, row.currency) }}
+            </template>
+            <template #cell(status)="{ row }">
+              <StatusBadge 
+                domain="payment" 
+                :status="row.status === 'Paid' ? 'active' : 'hold'" 
+                :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
+              />
+            </template>
+          </ListTable>
+        </SectionPanel>
+      </div>
+
+      <!-- Sidebar (4) -->
+      <aside class="detail-sidebar at-detail-aside space-y-6">
+        <SectionPanel :title="t('customer_details')">
+          <template #trailing>
+            <ActionButton variant="secondary" size="xs" @click="openCustomer">
+              {{ t('view_full_profile') }}
+            </ActionButton>
+          </template>
+          <SkeletonLoader v-if="loading" variant="card" />
+          <div v-else class="space-y-4">
+            <div class="flex items-center gap-4">
+              <div class="h-12 w-12 rounded-full bg-brand-50 flex items-center justify-center text-lg font-bold text-brand-600">
+                {{ uppercaseText((payment.customer_name || "?").charAt(0), activeLocale) }}
+              </div>
+              <div>
+                <p class="font-bold text-slate-900">{{ payment.customer_name || t("all") }}</p>
+                <p class="text-sm text-slate-500">{{ payment.customer }}</p>
+              </div>
+            </div>
           </div>
         </SectionPanel>
 
@@ -111,58 +135,6 @@
           </div>
         </SectionPanel>
       </aside>
-
-      <!-- Main Content (8) -->
-      <div class="detail-main space-y-6">
-        <EditableCard
-          :title="t('payment_info')"
-          :fields="profileFields"
-          layout="list"
-          :t="t"
-          :saving="saving"
-          @save="savePayment"
-        />
-
-        <EditableCard
-          :title="t('financial_summary')"
-          :fields="financialFields"
-          layout="list"
-          :t="t"
-          :saving="saving"
-          @save="savePayment"
-        />
-
-        <SectionPanel v-if="installments.length" :title="t('payment_plan')">
-          <ListTable
-            :columns="installmentColumns"
-            :rows="installments"
-            :loading="loading"
-          >
-            <template #cell(due_date)="{ row }">
-              {{ formatDate(row.due_date) }}
-            </template>
-            <template #cell(amount)="{ row }">
-              {{ formatCurrency(row.amount, row.currency) }}
-            </template>
-            <template #cell(status)="{ row }">
-              <StatusBadge 
-                domain="payment" 
-                :status="row.status === 'Paid' ? 'active' : 'hold'" 
-                :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
-              />
-            </template>
-          </ListTable>
-        </SectionPanel>
-
-        <SectionPanel :title="t('activity_timeline')">
-          <div class="card-empty">
-            <div class="card-empty-icon">
-              <FeatherIcon name="activity" class="h-6 w-6" />
-            </div>
-            <p class="card-empty-text">{{ t('no_recent_activity') }}</p>
-          </div>
-        </SectionPanel>
-      </div>
     </div>
 
     <WorkbenchFileUploadModal
@@ -199,7 +171,6 @@ import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import EditableCard from "../components/app-shell/EditableCard.vue";
-import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
 import ToastNotification from "../components/ui/ToastNotification.vue";
 import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import { openDocumentInNewTab } from "../utils/documentOpen";
@@ -234,11 +205,8 @@ const {
   profileFields,
   financialFields,
   saving,
-  customerSaving,
   notification,
   savePayment,
-  updateCustomer,
-  customer,
 } = usePaymentDetailRuntime({ 
   name: computed(() => props.name),
   activeLocale 
