@@ -14,10 +14,10 @@
   >
     <div class="space-y-6 py-2">
       <!-- Section: Customer -->
-      <section class="policy-form-section">
-        <header class="flex items-center gap-3 mb-5">
-          <span class="qc-accent-label shrink-0">{{ translateText('customer_details', locale) }}</span>
-          <div class="h-px flex-1 bg-slate-100"></div>
+      <section class="policy-form-section p-5 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm ring-1 ring-slate-200/50">
+        <header class="flex items-center gap-3 mb-5 px-1">
+          <span class="qc-accent-label shrink-0 text-brand-700">{{ translateText('customer_details', locale) }}</span>
+          <div class="h-px flex-1 bg-brand-100/50"></div>
         </header>
         
         <QuickCustomerPicker
@@ -36,10 +36,10 @@
       </section>
 
       <!-- Section: Core Details -->
-      <section class="policy-form-section">
-        <header class="flex items-center gap-3 mb-5">
-          <span class="qc-accent-label shrink-0">{{ translateText('policy_technical_details', locale) }}</span>
-          <div class="h-px flex-1 bg-slate-100"></div>
+      <section class="policy-form-section p-5 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm ring-1 ring-slate-200/50">
+        <header class="flex items-center gap-3 mb-5 px-1">
+          <span class="qc-accent-label shrink-0 text-brand-700">{{ translateText('policy_technical_details', locale) }}</span>
+          <div class="h-px flex-1 bg-brand-100/50"></div>
         </header>
 
         <QuickCreateFormRenderer
@@ -53,10 +53,10 @@
       </section>
 
       <!-- Section: Schedule -->
-      <section class="policy-form-section">
-        <header class="flex items-center gap-3 mb-5">
-          <span class="qc-accent-label shrink-0">{{ translateText('scheduleTitle', locale) }}</span>
-          <div class="h-px flex-1 bg-slate-100"></div>
+      <section class="policy-form-section p-5 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm ring-1 ring-slate-200/50">
+        <header class="flex items-center gap-3 mb-5 px-1">
+          <span class="qc-accent-label shrink-0 text-brand-700">{{ translateText('scheduleTitle', locale) }}</span>
+          <div class="h-px flex-1 bg-brand-100/50"></div>
         </header>
 
         <QuickCreateFormRenderer
@@ -145,7 +145,7 @@ const filteredFields = computed(() =>
 
 // Grouping logic for "Tightness"
 const coreFields = computed(() => 
-  filteredFields.value.filter(f => ['insurance_company', 'branch', 'carrier_policy_no', 'sales_entity', 'status'].includes(f.name))
+  filteredFields.value.filter(f => ['insurance_company', 'branch', 'policy_no', 'sales_entity', 'status'].includes(f.name))
 );
 
 const scheduleFields = computed(() => 

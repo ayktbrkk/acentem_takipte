@@ -194,11 +194,22 @@ export function usePolicyQuickCreateRuntime({
   }
 
   function resetQuickPolicyForm() {
+    const today = new Date();
+    const nextYear = new Date();
+    nextYear.setFullYear(today.getFullYear() + 1);
+    
+    const formatDate = (d) => d.toISOString().split('T')[0];
+    const todayStr = formatDate(today);
+    const nextYearStr = formatDate(nextYear);
+
     Object.assign(quickPolicyForm, {
       queryText: "",
       customerOption: null,
       createCustomerMode: false,
       ...buildQuickCreateDraft(quickPolicyConfig),
+      issue_date: todayStr,
+      start_date: todayStr,
+      end_date: nextYearStr,
     });
     quickPolicyError.value = "";
     clearQuickPolicyFieldErrors();
