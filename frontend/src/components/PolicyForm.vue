@@ -8,7 +8,11 @@
     :loading="loading"
     :save-disabled="loading || disabled"
     :show-save-and-open="true"
-    :labels="{ cancel: translateText('cancel', locale), save: loading ? translateText('updating', locale) + '...' : translateText('save', locale) }"
+    :labels="{ 
+      cancel: translateText('cancel', locale), 
+      save: loading ? translateText('updating', locale) + '...' : translateText('save', locale),
+      saveAndOpen: translateText('save_and_open', locale)
+    }"
     @cancel="emit('cancel')"
     @save="emit('submit')"
     @saveAndOpen="emit('submit-and-open')"
