@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-3">
+  <div class="space-y-4">
     <div v-if="locked" class="rounded-lg border border-brand-200 bg-brand-50/60 px-3 py-2 text-sm text-brand-800">
       {{ text(lockedMessage) }}
     </div>
@@ -23,20 +23,23 @@
 
         <div
           v-if="showCustomerSuggestions"
-          class="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm"
+          class="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-slate-900/5 mt-1"
         >
           <button
             v-for="option in customerOptions"
             :key="option.value"
-            class="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50 transition-colors"
+            class="flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0"
             type="button"
             :disabled="disabled"
             @mousedown.prevent="selectCustomerOption(option)"
           >
-            <span class="truncate text-slate-800 font-medium">{{ option.label }}</span>
-            <span v-if="option.description" class="ml-3 shrink-0 text-xs text-slate-400 font-mono">
-              {{ option.description }}
-            </span>
+            <div class="flex flex-col">
+              <span class="truncate text-slate-800 font-semibold">{{ option.label }}</span>
+              <span v-if="option.description" class="truncate text-[10px] text-slate-400 font-medium">
+                {{ option.description }}
+              </span>
+            </div>
+            <FeatherIcon name="chevron-right" class="h-3.5 w-3.5 text-slate-300" />
           </button>
         </div>
 
@@ -77,13 +80,13 @@
         </div>
       </div>
 
-      <div v-if="showInlineFields" class="grid grid-cols-1 gap-x-4 gap-y-3.5 md:grid-cols-2 p-5 bg-brand-50/20 rounded-2xl border border-brand-100/30">
+      <div v-if="showInlineFields" class="grid grid-cols-1 gap-x-4 gap-y-4 p-5 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/60 shadow-sm ring-1 ring-slate-200/50 mt-4">
         <div class="md:col-span-2">
           <label class="field-label block">
             {{ text(customerTypeLabel) }}
             <span class="text-amber-500">*</span>
           </label>
-          <select v-model="model[customerTypeFieldName]" class="qc-control bg-white" :disabled="disabled">
+          <select v-model="model[customerTypeFieldName]" class="qc-control bg-white/80" :disabled="disabled">
             <option value="Individual">{{ text(individualLabel) }}</option>
             <option value="Corporate">{{ text(corporateLabel) }}</option>
           </select>
@@ -99,7 +102,7 @@
           </label>
           <input
             v-model="model[identityFieldName]"
-            class="qc-control"
+            class="qc-control bg-white/80"
             type="text"
             inputmode="numeric"
             :disabled="disabled"
@@ -118,7 +121,7 @@
           </label>
           <input
             v-model="model[birthDateFieldName]"
-            class="qc-control"
+            class="qc-control bg-white/80"
             type="date"
             :disabled="disabled || isBirthDateLocked"
             :readonly="isBirthDateLocked"
@@ -132,7 +135,7 @@
           <label class="field-label block">
             {{ text(phoneLabel) }}
           </label>
-          <input v-model="model[phoneFieldName]" class="qc-control" type="text" :disabled="disabled" />
+          <input v-model="model[phoneFieldName]" class="qc-control bg-white/80" type="text" :disabled="disabled" />
           <p v-if="fieldErrors?.[phoneFieldName]" class="form-error">
             {{ fieldErrors[phoneFieldName] }}
           </p>
@@ -142,7 +145,7 @@
           <label class="field-label block">
             {{ text(emailLabel) }}
           </label>
-          <input v-model="model[emailFieldName]" class="qc-control" type="email" :disabled="disabled" />
+          <input v-model="model[emailFieldName]" class="qc-control bg-white/80" type="email" :disabled="disabled" />
           <p v-if="fieldErrors?.[emailFieldName]" class="form-error">
             {{ fieldErrors[emailFieldName] }}
           </p>
@@ -227,9 +230,4 @@ const {
 } = useQuickCustomerPicker(props);
 </script>
 
-<style scoped>
-.input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
-}
-</style>
 

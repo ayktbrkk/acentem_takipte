@@ -1,7 +1,7 @@
 import { onBeforeUnmount, ref } from "vue";
 import { createResource } from "frappe-ui";
-
 import { openListExport } from "../utils/listExport";
+import { parseActionError } from "../utils/error";
 
 export function useLeadListActions({ t, refreshLeadList, buildLeadExportQuery, canConvertLead }) {
   const actionSuccessText = ref("");
@@ -33,26 +33,6 @@ export function useLeadListActions({ t, refreshLeadList, buildLeadExportQuery, c
       lastConvertedOfferName.value = "";
       actionFlashTimer = null;
     }, 4000);
-  }
-
-  function parseActionError(error) {
-    const direct = error?.message || error?.exc_type;
-    if (direct) return String(direct);
-    const serverMessage =
-      error?._server_messages ||
-      error?.messages?.[0] ||
-      error?.response?._server_messages ||
-      error?.response?.message;
-    if (!serverMessage) return "";
-    try {
-      const parsed = typeof serverMessage === "string" ? JSON.parse(serverMessage) : serverMessage;
-      if (Array.isArray(parsed) && parsed.length) {
-        return String(parsed[0]).replace(/<[^>]*>/g, "").trim();
-      }
-    } catch {
-      return String(serverMessage).replace(/<[^>]*>/g, "").trim();
-    }
-    return "";
   }
 
   async function convertLeadToOffer(row) {
@@ -97,7 +77,6 @@ export function useLeadListActions({ t, refreshLeadList, buildLeadExportQuery, c
     leadConvertResource,
     clearActionFeedback,
     scheduleActionFeedbackClear,
-    parseActionError,
     convertLeadToOffer,
     downloadLeadExport,
   };

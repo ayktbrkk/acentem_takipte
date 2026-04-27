@@ -527,11 +527,11 @@
   }
 
   .at-quick-create-shell__body {
-    @apply flex-1 p-6 space-y-6;
+    @apply flex-1 p-5 space-y-5;
   }
 
   .at-quick-create-shell__footer {
-    @apply flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-4 rounded-b-xl;
+    @apply flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-5 py-4 rounded-b-xl;
   }
 
   .qc-accent-label {
