@@ -1,4 +1,4 @@
-import { computed, ref, unref, watch } from "vue";
+import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
@@ -22,6 +22,22 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   const installments = computed(() => data.value.installments || []);
   const documents = computed(() => data.value.documents || data.value.files || []);
   const showUploadModal = ref(false);
+  const saving = ref(false);
+  const notification = reactive({ show: false, message: "", type: "success" });
+
+  const updateResource = createResource({
+    url: "frappe.client.set_value",
+    auto: false,
+  });
+
+  function showNotification(message, type = "success") {
+    notification.message = message;
+    notification.type = type;
+    notification.show = true;
+    setTimeout(() => {
+      notification.show = false;
+    }, 4000);
+  }
 
   const loading = computed(() => paymentResource.loading);
 
@@ -131,6 +147,28 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "claim", label: t("claim_detail"), value: payment.value.claim, type: "text" },
   ]);
 
+  async function savePayment(values, onSuccess) {
+    const paymentName = unref(name);
+    if (!paymentName) return;
+    
+    saving.value = true;
+    try {
+      await updateResource.submit({
+        doctype: "AT Payment",
+        name: paymentName,
+        fieldname: values,
+      });
+      showNotification(t("save_success"));
+      if (onSuccess) onSuccess();
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    } finally {
+      saving.value = false;
+    }
+  }
+
   // Watch for name change
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
@@ -158,5 +196,8 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
     heroCells,
     profileFields,
     financialFields,
+    saving,
+    notification,
+    savePayment,
   };
 }

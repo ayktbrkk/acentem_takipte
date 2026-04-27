@@ -37,7 +37,8 @@
           :fields="profileFields"
           layout="list"
           :t="t"
-          :saving="loading"
+          :saving="saving"
+          @save="savePayment"
         />
 
         <EditableCard
@@ -45,7 +46,8 @@
           :fields="financialFields"
           layout="list"
           :t="t"
-          :saving="loading"
+          :saving="saving"
+          @save="savePayment"
         />
 
         <SectionPanel v-if="installments.length" :title="t('payment_plan')">
@@ -142,6 +144,16 @@
       @close="closeUploadModal"
       @uploaded="handleUploadComplete"
     />
+
+    <!-- Notifications -->
+    <div class="fixed right-6 top-24 z-[100] w-full max-w-sm pointer-events-none">
+      <ToastNotification
+        :show="notification.show"
+        :message="notification.message"
+        :type="notification.type"
+        @close="notification.show = false"
+      />
+    </div>
   </WorkbenchPageLayout>
 </template>
 
@@ -159,6 +171,7 @@ import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import EditableCard from "../components/app-shell/EditableCard.vue";
+import ToastNotification from "../components/ui/ToastNotification.vue";
 import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 
@@ -191,6 +204,9 @@ const {
   heroCells,
   profileFields,
   financialFields,
+  saving,
+  notification,
+  savePayment,
 } = usePaymentDetailRuntime({ 
   name: computed(() => props.name),
   activeLocale 
