@@ -1,131 +1,133 @@
 <template>
   <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-    <template v-for="field in fields" :key="field.name">
-      <div :class="fieldWrapClass(field)">
-        <slot v-if="field.type === 'custom'" :name="`field-${field.name}`" :field="field" />
+    <div 
+      v-for="field in fields" 
+      :key="field.name"
+      :class="fieldWrapClass(field)"
+    >
+      <slot v-if="field.type === 'custom'" :name="`field-${field.name}`" :field="field" />
 
-        <div v-else>
-          <label class="field-label block">
-            {{ fieldLabel(field) }}
-            <span v-if="isFieldRequired(field)" class="text-amber-500">*</span>
-          </label>
+      <div v-else>
+        <label class="field-label block">
+          {{ fieldLabel(field) }}
+          <span v-if="isFieldRequired(field)" class="text-amber-500">*</span>
+        </label>
 
-          <template v-if="field.type === 'select'">
-            <VueSelect
-              v-if="isRemoteSelect(field)"
-              v-model="model[field.name]"
-              :class="controlClass(field, 'qc-remote-select qc-control')"
-              :is-disabled="isFieldDisabled(field)"
-              :is-loading="Boolean(remoteLoadingMap[field.name])"
-              :is-searchable="true"
-              :is-clearable="true"
-              :is-taggable="canCreateRelated(field)"
-              :close-on-select="true"
-              :placeholder="text(field.searchPlaceholder) || text(defaultSearchPlaceholder)"
-              :options="resolveRemoteSelectOptions(field)"
-              :classes="{ menuContainer: remoteMenuClass(field) }"
-              @search="onRemoteSelectSearch(field, $event)"
-              @menu-opened="onRemoteMenuOpened(field)"
-              @menu-closed="onRemoteMenuClosed(field)"
-              @option-created="onRelatedCreateRequested(field, $event)"
-            >
-              <template #no-options>
-                <div class="qc-remote-no-options">
-                  {{ remoteNoResultsText(field) }}
-                </div>
-              </template>
-
-              <template #taggable-no-options>
-                <button
-                  v-if="showRelatedCreateAction(field)"
-                  type="button"
-                  class="qc-remote-create-action"
-                  :disabled="isFieldDisabled(field)"
-                  @mousedown.prevent
-                  @click="onRelatedCreateButton(field)"
-                >
-                  {{ relatedCreateActionText(field) }}
-                </button>
-              </template>
-            </VueSelect>
-
-            <select
-              v-else
-              v-model="model[field.name]"
-              :class="controlClass(field, 'qc-control')"
-              :disabled="isFieldDisabled(field)"
-            >
-              <option value="">{{ text(field.placeholder) || text(defaultSelectPlaceholder) }}</option>
-              <option
-                v-for="option in resolveSelectOptions(field)"
-                :key="String(option.value)"
-                :value="option.value"
-              >
-                {{ text(option.label) || option.label || option.value }}
-              </option>
-            </select>
-          </template>
-
-          <label
-            v-else-if="field.type === 'checkbox'"
-            class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 hover:bg-white transition-colors cursor-pointer"
-          >
-            <input v-model="model[field.name]" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" type="checkbox" :disabled="isFieldDisabled(field)" />
-            <span class="font-medium">{{ text(field.checkboxLabel || field.label) }}</span>
-          </label>
-
-          <textarea
-            v-else-if="field.type === 'textarea'"
+        <div v-if="field.type === 'select'">
+          <VueSelect
+            v-if="isRemoteSelect(field)"
             v-model="model[field.name]"
-            :class="controlClass(field, 'qc-textarea min-h-[90px]')"
-            :rows="field.rows || 3"
-            :placeholder="text(field.placeholder)"
-            :disabled="isFieldDisabled(field)"
-          />
+            :class="controlClass(field, 'qc-remote-select qc-control')"
+            :is-disabled="isFieldDisabled(field)"
+            :is-loading="Boolean(remoteLoadingMap[field.name])"
+            :is-searchable="true"
+            :is-clearable="true"
+            :is-taggable="canCreateRelated(field)"
+            :close-on-select="true"
+            :placeholder="text(field.searchPlaceholder) || text(defaultSearchPlaceholder)"
+            :options="resolveRemoteSelectOptions(field)"
+            :classes="{ menuContainer: remoteMenuClass(field) }"
+            @search="onRemoteSelectSearch(field, $event)"
+            @menu-opened="onRemoteMenuOpened(field)"
+            @menu-closed="onRemoteMenuClosed(field)"
+            @option-created="onRelatedCreateRequested(field, $event)"
+          >
+            <template #no-options>
+              <div class="qc-remote-no-options">
+                {{ remoteNoResultsText(field) }}
+              </div>
+            </template>
 
-          <div v-else-if="field.type === 'autocomplete'">
-            <input
-              v-model="model[field.name]"
-              :class="controlClass(field, 'qc-control')"
-              type="text"
-              :list="autocompleteListId(field)"
-              :placeholder="text(field.placeholder)"
-              :disabled="isFieldDisabled(field)"
-              @keyup.enter="emit('submit')"
-            />
-            <datalist :id="autocompleteListId(field)">
-              <option
-                v-for="option in resolveOptions(field)"
-                :key="String(option.value ?? option.label)"
-                :value="autocompleteOptionValue(option, field)"
+            <template #taggable-no-options>
+              <button
+                v-if="showRelatedCreateAction(field)"
+                type="button"
+                class="qc-remote-create-action"
+                :disabled="isFieldDisabled(field)"
+                @mousedown.prevent
+                @click="onRelatedCreateButton(field)"
               >
-                {{ text(option.label) || option.label || option.value }}
-              </option>
-            </datalist>
-          </div>
+                {{ relatedCreateActionText(field) }}
+              </button>
+            </template>
+          </VueSelect>
 
-          <input
+          <select
             v-else
             v-model="model[field.name]"
-            :class="controlClass(field, ['qc-control', field.type === 'number' ? 'form-input-number' : ''])"
-            :type="normalizeInputType(field.type)"
+            :class="controlClass(field, 'qc-control')"
+            :disabled="isFieldDisabled(field)"
+          >
+            <option value="">{{ text(field.placeholder) || text(defaultSelectPlaceholder) }}</option>
+            <option
+              v-for="option in resolveSelectOptions(field)"
+              :key="String(option.value)"
+              :value="option.value"
+            >
+              {{ text(option.label) || option.label || option.value }}
+            </option>
+          </select>
+        </div>
+
+        <label
+          v-else-if="field.type === 'checkbox'"
+          class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 hover:bg-white transition-colors cursor-pointer"
+        >
+          <input v-model="model[field.name]" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" type="checkbox" :disabled="isFieldDisabled(field)" />
+          <span class="font-medium">{{ text(field.checkboxLabel || field.label) }}</span>
+        </label>
+
+        <textarea
+          v-else-if="field.type === 'textarea'"
+          v-model="model[field.name]"
+          :class="controlClass(field, 'qc-textarea min-h-[90px]')"
+          :rows="field.rows || 3"
+          :placeholder="text(field.placeholder)"
+          :disabled="isFieldDisabled(field)"
+        />
+
+        <div v-else-if="field.type === 'autocomplete'">
+          <input
+            v-model="model[field.name]"
+            :class="controlClass(field, 'qc-control')"
+            type="text"
+            :list="autocompleteListId(field)"
             :placeholder="text(field.placeholder)"
             :disabled="isFieldDisabled(field)"
-            :min="field.min"
-            :max="field.max"
-            :step="field.step"
             @keyup.enter="emit('submit')"
           />
-
-          <p v-if="fieldErrors?.[field.name]" class="form-error">
-            {{ fieldErrors[field.name] }}
-          </p>
-          <p v-else-if="fieldHelp(field)" class="mt-1 text-xs text-slate-500">
-            {{ fieldHelp(field) }}
-          </p>
+          <datalist :id="autocompleteListId(field)">
+            <option
+              v-for="option in resolveOptions(field)"
+              :key="String(option.value ?? option.label)"
+              :value="autocompleteOptionValue(option, field)"
+            >
+              {{ text(option.label) || option.label || option.value }}
+            </option>
+          </datalist>
         </div>
+
+        <input
+          v-else
+          v-model="model[field.name]"
+          :class="controlClass(field, ['qc-control', field.type === 'number' ? 'form-input-number' : ''])"
+          :type="normalizeInputType(field.type)"
+          :placeholder="text(field.placeholder)"
+          :disabled="isFieldDisabled(field)"
+          :min="field.min"
+          :max="field.max"
+          :step="field.step"
+          @keyup.enter="emit('submit')"
+        />
+
+        <p v-if="fieldErrors?.[field.name]" class="form-error">
+          {{ fieldErrors[field.name] }}
+        </p>
+        <p v-else-if="fieldHelp(field)" class="mt-1 text-xs text-slate-500">
+          {{ fieldHelp(field) }}
+        </p>
       </div>
-    </template>
+    </div>
   </div>
 </template>
 
