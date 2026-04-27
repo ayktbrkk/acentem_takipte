@@ -32,7 +32,7 @@ def get_payment_360_payload(payment_name):
         filters={
             "reference_doctype": "AT Payment",
             "reference_name": payment_name,
-            "is_archived": 0
+            "status": ["!=", "Archived"]
         },
         fields=["*"],
         order_by="creation desc"

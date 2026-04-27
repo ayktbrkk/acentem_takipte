@@ -21,7 +21,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : 'text-gray-900'"
+          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : 'text-slate-900'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -155,7 +155,11 @@
                   @click="openPolicy(item.name)"
                 >
                   <template #trailing>
-                    <StatusBadge domain="policy" :status="normalizeStatus(item.status)" />
+                    <StatusBadge 
+                      domain="policy" 
+                      :status="normalizeStatus(item.status)" 
+                      :label="t('status_' + String(item.status || 'draft').toLowerCase())" 
+                    />
                   </template>
                   <MiniFactList class="mt-2" :items="policyFacts(item)" />
                 </MetaListCard>
@@ -182,7 +186,11 @@
                   @click="openOffer(item.name)"
                 >
                   <template #trailing>
-                    <StatusBadge domain="offer" :status="normalizeStatus(item.status)" />
+                    <StatusBadge 
+                      domain="offer" 
+                      :status="normalizeStatus(item.status)" 
+                      :label="t('status_' + String(item.status || 'draft').toLowerCase())" 
+                    />
                   </template>
                   <MiniFactList class="mt-2" :items="offerFacts(item)" />
                 </MetaListCard>
@@ -209,7 +217,11 @@
                   @click="openClaim(item.name)"
                 >
                   <template #trailing>
-                    <StatusBadge domain="claim" :status="normalizeStatus(item.claim_status)" />
+                    <StatusBadge 
+                      domain="claim" 
+                      :status="normalizeStatus(item.claim_status)" 
+                      :label="t('status_' + String(item.claim_status || 'open').toLowerCase())" 
+                    />
                   </template>
                   <MiniFactList class="mt-2" :items="claimFacts(item)" />
                 </MetaListCard>

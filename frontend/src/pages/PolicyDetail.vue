@@ -33,7 +33,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : cell.variant === 'cancel-pill' ? 'text-rose-600' : 'text-gray-900'"
+          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : cell.variant === 'cancel-pill' ? 'text-rose-600' : 'text-slate-900'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -146,7 +146,11 @@
               {{ formatDate(row.endorsement_date) }}
             </template>
             <template #cell(status)="{ row }">
-              <StatusBadge domain="policy" :status="row.status === 'Applied' ? 'active' : 'waiting'" :label="row.status" />
+              <StatusBadge 
+                domain="policy" 
+                :status="normalizeStatus(row.status)" 
+                :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
+              />
             </template>
           </ListTable>
         </SectionPanel>
@@ -164,7 +168,11 @@
               {{ formatCurrency(row.amount, row.currency) }}
             </template>
             <template #cell(status)="{ row }">
-              <StatusBadge domain="payment" :status="row.status === 'Paid' ? 'active' : 'waiting'" :label="row.status" />
+              <StatusBadge 
+                domain="payment" 
+                :status="row.status === 'Paid' ? 'active' : 'waiting'" 
+                :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
+              />
             </template>
           </ListTable>
         </SectionPanel>

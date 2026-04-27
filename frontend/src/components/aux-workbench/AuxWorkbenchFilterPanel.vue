@@ -24,23 +24,23 @@
       </template>
     </SmartFilterBar>
 
-    <div v-if="showAdvanced" class="mt-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div v-if="showAdvanced" class="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <template v-for="fd in advancedFilterDefs" :key="'adv-'+fd.key">
-           <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
-             <span>{{ fieldLabel(fd.field) }}</span>
+           <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+             <span class="text-[10.5px] font-semibold tracking-[0.05em] text-slate-400 uppercase">{{ fieldLabel(fd.field) }}</span>
              <input
                v-model="draft[fd.key]"
                :type="fd.type === 'number' ? 'number' : 'text'"
-               class="input"
+               class="input shadow-sm"
                :placeholder="fieldLabel(fd.field)"
              />
            </label>
         </template>
       </div>
-      <div class="mt-5 flex items-center justify-end gap-2 border-t pt-4">
-        <button class="btn btn-outline btn-sm" type="button" @click="$emit('reset')">{{ resetLabel }}</button>
-        <button class="btn btn-primary btn-sm px-6" type="button" @click="$emit('apply')">{{ applyLabel }}</button>
+      <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+        <button class="btn btn-outline btn-sm shadow-sm" type="button" @click="$emit('reset')">{{ resetLabel }}</button>
+        <button class="btn btn-primary btn-sm px-6 shadow-sm" type="button" @click="$emit('apply')">{{ applyLabel }}</button>
       </div>
     </div>
   </div>

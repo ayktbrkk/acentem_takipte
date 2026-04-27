@@ -1,5 +1,5 @@
 <template>
-  <article class="surface-card rounded-2xl p-5">
+  <article class="surface-card rounded-xl border-[0.5px] border-slate-200 p-5 shadow-sm">
     <div class="flex items-center justify-between gap-3">
       <div>
         <h3 class="text-base font-semibold text-slate-900">{{ t("title") }}</h3>
@@ -7,15 +7,26 @@
       </div>
     </div>
 
-    <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-      {{ t("loading") }}
+    <div v-if="loading" class="mt-4 space-y-3">
+      <SkeletonLoader v-for="i in 5" :key="i" variant="text" />
     </div>
     <article v-else-if="errorText" class="qc-error-banner mt-4">
-      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-      <p class="qc-error-banner__text mt-1">{{ errorText }}</p>
+      <div class="flex items-start gap-3">
+        <FeatherIcon name="alert-circle" class="h-5 w-5 text-amber-600 mt-0.5" />
+        <div>
+          <p class="qc-error-banner__text font-bold">{{ t("loadErrorTitle") }}</p>
+          <p class="qc-error-banner__text mt-0.5">{{ errorText }}</p>
+        </div>
+      </div>
     </article>
-    <div v-else-if="payments.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-      <EmptyState :title="t('emptyTitle')" :description="t('empty')" />
+    <div v-else-if="payments.length === 0" class="mt-4">
+      <div class="at-empty-state py-12">
+        <div class="card-empty-icon mx-auto">
+          <FeatherIcon name="search" class="h-8 w-8 text-slate-300" />
+        </div>
+        <h4 class="mt-4 text-sm font-bold text-slate-900">{{ t('emptyTitle') }}</h4>
+        <p class="mt-1 text-xs text-slate-500">{{ t('empty') }}</p>
+      </div>
     </div>
     <div v-else class="mt-4">
       <ListTable
@@ -31,8 +42,10 @@
 </template>
 
 <script setup>
+import { FeatherIcon } from "frappe-ui";
 import EmptyState from "../app-shell/EmptyState.vue";
 import ListTable from "../ui/ListTable.vue";
+import SkeletonLoader from "../ui/SkeletonLoader.vue";
 
 defineProps({
   payments: {

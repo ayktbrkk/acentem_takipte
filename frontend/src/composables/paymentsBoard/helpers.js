@@ -20,7 +20,6 @@ export function formatCurrency(localeCode, value) {
   return new Intl.NumberFormat(localeCode, {
     style: "currency",
     currency: "TRY",
-    maximumFractionDigits: 0,
   }).format(Number(value || 0));
 }
 
@@ -65,13 +64,14 @@ export function isDueSoon(value) {
 }
 
 export function buildPaymentStatus(payment, collectedAmount, remainingAmount, isOverdue) {
-  const rawStatus = String(payment?.status || "").trim();
-  if (rawStatus === "Cancelled") return rawStatus;
-  if (remainingAmount <= 0 && Number(payment?.amount_try || payment?.amount || 0) > 0) return "Paid";
-  if (isOverdue) return "Overdue";
-  if (collectedAmount > 0 && remainingAmount > 0) return "Partially Paid";
-  if (rawStatus) return rawStatus;
-  return "Outstanding";
+  const rawStatus = String(payment?.status || "").trim().toLowerCase();
+  if (rawStatus === "cancelled") return "status_cancelled";
+  if (remainingAmount <= 0 && Number(payment?.amount_try || payment?.amount || 0) > 0) return "status_paid";
+  if (isOverdue) return "status_overdue";
+  if (collectedAmount > 0 && remainingAmount > 0) return "status_partially_paid";
+  if (rawStatus === "paid") return "status_paid";
+  if (rawStatus === "unpaid") return "status_unpaid";
+  return "status_outstanding";
 }
 
 export function buildPaymentSnapshot(payment, installmentSummary, localeCode) {

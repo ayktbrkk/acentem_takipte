@@ -16,7 +16,7 @@
             {{ option.label }}
           </option>
         </select>
-        <div class="h-4 w-px bg-gray-200 mx-1"></div>
+        <div class="h-4 w-px bg-slate-200 mx-1"></div>
         <FilterPresetMenu
           :model-value="presetModel"
           :label="t('presetLabel')"
@@ -31,18 +31,18 @@
           @save="$emit('preset-save', $event)"
           @delete="$emit('preset-delete')"
         />
-        <button class="btn btn-primary" @click="$emit('apply')">
+        <ActionButton variant="primary" size="sm" @click="$emit('apply')">
           {{ t('applyFilters') }}
-        </button>
-        <button class="btn btn-outline" @click="$emit('reset')">
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="$emit('reset')">
           <FeatherIcon name="x" class="h-4 w-4" />
-        </button>
+        </ActionButton>
       </template>
 
       <template #advanced>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3 pt-2">
           <label class="flex flex-col gap-1">
-            <span class="text-xs font-medium text-gray-600">{{ t('customerFilter') }}</span>
+            <span class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t('customerFilter') }}</span>
             <input
               v-model.trim="filters.customerQuery"
               class="input"
@@ -52,7 +52,7 @@
             />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs font-medium text-gray-600">{{ t('policyFilter') }}</span>
+            <span class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t('policyFilter') }}</span>
             <input
               v-model.trim="filters.policyQuery"
               class="input"
@@ -62,7 +62,7 @@
             />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs font-medium text-gray-600">{{ t('purposeFilter') }}</span>
+            <span class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t('purposeFilter') }}</span>
             <input
               v-model.trim="filters.purposeQuery"
               class="input"
@@ -81,6 +81,7 @@
 import { computed, ref } from "vue";
 import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
 import FilterPresetMenu from "../app-shell/FilterPresetMenu.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import { FeatherIcon } from "frappe-ui";
 
 const props = defineProps({

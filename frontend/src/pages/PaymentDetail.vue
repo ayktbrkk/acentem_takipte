@@ -9,7 +9,7 @@
         {{ t("back_to_list") }}
       </ActionButton>
       <ActionButton variant="primary" size="sm" @click="reload">
-        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+        <FeatherIcon name="refresh-cw" :class="['h-4 w-4', loading && 'animate-spin']" />
         {{ t("refresh") }}
       </ActionButton>
     </template>
@@ -21,7 +21,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : cell.variant === 'cancel-pill' ? 'text-rose-600' : 'text-gray-900'"
+          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : cell.variant === 'cancel-pill' ? 'text-rose-600' : 'text-slate-900'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -36,8 +36,8 @@
           <SkeletonLoader v-if="loading" variant="text" :rows="8" />
           <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div v-for="field in profileFields" :key="field.label">
-              <p class="text-sm font-medium text-slate-500">{{ field.label }}</p>
-              <p class="mt-1 text-base font-semibold text-slate-900">{{ field.value || "-" }}</p>
+              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ field.label }}</p>
+              <p class="mt-1 text-sm font-semibold text-slate-900">{{ field.value || "-" }}</p>
             </div>
           </div>
         </SectionPanel>
@@ -45,20 +45,20 @@
         <SectionPanel :title="t('financial_summary')">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <p class="text-sm font-medium text-slate-500">{{ t("amount") }}</p>
-              <p class="mt-1 text-base font-semibold text-slate-900">{{ formatCurrency(payment.amount, payment.currency) }}</p>
+              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t("amount") }}</p>
+              <p class="mt-1 text-sm font-semibold text-slate-900">{{ formatCurrency(payment.amount, payment.currency) }}</p>
             </div>
             <div>
-              <p class="text-sm font-medium text-slate-500">{{ t("status") }}</p>
-              <p class="mt-1 text-base font-semibold text-slate-900">{{ payment.status || "-" }}</p>
+              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t("status") }}</p>
+              <p class="mt-1 text-sm font-semibold text-slate-900">{{ t('status_' + String(payment.status || 'Unpaid').toLowerCase()) }}</p>
             </div>
             <div>
-              <p class="text-sm font-medium text-slate-500">{{ t("policy") }}</p>
-              <p class="mt-1 text-base font-semibold text-slate-900">{{ payment.policy || "-" }}</p>
+              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t("policy") }}</p>
+              <p class="mt-1 text-sm font-semibold text-slate-900">{{ payment.policy || "-" }}</p>
             </div>
             <div>
-              <p class="text-sm font-medium text-slate-500">{{ t("claim_detail") }}</p>
-              <p class="mt-1 text-base font-semibold text-slate-900">{{ payment.claim || "-" }}</p>
+              <p class="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">{{ t("claim_detail") }}</p>
+              <p class="mt-1 text-sm font-semibold text-slate-900">{{ payment.claim || "-" }}</p>
             </div>
           </div>
         </SectionPanel>
@@ -76,7 +76,11 @@
               {{ formatCurrency(row.amount, row.currency) }}
             </template>
             <template #cell(status)="{ row }">
-              <StatusBadge domain="payment" :status="row.status === 'Paid' ? 'active' : 'hold'" :label="row.status" />
+              <StatusBadge 
+                domain="payment" 
+                :status="row.status === 'Paid' ? 'active' : 'hold'" 
+                :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
+              />
             </template>
           </ListTable>
         </SectionPanel>
@@ -93,7 +97,7 @@
           <SkeletonLoader v-if="loading" variant="card" />
           <div v-else class="space-y-4">
             <div class="flex items-center gap-4">
-              <div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-lg font-bold text-slate-600">
+              <div class="h-12 w-12 rounded-full bg-brand-50 flex items-center justify-center text-lg font-bold text-brand-600">
                 {{ uppercaseText((payment.customer_name || "?").charAt(0), activeLocale) }}
               </div>
               <div>
@@ -104,7 +108,7 @@
           </div>
         </SectionPanel>
 
-        <SectionPanel :title="detailCopy.receiptTitle">
+        <SectionPanel :title="t('receipt_title')">
           <template #trailing>
             <div class="flex flex-wrap items-center gap-2">
               <ActionButton variant="secondary" size="xs" @click="openCollectPayment">
@@ -121,14 +125,22 @@
               </ActionButton>
             </div>
           </template>
-          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
-          <div v-else class="space-y-2">
+          <div v-if="!documents.length" class="flex flex-col items-center justify-center py-8 card-empty-compact">
+            <div class="card-empty-icon">
+              <FeatherIcon name="file" class="h-6 w-6" />
+            </div>
+            <p class="card-empty-text">{{ t("no_activities") }}</p>
+          </div>
+          <div v-else class="divide-y divide-slate-100">
             <div 
               v-for="doc in documents" 
               :key="doc.name"
-              class="flex items-center justify-between gap-3 p-2 rounded hover:bg-slate-50 text-sm text-slate-600 transition-colors"
+              class="flex items-center justify-between gap-3 py-3 text-sm text-slate-600"
             >
-              <span class="truncate">{{ doc.display_name || doc.file_name }}</span>
+              <div class="flex items-center gap-3 truncate">
+                <FeatherIcon name="file-text" class="h-4 w-4 text-slate-400" />
+                <span class="truncate font-medium text-slate-700">{{ doc.display_name || doc.file_name }}</span>
+              </div>
               <ActionButton variant="secondary" size="xs" @click="openDocument(doc)">
                 {{ t("openDocument") }}
               </ActionButton>
@@ -205,9 +217,9 @@ async function openDocument(doc) {
 }
 
 const installmentColumns = computed(() => [
-  { key: "installment_no", label: t("installment_no"), width: "100px" },
-  { key: "due_date", label: t("due_date"), width: "120px" },
-  { key: "amount", label: t("amount"), width: "120px", align: "right" },
-  { key: "status", label: t("status"), width: "100px" },
+  { key: "installment_no", label: t("colInstallmentNo"), width: "100px" },
+  { key: "due_date", label: t("colTerminDate"), width: "120px" },
+  { key: "amount", label: t("colAmount"), width: "120px", align: "right" },
+  { key: "status", label: t("colStatus"), width: "100px" },
 ]);
 </script>

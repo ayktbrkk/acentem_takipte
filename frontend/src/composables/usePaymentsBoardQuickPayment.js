@@ -85,7 +85,7 @@ export function usePaymentsBoardQuickPayment({ t, branchStore, reloadPayments, l
     })),
   }));
 
-  const quickPaymentEyebrow = computed(() => translateText("Quick Payment", unref(localeCode)));
+  const quickPaymentEyebrow = computed(() => t("quickPayment"));
   const quickPaymentSuccessHandlers = {
     payment_list: async () => {
       await reloadPayments();

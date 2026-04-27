@@ -17,45 +17,6 @@ function humanizeField(field) {
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-const AUX_DETAIL_VALUE_LABELS = {
-  tr: {
-    Synced: "Senkron",
-    Draft: "Taslak",
-    Failed: "Başarısız",
-    Active: "Aktif",
-    Archived: "Arşivlendi",
-    Claim: "Hasar",
-    Policy: "Poliçe",
-    Endorsement: "Zeyilname",
-    Payment: "Ödeme",
-    Resolved: "Çözüldü",
-    Open: "Açık",
-    Ignored: "Yoksayıldı",
-    Amount: "Tutar",
-    Currency: "Döviz",
-    "Missing External": "Harici Kayıt Eksik",
-    "Missing Local": "Yerel Kayıt Eksik",
-    Status: "Durum",
-    Other: "Diğer",
-    Matched: "Eşleşti",
-    Adjusted: "Düzeltildi",
-    "Manual Override": "Manuel Geçersiz Kılma",
-    "AT Policy": "Poliçe",
-    "AT Claim": "Hasar",
-    "AT Payment": "Ödeme",
-    "AT Customer": "Müşteri",
-    "AT Accounting Entry": "Muhasebe Kaydı",
-    "AT Reconciliation Item": "Mutabakat Kalemi",
-    Yes: "Evet",
-    No: "Hayır",
-    "Vehicle Registration": "Ruhsat",
-    "ID Document": "Kimlik",
-    "Policy Copy": "Poliçe Kopyası",
-    "Damage Photo": "Hasar Fotoğrafı",
-  },
-  en: {},
-};
-
 const AUX_DETAIL_FIELD_LABELS = {
   "accounting-entries": {
     tr: {
@@ -309,10 +270,11 @@ export function useAuxRecordDetailSummary({
   );
 
   function translateDetailValue(value) {
-    const locale = activeLocale.value || "en";
-    const table = AUX_DETAIL_VALUE_LABELS[locale] || {};
     const key = String(value ?? "");
-    return table[key] || key;
+    if (!key) return "-";
+    const lookupKey = "val" + key.replace(/\s+/g, "");
+    const translated = t(lookupKey);
+    return translated === lookupKey ? key : translated;
   }
 
   function fieldLabel(field) {

@@ -37,13 +37,20 @@ def get_claim_360_payload(name):
         limit_page_length=20
     )
     
-    # 4. Fetch Linked Customer/Policy brief
-    # (Optional, but useful for quick context if needed in specialized cards)
+    # 4. Fetch Linked Customer brief
+    customer = {}
+    if claim.customer:
+        try:
+            customer = frappe.get_doc("AT Customer", claim.customer).as_dict()
+            # Mask sensitive info if needed, but for detail view we usually show it
+        except frappe.DoesNotExistError:
+            pass
 
     payload = {
         "claim": claim.as_dict(),
         "documents": documents,
         "payments": payments,
+        "customer": customer,
         "metadata": {
             "last_cached": frappe.utils.now(),
             "ttl": 300

@@ -18,7 +18,7 @@
             {{ option.label }}
           </option>
         </select>
-        <div class="h-4 w-px bg-gray-200 mx-1"></div>
+        <div class="h-4 w-px bg-slate-200 mx-1"></div>
         <button class="btn btn-primary" @click="runtime.applySnapshotFilters">
           {{ t('applyFilters') }}
         </button>

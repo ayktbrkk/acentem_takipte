@@ -21,7 +21,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : 'text-gray-900'"
+          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : 'text-slate-900'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -51,7 +51,12 @@
             >
               <p class="text-sm font-bold text-slate-900 truncate">{{ policy.policy_no || policy.name }}</p>
               <div class="flex items-center justify-between mt-2">
-                <StatusBadge domain="policy" :status="policy.status === 'Active' ? 'active' : 'waiting'" :label="policy.status" size="sm" />
+                <StatusBadge 
+                  domain="policy" 
+                  :status="policy.status === 'Active' ? 'active' : 'waiting'" 
+                  :label="t('status_' + String(policy.status || 'draft').toLowerCase())" 
+                  size="sm" 
+                />
                 <p class="text-xs font-bold text-slate-600">{{ formatCurrency(policy.gross_premium, policy.currency) }}</p>
               </div>
             </div>
@@ -68,7 +73,12 @@
             >
               <p class="text-sm font-bold text-slate-900 truncate">{{ relOffer.name }}</p>
               <div class="flex items-center justify-between mt-2">
-                <StatusBadge domain="policy" :status="relOffer.status === 'Accepted' ? 'active' : 'waiting'" :label="relOffer.status" size="sm" />
+                <StatusBadge 
+                  domain="policy" 
+                  :status="relOffer.status === 'Accepted' ? 'active' : 'waiting'" 
+                  :label="t('status_' + String(relOffer.status || 'draft').toLowerCase())" 
+                  size="sm" 
+                />
                 <p class="text-xs font-bold text-slate-600">{{ formatCurrency(relOffer.gross_premium, relOffer.currency) }}</p>
               </div>
             </div>

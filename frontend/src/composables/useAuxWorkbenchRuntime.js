@@ -10,6 +10,7 @@ import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 import { useAuxWorkbenchPresets } from "./useAuxWorkbenchPresets";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
+import { translateText } from "@/utils/i18n";
 
 const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
   "AT Renewal Task",
@@ -26,20 +27,11 @@ function asArray(value) {
 
 export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branchStore, route, router }) {
   const localeCode = computed(() => (String(unref(activeLocale) || "").trim() === "tr" ? "tr-TR" : "en-US"));
-  const documentLifecycleLabels = computed(() => {
-    const isTr = String(unref(activeLocale) || "").trim() === "tr";
-    return isTr
-      ? {
-          archiveConfirm: "Bu doküman arşivlensin mi?",
-          restoreConfirm: "Bu doküman geri yüklensin mi?",
-          permanentDeleteConfirm: "Bu doküman ve bağlı dosyası kalıcı olarak silinecek. Devam edilsin mi?",
-        }
-      : {
-          archiveConfirm: "Archive this document?",
-          restoreConfirm: "Restore this document?",
-          permanentDeleteConfirm: "This document and its linked file will be permanently deleted. Continue?",
-        };
-  });
+  const documentLifecycleLabels = computed(() => ({
+    archiveConfirm: translateText("archiveConfirm", activeLocale),
+    restoreConfirm: translateText("restoreConfirm", activeLocale),
+    permanentDeleteConfirm: translateText("permanentDeleteConfirm", activeLocale),
+  }));
 
   const draft = reactive({ query: "", sort: config.defaultSort || "modified desc", pageLength: 20 });
   const filters = reactive({ query: "", sort: config.defaultSort || "modified desc" });

@@ -27,7 +27,7 @@
       </button>
     </div>
 
-    <div class="h-6 w-px bg-gray-200 mx-1"></div>
+    <div class="h-6 w-px bg-slate-200 mx-1"></div>
 
     <button
       v-if="canCreateQuickMessage"

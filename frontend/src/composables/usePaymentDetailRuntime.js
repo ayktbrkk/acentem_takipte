@@ -100,10 +100,14 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const heroCells = computed(() => [
-    { label: t("payment_purpose"), value: payment.value.payment_purpose },
-    { label: t("amount"), value: formatCurrency(payment.value.amount, payment.value.currency), variant: "lg" },
+    { label: t("payment_purpose"), value: payment.value.payment_purpose || "-" },
+    { label: t("amount"), value: formatCurrency(payment.value.amount, payment.value.currency) },
     { label: t("payment_date"), value: formatDate(payment.value.payment_date) },
-    { label: t("status"), value: t(`status_${String(payment.value.status || "Unpaid").toLowerCase()}`), variant: "accent" },
+    { 
+      label: t("status"), 
+      value: t(`status_${String(payment.value.status || "Unpaid").toLowerCase()}`),
+      variant: payment.value.status === "Paid" ? "success-pill" : payment.value.status === "Cancelled" ? "cancel-pill" : "default"
+    },
   ]);
 
   const profileFields = computed(() => [
