@@ -209,6 +209,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   const profileFields = computed(() => {
     const fields = [
+      { key: "name", label: t("record_no") || "Kayıt No", value: policy.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
       { key: "policy_no", label: t("carrier_policy_no"), value: policy.value.policy_no, type: "text", required: true, copyable: true, unspecifiedLabel: t("unspecified") },
       { 
         key: "insurance_company", 
