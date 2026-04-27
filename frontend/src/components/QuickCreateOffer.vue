@@ -25,7 +25,7 @@ import { computed, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource, Dialog } from "frappe-ui";
 import OfferForm from "./OfferForm.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate/registry";
+import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { translateText } from "../utils/i18n";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";

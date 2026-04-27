@@ -92,7 +92,7 @@ import { computed } from "vue";
 import QuickCreateDialogShell from "./app-shell/QuickCreateDialogShell.vue";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import QuickCustomerPicker from "./app-shell/QuickCustomerPicker.vue";
-import { getQuickCreateConfig } from "../config/quickCreate";
+import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { translateText } from "../utils/i18n";
 
 const props = defineProps({
