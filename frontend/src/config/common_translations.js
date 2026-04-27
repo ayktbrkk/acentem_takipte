@@ -115,6 +115,9 @@ export const COMMON_TRANSLATIONS = {
     payment_plan: "Ödeme Planı",
     receipt_title: "Dekont / Fatura",
     whatsapp_share_message: "Poliçe: {policy}\nMüşteri: {customer}",
+    selected: "Seçili",
+    search_records: "Kayıtlarda ara...",
+    no_records_found: "Kayıt bulunamadı",
   },
   en: {
     all: "All",
@@ -232,6 +235,9 @@ export const COMMON_TRANSLATIONS = {
     payment_plan: "Payment Plan",
     receipt_title: "Receipt / Invoice",
     whatsapp_share_message: "Policy: {policy}\nCustomer: {customer}",
+    selected: "Selected",
+    search_records: "Search records...",
+    no_records_found: "No records found",
   }
 };
 

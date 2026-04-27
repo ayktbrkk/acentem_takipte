@@ -240,6 +240,10 @@ export const POLICY_TRANSLATIONS = {
     typeNote: "Not",
     expired: "Süresi Doldu",
     noDate: "Tarih yok",
+    record_no: "Kayıt No",
+    document_serial_no: "Belge Seri-No",
+    brand_code: "Marka Kodu",
+    model_year: "Model Yılı",
   },
   en: {
     // List Page
@@ -496,6 +500,10 @@ export const POLICY_TRANSLATIONS = {
     typeNote: "Note",
     expired: "Expired",
     noDate: "No date",
+    record_no: "Record No",
+    document_serial_no: "Document Serial No",
+    brand_code: "Brand Code",
+    model_year: "Model Year",
   },
 };
 
