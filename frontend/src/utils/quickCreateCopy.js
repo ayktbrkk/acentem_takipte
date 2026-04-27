@@ -10,9 +10,9 @@ const QUICK_CREATE_EYEBROWS = {
 };
 
 const QUICK_CREATE_LABELS = {
-  create: { cancel: "Cancel", save: "Create", saveAndOpen: "Create & Open" },
+  create: { cancel: "Cancel", save: "Save", saveAndOpen: "Save & Open" },
   manage: { cancel: "Cancel", save: "Save", saveAndOpen: "Save & Open" },
-  claim: { cancel: "Cancel", save: "Create" },
+  claim: { cancel: "Cancel", save: "Save" },
 };
 
 export function getQuickCreateEyebrow(configKey, locale = "en") {

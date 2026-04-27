@@ -1,51 +1,31 @@
 <template>
-  <div v-if="modelValue" class="dialog-overlay" @click.self="close">
-    <div class="dialog-shell dialog-md qc-managed-dialog-shell">
-      <div class="qc-managed-dialog__header">
-        <div class="qc-managed-dialog__headline">
-          <p class="qc-managed-dialog__eyebrow">{{ resolvedEyebrow }}</p>
-          <h3 class="qc-managed-dialog__title">{{ resolvedTitle }}</h3>
-          <p v-if="resolvedSubtitle" class="qc-managed-dialog__subtitle">{{ resolvedSubtitle }}</p>
-        </div>
-        <button
-          class="qc-managed-dialog__close"
-          type="button"
-          :aria-label="translateText('Close', locale)"
-          :title="translateText('Close', locale)"
-          @click="close"
-        >
-          <span aria-hidden="true">×</span>
-          <span class="sr-only">{{ translateText('Close', locale) }}</span>
-        </button>
-      </div>
-
-      <form class="qc-managed-dialog__body" @submit.prevent="submit(false)">
-        <OfferForm
-          :model="form"
-          :field-errors="fieldErrors"
-          :options-map="optionsMap"
-          :disabled="loading"
-          :loading="loading"
-          :error="errorText"
-          :eyebrow="resolvedEyebrow"
-          :subtitle="resolvedSubtitle"
-          :locale="locale"
-          @cancel="close"
-          @submit="submit(false)"
-          @submit-and-open="submit(true)"
-        />
-      </form>
-    </div>
-  </div>
+  <Dialog v-model="showProxy" :options="{ title: resolvedTitle, size: 'xl' }">
+    <template #body-content>
+      <OfferForm
+        :model="form"
+        :field-errors="fieldErrors"
+        :options-map="optionsMap"
+        :disabled="loading"
+        :loading="loading"
+        :error="errorText"
+        :eyebrow="resolvedEyebrow"
+        :subtitle="resolvedSubtitle"
+        :locale="locale"
+        :labels="resolvedLabels"
+        @cancel="close"
+        @submit="submit(false)"
+        @submit-and-open="submit(true)"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { createResource } from "frappe-ui";
-import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
+import { createResource, Dialog } from "frappe-ui";
 import OfferForm from "./OfferForm.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate";
+import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate/registry";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { translateText } from "../utils/i18n";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
@@ -77,6 +57,11 @@ const fieldErrors = reactive({});
 const loading = ref(false);
 const errorText = ref("");
 
+const showProxy = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
 const createResourceHandle = createResource({
   url: config?.submitUrl || "",
   auto: false,
@@ -86,7 +71,6 @@ const resolvedTitle = computed(() => getLocalizedText(props.titleOverride || con
 const resolvedEyebrow = computed(() => getQuickCreateEyebrow("offer", props.locale));
 const resolvedSubtitle = computed(() => getLocalizedText(props.subtitleOverride || config?.subtitle, props.locale));
 const resolvedLabels = computed(() => ({ ...getQuickCreateLabels("create", props.locale), ...props.labels }));
-const saveDisabledComputed = computed(() => props.saveDisabled || loading.value);
 
 function resetFieldErrors() {
   Object.keys(fieldErrors).forEach((key) => delete fieldErrors[key]);
@@ -139,13 +123,6 @@ function validateRequired() {
 
 async function submit(openAfter = false) {
   if (loading.value || !validateRequired()) return;
-
-  const hasPolicyHolderField = fields.value.some((field) => field?.name === "policy_holder");
-  if (hasPolicyHolderField && !String(form.policy_holder || "").trim()) {
-    errorText.value = translateText("Policy holder is required.", props.locale);
-    fieldErrors.policy_holder = translateText("Policy Holder", props.locale);
-    return;
-  }
 
   if (typeof props.validate === "function") {
     const result = await props.validate({ form, fieldErrors, setError: (text) => (errorText.value = text) });

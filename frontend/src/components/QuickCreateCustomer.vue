@@ -1,52 +1,31 @@
 <template>
-  <div v-if="modelValue" class="dialog-overlay" @click.self="close">
-    <div class="dialog-shell dialog-sm qc-managed-dialog-shell">
-      <div class="qc-managed-dialog__header">
-        <div class="qc-managed-dialog__headline">
-          <p class="qc-managed-dialog__eyebrow">{{ resolvedEyebrow }}</p>
-          <h3 class="qc-managed-dialog__title">{{ resolvedTitle }}</h3>
-          <p v-if="resolvedSubtitle" class="qc-managed-dialog__subtitle">{{ resolvedSubtitle }}</p>
-        </div>
-        <button
-          class="qc-managed-dialog__close"
-          type="button"
-          :aria-label="translateText('Close', locale)"
-          :title="translateText('Close', locale)"
-          @click="close"
-        >
-          <span aria-hidden="true">×</span>
-          <span class="sr-only">{{ translateText('Close', locale) }}</span>
-        </button>
-      </div>
-
-      <form class="qc-managed-dialog__body" @submit.prevent="submit(false)">
-        <CustomerForm
-          :model="form"
-          :field-errors="fieldErrors"
-          :options-map="optionsMap"
-          :disabled="loading"
-          :loading="loading"
-          :error="errorText"
-          :eyebrow="resolvedEyebrow"
-          :subtitle="resolvedSubtitle"
-          :locale="locale"
-          :labels="resolvedLabels"
-          :fields="fields"
-          @cancel="close"
-          @save="submit($event)"
-        />
-      </form>
-    </div>
-  </div>
+  <Dialog v-model="showProxy" :options="{ title: resolvedTitle, size: 'xl' }">
+    <template #body-content>
+      <CustomerForm
+        :model="form"
+        :field-errors="fieldErrors"
+        :options-map="optionsMap"
+        :disabled="loading"
+        :loading="loading"
+        :error="errorText"
+        :eyebrow="resolvedEyebrow"
+        :subtitle="resolvedSubtitle"
+        :locale="locale"
+        :labels="resolvedLabels"
+        :fields="fields"
+        @cancel="close"
+        @save="submit($event)"
+      />
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { createResource } from "frappe-ui";
-import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
+import { createResource, Dialog } from "frappe-ui";
 import CustomerForm from "./CustomerForm.vue";
-import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate";
+import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreate/registry";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
 import { translateText } from "../utils/i18n";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
@@ -78,6 +57,11 @@ const fieldErrors = reactive({});
 const loading = ref(false);
 const errorText = ref("");
 
+const showProxy = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
 const createResourceHandle = createResource({
   url: config?.submitUrl || "",
   auto: false,
@@ -87,7 +71,6 @@ const resolvedTitle = computed(() => getLocalizedText(props.titleOverride || con
 const resolvedEyebrow = computed(() => getQuickCreateEyebrow("customer", props.locale));
 const resolvedSubtitle = computed(() => getLocalizedText(props.subtitleOverride || config?.subtitle, props.locale));
 const resolvedLabels = computed(() => ({ ...getQuickCreateLabels("create", props.locale), ...props.labels }));
-const saveDisabledComputed = computed(() => props.saveDisabled || loading.value);
 
 function resetFieldErrors() {
   Object.keys(fieldErrors).forEach((key) => delete fieldErrors[key]);
