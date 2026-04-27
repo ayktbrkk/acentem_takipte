@@ -17,6 +17,7 @@
         :locale="activeLocale"
         @cancel="emit('cancel')"
         @submit="emit('submit')"
+        @submit-and-open="emit('submit-and-open')"
       />
     </template>
   </Dialog>
@@ -87,7 +88,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:show", "cancel", "submit"]);
+const emit = defineEmits(["update:show", "cancel", "submit", "submit-and-open"]);
 
 const showProxy = computed({
   get: () => props.show,

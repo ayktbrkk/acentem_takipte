@@ -114,7 +114,8 @@
       :subtitle="quickPolicyUi.subtitle"
       @update:show="setQuickPolicyDialogVisibility"
       @cancel="cancelQuickPolicyDialog"
-      @submit="submitQuickPolicy"
+      @submit="submitQuickPolicy(false)"
+      @submit-and-open="submitQuickPolicy(true)"
     />
   </WorkbenchPageLayout>
 </template>

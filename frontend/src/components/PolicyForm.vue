@@ -7,10 +7,11 @@
     :show-subtitle="Boolean(subtitle)"
     :loading="loading"
     :save-disabled="loading || disabled"
-    :show-save-and-open="false"
+    :show-save-and-open="true"
     :labels="{ cancel: translateText('cancel', locale), save: loading ? translateText('updating', locale) + '...' : translateText('save', locale) }"
     @cancel="emit('cancel')"
     @save="emit('submit')"
+    @saveAndOpen="emit('submit-and-open')"
   >
     <div class="space-y-6 py-2">
       <!-- Section: Customer -->
@@ -124,7 +125,7 @@ const props = defineProps({
   locale: { type: String, default: "tr" },
 });
 
-const emit = defineEmits(["cancel", "submit"]);
+const emit = defineEmits(["cancel", "submit", "submit-and-open"]);
 
 const config = getQuickCreateConfig("policy");
 const allFields = computed(() => config?.fields || []);
