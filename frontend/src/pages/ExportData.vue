@@ -32,6 +32,7 @@ import ExportDataFiltersPanel from "../components/export-data/ExportDataFiltersP
 import ExportDataHistoryPanel from "../components/export-data/ExportDataHistoryPanel.vue";
 import ExportDataFooterActions from "../components/export-data/ExportDataFooterActions.vue";
 import { translateText } from "../utils/i18n";
+import { EXPORT_TRANSLATIONS } from "../config/export_translations";
 
 const router = useRouter();
 const appPinia = getAppPinia();
@@ -40,7 +41,8 @@ const authStore = useAuthStore(appPinia);
 const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function t(key) {
-  return translateText(key, activeLocale);
+  const locale = String(unref(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+  return EXPORT_TRANSLATIONS[locale]?.[key] || EXPORT_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
 }
 
 const runtime = useExportDataRuntime({ t, router, authStore });

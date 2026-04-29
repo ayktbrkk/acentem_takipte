@@ -2,6 +2,7 @@ import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "@/utils/i18n";
+import { LEAD_TRANSLATIONS } from "@/config/lead_translations";
 
 export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
@@ -13,7 +14,8 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
   }
 
   function t(key) {
-    return translateText(key, unref(activeLocale));
+    const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+    return LEAD_TRANSLATIONS[locale]?.[key] || LEAD_TRANSLATIONS.en?.[key] || translateText(key, unref(activeLocale));
   }
 
   const filters = reactive({

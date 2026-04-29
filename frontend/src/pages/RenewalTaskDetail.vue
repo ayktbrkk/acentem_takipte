@@ -8,9 +8,13 @@
       <ActionButton variant="secondary" size="sm" @click="goBack">
         {{ t('backList') }}
       </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="reload">
+        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+        {{ t('refresh') }}
+      </ActionButton>
       <ActionButton variant="primary" size="sm" @click="openPolicy">
         <FeatherIcon name="external-link" class="h-4 w-4" />
-        {{ t('openPolicy') }}
+        {{ t('open_policy') }}
       </ActionButton>
     </template>
 
@@ -29,71 +33,79 @@
       </div>
     </template>
 
-    <SectionPanel :title="t('renewalProcess')" panel-class="surface-card rounded-2xl p-5">
+    <SectionPanel :title="t('renewalProcess')">
       <StepBar :steps="renewalSteps" />
     </SectionPanel>
 
-    <div class="detail-body">
-      <div class="detail-main space-y-4">
-        <SectionPanel :title="t('previousPolicy')" panel-class="surface-card rounded-2xl p-5">
+    <div class="detail-body at-detail-split-wide">
+      <div class="detail-main space-y-6">
+        <SectionPanel :title="t('previousPolicy')">
           <div v-if="!policy" class="card-empty">{{ t('noPolicy') }}</div>
-          <FieldGroup v-else :fields="policyFields" :cols="2" />
+          <FieldGroup v-else :fields="policyFields" :cols="2" :locale="activeLocale" />
         </SectionPanel>
 
-        <SectionPanel :title="t('newOffers')" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('new_offers')">
           <div v-if="!offers.length" class="card-empty">{{ t('noOffers') }}</div>
           <div v-else class="space-y-3">
             <div
               v-for="offer in offers"
               :key="offer.name"
-              class="rounded-lg border border-gray-200 p-3"
+              class="rounded-xl border border-slate-100 bg-slate-50/50 p-3 transition-all hover:border-brand-200 hover:bg-brand-50/30"
             >
               <div class="flex items-center justify-between gap-2">
                 <div>
-                  <p class="text-sm font-medium text-gray-900">{{ offer.name }}</p>
-                  <p class="text-xs text-gray-500">{{ formatDate(offer.offer_date) }} · {{ offer.status || '-' }}</p>
+                  <p class="text-sm font-bold text-slate-900">{{ offer.name }}</p>
+                  <p class="text-xs text-slate-500">{{ formatDate(offer.offer_date) }} · {{ offer.status || '-' }}</p>
                 </div>
-                <button class="btn btn-sm" type="button" @click="openOffer(offer.name)">{{ t('openOfferDetail') }}</button>
+                <ActionButton variant="secondary" size="xs" @click="openOffer(offer.name)">{{ t('openOfferDetail') }}</ActionButton>
               </div>
             </div>
           </div>
         </SectionPanel>
 
-        <SectionPanel :title="t('communicationHistory')" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('communication_history')">
           <div v-if="!communications.length" class="card-empty">{{ t('noCommunication') }}</div>
-          <div v-else>
-            <div v-for="item in communications" :key="item.name" class="timeline-item">
-              <div class="tl-dot" />
+          <div v-else class="space-y-4">
+            <div v-for="item in communications" :key="item.name" class="flex gap-4">
+              <div class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-500" />
               <div>
-                <p class="tl-text">{{ item.subject || item.call_outcome || item.channel || '-' }}</p>
-                <p class="tl-time">{{ formatDate(item.note_at) }} · {{ item.owner || '-' }}</p>
+                <p class="text-sm font-bold text-slate-900">{{ item.subject || item.call_outcome || item.channel || '-' }}</p>
+                <p class="mt-0.5 text-xs text-slate-500">{{ formatDate(item.note_at) }} · {{ item.owner || '-' }}</p>
               </div>
             </div>
           </div>
         </SectionPanel>
 
-        <SectionPanel :title="t('reminders')" panel-class="surface-card rounded-2xl p-5">
+        <SectionPanel :title="t('reminders')">
           <div v-if="!reminders.length" class="card-empty">{{ t('noReminders') }}</div>
           <div v-else class="space-y-2">
-            <div v-for="item in reminders" :key="item.label" class="rounded-md bg-gray-50 px-3 py-2">
-              <p class="text-sm font-medium text-gray-900">{{ item.label }}</p>
-              <p class="text-xs text-gray-500">{{ item.value }}</p>
+            <div v-for="item in reminders" :key="item.label" class="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-3">
+              <p class="field-label !mb-1">{{ item.label }}</p>
+              <p class="text-sm font-bold text-slate-900">{{ item.value }}</p>
             </div>
           </div>
         </SectionPanel>
       </div>
 
-      <aside class="detail-sidebar space-y-4">
-        <SectionPanel :title="t('people')" panel-class="surface-card rounded-2xl p-5">
-          <FieldGroup :fields="peopleFields" :cols="1" />
+      <aside class="detail-sidebar at-detail-aside space-y-6">
+        <StandardCustomerCard
+          :title="t('customer_details')"
+          :customer="customerCard"
+          :saving="false"
+          :t="t"
+          @view-full="openCustomer"
+        />
+
+        <SectionPanel :title="t('statusInfo')">
+          <FieldGroup :fields="statusFields" :cols="1" layout="list" :locale="activeLocale" />
         </SectionPanel>
 
-        <SectionPanel :title="t('statusInfo')" panel-class="surface-card rounded-2xl p-5">
-          <FieldGroup :fields="statusFields" :cols="1" />
+        <SectionPanel :title="t('recordMeta')">
+          <FieldGroup :fields="recordFields" :cols="1" layout="list" :locale="activeLocale" />
         </SectionPanel>
 
-        <SectionPanel :title="t('recordMeta')" panel-class="surface-card rounded-2xl p-5">
-          <FieldGroup :fields="recordFields" :cols="1" />
+        <SectionPanel :title="t('people')">
+          <FieldGroup :fields="peopleFields" :cols="1" layout="list" :locale="activeLocale" />
         </SectionPanel>
       </aside>
     </div>
@@ -106,15 +118,16 @@ import { createResource } from 'frappe-ui';
 import { useRouter } from 'vue-router';
 
 import { FeatherIcon } from 'frappe-ui';
-import StatusBadge from '@/components/ui/StatusBadge.vue';
 import SaaSMetricCard from '@/components/app-shell/SaaSMetricCard.vue';
 import ActionButton from '@/components/app-shell/ActionButton.vue';
+import StandardCustomerCard from '@/components/app-shell/StandardCustomerCard.vue';
 import WorkbenchPageLayout from '@/components/app-shell/WorkbenchPageLayout.vue';
 import FieldGroup from '@/components/ui/FieldGroup.vue';
 import StepBar from '@/components/ui/StepBar.vue';
 import SectionPanel from '../components/app-shell/SectionPanel.vue';
 import SkeletonLoader from '@/components/ui/SkeletonLoader.vue';
 import { getAppPinia } from '../pinia';
+import { RENEWAL_TRANSLATIONS } from '../config/renewal_translations';
 import { useAuthStore } from '../stores/auth';
 import { translateText } from '../utils/i18n';
 
@@ -123,7 +136,8 @@ const _authStore = useAuthStore(_appPinia);
 const activeLocale = computed(() => unref(_authStore.locale) || 'en');
 
 function t(key) {
-  return translateText(key, activeLocale);
+  const locale = String(unref(activeLocale) || 'tr').toLowerCase().startsWith('tr') ? 'tr' : 'en';
+  return RENEWAL_TRANSLATIONS[locale]?.[key] || RENEWAL_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
 }
 
 const props = defineProps({ name: { type: String, required: true } });
@@ -143,6 +157,15 @@ const policy = computed(() => {
 });
 const offers = computed(() => (Array.isArray(unref(offersResource.data)) ? unref(offersResource.data) : []));
 const communications = computed(() => (Array.isArray(unref(communicationsResource.data)) ? unref(communicationsResource.data) : []));
+const customerCard = computed(() => ({
+  full_name: policy.value?.customer || renewal.value.customer || '-',
+  customer_type: renewal.value.customer_type || 'Individual',
+  tax_id: renewal.value.customer_tax_id || '',
+  birth_date: renewal.value.customer_birth_date || '',
+  occupation: renewal.value.customer_occupation || '',
+  phone: renewal.value.customer_phone || '',
+  email: renewal.value.customer_email || '',
+}));
 
 const heroCells = computed(() => [
   { label: t('lblPolicy'), value: renewal.value.policy || '-', variant: 'default' },
@@ -215,7 +238,7 @@ const recordFields = computed(() => [
 ]);
 
 function priorityLabel(value) {
-  const map = { high: t('priorityHigh'), medium: t('priorityMedium'), low: t('priorityLow') };
+  const map = { high: t('priority_high'), medium: t('priority_medium'), low: t('priority_low') };
   return map[String(value || '').toLowerCase()] || '-';
 }
 
@@ -235,6 +258,12 @@ function openOffer(offerName) {
 function openPolicy() {
   if (!renewal.value.policy) return;
   router.push({ name: 'policy-detail', params: { name: renewal.value.policy } });
+}
+
+function openCustomer() {
+  const customerName = String(policy.value?.customer || renewal.value.customer || '').trim();
+  if (!customerName) return;
+  router.push({ name: 'customer-detail', params: { name: customerName } });
 }
 
 function goBack() {

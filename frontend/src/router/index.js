@@ -152,7 +152,7 @@ const router = createRouter({
       name: "customer-search",
       component: CustomerSearchPage,
       meta: {
-        title: "Customer Search",
+        title: "Müşteri Ara",
         section: "Sales & Portfolio",
       },
     },

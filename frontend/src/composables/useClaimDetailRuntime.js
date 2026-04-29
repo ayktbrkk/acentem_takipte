@@ -2,6 +2,7 @@ import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
+import { CLAIM_TRANSLATIONS } from "../config/claim_translations";
 import { useAuthStore } from "../stores/auth";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 
@@ -10,7 +11,8 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   const authStore = useAuthStore();
 
   function t(key) {
-    return translateText(key, activeLocale);
+    const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+    return CLAIM_TRANSLATIONS[locale]?.[key] || CLAIM_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
   }
 
   const claimResource = createResource({

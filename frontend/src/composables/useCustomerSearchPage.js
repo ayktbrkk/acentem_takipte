@@ -29,7 +29,7 @@ export function useCustomerSearchPage() {
 
   async function loadRequestHistory() {
     try {
-      const response = await fetch("/api/resource/AT Access Log?filters=[[\"action\",\"=\",\"Create\"]]&fields=[\"name\",\"reference_name\",\"action_summary\",\"docstatus\",\"created\"]&limit_page_length=10", {
+      const response = await fetch("/api/resource/AT Access Log?filters=[[\"action\",\"=\",\"Create\"]]&fields=[\"name\",\"reference_name\",\"action_summary\",\"viewed_on\"]&limit_page_length=10", {
         headers: {
           "X-Frappe-CSRF-Token": window?.frappe?.csrf_token || "",
         },
@@ -43,14 +43,14 @@ export function useCustomerSearchPage() {
           .filter((log) => log.action_summary?.includes("REQUEST"))
           .map((log) => ({
             id: log.name,
-            customer_name: log.reference_name || "Unknown",
+            customer_name: log.reference_name || "",
             request_kind: log.action_summary?.includes("ACCESS")
               ? "access"
               : log.action_summary?.includes("TRANSFER")
               ? "transfer"
               : "share",
-            status: "Pending",
-            created: log.created,
+            status: "pending",
+            created: log.viewed_on,
           }));
         showRequestHistory.value = accessRequestHistory.value.length > 0;
       }

@@ -1,5 +1,6 @@
 export const RENEWAL_TRANSLATIONS = {
   tr: {
+    title: "Yenileme Yönetimi",
     renewals: "Yenilemeler",
     renewal_detail: "Yenileme Detayı",
     renewals_breadcrumb: "Operasyonlar → Yenilemeler",
@@ -103,6 +104,7 @@ export const RENEWAL_TRANSLATIONS = {
     metricDue: "Vadesi Gelen",
   },
   en: {
+    title: "Renewal Management",
     renewals: "Renewals",
     renewal_detail: "Renewal Detail",
     renewals_breadcrumb: "Operations → Renewals",

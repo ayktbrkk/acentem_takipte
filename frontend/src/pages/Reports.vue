@@ -155,6 +155,7 @@ import ReportsTableSection from "../components/reports/ReportsTableSection.vue";
 import ReportsChartSection from "../components/reports/ReportsChartSection.vue";
 import ReportsScheduledSection from "../components/reports/ReportsScheduledSection.vue";
 import { reportCatalog } from "../composables/reportsConfig";
+import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 import { useReportsFilters } from "../composables/useReportsFilters";
 import { useReportsRuntime } from "../composables/useReportsRuntime";
 import { useReportsTableData } from "../composables/useReportsTableData";
@@ -193,7 +194,8 @@ const activeLocale = computed(() => unref(authStore.locale) || "tr");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
 function t(key) {
-  return translateText(key, activeLocale);
+  const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+  return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
 }
 
 const reportFilterComposables = useReportsFilters({

@@ -34,6 +34,7 @@ import BreakGlassApprovalsActionBar from "../components/break-glass-approvals/Br
 import BreakGlassApprovalsTableSection from "../components/break-glass-approvals/BreakGlassApprovalsTableSection.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import { getAppPinia } from "../pinia";
+import { BREAK_GLASS_TRANSLATIONS } from "../config/break_glass_translations";
 import { useAuthStore } from "../stores/auth";
 import { useBreakGlassApprovals } from "../composables/useBreakGlassApprovals";
 import { translateText } from "../utils/i18n";
@@ -41,7 +42,10 @@ import { translateText } from "../utils/i18n";
 const authStore = useAuthStore(getAppPinia());
 
 function t(key) {
-  return translateText(key, authStore.locale);
+  const locale = String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+  return BREAK_GLASS_TRANSLATIONS[locale]?.[key]
+    || BREAK_GLASS_TRANSLATIONS.en?.[key]
+    || translateText(key, locale);
 }
 
 const {

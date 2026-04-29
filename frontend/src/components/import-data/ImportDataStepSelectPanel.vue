@@ -12,15 +12,25 @@
 
       <div class="form-field">
         <label class="form-label">{{ t("fileLabel") }}</label>
-        <input class="form-input" type="file" accept=".xlsx,.xls,.csv" @change="$emit('file-select', $event)" />
-        <p v-if="fileName" class="mt-1 text-xs text-gray-500">{{ t("selectedFile") }}: {{ fileName }}</p>
+        <input
+          ref="fileInput"
+          class="hidden"
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          @change="$emit('file-select', $event)"
+        />
+        <button type="button" class="file-trigger" @click="openFilePicker">
+          <span class="file-trigger__label">{{ t("chooseFile") }}</span>
+          <span class="file-trigger__hint">{{ t("chooseFileHint") }}</span>
+        </button>
+        <p v-if="fileName" class="mt-2 text-xs font-medium text-slate-600">{{ t("selectedFile") }}: {{ fileName }}</p>
       </div>
     </div>
   </SectionPanel>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 import SectionPanel from "../app-shell/SectionPanel.vue";
 
@@ -44,9 +54,46 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:modelValue", "file-select"]);
+const fileInput = ref(null);
 
 const selectedDatasetModel = computed({
   get: () => props.modelValue,
   set: (value) => emit("update:modelValue", value),
 });
+
+function openFilePicker() {
+  fileInput.value?.click();
+}
 </script>
+
+<style scoped>
+.file-trigger {
+  width: 100%;
+  border: 1px dashed rgb(148 163 184 / 0.7);
+  border-radius: 0.875rem;
+  background: linear-gradient(180deg, rgb(248 250 252) 0%, rgb(255 255 255) 100%);
+  padding: 0.875rem 1rem;
+  text-align: left;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.file-trigger:hover {
+  border-color: rgb(27 93 184 / 0.55);
+  background: rgb(248 250 252);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.file-trigger__label {
+  display: block;
+  color: rgb(15 23 42);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.file-trigger__hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: rgb(100 116 139);
+  font-size: 0.75rem;
+}
+</style>

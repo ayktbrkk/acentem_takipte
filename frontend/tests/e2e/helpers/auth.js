@@ -1,5 +1,62 @@
 import { test } from "@playwright/test";
 
+export async function pageRequest(page, method, path, options = {}) {
+  return page.evaluate(
+    async ({ requestMethod, requestPath, requestOptions }) => {
+      const headers = new Headers(requestOptions.headers || {});
+      const csrfToken =
+        requestOptions.csrfToken
+        || (typeof window !== "undefined" && window.csrf_token)
+        || "";
+
+      if (csrfToken && !headers.has("X-Frappe-CSRF-Token")) {
+        headers.set("X-Frappe-CSRF-Token", csrfToken);
+      }
+
+      let body;
+      if (requestOptions.form) {
+        body = new URLSearchParams();
+        for (const [key, value] of Object.entries(requestOptions.form)) {
+          if (value == null) continue;
+          body.append(key, String(value));
+        }
+        if (!headers.has("Content-Type")) {
+          headers.set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+        }
+      } else if (requestOptions.body != null) {
+        body = requestOptions.body;
+      }
+
+      const response = await fetch(requestPath, {
+        method: requestMethod,
+        headers,
+        body,
+        credentials: "include",
+      });
+
+      const text = await response.text();
+      let json = null;
+      try {
+        json = text ? JSON.parse(text) : null;
+      } catch {
+        json = null;
+      }
+
+      return {
+        ok: response.ok,
+        status: response.status,
+        text,
+        json,
+      };
+    },
+    {
+      requestMethod: method,
+      requestPath: path,
+      requestOptions: options,
+    }
+  );
+}
+
 export async function ensureAuthenticated(page, options = {}) {
   const userEnvKey = options.userEnvKey || "E2E_USER";
   const passwordEnvKey = options.passwordEnvKey || "E2E_PASSWORD";

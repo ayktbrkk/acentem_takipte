@@ -1,10 +1,12 @@
 <template>
-  <button class="btn btn-outline btn-sm" type="button" :disabled="loading" @click="$emit('refresh')">
+  <ActionButton variant="secondary" size="sm" type="button" :disabled="loading" @click="$emit('refresh')">
     {{ loading ? t("loading") : t("refresh") }}
-  </button>
+  </ActionButton>
 </template>
 
 <script setup>
+import ActionButton from "../app-shell/ActionButton.vue";
+
 defineProps({
   loading: {
     type: Boolean,

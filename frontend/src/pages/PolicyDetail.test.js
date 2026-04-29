@@ -26,6 +26,10 @@ vi.mock("../utils/documentOpen", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: (config = {}) => {
     const data = ref({});
     const url = String(config?.url || "");
@@ -181,6 +185,18 @@ const MetaListCardStub = {
   `,
 };
 
+const StandardCustomerCardStub = {
+  props: ["title"],
+  emits: ["view-full"],
+  template: `
+    <section class="standard-customer-card-stub">
+      <h3>{{ title }}</h3>
+      <button class="action-button-stub" @click="$emit('view-full')">Profilin Tamamını Gör</button>
+      <slot />
+    </section>
+  `,
+};
+
 const SectionPanelStub = {
   props: ["title"],
   template: `
@@ -207,6 +223,8 @@ const commonStubs = {
   WorkbenchPageLayout: genericStub,
   ListTable: genericStub,
   StatusBadge: true,
+  StandardCustomerCard: StandardCustomerCardStub,
+  EditableCard: genericStub,
   SkeletonLoader: genericStub,
 };
 
@@ -262,10 +280,11 @@ describe("PolicyDetail document management", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("Müşteri Detayları");
-    expect(wrapper.text()).toContain("Dosyalar");
+    expect(wrapper.text()).toContain("Müşteri Bilgileri");
+    expect(wrapper.text()).toContain("Dokümanlar");
     expect(wrapper.text()).toContain("Listeye Dön");
     expect(wrapper.text()).toContain("Yenile");
+    expect(wrapper.text()).toContain("Profilin Tamamını Gör");
   });
 
   it("routes back to policy list and customer detail", async () => {
@@ -283,7 +302,7 @@ describe("PolicyDetail document management", () => {
     await clickByText("Listeye Dön");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "policy-list" });
 
-    await clickByText("Müşteri Detayları");
+    await clickByText("Profilin Tamamını Gör");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "customer-detail", params: { name: "CUST-001" } });
   });
 
@@ -293,7 +312,7 @@ describe("PolicyDetail document management", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const openButton = wrapper.findAll("button").find((node) => node.text().includes("Doküman Merkezine Git"));
+    const openButton = wrapper.findAll("button").find((node) => node.text().includes("Tüm Dokümanları Görüntüle"));
     expect(openButton).toBeTruthy();
     await openButton.trigger("click");
 
@@ -326,7 +345,7 @@ describe("PolicyDetail document management", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Yükle"));
     expect(uploadBtn).toBeTruthy();
   });
 
@@ -336,7 +355,7 @@ describe("PolicyDetail document management", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Yükle"));
     expect(uploadBtn).toBeFalsy();
   });
 
@@ -360,7 +379,7 @@ describe("PolicyDetail document management", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Yükle"));
     await uploadBtn.trigger("click");
 
     expect(wrapper.find(".upload-modal-stub").attributes("data-open")).toBe("true");
@@ -392,7 +411,7 @@ describe("PolicyDetail document management", () => {
     await Promise.resolve();
 
     const callsBefore = policyDetailReload.mock.calls.length;
-    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Doküman Yükle"));
+    const uploadBtn = wrapper.findAll("button").find((n) => n.text().includes("Yükle"));
     await uploadBtn.trigger("click");
     await wrapper.find(".modal-stub-uploaded").trigger("click");
     await Promise.resolve();
@@ -407,11 +426,8 @@ describe("PolicyDetail document management", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(wrapper.text()).toContain("police.pdf");
     expect(wrapper.text()).toContain("POL001_RUHSAT_20260309_001.PDF");
-    expect(wrapper.text()).toContain("100.0 KB");
-    expect(wrapper.text()).toContain("200.0 KB");
-    expect(wrapper.text()).toContain("Gizli");
-    expect(wrapper.text()).toContain("Doğrulandı");
+    expect(wrapper.text()).toContain("Vehicle Registration");
+    expect(wrapper.text()).toContain("external-link");
   });
 });

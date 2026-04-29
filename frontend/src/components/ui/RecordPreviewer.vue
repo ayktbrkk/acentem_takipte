@@ -27,7 +27,7 @@
     </div>
 
     <!-- Fields Section -->
-    <SectionPanel title="Details" panel-class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+    <SectionPanel :title="t('Details')" panel-class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
       <div class="grid grid-cols-1 gap-4">
         <div v-for="field in preview.fields" :key="field.label" class="flex flex-col border-b border-slate-50 pb-2 last:border-0">
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ field.label }}</span>
@@ -38,18 +38,21 @@
 
     <div class="flex justify-end gap-3 pt-4">
       <ActionButton variant="secondary" size="sm" @click="goToDetail">
-        Full Record Details
+        {{ t("Open Record Details") }}
       </ActionButton>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, unref } from "vue";
+import { computed, ref, watch, unref } from "vue";
 import { frappeRequest } from "frappe-ui";
 import { useRouter } from "vue-router";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
+import { getAppPinia } from "@/pinia";
+import { useAuthStore } from "@/stores/auth";
+import { translateText } from "@/utils/i18n";
 
 const props = defineProps({
   doctype: { type: String, required: true },
@@ -59,6 +62,12 @@ const props = defineProps({
 const router = useRouter();
 const loading = ref(false);
 const preview = ref(null);
+const authStore = useAuthStore(getAppPinia());
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+
+function t(source) {
+  return translateText(source, activeLocale.value);
+}
 
 async function loadPreview() {
   if (!props.doctype || !props.name) return;
@@ -79,7 +88,8 @@ async function loadPreview() {
 
 function formatValue(val, currency) {
   if (currency) {
-    return new Intl.NumberFormat("tr-TR", { style: "currency", currency }).format(val);
+    const numberLocale = String(activeLocale.value || "en").startsWith("tr") ? "tr-TR" : "en-US";
+    return new Intl.NumberFormat(numberLocale, { style: "currency", currency }).format(val);
   }
   return val;
 }

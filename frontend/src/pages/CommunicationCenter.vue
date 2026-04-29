@@ -44,6 +44,7 @@ import CommunicationCenterDialogs from "../components/communication-center/Commu
 import CommunicationCenterOverview from "../components/communication-center/CommunicationCenterOverview.vue";
 import CommunicationCenterQueueSections from "../components/communication-center/CommunicationCenterQueueSections.vue";
 import { useCommunicationCenterRuntime } from "../composables/communicationCenter/runtime";
+import { COMMUNICATION_TRANSLATIONS } from "../config/communication_translations";
 import { translateText } from "../utils/i18n";
 import { useCommunicationCenterState } from "../composables/communicationCenter/state";
 import { useCommunicationCenterActions } from "../composables/communicationCenter/actions";
@@ -55,11 +56,13 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const communicationStore = useCommunicationStore();
 
-const activeLocale = computed(() => unref(authStore.locale) || "en");
+const activeLocale = computed(() => (String(unref(authStore.locale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en"));
 const recordCount = computed(() => (unref(state.outboxItems)?.length || 0) + (unref(state.draftItems)?.length || 0));
 
 function t(key) {
-  return translateText(key, activeLocale);
+  return COMMUNICATION_TRANSLATIONS[activeLocale.value]?.[key]
+    || COMMUNICATION_TRANSLATIONS.en?.[key]
+    || translateText(key, activeLocale.value);
 }
 
 const filters = communicationStore.state.filters;

@@ -2,6 +2,7 @@ import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
+import { POLICY_TRANSLATIONS } from "../config/policy_translations";
 import { useAuthStore } from "../stores/auth";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 import { useAtFormatting } from "./useAtFormatting";
@@ -56,12 +57,17 @@ function normalizeStatus(status) {
   return "waiting";
 }
 
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
 export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
   const authStore = useAuthStore();
 
   function t(key) {
-    return translateText(key, activeLocale);
+    const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+    return POLICY_TRANSLATIONS[locale]?.[key] || POLICY_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
   }
 
   const policyResource = createResource({
@@ -170,9 +176,9 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     auto: true
   });
 
-  const branchOptions = computed(() => (branchesResource.data || []).map(b => ({ label: b.name, value: b.name })));
-  const companyOptions = computed(() => (companiesResource.data || []).map(c => ({ label: c.name, value: c.name })));
-  const salesEntityOptions = computed(() => (salesEntitiesResource.data || []).map(s => ({ 
+  const branchOptions = computed(() => asArray(branchesResource.data).map(b => ({ label: b.name, value: b.name })));
+  const companyOptions = computed(() => asArray(companiesResource.data).map(c => ({ label: c.name, value: c.name })));
+  const salesEntityOptions = computed(() => asArray(salesEntitiesResource.data).map(s => ({ 
     label: `${s.full_name} (${s.office_branch || '-'})`, 
     value: s.name 
   })));

@@ -6,14 +6,14 @@
     :record-count-label="t('total_leads')"
   >
     <template #actions>
-      <button class="btn btn-primary" @click="openQuickLeadDialog()">
+      <ActionButton variant="primary" size="sm" @click="openQuickLeadDialog()">
         <FeatherIcon name="plus" class="h-4 w-4" />
         {{ t("new_lead") }}
-      </button>
-      <button class="btn btn-outline" @click="reload">
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="reload">
         <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t("refresh") }}
-      </button>
+      </ActionButton>
     </template>
 
     <template #metrics>
@@ -48,8 +48,8 @@
         </template>
       </SmartFilterBar>
 
-      <div v-if="showAdvancedFilters" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-gray-500">{{ t("advanced_filters_placeholder") || 'Gelişmiş filtreleme seçenekleri yakında eklenecek.' }}</p>
+      <div v-if="showAdvancedFilters" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm text-slate-500">{{ t("advanced_filters_placeholder") }}</p>
       </div>
     </div>
 
@@ -120,7 +120,6 @@ import { useAuthStore } from "../stores/auth";
 import { useLeadBoardRuntime } from "../composables/useLeadBoardRuntime";
 import { useLeadListQuickLead } from "../composables/useLeadListQuickLead";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import ListTable from "../components/ui/ListTable.vue";

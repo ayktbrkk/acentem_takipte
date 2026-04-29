@@ -130,6 +130,7 @@
 import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useRenewalsBoardRuntime } from "../composables/useRenewalsBoardRuntime";
+import { RENEWAL_TRANSLATIONS } from "../config/renewal_translations";
 import { translateText } from "../utils/i18n";
 import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
@@ -147,7 +148,8 @@ const activeLocale = computed(() => unref(authStore.locale) || "tr");
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
 function t(key) {
-  return translateText(key, activeLocale);
+  const locale = activeLocale.value === "tr" ? "tr" : "en";
+  return RENEWAL_TRANSLATIONS[locale]?.[key] || translateText(key, activeLocale);
 }
 
 const {

@@ -1,79 +1,84 @@
 <template>
   <div class="flex flex-wrap items-center gap-2">
     <div class="flex flex-wrap items-center gap-1.5 mr-2">
-      <button class="btn btn-outline" @click="runtime.openSegmentDialog()">
+      <ActionButton variant="secondary" size="sm" @click="runtime.openSegmentDialog()">
         <FeatherIcon name="users" class="h-4 w-4" />
         {{ t('quickSegment') }}
-      </button>
-      <button class="btn btn-outline" @click="runtime.openCampaignDialog()">
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="runtime.openCampaignDialog()">
         <FeatherIcon name="layers" class="h-4 w-4" />
         {{ t('quickCampaign') }}
-      </button>
-      <button class="btn btn-outline" @click="runtime.openCampaignRunDialog()">
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="runtime.openCampaignRunDialog()">
         <FeatherIcon name="play" class="h-4 w-4" />
         {{ t('runCampaign') }}
-      </button>
-      <button class="btn btn-outline" @click="runtime.openSegmentPreviewDialog()">
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="runtime.openSegmentPreviewDialog()">
         <FeatherIcon name="eye" class="h-4 w-4" />
         {{ t('previewSegment') }}
-      </button>
-      <button class="btn btn-outline" @click="runtime.openCallNoteDialog()">
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="runtime.openCallNoteDialog()">
         <FeatherIcon name="phone" class="h-4 w-4" />
         {{ t('quickCallNote') }}
-      </button>
-      <button class="btn btn-outline" @click="runtime.openReminderDialog()">
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="runtime.openReminderDialog()">
         <FeatherIcon name="bell" class="h-4 w-4" />
         {{ t('quickReminder') }}
-      </button>
+      </ActionButton>
     </div>
 
     <div class="h-6 w-px bg-slate-200 mx-1"></div>
 
-    <button
+    <ActionButton
       v-if="canCreateQuickMessage"
-      class="btn btn-primary"
+      variant="primary"
+      size="sm"
       @click="runtime.openQuickMessageDialog()"
     >
       <FeatherIcon name="message-square" class="h-4 w-4" />
       {{ t('quickMessage') }}
-    </button>
+    </ActionButton>
 
-    <button
+    <ActionButton
       v-if="canReturnToContext"
-      class="btn btn-outline"
+      variant="secondary"
+      size="sm"
       @click="runtime.returnToContext()"
     >
       <FeatherIcon name="arrow-left" class="h-4 w-4" />
       {{ returnToLabel }}
-    </button>
+    </ActionButton>
 
-    <button class="btn btn-outline" @click="runtime.reloadSnapshot">
+    <ActionButton variant="secondary" size="sm" @click="runtime.reloadSnapshot">
       <FeatherIcon name="refresh-cw" :class="['h-4 w-4', runtime.snapshotResource.loading && 'animate-spin']" />
-    </button>
+    </ActionButton>
 
-    <button
-      class="btn btn-outline"
+    <ActionButton
+      variant="secondary"
+      size="sm"
       :disabled="runtime.snapshotResource.loading"
       @click="runtime.downloadCommunicationExport('xlsx')"
     >
       <FeatherIcon name="download" class="h-4 w-4" />
-    </button>
+    </ActionButton>
 
-    <button
+    <ActionButton
       v-if="canRunDispatchCycle"
-      class="btn btn-primary px-6"
+      variant="primary"
+      size="sm"
       :disabled="dispatching"
       @click="runtime.runDispatchCycle"
     >
       <FeatherIcon :name="dispatching ? 'loader' : 'send'" :class="['h-4 w-4', dispatching && 'animate-spin']" />
       {{ dispatching ? t('dispatching') : t('dispatch') }}
-    </button>
+    </ActionButton>
   </div>
 </template>
 
 <script setup>
 import { computed, unref } from "vue";
 import { FeatherIcon } from "frappe-ui";
+import ActionButton from "../app-shell/ActionButton.vue";
 
 const props = defineProps({
   runtime: {

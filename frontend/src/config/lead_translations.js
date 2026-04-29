@@ -33,6 +33,7 @@ export const LEAD_TRANSLATIONS = {
     offers: "Teklifler",
     policies: "Poliçeler",
     tax_id: "TCKN/VKN",
+    search: "İsim, telefon veya branş ara",
     showing: "Gösterilen",
     total: "Toplam",
     active: "Aktif",
@@ -50,6 +51,7 @@ export const LEAD_TRANSLATIONS = {
     campaign: "Kampanya",
     next_step: "Sonraki Adım",
     unspecified: "Belirtilmemiş",
+    advanced_filters_placeholder: "Gelişmiş filtreleme seçenekleri bu ekran için bir sonraki dilimde genişletilecek.",
   },
   en: {
     leads: "Leads",
@@ -85,6 +87,7 @@ export const LEAD_TRANSLATIONS = {
     offers: "Offers",
     policies: "Policies",
     tax_id: "Tax ID",
+    search: "Search by name, phone, or branch",
     showing: "Showing",
     total: "Total",
     active: "Active",
@@ -102,6 +105,7 @@ export const LEAD_TRANSLATIONS = {
     campaign: "Campaign",
     next_step: "Next Step",
     unspecified: "Unspecified",
+    advanced_filters_placeholder: "Advanced filtering options for this screen will be expanded in the next pass.",
   }
 };
 

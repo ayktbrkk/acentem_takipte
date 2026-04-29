@@ -15,6 +15,10 @@ vi.mock("vue-router", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: () =>
     resourceQueue.shift() || {
       data: ref([]),
@@ -26,6 +30,11 @@ vi.mock("frappe-ui", () => ({
       setData: vi.fn(),
     },
 }));
+
+const ListTableStub = {
+  props: ["rows"],
+  template: `<div class="list-table-stub"><div v-for="row in rows" :key="row.name">{{ row.name }}</div><slot /></div>`,
+};
 
 const StatusBadgeStub = {
   props: ["domain", "status"],
@@ -138,6 +147,7 @@ describe("RenewalTaskDetail page", () => {
       props: { name: "REN-001" },
       global: {
         stubs: {
+          ListTable: ListTableStub,
           StatusBadge: StatusBadgeStub,
           HeroStrip: HeroStripStub,
           SectionPanel: SectionPanelStub,
@@ -153,7 +163,7 @@ describe("RenewalTaskDetail page", () => {
     expect(wrapper.text()).toContain("Yenileme Süreci");
     expect(wrapper.text()).toContain("Eski Poliçe Bilgileri");
     expect(wrapper.text()).toContain("Yeni Teklifler");
-    expect(wrapper.text()).toContain("Müşteri İletişim Geçmişi");
+    expect(wrapper.text()).toContain("İletişim Geçmişi");
     expect(wrapper.text()).toContain("Hatırlatıcılar");
     expect(wrapper.text()).toContain("POL-001");
     expect(wrapper.text()).toContain("P-100");

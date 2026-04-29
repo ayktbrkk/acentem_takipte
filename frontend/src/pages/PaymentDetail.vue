@@ -32,23 +32,25 @@
     <div class="detail-body at-detail-split-wide">
       <!-- Main Content (8) -->
       <div class="detail-main space-y-6">
-        <EditableCard
-          :title="t('payment_info')"
-          :fields="profileFields"
-          layout="list"
-          :t="t"
-          :saving="saving"
-          @save="savePayment"
-        />
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <EditableCard
+            :title="t('payment_info')"
+            :fields="profileFields"
+            layout="list"
+            :t="t"
+            :saving="saving"
+            @save="savePayment"
+          />
 
-        <EditableCard
-          :title="t('financial_summary')"
-          :fields="financialFields"
-          layout="list"
-          :t="t"
-          :saving="saving"
-          @save="savePayment"
-        />
+          <EditableCard
+            :title="t('financial_summary')"
+            :fields="financialFields"
+            layout="list"
+            :t="t"
+            :saving="saving"
+            @save="savePayment"
+          />
+        </div>
 
         <SectionPanel v-if="installments.length" :title="t('payment_plan')">
           <ListTable
@@ -71,29 +73,26 @@
             </template>
           </ListTable>
         </SectionPanel>
+
+        <SectionPanel :title="t('activity_timeline')">
+          <div class="card-empty">
+            <div class="card-empty-icon">
+              <FeatherIcon name="activity" class="h-6 w-6" />
+            </div>
+            <p class="card-empty-text">{{ t('no_activities') }}</p>
+          </div>
+        </SectionPanel>
       </div>
 
       <!-- Sidebar (4) -->
       <aside class="detail-sidebar at-detail-aside space-y-6">
-        <SectionPanel :title="t('customer_details')">
-          <template #trailing>
-            <ActionButton variant="secondary" size="xs" @click="openCustomer">
-              {{ t('view_full_profile') }}
-            </ActionButton>
-          </template>
-          <SkeletonLoader v-if="loading" variant="card" />
-          <div v-else class="space-y-4">
-            <div class="flex items-center gap-4">
-              <div class="h-12 w-12 rounded-full bg-brand-50 flex items-center justify-center text-lg font-bold text-brand-600">
-                {{ uppercaseText((payment.customer_name || "?").charAt(0), activeLocale) }}
-              </div>
-              <div>
-                <p class="font-bold text-slate-900">{{ payment.customer_name || t("all") }}</p>
-                <p class="text-sm text-slate-500">{{ payment.customer }}</p>
-              </div>
-            </div>
-          </div>
-        </SectionPanel>
+        <StandardCustomerCard
+          :title="t('customer_details')"
+          :customer="customerCard"
+          :saving="false"
+          :t="t"
+          @view-full="openCustomer"
+        />
 
         <SectionPanel :title="t('receipt_title')">
           <template #trailing>
@@ -161,7 +160,6 @@
 import { computed } from "vue";
 import { FeatherIcon } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
-import { uppercaseText } from "../utils/i18n";
 import { usePaymentDetailRuntime } from "../composables/usePaymentDetailRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
@@ -171,6 +169,7 @@ import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import EditableCard from "../components/app-shell/EditableCard.vue";
+import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
 import ToastNotification from "../components/ui/ToastNotification.vue";
 import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import { openDocumentInNewTab } from "../utils/documentOpen";
@@ -181,6 +180,15 @@ const props = defineProps({
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
+const customerCard = computed(() => ({
+  full_name: payment.value.customer_name || payment.value.customer || "-",
+  customer_type: payment.value.customer_type || "Individual",
+  tax_id: payment.value.customer_tax_id || "",
+  birth_date: payment.value.customer_birth_date || "",
+  occupation: payment.value.customer_occupation || "",
+  phone: payment.value.customer_phone || "",
+  email: payment.value.customer_email || "",
+}));
 
 const {
   payment,

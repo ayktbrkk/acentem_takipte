@@ -1,5 +1,5 @@
 <template>
-  <SectionPanel :title="t('requestPanelTitle')" panel-class="surface-card rounded-2xl p-5">
+  <SectionPanel :title="t('requestPanelTitle')">
     <form class="space-y-4" @submit.prevent="$emit('submit')">
       <div class="grid gap-3 md:grid-cols-2">
         <label class="flex flex-col gap-1">
@@ -52,18 +52,19 @@
       </article>
 
       <div class="flex flex-wrap items-center gap-2">
-        <button class="btn btn-primary btn-sm" type="submit" :disabled="submitting">
+        <ActionButton variant="primary" size="sm" type="submit" :disabled="submitting">
           {{ submitting ? t("submitting") : t("submit") }}
-        </button>
-        <button class="btn btn-outline btn-sm" type="button" :disabled="submitting" @click="$emit('reset')">
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" type="button" :disabled="submitting" @click="$emit('reset')">
           {{ t("clear") }}
-        </button>
+        </ActionButton>
       </div>
     </form>
   </SectionPanel>
 </template>
 
 <script setup>
+import ActionButton from "../app-shell/ActionButton.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 
 defineProps({

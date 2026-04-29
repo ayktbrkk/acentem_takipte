@@ -19,12 +19,12 @@
           </option>
         </select>
         <div class="h-4 w-px bg-slate-200 mx-1"></div>
-        <button class="btn btn-primary" @click="runtime.applySnapshotFilters">
+        <ActionButton variant="primary" size="sm" @click="runtime.applySnapshotFilters">
           {{ t('applyFilters') }}
-        </button>
-        <button class="btn btn-outline" @click="runtime.resetSnapshotFilters">
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="runtime.resetSnapshotFilters">
           <FeatherIcon name="x" class="h-4 w-4" />
-        </button>
+        </ActionButton>
       </template>
     </SmartFilterBar>
   </div>
@@ -58,59 +58,66 @@
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <button
+        <ActionButton
           v-if="canStartAssignmentContext"
-          class="btn btn-outline btn-sm"
+          variant="secondary"
+          size="sm"
           @click="runtime.startAssignmentContext"
         >
           {{ t('startAssignmentContext') }}
-        </button>
-        <button
+        </ActionButton>
+        <ActionButton
           v-if="canBlockAssignmentContext"
-          class="btn btn-outline btn-sm"
+          variant="secondary"
+          size="sm"
           @click="runtime.blockAssignmentContext"
         >
           {{ t('blockAssignmentContext') }}
-        </button>
-        <button
+        </ActionButton>
+        <ActionButton
           v-if="canCloseAssignmentContext"
-          class="btn btn-outline btn-sm"
+          variant="secondary"
+          size="sm"
           @click="runtime.closeAssignmentContext"
         >
           {{ t('closeAssignmentContext') }}
-        </button>
-        <button
+        </ActionButton>
+        <ActionButton
           v-if="canClearCallNoteContext"
-          class="btn btn-outline btn-sm"
+          variant="secondary"
+          size="sm"
           @click="runtime.clearCallNoteContext"
         >
           {{ t('clearCallFollowUpContext') }}
-        </button>
-        <button
+        </ActionButton>
+        <ActionButton
           v-if="canCompleteReminderContext"
-          class="btn btn-outline btn-sm"
+          variant="secondary"
+          size="sm"
           @click="runtime.completeReminderContext"
         >
           {{ t('completeReminderContext') }}
-        </button>
-        <button
+        </ActionButton>
+        <ActionButton
           v-if="canCancelReminderContext"
-          class="btn btn-outline btn-sm"
+          variant="secondary"
+          size="sm"
           @click="runtime.cancelReminderContext"
         >
           {{ t('cancelReminderContext') }}
-        </button>
-        <button
+        </ActionButton>
+        <ActionButton
           v-if="canReturnToContext"
-          class="btn btn-outline btn-sm"
+          variant="secondary"
+          size="sm"
           @click="runtime.returnToContext"
         >
           {{ state.returnToLabel }}
-        </button>
+        </ActionButton>
         <div class="h-6 w-px bg-slate-200 mx-1"></div>
-        <button class="btn btn-outline btn-sm text-rose-600 border-rose-100 hover:bg-rose-50" @click="runtime.clearContextFilters">
+        <ActionButton variant="ghost" size="sm" class="!text-rose-600 hover:!bg-rose-50" @click="runtime.clearContextFilters">
           {{ t('clearContext') }}
-        </button>
+        </ActionButton>
       </div>
     </div>
   </article>
@@ -120,6 +127,7 @@
 import { computed, ref, unref } from "vue";
 import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
 import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import { FeatherIcon } from "frappe-ui";
 
 const props = defineProps({

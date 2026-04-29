@@ -2,6 +2,7 @@ import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
+import { OFFER_TRANSLATIONS } from "../config/offer_translations";
 import { useAuthStore } from "../stores/auth";
 
 export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
@@ -9,7 +10,8 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   const authStore = useAuthStore();
 
   function t(key) {
-    return translateText(key, activeLocale);
+    const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+    return OFFER_TRANSLATIONS[locale]?.[key] || OFFER_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
   }
 
   const offerResource = createResource({

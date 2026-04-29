@@ -21,6 +21,10 @@ vi.mock("../utils/documentOpen", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: (config = {}) => {
     const data = ref({});
     const url = String(config?.url || "");
@@ -189,6 +193,8 @@ const commonStubs = {
   SectionPanel: { template: `<section><h2>{{ title }}</h2><slot /><slot name="trailing" /></section>`, props: ["title"] },
   SkeletonLoader: true,
   StatusBadge: true,
+  StandardCustomerCard: { props: ["title"], template: `<div><h3>{{ title }}</h3><button class="action-button-stub" @click="$emit('view-full')">Profilin Tamamını Gör</button><slot /></div>`, emits: ["view-full"] },
+  EditableCard: { template: `<div><slot /></div>` },
   ListTable: ListTableStub,
   WorkbenchFileUploadModal: WorkbenchFileUploadModalStub,
   WorkbenchPageLayout: { props: ["title", "subtitle"], template: `<div><h1>{{ title }}</h1><div v-if="subtitle">{{ subtitle }}</div><slot name="actions" /><slot name="metrics" /><slot /></div>` },
@@ -258,7 +264,7 @@ describe("ClaimDetail page", () => {
     await backButton.trigger("click");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "claims-board" });
 
-    const documentCenterButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Doküman Merkezine Git"));
+    const documentCenterButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Tüm Dokümanları Görüntüle"));
     await documentCenterButton.trigger("click");
     expect(routerPush).toHaveBeenLastCalledWith({
       name: "at-documents-list",
@@ -273,7 +279,7 @@ describe("ClaimDetail page", () => {
     const withoutPermission = mountDetail();
     await Promise.resolve();
     await Promise.resolve();
-    expect(withoutPermission.findAll(".action-button-stub").some((button) => button.text().includes("Doküman Yükle"))).toBe(false);
+    expect(withoutPermission.findAll(".action-button-stub").some((button) => button.text().includes("Yükle"))).toBe(false);
 
     const authStore = useAuthStore();
     authStore.applyContext({
@@ -292,7 +298,7 @@ describe("ClaimDetail page", () => {
     const withPermission = mountDetail();
     await Promise.resolve();
     await Promise.resolve();
-    expect(withPermission.findAll(".action-button-stub").some((button) => button.text().includes("Doküman Yükle"))).toBe(true);
+    expect(withPermission.findAll(".action-button-stub").some((button) => button.text().includes("Yükle"))).toBe(true);
   });
 
   it("opens and closes the upload modal", async () => {
@@ -314,7 +320,7 @@ describe("ClaimDetail page", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const uploadButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Doküman Yükle"));
+    const uploadButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Yükle"));
     await uploadButton.trigger("click");
     expect(wrapper.find(".upload-modal-stub").attributes("data-open")).toBe("true");
 
@@ -323,7 +329,7 @@ describe("ClaimDetail page", () => {
     expect(wrapper.find(".upload-modal-stub").attributes("data-open")).toBe("false");
   });
 
-  it("renders restored document actions and verified badge", async () => {
+  it("renders the current document panel contract", async () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "agent@example.com",
@@ -345,9 +351,7 @@ describe("ClaimDetail page", () => {
 
     expect(wrapper.text()).toContain("hasar-raporu.pdf");
     expect(wrapper.text()).toContain("Damage Photo");
-    expect(wrapper.text()).toContain("Doğrulandı");
-    expect(wrapper.text()).toContain("Arşivle");
-    expect(wrapper.text()).toContain("Kalıcı Sil");
-    expect(wrapper.text()).toContain("Dokümanı Aç");
+    expect(wrapper.text()).toContain("external-link");
+    expect(wrapper.text()).toContain("Tüm Dokümanları Görüntüle");
   });
 });

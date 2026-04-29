@@ -211,6 +211,8 @@ scripts/                     Optional benchmark and seed helpers
 
 Even though this README is product-focused, a few implementation details are useful when onboarding:
 
+- frontend UI work should follow `docs/DESIGN_GUIDELINES.md` as the canonical design constitution
+- PR and self-review for user-facing frontend changes should use `docs/UI_REVIEW_CHECKLIST.md`
 - `frontend/` contains the SPA source and test setup.
 - compiled assets in `acentem_takipte/public/frontend/` are generated artifacts and should not be committed
 - the `/at` route injects the latest built Vite assets dynamically

@@ -22,6 +22,10 @@ vi.mock("vue-router", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: (config = {}) => {
     const data = ref({});
     const url = String(config?.url || "");
@@ -149,6 +153,10 @@ describe("OfferDetail", () => {
           HeroStrip: HeroStripStub,
           SectionPanel: GenericStub,
           FieldGroup: GenericStub,
+          StatusBadge: true,
+          StandardCustomerCard: GenericStub,
+          EditableCard: GenericStub,
+          MetaListCard: GenericStub,
           SkeletonLoader: true,
           WorkbenchFileUploadModal: WorkbenchFileUploadModalStub,
         },
@@ -164,9 +172,9 @@ describe("OfferDetail", () => {
 
     expect(wrapper.text()).toContain("Offer Detail");
     expect(wrapper.text()).toContain("offer.pdf");
-    expect(wrapper.text()).toContain("Upload Document");
-    expect(wrapper.text()).toContain("Open Document Center");
-    expect(wrapper.text()).toContain("Open Document");
+    expect(wrapper.text()).toContain("Upload");
+    expect(wrapper.text()).toContain("View All Documents");
+    expect(wrapper.text()).toContain("external-link");
     expect(payloadReload).toHaveBeenCalled();
   });
 
@@ -177,8 +185,8 @@ describe("OfferDetail", () => {
     await Promise.resolve();
 
     const buttons = wrapper.findAll(".action-button-stub");
-    const documentCenterButton = buttons.find((button) => button.text().includes("Open Document Center"));
-    const openDocumentButton = buttons.find((button) => button.text().includes("Open Document"));
+    const documentCenterButton = buttons.find((button) => button.text().includes("View All Documents"));
+    const openDocumentButton = wrapper.find("button.text-slate-400");
 
     await documentCenterButton.trigger("click");
     expect(routerPush).toHaveBeenCalledWith({
@@ -202,7 +210,7 @@ describe("OfferDetail", () => {
     await nextTick();
     await Promise.resolve();
 
-    const uploadButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Upload Document"));
+    const uploadButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Upload"));
     await uploadButton.trigger("click");
     await nextTick();
 

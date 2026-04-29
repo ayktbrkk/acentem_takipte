@@ -19,7 +19,7 @@
         type="button"
         @click="$emit('save')"
       >
-        {{ saveLabel }}
+        {{ effectiveSaveLabel }}
       </button>
       <button
         v-if="showDelete"
@@ -28,13 +28,19 @@
         type="button"
         @click="$emit('delete')"
       >
-        {{ deleteLabel }}
+        {{ effectiveDeleteLabel }}
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed, unref } from "vue";
+
+import { getAppPinia } from "@/pinia";
+import { useAuthStore } from "@/stores/auth";
+import { translateText } from "@/utils/i18n";
+
 const props = defineProps({
   label: {
     type: String,
@@ -66,15 +72,20 @@ const props = defineProps({
   },
   saveLabel: {
     type: String,
-    default: "Save",
+    default: "",
   },
   deleteLabel: {
     type: String,
-    default: "Delete",
+    default: "",
   },
 });
 
 const emit = defineEmits(["update:modelValue", "change", "save", "delete"]);
+
+const authStore = useAuthStore(getAppPinia());
+const activeLocale = computed(() => unref(authStore.locale) || "en");
+const effectiveSaveLabel = computed(() => props.saveLabel || translateText("Save", activeLocale.value));
+const effectiveDeleteLabel = computed(() => props.deleteLabel || translateText("Delete", activeLocale.value));
 
 function onChange(event) {
   const value = String(event?.target?.value || "");

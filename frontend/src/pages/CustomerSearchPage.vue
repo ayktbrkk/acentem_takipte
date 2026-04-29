@@ -55,13 +55,19 @@
             :columns="columns"
             :rows="accessRequestHistory"
           >
+            <template #cell(customer_name)="{ row }">
+              {{ row.customer_name || t("unknown_customer") }}
+            </template>
+            <template #cell(request_kind)="{ row }">
+              {{ mapRequestKind(row.request_kind) }}
+            </template>
             <template #cell(created)="{ row }">
               {{ formatDate(row.created) }}
             </template>
             <template #cell(status)="{ row }">
               <StatusBadge 
                 domain="renewal" 
-                :status="row.status === 'Approved' ? 'active' : row.status === 'Pending' ? 'hold' : 'cancel'" 
+                :status="row.status === 'approved' ? 'active' : row.status === 'pending' ? 'hold' : 'cancel'" 
                 :label="mapStatus(row.status)" 
               />
             </template>
@@ -76,6 +82,7 @@
 import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useCustomerSearchPage } from "../composables/useCustomerSearchPage";
+import { CUSTOMER_SEARCH_TRANSLATIONS } from "../config/customer_search_translations";
 import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
@@ -85,10 +92,12 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import GlobalCustomerSearch from "../components/app-shell/GlobalCustomerSearch.vue";
 
 const authStore = useAuthStore();
-const activeLocale = computed(() => unref(authStore.locale) || "tr");
+const activeLocale = computed(() => (String(unref(authStore.locale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key: string) {
-  return translateText(key, activeLocale);
+  return CUSTOMER_SEARCH_TRANSLATIONS[activeLocale.value]?.[key]
+    || CUSTOMER_SEARCH_TRANSLATIONS.en?.[key]
+    || translateText(key, activeLocale.value);
 }
 
 const columns = computed(() => [
@@ -103,6 +112,14 @@ function mapStatus(value: string) {
   if (normalized === "pending") return t("status_pending");
   if (normalized === "approved") return t("status_approved");
   if (normalized === "rejected") return t("status_rejected");
+  return value || "-";
+}
+
+function mapRequestKind(value: string) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "access") return t("request_kind_access");
+  if (normalized === "transfer") return t("request_kind_transfer");
+  if (normalized === "share") return t("request_kind_share");
   return value || "-";
 }
 

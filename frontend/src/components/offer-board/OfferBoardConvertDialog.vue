@@ -25,23 +25,23 @@
         <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div class="at-input-group">
             <label class="at-label block">{{ translateText('start_date', locale) }}</label>
-            <input v-model="model.start_date" class="at-control-premium" type="date" />
+            <input v-model="model.start_date" class="at-control-premium at-control-date" type="date" />
           </div>
           <div class="at-input-group">
             <label class="at-label block">{{ translateText('end_date', locale) }}</label>
-            <input v-model="model.end_date" class="at-control-premium" type="date" />
+            <input v-model="model.end_date" class="at-control-premium at-control-date" type="date" />
           </div>
           <div class="at-input-group">
             <label class="at-label block">{{ netPremiumLabel }}</label>
-            <input v-model="model.net_premium" class="at-control-premium at-control-right" :placeholder="netPremiumLabel" type="number" min="0" step="0.01" />
+            <input v-model="model.net_premium" class="at-control-premium at-control-number at-control-right" :placeholder="netPremiumLabel" type="number" min="0" step="0.01" inputmode="decimal" />
           </div>
           <div class="at-input-group">
             <label class="at-label block">{{ taxAmountLabel }}</label>
-            <input v-model="model.tax_amount" class="at-control-premium at-control-right" :placeholder="taxAmountLabel" type="number" min="0" step="0.01" />
+            <input v-model="model.tax_amount" class="at-control-premium at-control-number at-control-right" :placeholder="taxAmountLabel" type="number" min="0" step="0.01" inputmode="decimal" />
           </div>
           <div class="at-input-group">
             <label class="at-label block">{{ commissionAmountLabel }}</label>
-            <input v-model="model.commission_amount" class="at-control-premium at-control-right" :placeholder="commissionAmountLabel" type="number" min="0" step="0.01" />
+            <input v-model="model.commission_amount" class="at-control-premium at-control-number at-control-right" :placeholder="commissionAmountLabel" type="number" min="0" step="0.01" inputmode="decimal" />
           </div>
           <div class="at-input-group">
             <label class="at-label block">{{ policyNoLabel }}</label>
@@ -84,3 +84,22 @@ const visibleProxy = computed({
   set: (value) => emit("update:modelValue", value),
 });
 </script>
+
+<style scoped>
+.at-control-date,
+.at-control-number {
+  appearance: none;
+  -moz-appearance: textfield;
+}
+
+.at-control-date::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+  cursor: pointer;
+}
+
+.at-control-number::-webkit-outer-spin-button,
+.at-control-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+</style>

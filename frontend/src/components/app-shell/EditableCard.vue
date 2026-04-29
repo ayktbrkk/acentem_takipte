@@ -67,7 +67,7 @@
                   type="text"
                   class="at-input w-full pr-10"
                   :class="{ 'border-rose-500 focus:ring-rose-500/20': errors[field.key], 'bg-slate-50 cursor-not-allowed': field.disabled }"
-                  :placeholder="field.placeholder || t('search_records') || 'Ara...'"
+                  :placeholder="field.placeholder || t('search_records')"
                   :disabled="field.disabled"
                   @focus="activeDropdown = field.key"
                   @input="handleAutocompleteInput(field.key)"
@@ -86,7 +86,7 @@
                 class="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200"
               >
                 <div v-if="filteredOptions(field).length === 0" class="px-4 py-8 text-center">
-                  <p class="text-xs font-medium text-slate-400">{{ t('no_records_found') || 'Kayıt bulunamadı' }}</p>
+                  <p class="text-xs font-medium text-slate-400">{{ t('no_records_found') }}</p>
                 </div>
                 <button
                   v-for="(opt, idx) in filteredOptions(field)"
@@ -111,7 +111,7 @@
               
               <!-- Selected Value Hint -->
               <div v-if="editData[field.key] && !activeDropdown" class="mt-1.5 flex items-center gap-2 px-1">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600">{{ t('selected') || 'Seçili' }}:</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600">{{ t('selected') }}:</span>
                 <span class="text-[11px] font-semibold text-slate-900 truncate max-w-[200px]">{{ getOptionLabel(field) }}</span>
                 <button type="button" @click="clearSelection(field.key)" class="text-slate-400 hover:text-rose-500 transition-colors">
                   <FeatherIcon name="x" class="h-3 w-3" />

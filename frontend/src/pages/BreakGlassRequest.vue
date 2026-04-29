@@ -8,7 +8,7 @@
   >
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2">
-        <SectionPanel :title="t('new_request')" panel-class="surface-card rounded-2xl p-6">
+        <SectionPanel :title="t('new_request')">
           <BreakGlassRequestFormPanel
             :form="form"
             :access-type-options="accessTypeOptions"
@@ -23,7 +23,7 @@
       </div>
 
       <div class="space-y-6">
-        <SectionPanel :title="t('active_check')" panel-class="surface-card rounded-2xl p-6">
+        <SectionPanel :title="t('active_check')">
           <BreakGlassRequestValidationPanel
             :validation="validation"
             :access-type-options="accessTypeOptions"
@@ -43,6 +43,7 @@
 import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useBreakGlassRequest } from "../composables/useBreakGlassRequest";
+import { BREAK_GLASS_TRANSLATIONS } from "../config/break_glass_translations";
 import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
@@ -50,10 +51,12 @@ import BreakGlassRequestFormPanel from "../components/break-glass-request/BreakG
 import BreakGlassRequestValidationPanel from "../components/break-glass-request/BreakGlassRequestValidationPanel.vue";
 
 const authStore = useAuthStore();
-const activeLocale = computed(() => unref(authStore.locale) || "tr");
+const activeLocale = computed(() => (String(unref(authStore.locale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key) {
-  return translateText(key, activeLocale);
+  return BREAK_GLASS_TRANSLATIONS[activeLocale.value]?.[key]
+    || BREAK_GLASS_TRANSLATIONS.en?.[key]
+    || translateText(key, activeLocale.value);
 }
 
 const runtime = useBreakGlassRequest({ t });

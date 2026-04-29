@@ -1,5 +1,5 @@
 <template>
-  <SectionPanel :title="t('validatePanelTitle')" panel-class="surface-card rounded-2xl p-5">
+  <SectionPanel :title="t('validatePanelTitle')">
     <div class="grid gap-3 md:grid-cols-2">
       <label class="flex flex-col gap-1">
         <span class="text-xs font-semibold tracking-wide text-slate-500">{{ t("accessType") }}</span>
@@ -17,9 +17,9 @@
     </div>
 
     <div class="mt-4 flex flex-wrap items-center gap-2">
-      <button class="btn btn-outline btn-sm" type="button" :disabled="validating" @click="$emit('validate')">
+      <ActionButton variant="secondary" size="sm" type="button" :disabled="validating" @click="$emit('validate')">
         {{ validating ? t("validating") : t("validate") }}
-      </button>
+      </ActionButton>
       <p v-if="validationMessage" class="text-sm" :class="validationOk ? 'text-emerald-700' : 'text-amber-700'">
         {{ validationMessage }}
       </p>
@@ -28,6 +28,7 @@
 </template>
 
 <script setup>
+import ActionButton from "../app-shell/ActionButton.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 
 defineProps({

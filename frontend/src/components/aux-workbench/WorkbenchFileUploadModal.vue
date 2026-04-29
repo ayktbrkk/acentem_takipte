@@ -4,8 +4,8 @@
       <div class="modal-backdrop" @click.self="$emit('close')">
         <div class="modal-box" role="dialog" aria-modal="true">
           <div class="modal-header">
-            <h2 class="modal-title">{{ t("uploadDocument") }}</h2>
-            <button class="modal-close-btn" type="button" :aria-label="t('close')" @click="$emit('close')">✕</button>
+            <h2 class="modal-title">{{ translateLabel("uploadDocument") }}</h2>
+            <button class="modal-close-btn" type="button" :aria-label="translateLabel('close')" @click="$emit('close')">✕</button>
           </div>
 
           <div
@@ -22,7 +22,7 @@
               class="hidden-input"
               @change="onFileChange"
             />
-            <p v-if="!selectedFile" class="drop-zone-text">{{ t("chooseFile") }}</p>
+            <p v-if="!selectedFile" class="drop-zone-text">{{ translateLabel("chooseFile") }}</p>
             <p v-else class="drop-zone-selected">
               {{ selectedFile.name }}
               <span class="drop-zone-size">{{ fmtFileSize(selectedFile.size) }}</span>
@@ -42,22 +42,22 @@
 
           <div v-if="!props.attachedToDoctype" class="link-section">
             <label class="field-row">
-              <span class="field-label">{{ t('linkDoctypeLabel') }}</span>
+              <span class="field-label">{{ translateLabel('linkDoctypeLabel') }}</span>
               <select v-model="linkDoctype" class="field-input" @change="onLinkDoctypeChange">
                 <option value="">—</option>
-                <option value="AT Customer">{{ t('linkCustomer') }}</option>
-                <option value="AT Policy">{{ t('linkPolicy') }}</option>
-                <option value="AT Claim">{{ t('linkClaim') }}</option>
+                <option value="AT Customer">{{ translateLabel('linkCustomer') }}</option>
+                <option value="AT Policy">{{ translateLabel('linkPolicy') }}</option>
+                <option value="AT Claim">{{ translateLabel('linkClaim') }}</option>
               </select>
             </label>
             <div v-if="linkDoctype" class="field-row">
-              <span class="field-label">{{ t('linkNameLabel') }}</span>
+              <span class="field-label">{{ translateLabel('linkNameLabel') }}</span>
               <div class="link-input-wrap">
                 <input
                   v-model="linkSearch"
                   type="text"
                   class="field-input"
-                  :placeholder="t('linkSearchPlaceholder')"
+                  :placeholder="translateLabel('linkSearchPlaceholder')"
                   @input="onLinkSearch"
                   autocomplete="off"
                 />
@@ -73,7 +73,7 @@
                     <span class="link-result-id">{{ r.name }}</span>
                   </li>
                 </ul>
-                <p v-if="linkSearching" class="link-searching">{{ t('linkSearching') }}</p>
+                <p v-if="linkSearching" class="link-searching">{{ translateLabel('linkSearching') }}</p>
               </div>
               <span v-if="linkName" class="link-selected">✓ {{ linkName }}</span>
             </div>
@@ -81,32 +81,32 @@
 
           <div class="meta-fields">
             <label class="field-row">
-              <span class="field-label">{{ t("documentKind") }}</span>
+              <span class="field-label">{{ translateLabel("documentKind") }}</span>
               <select v-model="documentKind" class="field-input">
                 <option value="">—</option>
-                <option value="Policy">{{ t("kindPolicy") }}</option>
-                <option value="Endorsement">{{ t("kindEndorsement") }}</option>
-                <option value="Claim">{{ t("kindClaim") }}</option>
-                <option value="Other">{{ t("kindOther") }}</option>
+                <option value="Policy">{{ translateLabel("kindPolicy") }}</option>
+                <option value="Endorsement">{{ translateLabel("kindEndorsement") }}</option>
+                <option value="Claim">{{ translateLabel("kindClaim") }}</option>
+                <option value="Other">{{ translateLabel("kindOther") }}</option>
               </select>
             </label>
             <label class="field-row">
-              <span class="field-label">{{ t("documentSubType") }}</span>
+              <span class="field-label">{{ translateLabel("documentSubType") }}</span>
               <select v-model="documentSubType" class="field-input">
                 <option value="">—</option>
-                  <option value="Vehicle Registration">{{ t("subRuhsat") }}</option>
-                  <option value="ID Document">{{ t("subKimlik") }}</option>
-                  <option value="Policy Copy">{{ t("subPoliceCopyasi") }}</option>
-                  <option value="Damage Photo">{{ t("subHasarFotografi") }}</option>
-                  <option value="Other">{{ t("subDiger") }}</option>
+                  <option value="Vehicle Registration">{{ translateLabel("subRuhsat") }}</option>
+                  <option value="ID Document">{{ translateLabel("subKimlik") }}</option>
+                  <option value="Policy Copy">{{ translateLabel("subPoliceCopyasi") }}</option>
+                  <option value="Damage Photo">{{ translateLabel("subHasarFotografi") }}</option>
+                  <option value="Other">{{ translateLabel("subDiger") }}</option>
               </select>
             </label>
             <label class="field-row field-row-check">
               <input v-model="isSensitive" type="checkbox" class="field-checkbox" />
-              <span class="field-label">{{ t("isSensitive") }}</span>
+              <span class="field-label">{{ translateLabel("isSensitive") }}</span>
             </label>
             <label class="field-row">
-              <span class="field-label">{{ t("notes") }}</span>
+              <span class="field-label">{{ translateLabel("notes") }}</span>
               <textarea v-model="notes" class="field-input field-textarea" rows="2" />
             </label>
           </div>
@@ -118,7 +118,7 @@
               :disabled="uploading"
               @click="$emit('close')"
             >
-              {{ t("cancel") }}
+              {{ translateLabel("cancel") }}
             </button>
             <button
               class="btn btn-sm btn-primary"
@@ -126,8 +126,8 @@
               :disabled="!selectedFile || uploading"
               @click="submit"
             >
-              <span v-if="uploading">{{ t("uploading") }}</span>
-              <span v-else>{{ t("upload") }}</span>
+              <span v-if="uploading">{{ translateLabel("uploading") }}</span>
+              <span v-else>{{ translateLabel("upload") }}</span>
             </button>
           </div>
         </div>
@@ -157,7 +157,7 @@ watch(() => [props.attachedToDoctype, props.attachedToName], () => {
 const authStore = useAuthStore();
 const locale = computed(() => authStore.locale || "en");
 
-function t(key) {
+function translateLabel(key) {
   const local = copy[locale.value]?.[key] || copy.en[key] || key;
   if (!props.t) return local;
   const translated = props.t(key);
@@ -405,7 +405,7 @@ async function submit() {
 
   const maxBytes = 10 * 1024 * 1024;
   if (selectedFile.value.size > maxBytes) {
-    errorMessage.value = t("fileTooLarge");
+    errorMessage.value = translateLabel("fileTooLarge");
     return;
   }
 
@@ -441,9 +441,9 @@ async function submit() {
       if (!frappe_file_name) {
         const errMsg = uploadResult?.message || uploadResult?.exception || uploadResult?.error || "";
         if (typeof errMsg === 'string' && errMsg.toLowerCase().includes('model does not support image')) {
-          errorMessage.value = t("fileTypeNotSupported");
+          errorMessage.value = translateLabel("fileTypeNotSupported");
         } else {
-          errorMessage.value = t("uploadError");
+          errorMessage.value = translateLabel("uploadError");
         }
         return;
       }
@@ -475,7 +475,7 @@ async function submit() {
           detail = extractServerErrorMessage(payload);
         } catch {
         }
-        errorMessage.value = detail ? `${t("uploadError")} (${detail})` : t("uploadError");
+        errorMessage.value = detail ? `${translateLabel("uploadError")} (${detail})` : translateLabel("uploadError");
         return;
       }
       selectedFile.value = null;
@@ -502,13 +502,13 @@ async function submit() {
         }
       }
       if (detail.toLowerCase().includes("model does not support image")) {
-        errorMessage.value = t("fileTypeNotSupported");
+        errorMessage.value = translateLabel("fileTypeNotSupported");
       } else {
-        errorMessage.value = detail ? `${t("uploadError")} (${detail})` : t("uploadError");
+        errorMessage.value = detail ? `${translateLabel("uploadError")} (${detail})` : translateLabel("uploadError");
       }
     }
   } catch {
-    errorMessage.value = t("uploadError");
+    errorMessage.value = translateLabel("uploadError");
   } finally {
     uploading.value = false;
   }

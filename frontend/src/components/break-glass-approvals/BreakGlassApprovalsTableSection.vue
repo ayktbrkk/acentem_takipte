@@ -1,5 +1,5 @@
 <template>
-  <SectionPanel :title="t('pendingTitle')" :count="pendingRows.length" panel-class="surface-card rounded-2xl p-5">
+  <SectionPanel :title="t('pendingTitle')" :count="pendingRows.length">
     <article v-if="errorText" class="qc-error-banner" role="alert" aria-live="polite">
       <p class="qc-error-banner__text">{{ errorText }}</p>
     </article>
@@ -65,22 +65,24 @@
                 />
               </label>
               <div class="flex items-center gap-2">
-                <button
-                  class="btn btn-primary btn-xs"
+                <ActionButton
+                  variant="primary"
+                  size="xs"
                   type="button"
                   :disabled="isRowBusy(row.name)"
                   @click="$emit('approve', row.name)"
                 >
                   {{ t("approve") }}
-                </button>
-                <button
-                  class="btn btn-outline btn-xs"
+                </ActionButton>
+                <ActionButton
+                  variant="secondary"
+                  size="xs"
                   type="button"
                   :disabled="isRowBusy(row.name)"
                   @click="$emit('reject', row.name)"
                 >
                   {{ t("reject") }}
-                </button>
+                </ActionButton>
               </div>
             </td>
           </tr>
@@ -91,6 +93,7 @@
 </template>
 
 <script setup>
+import ActionButton from "../app-shell/ActionButton.vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 

@@ -8,29 +8,36 @@
   >
     <template #actions>
       <div class="flex items-center gap-2">
-        <div class="mr-2 flex rounded-lg border border-gray-200 bg-white p-1">
+        <div class="mr-2 flex rounded-lg border border-gray-200 bg-white p-1" role="group" :aria-label="t('viewMode')">
           <button
+            type="button"
             class="rounded px-3 py-1 text-xs font-medium transition-all"
-            :class="isListView ? 'bg-brand-50 text-brand-600' : 'text-gray-500 hover:text-gray-700'"
+            :class="isListView ? 'bg-brand-50 text-brand-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            :aria-pressed="isListView"
+            :aria-label="t('viewList')"
             @click="setOfferViewMode('list')"
           >
             {{ t('viewList') }}
           </button>
           <button
+            type="button"
             class="rounded px-3 py-1 text-xs font-medium transition-all"
-            :class="!isListView ? 'bg-brand-50 text-brand-600' : 'text-gray-500 hover:text-gray-700'"
+            :class="!isListView ? 'bg-brand-50 text-brand-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            :aria-pressed="!isListView"
+            :aria-label="t('viewBoard')"
             @click="setOfferViewMode('board')"
           >
             {{ t('viewBoard') }}
           </button>
         </div>
-        <button class="btn btn-primary" @click="openQuickOfferDialog">
+        <ActionButton variant="primary" size="sm" @click="openQuickOfferDialog">
           <FeatherIcon name="plus" class="h-4 w-4" />
           {{ t("newOffer") }}
-        </button>
-        <button class="btn btn-outline" @click="refreshOffers">
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" :aria-label="t('refresh')" @click="refreshOffers">
           <FeatherIcon name="refresh-cw" class="h-4 w-4" />
-        </button>
+          <span class="sr-only">{{ t("refresh") }}</span>
+        </ActionButton>
       </div>
     </template>
 
@@ -158,6 +165,7 @@ import { useRoute, useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
 import QuickCreateOffer from "../components/QuickCreateOffer.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
@@ -184,7 +192,8 @@ const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-U
 const showAdvancedFilters = ref(false);
 
 function t(key) {
-  return translateText(key, activeLocale.value);
+  const locale = activeLocale.value === "tr" ? "tr" : "en";
+  return OFFER_TRANSLATIONS[locale]?.[key] || translateText(key, activeLocale.value);
 }
 
 function buildOfficeBranchLookupFilters() {

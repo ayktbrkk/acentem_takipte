@@ -22,6 +22,10 @@ vi.mock("vue-router", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: (config = {}) => {
     const url = String(config?.url || "");
 
@@ -169,6 +173,7 @@ describe("CustomerDetail page", () => {
           HeroStrip: HeroStripStub,
           MetaListCard: MetaListCardStub,
           MiniFactList: MiniFactListStub,
+          EditableCard: MetaListCardStub,
           SectionPanel: { template: `<section><h2>{{ title }}</h2><slot /><slot name="trailing" /></section>`, props: ["title"] },
           SkeletonLoader: true,
           StatusBadge: true,
@@ -234,7 +239,10 @@ describe("CustomerDetail page", () => {
 
     await wrapper.findAll(".nav-tab")[1].trigger("click");
     await nextTick();
-    await wrapper.findAll(".meta-list-card-stub")[0].trigger("click");
+    const policyCard = wrapper.findAll(".meta-list-card-stub").find((card) => card.text().includes("P-100"));
+    expect(policyCard).toBeTruthy();
+    await policyCard.trigger("click");
+    await nextTick();
     expect(routerPush).toHaveBeenLastCalledWith({ name: "policy-detail", params: { name: "POL-001" } });
   });
 

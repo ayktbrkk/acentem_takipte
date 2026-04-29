@@ -6,6 +6,7 @@ import { useAuthStore } from "../stores/auth";
 import { formatDate as sharedFormatDate, formatMoney as sharedFormatMoney } from "../utils/detailFormatters";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 import { translateText } from "../utils/i18n";
+import { CUSTOMER_TRANSLATIONS } from "../config/customer_translations";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 
 export function useCustomerDetailRuntime({ name, activeLocale }) {
@@ -16,7 +17,8 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   const localeCode = computed(() => (localeValue.value.startsWith("tr") ? "tr-TR" : "en-US"));
 
   function t(key) {
-    return translateText(key, activeLocale);
+    const locale = localeValue.value.startsWith("tr") ? "tr" : "en";
+    return CUSTOMER_TRANSLATIONS[locale]?.[key] || CUSTOMER_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
   }
 
   const customer360Resource = createResource({

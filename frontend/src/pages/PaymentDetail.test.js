@@ -21,6 +21,10 @@ vi.mock("../utils/documentOpen", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: () =>
     resourceQueue.shift() || {
       data: ref({}),
@@ -31,6 +35,11 @@ vi.mock("frappe-ui", () => ({
       submit: vi.fn(async () => ({})),
     },
 }));
+
+const ListTableStub = {
+  props: ["rows"],
+  template: `<div class="list-table-stub"><div v-for="row in rows" :key="row.name">{{ row.name || row.file_name }}</div><slot /></div>`,
+};
 
 const StatusBadgeStub = {
   props: ["domain", "status"],
@@ -166,6 +175,7 @@ describe("PaymentDetail page", () => {
       props: { name: "PAY-001" },
       global: {
         stubs: {
+          ListTable: ListTableStub,
           StatusBadge: StatusBadgeStub,
           HeroStrip: HeroStripStub,
           SectionPanel: SectionPanelStub,
@@ -205,11 +215,20 @@ describe("PaymentDetail page", () => {
       },
     });
 
-    await buttons.find((button) => button.text().includes("Müşteri kaydını aç")).trigger("click");
+    await buttons.find((button) => button.text().includes("Profilin Tamamını Gör")).trigger("click");
     expect(routerPush).toHaveBeenCalledWith({
       name: "customer-detail",
       params: {
         name: "CUST-001",
+      },
+    });
+
+    await buttons.find((button) => button.text().includes("Doküman Merkezine Git")).trigger("click");
+    expect(routerPush).toHaveBeenCalledWith({
+      name: "at-documents-list",
+      query: {
+        reference_doctype: "AT Payment",
+        reference_name: "PAY-001",
       },
     });
 

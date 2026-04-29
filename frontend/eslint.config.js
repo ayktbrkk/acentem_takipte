@@ -1,6 +1,7 @@
 import js from "@eslint/js";
 import pluginVue from "eslint-plugin-vue";
 import globals from "globals";
+import tsParser from "@typescript-eslint/parser";
 
 const testGlobals = {
   describe: "readonly",
@@ -43,6 +44,11 @@ export default [
   {
     files: ["**/*.vue"],
     languageOptions: {
+      parserOptions: {
+        parser: tsParser,
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
       globals: {
         ...globals.browser,
       },

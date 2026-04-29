@@ -44,7 +44,7 @@
             v-if="field.copyable && field.value" 
             class="text-slate-300 hover:text-brand-600 transition-colors p-0.5"
             @click.stop="$emit('copy', field.value)"
-            title="Kopyala"
+            :title="copyTitle"
           >
             <FeatherIcon name="copy" class="h-3 w-3" />
           </button>
@@ -56,16 +56,19 @@
 
 <script setup>
 import { computed } from "vue";
+import { translateText } from "../../utils/i18n";
 
 const props = defineProps({
   fields: { type: Array, default: () => [] },
   cols: { type: Number, default: 2 },
   layout: { type: String, default: "grid" }, // 'grid' or 'list'
+  locale: { type: String, default: "en" },
 });
 
 defineEmits(["copy"]);
 
 const normalizedFields = computed(() => (Array.isArray(props.fields) ? props.fields : []));
+const copyTitle = computed(() => translateText("copy", props.locale));
 
 function badgeItems(field) {
   return Array.isArray(field?.badges) ? field.badges : [];

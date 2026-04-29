@@ -184,6 +184,7 @@ const {
   reload,
   backToList,
   openClaimDocuments,
+  openCustomer,
   showUploadModal,
   openUploadModal,
   closeUploadModal,
