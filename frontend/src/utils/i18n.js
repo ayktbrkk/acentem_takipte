@@ -7,6 +7,7 @@ import { POLICY_TRANSLATIONS } from "@/config/policy_translations";
 import { OFFER_TRANSLATIONS } from "@/config/offer_translations";
 import { CLAIM_TRANSLATIONS } from "@/config/claim_translations";
 import { PAYMENT_TRANSLATIONS } from "@/config/payment_translations";
+import { COMMUNICATION_TRANSLATIONS } from "@/config/communication_translations";
 import { REPORTS_TRANSLATIONS } from "@/config/reports_translations";
 import { IMPORT_TRANSLATIONS } from "@/config/import_translations";
 import { RECONCILIATION_TRANSLATIONS } from "@/config/reconciliation_translations";
@@ -26,6 +27,7 @@ const ALL_TRANSLATIONS = {
   offer: OFFER_TRANSLATIONS,
   claim: CLAIM_TRANSLATIONS,
   payment: PAYMENT_TRANSLATIONS,
+  communication: COMMUNICATION_TRANSLATIONS,
   reports: REPORTS_TRANSLATIONS,
   import: IMPORT_TRANSLATIONS,
   reconciliation: RECONCILIATION_TRANSLATIONS,
