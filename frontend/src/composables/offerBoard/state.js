@@ -1,4 +1,4 @@
-import { computed, reactive, ref, unref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../../config/quickCreate";
 import { readFilterPresetKey, readFilterPresetList } from "../../utils/filterPresetState";
 import { getCustomerOptionLabel } from "../../utils/customerOptions";
@@ -37,16 +37,15 @@ export function useOfferBoardState({
   t,
   activeLocale,
   localeCode,
-  branchStore,
+  _branchStore,
   offersResource,
   branchResource,
   insuranceCompanyResource,
   salesEntityResource,
   customerSearchResource,
   offerListResource,
-  offerListCountResource,
+  _offerListCountResource,
 }) {
-  const QUICK_OPTION_LIMIT = 2000;
   const offerQuickConfig = getQuickCreateConfig("offer");
   const offerViewMode = ref("list");
   const offerListFilters = reactive({

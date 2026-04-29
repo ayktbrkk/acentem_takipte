@@ -1,5 +1,4 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { ref } from "vue";
 
 import { useCommunicationCenterOperations } from "./operations";
 

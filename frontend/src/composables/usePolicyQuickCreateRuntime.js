@@ -11,10 +11,9 @@ import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { translateText } from "../utils/i18n";
 
 const QUICK_OPTION_LIMIT = 2000;
-const POLICY_PRESET_STORAGE_KEY = "at:policy-list:preset";
 
 export function usePolicyQuickCreateRuntime({
-  t,
+  t: _t,
   activeLocale,
   router,
   route,
@@ -22,7 +21,6 @@ export function usePolicyQuickCreateRuntime({
   refreshPolicyList,
   openPolicyDetail,
 }) {
-  const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
   const quickPolicyConfig = getQuickCreateConfig("policy");
   const showQuickPolicyDialog = ref(false);
   const quickPolicyDialogKey = ref(0);

@@ -1,5 +1,3 @@
-import { computed } from "vue";
-
 import { paymentDetailFacts, paymentIdentityFacts } from "./paymentsBoard/helpers";
 
 export function usePaymentsBoardActions({ t, router, installmentSummaryByPayment }) {

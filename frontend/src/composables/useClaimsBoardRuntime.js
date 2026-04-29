@@ -21,7 +21,7 @@ function resourceValue(resource, fallback) {
 
 import { CLAIM_TRANSLATIONS } from "../config/claim_translations";
 
-export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, route, activeLocale, localeCode }) {
+export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, claimStore, route, activeLocale, localeCode }) {
   function t(key) {
     return CLAIM_TRANSLATIONS[activeLocale.value]?.[key] || CLAIM_TRANSLATIONS.en[key] || translateText(key, activeLocale.value) || key;
   }
@@ -45,10 +45,6 @@ export function useClaimsBoardRuntime({ authStore, branchStore, claimStore, rout
 
   function todayIso() {
     return new Date().toISOString().slice(0, 10);
-  }
-
-  function normalizeText(value) {
-    return String(value || "").trim().toLocaleLowerCase(localeCode.value);
   }
 
   function buildClaimListParams() {

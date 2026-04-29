@@ -12,8 +12,8 @@ export function useReportsRuntime({
   buildPreviousPeriodFiltersPayload,
   canManageScheduledReports,
   filtersSectionRef,
-  visibleColumnKeys,
-  groupByColumn,
+  visibleColumnKeys: _visibleColumnKeys,
+  groupByColumn: _groupByColumn,
 }) {
   const loading = ref(false);
   const error = ref("");

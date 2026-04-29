@@ -140,18 +140,6 @@ function getSafeLocalStorage() {
   }
 }
 
-function migrateColumnKeys(reportKey, keys) {
-  const renames = COLUMN_MIGRATIONS[reportKey];
-  if (!renames || !keys.length) return keys;
-  const migrated = keys.map((key) => renames[key] ?? key);
-  if (keys.includes("customer") && !migrated.includes("customer_tax_id")) {
-    const insertAt = migrated.indexOf("customer_full_name");
-    if (insertAt !== -1) migrated.splice(insertAt + 1, 0, "customer_tax_id");
-    else migrated.push("customer_tax_id");
-  }
-  return migrated;
-}
-
 export function useReportsRuntime({
   t,
   activeLocale,

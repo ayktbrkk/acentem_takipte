@@ -27,11 +27,6 @@ function compareDateDesc(leftDate, rightDate) {
 }
 
 export function useDashboardFormatters({ dashboardComparisonTrendHint, localeCode, maxTrendValue }) {
-    function upperLabel(text) {
-      const locale = String(unref(localeCode) || "en").toLowerCase();
-      return locale.startsWith("tr") ? String(text ?? "").toLocaleUpperCase("tr-TR") : String(text ?? "").toUpperCase();
-    }
-
   function formatDate(dateValue) {
     if (!dateValue) return "-";
     const date = new Date(dateValue);

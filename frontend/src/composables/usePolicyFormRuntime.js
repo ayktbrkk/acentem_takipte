@@ -1,4 +1,4 @@
-import { computed, reactive, ref, unref } from "vue";
+import { computed, ref, unref } from "vue";
 
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";

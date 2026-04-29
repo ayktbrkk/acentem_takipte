@@ -34,6 +34,10 @@ function makeResource(data, reloadResult = data) {
 }
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: () => resourceQueue.shift() || makeResource([]),
   Dialog: { template: `<div><slot /><slot name="actions" /><slot name="body-content" /></div>` },
 }));

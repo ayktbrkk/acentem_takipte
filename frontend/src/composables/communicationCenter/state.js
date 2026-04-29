@@ -26,8 +26,6 @@ export function useCommunicationCenterState({
     const value = unref(resource?.data);
     return value == null ? fallback : value;
   };
-  const asArray = (value) => (Array.isArray(value) ? value : []);
-
   const {
     presetKey,
     presetOptions,
@@ -159,14 +157,6 @@ export function useCommunicationCenterState({
   }));
   const segmentPreviewSummary = computed(() => runtime.segmentPreviewPayload.value?.summary || null);
   const segmentPreviewRows = computed(() => runtime.segmentPreviewPayload.value?.customers || []);
-  const statusCards = computed(() =>
-    communicationStore.statusCards.map((item) => ({
-      key: item.key,
-      label: statusLabel(item.status, t),
-      value: item.value,
-    })),
-  );
-
   function resetSnapshotFilters() {
     applyPreset("default", { refresh: false });
     void persistPresetStateToServer();

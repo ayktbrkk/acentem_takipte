@@ -1,4 +1,4 @@
-import { computed, reactive, ref } from "vue";
+import { reactive, ref } from "vue";
 import { describe, expect, it, vi } from "vitest";
 
 import { useReportsFilters } from "./useReportsFilters";

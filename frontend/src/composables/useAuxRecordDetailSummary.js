@@ -774,8 +774,6 @@ export function useAuxRecordDetailSummary({
       ].filter((item) => item.value != null && String(item.value).trim() !== "");
     }
     if (specialDetailMode.value === "access_log") {
-      const actionSummaryTitle = "Eylem Özeti";
-      const decisionContextTitle = "Karar Bağlamı";
       return [
         { key: "decision_context", field: "decision_context", title: t("auditDecisionContext"), value: formatSignalText(doc.value?.decision_context), fullWidth: true },
       ].filter((item) => item.value != null && String(item.value).trim() !== "");

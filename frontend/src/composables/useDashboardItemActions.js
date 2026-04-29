@@ -105,14 +105,6 @@ export function useDashboardItemActions({
     triggerDashboardReload({ immediate: true });
   }
 
-  async function startTask(task) {
-    await updateTaskStatus(task, "In Progress");
-  }
-
-  async function blockTask(task) {
-    await updateTaskStatus(task, "Blocked");
-  }
-
   async function completeTask(task) {
     await updateTaskStatus(task, "Done");
   }

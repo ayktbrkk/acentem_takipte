@@ -8,8 +8,6 @@ import { readQuickCreateIntent, stripQuickCreateIntentQuery } from "../utils/qui
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 import { translateText } from "../utils/i18n";
 
-const QUICK_OPTION_LIMIT = 2000;
-
 export function useCustomerQuickCreateRuntime({
   t,
   activeLocale,
@@ -19,7 +17,6 @@ export function useCustomerQuickCreateRuntime({
   refreshCustomerList,
   openCustomer360,
 }) {
-  const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
   const quickCustomerConfig = getQuickCreateConfig("customer");
   const showQuickCustomerDialog = ref(false);
   const quickCustomerLoading = ref(false);

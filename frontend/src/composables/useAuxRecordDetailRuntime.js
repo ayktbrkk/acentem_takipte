@@ -19,7 +19,7 @@ function getDetailDoctypeCandidates(props, config) {
   return [baseDoctype, fallbackDoctype].filter((value, index, list) => value && list.indexOf(value) === index);
 }
 
-export function useAuxRecordDetailRuntime({ props, config, route, router }) {
+export function useAuxRecordDetailRuntime({ props, config, route: _route, router: _router }) {
   const resource = createResource({ url: "frappe.client.get", auto: false });
   const resolvedDoctype = ref(config.doctype);
   const activeDoctype = computed(() => resolvedDoctype.value || config.doctype);

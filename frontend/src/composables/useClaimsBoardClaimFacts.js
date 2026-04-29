@@ -2,10 +2,6 @@ import { computed, unref } from "vue";
 
 import { subtleFact } from "../utils/factItems";
 
-function asArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
 export function useClaimsBoardClaimFacts({
   claimStore,
   claimsResource,
@@ -16,7 +12,7 @@ export function useClaimsBoardClaimFacts({
   claimsLoading,
   localeCode,
   t,
-  reloadClaims,
+  _reloadClaims,
 }) {
   function formatCurrency(value) {
     const amount = Number(value || 0);

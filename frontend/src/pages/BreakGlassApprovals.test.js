@@ -10,6 +10,10 @@ import { useAuthStore } from "../stores/auth";
 const frappeRequest = vi.fn();
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   frappeRequest: (...args) => frappeRequest(...args),
 }));
 

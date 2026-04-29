@@ -15,8 +15,6 @@ import {
 
 const PRESET_STORAGE_KEY = "at:lead-list:preset";
 const PRESET_LIST_STORAGE_KEY = "at:lead-list:preset-list";
-const QUICK_OPTION_LIMIT = 2000;
-
 export function useLeadListFilters({ t, activeLocale }) {
   const branchStore = useBranchStore();
 

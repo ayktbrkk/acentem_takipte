@@ -1,4 +1,4 @@
-import { computed, onMounted, reactive, ref, unref, watch } from "vue";
+import { computed, onMounted, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
@@ -29,7 +29,7 @@ function buildOfficeBranchOptions(branches) {
 
 export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   const appPinia = getAppPinia();
-  const authStore = useAuthStore(appPinia);
+  useAuthStore(appPinia);
   const branchStore = useBranchStore(appPinia);
   const renewalStore = useRenewalStore(appPinia);
   const route = useRoute();
@@ -483,7 +483,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
     if (refresh) void reloadRenewals();
   }
 
-  const { presetKey, presetOptions, canDeletePreset, applyPreset, onPresetChange, savePreset, deletePreset, persistPresetStateToServer, hydratePresetStateFromServer } = useCustomFilterPresets({
+  const { presetKey, presetOptions, canDeletePreset, applyPreset, onPresetChange, savePreset, deletePreset, hydratePresetStateFromServer } = useCustomFilterPresets({
     screen: "renewals_board",
     presetStorageKey: "at:renewals-board:preset",
     presetListStorageKey: "at:renewals-board:preset-list",

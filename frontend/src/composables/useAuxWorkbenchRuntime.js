@@ -52,14 +52,6 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
 
   const listResource = createResource({ url: "frappe.client.get_list", auto: false });
   const countResource = createResource({ url: "frappe.client.get_count", auto: false });
-  const presetServerReadResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
-    auto: false,
-  });
-  const presetServerWriteResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
-    auto: false,
-  });
   const sendDraftNowRowResource = createResource({
     url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
     auto: false,
@@ -120,8 +112,6 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
   });
 
   const PRESET_STORAGE_KEY = `at:aux:${config.key}:preset`;
-  const PRESET_LIST_STORAGE_KEY = `at:aux:${config.key}:preset-list`;
-
   const auxQuickCreate = computed(() => config.quickCreate || null);
 
   const showWorkbenchUploadModal = ref(false);

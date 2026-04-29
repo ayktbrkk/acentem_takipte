@@ -23,6 +23,10 @@ vi.mock("vue-router", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: () =>
     resourceQueue.shift() || {
       data: ref({}),

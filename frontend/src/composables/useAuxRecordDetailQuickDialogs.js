@@ -187,7 +187,7 @@ export function useAuxRecordDetailQuickDialogs({
     return value;
   }
 
-  async function prepareQuickEditDialog({ form, resetForm }) {
+  async function prepareQuickEditDialog({ resetForm }) {
     await ensureQuickEditOptionSources();
     const reg = quickEditRegistryCfg();
     const current = unref(doc) || {};

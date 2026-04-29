@@ -35,6 +35,10 @@ const resourceQueue = [];
 let reminderMutationSubmit;
 
 vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
   createResource: (options = {}) => {
     const url = String(options?.url || "");
     if (

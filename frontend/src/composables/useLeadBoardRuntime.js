@@ -1,4 +1,4 @@
-import { computed, reactive, ref, unref, watch } from "vue";
+import { computed, reactive, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "@/utils/i18n";

@@ -66,8 +66,8 @@ export function usePolicyDetailSummary({
   fmtPct,
   stripHtml,
   policyStatusLabel,
-  paymentStatusLabel,
-  endorsementStatusLabel,
+  paymentStatusLabel: _paymentStatusLabel,
+  endorsementStatusLabel: _endorsementStatusLabel,
 }) {
   const isTrLocale = computed(() => String(locale.value || "").toLowerCase().startsWith("tr"));
 

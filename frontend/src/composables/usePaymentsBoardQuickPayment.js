@@ -1,7 +1,6 @@
 import { computed, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { getCustomerOptionLabel } from "../utils/customerOptions";
-import { translateText } from "../utils/i18n";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -17,7 +16,7 @@ function buildOfficeBranchLookupFilters(branchStore) {
   return officeBranch ? { office_branch: officeBranch } : {};
 }
 
-export function usePaymentsBoardQuickPayment({ t, branchStore, reloadPayments, localeCode }) {
+export function usePaymentsBoardQuickPayment({ t, branchStore, reloadPayments, localeCode: _localeCode }) {
   const paymentQuickCustomerResource = createResource({
     url: "frappe.client.get_list",
     auto: true,

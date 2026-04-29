@@ -4,7 +4,6 @@ import { createResource } from "frappe-ui";
 import { useBranchStore } from "../stores/branch";
 import { useDashboardStore } from "../stores/dashboard";
 
-const DASHBOARD_TABS = ["daily", "sales", "collections", "renewals"];
 const DASHBOARD_RELOAD_DEBOUNCE_MS = 300;
 
 export function useDashboardResources({ route, selectedRange, normalizeDashboardTab }) {
@@ -14,10 +13,6 @@ export function useDashboardResources({ route, selectedRange, normalizeDashboard
 
   function normalizeResourcePayload(payload) {
     return payload?.message || payload || {};
-  }
-
-  function cstr(value) {
-    return String(value ?? "").trim();
   }
 
   function withOfficeBranchFilter(params) {

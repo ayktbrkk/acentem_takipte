@@ -31,14 +31,6 @@ function daysUntil(dateValue) {
   return Math.round((due.getTime() - today.getTime()) / 86400000);
 }
 
-function compareDateDesc(leftDate, rightDate) {
-  const leftTime = new Date(leftDate || 0).getTime();
-  const rightTime = new Date(rightDate || 0).getTime();
-  const safeLeft = Number.isFinite(leftTime) ? leftTime : 0;
-  const safeRight = Number.isFinite(rightTime) ? rightTime : 0;
-  return safeRight - safeLeft;
-}
-
 export function useDashboardSales({
   dashboardData,
   dashboardTabSeries,

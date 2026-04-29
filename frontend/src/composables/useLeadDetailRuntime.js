@@ -48,7 +48,7 @@ export function leadConversionState(lead) {
   return "None";
 }
 
-export function leadConversionMissingFields(lead, t = (k) => k) {
+export function leadConversionMissingFields(lead) {
   const required = ["customer", "sales_entity", "insurance_company", "branch", "estimated_gross_premium"];
   return required.filter((f) => !lead[f]);
 }

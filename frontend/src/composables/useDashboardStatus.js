@@ -16,8 +16,8 @@ export function useDashboardStatus({
   myRemindersResource,
   myTasksResource,
   recentOffers,
-  route,
-  selectedRange,
+  route: _route,
+  selectedRange: _selectedRange,
   t,
 }) {
   const activeDashboardTab = computed(() => normalizeDashboardTab(unref(dashboardTabKey) || dashboardStore.state.activeTab));

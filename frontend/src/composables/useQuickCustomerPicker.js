@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, ref, unref, watch } from "vue";
+import { computed, onBeforeUnmount, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import { normalizeCustomerType } from "../utils/customerIdentity";

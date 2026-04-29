@@ -35,7 +35,6 @@ export function useDashboardTabHelpers({
   const myTaskItems = computed(() => (Array.isArray(myTasksPayload.value.items) ? myTasksPayload.value.items : []));
 
   const myActivitiesPayload = computed(() => unref(myActivitiesResource.data) || {});
-  const myActivitySummary = computed(() => myActivitiesPayload.value.summary || { total: 0, logged: 0, shared: 0, archived: 0 });
   const myActivityItems = computed(() => (Array.isArray(myActivitiesPayload.value.items) ? myActivitiesPayload.value.items : []));
 
   const myRemindersPayload = computed(() => unref(myRemindersResource.data) || {});
