@@ -1,9 +1,9 @@
 export const DASHBOARD_TRANSLATIONS = {
   tr: {
-    heroTag: "Sigorta Kontrol Merkezi",
+    heroTag: "Genel Operasyonel Görünüm",
     heroTitle: "Sigorta Operasyon Panosu",
     heroSubtitle: "Frappe CRM yapısına benzer panelde fırsat, poliçe, hasar ve ödeme akışlarını canlı takip edin.",
-    heroTitleDaily: "Acente Yönetim Konsolu",
+    heroTitleDaily: "Sigorta Kontrol Merkezi",
     heroSubtitleDaily: "Genel Operasyonel Görünüm ve Kritik İşlemler",
     heroTitleSales: "Satış Panosu",
     heroSubtitleSales: "Fırsat, teklif ve poliçe üretimini satış odağında izleyin.",
@@ -268,10 +268,10 @@ export const DASHBOARD_TRANSLATIONS = {
     followUpSlaTitle: "Öncelikli Takipler",
   },
   en: {
-    heroTag: "Insurance Control Center",
+    heroTag: "General Operational Overview",
     heroTitle: "Insurance Operations Dashboard",
     heroSubtitle: "Track lead, policy, claim and payment flows in a Frappe CRM style control panel.",
-    heroTitleDaily: "Agency Management Console",
+    heroTitleDaily: "Insurance Control Center",
     heroSubtitleDaily: "General Operational Overview and Critical Operations",
     heroTitleSales: "Sales Dashboard",
     heroSubtitleSales: "Monitor lead, offer and policy production with a sales focus.",

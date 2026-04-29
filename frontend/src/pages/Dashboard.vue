@@ -888,6 +888,8 @@ watch(
   { immediate: true }
 );
 
+let dashboardRouteReady = false;
+
 watch(
   () => normalizeDashboardTab(route.query?.tab),
   (routeTab) => {
