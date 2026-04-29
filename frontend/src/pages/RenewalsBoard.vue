@@ -6,7 +6,7 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <button class="btn btn-primary px-4">
+      <button class="btn btn-primary px-4" @click="showQuickRenewalDialog = true">
         <FeatherIcon name="plus" class="h-4 w-4" />
         {{ t("newTask") }}
       </button>
@@ -112,6 +112,17 @@
         </article>
       </div>
     </section>
+
+    <QuickCreateManagedDialog
+      v-model="showQuickRenewalDialog"
+      config-key="renewal_task"
+      :locale="activeLocale"
+      :title-override="t('newTask')"
+      :options-map="renewalQuickOptionsMap"
+      :eyebrow="quickRenewalEyebrow"
+      :before-open="prepareQuickRenewalDialog"
+      :success-handlers="quickRenewalSuccessHandlers"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -120,6 +131,7 @@ import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
 import { useRenewalsBoardRuntime } from "../composables/useRenewalsBoardRuntime";
 import { translateText } from "../utils/i18n";
+import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
@@ -143,10 +155,15 @@ const {
   renewalStatusOptions,
   renewalsLoading,
   renewals,
+  showQuickRenewalDialog,
+  renewalQuickOptionsMap,
+  quickRenewalEyebrow,
+  quickRenewalSuccessHandlers,
   renewalSummaryItems,
   boardColumns,
   reloadRenewals,
   applyRenewalFilters,
+  prepareQuickRenewalDialog,
   canMoveRenewalToStatus,
   updateRenewalStatus,
   openRenewalDetail,

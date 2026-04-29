@@ -4,6 +4,7 @@
     config-key="payment"
     :locale="locale"
     :options-map="optionsMap"
+    :title-override="titleOverride"
     :eyebrow="eyebrow"
     :show-save-and-open="false"
     :before-open="beforeOpen"
@@ -32,6 +33,10 @@ const props = defineProps({
   eyebrow: {
     type: String,
     required: true,
+  },
+  titleOverride: {
+    type: String,
+    default: "",
   },
   beforeOpen: {
     type: Function,

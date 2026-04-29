@@ -3,7 +3,7 @@ import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
-import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";
+import { getQuickCreateLabels, resolveQuickCreateEyebrow } from "../utils/quickCreateCopy";
 import { translateText } from "../utils/i18n";
 import { runQuickCreateSuccessTargets } from "../utils/quickCreateSuccess";
 
@@ -33,7 +33,15 @@ export function useQuickCreateManagedDialog(props, emit) {
   }));
 
   const uiTitle = computed(() => getLocalizedText(props.titleOverride || config.value?.title, props.locale));
-  const resolvedEyebrow = computed(() => props.eyebrow || getQuickCreateEyebrow("managed", props.locale));
+  const resolvedEyebrow = computed(
+    () =>
+      props.eyebrow ||
+      resolveQuickCreateEyebrow(
+        props.configKey,
+        props.locale,
+        getLocalizedText(config.value?.title, props.locale)
+      )
+  );
   const uiSubtitle = computed(() => getLocalizedText(props.subtitleOverride || config.value?.subtitle, props.locale));
   const dialogShellClass = computed(() => {
     const size = String(props.dialogSize || "").toLowerCase();

@@ -54,6 +54,7 @@
       v-model="showQuickPaymentDialog"
       :locale="activeLocale"
       :options-map="paymentQuickOptionsMap"
+      :title-override="t('newPayment')"
       :eyebrow="quickPaymentEyebrow"
       :before-open="prepareQuickPaymentDialog"
       :success-handlers="quickPaymentSuccessHandlers"

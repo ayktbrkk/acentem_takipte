@@ -2,13 +2,15 @@
   <ATQuickEntryModal
     v-model="show"
     :error="error"
-    :title="translateText('quick_claim', locale)"
-    :subtitle="translateText('quick_claim_subtitle', locale)"
+    :title="title || translateText('quick_claim', locale)"
+    :subtitle="subtitle || translateText('quick_claim_subtitle', locale)"
+    :eyebrow="eyebrow || translateText('Quick Claim', locale)"
     :loading="loading"
     :disabled="loading || disabled"
     :locale="locale"
+    :labels="labels"
     :show-save-and-open="true"
-    @cancel="emit('cancel')"
+    @cancel="closeModal"
     @save="emit('save', false)"
     @save-and-open="emit('save', true)"
   >
@@ -66,12 +68,13 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import ATQuickEntryModal from "./app-shell/ATQuickEntryModal.vue";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import { translateText } from "../utils/i18n";
 
 const props = defineProps({
+  modelValue: { type: Boolean, default: true },
   model: { type: Object, required: true },
   fieldErrors: { type: Object, default: () => ({}) },
   optionsMap: { type: Object, default: () => ({}) },
@@ -79,15 +82,19 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
   error: { type: String, default: "" },
   eyebrow: { type: String, default: "" },
+  title: { type: String, default: "" },
   subtitle: { type: String, default: "" },
   locale: { type: String, default: "tr" },
   labels: { type: Object, default: () => ({}) },
   fields: { type: Array, required: true },
 });
 
-const emit = defineEmits(["cancel", "save"]);
+const emit = defineEmits(["update:modelValue", "cancel", "save"]);
 
-const show = ref(true);
+const show = computed({
+  get: () => props.modelValue,
+  set: (value) => emit("update:modelValue", value),
+});
 
 const technicalFields = computed(() => 
   props.fields.filter(f => ['policy', 'customer', 'claim_no', 'claim_type', 'claim_status', 'incident_date', 'reported_date'].includes(f.name))
@@ -100,4 +107,9 @@ const financialFields = computed(() =>
 const noteFields = computed(() => 
   props.fields.filter(f => f.name === 'notes')
 );
+
+function closeModal() {
+  emit("update:modelValue", false);
+  emit("cancel");
+}
 </script>

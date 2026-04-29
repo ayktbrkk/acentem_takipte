@@ -1,29 +1,27 @@
 <template>
-  <Dialog v-model="showProxy" :options="{ title: resolvedTitle, size: 'xl' }">
-    <template #body-content>
-      <ClaimForm
-        :model="form"
-        :field-errors="fieldErrors"
-        :options-map="optionsMap"
-        :disabled="loading"
-        :loading="loading"
-        :error="errorText"
-        :eyebrow="resolvedEyebrow"
-        :subtitle="resolvedSubtitle"
-        :locale="locale"
-        :labels="resolvedLabels"
-        :fields="fields"
-        @cancel="close"
-        @save="submit($event)"
-      />
-    </template>
-  </Dialog>
+  <ClaimForm
+    v-model="showProxy"
+    :model="form"
+    :field-errors="fieldErrors"
+    :options-map="optionsMap"
+    :disabled="loading"
+    :loading="loading"
+    :error="errorText"
+    :title="resolvedTitle"
+    :eyebrow="resolvedEyebrow"
+    :subtitle="resolvedSubtitle"
+    :locale="locale"
+    :labels="resolvedLabels"
+    :fields="fields"
+    @cancel="close"
+    @save="submit($event)"
+  />
 </template>
 
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { createResource, Dialog } from "frappe-ui";
+import { createResource } from "frappe-ui";
 import ClaimForm from "./ClaimForm.vue";
 import { buildQuickCreateDraft, getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { getQuickCreateEyebrow, getQuickCreateLabels } from "../utils/quickCreateCopy";

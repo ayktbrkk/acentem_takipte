@@ -40,6 +40,21 @@
       :t="t"
       @row-click="openClaimDetail"
     />
+
+    <ClaimsBoardDialogs
+      :show-quick-claim-dialog="showQuickClaimDialog"
+      :show-ownership-assignment-dialog="showOwnershipAssignmentDialog"
+      :active-locale="activeLocale"
+      :claim-quick-options-map="claimQuickOptionsMap"
+      :claim-dialog-title="t('newClaim')"
+      :ownership-assignment-eyebrow="ownershipAssignmentEyebrow"
+      :prepare-quick-claim-dialog="prepareQuickClaimDialog"
+      :quick-claim-success-handlers="quickClaimSuccessHandlers"
+      :prepare-ownership-assignment-dialog="prepareOwnershipAssignmentDialog"
+      :ownership-assignment-success-handlers="ownershipAssignmentSuccessHandlers"
+      @update:show-quick-claim-dialog="showQuickClaimDialog = $event"
+      @update:show-ownership-assignment-dialog="showOwnershipAssignmentDialog = $event"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -48,6 +63,7 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 
 import ClaimsBoardActionBar from "../components/claims-board/ClaimsBoardActionBar.vue";
+import ClaimsBoardDialogs from "../components/claims-board/ClaimsBoardDialogs.vue";
 import ClaimsBoardFilterSection from "../components/claims-board/ClaimsBoardFilterSection.vue";
 import ClaimsBoardMetricsPanel from "../components/claims-board/ClaimsBoardMetricsPanel.vue";
 import ClaimsBoardTableSection from "../components/claims-board/ClaimsBoardTableSection.vue";
@@ -68,16 +84,23 @@ const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-U
 const {
   claimsLoading,
   showQuickClaimDialog,
+  showOwnershipAssignmentDialog,
   claimsListSearchQuery,
   claimsListFilterConfig,
   claimsListRowsWithActions,
+  claimQuickOptionsMap,
+  ownershipAssignmentEyebrow,
   claimSummary,
   claimsListActiveCount,
+  quickClaimSuccessHandlers,
+  ownershipAssignmentSuccessHandlers,
   onClaimsListFilterChange,
   onClaimsListFilterReset,
   formatCount,
   reloadClaims,
   downloadClaimExport,
+  prepareQuickClaimDialog,
+  prepareOwnershipAssignmentDialog,
   openClaimDetail,
   t,
 } = useClaimsBoardRuntime({

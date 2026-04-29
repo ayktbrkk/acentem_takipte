@@ -3,6 +3,7 @@
     v-model="quickClaimOpen"
     :locale="activeLocale"
     :options-map="claimQuickOptionsMap"
+    :title-override="claimDialogTitle"
     :before-open="prepareQuickClaimDialog"
     :success-handlers="quickClaimSuccessHandlers"
   />
@@ -40,6 +41,10 @@ const props = defineProps({
   claimQuickOptionsMap: {
     type: Object,
     required: true,
+  },
+  claimDialogTitle: {
+    type: String,
+    default: "",
   },
   ownershipAssignmentEyebrow: {
     type: String,

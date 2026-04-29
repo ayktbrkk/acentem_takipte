@@ -20,6 +20,11 @@ export function getQuickCreateEyebrow(configKey, locale = "en") {
   return translateText(source, locale);
 }
 
+export function resolveQuickCreateEyebrow(configKey, locale = "en", fallback = "") {
+  const source = QUICK_CREATE_EYEBROWS[configKey] || fallback || QUICK_CREATE_EYEBROWS.managed;
+  return translateText(source, locale);
+}
+
 export function getQuickCreateLabels(mode, locale = "en") {
   const group = QUICK_CREATE_LABELS[mode] || QUICK_CREATE_LABELS.manage;
   return {
