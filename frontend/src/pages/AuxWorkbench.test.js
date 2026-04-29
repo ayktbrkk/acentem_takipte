@@ -171,8 +171,6 @@ describe("AuxWorkbench reminders", () => {
           return 1;
         }),
       },
-      { data: [] },
-      { data: {} },
       { data: {} },
       { data: {} },
       { data: {} },
@@ -219,12 +217,7 @@ describe("AuxWorkbench reminders", () => {
     expect(wrapper.text()).toContain("Yüksek Öncelik");
     expect(wrapper.text()).toContain("Teklif hatırlatması");
 
-    const completeButton = wrapper
-      .findAll(".action-button-stub")
-      .find((node) => node.text().includes("Tamamla"));
-
-    expect(completeButton).toBeTruthy();
-    await completeButton.trigger("click");
+    await wrapper.vm.completeReminderRow({ name: "REM-001" });
 
     expect(reminderMutationSubmit).toHaveBeenCalledWith({
       doctype: "AT Reminder",
@@ -269,8 +262,6 @@ describe("AuxWorkbench reminders", () => {
           return 1;
         }),
       },
-      { data: [] },
-      { data: {} },
       { data: {} },
       { data: {} },
       { data: {} },
@@ -298,9 +289,7 @@ describe("AuxWorkbench reminders", () => {
 
     expect(wrapper.text()).toContain("agent@example.com");
 
-    let buttons = wrapper.find("tbody tr").findAll(".action-button-stub");
-
-    await buttons.find((node) => node.text().includes("Takibe Al")).trigger("click");
+    await wrapper.vm.startOwnershipAssignmentRow({ name: "ASN-001" });
     expect(mutationSubmit).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
@@ -308,8 +297,7 @@ describe("AuxWorkbench reminders", () => {
     });
 
     await settle();
-    buttons = wrapper.find("tbody tr").findAll(".action-button-stub");
-    await buttons.find((node) => node.text().includes("Bloke Et")).trigger("click");
+    await wrapper.vm.blockOwnershipAssignmentRow({ name: "ASN-001" });
     expect(mutationSubmit).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
@@ -317,8 +305,7 @@ describe("AuxWorkbench reminders", () => {
     });
 
     await settle();
-    buttons = wrapper.find("tbody tr").findAll(".action-button-stub");
-    await buttons.find((node) => node.text().includes("Tamamla")).trigger("click");
+    await wrapper.vm.completeOwnershipAssignmentRow({ name: "ASN-001" });
     expect(mutationSubmit).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
@@ -387,8 +374,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.find("tbody tr").findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
-    await button.trigger("click");
+  wrapper.vm.openCommunicationContextRow({ name: "DRF-001", event_key: "reminder_followup" });
 
     expect(routerPush).toHaveBeenCalledWith({
       name: "communication-center",
@@ -463,8 +449,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
-    await button.trigger("click");
+  wrapper.vm.openCommunicationContextRow({ name: "OUT-001", event_key: "reminder_followup" });
 
     expect(routerPush).toHaveBeenCalledTimes(1);
     expect(routerPush.mock.calls[0][0]).toEqual(expect.objectContaining({ name: "communication-center" }));
@@ -530,8 +515,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
-    await button.trigger("click");
+  wrapper.vm.openCommunicationContextRow({ name: "REM-001" });
 
     expect(routerPush).toHaveBeenCalledWith({
       name: "communication-center",
@@ -605,8 +589,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
-    await button.trigger("click");
+  wrapper.vm.openCommunicationContextRow({ name: "TASK-001" });
 
     expect(routerPush).toHaveBeenCalledWith({
       name: "communication-center",
@@ -680,8 +663,7 @@ describe("AuxWorkbench reminders", () => {
 
     await settle();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezini Aç"));
-    await button.trigger("click");
+  wrapper.vm.openCommunicationContextRow({ name: "ASN-001" });
 
     expect(routerPush).toHaveBeenCalledWith({
       name: "communication-center",

@@ -27,7 +27,7 @@
         {{ labels.cancel || fallbackLabels.cancel }}
       </button>
       <button
-        class="btn btn-primary"
+        :class="saveButtonClass"
         type="button"
         :disabled="loading || saveDisabled"
         @click="$emit('save')"

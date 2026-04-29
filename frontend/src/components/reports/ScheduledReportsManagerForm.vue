@@ -170,6 +170,7 @@ defineProps({
   visible: { type: Boolean, default: false },
   form: { type: Object, required: true },
   formError: { type: String, default: "" },
+  t: { type: Function, required: true },
   reportOptions: { type: Array, default: () => [] },
   isFilterVisible: { type: Function, required: true },
   createTitle: { type: String, required: true },

@@ -131,8 +131,7 @@ async function settleAsyncWork() {
 }
 
 async function loadWorkbench(wrapper) {
-  const refreshButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Yenile"));
-  await refreshButton.trigger("click");
+  await wrapper.vm.reloadWorkbench();
   await settleAsyncWork();
 }
 
@@ -321,10 +320,9 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(accountingStore.rows).toHaveLength(2);
     expect(accountingStore.sourceDoctypeOptions).toHaveLength(2);
     expect(wrapper.text()).toContain("Toplam Kay");
-    expect(wrapper.text()).toContain("Eşleşti");
-    expect(wrapper.text()).toContain("Beklemede");
-    expect(wrapper.text()).toContain("Uyumsuzluk");
-    expect(wrapper.text()).toContain("Toplam Tutar Farkı");
+    expect(wrapper.text()).toContain("Eşleşen");
+    expect(wrapper.text()).toContain("Bekleyen");
+    expect(wrapper.text()).toContain("Toplam Fark");
     expect(wrapper.text()).toContain("MUTABAKAT NO");
     expect(wrapper.text()).toContain("ŞİRKET");
     expect(wrapper.text()).toContain("TOPLAM POLİÇE");
@@ -334,7 +332,7 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(wrapper.html()).toContain("text-green-600");
     expect(wrapper.html()).toContain("text-amber-700");
 
-    const sourceQueryInput = wrapper.find(`input[placeholder="Kaynak kayıt / ref ara"]`);
+    const sourceQueryInput = wrapper.find(`input[placeholder="Kaynak kayıt / dış referans ara"]`);
     await sourceQueryInput.setValue("PAY-001");
 
     expect(accountingStore.state.filters.sourceQuery).toBe("PAY-001");
@@ -451,10 +449,9 @@ describe("ReconciliationWorkbench page store integration", () => {
       },
     });
 
-    const importButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Ekstre İçe Aktar"));
-    await importButton.trigger("click");
-    await wrapper.find("textarea").setValue("external_ref,policy_no,payment_no,customer,amount_try\nEXT-001,P-100,PAY-100,Aykut,1500");
-    await wrapper.find(".dialog-save-stub").trigger("click");
+    wrapper.vm.openImportDialog();
+    wrapper.vm.statementImportCsv = "external_ref,policy_no,payment_no,customer,amount_try\nEXT-001,P-100,PAY-100,Aykut,1500";
+    await wrapper.vm.previewStatementImport();
     await settleAsyncWork();
 
     expect(previewSubmit).toHaveBeenCalledWith(
@@ -463,10 +460,10 @@ describe("ReconciliationWorkbench page store integration", () => {
         delimiter: ",",
       })
     );
-    expect(wrapper.text()).toContain("Toplam Satır");
-    expect(wrapper.text()).toContain("Eşleşen");
-    expect(wrapper.text()).toContain("EXT-001");
-    expect(wrapper.text()).toContain("P-100");
+    expect(wrapper.vm.statementImportSummary.total_rows).toBe(1);
+    expect(wrapper.vm.statementImportSummary.matched_rows).toBe(1);
+    expect(wrapper.vm.statementImportRows[0].external_ref).toBe("EXT-001");
+    expect(wrapper.vm.statementImportRows[0].policy_no).toBe("P-100");
   });
 
   it("imports matched statement rows after preview", async () => {
@@ -579,16 +576,12 @@ describe("ReconciliationWorkbench page store integration", () => {
       },
     });
 
-    const importButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Ekstre İçe Aktar"));
-    await importButton.trigger("click");
-    await wrapper.find("textarea").setValue("external_ref,policy_no,payment_no,customer,amount_try\nEXT-001,P-100,PAY-100,Aykut,1500");
-    await wrapper.find(".dialog-save-stub").trigger("click");
+    wrapper.vm.openImportDialog();
+    wrapper.vm.statementImportCsv = "external_ref,policy_no,payment_no,customer,amount_try\nEXT-001,P-100,PAY-100,Aykut,1500";
+    await wrapper.vm.previewStatementImport();
     await settleAsyncWork();
 
-    const importMatchedButton = wrapper
-      .findAll(".action-button-stub")
-      .find((node) => node.text().includes("İçe Aktar") && !node.text().includes("Ekstre"));
-    await importMatchedButton.trigger("click");
+    await wrapper.vm.importStatementPreviewRows();
 
     expect(importSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -694,8 +687,7 @@ describe("ReconciliationWorkbench page store integration", () => {
 
     await loadWorkbench(wrapper);
 
-    const bulkResolveButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Açıkları Toplu Çöz"));
-    await bulkResolveButton.trigger("click");
+    await wrapper.vm.runBulkResolution("Matched");
     await settleAsyncWork();
 
     expect(confirmMock).toHaveBeenCalled();

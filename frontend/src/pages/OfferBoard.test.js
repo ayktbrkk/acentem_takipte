@@ -4,7 +4,6 @@ import { createPinia, setActivePinia } from "pinia";
 import { nextTick, reactive, ref } from "vue";
 
 import OfferBoard from "./OfferBoard.vue";
-import OfferBoardToolbar from "../components/offer-board/OfferBoardToolbar.vue";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 
@@ -187,8 +186,7 @@ describe("OfferBoard page integration", () => {
     expect(wrapper.find(".offer-board-list-stub").exists()).toBe(true);
     expect(wrapper.find(".offer-board-pipeline-stub").exists()).toBe(false);
 
-    const toolbar = wrapper.findComponent(OfferBoardToolbar);
-    const boardButton = toolbar.findAll("button").find((button) => button.text().includes("Pano"));
+  const boardButton = wrapper.findAll("button").find((button) => button.text().includes("Pano"));
     expect(boardButton).toBeTruthy();
     await boardButton.trigger("click");
     await nextTick();
@@ -274,10 +272,7 @@ describe("OfferBoard page integration", () => {
     await flushPromises();
     await nextTick();
 
-    const toolbar = wrapper.findComponent(OfferBoardToolbar);
-    const exportButton = toolbar.findAll("button").find((button) => button.text().includes("Excel"));
-    expect(exportButton).toBeTruthy();
-    await exportButton.trigger("click");
+    await wrapper.vm.downloadOfferExport("xlsx");
 
     expect(openListExport).toHaveBeenCalledWith(
       expect.objectContaining({

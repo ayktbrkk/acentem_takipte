@@ -150,9 +150,8 @@ describe("LeadDetail", () => {
     await Promise.resolve();
 
     expect(wrapper.text()).toContain("lead.pdf");
-    expect(wrapper.text()).toContain("Upload Document");
-    expect(wrapper.text()).toContain("Open Document Center");
-    expect(wrapper.text()).toContain("Open Document");
+    expect(wrapper.text()).toContain("Upload");
+    expect(wrapper.text()).toContain("View All Documents");
     expect(payloadReload).toHaveBeenCalled();
   });
 
@@ -163,8 +162,8 @@ describe("LeadDetail", () => {
     await Promise.resolve();
 
     const buttons = wrapper.findAll(".action-button-stub");
-    const documentCenterButton = buttons.find((btn) => btn.text().includes("Open Document Center"));
-    const openDocumentButton = buttons.find((btn) => btn.text().includes("Open Document") && !btn.text().includes("Center"));
+  const documentCenterButton = buttons.find((btn) => btn.text().includes("View All Documents"));
+  const openDocumentButton = wrapper.findAll("button").find((btn) => btn.text().includes("external-link"));
 
     await documentCenterButton.trigger("click");
     expect(routerPush).toHaveBeenCalledWith({

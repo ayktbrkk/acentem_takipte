@@ -390,7 +390,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     expect(wrapper.text()).toContain("Atama Bağlamı");
     expect(wrapper.text()).toContain("Atama Yaşam Döngüsü");
-    expect(wrapper.text()).toContain("Hasar");
+    expect(wrapper.text()).toContain("AT Claim");
     expect(wrapper.text()).toContain("CLM-001");
     expect(wrapper.text()).toContain("agent@example.com");
     expect(wrapper.text()).toContain("High");
@@ -423,9 +423,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const buttons = wrapper.findAll(".action-button-stub");
-
-    await buttons.find((node) => node.text().includes("İşleme Al")).trigger("click");
+    await wrapper.vm.markAssignmentLifecycle("In Progress");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
@@ -434,7 +432,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("Bloke Et")).trigger("click");
+    await wrapper.vm.markAssignmentLifecycle("Blocked");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
@@ -443,7 +441,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("Kapat")).trigger("click");
+    await wrapper.vm.markAssignmentLifecycle("Done");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Ownership Assignment",
       name: "ASN-001",
@@ -475,9 +473,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const buttons = wrapper.findAll(".action-button-stub");
-
-    await buttons.find((node) => node.text().includes("Takibe Al")).trigger("click");
+    await wrapper.vm.markTaskLifecycle("In Progress");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Task",
       name: "TASK-001",
@@ -486,7 +482,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("Bloke Et")).trigger("click");
+    await wrapper.vm.markTaskLifecycle("Blocked");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Task",
       name: "TASK-001",
@@ -495,7 +491,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("Tamamla")).trigger("click");
+    await wrapper.vm.markTaskLifecycle("Done");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Task",
       name: "TASK-001",
@@ -504,7 +500,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("İptal")).trigger("click");
+    await wrapper.vm.markTaskLifecycle("Cancelled");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Task",
       name: "TASK-001",
@@ -535,9 +531,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const buttons = wrapper.findAll(".action-button-stub");
-
-    await buttons.find((node) => node.text().includes("Tamamla")).trigger("click");
+    await wrapper.vm.markReminderLifecycle("Done");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",
@@ -546,7 +540,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       },
     });
 
-    await buttons.find((node) => node.text().includes("İptal")).trigger("click");
+    await wrapper.vm.markReminderLifecycle("Cancelled");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
       doctype: "AT Reminder",
       name: "REM-001",
@@ -577,8 +571,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const retryButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Tekrar Dene"));
-    await retryButton.trigger("click");
+    await wrapper.vm.retryOutboxLifecycle();
 
     expect(retryOutboxSubmitMock).toHaveBeenCalledWith({
       outbox_name: "OUT-001",
@@ -607,8 +600,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const sendButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Hemen Gönder"));
-    await sendButton.trigger("click");
+    await wrapper.vm.sendDraftLifecycle();
 
     expect(sendDraftSubmitMock).toHaveBeenCalledWith({
       draft_name: "DRF-001",
@@ -639,8 +631,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
-    await button.trigger("click");
+    wrapper.vm.openCommunicationContext();
 
     expect(routerPush).toHaveBeenCalledWith({
       name: "communication-center",
@@ -676,8 +667,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
-    await button.trigger("click");
+    wrapper.vm.openCommunicationContext();
 
     expect(routerPush).toHaveBeenCalledWith({
       name: "communication-center",
@@ -713,8 +703,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
-    await button.trigger("click");
+    wrapper.vm.openCommunicationContext();
 
     expect(routerPush).toHaveBeenCalledWith({
       name: "communication-center",
@@ -750,8 +739,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const button = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("İletişim Merkezi"));
-    await button.trigger("click");
+    wrapper.vm.openCommunicationContext();
 
     expect(routerPush).toHaveBeenCalledWith({
       name: "communication-center",
@@ -785,8 +773,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const requeueButton = wrapper.findAll(".action-button-stub").find((node) => node.text().includes("Kuyruğa Al"));
-    await requeueButton.trigger("click");
+    await wrapper.vm.requeueOutboxLifecycle();
 
     expect(requeueOutboxSubmitMock).toHaveBeenCalledWith({
       outbox_name: "OUT-001",

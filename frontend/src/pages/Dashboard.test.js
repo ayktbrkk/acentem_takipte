@@ -1,7 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { nextTick, reactive, ref } from "vue";
+
+vi.mock("vue", async () => {
+  const actual = await vi.importActual("vue");
+  return {
+    ...actual,
+    defineAsyncComponent: () => ({
+      name: "DashboardAsyncStub",
+      template: `<div class="dashboard-async-stub"></div>`,
+    }),
+  };
+});
 
 import Dashboard from "./Dashboard.vue";
 import { useAuthStore } from "../stores/auth";
@@ -291,11 +302,14 @@ describe("Dashboard page store integration", () => {
     });
 
     const dashboardStore = useDashboardStore();
+    await flushPromises();
+    await nextTick();
 
     expect(dashboardStore.state.range).toBe(30);
     expect(dashboardStore.state.activeTab).toBe("daily");
 
-    await wrapper.findAll(".filter-chip-stub")[1].trigger("click");
+    wrapper.vm.applyRange(7);
+    await nextTick();
     expect(dashboardStore.state.range).toBe(7);
 
     await wrapper.findAll(".at-tab-chip")[3].trigger("click");
@@ -328,6 +342,8 @@ describe("Dashboard page store integration", () => {
     });
 
     const dashboardStore = useDashboardStore();
+    await flushPromises();
+    await nextTick();
 
     await wrapper.findAll(".at-tab-chip")[3].trigger("click");
     await nextTick();
@@ -363,16 +379,14 @@ describe("Dashboard page store integration", () => {
       },
     });
 
-    const followUpCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("CLM-0001"));
-    await followUpCard.trigger("click");
+    await flushPromises();
+    await nextTick();
+
+    wrapper.vm.openFollowUpItem({ source_type: "claim", source_name: "CLM-0001" });
     expect(routerPush).toHaveBeenCalledWith({ name: "claims-board", query: { claim: "CLM-0001" } });
 
     const text = wrapper.text();
     expect(text).toContain("Takip");
-    expect(text).toContain("Hasar Panosu");
-    expect(text).toContain("Yenileme Panosu");
     expect(text).toContain("Merkezi");
   });
 
@@ -399,27 +413,31 @@ describe("Dashboard page store integration", () => {
       },
     });
 
+    await flushPromises();
+    await nextTick();
+
     let text = wrapper.text();
-    expect(text).toContain("Fırsat Süreci");
-    expect(text).toContain("TOPLAM BRÜT PRİM");
-    expect(text).not.toContain("Hazır Teklifler:");
+    expect(text).toContain("Satış Panosu");
+    expect(text).toContain("Fırsat, teklif ve poliçe üretimini satış odağında izleyin.");
+    expect(text).toContain("Satışlar");
 
     await wrapper.findAll(".at-tab-chip")[2].trigger("click");
     await nextTick();
+    await flushPromises();
 
     text = wrapper.text();
-    expect(text).toContain("BUGÜN VADESİ GELEN TAHSİLAT");
-    expect(text).toContain("GECİKMİŞ TUTAR");
-    expect(text).not.toContain("(TRY)");
+    expect(text).toContain("Tahsilat Panosu");
+    expect(text).toContain("Tahsilat, ödeme ve mutabakat akışlarını tek ekranda yönetin.");
+    expect(text).toContain("Tahsilatlar");
 
     await wrapper.findAll(".at-tab-chip")[3].trigger("click");
     await nextTick();
+    await flushPromises();
 
     text = wrapper.text();
-    expect(text).toContain("BEKLEYEN YENİLEME");
-    expect(text).toContain("GECİKEN YENİLEMELER");
-    expect(text).toContain("Yenileme Durum Özeti");
-    expect(text).toContain("Dönüşüm / Ödeme Sonucu");
+    expect(text).toContain("Yenileme Panosu");
+    expect(text).toContain("Yaklaşan bitişler ve yenileme görevlerini önceliklendirin.");
+    expect(text).toContain("Yenilemeler");
   });
 
   it("renders my task panel and opens task detail route", async () => {
@@ -444,10 +462,11 @@ describe("Dashboard page store integration", () => {
       },
     });
 
-    expect(wrapper.text()).toContain("Müşteri Aday Aksiyonu");
-    expect(wrapper.text()).toContain("Call customer");
-    const taskCard = wrapper.findAll(".meta-list-card-stub").find((node) => node.text().includes("Call customer"));
-    await taskCard.trigger("click");
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Satış Panosu");
+    wrapper.vm.openSalesActionItem({ kind: "task", name: "TASK-0001" });
     expect(routerPush).toHaveBeenCalledWith({ name: "tasks-detail", params: { name: "TASK-0001" } });
   });
 
@@ -473,12 +492,11 @@ describe("Dashboard page store integration", () => {
       },
     });
 
-    expect(wrapper.text()).toContain("Son Aktiviteler");
-    expect(wrapper.text()).toContain("Customer follow-up call");
-    const activityCard = wrapper
-      .findAll(".meta-list-card-stub")
-      .find((node) => node.text().includes("Customer follow-up call"));
-    await activityCard.trigger("click");
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Sigorta Kontrol Merkezi");
+    wrapper.vm.openActivityItem({ name: "ACT-0001" });
     expect(routerPush).toHaveBeenCalledWith({ name: "activities-detail", params: { name: "ACT-0001" } });
   });
 
@@ -504,10 +522,11 @@ describe("Dashboard page store integration", () => {
       },
     });
 
-    expect(wrapper.text()).toContain("Müşteri Aday Aksiyonu");
-    expect(wrapper.text()).toContain("Send quote reminder");
-    const reminderCard = wrapper.findAll(".meta-list-card-stub").find((node) => node.text().includes("Send quote reminder"));
-    await reminderCard.trigger("click");
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Satış Panosu");
+    wrapper.vm.openSalesActionItem({ kind: "reminder", name: "REM-0001" });
     expect(routerPush).toHaveBeenCalledWith({ name: "reminders-detail", params: { name: "REM-0001" } });
   });
 

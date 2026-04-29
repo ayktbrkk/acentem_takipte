@@ -73,6 +73,7 @@
       :visible="form.visible"
       :form="form"
       :form-error="formError"
+      :t="t"
       :report-options="reportOptions"
       :is-filter-visible="isFilterVisible"
       :create-title="t('createTitle')"

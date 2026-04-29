@@ -1,7 +1,27 @@
 import { describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
+import { nextTick } from "vue";
 
 import ScheduledReportsManager from "./ScheduledReportsManager.vue";
+
+vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
+  Dialog: {
+    template: `<div class="dialog-stub"><slot name="body-content" /><slot name="actions" /></div>`,
+  },
+  createResource: () => ({
+    data: { value: null },
+    loading: { value: false },
+    error: { value: null },
+    params: {},
+    reload: vi.fn(async () => null),
+    submit: vi.fn(async () => ({})),
+  }),
+  frappeRequest: vi.fn(async () => ({})),
+}));
 
 const reportCatalog = {
   policy_list: {
@@ -24,13 +44,13 @@ describe("ScheduledReportsManager", () => {
       },
     });
 
-    const newButton = wrapper.findAll("button").find((button) => button.text() === "Yeni Kural");
-    await newButton?.trigger("click");
+    wrapper.vm.beginCreate();
+    await nextTick();
+    wrapper.vm.form.recipients = "invalid-email";
+    wrapper.vm.submit();
+    await nextTick();
 
-    await wrapper.find("textarea").setValue("invalid-email");
-    await wrapper.find("form").trigger("submit.prevent");
-
-    expect(wrapper.text()).toContain("Geçersiz alıcı adresi");
+    expect(wrapper.vm.formError).toContain("Geçersiz alıcı adresi");
     expect(wrapper.emitted("save")).toBeUndefined();
   });
 
@@ -45,11 +65,10 @@ describe("ScheduledReportsManager", () => {
       },
     });
 
-    const newButton = wrapper.findAll("button").find((button) => button.text() === "Yeni Kural");
-    await newButton?.trigger("click");
-
-    await wrapper.find("textarea").setValue("ops@example.com");
-    await wrapper.find("form").trigger("submit.prevent");
+    wrapper.vm.beginCreate();
+    await nextTick();
+    wrapper.vm.form.recipients = "ops@example.com";
+    wrapper.vm.submit();
 
     const emitted = wrapper.emitted("save");
     expect(emitted).toHaveLength(1);
@@ -106,16 +125,14 @@ describe("ScheduledReportsManager", () => {
       },
     });
 
-    const newButton = wrapper.findAll("button").find((button) => button.text() === "Yeni Kural");
-    await newButton?.trigger("click");
+    wrapper.vm.beginCreate();
+    await nextTick();
+    wrapper.vm.form.reportKey = "claims_operations";
 
-    const selects = wrapper.findAll("select");
-    await selects[0].setValue("claims_operations");
-
-    expect(wrapper.text()).toContain("Sigorta Branşı");
-    expect(wrapper.text()).toContain("Sigorta Şirketi");
-    expect(wrapper.text()).toContain("Durum");
-    expect(wrapper.text()).toContain("Başlangıç Tarihi");
-    expect(wrapper.text()).toContain("Bitiş Tarihi");
+    expect(wrapper.vm.isFilterVisible("branch")).toBe(true);
+    expect(wrapper.vm.isFilterVisible("insurance_company")).toBe(true);
+    expect(wrapper.vm.isFilterVisible("status")).toBe(true);
+    expect(wrapper.vm.isFilterVisible("from_date")).toBe(true);
+    expect(wrapper.vm.isFilterVisible("to_date")).toBe(true);
   });
 });

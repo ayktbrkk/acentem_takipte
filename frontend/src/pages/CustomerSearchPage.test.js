@@ -4,6 +4,25 @@ import { nextTick } from "vue";
 
 import CustomerSearchPage from "./CustomerSearchPage.vue";
 
+vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
+  Dialog: {
+    template: `<div class="dialog-stub"><slot name="body-content" /><slot name="actions" /></div>`,
+  },
+  createResource: () => ({
+    data: { value: null },
+    loading: { value: false },
+    error: { value: null },
+    params: {},
+    reload: vi.fn(async () => null),
+    submit: vi.fn(async () => ({})),
+  }),
+  frappeRequest: vi.fn(async () => ({})),
+}));
+
 const fetchMock = vi.fn();
 
 vi.stubGlobal("fetch", fetchMock);
@@ -22,6 +41,11 @@ const GlobalCustomerSearchStub = {
   template: `<button class="search-hit-btn" @click="$emit('customer-selected', { name: 'CUST-001' })">hit</button>`,
 };
 
+const ListTableStub = {
+  props: ["rows"],
+  template: `<div class="list-table-stub"><div v-for="row in rows" :key="row.id">{{ row.customer_name }}</div></div>`,
+};
+
 describe("CustomerSearchPage", () => {
   beforeEach(() => {
     fetchMock.mockReset();
@@ -36,7 +60,7 @@ describe("CustomerSearchPage", () => {
             name: "LOG-001",
             reference_name: "CUST-001",
             action_summary: "REQUEST ACCESS",
-            created: "2026-03-29 10:00:00",
+            viewed_on: "2026-03-29 10:00:00",
           },
         ],
       }),
@@ -47,6 +71,8 @@ describe("CustomerSearchPage", () => {
         stubs: {
           WorkbenchPageLayout: WorkbenchPageLayoutStub,
           GlobalCustomerSearch: GlobalCustomerSearchStub,
+          ListTable: ListTableStub,
+          StatusBadge: true,
         },
       },
     });

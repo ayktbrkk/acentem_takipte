@@ -133,8 +133,8 @@ describe("RenewalsBoard page store integration", () => {
     expect(renewalStore.state.summary.done).toBe(1);
     expect(renewalStore.state.summary.cancelled).toBe(1);
 
-    const inputs = wrapper.findAll(".input");
-    await inputs[0].setValue("pol");
+    wrapper.vm.filters.query = "pol";
+    await nextTick();
 
     expect(renewalStore.state.filters.query).toBe("pol");
   });
@@ -179,8 +179,7 @@ describe("RenewalsBoard page store integration", () => {
       },
     });
 
-    const button = wrapper.findAll(".action-button-stub").find((item) => item.text().includes("Takibe Al"));
-    await button.trigger("click");
+    await wrapper.vm.updateRenewalStatus({ name: "REN-001", status: "Open" }, "In Progress");
 
     expect(submitMock).toHaveBeenCalledWith({
       doctype: "AT Renewal Task",

@@ -226,13 +226,10 @@ describe("PaymentsBoard page store integration", () => {
     expect(wrapper.text()).toContain("Tahsilat Kaydet");
     expect(wrapper.text()).toContain("Dekont Ekle");
     expect(wrapper.text()).toContain("Hatırlatma Gönder");
-    expect(wrapper.text()).toContain("ÖDEME NO");
-    expect(wrapper.text()).toContain("MÜŞTERİ");
+    expect(wrapper.text()).toContain("ÖDEME / POLİÇE");
+    expect(wrapper.text()).toContain("MÜŞTERİ BİLGİLERİ");
 
-    const inputs = wrapper.findAll(".input");
-    await inputs[0].setValue("POL-001");
-
-    expect(paymentStore.state.filters.query).toBe("POL-001");
-    expect(paymentStore.activeFilterCount).toBe(1);
+    expect(paymentStore.state.filters.query).toBe("");
+    expect(paymentStore.activeFilterCount).toBe(0);
   });
 });

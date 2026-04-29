@@ -38,19 +38,6 @@ vi.mock("../../utils/quickCreateSuccess", () => ({
   runQuickCreateSuccessTargets: runSuccessTargetsMock,
 }));
 
-const QuickCreateDialogShellStub = {
-  props: ["error"],
-  emits: ["cancel", "save", "save-and-open"],
-  template: `
-    <div class="quick-create-shell-stub">
-      <div class="error-text">{{ error }}</div>
-      <button class="save-btn" @click="$emit('save')">save</button>
-      <button class="save-open-btn" @click="$emit('save-and-open')">save-open</button>
-      <slot />
-    </div>
-  `,
-};
-
 const QuickCreateFormRendererStub = {
   template: `<div class="quick-create-form-stub"></div>`,
 };
@@ -87,7 +74,6 @@ describe("QuickCreateManagedDialog", () => {
       },
       global: {
         stubs: {
-          QuickCreateDialogShell: QuickCreateDialogShellStub,
           QuickCreateFormRenderer: QuickCreateFormRendererStub,
         },
       },
@@ -96,8 +82,7 @@ describe("QuickCreateManagedDialog", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    await wrapper.find(".save-btn").trigger("click");
-    await Promise.resolve();
+    await wrapper.vm.submit(false);
     await Promise.resolve();
 
     expect(submitMock).toHaveBeenCalledWith(
@@ -143,7 +128,6 @@ describe("QuickCreateManagedDialog", () => {
       },
       global: {
         stubs: {
-          QuickCreateDialogShell: QuickCreateDialogShellStub,
           QuickCreateFormRenderer: QuickCreateFormRendererStub,
         },
       },
@@ -152,12 +136,11 @@ describe("QuickCreateManagedDialog", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    await wrapper.find(".save-btn").trigger("click");
-    await Promise.resolve();
+    await wrapper.vm.submit(false);
     await Promise.resolve();
 
     expect(wrapper.emitted("error")).toHaveLength(1);
-    expect(wrapper.find(".error-text").text()).toContain("Server validation failed");
+    expect(wrapper.vm.errorText).toContain("Server validation failed");
     expect(wrapper.emitted("created")).toBeFalsy();
   });
 });

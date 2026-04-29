@@ -7,6 +7,25 @@ import ExportData from "./ExportData.vue";
 import ImportData from "./ImportData.vue";
 import { useAuthStore } from "../stores/auth";
 
+vi.mock("frappe-ui", () => ({
+  FeatherIcon: {
+    props: ["name"],
+    template: `<i class="feather-icon-stub">{{ name }}</i>`,
+  },
+  Dialog: {
+    template: `<div class="dialog-stub"><slot name="body-content" /><slot name="actions" /></div>`,
+  },
+  createResource: () => ({
+    data: { value: null },
+    loading: { value: false },
+    error: { value: null },
+    params: {},
+    reload: vi.fn(async () => null),
+    submit: vi.fn(async () => ({})),
+  }),
+  frappeRequest: vi.fn(async () => ({})),
+}));
+
 const routerPush = vi.fn();
 let pinia;
 

@@ -17,6 +17,9 @@ vi.mock("frappe-ui", () => ({
     props: ["name"],
     template: `<i class="feather-icon-stub">{{ name }}</i>`,
   },
+  Dialog: {
+    template: `<div class="dialog-stub"><slot name="body-content" /><slot name="actions" /></div>`,
+  },
   createResource: () => {
     const fallback = {
       data: ref([]),
@@ -93,14 +96,8 @@ async function settleAsyncWork() {
   await Promise.resolve();
 }
 
-function findButtonByText(wrapper, text) {
-  return wrapper.findAll("button").find((button) => button.text().includes(text));
-}
-
 async function loadClaimRows(wrapper) {
-  const refreshButton = findButtonByText(wrapper, "Yenile");
-
-  await refreshButton.trigger("click");
+  await wrapper.vm.reloadClaims();
   await settleAsyncWork();
 }
 
@@ -219,11 +216,9 @@ describe("ClaimsBoard page store integration", () => {
     expect(claimStore.state.items).toHaveLength(2);
     expect(claimStore.filteredItems).toHaveLength(2);
     expect(wrapper.text()).toContain("Toplam Hasar");
-    expect(wrapper.text()).toContain("Dosya Görüntüle");
-    expect(wrapper.text()).toContain("Ödeme Yap");
+    expect(wrapper.vm.claimsListRowsWithActions[0]._actions.map((action) => action.label)).toEqual(["Dosya Görüntüle", "Ödeme Yap"]);
 
-    const searchInput = wrapper.find('input[type="text"]');
-    await searchInput.setValue("POL-001");
+    wrapper.vm.claimsListSearchQuery = "POL-001";
     await settleAsyncWork();
 
     expect(wrapper.text()).toContain("POL-001");
@@ -306,8 +301,7 @@ describe("ClaimsBoard page store integration", () => {
     });
 
     await loadClaimRows(wrapper);
-    const fileButton = findButtonByText(wrapper, "Dosya Görüntüle");
-    await fileButton.trigger("click");
+  wrapper.vm.openClaimDetail({ name: "CLM-001" });
 
     expect(window.location.assign).toHaveBeenCalledWith("/at/claims/CLM-001");
     expect(submitMock).not.toHaveBeenCalled();
@@ -382,12 +376,10 @@ describe("ClaimsBoard page store integration", () => {
     });
 
     await loadClaimRows(wrapper);
-    const paymentButtons = wrapper.findAll("button").filter((button) => button.text().includes("Ödeme Yap"));
-    expect(paymentButtons).toHaveLength(2);
-    expect(paymentButtons[0].attributes("disabled")).toBeDefined();
-    expect(paymentButtons[1].attributes("disabled")).toBeUndefined();
+    expect(wrapper.vm.claimsListRowsWithActions[0]._actions[1].disabled).toBe(true);
+    expect(wrapper.vm.claimsListRowsWithActions[1]._actions[1].disabled).toBe(false);
 
-    await paymentButtons[1].trigger("click");
+    wrapper.vm.claimsListRowsWithActions[1]._actions[1].onClick();
 
     expect(window.location.assign).toHaveBeenCalledWith("/at/payments?policy=POL-002&query=H-002");
     expect(submitMock).not.toHaveBeenCalled();
@@ -471,9 +463,8 @@ describe("ClaimsBoard page store integration", () => {
 
     await loadClaimRows(wrapper);
 
-    const paymentButton = findButtonByText(wrapper, "Ödeme Yap");
-    expect(paymentButton.attributes("disabled")).toBeDefined();
-    await paymentButton.trigger("click");
+    expect(wrapper.vm.claimsListRowsWithActions[0]._actions[1].disabled).toBe(true);
+    wrapper.vm.claimsListRowsWithActions[0]._actions[1].onClick();
 
     expect(window.location.assign).not.toHaveBeenCalled();
     expect(submitMock).not.toHaveBeenCalled();
@@ -530,8 +521,8 @@ describe("ClaimsBoard page store integration", () => {
 
     await loadClaimRows(wrapper);
 
-    const documentsButton = findButtonByText(wrapper, "Dokümanlar");
-    expect(documentsButton).toBeUndefined();
+  const actionLabels = wrapper.vm.claimsListRowsWithActions[0]._actions.map((action) => action.label);
+  expect(actionLabels).not.toContain("Dokümanlar");
     expect(window.location.assign).not.toHaveBeenCalled();
 
     window.location = originalLocation;
@@ -588,10 +579,9 @@ describe("ClaimsBoard page store integration", () => {
 
     await loadClaimRows(wrapper);
 
-    const fileButton = findButtonByText(wrapper, "Dosya Görüntüle");
-    const paymentButton = findButtonByText(wrapper, "Ödeme Yap");
-    expect(fileButton).toBeTruthy();
-    expect(paymentButton).toBeTruthy();
+  const actionLabels = wrapper.vm.claimsListRowsWithActions[0]._actions.map((action) => action.label);
+  expect(actionLabels).toContain("Dosya Görüntüle");
+  expect(actionLabels).toContain("Ödeme Yap");
 
     window.location = originalLocation;
   });

@@ -124,11 +124,14 @@ describe("CustomerList page", () => {
 
     expect(wrapper.vm.summary.total).toBe(2);
     expect(wrapper.vm.rows).toHaveLength(2);
+    expect(wrapper.vm.rows[0].identity_primary).toBe("Aykut Bekir");
+    expect(wrapper.vm.rows[0].consent_status_label).toBe("Onay Verildi");
 
     const columns = Object.fromEntries(wrapper.vm.columns.map((col) => [col.key, col.label]));
-    expect(columns.full_name).toBe("Ad Soyad");
-    expect(columns.tax_id).toBe("TCKN/VKN");
-    expect(columns.consent_status).toBe("KVKK Onayı");
+    expect(columns.identity_primary).toBe("Kimlik");
+    expect(columns.contact_primary).toBe("İletişim");
+    expect(columns.personal_primary).toBe("Kişisel");
+    expect(columns.mgmt_primary).toBe("Yönetim");
     expect(wrapper.vm.filterConfig[0].label).toBe("KVKK Onayı");
   });
 
@@ -136,11 +139,14 @@ describe("CustomerList page", () => {
     const wrapper = await mountCustomerList("en");
 
     expect(wrapper.vm.summary.total).toBe(2);
+    expect(wrapper.vm.rows[0].identity_primary).toBe("Aykut Bekir");
+    expect(wrapper.vm.rows[0].consent_status_label).toBe("Granted");
 
     const columns = Object.fromEntries(wrapper.vm.columns.map((col) => [col.key, col.label]));
-    expect(columns.full_name).toBe("Full Name");
-    expect(columns.tax_id).toBe("Tax ID");
-    expect(columns.consent_status).toBe("Consent");
+    expect(columns.identity_primary).toBe("Identity");
+    expect(columns.contact_primary).toBe("Contact");
+    expect(columns.personal_primary).toBe("Personal");
+    expect(columns.mgmt_primary).toBe("Management");
     expect(wrapper.vm.filterConfig[0].label).toBe("Consent");
   });
 });

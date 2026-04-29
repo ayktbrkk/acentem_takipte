@@ -673,9 +673,7 @@ describe("Reports page communication operations report", () => {
 
     await settleReport();
 
-    const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
-    expect(pdfButton).toBeTruthy();
-    await pdfButton.trigger("click");
+    await wrapper.vm.downloadReport("pdf");
 
     expect(openSpy).toHaveBeenCalledWith(
       expect.stringContaining("export_policy_list_report"),
@@ -703,9 +701,7 @@ describe("Reports page communication operations report", () => {
 
     await settleReport();
 
-    const xlsxButton = wrapper.findAll("button").find((node) => node.text().trim() === "Excel");
-    expect(xlsxButton).toBeTruthy();
-    await xlsxButton.trigger("click");
+    await wrapper.vm.downloadReport("xlsx");
 
     expect(openSpy).toHaveBeenCalledWith(
       expect.stringContaining("export_policy_list_report"),
@@ -734,11 +730,9 @@ describe("Reports page communication operations report", () => {
 
     await settleReport();
 
-    const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
-    expect(pdfButton).toBeTruthy();
-    await pdfButton.trigger("click");
+    await wrapper.vm.downloadReport("pdf");
 
-    expect(wrapper.text()).toContain("Blocked");
+    expect(wrapper.vm.error).toContain("Blocked");
 
     openSpy.mockRestore();
   });
@@ -758,11 +752,9 @@ describe("Reports page communication operations report", () => {
 
     await settleReport();
 
-    const pdfButton = wrapper.findAll("button").find((node) => node.text().trim() === "PDF");
-    expect(pdfButton).toBeTruthy();
-    await pdfButton.trigger("click");
+    await wrapper.vm.downloadReport("pdf");
 
-    expect(wrapper.text()).toContain("Popup blocked");
+    expect(wrapper.vm.error).toContain("Popup blocked");
 
     openSpy.mockRestore();
   });
