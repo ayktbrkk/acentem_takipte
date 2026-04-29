@@ -1,57 +1,36 @@
 <template>
-  <div v-if="open" class="dialog-overlay" @click.self="onCancel">
-    <div :class="dialogShellClass">
-      <div class="qc-managed-dialog__header">
-        <div class="qc-managed-dialog__headline">
-          <p class="qc-managed-dialog__eyebrow">{{ resolvedEyebrow }}</p>
-          <h3 class="qc-managed-dialog__title">{{ uiTitle }}</h3>
-          <p v-if="uiSubtitle" class="qc-managed-dialog__subtitle">{{ uiSubtitle }}</p>
-        </div>
-        <button
-          class="qc-managed-dialog__close"
-          type="button"
-          :aria-label="translateText('Close', locale)"
-          :title="translateText('Close', locale)"
-          @click="onCancel"
-        >
-          <span aria-hidden="true">×</span>
-          <span class="sr-only">{{ translateText('Close', locale) }}</span>
-        </button>
-      </div>
-
-      <form class="qc-managed-dialog__body" @submit.prevent="submit(false)">
-        <QuickCreateDialogShell
-          :error="errorText"
-          :show-eyebrow="false"
-          :show-subtitle="false"
-          :eyebrow="resolvedEyebrow"
-          :subtitle="uiSubtitle"
-          :loading="loading"
-          :save-disabled="saveDisabledComputed"
-          :show-save-and-open="showSaveAndOpen"
-          :labels="labelsResolved"
-          @cancel="onCancel"
-          @save="submit(false)"
-          @save-and-open="submit(true)"
-        >
-          <QuickCreateFormRenderer
-            :fields="fields"
-            :model="form"
-            :field-errors="fieldErrors"
-            :disabled="loading"
-            :locale="locale"
-            :options-map="optionsMap"
-            @submit="submit(false)"
-          />
-        </QuickCreateDialogShell>
-      </form>
+  <ATQuickEntryModal
+    v-model="open"
+    :error="errorText"
+    :title="uiTitle"
+    :subtitle="uiSubtitle"
+    :eyebrow="resolvedEyebrow"
+    :loading="loading"
+    :disabled="saveDisabledComputed"
+    :show-save-and-open="showSaveAndOpen"
+    :locale="locale"
+    :labels="labelsResolved"
+    @cancel="onCancel"
+    @save="submit(false)"
+    @save-and-open="submit(true)"
+  >
+    <div class="at-card-premium">
+      <QuickCreateFormRenderer
+        :fields="fields"
+        :model="form"
+        :field-errors="fieldErrors"
+        :disabled="loading"
+        :locale="locale"
+        :options-map="optionsMap"
+        @submit="submit(false)"
+      />
     </div>
-  </div>
+  </ATQuickEntryModal>
 </template>
 
 <script setup>
 import { translateText } from "../../utils/i18n";
-import QuickCreateDialogShell from "./QuickCreateDialogShell.vue";
+import ATQuickEntryModal from "./ATQuickEntryModal.vue";
 import QuickCreateFormRenderer from "./QuickCreateFormRenderer.vue";
 import { useQuickCreateManagedDialog } from "../../composables/useQuickCreateManagedDialog";
 
