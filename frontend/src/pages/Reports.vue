@@ -7,18 +7,18 @@
     :record-count-label="t('record_count')"
   >
     <template #actions>
-      <button class="btn btn-outline" @click="focusFilters">
+      <ActionButton variant="secondary" size="sm" @click="focusFilters">
         <FeatherIcon name="search" class="h-4 w-4" />
         {{ t("focus_filters") }}
-      </button>
-      <button class="btn btn-outline" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('xlsx')">
         <FeatherIcon name="download" class="h-4 w-4" />
         {{ t("export_xlsx") }}
-      </button>
-      <button class="btn btn-primary px-4" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="loading || exportLoading" @click="downloadReport('pdf')">
         <FeatherIcon name="file-text" class="h-4 w-4" />
         {{ t("export_pdf") }}
-      </button>
+      </ActionButton>
     </template>
 
     <template #metrics>
@@ -146,6 +146,7 @@ import { useRoute, useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import { FeatherIcon } from "frappe-ui";
 import SidePanel from "../components/ui/SidePanel.vue";
 import RecordPreviewer from "../components/ui/RecordPreviewer.vue";

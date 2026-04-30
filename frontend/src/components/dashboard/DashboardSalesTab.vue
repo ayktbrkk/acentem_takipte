@@ -1,5 +1,15 @@
 <template>
   <div v-if="isSalesTab" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <div class="grid gap-4 sm:grid-cols-2 xl:col-span-12 xl:grid-cols-4">
+      <SaaSMetricCard
+        v-for="card in salesSummaryCards"
+        :key="card.label"
+        :label="card.label"
+        :value="card.value"
+        :value-class="card.valueClass"
+      />
+    </div>
+
     <!-- Left: Pipelines (8 units) -->
     <div class="space-y-6 xl:col-span-8">
       <SectionPanel :title="t('offerPipeline')" :count="formatNumber(salesPipelineOffers.length)">
@@ -44,14 +54,14 @@
             @click="openOfferItem(offer)"
           >
             <template #trailing>
-              <button
+              <ActionButton
                 v-if="offer.converted_policy"
-                class="btn btn-outline btn-sm"
-                @click.stop="openConvertedPolicyItem(offer)"
+                size="xs"
+                trailing-icon="↗"
+                @click="handleOpenConvertedPolicy(offer, $event)"
               >
-                <FeatherIcon name="external-link" class="h-3 w-3" />
                 {{ t("openPolicyAction") }}
-              </button>
+              </ActionButton>
             </template>
             <MiniFactList :items="recentOfferFacts(offer)" />
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
@@ -168,16 +178,18 @@
 </template>
 
 <script setup>
-import { FeatherIcon } from "frappe-ui";
+import { computed } from "vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import MiniFactList from "../app-shell/MiniFactList.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
+import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 
-defineProps({
+const props = defineProps({
   convertedSalesOffers: { type: Array, required: true },
   dashboardLoading: { type: Boolean, required: true },
   displayRecentLeads: { type: Array, required: true },
@@ -209,4 +221,16 @@ defineProps({
   shouldShowViewAll: { type: Function, required: true },
   t: { type: Function, required: true },
 });
+
+const salesSummaryCards = computed(() => [
+  { label: props.t("offerPipeline"), value: props.formatNumber(props.salesPipelineOffers.length), valueClass: "text-brand-600" },
+  { label: props.t("convertedOffersTitle"), value: props.formatNumber(props.convertedSalesOffers.length), valueClass: "text-at-green" },
+  { label: props.t("recentLeads"), value: props.formatNumber(props.displayRecentLeads.length), valueClass: "text-slate-900" },
+  { label: props.t("salesCandidateActionTitle"), value: props.formatNumber(props.salesCandidateActions.length), valueClass: "text-at-amber" },
+]);
+
+function handleOpenConvertedPolicy(offer, event) {
+  event?.stopPropagation?.();
+  props.openConvertedPolicyItem(offer);
+}
 </script>

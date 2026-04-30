@@ -25,6 +25,14 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   function t(key) {
     return CLAIM_TRANSLATIONS[activeLocale.value]?.[key] || CLAIM_TRANSLATIONS.en[key] || translateText(key, activeLocale.value) || key;
   }
+
+  function fallbackLabel() {
+    return t("unspecified");
+  }
+
+  function translateValue(value) {
+    return value ? translateText(String(value), activeLocale.value) || String(value) : fallbackLabel();
+  }
   const ownershipAssignmentEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) ||
@@ -198,7 +206,7 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   }
 
   function formatDate(value) {
-    if (!value) return "-";
+    if (!value) return fallbackLabel();
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return String(value);
     return new Intl.DateTimeFormat(localeCode.value, {
@@ -322,22 +330,22 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   const claimsListRowsWithActions = computed(() =>
     claimsListFilteredRows.value.map((claim) => ({
       ...claim,
-      policy_no_display: claim.policy_no || claim.policy || "-",
-      insurance_company_label: claim.insurance_company || "-",
-      carrier_policy_no: claim.carrier_policy_no || claim.policy_no || "-",
-      branch_label: claim.branch || claim.office_branch || "-",
-      customer_type_label: translateText(claim.customer_customer_type || "-", activeLocale.value),
-      customer_tax_id: claim.customer_masked_tax_id || "-",
+      policy_no_display: claim.policy_no || claim.policy || fallbackLabel(),
+      insurance_company_label: claim.insurance_company || fallbackLabel(),
+      carrier_policy_no: claim.carrier_policy_no || claim.policy_no || fallbackLabel(),
+      branch_label: translateValue(claim.branch || claim.office_branch),
+      customer_type_label: claim.customer_customer_type ? translateText(claim.customer_customer_type, activeLocale.value) || claim.customer_customer_type : fallbackLabel(),
+      customer_tax_id: claim.customer_masked_tax_id || fallbackLabel(),
       customer_birth_date: claim.customer_birth_date || null,
-      customer_label: claim.customer_full_name || claim.customer_name || claim.customer || "-",
+      customer_label: claim.customer_full_name || claim.customer_name || claim.customer || fallbackLabel(),
       incident_date_label: formatDate(claim.incident_date),
-      office_branch_label: claim.office_branch || "-",
+      office_branch_label: claim.office_branch || fallbackLabel(),
       reserve_amount_label: formatCurrency(claim.estimated_amount || 0),
       paid_amount_label: formatCurrency(claim.paid_amount || 0),
-      claim_primary: claim.claim_no || claim.name || "-",
-      claim_secondary: claim.policy_no || claim.policy || "-",
-      type_primary: claim.claim_type || "-",
-      type_secondary: claim.branch || claim.office_branch || "-",
+      claim_primary: claim.claim_no || claim.name || fallbackLabel(),
+      claim_secondary: claim.policy_no || claim.policy || fallbackLabel(),
+      type_primary: translateValue(claim.claim_type),
+      type_secondary: translateValue(claim.branch || claim.office_branch),
       finance_primary: formatCurrency(claim.estimated_amount || 0),
       finance_secondary: formatCurrency(claim.paid_amount || 0),
       _urgency: claim.remaining_days <= 0 ? "row-critical" : claim.remaining_days <= 7 ? "row-warning" : "",

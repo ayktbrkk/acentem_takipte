@@ -24,6 +24,8 @@
             :key="days"
             class="rounded-lg px-4 py-1.5 text-xs font-bold transition-all"
             :class="selectedRange === days ? 'bg-white text-brand-900 shadow-sm' : 'text-white hover:bg-white/10'"
+            :aria-pressed="selectedRange === days"
+            :aria-label="`${rangeLabelText} ${rangeLabel(days)}`"
             @click="$emit('apply-range', days)"
           >
             {{ rangeLabel(days) }}
@@ -31,34 +33,41 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <button
-            class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white border border-white/10 transition-all hover:bg-white/20 hover:scale-105 active:scale-95"
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            class="!flex !h-9 !w-9 !items-center !justify-center !rounded-xl !border-white/10 !bg-white/10 !px-0 !text-white hover:!bg-white/20"
+            :aria-label="refreshLabel"
             @click="$emit('reload')"
           >
             <FeatherIcon name="refresh-cw" class="h-4 w-4" />
-          </button>
+          </ActionButton>
           
-          <button
+          <ActionButton
             v-if="showNewLeadAction"
-            class="flex h-9 items-center gap-2 rounded-xl bg-emerald-500 px-5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 hover:scale-105 active:scale-95"
+            variant="primary"
+            size="sm"
+            class="!flex !h-9 !items-center !gap-2 !rounded-xl !bg-emerald-500 !px-5 !text-xs !font-bold !text-white !shadow-lg !shadow-emerald-500/20 hover:!bg-emerald-400"
             @click="$emit('new-lead')"
           >
             <FeatherIcon name="plus" class="h-4 w-4" />
             {{ newLeadLabel }}
-          </button>
+          </ActionButton>
         </div>
       </ActionToolbarGroup>
     </div>
   </div>
 
   <div class="surface-card rounded-2xl p-2">
-    <div class="flex gap-2 overflow-x-auto whitespace-nowrap px-1 py-1">
+    <div class="flex gap-2 overflow-x-auto whitespace-nowrap px-1 py-1" role="tablist" :aria-label="heroTitle">
       <button
         v-for="tab in dashboardTabs"
         :key="tab.key"
         class="at-tab-chip shrink-0"
         :class="activeDashboardTab === tab.key ? 'at-tab-chip-active' : 'at-tab-chip-idle'"
         type="button"
+        role="tab"
+        :aria-selected="activeDashboardTab === tab.key"
         @click="$emit('set-dashboard-tab', tab.key)"
       >
         {{ tab.label }}
@@ -70,6 +79,7 @@
 <script setup>
 import { FeatherIcon } from "frappe-ui";
 import ActionToolbarGroup from "../app-shell/ActionToolbarGroup.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 
 defineProps({
   activeDashboardTab: { type: String, required: true },

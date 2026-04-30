@@ -116,6 +116,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { getAuxWorkbenchConfig } from "../config/auxWorkbenchConfigs";
+import { AUX_DETAIL_TRANSLATIONS } from "../config/aux_detail_translations";
 import { deskActionsEnabled } from "../utils/deskActions";
 import { useAuxRecordDetailRuntime } from "../composables/useAuxRecordDetailRuntime";
 import { useAuxRecordDetailSummary } from "../composables/useAuxRecordDetailSummary";
@@ -150,7 +151,8 @@ if (!config) {
 }
 
 function t(key) {
-  return translateText(key, activeLocale);
+  const locale = String(unref(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+  return AUX_DETAIL_TRANSLATIONS[locale]?.[key] || AUX_DETAIL_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
 }
 
 function localize(v) {

@@ -161,6 +161,18 @@ def invalidate_lead_from_doc_event(doc, method=None):
     if not doc:
         return
 
+    def read_value(fieldname: str) -> str:
+        if hasattr(doc, "get"):
+            try:
+                value = doc.get(fieldname)
+            except Exception:
+                value = None
+        else:
+            value = None
+        if value:
+            return value
+        return getattr(doc, fieldname, None)
+
     # Direct target
     if doc.doctype == "AT Lead":
         invalidate_lead_360_cache(doc.name)
@@ -168,12 +180,12 @@ def invalidate_lead_from_doc_event(doc, method=None):
 
     # Reference target
     lead_name = None
-    if doc.doctype == "AT Offer" and hasattr(doc, "source_lead") and doc.source_lead:
-        lead_name = doc.source_lead
-    elif doc.doctype in ["Communication", "Comment"] and doc.reference_doctype == "AT Lead":
-        lead_name = doc.reference_name
-    elif doc.doctype == "AT Document" and doc.attached_to_doctype == "AT Lead":
-        lead_name = doc.attached_to_name
+    if doc.doctype == "AT Offer" and read_value("source_lead"):
+        lead_name = read_value("source_lead")
+    elif doc.doctype in ["Communication", "Comment"] and read_value("reference_doctype") == "AT Lead":
+        lead_name = read_value("reference_name")
+    elif doc.doctype == "AT Document" and read_value("reference_doctype") == "AT Lead":
+        lead_name = read_value("reference_name")
 
     if lead_name:
         invalidate_lead_360_cache(lead_name)

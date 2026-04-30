@@ -1,8 +1,10 @@
 <template>
-  <button class="btn btn-outline btn-sm" type="button" @click="$emit('reset')">{{ t("reset") }}</button>
+  <ActionButton variant="secondary" size="sm" type="button" @click="$emit('reset')">{{ t("reset") }}</ActionButton>
 </template>
 
 <script setup>
+import ActionButton from "../app-shell/ActionButton.vue";
+
 defineProps({
   t: {
     type: Function,

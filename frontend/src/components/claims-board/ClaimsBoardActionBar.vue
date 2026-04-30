@@ -1,25 +1,27 @@
 <template>
   <div class="flex flex-wrap items-center gap-2">
-    <button class="btn btn-primary" @click="$emit('launch-quick-claim')">
-      <FeatherIcon name="plus" class="h-4 w-4" />
-      {{ t('newClaim') }}
-    </button>
-    <button class="btn btn-outline" :disabled="claimsLoading" @click="$emit('refresh')">
+    <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="$emit('refresh')">
       <FeatherIcon name="refresh-cw" :class="['h-4 w-4', claimsLoading && 'animate-spin']" />
-    </button>
-    <button class="btn btn-outline" :disabled="claimsLoading" @click="$emit('download-xlsx')">
+      {{ t("refresh") }}
+    </ActionButton>
+    <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="$emit('download-xlsx')">
       <FeatherIcon name="download" class="h-4 w-4" />
       {{ t("exportXlsx") }}
-    </button>
-    <button class="btn btn-outline" :disabled="claimsLoading" @click="$emit('download-pdf')">
+    </ActionButton>
+    <ActionButton variant="secondary" size="sm" :disabled="claimsLoading" @click="$emit('download-pdf')">
       <FeatherIcon name="file-text" class="h-4 w-4" />
       {{ t("exportPdf") }}
-    </button>
+    </ActionButton>
+    <ActionButton variant="primary" size="sm" @click="$emit('launch-quick-claim')">
+      <FeatherIcon name="plus" class="h-4 w-4" />
+      {{ t('newClaim') }}
+    </ActionButton>
   </div>
 </template>
 
 <script setup>
 import { FeatherIcon } from "frappe-ui";
+import ActionButton from "../app-shell/ActionButton.vue";
 
 defineProps({
   claimsLoading: {

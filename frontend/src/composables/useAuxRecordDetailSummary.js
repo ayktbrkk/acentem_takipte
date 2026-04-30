@@ -314,6 +314,11 @@ export function useAuxRecordDetailSummary({
     }
 
     if (typeof value === "boolean") return translateDetailValue(value ? "Yes" : "No");
+    if (Array.isArray(config.boolFields) && config.boolFields.includes(field)) {
+      const normalized = String(value ?? "").trim().toLowerCase();
+      if (["1", "true", "yes"].includes(normalized)) return translateDetailValue("Yes");
+      if (["0", "false", "no"].includes(normalized)) return translateDetailValue("No");
+    }
     if (typeof value === "number") return formatNumber(value);
     if (typeof value === "string" && value.trim() === "") return "-";
 
@@ -713,6 +718,7 @@ export function useAuxRecordDetailSummary({
   function groupTitle(key) {
     const titles = {
       base: t("baseInfo"),
+      document: localize(config.labels?.detail) || humanizeField(key),
       schedule: t("scheduleInfo"),
       assignment: t("assignmentInfo"),
       draft: t("draftInfo"),

@@ -35,6 +35,10 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
     return translateText(key, activeLocale);
   }
 
+  function fallbackLabel() {
+    return t("unspecified");
+  }
+
   const paymentSortOptions = computed(() => [
     { value: "modified desc", label: t("sortModifiedDesc") },
     { value: "payment_date desc", label: t("sortPaymentDateDesc") },
@@ -160,14 +164,14 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
       title: t("title"),
       columns: [t("payment_no"), t("customer"), t("policy"), t("due_date"), t("amount"), t("collected"), t("remaining"), t("status")],
       rows: summaryUi.paymentSnapshots.value.map((payment) => ({
-        [t("payment_no")]: payment.payment_no || payment.name || "-",
-        [t("customer")]: payment.customer_label || payment.customer_full_name || payment.customer_name || payment.customer || "-",
-        [t("policy")]: payment.policy || "-",
-        [t("due_date")]: payment.due_date_label || "-",
+        [t("payment_no")]: payment.payment_no || payment.name || fallbackLabel(),
+        [t("customer")]: payment.customer_label || payment.customer_full_name || payment.customer_name || payment.customer || fallbackLabel(),
+        [t("policy")]: payment.policy || fallbackLabel(),
+        [t("due_date")]: payment.due_date_label || fallbackLabel(),
         [t("amount")]: payment.amount_label || summaryUi.formatCurrency(payment.totalAmount),
         [t("collected")]: payment.collected_amount_label || summaryUi.formatCurrency(payment.collectedAmount),
         [t("remaining")]: payment.remaining_amount_label || summaryUi.formatCurrency(payment.remainingAmount),
-        [t("status")]: payment.status || "-",
+        [t("status")]: payment.status || fallbackLabel(),
       })),
       filters: buildPresetPayload(filters),
       format,

@@ -31,7 +31,7 @@
     <ActionButton variant="secondary" size="sm" :disabled="props.workbenchLoading" @click="$emit('export-xlsx')">
       {{ props.t("exportXlsx") }}
     </ActionButton>
-    <ActionButton variant="primary" size="sm" :disabled="props.workbenchLoading" @click="$emit('export-pdf')">
+    <ActionButton variant="secondary" size="sm" :disabled="props.workbenchLoading" @click="$emit('export-pdf')">
       {{ props.t("exportPdf") }}
     </ActionButton>
   </div>

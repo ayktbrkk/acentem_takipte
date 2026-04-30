@@ -28,6 +28,7 @@ import IconLucideListChecks from '~icons/lucide/list-checks';
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useUiStore } from "../stores/ui";
+import { SIDEBAR_TRANSLATIONS } from "../config/sidebar_translations";
 import { translateText } from "@/utils/i18n";
 
 export function useSidebarNavigation() {
@@ -36,7 +37,8 @@ export function useSidebarNavigation() {
   const uiStore = useUiStore();
 
   function t(key) {
-    return translateText(key, authStore.locale);
+    const locale = String(authStore.locale || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+    return SIDEBAR_TRANSLATIONS[locale]?.[key] || SIDEBAR_TRANSLATIONS.en?.[key] || translateText(key, authStore.locale);
   }
 
   function upper(value) {

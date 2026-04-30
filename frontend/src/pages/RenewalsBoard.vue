@@ -1,18 +1,26 @@
 <template>
   <WorkbenchPageLayout
-    :breadcrumb="t('breadcrumb')"
+    :breadcrumb="t('renewals_breadcrumb')"
     :title="t('title')"
+    :subtitle="t('subtitle')"
     :record-count="renewals.length"
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <button class="btn btn-primary px-4" @click="showQuickRenewalDialog = true">
+      <ActionButton variant="secondary" size="sm" @click="reloadRenewals">
+        <FeatherIcon name="refresh-cw" :class="['h-4 w-4', renewalsLoading && 'animate-spin']" />
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="downloadRenewalExport('xlsx')">
+        {{ t("exportExcel") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="downloadRenewalExport('pdf')">
+        {{ t("exportPdf") }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="showQuickRenewalDialog = true">
         <FeatherIcon name="plus" class="h-4 w-4" />
         {{ t("newTask") }}
-      </button>
-      <button class="btn btn-outline" @click="reloadRenewals">
-        <FeatherIcon name="refresh-cw" :class="['h-4 w-4', renewalsLoading && 'animate-spin']" />
-      </button>
+      </ActionButton>
     </template>
 
     <template #metrics>
@@ -86,8 +94,11 @@
               </div>
 
               <div class="mt-3 flex items-center gap-2">
-                <StatusBadge domain="renewal" :status="task.status === 'Open' ? 'active' : task.status === 'Done' ? 'active' : 'hold'" :label="task.status" />
-                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                <StatusBadge domain="renewal" :status="task.status || 'Open'" />
+                <span
+                  v-if="task.status !== 'Done' && task.status !== 'Cancelled'"
+                  class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600"
+                >
                   {{ task.priorityLabel }}
                 </span>
               </div>
@@ -136,6 +147,7 @@ import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManaged
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import { FeatherIcon } from "frappe-ui";
@@ -164,6 +176,7 @@ const {
   renewalSummaryItems,
   boardColumns,
   reloadRenewals,
+  downloadRenewalExport,
   applyRenewalFilters,
   prepareQuickRenewalDialog,
   canMoveRenewalToStatus,

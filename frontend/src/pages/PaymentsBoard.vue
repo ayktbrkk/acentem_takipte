@@ -1,9 +1,10 @@
 <template>
   <WorkbenchPageLayout
-    :breadcrumb="t('title')"
+    :breadcrumb="t('payments_breadcrumb')"
     :title="t('title')"
+    :subtitle="t('subtitle')"
     :record-count="paymentSummary.total"
-    :record-count-label="t('records')"
+    :record-count-label="t('recordCount')"
   >
     <template #actions>
       <PaymentsBoardActionBar
@@ -12,6 +13,7 @@
         @launch="showQuickPaymentDialog = true"
         @refresh="reloadPayments"
         @export-xlsx="downloadPaymentExport('xlsx')"
+        @export-pdf="downloadPaymentExport('pdf')"
       />
     </template>
 

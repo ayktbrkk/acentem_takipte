@@ -105,7 +105,7 @@
               </ActionButton>
             </div>
           </template>
-          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
+          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_documents") }}</div>
           <div v-else class="space-y-2">
             <MetaListCard
               v-for="doc in documents.slice(0, 5)" 

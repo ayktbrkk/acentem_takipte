@@ -5,6 +5,14 @@
     :subtitle="t('subtitle')"
     :show-record-count="false"
   >
+    <template #metrics>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <SaaSMetricCard :label="t('datasetLabel')" :value="activeScreenLabel" />
+        <SaaSMetricCard :label="t('formatLabel')" :value="activeFormatLabel" value-class="text-brand-600" />
+        <SaaSMetricCard :label="t('history_summary')" :value="historyRows.length" value-class="text-at-green" />
+      </div>
+    </template>
+
     <template #actions>
       <ExportDataHeaderActions :t="t" @reset="resetForm" />
     </template>
@@ -26,6 +34,7 @@ import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import { useExportDataRuntime } from "../composables/useExportDataRuntime";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ExportDataHeaderActions from "../components/export-data/ExportDataHeaderActions.vue";
 import ExportDataOptionsPanel from "../components/export-data/ExportDataOptionsPanel.vue";
 import ExportDataFiltersPanel from "../components/export-data/ExportDataFiltersPanel.vue";
@@ -47,5 +56,15 @@ function t(key) {
 
 const runtime = useExportDataRuntime({ t, router, authStore });
 const { form, message, historyRows, localizedScreenOptions, downloadExport, resetForm, cancel } = runtime;
+
+const activeScreenLabel = computed(
+  () => localizedScreenOptions.value.find((option) => option.value === form.screen)?.label || t("screenNoLabel"),
+);
+
+const activeFormatLabel = computed(() => {
+  if (form.format === "pdf") return t("formatPdf");
+  if (form.format === "csv") return t("formatCsv");
+  return t("formatXlsx");
+});
 </script>
 

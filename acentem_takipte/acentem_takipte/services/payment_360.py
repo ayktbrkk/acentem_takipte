@@ -2,6 +2,28 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate
 
+
+def _get_customer_brief(customer_name):
+    customer_name = str(customer_name or "").strip()
+    if not customer_name:
+        return {}
+
+    try:
+        customer = frappe.get_doc("AT Customer", customer_name)
+    except frappe.DoesNotExistError:
+        return {}
+
+    return {
+        "name": customer.name,
+        "full_name": customer.full_name,
+        "customer_type": customer.customer_type,
+        "tax_id": customer.tax_id,
+        "birth_date": customer.birth_date,
+        "occupation": customer.occupation,
+        "phone": customer.phone,
+        "email": customer.email,
+    }
+
 def get_payment_360_payload(payment_name):
     """
     Aggregates payment data, installments, and linked documents for a 360-degree view.
@@ -41,6 +63,7 @@ def get_payment_360_payload(payment_name):
     # Build payload
     payload = {
         "payment": payment.as_dict(),
+        "customer": _get_customer_brief(payment.customer),
         "installments": installments,
         "documents": documents,
         "metadata": {

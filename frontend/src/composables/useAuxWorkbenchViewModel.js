@@ -3,6 +3,7 @@ import { computed, unref } from "vue";
 import { buildOfficeBranchOptions } from "../utils/officeBranchTree";
 import { openTabularExport } from "../utils/listExport";
 import { getCustomerOptionLabel } from "../utils/customerOptions";
+import { AUX_WORKBENCH_TRANSLATIONS } from "../config/aux_workbench_translations";
 import { translateText } from "@/utils/i18n";
 
 function humanizeField(field) {
@@ -271,7 +272,8 @@ export function useAuxWorkbenchViewModel({
   }
 
   function t(key) {
-    return translateText(key, activeLocale);
+    const locale = String(currentLocale(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+    return AUX_WORKBENCH_TRANSLATIONS[locale]?.[key] || AUX_WORKBENCH_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
   }
 
   function label(kind) {

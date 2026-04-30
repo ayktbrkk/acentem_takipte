@@ -1,36 +1,44 @@
 <template>
   <div class="flex items-center gap-2">
-    <button class="btn btn-outline shadow-sm" :disabled="isLoading" @click="$emit('download-xlsx')">
+    <ActionButton variant="secondary" size="sm" :disabled="isLoading" @click="$emit('refresh')">
+      <FeatherIcon name="refresh-cw" :class="['h-4 w-4', isLoading && 'animate-spin']" />
+      {{ refreshLabel }}
+    </ActionButton>
+    <ActionButton variant="secondary" size="sm" :disabled="isLoading" @click="$emit('download-xlsx')">
       <FeatherIcon name="download" class="h-4 w-4" />
       {{ exportXlsxLabel }}
-    </button>
-    <button
+    </ActionButton>
+    <ActionButton variant="secondary" size="sm" :disabled="isLoading" @click="$emit('download-pdf')">
+      <FeatherIcon name="file-text" class="h-4 w-4" />
+      {{ exportPdfLabel }}
+    </ActionButton>
+    <ActionButton
       v-if="auxQuickCreateLabel && canLaunchAuxQuickCreate"
-      class="btn btn-primary shadow-sm"
+      variant="primary"
+      size="sm"
       @click="$emit('launch-quick-create')"
     >
       <FeatherIcon name="plus" class="h-4 w-4" />
       {{ auxQuickCreateLabel }}
-    </button>
-    <button class="btn btn-outline shadow-sm" :disabled="isLoading" @click="$emit('refresh')">
-      <FeatherIcon name="refresh-cw" :class="['h-4 w-4', isLoading && 'animate-spin']" />
-    </button>
+    </ActionButton>
 
     <div v-if="visibleToolbarActions.length > 0" class="h-4 w-px bg-slate-200 mx-1"></div>
 
-    <button
+    <ActionButton
       v-for="action in visibleToolbarActions"
       :key="action.key || action.routeName || localize(action.label)"
-      class="btn btn-outline shadow-sm"
+      :variant="action.variant || 'secondary'"
+      size="sm"
       @click="$emit('run-toolbar-action', action)"
     >
       {{ localize(action.label) || panelLabel }}
-    </button>
+    </ActionButton>
   </div>
 </template>
 
 <script setup>
 import { FeatherIcon } from "frappe-ui";
+import ActionButton from "../app-shell/ActionButton.vue";
 
 defineProps({
   isLoading: { type: Boolean, default: false },

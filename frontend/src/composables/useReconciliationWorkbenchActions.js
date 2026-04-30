@@ -174,15 +174,14 @@ export function useReconciliationWorkbenchActions({
 
   function handleReconciliationRowClick(row) {
     if (!row?.name) return;
-    const sourceRow = rows.value.find((item) => item?.name === row.name);
-    if (sourceRow && canOpenSourcePanel(sourceRow)) openSourcePanel(sourceRow);
+    openReconciliationDetail(row);
   }
 
   function buildReconciliationRowActions(row) {
     const actions = [];
     actions.push({
       key: `${row?.name}-detail`,
-      label: "Kayıt Detayı",
+      label: t("recordDetail"),
       variant: "primary",
       onClick: () => openReconciliationDetail(row),
     });

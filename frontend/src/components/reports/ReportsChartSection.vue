@@ -7,7 +7,7 @@
     >
       <div class="flex items-center justify-between mb-6">
         <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-          <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+          <span class="h-2 w-2 rounded-full bg-brand-600"></span>
           {{ t_title(chartConfig.title) }}
         </h3>
         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -24,7 +24,7 @@
       </div>
 
       <!-- Subtle Background Decorative Element -->
-      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-50/50 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-sky-50/70 rounded-full blur-3xl pointer-events-none"></div>
     </div>
   </div>
 </template>
@@ -115,7 +115,7 @@ function getChartData(cfg) {
          label: t_title(cfg.title),
          data: top.map(x => x.v),
          backgroundColor: generateColors(top.length, cfg.type),
-         borderColor: cfg.type === 'line' ? '#6366f1' : 'transparent',
+         borderColor: cfg.type === 'line' ? '#1B5DB8' : 'transparent',
          tension: 0.4,
          borderRadius: cfg.type === 'bar' ? 8 : 0,
        }]
@@ -128,12 +128,12 @@ function getChartData(cfg) {
       label: t_title(cfg.title),
       data: values,
       backgroundColor: generateColors(labels.length, cfg.type),
-      borderColor: cfg.type === 'line' ? '#6366f1' : 'transparent',
+      borderColor: cfg.type === 'line' ? '#1B5DB8' : 'transparent',
       tension: 0.4,
       borderRadius: cfg.type === 'bar' ? 8 : 0,
       fill: cfg.type === 'line' ? {
         target: 'origin',
-        above: 'rgba(99, 102, 241, 0.05)',
+        above: 'rgba(27, 93, 184, 0.08)',
       } : false
     }]
   };
@@ -141,12 +141,12 @@ function getChartData(cfg) {
 
 function generateColors(count, type) {
   const palette = [
-    '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', 
-    '#f59e0b', '#10b981', '#06b6d4', '#3b82f6',
-    '#64748b', '#94a3b8'
+    '#1B5DB8', '#10B981', '#F59E0B', '#EF4444',
+    '#0EA5E9', '#475569', '#14B8A6', '#2563EB',
+    '#84CC16', '#A855F7'
   ];
   
-  if (type === 'line') return '#6366f1';
+  if (type === 'line') return '#1B5DB8';
   if (type === 'bar') return palette.map(c => c + 'CC'); // 80% opacity
   
   return palette.slice(0, count);

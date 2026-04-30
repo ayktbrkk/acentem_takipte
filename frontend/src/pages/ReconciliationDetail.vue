@@ -1,8 +1,8 @@
 <template>
   <WorkbenchPageLayout
     :breadcrumb="t('detailBreadcrumb')"
-    :title="item.name || name"
-    :subtitle="entry.insurance_company || item.accounting_entry"
+    :title="t('detailTitle')"
+    :subtitle="detailSubtitle"
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="goBack">
@@ -105,6 +105,7 @@ import { computed, onMounted, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { getAppPinia } from "../pinia";
+import { RECONCILIATION_TRANSLATIONS } from "../config/reconciliation_translations";
 import { useAuthStore } from "../stores/auth";
 import { translateText } from "../utils/i18n";
 
@@ -122,10 +123,10 @@ const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || "");
 const router = useRouter();
 const authStore = useAuthStore(getAppPinia());
-const activeLocale = computed(() => unref(authStore.locale) || "en");
+const activeLocale = computed(() => (String(unref(authStore.locale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key) {
-  return translateText(key, activeLocale);
+  return RECONCILIATION_TRANSLATIONS[activeLocale.value]?.[key] || RECONCILIATION_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
 }
 
 const itemResource = createResource({ url: "frappe.client.get", auto: false });
@@ -136,27 +137,32 @@ const item = computed(() => unref(itemResource.data) || {});
 const entry = computed(() => unref(entryResource.data) || {});
 const relatedItems = computed(() => (Array.isArray(unref(relatedItemsResource.data)) ? unref(relatedItemsResource.data) : []));
 const loading = computed(() => Boolean(unref(itemResource.loading) || unref(entryResource.loading) || unref(relatedItemsResource.loading)));
+const detailSubtitle = computed(() => {
+  return [item.value.name, entry.value.insurance_company || item.value.accounting_entry, t("detailSubtitle")]
+    .filter((value) => String(value || "").trim())
+    .join(" · ");
+});
 
 const differenceValue = computed(() => Number(item.value.difference_try || 0));
-const statusLabel = computed(() => normalizeReconciliationStatus(item.value.status, differenceValue.value));
+const statusLabel = computed(() => translateStatus(normalizeReconciliationStatusValue(item.value.status, differenceValue.value)));
 const periodLabel = computed(() => derivePeriodLabel(item.value, entry.value));
 
 const heroCells = computed(() => [
-  { label: t("reconciliationNo"), value: item.value.name || name.value || "-", variant: "default" },
-  { label: t("company"), value: entry.value.insurance_company || "-", variant: "default" },
+  { label: t("reconciliationNo"), value: formatValue(item.value.name || name.value), variant: "default" },
+  { label: t("company"), value: formatValue(entry.value.insurance_company), variant: "default" },
   { label: t("period"), value: periodLabel.value, variant: "lg" },
   { label: t("difference"), value: formatMoney(differenceValue.value), variant: differenceValue.value ? "warn" : "success" },
 ]);
 
 const summaryFields = computed(() => [
-  { label: t("accountingEntry"), value: item.value.accounting_entry || "-" },
-  { label: t("sourceDoctype"), value: item.value.source_doctype || "-" },
-  { label: t("sourceName"), value: item.value.source_name || "-" },
-  { label: t("mismatchType"), value: item.value.mismatch_type || "-" },
+  { label: t("accountingEntry"), value: formatValue(item.value.accounting_entry) },
+  { label: t("sourceDoctype"), value: formatValue(translateSource(item.value.source_doctype)) },
+  { label: t("sourceName"), value: formatValue(item.value.source_name) },
+  { label: t("mismatchType"), value: formatValue(translateMismatch(item.value.mismatch_type)) },
   { label: t("status"), value: statusLabel.value },
   { label: t("difference"), value: formatMoney(differenceValue.value) },
-  { label: t("resolvedAction"), value: item.value.resolution_action || "-" },
-  { label: t("resolvedBy"), value: item.value.resolved_by || "-" },
+  { label: t("resolvedAction"), value: formatValue(translateResolution(item.value.resolution_action)) },
+  { label: t("resolvedBy"), value: formatValue(item.value.resolved_by) },
 ]);
 
 const policyColumns = computed(() => [
@@ -191,7 +197,7 @@ const detailsEntries = computed(() => {
   if (!parsed || typeof parsed !== "object") return [];
   return Object.entries(parsed)
     .slice(0, 8)
-    .map(([label, value]) => ({ label, value: stringifyDetailValue(value) }));
+    .map(([label, value]) => ({ label: humanizeDetailLabel(label), value: stringifyDetailValue(value) }));
 });
 
 const historyEntries = computed(() => {
@@ -206,11 +212,11 @@ const historyEntries = computed(() => {
 });
 
 const companyFields = computed(() => [
-  { label: t("company"), value: entry.value.insurance_company || "-" },
-  { label: t("policy"), value: entry.value.policy || "-" },
-  { label: t("customer"), value: entry.value.customer || "-" },
-  { label: t("sourceDoctype"), value: item.value.source_doctype || "-" },
-  { label: t("sourceName"), value: item.value.source_name || "-" },
+  { label: t("company"), value: formatValue(entry.value.insurance_company) },
+  { label: t("policy"), value: formatValue(entry.value.policy) },
+  { label: t("customer"), value: formatValue(entry.value.customer) },
+  { label: t("sourceDoctype"), value: formatValue(translateSource(item.value.source_doctype)) },
+  { label: t("sourceName"), value: formatValue(item.value.source_name) },
 ]);
 
 const periodFields = computed(() => [
@@ -222,9 +228,9 @@ const periodFields = computed(() => [
 
 const statusFields = computed(() => [
   { label: t("status"), value: statusLabel.value },
-  { label: t("entryStatus"), value: entry.value.status || "-" },
-  { label: t("resolvedAction"), value: item.value.resolution_action || "-" },
-  { label: t("resolvedBy"), value: item.value.resolved_by || "-" },
+  { label: t("entryStatus"), value: formatValue(translateStatus(entry.value.status)) },
+  { label: t("resolvedAction"), value: formatValue(translateResolution(item.value.resolution_action)) },
+  { label: t("resolvedBy"), value: formatValue(item.value.resolved_by) },
 ]);
 
 function buildTableRow(row) {
@@ -233,22 +239,22 @@ function buildTableRow(row) {
   return {
     id: row.name,
     name: row.name,
-    policy: entry.value.policy || row.source_name || "-",
-    customer: entry.value.customer || "-",
-    source: row.source_doctype || "-",
-    sourceDoctype: row.source_doctype || "-",
-    sourceName: row.source_name || "-",
-    mismatchType: row.mismatch_type || "-",
+    policy: formatValue(entry.value.policy || row.source_name),
+    customer: formatValue(entry.value.customer || item.value.customer),
+    source: formatValue(translateSource(row.source_doctype || item.value.source_doctype)),
+    sourceDoctype: formatValue(translateSource(row.source_doctype || item.value.source_doctype)),
+    sourceName: formatValue(row.source_name),
+    mismatchType: formatValue(translateMismatch(row.mismatch_type || item.value.mismatch_type)),
     localTry: formatMoney(row.local_amount_try || 0),
     externalTry: formatMoney(row.external_amount_try || 0),
     difference: formatMoney(Math.abs(difference)),
     difference_raw: difference,
-    status: normalizeReconciliationStatus(row.status, difference),
+    status: normalizeReconciliationStatusValue(row.status, difference),
     _actions: [],
   };
 }
 
-function normalizeReconciliationStatus(status, difference) {
+function normalizeReconciliationStatusValue(status, difference) {
   const normalizedStatus = String(status || "");
   if (normalizedStatus === "Resolved") return "Matched";
   if (normalizedStatus === "Ignored") return "Cancelled";
@@ -266,10 +272,10 @@ function derivePeriodLabel(itemRow, entryRow) {
     entryRow?.last_synced_on ||
     "";
   const trimmedValue = String(rawValue || "").trim();
-  if (!trimmedValue) return "-";
+  if (!trimmedValue) return t("unspecified");
   const parsedDate = new Date(trimmedValue);
   if (Number.isNaN(parsedDate.getTime())) return trimmedValue.slice(0, 7);
-  return new Intl.DateTimeFormat("tr-TR", { month: "short", year: "numeric" }).format(parsedDate);
+  return new Intl.DateTimeFormat(activeLocale.value === "tr" ? "tr-TR" : "en-US", { month: "short", year: "numeric" }).format(parsedDate);
 }
 
 function parseDetailsJson(value) {
@@ -284,18 +290,26 @@ function parseDetailsJson(value) {
 }
 
 function stringifyDetailValue(value) {
-  if (value == null) return "-";
+  if (value == null) return t("unspecified");
   if (typeof value === "string") return value;
   if (Array.isArray(value)) return value.map(stringifyDetailValue).join(", ");
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 
+function humanizeDetailLabel(value) {
+  const text = String(value || "").trim();
+  if (!text) return t("unspecified");
+  if (text === "auto_closed") return t("autoClose");
+  const normalized = text.replace(/_/g, " ");
+  return translateText(normalized, activeLocale) || normalized;
+}
+
 function formatDateTime(value) {
-  if (!value) return "-";
+  if (!value) return t("unspecified");
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat("tr-TR", {
+  return new Intl.DateTimeFormat(activeLocale.value === "tr" ? "tr-TR" : "en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -314,6 +328,44 @@ function formatMoney(value) {
   } catch {
     return String(value ?? 0);
   }
+}
+
+function formatValue(value) {
+  const text = String(value ?? "").trim();
+  return text || t("unspecified");
+}
+
+function translateSource(value) {
+  return value ? translateText(String(value), activeLocale) || String(value) : "";
+}
+
+function translateMismatch(value) {
+  if (value === "Amount") return t("mismatchAmount");
+  if (value === "Currency") return t("mismatchCurrency");
+  if (value === "Missing External") return t("mismatchMissingExternal");
+  if (value === "Missing Local") return t("mismatchMissingLocal");
+  if (value === "Status") return t("mismatchStatus");
+  if (value === "Other") return t("mismatchOther");
+  return value ? translateText(String(value), activeLocale) || String(value) : "";
+}
+
+function translateResolution(value) {
+  if (value === "Matched") return t("summaryMatched");
+  if (value === "Ignored") return t("statusIgnored");
+  return value ? translateText(String(value), activeLocale) || String(value) : "";
+}
+
+function translateStatus(value) {
+  if (value === "Matched") return t("summaryMatched");
+  if (value === "Pending") return t("summaryPending");
+  if (value === "Mismatch") return t("summaryMismatch");
+  if (value === "Resolved") return t("statusResolved");
+  if (value === "Ignored") return t("statusIgnored");
+  if (value === "Open") return t("statusOpen");
+  if (value === "Synced") return t("entryStatusSynced");
+  if (value === "Pending Sync") return t("entryStatusPending");
+  if (value === "Failed") return t("entryStatusFailed");
+  return value ? translateText(String(value), activeLocale) || String(value) : "";
 }
 
 function goBack() {

@@ -21,6 +21,7 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   const data = computed(() => unref(paymentResource.data) || {});
   const payment = computed(() => data.value.payment || {});
+  const customer = computed(() => data.value.customer || {});
   const installments = computed(() => data.value.installments || []);
   const documents = computed(() => data.value.documents || data.value.files || []);
   const showUploadModal = ref(false);
@@ -106,8 +107,12 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   );
 
   function formatDate(val) {
-    if (!val) return "-";
+    if (!val) return t("unspecified");
     return new Intl.DateTimeFormat(unref(activeLocale) === "tr" ? "tr-TR" : "en-US").format(new Date(val));
+  }
+
+  function translateValue(val) {
+    return val ? translateText(String(val), activeLocale) || String(val) : t("unspecified");
   }
 
   function formatCurrency(val, currency = "TRY") {
@@ -118,7 +123,7 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const heroCells = computed(() => [
-    { label: t("payment_purpose"), value: payment.value.payment_purpose || "-" },
+    { label: t("payment_purpose"), value: translateValue(payment.value.payment_purpose) },
     { label: t("amount"), value: formatCurrency(payment.value.amount, payment.value.currency) },
     { label: t("payment_date"), value: formatDate(payment.value.payment_date) },
     { 
@@ -129,24 +134,24 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const profileFields = computed(() => [
-    { key: "payment_no", label: t("payment_no"), value: payment.value.payment_no, type: "text", disabled: true },
-    { key: "payment_date", label: t("payment_date"), value: payment.value.payment_date, displayValue: formatDate(payment.value.payment_date), type: "date" },
-    { key: "payment_direction", label: t("payment_direction"), value: payment.value.payment_direction, type: "select", options: [
+    { key: "payment_no", label: t("payment_no"), value: payment.value.payment_no, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    { key: "payment_date", label: t("payment_date"), value: payment.value.payment_date, displayValue: formatDate(payment.value.payment_date), type: "date", unspecifiedLabel: t("unspecified") },
+    { key: "payment_direction", label: t("payment_direction"), value: payment.value.payment_direction, displayValue: translateValue(payment.value.payment_direction), type: "select", options: [
       { label: t("inbound"), value: "Inbound" },
       { label: t("outbound"), value: "Outbound" }
-    ]},
-    { key: "payment_purpose", label: t("payment_purpose"), value: payment.value.payment_purpose, type: "text" },
+    ], unspecifiedLabel: t("unspecified")},
+    { key: "payment_purpose", label: t("payment_purpose"), value: payment.value.payment_purpose, displayValue: translateValue(payment.value.payment_purpose), type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const financialFields = computed(() => [
-    { key: "amount", label: t("amount"), value: payment.value.amount, displayValue: formatCurrency(payment.value.amount, payment.value.currency), type: "text" },
+    { key: "amount", label: t("amount"), value: payment.value.amount, displayValue: formatCurrency(payment.value.amount, payment.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
     { key: "status", label: t("status"), value: payment.value.status, displayValue: t('status_' + String(payment.value.status || 'Unpaid').toLowerCase()), type: "select", options: [
       { label: t("status_paid"), value: "Paid" },
       { label: t("status_unpaid"), value: "Unpaid" },
       { label: t("status_cancelled"), value: "Cancelled" }
-    ]},
-    { key: "policy", label: t("policy"), value: payment.value.policy, type: "text" },
-    { key: "claim", label: t("claim_detail"), value: payment.value.claim, type: "text" },
+    ], unspecifiedLabel: t("unspecified")},
+    { key: "policy", label: t("policy"), value: payment.value.policy, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "claim", label: t("claim_detail"), value: payment.value.claim, type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   async function savePayment(values, onSuccess) {
@@ -178,6 +183,7 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   return {
     payment,
+    customer,
     installments,
     documents,
     showUploadModal,

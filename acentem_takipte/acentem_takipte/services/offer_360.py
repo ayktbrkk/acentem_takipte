@@ -178,6 +178,18 @@ def invalidate_offer_from_doc_event(doc, method=None):
     if not doc:
         return
 
+    def read_value(fieldname: str) -> str:
+        if hasattr(doc, "get"):
+            try:
+                value = doc.get(fieldname)
+            except Exception:
+                value = None
+        else:
+            value = None
+        if value:
+            return value
+        return getattr(doc, fieldname, None)
+
     # Direct target
     if doc.doctype == "AT Offer":
         invalidate_offer_360_cache(doc.name)
@@ -185,12 +197,12 @@ def invalidate_offer_from_doc_event(doc, method=None):
 
     # Reference target
     offer_name = None
-    if hasattr(doc, "offer") and doc.offer:
-        offer_name = doc.offer
-    elif doc.doctype in ["Communication", "Comment"] and doc.reference_doctype == "AT Offer":
-        offer_name = doc.reference_name
-    elif doc.doctype == "AT Document" and doc.attached_to_doctype == "AT Offer":
-        offer_name = doc.attached_to_name
+    if read_value("offer"):
+        offer_name = read_value("offer")
+    elif doc.doctype in ["Communication", "Comment"] and read_value("reference_doctype") == "AT Offer":
+        offer_name = read_value("reference_name")
+    elif doc.doctype == "AT Document" and read_value("reference_doctype") == "AT Offer":
+        offer_name = read_value("reference_name")
 
     if offer_name:
         invalidate_offer_360_cache(offer_name)

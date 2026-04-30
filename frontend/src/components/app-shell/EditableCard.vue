@@ -228,13 +228,32 @@ const activeDropdown = ref(null);
 const highlightIndex = ref(0);
 
 const displayFields = computed(() => {
-  return props.fields.map(f => ({
-    label: f.label,
-    value: f.displayValue !== undefined
-      ? f.displayValue
-      : ((f.value || f.value === 0 || f.value === false) ? f.value : (f.unspecifiedLabel || props.t('unspecified'))),
-    variant: (f.value || f.value === 0 || f.value === false) ? 'default' : 'muted'
-  }));
+  return props.fields.map(f => {
+    if (f.type === 'divider') {
+      return {
+        key: f.key,
+        type: 'divider',
+        label: f.label,
+        span: f.span,
+      };
+    }
+
+    const hasValue = f.value || f.value === 0 || f.value === false;
+
+    return {
+      key: f.key,
+      type: f.type,
+      label: f.label,
+      value: f.displayValue !== undefined
+        ? f.displayValue
+        : (hasValue ? f.value : (f.unspecifiedLabel || props.t('unspecified'))),
+      unspecifiedLabel: f.unspecifiedLabel,
+      copyable: f.copyable,
+      valueClass: f.valueClass,
+      span: f.span,
+      variant: hasValue ? 'default' : 'muted'
+    };
+  });
 });
 
 function startEditing() {

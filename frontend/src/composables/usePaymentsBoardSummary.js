@@ -4,26 +4,32 @@ import { buildPaymentSnapshot, formatCount, formatCurrency } from "./paymentsBoa
 import { translateText } from "../utils/i18n";
 
 export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSummaryByPayment, buildPaymentRowActions, paymentStore }) {
+  function fallbackLabel() {
+    return t("unspecified");
+  }
+
   const paymentSnapshots = computed(() =>
     payments.value.map((payment) => {
       const snapshot = buildPaymentSnapshot(payment, installmentSummaryByPayment.value.get(payment?.name), localeCode.value);
-      const custType = translateText(snapshot.customer_customer_type || "-", localeCode.value);
+      const custType = snapshot.customer_customer_type
+        ? translateText(snapshot.customer_customer_type, localeCode.value) || snapshot.customer_customer_type
+        : fallbackLabel();
       return {
         ...snapshot,
-        payment_primary: snapshot.payment_no || snapshot.name || "-",
-        payment_secondary: snapshot.policy || "-",
-        customer_label: snapshot.customer_full_name || snapshot.customer_name || snapshot.customer || "-",
-        customer_secondary: `${custType} | ${snapshot.customer_masked_tax_id || "-"}`,
-        due_primary: snapshot.due_date_label || "-",
+        payment_primary: snapshot.payment_no || snapshot.name || fallbackLabel(),
+        payment_secondary: snapshot.policy || fallbackLabel(),
+        customer_label: snapshot.customer_full_name || snapshot.customer_name || snapshot.customer || fallbackLabel(),
+        customer_secondary: `${custType} | ${snapshot.customer_masked_tax_id || fallbackLabel()}`,
+        due_primary: snapshot.due_date_label || fallbackLabel(),
         due_secondary: t(snapshot.status),
         finance_primary: snapshot.amount_label || formatCurrency(localeCode.value, snapshot.totalAmount),
         finance_secondary: `${snapshot.collected_amount_label || "0"} | ${snapshot.remaining_amount_label || "0"}`,
-        policy_no_display: snapshot.policy_no || snapshot.policy || "-",
-        insurance_company_label: snapshot.insurance_company || "-",
-        carrier_policy_no: snapshot.carrier_policy_no || snapshot.policy_no || "-",
-        branch_label: snapshot.branch || "-",
+        policy_no_display: snapshot.policy_no || snapshot.policy || fallbackLabel(),
+        insurance_company_label: snapshot.insurance_company || fallbackLabel(),
+        carrier_policy_no: snapshot.carrier_policy_no || snapshot.policy_no || fallbackLabel(),
+        branch_label: snapshot.branch || fallbackLabel(),
         customer_type_label: custType,
-        customer_tax_id: snapshot.customer_masked_tax_id || "-",
+        customer_tax_id: snapshot.customer_masked_tax_id || fallbackLabel(),
         customer_birth_date: snapshot.customer_birth_date || null,
       };
     })

@@ -16,9 +16,17 @@
       </div>
     </template>
 
+    <template #metrics>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <SaaSMetricCard :label="t('datasetLabel')" :value="selectedDatasetLabel" />
+        <SaaSMetricCard :label="t('fileLabel')" :value="fileStateLabel" value-class="text-brand-600" />
+        <SaaSMetricCard :label="t('mapping_summary')" :value="mappedColumnsLabel" value-class="text-at-green" />
+      </div>
+    </template>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-1 space-y-6">
-        <SectionPanel :title="t('step_file')" panel-class="surface-card rounded-2xl p-6">
+        <div class="surface-card rounded-2xl p-6">
           <ImportDataStepSelectPanel
             v-model="selectedDataset"
             :localized-datasets="localizedDatasets"
@@ -26,27 +34,27 @@
             :t="t"
             @file-select="handleFileSelect"
           />
-        </SectionPanel>
+        </div>
 
-        <SectionPanel :title="t('step_mapping')" panel-class="surface-card rounded-2xl p-6">
+        <div class="surface-card rounded-2xl p-6">
           <ImportDataStepMappingPanel
             :columns="columns"
             :column-mapping="columnMapping"
             :selected-field-options="selectedFieldOptions"
             :t="t"
           />
-        </SectionPanel>
+        </div>
       </div>
 
       <div class="lg:col-span-2">
-        <SectionPanel :title="t('step_preview')" panel-class="surface-card rounded-2xl p-6">
+        <div class="surface-card rounded-2xl p-6">
           <ImportDataStepPreviewPanel
             :columns="columns"
             :preview-rows="previewRows"
             :import-message="importMessage"
             :t="t"
           />
-        </SectionPanel>
+        </div>
       </div>
     </div>
   </WorkbenchPageLayout>
@@ -59,8 +67,8 @@ import { useAuthStore } from "../stores/auth";
 import { translateText } from "../utils/i18n";
 import { IMPORT_TRANSLATIONS } from "../config/import_translations";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import { useImportDataRuntime } from "../composables/useImportDataRuntime";
 import ImportDataStepMappingPanel from "../components/import-data/ImportDataStepMappingPanel.vue";
 import ImportDataStepPreviewPanel from "../components/import-data/ImportDataStepPreviewPanel.vue";
@@ -90,4 +98,15 @@ const {
   importData,
   cancel,
 } = runtime;
+
+const selectedDatasetLabel = computed(
+  () => localizedDatasets.value.find((dataset) => dataset.key === selectedDataset.value)?.label || t("select_dataset"),
+);
+
+const fileStateLabel = computed(() => fileName.value || t("no_file_selected"));
+
+const mappedColumnsLabel = computed(() => {
+  const mappedColumns = Object.values(columnMapping.value || {}).filter(Boolean).length;
+  return `${mappedColumns} ${t("columnsMapped")}`;
+});
 </script>

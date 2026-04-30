@@ -2,6 +2,7 @@
   <WorkbenchPageLayout
     :breadcrumb="t('claims_breadcrumb')"
     :title="t('title')"
+    :subtitle="t('subtitle')"
     :record-count="claimSummary.total"
     :record-count-label="t('recordCount')"
   >

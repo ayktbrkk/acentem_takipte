@@ -350,7 +350,9 @@ export function useReportsRuntime({
       const numeric = Number(value);
       const numericColumns = new Set([
         "gross_premium",
+        "net_premium",
         "total_gross_premium",
+        "total_net_premium",
         "total_premium",
         "commission_amount",
         "total_commission",

@@ -1,5 +1,15 @@
 <template>
   <div v-if="isCollectionsTab" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <div class="grid gap-4 sm:grid-cols-2 xl:col-span-12 xl:grid-cols-4">
+      <SaaSMetricCard
+        v-for="card in collectionsSummaryCards"
+        :key="card.label"
+        :label="card.label"
+        :value="card.value"
+        :value-class="card.valueClass"
+      />
+    </div>
+
     <!-- Left: Collections Queue (8 units) -->
     <div class="space-y-6 xl:col-span-8">
       <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)">
@@ -136,15 +146,9 @@
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="reconciliationPreviewRows.length === 0" :title="t('noReconciliationPreview')" />
         <div v-else class="space-y-3">
-          <div class="grid grid-cols-2 gap-2">
-            <div class="at-mini-stat">
-              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t("mismatchRows") }}</p>
-              <p class="mt-1 text-2xl font-black text-slate-900 tracking-tight">{{ formatNumber(reconciliationPreviewMetrics.open || 0) }}</p>
-            </div>
-            <div class="at-mini-stat">
-              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t("openDifference") }}</p>
-              <p class="mt-1 text-2xl font-black text-slate-900 tracking-tight">{{ formatCurrency(reconciliationPreviewOpenDifference) }}</p>
-            </div>
+          <div class="grid gap-3 md:grid-cols-2">
+            <SaaSMetricCard :label="t('mismatchRows')" :value="formatNumber(reconciliationPreviewMetrics.open || 0)" value-class="text-at-amber" />
+            <SaaSMetricCard :label="t('openDifference')" :value="formatCurrency(reconciliationPreviewOpenDifference)" value-class="text-brand-600" />
           </div>
           <ul class="space-y-2">
             <MetaListCard
@@ -176,16 +180,18 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import MiniFactList from "../app-shell/MiniFactList.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
 import ProgressMetricRow from "../app-shell/ProgressMetricRow.vue";
+import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 
-defineProps({
+const props = defineProps({
   collectionPaymentDirectionSummary: { type: Array, required: true },
   collectionPaymentStatusSummary: { type: Array, required: true },
   collectionRiskFacts: { type: Function, required: true },
@@ -212,4 +218,11 @@ defineProps({
   shouldShowViewAll: { type: Function, required: true },
   t: { type: Function, required: true },
 });
+
+const collectionsSummaryCards = computed(() => [
+  { label: props.t("todayCollectionsTitle"), value: props.formatNumber(props.dueTodayCollectionPayments.length), valueClass: "text-brand-600" },
+  { label: props.t("overdueCollectionsTitle"), value: props.formatNumber(props.overdueCollectionPayments.length), valueClass: "text-at-amber" },
+  { label: props.t("reconciliationPreview"), value: props.formatNumber(props.reconciliationPreviewRows.length), valueClass: "text-slate-900" },
+  { label: props.t("openDifference"), value: props.formatCurrency(props.reconciliationPreviewOpenDifference), valueClass: "text-at-green" },
+]);
 </script>

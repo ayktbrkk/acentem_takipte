@@ -1,8 +1,8 @@
 <template>
   <WorkbenchPageLayout
-    :breadcrumb="t('breadcrumb')"
-    :title="renewal.name || name"
-    :subtitle="renewal.policy"
+    :breadcrumb="t('renewals_breadcrumb')"
+    :title="t('renewal_detail')"
+    :subtitle="detailSubtitle"
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="goBack">
@@ -55,7 +55,7 @@
               <div class="flex items-center justify-between gap-2">
                 <div>
                   <p class="text-sm font-bold text-slate-900">{{ offer.name }}</p>
-                  <p class="text-xs text-slate-500">{{ formatDate(offer.offer_date) }} · {{ offer.status || '-' }}</p>
+                  <p class="text-xs text-slate-500">{{ formatDate(offer.offer_date) }} · {{ formatValue(translateStatus(offer.status)) }}</p>
                 </div>
                 <ActionButton variant="secondary" size="xs" @click="openOffer(offer.name)">{{ t('openOfferDetail') }}</ActionButton>
               </div>
@@ -148,6 +148,7 @@ const renewalResource = createResource({ url: 'frappe.client.get', auto: false }
 const policyResource = createResource({ url: 'frappe.client.get_list', auto: false });
 const offersResource = createResource({ url: 'frappe.client.get_list', auto: false });
 const communicationsResource = createResource({ url: 'frappe.client.get_list', auto: false });
+const customerResource = createResource({ url: 'frappe.client.get_list', auto: false });
 
 const renewal = computed(() => unref(renewalResource.data) || {});
 const policy = computed(() => {
@@ -157,21 +158,31 @@ const policy = computed(() => {
 });
 const offers = computed(() => (Array.isArray(unref(offersResource.data)) ? unref(offersResource.data) : []));
 const communications = computed(() => (Array.isArray(unref(communicationsResource.data)) ? unref(communicationsResource.data) : []));
+const customerProfile = computed(() => {
+  const value = unref(customerResource.data);
+  if (Array.isArray(value)) return value[0] || null;
+  return value || null;
+});
 const customerCard = computed(() => ({
-  full_name: policy.value?.customer || renewal.value.customer || '-',
-  customer_type: renewal.value.customer_type || 'Individual',
-  tax_id: renewal.value.customer_tax_id || '',
-  birth_date: renewal.value.customer_birth_date || '',
-  occupation: renewal.value.customer_occupation || '',
-  phone: renewal.value.customer_phone || '',
-  email: renewal.value.customer_email || '',
+  full_name: customerProfile.value?.full_name || policy.value?.customer || renewal.value.customer || t('unspecified'),
+  customer_type: customerProfile.value?.customer_type || renewal.value.customer_type || 'Individual',
+  tax_id: customerProfile.value?.tax_id || renewal.value.customer_tax_id || '',
+  birth_date: customerProfile.value?.birth_date || renewal.value.customer_birth_date || '',
+  occupation: customerProfile.value?.occupation || renewal.value.customer_occupation || '',
+  phone: customerProfile.value?.phone || renewal.value.customer_phone || '',
+  email: customerProfile.value?.email || renewal.value.customer_email || '',
 }));
 
+const detailSubtitle = computed(() => {
+  const parts = [renewal.value.name, renewal.value.policy, t('detailSubtitle')].filter((value) => String(value || '').trim());
+  return parts.join(' · ');
+});
+
 const heroCells = computed(() => [
-  { label: t('lblPolicy'), value: renewal.value.policy || '-', variant: 'default' },
+  { label: t('lblPolicy'), value: formatValue(renewal.value.policy), variant: 'default' },
   { label: t('lblDue'), value: formatDate(renewal.value.due_date), variant: 'default' },
   { label: t('lblRenewalDate'), value: formatDate(renewal.value.renewal_date), variant: 'lg' },
-  { label: t('lblStatus'), value: renewal.value.status || '-', variant: 'accent' },
+  { label: t('lblStatus'), value: formatValue(translateStatus(renewal.value.status)), variant: 'accent' },
 ]);
 
 function getStepStatus(key) {
@@ -204,11 +215,11 @@ const renewalSteps = computed(() => [
 ]);
 
 const policyFields = computed(() => [
-  { label: t('fldPolicyNo'), value: policy.value?.policy_no || policy.value?.name || renewal.value.policy || '-' },
-  { label: t('fldCustomer'), value: policy.value?.customer || '-' },
-  { label: t('fldBranch'), value: policy.value?.branch || '-' },
+  { label: t('fldPolicyNo'), value: formatValue(policy.value?.policy_no || policy.value?.name || renewal.value.policy) },
+  { label: t('fldCustomer'), value: formatValue(customerProfile.value?.full_name || policy.value?.customer || renewal.value.customer) },
+  { label: t('fldBranch'), value: formatValue(policy.value?.branch) },
   { label: t('fldEndDate'), value: formatDate(policy.value?.end_date) },
-  { label: t('lblStatus'), value: policy.value?.status || '-' },
+  { label: t('lblStatus'), value: formatValue(translateStatus(policy.value?.status)) },
 ]);
 
 const reminders = computed(() => {
@@ -220,32 +231,42 @@ const reminders = computed(() => {
 });
 
 const peopleFields = computed(() => [
-  { label: t('fldCustomer'), value: policy.value?.customer || '-' },
-  { label: t('fldAgent'), value: renewal.value.assigned_to || '-' },
+  { label: t('fldCustomer'), value: formatValue(customerProfile.value?.full_name || policy.value?.customer || renewal.value.customer) },
+  { label: t('fldAgent'), value: formatValue(renewal.value.assigned_to) },
 ]);
 
 const statusFields = computed(() => [
-  { label: t('lblStatus'), value: renewal.value.status || '-' },
+  { label: t('lblStatus'), value: formatValue(translateStatus(renewal.value.status)) },
   { label: t('fldPriority'), value: priorityLabel(renewal.value.priority) },
-  { label: t('fldLostReason'), value: renewal.value.lost_reason_code || '-' },
+  { label: t('fldLostReason'), value: formatValue(renewal.value.lost_reason_code) },
 ]);
 
 const recordFields = computed(() => [
-  { label: t('fldCreatedBy'), value: renewal.value.owner || '-' },
+  { label: t('fldCreatedBy'), value: formatValue(renewal.value.owner) },
   { label: t('fldCreated'), value: formatDate(renewal.value.creation) },
-  { label: t('fldModifiedBy'), value: renewal.value.modified_by || '-' },
+  { label: t('fldModifiedBy'), value: formatValue(renewal.value.modified_by) },
   { label: t('fldModified'), value: formatDate(renewal.value.modified) },
 ]);
 
 function priorityLabel(value) {
   const map = { high: t('priority_high'), medium: t('priority_medium'), low: t('priority_low') };
-  return map[String(value || '').toLowerCase()] || '-';
+  return map[String(value || '').toLowerCase()] || t('unspecified');
+}
+
+function formatValue(value) {
+  const text = String(value ?? '').trim();
+  return text || t('unspecified');
+}
+
+function translateStatus(value) {
+  const statusKey = String(value || '').toLowerCase().replace(/\s+/g, '_');
+  return statusKey ? t(`status_${statusKey}`) : t('unspecified');
 }
 
 function formatDate(value) {
-  if (!value) return '-';
+  if (!value) return t('unspecified');
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '-';
+  if (Number.isNaN(date.getTime())) return formatValue(value);
   const locale = activeLocale.value === 'tr' ? 'tr-TR' : 'en-US';
   return new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
 }
@@ -286,6 +307,15 @@ async function reload() {
   }
 
   if (renewal.value.customer) {
+    await customerResource.reload({
+      doctype: 'AT Customer',
+      fields: ['name', 'full_name', 'customer_type', 'tax_id', 'birth_date', 'occupation', 'phone', 'email'],
+      filters: { name: renewal.value.customer },
+      limit_page_length: 1,
+    }).catch(() => {
+      customerResource.setData([]);
+    });
+
     await offersResource.reload({
       doctype: 'AT Offer',
       fields: ['name', 'status', 'offer_date'],
@@ -296,6 +326,7 @@ async function reload() {
       offersResource.setData([]);
     });
   } else {
+    customerResource.setData([]);
     offersResource.setData([]);
   }
 

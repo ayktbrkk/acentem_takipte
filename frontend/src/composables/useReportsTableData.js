@@ -2,6 +2,7 @@ import { computed, reactive, ref } from "vue";
 
 import { columnLabels } from "./reportsConfig";
 import { translateText } from "@/utils/i18n";
+import { useAtFormatting } from "./useAtFormatting";
 
 function isDateLikeValue(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -81,6 +82,8 @@ export function useReportsTableData({
     }),
   );
 
+  const { formatCurrency, formatCount, formatPercent } = useAtFormatting(activeLocale);
+
   const comparisonEnabled = computed(
     () =>
       ["communication_operations", "reconciliation_operations", "claims_operations"].includes(filters.reportKey)
@@ -95,9 +98,10 @@ export function useReportsTableData({
 
   const metricToneClasses = {
     rows: "text-gray-900",
-    gross_premium: "text-brand-600",
-    commission: "text-green-600",
-    paid_amount: "text-amber-600",
+    gross_premium: "text-at-green",
+    net_premium: "text-slate-900",
+    commission: "text-brand-600",
+    paid_amount: "text-at-amber",
     active_policies: "text-green-600",
     conversion_rate: "text-brand-600",
     open_renewals: "text-amber-600",
@@ -151,6 +155,10 @@ export function useReportsTableData({
     }, 0);
   }
 
+  function formatSummaryCurrency(value, currency = "TRY") {
+    return formatCurrency(value, currency);
+  }
+
   function getColumnLabel(column) {
     const entry = columnLabels[column];
     if (entry) {
@@ -183,79 +191,88 @@ export function useReportsTableData({
 
     if (filters.reportKey === "policy_list" && filters.granularity) {
       return [
-        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(numericTotal(["policy_count"]))),
-        buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
-        buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["total_commission"]))),
-        buildMetricItem("paid_amount", t("summaryPaidAmount"), numberFormatter.value.format(0)),
+        buildMetricItem("gross_premium", t("summaryGrossPremium"), formatSummaryCurrency(numericTotal(["total_gross_premium"]))),
+        buildMetricItem("commission", t("summaryCommission"), formatSummaryCurrency(numericTotal(["total_commission"]))),
+        buildMetricItem("paid_amount", t("summaryPaidAmount"), formatSummaryCurrency(0)),
+        buildMetricItem("net_premium", t("summaryNetPremium"), formatSummaryCurrency(numericTotal(["total_net_premium"]))),
+      ];
+    }
+
+    if (filters.reportKey === "policy_list") {
+      return [
+        buildMetricItem("gross_premium", t("summaryGrossPremium"), formatSummaryCurrency(numericTotal(["gross_premium", "total_gross_premium"]))),
+        buildMetricItem("commission", t("summaryCommission"), formatSummaryCurrency(numericTotal(["commission_amount", "total_commission"]))),
+        buildMetricItem("paid_amount", t("summaryPaidAmount"), formatSummaryCurrency(numericTotal(["paid_amount", "approved_amount"]))),
+        buildMetricItem("net_premium", t("summaryNetPremium"), formatSummaryCurrency(numericTotal(["net_premium", "total_net_premium"]))),
       ];
     }
 
     if (filters.reportKey === "agent_performance") {
       return [
-        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
-        buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_gross_premium"]))),
-        buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["total_commission"]))),
-        buildMetricItem("conversion_rate", t("summaryAvgConversionRate"), `%${percentFormatter.value.format(avgNumeric("offer_conversion_rate"))}`),
+        buildMetricItem("rows", t("summaryRows"), formatCount(rows.value.length)),
+        buildMetricItem("gross_premium", t("summaryGrossPremium"), formatSummaryCurrency(numericTotal(["total_gross_premium"]))),
+        buildMetricItem("commission", t("summaryCommission"), formatSummaryCurrency(numericTotal(["total_commission"]))),
+        buildMetricItem("conversion_rate", t("summaryAvgConversionRate"), formatPercent(avgNumeric("offer_conversion_rate"))),
       ];
     }
 
     if (filters.reportKey === "customer_segmentation") {
       return [
-        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
-        buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["total_premium"]))),
-        buildMetricItem("active_policies", t("summaryActivePolicies"), numberFormatter.value.format(numericTotal(["active_policy_count"]))),
+        buildMetricItem("rows", t("summaryRows"), formatCount(rows.value.length)),
+        buildMetricItem("gross_premium", t("summaryGrossPremium"), formatSummaryCurrency(numericTotal(["total_premium"]))),
+        buildMetricItem("active_policies", t("summaryActivePolicies"), formatCount(numericTotal(["active_policy_count"]))),
         buildMetricItem(
           "claim_customers",
           t("summaryClaimCustomers"),
-          numberFormatter.value.format(rows.value.filter((row) => String(row?.claim_history_segment || "") === "HAS_CLAIM").length),
+          formatCount(rows.value.filter((row) => String(row?.claim_history_segment || "") === "HAS_CLAIM").length),
         ),
       ];
     }
 
     if (filters.reportKey === "communication_operations") {
       return [
-        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
-        buildMetricItem("matched_customers", t("summaryMatchedCustomers"), numberFormatter.value.format(numericTotal(["matched_customer_count"]))),
-        buildMetricItem("created_drafts", t("summaryCreatedDrafts"), numberFormatter.value.format(numericTotal(["sent_count"]))),
-        buildMetricItem("successful_deliveries", t("summarySuccessfulDeliveries"), numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
+        buildMetricItem("rows", t("summaryRows"), formatCount(rows.value.length)),
+        buildMetricItem("matched_customers", t("summaryMatchedCustomers"), formatCount(numericTotal(["matched_customer_count"]))),
+        buildMetricItem("created_drafts", t("summaryCreatedDrafts"), formatCount(numericTotal(["sent_count"]))),
+        buildMetricItem("successful_deliveries", t("summarySuccessfulDeliveries"), formatCount(numericTotal(["sent_outbox_count"]))),
       ];
     }
 
     if (filters.reportKey === "reconciliation_operations") {
       return [
-        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
-        buildMetricItem("open_reconciliation", t("summaryOpenReconciliation"), numberFormatter.value.format(rows.value.filter((row) => String(row?.status || "") === "Open").length)),
-        buildMetricItem("difference_amount", t("summaryDifferenceAmount"), numberFormatter.value.format(numericTotal(["difference_try"]))),
+        buildMetricItem("rows", t("summaryRows"), formatCount(rows.value.length)),
+        buildMetricItem("open_reconciliation", t("summaryOpenReconciliation"), formatCount(rows.value.filter((row) => String(row?.status || "") === "Open").length)),
+        buildMetricItem("difference_amount", t("summaryDifferenceAmount"), formatSummaryCurrency(numericTotal(["difference_try"]))),
         buildMetricItem(
           "resolved_items",
           t("summaryResolvedItems"),
-          numberFormatter.value.format(rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length),
+          formatCount(rows.value.filter((row) => ["Resolved", "Ignored"].includes(String(row?.status || ""))).length),
         ),
       ];
     }
 
     if (filters.reportKey === "claims_operations") {
       return [
-        buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
+        buildMetricItem("rows", t("summaryRows"), formatCount(rows.value.length)),
         buildMetricItem(
           "open_claims",
           t("summaryOpenClaims"),
-          numberFormatter.value.format(rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length),
+          formatCount(rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length),
         ),
         buildMetricItem(
           "rejected_claims",
           t("summaryRejectedClaims"),
-          numberFormatter.value.format(rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length),
+          formatCount(rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length),
         ),
-        buildMetricItem("successful_notifications", t("summarySuccessfulNotifications"), numberFormatter.value.format(numericTotal(["sent_outbox_count"]))),
+        buildMetricItem("successful_notifications", t("summarySuccessfulNotifications"), formatCount(numericTotal(["sent_outbox_count"]))),
       ];
     }
 
     return [
-      buildMetricItem("rows", t("summaryRows"), numberFormatter.value.format(rows.value.length)),
-      buildMetricItem("gross_premium", t("summaryGrossPremium"), numberFormatter.value.format(numericTotal(["gross_premium", "total_gross_premium", "total_premium"]))),
-      buildMetricItem("commission", t("summaryCommission"), numberFormatter.value.format(numericTotal(["commission_amount", "total_commission"]))),
-      buildMetricItem("paid_amount", t("summaryPaidAmount"), numberFormatter.value.format(numericTotal(["paid_amount", "approved_amount"]))),
+      buildMetricItem("rows", t("summaryRows"), formatCount(rows.value.length)),
+      buildMetricItem("gross_premium", t("summaryGrossPremium"), formatSummaryCurrency(numericTotal(["gross_premium", "total_gross_premium", "total_premium"]))),
+      buildMetricItem("commission", t("summaryCommission"), formatSummaryCurrency(numericTotal(["commission_amount", "total_commission"]))),
+      buildMetricItem("paid_amount", t("summaryPaidAmount"), formatSummaryCurrency(numericTotal(["paid_amount", "approved_amount"]))),
     ];
   });
 
@@ -263,6 +280,7 @@ export function useReportsTableData({
     summaryItems.value.map((item, index) => ({
       label: item.label,
       value: item.value,
+      valueClass: item.valueClass,
       sub: index === 0 ? branchScopeLabel.value : undefined,
       variant: getHeroVariant(item.key, index),
     })),
@@ -447,9 +465,9 @@ export function useReportsTableData({
 
   function getSortIndicator(column) {
     if (sortState.column !== column) {
-      return "|";
+      return "";
     }
-    return sortState.direction === "desc" ? "v" : "^";
+    return sortState.direction === "desc" ? "▼" : "▲";
   }
 
   const visibleColumns = computed(() => {

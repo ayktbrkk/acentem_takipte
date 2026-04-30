@@ -1,5 +1,15 @@
 <template>
   <div v-if="isRenewalsTab" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <div class="grid gap-4 sm:grid-cols-2 xl:col-span-12 xl:grid-cols-4">
+      <SaaSMetricCard
+        v-for="card in renewalSummaryCards"
+        :key="card.label"
+        :label="card.label"
+        :value="card.value"
+        :value-class="card.valueClass"
+      />
+    </div>
+
     <!-- Left: Renewals Pipeline (8 units) -->
     <div class="space-y-6 xl:col-span-8">
       <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)">
@@ -81,10 +91,7 @@
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <EmptyState v-else-if="renewalOutcomeSummary.length === 0" :title="t('noRenewalOutcome')" />
         <div v-else class="space-y-3">
-          <div class="at-mini-stat">
-            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t("kpiRenewalRetention") }}</p>
-            <p class="mt-1 text-2xl font-black text-slate-900 tracking-tight">{{ formatNumber(renewalRetentionRate) }}%</p>
-          </div>
+          <SaaSMetricCard :label="t('kpiRenewalRetention')" :value="`${formatNumber(renewalRetentionRate)}%`" value-class="text-brand-600" />
           <ProgressMetricRow
             v-for="item in renewalOutcomeSummary"
             :key="item.key"
@@ -133,16 +140,18 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import MiniFactList from "../app-shell/MiniFactList.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
 import ProgressMetricRow from "../app-shell/ProgressMetricRow.vue";
+import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 
-defineProps({
+const props = defineProps({
   dashboardLoading: { type: Boolean, required: true },
   displayRenewalTasks: { type: Array, required: true },
   formatCurrencyBy: { type: Function, required: true },
@@ -165,4 +174,11 @@ defineProps({
   shouldShowViewAll: { type: Function, required: true },
   t: { type: Function, required: true },
 });
+
+const renewalSummaryCards = computed(() => [
+  { label: props.t("renewalQueue"), value: props.formatNumber(props.displayRenewalTasks.length), valueClass: "text-brand-600" },
+  { label: props.t("offerWaitingRenewalsTitle"), value: props.formatNumber(props.offerWaitingRenewals.length), valueClass: "text-at-amber" },
+  { label: props.t("kpiRenewalRetention"), value: `${props.formatNumber(props.renewalRetentionRate)}%`, valueClass: "text-at-green" },
+  { label: props.t("linkedPoliciesTitle"), value: props.formatNumber(props.renewalLinkedPolicies.length), valueClass: "text-slate-900" },
+]);
 </script>

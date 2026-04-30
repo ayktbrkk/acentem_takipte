@@ -168,6 +168,7 @@ function translateLabel(key) {
 const copy = {
   tr: {
     uploadDocument: "Doküman Yükle",
+    close: "Kapat",
     chooseFile: "Dosya seçin veya buraya sürükleyin",
     uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.",
     fileTypeNotSupported: "Bu dosya tipi desteklenmiyor. PDF, DOC veya JPEG/PNG kullanın.",
@@ -199,6 +200,7 @@ const copy = {
   },
   en: {
     uploadDocument: "Upload Document",
+    close: "Close",
     chooseFile: "Choose a file or drag it here",
     uploadError: "Upload failed. Please try again.",
     fileTypeNotSupported: "This file type is not supported. Use PDF, DOC or JPEG/PNG.",
@@ -356,8 +358,17 @@ function fmtFileSize(bytes) {
 
 function extractServerErrorMessage(payload) {
   if (!payload || typeof payload !== "object") return "";
-  const direct = String(payload?.message || payload?.exc_type || "").trim();
+  const direct = String(payload?.message || "").trim();
   if (direct) return direct;
+
+  const exceptionText = String(payload?.exception || "").trim();
+  if (exceptionText) {
+    const cleanException = exceptionText.replace(/^[A-Za-z]+Error:\s*/, "").trim();
+    if (cleanException) return cleanException;
+  }
+
+  const exceptionType = String(payload?.exc_type || "").trim();
+  if (exceptionType) return exceptionType;
 
   const rawServerMessages = payload?._server_messages;
   if (rawServerMessages) {
@@ -478,6 +489,14 @@ async function submit() {
         errorMessage.value = detail ? `${translateLabel("uploadError")} (${detail})` : translateLabel("uploadError");
         return;
       }
+      let uploadPayload = null;
+      try {
+        const metaResult = await metaResp.json();
+        uploadPayload = metaResult?.message || metaResult || null;
+      } catch {
+        uploadPayload = null;
+      }
+
       selectedFile.value = null;
       documentKind.value = "";
       documentSubType.value = "";
@@ -488,7 +507,7 @@ async function submit() {
       linkSearch.value = "";
       linkResults.value = [];
       if (fileInput.value) fileInput.value.value = "";
-      emit("uploaded");
+      emit("uploaded", uploadPayload);
     } else {
       let detail = "";
       try {

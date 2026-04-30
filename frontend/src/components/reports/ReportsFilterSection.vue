@@ -45,13 +45,9 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-2">
-        <button
-          type="button"
-          class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500 transition-colors hover:bg-gray-50"
-          @click="$emit('toggle-advanced')"
-        >
+        <ActionButton type="button" variant="secondary" size="sm" @click="$emit('toggle-advanced')">
           {{ reportsAdvancedOpen ? t('hide_advanced_filters') : t('advanced_filters') }}
-        </button>
+        </ActionButton>
 
         <span
           v-if="activeFilterCount > 0"
@@ -76,24 +72,21 @@
             @save="$emit('preset-save')"
             @delete="$emit('preset-delete')"
           />
-          <button class="btn btn-outline" type="button" :disabled="loading" @click="$emit('refresh')">
+          <ActionButton variant="secondary" size="sm" type="button" :disabled="loading" @click="$emit('refresh')">
             <FeatherIcon name="refresh-cw" :class="['h-4 w-4', loading && 'animate-spin']" />
-          </button>
-          <button class="btn btn-primary" type="button" :disabled="loading" @click="$emit('apply-filters')">
+            {{ t('refresh') }}
+          </ActionButton>
+          <ActionButton variant="primary" size="sm" type="button" :disabled="loading" @click="$emit('apply-filters')">
             {{ t('apply_filters') }}
-          </button>
-          <button
-            class="btn btn-outline"
-            type="button"
-            :disabled="loading"
-            @click="$emit('enqueue-export', 'xlsx')"
-          >
+          </ActionButton>
+          <ActionButton variant="secondary" size="sm" type="button" :disabled="loading" @click="$emit('enqueue-export', 'xlsx')">
             <FeatherIcon name="cloud-lightning" class="h-4 w-4" />
-            {{ t('backgroundExport') || 'Background Export' }}
-          </button>
-          <button class="btn btn-outline" type="button" :disabled="loading" @click="$emit('clear-filters')">
-             <FeatherIcon name="x" class="h-4 w-4" />
-          </button>
+            {{ t('backgroundExport') }}
+          </ActionButton>
+          <ActionButton variant="secondary" size="sm" type="button" :disabled="loading" @click="$emit('clear-filters')">
+            <FeatherIcon name="x" class="h-4 w-4" />
+            {{ t('clear_filters') }}
+          </ActionButton>
         </div>
       </div>
     </div>
@@ -134,6 +127,7 @@
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import FilterPresetMenu from "../app-shell/FilterPresetMenu.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import { FeatherIcon } from "frappe-ui";
 
 defineProps({

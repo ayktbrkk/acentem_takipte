@@ -172,6 +172,7 @@ def get_policy_list_report_rows(
             p.start_date,
             p.end_date,
             p.gross_premium,
+            p.net_premium,
             p.commission_amount
         FROM `tabAT Policy` p
         LEFT JOIN `tabAT Customer` c ON c.name = p.customer
@@ -250,6 +251,7 @@ def _get_policy_list_grouped_rows(
             DATE_FORMAT(`tabAT Policy`.issue_date, '{label_format}') AS period_label,
             COUNT(*) AS policy_count,
             SUM(`tabAT Policy`.gross_premium) AS total_gross_premium,
+            SUM(`tabAT Policy`.net_premium) AS total_net_premium,
             SUM(`tabAT Policy`.commission_amount) AS total_commission
         FROM `tabAT Policy`
         LEFT JOIN `tabAT Customer` customer ON customer.name = `tabAT Policy`.customer

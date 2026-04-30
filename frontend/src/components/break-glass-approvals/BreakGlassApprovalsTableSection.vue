@@ -39,10 +39,10 @@
               <p class="text-xs text-slate-500">{{ row.user }}</p>
             </td>
             <td class="at-table-cell">{{ mapAccessType(row.access_type) }}</td>
-            <td class="at-table-cell">{{ row.created_at || "-" }}</td>
+            <td class="at-table-cell">{{ displayFallback(row.created_at) }}</td>
             <td class="at-table-cell max-w-[360px]">
-              <p class="line-clamp-3">{{ row.justification || "-" }}</p>
-              <p class="mt-1 text-xs text-slate-500">{{ row.reference || "-" }}</p>
+              <p class="line-clamp-3">{{ displayFallback(row.justification) }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ displayFallback(row.reference) }}</p>
             </td>
             <td class="at-table-cell min-w-[220px]">
               <label class="mb-2 flex flex-col gap-1">
@@ -97,7 +97,7 @@ import ActionButton from "../app-shell/ActionButton.vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 
-defineProps({
+const props = defineProps({
   pendingRows: {
     type: Array,
     required: true,
@@ -133,4 +133,12 @@ defineProps({
 });
 
 defineEmits(["refresh", "approve", "reject"]);
+
+function displayFallback(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized || /^none(?::none)?$/i.test(normalized)) {
+    return props.t("notProvided");
+  }
+  return normalized;
+}
 </script>

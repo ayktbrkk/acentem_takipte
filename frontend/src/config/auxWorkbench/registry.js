@@ -498,9 +498,11 @@ export const AUX_WORKBENCH_CONFIGS = {
     numberFields: ["version_no"],
     toolbarActions: [
       {
-        key: "upload_document",
-        type: "upload",
-        label: L("Upload Document", "Doküman Yükle"),
+        key: "quick_upload_document",
+        type: "route",
+        routeName: "at-documents-upload",
+        label: L("Quick Upload", "Hızlı Doküman Yükle"),
+        variant: "primary",
       },
     ],
     quickEdit: { registryKey: "document_registry_edit", label: L("Quick Edit", "Hızlı Düzenle") },

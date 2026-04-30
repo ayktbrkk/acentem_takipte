@@ -3,11 +3,21 @@
     :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
+    :record-count="accessRequestHistory.length"
+    :record-count-label="t('request_count')"
   >
     <template #actions>
-      <ActionButton variant="secondary" size="sm" @click="resetSearch">
-        {{ hasSearched ? t("clear_search") : t("search") }}
+      <ActionButton v-if="hasSearched" variant="secondary" size="sm" @click="resetSearch">
+        {{ t("clear_search") }}
       </ActionButton>
+    </template>
+
+    <template #metrics>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <SaaSMetricCard :label="t('recent_access_requests')" :value="accessRequestHistory.length" />
+        <SaaSMetricCard :label="t('visibility_summary')" :value="t('role_based')" value-class="text-brand-600" />
+        <SaaSMetricCard :label="t('scope_summary')" :value="t('all_branches')" value-class="text-at-green" />
+      </div>
     </template>
 
     <div class="space-y-8">
@@ -87,6 +97,7 @@ import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import GlobalCustomerSearch from "../components/app-shell/GlobalCustomerSearch.vue";

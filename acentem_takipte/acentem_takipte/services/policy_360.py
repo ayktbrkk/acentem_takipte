@@ -144,6 +144,18 @@ def invalidate_policy_from_doc_event(doc, method=None):
     if not doc:
         return
 
+    def read_value(fieldname: str) -> str:
+        if hasattr(doc, "get"):
+            try:
+                value = doc.get(fieldname)
+            except Exception:
+                value = None
+        else:
+            value = None
+        if value:
+            return value
+        return getattr(doc, fieldname, None)
+
     # Direct target
     if doc.doctype == "AT Policy":
         invalidate_policy_360_cache(doc.name)
@@ -151,14 +163,14 @@ def invalidate_policy_from_doc_event(doc, method=None):
 
     # Reference target
     policy_name = None
-    if hasattr(doc, "policy") and doc.policy:
-        policy_name = doc.policy
-    elif doc.doctype in ["Communication", "Comment"] and doc.reference_doctype == "AT Policy":
-        policy_name = doc.reference_name
-    elif doc.doctype == "AT Document" and doc.attached_to_doctype == "AT Policy":
-        policy_name = doc.attached_to_name
-    elif doc.doctype == "AT Policy Endorsement" and hasattr(doc, "policy") and doc.policy:
-        policy_name = doc.policy
+    if read_value("policy"):
+        policy_name = read_value("policy")
+    elif doc.doctype in ["Communication", "Comment"] and read_value("reference_doctype") == "AT Policy":
+        policy_name = read_value("reference_name")
+    elif doc.doctype == "AT Document" and read_value("reference_doctype") == "AT Policy":
+        policy_name = read_value("reference_name")
+    elif doc.doctype == "AT Policy Endorsement" and read_value("policy"):
+        policy_name = read_value("policy")
 
     if policy_name:
         invalidate_policy_360_cache(policy_name)

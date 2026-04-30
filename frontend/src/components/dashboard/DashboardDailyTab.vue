@@ -1,24 +1,29 @@
 <template>
   <div v-if="isDailyTab" class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+    <div class="grid gap-4 sm:grid-cols-2 xl:col-span-12 xl:grid-cols-4">
+      <SaaSMetricCard
+        v-for="card in dailySummaryCards"
+        :key="card.label"
+        :label="card.label"
+        :value="card.value"
+        :value-class="card.valueClass"
+      />
+    </div>
+
     <!-- Main Content: Detailed Lists (8 units) -->
     <div class="space-y-6 xl:col-span-8">
       <SectionPanel :title="t('followUpSlaTitle')" :count="formatNumber(prioritizedFollowUpItems.length)">
         <p class="mb-3 text-xs text-slate-500">{{ t("followUpSlaHint") }}</p>
         <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <div v-else class="space-y-3">
-          <div class="grid grid-cols-3 gap-2">
-            <div class="qc-warning-card">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/70">{{ t("followUpOverdue") }}</p>
-              <p class="mt-1 text-2xl font-black text-amber-900 tracking-tight">{{ formatNumber(followUpSummary.overdue) }}</p>
-            </div>
-            <div class="qc-warning-card">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/70">{{ t("followUpToday") }}</p>
-              <p class="mt-1 text-2xl font-black text-amber-900 tracking-tight">{{ formatNumber(followUpSummary.due_today) }}</p>
-            </div>
-            <div class="qc-warning-card">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-brand-700/70">{{ t("followUpSoon") }}</p>
-              <p class="mt-1 text-2xl font-black text-brand-900 tracking-tight">{{ formatNumber(followUpSummary.due_soon) }}</p>
-            </div>
+          <div class="grid gap-3 md:grid-cols-3">
+            <SaaSMetricCard
+              v-for="card in followUpSummaryCards"
+              :key="card.label"
+              :label="card.label"
+              :value="card.value"
+              :value-class="card.valueClass"
+            />
           </div>
           <ul v-if="prioritizedFollowUpItems.length > 0" class="space-y-2">
             <MetaListCard
@@ -81,19 +86,14 @@
         <p class="mb-3 text-xs text-slate-500">{{ t("myTasksHint") }}</p>
         <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <div v-else class="space-y-3">
-          <div class="grid grid-cols-3 gap-2">
-            <div class="qc-warning-card">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/70">{{ t("taskOverdue") }}</p>
-              <p class="mt-1 text-2xl font-black text-amber-900 tracking-tight">{{ formatNumber(myTaskSummary.overdue) }}</p>
-            </div>
-            <div class="qc-warning-card">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700/70">{{ t("taskToday") }}</p>
-              <p class="mt-1 text-2xl font-black text-amber-900 tracking-tight">{{ formatNumber(myTaskSummary.due_today) }}</p>
-            </div>
-            <div class="qc-warning-card">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-brand-700/70">{{ t("taskSoon") }}</p>
-              <p class="mt-1 text-2xl font-black text-brand-900 tracking-tight">{{ formatNumber(myTaskSummary.due_soon) }}</p>
-            </div>
+          <div class="grid gap-3 md:grid-cols-3">
+            <SaaSMetricCard
+              v-for="card in taskSummaryCards"
+              :key="card.label"
+              :label="card.label"
+              :value="card.value"
+              :value-class="card.valueClass"
+            />
           </div>
           <ul v-if="priorityTaskItems.length > 0" class="space-y-2">
             <MetaListCard
@@ -218,11 +218,13 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import MiniFactList from "../app-shell/MiniFactList.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
+import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 import DashboardQuickActions from "./DashboardQuickActions.vue";
@@ -271,6 +273,25 @@ const props = defineProps({
   locale: { type: String, default: "en" },
   visibleQuickActions: { type: Array, required: true },
 });
+
+const dailySummaryCards = computed(() => [
+  { label: props.t("followUpSlaTitle"), value: props.formatNumber(props.prioritizedFollowUpItems.length), valueClass: "text-brand-600" },
+  { label: props.t("todayTasksTitle"), value: props.formatNumber(props.priorityTaskItems.length), valueClass: "text-slate-900" },
+  { label: props.t("renewalAlertTitle"), value: props.formatNumber(props.displayRenewalAlertItems.length), valueClass: "text-at-amber" },
+  { label: props.t("openClaimsTitle"), value: props.formatNumber(props.openClaimsPreviewRows.length), valueClass: "text-at-green" },
+]);
+
+const followUpSummaryCards = computed(() => [
+  { label: props.t("followUpOverdue"), value: props.formatNumber(props.followUpSummary.overdue || 0), valueClass: "text-at-amber" },
+  { label: props.t("followUpToday"), value: props.formatNumber(props.followUpSummary.due_today || 0), valueClass: "text-slate-900" },
+  { label: props.t("followUpSoon"), value: props.formatNumber(props.followUpSummary.due_soon || 0), valueClass: "text-brand-600" },
+]);
+
+const taskSummaryCards = computed(() => [
+  { label: props.t("taskOverdue"), value: props.formatNumber(props.myTaskSummary.overdue || 0), valueClass: "text-at-amber" },
+  { label: props.t("taskToday"), value: props.formatNumber(props.myTaskSummary.due_today || 0), valueClass: "text-slate-900" },
+  { label: props.t("taskSoon"), value: props.formatNumber(props.myTaskSummary.due_soon || 0), valueClass: "text-brand-600" },
+]);
 
 function upperLabel(text) {
   const loc = String(props.locale || "en").toLowerCase();

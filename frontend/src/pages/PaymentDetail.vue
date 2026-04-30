@@ -115,7 +115,7 @@
             <div class="card-empty-icon">
               <FeatherIcon name="file" class="h-6 w-6" />
             </div>
-            <p class="card-empty-text">{{ t("no_activities") }}</p>
+            <p class="card-empty-text">{{ t("no_documents") }}</p>
           </div>
           <div v-else class="divide-y divide-slate-100">
             <div 
@@ -181,17 +181,18 @@ const props = defineProps({
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
 const customerCard = computed(() => ({
-  full_name: payment.value.customer_name || payment.value.customer || "-",
-  customer_type: payment.value.customer_type || "Individual",
-  tax_id: payment.value.customer_tax_id || "",
-  birth_date: payment.value.customer_birth_date || "",
-  occupation: payment.value.customer_occupation || "",
-  phone: payment.value.customer_phone || "",
-  email: payment.value.customer_email || "",
+  full_name: customer.value.full_name || payment.value.customer_full_name || payment.value.customer_name || payment.value.customer || t("unspecified"),
+  customer_type: customer.value.customer_type || payment.value.customer_type || "Individual",
+  tax_id: customer.value.tax_id || payment.value.customer_tax_id || "",
+  birth_date: customer.value.birth_date || payment.value.customer_birth_date || "",
+  occupation: customer.value.occupation || payment.value.customer_occupation || "",
+  phone: customer.value.phone || payment.value.customer_phone || "",
+  email: customer.value.email || payment.value.customer_email || "",
 }));
 
 const {
   payment,
+  customer,
   installments,
   documents,
   showUploadModal,

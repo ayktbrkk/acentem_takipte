@@ -31,6 +31,7 @@ const ClaimRatioReport = () => import("../pages/ClaimRatioReport.vue");
 const AgentPerformanceReport = () => import("../pages/AgentPerformanceReport.vue");
 const CustomerSegmentationReport = () => import("../pages/CustomerSegmentationReport.vue");
 const AuxWorkbench = () => import("../pages/AuxWorkbench.vue");
+const QuickDocumentUpload = () => import("../pages/QuickDocumentUpload.vue");
 const NotificationDraftsList = () => import("../pages/NotificationDraftsList.vue");
 const NotificationDraftDetail = () => import("../pages/NotificationDraftDetail.vue");
 const SentNotificationsList = () => import("../pages/SentNotificationsList.vue");
@@ -153,7 +154,7 @@ const router = createRouter({
       component: CustomerSearchPage,
       meta: {
         title: "Müşteri Ara",
-        section: "Sales & Portfolio",
+        section: "Satış ve Portföy",
       },
     },
     {
@@ -161,8 +162,8 @@ const router = createRouter({
       name: "claims-board",
       component: ClaimsBoard,
       meta: {
-        title: "Claims Board",
-        section: "Insurance Operations",
+        title: "Hasarlar",
+        section: "Sigorta Operasyonları",
       },
     },
     {
@@ -171,8 +172,8 @@ const router = createRouter({
       component: ClaimDetail,
       props: true,
       meta: {
-        title: "Claim Details",
-        section: "Insurance Operations",
+        title: "Hasar Detayı",
+        section: "Sigorta Operasyonları",
       },
     },
     {
@@ -180,8 +181,8 @@ const router = createRouter({
       name: "payments-board",
       component: PaymentsBoard,
       meta: {
-        title: "Payment Operations",
-        section: "Insurance Operations",
+        title: "Ödemeler",
+        section: "Sigorta Operasyonları",
       },
     },
     {
@@ -190,8 +191,8 @@ const router = createRouter({
       component: PaymentDetail,
       props: true,
       meta: {
-        title: "Payment Details",
-        section: "Insurance Operations",
+        title: "Ödeme Detayı",
+        section: "Sigorta Operasyonları",
       },
     },
     {
@@ -199,8 +200,8 @@ const router = createRouter({
       name: "renewals-board",
       component: RenewalsBoard,
       meta: {
-        title: "Renewal Board",
-        section: "Insurance Operations",
+        title: "Yenilemeler",
+        section: "Sigorta Operasyonları",
       },
     },
     {
@@ -209,8 +210,8 @@ const router = createRouter({
       component: RenewalTaskDetail,
       props: true,
       meta: {
-        title: "Renewal Details",
-        section: "Insurance Operations",
+        title: "Yenileme Detayı",
+        section: "Sigorta Operasyonları",
       },
     },
     {
@@ -231,8 +232,8 @@ const router = createRouter({
       name: "break-glass-request",
       component: BreakGlassRequest,
       meta: {
-        title: "Break-Glass Request",
-        section: "Control Center",
+        title: "Acil Erişim Talebi",
+        section: "Finans ve Kontrol",
       },
     },
     {
@@ -240,8 +241,8 @@ const router = createRouter({
       name: "break-glass-approvals",
       component: BreakGlassApprovals,
       meta: {
-        title: "Break-Glass Approvals",
-        section: "Control Center",
+        title: "Acil Erişim Onayları",
+        section: "Finans ve Kontrol",
         requiresBreakGlassManager: true,
       },
     },
@@ -250,8 +251,8 @@ const router = createRouter({
       name: "reconciliation-workbench",
       component: ReconciliationWorkbench,
       meta: {
-        title: "Reconciliation Workbench",
-        section: "Control Center",
+        title: "Mutabakat",
+        section: "Kontrol Merkezi",
       },
     },
     {
@@ -260,8 +261,8 @@ const router = createRouter({
       component: ReconciliationDetail,
       props: true,
       meta: {
-        title: "Reconciliation Details",
-        section: "Control Center",
+        title: "Mutabakat Detayı",
+        section: "Kontrol Merkezi",
       },
     },
     {
@@ -269,8 +270,8 @@ const router = createRouter({
       name: "reports",
       component: Reports,
       meta: {
-        title: "Reports",
-        section: "Control Center",
+        title: "Raporlar",
+        section: "Kontrol Merkezi",
       },
     },
     {
@@ -314,8 +315,8 @@ const router = createRouter({
       name: "import-data",
       component: ImportData,
       meta: {
-        title: "Data Import",
-        section: "Control Center",
+        title: "Veri İçe Aktarma",
+        section: "Kontrol Merkezi",
       },
     },
     {
@@ -323,8 +324,8 @@ const router = createRouter({
       name: "export-data",
       component: ExportData,
       meta: {
-        title: "Data Export",
-        section: "Control Center",
+        title: "Veri Dışa Aktarma",
+        section: "Kontrol Merkezi",
       },
     },
     {
@@ -335,6 +336,15 @@ const router = createRouter({
       meta: {
         title: "Müşteri Detayı",
         section: "Müşteri",
+      },
+    },
+    {
+      path: "/at-documents/upload",
+      name: "at-documents-upload",
+      component: QuickDocumentUpload,
+      meta: {
+        title: "Hızlı Doküman Yükle",
+        section: "Doküman Merkezi",
       },
     },
     ...AUX_WORKBENCH_ROUTE_DEFS.flatMap((def) => [

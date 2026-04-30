@@ -99,8 +99,12 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   );
 
   function formatDate(val) {
-    if (!val) return "-";
+    if (!val) return t("unspecified");
     return new Intl.DateTimeFormat(unref(activeLocale) === "tr" ? "tr-TR" : "en-US").format(new Date(val));
+  }
+
+  function translateValue(val) {
+    return val ? translateText(String(val), activeLocale) || String(val) : t("unspecified");
   }
 
   function formatCurrency(val, currency = "TRY") {
@@ -123,7 +127,7 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const heroCells = computed(() => [
-    { label: t("claim_type"), value: claim.value.claim_type },
+    { label: t("claim_type"), value: translateValue(claim.value.claim_type) },
     { label: t("total_amount"), value: formatCurrency(claim.value.estimated_amount, claim.value.currency), variant: "lg" },
     { label: t("claim_date"), value: formatDate(claim.value.incident_date) },
     { 
@@ -139,7 +143,7 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "insurance_company", label: t("insurance_company"), value: claim.value.insurance_company, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
     { type: "divider", label: t("incident_details") },
     { key: "incident_date", label: t("claim_date"), value: claim.value.incident_date, displayValue: formatDate(claim.value.incident_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
-    { key: "claim_type", label: t("claim_type"), value: claim.value.claim_type, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "claim_type", label: t("claim_type"), value: claim.value.claim_type, displayValue: translateValue(claim.value.claim_type), type: "text", unspecifiedLabel: t("unspecified") },
     { key: "assigned_expert", label: t("expert_name"), value: claim.value.assigned_expert, type: "text", unspecifiedLabel: t("unspecified") },
     { key: "incident_location", label: t("incident_location"), value: claim.value.incident_location, type: "text", unspecifiedLabel: t("unspecified") },
   ]);
@@ -159,10 +163,10 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   ]);
 
   const customerFields = computed(() => [
-    { label: t("customer"), value: customer.value.full_name || claim.value.customer_name || "-" },
-    { label: t("tax_id"), value: customer.value.tax_id || "-" },
-    { label: t("phone"), value: customer.value.phone || "-" },
-    { label: t("email"), value: customer.value.email || "-" },
+    { label: t("customer"), value: customer.value.full_name || claim.value.customer_name || t("unspecified") },
+    { label: t("tax_id"), value: customer.value.tax_id || t("unspecified") },
+    { label: t("phone"), value: customer.value.phone || t("unspecified") },
+    { label: t("email"), value: customer.value.email || t("unspecified") },
   ]);
 
   async function updateClaim(values, onSuccess) {
