@@ -28,7 +28,7 @@ function resolvePolicyStatusPresentation(status, t) {
     };
   }
 
-  return { label: status || "-", variant: "waiting-pill" };
+  return { label: status || t("unspecified"), variant: "waiting-pill" };
 }
 
 function getDateClass(dateStr) {
@@ -157,6 +157,10 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   const { formatCurrency, formatDate, formatPercent } = useAtFormatting(activeLocale);
 
+  function formatDateOrFallback(value) {
+    return value ? formatDate(value) : t("unspecified");
+  }
+
   // Resources for searchable selects
   const branchesResource = createResource({
     url: "frappe.client.get_list",
@@ -179,12 +183,12 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const branchOptions = computed(() => asArray(branchesResource.data).map(b => ({ label: b.name, value: b.name })));
   const companyOptions = computed(() => asArray(companiesResource.data).map(c => ({ label: c.name, value: c.name })));
   const salesEntityOptions = computed(() => asArray(salesEntitiesResource.data).map(s => ({ 
-    label: `${s.full_name} (${s.office_branch || '-'})`, 
+    label: `${s.full_name} (${s.office_branch || t("unspecified")})`, 
     value: s.name 
   })));
 
   function formatFileSize(bytes) {
-    if (!bytes || Number(bytes) <= 0) return "-";
+    if (!bytes || Number(bytes) <= 0) return t("unspecified");
     const kilobytes = Number(bytes) / 1024;
     if (kilobytes < 1024) {
       return `${kilobytes.toFixed(1)} KB`;
@@ -207,15 +211,15 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const policyStatusPresentation = computed(() => resolvePolicyStatusPresentation(policy.value.status, t));
 
   const heroCells = computed(() => [
-    { label: t("branch"), value: policy.value.branch },
+    { label: t("branch"), value: policy.value.branch || t("unspecified") },
     { label: t("gross_premium"), value: formatCurrency(policy.value.gross_premium, policy.value.currency), variant: "lg" },
-    { label: t("end_date"), value: formatDate(policy.value.end_date) },
+    { label: t("end_date"), value: formatDateOrFallback(policy.value.end_date) },
     { label: t("status"), value: policyStatusPresentation.value.label, variant: policyStatusPresentation.value.variant },
   ]);
 
   const profileFields = computed(() => {
     return [
-      { key: "name", label: t("record_no") || "Kayıt No", value: policy.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+      { key: "name", label: t("record_no") || "Kayıt No", value: policy.value.name || unref(name), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
       { key: "policy_no", label: t("carrier_policy_no"), value: policy.value.policy_no, type: "text", required: true, copyable: true, unspecifiedLabel: t("unspecified") },
       { 
         key: "insurance_company", 
@@ -248,13 +252,13 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
         ],
         required: true
       },
-      { key: "issue_date", label: t("issue_date"), value: policy.value.issue_date, displayValue: formatDate(policy.value.issue_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
-      { key: "start_date", label: t("start_date"), value: policy.value.start_date, displayValue: formatDate(policy.value.start_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
+      { key: "issue_date", label: t("issue_date"), value: policy.value.issue_date, displayValue: formatDateOrFallback(policy.value.issue_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
+      { key: "start_date", label: t("start_date"), value: policy.value.start_date, displayValue: formatDateOrFallback(policy.value.start_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
       { 
         key: "end_date", 
         label: t("end_date"), 
         value: policy.value.end_date, 
-        displayValue: formatDate(policy.value.end_date), 
+        displayValue: formatDateOrFallback(policy.value.end_date), 
         type: "date", 
         required: true, 
         unspecifiedLabel: t("unspecified"),
@@ -264,7 +268,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
         key: "sales_entity", 
         label: t("sales_entity"), 
         value: policy.value.sales_entity, 
-        displayValue: policy.value.sales_entity_full_name ? `${policy.value.sales_entity_full_name} (${policy.value.sales_entity_office || '-'})` : policy.value.sales_entity,
+        displayValue: policy.value.sales_entity_full_name ? `${policy.value.sales_entity_full_name} (${policy.value.sales_entity_office || t("unspecified")})` : (policy.value.sales_entity || t("unspecified")),
         type: "autocomplete", 
         options: salesEntityOptions.value,
         unspecifiedLabel: t("unspecified") 
@@ -307,14 +311,14 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "tax_amount", label: t("tax_amount"), value: policy.value.tax_amount, displayValue: formatCurrency(policy.value.tax_amount, policy.value.currency), type: "number", step: "0.01" },
     { key: "commission_amount", label: t("commission_amount"), value: policy.value.commission_amount, displayValue: formatCurrency(policy.value.commission_amount, policy.value.currency), type: "number", step: "0.01" },
     { key: "gross_premium", label: t("gross_premium"), value: policy.value.gross_premium, displayValue: formatCurrency(policy.value.gross_premium, policy.value.currency), type: "number", step: "0.01", required: true },
-    { key: "commission_rate", label: t("commission_rate"), value: policy.value.commission_rate, displayValue: formatPercent(policy.value.commission_rate), type: "number", step: "0.01", disabled: true },
+    { key: "commission_rate", label: t("commission_rate"), value: policy.value.commission_rate, displayValue: policy.value.commission_rate != null ? formatPercent(policy.value.commission_rate) : t("unspecified"), type: "number", step: "0.01", disabled: true },
   ]);
 
   const customerFields = computed(() => [
-    { label: t("customer"), value: customer.value.full_name || policy.value.customer || "-" },
-    { label: t("tax_id"), value: customer.value.tax_id || "-" },
-    { label: t("phone"), value: customer.value.phone || "-" },
-    { label: t("email"), value: customer.value.email || "-" },
+    { label: t("customer"), value: customer.value.full_name || policy.value.customer || t("unspecified") },
+    { label: t("tax_id"), value: customer.value.tax_id || t("unspecified") },
+    { label: t("phone"), value: customer.value.phone || t("unspecified") },
+    { label: t("email"), value: customer.value.email || t("unspecified") },
   ]);
 
   async function updatePolicy(values, onSuccess) {

@@ -2,7 +2,7 @@
   <WorkbenchPageLayout
     :breadcrumb="t('policies_breadcrumb')"
     :title="t('policyDetailTitle')"
-    :subtitle="policy.policy_no || policy.name"
+    :subtitle="policy.policy_no || policy.name || name"
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="reload">
@@ -79,7 +79,7 @@
           />
         </div>
 
-        <SectionPanel v-if="endorsements.length" :title="t('endorsements')">
+        <SectionPanel v-if="endorsements.length" :title="t('endorsementTitle')">
           <ListTable
             :columns="endorsementColumns"
             :rows="endorsements"
@@ -123,7 +123,7 @@
             <div class="card-empty-icon">
               <FeatherIcon name="activity" class="h-6 w-6" />
             </div>
-            <p class="card-empty-text">{{ t('no_recent_activity') }}</p>
+            <p class="card-empty-text">{{ t('emptyActivities') }}</p>
           </div>
         </SectionPanel>
       </div>
@@ -177,7 +177,7 @@
               </ActionButton>
             </div>
           </template>
-          <div v-if="!documents.length && !atDocuments.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
+          <div v-if="!documents.length && !atDocuments.length" class="text-sm text-slate-400 py-2">{{ t("emptyDocuments") }}</div>
           <div v-else class="space-y-2">
             <MetaListCard
               v-for="doc in atDocuments.slice(0, 5)" 
@@ -193,7 +193,7 @@
               </template>
             </MetaListCard>
             <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openPolicyDocuments">
-              {{ t("view_all_documents") }}
+              {{ t("openDocumentCenter") }}
             </ActionButton>
           </div>
         </SectionPanel>

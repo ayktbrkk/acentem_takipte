@@ -24,7 +24,7 @@
         </div>
         <div class="min-w-0">
           <h3 class="font-bold text-slate-900 truncate leading-tight group-hover:text-brand-600 transition-colors">
-            {{ customer.full_name || '-' }}
+            {{ customer.full_name || t('unspecified') }}
           </h3>
           <p class="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
             {{ customer.customer_type === 'Corporate' ? t('corporate') : t('individual') }}
@@ -36,7 +36,7 @@
       <div class="grid gap-3.5 border-t border-slate-50 pt-4">
         <div v-for="f in displayFields" :key="f.key" class="flex items-center justify-between">
           <p class="field-label !mb-0">{{ f.label }}</p>
-          <p class="text-[13px] font-bold text-slate-900">{{ f.value || '—' }}</p>
+          <p class="text-[13px] font-bold text-slate-900">{{ f.value || t('unspecified') }}</p>
         </div>
       </div>
 

@@ -124,7 +124,7 @@ const router = createRouter({
       name: "policy-list",
       component: PolicyList,
       meta: {
-        title: "Policy Management",
+        title: "Poliçeler",
         section: "Insurance Operations",
       },
     },
@@ -134,7 +134,7 @@ const router = createRouter({
       component: PolicyDetail,
       props: true,
       meta: {
-        title: "Policy Details",
+        title: "Poliçe Detayı",
         section: "Insurance Operations",
       },
     },

@@ -26,7 +26,11 @@ function mapCustomerTypeLabel(value, localeCode) {
   if (normalized === "individual" || normalized === "bireysel") {
     return isTr ? "Bireysel" : "Individual";
   }
-  return "-";
+  return isTr ? "Belirtilmemiş" : "Unspecified";
+}
+
+function fallbackLabel(localeCode) {
+  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmemiş" : "Unspecified";
 }
 
 export function usePolicyListTableData({
@@ -43,21 +47,21 @@ export function usePolicyListTableData({
     unref(rows).map((row) => ({
       ...row,
       name: row.record_name || row.name,
-      carrier_policy_no: row.carrier_policy_no || row.policy_no || "-",
-      customer_label: row.customer_full_name || row.customer_name || row.customer || "-",
-      customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode))} | ${row.customer_masked_tax_id || "-"}`,
+      carrier_policy_no: row.carrier_policy_no || row.policy_no || fallbackLabel(unref(localeCode)),
+      customer_label: row.customer_full_name || row.customer_name || row.customer || fallbackLabel(unref(localeCode)),
+      customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode))} | ${row.customer_masked_tax_id || fallbackLabel(unref(localeCode))}`,
       policy_primary: row.record_name || row.name,
-      policy_secondary: row.policy_no || "-",
-      product_primary: row.branch || "-",
-      product_secondary: row.insurance_company || "-",
+      policy_secondary: row.policy_no || fallbackLabel(unref(localeCode)),
+      product_primary: row.branch || fallbackLabel(unref(localeCode)),
+      product_secondary: row.insurance_company || fallbackLabel(unref(localeCode)),
       vade_primary: formatDate(row.end_date),
       vade_secondary: formatDate(row.issue_date),
       finance_primary: formatCurrency(row.gross_premium, row.currency || "TRY"),
       finance_secondary: `${formatCurrency(row.commission_amount || 0, row.currency || "TRY")} (${row.currency || "TRY"})`,
       customer_type_label: mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode)),
-      customer_tax_id: row.customer_masked_tax_id || "-",
+      customer_tax_id: row.customer_masked_tax_id || fallbackLabel(unref(localeCode)),
       customer_birth_date: row.customer_birth_date || null,
-      branch: row.branch || "-",
+      branch: row.branch || fallbackLabel(unref(localeCode)),
       remaining_days: computeRemainingDays(row.end_date),
     }))
   );

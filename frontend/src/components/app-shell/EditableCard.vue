@@ -230,8 +230,10 @@ const highlightIndex = ref(0);
 const displayFields = computed(() => {
   return props.fields.map(f => ({
     label: f.label,
-    value: f.displayValue !== undefined ? f.displayValue : (f.value || '—'),
-    variant: f.value ? 'default' : 'muted'
+    value: f.displayValue !== undefined
+      ? f.displayValue
+      : ((f.value || f.value === 0 || f.value === false) ? f.value : (f.unspecifiedLabel || props.t('unspecified'))),
+    variant: (f.value || f.value === 0 || f.value === false) ? 'default' : 'muted'
   }));
 });
 
