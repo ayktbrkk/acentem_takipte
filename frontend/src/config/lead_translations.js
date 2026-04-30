@@ -1,6 +1,7 @@
 export const LEAD_TRANSLATIONS = {
   tr: {
     leads: "Fırsatlar",
+    subtitle: "Fırsat listesini filtreleyin, önceliklendirin ve operasyona hazır tutun",
     lead_detail: "Fırsat Detayı",
     leads_breadcrumb: "Sigorta Operasyonları → Fırsatlar",
     total_leads: "Toplam Fırsat",
@@ -52,9 +53,14 @@ export const LEAD_TRANSLATIONS = {
     next_step: "Sonraki Adım",
     unspecified: "Belirtilmemiş",
     advanced_filters_placeholder: "Gelişmiş filtreleme seçenekleri bu ekran için bir sonraki dilimde genişletilecek.",
+    applyFilters: "Filtreleri Uygula",
+    clearFilters: "Filtreleri Temizle",
+    sortNewest: "En yeni kayıtlar",
+    sortOldest: "En eski kayıtlar",
   },
   en: {
     leads: "Leads",
+    subtitle: "Filter, prioritize, and keep the lead list ready for action",
     lead_detail: "Lead Detail",
     leads_breadcrumb: "Insurance Operations → Leads",
     total_leads: "Total Leads",
@@ -106,6 +112,10 @@ export const LEAD_TRANSLATIONS = {
     next_step: "Next Step",
     unspecified: "Unspecified",
     advanced_filters_placeholder: "Advanced filtering options for this screen will be expanded in the next pass.",
+    applyFilters: "Apply Filters",
+    clearFilters: "Clear Filters",
+    sortNewest: "Newest first",
+    sortOldest: "Oldest first",
   }
 };
 

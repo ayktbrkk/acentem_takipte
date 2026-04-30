@@ -2,6 +2,7 @@
   <WorkbenchPageLayout
     :breadcrumb="t('leads_breadcrumb')"
     :title="t('leads')"
+    :subtitle="t('subtitle')"
     :record-count="summary.total"
     :record-count-label="t('total_leads')"
   >
@@ -23,8 +24,8 @@
       <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SaaSMetricCard :label="t('total')" :value="summary.total" />
         <SaaSMetricCard :label="t('active')" :value="summary.active" value-class="text-brand-600" />
-        <SaaSMetricCard :label="t('individual')" :value="summary.individual" value-class="text-emerald-600" />
-        <SaaSMetricCard :label="t('corporate')" :value="summary.corporate" value-class="text-violet-600" />
+        <SaaSMetricCard :label="t('individual')" :value="summary.individual" value-class="text-at-green" />
+        <SaaSMetricCard :label="t('corporate')" :value="summary.corporate" value-class="text-slate-900" />
       </div>
     </template>
 
@@ -49,7 +50,23 @@
       </SmartFilterBar>
 
       <div v-if="showAdvancedFilters" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-slate-500">{{ t("advanced_filters_placeholder") }}</p>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+            <span>{{ t("branch") }}</span>
+            <input v-model="filters.office_branch" class="input" type="text" />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+            <span>{{ t("status") }}</span>
+            <select v-model="filters.sort" class="input">
+              <option value="creation desc">{{ t("sortNewest") }}</option>
+              <option value="creation asc">{{ t("sortOldest") }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="mt-5 flex items-center justify-end gap-2 border-t pt-4">
+          <button class="btn btn-outline btn-sm" type="button" @click="clearFilters">{{ t("clearFilters") }}</button>
+          <button class="btn btn-primary btn-sm px-6" type="button" @click="applyAdvancedFilters">{{ t("applyFilters") }}</button>
+        </div>
       </div>
     </div>
 
@@ -189,4 +206,18 @@ const filterConfig = computed(() => [
     ],
   },
 ]);
+
+function applyAdvancedFilters() {
+  pagination.page = 1;
+  reload();
+}
+
+function clearFilters() {
+  filters.query = "";
+  filters.status = "";
+  filters.office_branch = "";
+  filters.sort = "creation desc";
+  pagination.page = 1;
+  reload();
+}
 </script>

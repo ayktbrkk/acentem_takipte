@@ -30,6 +30,10 @@
             {{ t('viewBoard') }}
           </button>
         </div>
+        <ActionButton variant="secondary" size="sm" @click="downloadOfferExport('xlsx')">
+          <FeatherIcon name="download" class="h-4 w-4" />
+          {{ t("exportXlsx") }}
+        </ActionButton>
         <ActionButton variant="primary" size="sm" @click="openQuickOfferDialog">
           <FeatherIcon name="plus" class="h-4 w-4" />
           {{ t("newOffer") }}
@@ -45,8 +49,8 @@
       <div v-if="isListView" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <SaaSMetricCard :label="t('summaryTotal')" :value="formatCount(offerSummary.total)" />
         <SaaSMetricCard :label="t('summaryDraft')" :value="formatCount(offerSummary.draft)" value-class="text-gray-500" />
-        <SaaSMetricCard :label="t('summarySent')" :value="formatCount(offerSummary.sent)" value-class="text-amber-600" />
-        <SaaSMetricCard :label="t('summaryAccepted')" :value="formatCount(offerSummary.accepted)" value-class="text-green-600" />
+        <SaaSMetricCard :label="t('summarySent')" :value="formatCount(offerSummary.sent)" value-class="text-at-amber" />
+        <SaaSMetricCard :label="t('summaryAccepted')" :value="formatCount(offerSummary.accepted)" value-class="text-at-green" />
         <SaaSMetricCard :label="t('summaryConversion')" :value="`${offerConversionRate}%`" value-class="text-brand-600" />
       </div>
     </template>
@@ -64,7 +68,7 @@
             @change="onOfferListFilterBarChange({ key: 'status', value: $event.target.value })"
           >
             <option value="">{{ t("colStatus") }}: {{ t("all") || 'Hepsi' }}</option>
-            <option v-for="opt in offerListFilterConfig[0].options" :key="opt.value" :value="opt.value">
+            <option v-for="opt in offerListFilterConfig[1].options" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </option>
           </select>
@@ -72,7 +76,35 @@
       </SmartFilterBar>
 
       <div v-if="showAdvancedFilters" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-gray-500">{{ t("advanced_filters_placeholder") || 'Gelişmiş filtreleme seçenekleri yakında eklenecek.' }}</p>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            <span>{{ t("insurance_company") }}</span>
+            <input v-model="state.offerListFilters.insurance_company" class="input" type="text" />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            <span>{{ t("branch") }}</span>
+            <input v-model="state.offerListFilters.branch" class="input" type="text" />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            <span>{{ t("valid_until") }}</span>
+            <input v-model="state.offerListFilters.valid_until" class="input" type="date" />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+            <span>{{ t("gross_premium") }}</span>
+            <div class="grid grid-cols-2 gap-2">
+              <input v-model="state.offerListFilters.gross_min" class="input" type="number" min="0" placeholder="Min" />
+              <input v-model="state.offerListFilters.gross_max" class="input" type="number" min="0" placeholder="Max" />
+            </div>
+          </label>
+        </div>
+        <label class="mt-4 flex items-center gap-2 text-sm text-gray-700">
+          <input v-model="state.offerListFilters.actionable_only" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+          <span>{{ t("presetActionable") }}</span>
+        </label>
+        <div class="mt-5 flex items-center justify-end gap-2 border-t pt-4">
+          <button class="btn btn-outline btn-sm" type="button" @click="onOfferListFilterBarReset">{{ t("clearFilters") }}</button>
+          <button class="btn btn-primary btn-sm px-6" type="button" @click="filtersRuntime.applyOfferListFilters()">{{ t("applyFilters") }}</button>
+        </div>
       </div>
     </div>
 

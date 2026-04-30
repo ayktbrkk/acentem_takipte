@@ -5,12 +5,12 @@
     :subtitle="lead.full_name || lead.name"
   >
     <template #actions>
-      <ActionButton variant="secondary" size="sm" @click="backToList">
-        {{ t("back_to_list") }}
-      </ActionButton>
-      <ActionButton variant="primary" size="sm" @click="reload">
+      <ActionButton variant="secondary" size="sm" @click="reload">
         <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton variant="link" size="sm" @click="backToList">
+        {{ t("back_to_list") }}
       </ActionButton>
     </template>
 
@@ -21,7 +21,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : 'text-slate-900'"
+          :value-class="cell.variant === 'success-pill' ? 'text-at-green' : cell.variant === 'cancel-pill' ? 'text-at-red' : cell.variant === 'waiting-pill' ? 'text-at-amber' : 'text-slate-900'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -30,91 +30,6 @@
     </template>
 
     <div class="detail-body at-detail-split-wide">
-      <!-- Sidebar (Sol Kolon - 4) -->
-      <aside class="detail-sidebar at-detail-aside space-y-6">
-        <StandardCustomerCard
-          :title="t('customer_details')"
-          :customer="customer"
-          :saving="customerSaving"
-          :t="t"
-          @save="updateCustomer"
-          @view-full="openCustomer"
-        />
-
-        <SectionPanel v-if="offers.length" :title="t('offers')">
-          <div class="space-y-3">
-            <div 
-              v-for="item in offers" 
-              :key="item.name"
-              @click="openOffer(item.name)"
-              class="p-3 rounded-xl border border-slate-100 hover:border-brand-200 hover:bg-brand-50/30 cursor-pointer transition-all bg-slate-50/50"
-            >
-              <p class="text-sm font-bold text-slate-900 truncate">{{ item.name }}</p>
-              <div class="flex items-center justify-between mt-2">
-                <StatusBadge 
-                  domain="policy" 
-                  :status="item.status === 'Accepted' ? 'active' : 'waiting'" 
-                  :label="t('status_' + String(item.status || 'draft').toLowerCase())" 
-                  size="sm" 
-                />
-                <p class="text-xs font-bold text-slate-600">{{ formatCurrency(item.gross_premium, item.currency) }}</p>
-              </div>
-            </div>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel v-if="policies.length" :title="t('policies')">
-          <div class="space-y-3">
-            <div 
-              v-for="item in policies" 
-              :key="item.name"
-              @click="openPolicy(item.name)"
-              class="p-3 rounded-xl border border-slate-100 hover:border-brand-200 hover:bg-brand-50/30 cursor-pointer transition-all bg-slate-50/50"
-            >
-              <p class="text-sm font-bold text-slate-900 truncate">{{ item.policy_no || item.name }}</p>
-              <div class="flex items-center justify-between mt-2">
-                <StatusBadge 
-                  domain="policy" 
-                  :status="item.status === 'Active' ? 'active' : 'waiting'" 
-                  :label="t('status_' + String(item.status || 'draft').toLowerCase())" 
-                  size="sm" 
-                />
-                <p class="text-xs font-bold text-slate-600">{{ formatCurrency(item.gross_premium, item.currency) }}</p>
-              </div>
-            </div>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel :title="t('documents')">
-          <template #trailing>
-            <div class="flex flex-wrap items-center gap-2">
-              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
-                {{ t("upload") }}
-              </ActionButton>
-            </div>
-          </template>
-          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
-          <div v-else class="space-y-2">
-            <div 
-              v-for="doc in documents.slice(0, 5)" 
-              :key="doc.name"
-              class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-brand-200 transition-colors"
-            >
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-slate-800 truncate">{{ doc.file_name }}</p>
-              </div>
-              <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc)">
-                <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openLeadDocuments">
-              {{ t("view_all_documents") }}
-            </ActionButton>
-          </div>
-        </SectionPanel>
-      </aside>
-
-      <!-- Main Content (Sağ Kolon - 8) -->
       <div class="detail-main space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <EditableCard
@@ -157,6 +72,95 @@
           </div>
         </SectionPanel>
       </div>
+
+      <aside class="detail-sidebar at-detail-aside space-y-6">
+        <StandardCustomerCard
+          :title="t('customer_details')"
+          :customer="customer"
+          :saving="customerSaving"
+          :t="t"
+          @save="updateCustomer"
+          @view-full="openCustomer"
+        />
+
+        <SectionPanel v-if="offers.length" :title="t('offers')">
+          <div class="space-y-2">
+            <MetaListCard
+              v-for="item in offers"
+              :key="item.name"
+              :title="item.name"
+              :subtitle="t('status_' + String(item.status || 'draft').toLowerCase())"
+              class="!p-3 cursor-pointer"
+              @click="openOffer(item.name)"
+            >
+              <template #trailing>
+                <div class="flex items-center gap-2">
+                  <StatusBadge
+                    domain="policy"
+                    :status="item.status === 'Accepted' ? 'active' : 'waiting'"
+                    :label="t('status_' + String(item.status || 'draft').toLowerCase())"
+                    size="sm"
+                  />
+                  <span class="text-xs font-semibold text-slate-600">{{ formatCurrency(item.gross_premium, item.currency) }}</span>
+                </div>
+              </template>
+            </MetaListCard>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel v-if="policies.length" :title="t('policies')">
+          <div class="space-y-2">
+            <MetaListCard
+              v-for="item in policies"
+              :key="item.name"
+              :title="item.policy_no || item.name"
+              :subtitle="t('status_' + String(item.status || 'draft').toLowerCase())"
+              class="!p-3 cursor-pointer"
+              @click="openPolicy(item.name)"
+            >
+              <template #trailing>
+                <div class="flex items-center gap-2">
+                  <StatusBadge
+                    domain="policy"
+                    :status="item.status === 'Active' ? 'active' : 'waiting'"
+                    :label="t('status_' + String(item.status || 'draft').toLowerCase())"
+                    size="sm"
+                  />
+                  <span class="text-xs font-semibold text-slate-600">{{ formatCurrency(item.gross_premium, item.currency) }}</span>
+                </div>
+              </template>
+            </MetaListCard>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel :title="t('documents')">
+          <template #trailing>
+            <div class="flex flex-wrap items-center gap-2">
+              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                {{ t("upload") }}
+              </ActionButton>
+            </div>
+          </template>
+          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_activities") }}</div>
+          <div v-else class="space-y-2">
+            <MetaListCard
+              v-for="doc in documents.slice(0, 5)"
+              :key="doc.name"
+              :title="doc.file_name || doc.name"
+              class="!p-3"
+            >
+              <template #trailing>
+                <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc)">
+                  <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
+                </button>
+              </template>
+            </MetaListCard>
+            <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openLeadDocuments">
+              {{ t("view_all_documents") }}
+            </ActionButton>
+          </div>
+        </SectionPanel>
+      </aside>
     </div>
 
     <!-- Notifications -->
@@ -190,6 +194,7 @@ import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import EditableCard from "../components/app-shell/EditableCard.vue";
 import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
+import MetaListCard from "../components/app-shell/MetaListCard.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ToastNotification from "../components/ui/ToastNotification.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";

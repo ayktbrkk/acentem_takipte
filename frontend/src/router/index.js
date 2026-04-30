@@ -96,7 +96,7 @@ const router = createRouter({
       component: LeadDetail,
       props: true,
       meta: {
-        title: "Lead Details",
+        title: "Fırsat Detayı",
         section: "Sales & Portfolio",
       },
     },
@@ -115,7 +115,7 @@ const router = createRouter({
       component: OfferDetail,
       props: true,
       meta: {
-        title: "Offer Details",
+        title: "Teklif Detayı",
         section: "Insurance Operations",
       },
     },
