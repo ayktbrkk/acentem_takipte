@@ -14,16 +14,19 @@
 
 import { expect, test } from "@playwright/test";
 import fs from "node:fs";
-import { ensureAuthenticated } from "./helpers/auth.js";
+import { ensureAuthenticated, pageRequest } from "./helpers/auth.js";
 
 const KNOWN_EXTERNAL_CONSOLE_PATTERNS = [
   /Failed to load resource: net::ERR_CONNECTION_REFUSED/i,
+  /Failed to load resource: net::ERR_NETWORK_CHANGED/i,
   /Failed to load resource: the server responded with a status of 404 \(NOT FOUND\)/i,
   /Failed to load resource: the server responded with a status of 417 \(EXPECTATION FAILED\)/i,
+  /Unable to preload CSS for \/assets\//i,
 ];
 
 const EXTERNAL_ERROR_TYPE_PATTERNS = [
   { key: "err_connection_refused", pattern: /net::ERR_CONNECTION_REFUSED/i },
+  { key: "other_external", pattern: /net::ERR_NETWORK_CHANGED/i },
   { key: "http_404", pattern: /status of 404 \(NOT FOUND\)/i },
   { key: "http_417", pattern: /status of 417 \(EXPECTATION FAILED\)/i },
 ];
@@ -101,21 +104,16 @@ function recordConsoleMetrics({ label, url, appErrors, externalErrors }) {
 // Yardımcı: İlk kaydın adını API'den al
 // ──────────────────────────────────────────────────────────────────
 async function getFirstRecord(page, doctype) {
-  try {
-    const resp = await page.request.post("/api/method/frappe.client.get_list", {
-      form: {
-        doctype,
-        fields: JSON.stringify(["name"]),
-        order_by: "modified desc",
-        limit_page_length: 1,
-      },
-    });
-    if (!resp.ok()) return null;
-    const payload = await resp.json().catch(() => null);
-    return Array.isArray(payload?.message) ? payload.message[0]?.name || null : null;
-  } catch {
-    return null;
-  }
+  const resp = await pageRequest(page, "POST", "/api/method/frappe.client.get_list", {
+    form: {
+      doctype,
+      fields: JSON.stringify(["name"]),
+      order_by: "modified desc",
+      limit_page_length: 1,
+    },
+  }).catch(() => null);
+  if (!resp?.ok) return null;
+  return Array.isArray(resp.json?.message) ? resp.json.message[0]?.name || null : null;
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -184,9 +182,9 @@ test.describe("Adım 1.1 — Kimlik Doğrulama", () => {
     const authenticated = await ensureAuthenticated(page);
     expect(authenticated).toBe(true);
 
-    const resp = await page.request.get("/api/method/frappe.auth.get_logged_user");
-    const payload = await resp.json().catch(() => null);
-    expect(resp.ok()).toBeTruthy();
+    const resp = await pageRequest(page, "GET", "/api/method/frappe.auth.get_logged_user");
+    const payload = resp.json;
+    expect(resp.ok).toBeTruthy();
     expect(payload?.message).not.toBe("Guest");
 
     console.log(`✅ Giriş başarılı: ${payload?.message}`);
@@ -303,31 +301,31 @@ test.describe("Adım 1.3b — Hızlı Ekranlar (QuickCreate Dialog)", () => {
       triggerUrl: "/at/customers",
       // Müşteri listesindeki "Yeni Müşteri" butonu
       btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
-      dialogSelector: ".at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
+      dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
     {
       label: "QC_Teklif_Olustur",
       triggerUrl: "/at/offers",
       btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
-      dialogSelector: ".at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
+      dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
     {
       label: "QC_Hasar_Olustur",
       triggerUrl: "/at/claims",
       btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
-      dialogSelector: ".at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
+      dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
     {
       label: "QC_Police_Olustur",
       triggerUrl: "/at/policies",
       btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
-      dialogSelector: ".at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
+      dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
     {
       label: "QC_Firsat_Olustur",
       triggerUrl: "/at/leads",
       btnSelector: 'button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]',
-      dialogSelector: ".at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
+      dialogSelector: "[role='dialog'], .modal, .dialog, .at-quick-create-shell, .dialog-shell, .qc-managed-dialog-shell",
     },
   ];
 

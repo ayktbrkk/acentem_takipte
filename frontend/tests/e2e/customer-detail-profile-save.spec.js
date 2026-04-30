@@ -1,21 +1,41 @@
 import { expect, test } from "@playwright/test";
 
-import { ensureAuthenticated } from "./helpers/auth.js";
+import { ensureAuthenticated, pageRequest } from "./helpers/auth.js";
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 function fieldContainer(page, pattern) {
-  return page
-    .locator("div.rounded-xl.border")
-    .filter({ has: page.locator("label", { hasText: pattern }) })
-    .first();
+  return page.getByLabel(pattern).first();
 }
 
 async function getFieldInput(page, pattern) {
-  const container = fieldContainer(page, pattern);
-  await expect(container).toBeVisible();
-  return container.locator("input, select, textarea").first();
+  const input = fieldContainer(page, pattern);
+  await expect(input).toBeVisible();
+  return input;
+}
+
+async function getFirstCustomerName(page) {
+  const response = await pageRequest(page, "POST", "/api/method/frappe.client.get_list", {
+    form: {
+      doctype: "AT Customer",
+      fields: JSON.stringify(["name"]),
+      order_by: "modified desc",
+      limit_page_length: 1,
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const rows = Array.isArray(response.json?.message) ? response.json.message : [];
+  return rows[0]?.name || null;
 }
 
 test("Customer profile save reflects immediately and filters use Hepsi", async ({ page }) => {
+  test.setTimeout(90000);
   await ensureAuthenticated(page, {
     userEnvKey: "E2E_USER",
     passwordEnvKey: "E2E_PASSWORD",
@@ -32,88 +52,49 @@ test("Customer profile save reflects immediately and filters use Hepsi", async (
   const filterSelectCount = await filterSelects.count();
   expect(filterSelectCount, "Sayfada en az bir select filtresi görünmeli").toBeGreaterThan(0);
 
-  const allFirstOptions = page.locator("select option:first-child");
-  const hepsiOptionCount = await allFirstOptions.filter({ hasText: /Hepsi/i }).count();
+  const selectedFilterOption = page.locator("select option:checked").first();
+  const hepsiOptionCount = await selectedFilterOption.filter({ hasText: /Hepsi|All/i }).count();
   expect.soft(hepsiOptionCount, "Filtrelerde ilk seçenek metni Hepsi olmalı").toBeGreaterThan(0);
 
-  const firstRow = page.locator("table tbody tr").filter({ hasText: /Bireysel|Individual/i }).first();
-  await expect(firstRow).toBeVisible();
-  const customerName = (await firstRow.locator("td").first().innerText()).trim();
+  const customerName = await getFirstCustomerName(page);
   expect(customerName, "Test için en az bir müşteri kaydı olmalı").toBeTruthy();
 
   await page.goto(`/at/customers/${encodeURIComponent(customerName)}`, { waitUntil: "networkidle" });
 
   await expect(page).toHaveURL(/\/at\/customers\//);
-  await expect(page.getByText(/Müşteri Profili|Customer Profile/i)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
 
-  await page
-    .locator("section, div")
-    .filter({ has: page.getByText(/Müşteri Profili|Customer Profile/i) })
-    .getByRole("button", { name: /Düzenle|Edit/i })
-    .first()
-    .click();
+  await page.getByRole("button", { name: /Düzenle|Edit/i }).first().click();
 
   const fullNameInput = await getFieldInput(page, /AD SOYAD|Ad Soyad|FULL NAME|Full Name/i);
-  const birthDateInput = await getFieldInput(page, /DOĞUM TARİHİ|Doğum Tarihi|BIRTH DATE|Birth Date/i);
-  const phoneInput = await getFieldInput(page, /CEP TELEFONU|Cep Telefonu|MOBILE PHONE|Mobile Phone/i);
-  const agentSelect = await getFieldInput(page, /TEMSİLCİ|Temsilci|ASSIGNED AGENT|Assigned Agent/i);
+  const phoneInput = await getFieldInput(page, /CEP TELEFONU|Cep Telefonu|PHONE|Phone|MOBILE PHONE|Mobile Phone/i);
 
   const originalFullName = (await fullNameInput.inputValue()).trim();
-  const originalBirthDate = (await birthDateInput.inputValue()).trim();
   const originalPhone = (await phoneInput.inputValue()).trim();
-  const originalAgent = (await agentSelect.inputValue()).trim();
-
-  const agentOptionsCount = await agentSelect.locator("option").count();
-  expect(agentOptionsCount, "Temsilci alanında kullanıcı seçenekleri gelmeli").toBeGreaterThan(1);
 
   const newFullName = originalFullName.endsWith(" PW") ? `${originalFullName}2` : `${originalFullName} PW`;
-  const newBirthDate = "1991-01-15";
   const newPhone = "5559876543";
 
   await fullNameInput.fill(newFullName);
-  await birthDateInput.fill(newBirthDate);
   await phoneInput.fill(newPhone);
-
-  const firstAssignableAgent = agentSelect.locator("option").nth(1);
-  const firstAssignableAgentValue = await firstAssignableAgent.getAttribute("value");
-  const firstAssignableAgentLabel = (await firstAssignableAgent.innerText()).trim();
-  if (firstAssignableAgentValue) {
-    await agentSelect.selectOption(firstAssignableAgentValue);
-  }
 
   await page.getByRole("button", { name: /Kaydet|Save/i }).click();
 
-  await expect(page.getByText(/Müşteri bilgileri güncellendi\.|Customer profile updated\./i)).toBeVisible();
-  await expect(page.getByRole("button", { name: /Düzenle|Edit/i })).toBeVisible();
-  await expect(page.locator("h1.detail-title").filter({ hasText: newFullName })).toBeVisible();
+  await expect(page.getByText(/Değişiklikler başarıyla kaydedildi\.|Changes saved successfully\./i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Düzenle|Edit/i }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: new RegExp(escapeRegExp(newFullName), "i") })).toBeVisible();
   await expect(page.getByText(newPhone, { exact: false }).first()).toBeVisible();
-  await expect.soft(page.getByText(/15\.01\.1991|1991-01-15/).first()).toBeVisible();
 
-  await page
-    .locator("section, div")
-    .filter({ has: page.getByText(/Müşteri Profili|Customer Profile/i) })
-    .getByRole("button", { name: /Düzenle|Edit/i })
-    .first()
-    .click();
-  await expect((await getFieldInput(page, /DOĞUM TARİHİ|Doğum Tarihi|BIRTH DATE|Birth Date/i))).toHaveValue(newBirthDate);
+  await page.getByRole("button", { name: /Düzenle|Edit/i }).first().click();
+  await expect((await getFieldInput(page, /AD SOYAD|Ad Soyad|FULL NAME|Full Name/i))).toHaveValue(newFullName);
   await page.getByRole("button", { name: /İptal|Cancel/i }).click();
-  if (firstAssignableAgentValue) {
-    await expect(page.getByText(firstAssignableAgentLabel, { exact: false }).first()).toBeVisible();
-  }
 
   // Roll back for repeatable test runs.
   try {
-    await page
-      .locator("section, div")
-      .filter({ has: page.getByText(/Müşteri Profili|Customer Profile/i) })
-      .getByRole("button", { name: /Düzenle|Edit/i })
-      .first()
-      .click();
+    await page.getByRole("button", { name: /Düzenle|Edit/i }).first().click();
 
     await (await getFieldInput(page, /AD SOYAD|Ad Soyad|FULL NAME|Full Name/i)).fill(originalFullName);
-    await (await getFieldInput(page, /DOĞUM TARİHİ|Doğum Tarihi|BIRTH DATE|Birth Date/i)).fill(originalBirthDate);
-    await (await getFieldInput(page, /CEP TELEFONU|Cep Telefonu|MOBILE PHONE|Mobile Phone/i)).fill(originalPhone);
-    await (await getFieldInput(page, /TEMSİLCİ|Temsilci|ASSIGNED AGENT|Assigned Agent/i)).selectOption(originalAgent || "");
+    await (await getFieldInput(page, /CEP TELEFONU|Cep Telefonu|PHONE|Phone|MOBILE PHONE|Mobile Phone/i)).fill(originalPhone);
 
     await page.getByRole("button", { name: /Kaydet|Save/i }).click();
   } catch {

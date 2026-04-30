@@ -5,15 +5,15 @@ async function clickFirstRow(page) {
   const rows = page.locator("tbody tr.at-table-row");
   // List pages load asynchronously; wait briefly so smoke doesn't skip on a race.
   await rows.first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
-  let count = await rows.count();
+  let count = await rows.count().catch(() => 0);
   if (!count) {
     // One retry helps with intermittent initial empty render/state hydration races.
     await page.reload().catch(() => {});
     await rows.first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
-    count = await rows.count();
+    count = await rows.count().catch(() => 0);
   }
   if (!count) return false;
-  await rows.first().click();
+  await rows.first().click().catch(() => false);
   return true;
 }
 

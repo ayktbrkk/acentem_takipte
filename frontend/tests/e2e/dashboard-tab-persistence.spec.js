@@ -8,5 +8,5 @@ test("dashboard keeps selected tab after delayed rerender", async ({ page }) => 
   await page.waitForTimeout(1200);
 
   await expect(page).toHaveURL(/\/at\/\?tab=sales$/);
-  await expect(page.locator(".at-tab-chip-active").first()).toHaveText("Satış");
+  await expect(page.locator(".at-tab-chip-active").first()).toHaveText(/Satışlar|Sales/i);
 });

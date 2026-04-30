@@ -1,5 +1,5 @@
 <template>
-  <article class="group relative overflow-hidden bg-white rounded-3xl border border-slate-100 p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/10 hover:border-brand-200 active:scale-[0.98]">
+  <article class="at-metric-card group relative overflow-hidden bg-white rounded-3xl border border-slate-100 p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/10 hover:border-brand-200 active:scale-[0.98]">
     <!-- Background Glow -->
     <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brand-500/5 blur-3xl transition-all group-hover:bg-brand-500/10"></div>
     

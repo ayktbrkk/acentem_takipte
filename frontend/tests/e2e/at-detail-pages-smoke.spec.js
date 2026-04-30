@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { ensureAuthenticated } from "./helpers/auth.js";
+import { ensureAuthenticated, pageRequest } from "./helpers/auth.js";
 
 async function getFirstRecordName(page, doctype) {
-  const response = await page.request.post("/api/method/frappe.client.get_list", {
+  const response = await pageRequest(page, "POST", "/api/method/frappe.client.get_list", {
     form: {
       doctype,
       fields: JSON.stringify(["name"]),
@@ -11,16 +11,11 @@ async function getFirstRecordName(page, doctype) {
     },
   });
 
-  if (!response.ok()) {
+  if (!response.ok) {
     return null;
   }
 
-  let payload = null;
-  try {
-    payload = await response.json();
-  } catch {
-    payload = null;
-  }
+  const payload = response.json;
 
   const rows = Array.isArray(payload?.message) ? payload.message : [];
   return rows[0]?.name || null;
@@ -28,6 +23,7 @@ async function getFirstRecordName(page, doctype) {
 
 test.describe("Acentem Takipte detail pages smoke", () => {
   test("policy/customer/claim detail shells render", async ({ page }) => {
+    test.setTimeout(90000);
     await ensureAuthenticated(page);
 
     const configs = [
@@ -36,7 +32,7 @@ test.describe("Acentem Takipte detail pages smoke", () => {
         doctype: "AT Policy",
         routePrefix: "/at/policies",
         titlePattern: /Policy Details|policy_detail|Poliçe/i,
-        requiredTexts: [/Listeye Dön|Back to List/i, /Yenile|Refresh/i, /Dosyalar|Documents/i],
+        requiredTexts: [/Listeye Dön|Back to List/i, /Yenile|Refresh/i, /Dosyalar|Dokümanlar|Documents/i],
       },
       {
         label: "customer",
@@ -50,7 +46,7 @@ test.describe("Acentem Takipte detail pages smoke", () => {
         doctype: "AT Claim",
         routePrefix: "/at/claims",
         titlePattern: /Claim Detail|Hasar Detayı/i,
-        requiredTexts: [/Listeye Dön|Back to List/i, /Yenile|Refresh/i, /Dosyalar|Documents/i],
+        requiredTexts: [/Listeye Dön|Back to List/i, /Yenile|Refresh/i, /Dosyalar|Dokümanlar|Documents/i],
       },
     ];
 

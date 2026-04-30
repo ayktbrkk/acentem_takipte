@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { ensureAuthenticated } from "./helpers/auth.js";
+import { ensureAuthenticated, pageRequest } from "./helpers/auth.js";
 
 async function getFirstRecordName(page, doctype) {
-  const response = await page.request.post("/api/method/frappe.client.get_list", {
+  const response = await pageRequest(page, "POST", "/api/method/frappe.client.get_list", {
     form: {
       doctype,
       fields: JSON.stringify(["name"]),
@@ -11,11 +11,11 @@ async function getFirstRecordName(page, doctype) {
     },
   });
 
-  if (!response.ok()) {
+  if (!response.ok) {
     return null;
   }
 
-  const payload = await response.json().catch(() => null);
+  const payload = response.json;
   const rows = Array.isArray(payload?.message) ? payload.message : [];
   return rows[0]?.name || null;
 }
@@ -53,9 +53,9 @@ test.describe("customer detail network", () => {
     page.on("response", onResponse);
     page.on("console", onConsole);
     try {
-      await page.goto(`/at/customers/${encodeURIComponent(customerName)}`, { waitUntil: "networkidle", timeout: 30000 });
+      await page.goto(`/at/customers/${encodeURIComponent(customerName)}`, { waitUntil: "domcontentloaded", timeout: 45000 });
       await expect(page.locator(".page-shell").first()).toBeVisible();
-      await expect(page.locator(".detail-title").first()).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
       await page.waitForTimeout(2000);
     } finally {
       page.off("response", onResponse);

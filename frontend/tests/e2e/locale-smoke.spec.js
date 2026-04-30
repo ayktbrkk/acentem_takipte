@@ -26,24 +26,25 @@ test.describe("Locale smoke", () => {
     const newButton = page
       .locator('button:has-text("Yeni"), button:has-text("New"), button[aria-label*="Yeni"], button[aria-label*="New"]')
       .first();
+    const quickCreateTitle = page.getByText(/Hızlı Müşteri Kaydı|Quick Customer Registration/i).first();
 
     await expect(newButton).toBeVisible();
     await newButton.click();
-    await expect(page.locator(".at-quick-create-shell").first()).toBeVisible();
+    await expect(quickCreateTitle).toBeVisible();
     const trCancelButton = page.locator('button:has-text("İptal")').first();
     await expect(trCancelButton).toBeVisible();
     await trCancelButton.click();
-    await expect(page.locator(".at-quick-create-shell").first()).toBeHidden();
+    await expect(quickCreateTitle).toBeHidden();
 
     await localeButton.click();
     await expect(localeButton).toHaveText("EN");
 
     await newButton.click();
-    await expect(page.locator(".at-quick-create-shell").first()).toBeVisible();
+    await expect(quickCreateTitle).toBeVisible();
     const enCancelButton = page.locator('button:has-text("Cancel")').first();
     await expect(enCancelButton).toBeVisible();
     await enCancelButton.click();
-    await expect(page.locator(".at-quick-create-shell").first()).toBeHidden();
+    await expect(quickCreateTitle).toBeHidden();
 
     const accountMenuButton = page.locator('button[aria-haspopup="menu"]').first();
     await accountMenuButton.click();
