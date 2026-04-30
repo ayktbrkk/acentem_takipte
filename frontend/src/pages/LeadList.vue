@@ -56,7 +56,7 @@
             <input v-model="filters.office_branch" class="input" type="text" />
           </label>
           <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
-            <span>{{ t("status") }}</span>
+            <span>{{ t("sort") }}</span>
             <select v-model="filters.sort" class="input">
               <option value="creation desc">{{ t("sortNewest") }}</option>
               <option value="creation asc">{{ t("sortOldest") }}</option>

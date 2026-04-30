@@ -7,6 +7,21 @@ import { LEAD_TRANSLATIONS } from "@/config/lead_translations";
 export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
 
+  function formatCurrency(value, currency = "TRY") {
+    const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr-TR" : "en-US";
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currency || "TRY",
+      maximumFractionDigits: 2,
+    }).format(Number(value || 0));
+  }
+
+  function formatDate(value) {
+    if (!value) return t("unspecified");
+    const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr-TR" : "en-US";
+    return new Intl.DateTimeFormat(locale).format(new Date(value));
+  }
+
   function getLeadRows() {
     const data = unref(leadResource.data);
     if (Array.isArray(data)) return data;
@@ -61,12 +76,12 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
       full_name: [row.first_name, row.last_name].filter(Boolean).join(" "),
       status_label: t(`status_${String(row.status || "Draft").toLowerCase()}`),
       lead_primary: row.name,
-      lead_secondary: row.branch || "-",
-      customer_label: [row.first_name, row.last_name].filter(Boolean).join(" ") || "-",
-      customer_secondary: row.phone || "-",
-      takip_label: row.sales_entity || "-",
-      finance_primary: row.estimated_gross_premium || 0,
-      date_secondary: row.creation ? String(row.creation).slice(0, 10) : "-",
+      lead_secondary: row.branch || t("unspecified"),
+      customer_label: [row.first_name, row.last_name].filter(Boolean).join(" ") || t("unspecified"),
+      customer_secondary: row.phone || t("unspecified"),
+      takip_label: row.sales_entity || t("unspecified"),
+      finance_primary: formatCurrency(row.estimated_gross_premium, row.currency || "TRY"),
+      date_secondary: formatDate(row.creation),
     }));
   });
 

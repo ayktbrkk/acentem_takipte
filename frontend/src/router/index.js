@@ -86,7 +86,7 @@ const router = createRouter({
       name: "lead-list",
       component: LeadList,
       meta: {
-        title: "Lead Management",
+        title: "Fırsatlar",
         section: "Sales & Portfolio",
       },
     },

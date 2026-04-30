@@ -175,7 +175,7 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   function formatDate(val) {
-    if (!val) return "-";
+    if (!val) return t("unspecified");
     return new Intl.DateTimeFormat(unref(activeLocale) === "tr" ? "tr-TR" : "en-US").format(new Date(val));
   }
 
@@ -187,7 +187,7 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const heroCells = computed(() => [
-    { label: t("industry"), value: lead.value.industry || "-" },
+    { label: t("industry"), value: lead.value.industry || t("unspecified") },
     { label: t("lead_date"), value: formatDate(lead.value.creation) },
     { label: t("status"), value: t(`status_${String(lead.value.status || "Draft").toLowerCase()}`), variant: "accent" },
   ]);
@@ -197,24 +197,23 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "phone", label: t("phone"), value: lead.value.phone, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
     { key: "email", label: t("email"), value: lead.value.email, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
     { key: "tax_id", label: t("tax_id"), value: lead.value.tax_id, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
-    { key: "industry", label: t("industry"), value: lead.value.industry, type: "text", unspecifiedLabel: t("unspecified") },
-    { key: "lead_type", label: t("lead_type"), value: lead.value.lead_type, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "industry", label: t("industry"), value: lead.value.industry, displayValue: lead.value.industry || t("unspecified"), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "lead_type", label: t("lead_type"), value: lead.value.lead_type, displayValue: lead.value.lead_type || t("unspecified"), type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const estimationFields = computed(() => [
     { key: "branch", label: t("branch"), value: lead.value.branch, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
     { key: "estimated_gross_premium", label: t("estimated_gross_premium"), value: lead.value.estimated_gross_premium, displayValue: formatCurrency(lead.value.estimated_gross_premium, lead.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
     { key: "probability", label: t("probability"), value: lead.value.probability, displayValue: `${lead.value.probability || 0}%`, type: "text", unspecifiedLabel: t("unspecified"), valueClass: "text-brand-600 font-bold" },
-    { type: "divider", label: t("next_step") },
     { key: "expected_closing", label: t("expected_closing"), value: lead.value.expected_closing, displayValue: formatDate(lead.value.expected_closing), type: "date", unspecifiedLabel: t("unspecified") },
-    { key: "next_step", label: t("next_step"), value: lead.value.next_step, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "next_step", label: t("next_step"), value: lead.value.next_step, displayValue: lead.value.next_step || t("unspecified"), type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const customerFields = computed(() => [
-    { label: t("customer"), value: customer.value.full_name || lead.value.customer || "-" },
-    { label: t("tax_id"), value: customer.value.tax_id || "-" },
-    { label: t("phone"), value: customer.value.phone || "-" },
-    { label: t("email"), value: customer.value.email || "-" },
+    { label: t("customer"), value: customer.value.full_name || lead.value.customer || t("unspecified") },
+    { label: t("tax_id"), value: customer.value.tax_id || t("unspecified") },
+    { label: t("phone"), value: customer.value.phone || t("unspecified") },
+    { label: t("email"), value: customer.value.email || t("unspecified") },
   ]);
 
   async function updateLead(values, onSuccess) {
