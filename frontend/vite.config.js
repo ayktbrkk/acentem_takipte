@@ -33,7 +33,6 @@ export default defineConfig({
           vue: ["vue", "vue-router"],
           frappe_ui: ["frappe-ui"],
           chart: ["chart.js"],
-          ui: ["@iconify-json/lucide"],
         },
       },
     },

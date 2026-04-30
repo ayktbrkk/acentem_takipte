@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from types import SimpleNamespace
+
 import pytest
 
 from acentem_takipte.acentem_takipte.api import reports
@@ -330,4 +333,35 @@ def test_load_scheduled_report_configs_sanitizes_runtime_fields(monkeypatch):
     assert payload[0]["day_of_month"] == 1
     assert payload[0]["last_status"] == "sent"
     assert payload[0]["last_summary"] == {"sent": 1}
+
+
+def test_save_scheduled_report_configs_writes_site_config_atomically(monkeypatch, tmp_path):
+    site_config_path = tmp_path / "site_config.json"
+    site_config_path.write_text(
+        json.dumps({"db_name": "at_localhost", "existing": 1}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(scheduled_reports.frappe, "get_site_path", lambda *parts: str(site_config_path))
+    monkeypatch.setattr(scheduled_reports.frappe, "conf", SimpleNamespace())
+
+    scheduled_reports.save_scheduled_report_configs(
+        [
+            {
+                "report_key": "policy_list",
+                "recipients": ["ops@example.com"],
+            }
+        ]
+    )
+
+    payload = json.loads(site_config_path.read_text(encoding="utf-8"))
+
+    assert payload["db_name"] == "at_localhost"
+    assert payload["existing"] == 1
+    saved_config = payload["at_scheduled_reports"][0]
+    assert saved_config["report_key"] == "policy_list"
+    assert saved_config["recipients"] == ["ops@example.com"]
+    assert saved_config["delivery_channel"] == "email"
+    assert saved_config["format"] == "xlsx"
+    assert list(tmp_path.glob(".site_config.*.tmp")) == []
 

@@ -1,15 +1,30 @@
 from __future__ import annotations
+
 import frappe
 from frappe import _
+
 from acentem_takipte.acentem_takipte.api.security import assert_authenticated
+from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
+    has_sensitive_access,
+    mask_phone,
+    mask_tax_id,
+)
+
+
+def _mask_email(value: str | None) -> str:
+    email = str(value or "").strip()
+    if not email or "@" not in email:
+        return ""
+    local, domain = email.split("@", 1)
+    if not local:
+        return f"***@{domain}"
+    return f"{local[:1]}***@{domain}"
 
 @frappe.whitelist()
 def get_record_preview(doctype: str, name: str) -> dict:
     assert_authenticated()
-    if not frappe.has_permission(doctype, "read"):
-        frappe.throw(_("You do not have permission to read this record."), frappe.PermissionError)
-
     doc = frappe.get_doc(doctype, name)
+    frappe.has_permission(doctype, ptype="read", doc=doc, throw=True)
     
     # Base summary
     preview = {
@@ -35,11 +50,18 @@ def get_record_preview(doctype: str, name: str) -> dict:
         ]
 
     elif doctype == "AT Customer":
+        can_view_sensitive = has_sensitive_access()
         preview["title"] = doc.full_name or name
-        preview["subtitle"] = doc.tax_id or ""
+        preview["subtitle"] = doc.tax_id if can_view_sensitive else mask_tax_id(doc.tax_id)
         preview["fields"] = [
-            {"label": _("Email"), "value": doc.email},
-            {"label": _("Phone"), "value": doc.mobile_phone},
+            {
+                "label": _("Email"),
+                "value": doc.email if can_view_sensitive else _mask_email(doc.email),
+            },
+            {
+                "label": _("Phone"),
+                "value": doc.phone if can_view_sensitive else mask_phone(doc.phone),
+            },
             {"label": _("Type"), "value": doc.customer_type},
         ]
 

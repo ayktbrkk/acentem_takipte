@@ -64,6 +64,7 @@ class ATPolicy(Document):
                 "acentem_takipte.acentem_takipte.doctype.at_policy.at_policy.update_policy_fx_rate_async",
                 policy_name=self.name,
                 now=frappe.flags.in_test,
+                enqueue_after_commit=True,
             )
 
     def on_trash(self):

@@ -104,7 +104,6 @@ async function callApiMethod(page, method, params = {}) {
 
 function expectPermissionDenied(result, label = "request") {
   const status = Number(result?.status || 0);
-  const bodyText = String(result?.text || "");
   const payload = result?.payload || null;
 
   const failedViaStatus = status >= 400;

@@ -8,6 +8,7 @@ from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 from acentem_takipte.acentem_takipte.api.documents import (
     _resolve_reference_token,
     archive_document,
+    share_document,
     track_document_view,
     permanent_delete_document,
     restore_document,
@@ -25,6 +26,12 @@ class FakeDoc:
     def save(self, ignore_permissions=False):
         self.saved = True
         return self
+
+
+class FakeFileDoc:
+    def __init__(self, file_url: str = "/private/files/FILE-001.pdf", is_private: int = 1):
+        self.file_url = file_url
+        self.is_private = is_private
 
 
 class TestDocumentsApi(IntegrationTestCase):
@@ -149,3 +156,43 @@ class TestDocumentsApi(IntegrationTestCase):
                     attached_to_doctype="AT Policy",
                     attached_to_name="AT-POL-001",
                 )
+
+    def test_share_document_rejects_sensitive_documents(self):
+        document_doc = SimpleNamespace(file="FILE-001", is_sensitive=1, customer=None)
+        file_doc = FakeFileDoc(file_url="/files/policy.pdf", is_private=0)
+
+        def fake_get_doc(doctype, name):
+            if doctype == "AT Document":
+                return document_doc
+            if doctype == "File":
+                return file_doc
+            raise AssertionError(f"Unexpected get_doc call: {doctype} {name}")
+
+        with (
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", side_effect=fake_get_doc),
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.has_permission", return_value=True),
+        ):
+            with self.assertRaises(Exception) as err:
+                share_document("AT-DOC-001", "url")
+
+        self.assertIn("sensitive", str(err.exception).lower())
+
+    def test_share_document_rejects_private_files(self):
+        document_doc = SimpleNamespace(file="FILE-001", is_sensitive=0, customer="AT-CUST-001")
+        file_doc = FakeFileDoc(file_url="/private/files/policy.pdf", is_private=1)
+
+        def fake_get_doc(doctype, name):
+            if doctype == "AT Document":
+                return document_doc
+            if doctype == "File":
+                return file_doc
+            raise AssertionError(f"Unexpected get_doc call: {doctype} {name}")
+
+        with (
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", side_effect=fake_get_doc),
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.has_permission", return_value=True),
+        ):
+            with self.assertRaises(Exception) as err:
+                share_document("AT-DOC-001", "whatsapp")
+
+        self.assertIn("private", str(err.exception).lower())

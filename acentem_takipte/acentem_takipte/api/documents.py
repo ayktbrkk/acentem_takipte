@@ -617,9 +617,8 @@ def share_document(docname: str, method: str = "whatsapp") -> dict:
     """
     Return a shareable URL for an AT Document record.
 
-    For WhatsApp, returns a wa.me deep-link pre-filled with the file URL.
-    If the document is marked is_sensitive, a warning is included but the
-    link is still returned — the final decision rests with the user.
+    Sharing is intentionally denied for sensitive documents and private files.
+    WhatsApp shares return a wa.me deep-link pre-filled with the file URL.
 
     Args:
         docname: Name of the AT Document record.
@@ -631,6 +630,10 @@ def share_document(docname: str, method: str = "whatsapp") -> dict:
     doc = frappe.get_doc("AT Document", docname)
     frappe.has_permission("AT Document", ptype="read", doc=doc, throw=True)
 
+    share_method = str(method or "whatsapp").strip().lower() or "whatsapp"
+    if share_method not in {"whatsapp", "url"}:
+        frappe.throw(_("Unsupported share method."))
+
     if not doc.file:
         frappe.throw(_("AT Document has no linked file."))
 
@@ -638,10 +641,9 @@ def share_document(docname: str, method: str = "whatsapp") -> dict:
 
     warning = None
     if doc.is_sensitive:
-        warning = _("This document is marked as sensitive. Sharing is not recommended.")
+        frappe.throw(_("Sensitive documents cannot be shared."), frappe.PermissionError)
     if file_doc.is_private:
-        private_warning = _("This file is private and requires authentication to access. Recipients may not be able to open the shared link.")
-        warning = f"{warning}\n{private_warning}" if warning else private_warning
+        frappe.throw(_("Private files cannot be shared externally."), frappe.PermissionError)
     file_url = frappe.utils.get_url(file_doc.file_url)
 
     phone = ""
@@ -650,7 +652,7 @@ def share_document(docname: str, method: str = "whatsapp") -> dict:
     # Normalise: strip non-digit chars (spaces, dashes, parens) for wa.me
     phone_digits = "".join(c for c in phone if c.isdigit() or c == "+")
 
-    if method == "whatsapp":
+    if share_method == "whatsapp":
         import urllib.parse
         wa_url = f"https://wa.me/{phone_digits}?text={urllib.parse.quote(file_url, safe='')}"
         return {"url": wa_url, "phone": phone_digits, "warning": warning}

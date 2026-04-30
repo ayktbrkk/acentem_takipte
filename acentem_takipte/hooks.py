@@ -12,6 +12,8 @@ website_route_rules = [
     {"from_route": "/at/<path:path>", "to_route": "at"},
 ]
 
+boot_session = "acentem_takipte.acentem_takipte.startup.enforce_production_safety_flags"
+
 # ---------------------------------------------------------------------------
 # Document Events
 # Each handler is referenced by its full dotted path so Frappe can resolve it

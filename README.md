@@ -165,6 +165,10 @@ If you are preparing a production Bench:
 sudo bench setup production frappe
 ```
 
+For the actual release procedure, backups, production-safe flags, post-deploy checks, and rollback expectations, use [docs/PRODUCTION_DEPLOY_CHECKLIST.md](docs/PRODUCTION_DEPLOY_CHECKLIST.md).
+
+Production boot is also guarded by the app itself: if `at_enable_demo_endpoints=1`, desk boot fails fast; if `developer_mode=1`, the app logs a deployment warning so the issue is visible before release validation is signed off.
+
 ## First-Time Access
 
 After installation:

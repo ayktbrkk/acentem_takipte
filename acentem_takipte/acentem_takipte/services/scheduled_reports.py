@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from typing import Any
 
 import frappe
@@ -123,9 +125,28 @@ def save_scheduled_report_configs(configs: list[dict[str, Any]]) -> None:
     except Exception:
         site_config = {}
     site_config["at_scheduled_reports"] = sanitized
-    with open(site_config_path, "w", encoding="utf-8") as handle:
-        json.dump(site_config, handle, indent=2, sort_keys=True, ensure_ascii=False)
-        handle.write("\n")
+    _write_json_atomically(site_config_path, site_config)
+
+
+def _write_json_atomically(path: str, payload: dict[str, Any]) -> None:
+    directory = os.path.dirname(path) or "."
+    file_descriptor, temp_path = tempfile.mkstemp(
+        dir=directory,
+        prefix=".site_config.",
+        suffix=".tmp",
+        text=True,
+    )
+    try:
+        with os.fdopen(file_descriptor, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2, sort_keys=True, ensure_ascii=False)
+            handle.write("\n")
+        os.replace(temp_path, path)
+    except Exception:
+        try:
+            os.remove(temp_path)
+        except FileNotFoundError:
+            pass
+        raise
 
 
 def summarize_scheduled_report_configs() -> list[dict[str, Any]]:

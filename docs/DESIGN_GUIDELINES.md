@@ -1,4 +1,4 @@
-# Acentem Takipte (AT) Design Guidelines & Manifesto v2.1
+# Acentem Takipte (AT) Design Guidelines & Manifesto v2.2
 
 This document is the design constitution of the AT ecosystem. It exists to keep every screen, component, and workflow aligned across developers and AI agents.
 
@@ -27,6 +27,7 @@ The objective is simple: English code, bilingual UI, consistent operational dens
 - Python must use `_()`.
 - Vue and JavaScript must use the module translation helper already used by the surrounding page, such as `__()`, `translateText`, or the local `t()` wrapper.
 - If a module owns its own translation map, add both `tr` and `en` entries in the same change.
+- Shared shell surfaces such as sidebar, top navigation, scope switchers, breadcrumbs, and persistent action bars must resolve copy from their own shell or module translation source, not from unrelated page-level generic keys like `title`, `subtitle`, or `breadcrumb`.
 - If a string appears in tables, badges, filters, empty states, toasts, modals, quick actions, or route titles, it must still be translated.
 
 ### 1.3 Translation Delivery Rules
@@ -137,6 +138,7 @@ Use for imports, assisted creation, and multi-step operational flows.
 
 - Use for short, focused tasks only.
 - Do not move a full detail workflow into a modal just to avoid navigation.
+- If a modal task grows to require guidance copy, summary metrics, contextual linking, or post-submit routing, promote it to a full page or workbench flow and keep the modal limited to the narrow upload or edit step itself.
 - The primary action must be visible without scrolling in common viewport sizes when feasible.
 - Closing behavior must be clear and forgiving.
 
@@ -269,6 +271,7 @@ Every new surface must explicitly define these states.
 - Run the relevant frontend checks.
 - Verify the page in both TR and EN if the changed surface is user-facing.
 - Compare the edited page against policy pages and adjacent modules for visual consistency.
+- Verify copy in the persistent shell too: route title, sidebar labels, shell subtitle, scope controls, and breadcrumbs must still match the current surface after the change.
 - Confirm that route title, buttons, filters, empty states, badges, and helper text are translated.
 
 ## 11. Anti-Patterns
