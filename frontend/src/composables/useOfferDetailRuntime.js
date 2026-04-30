@@ -101,7 +101,7 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   function formatDate(val) {
-    if (!val) return "-";
+    if (!val) return t("unspecified");
     return new Intl.DateTimeFormat(unref(activeLocale) === "tr" ? "tr-TR" : "en-US").format(new Date(val));
   }
 
@@ -113,7 +113,7 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const heroCells = computed(() => [
-    { label: t("branch"), value: offer.value.branch },
+    { label: t("branch"), value: offer.value.branch || t("unspecified") },
     { label: t("gross_premium"), value: formatCurrency(offer.value.gross_premium, offer.value.currency), variant: "lg" },
     { label: t("offer_date"), value: formatDate(offer.value.offer_date) },
     { label: t("status"), value: t(`status_${String(offer.value.status || "Draft").toLowerCase()}`), variant: "accent" },
@@ -123,7 +123,6 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "offer_no", label: t("offer_no"), value: offer.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
     { key: "insurance_company", label: t("insurance_company"), value: offer.value.insurance_company, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
     { key: "branch", label: t("branch"), value: offer.value.branch, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
-    { type: "divider", label: t("validity") },
     { key: "offer_date", label: t("offer_date"), value: offer.value.offer_date, displayValue: formatDate(offer.value.offer_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
     { key: "valid_until", label: t("valid_until"), value: offer.value.valid_until, displayValue: formatDate(offer.value.valid_until), type: "date", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-amber-600 font-bold" },
   ]);
@@ -132,15 +131,14 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "net_premium", label: t("net_premium"), value: offer.value.net_premium, displayValue: formatCurrency(offer.value.net_premium, offer.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
     { key: "tax_amount", label: t("tax_amount"), value: offer.value.tax_amount, displayValue: formatCurrency(offer.value.tax_amount, offer.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
     { key: "commission_amount", label: t("commission_amount"), value: offer.value.commission_amount, displayValue: formatCurrency(offer.value.commission_amount, offer.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
-    { type: "divider" },
     { key: "gross_premium", label: t("gross_premium"), value: offer.value.gross_premium, displayValue: formatCurrency(offer.value.gross_premium, offer.value.currency), type: "text", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-brand-600 font-bold" },
   ]);
 
   const customerFields = computed(() => [
-    { label: t("customer"), value: customer.value.full_name || offer.value.customer || "-" },
-    { label: t("tax_id"), value: customer.value.tax_id || "-" },
-    { label: t("phone"), value: customer.value.phone || "-" },
-    { label: t("email"), value: customer.value.email || "-" },
+    { label: t("customer"), value: customer.value.full_name || offer.value.customer || t("unspecified") },
+    { label: t("tax_id"), value: customer.value.tax_id || t("unspecified") },
+    { label: t("phone"), value: customer.value.phone || t("unspecified") },
+    { label: t("email"), value: customer.value.email || t("unspecified") },
   ]);
 
   async function updateOffer(values, onSuccess) {

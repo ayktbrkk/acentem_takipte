@@ -105,7 +105,7 @@ const router = createRouter({
       name: "offer-board",
       component: OfferBoard,
       meta: {
-        title: "Offer Board",
+        title: "Teklifler",
         section: "Insurance Operations",
       },
     },
