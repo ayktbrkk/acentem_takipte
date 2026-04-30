@@ -10,6 +10,10 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
     return translateText(key, activeLocale);
   }
 
+  function fallbackLabel() {
+    return t("unspecified");
+  }
+
   const filters = reactive({
     query: "",
     consent_status: "",
@@ -44,13 +48,13 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
     const data = unref(customerResource.data) || {};
     return (data.rows || []).map(row => ({
       ...row,
-      identity_primary: row.full_name || "-",
-      identity_secondary: `${row.name} | ${row.customer_type === "Corporate" ? t("corporate") : t("individual")} | ${row.tax_id || "-"}`,
-      contact_primary: row.phone || "-",
-      contact_secondary: row.email || "-",
-      personal_primary: row.job_title || "-",
-      personal_secondary: `${t(row.gender || "Unknown")} | ${row.birth_date || "-"}`,
-      mgmt_primary: row.sales_entity || "-",
+      identity_primary: row.full_name || fallbackLabel(),
+      identity_secondary: `${row.name || fallbackLabel()} | ${row.customer_type === "Corporate" ? t("corporate") : t("individual")} | ${row.tax_id || fallbackLabel()}`,
+      contact_primary: row.phone || fallbackLabel(),
+      contact_secondary: row.email || fallbackLabel(),
+      personal_primary: row.job_title || fallbackLabel(),
+      personal_secondary: `${t(row.gender || "Unknown")} | ${row.birth_date || fallbackLabel()}`,
+      mgmt_primary: row.sales_entity || fallbackLabel(),
       mgmt_secondary: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),
       customer_type_label: row.customer_type === "Corporate" ? t("corporate") : t("individual"),
       consent_status_label: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),

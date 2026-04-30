@@ -143,7 +143,7 @@ const router = createRouter({
       name: "customer-list",
       component: CustomerList,
       meta: {
-        title: "Customer Management",
+        title: "Müşteriler",
         section: "Sales & Portfolio",
       },
     },
@@ -333,8 +333,8 @@ const router = createRouter({
       component: CustomerDetail,
       props: true,
       meta: {
-        title: "Customer Details",
-        section: "Customer",
+        title: "Müşteri Detayı",
+        section: "Müşteri",
       },
     },
     ...AUX_WORKBENCH_ROUTE_DEFS.flatMap((def) => [

@@ -91,8 +91,12 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     return sharedFormatMoney(localeCode.value, val, currency);
   }
 
+  function formatDateOrFallback(val) {
+    return val ? formatDate(val) : t("unspecified");
+  }
+
   function formatFileSize(bytes) {
-    if (!bytes || Number(bytes) <= 0) return "-";
+    if (!bytes || Number(bytes) <= 0) return t("unspecified");
     const kilobytes = Number(bytes) / 1024;
     if (kilobytes < 1024) {
       return `${kilobytes.toFixed(1)} KB`;
@@ -153,26 +157,28 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       key: "birth_date",
       label: t("birth_date"),
       value: customer.value.birth_date,
-      displayValue: formatDate(customer.value.birth_date),
+      displayValue: formatDateOrFallback(customer.value.birth_date),
       type: "date",
+      unspecifiedLabel: t("unspecified"),
     },
     {
       key: "gender",
       label: t("gender"),
       value: customer.value.gender,
-      displayValue: t(customer.value.gender?.toLowerCase()) || customer.value.gender || "-",
+      displayValue: customer.value.gender ? (t(customer.value.gender?.toLowerCase()) || customer.value.gender) : t("unspecified"),
       type: "select",
       options: [
         { label: t("male"), value: "Male" },
         { label: t("female"), value: "Female" },
         { label: t("other"), value: "Other" },
       ],
+      unspecifiedLabel: t("unspecified"),
     },
     {
       key: "marital_status",
       label: t("marital_status"),
       value: customer.value.marital_status,
-      displayValue: t(customer.value.marital_status?.toLowerCase()) || customer.value.marital_status || "-",
+      displayValue: customer.value.marital_status ? (t(customer.value.marital_status?.toLowerCase()) || customer.value.marital_status) : t("unspecified"),
       type: "select",
       options: [
         { label: t("single"), value: "Single" },
@@ -180,12 +186,14 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
         { label: t("divorced"), value: "Divorced" },
         { label: t("widowed"), value: "Widowed" },
       ],
+      unspecifiedLabel: t("unspecified"),
     },
     {
       key: "occupation",
       label: t("occupation"),
       value: customer.value.occupation,
       type: "text",
+      unspecifiedLabel: t("unspecified"),
     },
   ]);
 
@@ -196,6 +204,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       value: customer.value.office_branch,
       type: "text", // Should be a link ideally, but for now text
       disabled: true, // Typically branch shouldn't be edited inline easily without a search
+      unspecifiedLabel: t("unspecified"),
     },
     {
       key: "assigned_agent",
@@ -203,6 +212,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       value: customer.value.assigned_agent,
       type: "text", // Link would be better
       disabled: true,
+      unspecifiedLabel: t("unspecified"),
     },
     {
       key: "consent_status",

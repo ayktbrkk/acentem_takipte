@@ -3,17 +3,17 @@
     :breadcrumb="t('customers_breadcrumb')"
     :title="t('customers')"
     :record-count="summary.total"
-    :record-count-label="t('total_customers')"
+    :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <button class="btn btn-primary" @click="showQuickCreateCustomer = true">
-        <FeatherIcon name="plus" class="h-4 w-4" />
-        {{ t("new_customer") }}
-      </button>
-      <button class="btn btn-outline" @click="reload">
+      <ActionButton variant="secondary" size="sm" @click="reload">
         <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t("refresh") }}
-      </button>
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="showQuickCreateCustomer = true">
+        <FeatherIcon name="plus" class="h-4 w-4" />
+        {{ t("new_customer") }}
+      </ActionButton>
     </template>
 
     <template #metrics>
@@ -68,7 +68,7 @@
 
         <div class="mt-4 flex items-center justify-between px-2">
           <p class="text-xs font-medium text-slate-400">
-            {{ t("showing") }} {{ rows.length }} / {{ summary.total }} {{ t('total_customers') }}
+            {{ rows.length }} / {{ summary.total }} {{ t('showingRecords') }}
           </p>
           <div class="flex items-center gap-2">
             <button

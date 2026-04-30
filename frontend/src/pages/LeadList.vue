@@ -4,7 +4,7 @@
     :title="t('leads')"
     :subtitle="t('subtitle')"
     :record-count="summary.total"
-    :record-count-label="t('total_leads')"
+    :record-count-label="t('recordCount')"
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="reload">
@@ -85,7 +85,7 @@
 
         <div class="mt-4 flex items-center justify-between px-2">
           <p class="text-xs font-medium text-slate-400">
-            {{ t("showing") }} {{ rows.length }} / {{ summary.total }} {{ t('total_leads') }}
+            {{ rows.length }} / {{ summary.total }} {{ t('showingRecords') }}
           </p>
           <div class="flex items-center gap-2">
             <button

@@ -3,6 +3,8 @@ export const CUSTOMER_TRANSLATIONS = {
     customers: "Müşteriler",
     customers_breadcrumb: "Sigorta Operasyonları → Müşteriler",
     total_customers: "Toplam Müşteri",
+    recordCount: "kayıt",
+    showingRecords: "müşteri gösteriliyor",
     new_customer: "Yeni Müşteri",
     refresh: "Yenile",
     total: "Toplam",
@@ -81,6 +83,9 @@ export const CUSTOMER_TRANSLATIONS = {
     no_renewals: "Yenileme kaydı bulunamadı.",
     no_documents: "Doküman bulunamadı.",
     no_activities: "Aktivite bulunamadı.",
+    unspecified: "Belirtilmemiş",
+    save_success: "Kayıt başarıyla güncellendi.",
+    save_failed: "Güncelleme başarısız oldu. Lütfen tekrar deneyin.",
     
     // Tooltips/Status
     load_error_title: "Veri Yüklenemedi",
@@ -91,6 +96,8 @@ export const CUSTOMER_TRANSLATIONS = {
     customers: "Customers",
     customers_breadcrumb: "Insurance Operations → Customers",
     total_customers: "Total Customers",
+    recordCount: "records",
+    showingRecords: "customers shown",
     new_customer: "New Customer",
     refresh: "Refresh",
     total: "Total",
@@ -169,6 +176,9 @@ export const CUSTOMER_TRANSLATIONS = {
     no_renewals: "No renewals found.",
     no_documents: "No documents found.",
     no_activities: "No activities found.",
+    unspecified: "Unspecified",
+    save_success: "Record updated successfully.",
+    save_failed: "Update failed. Please try again.",
     
     // Tooltips/Status
     load_error_title: "Failed to Load",
