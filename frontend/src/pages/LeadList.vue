@@ -7,13 +7,13 @@
     :record-count-label="t('total_leads')"
   >
     <template #actions>
-      <ActionButton variant="primary" size="sm" @click="openQuickLeadDialog()">
-        <FeatherIcon name="plus" class="h-4 w-4" />
-        {{ t("new_lead") }}
-      </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="reload">
         <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="openQuickLeadDialog()">
+        <FeatherIcon name="plus" class="h-4 w-4" />
+        {{ t("new_lead") }}
       </ActionButton>
     </template>
 

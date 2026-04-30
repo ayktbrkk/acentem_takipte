@@ -34,13 +34,13 @@
           <FeatherIcon name="download" class="h-4 w-4" />
           {{ t("exportXlsx") }}
         </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="refreshOffers">
+          <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+          {{ t("refresh") }}
+        </ActionButton>
         <ActionButton variant="primary" size="sm" @click="openQuickOfferDialog">
           <FeatherIcon name="plus" class="h-4 w-4" />
           {{ t("newOffer") }}
-        </ActionButton>
-        <ActionButton variant="secondary" size="sm" :aria-label="t('refresh')" @click="refreshOffers">
-          <FeatherIcon name="refresh-cw" class="h-4 w-4" />
-          <span class="sr-only">{{ t("refresh") }}</span>
         </ActionButton>
       </div>
     </template>

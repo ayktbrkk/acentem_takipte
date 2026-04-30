@@ -6,14 +6,14 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <button class="btn btn-outline" type="button" @click="downloadPolicyExport('xlsx')">
+      <ActionButton variant="secondary" size="sm" @click="downloadPolicyExport('xlsx')">
         <FeatherIcon name="download" class="h-4 w-4" />
         {{ t("exportXlsx") }}
-      </button>
-      <button class="btn btn-primary" type="button" @click="openQuickPolicyDialog()">
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="openQuickPolicyDialog()">
         <FeatherIcon name="plus" class="h-4 w-4" />
         {{ t("newPolicy") }}
-      </button>
+      </ActionButton>
     </template>
 
     <template #metrics>
@@ -133,6 +133,7 @@ import { usePolicyListQuickPolicy } from "../composables/usePolicyListQuickPolic
 import { usePolicyListRuntime } from "../composables/usePolicyListRuntime";
 import { usePolicyListTableData } from "../composables/usePolicyListTableData";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
