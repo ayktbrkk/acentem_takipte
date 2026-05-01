@@ -140,8 +140,23 @@
 
   .at-quick-create-shell__body {
     @apply flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pr-1;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+  }
+
+  .at-quick-create-shell__body::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .at-quick-create-shell__body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .at-quick-create-shell__body::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgba(148, 163, 184, 0.2);
+  }
+
+  .at-quick-create-shell__body::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.35);
   }
 
   .at-quick-create-shell__intro {
