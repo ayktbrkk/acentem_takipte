@@ -73,12 +73,18 @@ def get_queue_snapshot(
 
     # Filter for Outbox
     outbox_filters = {}
-    if customer: outbox_filters["customer"] = customer
-    if status: outbox_filters["status"] = status
-    if channel: outbox_filters["channel"] = channel
-    if reference_doctype: outbox_filters["reference_doctype"] = reference_doctype
-    if reference_name: outbox_filters["reference_name"] = reference_name
-    if office_branch: outbox_filters["office_branch"] = office_branch
+    if customer:
+        outbox_filters["customer"] = customer
+    if status:
+        outbox_filters["status"] = status
+    if channel:
+        outbox_filters["channel"] = channel
+    if reference_doctype:
+        outbox_filters["reference_doctype"] = reference_doctype
+    if reference_name:
+        outbox_filters["reference_name"] = reference_name
+    if office_branch:
+        outbox_filters["office_branch"] = office_branch
 
     outbox = frappe.get_list(
         "AT Notification Outbox",
@@ -92,9 +98,12 @@ def get_queue_snapshot(
     draft_filters = {
         "status": ["in", [ATNotificationDraftStatus.DRAFT, ATNotificationDraftStatus.QUEUED, ATNotificationDraftStatus.FAILED]]
     }
-    if customer: draft_filters["customer"] = customer
-    if channel: draft_filters["channel"] = channel
-    if office_branch: draft_filters["office_branch"] = office_branch
+    if customer:
+        draft_filters["customer"] = customer
+    if channel:
+        draft_filters["channel"] = channel
+    if office_branch:
+        draft_filters["office_branch"] = office_branch
 
     drafts = frappe.get_list(
         "AT Notification Draft",

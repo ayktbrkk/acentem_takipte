@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 # audit(f401): `nowdate` is no longer needed after completion timestamps moved to
 # `now_datetime()` so tasks keep time-of-day precision.

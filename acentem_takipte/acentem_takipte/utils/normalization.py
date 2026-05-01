@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
-from frappe.utils import cstr, getdate, flt
+from frappe.utils import getdate, flt
 
 
 def normalize_option(value: str | None) -> str | None:

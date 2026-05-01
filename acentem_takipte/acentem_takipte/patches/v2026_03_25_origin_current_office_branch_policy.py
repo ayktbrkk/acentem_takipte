@@ -58,7 +58,7 @@ def execute():
     for idx_name, columns in indexes:
         # Check if index exists
         existing = frappe.db.sql(
-            f"SHOW INDEXES FROM `tabAT Policy` WHERE Key_name = %s",
+            "SHOW INDEXES FROM `tabAT Policy` WHERE Key_name = %s",
             (idx_name,),
         )
         if not existing:

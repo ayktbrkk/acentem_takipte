@@ -9,7 +9,6 @@ from acentem_takipte.acentem_takipte.services.quick_create import (
 )
 from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
     _assert_create_permission,
-    _normalize_date,
     _normalize_datetime,
     _normalize_doctype_or_blank,
     _normalize_link,

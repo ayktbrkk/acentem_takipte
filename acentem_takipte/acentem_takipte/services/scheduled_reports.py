@@ -3,10 +3,35 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from datetime import timedelta
 from typing import Any
 
 import frappe
+from frappe import _
 from frappe.utils import cint, getdate, nowdate, flt
+
+from acentem_takipte.acentem_takipte.communication import enqueue_notification_draft
+from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+    coerce_export_format,
+    coerce_filters,
+    coerce_string_list,
+)
+from acentem_takipte.acentem_takipte.services.report_exports import (
+    build_report_filename,
+    build_report_title,
+    render_report_html_summary,
+    render_report_pdf,
+    render_report_xlsx,
+)
+from acentem_takipte.acentem_takipte.services.report_registry import (
+    REPORT_DEFINITIONS,
+    build_report_payload,
+)
+from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
+from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
+from acentem_takipte.acentem_takipte.utils.normalization import (
+    normalize_option as shared_normalize_option,
+)
 
 
 def evaluate_report_alerts(rows: list[dict[str, Any]], alerts: list[dict[str, Any]]) -> bool:
@@ -35,19 +60,27 @@ def evaluate_report_alerts(rows: list[dict[str, Any]], alerts: list[dict[str, An
                 # Try numeric comparison
                 f_val = flt(val)
                 f_threshold = flt(threshold)
-                if operator == ">": is_match = f_val > f_threshold
-                elif operator == "<": is_match = f_val < f_threshold
-                elif operator == "==": is_match = f_val == f_threshold
-                elif operator == "!=": is_match = f_val != f_threshold
+                if operator == ">":
+                    is_match = f_val > f_threshold
+                elif operator == "<":
+                    is_match = f_val < f_threshold
+                elif operator == "==":
+                    is_match = f_val == f_threshold
+                elif operator == "!=":
+                    is_match = f_val != f_threshold
             except (ValueError, TypeError):
                 # Fallback to string comparison
                 s_val = str(val).strip()
                 s_threshold = str(threshold).strip()
-                if operator == "==": is_match = s_val == s_threshold
-                elif operator == "!=": is_match = s_val != s_threshold
+                if operator == "==":
+                    is_match = s_val == s_threshold
+                elif operator == "!=":
+                    is_match = s_val != s_threshold
                 # >, < don't make much sense for non-numeric strings but we can do it
-                elif operator == ">": is_match = s_val > s_threshold
-                elif operator == "<": is_match = s_val < s_threshold
+                elif operator == ">":
+                    is_match = s_val > s_threshold
+                elif operator == "<":
+                    is_match = s_val < s_threshold
 
             if is_match:
                 match_count += 1
@@ -59,29 +92,6 @@ def evaluate_report_alerts(rows: list[dict[str, Any]], alerts: list[dict[str, An
 
     # Combined logic: All defined alerts must pass (AND between different alerts)
     return all(results) if results else True
-
-from acentem_takipte.acentem_takipte.communication import enqueue_notification_draft
-from acentem_takipte.acentem_takipte.services.export_payload_utils import (
-    coerce_export_format,
-    coerce_filters,
-    coerce_string_list,
-)
-from acentem_takipte.acentem_takipte.services.report_exports import (
-    build_report_filename,
-    build_report_title,
-    render_report_pdf,
-    render_report_xlsx,
-    render_report_html_summary,
-)
-from acentem_takipte.acentem_takipte.services.report_registry import (
-    REPORT_DEFINITIONS,
-    build_report_payload,
-)
-from acentem_takipte.acentem_takipte.utils.normalization import (
-    normalize_option as shared_normalize_option,
-)
-from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
-from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 
 
 def load_scheduled_report_configs() -> list[dict[str, Any]]:
@@ -242,7 +252,6 @@ def delete_scheduled_report_config(index: int) -> dict[str, int]:
 
 
 def get_scheduled_reports_timeline(days: int = 30) -> list[dict[str, Any]]:
-    from datetime import timedelta
     configs = [c for c in load_scheduled_report_configs() if cint(c.get("enabled", 1))]
     start_date = getdate(nowdate())
     timeline = []

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, getdate
 

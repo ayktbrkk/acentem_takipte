@@ -20,7 +20,6 @@ from acentem_takipte.acentem_takipte.services.quick_create_core import (
 )
 from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
     _assert_create_permission,
-    _digits_only,
     _normalize_date,
     _normalize_datetime,
     _normalize_link,

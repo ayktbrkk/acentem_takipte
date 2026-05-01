@@ -50,7 +50,7 @@ def execute():
 
     for idx_name, columns in indexes:
         existing = frappe.db.sql(
-            f"SHOW INDEXES FROM `tabAT Customer` WHERE Key_name = %s",
+            "SHOW INDEXES FROM `tabAT Customer` WHERE Key_name = %s",
             (idx_name,),
         )
         if not existing:

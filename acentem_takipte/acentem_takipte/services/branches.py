@@ -4,6 +4,7 @@ from typing import Any
 from collections import defaultdict, deque
 
 import frappe
+from frappe import _
 from frappe.utils import getdate, today
 
 from acentem_takipte.acentem_takipte.utils.cache_keys import (

@@ -267,7 +267,6 @@ FIELD_REGISTRY: dict[tuple[str, str], tuple] = {
     ),
     # ── Date fields ──
     ("AT Call Note", "next_follow_up_on"): ("date",),
-    ("AT Claim", "next_follow_up_on"): ("date",),
     ("AT Ownership Assignment", "due_date"): ("date",),
     ("AT Task", "due_date"): ("date",),
     # ── Datetime fields ──

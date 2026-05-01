@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
+from frappe import _
 from frappe.utils import cint
 
 from acentem_takipte.acentem_takipte.api.security import assert_authenticated, assert_doctype_permission
