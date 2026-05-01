@@ -377,7 +377,3 @@ watch(() => props.saving, (newVal, oldVal) => {
   }
 });
 </script>
-
-<style scoped>
-/* Scoped styles removed in favor of global .at-input and .field-label in style.css */
-</style>

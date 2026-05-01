@@ -168,6 +168,10 @@ def list_pending() -> list:
 def list_audit_events(limit: str = "50", user: str = "") -> list:
     """List break-glass audit events for authorized reviewers.
 
+    audit(whitelist-usage): No active `frontend/src` caller was found during the
+    May 2026 audit. Keep the endpoint because compliance reviewers may still hit
+    it via manual/admin tooling outside the SPA.
+
     Only users with break-glass audit access can read this endpoint.
     """
     if not can_view_break_glass_audit(frappe.session.user):

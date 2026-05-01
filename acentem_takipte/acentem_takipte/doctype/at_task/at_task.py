@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import get_datetime, getdate, now_datetime, nowdate
+# audit(f401): `nowdate` is no longer needed after completion timestamps moved to
+# `now_datetime()` so tasks keep time-of-day precision.
+from frappe.utils import get_datetime, getdate, now_datetime
 
 
 VALID_TASK_TYPES = {"Follow-up", "Visit", "Call", "Collection", "Claim", "Renewal", "Review", "Other"}

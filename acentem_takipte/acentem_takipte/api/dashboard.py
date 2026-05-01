@@ -15,12 +15,9 @@ from frappe.utils import cint, flt, getdate, add_days, nowdate
 from acentem_takipte.acentem_takipte.api.v2 import (
     constants as dashboard_constants,
 )
-from acentem_takipte.acentem_takipte.api.v2 import (
-    details_lead as dashboard_lead_detail_builder,
-)
-from acentem_takipte.acentem_takipte.api.v2 import (
-    details_offer as dashboard_offer_detail_builder,
-)
+# audit(f401): The detail payload endpoints now import their builders lazily
+# inside the whitelist functions below. The old eager v2 detail imports were left
+# behind after the dashboard refactor and are intentionally not loaded here.
 from acentem_takipte.acentem_takipte.api.v2 import (
     filters as dashboard_filters,
 )
@@ -40,14 +37,12 @@ from acentem_takipte.acentem_takipte.api.v2 import (
     serializers as dashboard_serializers,
 )
 from acentem_takipte.acentem_takipte.api.dashboard_scopes import (
-    _build_claim_where,
     _build_lead_where,
     _build_payment_collection_where,
     _build_payment_where,
     _build_policy_where,
     _get_scoped_customer_names,
     _get_scoped_policy_names,
-    _qualified_field,
 )
 from acentem_takipte.acentem_takipte.api.v2 import (
     tab_payload as dashboard_tab_sections,
@@ -59,23 +54,11 @@ from acentem_takipte.acentem_takipte.services.branches import (
     normalize_requested_office_branch,
 )
 from acentem_takipte.acentem_takipte.services.privacy_masking import masked_query_gate
-from acentem_takipte.acentem_takipte.services.query_isolation import (
-    build_scope_filters_dict,
-)
+# audit(f401): `build_scope_filters_dict` and the eager 360 builder imports below
+# were used by the pre-refactor dashboard path. Current endpoints either compose
+# scope data via helpers in this file or import detail builders lazily.
 from acentem_takipte.acentem_takipte.services.customer_360 import (
     build_customer_360_payload,
-)
-from acentem_takipte.acentem_takipte.services.offer_360 import (
-    build_offer_360_payload,
-)
-from acentem_takipte.acentem_takipte.services.lead_360 import (
-    build_lead_360_payload,
-)
-from acentem_takipte.acentem_takipte.services.claim_360 import (
-    get_claim_360_payload,
-)
-from acentem_takipte.acentem_takipte.services.payment_360 import (
-    get_payment_360_payload,
 )
 from acentem_takipte.acentem_takipte.services.follow_up_sla import (
     build_follow_up_sla_payload,

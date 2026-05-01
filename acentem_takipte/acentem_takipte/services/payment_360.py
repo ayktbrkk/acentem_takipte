@@ -1,6 +1,4 @@
 import frappe
-from frappe import _
-from frappe.utils import flt, getdate
 
 
 def _get_customer_brief(customer_name):

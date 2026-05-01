@@ -1,7 +1,6 @@
 from types import SimpleNamespace
-from unittest.mock import MagicMock
 
-import acentem_takipte.acentem_takipte.notifications
+import acentem_takipte.acentem_takipte.notifications as notifications
 from acentem_takipte.acentem_takipte.services.notifications import build_notification_draft_payloads
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import acentem_takipte.acentem_takipte.tasks
+import acentem_takipte.acentem_takipte.tasks as tasks
 def test_run_scheduled_reports_logic_enqueues_queued_outboxes(monkeypatch):
     monkeypatch.setattr(
         tasks,

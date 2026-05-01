@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
 from acentem_takipte.acentem_takipte.services import quick_create_helpers
 
 

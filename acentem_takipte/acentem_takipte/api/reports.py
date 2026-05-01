@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
-from frappe import _
 from frappe.utils import cint
+
+# audit(f401): `_` became unused after report API error and permission messages
+# were inlined. Leave this note so the import is not silently reintroduced.
 
 from acentem_takipte.acentem_takipte.api.security import assert_authenticated, assert_doctype_permission, assert_post_request, assert_roles
 from acentem_takipte.acentem_takipte.services.export_payload_utils import (

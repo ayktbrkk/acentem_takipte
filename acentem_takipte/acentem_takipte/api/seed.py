@@ -66,6 +66,9 @@ def _assert_demo_seed_access(*, reset_existing: int | str = 0) -> None:
 
 @frappe.whitelist()
 def seed_demo_data(reset_existing: int | str = 0) -> dict[str, Any]:
+    # audit(whitelist-usage): No active `frontend/src` caller was found in the
+    # May 2026 audit. This remains whitelisted for bench/manual smoke seeding and
+    # security regression tests guarded by `at_enable_demo_endpoints`.
     _assert_demo_seed_access(reset_existing=reset_existing)
     reset = bool(cint(reset_existing))
     if reset:

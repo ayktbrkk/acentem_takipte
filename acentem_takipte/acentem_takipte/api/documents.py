@@ -617,6 +617,10 @@ def share_document(docname: str, method: str = "whatsapp") -> dict:
     """
     Return a shareable URL for an AT Document record.
 
+    audit(whitelist-usage): No active `frontend/src` caller was found during the
+    May 2026 audit. Keep this endpoint for manual API consumers and the planned
+    document-share UI rather than deleting it outright.
+
     Sharing is intentionally denied for sensitive documents and private files.
     WhatsApp shares return a wa.me deep-link pre-filled with the file URL.
 
@@ -663,6 +667,10 @@ def share_document(docname: str, method: str = "whatsapp") -> dict:
 @frappe.whitelist()
 def toggle_verified(docname: str) -> dict:
     """Toggle is_verified flag on an AT Document record.
+
+    audit(whitelist-usage): No active `frontend/src` caller was found during the
+    May 2026 audit. This stays in place because the document-management rollout
+    plan and tests still reference the verification action.
 
     Returns:
         {"is_verified": int}

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import frappe
-from frappe.utils import add_days, cint, getdate, nowdate
+# audit(f401): `add_days` was used by an older date-window helper that was
+# removed when the workbench queries were split into smaller builders.
+from frappe.utils import cint, getdate, nowdate
 
 from acentem_takipte.acentem_takipte.api.dashboard_scopes import (
     _get_scoped_policy_names,

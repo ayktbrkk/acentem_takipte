@@ -199,7 +199,3 @@ async function handleSave() {
 
 // Ensure edit mode closes if saving prop changes externally (handled via callback mostly)
 </script>
-
-<style scoped>
-/* Scoped styles removed in favor of global .at-input and .field-label in style.css */
-</style>

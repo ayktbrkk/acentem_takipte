@@ -248,7 +248,7 @@
                     <template #trailing>
                        <p class="text-xs text-slate-500">{{ formatDate(item.timestamp) }}</p>
                     </template>
-                    <div class="mt-2 text-sm text-slate-600" v-html="item.payload?.content || ''"></div>
+                    <div class="mt-2 whitespace-pre-line text-sm text-slate-600">{{ item.payload?.content || "" }}</div>
                   </MetaListCard>
                 </div>
              </SectionPanel>

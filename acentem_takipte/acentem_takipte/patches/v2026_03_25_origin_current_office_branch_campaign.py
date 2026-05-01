@@ -1,5 +1,6 @@
 import frappe
-from frappe.utils import now
+
+# audit(f401): this patch copies office-branch values in SQL only; `now` is unused.
 
 
 def execute():

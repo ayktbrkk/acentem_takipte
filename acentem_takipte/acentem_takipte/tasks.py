@@ -14,7 +14,6 @@ from acentem_takipte.acentem_takipte.renewal.pipeline import (
     run_renewal_task_creation,
     run_stale_renewal_task_remediation,
 )
-from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
 from acentem_takipte.acentem_takipte.services.campaigns import execute_due_campaigns
 from acentem_takipte.acentem_takipte.services.customer_segments import refresh_due_customer_segment_snapshots
 from acentem_takipte.acentem_takipte.services.report_snapshots import refresh_report_snapshots
@@ -23,14 +22,13 @@ from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
 from acentem_takipte.acentem_takipte.renewal.service import (
-    build_renewal_key,
     RENEWAL_LOOKAHEAD_DAYS,
     MAX_POLICIES_PER_RUN,
-    MAX_PAYMENTS_PER_RUN,
 )
 
-# RENEWAL_LOOKAHEAD_DAYS and build_renewal_key are now imported from renewal.service
-# to avoid duplication across the task runner and the service layer.
+# audit(f401): `build_renewal_key`, `build_renewal_stage_key`, and
+# `MAX_PAYMENTS_PER_RUN` belonged to the older inline renewal/payment loops. The
+# current task runner delegates those details to service-layer helpers.
 
 
 def _extract_job_id(job: Any) -> str | None:

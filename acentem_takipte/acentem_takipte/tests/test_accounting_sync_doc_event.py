@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-import acentem_takipte.acentem_takipte.accounting
+import acentem_takipte.acentem_takipte.accounting as accounting
 class _FakeCache:
     def __init__(self):
         self.store = {}

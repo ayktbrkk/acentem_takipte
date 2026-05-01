@@ -10,10 +10,9 @@ Tests:
 """
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import frappe
-from frappe.utils import add_to_date, now_datetime, get_datetime
-from datetime import timedelta
+from frappe.utils import now_datetime
 
 # Import break-glass service
 try:
@@ -25,7 +24,6 @@ try:
         expire_break_glass_grants,
         can_view_break_glass_audit,
         detect_break_glass_anomalies,
-        BreakGlassAccessDenied
     )
 except ImportError:
     # Handle case where module isn't loaded yet
@@ -206,7 +204,7 @@ class TestBreakGlassWorkflow(unittest.TestCase):
         request_id = request_result["request_id"]
         
         with patch("frappe.model.document.Document.validate_set_only_once", lambda self: None):
-            approve_result = approve_break_glass_request(
+            approve_break_glass_request(
                 request_id=request_id,
                 duration_hours=2,
             )
@@ -229,12 +227,11 @@ class TestBreakGlassWorkflow(unittest.TestCase):
         # This would normally be prevented by duration validation,
         # but we're testing the expiration check logic
         
-        request_result = create_break_glass_request(
+        create_break_glass_request(
             access_type="customer_data",
             justification="Request that will expire immediately",
             user=self.test_user
         )
-        request_id = request_result["request_id"]
         
         # Manually create an expired grant for testing
         # (In production, approving sets a future expires_at)
@@ -260,7 +257,7 @@ class TestBreakGlassWorkflow(unittest.TestCase):
         request_id = request_result["request_id"]
         
         with patch("frappe.model.document.Document.validate_set_only_once", lambda self: None):
-            approve_result = approve_break_glass_request(
+            approve_break_glass_request(
                 request_id=request_id,
                 duration_hours=1,
             )

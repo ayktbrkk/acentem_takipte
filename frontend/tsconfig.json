@@ -2,16 +2,17 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
-    "baseUrl": ".",
+    "forceConsistentCasingInFileNames": true,
     "jsx": "preserve",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,
     "paths": {
-      "@/*": ["src/*"],
-      "frappe-ui": ["src/types/frappe-ui.d.ts"]
+      "@/*": ["./src/*"],
+      "frappe-ui": ["./src/types/frappe-ui.d.ts"]
     },
     "skipLibCheck": true,
+    "strict": true,
     "target": "ES2020",
     "types": ["node", "vite/client"]
   },

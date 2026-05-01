@@ -20,7 +20,6 @@ Handler format: (handler_type, *handler_args)
 
 from __future__ import annotations
 
-import frappe
 from frappe.utils import flt
 
 from acentem_takipte.acentem_takipte.utils.statuses import (

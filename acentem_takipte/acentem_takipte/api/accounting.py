@@ -8,7 +8,9 @@ from acentem_takipte.acentem_takipte.accounting import (
     run_reconciliation,
     sync_accounting_entries,
 )
-from acentem_takipte.acentem_takipte.utils.statuses import ATAccountingEntryStatus, ATReconciliationItemStatus
+# audit(f401): `ATAccountingEntryStatus` was part of an older API surface but the
+# current accounting endpoints only read reconciliation status here.
+from acentem_takipte.acentem_takipte.utils.statuses import ATReconciliationItemStatus
 from acentem_takipte.acentem_takipte.api.security import (
     assert_authenticated,
     assert_doctype_permission,

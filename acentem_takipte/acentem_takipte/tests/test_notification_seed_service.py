@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import types
 from unittest.mock import patch
 
 from acentem_takipte.acentem_takipte.notification_seed_service import upsert_default_notification_templates

@@ -5,6 +5,10 @@ from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import 
     log_decision_event,
 )
 
+# audit(facade): This package re-exports the quick-create surface on purpose.
+# Local references are sparse because callers usually import symbols from the
+# package namespace, not from this file body.
+
 
 def _insert_doc(payload: dict, result_key: str) -> dict[str, str]:
     doc = frappe.get_doc(payload)
@@ -120,3 +124,62 @@ from acentem_takipte.acentem_takipte.services.quick_create_workflow import (  # 
     create_quick_activity,
     create_quick_reminder,
 )
+
+__all__ = [
+    "_as_check",
+    "_assert_create_permission",
+    "_assert_delete_permission",
+    "_assert_write_permission",
+    "_digits_only",
+    "_insert_doc",
+    "_normalize_date",
+    "_normalize_datetime",
+    "_normalize_doctype_or_blank",
+    "_normalize_link",
+    "_normalize_option",
+    "_normalize_source_name",
+    "_resolve_office_branch",
+    "_split_full_name",
+    "create_activity",
+    "create_call_note",
+    "create_campaign",
+    "create_claim",
+    "create_customer",
+    "create_customer_relation",
+    "create_insured_asset",
+    "create_lead",
+    "create_ownership_assignment",
+    "create_payment",
+    "create_policy",
+    "create_quick_accounting_entry",
+    "create_quick_activity",
+    "create_quick_branch",
+    "create_quick_call_note",
+    "create_quick_campaign",
+    "create_quick_claim",
+    "create_quick_customer",
+    "create_quick_customer_relation",
+    "create_quick_insurance_company",
+    "create_quick_insured_asset",
+    "create_quick_lead",
+    "create_quick_notification_template",
+    "create_quick_ownership_assignment",
+    "create_quick_payment",
+    "create_quick_policy",
+    "create_quick_reconciliation_item",
+    "create_quick_reminder",
+    "create_quick_renewal_task",
+    "create_quick_sales_entity",
+    "create_quick_segment",
+    "create_quick_task",
+    "create_reminder",
+    "create_renewal_task",
+    "create_segment",
+    "create_task",
+    "delete_aux_record",
+    "delete_quick_aux_record",
+    "log_decision_event",
+    "search_quick_options",
+    "update_aux_record",
+    "update_quick_aux_record",
+]

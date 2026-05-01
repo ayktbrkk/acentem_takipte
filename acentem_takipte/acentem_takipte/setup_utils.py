@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-
 import frappe
 from frappe.permissions import add_permission, update_permission_property
 

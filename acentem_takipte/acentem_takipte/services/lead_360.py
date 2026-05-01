@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import frappe
-from frappe import _
 from frappe.utils.logger import get_logger
 
 from acentem_takipte.acentem_takipte.services.document_center import build_document_profile

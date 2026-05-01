@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 from acentem_takipte.acentem_takipte.api import communication
 
 

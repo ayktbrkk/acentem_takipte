@@ -103,7 +103,7 @@ def expire_stale() -> dict[str, int]:
         return {"expired": 0}
 
     # Batch UPDATE instead of per-record save+commit loop (N+1 fix)
-    result = frappe.db.sql(
+    frappe.db.sql(
         """
         UPDATE `tabAT Emergency Access`
         SET status = 'Expired', modified = NOW()

@@ -1,5 +1,4 @@
 import frappe
-from frappe import _
 
 @frappe.whitelist()
 def get_claim_360_payload(name):

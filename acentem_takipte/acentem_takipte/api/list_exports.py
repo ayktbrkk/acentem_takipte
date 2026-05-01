@@ -34,6 +34,9 @@ def _get_export_payload(screen: str, query: dict | str | None = None, limit: int
 
 @frappe.whitelist()
 def get_screen_export_payload(screen: str, query: dict | str | None = None, limit: int = 1000) -> dict:
+    # audit(whitelist-usage): No direct `frontend/src` caller was found in the
+    # May 2026 audit. Retain the payload endpoint for tests/manual export tooling
+    # so export schema inspection does not depend on download side effects.
     return _get_export_payload(screen, query=query, limit=limit)
 
 

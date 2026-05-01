@@ -1,5 +1,6 @@
 import frappe
-from frappe.utils import now
+
+# audit(f401): this migration no longer stamps rows directly, so `now` is not needed.
 
 
 def execute():

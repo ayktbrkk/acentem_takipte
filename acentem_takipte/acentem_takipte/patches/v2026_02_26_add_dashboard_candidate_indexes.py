@@ -68,12 +68,8 @@ def _index_exists(*, index_name: str, table_name: str, db_type: str) -> bool:
 
 def _is_duplicate_index_error(exc: Exception) -> bool:
     message = str(exc or "").lower()
-    duplicate_markers = [
-        "duplicate key name",
-        "already exists",
-        "relation",
-        "index",
-    ]
+    # audit(f841): the earlier helper built a marker list, but the duplicate-index
+    # check now uses narrower explicit phrases to avoid masking unrelated SQL errors.
     # Require "already exists" or duplicate phrase to avoid masking unrelated SQL issues.
     if "duplicate key name" in message:
         return True
