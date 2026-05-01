@@ -217,6 +217,7 @@ Even though this README is product-focused, a few implementation details are use
 
 - frontend UI work should follow `docs/DESIGN_GUIDELINES.md` as the canonical design constitution
 - PR and self-review for user-facing frontend changes should use `docs/UI_REVIEW_CHECKLIST.md`
+- canonical Frappe hooks live in `acentem_takipte/hooks.py`; the repository-root `hooks.py` is only a lightweight pointer and is not loaded at runtime
 - `frontend/` contains the SPA source and test setup.
 - compiled assets in `acentem_takipte/public/frontend/` are generated artifacts and should not be committed
 - the `/at` route injects the latest built Vite assets dynamically
