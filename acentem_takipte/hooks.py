@@ -167,6 +167,7 @@ scheduler_events = {
         "0 * * * *": [
             "acentem_takipte.acentem_takipte.tasks.run_accounting_sync_job",
             "acentem_takipte.acentem_takipte.services.break_glass.expire_break_glass_grants",
+            "acentem_takipte.acentem_takipte.services.ops_alerts.run_error_log_alert_monitor",
         ],
         # 01:00 — campaign dispatch + customer segment snapshot
         "0 1 * * *": [
@@ -187,6 +188,7 @@ scheduler_events = {
     # 00:00 — urgent lightweight daily ops
     "daily": [
         "acentem_takipte.acentem_takipte.tasks.create_renewal_tasks",
+        "acentem_takipte.acentem_takipte.tasks.run_policy_renewal_reminder_job",
         "acentem_takipte.acentem_takipte.tasks.run_stale_renewal_task_job",
         "acentem_takipte.acentem_takipte.tasks.run_payment_due_job",
         "acentem_takipte.acentem_takipte.services.break_glass.expire_stale",

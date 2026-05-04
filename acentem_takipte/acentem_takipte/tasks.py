@@ -27,6 +27,7 @@ from acentem_takipte.acentem_takipte.renewal.service import (
     MAX_POLICIES_PER_RUN,
     MAX_PAYMENTS_PER_RUN,
 )
+from acentem_takipte.acentem_takipte.renewal.reminders import resolve_stage_for_days
 from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
 
 # audit(facade): These renewal helpers remain re-exported from the task module
@@ -127,6 +128,22 @@ def run_payment_due_job(limit: int = 250) -> dict[str, Any]:
         job=job,
         queue="default",
         method="acentem_takipte.tasks._run_payment_due_logic",
+        limit=safe_limit,
+    )
+
+
+def run_policy_renewal_reminder_job(limit: int = 250) -> dict[str, Any]:
+    safe_limit = max(cint(limit), 1)
+    job = frappe.enqueue(
+        "acentem_takipte.tasks._run_policy_renewal_reminder_logic",
+        limit=safe_limit,
+        queue="default",
+        timeout=900,
+    )
+    return _queued_response(
+        job=job,
+        queue="default",
+        method="acentem_takipte.tasks._run_policy_renewal_reminder_logic",
         limit=safe_limit,
     )
 
@@ -277,6 +294,84 @@ def _run_payment_due_logic(limit: int = 250) -> dict[str, int]:
     return summary
 
 
+def _run_policy_renewal_reminder_logic(limit: int = 250) -> dict[str, int]:
+    today = getdate(nowdate())
+    reminder_windows = (30, 15, 7)
+    safe_limit = max(cint(limit), 1)
+
+    scanned = 0
+    created = 0
+    skipped_duplicate = 0
+    skipped_invalid = 0
+
+    for days_before_expiry in reminder_windows:
+        stage = resolve_stage_for_days(days_before_expiry)
+        if not stage:
+            continue
+
+        target_end_date = add_days(today, days_before_expiry)
+        policies = frappe.get_list(
+            "AT Policy",
+            filters={
+                "status": "Active",
+                "end_date": target_end_date,
+            },
+            fields=["name", "customer", "end_date"],
+            order_by="end_date asc",
+            limit_page_length=safe_limit,
+        )
+
+        scanned += len(policies)
+
+        for policy in policies:
+            policy_name = str(getattr(policy, "name", "") or "").strip()
+            customer = str(getattr(policy, "customer", "") or "").strip() or None
+            policy_end_date = getattr(policy, "end_date", None)
+            if not policy_name or not customer or not policy_end_date:
+                skipped_invalid += 1
+                continue
+
+            if _policy_renewal_notification_exists_today(policy_name, today):
+                skipped_duplicate += 1
+                continue
+
+            create_notification_drafts(
+                event_key="renewal_due",
+                template_key=stage.template_key,
+                reference_doctype="AT Policy",
+                reference_name=policy_name,
+                customer=customer,
+                context={
+                    "policy": policy_name,
+                    "policy_end_date": str(policy_end_date),
+                    "renewal_stage": stage.code,
+                    "renewal_dedupe_key": build_renewal_stage_key(
+                        policy_name,
+                        customer,
+                        stage.code,
+                        today,
+                    ),
+                },
+            )
+            created += 1
+
+    summary = {
+        "scanned": scanned,
+        "created": created,
+        "skipped_duplicate": skipped_duplicate,
+        "skipped_invalid": skipped_invalid,
+    }
+    frappe.logger("acentem_takipte").info(
+        "AT policy renewal reminder job summary: %s",
+        build_metric_event(
+            "policy.renewal_reminder_job",
+            dimensions={"component": "tasks"},
+            values=summary,
+        ),
+    )
+    return summary
+
+
 def _run_scheduled_reports_logic(frequency: str = "daily", limit: int = 10) -> dict[str, Any]:
     summary = dispatch_scheduled_reports(frequency=frequency, limit=limit)
     outbox_names = [str(item).strip() for item in (summary.pop("outboxes", []) or []) if str(item).strip()]
@@ -371,6 +466,23 @@ def _payment_notification_exists_today(payment_name: str, business_date) -> bool
             "reference_doctype": "AT Payment",
             "reference_name": payment_name,
             "event_key": "payment_due",
+            "creation": ["between", [start_of_day, end_of_day]],
+        },
+        fields=["name"],
+        limit_page_length=5,
+    )
+    return bool(rows)
+
+
+def _policy_renewal_notification_exists_today(policy_name: str, business_date) -> bool:
+    start_of_day = f"{business_date} 00:00:00"
+    end_of_day = f"{business_date} 23:59:59"
+    rows = frappe.get_all(
+        "AT Notification Draft",
+        filters={
+            "reference_doctype": "AT Policy",
+            "reference_name": policy_name,
+            "event_key": "renewal_due",
             "creation": ["between", [start_of_day, end_of_day]],
         },
         fields=["name"],

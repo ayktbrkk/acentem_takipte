@@ -96,32 +96,14 @@ class ATBreakGlassRequest(Document):
             )
     
     def on_submit(self):
-        """Log audit event after document submission."""
+        """Record a lightweight lifecycle log after document submission.
+
+        The canonical Error Log audit entry is emitted centrally from the
+        service-layer approval/rejection helpers. Keeping this hook side-effect
+        free avoids duplicate Error Log rows for the same incident.
+        """
         action = "approved" if self.status == "Approved" else "rejected"
-        
-        title = f"[Break-Glass Audit] {action.upper()} | {self.name}"
-        message = (
-            f"Request: {self.name}\n"
-            f"User: {self.user}\n"
-            f"Action: {action}\n"
-            f"Access Type: {self.access_type}\n"
-            f"Status: {self.status}\n"
-        )
-        
-        if self.approved_by:
-            message += f"Approved By: {self.approved_by}\n"
-        if self.expires_at_ts:
-            message += f"Expires At: {self.expires_at_ts}\n"
-        if self.reference_doctype and self.reference_name:
-            message += f"Reference: {self.reference_doctype}:{self.reference_name}\n"
-        
-        frappe.log_error(
-            title=title,
-            message=message,
-            reference_doctype="AT Break Glass Request",
-            reference_name=self.name
-        )
-        
+
         frappe.logger().info(
             f"Break-glass request {action}: {self.name} | "
             f"user={self.user} | access_type={self.access_type}"

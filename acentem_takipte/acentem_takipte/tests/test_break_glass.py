@@ -296,6 +296,27 @@ class TestBreakGlassAPI(unittest.TestCase):
 class TestBreakGlassAuditUtilities(unittest.TestCase):
     """Unit tests for break-glass audit utility helpers."""
 
+    @patch("acentem_takipte.acentem_takipte.doctype.at_break_glass_request.at_break_glass_request.frappe.log_error")
+    @patch("acentem_takipte.acentem_takipte.doctype.at_break_glass_request.at_break_glass_request.frappe.logger")
+    def test_doctype_on_submit_does_not_duplicate_error_log(self, mock_logger, mock_log_error):
+        from acentem_takipte.acentem_takipte.doctype.at_break_glass_request.at_break_glass_request import (
+            ATBreakGlassRequest,
+        )
+
+        doc = frappe._dict(
+            {
+                "name": "AT000123",
+                "status": "Approved",
+                "user": "agent@example.com",
+                "access_type": "customer_financials",
+            }
+        )
+
+        ATBreakGlassRequest.on_submit(doc)
+
+        assert mock_log_error.called is False
+        assert mock_logger.return_value.info.called
+
     @patch("acentem_takipte.acentem_takipte.services.break_glass.frappe.get_roles")
     @patch("acentem_takipte.acentem_takipte.services.break_glass.frappe.get_site_config")
     def test_can_view_break_glass_audit_with_configured_role(self, mock_site_config, mock_get_roles):

@@ -217,6 +217,7 @@ Even though this README is product-focused, a few implementation details are use
 
 - frontend UI work should follow `docs/DESIGN_GUIDELINES.md` as the canonical design constitution
 - PR and self-review for user-facing frontend changes should use `docs/UI_REVIEW_CHECKLIST.md`
+- ops alert monitor setup, preview, and webhook configuration are documented in `docs/OPS_ALERT_MONITOR.md`
 - canonical Frappe hooks live in `acentem_takipte/hooks.py`; the repository-root `hooks.py` is only a lightweight pointer and is not loaded at runtime
 - if you need to change hooks, scheduler events, or app metadata, edit only `acentem_takipte/hooks.py`; changing the repository-root `hooks.py` has no runtime effect
 - `frontend/` contains the SPA source and test setup.

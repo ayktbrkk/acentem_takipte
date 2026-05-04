@@ -97,7 +97,8 @@
    "fieldname": "policy_no",
    "fieldtype": "Data",
    "description": "External policy number used by the insurer.",
-   "label": "Carrier Policy Number"
+    "label": "Carrier Policy Number",
+    "search_index": 1
   },
   {
    "fieldname": "source_offer",
