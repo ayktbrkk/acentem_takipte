@@ -91,6 +91,43 @@ vi.mock("frappe-ui", () => ({
       };
     }
 
+    if (url.includes("frappe.client.get_list") && config?.params?.doctype === "User") {
+      const data = ref([
+        { name: "agent@example.com", full_name: "Agent User", enabled: 1, user_type: "System User" },
+        { name: "manager@example.com", full_name: "Manager User", enabled: 1, user_type: "System User" },
+        { name: "viewer@example.com", full_name: "Viewer User", enabled: 1, user_type: "System User" },
+      ]);
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: config?.params || {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => data.value),
+        submit: vi.fn(async () => ({})),
+      };
+    }
+
+    if (url.includes("frappe.client.get_list") && config?.params?.doctype === "Has Role") {
+      const data = ref([
+        { parent: "agent@example.com", role: "Agent", parenttype: "User" },
+        { parent: "manager@example.com", role: "System Manager", parenttype: "User" },
+      ]);
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: config?.params || {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => data.value),
+        submit: vi.fn(async () => ({})),
+      };
+    }
+
     return {
       data: ref({}),
       loading: ref(false),
@@ -202,6 +239,12 @@ describe("CustomerDetail page", () => {
     expect(wrapper.vm.moreProfileFields.find((field) => field.key === "marital_status")?.displayValue).toBe("Bekar");
     expect(wrapper.vm.moreProfileFields.find((field) => field.key === "occupation")?.displayValue).toBe("Operator");
     expect(wrapper.vm.operationalFields.find((field) => field.key === "assigned_agent")?.displayValue).toBe("Belirtilmemiş");
+    expect(wrapper.vm.operationalFields.find((field) => field.key === "assigned_agent")?.type).toBe("autocomplete");
+    expect(wrapper.vm.operationalFields.find((field) => field.key === "assigned_agent")?.options).toEqual([
+      { value: "agent@example.com", label: "Agent User (agent@example.com)" },
+      { value: "manager@example.com", label: "Manager User (manager@example.com)" },
+    ]);
+    expect(wrapper.vm.operationalFields.find((field) => field.key === "office_branch")?.disabled).toBe(true);
   });
 
   it("switches tabs and renders portfolio, activity, and document content", async () => {

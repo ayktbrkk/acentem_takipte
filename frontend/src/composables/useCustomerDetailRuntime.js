@@ -13,6 +13,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
   const authStore = useAuthStore();
   const UNKNOWN_VALUE_SET = new Set(["", "unknown", "none", "null", "undefined"]);
+  const ASSIGNED_AGENT_ROLE_SET = new Set(["Agent", "System Manager"]);
   const customerName = computed(() => String(unref(name) || "").trim());
   const localeValue = computed(() => String(unref(activeLocale) || "en").trim() || "en");
   const localeCode = computed(() => (localeValue.value.startsWith("tr") ? "tr-TR" : "en-US"));
@@ -47,6 +48,33 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   const updateResource = createResource({
     url: "frappe.client.set_value",
     auto: false,
+  });
+
+  const assignedAgentsResource = createResource({
+    url: "frappe.client.get_list",
+    params: {
+      doctype: "User",
+      fields: ["name", "full_name", "enabled", "user_type"],
+      filters: { enabled: 1 },
+      limit_page_length: 500,
+      order_by: "full_name asc",
+    },
+    auto: true,
+  });
+
+  const assignedAgentRolesResource = createResource({
+    url: "frappe.client.get_list",
+    params: {
+      doctype: "Has Role",
+      fields: ["parent", "role", "parenttype"],
+      filters: {
+        parenttype: "User",
+        role: ["in", Array.from(ASSIGNED_AGENT_ROLE_SET)],
+      },
+      limit_page_length: 1000,
+      order_by: "parent asc",
+    },
+    auto: true,
   });
 
   const saving = ref(false);
@@ -121,6 +149,60 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     if (normalized === "Widowed") return t("maritalWidowed");
     return t("unspecified");
   }
+
+  function asArray(value) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  function assignedAgentOptionLabel(row) {
+    const userId = String(row?.name || "").trim();
+    const fullName = String(row?.full_name || "").trim();
+    if (!userId) return "";
+    return fullName && fullName !== userId ? `${fullName} (${userId})` : userId;
+  }
+
+  const assignedAgentOptions = computed(() => {
+    const allowedAssignedAgents = new Set(
+      asArray(unref(assignedAgentRolesResource.data))
+        .map((row) => String(row?.parent || "").trim())
+        .filter(Boolean)
+    );
+
+    const options = asArray(unref(assignedAgentsResource.data))
+      .filter((row) => {
+        const userId = String(row?.name || "").trim();
+        if (!userId || userId === "Guest") return false;
+        const userType = String(row?.user_type || "System User").trim();
+        return (!userType || userType === "System User") && allowedAssignedAgents.has(userId);
+      })
+      .map((row) => ({
+        value: String(row.name || "").trim(),
+        label: assignedAgentOptionLabel(row),
+      }));
+
+    const currentValue = normalizeValue(customer.value.assigned_agent);
+    if (currentValue && !options.some((option) => option.value === currentValue)) {
+      options.unshift({ value: currentValue, label: currentValue });
+    }
+
+    return options;
+  });
+
+  const assignedAgentLabelMap = computed(() => {
+    const map = new Map();
+    for (const option of assignedAgentOptions.value) {
+      const key = String(option?.value || "").trim();
+      if (!key) continue;
+      map.set(key, String(option?.label || key));
+    }
+    return map;
+  });
+
+  const assignedAgentDisplay = computed(() => {
+    const currentValue = normalizeValue(customer.value.assigned_agent);
+    if (!currentValue) return t("unspecified");
+    return assignedAgentLabelMap.value.get(currentValue) || currentValue;
+  });
 
   function formatFileSize(bytes) {
     if (!bytes || Number(bytes) <= 0) return t("unspecified");
@@ -239,9 +321,9 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       key: "assigned_agent",
       label: t("assigned_agent"),
       value: customer.value.assigned_agent,
-      displayValue: formatTextOrFallback(customer.value.assigned_agent),
-      type: "text", // Link would be better
-      disabled: true,
+      displayValue: assignedAgentDisplay.value,
+      type: "autocomplete",
+      options: assignedAgentOptions.value,
       unspecifiedLabel: t("unspecified"),
     },
     {
