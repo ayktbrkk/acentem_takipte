@@ -125,6 +125,9 @@ export function useSidebarNavigation() {
         ...(isSystemManager.value
           ? [{ key: "break-glass-approvals", label: t("breakGlassApprovals"), to: "/break-glass/approvals", short: "BA", icon: shallowRef(IconLucideKey), badgeClass: "text-rose-700" }]
           : []),
+        ...(isSystemManager.value
+          ? [{ key: "alert-channels", label: t("alertChannelsSettings"), to: "/admin/alert-channels", short: "AL", icon: shallowRef(IconLucideMessageSquare), badgeClass: "text-sky-700" }]
+          : []),
         { key: "accounting-entries", label: t("accountingEntries"), to: "/accounting-entries", short: "AC", icon: shallowRef(IconLucideReceipt), badgeClass: "text-slate-700" },
         { key: "reconciliation-items", label: t("reconciliationItems"), to: "/reconciliation-items", short: "RI", icon: shallowRef(IconLucideListChecks), badgeClass: "text-cyan-700" },
       ],

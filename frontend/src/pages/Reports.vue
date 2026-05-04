@@ -123,6 +123,7 @@
       @remove="removeScheduledReport"
       @run-segment-snapshots="runCustomerSegmentSnapshots"
     />
+
   </WorkbenchPageLayout>
 
   <!-- Side Panel for Record Previews -->

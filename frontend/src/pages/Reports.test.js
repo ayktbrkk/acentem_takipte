@@ -528,6 +528,7 @@ describe("Reports page communication operations report", () => {
         params: expect.objectContaining({ index: "0" }),
       }),
     );
+
   });
 
   it("shows error when scheduled reports run fails", async () => {

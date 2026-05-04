@@ -26,6 +26,7 @@ const ReconciliationWorkbench = () => import("../pages/ReconciliationWorkbench.v
 const ReconciliationDetail = () => import("../pages/ReconciliationDetail.vue");
 const CommunicationHub = () => import("../pages/CommunicationHub.vue");
 const Reports = () => import("../pages/Reports.vue");
+const AdminAlertChannelsSettings = () => import("../pages/AdminAlertChannelsSettings.vue");
 const PremiumReport = () => import("../pages/PremiumReport.vue");
 const ClaimRatioReport = () => import("../pages/ClaimRatioReport.vue");
 const AgentPerformanceReport = () => import("../pages/AgentPerformanceReport.vue");
@@ -275,6 +276,16 @@ const router = createRouter({
       },
     },
     {
+      path: "/admin/alert-channels",
+      name: "admin-alert-channels",
+      component: AdminAlertChannelsSettings,
+      meta: {
+        title: { tr: "Uyarı Kanal Ayarları", en: "Alert Channel Settings" },
+        section: { tr: "Finans & Kontrol", en: "Finance & Control" },
+        requiresSystemManager: true,
+      },
+    },
+    {
       path: "/reports/premium",
       name: "premium-report",
       component: PremiumReport,
@@ -441,6 +452,10 @@ export function hasSystemManagerRole(roles = []) {
 }
 
 router.beforeEach((to) => {
+  if (to.meta?.requiresSystemManager && !hasSystemManagerRole(sessionState.roles)) {
+    return { name: "dashboard" };
+  }
+
   if (to.meta?.requiresBreakGlassManager && !hasSystemManagerRole(sessionState.roles)) {
     return { name: "break-glass-request" };
   }

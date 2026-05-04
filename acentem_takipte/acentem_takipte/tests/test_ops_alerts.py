@@ -37,7 +37,9 @@ class TestOpsAlerts(IntegrationTestCase):
         ), patch.object(
             ops_alerts,
             "make_post_request",
-            side_effect=lambda url, data=None, **kwargs: sent.append({"url": url, "data": data}),
+            side_effect=lambda url, data=None, json=None, **kwargs: sent.append(
+                {"url": url, "data": data, "json": json}
+            ),
         ):
             summary = ops_alerts.run_error_log_alert_monitor()
 
@@ -45,10 +47,13 @@ class TestOpsAlerts(IntegrationTestCase):
         self.assertTrue(summary["alerted"])
         self.assertEqual(summary["channels"], ["slack", "telegram"])
         self.assertEqual(len(sent), 2)
-        self.assertTrue(sent[0]["data"]["text"].startswith("AT ops alert: 1 critical Error Log entries"))
-        self.assertIn("Site: at.localhost", sent[0]["data"]["text"])
-        self.assertIn("Environment: staging", sent[0]["data"]["text"])
-        self.assertIn("https://at.localhost:8000/app/error-log/ERR-0001", sent[0]["data"]["text"])
+        self.assertTrue(sent[0]["json"]["text"].startswith("AT ops alert: 1 critical Error Log entries"))
+        self.assertIsNone(sent[0]["data"])
+        self.assertIn("Site: at.localhost", sent[0]["json"]["text"])
+        self.assertIn("Environment: staging", sent[0]["json"]["text"])
+        self.assertIn("https://at.localhost:8000/app/error-log/ERR-0001", sent[0]["json"]["text"])
+        self.assertEqual(sent[1]["data"]["chat_id"], "1234")
+        self.assertEqual(sent[1]["data"]["text"], sent[0]["json"]["text"])
 
     def test_run_error_log_alert_monitor_skips_when_fingerprint_already_alerted(self):
         rows = [

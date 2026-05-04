@@ -26,6 +26,11 @@ from acentem_takipte.acentem_takipte.services.reports_runtime import (
     remove_scheduled_report,
     save_scheduled_report,
 )
+from acentem_takipte.acentem_takipte.services.ops_alert_settings import (
+    load_ops_alert_channel_settings,
+    save_ops_alert_channel_settings,
+    send_ops_alert_channel_test,
+)
 from acentem_takipte.acentem_takipte.services.scheduled_reports import (
     get_scheduled_reports_timeline as get_timeline_service,
 )
@@ -189,6 +194,29 @@ def get_scheduled_reports_timeline(days: int = 30) -> list[dict[str, Any]]:
     return get_timeline_service(days=max(cint(days), 1))
 
 
+@frappe.whitelist()
+def get_ops_alert_channel_settings() -> dict[str, Any]:
+    assert_authenticated()
+    assert_roles("System Manager", "Administrator", message="You do not have permission to view alert channel settings.")
+    return _coerce_alert_channel_payload(load_ops_alert_channel_settings())
+
+
+@frappe.whitelist()
+def save_ops_alert_channel_settings_api(config: dict | str | None = None) -> dict[str, Any]:
+    assert_authenticated()
+    assert_post_request("Only POST requests are allowed for alert channel changes.")
+    assert_roles("System Manager", "Administrator", message="You do not have permission to manage alert channel settings.")
+    return _coerce_alert_channel_payload(save_ops_alert_channel_settings(config=config))
+
+
+@frappe.whitelist()
+def send_ops_alert_channel_test_api(config: dict | str | None = None) -> dict[str, Any]:
+    assert_authenticated()
+    assert_post_request("Only POST requests are allowed for alert channel tests.")
+    assert_roles("System Manager", "Administrator", message="You do not have permission to test alert channels.")
+    return _coerce_alert_test_payload(send_ops_alert_channel_test(config=config))
+
+
 def _respond_with_report_file(
     *,
     report_key: str,
@@ -286,6 +314,39 @@ def _coerce_summary_item(value: dict[str, Any]) -> dict[str, Any]:
         "last_run_at": value.get("last_run_at"),
         "last_status": str(value.get("last_status") or "").strip().lower() or None,
         "last_summary": _coerce_filters(value.get("last_summary")),
+    }
+
+
+def _coerce_alert_channel_payload(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {
+            "slack_webhook_url": "",
+            "telegram_bot_token": "",
+            "telegram_chat_id": "",
+            "slack_configured": False,
+            "telegram_configured": False,
+        }
+    payload = dict(value)
+    slack_webhook_url = str(payload.get("slack_webhook_url") or "").strip()
+    telegram_bot_token = str(payload.get("telegram_bot_token") or "").strip()
+    telegram_chat_id = str(payload.get("telegram_chat_id") or "").strip()
+    return {
+        "slack_webhook_url": slack_webhook_url,
+        "telegram_bot_token": telegram_bot_token,
+        "telegram_chat_id": telegram_chat_id,
+        "slack_configured": bool(payload.get("slack_configured") or slack_webhook_url),
+        "telegram_configured": bool(payload.get("telegram_configured") or (telegram_bot_token and telegram_chat_id)),
+    }
+
+
+def _coerce_alert_test_payload(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {"ok": False, "channels": []}
+    payload = dict(value)
+    channels = payload.get("channels")
+    return {
+        "ok": bool(payload.get("ok", True)),
+        "channels": [str(channel).strip().lower() for channel in channels if str(channel).strip()] if isinstance(channels, list) else [],
     }
 
 

@@ -59,6 +59,30 @@ describe("Sidebar localization", () => {
     expect(wrapper.text()).toContain("Kenar Menüsünü Daralt");
   });
 
+  it("shows alert channel settings for system managers", () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      locale: "tr",
+      user: "Aykut",
+      userId: "aykut",
+      roles: ["System Manager"],
+    });
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        mobileOpen: false,
+      },
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+          OfficeBranchSelect: OfficeBranchSelectStub,
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain("Uyarı Kanal Ayarları");
+  });
+
   it("renders English chrome labels when the locale is en", () => {
     const authStore = useAuthStore();
     authStore.applyContext({

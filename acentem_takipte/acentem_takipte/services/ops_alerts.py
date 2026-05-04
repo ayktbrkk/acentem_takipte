@@ -233,7 +233,7 @@ def _dispatch_alerts(*, site_config: dict[str, Any], message: str) -> list[str]:
     telegram_chat_id = str(site_config.get("at_ops_alert_telegram_chat_id") or "").strip()
 
     if slack_webhook:
-        make_post_request(slack_webhook, data={"text": message})
+        make_post_request(slack_webhook, json={"text": message})
         channels.append("slack")
 
     if telegram_bot_token and telegram_chat_id:

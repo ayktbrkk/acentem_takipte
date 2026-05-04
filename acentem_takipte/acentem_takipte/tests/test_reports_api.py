@@ -230,6 +230,64 @@ def test_remove_scheduled_report_config_coerces_string_index(monkeypatch):
     assert captured["index"] == 2
 
 
+def test_get_ops_alert_channel_settings_coerces_response_shape(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        reports,
+        "load_ops_alert_channel_settings",
+        lambda: {
+            "slack_webhook_url": " https://hooks.slack.test/services/demo ",
+            "telegram_bot_token": " bot-token ",
+            "telegram_chat_id": " 909781070 ",
+            "slack_configured": 1,
+            "telegram_configured": 1,
+        },
+    )
+
+    payload = reports.get_ops_alert_channel_settings()
+
+    assert payload == {
+        "slack_webhook_url": "https://hooks.slack.test/services/demo",
+        "telegram_bot_token": "bot-token",
+        "telegram_chat_id": "909781070",
+        "slack_configured": True,
+        "telegram_configured": True,
+    }
+
+
+def test_save_ops_alert_channel_settings_api_passes_config(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_post_request", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    captured = {}
+    monkeypatch.setattr(
+        reports,
+        "save_ops_alert_channel_settings",
+        lambda config=None: captured.update({"config": config}) or {"slack_configured": True},
+    )
+
+    payload = reports.save_ops_alert_channel_settings_api(config={"slack_webhook_url": "https://hooks.slack.test/services/demo"})
+
+    assert captured["config"] == {"slack_webhook_url": "https://hooks.slack.test/services/demo"}
+    assert payload["slack_configured"] is True
+
+
+def test_send_ops_alert_channel_test_api_coerces_channels(monkeypatch):
+    monkeypatch.setattr(reports, "assert_authenticated", lambda: "Administrator")
+    monkeypatch.setattr(reports, "assert_post_request", lambda *args, **kwargs: None)
+    monkeypatch.setattr(reports, "assert_roles", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        reports,
+        "send_ops_alert_channel_test",
+        lambda config=None: {"ok": True, "channels": ["Slack", "telegram", " "]},
+    )
+
+    payload = reports.send_ops_alert_channel_test_api(config={"telegram_chat_id": "909781070"})
+
+    assert payload == {"ok": True, "channels": ["slack", "telegram"]}
+
+
 def test_get_report_payload_coerces_json_filters_and_positive_limit(monkeypatch):
     monkeypatch.setattr(reports, "assert_authenticated", lambda: None)
     monkeypatch.setattr(reports, "assert_doctype_permission", lambda *args, **kwargs: None)
