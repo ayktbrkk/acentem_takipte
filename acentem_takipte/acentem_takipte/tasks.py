@@ -22,13 +22,16 @@ from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_
 from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
 from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
 from acentem_takipte.acentem_takipte.renewal.service import (
+    build_renewal_key,
     RENEWAL_LOOKAHEAD_DAYS,
     MAX_POLICIES_PER_RUN,
+    MAX_PAYMENTS_PER_RUN,
 )
+from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
 
-# audit(f401): `build_renewal_key`, `build_renewal_stage_key`, and
-# `MAX_PAYMENTS_PER_RUN` belonged to the older inline renewal/payment loops. The
-# current task runner delegates those details to service-layer helpers.
+# audit(facade): These renewal helpers remain re-exported from the task module
+# because dashboard, seed, and test code still import them from this stable
+# dotted path. Runtime task logic itself delegates to service-layer helpers.
 
 
 def _extract_job_id(job: Any) -> str | None:
