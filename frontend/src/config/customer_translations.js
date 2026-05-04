@@ -66,6 +66,15 @@ export const CUSTOMER_TRANSLATIONS = {
     office_branch: "Şube",
     assigned_agent: "Atanan Temsilci",
     consent_status: "KVKK Onayı",
+    genderUnknown: "Belirtilmemiş",
+    genderMale: "Erkek",
+    genderFemale: "Kadın",
+    genderOther: "Diğer",
+    maritalUnknown: "Belirtilmemiş",
+    maritalSingle: "Bekar",
+    maritalMarried: "Evli",
+    maritalDivorced: "Boşanmış",
+    maritalWidowed: "Dul",
     
     // Actions
     new_offer: "Yeni Teklif",
@@ -159,6 +168,15 @@ export const CUSTOMER_TRANSLATIONS = {
     office_branch: "Office Branch",
     assigned_agent: "Assigned Agent",
     consent_status: "Consent Status",
+    genderUnknown: "Unspecified",
+    genderMale: "Male",
+    genderFemale: "Female",
+    genderOther: "Other",
+    maritalUnknown: "Unspecified",
+    maritalSingle: "Single",
+    maritalMarried: "Married",
+    maritalDivorced: "Divorced",
+    maritalWidowed: "Widowed",
     
     // Actions
     new_offer: "New Offer",

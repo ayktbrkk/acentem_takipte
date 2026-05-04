@@ -47,7 +47,12 @@ vi.mock("frappe-ui", () => ({
               tax_id: "1234567890",
               phone: "05550000000",
               email: "aykut@example.com",
+              birth_date: "1975-10-01",
+              gender: "Male",
+              marital_status: "Single",
+              occupation: "Operator",
               office_branch: "IST",
+              assigned_agent: "Unknown",
             },
             summary: {
               active_policy_count: 1,
@@ -193,6 +198,10 @@ describe("CustomerDetail page", () => {
     expect(wrapper.text()).toContain("Toplam Prim");
     expect(wrapper.findAll(".nav-tab")).toHaveLength(4);
     expect(wrapper.vm.tabs.map((tab) => tab.key)).toEqual(["overview", "portfolio", "activity", "operations"]);
+    expect(wrapper.vm.moreProfileFields.find((field) => field.key === "gender")?.displayValue).toBe("Erkek");
+    expect(wrapper.vm.moreProfileFields.find((field) => field.key === "marital_status")?.displayValue).toBe("Bekar");
+    expect(wrapper.vm.moreProfileFields.find((field) => field.key === "occupation")?.displayValue).toBe("Operator");
+    expect(wrapper.vm.operationalFields.find((field) => field.key === "assigned_agent")?.displayValue).toBe("Belirtilmemiş");
   });
 
   it("switches tabs and renders portfolio, activity, and document content", async () => {

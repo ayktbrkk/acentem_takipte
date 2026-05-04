@@ -50,8 +50,24 @@ vi.mock("frappe-ui", () => ({
         },
         reload: vi.fn(async () => ({
           rows: [
-            { name: "CUST-001", full_name: "Aykut Bekir", consent_status: "Granted", customer_type: "Individual" },
-            { name: "CUST-002", full_name: "Ayse Demir", consent_status: "Unknown", customer_type: "Corporate" },
+            {
+              name: "CUST-001",
+              full_name: "Aykut Bekir",
+              consent_status: "Granted",
+              customer_type: "Individual",
+              marital_status: "Married",
+              gender: "Male",
+              birth_date: "1975-10-01",
+              assigned_agent: "Acentem Operasyon",
+            },
+            {
+              name: "CUST-002",
+              full_name: "Ayse Demir",
+              consent_status: "Unknown",
+              customer_type: "Corporate",
+              occupation: "Finance Manager",
+              sales_entity: "Corporate North",
+            },
           ],
           total: 2,
           active_count: 2,
@@ -125,6 +141,11 @@ describe("CustomerList page", () => {
     expect(wrapper.vm.summary.total).toBe(2);
     expect(wrapper.vm.rows).toHaveLength(2);
     expect(wrapper.vm.rows[0].identity_primary).toBe("Aykut Bekir");
+    expect(wrapper.vm.rows[0].personal_primary).toBe("Evli");
+    expect(wrapper.vm.rows[0].personal_secondary).toBe("Erkek | 1975-10-01");
+    expect(wrapper.vm.rows[0].mgmt_primary).toBe("Acentem Operasyon");
+    expect(wrapper.vm.rows[1].personal_primary).toBe("Finance Manager");
+    expect(wrapper.vm.rows[1].mgmt_primary).toBe("Corporate North");
     expect(wrapper.vm.rows[0].consent_status_label).toBe("Onay Verildi");
 
     const columns = Object.fromEntries(wrapper.vm.columns.map((col) => [col.key, col.label]));
@@ -140,6 +161,9 @@ describe("CustomerList page", () => {
 
     expect(wrapper.vm.summary.total).toBe(2);
     expect(wrapper.vm.rows[0].identity_primary).toBe("Aykut Bekir");
+    expect(wrapper.vm.rows[0].personal_primary).toBe("Married");
+    expect(wrapper.vm.rows[0].personal_secondary).toBe("Male | 1975-10-01");
+    expect(wrapper.vm.rows[0].mgmt_primary).toBe("Acentem Operasyon");
     expect(wrapper.vm.rows[0].consent_status_label).toBe("Granted");
 
     const columns = Object.fromEntries(wrapper.vm.columns.map((col) => [col.key, col.label]));

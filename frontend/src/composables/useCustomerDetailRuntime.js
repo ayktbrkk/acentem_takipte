@@ -12,6 +12,7 @@ import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 export function useCustomerDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
   const authStore = useAuthStore();
+  const UNKNOWN_VALUE_SET = new Set(["", "unknown", "none", "null", "undefined"]);
   const customerName = computed(() => String(unref(name) || "").trim());
   const localeValue = computed(() => String(unref(activeLocale) || "en").trim() || "en");
   const localeCode = computed(() => (localeValue.value.startsWith("tr") ? "tr-TR" : "en-US"));
@@ -91,8 +92,34 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
     return sharedFormatMoney(localeCode.value, val, currency);
   }
 
+  function normalizeValue(value) {
+    const normalized = String(value ?? "").trim();
+    return UNKNOWN_VALUE_SET.has(normalized.toLowerCase()) ? "" : normalized;
+  }
+
+  function formatTextOrFallback(value) {
+    return normalizeValue(value) || t("unspecified");
+  }
+
   function formatDateOrFallback(val) {
-    return val ? formatDate(val) : t("unspecified");
+    return normalizeValue(val) ? formatDate(val) : t("unspecified");
+  }
+
+  function normalizeGender(value) {
+    const normalized = normalizeValue(value);
+    if (normalized === "Male") return t("genderMale");
+    if (normalized === "Female") return t("genderFemale");
+    if (normalized === "Other") return t("genderOther");
+    return t("unspecified");
+  }
+
+  function normalizeMaritalStatus(value) {
+    const normalized = normalizeValue(value);
+    if (normalized === "Single") return t("maritalSingle");
+    if (normalized === "Married") return t("maritalMarried");
+    if (normalized === "Divorced") return t("maritalDivorced");
+    if (normalized === "Widowed") return t("maritalWidowed");
+    return t("unspecified");
   }
 
   function formatFileSize(bytes) {
@@ -165,12 +192,12 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       key: "gender",
       label: t("gender"),
       value: customer.value.gender,
-      displayValue: customer.value.gender ? (t(customer.value.gender?.toLowerCase()) || customer.value.gender) : t("unspecified"),
+      displayValue: normalizeGender(customer.value.gender),
       type: "select",
       options: [
-        { label: t("male"), value: "Male" },
-        { label: t("female"), value: "Female" },
-        { label: t("other"), value: "Other" },
+        { label: t("genderMale"), value: "Male" },
+        { label: t("genderFemale"), value: "Female" },
+        { label: t("genderOther"), value: "Other" },
       ],
       unspecifiedLabel: t("unspecified"),
     },
@@ -178,13 +205,13 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       key: "marital_status",
       label: t("marital_status"),
       value: customer.value.marital_status,
-      displayValue: customer.value.marital_status ? (t(customer.value.marital_status?.toLowerCase()) || customer.value.marital_status) : t("unspecified"),
+      displayValue: normalizeMaritalStatus(customer.value.marital_status),
       type: "select",
       options: [
-        { label: t("single"), value: "Single" },
-        { label: t("married"), value: "Married" },
-        { label: t("divorced"), value: "Divorced" },
-        { label: t("widowed"), value: "Widowed" },
+        { label: t("maritalSingle"), value: "Single" },
+        { label: t("maritalMarried"), value: "Married" },
+        { label: t("maritalDivorced"), value: "Divorced" },
+        { label: t("maritalWidowed"), value: "Widowed" },
       ],
       unspecifiedLabel: t("unspecified"),
     },
@@ -192,6 +219,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       key: "occupation",
       label: t("occupation"),
       value: customer.value.occupation,
+      displayValue: formatTextOrFallback(customer.value.occupation),
       type: "text",
       unspecifiedLabel: t("unspecified"),
     },
@@ -202,6 +230,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       key: "office_branch",
       label: t("office_branch"),
       value: customer.value.office_branch,
+      displayValue: formatTextOrFallback(customer.value.office_branch),
       type: "text", // Should be a link ideally, but for now text
       disabled: true, // Typically branch shouldn't be edited inline easily without a search
       unspecifiedLabel: t("unspecified"),
@@ -210,6 +239,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       key: "assigned_agent",
       label: t("assigned_agent"),
       value: customer.value.assigned_agent,
+      displayValue: formatTextOrFallback(customer.value.assigned_agent),
       type: "text", // Link would be better
       disabled: true,
       unspecifiedLabel: t("unspecified"),

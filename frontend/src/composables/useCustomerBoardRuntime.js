@@ -6,12 +6,46 @@ import { translateText } from "../utils/i18n";
 export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
 
+  const UNKNOWN_VALUE_SET = new Set(["", "unknown", "none", "null", "undefined"]);
+
   function t(key) {
     return translateText(key, activeLocale);
   }
 
   function fallbackLabel() {
     return t("unspecified");
+  }
+
+  function normalizeValue(value) {
+    const normalized = String(value ?? "").trim();
+    return UNKNOWN_VALUE_SET.has(normalized.toLowerCase()) ? "" : normalized;
+  }
+
+  function firstPresentValue(...values) {
+    for (const value of values) {
+      const normalized = normalizeValue(value);
+      if (normalized) {
+        return normalized;
+      }
+    }
+    return "";
+  }
+
+  function normalizeGender(value) {
+    const normalized = normalizeValue(value);
+    if (normalized === "Male") return t("genderMale");
+    if (normalized === "Female") return t("genderFemale");
+    if (normalized === "Other") return t("genderOther");
+    return fallbackLabel();
+  }
+
+  function normalizeMaritalStatus(value) {
+    const normalized = normalizeValue(value);
+    if (normalized === "Single") return t("maritalSingle");
+    if (normalized === "Married") return t("maritalMarried");
+    if (normalized === "Divorced") return t("maritalDivorced");
+    if (normalized === "Widowed") return t("maritalWidowed");
+    return fallbackLabel();
   }
 
   const filters = reactive({
@@ -46,19 +80,25 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const rows = computed(() => {
     unref(activeLocale);
     const data = unref(customerResource.data) || {};
-    return (data.rows || []).map(row => ({
-      ...row,
-      identity_primary: row.full_name || fallbackLabel(),
-      identity_secondary: `${row.name || fallbackLabel()} | ${row.customer_type === "Corporate" ? t("corporate") : t("individual")} | ${row.tax_id || fallbackLabel()}`,
-      contact_primary: row.phone || fallbackLabel(),
-      contact_secondary: row.email || fallbackLabel(),
-      personal_primary: row.job_title || fallbackLabel(),
-      personal_secondary: `${t(row.gender || "Unknown")} | ${row.birth_date || fallbackLabel()}`,
-      mgmt_primary: row.sales_entity || fallbackLabel(),
-      mgmt_secondary: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),
-      customer_type_label: row.customer_type === "Corporate" ? t("corporate") : t("individual"),
-      consent_status_label: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),
-    }));
+    return (data.rows || []).map(row => {
+      const maritalStatus = firstPresentValue(row.marital_status);
+
+      return {
+        ...row,
+        identity_primary: row.full_name || fallbackLabel(),
+        identity_secondary: `${row.name || fallbackLabel()} | ${row.customer_type === "Corporate" ? t("corporate") : t("individual")} | ${row.tax_id || fallbackLabel()}`,
+        contact_primary: row.phone || fallbackLabel(),
+        contact_secondary: row.email || fallbackLabel(),
+        personal_primary: maritalStatus
+          ? normalizeMaritalStatus(maritalStatus)
+          : firstPresentValue(row.occupation, row.job_title) || fallbackLabel(),
+        personal_secondary: `${normalizeGender(row.gender)} | ${firstPresentValue(row.birth_date) || fallbackLabel()}`,
+        mgmt_primary: firstPresentValue(row.assigned_agent, row.sales_entity, row.segment, row.owner) || fallbackLabel(),
+        mgmt_secondary: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),
+        customer_type_label: row.customer_type === "Corporate" ? t("corporate") : t("individual"),
+        consent_status_label: t(`status_${String(row.consent_status || "Unknown").toLowerCase()}`),
+      };
+    });
   });
 
   const loading = computed(() => unref(customerResource.loading));
