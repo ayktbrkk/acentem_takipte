@@ -37,10 +37,11 @@ import { frappeRequest } from "frappe-ui";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ReportsAlertChannelsSection from "../components/reports/ReportsAlertChannelsSection.vue";
+import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 
-const TRANSLATIONS = {
+const PAGE_TRANSLATIONS = {
   tr: {
     breadcrumb: "Kontrol Merkezi → Yönetim Ayarları",
     title: "Uyarı Kanal Ayarları",
@@ -66,6 +67,17 @@ const TRANSLATIONS = {
     loadError: "Failed to load alert channel settings.",
     saveError: "Failed to save alert channel settings.",
     testError: "Failed to send alert channel test.",
+  },
+};
+
+const TRANSLATIONS = {
+  tr: {
+    ...REPORTS_TRANSLATIONS.tr,
+    ...PAGE_TRANSLATIONS.tr,
+  },
+  en: {
+    ...REPORTS_TRANSLATIONS.en,
+    ...PAGE_TRANSLATIONS.en,
   },
 };
 

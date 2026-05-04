@@ -80,6 +80,8 @@ describe("Sidebar localization", () => {
       },
     });
 
+    expect(wrapper.text()).toContain("Yönetim Ayarları");
+    expect(wrapper.text()).toContain("Genel Ayarlar");
     expect(wrapper.text()).toContain("Uyarı Kanal Ayarları");
   });
 

@@ -5,6 +5,8 @@ from typing import Any
 import frappe
 from frappe.utils import cint, getdate, nowdate
 
+from acentem_takipte.acentem_takipte.services.admin_general_settings import get_follow_up_defaults
+
 
 OPEN_RENEWAL_STATUSES = {"Open", "In Progress"}
 OPEN_ASSIGNMENT_STATUSES = {"Open", "In Progress"}
@@ -15,8 +17,11 @@ def build_follow_up_sla_payload(
     *,
     office_branch: str | None = None,
     allowed_customers: list[str] | None = None,
-    preview_limit: int = 8,
+    preview_limit: int | None = None,
 ) -> dict[str, Any]:
+    operational_defaults = get_follow_up_defaults()
+    configured_preview_limit = operational_defaults["follow_up_preview_limit"]
+    due_soon_window = operational_defaults["follow_up_due_soon_days"]
     today = getdate(nowdate())
     preview_rows: list[dict[str, Any]] = []
 
@@ -97,7 +102,7 @@ def build_follow_up_sla_payload(
             overdue += 1
         elif delta == 0:
             due_today += 1
-        elif delta <= 7:
+        elif delta <= due_soon_window:
             due_soon += 1
 
     normalized_rows.sort(
@@ -114,7 +119,13 @@ def build_follow_up_sla_payload(
             "due_today": due_today,
             "due_soon": due_soon,
         },
-        "items": normalized_rows[: max(cint(preview_limit), 1)],
+        "meta": {
+            "settings": {
+                "follow_up_due_soon_days": due_soon_window,
+                "follow_up_preview_limit": max(cint(preview_limit or configured_preview_limit), 1),
+            }
+        },
+        "items": normalized_rows[: max(cint(preview_limit or configured_preview_limit), 1)],
     }
 
 

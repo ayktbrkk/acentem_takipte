@@ -171,6 +171,12 @@ describe("Dashboard page store integration", () => {
       {
         data: {
           summary: { total: 2, overdue: 1, due_today: 1, due_soon: 0 },
+          meta: {
+            settings: {
+              follow_up_due_soon_days: 7,
+              follow_up_preview_limit: 8,
+            },
+          },
           items: [
             {
               source_type: "claim",

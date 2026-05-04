@@ -26,6 +26,7 @@ const ReconciliationWorkbench = () => import("../pages/ReconciliationWorkbench.v
 const ReconciliationDetail = () => import("../pages/ReconciliationDetail.vue");
 const CommunicationHub = () => import("../pages/CommunicationHub.vue");
 const Reports = () => import("../pages/Reports.vue");
+const AdminGeneralSettings = () => import("../pages/AdminGeneralSettings.vue");
 const AdminAlertChannelsSettings = () => import("../pages/AdminAlertChannelsSettings.vue");
 const PremiumReport = () => import("../pages/PremiumReport.vue");
 const ClaimRatioReport = () => import("../pages/ClaimRatioReport.vue");
@@ -276,12 +277,22 @@ const router = createRouter({
       },
     },
     {
+      path: "/admin/general-settings",
+      name: "admin-general-settings",
+      component: AdminGeneralSettings,
+      meta: {
+        title: { tr: "Genel Ayarlar", en: "General Settings" },
+        section: { tr: "Yönetim Ayarları", en: "Admin Settings" },
+        requiresSystemManager: true,
+      },
+    },
+    {
       path: "/admin/alert-channels",
       name: "admin-alert-channels",
       component: AdminAlertChannelsSettings,
       meta: {
         title: { tr: "Uyarı Kanal Ayarları", en: "Alert Channel Settings" },
-        section: { tr: "Finans & Kontrol", en: "Finance & Control" },
+        section: { tr: "Yönetim Ayarları", en: "Admin Settings" },
         requiresSystemManager: true,
       },
     },

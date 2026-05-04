@@ -11,18 +11,6 @@ vi.mock("frappe-ui", () => ({
   frappeRequest: (...args) => frappeRequestMock(...args),
 }));
 
-const alertChannelsStub = {
-  props: ["config"],
-  emits: ["save", "test"],
-  template: `
-    <div>
-      <button type="button" data-testid="alert-settings-save" @click="$emit('save', { slack_webhook_url: 'https://hooks.slack.test/services/demo', telegram_bot_token: 'bot-token', telegram_chat_id: '6391020707' })">Save Alerts</button>
-      <button type="button" data-testid="alert-settings-test" @click="$emit('test', { slack_webhook_url: 'https://hooks.slack.test/services/demo', telegram_bot_token: 'bot-token', telegram_chat_id: '6391020707' })">Test Alerts</button>
-      <div class="config-probe">{{ config.slack_configured ? 'slack-on' : 'slack-off' }}</div>
-    </div>
-  `,
-};
-
 async function settle() {
   await flushPromises();
 }
@@ -67,7 +55,7 @@ describe("AdminAlertChannelsSettings", () => {
         stubs: {
           WorkbenchPageLayout: { template: `<div><slot name="metrics" /><slot /></div>` },
           SaaSMetricCard: { props: ["label", "value"], template: `<div>{{ label }} {{ value }}</div>` },
-          ReportsAlertChannelsSection: alertChannelsStub,
+          SectionPanel: { props: ["title", "meta", "count"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><span>{{ count }}</span><slot /></section>` },
         },
       },
     });
@@ -82,6 +70,8 @@ describe("AdminAlertChannelsSettings", () => {
     );
     expect(wrapper.text()).toContain("Slack Durumu");
     expect(wrapper.text()).toContain("Bağlı");
+    expect(wrapper.text()).toContain("Uyarı Kanalları");
+    expect(wrapper.text()).toContain("Slack Webhook URL");
 
     await wrapper.find('[data-testid="alert-settings-save"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(

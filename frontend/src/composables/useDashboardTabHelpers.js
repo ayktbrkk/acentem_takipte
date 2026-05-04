@@ -27,6 +27,7 @@ export function useDashboardTabHelpers({
   const displayRenewalTasks = computed(() => activeRenewalTasks.value);
 
   const followUpPayload = computed(() => unref(followUpResource.data) || {});
+  const followUpMeta = computed(() => followUpPayload.value.meta || {});
   const followUpSummary = computed(() => followUpPayload.value.summary || { total: 0, overdue: 0, due_today: 0, due_soon: 0 });
   const followUpItems = computed(() => (Array.isArray(followUpPayload.value.items) ? followUpPayload.value.items : []));
 
@@ -84,6 +85,7 @@ export function useDashboardTabHelpers({
   return {
     displayRenewalAlertItems,
     displayRenewalTasks,
+    followUpMeta,
     followUpSummary,
     myReminderItems,
     myReminderSummary,

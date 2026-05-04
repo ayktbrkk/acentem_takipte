@@ -69,6 +69,7 @@
       :follow-up-description="followUpDescription"
       :follow-up-facts="followUpFacts"
       :follow-up-loading="followUpLoading"
+      :follow-up-meta="followUpMeta"
       :follow-up-summary="followUpSummary"
       :follow-up-title="followUpTitle"
       :format-currency-by="formatCurrencyBy"
@@ -749,6 +750,7 @@ const visibleRange = useDashboardVisibleRange({
 const {
   displayRenewalAlertItems,
   displayRenewalTasks,
+  followUpMeta,
   followUpSummary,
   myReminderItems,
   myTaskItems,

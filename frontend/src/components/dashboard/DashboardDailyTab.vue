@@ -14,6 +14,7 @@
     <div class="space-y-6 xl:col-span-8">
       <SectionPanel :title="t('followUpSlaTitle')" :count="formatNumber(prioritizedFollowUpItems.length)">
         <p class="mb-3 text-xs text-slate-500">{{ t("followUpSlaHint") }}</p>
+        <p v-if="followUpSettingsHint" class="mb-3 text-xs font-medium text-slate-600">{{ followUpSettingsHint }}</p>
         <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <div v-else class="space-y-3">
           <div class="grid gap-3 md:grid-cols-3">
@@ -239,6 +240,7 @@ const props = defineProps({
   followUpDescription: { type: Function, required: true },
   followUpFacts: { type: Function, required: true },
   followUpLoading: { type: Boolean, required: true },
+  followUpMeta: { type: Object, default: () => ({}) },
   followUpSummary: { type: Object, required: true },
   followUpTitle: { type: Function, required: true },
   formatCurrencyBy: { type: Function, required: true },
@@ -286,6 +288,14 @@ const followUpSummaryCards = computed(() => [
   { label: props.t("followUpToday"), value: props.formatNumber(props.followUpSummary.due_today || 0), valueClass: "text-slate-900" },
   { label: props.t("followUpSoon"), value: props.formatNumber(props.followUpSummary.due_soon || 0), valueClass: "text-brand-600" },
 ]);
+
+const followUpSettingsHint = computed(() => {
+  const settings = props.followUpMeta?.settings || {};
+  const dueSoonDays = Number(settings.follow_up_due_soon_days || 0);
+  const previewLimit = Number(settings.follow_up_preview_limit || 0);
+  if (!dueSoonDays || !previewLimit) return "";
+  return `${props.t("followUpSettingsLead")} ${props.t("followUpWindowInfoLabel")}: ${props.formatNumber(dueSoonDays)} ${props.t("followUpDaysUnit")} • ${props.t("followUpPreviewInfoLabel")}: ${props.formatNumber(previewLimit)} ${props.t("followUpRecordsUnit")}`;
+});
 
 const taskSummaryCards = computed(() => [
   { label: props.t("taskOverdue"), value: props.formatNumber(props.myTaskSummary.overdue || 0), valueClass: "text-at-amber" },
