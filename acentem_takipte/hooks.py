@@ -1,12 +1,17 @@
+from acentem_takipte import __version__
+
+
 app_name = "acentem_takipte"
 app_title = "Acentem Takipte"
 app_publisher = "ayktbrkk"
 app_description = "Acentem Takipte Core Application"
 app_email = "ayktbrkk@gmail.com"
 app_license = "mit"
+app_version = __version__
+export_python_type_annotations = True
 
 # Website routing
-website_user_home_page = "at"
+get_website_user_home_page = "acentem_takipte.acentem_takipte.api.session.get_website_user_home_page"
 
 website_route_rules = [
     {"from_route": "/at/<path:path>", "to_route": "at"},

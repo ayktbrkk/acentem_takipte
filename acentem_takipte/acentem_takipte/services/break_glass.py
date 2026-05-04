@@ -177,6 +177,7 @@ def create_break_glass_request(
 
     # Create request document
     doc = frappe.new_doc("AT Break Glass Request")
+    doc.owner = user
     doc.user = user
     doc.access_type = access_type
     doc.reference_doctype = reference_doctype
@@ -184,8 +185,7 @@ def create_break_glass_request(
     doc.justification = justification
     doc.status = "Pending"
     doc.created_at_ts = now_datetime()
-    # ignore_permissions: Request creation is for the current user; approval workflow enforces SM permission separately.
-    doc.insert(ignore_permissions=True)
+    doc.insert()
 
     # Log creation event
     frappe.logger().info(

@@ -24,7 +24,7 @@ from acentem_takipte.acentem_takipte.services.break_glass import (
 )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_request(
     access_type: str,
     justification: str,

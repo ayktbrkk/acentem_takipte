@@ -1,5 +1,5 @@
 // audit(ui/U-01): Modernized stacked list views - v1.0.1
-import { createApp } from "vue";
+import { createApp, watch } from "vue";
 import { setActivePinia } from "pinia";
 import { FrappeUI, frappeRequest, setConfig } from "frappe-ui";
 
@@ -8,6 +8,8 @@ import router from "./router";
 import { getAppPinia, setAppPinia } from "./pinia";
 import { hydrateSessionState } from "./state/session";
 import { useBranchStore } from "./stores/branch";
+import { useAuthStore } from "./stores/auth";
+import { resolveRouteDocumentTitle } from "./utils/routeMeta";
 import "./style.css";
 import "@/assets/design-system.css";
 import "@/assets/frappe-overrides.css";
@@ -201,6 +203,14 @@ function renderBootstrapError(target, error) {
   `;
 }
 
+function syncRouteDocumentTitle(route, locale = "en") {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.title = resolveRouteDocumentTitle(route, locale);
+}
+
 const mountTarget = document.querySelector("#app");
 if (mountTarget) {
   const mountApp = async () => {
@@ -209,6 +219,7 @@ if (mountTarget) {
 
     const app = createApp(App);
     const pinia = getAppPinia();
+    const authStore = useAuthStore(pinia);
     const realtimeConfig = readRealtimeConfig();
     setAppPinia(pinia);
     setActivePinia(pinia);
@@ -239,9 +250,17 @@ if (mountTarget) {
     const branchStore = useBranchStore(pinia);
     branchStore.hydrateFromSession();
     branchStore.syncFromRoute(router.currentRoute.value);
+    syncRouteDocumentTitle(router.currentRoute.value, authStore.locale);
     router.afterEach((to) => {
       branchStore.syncFromRoute(to);
+      syncRouteDocumentTitle(to, authStore.locale);
     });
+    watch(
+      () => authStore.locale,
+      (locale) => {
+        syncRouteDocumentTitle(router.currentRoute.value, locale);
+      }
+    );
     setActivePinia(pinia);
     app.mount(mountTarget);
   };

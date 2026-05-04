@@ -128,6 +128,27 @@ class ATBreakGlassRequest(Document):
         )
 
 
+def get_permission_query_conditions(user=None):
+    user = str(user or frappe.session.user or "").strip()
+    if not user or user == "Guest":
+        return "1=0"
+    if can_manage_break_glass(user):
+        return ""
+
+    escaped_user = frappe.db.escape(user)
+    return f"`tabAT Break Glass Request`.`user` = {escaped_user}"
+
+
+def has_permission(doc, user=None, permission_type="read"):
+    user = str(user or frappe.session.user or "").strip()
+    if not user or user == "Guest":
+        return False
+    if can_manage_break_glass(user):
+        return True
+
+    return str(getattr(doc, "user", "") or "").strip() == user
+
+
 def get_pending_requests_for_approval():
     """List all pending break-glass requests (for approver dashboard)."""
     return frappe.get_all(

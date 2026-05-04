@@ -285,7 +285,7 @@ def _log_document_decision(doc, action: str, action_summary: str, decision_conte
         pass
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def archive_document(docname: str) -> dict:
     doc = _load_at_document(docname)
     _assert_at_document_write_access(doc)
@@ -304,7 +304,7 @@ def archive_document(docname: str) -> dict:
     return {"status": "success", "message": _("Document archived.")}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def restore_document(docname: str) -> dict:
     doc = _load_at_document(docname)
     _assert_at_document_write_access(doc)
@@ -323,7 +323,7 @@ def restore_document(docname: str) -> dict:
     return {"status": "success", "message": _("Document restored.")}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def permanent_delete_document(docname: str) -> dict:
     doc = _load_at_document(docname)
     _assert_at_document_delete_access(doc)
@@ -374,7 +374,7 @@ def track_document_view(reference_doctype: str, reference_name: str) -> dict:
     return {"status": "success"}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def upload_document(
     file_name: str,
     file_url: str = "",

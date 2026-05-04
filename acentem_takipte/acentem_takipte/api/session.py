@@ -146,6 +146,12 @@ def _resolve_session_interface(user: str) -> dict:
     }
 
 
+def get_website_user_home_page(user: str | None = None) -> str:
+    resolved_user = str(user or frappe.session.user or "Guest").strip() or "Guest"
+    preferred_home = _resolve_session_interface(resolved_user)["preferred_home"]
+    return str(preferred_home or "/at").lstrip("/") or "at"
+
+
 def resolve_current_user() -> str:
     session_user = frappe.session.user or "Guest"
     try:

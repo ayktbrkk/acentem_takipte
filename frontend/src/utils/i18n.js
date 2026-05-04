@@ -18,6 +18,7 @@ import { DASHBOARD_TRANSLATIONS } from "@/config/dashboard_translations";
 import { SIDEBAR_TRANSLATIONS } from "@/config/sidebar_translations";
 import { AUX_WORKBENCH_TRANSLATIONS } from "@/config/aux_workbench_translations";
 import { AUX_DETAIL_TRANSLATIONS } from "@/config/aux_detail_translations";
+import { ROUTER_TRANSLATIONS } from "@/config/router_translations";
 
 const ALL_TRANSLATIONS = {
   common: COMMON_TRANSLATIONS,
@@ -38,6 +39,7 @@ const ALL_TRANSLATIONS = {
   sidebar: SIDEBAR_TRANSLATIONS,
   aux_workbench: AUX_WORKBENCH_TRANSLATIONS,
   aux_detail: AUX_DETAIL_TRANSLATIONS,
+  router: ROUTER_TRANSLATIONS,
 };
 
 
