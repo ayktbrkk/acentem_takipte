@@ -78,6 +78,14 @@ The backend contains DocTypes, API endpoints, scheduled jobs, permission hooks, 
 The frontend source lives in `frontend/` and is built into static assets consumed by the Frappe route at `/at`.
 Frontend build artifacts are generated during build/deployment and are not committed to the repository.
 
+## Architecture Docs
+
+For repository-grounded architecture documentation, use:
+
+- [docs/README.md](docs/README.md) for the documentation index
+- [docs/ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md) for the short executive summary
+- [docs/ARCHITECTURE_MAP.md](docs/ARCHITECTURE_MAP.md) for the full architecture map and runtime flow breakdown
+
 ## Prerequisites
 
 Before installing the app, make sure you have:

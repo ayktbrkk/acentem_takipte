@@ -2,6 +2,8 @@
 
 This repository is a hybrid Frappe + Vue application for insurance agency operations. Use this file as the fast-start guide; follow the linked docs for details instead of duplicating their content.
 
+Start with [docs/README.md](docs/README.md) for the documentation index, [docs/ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md) for the short architecture summary, and [docs/ARCHITECTURE_MAP.md](docs/ARCHITECTURE_MAP.md) for the full verified architecture map.
+
 ## Scope
 
 - Backend lives in `acentem_takipte/acentem_takipte/` and runs inside Frappe Bench.
@@ -58,6 +60,9 @@ CI also runs backend tests by creating a fresh Frappe v15 bench and site; see [b
 ## Repo Landmarks
 
 - [README.md](README.md): product overview, architecture, install flow, and local quality gates
+- [docs/README.md](docs/README.md): documentation index and fastest entry point into repo docs
+- [docs/ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md): short verified architecture summary for quick onboarding
+- [docs/ARCHITECTURE_MAP.md](docs/ARCHITECTURE_MAP.md): full architecture map with runtime flows and module boundaries
 - [docs/DESIGN_GUIDELINES.md](docs/DESIGN_GUIDELINES.md): frontend design constitution and shared-component rules
 - [docs/UI_REVIEW_CHECKLIST.md](docs/UI_REVIEW_CHECKLIST.md): quick review checklist for user-facing changes
 - [docs/PRODUCTION_DEPLOY_CHECKLIST.md](docs/PRODUCTION_DEPLOY_CHECKLIST.md): production-safe deploy sequence and post-deploy checks
