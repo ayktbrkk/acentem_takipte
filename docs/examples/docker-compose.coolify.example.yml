@@ -1,0 +1,138 @@
+services:
+  backend:
+    image: ${APP_IMAGE:?}
+    user: frappe
+    restart: always
+    working_dir: /home/frappe/frappe-bench/sites
+    command:
+      - /bin/sh
+      - -lc
+      - |
+        export PATH=/home/frappe/.nvm/versions/node/v20.20.2/bin:$PATH
+        node /home/frappe/frappe-bench/apps/frappe/socketio.js >/proc/1/fd/1 2>/proc/1/fd/2 &
+        exec /home/frappe/frappe-bench/env/bin/gunicorn --bind=0.0.0.0:8000 --threads=4 --workers=2 --worker-class=gthread --worker-tmp-dir=/dev/shm --timeout=120 --preload frappe.app:application
+    environment:
+      SITE_NAME: ${SITE_NAME:?}
+      INSTALL_APPS: ${INSTALL_APPS:-erpnext,acentem_takipte}
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:?}
+    volumes:
+      - app_sites:/home/frappe/frappe-bench/sites
+
+  frontend:
+    image: ${APP_IMAGE:?}
+    restart: always
+    depends_on:
+      - backend
+      - websocket
+    command:
+      - nginx-entrypoint.sh
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:?}
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: "120"
+      CLIENT_MAX_BODY_SIZE: 50m
+    volumes:
+      - app_sites:/home/frappe/frappe-bench/sites
+
+  websocket:
+    image: ${APP_IMAGE:?}
+    user: frappe
+    restart: always
+    command:
+      - node
+      - /home/frappe/frappe-bench/apps/frappe/socketio.js
+    volumes:
+      - app_sites:/home/frappe/frappe-bench/sites
+
+  configurator:
+    image: ${APP_IMAGE:?}
+    user: frappe
+    working_dir: /home/frappe/frappe-bench/sites
+    restart: "no"
+    depends_on:
+      - mariadb
+      - redis-cache
+      - redis-queue
+      - redis-socketio
+    command:
+      - /bin/sh
+      - -lc
+      - |
+        set -e
+        ../env/bin/python - <<'PY'
+        import json
+        from pathlib import Path
+
+        path = Path("common_site_config.json")
+        config = {}
+        if path.exists():
+            config = json.loads(path.read_text())
+
+        config.update(
+            {
+                "db_host": "mariadb",
+                "redis_cache": "redis://redis-cache:6379",
+                "redis_queue": "redis://redis-queue:6379",
+                "redis_socketio": "redis://redis-socketio:6379",
+            "dns_multitenant": True,
+                "default_site": "${SITE_NAME}",
+                "serve_default_site": True,
+                "socketio_port": 9000,
+            }
+        )
+
+        path.write_text(json.dumps(config, indent=2) + "\n")
+        PY
+
+        if [ ! -d "${SITE_NAME}" ]; then
+          bench new-site "${SITE_NAME}" \
+            --db-root-username "${DB_ROOT_USER:-root}" \
+            --mariadb-root-password "${MYSQL_ROOT_PASSWORD}" \
+            --admin-password "${ADMIN_PASSWORD}" \
+            --no-mariadb-socket
+        fi
+
+        if ! bench --site "${SITE_NAME}" list-apps | grep -qx erpnext; then
+          bench --site "${SITE_NAME}" install-app erpnext
+        fi
+
+        if ! bench --site "${SITE_NAME}" list-apps | grep -qx acentem_takipte; then
+          bench --site "${SITE_NAME}" install-app acentem_takipte
+        fi
+
+        cd /home/frappe/frappe-bench/apps/acentem_takipte/frontend
+        npm ci
+        npm run build
+
+        cd /home/frappe/frappe-bench/sites
+        bench --site "${SITE_NAME}" migrate
+        bench --site "${SITE_NAME}" clear-cache
+        bench --site "${SITE_NAME}" clear-website-cache
+
+  mariadb:
+    image: mariadb:10.6
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+    volumes:
+      - db_data:/var/lib/mysql
+
+  redis-cache:
+    image: redis:6.2
+    restart: always
+
+  redis-queue:
+    image: redis:6.2
+    restart: always
+
+  redis-socketio:
+    image: redis:6.2
+    restart: always
+
+volumes:
+  app_sites:
+  db_data:

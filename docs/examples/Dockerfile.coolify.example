@@ -1,0 +1,39 @@
+ARG FRAPPE_BRANCH=version-15
+ARG FRAPPE_IMAGE_PREFIX=ghcr.io/frappe
+ARG FRAPPE_PATH=https://github.com/frappe/frappe
+
+FROM ${FRAPPE_IMAGE_PREFIX}/build:${FRAPPE_BRANCH} AS builder
+
+ARG FRAPPE_BRANCH
+ARG FRAPPE_PATH
+
+USER frappe
+WORKDIR /home/frappe
+
+RUN bench init \
+    --frappe-branch="${FRAPPE_BRANCH}" \
+    --frappe-path="${FRAPPE_PATH}" \
+    --no-procfile \
+    --no-backups \
+    --skip-redis-config-generation \
+    /home/frappe/frappe-bench
+
+WORKDIR /home/frappe/frappe-bench
+
+COPY --chown=frappe:frappe . /home/frappe/frappe-bench/apps/acentem_takipte
+
+RUN ./env/bin/pip install -r apps/acentem_takipte/requirements.txt \
+    && cd apps/acentem_takipte/frontend \
+    && npm ci \
+    && npm run build \
+    && printf '\nacentem_takipte\n' >> /home/frappe/frappe-bench/sites/apps.txt
+
+FROM ${FRAPPE_IMAGE_PREFIX}/base:${FRAPPE_BRANCH}
+
+ARG FRAPPE_BRANCH
+
+USER frappe
+WORKDIR /home/frappe/frappe-bench
+ENV PATH=/home/frappe/frappe-bench/env/bin:${PATH}
+
+COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench /home/frappe/frappe-bench

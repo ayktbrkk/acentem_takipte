@@ -25,6 +25,8 @@ This directory contains the main repository documentation for `Acentem Takipte`.
 
 - [Production Deploy Checklist](PRODUCTION_DEPLOY_CHECKLIST.md)
   - Production-safe deployment and rollback checklist.
+- [Coolify VPS Deployment Guide](COOLIFY_VPS_DEPLOY_GUIDE.md)
+  - End-to-end guide for installing Coolify on a VPS and deploying this repository as a multi-service Frappe stack.
 - [OPS Alert Monitor](OPS_ALERT_MONITOR.md)
   - Ops alerting setup and monitor guidance.
 
@@ -44,3 +46,4 @@ This directory contains the main repository documentation for `Acentem Takipte`.
 3. [Design Guidelines](DESIGN_GUIDELINES.md)
 4. [UI Review Checklist](UI_REVIEW_CHECKLIST.md)
 5. [Production Deploy Checklist](PRODUCTION_DEPLOY_CHECKLIST.md)
+6. [Coolify VPS Deployment Guide](COOLIFY_VPS_DEPLOY_GUIDE.md)

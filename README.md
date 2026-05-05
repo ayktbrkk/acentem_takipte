@@ -175,6 +175,8 @@ sudo bench setup production frappe
 
 For the actual release procedure, backups, production-safe flags, post-deploy checks, and rollback expectations, use [docs/PRODUCTION_DEPLOY_CHECKLIST.md](docs/PRODUCTION_DEPLOY_CHECKLIST.md).
 
+If you want to self-host the app on your own VPS with Coolify, use [docs/COOLIFY_VPS_DEPLOY_GUIDE.md](docs/COOLIFY_VPS_DEPLOY_GUIDE.md). That guide covers Coolify installation, image strategy, multi-service compose layout, site configuration, asset serving, and the Frappe-specific pitfalls that matter for this repository.
+
 Production boot is also guarded by the app itself: if `at_enable_demo_endpoints=1`, desk boot fails fast; if `developer_mode=1`, the app logs a deployment warning so the issue is visible before release validation is signed off.
 
 ## First-Time Access

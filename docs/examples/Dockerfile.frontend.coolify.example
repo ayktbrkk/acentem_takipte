@@ -1,0 +1,11 @@
+FROM nginxinc/nginx-unprivileged:1.27-alpine
+
+RUN apk add --no-cache bash gettext
+
+COPY docs/examples/docker-entrypoint.frontend.coolify.example.sh /docker-entrypoint.d/40-render-frappe-template.sh
+COPY docs/examples/nginx.default.conf.coolify.example.template /etc/nginx/templates/default.conf.template
+
+RUN chmod +x /docker-entrypoint.d/40-render-frappe-template.sh \
+	&& chown -R nginx:nginx /docker-entrypoint.d /etc/nginx /usr/share/nginx/html /var/cache/nginx /var/run
+
+USER nginx
