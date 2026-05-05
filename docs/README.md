@@ -2,6 +2,11 @@
 
 This directory contains the main repository documentation for `Acentem Takipte`.
 
+## Contributor Guide
+
+- [AGENTS.md](../AGENTS.md)
+  - Fast-start contributor guide with onboarding order, source-of-truth rules, validation matrix, task playbooks, and common mistakes.
+
 ## Core Architecture
 
 - [Architecture Overview](ARCHITECTURE_OVERVIEW.md)
