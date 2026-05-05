@@ -4,6 +4,8 @@ This guide explains how to deploy `acentem_takipte` on your own VPS with Coolify
 
 It is written for the actual structure of this repository, not for a generic Frappe app template.
 
+It also reflects the live deployment path that was verified against a real Coolify v4 installation on a Hetzner VPS, including the fixes that were required to make the public domain and `/at` route work correctly.
+
 Important constraint up front:
 
 - this repository does not ship a ready-to-run `Dockerfile`
@@ -41,9 +43,14 @@ For this repository, the production shape that works reliably is:
   - runs Gunicorn for Frappe
   - runs from `/home/frappe/frappe-bench/sites`
 - `frontend`
-  - `frappe/erpnext-nginx:latest`
+  - same custom app image as backend
+  - runs `nginx-entrypoint.sh`
+  - listens on container port `8080`
   - proxies public HTTP(S) traffic to backend
-  - serves built assets from the shared `sites/assets` volume
+  - serves built assets from the shared `sites` volume
+- `websocket`
+  - same custom app image as backend
+  - runs `node /home/frappe/frappe-bench/apps/frappe/socketio.js`
 - `mariadb`
   - database
 - `redis-cache`
@@ -233,6 +240,13 @@ This repository now includes starter templates you can copy and adapt:
 
 Treat these files as starting points, not drop-in production files. They still need your own base image, registry, secrets, and domain values.
 
+The app image and Docker Compose examples under `docs/examples/` were also validated during a live Coolify deployment recovery. In particular, the current examples already include the fixes that were required for this repo:
+
+- the app image installs `acentem_takipte` into the Bench environment with `pip install -e`
+- the configurator installs only `acentem_takipte` by default, not `erpnext`
+- the frontend service exposes container port `8080` so Coolify can generate a working proxy target
+- the configurator shell loop escapes `$$app` correctly so Docker Compose does not eat the variable before runtime
+
 The app Dockerfile example now follows the same broad shape as `frappe_docker`: build Bench in a `build` image, then copy the finished bench into a `base` image that can serve `backend`, `frontend`, and `websocket` roles.
 
 The `.env` example is intentionally minimal. Put real secret values into Coolify environment variables or a private deployment repository, not into this repository.
@@ -304,6 +318,8 @@ services:
 
   frontend:
     image: ghcr.io/your-org/acentem-worker:latest
+    expose:
+      - "8080"
     command: ["nginx-entrypoint.sh"]
 
   websocket:
@@ -389,8 +405,6 @@ frontend:
 
 In that model, the frontend container reads assets through the shared bench `sites` volume and does not need a separate host bind mount to `/usr/share/nginx/html/assets`.
 
-The extra direct assets mount was needed in the live Hetzner deployment only because that deployment used `frappe/erpnext-nginx:latest` as a separate stock frontend image.
-
 If you do not do this, the usual symptom is:
 
 - login page HTML loads
@@ -419,29 +433,34 @@ If you want to set an upstream read timeout, use the correctly spelled key:
 PROXY_READ_TIMEOUT=120
 ```
 
+Also make sure the frontend service is discoverable by Coolify's proxy generator. In the validated deployment, that meant keeping the service on container port `8080` and declaring it explicitly in Compose:
+
+```yaml
+frontend:
+  expose:
+    - "8080"
+```
+
+Without that, Coolify's Traefik side can stay stuck on a `service "frontend-..." error: port is missing` 503 even while the frontend container itself is running.
+
 Be aware that some stock nginx images published in the Frappe ecosystem still expose the misspelled `PROXY_READ_TIMOUT` variable in the container environment by default. Treat that as an upstream image quirk. Keep your own deployment configuration explicit, and always verify the effective nginx config with `nginx -T | grep proxy_read_timeout` after changes.
 
-### Why backend needs socket.io
+### Why the deployment needs a dedicated socket.io service
 
 The default Frappe web bundles will attempt socket.io activity unless realtime is fully disabled everywhere.
 
 For a production setup, the cleaner path is to run socket.io correctly instead of letting `/socket.io` return `502`.
 
-A working pattern is to launch the Node socket process alongside Gunicorn in the backend container command.
+A working pattern for this repository is to keep Gunicorn and socket.io in separate services and point nginx at the websocket service on port `9000`.
 
 Example pattern:
 
 ```yaml
-backend:
+websocket:
   image: ghcr.io/your-org/acentem-worker:latest
-  working_dir: /home/frappe/frappe-bench/sites
   command:
-    - /bin/sh
-    - -lc
-    - |
-      export PATH=/home/frappe/.nvm/versions/node/v20.20.2/bin:$PATH
-      node /home/frappe/frappe-bench/apps/frappe/socketio.js >/proc/1/fd/1 2>/proc/1/fd/2 &
-      exec /home/frappe/frappe-bench/env/bin/gunicorn --bind=0.0.0.0:8000 --threads=4 --workers=2 --worker-class=gthread --worker-tmp-dir=/dev/shm --timeout=120 --preload frappe.app:application
+    - node
+    - /home/frappe/frappe-bench/apps/frappe/socketio.js
 ```
 
 That assumes your image actually contains Node at that path. If it does not, adjust the path for your image.
@@ -461,9 +480,11 @@ Recommended values:
 
 ```text
 SITE_NAME=your-domain.com
-INSTALL_APPS=erpnext,acentem_takipte
+INSTALL_APPS=acentem_takipte
 FRAPPE_SITE_NAME_HEADER=your-domain.com
 ```
+
+For this repository, do not default `INSTALL_APPS` to `erpnext,acentem_takipte` unless your image really contains ERPNext. During the live deployment, leaving `erpnext` in that list caused the configurator to fail with `No module named 'erpnext'`.
 
 ### Why `FRAPPE_SITE_NAME_HEADER` matters
 
@@ -582,7 +603,23 @@ https://your-domain.com
 
 Coolify will route that to the frontend service.
 
-The custom frontend image example in `docs/examples/` listens on `8080` so it can run as a non-root nginx user.
+For Docker Compose applications in Coolify, store the domain as a full URL, not a bare hostname.
+
+Use:
+
+```text
+https://your-domain.com
+```
+
+Do not use:
+
+```text
+your-domain.com
+```
+
+In the validated deployment, a bare hostname caused Coolify to generate broken Traefik rules such as `Host(\`\`) && PathPrefix(...)`, which left the public site on `503` until the domain fields were rewritten as full URLs.
+
+The current `docs/examples/docker-compose.coolify.example.yml` expects the `frontend` service to be the only public entrypoint. Keep the domain attached there.
 
 ### DNS setup
 
@@ -625,8 +662,9 @@ Verify:
 Verify:
 
 - backend listens on `8000`
-- socket.io listens on `9000`
-- nginx can serve the actual hash-named CSS files from `sites/assets`
+- websocket listens on `9000`
+- frontend listens on `8080`
+- nginx can serve the actual hash-named CSS files from the shared `sites` volume
 
 ## Part 10: Known Failure Modes For This Repo
 
@@ -639,12 +677,15 @@ Usually means one of these:
 - Coolify routed to the wrong service
 - frontend service has no HTTPS router
 - frontend container is down
+- frontend container is up but Coolify could not detect an exposed upstream port
 
 Check:
 
 - domain assignment in Coolify
+- domain value format in Coolify, which should be `https://your-domain.com`
 - frontend container logs
 - generated proxy labels
+- Coolify proxy logs for `service "frontend-..." error: port is missing`
 
 ### 2. Public domain resolves, but Frappe says the site does not exist
 
@@ -672,8 +713,8 @@ Usually means socket.io is not running.
 Fixes:
 
 - add `socketio_port` to common site config
-- start the Node `socketio.js` process
-- verify port `9000` is listening inside backend
+- start the Node `socketio.js` process in the dedicated `websocket` service
+- verify port `9000` is listening inside the websocket container
 
 ### 5. App installs, but `/at` is blank
 
@@ -702,16 +743,91 @@ Use this short version when repeating the deploy.
 4. Create a Coolify Docker Compose resource.
 5. Add backend, frontend, MariaDB, and 3 Redis services.
 6. Set backend `working_dir` to `/home/frappe/frappe-bench/sites`.
-7. Mount shared `sites/assets` into nginx docroot.
+7. Mount the shared `sites` volume into both backend and frontend.
 8. Set `FRAPPE_SITE_NAME_HEADER` to the actual site domain.
-9. Ensure `default_site`, `serve_default_site`, and `socketio_port` exist in common site config.
-10. Create the site.
-11. Install `acentem_takipte`.
-12. Build frontend assets.
-13. Run migrate and clear cache.
-14. Verify `/login`, `/at`, and socket.io behavior.
+9. Set `INSTALL_APPS=acentem_takipte` unless your image also includes ERPNext.
+10. Expose frontend container port `8080` in Compose.
+11. Enter the Coolify domain as a full URL such as `https://your-domain.com`.
+12. Ensure `default_site`, `serve_default_site`, and `socketio_port` exist in common site config.
+13. Create the site.
+14. Install `acentem_takipte`.
+15. Build frontend assets.
+16. Run migrate and clear cache.
+17. Verify `/login`, `/at`, and socket.io behavior.
 
-## Part 12: Recommended Validation Commands
+## Part 12: Example Copy-Paste Runbook
+
+This section is intentionally example-only. The values below are placeholders, not real secrets or live infrastructure values.
+
+### Example deployment values
+
+Use a private password manager and replace these before a real deployment:
+
+```text
+VPS_IP=203.0.113.10
+COOLIFY_PANEL_DOMAIN=https://coolify.example.com
+APP_DOMAIN=https://app.example.com
+SITE_NAME=app.example.com
+APP_IMAGE=ghcr.io/example-org/acentem-worker:latest
+MYSQL_ROOT_PASSWORD=replace-with-example-db-root-password
+ADMIN_PASSWORD=replace-with-example-admin-password
+INSTALL_APPS=acentem_takipte
+```
+
+The `203.0.113.10` address above is a documentation-only example from the reserved TEST-NET range.
+
+### Example DNS setup
+
+Create these DNS records:
+
+- `A coolify.example.com -> 203.0.113.10`
+- `A app.example.com -> 203.0.113.10`
+
+### Example Coolify environment variables
+
+In the Coolify application, set values like these:
+
+```text
+SITE_NAME=app.example.com
+DB_ROOT_USER=root
+MYSQL_ROOT_PASSWORD=replace-with-example-db-root-password
+ADMIN_PASSWORD=replace-with-example-admin-password
+INSTALL_APPS=acentem_takipte
+APP_IMAGE=ghcr.io/example-org/acentem-worker:latest
+```
+
+The compose example already maps `FRAPPE_SITE_NAME_HEADER` from `SITE_NAME`, so you do not need to define it separately unless you intentionally override the example.
+
+### Example first deployment flow
+
+1. Build and publish your app image, for example `ghcr.io/example-org/acentem-worker:latest`.
+2. In Coolify, create a new Docker Compose application that points to this repository.
+3. Set the compose file path to `/docs/examples/docker-compose.coolify.example.yml`.
+4. Set the public domain on the `frontend` service as `https://app.example.com`.
+5. Add the example environment variables above with your real values.
+6. Deploy once and let Coolify create the containers and volumes.
+7. Confirm that `configurator` either exits successfully or is at least idempotent on the next deploy.
+8. Check that the public endpoints respond as expected.
+
+### Example post-deploy checks
+
+From outside the server:
+
+```bash
+curl -I https://app.example.com/login
+curl -I https://app.example.com/at
+```
+
+Expected example result:
+
+- `/login` returns `200 OK`
+- `/at` redirects to `/login?redirect-to=/at` when you are not authenticated
+
+### Example cleanup rule
+
+If you debug inside Coolify's application directory on the VPS, do not run ad hoc `docker compose up` commands there unless you are deliberately replacing Coolify management. Manual compose runs can create a second unmanaged container set that looks similar to the real deployment and complicates recovery.
+
+## Part 13: Recommended Validation Commands
 
 After deploy, these are the first commands to run.
 
@@ -727,17 +843,22 @@ curl -I https://your-domain.com/assets/frappe/dist/css/website.bundle.YOURHASH.c
 
 ```bash
 curl -I http://127.0.0.1:8000/login
+```
+
+### From inside the websocket container
+
+```bash
 curl -I http://127.0.0.1:9000/socket.io/?EIO=4&transport=polling
 ```
 
 ### From inside the frontend container
 
 ```bash
-ls /usr/share/nginx/html/assets/frappe/dist/css
-cat /etc/nginx/conf.d/default.conf
+curl -I http://127.0.0.1:8080/login
+nginx -T | grep -E 'listen|proxy_read_timeout|upstream|socket.io'
 ```
 
-## Part 13: What To Keep In Git And What Not To Keep In Git
+## Part 14: What To Keep In Git And What Not To Keep In Git
 
 Keep in git:
 
@@ -751,7 +872,7 @@ Do not keep in git:
 - site-specific `site_config.json` secrets
 - emergency one-off hotfix values
 
-## Part 14: When To Prefer Raw Bench Instead Of Coolify
+## Part 15: When To Prefer Raw Bench Instead Of Coolify
 
 Choose raw Bench instead of Coolify if:
 
@@ -772,6 +893,6 @@ For this repository, the most reliable Coolify path is:
 
 1. prepare and publish your own custom Frappe app image
 2. deploy with Docker Compose in Coolify
-3. keep nginx assets, backend working directory, site header, and socket.io wiring explicit
+3. keep frontend port exposure, backend working directory, site header, socket.io wiring, and Coolify domain format explicit
 
-Do not rely on generic Frappe defaults for those four areas. They are the places where this app most easily looks healthy at container level while still failing at runtime.
+Do not rely on generic Frappe defaults for those areas. They are the places where this app most easily looks healthy at container level while still failing at runtime.
