@@ -23,6 +23,7 @@ WORKDIR /home/frappe/frappe-bench
 COPY --chown=frappe:frappe . /home/frappe/frappe-bench/apps/acentem_takipte
 
 RUN ./env/bin/pip install -r apps/acentem_takipte/requirements.txt \
+    && ./env/bin/pip install -e apps/acentem_takipte \
     && cd apps/acentem_takipte/frontend \
     && npm ci \
     && npm run build \
