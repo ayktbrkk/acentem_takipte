@@ -11,21 +11,16 @@
     </div>
 
     <!-- Main Content: Detailed Lists (8 units) -->
-    <div class="space-y-6 xl:col-span-8">
-      <SectionPanel :title="t('followUpSlaTitle')" :count="formatNumber(prioritizedFollowUpItems.length)">
+    <div class="space-y-5 xl:col-span-8">
+      <SectionPanel
+        :title="t('followUpSlaTitle')"
+        :count="formatNumber(prioritizedFollowUpItems.length)"
+        panel-class="surface-card rounded-xl p-4"
+      >
         <p class="mb-3 text-xs text-slate-500">{{ t("followUpSlaHint") }}</p>
         <p v-if="followUpSettingsHint" class="mb-3 text-xs font-medium text-slate-600">{{ followUpSettingsHint }}</p>
         <div v-if="followUpLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <div v-else class="space-y-3">
-          <div class="grid gap-3 md:grid-cols-3">
-            <SaaSMetricCard
-              v-for="card in followUpSummaryCards"
-              :key="card.label"
-              :label="card.label"
-              :value="card.value"
-              :value-class="card.valueClass"
-            />
-          </div>
           <ul v-if="prioritizedFollowUpItems.length > 0" class="space-y-2">
             <MetaListCard
               v-for="item in pagedPreviewItems(prioritizedFollowUpItems, 'dailyFollowUp')"
@@ -33,13 +28,14 @@
               :title="followUpTitle(item)"
               :description="followUpDescription(item)"
               description-class="mt-2 text-xs font-semibold text-slate-600"
+              dense
               clickable
               @click="openFollowUpItem(item)"
             >
-              <MiniFactList :items="followUpFacts(item)" />
+              <MiniFactList :items="followUpFacts(item)" dense />
             </MetaListCard>
           </ul>
-          <EmptyState v-else />
+          <EmptyState v-else :title="t('noFollowUpItems')" />
           <PreviewPager
             v-if="prioritizedFollowUpItems.length > 0"
             :current-page="previewResolvedPage('dailyFollowUp', prioritizedFollowUpItems)"
@@ -52,7 +48,11 @@
         </div>
       </SectionPanel>
 
-      <SectionPanel :title="t('renewalAlertTitle')" :count="displayRenewalAlertItems.length">
+      <SectionPanel
+        :title="t('renewalAlertTitle')"
+        :count="displayRenewalAlertItems.length"
+        panel-class="surface-card rounded-xl p-4"
+      >
         <p class="mb-3 text-xs text-slate-500">{{ t("renewalAlertHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <ul v-else-if="displayRenewalAlertItems.length > 0" class="space-y-2">
@@ -62,16 +62,18 @@
             :title="task.policy || '-'"
             :description="formatDaysToDue(task.due_date)"
             description-class="mt-2 text-xs font-semibold text-amber-700"
+            dense
+            emphasis-class="border-l-4 border-l-amber-300"
             clickable
             @click="openRenewalTaskItem(task)"
           >
             <template #trailing>
-              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" size="xs" />
             </template>
-            <MiniFactList :items="renewalAlertFacts(task)" />
+            <MiniFactList :items="renewalAlertFacts(task)" dense />
           </MetaListCard>
         </ul>
-        <EmptyState v-else />
+        <EmptyState v-else :title="t('noRenewalAlert')" />
         <PreviewPager
           v-if="displayRenewalAlertItems.length > 0"
           :current-page="previewResolvedPage('dailyRenewalAlerts', displayRenewalAlertItems)"
@@ -83,19 +85,14 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('todayTasksTitle')" :count="formatNumber(priorityTaskItems.length)">
+      <SectionPanel
+        :title="t('todayTasksTitle')"
+        :count="formatNumber(priorityTaskItems.length)"
+        panel-class="surface-card rounded-xl p-4"
+      >
         <p class="mb-3 text-xs text-slate-500">{{ t("myTasksHint") }}</p>
         <div v-if="myTasksLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
         <div v-else class="space-y-3">
-          <div class="grid gap-3 md:grid-cols-3">
-            <SaaSMetricCard
-              v-for="card in taskSummaryCards"
-              :key="card.label"
-              :label="card.label"
-              :value="card.value"
-              :value-class="card.valueClass"
-            />
-          </div>
           <ul v-if="priorityTaskItems.length > 0" class="space-y-2">
             <MetaListCard
               v-for="task in pagedPreviewItems(priorityTaskItems, 'dailyTasks')"
@@ -103,13 +100,14 @@
               :title="task.task_title || task.name || '-'"
               :description="localizeStatus(task.status)"
               description-class="mt-2 text-xs font-semibold text-slate-600"
+              dense
               clickable
               @click="openTaskItem(task)"
             >
-              <MiniFactList :items="taskFacts(task)" />
+              <MiniFactList :items="taskFacts(task)" dense />
             </MetaListCard>
           </ul>
-          <EmptyState v-else />
+          <EmptyState v-else :title="t('todayTasksEmpty')" />
           <PreviewPager
             v-if="priorityTaskItems.length > 0"
             :current-page="previewResolvedPage('dailyTasks', priorityTaskItems)"
@@ -124,12 +122,14 @@
     </div>
 
     <!-- Sidebar: Actions & Summaries (4 units) -->
-    <div class="space-y-6 xl:col-span-4">
-      <DashboardQuickActions :actions="visibleQuickActions" :open-page="openPage" :t="t" />
-
-      <SectionPanel :title="t('recentActivitiesTitle')" :count="formatNumber(recentActivityItems.length)">
+    <div class="space-y-5 xl:col-span-4">
+      <SectionPanel
+        :title="t('recentActivitiesTitle')"
+        :count="formatNumber(recentActivityItems.length)"
+        panel-class="surface-card rounded-xl p-4"
+      >
         <div v-if="myActivitiesLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="recentActivityItems.length === 0" />
+        <EmptyState v-else-if="recentActivityItems.length === 0" :title="t('recentActivitiesEmpty')" compact />
         <ul v-else class="space-y-2">
           <MetaListCard
             v-for="activity in pagedPreviewItems(recentActivityItems, 'dailyActivities')"
@@ -137,10 +137,11 @@
             :title="activity.activity_title || activity.activity_type || activity.name || '-'"
             :description="localizeStatus(activity.status)"
             description-class="mt-2 text-xs font-semibold text-slate-600"
+            dense
             clickable
             @click="openActivityItem(activity)"
           >
-            <MiniFactList :items="activityFacts(activity)" />
+            <MiniFactList :items="activityFacts(activity)" dense />
           </MetaListCard>
         </ul>
         <PreviewPager
@@ -154,21 +155,26 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('openClaimsTitle')" :count="formatNumber(openClaimsPreviewRows.length)">
+      <SectionPanel
+        :title="t('openClaimsTitle')"
+        :count="formatNumber(openClaimsPreviewRows.length)"
+        panel-class="surface-card rounded-xl p-4"
+      >
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="openClaimsPreviewRows.length === 0" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="openClaimsPreviewRows.length === 0" :title="t('noOpenClaims')" compact />
+        <ul v-else class="space-y-2">
           <EntityPreviewCard
             v-for="claim in pagedPreviewItems(openClaimsPreviewRows, 'dailyClaims')"
             :key="claim.name"
             :title="claim.claim_no || claim.name"
+            dense
             clickable
             @click="openClaimItem(claim)"
           >
             <template #trailing>
-              <StatusBadge domain="claim" :status="claim.claim_status" />
+              <StatusBadge domain="claim" :status="claim.claim_status" size="xs" />
             </template>
-            <MiniFactList :items="claimFacts(claim)" />
+            <MiniFactList :items="claimFacts(claim)" dense />
           </EntityPreviewCard>
         </ul>
         <PreviewPager
@@ -179,39 +185,6 @@
           :view-all-label="t('viewAllItems')"
           @change-page="setPreviewPage('dailyClaims', $event, openClaimsPreviewRows)"
           @view-all="openPreviewList('claims')"
-        />
-      </SectionPanel>
-
-      <SectionPanel :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)">
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="displayRecentPolicies.length === 0" />
-        <ul v-else class="space-y-3">
-          <EntityPreviewCard
-            v-for="policy in pagedPreviewItems(displayRecentPolicies, 'dailyPolicies')"
-            :key="policy.name"
-            :title="policy.policy_no || policy.name"
-            clickable
-            @click="openPolicyItem(policy)"
-          >
-            <template #trailing>
-              <StatusBadge domain="policy" :status="policy.status" />
-            </template>
-            <MiniFactList :items="recentPolicyFacts(policy)" />
-            <p class="mt-1 text-xs text-slate-600">
-              {{ formatCurrencyBy(policy.gross_premium, policy.currency || "TRY") }}
-              /
-              {{ formatCurrencyBy(policy.commission_amount || policy.commission, policy.currency || "TRY") }}
-            </p>
-          </EntityPreviewCard>
-        </ul>
-        <PreviewPager
-          v-if="displayRecentPolicies.length > 0"
-          :current-page="previewResolvedPage('dailyPolicies', displayRecentPolicies)"
-          :total-pages="previewPageCount(displayRecentPolicies)"
-          :show-view-all="shouldShowViewAll(displayRecentPolicies)"
-          :view-all-label="t('viewAllItems')"
-          @change-page="setPreviewPage('dailyPolicies', $event, displayRecentPolicies)"
-          @view-all="openPreviewList('policies')"
         />
       </SectionPanel>
     </div>
@@ -228,7 +201,6 @@ import PreviewPager from "../app-shell/PreviewPager.vue";
 import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
-import DashboardQuickActions from "./DashboardQuickActions.vue";
 
 
 
@@ -254,7 +226,6 @@ const props = defineProps({
   openClaimItem: { type: Function, required: true },
   openClaimsPreviewRows: { type: Array, required: true },
   openFollowUpItem: { type: Function, required: true },
-  openPage: { type: Function, required: true },
   openPolicyItem: { type: Function, required: true },
   openPreviewList: { type: Function, required: true },
   openRenewalTaskItem: { type: Function, required: true },
@@ -273,7 +244,6 @@ const props = defineProps({
   taskFacts: { type: Function, required: true },
   t: { type: Function, required: true },
   locale: { type: String, default: "en" },
-  visibleQuickActions: { type: Array, required: true },
 });
 
 const dailySummaryCards = computed(() => [
@@ -283,12 +253,6 @@ const dailySummaryCards = computed(() => [
   { label: props.t("openClaimsTitle"), value: props.formatNumber(props.openClaimsPreviewRows.length), valueClass: "text-at-green" },
 ]);
 
-const followUpSummaryCards = computed(() => [
-  { label: props.t("followUpOverdue"), value: props.formatNumber(props.followUpSummary.overdue || 0), valueClass: "text-at-amber" },
-  { label: props.t("followUpToday"), value: props.formatNumber(props.followUpSummary.due_today || 0), valueClass: "text-slate-900" },
-  { label: props.t("followUpSoon"), value: props.formatNumber(props.followUpSummary.due_soon || 0), valueClass: "text-brand-600" },
-]);
-
 const followUpSettingsHint = computed(() => {
   const settings = props.followUpMeta?.settings || {};
   const dueSoonDays = Number(settings.follow_up_due_soon_days || 0);
@@ -296,12 +260,6 @@ const followUpSettingsHint = computed(() => {
   if (!dueSoonDays || !previewLimit) return "";
   return `${props.t("followUpSettingsLead")} ${props.t("followUpWindowInfoLabel")}: ${props.formatNumber(dueSoonDays)} ${props.t("followUpDaysUnit")} • ${props.t("followUpPreviewInfoLabel")}: ${props.formatNumber(previewLimit)} ${props.t("followUpRecordsUnit")}`;
 });
-
-const taskSummaryCards = computed(() => [
-  { label: props.t("taskOverdue"), value: props.formatNumber(props.myTaskSummary.overdue || 0), valueClass: "text-at-amber" },
-  { label: props.t("taskToday"), value: props.formatNumber(props.myTaskSummary.due_today || 0), valueClass: "text-slate-900" },
-  { label: props.t("taskSoon"), value: props.formatNumber(props.myTaskSummary.due_soon || 0), valueClass: "text-brand-600" },
-]);
 
 function upperLabel(text) {
   const loc = String(props.locale || "en").toLowerCase();

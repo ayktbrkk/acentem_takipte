@@ -45,7 +45,7 @@ export function useDashboardNavigation({ router, route, normalizeDashboardTab })
         openPage("/claims");
         return;
       case "reconciliation":
-        openPage("/reconciliation-items");
+        router.push({ name: "reconciliation-workbench" });
         return;
       case "leads":
         openPage("/leads");

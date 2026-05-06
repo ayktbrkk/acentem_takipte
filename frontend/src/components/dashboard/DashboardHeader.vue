@@ -63,10 +63,12 @@
       <button
         v-for="tab in dashboardTabs"
         :key="tab.key"
+        :id="tab.tabId"
         class="at-tab-chip shrink-0"
         :class="activeDashboardTab === tab.key ? 'at-tab-chip-active' : 'at-tab-chip-idle'"
         type="button"
         role="tab"
+        :aria-controls="tab.panelId"
         :aria-selected="activeDashboardTab === tab.key"
         @click="$emit('set-dashboard-tab', tab.key)"
       >

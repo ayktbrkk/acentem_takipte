@@ -11,22 +11,23 @@
     </div>
 
     <!-- Left: Collections Queue (8 units) -->
-    <div class="space-y-6 xl:col-span-8">
-      <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)">
+    <div class="space-y-5 xl:col-span-8">
+      <SectionPanel :title="t('todayCollectionsTitle')" :count="formatNumber(dueTodayCollectionPayments.length)" panel-class="surface-card rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="dueTodayCollectionPayments.length === 0" :title="t('noTodayCollections')" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="dueTodayCollectionPayments.length === 0" :title="t('noTodayCollections')" compact />
+        <ul v-else class="space-y-2">
           <EntityPreviewCard
             v-for="payment in pagedPreviewItems(dueTodayCollectionPayments, 'collectionsDueToday')"
             :key="payment.name"
             :title="payment.payment_no || payment.name"
+            dense
             clickable
             @click="openPaymentItem(payment)"
           >
             <template #trailing>
-              <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
+              <StatusBadge domain="payment_direction" :status="payment.payment_direction" size="xs" />
             </template>
-            <MiniFactList :items="dashboardPaymentFacts(payment)" />
+            <MiniFactList :items="dashboardPaymentFacts(payment)" dense />
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrency(payment.amount_try) }}</p>
           </EntityPreviewCard>
         </ul>
@@ -41,21 +42,23 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('overdueCollectionsTitle')" :count="formatNumber(overdueCollectionPayments.length)">
+      <SectionPanel :title="t('overdueCollectionsTitle')" :count="formatNumber(overdueCollectionPayments.length)" panel-class="surface-card rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="overdueCollectionPayments.length === 0" :title="t('noOverdueCollections')" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="overdueCollectionPayments.length === 0" :title="t('noOverdueCollections')" compact />
+        <ul v-else class="space-y-2">
           <EntityPreviewCard
             v-for="payment in pagedPreviewItems(overdueCollectionPayments, 'collectionsOverdue')"
             :key="payment.name"
             :title="payment.payment_no || payment.name"
+            dense
+            emphasis-class="border-l-4 border-l-amber-300"
             clickable
             @click="openPaymentItem(payment)"
           >
             <template #trailing>
-              <StatusBadge domain="payment_direction" :status="payment.payment_direction" />
+              <StatusBadge domain="payment_direction" :status="payment.payment_direction" size="xs" />
             </template>
-            <MiniFactList :items="dashboardPaymentFacts(payment)" />
+            <MiniFactList :items="dashboardPaymentFacts(payment)" dense />
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrency(payment.amount_try) }}</p>
           </EntityPreviewCard>
         </ul>
@@ -72,14 +75,10 @@
     </div>
 
     <!-- Right: Metrics & Risk (4 units) -->
-    <div class="space-y-6 xl:col-span-4">
-      <SectionPanel :title="t('collectionsPerformanceTitle')" :show-count="false">
+    <div class="space-y-5 xl:col-span-4">
+      <SectionPanel v-if="showCollectionsPerformance" :title="t('collectionsPerformanceTitle')" :show-count="false" panel-class="surface-card rounded-xl p-4">
         <p class="mb-3 text-xs text-slate-500">{{ t("collectionsPerformanceHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState
-          v-else-if="collectionPaymentStatusSummary.length === 0 && collectionPaymentDirectionSummary.length === 0"
-          :title="t('noCollectionPerformance')"
-        />
         <div v-else class="space-y-4">
           <div>
             <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{{ t("paymentStatusBreakdownTitle") }}</p>
@@ -114,10 +113,10 @@
         </div>
       </SectionPanel>
 
-      <SectionPanel :title="t('collectionsRiskTitle')" :count="formatNumber(collectionRiskRows.length)">
+      <SectionPanel :title="t('collectionsRiskTitle')" :count="formatNumber(collectionRiskRows.length)" panel-class="surface-card rounded-xl p-4">
         <p class="mb-3 text-xs text-slate-500">{{ t("collectionsRiskHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="collectionRiskRows.length === 0" :title="t('noCollectionsRisk')" />
+        <EmptyState v-else-if="collectionRiskRows.length === 0" :title="t('noCollectionsRisk')" compact />
         <ul v-else class="space-y-2">
           <MetaListCard
             v-for="row in pagedPreviewItems(collectionRiskRows, 'collectionsRisk')"
@@ -125,10 +124,11 @@
             :title="row.title"
             :description="row.description"
             description-class="mt-2 text-xs font-semibold text-slate-600"
+            dense
             clickable
             @click="openCollectionRiskItem(row)"
           >
-            <MiniFactList :items="collectionRiskFacts(row)" />
+            <MiniFactList :items="collectionRiskFacts(row)" dense />
           </MetaListCard>
         </ul>
         <PreviewPager
@@ -142,26 +142,23 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)">
+      <SectionPanel :title="t('reconciliationPreview')" :count="formatNumber(reconciliationPreviewRows.length)" panel-class="surface-card rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="reconciliationPreviewRows.length === 0" :title="t('noReconciliationPreview')" />
+        <EmptyState v-else-if="reconciliationPreviewRows.length === 0" :title="t('noReconciliationPreview')" compact />
         <div v-else class="space-y-3">
-          <div class="grid gap-3 md:grid-cols-2">
-            <SaaSMetricCard :label="t('mismatchRows')" :value="formatNumber(reconciliationPreviewMetrics.open || 0)" value-class="text-at-amber" />
-            <SaaSMetricCard :label="t('openDifference')" :value="formatCurrency(reconciliationPreviewOpenDifference)" value-class="text-brand-600" />
-          </div>
           <ul class="space-y-2">
             <MetaListCard
               v-for="row in pagedPreviewItems(reconciliationPreviewRows, 'collectionsReconciliation')"
               :key="row.name"
               :title="`${row.source_doctype || '-'} / ${row.source_name || '-'}`"
+              dense
               clickable
               @click="openReconciliationItem(row)"
             >
               <template #trailing>
-                <StatusBadge domain="reconciliation" :status="row.status" />
+                <StatusBadge domain="reconciliation" :status="row.status" size="xs" />
               </template>
-              <MiniFactList :items="dashboardReconciliationFacts(row)" />
+              <MiniFactList :items="dashboardReconciliationFacts(row)" dense />
             </MetaListCard>
           </ul>
           <PreviewPager
@@ -225,4 +222,9 @@ const collectionsSummaryCards = computed(() => [
   { label: props.t("reconciliationPreview"), value: props.formatNumber(props.reconciliationPreviewRows.length), valueClass: "text-slate-900" },
   { label: props.t("openDifference"), value: props.formatCurrency(props.reconciliationPreviewOpenDifference), valueClass: "text-at-green" },
 ]);
+
+const showCollectionsPerformance = computed(() => {
+  if (props.dashboardLoading) return true;
+  return props.collectionPaymentStatusSummary.length > 0 || props.collectionPaymentDirectionSummary.length > 0;
+});
 </script>

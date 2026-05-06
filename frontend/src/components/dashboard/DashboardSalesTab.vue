@@ -11,23 +11,24 @@
     </div>
 
     <!-- Left: Pipelines (8 units) -->
-    <div class="space-y-6 xl:col-span-8">
-      <SectionPanel :title="t('offerPipeline')" :count="formatNumber(salesPipelineOffers.length)">
+    <div class="space-y-5 xl:col-span-8">
+      <SectionPanel :title="t('offerPipeline')" :count="formatNumber(salesPipelineOffers.length)" panel-class="surface-card rounded-xl p-4">
         <p class="mb-3 text-xs text-slate-500">{{ t("salesPipelineHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="salesPipelineOffers.length === 0" :title="t('noOffer')" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="salesPipelineOffers.length === 0" :title="t('noOffer')" compact />
+        <ul v-else class="space-y-2">
           <EntityPreviewCard
             v-for="offer in pagedPreviewItems(salesPipelineOffers, 'salesOffers')"
             :key="offer.name"
             :title="offer.name"
+            dense
             clickable
             @click="openOfferItem(offer)"
           >
             <template #trailing>
-              <StatusBadge domain="offer" :status="offer.status" />
+              <StatusBadge domain="offer" :status="offer.status" size="xs" />
             </template>
-            <MiniFactList :items="recentOfferFacts(offer)" />
+            <MiniFactList :items="recentOfferFacts(offer)" dense />
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
           </EntityPreviewCard>
         </ul>
@@ -42,14 +43,15 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('convertedOffersTitle')" :count="formatNumber(convertedSalesOffers.length)">
+      <SectionPanel :title="t('convertedOffersTitle')" :count="formatNumber(convertedSalesOffers.length)" panel-class="surface-card rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="convertedSalesOffers.length === 0" :title="t('noConvertedOffers')" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="convertedSalesOffers.length === 0" :title="t('noConvertedOffers')" compact />
+        <ul v-else class="space-y-2">
           <EntityPreviewCard
             v-for="offer in pagedPreviewItems(convertedSalesOffers, 'salesConvertedOffers')"
             :key="offer.name"
             :title="offer.name"
+            dense
             clickable
             @click="openOfferItem(offer)"
           >
@@ -63,7 +65,7 @@
                 {{ t("openPolicyAction") }}
               </ActionButton>
             </template>
-            <MiniFactList :items="recentOfferFacts(offer)" />
+            <MiniFactList :items="recentOfferFacts(offer)" dense />
             <p class="mt-1 text-xs text-slate-600">{{ formatCurrencyBy(offer.gross_premium, offer.currency || "TRY") }}</p>
             <p v-if="offer.converted_policy" class="mt-1 text-xs font-semibold text-emerald-600">
               {{ t("converted") }}: {{ offer.converted_policy }}
@@ -83,23 +85,24 @@
     </div>
 
     <!-- Right: Context & Actions (4 units) -->
-    <div class="space-y-6 xl:col-span-4">
-      <SectionPanel :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)">
+    <div class="space-y-5 xl:col-span-4">
+      <SectionPanel :title="t('recentLeads')" :count="formatNumber(displayRecentLeads.length)" panel-class="surface-card rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="displayRecentLeads.length === 0" :title="t('noLead')" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="displayRecentLeads.length === 0" :title="t('noLead')" compact />
+        <ul v-else class="space-y-2">
           <EntityPreviewCard
             v-for="lead in pagedPreviewItems(displayRecentLeads, 'salesLeads')"
             :key="lead.name"
             :title="[lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.name"
+            dense
             clickable
             @click="openLeadItem(lead)"
           >
             <template #trailing>
-              <StatusBadge domain="lead" :status="lead.status" />
+              <StatusBadge domain="lead" :status="lead.status" size="xs" />
             </template>
-            <MiniFactList :items="recentLeadFacts(lead)" />
-            <p class="mt-2 max-h-10 overflow-hidden text-sm text-slate-700">{{ lead.notes || t("noNote") }}</p>
+            <MiniFactList :items="recentLeadFacts(lead)" dense />
+            <p class="mt-1 max-h-9 overflow-hidden text-xs text-slate-700">{{ lead.notes || t("noNote") }}</p>
           </EntityPreviewCard>
         </ul>
         <PreviewPager
@@ -113,43 +116,10 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('recentPolicies')" :count="formatNumber(displayRecentPolicies.length)">
-        <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="displayRecentPolicies.length === 0" :title="t('noPolicy')" />
-        <ul v-else class="space-y-3">
-          <EntityPreviewCard
-            v-for="policy in pagedPreviewItems(displayRecentPolicies, 'salesPolicies')"
-            :key="policy.name"
-            :title="policy.policy_no || policy.name"
-            clickable
-            @click="openPolicyItem(policy)"
-          >
-            <template #trailing>
-              <StatusBadge domain="policy" :status="policy.status" />
-            </template>
-            <MiniFactList :items="recentPolicyFacts(policy)" />
-            <p class="mt-1 text-xs text-slate-600">
-              {{ formatCurrencyBy(policy.gross_premium, policy.currency || "TRY") }}
-              /
-              {{ formatCurrencyBy(policy.commission_amount || policy.commission, policy.currency || "TRY") }}
-            </p>
-          </EntityPreviewCard>
-        </ul>
-        <PreviewPager
-          v-if="displayRecentPolicies.length > 0"
-          :current-page="previewResolvedPage('salesPolicies', displayRecentPolicies)"
-          :total-pages="previewPageCount(displayRecentPolicies)"
-          :show-view-all="shouldShowViewAll(displayRecentPolicies)"
-          :view-all-label="t('viewAllItems')"
-          @change-page="setPreviewPage('salesPolicies', $event, displayRecentPolicies)"
-          @view-all="openPreviewList('policies')"
-        />
-      </SectionPanel>
-
-      <SectionPanel :title="t('salesCandidateActionTitle')" :count="formatNumber(salesCandidateActions.length)">
+      <SectionPanel :title="t('salesCandidateActionTitle')" :count="formatNumber(salesCandidateActions.length)" panel-class="surface-card rounded-xl p-4">
         <p class="mb-3 text-xs text-slate-500">{{ t("salesCandidateActionHint") }}</p>
         <div v-if="myTasksLoading || myRemindersLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="salesCandidateActions.length === 0" :title="t('noSalesCandidateAction')" />
+        <EmptyState v-else-if="salesCandidateActions.length === 0" :title="t('noSalesCandidateAction')" compact />
         <ul v-else class="space-y-2">
           <MetaListCard
             v-for="action in pagedPreviewItems(salesCandidateActions, 'salesActions')"
@@ -157,10 +127,11 @@
             :title="salesActionTitle(action)"
             :description="salesActionDescription(action)"
             description-class="mt-2 text-xs font-semibold text-slate-600"
+            dense
             clickable
             @click="openSalesActionItem(action)"
           >
-            <MiniFactList :items="salesActionFacts(action)" />
+            <MiniFactList :items="salesActionFacts(action)" dense />
           </MetaListCard>
         </ul>
         <PreviewPager

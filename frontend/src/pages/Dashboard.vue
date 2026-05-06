@@ -61,134 +61,164 @@
       :trend-ratio="trendRatio"
     />
 
-    <DashboardDailyTab
-      :activity-facts="activityFacts"
-      :dashboard-loading="dashboardLoading"
-      :display-recent-policies="displayRecentPolicies"
-      :display-renewal-alert-items="displayRenewalAlertItems"
-      :follow-up-description="followUpDescription"
-      :follow-up-facts="followUpFacts"
-      :follow-up-loading="followUpLoading"
-      :follow-up-meta="followUpMeta"
-      :follow-up-summary="followUpSummary"
-      :follow-up-title="followUpTitle"
-      :format-currency-by="formatCurrencyBy"
-      :format-days-to-due="formatDaysToDue"
-      :format-number="formatNumber"
-      :is-daily-tab="isDailyTab"
-      :my-activities-loading="myActivitiesLoading"
-      :my-task-summary="myTaskSummary"
-      :my-tasks-loading="myTasksLoading"
-      :open-activity-item="openActivityItem"
-      :open-claim-item="openClaimItem"
-      :open-claims-preview-rows="openClaimsPreviewRows"
-      :open-follow-up-item="openFollowUpItem"
-      :open-page="openPage"
-      :open-policy-item="openPolicyItem"
-      :open-preview-list="openPreviewList"
-      :open-renewal-task-item="openRenewalTaskItem"
-      :open-task-item="openTaskItem"
-      :paged-preview-items="pagedPreviewItems"
-      :prioritized-follow-up-items="prioritizedFollowUpItems"
-      :priority-task-items="priorityTaskItems"
-      :preview-page-count="previewPageCount"
-      :preview-resolved-page="previewResolvedPage"
-      :recent-activity-items="recentActivityItems"
-      :recent-policy-facts="recentPolicyFacts"
-      :renewal-alert-facts="renewalAlertFacts"
-      :set-preview-page="setPreviewPage"
-      :should-show-view-all="shouldShowViewAll"
-      :claim-facts="claimFacts"
-      :task-facts="taskFacts"
-      :t="t"
-      :locale="activeLocale"
-      :visible-quick-actions="visibleQuickActions"
-    />
+    <div
+      v-if="isDailyTab"
+      id="dashboard-panel-daily"
+      role="tabpanel"
+      aria-labelledby="dashboard-tab-daily"
+      tabindex="0"
+    >
+      <DashboardDailyTab
+        :activity-facts="activityFacts"
+        :dashboard-loading="dashboardLoading"
+        :display-recent-policies="displayRecentPolicies"
+        :display-renewal-alert-items="displayRenewalAlertItems"
+        :follow-up-description="followUpDescription"
+        :follow-up-facts="followUpFacts"
+        :follow-up-loading="followUpLoading"
+        :follow-up-meta="followUpMeta"
+        :follow-up-summary="followUpSummary"
+        :follow-up-title="followUpTitle"
+        :format-currency-by="formatCurrencyBy"
+        :format-days-to-due="formatDaysToDue"
+        :format-number="formatNumber"
+        :is-daily-tab="isDailyTab"
+        :my-activities-loading="myActivitiesLoading"
+        :my-task-summary="myTaskSummary"
+        :my-tasks-loading="myTasksLoading"
+        :open-activity-item="openActivityItem"
+        :open-claim-item="openClaimItem"
+        :open-claims-preview-rows="openClaimsPreviewRows"
+        :open-follow-up-item="openFollowUpItem"
+        :open-policy-item="openPolicyItem"
+        :open-preview-list="openPreviewList"
+        :open-renewal-task-item="openRenewalTaskItem"
+        :open-task-item="openTaskItem"
+        :paged-preview-items="pagedPreviewItems"
+        :prioritized-follow-up-items="prioritizedFollowUpItems"
+        :priority-task-items="priorityTaskItems"
+        :preview-page-count="previewPageCount"
+        :preview-resolved-page="previewResolvedPage"
+        :recent-activity-items="recentActivityItems"
+        :recent-policy-facts="recentPolicyFacts"
+        :renewal-alert-facts="renewalAlertFacts"
+        :set-preview-page="setPreviewPage"
+        :should-show-view-all="shouldShowViewAll"
+        :claim-facts="claimFacts"
+        :task-facts="taskFacts"
+        :t="t"
+        :locale="activeLocale"
+      />
+    </div>
 
-    <DashboardCollectionsTab
-      :collection-payment-direction-summary="collectionPaymentDirectionSummary"
-      :collection-payment-status-summary="collectionPaymentStatusSummary"
-      :collection-risk-facts="collectionRiskFacts"
-      :collection-risk-rows="collectionRiskRows"
-      :dashboard-loading="dashboardLoading"
-      :dashboard-payment-facts="dashboardPaymentFacts"
-      :dashboard-reconciliation-facts="dashboardReconciliationFacts"
-      :due-today-collection-payments="dueTodayCollectionPayments"
-      :format-currency="formatCurrency"
-      :format-number="formatNumber"
-      :is-collections-tab="isCollectionsTab"
-      :open-collection-risk-item="openCollectionRiskItem"
-      :open-payment-item="openPaymentItem"
-      :open-preview-list="openPreviewList"
-      :open-reconciliation-item="openReconciliationItem"
-      :overdue-collection-payments="overdueCollectionPayments"
-      :paged-preview-items="pagedPreviewItems"
-      :preview-page-count="previewPageCount"
-      :preview-resolved-page="previewResolvedPage"
-      :reconciliation-preview-metrics="reconciliationPreviewMetrics"
-      :reconciliation-preview-open-difference="reconciliationPreviewOpenDifference"
-      :reconciliation-preview-rows="reconciliationPreviewRows"
-      :set-preview-page="setPreviewPage"
-      :should-show-view-all="shouldShowViewAll"
-      :t="t"
-    />
+    <div
+      v-if="isCollectionsTab"
+      id="dashboard-panel-collections"
+      role="tabpanel"
+      aria-labelledby="dashboard-tab-collections"
+      tabindex="0"
+    >
+      <DashboardCollectionsTab
+        :collection-payment-direction-summary="collectionPaymentDirectionSummary"
+        :collection-payment-status-summary="collectionPaymentStatusSummary"
+        :collection-risk-facts="collectionRiskFacts"
+        :collection-risk-rows="collectionRiskRows"
+        :dashboard-loading="dashboardLoading"
+        :dashboard-payment-facts="dashboardPaymentFacts"
+        :dashboard-reconciliation-facts="dashboardReconciliationFacts"
+        :due-today-collection-payments="dueTodayCollectionPayments"
+        :format-currency="formatCurrency"
+        :format-number="formatNumber"
+        :is-collections-tab="isCollectionsTab"
+        :open-collection-risk-item="openCollectionRiskItem"
+        :open-payment-item="openPaymentItem"
+        :open-preview-list="openPreviewList"
+        :open-reconciliation-item="openReconciliationItem"
+        :overdue-collection-payments="overdueCollectionPayments"
+        :paged-preview-items="pagedPreviewItems"
+        :preview-page-count="previewPageCount"
+        :preview-resolved-page="previewResolvedPage"
+        :reconciliation-preview-metrics="reconciliationPreviewMetrics"
+        :reconciliation-preview-open-difference="reconciliationPreviewOpenDifference"
+        :reconciliation-preview-rows="reconciliationPreviewRows"
+        :set-preview-page="setPreviewPage"
+        :should-show-view-all="shouldShowViewAll"
+        :t="t"
+      />
+    </div>
 
-    <DashboardRenewalsTab
-      :dashboard-loading="dashboardLoading"
-      :display-renewal-tasks="displayRenewalTasks"
-      :format-currency-by="formatCurrencyBy"
-      :format-number="formatNumber"
-      :is-renewals-tab="isRenewalsTab"
-      :open-policy-item="openPolicyItem"
-      :open-preview-list="openPreviewList"
-      :open-renewal-task-item="openRenewalTaskItem"
-      :paged-preview-items="pagedPreviewItems"
-      :preview-page-count="previewPageCount"
-      :preview-resolved-page="previewResolvedPage"
-      :recent-policy-facts="recentPolicyFacts"
-      :renewal-linked-policies="renewalLinkedPolicies"
-      :renewal-outcome-summary="renewalOutcomeSummary"
-      :renewal-retention-rate="renewalRetentionRate"
-      :renewal-status-summary="renewalStatusSummary"
-      :renewal-task-facts-detailed="renewalTaskFactsDetailed"
-      :offer-waiting-renewals="offerWaitingRenewals"
-      :set-preview-page="setPreviewPage"
-      :should-show-view-all="shouldShowViewAll"
-      :t="t"
-    />
+    <div
+      v-if="isRenewalsTab"
+      id="dashboard-panel-renewals"
+      role="tabpanel"
+      aria-labelledby="dashboard-tab-renewals"
+      tabindex="0"
+    >
+      <DashboardRenewalsTab
+        :dashboard-loading="dashboardLoading"
+        :display-renewal-tasks="displayRenewalTasks"
+        :format-currency-by="formatCurrencyBy"
+        :format-number="formatNumber"
+        :is-renewals-tab="isRenewalsTab"
+        :open-policy-item="openPolicyItem"
+        :open-preview-list="openPreviewList"
+        :open-renewal-task-item="openRenewalTaskItem"
+        :paged-preview-items="pagedPreviewItems"
+        :preview-page-count="previewPageCount"
+        :preview-resolved-page="previewResolvedPage"
+        :recent-policy-facts="recentPolicyFacts"
+        :renewal-linked-policies="renewalLinkedPolicies"
+        :renewal-outcome-summary="renewalOutcomeSummary"
+        :renewal-retention-rate="renewalRetentionRate"
+        :renewal-status-summary="renewalStatusSummary"
+        :renewal-task-facts-detailed="renewalTaskFactsDetailed"
+        :offer-waiting-renewals="offerWaitingRenewals"
+        :set-preview-page="setPreviewPage"
+        :should-show-view-all="shouldShowViewAll"
+        :t="t"
+      />
+    </div>
 
-    <DashboardSalesTab
-      :converted-sales-offers="convertedSalesOffers"
-      :dashboard-loading="dashboardLoading"
-      :display-recent-leads="displayRecentLeads"
-      :display-recent-policies="displayRecentPolicies"
-      :format-currency-by="formatCurrencyBy"
-      :format-number="formatNumber"
-      :is-sales-tab="isSalesTab"
-      :my-reminders-loading="myRemindersLoading"
-      :my-tasks-loading="myTasksLoading"
-      :open-converted-policy-item="openConvertedPolicyItem"
-      :open-lead-item="openLeadItem"
-      :open-offer-item="openOfferItem"
-      :open-policy-item="openPolicyItem"
-      :open-preview-list="openPreviewList"
-      :open-sales-action-item="openSalesActionItem"
-      :open-sales-action-list="openSalesActionList"
-      :paged-preview-items="pagedPreviewItems"
-      :preview-page-count="previewPageCount"
-      :preview-resolved-page="previewResolvedPage"
-      :recent-lead-facts="recentLeadFacts"
-      :recent-offer-facts="recentOfferFacts"
-      :recent-policy-facts="recentPolicyFacts"
-      :sales-action-description="salesActionDescription"
-      :sales-action-facts="salesActionFacts"
-      :sales-action-title="salesActionTitle"
-      :sales-candidate-actions="salesCandidateActions"
-      :sales-pipeline-offers="salesPipelineOffers"
-      :set-preview-page="setPreviewPage"
-      :should-show-view-all="shouldShowViewAll"
-      :t="t"
-    />
+    <div
+      v-if="isSalesTab"
+      id="dashboard-panel-sales"
+      role="tabpanel"
+      aria-labelledby="dashboard-tab-sales"
+      tabindex="0"
+    >
+      <DashboardSalesTab
+        :converted-sales-offers="convertedSalesOffers"
+        :dashboard-loading="dashboardLoading"
+        :display-recent-leads="displayRecentLeads"
+        :display-recent-policies="displayRecentPolicies"
+        :format-currency-by="formatCurrencyBy"
+        :format-number="formatNumber"
+        :is-sales-tab="isSalesTab"
+        :my-reminders-loading="myRemindersLoading"
+        :my-tasks-loading="myTasksLoading"
+        :open-converted-policy-item="openConvertedPolicyItem"
+        :open-lead-item="openLeadItem"
+        :open-offer-item="openOfferItem"
+        :open-policy-item="openPolicyItem"
+        :open-preview-list="openPreviewList"
+        :open-sales-action-item="openSalesActionItem"
+        :open-sales-action-list="openSalesActionList"
+        :paged-preview-items="pagedPreviewItems"
+        :preview-page-count="previewPageCount"
+        :preview-resolved-page="previewResolvedPage"
+        :recent-lead-facts="recentLeadFacts"
+        :recent-offer-facts="recentOfferFacts"
+        :recent-policy-facts="recentPolicyFacts"
+        :sales-action-description="salesActionDescription"
+        :sales-action-facts="salesActionFacts"
+        :sales-action-title="salesActionTitle"
+        :sales-candidate-actions="salesCandidateActions"
+        :sales-pipeline-offers="salesPipelineOffers"
+        :set-preview-page="setPreviewPage"
+        :should-show-view-all="shouldShowViewAll"
+        :t="t"
+      />
+    </div>
 
 
 
@@ -290,9 +320,6 @@ const DashboardRenewalsTab = defineAsyncComponent(() =>
 );
 const DashboardSalesTab = defineAsyncComponent(() =>
   import("../components/dashboard/DashboardSalesTab.vue")
-);
-const DashboardQuickActions = defineAsyncComponent(() =>
-  import("../components/dashboard/DashboardQuickActions.vue")
 );
 const SectionPanel = defineAsyncComponent(() =>
   import("../components/app-shell/SectionPanel.vue")
@@ -607,7 +634,6 @@ const {
   showNewLeadAction,
   showPoliciesOffersRow,
   showRenewalAlertsTopRow,
-  visibleQuickActions,
 } = useDashboardPresentation({
   t,
   isDailyTab,
@@ -621,7 +647,6 @@ const {
   applyRange,
   buildKpiParams,
   buildTabPayloadParams,
-  openPage,
   openPreviewList,
   reloadData,
   setDashboardTab,

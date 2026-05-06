@@ -46,14 +46,8 @@ function getMessagePayload(payload) {
   return payload?.message || {};
 }
 
-const DASHBOARD_TAB_NAMES = {
-  sales: /^Satış(?:lar)?$|^Sales$/i,
-  collections: /^Tahsilat(?:lar)?$|^Collections$/i,
-  renewals: /^Yenileme(?:ler)?$|^Renewals$/i,
-};
-
 async function openDashboardTab(page, tabKey) {
-  await page.getByRole("button", { name: DASHBOARD_TAB_NAMES[tabKey] }).click();
+  await page.locator(`#dashboard-tab-${tabKey}`).click();
 }
 
 async function expectMetricCardCount(page, count) {
@@ -104,29 +98,31 @@ test.describe("dashboard tab contract", () => {
     await expect(page.getByRole("heading", { name: /Bugün Yapılacaklar|Today's Tasks/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Son Aktiviteler|Recent Activities/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Açık Hasarlar|Open Claims/i })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Son Poliçeler|Recent Policies/i })).toBeVisible();
     await expectMetricCardCount(page, 4);
 
     await openDashboardTab(page, "sales");
     await expect(page.getByRole("heading", { name: /Güncel Fırsat Kartları|Recent Lead Cards/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Teklif Süreci|Offer Pipeline/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Dönüşen Teklifler|Converted Offers/i }).first()).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Son Poliçeler|Recent Policies/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Müşteri Aday Aksiyonu|Prospect Action Queue/i })).toBeVisible();
     await expectMetricCardCount(page, 4);
 
     await openDashboardTab(page, "collections");
     await expect(page.getByRole("heading", { name: /Bugün Vadesi Gelen Tahsilatlar|Collections Due Today/i }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Gecikmiş Tahsilatlar|Overdue Collections/i }).first()).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Tahsilat Performansı|Collection Performance/i }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Riskli Müşteriler \/ Poliçeler|Risky Customers \/ Policies/i }).first()).toBeVisible();
+    if (collectionsMessage.series?.payment_status?.length || collectionsMessage.series?.payment_direction?.length) {
+      await expect(page.getByRole("heading", { name: /Tahsilat Performansı|Collection Performance/i }).first()).toBeVisible();
+    }
     await expectMetricCardCount(page, 4);
 
     await openDashboardTab(page, "renewals");
     await expect(page.getByRole("heading", { name: /Teklif Bekleyen Yenilemeler|Renewals Waiting For Offer/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Yenileme Takip Listesi|Renewal Follow-up List/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: /Dönüşüm \/ Ödeme Sonucu|Conversion \/ Payment Outcome/i })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Bağlı Poliçeler|Linked Policies/i })).toBeVisible();
+    if (Array.isArray(renewalsMessage.previews?.policies) && renewalsMessage.previews.policies.length > 0) {
+      await expect(page.getByRole("heading", { name: /Bağlı Poliçeler|Linked Policies/i })).toBeVisible();
+    }
     await expectMetricCardCount(page, 4);
   });
 
@@ -240,26 +236,6 @@ test.describe("dashboard tab contract", () => {
     ]);
   });
 
-  test("operations recent policy card drills into policy detail when live data exists", async ({ page }) => {
-    await ensureAuthenticated(page);
-
-    const { payload: operationsPayload } = await getDashboardTabPayload(page, "daily", 15);
-    const operationsMessage = getMessagePayload(operationsPayload);
-    const policies = Array.isArray(operationsMessage.previews?.policies) ? operationsMessage.previews.policies : [];
-    const policy = policies[0] || null;
-
-    test.skip(!policy?.name, "Canli ortamda operasyon policy drill-down icin policy preview kaydi yok.");
-
-    await page.goto("/at/");
-    const policiesPanel = page.locator("article").filter({ hasText: /Son Poliçeler|Recent Policies/i }).first();
-    const policyCard = policiesPanel.locator('[role="button"]').filter({ hasText: String(policy.policy_no || policy.name) }).first();
-    await expect(policyCard).toBeVisible();
-    await Promise.all([
-      page.waitForURL(new RegExp(`/at/policies/${policy.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`)),
-      policyCard.click(),
-    ]);
-  });
-
   test("sales candidate action card opens task or reminder detail when live data exists", async ({ page }) => {
     await ensureAuthenticated(page);
 
@@ -314,13 +290,11 @@ test.describe("dashboard tab contract", () => {
 
     await openDashboardTab(page, "collections");
     await expect(page.getByRole("heading", { name: /Bugün Vadesi Gelen Tahsilatlar|Collections Due Today/i }).first()).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Tahsilat Performansı|Collection Performance/i }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Riskli Müşteriler \/ Poliçeler|Risky Customers \/ Policies/i }).first()).toBeVisible();
 
     await openDashboardTab(page, "renewals");
     await expect(page.getByRole("heading", { name: /Teklif Bekleyen Yenilemeler|Renewals Waiting For Offer/i }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Dönüşüm \/ Ödeme Sonucu|Conversion \/ Payment Outcome/i }).first()).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Bağlı Poliçeler|Linked Policies/i }).first()).toBeVisible();
     await expectMetricCardCount(page, 4);
   });
 });

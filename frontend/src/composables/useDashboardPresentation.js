@@ -9,10 +9,10 @@ export function useDashboardPresentation({ t, isDailyTab, isSalesTab, isCollecti
   const showPoliciesOffersRow = computed(() => isSalesTab.value);
 
   const dashboardTabs = computed(() => [
-    { key: "daily", label: t("tabDaily") },
-    { key: "sales", label: t("tabSales") },
-    { key: "collections", label: t("tabCollections") },
-    { key: "renewals", label: t("tabRenewals") },
+    { key: "daily", label: t("tabDaily"), tabId: "dashboard-tab-daily", panelId: "dashboard-panel-daily" },
+    { key: "sales", label: t("tabSales"), tabId: "dashboard-tab-sales", panelId: "dashboard-panel-sales" },
+    { key: "collections", label: t("tabCollections"), tabId: "dashboard-tab-collections", panelId: "dashboard-panel-collections" },
+    { key: "renewals", label: t("tabRenewals"), tabId: "dashboard-tab-renewals", panelId: "dashboard-panel-renewals" },
   ]);
 
   const dashboardHeroTitle = computed(() => {
@@ -39,71 +39,14 @@ export function useDashboardPresentation({ t, isDailyTab, isSalesTab, isCollecti
     return t("heroSubtitleDaily");
   });
 
-  const quickActions = computed(() => [
-    {
-      key: "offers",
-      label: t("quickOffer"),
-      description: t("quickOfferDesc"),
-      to: "/offers",
-    },
-    {
-      key: "policies",
-      label: t("quickPolicy"),
-      description: t("quickPolicyDesc"),
-      to: "/policies",
-    },
-    {
-      key: "claims",
-      label: t("quickClaim"),
-      description: t("quickClaimDesc"),
-      to: "/claims",
-    },
-    {
-      key: "payments",
-      label: t("quickPayment"),
-      description: t("quickPaymentDesc"),
-      to: "/payments",
-    },
-    {
-      key: "renewals",
-      label: t("quickRenewal"),
-      description: t("quickRenewalDesc"),
-      to: "/renewals",
-    },
-    {
-      key: "communication",
-      label: t("quickCommunication"),
-      description: t("quickCommunicationDesc"),
-      to: "/communication",
-    },
-    {
-      key: "reconciliation",
-      label: t("quickReconciliation"),
-      description: t("quickReconciliationDesc"),
-      to: "/reconciliation",
-    },
-  ]);
-
-  const visibleQuickActions = computed(() => {
-    const actionMap = new Map(quickActions.value.map((action) => [action.key, action]));
-    const pick = (keys) => keys.map((key) => actionMap.get(key)).filter(Boolean);
-    if (isSalesTab.value) return pick(["offers", "policies", "communication"]);
-    if (isCollectionsTab.value) return pick(["payments", "reconciliation", "communication"]);
-    if (isRenewalsTab.value) return pick(["renewals", "offers", "policies", "communication"]);
-    if (isDailyTab.value) return pick(["offers", "renewals", "claims", "payments", "communication"]);
-    return pick(["offers", "renewals", "claims", "payments", "communication"]);
-  });
-
   return {
     dashboardHeroSubtitle,
     dashboardHeroTitle,
     dashboardTabs,
-    quickActions,
     showAnalyticsRow,
     showNewLeadAction,
     showPoliciesOffersRow,
     showRenewalAlertsTopRow,
-    visibleQuickActions,
   };
 }
 

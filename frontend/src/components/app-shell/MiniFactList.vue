@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-2">
+  <div :class="dense ? 'space-y-1' : 'space-y-2'">
     <div v-for="item in items" :key="item.key || item.label" :class="item.wrapperClass || ''">
-      <p class="text-[11px] tracking-wide text-slate-400">{{ upperLabel(item.label) }}</p>
-      <p class="truncate text-sm" :class="item.valueClass || 'font-medium text-slate-800'">
+      <p :class="dense ? 'text-[10px] tracking-wide text-slate-400' : 'text-[11px] tracking-wide text-slate-400'">{{ upperLabel(item.label) }}</p>
+      <p :class="dense ? `truncate text-xs ${item.valueClass || 'font-medium text-slate-800'}` : `truncate text-sm ${item.valueClass || 'font-medium text-slate-800'}`">
         {{ item.value ?? "-" }}
       </p>
     </div>
@@ -32,6 +32,10 @@ defineProps({
   items: {
     type: Array,
     default: () => [],
+  },
+  dense: {
+    type: Boolean,
+    default: false,
   },
 });
 </script>

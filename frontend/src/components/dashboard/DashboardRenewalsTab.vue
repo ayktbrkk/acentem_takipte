@@ -11,22 +11,24 @@
     </div>
 
     <!-- Left: Renewals Pipeline (8 units) -->
-    <div class="space-y-6 xl:col-span-8">
-      <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)">
+    <div class="space-y-5 xl:col-span-8">
+      <SectionPanel :title="t('offerWaitingRenewalsTitle')" :count="formatNumber(offerWaitingRenewals.length)" panel-class="surface-card rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="offerWaitingRenewals.length === 0" :title="t('noOfferWaitingRenewals')" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="offerWaitingRenewals.length === 0" :title="t('noOfferWaitingRenewals')" compact />
+        <ul v-else class="space-y-2">
           <MetaListCard
             v-for="task in pagedPreviewItems(offerWaitingRenewals, 'renewalsOfferWaiting')"
             :key="task.name"
             :title="task.policy || '-'"
+            dense
+            emphasis-class="border-l-4 border-l-amber-300"
             clickable
             @click="openRenewalTaskItem(task)"
           >
             <template #trailing>
-              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" size="xs" />
             </template>
-            <MiniFactList :items="renewalTaskFactsDetailed(task)" />
+            <MiniFactList :items="renewalTaskFactsDetailed(task)" dense />
           </MetaListCard>
         </ul>
         <PreviewPager
@@ -40,21 +42,22 @@
         />
       </SectionPanel>
 
-      <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)">
+      <SectionPanel :title="t('renewalQueue')" :count="formatNumber(displayRenewalTasks.length)" panel-class="surface-card rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="displayRenewalTasks.length === 0" :title="t('noRenewal')" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="displayRenewalTasks.length === 0" :title="t('noRenewal')" compact />
+        <ul v-else class="space-y-2">
           <MetaListCard
             v-for="task in pagedPreviewItems(displayRenewalTasks, 'renewalsQueue')"
             :key="task.name"
             :title="task.policy || '-'"
+            dense
             clickable
             @click="openRenewalTaskItem(task)"
           >
             <template #trailing>
-              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" />
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" size="xs" />
             </template>
-            <MiniFactList :items="renewalTaskFactsDetailed(task)" />
+            <MiniFactList :items="renewalTaskFactsDetailed(task)" dense />
           </MetaListCard>
         </ul>
         <PreviewPager
@@ -70,10 +73,10 @@
     </div>
 
     <!-- Right: Metrics & Linked Records (4 units) -->
-    <div class="space-y-6 xl:col-span-4">
-      <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false">
+    <div class="space-y-5 xl:col-span-4">
+      <SectionPanel :title="t('renewalStatusOverviewTitle')" :show-count="false" panel-class="surface-card rounded-xl p-4">
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="renewalStatusSummary.length === 0" :title="t('noRenewalStatus')" />
+        <EmptyState v-else-if="renewalStatusSummary.length === 0" :title="t('noRenewalStatus')" compact />
         <div v-else class="space-y-3">
           <ProgressMetricRow
             v-for="item in renewalStatusSummary"
@@ -86,12 +89,11 @@
         </div>
       </SectionPanel>
 
-      <SectionPanel :title="t('renewalOutcomeTitle')" :show-count="false">
+      <SectionPanel :title="t('renewalOutcomeTitle')" :show-count="false" panel-class="surface-card rounded-xl p-4">
         <p class="mb-3 text-xs text-slate-500">{{ t("renewalOutcomeHint") }}</p>
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="renewalOutcomeSummary.length === 0" :title="t('noRenewalOutcome')" />
+        <EmptyState v-else-if="renewalOutcomeSummary.length === 0" :title="t('noRenewalOutcome')" compact />
         <div v-else class="space-y-3">
-          <SaaSMetricCard :label="t('kpiRenewalRetention')" :value="`${formatNumber(renewalRetentionRate)}%`" value-class="text-brand-600" />
           <ProgressMetricRow
             v-for="item in renewalOutcomeSummary"
             :key="item.key"
@@ -103,21 +105,27 @@
         </div>
       </SectionPanel>
 
-      <SectionPanel :title="t('linkedPoliciesTitle')" :count="formatNumber(renewalLinkedPolicies.length)">
+      <SectionPanel
+        v-if="showLinkedPolicies"
+        :title="t('linkedPoliciesTitle')"
+        :count="formatNumber(renewalLinkedPolicies.length)"
+        panel-class="surface-card rounded-xl p-4"
+      >
         <div v-if="dashboardLoading" class="text-sm text-slate-500">{{ t("loading") }}</div>
-        <EmptyState v-else-if="renewalLinkedPolicies.length === 0" :title="t('noLinkedPolicies')" />
-        <ul v-else class="space-y-3">
+        <EmptyState v-else-if="renewalLinkedPolicies.length === 0" :title="t('noLinkedPolicies')" compact />
+        <ul v-else class="space-y-2">
           <EntityPreviewCard
             v-for="policy in pagedPreviewItems(renewalLinkedPolicies, 'renewalsPolicies')"
             :key="policy.name"
             :title="policy.policy_no || policy.name"
+            dense
             clickable
             @click="openPolicyItem(policy)"
           >
             <template #trailing>
-              <StatusBadge domain="policy" :status="policy.status" />
+              <StatusBadge domain="policy" :status="policy.status" size="xs" />
             </template>
-            <MiniFactList :items="recentPolicyFacts(policy)" />
+            <MiniFactList :items="recentPolicyFacts(policy)" dense />
             <p class="mt-1 text-xs text-slate-600">
               {{ formatCurrencyBy(policy.gross_premium, policy.currency || "TRY") }}
               /
@@ -181,4 +189,6 @@ const renewalSummaryCards = computed(() => [
   { label: props.t("kpiRenewalRetention"), value: `${props.formatNumber(props.renewalRetentionRate)}%`, valueClass: "text-at-green" },
   { label: props.t("linkedPoliciesTitle"), value: props.formatNumber(props.renewalLinkedPolicies.length), valueClass: "text-slate-900" },
 ]);
+
+const showLinkedPolicies = computed(() => props.dashboardLoading || props.renewalLinkedPolicies.length > 0);
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <span :class="['status-badge', variantClass]">{{ label }}</span>
+  <span :class="['status-badge', variantClass, sizeClass]">{{ label }}</span>
 </template>
 
 <script setup>
@@ -15,6 +15,7 @@ const props = defineProps({
   // Domain: customer, policy, offer, lead, claim, renewal, payment, etc.
   // We normalize the raw value first and then localize the final label.
   domain: { type: String, default: null },
+  size: { type: String, default: "sm" },
 });
 
 const DOMAIN_MAP = {
@@ -348,4 +349,5 @@ const localizedDomainLabel = computed(() => {
 const variantClass = computed(() => STANDARD_MAP[normalizedStatus.value]?.cls ?? "status-draft");
 const fallbackLabel = computed(() => translateBadgeText(STANDARD_MAP[normalizedStatus.value]?.label || props.status || ""));
 const label = computed(() => localizedDomainLabel.value || fallbackLabel.value || props.status);
+const sizeClass = computed(() => (props.size === "xs" ? "px-2 py-0.5 text-[10px] leading-4" : ""));
 </script>
