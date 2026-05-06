@@ -246,6 +246,8 @@ The app image and Docker Compose examples under `docs/examples/` were also valid
 - the configurator installs only `acentem_takipte` by default, not `erpnext`
 - the frontend service exposes container port `8080` so Coolify can generate a working proxy target
 - the configurator shell loop escapes `$$app` correctly so Docker Compose does not eat the variable before runtime
+- the configurator mounts the shared `app_sites` volume so it can see the real site directory before deciding whether `bench new-site` is needed
+- the configurator does not run runtime asset builds, which would otherwise desynchronize backend/frontend asset hashes across separate containers
 
 The app Dockerfile example now follows the same broad shape as `frappe_docker`: build Bench in a `build` image, then copy the finished bench into a `base` image that can serve `backend`, `frontend`, and `websocket` roles.
 
@@ -410,6 +412,16 @@ If you do not do this, the usual symptom is:
 - login page HTML loads
 - CSS and icons return `404`
 - page looks broken or unstyled
+
+There is one more constraint that mattered in the live recovery: avoid rebuilding assets inside only one runtime container after the image is already built.
+
+For this repository, the custom app image should already contain the built Vue `/at` assets and a self-consistent Frappe asset tree. If a one-off runtime job such as `configurator` runs `npm run build` or `bench build` without the same app filesystem being shared across `backend` and `frontend`, you can create asset drift:
+
+- backend HTML starts referencing new hashed asset filenames
+- frontend nginx still serves the old asset tree baked into its container image
+- login or `/at` loads HTML but CSS requests return `404` or `text/html`
+
+For that reason, the example `configurator` flow is intentionally limited to site creation, app installation, `migrate`, and cache clears. Build the image first, then deploy that image consistently across `backend`, `frontend`, and `websocket`.
 
 ### Why frontend nginx env vars matter
 

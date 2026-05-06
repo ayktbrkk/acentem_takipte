@@ -103,14 +103,12 @@ services:
           fi
         done
 
-        cd /home/frappe/frappe-bench/apps/acentem_takipte/frontend
-        npm ci
-        npm run build
-
         cd /home/frappe/frappe-bench/sites
         bench --site "${SITE_NAME}" migrate
         bench --site "${SITE_NAME}" clear-cache
         bench --site "${SITE_NAME}" clear-website-cache
+    volumes:
+      - app_sites:/home/frappe/frappe-bench/sites
 
   mariadb:
     image: mariadb:10.6
