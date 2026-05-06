@@ -8,10 +8,7 @@ services:
       - /bin/sh
       - -lc
       - |
-        if [ -d /home/frappe/assets-seed ]; then
-          rm -rf /home/frappe/frappe-bench/sites/assets
-          cp -a /home/frappe/assets-seed /home/frappe/frappe-bench/sites/assets
-        fi
+        python3 /usr/local/bin/sync-assets-manifest.py
         export PATH=/home/frappe/.nvm/versions/node/v20.20.2/bin:$PATH
         exec /home/frappe/frappe-bench/env/bin/gunicorn --bind=0.0.0.0:8000 --threads=4 --workers=2 --worker-class=gthread --worker-tmp-dir=/dev/shm --timeout=120 --preload frappe.app:application
     environment:

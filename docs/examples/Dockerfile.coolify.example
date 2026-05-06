@@ -27,9 +27,6 @@ RUN ./env/bin/pip install -r apps/acentem_takipte/requirements.txt \
     && cd apps/acentem_takipte/frontend \
     && npm ci \
     && npm run build \
-    && cd /home/frappe/frappe-bench \
-    && bench build --apps frappe,acentem_takipte \
-    && cp -a /home/frappe/frappe-bench/sites/assets /home/frappe/assets-seed \
     && printf '\nacentem_takipte\n' >> /home/frappe/frappe-bench/sites/apps.txt
 
 FROM ${FRAPPE_IMAGE_PREFIX}/base:${FRAPPE_BRANCH}
@@ -41,8 +38,8 @@ WORKDIR /home/frappe/frappe-bench
 ENV PATH=/home/frappe/frappe-bench/env/bin:${PATH}
 
 COPY --from=builder --chown=frappe:frappe /home/frappe/frappe-bench /home/frappe/frappe-bench
-COPY --from=builder --chown=frappe:frappe /home/frappe/assets-seed /home/frappe/assets-seed
 COPY --chown=frappe:frappe docs/examples/docker-entrypoint.frontend.coolify.example.sh /usr/local/bin/nginx-entrypoint.sh
 COPY --chown=frappe:frappe docs/examples/nginx.default.conf.coolify.example.template /etc/nginx/templates/default.conf.template
+COPY --chown=frappe:frappe docs/examples/sync-assets-manifest.py /usr/local/bin/sync-assets-manifest.py
 
 RUN chmod +x /usr/local/bin/nginx-entrypoint.sh

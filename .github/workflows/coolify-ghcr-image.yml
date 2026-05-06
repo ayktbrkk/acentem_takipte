@@ -13,6 +13,7 @@ on:
       - 'docs/examples/docker-entrypoint.frontend.coolify.example.sh'
       - 'docs/examples/nginx.default.conf.coolify.example.template'
       - 'docs/examples/docker-compose.coolify.example.yml'
+      - 'docs/examples/sync-assets-manifest.py'
       - '.github/workflows/coolify-ghcr-image.yml'
 
 permissions:
