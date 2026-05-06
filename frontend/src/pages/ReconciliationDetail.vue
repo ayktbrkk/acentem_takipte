@@ -21,7 +21,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'warn' ? 'text-amber-600 font-bold' : cell.variant === 'success' ? 'text-emerald-600 font-bold' : 'text-gray-900'"
+          :value-class="cell.variant === 'warn' ? 'text-at-amber font-bold' : cell.variant === 'success' ? 'text-at-green font-bold' : 'text-slate-900'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -65,8 +65,8 @@
                 :key="entryItem.label"
                 class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
               >
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ entryItem.label }}</p>
-                <p class="mt-1 text-sm text-slate-700">{{ entryItem.value }}</p>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ entryItem.label }}</p>
+                <p class="mt-1 text-sm font-medium text-slate-700">{{ entryItem.value }}</p>
               </div>
             </div>
           </div>

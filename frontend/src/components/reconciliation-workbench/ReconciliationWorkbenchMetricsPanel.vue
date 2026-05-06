@@ -1,29 +1,15 @@
 <template>
   <div class="w-full grid grid-cols-1 gap-4 md:grid-cols-5">
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ props.t("summaryTotal") }}</p>
-      <p class="mini-metric-value">{{ props.summary.total }}</p>
-    </div>
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ props.t("summaryMatched") }}</p>
-      <p class="mini-metric-value text-emerald-600">{{ props.summary.matched }}</p>
-    </div>
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ props.t("summaryPending") }}</p>
-      <p class="mini-metric-value text-amber-600">{{ props.summary.pending }}</p>
-    </div>
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ props.t("summaryMismatch") }}</p>
-      <p class="mini-metric-value text-amber-700">{{ props.summary.mismatch }}</p>
-    </div>
-    <div class="mini-metric">
-      <p class="mini-metric-label">{{ props.t("summaryDifference") }}</p>
-      <p class="mini-metric-value text-brand-600">{{ props.formatMoney(props.summary.totalDifference) }}</p>
-    </div>
+    <SaaSMetricCard :label="props.t('summaryTotal')" :value="String(props.summary.total)" />
+    <SaaSMetricCard :label="props.t('summaryMatched')" :value="String(props.summary.matched)" value-class="text-at-green" />
+    <SaaSMetricCard :label="props.t('summaryPending')" :value="String(props.summary.pending)" value-class="text-brand-600" />
+    <SaaSMetricCard :label="props.t('summaryMismatch')" :value="String(props.summary.mismatch)" value-class="text-at-amber" />
+    <SaaSMetricCard :label="props.t('summaryDifference')" :value="props.formatMoney(props.summary.totalDifference)" />
   </div>
 </template>
 
 <script setup>
+import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 const props = defineProps({
   t: { type: Function, required: true },
   summary: { type: Object, required: true },

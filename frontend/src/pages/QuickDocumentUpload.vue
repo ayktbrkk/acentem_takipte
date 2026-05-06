@@ -27,7 +27,7 @@
       <SectionPanel :title="t('flowTitle')">
         <div class="space-y-4 text-sm text-slate-600">
           <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{{ t('flowEyebrow') }}</p>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('flowEyebrow') }}</p>
             <p class="mt-2 text-sm font-semibold text-slate-900">{{ t('flowLead') }}</p>
             <p class="mt-2 leading-6">{{ t('flowBody') }}</p>
           </div>
@@ -38,7 +38,7 @@
               :key="step.key"
               class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
             >
-              <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{{ step.step }}</p>
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ step.step }}</p>
               <h3 class="mt-2 text-sm font-semibold text-slate-900">{{ step.title }}</h3>
               <p class="mt-2 text-sm leading-6 text-slate-600">{{ step.description }}</p>
             </article>
@@ -46,7 +46,7 @@
 
           <div class="rounded-2xl border border-dashed border-brand-200 bg-brand-50/70 p-4">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">{{ t('contextEyebrow') }}</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-brand-700">{{ t('contextEyebrow') }}</span>
               <span
                 v-for="chip in contextChips"
                 :key="chip"
@@ -69,7 +69,7 @@
               :key="rule.key"
               class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
             >
-              <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{{ rule.label }}</p>
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ rule.label }}</p>
               <p class="mt-1 text-sm font-medium text-slate-900">{{ rule.value }}</p>
             </div>
           </div>
