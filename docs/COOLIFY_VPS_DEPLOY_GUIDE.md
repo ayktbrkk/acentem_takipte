@@ -265,6 +265,8 @@ APP_IMAGE=ghcr.io/ayktbrkk/acentem-worker:latest
 
 If you switch an existing Coolify stack from a host-local image to GHCR, make the image reference change first, then trigger a redeploy after the workflow has published at least one successful `latest` tag.
 
+If Coolify cannot pull the image from GHCR, either make the package public in GitHub Packages or add a GHCR registry credential in Coolify and attach it to the resource before redeploying.
+
 Use the app repository itself as source code, but keep deployment mechanics separate if you do not want infrastructure files mixed into the main app repository.
 
 ### What your image must contain
