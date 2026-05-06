@@ -17,6 +17,11 @@ export UPSTREAM_REAL_IP_RECURSIVE="${UPSTREAM_REAL_IP_RECURSIVE:-off}"
 export PROXY_READ_TIMEOUT="${PROXY_READ_TIMEOUT:-120}"
 export CLIENT_MAX_BODY_SIZE="${CLIENT_MAX_BODY_SIZE:-50m}"
 
+if [ -d /home/frappe/assets-seed ]; then
+  rm -rf /home/frappe/frappe-bench/sites/assets
+  cp -a /home/frappe/assets-seed /home/frappe/frappe-bench/sites/assets
+fi
+
 rm -rf /usr/share/nginx/html/assets
 ln -s /home/frappe/frappe-bench/sites/assets /usr/share/nginx/html/assets
 

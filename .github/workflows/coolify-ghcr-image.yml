@@ -10,6 +10,9 @@ on:
       - 'requirements.txt'
       - 'pyproject.toml'
       - 'docs/examples/Dockerfile.coolify.example'
+      - 'docs/examples/docker-entrypoint.frontend.coolify.example.sh'
+      - 'docs/examples/nginx.default.conf.coolify.example.template'
+      - 'docs/examples/docker-compose.coolify.example.yml'
       - '.github/workflows/coolify-ghcr-image.yml'
 
 permissions:
