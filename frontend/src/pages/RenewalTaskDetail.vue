@@ -25,7 +25,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'lg' ? 'text-gray-900 font-bold' : 'text-gray-600'"
+          :value-class="cell.variant === 'lg' ? 'text-slate-900 font-bold' : 'text-slate-600'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -50,7 +50,7 @@
             <div
               v-for="offer in offers"
               :key="offer.name"
-              class="rounded-xl border border-slate-100 bg-slate-50/50 p-3 transition-all hover:border-brand-200 hover:bg-brand-50/30"
+              class="rounded-xl border border-slate-200 bg-slate-50/50 p-3 transition-all hover:border-brand-200 hover:bg-brand-50/30"
             >
               <div class="flex items-center justify-between gap-2">
                 <div>
@@ -70,7 +70,7 @@
               <div class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-500" />
               <div>
                 <p class="text-sm font-bold text-slate-900">{{ item.subject || item.call_outcome || item.channel || '-' }}</p>
-                <p class="mt-0.5 text-xs text-slate-500">{{ formatDate(item.note_at) }} · {{ item.owner || '-' }}</p>
+                <p class="mt-0.5 text-[11px] text-slate-400 font-medium">{{ formatDate(item.note_at) }} · {{ item.owner || '-' }}</p>
               </div>
             </div>
           </div>
@@ -79,7 +79,7 @@
         <SectionPanel :title="t('reminders')">
           <div v-if="!reminders.length" class="card-empty">{{ t('noReminders') }}</div>
           <div v-else class="space-y-2">
-            <div v-for="item in reminders" :key="item.label" class="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-3">
+            <div v-for="item in reminders" :key="item.label" class="rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-3">
               <p class="field-label !mb-1">{{ item.label }}</p>
               <p class="text-sm font-bold text-slate-900">{{ item.value }}</p>
             </div>

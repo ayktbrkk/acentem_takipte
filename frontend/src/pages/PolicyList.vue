@@ -44,13 +44,13 @@
         </template>
       </SmartFilterBar>
 
-      <div v-if="showAdvancedFilters" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div v-if="showAdvancedFilters" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             <span>{{ t("insurance_company") }}</span>
             <input v-model="filters.insurance_company" class="input" type="text" @change="applyFilters" />
           </label>
-          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             <span>{{ t("endDateFilter") }}</span>
             <input v-model="filters.end_date" class="input" type="date" @change="applyFilters" />
           </label>
@@ -59,9 +59,13 @@
             <input v-model="filters.customer" class="input" type="text" @change="applyFilters" />
           </label>
         </div>
-        <div class="mt-5 flex items-center justify-end gap-2 border-t pt-4">
-          <button class="btn btn-outline btn-sm" type="button" @click="clearFilters">{{ t("clearFilters") }}</button>
-          <button class="btn btn-primary btn-sm px-6" type="button" @click="applyFilters">{{ t("applyFilters") }}</button>
+        <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+          <ActionButton variant="secondary" size="sm" @click="clearFilters">
+            {{ t("clearFilters") }}
+          </ActionButton>
+          <ActionButton variant="primary" size="sm" class="px-6" @click="applyFilters">
+            {{ t("applyFilters") }}
+          </ActionButton>
         </div>
       </div>
     </div>

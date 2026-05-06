@@ -105,7 +105,7 @@
               </ActionButton>
             </div>
           </template>
-          <div v-if="!documents.length" class="text-sm text-slate-400 py-2">{{ t("no_documents") }}</div>
+          <div v-if="!documents.length" class="text-[11px] text-slate-400 font-medium py-2">{{ t("no_documents") }}</div>
           <div v-else class="space-y-2">
             <MetaListCard
               v-for="doc in documents.slice(0, 5)" 
@@ -115,7 +115,7 @@
               class="!p-3"
             >
               <template #trailing>
-                 <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc)">
+                 <button class="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors" @click="openDocument(doc)">
                   <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
                 </button>
               </template>

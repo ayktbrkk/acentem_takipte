@@ -21,7 +21,7 @@
           :key="cell.label"
           :label="cell.label"
           :value="cell.value"
-          :value-class="cell.variant === 'success-pill' ? 'text-emerald-600' : 'text-slate-900'"
+          :value-class="cell.variant === 'success-pill' ? 'text-at-green' : 'text-slate-900'"
         />
       </div>
       <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -246,7 +246,7 @@
                     :subtitle="item.meta"
                   >
                     <template #trailing>
-                       <p class="text-xs text-slate-500">{{ formatDate(item.timestamp) }}</p>
+                       <p class="text-[11px] text-slate-400 font-medium">{{ formatDate(item.timestamp) }}</p>
                     </template>
                     <div class="mt-2 whitespace-pre-line text-sm text-slate-600">{{ item.payload?.content || "" }}</div>
                   </MetaListCard>
@@ -283,13 +283,11 @@
                   >
                     <template #trailing>
                       <div class="flex flex-wrap items-center gap-2">
-                        <span v-if="doc.is_private" class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                        <span v-if="doc.is_private" class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
                           {{ t("private") }}
                         </span>
-                        <span v-if="doc.is_verified" class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
-                          {{ t("status_verified") }}
-                        </span>
-                        <p class="text-xs text-slate-500">{{ formatDate(doc.creation) }}</p>
+                        <StatusBadge v-if="doc.is_verified" status="active" :label="t('status_verified')" size="sm" />
+                        <p class="text-[11px] text-slate-400 font-medium">{{ formatDate(doc.creation) }}</p>
                         <ActionButton v-if="canArchiveDocument(doc)" variant="secondary" size="xs" @click="archiveDocument(doc)">
                           {{ t("archiveDocument") }}
                         </ActionButton>

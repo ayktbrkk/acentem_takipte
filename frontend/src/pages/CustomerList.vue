@@ -22,9 +22,9 @@
       </div>
       <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SaaSMetricCard :label="t('total')" :value="summary.total" />
-        <SaaSMetricCard :label="t('active')" :value="summary.active" value-class="text-emerald-600" />
+        <SaaSMetricCard :label="t('active')" :value="summary.active" value-class="text-at-green" />
         <SaaSMetricCard :label="t('individual')" :value="summary.individual" value-class="text-brand-600" />
-        <SaaSMetricCard :label="t('corporate')" :value="summary.corporate" value-class="text-violet-600" />
+        <SaaSMetricCard :label="t('corporate')" :value="summary.corporate" value-class="text-slate-900" />
       </div>
     </template>
 
@@ -48,8 +48,8 @@
         </template>
       </SmartFilterBar>
 
-      <div v-if="showAdvancedFilters" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <p class="text-sm text-gray-500">{{ t("advanced_filters_placeholder") || 'Gelişmiş filtreleme seçenekleri yakında eklenecek.' }}</p>
+      <div v-if="showAdvancedFilters" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm text-slate-500">{{ t("advanced_filters_placeholder") || 'Gelişmiş filtreleme seçenekleri yakında eklenecek.' }}</p>
       </div>
     </div>
 
@@ -62,6 +62,7 @@
           :columns="columns"
           :rows="rows"
           :loading="loading"
+          :empty-message="t('no_customers_found')"
           clickable
           @row-click="row => openCustomer(row.name)"
         />

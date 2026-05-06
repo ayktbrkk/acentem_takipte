@@ -8,7 +8,7 @@
   >
     <template #actions>
       <div class="flex items-center gap-2">
-        <div class="mr-2 flex rounded-lg border border-gray-200 bg-white p-1" role="group" :aria-label="t('viewMode')">
+        <div class="mr-2 flex rounded-lg border border-slate-200 bg-white p-1" role="group" :aria-label="t('viewMode')">
           <button
             type="button"
             class="rounded px-3 py-1 text-xs font-medium transition-all"
@@ -75,7 +75,7 @@
         </template>
       </SmartFilterBar>
 
-      <div v-if="showAdvancedFilters" class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div v-if="showAdvancedFilters" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
             <span>{{ t("insurance_company") }}</span>
@@ -101,9 +101,13 @@
           <input v-model="state.offerListFilters.actionable_only" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
           <span>{{ t("presetActionable") }}</span>
         </label>
-        <div class="mt-5 flex items-center justify-end gap-2 border-t pt-4">
-          <button class="btn btn-outline btn-sm" type="button" @click="onOfferListFilterBarReset">{{ t("clearFilters") }}</button>
-          <button class="btn btn-primary btn-sm px-6" type="button" @click="filtersRuntime.applyOfferListFilters()">{{ t("applyFilters") }}</button>
+        <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+          <ActionButton variant="secondary" size="sm" @click="onOfferListFilterBarReset">
+            {{ t("clearFilters") }}
+          </ActionButton>
+          <ActionButton variant="primary" size="sm" class="px-6" @click="filtersRuntime.applyOfferListFilters()">
+            {{ t("applyFilters") }}
+          </ActionButton>
         </div>
       </div>
     </div>

@@ -6,10 +6,10 @@
       @open-advanced="showAdvanced = !showAdvanced"
     >
       <template #primary-filters>
-        <button class="btn btn-outline" @click="$emit('reset')">
+        <ActionButton variant="secondary" size="sm" @click="$emit('reset')">
           <FeatherIcon name="x" class="h-4 w-4" />
           {{ t("clearFilters") }}
-        </button>
+        </ActionButton>
       </template>
     </SmartFilterBar>
   </div>
@@ -18,6 +18,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import { FeatherIcon } from "frappe-ui";
 
 const props = defineProps({

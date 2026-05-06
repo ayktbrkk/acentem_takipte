@@ -97,7 +97,7 @@
                 <StatusBadge domain="renewal" :status="task.status || 'Open'" />
                 <span
                   v-if="task.status !== 'Done' && task.status !== 'Cancelled'"
-                  class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600"
+                  class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-200 text-slate-600"
                 >
                   {{ task.priorityLabel }}
                 </span>
@@ -200,11 +200,11 @@ const {
 }
 
 .kanban-column {
-  @apply flex flex-col w-[320px] rounded-2xl border border-slate-100 bg-slate-50/50 backdrop-blur-sm;
+  @apply flex flex-col w-[320px] rounded-2xl border border-slate-200 bg-slate-50/50 backdrop-blur-sm;
 }
 
 .kanban-column-header {
-  @apply flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3;
+  @apply flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-3;
 }
 
 .kanban-column-title {
@@ -228,6 +228,6 @@ const {
 }
 
 .kanban-card {
-  @apply cursor-pointer rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-brand-200 hover:-translate-y-0.5 active:scale-[0.98];
+  @apply cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-brand-200 hover:-translate-y-0.5 active:scale-[0.98];
 }
 </style>

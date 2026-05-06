@@ -6,7 +6,7 @@
       @open-advanced="showAdvanced = !showAdvanced"
     >
       <template #primary-filters>
-        <select v-model="filters.direction" class="form-input h-9 py-1 text-sm min-w-[140px]" @change="$emit('apply')">
+        <select v-model="filters.direction" class="input h-9 py-1 text-sm min-w-[140px]" @change="$emit('apply')">
           <option value="">{{ t("allDirections") }}</option>
           <option value="Inbound">{{ t("inbound") }}</option>
           <option value="Outbound">{{ t("outbound") }}</option>

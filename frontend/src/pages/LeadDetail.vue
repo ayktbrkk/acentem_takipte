@@ -65,8 +65,8 @@
             <div v-for="event in activity" :key="event.timestamp" class="flex gap-4">
               <div class="mt-1.5 h-2 w-2 rounded-full bg-brand-500 shrink-0" />
               <div>
-                <p class="text-sm font-bold text-slate-900">{{ event.meta }}</p>
-                <p class="text-xs text-slate-500 mt-0.5">{{ formatDate(event.timestamp) }} · {{ event.owner }}</p>
+                <p class="text-[13px] font-bold text-slate-900">{{ event.meta }}</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">{{ formatDate(event.timestamp) }} · {{ event.owner }}</p>
               </div>
             </div>
           </div>
@@ -150,7 +150,10 @@
               class="!p-3"
             >
               <template #trailing>
-                <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc)">
+                <button 
+                  class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50/50 text-slate-400 opacity-60 transition-all hover:opacity-100 hover:bg-white hover:text-brand-600 hover:border-brand-200 shadow-sm active:scale-95"
+                  @click="openDocument(doc)"
+                >
                   <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
                 </button>
               </template>

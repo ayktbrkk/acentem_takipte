@@ -1,30 +1,24 @@
 <template>
-  <Dialog v-model="showDialogProxy" :options="{ title: quickLeadUi.title, size: 'xl' }">
-    <template #body-content>
-      <LeadForm
-        :model="quickLeadForm"
-        :field-errors="quickLeadFieldErrors"
-        :options-map="leadQuickOptionsMap"
-        :disabled="quickLeadLoading"
-        :loading="quickLeadLoading"
-        :error="quickLeadError"
-        :eyebrow="quickLeadUi.eyebrow"
-        :subtitle="quickLeadUi.subtitle"
-        :locale="activeLocale"
-        :office-branch="officeBranch"
-        :labels="quickCreateCommon"
-        :fields="leadQuickFormFields"
-        @cancel="$emit('cancel')"
-        @save="$emit('save', $event)"
-      />
-    </template>
-  </Dialog>
+  <LeadForm
+    v-if="showQuickLeadDialog"
+    :model="quickLeadForm"
+    :field-errors="quickLeadFieldErrors"
+    :options-map="leadQuickOptionsMap"
+    :disabled="quickLeadLoading"
+    :loading="quickLeadLoading"
+    :error="quickLeadError"
+    :eyebrow="quickLeadUi.eyebrow"
+    :subtitle="quickLeadUi.subtitle"
+    :locale="activeLocale"
+    :office-branch="officeBranch"
+    :labels="quickCreateCommon"
+    :fields="leadQuickFormFields"
+    @cancel="$emit('cancel')"
+    @save="$emit('save', $event)"
+  />
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { Dialog } from "frappe-ui";
-
 import LeadForm from "../LeadForm.vue";
 
 const props = defineProps({
@@ -75,9 +69,4 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:showQuickLeadDialog", "cancel", "save", "request-related-create"]);
-
-const showDialogProxy = computed({
-  get: () => props.showQuickLeadDialog,
-  set: (value) => emit("update:showQuickLeadDialog", value),
-});
 </script>

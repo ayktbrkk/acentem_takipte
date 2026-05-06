@@ -63,9 +63,13 @@
             </select>
           </label>
         </div>
-        <div class="mt-5 flex items-center justify-end gap-2 border-t pt-4">
-          <button class="btn btn-outline btn-sm" type="button" @click="clearFilters">{{ t("clearFilters") }}</button>
-          <button class="btn btn-primary btn-sm px-6" type="button" @click="applyAdvancedFilters">{{ t("applyFilters") }}</button>
+        <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+          <ActionButton variant="secondary" size="sm" @click="clearFilters">
+            {{ t("clearFilters") }}
+          </ActionButton>
+          <ActionButton variant="primary" size="sm" class="px-6" @click="applyAdvancedFilters">
+            {{ t("applyFilters") }}
+          </ActionButton>
         </div>
       </div>
     </div>
@@ -79,6 +83,7 @@
           :columns="columns"
           :rows="rows"
           :loading="loading"
+          :empty-message="t('no_leads_found')"
           clickable
           @row-click="row => openLead(row.name)"
         />
