@@ -255,6 +255,16 @@ The `.env` example is intentionally minimal. Put real secret values into Coolify
 
 The GitHub Actions file is stored under `docs/examples/` on purpose so it does not run automatically in this repository. If you want to make it live, copy it into `.github/workflows/` and adjust the trigger paths, tags, and Dockerfile path to match your deployment repository.
 
+This repository now also includes a live workflow at `.github/workflows/coolify-ghcr-image.yml` that publishes `ghcr.io/<owner>/acentem-worker` on pushes to `main`. If you use this repository directly as the source of truth, point Coolify `APP_IMAGE` at the GHCR image instead of a host-local tag such as `acentem-worker:latest`.
+
+For this repo's current naming, the direct production-style value is:
+
+```text
+APP_IMAGE=ghcr.io/ayktbrkk/acentem-worker:latest
+```
+
+If you switch an existing Coolify stack from a host-local image to GHCR, make the image reference change first, then trigger a redeploy after the workflow has published at least one successful `latest` tag.
+
 Use the app repository itself as source code, but keep deployment mechanics separate if you do not want infrastructure files mixed into the main app repository.
 
 ### What your image must contain
