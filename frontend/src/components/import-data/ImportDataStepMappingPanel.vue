@@ -13,7 +13,7 @@
           <tr v-for="col in columns" :key="col">
             <td class="table-cell">{{ col }}</td>
             <td class="table-cell">
-              <select v-model="columnMapping[col]" class="form-input">
+              <select v-model="columnMapping[col]" class="input">
                 <option value="">{{ t("selectOption") }}</option>
                 <option v-for="field in selectedFieldOptions" :key="field.value" :value="field.value">
                   {{ field.label }}

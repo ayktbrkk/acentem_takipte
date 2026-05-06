@@ -3,17 +3,17 @@
     <div class="grid gap-4 md:grid-cols-3">
       <div class="form-field">
         <label class="form-label">{{ t("startDateLabel") }}</label>
-        <input v-model="form.startDate" class="form-input" type="date" />
+        <input v-model="form.startDate" class="input" type="date" />
       </div>
 
       <div class="form-field">
         <label class="form-label">{{ t("endDateLabel") }}</label>
-        <input v-model="form.endDate" class="form-input" type="date" />
+        <input v-model="form.endDate" class="input" type="date" />
       </div>
 
       <div class="form-field">
         <label class="form-label">{{ t("statusLabel") }}</label>
-        <select v-model="form.status" class="form-input">
+        <select v-model="form.status" class="input">
           <option value="">{{ t("allStatuses") }}</option>
           <option value="Draft">{{ t("statusDraft") }}</option>
           <option value="Active">{{ t("statusActive") }}</option>

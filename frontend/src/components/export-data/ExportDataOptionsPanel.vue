@@ -3,14 +3,14 @@
     <div class="grid gap-4 md:grid-cols-3">
       <div class="form-field">
         <label class="form-label">{{ t("datasetLabel") }}</label>
-        <select v-model="form.screen" class="form-input">
+        <select v-model="form.screen" class="input">
           <option v-for="option in screenOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
         </select>
       </div>
 
       <div class="form-field">
         <label class="form-label">{{ t("formatLabel") }}</label>
-        <select v-model="form.format" class="form-input">
+        <select v-model="form.format" class="input">
           <option value="xlsx">{{ t("formatXlsx") }}</option>
           <option value="pdf">{{ t("formatPdf") }}</option>
           <option value="csv">{{ t("formatCsv") }}</option>
@@ -19,7 +19,7 @@
 
       <div class="form-field">
         <label class="form-label">{{ t("filenameLabel") }}</label>
-        <input v-model="form.filename" class="form-input" type="text" :placeholder="t('filenamePlaceholder')" />
+        <input v-model="form.filename" class="input" type="text" :placeholder="t('filenamePlaceholder')" />
       </div>
     </div>
   </SectionPanel>

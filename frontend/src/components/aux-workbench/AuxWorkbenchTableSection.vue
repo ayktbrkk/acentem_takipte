@@ -43,18 +43,18 @@
                 <div class="flex flex-col">
                   <span class="text-sm font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{{ rowTitle(row) }}</span>
                   <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
-                    <span v-for="fact in factItems(row, config.primaryFields)" :key="fact.label" class="text-[11px] text-slate-500 font-medium">
+                    <span v-for="fact in factItems(row, config.primaryFields)" :key="fact.label" class="text-[11px] text-slate-400">
                       {{ fact.label }}: <span class="text-slate-700 font-semibold">{{ fact.value }}</span>
                     </span>
                   </div>
-                  <span class="mt-1 text-[10px] text-slate-400 font-medium">{{ modifiedLabel }}: {{ formatField(row.modified, 'modified') }}</span>
+                  <span class="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ modifiedLabel }}: {{ formatField(row.modified, 'modified') }}</span>
                 </div>
               </td>
 
               <td class="px-4 py-4">
                 <div class="grid grid-cols-1 gap-1">
                   <div v-for="fact in factItems(row, config.detailFields)" :key="fact.label" class="flex flex-col">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight leading-none mb-0.5">{{ fact.label }}</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{{ fact.label }}</span>
                     <span class="text-xs font-semibold text-slate-700 truncate max-w-[200px]">{{ fact.value }}</span>
                   </div>
                 </div>
@@ -70,7 +70,7 @@
               <td class="px-4 py-4">
                 <div class="flex flex-wrap gap-4">
                   <div v-for="fact in factItems(row, config.metricFields)" :key="fact.label" class="flex flex-col items-center">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight leading-none mb-0.5">{{ fact.label }}</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{{ fact.label }}</span>
                     <span class="text-xs font-black text-slate-900">{{ fact.value }}</span>
                   </div>
                 </div>

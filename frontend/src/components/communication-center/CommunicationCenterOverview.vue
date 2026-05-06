@@ -53,7 +53,7 @@
         <p v-if="referenceContextLabel" class="text-xs font-medium text-slate-500 pl-4">
           {{ t('referenceContext') }}: {{ referenceContextLabel }}
         </p>
-        <p v-if="channelStatusContextLabel" class="text-[10px] font-bold text-slate-400 uppercase pl-4">
+        <p v-if="channelStatusContextLabel" class="text-[11px] font-bold uppercase tracking-wider text-slate-400 pl-4">
           {{ channelStatusContextLabel }}
         </p>
       </div>
