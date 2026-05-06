@@ -85,23 +85,23 @@
         <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
       </div>
 
-      <div class="mt-4 overflow-hidden rounded-lg border border-gray-200">
+      <div class="mt-4 overflow-hidden rounded-lg border border-slate-200">
         <div class="overflow-auto">
           <table class="w-full border-collapse">
             <thead>
-              <tr class="border-b border-gray-200 bg-gray-50">
+              <tr class="border-b border-slate-200 bg-slate-50">
                 <th
                   v-for="column in visibleColumns"
                   :key="column"
-                  class="px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-wider text-gray-400"
+                  class="px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-wider text-slate-400"
                 >
                   <button
                     type="button"
-                    class="inline-flex w-full items-center justify-between gap-2 text-left text-[10.5px] font-semibold uppercase tracking-wider text-gray-400 transition-colors hover:text-gray-600"
+                    class="inline-flex w-full items-center justify-between gap-2 text-left text-[10.5px] font-semibold uppercase tracking-wider text-slate-400 transition-colors hover:text-slate-600"
                     @click="onToggleSort(column)"
                   >
                     <span>{{ getColumnLabel(column) }}</span>
-                    <span class="text-[10px] text-gray-400">{{ getSortIndicator(column) }}</span>
+                    <span class="text-[10px] text-slate-400">{{ getSortIndicator(column) }}</span>
                   </button>
                 </th>
                 <th class="w-10 px-4 py-2.5"></th>
@@ -126,11 +126,11 @@
                 </tr>
                 <tr
                   v-else
-                  class="group border-b border-gray-100 transition-colors duration-100 last:border-0"
-                  :class="isRowClickable(row) ? 'cursor-pointer hover:bg-gray-50' : ''"
+                  class="group border-b border-slate-100 transition-colors duration-100 last:border-0"
+                  :class="isRowClickable(row) ? 'cursor-pointer hover:bg-slate-50' : ''"
                   @click="onRowClick(row)"
                 >
-                  <td v-for="column in visibleColumns" :key="column" class="px-4 py-3 text-sm text-gray-900">
+                  <td v-for="column in visibleColumns" :key="column" class="px-4 py-3 text-sm text-slate-900">
                     {{ formatCellValue(column, row[column]) }}
                   </td>
                   <td class="w-10 px-4 py-3 text-right">
@@ -153,8 +153,8 @@
           </table>
         </div>
 
-        <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3">
-          <p class="text-xs text-gray-400">{{ sortedRows.length }} / {{ sortedRows.length }} {{ t("showingRecords") }}</p>
+        <div class="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3">
+          <p class="text-xs text-slate-400">{{ sortedRows.length }} / {{ sortedRows.length }} {{ t("showingRecords") }}</p>
         </div>
       </div>
     </template>

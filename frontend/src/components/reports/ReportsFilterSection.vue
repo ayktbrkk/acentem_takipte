@@ -25,7 +25,7 @@
           </option>
         </select>
 
-        <div class="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-1.5 py-1">
+        <div class="flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-1.5 py-1">
           <input
             v-model="filters.fromDate"
             class="report-filter-control report-filter-control--date"
@@ -33,7 +33,7 @@
             :placeholder="t('date_from')"
             :title="t('date_from')"
           />
-          <span class="text-xs text-gray-400">-</span>
+          <span class="text-xs text-slate-400">-</span>
           <input
             v-model="filters.toDate"
             class="report-filter-control report-filter-control--date"
@@ -44,14 +44,14 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-2">
+      <div class="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2">
         <ActionButton type="button" variant="secondary" size="sm" @click="$emit('toggle-advanced')">
           {{ reportsAdvancedOpen ? t('hide_advanced_filters') : t('advanced_filters') }}
         </ActionButton>
 
         <span
           v-if="activeFilterCount > 0"
-          class="flex h-8 items-center gap-1 rounded-md border border-gray-200 px-2.5 text-xs text-gray-500"
+          class="flex h-8 items-center gap-1 rounded-md border border-slate-200 px-2.5 text-xs text-slate-500"
         >
           {{ activeFilterCount }} {{ t('active_filters') }}
         </span>
@@ -91,14 +91,14 @@
       </div>
     </div>
 
-    <div v-if="reportsAdvancedOpen" class="mt-3 rounded-lg border border-gray-200 bg-gray-50/50 p-3">
+    <div v-if="reportsAdvancedOpen" class="mt-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
       <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
         <label
           v-for="field in visibleAdvancedFilters"
           :key="field.key"
           class="flex flex-col gap-1"
         >
-          <span class="text-xs font-medium text-gray-600">{{ field.label }}</span>
+          <span class="text-xs font-medium text-slate-600">{{ field.label }}</span>
           <input
             v-model.trim="filters[field.modelKey]"
             class="report-filter-control"
@@ -117,7 +117,7 @@
       </div>
     </div>
 
-    <div class="mt-3 flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
+    <div class="mt-3 flex items-center justify-between rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
       <span>{{ t("list_summary_title") }}</span>
       <span>{{ t("columns") }}: {{ columnsSummaryLabel }}</span>
     </div>

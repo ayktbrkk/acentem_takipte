@@ -21,21 +21,22 @@
         <h4 class="text-sm font-semibold text-slate-900">{{ t("segmentSnapshotTitle") }}</h4>
         <p class="text-xs text-slate-500">{{ t("segmentSnapshotHint") }}</p>
       </div>
-      <button
-        class="btn btn-sm"
-        type="button"
+      <ActionButton
+        variant="secondary"
+        size="sm"
         data-testid="run-segment-snapshot-job"
         :disabled="snapshotRunLoading"
         @click="$emit('run-segment-snapshots')"
       >
         {{ snapshotRunLoading ? t("runningSegmentSnapshots") : t("runSegmentSnapshots") }}
-      </button>
+      </ActionButton>
     </div>
   </SectionPanel>
 </template>
 
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import ScheduledReportsManager from "./ScheduledReportsManager.vue";
 
 defineProps({

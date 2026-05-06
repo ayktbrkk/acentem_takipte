@@ -18,7 +18,7 @@
         <p class="mini-metric-value" :class="item.valueClass">
           {{ item.value }}
         </p>
-        <p class="mt-1 text-xs font-medium" :class="item.delta >= 0 ? 'text-emerald-600' : 'text-amber-700'">
+        <p class="mt-1 text-[11px] font-bold" :class="item.delta >= 0 ? 'text-at-green' : 'text-at-amber'">
           {{ formatComparisonDelta(item.delta, item.previous) }}
         </p>
       </article>
