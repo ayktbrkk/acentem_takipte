@@ -1,10 +1,10 @@
 <template>
-  <div v-if="showAnalyticsRow" class="grid gap-4 xl:grid-cols-3">
-    <SectionPanel :title="t('leadPipeline')" :show-count="false" :meta="t('liveData')">
+  <div v-if="showAnalyticsRow" class="grid gap-4 md:grid-cols-2 xl:grid-cols-12">
+    <SectionPanel :title="t('leadPipeline')" :show-count="false" :meta="t('liveData')" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4 xl:col-span-4">
       <div v-if="dashboardLoading" class="text-sm text-slate-500">
         {{ t("loading") }}
       </div>
-      <div v-else class="space-y-4">
+      <div v-else class="space-y-3">
         <ProgressMetricRow
           v-for="item in leadStatusSummary"
           :key="item.key"
@@ -16,14 +16,14 @@
       </div>
     </SectionPanel>
 
-    <SectionPanel :title="t('offerStatusOverviewTitle')" :show-count="false" :meta="t('liveData')">
+    <SectionPanel :title="t('offerStatusOverviewTitle')" :show-count="false" :meta="t('liveData')" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4 xl:col-span-4">
       <div v-if="dashboardLoading" class="text-sm text-slate-500">
         {{ t("loading") }}
       </div>
       <div v-else-if="salesOfferStatusSummary.length === 0" class="card-empty-compact text-sm">
         {{ t("noOfferStatus") }}
       </div>
-      <div v-else class="space-y-4">
+      <div v-else class="space-y-3">
         <ProgressMetricRow
           v-for="item in salesOfferStatusSummary"
           :key="item.key"
@@ -35,7 +35,7 @@
       </div>
     </SectionPanel>
 
-    <SectionPanel :title="t('commissionTrend')" :show-count="false" :meta="t('lastMonths')">
+    <SectionPanel :title="t('commissionTrend')" :show-count="false" :meta="t('lastMonths')" panel-class="surface-card h-full rounded-xl p-3.5 sm:p-4 xl:col-span-4 md:col-span-2">
       <div
         v-if="commissionTrend.length === 0"
         class="card-empty-compact text-center"

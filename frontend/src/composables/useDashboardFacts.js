@@ -413,11 +413,13 @@ export function useDashboardFacts({
     return Array.from(grouped.values())
       .map((row) => {
         const score = row.overdueCount * 3 + row.dueTodayCount + Math.min(4, Math.ceil(row.overdueAmount / 5000));
+        const title = row.customer || row.policy || "-";
+        const descriptionParts = [row.policy, riskLevelLabel(score)].filter(Boolean);
         return {
           ...row,
           score,
-          title: row.policy || row.customer || "-",
-          description: `${riskLevelLabel(score)} · ${row.customer || row.policy || "-"}`,
+          title,
+          description: descriptionParts.join(" · ") || title,
         };
       })
       .filter((row) => row.score > 0)

@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell space-y-6">
+  <section class="page-shell space-y-4 lg:space-y-5">
     <DashboardHeader
       :active-dashboard-tab="activeDashboardTab"
       :dashboard-tabs="dashboardTabs"
@@ -37,7 +37,7 @@
       variant="card"
       :count="4"
     />
-    <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div v-else class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <DashboardStatCard
         v-for="card in visibleQuickStatCards"
         :key="card.key"

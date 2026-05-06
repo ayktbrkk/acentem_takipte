@@ -96,6 +96,15 @@ const DOMAIN_MAP = {
     "Completed": "active",
     "Cancelled": "cancel",
   },
+  task: {
+    "Draft": "draft",
+    "Open": "open",
+    "Working": "waiting",
+    "Pending Review": "waiting",
+    "Completed": "active",
+    "Done": "active",
+    "Cancelled": "cancel",
+  },
   reminder: {
     "Draft": "draft",
     "Open": "open",
@@ -151,6 +160,15 @@ const DOMAIN_MAP = {
     "Draft": "draft",
     "Synced": "active",
     "Failed": "cancel",
+  },
+  risk_level: {
+    high: "cancel",
+    medium: "waiting",
+    low: "active",
+  },
+  dashboard_action_kind: {
+    reminder: "waiting",
+    task: "open",
   },
   document_kind: {
     "Policy":      "active",
@@ -214,6 +232,15 @@ const DOMAIN_LABELS = {
     Completed: "Completed",
     Cancelled: "Cancelled",
   },
+  task: {
+    Draft: "status_draft",
+    Open: "status_open",
+    Working: "statusInProgress",
+    "Pending Review": "statusWaiting",
+    Completed: "statusCompleted",
+    Done: "statusCompleted",
+    Cancelled: "status_cancelled",
+  },
   payment: {
     Draft: "Draft",
     Outstanding: "Outstanding",
@@ -259,6 +286,15 @@ const DOMAIN_LABELS = {
     Draft: "status_draft",
     Synced: "active",
     Failed: "status_cancelled",
+  },
+  risk_level: {
+    high: "riskLevelHigh",
+    medium: "riskLevelMedium",
+    low: "riskLevelLow",
+  },
+  dashboard_action_kind: {
+    reminder: "salesActionReminder",
+    task: "salesActionTask",
   },
   document_kind: {
     Policy:      "kindPolicy",
