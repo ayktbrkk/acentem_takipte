@@ -1,6 +1,6 @@
 # Acentem Takipte Architecture Map
 
-Last verified: 2026-05-05
+Last verified: 2026-05-12
 
 This document is a repository-grounded architecture map for the current workspace. It is intended to replace approximate auto-generated summaries with a file-accurate view of how the application is structured and how its main runtime flows work.
 
@@ -77,6 +77,7 @@ Representative modules:
 
 - `dashboard.py`
 - `customers.py`
+- `offers.py`
 - `communication.py`
 - `reports.py`
 - `accounting.py`
@@ -261,7 +262,6 @@ Main stores:
 - `auth.js`
 - `branch.js`
 - `dashboard.js`
-- `customer.js`
 - `policy.js`
 - `payment.js`
 - `claim.js`
@@ -475,6 +475,35 @@ Primary backend surfaces:
 The current workspace does not show a `.agents/skills/` tree. If external summaries mention a large in-repo AI skill framework, treat that as outside the scope of this verified workspace snapshot unless those files are later restored or checked out.
 
 Likewise, use the actual `docs/` directory in this workspace as the source of truth for project documentation. Auto-generated summaries may refer to docs paths that do not exist here.
+
+## 7a. Recent Cleanup (May 2026)
+
+The following structural improvements were applied during the 2026-05-12 audit:
+
+**Frontend dead code removal:** 68 unused files were deleted:
+- 46 dead components (orphaned lead-list, offer-board, offer-detail, policy-detail, policy-form,
+  policy-list, dashboard, communication-center, reports sub-components and shell helpers)
+- 21 dead composables (replaced `*Runtime.js` stubs, orphaned communication/reports sub-modules)
+- 1 dead store (`customer.js`)
+
+**Backend dead code removal:**
+- `api/dashboard.py`: removed `get_policy_360_payload`, `update_customer_profile`
+- `api/documents.py`: removed `share_document`, `toggle_verified`
+
+**New API proxy module:**
+- `api/offers.py`: provides `quick_create_offer` and `convert_offer_to_policy` at the `api.offers`
+  path. This proxies the whitelist'd functions from `doctype/at_offer/at_offer.py` so the SPA can
+  call them through the standard `api/` layer.
+
+**Translation quality:**
+- Duplicate translation entries removed across 4 config files.
+- Missing TR column labels (`colIdentity`, `colContact`, `colPersonal`, `colManagement`,
+  `colPayment`, `colDueDate`) and missing EN values (`phone`, `view_full_profile`,
+  `quick_policy_entry`) were added.
+- The `view_all_documents` key in `claim_translations.js` was aligned with the Title Case
+  convention from `common_translations.js`.
+
+**Test baseline:** 84 test files, 268 tests, 0 failures.
 
 ## 8. Fast Navigation Index
 

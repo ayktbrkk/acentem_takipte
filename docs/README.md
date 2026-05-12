@@ -42,8 +42,8 @@ This directory contains the main repository documentation for `Acentem Takipte`.
 ## Suggested Reading Order
 
 1. [Architecture Overview](ARCHITECTURE_OVERVIEW.md)
-2. [Architecture Map](ARCHITECTURE_MAP.md)
-3. [Design Guidelines](DESIGN_GUIDELINES.md)
+2. [Architecture Map](ARCHITECTURE_MAP.md) — includes May 2026 cleanup notes
+3. [Design Guidelines](DESIGN_GUIDELINES.md) — v2.3, includes compliance audit results
 4. [UI Review Checklist](UI_REVIEW_CHECKLIST.md)
 5. [Production Deploy Checklist](PRODUCTION_DEPLOY_CHECKLIST.md)
 6. [Coolify VPS Deployment Guide](COOLIFY_VPS_DEPLOY_GUIDE.md)

@@ -1,6 +1,6 @@
 # Acentem Takipte Architecture Overview
 
-Last verified: 2026-05-05
+Last verified: 2026-05-12
 
 This is the short-form architecture summary for the current workspace. Use [ARCHITECTURE_MAP.md](ARCHITECTURE_MAP.md) for the full file-by-file map and runtime flow details.
 
@@ -22,7 +22,7 @@ This is the short-form architecture summary for the current workspace. Use [ARCH
 - [acentem_takipte/hooks.py](../acentem_takipte/hooks.py)
   Runtime hooks, website routing, document event wiring, scheduler definitions.
 - [acentem_takipte/acentem_takipte/api](../acentem_takipte/acentem_takipte/api)
-  SPA-facing API entrypoints.
+  SPA-facing API entrypoints (offers, dashboard, customers, communication, reports, accounting, admin, session, break-glass, quick-create, list-exports). Includes `offers.py` (offer quick-create and conversion proxy).
 - [acentem_takipte/acentem_takipte/api/v2](../acentem_takipte/acentem_takipte/api/v2)
   Refactored dashboard query/serialization slice.
 - [acentem_takipte/acentem_takipte/services](../acentem_takipte/acentem_takipte/services)
