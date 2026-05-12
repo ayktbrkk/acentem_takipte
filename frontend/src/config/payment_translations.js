@@ -196,7 +196,7 @@ export const PAYMENT_TRANSLATIONS = {
     activity_timeline: "Activity History",
     save_success: "Record updated successfully.",
     save_failed: "Update failed. Please try again.",
-    unspecified: "Unspecified",
+    unspecified: "Not provided",
     file_link_not_found: "Document link not found.",
     status_overdue: "Overdue",
     status_outstanding: "Outstanding",

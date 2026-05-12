@@ -88,20 +88,15 @@
           @row-click="row => openLead(row.name)"
         />
 
-        <div class="mt-4 flex items-center justify-between px-2">
-          <p class="text-xs font-medium text-slate-400">
-            {{ rows.length }} / {{ summary.total }} {{ t('showingRecords') }}
-          </p>
-          <div class="flex items-center gap-2">
-            <ActionButton variant="secondary" size="xs" :disabled="pagination.page <= 1" @click="setPage(pagination.page - 1)">
-              <FeatherIcon name="chevron-left" class="h-3 w-3" />
-            </ActionButton>
-            <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ pagination.page }}</span>
-            <ActionButton variant="secondary" size="xs" :disabled="rows.length < pagination.pageLength" @click="setPage(pagination.page + 1)">
-              <FeatherIcon name="chevron-right" class="h-3 w-3" />
-            </ActionButton>
-          </div>
-        </div>
+        <ListPager
+          :shown="rows.length"
+          :total="summary.total"
+          :page="pagination.page"
+          :has-next="rows.length >= pagination.pageLength"
+          :showing-label="t('showingRecords')"
+          @previous="setPage(pagination.page - 1)"
+          @next="setPage(pagination.page + 1)"
+        />
       </template>
     </div>
 
@@ -137,6 +132,7 @@ import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import ListTable from "../components/ui/ListTable.vue";
+import ListPager from "../components/app-shell/ListPager.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import LeadListQuickLeadDialog from "../components/lead-list/LeadListQuickLeadDialog.vue";

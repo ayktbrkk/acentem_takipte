@@ -465,7 +465,7 @@ export const POLICY_TRANSLATIONS = {
     structure_type: "Structure Type",
     coverage_type: "Coverage Type",
     network_type: "Network Type",
-    unspecified: "Unspecified",
+    unspecified: "Not provided",
     inpatient_outpatient: "Inpatient/Outpatient",
     endorsementTitle: "Endorsement History",
     emptyEndorsement: "No endorsements.",

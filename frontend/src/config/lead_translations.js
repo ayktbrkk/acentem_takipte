@@ -116,7 +116,7 @@ export const LEAD_TRANSLATIONS = {
     lead_type: "Lead Type",
     campaign: "Campaign",
     next_step: "Next Step",
-    unspecified: "Unspecified",
+    unspecified: "Not provided",
     advanced_filters_placeholder: "Advanced filtering options for this screen will be expanded in the next pass.",
     applyFilters: "Apply Filters",
     clearFilters: "Clear Filters",

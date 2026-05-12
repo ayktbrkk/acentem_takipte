@@ -69,7 +69,7 @@
             <template #cell(status)="{ row }">
               <StatusBadge 
                 domain="payment" 
-                :status="row.status === 'Paid' ? 'active' : 'hold'" 
+                :status="normalizePaidStatus(row.status)" 
                 :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
               />
             </template>
@@ -166,6 +166,7 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import { openDocumentInNewTab } from "../utils/documentOpen";
+import { normalizePaidStatus } from "../utils/statusMapping";
 
 const props = defineProps({
   name: { type: String, required: true },

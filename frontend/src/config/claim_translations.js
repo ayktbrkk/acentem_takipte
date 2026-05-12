@@ -231,7 +231,7 @@ export const CLAIM_TRANSLATIONS = {
     claim_amount: "Claim Amount",
     reserve_amount: "Reserve Amount",
     paid_amount: "Paid Amount",
-    unspecified: "Unspecified",
+    unspecified: "Not provided",
   }
 };
 

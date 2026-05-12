@@ -87,18 +87,15 @@
           clickable
           @row-click="(row) => openPolicyDetail(row.name)"
         />
-        <div class="mt-4 flex items-center justify-between px-2">
-          <p class="text-xs font-medium text-slate-400">{{ policyListRowsWithUrgency.length }} / {{ policyListTotalCount }} {{ t("showingRecords") }}</p>
-          <div class="flex items-center gap-2">
-            <ActionButton variant="secondary" size="xs" :disabled="policyListPage <= 1" @click="previousPage">
-              <FeatherIcon name="chevron-left" class="h-3 w-3" />
-            </ActionButton>
-            <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ policyListPage }}</span>
-            <ActionButton variant="secondary" size="xs" :disabled="!hasNextPage" @click="nextPage">
-              <FeatherIcon name="chevron-right" class="h-3 w-3" />
-            </ActionButton>
-          </div>
-        </div>
+        <ListPager
+          :shown="policyListRowsWithUrgency.length"
+          :total="policyListTotalCount"
+          :page="policyListPage"
+          :has-next="hasNextPage"
+          :showing-label="t('showingRecords')"
+          @previous="previousPage"
+          @next="nextPage"
+        />
       </template>
     </div>
 
@@ -142,6 +139,7 @@ import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import PolicyListQuickPolicyDialog from "../components/policy-list/PolicyListQuickPolicyDialog.vue";
 import ListTable from "../components/ui/ListTable.vue";
+import ListPager from "../components/app-shell/ListPager.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import { FeatherIcon } from "frappe-ui";
 import { ref } from "vue";

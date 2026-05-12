@@ -194,7 +194,7 @@ export const CUSTOMER_TRANSLATIONS = {
     no_renewals: "No renewals found.",
     no_documents: "No documents found.",
     no_activities: "No activities found.",
-    unspecified: "Unspecified",
+    unspecified: "Not provided",
     save_success: "Record updated successfully.",
     save_failed: "Update failed. Please try again.",
     

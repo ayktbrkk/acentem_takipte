@@ -196,7 +196,7 @@ export const OFFER_TRANSLATIONS = {
     tax_amount: "Tax Amount",
     commission_amount: "Commission Amount",
     validity: "Validity",
-    unspecified: "Unspecified",
+    unspecified: "Not provided",
     offer_details: "Offer Details",
   }
 };

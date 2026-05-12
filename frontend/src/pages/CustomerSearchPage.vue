@@ -77,7 +77,7 @@
             <template #cell(status)="{ row }">
               <StatusBadge 
                 domain="renewal" 
-                :status="row.status === 'approved' ? 'active' : row.status === 'pending' ? 'hold' : 'cancel'" 
+                :status="normalizeStatus(row.status, 'breakGlass')" 
                 :label="mapStatus(row.status)" 
               />
             </template>
@@ -91,6 +91,7 @@
 <script setup lang="ts">
 import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
+import { normalizeStatus } from "../utils/statusMapping";
 import { useCustomerSearchPage } from "../composables/useCustomerSearchPage";
 import { CUSTOMER_SEARCH_TRANSLATIONS } from "../config/customer_search_translations";
 import { translateText } from "../utils/i18n";

@@ -67,7 +67,7 @@
             <template #cell(status)="{ row }">
               <StatusBadge 
                 domain="payment" 
-                :status="row.status === 'Paid' ? 'active' : 'hold'" 
+                :status="normalizePaidStatus(row.status)" 
                 :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
               />
             </template>
@@ -167,6 +167,7 @@ import ActionButton from "../components/app-shell/ActionButton.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
+import { normalizePaidStatus } from "../utils/statusMapping";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import EditableCard from "../components/app-shell/EditableCard.vue";
 import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
