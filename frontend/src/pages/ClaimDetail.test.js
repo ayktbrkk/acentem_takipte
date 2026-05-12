@@ -264,7 +264,7 @@ describe("ClaimDetail page", () => {
     await backButton.trigger("click");
     expect(routerPush).toHaveBeenLastCalledWith({ name: "claims-board" });
 
-    const documentCenterButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Tüm dokümanları görüntüle"));
+    const documentCenterButton = wrapper.findAll(".action-button-stub").find((button) => button.text().includes("Tüm Dokümanları Görüntüle"));
     await documentCenterButton.trigger("click");
     expect(routerPush).toHaveBeenLastCalledWith({
       name: "at-documents-list",
@@ -352,6 +352,6 @@ describe("ClaimDetail page", () => {
     expect(wrapper.text()).toContain("hasar-raporu.pdf");
     expect(wrapper.text()).toContain("Damage Photo");
     expect(wrapper.text()).toContain("external-link");
-    expect(wrapper.text()).toContain("Tüm dokümanları görüntüle");
+    expect(wrapper.text()).toContain("Tüm Dokümanları Görüntüle");
   });
 });

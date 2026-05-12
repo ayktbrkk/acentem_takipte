@@ -109,7 +109,6 @@ export const BREAK_GLASS_TRANSLATIONS = {
     approve: "Approve",
     reject: "Reject",
     refresh: "Refresh",
-    refresh: "Refresh",
     loading: "Loading",
     emptyTitle: "No pending requests",
     emptyDescription: "There are no break-glass requests waiting for review.",

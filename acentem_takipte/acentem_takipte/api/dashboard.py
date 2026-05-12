@@ -598,26 +598,6 @@ def get_customer_360_payload(name: str) -> dict:
 
 
 @frappe.whitelist()
-def get_policy_360_payload(name: str) -> dict:
-    user = frappe.session.user
-    if user == "Guest":
-        frappe.throw(_("Authentication required"))
-
-    policy_name = str(name or "").strip()
-    if not policy_name:
-        frappe.throw(_("Policy is required"))
-
-    policy = frappe.get_doc("AT Policy", policy_name)
-    policy.check_permission("read")
-
-    from acentem_takipte.acentem_takipte.services.policy_360 import (
-        build_policy_360_payload,
-    )
-
-    return build_policy_360_payload(policy_name)
-
-
-@frappe.whitelist()
 def get_follow_up_sla_payload(filters=None) -> dict:
     user = frappe.session.user
     if user == "Guest":
@@ -907,89 +887,6 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
 # def get_payment_detail_payload(name: str) -> dict:
 #     _assert_dashboard_endpoint_method("get_payment_detail_payload")
 #     ...
-
-
-@frappe.whitelist()
-def update_customer_profile(name: str, values=None) -> dict:
-    _assert_dashboard_endpoint_method("update_customer_profile")
-    user = frappe.session.user
-    if user == "Guest":
-        frappe.throw(_("Authentication required"))
-
-    customer_name = str(name or "").strip()
-    if not customer_name:
-        frappe.throw(_("Customer is required"))
-
-    payload = frappe.parse_json(values) if isinstance(values, str) else (values or {})
-    if not isinstance(payload, dict):
-        payload = {}
-
-    doc = frappe.get_doc("AT Customer", customer_name)
-    doc.check_permission("write")
-
-    updates = {}
-    for fieldname in CUSTOMER_PROFILE_EDIT_FIELDS:
-        if fieldname not in payload:
-            continue
-        value = payload.get(fieldname)
-        if fieldname in {"full_name", "occupation", "phone", "email"}:
-            updates[fieldname] = str(value or "").strip() or None
-        elif fieldname == "address":
-            updates[fieldname] = str(value or "").strip() or None
-        elif fieldname == "birth_date":
-            updates[fieldname] = str(value).strip() if value else None
-        elif fieldname == "gender":
-            normalized = str(value or "").strip()
-            if normalized not in CUSTOMER_GENDER_OPTIONS:
-                frappe.throw(_("Invalid gender value"))
-            updates[fieldname] = normalized or "Unknown"
-        elif fieldname == "marital_status":
-            normalized = str(value or "").strip()
-            if normalized not in CUSTOMER_MARITAL_OPTIONS:
-                frappe.throw(_("Invalid marital status value"))
-            updates[fieldname] = normalized or "Unknown"
-        elif fieldname == "consent_status":
-            normalized = str(value or "").strip()
-            if normalized not in CUSTOMER_CONSENT_OPTIONS:
-                frappe.throw(_("Invalid consent status value"))
-            updates[fieldname] = normalized or "Unknown"
-        elif fieldname == "assigned_agent":
-            normalized = str(value or "").strip()
-            if normalized and not frappe.db.exists("User", normalized):
-                frappe.throw(_("Invalid assigned agent value"))
-            updates[fieldname] = normalized or None
-
-    if "full_name" in updates and not updates.get("full_name"):
-        frappe.throw(_("Full Name is required"))
-
-    for fieldname, value in updates.items():
-        doc.set(fieldname, value)
-
-    if doc.customer_type == "Corporate":
-        doc.birth_date = None
-        doc.gender = "Unknown"
-        doc.marital_status = "Unknown"
-        doc.occupation = None
-
-    if updates:
-        doc.save()
-        frappe.db.commit()
-
-    return {
-        "name": doc.name,
-        "customer_type": doc.customer_type,
-        "full_name": doc.full_name,
-        "birth_date": doc.birth_date,
-        "gender": doc.gender,
-        "marital_status": doc.marital_status,
-        "occupation": doc.occupation,
-        "phone": doc.phone,
-        "email": doc.email,
-        "address": doc.address,
-        "consent_status": doc.consent_status,
-        "assigned_agent": doc.assigned_agent,
-        "modified": doc.modified,
-    }
 
 
 CUSTOMER_WORKBENCH_DERIVED_SORTS = dashboard_constants.CUSTOMER_WORKBENCH_DERIVED_SORTS

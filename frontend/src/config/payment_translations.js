@@ -112,7 +112,6 @@ export const PAYMENT_TRANSLATIONS = {
     colTerminDate: "Termin Tarihi",
     colAmount: "Tutar",
     colStatus: "Durum",
-    applyFilters: "Uygula",
   },
   en: {
     payments: "Payments",
@@ -227,7 +226,6 @@ export const PAYMENT_TRANSLATIONS = {
     colTerminDate: "Due Date",
     colAmount: "Amount",
     colStatus: "Status",
-    applyFilters: "Apply",
   }
 };
 

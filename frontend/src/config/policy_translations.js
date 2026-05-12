@@ -131,7 +131,6 @@ export const POLICY_TRANSLATIONS = {
     tax: "Vergi",
     commission: "Komisyon",
     gross: "Brüt Prim",
-    gross: "Brüt Prim",
     commissionRate: "Komisyon Oranı",
     gwpTry: "GWP TRY",
     payments: "Ödemeler",
@@ -288,6 +287,7 @@ export const POLICY_TRANSLATIONS = {
     start_date: "Start Date",
     end_date: "End Date",
     status: "Status",
+    quick_policy_entry: "Quick Policy Entry",
 
     breadcrumb: "Insurance Operations → Policies",
     title: "Policy Workbench",
