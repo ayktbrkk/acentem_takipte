@@ -47,7 +47,7 @@ const savedSettings = {
     follow_up_due_soon_days: 14,
     follow_up_preview_limit: 20,
     default_policy_term_days: 365,
-    default_commission_rate: 15,
+    default_commission_rate: 10,
     default_currency: "TRY",
     renewal_reminder_lead_days: 30,
     kvkk_consent_default: "Unknown",
@@ -190,7 +190,7 @@ describe("AdminGeneralSettings", () => {
     await flushPromises();
 
     expect(wrapper.find('[data-testid="general-policy-term"]').element.value).toBe("365");
-    expect(wrapper.find('[data-testid="general-commission-rate"]').element.value).toBe("15");
+    expect(wrapper.find('[data-testid="general-commission-rate"]').element.value).toBe("10");
     expect(wrapper.find('[data-testid="general-renewal-lead"]').element.value).toBe("30");
     expect(wrapper.find('[data-testid="general-kvkk-consent"]').element.value).toBe("Unknown");
   });

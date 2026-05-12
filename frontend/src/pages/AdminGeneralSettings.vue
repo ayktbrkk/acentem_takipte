@@ -85,11 +85,15 @@
             <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
               <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('commissionRateLabel') }}</p>
               <select v-model="settings.default_commission_rate" class="mt-2 input" data-testid="general-commission-rate" @change="markDirty">
+                <option :value="0">%0</option>
                 <option :value="5">%5</option>
                 <option :value="10">%10</option>
                 <option :value="15">%15</option>
                 <option :value="20">%20</option>
                 <option :value="25">%25</option>
+                <option :value="30">%30</option>
+                <option :value="40">%40</option>
+                <option :value="50">%50</option>
               </select>
               <p class="mt-2 text-xs text-slate-500">{{ t('commissionRateHint') }}</p>
             </label>
@@ -105,6 +109,7 @@
             <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
               <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('renewalReminderLeadLabel') }}</p>
               <select v-model="settings.renewal_reminder_lead_days" class="mt-2 input" data-testid="general-renewal-lead" @change="markDirty">
+                <option :value="0">{{ t('renewalReminderOption0') }}</option>
                 <option :value="15">{{ t('renewalReminderOption15') }}</option>
                 <option :value="30">{{ t('renewalReminderOption30') }}</option>
                 <option :value="45">{{ t('renewalReminderOption45') }}</option>
@@ -192,7 +197,7 @@ const DEFAULTS = {
   follow_up_due_soon_days: 7,
   follow_up_preview_limit: 8,
   default_policy_term_days: 365,
-  default_commission_rate: 15,
+  default_commission_rate: 10,
   default_currency: "TRY",
   renewal_reminder_lead_days: 30,
   kvkk_consent_default: "Unknown",

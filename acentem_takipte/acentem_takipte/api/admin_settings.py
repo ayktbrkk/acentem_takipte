@@ -31,7 +31,7 @@ def _coerce_general_settings_payload(value: Any) -> dict[str, Any]:
             "follow_up_due_soon_days": 7,
             "follow_up_preview_limit": 8,
             "default_policy_term_days": 365,
-            "default_commission_rate": 15.0,
+            "default_commission_rate": 10.0,
             "default_currency": "TRY",
             "renewal_reminder_lead_days": 30,
             "kvkk_consent_default": "Unknown",
@@ -67,11 +67,13 @@ def _coerce_general_settings_payload(value: Any) -> dict[str, Any]:
     if default_policy_term_days not in {180, 365}:
         default_policy_term_days = 365
 
-    commission_rate_str = str(payload.get("default_commission_rate") or "15.0").strip()
+    commission_rate_str = str(payload.get("default_commission_rate") or "10.0").strip()
     try:
         default_commission_rate = float(commission_rate_str)
     except (TypeError, ValueError):
-        default_commission_rate = 15.0
+        default_commission_rate = 10.0
+    if default_commission_rate < 0 or default_commission_rate > 100:
+        default_commission_rate = 10.0
 
     default_currency = str(payload.get("default_currency") or "TRY").strip().upper()
     if default_currency not in {"TRY", "EUR", "USD"}:
@@ -81,7 +83,7 @@ def _coerce_general_settings_payload(value: Any) -> dict[str, Any]:
         renewal_reminder_lead_days = int(payload.get("renewal_reminder_lead_days") or 30)
     except (TypeError, ValueError):
         renewal_reminder_lead_days = 30
-    if renewal_reminder_lead_days not in {15, 30, 45, 60}:
+    if renewal_reminder_lead_days not in {0, 15, 30, 45, 60}:
         renewal_reminder_lead_days = 30
 
     kvkk_consent_default = str(payload.get("kvkk_consent_default") or "Unknown").strip()
