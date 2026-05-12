@@ -7,10 +7,11 @@
     :record-count-label="t('recordCountLabel')"
   >
     <template #metrics>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
         <SaaSMetricCard :label="t('appDefaultsMetric')" :value="activeLocaleLabel" value-class="text-brand-600" />
         <SaaSMetricCard :label="t('opsDefaultsMetric')" :value="followUpDaysLabel" value-class="text-at-amber" />
-        <SaaSMetricCard :label="t('systemInfoMetric')" :value="siteName" value-class="text-at-green" />
+        <SaaSMetricCard :label="t('insuranceDefaultsMetric')" :value="insuranceDefaultsLabel" value-class="text-at-green" />
+        <SaaSMetricCard :label="t('systemInfoMetric')" :value="siteName" value-class="text-slate-900" />
       </div>
     </template>
 
@@ -67,6 +68,57 @@
                 <option :value="20">20</option>
               </select>
               <p class="mt-2 text-xs text-slate-500">{{ t('followUpPreviewLimitHint') }}</p>
+            </label>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel :title="t('insuranceDefaultsTitle')" :meta="t('insuranceDefaultsSubtitle')" :show-count="false">
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('policyTermLabel') }}</p>
+              <select v-model="settings.default_policy_term_days" class="mt-2 input" data-testid="general-policy-term" @change="markDirty">
+                <option :value="180">{{ t('policyTermOption180') }}</option>
+                <option :value="365">{{ t('policyTermOption365') }}</option>
+              </select>
+              <p class="mt-2 text-xs text-slate-500">{{ t('policyTermHint') }}</p>
+            </label>
+            <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('commissionRateLabel') }}</p>
+              <select v-model="settings.default_commission_rate" class="mt-2 input" data-testid="general-commission-rate" @change="markDirty">
+                <option :value="5">%5</option>
+                <option :value="10">%10</option>
+                <option :value="15">%15</option>
+                <option :value="20">%20</option>
+                <option :value="25">%25</option>
+              </select>
+              <p class="mt-2 text-xs text-slate-500">{{ t('commissionRateHint') }}</p>
+            </label>
+            <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('defaultCurrencyLabel') }}</p>
+              <select v-model="settings.default_currency" class="mt-2 input" data-testid="general-currency" @change="markDirty">
+                <option value="TRY">TRY (₺)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="USD">USD ($)</option>
+              </select>
+              <p class="mt-2 text-xs text-slate-500">{{ t('defaultCurrencyHint') }}</p>
+            </label>
+            <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('renewalReminderLeadLabel') }}</p>
+              <select v-model="settings.renewal_reminder_lead_days" class="mt-2 input" data-testid="general-renewal-lead" @change="markDirty">
+                <option :value="15">{{ t('renewalReminderOption15') }}</option>
+                <option :value="30">{{ t('renewalReminderOption30') }}</option>
+                <option :value="45">{{ t('renewalReminderOption45') }}</option>
+                <option :value="60">{{ t('renewalReminderOption60') }}</option>
+              </select>
+              <p class="mt-2 text-xs text-slate-500">{{ t('renewalReminderLeadHint') }}</p>
+            </label>
+            <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer md:col-span-2">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('kvkkConsentLabel') }}</p>
+              <select v-model="settings.kvkk_consent_default" class="mt-2 input" data-testid="general-kvkk-consent" @change="markDirty">
+                <option value="Unknown">{{ t('kvkkConsentOptionUnknown') }}</option>
+                <option value="Granted">{{ t('kvkkConsentOptionGranted') }}</option>
+              </select>
+              <p class="mt-2 text-xs text-slate-500">{{ t('kvkkConsentHint') }}</p>
             </label>
           </div>
         </SectionPanel>
@@ -139,6 +191,11 @@ const DEFAULTS = {
   default_date_format: "DD.MM.YYYY",
   follow_up_due_soon_days: 7,
   follow_up_preview_limit: 8,
+  default_policy_term_days: 365,
+  default_commission_rate: 15,
+  default_currency: "TRY",
+  renewal_reminder_lead_days: 30,
+  kvkk_consent_default: "Unknown",
 };
 
 const authStore = useAuthStore(getAppPinia());
@@ -150,7 +207,12 @@ const isDirty = ref(false);
 const toast = reactive({ show: false, message: "", type: "success" });
 
 const originalSettings = ref({ ...DEFAULTS, site_name: "", environment: "production", active_locale: "tr" });
-const settings = ref({ ...DEFAULTS, site_name: "at.localhost", environment: "staging", active_locale: "tr" });
+const settings = ref({
+  ...DEFAULTS,
+  site_name: "at.localhost",
+  environment: "staging",
+  active_locale: "tr",
+});
 
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
@@ -159,9 +221,10 @@ function t(key) {
 }
 
 const hasUnsavedChanges = computed(() => isDirty.value);
-const editableSettingCount = computed(() => 4);
+const editableSettingCount = computed(() => 9);
 const activeLocaleLabel = computed(() => t(`languageOption${activeLocale.value === 'tr' ? 'Tr' : 'En'}`));
 const followUpDaysLabel = computed(() => `${settings.value.follow_up_due_soon_days} ${t('days')}`);
+const insuranceDefaultsLabel = computed(() => `${settings.value.default_currency} · %${settings.value.default_commission_rate}`);
 const activeLocaleDisplay = computed(() => (settings.value.active_locale === "tr" ? t("languageOptionTr") : t("languageOptionEn")));
 const siteName = computed(() => settings.value.site_name);
 const environment = computed(() => settings.value.environment);
@@ -180,12 +243,43 @@ function showToast(message, type = "success") {
 function resetToDefaults() {
   settings.value = {
     ...settings.value,
-    default_locale: DEFAULTS.default_locale,
-    default_date_format: DEFAULTS.default_date_format,
-    follow_up_due_soon_days: DEFAULTS.follow_up_due_soon_days,
-    follow_up_preview_limit: DEFAULTS.follow_up_preview_limit,
+    ...DEFAULTS,
   };
   isDirty.value = true;
+}
+
+function buildSavePayload() {
+  return {
+    default_locale: settings.value.default_locale,
+    default_date_format: settings.value.default_date_format,
+    follow_up_due_soon_days: settings.value.follow_up_due_soon_days,
+    follow_up_preview_limit: settings.value.follow_up_preview_limit,
+    default_policy_term_days: settings.value.default_policy_term_days,
+    default_commission_rate: settings.value.default_commission_rate,
+    default_currency: settings.value.default_currency,
+    renewal_reminder_lead_days: settings.value.renewal_reminder_lead_days,
+    kvkk_consent_default: settings.value.kvkk_consent_default,
+  };
+}
+
+function applyLoadedSettings(message) {
+  const loaded = {
+    default_locale: String(message.default_locale || "tr").toLowerCase().startsWith("en") ? "en" : "tr",
+    default_date_format: String(message.default_date_format || "DD.MM.YYYY"),
+    follow_up_due_soon_days: Number(message.follow_up_due_soon_days || 7),
+    follow_up_preview_limit: Number(message.follow_up_preview_limit || 8),
+    default_policy_term_days: Number(message.default_policy_term_days || 365),
+    default_commission_rate: Number(message.default_commission_rate || 15),
+    default_currency: String(message.default_currency || "TRY").toUpperCase(),
+    renewal_reminder_lead_days: Number(message.renewal_reminder_lead_days || 30),
+    kvkk_consent_default: String(message.kvkk_consent_default || "Unknown"),
+    site_name: String(message.site_name || "at.localhost"),
+    environment: String(message.environment || "staging"),
+    active_locale: String(message.active_locale || "tr").toLowerCase().startsWith("en") ? "en" : "tr",
+  };
+  settings.value = { ...loaded };
+  originalSettings.value = { ...loaded };
+  isDirty.value = false;
 }
 
 async function loadSettings() {
@@ -196,19 +290,7 @@ async function loadSettings() {
       url: "/api/method/acentem_takipte.acentem_takipte.api.admin_settings.get_admin_general_settings",
       method: "GET",
     });
-    const message = payload?.message || payload || {};
-    const loaded = {
-      default_locale: String(message.default_locale || "tr").toLowerCase().startsWith("en") ? "en" : "tr",
-      default_date_format: String(message.default_date_format || "DD.MM.YYYY"),
-      follow_up_due_soon_days: Number(message.follow_up_due_soon_days || 7),
-      follow_up_preview_limit: Number(message.follow_up_preview_limit || 8),
-      site_name: String(message.site_name || "at.localhost"),
-      environment: String(message.environment || "staging"),
-      active_locale: String(message.active_locale || "tr").toLowerCase().startsWith("en") ? "en" : "tr",
-    };
-    settings.value = { ...loaded };
-    originalSettings.value = { ...loaded };
-    isDirty.value = false;
+    applyLoadedSettings(payload?.message || payload || {});
   } catch (err) {
     error.value = String(err?.message || err || t("loadingError"));
   } finally {
@@ -223,28 +305,9 @@ async function saveSettings() {
     const payload = await frappeRequest({
       url: "/api/method/acentem_takipte.acentem_takipte.api.admin_settings.save_admin_general_settings_api",
       method: "POST",
-      params: {
-        config: {
-          default_locale: settings.value.default_locale,
-          default_date_format: settings.value.default_date_format,
-          follow_up_due_soon_days: settings.value.follow_up_due_soon_days,
-          follow_up_preview_limit: settings.value.follow_up_preview_limit,
-        },
-      },
+      params: { config: buildSavePayload() },
     });
-    const message = payload?.message || payload || {};
-    const saved = {
-      default_locale: String(message.default_locale || settings.value.default_locale).toLowerCase().startsWith("en") ? "en" : "tr",
-      default_date_format: String(message.default_date_format || settings.value.default_date_format),
-      follow_up_due_soon_days: Number(message.follow_up_due_soon_days || settings.value.follow_up_due_soon_days),
-      follow_up_preview_limit: Number(message.follow_up_preview_limit || settings.value.follow_up_preview_limit),
-      site_name: String(message.site_name || settings.value.site_name),
-      environment: String(message.environment || settings.value.environment),
-      active_locale: String(message.active_locale || settings.value.active_locale).toLowerCase().startsWith("en") ? "en" : "tr",
-    };
-    settings.value = { ...saved };
-    originalSettings.value = { ...saved };
-    isDirty.value = false;
+    applyLoadedSettings(payload?.message || payload || settings.value);
     showToast(t('saveSuccess'), "success");
   } catch (err) {
     error.value = String(err?.message || err || t("savingError"));

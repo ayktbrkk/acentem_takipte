@@ -23,6 +23,40 @@ vi.mock("vue-router", async () => {
   };
 });
 
+const loadedSettings = {
+  message: {
+    default_locale: "en",
+    default_date_format: "YYYY-MM-DD",
+    follow_up_due_soon_days: 10,
+    follow_up_preview_limit: 12,
+    default_policy_term_days: 180,
+    default_commission_rate: 10,
+    default_currency: "EUR",
+    renewal_reminder_lead_days: 45,
+    kvkk_consent_default: "Granted",
+    site_name: "at.localhost",
+    environment: "staging",
+    active_locale: "tr",
+  },
+};
+
+const savedSettings = {
+  message: {
+    default_locale: "tr",
+    default_date_format: "DD.MM.YYYY",
+    follow_up_due_soon_days: 14,
+    follow_up_preview_limit: 20,
+    default_policy_term_days: 365,
+    default_commission_rate: 15,
+    default_currency: "TRY",
+    renewal_reminder_lead_days: 30,
+    kvkk_consent_default: "Unknown",
+    site_name: "at.localhost",
+    environment: "staging",
+    active_locale: "tr",
+  },
+};
+
 describe("AdminGeneralSettings", () => {
   beforeEach(() => {
     pushMock.mockReset();
@@ -41,30 +75,8 @@ describe("AdminGeneralSettings", () => {
     });
   });
 
-  it("renders settings cards, loads data, and saves changes with toast", async () => {
-    frappeRequestMock
-      .mockResolvedValueOnce({
-        message: {
-          default_locale: "en",
-          default_date_format: "YYYY-MM-DD",
-          follow_up_due_soon_days: 10,
-          follow_up_preview_limit: 12,
-          site_name: "at.localhost",
-          environment: "staging",
-          active_locale: "tr",
-        },
-      })
-      .mockResolvedValueOnce({
-        message: {
-          default_locale: "tr",
-          default_date_format: "DD.MM.YYYY",
-          follow_up_due_soon_days: 14,
-          follow_up_preview_limit: 20,
-          site_name: "at.localhost",
-          environment: "staging",
-          active_locale: "tr",
-        },
-      });
+  it("renders all settings sections and loads data", async () => {
+    frappeRequestMock.mockResolvedValueOnce(loadedSettings);
 
     const wrapper = mount(AdminGeneralSettings, {
       global: {
@@ -81,49 +93,62 @@ describe("AdminGeneralSettings", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Genel Ayarlar");
-    expect(wrapper.text()).toContain("Uygulama Varsayılanları");
-    expect(wrapper.text()).toContain("Operasyon Varsayılanları");
-    expect(wrapper.text()).toContain("Sistem Bilgisi");
-    expect(wrapper.find('[data-testid="general-default-locale"]').element.value).toBe("en");
-    expect(wrapper.find('[data-testid="general-follow-up-window"]').element.value).toBe("10");
-    expect(wrapper.find('[data-testid="general-follow-up-preview-limit"]').element.value).toBe("12");
-    expect(wrapper.text()).toContain("Turkce");
-    expect(wrapper.text()).toContain("10");
+    expect(wrapper.text()).toContain("Sigorta Varsayılanları");
+    expect(wrapper.text()).toContain("Sigorta Operasyon Varsayılanları");
+    expect(wrapper.find('[data-testid="general-policy-term"]').element.value).toBe("180");
+    expect(wrapper.find('[data-testid="general-commission-rate"]').element.value).toBe("10");
+    expect(wrapper.find('[data-testid="general-currency"]').element.value).toBe("EUR");
+    expect(wrapper.find('[data-testid="general-renewal-lead"]').element.value).toBe("45");
+    expect(wrapper.find('[data-testid="general-kvkk-consent"]').element.value).toBe("Granted");
+    expect(wrapper.text()).toContain("EUR");
+    expect(wrapper.text()).toContain("%10");
+  });
 
-    await wrapper.find('[data-testid="general-default-locale"]').setValue("tr");
+  it("saves settings and shows toast", async () => {
+    frappeRequestMock
+      .mockResolvedValueOnce(loadedSettings)
+      .mockResolvedValueOnce(savedSettings);
+
+    const wrapper = mount(AdminGeneralSettings, {
+      global: {
+        stubs: {
+          WorkbenchPageLayout: { template: `<div><slot name="metrics" /><slot name="actions" /><slot /></div>` },
+          SaaSMetricCard: { props: ["label", "value"], template: `<div>{{ label }} {{ value }}</div>` },
+          SectionPanel: { props: ["title", "meta"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><slot /></section>` },
+          ActionButton: { emits: ["click"], template: `<button @click="$emit('click')" :disabled="disabled"><slot /></button>` },
+          ToastNotification: { props: ["show", "message", "type"], emits: ["close"], template: `<div v-if="show" class="toast-stub">{{ message }}</div>` },
+        },
+      },
+    });
+
+    await flushPromises();
+
     await wrapper.find('[data-testid="general-follow-up-window"]').setValue("14");
     await wrapper.find('[data-testid="general-follow-up-preview-limit"]').setValue("20");
-    await wrapper.findAll("button")[2].trigger("click");
+    await wrapper.find('[data-testid="general-policy-term"]').setValue("365");
+    await wrapper.find('[data-testid="general-commission-rate"]').setValue("15");
+    await wrapper.find('[data-testid="general-currency"]').setValue("TRY");
+    await wrapper.find('[data-testid="general-renewal-lead"]').setValue("30");
+    await wrapper.find('[data-testid="general-kvkk-consent"]').setValue("Unknown");
 
-    expect(frappeRequestMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.admin_settings.save_admin_general_settings_api",
-        method: "POST",
-        params: expect.objectContaining({
-          config: expect.objectContaining({
-            follow_up_due_soon_days: 14,
-            follow_up_preview_limit: 20,
-          }),
-        }),
-      }),
-    );
+    const allButtons = wrapper.findAll("button");
+    const saveButton = allButtons[allButtons.length - 1];
+    await saveButton.trigger("click");
+
+    expect(frappeRequestMock).toHaveBeenCalledTimes(2);
+    const saveCall = frappeRequestMock.mock.calls[1][0];
+    expect(saveCall.url).toContain("save_admin_general_settings_api");
+    expect(saveCall.method).toBe("POST");
+    expect(saveCall.params.config.default_policy_term_days).toBe(365);
+    expect(saveCall.params.config.renewal_reminder_lead_days).toBe(30);
+    expect(saveCall.params.config.kvkk_consent_default).toBe("Unknown");
 
     await flushPromises();
     expect(wrapper.text()).toContain("başarıyla kaydedildi");
   });
 
-  it("navigates to alert channel settings", async () => {
-    frappeRequestMock.mockResolvedValueOnce({
-      message: {
-        default_locale: "tr",
-        default_date_format: "DD.MM.YYYY",
-        follow_up_due_soon_days: 7,
-        follow_up_preview_limit: 8,
-        site_name: "at.localhost",
-        environment: "staging",
-        active_locale: "tr",
-      },
-    });
+  it("navigates to alert channels", async () => {
+    frappeRequestMock.mockResolvedValueOnce(loadedSettings);
 
     const wrapper = mount(AdminGeneralSettings, {
       global: {
@@ -138,23 +163,12 @@ describe("AdminGeneralSettings", () => {
     });
 
     await flushPromises();
-
     await wrapper.findAll("button")[1].trigger("click");
     expect(pushMock).toHaveBeenCalledWith({ name: "admin-alert-channels" });
   });
 
-  it("resets settings to defaults", async () => {
-    frappeRequestMock.mockResolvedValueOnce({
-      message: {
-        default_locale: "tr",
-        default_date_format: "DD.MM.YYYY",
-        follow_up_due_soon_days: 14,
-        follow_up_preview_limit: 20,
-        site_name: "at.localhost",
-        environment: "staging",
-        active_locale: "tr",
-      },
-    });
+  it("resets to defaults after making changes", async () => {
+    frappeRequestMock.mockResolvedValueOnce(loadedSettings);
 
     const wrapper = mount(AdminGeneralSettings, {
       global: {
@@ -169,13 +183,15 @@ describe("AdminGeneralSettings", () => {
     });
 
     await flushPromises();
-    expect(wrapper.find('[data-testid="general-follow-up-window"]').element.value).toBe("14");
+    expect(wrapper.find('[data-testid="general-policy-term"]').element.value).toBe("180");
 
-    await wrapper.find('[data-testid="general-default-locale"]').setValue("en");
+    await wrapper.find('[data-testid="general-currency"]').setValue("TRY");
     await wrapper.findAll("button")[0].trigger("click");
     await flushPromises();
 
-    expect(wrapper.find('[data-testid="general-follow-up-window"]').element.value).toBe("7");
-    expect(wrapper.find('[data-testid="general-follow-up-preview-limit"]').element.value).toBe("8");
+    expect(wrapper.find('[data-testid="general-policy-term"]').element.value).toBe("365");
+    expect(wrapper.find('[data-testid="general-commission-rate"]').element.value).toBe("15");
+    expect(wrapper.find('[data-testid="general-renewal-lead"]').element.value).toBe("30");
+    expect(wrapper.find('[data-testid="general-kvkk-consent"]').element.value).toBe("Unknown");
   });
 });
