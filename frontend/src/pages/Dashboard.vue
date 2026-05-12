@@ -271,17 +271,13 @@
       </template>
       <template #actions>
         <div class="flex items-center gap-3 p-4 bg-white border-t border-slate-100 w-full justify-end">
-          <button class="btn btn-outline px-6" @click="resetLeadForm(); showLeadDialog = false">
+          <ActionButton variant="secondary" size="sm" @click="resetLeadForm(); showLeadDialog = false">
             {{ t("cancel") }}
-          </button>
-          <button
-            class="btn btn-primary px-8"
-            :disabled="isSubmitting"
-            @click="createLead"
-          >
+          </ActionButton>
+          <ActionButton variant="primary" size="sm" :disabled="isSubmitting" @click="createLead">
             <FeatherIcon v-if="isSubmitting" name="loader" class="h-4 w-4 animate-spin mr-2" />
             {{ t("save") }}
-          </button>
+          </ActionButton>
         </div>
       </template>
     </Dialog>
@@ -301,7 +297,6 @@ import DashboardHeader from "../components/dashboard/DashboardHeader.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import QuickCustomerPicker from "../components/app-shell/QuickCustomerPicker.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
 
 // audit(perf/P-01): Heavy tab components are lazy-loaded with defineAsyncComponent.
 // These are only fetched from the server when the user first activates the respective
@@ -320,12 +315,6 @@ const DashboardRenewalsTab = defineAsyncComponent(() =>
 );
 const DashboardSalesTab = defineAsyncComponent(() =>
   import("../components/dashboard/DashboardSalesTab.vue")
-);
-const SectionPanel = defineAsyncComponent(() =>
-  import("../components/app-shell/SectionPanel.vue")
-);
-const PreviewPager = defineAsyncComponent(() =>
-  import("../components/app-shell/PreviewPager.vue")
 );
 import { getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
 import { useDashboardPresentation } from "../composables/useDashboardPresentation";

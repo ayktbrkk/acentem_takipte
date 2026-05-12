@@ -90,13 +90,13 @@
         <div class="mt-4 flex items-center justify-between px-2">
           <p class="text-xs font-medium text-slate-400">{{ policyListRowsWithUrgency.length }} / {{ policyListTotalCount }} {{ t("showingRecords") }}</p>
           <div class="flex items-center gap-2">
-            <button class="btn btn-outline btn-sm" type="button" :disabled="policyListPage <= 1" @click="previousPage">
+            <ActionButton variant="secondary" size="xs" :disabled="policyListPage <= 1" @click="previousPage">
               <FeatherIcon name="chevron-left" class="h-3 w-3" />
-            </button>
+            </ActionButton>
             <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ policyListPage }}</span>
-            <button class="btn btn-outline btn-sm" type="button" :disabled="!hasNextPage" @click="nextPage">
+            <ActionButton variant="secondary" size="xs" :disabled="!hasNextPage" @click="nextPage">
               <FeatherIcon name="chevron-right" class="h-3 w-3" />
-            </button>
+            </ActionButton>
           </div>
         </div>
       </template>
@@ -136,7 +136,6 @@ import { usePolicyListPresetSync } from "../composables/usePolicyListPresetSync"
 import { usePolicyListQuickPolicy } from "../composables/usePolicyListQuickPolicy";
 import { usePolicyListRuntime } from "../composables/usePolicyListRuntime";
 import { usePolicyListTableData } from "../composables/usePolicyListTableData";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";

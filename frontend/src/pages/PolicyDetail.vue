@@ -223,9 +223,8 @@
 <script setup>
 import { computed } from "vue";
 import { useRouter } from "vue-router";
-import { Dialog, createResource, FeatherIcon } from "frappe-ui";
+import { FeatherIcon } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
-import { uppercaseText } from "../utils/i18n";
 import { usePolicyDetailRuntime } from "../composables/usePolicyDetailRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";

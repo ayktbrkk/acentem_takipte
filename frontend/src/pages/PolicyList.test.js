@@ -197,7 +197,7 @@ describe("PolicyList page store integration", () => {
     expect(policyStore.state.filters.query).toBe("");
     expect(policyStore.state.pagination.pageLength).toBe(20);
 
-    await wrapper.find("button.btn-primary").trigger("click");
+    await wrapper.find(".action-button-stub").trigger("click");
     expect(wrapper.vm.showQuickPolicyDialog).toBe(true);
   });
 

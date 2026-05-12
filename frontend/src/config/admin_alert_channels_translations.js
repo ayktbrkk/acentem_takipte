@@ -1,0 +1,28 @@
+export const ADMIN_ALERT_CHANNELS_TRANSLATIONS = {
+  tr: {
+    breadcrumb: "Kontrol Merkezi → Yönetim Ayarları",
+    title: "Uyarı Kanal Ayarları",
+    subtitle: "Slack ve Telegram operasyon bildirim bağlantılarını tek yerden yönetin.",
+    recordCountLabel: "bağlı kanal",
+    slackStatus: "Slack Durumu",
+    telegramStatus: "Telegram Durumu",
+    connected: "Bağlı",
+    notConfigured: "Eksik",
+    loadError: "Uyarı kanal ayarları yüklenemedi.",
+    saveError: "Uyarı kanal ayarları kaydedilemedi.",
+    testError: "Test uyarısı gönderilemedi.",
+  },
+  en: {
+    breadcrumb: "Control Center → Admin Settings",
+    title: "Alert Channel Settings",
+    subtitle: "Manage Slack and Telegram ops notification connections from one place.",
+    recordCountLabel: "connected channels",
+    slackStatus: "Slack Status",
+    telegramStatus: "Telegram Status",
+    connected: "Connected",
+    notConfigured: "Missing",
+    loadError: "Failed to load alert channel settings.",
+    saveError: "Failed to save alert channel settings.",
+    testError: "Failed to send alert channel test.",
+  },
+};

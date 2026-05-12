@@ -19,15 +19,15 @@
         <SectionPanel :title="t('appDefaultsTitle')" :meta="t('appDefaultsSubtitle')" :show-count="false">
           <div class="grid gap-4 md:grid-cols-2">
             <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{{ t('defaultLanguageLabel') }}</p>
-              <select v-model="settings.default_locale" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm" data-testid="general-default-locale">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('defaultLanguageLabel') }}</p>
+              <select v-model="settings.default_locale" class="mt-2 input" data-testid="general-default-locale">
                 <option value="tr">{{ t('languageOptionTr') }}</option>
                 <option value="en">{{ t('languageOptionEn') }}</option>
               </select>
             </div>
             <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{{ t('dateFormatLabel') }}</p>
-              <select v-model="settings.default_date_format" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm" data-testid="general-date-format">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('dateFormatLabel') }}</p>
+              <select v-model="settings.default_date_format" class="mt-2 input" data-testid="general-date-format">
                 <option value="DD.MM.YYYY">DD.MM.YYYY</option>
                 <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                 <option value="YYYY-MM-DD">YYYY-MM-DD</option>
@@ -39,8 +39,8 @@
         <SectionPanel :title="t('opsDefaultsTitle')" :meta="t('opsDefaultsSubtitle')" :show-count="false">
           <div class="grid gap-4 md:grid-cols-2">
             <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{{ t('followUpWindowLabel') }}</p>
-              <select v-model="settings.follow_up_due_soon_days" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm" data-testid="general-follow-up-window">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('followUpWindowLabel') }}</p>
+              <select v-model="settings.follow_up_due_soon_days" class="mt-2 input" data-testid="general-follow-up-window">
                 <option :value="3">{{ t('followUpWindowOption3') }}</option>
                 <option :value="5">{{ t('followUpWindowOption5') }}</option>
                 <option :value="7">{{ t('followUpWindowOption7') }}</option>
@@ -50,8 +50,8 @@
               <p class="mt-2 text-xs text-slate-500">{{ t('followUpWindowHint') }}</p>
             </div>
             <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{{ t('followUpPreviewLimitLabel') }}</p>
-              <select v-model="settings.follow_up_preview_limit" class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm" data-testid="general-follow-up-preview-limit">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('followUpPreviewLimitLabel') }}</p>
+              <select v-model="settings.follow_up_preview_limit" class="mt-2 input" data-testid="general-follow-up-preview-limit">
                 <option :value="5">5</option>
                 <option :value="8">8</option>
                 <option :value="12">12</option>
@@ -111,95 +111,7 @@ import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
-
-const TRANSLATIONS = {
-  tr: {
-    breadcrumb: "Kontrol Merkezi → Yönetim Ayarları",
-    title: "Genel Ayarlar",
-    subtitle: "Sistem genelindeki temel yönetim varsayılanlarını tek yerden yönetin.",
-    recordCountLabel: "ayar grubu",
-    appDefaultsMetric: "Uygulama Varsayılanları",
-    opsDefaultsMetric: "Operasyon Varsayılanları",
-    systemInfoMetric: "Sistem Bilgisi",
-    configuredValue: "Hazır",
-    pendingValue: "Bekliyor",
-    readOnlyValue: "Salt okunur",
-    appDefaultsTitle: "Uygulama Varsayılanları",
-    appDefaultsSubtitle: "Arayüz ve temel kullanım tercihleri",
-    defaultLanguageLabel: "Varsayılan Dil",
-    defaultLanguageValue: "Türkçe",
-    dateFormatLabel: "Tarih Formatı",
-    dateFormatValue: "GG.AA.YYYY",
-    opsDefaultsTitle: "Operasyon Varsayılanları",
-    opsDefaultsSubtitle: "İş akışlarını etkileyen temel yönetim tercihleri",
-    followUpWindowLabel: "Yaklasan Takip Penceresi",
-    followUpWindowHint: "Follow-up SLA kartinda yaklasiyor durumuna girecek islerin gun araligini belirler.",
-    followUpWindowOption3: "3 gun",
-    followUpWindowOption5: "5 gun",
-    followUpWindowOption7: "7 gun",
-    followUpWindowOption10: "10 gun",
-    followUpWindowOption14: "14 gun",
-    followUpPreviewLimitLabel: "Takip Onizleme Kaydi",
-    followUpPreviewLimitHint: "Pano ve ilgili operasyon ozetlerinde gosterilecek maksimum follow-up kaydi sayisi.",
-    systemInfoTitle: "Sistem Bilgisi",
-    systemInfoSubtitle: "Salt okunur ortam özeti",
-    siteNameLabel: "Site",
-    environmentLabel: "Ortam",
-    activeLocaleLabel: "Aktif Dil",
-    actionsTitle: "Aksiyonlar",
-    actionsSubtitle: "Ayar yönetimi için sonraki adımlar",
-    saveButton: "Genel Ayarları Kaydet",
-    openAlertChannelsButton: "Uyarı Kanal Ayarlarına Git",
-    loadingError: "Genel ayarlar yuklenemedi.",
-    savingError: "Genel ayarlar kaydedilemedi.",
-    savingButton: "Kaydediliyor...",
-    languageOptionTr: "Turkce",
-    languageOptionEn: "Ingilizce",
-  },
-  en: {
-    breadcrumb: "Control Center → Admin Settings",
-    title: "General Settings",
-    subtitle: "Manage the core admin defaults for the system from one place.",
-    recordCountLabel: "settings groups",
-    appDefaultsMetric: "Application Defaults",
-    opsDefaultsMetric: "Operational Defaults",
-    systemInfoMetric: "System Info",
-    configuredValue: "Ready",
-    pendingValue: "Pending",
-    readOnlyValue: "Read-only",
-    appDefaultsTitle: "Application Defaults",
-    appDefaultsSubtitle: "Interface and core usage preferences",
-    defaultLanguageLabel: "Default Language",
-    defaultLanguageValue: "Turkish",
-    dateFormatLabel: "Date Format",
-    dateFormatValue: "DD.MM.YYYY",
-    opsDefaultsTitle: "Operational Defaults",
-    opsDefaultsSubtitle: "Core admin preferences that affect workflows",
-    followUpWindowLabel: "Upcoming Follow-up Window",
-    followUpWindowHint: "Controls how many days ahead an item is considered due soon in the follow-up SLA card.",
-    followUpWindowOption3: "3 days",
-    followUpWindowOption5: "5 days",
-    followUpWindowOption7: "7 days",
-    followUpWindowOption10: "10 days",
-    followUpWindowOption14: "14 days",
-    followUpPreviewLimitLabel: "Follow-up Preview Size",
-    followUpPreviewLimitHint: "Sets the maximum number of follow-up records shown in dashboard and related operation summaries.",
-    systemInfoTitle: "System Info",
-    systemInfoSubtitle: "Read-only environment summary",
-    siteNameLabel: "Site",
-    environmentLabel: "Environment",
-    activeLocaleLabel: "Active Locale",
-    actionsTitle: "Actions",
-    actionsSubtitle: "Next steps for settings management",
-    saveButton: "Save General Settings",
-    openAlertChannelsButton: "Go to Alert Channel Settings",
-    loadingError: "Failed to load general settings.",
-    savingError: "Failed to save general settings.",
-    savingButton: "Saving...",
-    languageOptionTr: "Turkish",
-    languageOptionEn: "English",
-  },
-};
+import { ADMIN_GENERAL_SETTINGS_TRANSLATIONS } from "../config/admin_general_settings_translations";
 
 const authStore = useAuthStore(getAppPinia());
 const router = useRouter();
@@ -219,7 +131,7 @@ const settings = ref({
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key) {
-  return TRANSLATIONS[activeLocale.value]?.[key] || TRANSLATIONS.en[key] || key;
+  return ADMIN_GENERAL_SETTINGS_TRANSLATIONS[activeLocale.value]?.[key] || ADMIN_GENERAL_SETTINGS_TRANSLATIONS.en[key] || key;
 }
 
 const activeLocaleDisplay = computed(() => (settings.value.active_locale === "tr" ? t("languageOptionTr") : t("languageOptionEn")));

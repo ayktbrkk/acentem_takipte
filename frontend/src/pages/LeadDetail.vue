@@ -189,7 +189,6 @@
 import { computed } from "vue";
 import { FeatherIcon } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
-import { uppercaseText } from "../utils/i18n";
 import { useLeadDetailRuntime } from "../composables/useLeadDetailRuntime";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";

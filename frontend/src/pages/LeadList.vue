@@ -93,21 +93,13 @@
             {{ rows.length }} / {{ summary.total }} {{ t('showingRecords') }}
           </p>
           <div class="flex items-center gap-2">
-            <button
-              class="btn btn-outline btn-sm"
-              :disabled="pagination.page <= 1"
-              @click="setPage(pagination.page - 1)"
-            >
+            <ActionButton variant="secondary" size="xs" :disabled="pagination.page <= 1" @click="setPage(pagination.page - 1)">
               <FeatherIcon name="chevron-left" class="h-3 w-3" />
-            </button>
+            </ActionButton>
             <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ pagination.page }}</span>
-            <button
-              class="btn btn-outline btn-sm"
-              :disabled="rows.length < pagination.pageLength"
-              @click="setPage(pagination.page + 1)"
-            >
+            <ActionButton variant="secondary" size="xs" :disabled="rows.length < pagination.pageLength" @click="setPage(pagination.page + 1)">
               <FeatherIcon name="chevron-right" class="h-3 w-3" />
-            </button>
+            </ActionButton>
           </div>
         </div>
       </template>
@@ -146,7 +138,6 @@ import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import LeadListQuickLeadDialog from "../components/lead-list/LeadListQuickLeadDialog.vue";
 import { FeatherIcon } from "frappe-ui";

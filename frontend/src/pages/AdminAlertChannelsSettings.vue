@@ -38,47 +38,13 @@ import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ReportsAlertChannelsSection from "../components/reports/ReportsAlertChannelsSection.vue";
 import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
+import { ADMIN_ALERT_CHANNELS_TRANSLATIONS } from "../config/admin_alert_channels_translations";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 
-const PAGE_TRANSLATIONS = {
-  tr: {
-    breadcrumb: "Kontrol Merkezi → Yönetim Ayarları",
-    title: "Uyarı Kanal Ayarları",
-    subtitle: "Slack ve Telegram operasyon bildirim bağlantılarını tek yerden yönetin.",
-    recordCountLabel: "bağlı kanal",
-    slackStatus: "Slack Durumu",
-    telegramStatus: "Telegram Durumu",
-    connected: "Bağlı",
-    notConfigured: "Eksik",
-    loadError: "Uyarı kanal ayarları yüklenemedi.",
-    saveError: "Uyarı kanal ayarları kaydedilemedi.",
-    testError: "Test uyarısı gönderilemedi.",
-  },
-  en: {
-    breadcrumb: "Control Center → Admin Settings",
-    title: "Alert Channel Settings",
-    subtitle: "Manage Slack and Telegram ops notification connections from one place.",
-    recordCountLabel: "connected channels",
-    slackStatus: "Slack Status",
-    telegramStatus: "Telegram Status",
-    connected: "Connected",
-    notConfigured: "Missing",
-    loadError: "Failed to load alert channel settings.",
-    saveError: "Failed to save alert channel settings.",
-    testError: "Failed to send alert channel test.",
-  },
-};
-
 const TRANSLATIONS = {
-  tr: {
-    ...REPORTS_TRANSLATIONS.tr,
-    ...PAGE_TRANSLATIONS.tr,
-  },
-  en: {
-    ...REPORTS_TRANSLATIONS.en,
-    ...PAGE_TRANSLATIONS.en,
-  },
+  tr: { ...REPORTS_TRANSLATIONS.tr, ...ADMIN_ALERT_CHANNELS_TRANSLATIONS.tr },
+  en: { ...REPORTS_TRANSLATIONS.en, ...ADMIN_ALERT_CHANNELS_TRANSLATIONS.en },
 };
 
 const authStore = useAuthStore(getAppPinia());
@@ -111,8 +77,8 @@ const configuredChannelCount = computed(() => {
 
 const slackStatusValue = computed(() => (alertChannelConfig.value.slack_configured ? t("connected") : t("notConfigured")));
 const telegramStatusValue = computed(() => (alertChannelConfig.value.telegram_configured ? t("connected") : t("notConfigured")));
-const slackStatusClass = computed(() => (alertChannelConfig.value.slack_configured ? "text-emerald-600" : "text-amber-600"));
-const telegramStatusClass = computed(() => (alertChannelConfig.value.telegram_configured ? "text-emerald-600" : "text-amber-600"));
+const slackStatusClass = computed(() => (alertChannelConfig.value.slack_configured ? "text-at-green" : "text-at-amber"));
+const telegramStatusClass = computed(() => (alertChannelConfig.value.telegram_configured ? "text-at-green" : "text-at-amber"));
 
 async function loadAlertChannelSettings() {
   if (!canManageAlertChannels.value) return;

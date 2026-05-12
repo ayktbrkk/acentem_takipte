@@ -152,7 +152,6 @@
 import { computed } from "vue";
 import { FeatherIcon } from "frappe-ui";
 import { useAuthStore } from "../stores/auth";
-import { uppercaseText } from "../utils/i18n";
 import { useClaimDetailRuntime } from "../composables/useClaimDetailRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";

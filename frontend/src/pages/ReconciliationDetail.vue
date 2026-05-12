@@ -110,7 +110,6 @@ import { useAuthStore } from "../stores/auth";
 import { translateText } from "../utils/i18n";
 
 import { FeatherIcon } from "frappe-ui";
-import StatusBadge from "@/components/ui/StatusBadge.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";

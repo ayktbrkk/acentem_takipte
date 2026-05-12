@@ -67,7 +67,7 @@
             class="input h-9 py-1 text-sm"
             @change="onOfferListFilterBarChange({ key: 'status', value: $event.target.value })"
           >
-            <option value="">{{ t("colStatus") }}: {{ t("all") || 'Hepsi' }}</option>
+            <option value="">{{ t("colStatus") }}: {{ t("all") }}</option>
             <option v-for="opt in offerListFilterConfig[1].options" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </option>
