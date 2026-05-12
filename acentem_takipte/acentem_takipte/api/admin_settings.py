@@ -35,6 +35,8 @@ def _coerce_general_settings_payload(value: Any) -> dict[str, Any]:
             "default_currency": "TRY",
             "renewal_reminder_lead_days": 30,
             "kvkk_consent_default": "Unknown",
+            "dashboard_refresh_seconds": 0,
+            "default_page_size": 20,
             "site_name": "",
             "environment": "production",
             "active_locale": "tr",
@@ -90,6 +92,20 @@ def _coerce_general_settings_payload(value: Any) -> dict[str, Any]:
     if kvkk_consent_default not in {"Granted", "Unknown"}:
         kvkk_consent_default = "Unknown"
 
+    try:
+        dashboard_refresh_seconds = int(payload.get("dashboard_refresh_seconds") or 0)
+    except (TypeError, ValueError):
+        dashboard_refresh_seconds = 0
+    if dashboard_refresh_seconds not in {0, 60, 300, 600}:
+        dashboard_refresh_seconds = 0
+
+    try:
+        default_page_size = int(payload.get("default_page_size") or 20)
+    except (TypeError, ValueError):
+        default_page_size = 20
+    if default_page_size not in {10, 20, 50}:
+        default_page_size = 20
+
     active_locale = str(payload.get("active_locale") or default_locale).strip().lower()
     if active_locale not in {"tr", "en"}:
         active_locale = default_locale
@@ -104,6 +120,8 @@ def _coerce_general_settings_payload(value: Any) -> dict[str, Any]:
         "default_currency": default_currency,
         "renewal_reminder_lead_days": renewal_reminder_lead_days,
         "kvkk_consent_default": kvkk_consent_default,
+        "dashboard_refresh_seconds": dashboard_refresh_seconds,
+        "default_page_size": default_page_size,
         "site_name": str(payload.get("site_name") or "").strip(),
         "environment": str(payload.get("environment") or "production").strip(),
         "active_locale": active_locale,

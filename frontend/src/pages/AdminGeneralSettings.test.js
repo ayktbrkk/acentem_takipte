@@ -34,6 +34,8 @@ const loadedSettings = {
     default_currency: "EUR",
     renewal_reminder_lead_days: 45,
     kvkk_consent_default: "Granted",
+    dashboard_refresh_seconds: 60,
+    default_page_size: 50,
     site_name: "at.localhost",
     environment: "staging",
     active_locale: "tr",
@@ -142,6 +144,8 @@ describe("AdminGeneralSettings", () => {
     expect(saveCall.params.config.default_policy_term_days).toBe(365);
     expect(saveCall.params.config.renewal_reminder_lead_days).toBe(30);
     expect(saveCall.params.config.kvkk_consent_default).toBe("Unknown");
+    expect(saveCall.params.config.dashboard_refresh_seconds).toBe(60);
+    expect(saveCall.params.config.default_page_size).toBe(50);
 
     await flushPromises();
     expect(wrapper.text()).toContain("başarıyla kaydedildi");

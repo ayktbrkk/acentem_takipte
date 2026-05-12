@@ -20,6 +20,8 @@ GENERAL_SETTINGS_KEYS = (
     "at_default_currency",
     "at_renewal_reminder_lead_days",
     "at_kvkk_consent_default",
+    "at_dashboard_refresh_seconds",
+    "at_default_page_size",
 )
 
 SUPPORTED_LOCALES = {"tr", "en"}
@@ -30,6 +32,8 @@ SUPPORTED_POLICY_TERMS = {180, 365}
 SUPPORTED_CURRENCIES = {"TRY", "EUR", "USD"}
 SUPPORTED_RENEWAL_REMINDER_LEAD_DAYS = {0, 15, 30, 45, 60}
 SUPPORTED_KVKK_CONSENT_DEFAULTS = {"Granted", "Unknown"}
+SUPPORTED_DASHBOARD_REFRESH_SECONDS = {0, 60, 300, 600}
+SUPPORTED_PAGE_SIZES = {10, 20, 50}
 
 DEFAULT_FOLLOW_UP_DUE_SOON_DAYS = 7
 DEFAULT_FOLLOW_UP_PREVIEW_LIMIT = 8
@@ -38,6 +42,8 @@ DEFAULT_COMMISSION_RATE = 10.0
 DEFAULT_CURRENCY = "TRY"
 DEFAULT_RENEWAL_REMINDER_LEAD_DAYS = 30
 DEFAULT_KVKK_CONSENT = "Unknown"
+DEFAULT_DASHBOARD_REFRESH_SECONDS = 0
+DEFAULT_PAGE_SIZE = 20
 
 
 def load_admin_general_settings() -> dict[str, Any]:
@@ -120,6 +126,20 @@ def _sanitize_settings_payload(config: dict[str, Any] | str | None) -> dict[str,
     if kvkk_consent_default not in SUPPORTED_KVKK_CONSENT_DEFAULTS:
         frappe.throw(_("KVKK consent default is not supported."))
 
+    dashboard_refresh_seconds = _coerce_int_setting(
+        config.get("dashboard_refresh_seconds") or config.get("at_dashboard_refresh_seconds"),
+        default=DEFAULT_DASHBOARD_REFRESH_SECONDS,
+    )
+    if dashboard_refresh_seconds not in SUPPORTED_DASHBOARD_REFRESH_SECONDS:
+        frappe.throw(_("Dashboard refresh interval is not supported."))
+
+    default_page_size = _coerce_int_setting(
+        config.get("default_page_size") or config.get("at_default_page_size"),
+        default=DEFAULT_PAGE_SIZE,
+    )
+    if default_page_size not in SUPPORTED_PAGE_SIZES:
+        frappe.throw(_("Default page size is not supported."))
+
     return {
         "at_default_locale": default_locale,
         "at_default_date_format": default_date_format,
@@ -130,6 +150,8 @@ def _sanitize_settings_payload(config: dict[str, Any] | str | None) -> dict[str,
         "at_default_currency": default_currency,
         "at_renewal_reminder_lead_days": renewal_reminder_lead_days,
         "at_kvkk_consent_default": kvkk_consent_default,
+        "at_dashboard_refresh_seconds": dashboard_refresh_seconds,
+        "at_default_page_size": default_page_size,
     }
 
 
@@ -155,6 +177,8 @@ def _build_settings_payload(site_config: dict[str, Any]) -> dict[str, Any]:
         "default_currency": insurance_defaults["default_currency"],
         "renewal_reminder_lead_days": insurance_defaults["renewal_reminder_lead_days"],
         "kvkk_consent_default": insurance_defaults["kvkk_consent_default"],
+        "dashboard_refresh_seconds": insurance_defaults["dashboard_refresh_seconds"],
+        "default_page_size": insurance_defaults["default_page_size"],
         "site_name": _resolve_site_name(site_config),
         "environment": _resolve_environment(site_config),
         "active_locale": str(getattr(frappe.local, "lang", default_locale) or default_locale).split("-", 1)[0].lower(),
@@ -214,12 +238,28 @@ def get_insurance_defaults(site_config: dict[str, Any] | None = None) -> dict[st
     if kvkk_consent_default not in SUPPORTED_KVKK_CONSENT_DEFAULTS:
         kvkk_consent_default = DEFAULT_KVKK_CONSENT
 
+    dashboard_refresh_seconds = _coerce_int_setting(
+        source.get("at_dashboard_refresh_seconds"),
+        default=DEFAULT_DASHBOARD_REFRESH_SECONDS,
+    )
+    if dashboard_refresh_seconds not in SUPPORTED_DASHBOARD_REFRESH_SECONDS:
+        dashboard_refresh_seconds = DEFAULT_DASHBOARD_REFRESH_SECONDS
+
+    default_page_size = _coerce_int_setting(
+        source.get("at_default_page_size"),
+        default=DEFAULT_PAGE_SIZE,
+    )
+    if default_page_size not in SUPPORTED_PAGE_SIZES:
+        default_page_size = DEFAULT_PAGE_SIZE
+
     return {
         "default_policy_term_days": policy_term_days,
         "default_commission_rate": commission_rate,
         "default_currency": default_currency,
         "renewal_reminder_lead_days": renewal_reminder_lead_days,
         "kvkk_consent_default": kvkk_consent_default,
+        "dashboard_refresh_seconds": dashboard_refresh_seconds,
+        "default_page_size": default_page_size,
     }
 
 

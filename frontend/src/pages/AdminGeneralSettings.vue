@@ -127,6 +127,30 @@
             </label>
           </div>
         </SectionPanel>
+
+        <SectionPanel :title="t('uiDefaultsTitle')" :meta="t('uiDefaultsSubtitle')" :show-count="false">
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('dashboardRefreshLabel') }}</p>
+              <select v-model="settings.dashboard_refresh_seconds" class="mt-2 input" data-testid="general-dashboard-refresh" @change="markDirty">
+                <option :value="0">{{ t('dashboardRefreshOption0') }}</option>
+                <option :value="60">{{ t('dashboardRefreshOption60') }}</option>
+                <option :value="300">{{ t('dashboardRefreshOption300') }}</option>
+                <option :value="600">{{ t('dashboardRefreshOption600') }}</option>
+              </select>
+              <p class="mt-2 text-xs text-slate-500">{{ t('dashboardRefreshHint') }}</p>
+            </label>
+            <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
+              <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('pageSizeLabel') }}</p>
+              <select v-model="settings.default_page_size" class="mt-2 input" data-testid="general-page-size" @change="markDirty">
+                <option :value="10">10</option>
+                <option :value="20">20</option>
+                <option :value="50">50</option>
+              </select>
+              <p class="mt-2 text-xs text-slate-500">{{ t('pageSizeHint') }}</p>
+            </label>
+          </div>
+        </SectionPanel>
       </div>
 
       <div class="space-y-4">
@@ -201,6 +225,8 @@ const DEFAULTS = {
   default_currency: "TRY",
   renewal_reminder_lead_days: 30,
   kvkk_consent_default: "Unknown",
+  dashboard_refresh_seconds: 0,
+  default_page_size: 20,
 };
 
 const authStore = useAuthStore(getAppPinia());
@@ -226,7 +252,7 @@ function t(key) {
 }
 
 const hasUnsavedChanges = computed(() => isDirty.value);
-const editableSettingCount = computed(() => 9);
+const editableSettingCount = computed(() => 11);
 const activeLocaleLabel = computed(() => t(`languageOption${activeLocale.value === 'tr' ? 'Tr' : 'En'}`));
 const followUpDaysLabel = computed(() => `${settings.value.follow_up_due_soon_days} ${t('days')}`);
 const insuranceDefaultsLabel = computed(() => `${settings.value.default_currency} · %${settings.value.default_commission_rate}`);
@@ -264,6 +290,8 @@ function buildSavePayload() {
     default_currency: settings.value.default_currency,
     renewal_reminder_lead_days: settings.value.renewal_reminder_lead_days,
     kvkk_consent_default: settings.value.kvkk_consent_default,
+    dashboard_refresh_seconds: settings.value.dashboard_refresh_seconds,
+    default_page_size: settings.value.default_page_size,
   };
 }
 
@@ -278,6 +306,8 @@ function applyLoadedSettings(message) {
     default_currency: String(message.default_currency || "TRY").toUpperCase(),
     renewal_reminder_lead_days: Number(message.renewal_reminder_lead_days || 30),
     kvkk_consent_default: String(message.kvkk_consent_default || "Unknown"),
+    dashboard_refresh_seconds: Number(message.dashboard_refresh_seconds || 0),
+    default_page_size: Number(message.default_page_size || 20),
     site_name: String(message.site_name || "at.localhost"),
     environment: String(message.environment || "staging"),
     active_locale: String(message.active_locale || "tr").toLowerCase().startsWith("en") ? "en" : "tr",
