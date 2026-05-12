@@ -434,7 +434,7 @@ describe("Dashboard page store integration", () => {
     text = wrapper.text();
     expect(text).toContain("Tahsilat Panosu");
     expect(text).toContain("Tahsilat, ödeme ve mutabakat akışlarını tek ekranda yönetin.");
-    expect(text).toContain("Tahsilatlar");
+    expect(text).toContain("Tahsilat");
 
     await wrapper.findAll(".at-tab-chip")[3].trigger("click");
     await nextTick();

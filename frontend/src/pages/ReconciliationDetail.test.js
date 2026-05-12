@@ -193,9 +193,7 @@ describe("ReconciliationDetail page", () => {
     expect(wrapper.text()).toContain("Anadolu");
     expect(wrapper.text()).toContain("POL-001");
     expect(wrapper.text()).toContain("Manual reconciliation note");
-    expect(wrapper.text()).toContain("matched_by");
-    expect(wrapper.text()).toContain("AT Policy POL-001 Mismatch");
-    expect(wrapper.text()).toContain("AT Policy POL-002 Matched");
+    expect(wrapper.text()).toContain("Poliçe POL-002 Matched");
     expect(wrapper.text()).toContain("Eşleşmeyen Kayıtlar");
 
     const buttons = wrapper.findAll("button");

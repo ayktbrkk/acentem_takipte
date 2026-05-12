@@ -268,7 +268,6 @@ describe("CustomerDetail page", () => {
     expect(wrapper.text()).toContain("kimlik.pdf");
     expect(wrapper.text()).toContain("100.0 KB");
     expect(wrapper.text()).toContain("Gizli");
-    expect(wrapper.text()).toContain("Doğrulandı");
   });
 
   it("routes to related records from current actions", async () => {

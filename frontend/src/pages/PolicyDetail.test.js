@@ -312,7 +312,7 @@ describe("PolicyDetail document management", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    const openButton = wrapper.findAll("button").find((node) => node.text().includes("Tüm Dokümanları Görüntüle"));
+    const openButton = wrapper.findAll("button").find((node) => node.text().includes("Doküman Merkezine Git"));
     expect(openButton).toBeTruthy();
     await openButton.trigger("click");
 

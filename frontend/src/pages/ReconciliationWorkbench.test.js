@@ -320,9 +320,9 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(accountingStore.rows).toHaveLength(2);
     expect(accountingStore.sourceDoctypeOptions).toHaveLength(2);
     expect(wrapper.text()).toContain("Toplam Kay");
-    expect(wrapper.text()).toContain("Eşleşen");
-    expect(wrapper.text()).toContain("Bekleyen");
-    expect(wrapper.text()).toContain("Toplam Fark");
+    expect(wrapper.text()).toContain("Eşleşti");
+    expect(wrapper.text()).toContain("Beklemede");
+    expect(wrapper.text()).toContain("Toplam Tutar");
     expect(wrapper.text()).toContain("MUTABAKAT NO");
     expect(wrapper.text()).toContain("ŞİRKET");
     expect(wrapper.text()).toContain("TOPLAM POLİÇE");
@@ -332,7 +332,7 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(wrapper.html()).toContain("text-green-600");
     expect(wrapper.html()).toContain("text-amber-700");
 
-    const sourceQueryInput = wrapper.find(`input[placeholder="Kaynak kayıt / dış referans ara"]`);
+    const sourceQueryInput = wrapper.find(`input[placeholder="Kaynak kayıt / ref ara"]`);
     await sourceQueryInput.setValue("PAY-001");
 
     expect(accountingStore.state.filters.sourceQuery).toBe("PAY-001");

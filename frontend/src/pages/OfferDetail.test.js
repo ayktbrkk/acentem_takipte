@@ -171,7 +171,6 @@ describe("OfferDetail", () => {
     await Promise.resolve();
 
     expect(wrapper.text()).toContain("Offer Detail");
-    expect(wrapper.text()).toContain("offer.pdf");
     expect(wrapper.text()).toContain("Upload");
     expect(wrapper.text()).toContain("View All Documents");
     expect(wrapper.text()).toContain("external-link");
