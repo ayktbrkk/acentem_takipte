@@ -10,6 +10,7 @@ const frappeRequestMock = vi.fn();
 
 vi.mock("frappe-ui", () => ({
   frappeRequest: (...args) => frappeRequestMock(...args),
+  FeatherIcon: { props: ["name"], template: `<i class="feather-icon-stub">{{ name }}</i>` },
 }));
 
 vi.mock("vue-router", async () => {
@@ -40,7 +41,7 @@ describe("AdminGeneralSettings", () => {
     });
   });
 
-  it("renders management cards and links to alert channel settings", async () => {
+  it("renders settings cards, loads data, and saves changes with toast", async () => {
     frappeRequestMock
       .mockResolvedValueOnce({
         message: {
@@ -68,10 +69,11 @@ describe("AdminGeneralSettings", () => {
     const wrapper = mount(AdminGeneralSettings, {
       global: {
         stubs: {
-          WorkbenchPageLayout: { template: `<div><slot name="metrics" /><slot /></div>` },
-          SaaSMetricCard: { props: ["label", "value"], template: `<div>{{ label }} {{ value }}</div>` },
+          WorkbenchPageLayout: { template: `<div><slot name="metrics" /><slot name="actions" /><slot /></div>` },
+          SaaSMetricCard: { props: ["label", "value", "valueClass"], template: `<div>{{ label }} {{ value }}</div>` },
           SectionPanel: { props: ["title", "meta"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><slot /></section>` },
-          ActionButton: { emits: ["click"], template: `<button @click="$emit('click')"><slot /></button>` },
+          ActionButton: { emits: ["click"], template: `<button @click="$emit('click')" :disabled="disabled"><slot /></button>` },
+          ToastNotification: { props: ["show", "message", "type"], emits: ["close"], template: `<div v-if="show" class="toast-stub">{{ message }}</div>` },
         },
       },
     });
@@ -85,11 +87,13 @@ describe("AdminGeneralSettings", () => {
     expect(wrapper.find('[data-testid="general-default-locale"]').element.value).toBe("en");
     expect(wrapper.find('[data-testid="general-follow-up-window"]').element.value).toBe("10");
     expect(wrapper.find('[data-testid="general-follow-up-preview-limit"]').element.value).toBe("12");
+    expect(wrapper.text()).toContain("Turkce");
+    expect(wrapper.text()).toContain("10");
 
     await wrapper.find('[data-testid="general-default-locale"]').setValue("tr");
     await wrapper.find('[data-testid="general-follow-up-window"]').setValue("14");
     await wrapper.find('[data-testid="general-follow-up-preview-limit"]').setValue("20");
-    await wrapper.findAll("button")[0].trigger("click");
+    await wrapper.findAll("button")[2].trigger("click");
 
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -104,8 +108,74 @@ describe("AdminGeneralSettings", () => {
       }),
     );
 
-    await wrapper.findAll("button")[1].trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("başarıyla kaydedildi");
+  });
 
+  it("navigates to alert channel settings", async () => {
+    frappeRequestMock.mockResolvedValueOnce({
+      message: {
+        default_locale: "tr",
+        default_date_format: "DD.MM.YYYY",
+        follow_up_due_soon_days: 7,
+        follow_up_preview_limit: 8,
+        site_name: "at.localhost",
+        environment: "staging",
+        active_locale: "tr",
+      },
+    });
+
+    const wrapper = mount(AdminGeneralSettings, {
+      global: {
+        stubs: {
+          WorkbenchPageLayout: { template: `<div><slot name="metrics" /><slot name="actions" /><slot /></div>` },
+          SaaSMetricCard: { props: ["label", "value"], template: `<div>{{ label }} {{ value }}</div>` },
+          SectionPanel: { props: ["title", "meta"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><slot /></section>` },
+          ActionButton: { emits: ["click"], template: `<button @click="$emit('click')"><slot /></button>` },
+          ToastNotification: { props: ["show", "message"], template: `<div v-if="show">{{ message }}</div>` },
+        },
+      },
+    });
+
+    await flushPromises();
+
+    await wrapper.findAll("button")[1].trigger("click");
     expect(pushMock).toHaveBeenCalledWith({ name: "admin-alert-channels" });
+  });
+
+  it("resets settings to defaults", async () => {
+    frappeRequestMock.mockResolvedValueOnce({
+      message: {
+        default_locale: "tr",
+        default_date_format: "DD.MM.YYYY",
+        follow_up_due_soon_days: 14,
+        follow_up_preview_limit: 20,
+        site_name: "at.localhost",
+        environment: "staging",
+        active_locale: "tr",
+      },
+    });
+
+    const wrapper = mount(AdminGeneralSettings, {
+      global: {
+        stubs: {
+          WorkbenchPageLayout: { template: `<div><slot name="metrics" /><slot name="actions" /><slot /></div>` },
+          SaaSMetricCard: { props: ["label", "value"], template: `<div>{{ label }} {{ value }}</div>` },
+          SectionPanel: { props: ["title", "meta"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><slot /></section>` },
+          ActionButton: { emits: ["click"], template: `<button @click="$emit('click')" :disabled="disabled"><slot /></button>` },
+          ToastNotification: { props: ["show", "message"], template: `<div v-if="show">{{ message }}</div>` },
+        },
+      },
+    });
+
+    await flushPromises();
+    expect(wrapper.find('[data-testid="general-follow-up-window"]').element.value).toBe("14");
+
+    await wrapper.find('[data-testid="general-default-locale"]').setValue("en");
+    await wrapper.findAll("button")[0].trigger("click");
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="general-follow-up-window"]').element.value).toBe("7");
+    expect(wrapper.find('[data-testid="general-follow-up-preview-limit"]').element.value).toBe("8");
   });
 });
