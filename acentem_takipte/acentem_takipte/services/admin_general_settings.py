@@ -10,6 +10,19 @@ from acentem_takipte.acentem_takipte.services.ops_alert_settings import _read_si
 from acentem_takipte.acentem_takipte.services.ops_alerts import _resolve_environment, _resolve_site_name
 
 
+def _log_settings_changed(user: str, changed_keys: list[str]) -> None:
+    try:
+        from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
+        log_decision_event(
+            "General Settings",
+            "site_config",
+            action="Save",
+            action_summary=f"Settings updated by {user}: {', '.join(changed_keys)}",
+        )
+    except Exception:
+        pass
+
+
 GENERAL_SETTINGS_KEYS = (
     "at_default_locale",
     "at_default_date_format",
@@ -55,11 +68,20 @@ def save_admin_general_settings(config: dict[str, Any] | str | None = None) -> d
     sanitized = _sanitize_settings_payload(config)
     site_config = _read_site_config()
 
+    changed_keys = []
     for config_key in GENERAL_SETTINGS_KEYS:
+        old_value = str(site_config.get(config_key, ""))
+        new_value = str(sanitized[config_key])
+        if old_value != new_value:
+            changed_keys.append(config_key)
         site_config[config_key] = sanitized[config_key]
         setattr(frappe.conf, config_key, sanitized[config_key])
 
     _write_json_atomically(site_config)
+
+    if changed_keys:
+        _log_settings_changed(frappe.session.user, changed_keys)
+
     return _build_settings_payload(site_config)
 
 
