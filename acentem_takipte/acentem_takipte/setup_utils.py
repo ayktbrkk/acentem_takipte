@@ -6,8 +6,8 @@ from frappe.permissions import add_permission, update_permission_property
 from .utils.assets import ensure_site_asset_symlink
 from .utils.i18n import translate_text
 
-CORE_ROLES = ("Agent", "Manager", "Accountant")
-CORE_ACCESS_ROLES = {"System Manager", "Agent", "Manager", "Accountant"}
+CORE_ROLES = ("AT Agent", "AT Manager", "AT Accountant")
+CORE_ACCESS_ROLES = {"System Manager", "AT Agent", "AT Manager", "AT Accountant"}
 CORE_SETUP_CACHE_KEY = "acentem_takipte:core_setup_done"
 DESKTOP_ICON_LABEL = "Acentem Takipte"
 DESKTOP_ICON_URL = "/at"
@@ -197,92 +197,92 @@ READ_ACCESS = {
 
 PERMISSION_MATRIX = {
     "AT Lead": {
-        "Agent": {0: RW_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: READ_ACCESS},
+        "AT Agent": {0: RW_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: READ_ACCESS},
     },
     "AT Offer": {
-        "Agent": {0: RW_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: READ_ACCESS},
+        "AT Agent": {0: RW_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: READ_ACCESS},
     },
     "AT Policy": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: RW_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: RW_ACCESS},
     },
     "AT Policy Endorsement": {
-        "Agent": {0: RW_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: RW_ACCESS},
+        "AT Agent": {0: RW_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: RW_ACCESS},
     },
     "AT Policy Snapshot": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: READ_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: READ_ACCESS},
     },
     "AT Claim": {
-        "Agent": {0: RW_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: RW_ACCESS},
+        "AT Agent": {0: RW_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: RW_ACCESS},
     },
     "AT Payment": {
-        "Agent": {0: RW_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: FULL_ACCESS},
+        "AT Agent": {0: RW_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: FULL_ACCESS},
     },
     "AT Renewal Task": {
-        "Agent": {0: RW_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: RW_ACCESS},
+        "AT Agent": {0: RW_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: RW_ACCESS},
     },
     "AT Customer": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS, 1: {"read": 1, "write": 1}},
-        "Accountant": {0: READ_ACCESS, 1: {"read": 1}},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS, 1: {"read": 1, "write": 1}},
+        "AT Accountant": {0: READ_ACCESS, 1: {"read": 1}},
     },
     "AT Sales Entity": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: READ_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: READ_ACCESS},
     },
     "AT Insurance Company": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: READ_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: READ_ACCESS},
     },
     "AT Branch": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: READ_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: READ_ACCESS},
     },
     "AT Notification Template": {
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: READ_ACCESS},
     },
     "AT Notification Draft": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: RW_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: RW_ACCESS},
     },
     "AT Notification Outbox": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: RW_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: RW_ACCESS},
     },
     "AT Accounting Entry": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: FULL_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: FULL_ACCESS},
     },
     "AT Reconciliation Item": {
-        "Agent": {0: READ_ACCESS},
-        "Manager": {0: FULL_ACCESS},
-        "Accountant": {0: FULL_ACCESS},
+        "AT Agent": {0: READ_ACCESS},
+        "AT Manager": {0: FULL_ACCESS},
+        "AT Accountant": {0: FULL_ACCESS},
     },
     "AT Access Log": {
-        "Manager": {0: READ_ACCESS},
-        "Accountant": {0: READ_ACCESS},
+        "AT Manager": {0: READ_ACCESS},
+        "AT Accountant": {0: READ_ACCESS},
     },
 }
 
@@ -418,14 +418,14 @@ def ensure_user_default_role(user: str | None = None) -> bool:
     if roles.intersection(CORE_ACCESS_ROLES):
         return False
 
-    if not frappe.db.exists("Has Role", {"parent": target_user, "role": "Agent"}):
+    if not frappe.db.exists("Has Role", {"parent": target_user, "role": "AT Agent"}):
         doc = frappe.get_doc(
             {
                 "doctype": "Has Role",
                 "parent": target_user,
                 "parentfield": "roles",
                 "parenttype": "User",
-                "role": "Agent",
+                "role": "AT Agent",
             }
         )
         # ignore_permissions: App install/migrate setup; runs as Administrator context.

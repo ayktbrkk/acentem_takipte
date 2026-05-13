@@ -21,7 +21,7 @@ from acentem_takipte.acentem_takipte import communication as communication_logic
 from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_access, build_doctype_permission_map
 
 
-COMMUNICATION_ADMIN_ROLES = ("System Manager", "Manager", "Accountant")
+COMMUNICATION_ADMIN_ROLES = ("System Manager", "AT Manager", "AT Accountant")
 COMMUNICATION_MUTATION_DOCTYPES = build_doctype_permission_map(
     create_quick_notification_draft=("AT Notification Draft",),
     execute_campaign=("AT Campaign", "AT Segment", "AT Notification Draft"),

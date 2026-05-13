@@ -12,7 +12,7 @@ from acentem_takipte.acentem_takipte.api.mutation_access import assert_role_base
 from acentem_takipte.acentem_takipte.services.admin_jobs import dispatch_admin_job
 from acentem_takipte.acentem_takipte.utils.permissions import build_doctype_permission_map
 
-ADMIN_JOB_ROLES = ("System Manager", "Manager", "Accountant")
+ADMIN_JOB_ROLES = ("System Manager", "AT Manager", "AT Accountant")
 ADMIN_JOB_RATE_LIMIT_WINDOW_SECONDS = 60
 ADMIN_JOB_RATE_LIMIT_MAX_REQUESTS = 12
 ADMIN_JOB_PERMISSION_DOCTYPES = build_doctype_permission_map(

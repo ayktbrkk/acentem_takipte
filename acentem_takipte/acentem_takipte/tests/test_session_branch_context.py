@@ -19,7 +19,7 @@ class TestSessionBranchContext(IntegrationTestCase):
         with patch.object(session_api, "resolve_current_user", return_value="agent@example.com"):
             with patch.object(session_api.frappe, "get_site_config", return_value={}):
                 with patch.object(session_api.frappe.db, "get_value", side_effect=_get_value):
-                    with patch.object(session_api, "_resolve_session_interface", return_value={"roles": ["Agent"], "preferred_home": "/at", "interface_mode": "spa"}):
+                    with patch.object(session_api, "_resolve_session_interface", return_value={"roles": ["AT Agent"], "preferred_home": "/at", "interface_mode": "spa"}):
                         with patch.object(session_api, "get_user_office_branches", return_value=[{"name": "BR-1"}]):
                             with patch.object(session_api, "get_default_office_branch", return_value="BR-1"):
                                 with patch.object(session_api, "user_can_access_all_office_branches", return_value=False):
@@ -45,7 +45,7 @@ class TestSessionBranchContext(IntegrationTestCase):
         with patch.object(session_api, "resolve_current_user", return_value="agent@example.com"):
             with patch.object(session_api.frappe, "get_site_config", return_value=site_config):
                 with patch.object(session_api.frappe.db, "get_value", side_effect=_get_value):
-                    with patch.object(session_api, "_resolve_session_interface", return_value={"roles": ["Agent"], "preferred_home": "/at", "interface_mode": "spa"}):
+                    with patch.object(session_api, "_resolve_session_interface", return_value={"roles": ["AT Agent"], "preferred_home": "/at", "interface_mode": "spa"}):
                         with patch.object(session_api, "get_user_office_branches", return_value=[]):
                             with patch.object(session_api, "get_default_office_branch", return_value=None):
                                 with patch.object(session_api, "user_can_access_all_office_branches", return_value=False):

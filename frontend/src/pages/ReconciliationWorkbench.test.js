@@ -146,8 +146,8 @@ describe("ReconciliationWorkbench page store integration", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "accountant@example.com",
-      full_name: "Accountant",
-      roles: ["Accountant"],
+      full_name: "AT Accountant",
+      roles: ["AT Accountant"],
       preferred_home: "/at",
       interface_mode: "spa",
       locale: "tr",

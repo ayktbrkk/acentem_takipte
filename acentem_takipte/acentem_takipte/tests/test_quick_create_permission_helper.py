@@ -14,7 +14,7 @@ def test_assert_create_permission_uses_shared_mutation_helper():
 
     mutation_access.assert_called_once_with(
         action="api.quick_create.create_at_customer",
-        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        roles=("System Manager", "AT Manager", "AT Agent", "AT Accountant"),
         doctype_permissions=("AT Customer",),
         permtype="create",
         details={"doctype": "AT Customer", "permtype": "create"},
@@ -29,7 +29,7 @@ def test_assert_write_permission_uses_shared_mutation_helper():
 
     mutation_access.assert_called_once_with(
         action="api.quick_create.update_at_notification_template",
-        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        roles=("System Manager", "AT Manager", "AT Agent", "AT Accountant"),
         doctype_permissions=("AT Notification Template",),
         permtype="write",
         details={"doctype": "AT Notification Template", "permtype": "write"},

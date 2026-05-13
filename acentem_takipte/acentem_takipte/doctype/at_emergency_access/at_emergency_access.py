@@ -30,7 +30,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_to_date, now_datetime
 
-_ALLOWED_GRANTING_ROLES = {"Manager", "System Manager", "Administrator"}
+_ALLOWED_GRANTING_ROLES = {"AT Manager", "System Manager", "Administrator"}
 _GRANT_DURATION_HOURS = 24
 
 

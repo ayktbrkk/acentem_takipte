@@ -36,7 +36,7 @@ describe("Sidebar localization", () => {
       locale: "tr",
       user: "Aykut",
       userId: "aykut",
-      roles: ["Agent"],
+      roles: ["AT Agent"],
     });
 
     const wrapper = mount(Sidebar, {
@@ -91,7 +91,7 @@ describe("Sidebar localization", () => {
       locale: "en",
       user: "Aykut",
       userId: "aykut",
-      roles: ["Agent"],
+      roles: ["AT Agent"],
     });
 
     const wrapper = mount(Sidebar, {

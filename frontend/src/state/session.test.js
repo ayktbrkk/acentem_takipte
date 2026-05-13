@@ -20,7 +20,7 @@ describe("session branch context", () => {
       can_access_all_office_branches: false,
       locale: "tr",
       capabilities: {},
-      roles: ["Agent"],
+      roles: ["AT Agent"],
       preferred_home: "/at",
       interface_mode: "spa",
     });

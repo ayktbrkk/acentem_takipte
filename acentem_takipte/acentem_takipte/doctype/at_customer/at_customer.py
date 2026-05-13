@@ -20,7 +20,7 @@ from acentem_takipte.acentem_takipte.services.branches import (
 )
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error
 
-SENSITIVE_ROLES = {"System Manager", "Manager", "Accountant"}
+SENSITIVE_ROLES = {"System Manager", "AT Manager", "AT Accountant"}
 CUSTOMER_TYPES = {"Individual", "Corporate"}
 
 
@@ -225,7 +225,7 @@ def get_permission_query_conditions(user=None):
         fieldname="origin_office_branch",
         user=user,
     )
-    if "Agent" in roles:
+    if "AT Agent" in roles:
         escaped_user = frappe.db.escape(user)
         agent_condition = f"(`tabAT Customer`.`assigned_agent` = {escaped_user} OR `tabAT Customer`.`owner` = {escaped_user})"
         if branch_condition == "1=0":
@@ -244,7 +244,7 @@ def has_permission(doc, user=None, permission_type="read"):
 
     roles = set(frappe.get_roles(user))
     # AT Customer uses origin_office_branch for permission checks per kanon branch model
-    if "Agent" in roles:
+    if "AT Agent" in roles:
         return (
             doc.assigned_agent == user or doc.owner == user
         ) and has_office_branch_permission(

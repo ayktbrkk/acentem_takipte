@@ -66,7 +66,7 @@ vi.mock("frappe-ui", () => ({
               claims: [{ name: "CLM-001", policy: "POL-001", claim_status: "Open", reported_date: "2026-03-03", claim_amount: 1500 }],
             },
             communication: {
-              timeline: [{ timestamp: "2026-03-01T10:00:00Z", title: "Call note", meta: "Agent", payload: { content: "Customer called" } }],
+              timeline: [{ timestamp: "2026-03-01T10:00:00Z", title: "Call note", meta: "AT Agent", payload: { content: "Customer called" } }],
             },
             documents: {
               items: [{ name: "FILE-001", file: "FILE-001", file_name: "kimlik.pdf", file_url: "/private/files/kimlik.pdf", file_size: 102400, is_private: 1, is_verified: 1, creation: "2026-03-09T08:00:00Z", document_kind: "Identity", status: "Active", reference_doctype: "AT Customer" }],
@@ -112,7 +112,7 @@ vi.mock("frappe-ui", () => ({
 
     if (url.includes("frappe.client.get_list") && config?.params?.doctype === "Has Role") {
       const data = ref([
-        { parent: "agent@example.com", role: "Agent", parenttype: "User" },
+        { parent: "agent@example.com", role: "AT Agent", parenttype: "User" },
         { parent: "manager@example.com", role: "System Manager", parenttype: "User" },
       ]);
       return {
@@ -194,8 +194,8 @@ describe("CustomerDetail page", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "agent@example.com",
-      full_name: "Agent",
-      roles: ["Agent"],
+      full_name: "AT Agent",
+      roles: ["AT Agent"],
       preferred_home: "/at",
       interface_mode: "spa",
       locale: "tr",
@@ -329,8 +329,8 @@ describe("CustomerDetail page", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "agent@example.com",
-      full_name: "Agent",
-      roles: ["Agent"],
+      full_name: "AT Agent",
+      roles: ["AT Agent"],
       preferred_home: "/at",
       interface_mode: "spa",
       locale: "tr",

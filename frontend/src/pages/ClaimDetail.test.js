@@ -223,8 +223,8 @@ describe("ClaimDetail page", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "agent@example.com",
-      full_name: "Agent",
-      roles: ["Agent"],
+      full_name: "AT Agent",
+      roles: ["AT Agent"],
       preferred_home: "/at",
       interface_mode: "spa",
       locale: "tr",
@@ -284,8 +284,8 @@ describe("ClaimDetail page", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "agent@example.com",
-      full_name: "Agent",
-      roles: ["Agent"],
+      full_name: "AT Agent",
+      roles: ["AT Agent"],
       preferred_home: "/at",
       interface_mode: "spa",
       locale: "tr",
@@ -305,8 +305,8 @@ describe("ClaimDetail page", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "agent@example.com",
-      full_name: "Agent",
-      roles: ["Agent"],
+      full_name: "AT Agent",
+      roles: ["AT Agent"],
       preferred_home: "/at",
       interface_mode: "spa",
       locale: "tr",
@@ -333,8 +333,8 @@ describe("ClaimDetail page", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "agent@example.com",
-      full_name: "Agent",
-      roles: ["Agent"],
+      full_name: "AT Agent",
+      roles: ["AT Agent"],
       preferred_home: "/at",
       interface_mode: "spa",
       locale: "tr",

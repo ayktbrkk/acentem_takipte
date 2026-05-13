@@ -22,7 +22,7 @@ class TestAccountingReconciliation(IntegrationTestCase):
         previous_user = getattr(frappe.session, "user", None)
         frappe.session.user = "restricted.user@example.com"
         try:
-            with patch.object(accounting_api.frappe, "get_roles", return_value=["Agent"]):
+            with patch.object(accounting_api.frappe, "get_roles", return_value=["AT Agent"]):
                 with self.assertRaises(Exception) as run_sync_error:
                     accounting_api.run_sync(limit=1)
                 self.assertTrue(str(run_sync_error.exception))

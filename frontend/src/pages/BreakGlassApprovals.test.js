@@ -33,7 +33,7 @@ describe("BreakGlassApprovals page", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "manager@example.com",
-      full_name: "Manager",
+      full_name: "AT Manager",
       roles: ["System Manager"],
       preferred_home: "/at",
       interface_mode: "spa",

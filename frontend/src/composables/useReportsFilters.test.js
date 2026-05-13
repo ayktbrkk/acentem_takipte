@@ -27,7 +27,7 @@ describe("useReportsFilters", () => {
       replace: vi.fn(),
     };
     const authStore = reactive({
-      roles: ["Manager"],
+      roles: ["AT Manager"],
       isDeskUser: false,
     });
     const branchStore = reactive({

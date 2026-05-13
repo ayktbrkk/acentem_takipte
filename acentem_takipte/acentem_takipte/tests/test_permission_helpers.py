@@ -23,7 +23,7 @@ def test_assert_mutation_access_runs_common_security_contract():
                     with patch("acentem_takipte.utils.permissions.audit_admin_action") as audit_mock:
                         user = assert_mutation_access(
                             action="api.admin_jobs.run_payment_due_job",
-                            roles=("System Manager", "Manager"),
+                            roles=("System Manager", "AT Manager"),
                             doctype_permissions=("AT Payment", "AT Notification Draft"),
                             permtype="write",
                             details={"limit": 5},
@@ -34,7 +34,7 @@ def test_assert_mutation_access_runs_common_security_contract():
     assert_post_request_mock.assert_called_once()
     assert_roles_mock.assert_called_once_with(
         "System Manager",
-        "Manager",
+        "AT Manager",
         user="manager@example.com",
         message="You do not have permission to perform this action.",
     )

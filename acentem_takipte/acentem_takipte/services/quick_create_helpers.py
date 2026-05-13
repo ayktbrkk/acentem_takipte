@@ -23,7 +23,7 @@ from acentem_takipte.acentem_takipte.utils.permissions import assert_mutation_ac
 def _assert_create_permission(doctype: str, message: str) -> None:
     assert_mutation_access(
         action=f"api.quick_create.create_{doctype.lower().replace(' ', '_')}",
-        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        roles=("System Manager", "AT Manager", "AT Agent", "AT Accountant"),
         doctype_permissions=(doctype,),
         permtype="create",
         details={"doctype": doctype, "permtype": "create"},
@@ -35,7 +35,7 @@ def _assert_create_permission(doctype: str, message: str) -> None:
 def _assert_write_permission(doctype: str, message: str) -> None:
     assert_mutation_access(
         action=f"api.quick_create.update_{doctype.lower().replace(' ', '_')}",
-        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        roles=("System Manager", "AT Manager", "AT Agent", "AT Accountant"),
         doctype_permissions=(doctype,),
         permtype="write",
         details={"doctype": doctype, "permtype": "write"},
@@ -47,7 +47,7 @@ def _assert_write_permission(doctype: str, message: str) -> None:
 def _assert_delete_permission(doctype: str, message: str) -> None:
     assert_mutation_access(
         action=f"api.quick_create.delete_{doctype.lower().replace(' ', '_')}",
-        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        roles=("System Manager", "AT Manager", "AT Agent", "AT Accountant"),
         doctype_permissions=(doctype,),
         permtype="delete",
         details={"doctype": doctype, "permtype": "delete"},

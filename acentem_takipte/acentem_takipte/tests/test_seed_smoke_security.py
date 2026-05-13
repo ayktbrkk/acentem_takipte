@@ -18,7 +18,7 @@ class TestSeedSmokeSecurity(IntegrationTestCase):
         previous_user = getattr(frappe.session, "user", None)
         frappe.session.user = "restricted.user@example.com"
         try:
-            with patch.object(seed_api.frappe, "get_roles", return_value=["Agent"]):
+            with patch.object(seed_api.frappe, "get_roles", return_value=["AT Agent"]):
                 with self.assertRaises(Exception) as err:
                     seed_api.seed_demo_data(reset_existing=0)
                 self.assertIn("system manager", str(err.exception).lower())
@@ -29,7 +29,7 @@ class TestSeedSmokeSecurity(IntegrationTestCase):
         previous_user = getattr(frappe.session, "user", None)
         frappe.session.user = "restricted.user@example.com"
         try:
-            with patch.object(smoke_api.frappe, "get_roles", return_value=["Agent"]):
+            with patch.object(smoke_api.frappe, "get_roles", return_value=["AT Agent"]):
                 with self.assertRaises(Exception) as err:
                     smoke_api.run_backend_smoke_test()
                 self.assertIn("system manager", str(err.exception).lower())
@@ -40,7 +40,7 @@ class TestSeedSmokeSecurity(IntegrationTestCase):
         previous_user = getattr(frappe.session, "user", None)
         frappe.session.user = "restricted.user@example.com"
         try:
-            with patch.object(smoke_api.frappe, "get_roles", return_value=["Agent"]):
+            with patch.object(smoke_api.frappe, "get_roles", return_value=["AT Agent"]):
                 with self.assertRaises(Exception) as err:
                     smoke_api.inspect_at_doctype_modules()
                 message = str(err.exception).lower()

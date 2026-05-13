@@ -24,7 +24,7 @@ from acentem_takipte.acentem_takipte.services.accounting_statement_import import
 )
 from acentem_takipte.acentem_takipte.utils.permissions import build_doctype_permission_map
 
-ACCOUNTING_ADMIN_ROLES = ("System Manager", "Manager", "Accountant")
+ACCOUNTING_ADMIN_ROLES = ("System Manager", "AT Manager", "AT Accountant")
 ACCOUNTING_MUTATION_DOCTYPES = build_doctype_permission_map(
     run_sync=("AT Accounting Entry",),
     run_reconciliation_job=("AT Reconciliation Item",),

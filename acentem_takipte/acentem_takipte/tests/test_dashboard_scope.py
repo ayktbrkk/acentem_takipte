@@ -15,7 +15,7 @@ class TestDashboardScope(TestCase):
         frappe.session.user = "agent.scope@example.com"
         try:
             with patch.object(dashboard_api.frappe, "get_site_config", return_value={}):
-                with patch.object(dashboard_api.frappe, "get_roles", return_value=["Agent"]):
+                with patch.object(dashboard_api.frappe, "get_roles", return_value=["AT Agent"]):
                     with patch.object(dashboard_api.dashboard_security, "user_can_access_all_office_branches", return_value=False):
                         with patch.object(dashboard_api.dashboard_security, "get_allowed_office_branch_names", return_value=set()):
                             with patch.object(dashboard_api.frappe, "get_all", return_value=[]):
@@ -73,7 +73,7 @@ class TestDashboardScope(TestCase):
                 "get_site_config",
                 return_value={"at_dashboard_allow_bootstrap_global_fallback": 1},
             ):
-                with patch.object(dashboard_api.frappe, "get_roles", return_value=["Agent"]):
+                with patch.object(dashboard_api.frappe, "get_roles", return_value=["AT Agent"]):
                     with patch.object(dashboard_api.dashboard_security, "user_can_access_all_office_branches", return_value=False):
                         with patch.object(dashboard_api.dashboard_security, "get_allowed_office_branch_names", return_value=set()):
                             with patch.object(dashboard_api.frappe, "get_all", return_value=[]):
@@ -90,7 +90,7 @@ class TestDashboardScope(TestCase):
         frappe.session.user = "manager.scope@example.com"
         try:
             with patch.object(dashboard_api.frappe, "get_site_config", return_value={}):
-                with patch.object(dashboard_api.frappe, "get_roles", return_value=["Manager"]):
+                with patch.object(dashboard_api.frappe, "get_roles", return_value=["AT Manager"]):
                     with patch.object(dashboard_api.dashboard_security, "user_can_access_all_office_branches", return_value=False):
                         with patch.object(dashboard_api.dashboard_security, "get_allowed_office_branch_names", return_value={"ANK"}):
                             with patch.object(dashboard_api.frappe, "get_all", return_value=["CUST-0001"]):
@@ -108,7 +108,7 @@ class TestDashboardScope(TestCase):
         captured = {}
         try:
             with patch.object(dashboard_api.frappe, "get_site_config", return_value={}):
-                with patch.object(dashboard_api.frappe, "get_roles", return_value=["Agent"]):
+                with patch.object(dashboard_api.frappe, "get_roles", return_value=["AT Agent"]):
                     with patch.object(dashboard_api.dashboard_security, "user_can_access_all_office_branches", return_value=False):
                         with patch.object(dashboard_api.dashboard_security, "get_allowed_office_branch_names", return_value={"ANK"}):
                             def _fake_get_all(doctype, filters=None, pluck=None, limit_page_length=0):

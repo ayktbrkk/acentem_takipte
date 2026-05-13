@@ -23,16 +23,16 @@ DASHBOARD_ENDPOINT_PERMISSION_POLICY = {
         "auth": "authenticated",
         "scope": "customer_scope",
         "doctype_permissions": [],
-        "roles_allow_global_scope": ["System Manager", "Manager", "Accountant"],
-        "roles_allow_scoped_scope": ["Agent"],
+        "roles_allow_global_scope": ["System Manager", "AT Manager", "AT Accountant"],
+        "roles_allow_scoped_scope": ["AT Agent"],
     },
     "get_dashboard_tab_payload": {
         "http_methods": ["GET"],
         "auth": "authenticated",
         "scope": "customer_scope",
         "doctype_permissions": [],
-        "roles_allow_global_scope": ["System Manager", "Manager", "Accountant"],
-        "roles_allow_scoped_scope": ["Agent"],
+        "roles_allow_global_scope": ["System Manager", "AT Manager", "AT Accountant"],
+        "roles_allow_scoped_scope": ["AT Agent"],
     },
     "get_customer_list": {
         "http_methods": ["GET"],
@@ -122,7 +122,7 @@ def allowed_customers_for_user(include_meta: bool = False):
         return _result(None, "global", "privileged_role")
 
     allowed_branches = sorted(get_allowed_office_branch_names(user))
-    if {"Manager", "Accountant"}.intersection(roles):
+    if {"AT Manager", "AT Accountant"}.intersection(roles):
         if not allowed_branches:
             if fallback_enabled:
                 _audit_global_fallback_used(
@@ -144,7 +144,7 @@ def allowed_customers_for_user(include_meta: bool = False):
             return _result(None, "global", "bootstrap_fallback_enabled")
         return _result([], "empty", "branch_assignment_empty")
 
-    if "Agent" in roles:
+    if "AT Agent" in roles:
         customer_filters = {"assigned_agent": user}
         if allowed_branches:
             customer_filters["office_branch"] = ["in", allowed_branches]
@@ -215,11 +215,11 @@ def allowed_sales_entities_for_user(
     roles = set(frappe.get_roles(user))
 
     # Global access roles
-    if {"System Manager", "Manager", "Accountant"}.intersection(roles):
+    if {"System Manager", "AT Manager", "AT Accountant"}.intersection(roles):
         return _result(None, "global", "privileged_role")
 
     # Agent role: restricted to assigned sales entities
-    if "Agent" in roles:
+    if "AT Agent" in roles:
         allowed_sales_entities = sorted(get_allowed_sales_entity_names(user=user)) or []
         if allowed_sales_entities:
             return _result(

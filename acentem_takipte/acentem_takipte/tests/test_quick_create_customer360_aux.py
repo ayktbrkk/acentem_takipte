@@ -58,7 +58,7 @@ def test_assert_delete_permission_uses_shared_mutation_helper():
 
     mutation_access.assert_called_once_with(
         action="api.quick_create.delete_at_customer_relation",
-        roles=("System Manager", "Manager", "Agent", "Accountant"),
+        roles=("System Manager", "AT Manager", "AT Agent", "AT Accountant"),
         doctype_permissions=("AT Customer Relation",),
         permtype="delete",
         details={"doctype": "AT Customer Relation", "permtype": "delete"},

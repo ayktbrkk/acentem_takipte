@@ -33,7 +33,7 @@ SESSION_CAPABILITY_QUICK_EDIT: dict[str, str] = {
 }
 
 DESK_HOME_ROLES = {"System Manager", "Administrator"}
-SPA_HOME_ROLES = {"Manager", "Agent", "Accountant"}
+SPA_HOME_ROLES = {"AT Manager", "AT Agent", "AT Accountant"}
 
 
 def _coerce_realtime_port(value) -> int | None:

@@ -99,8 +99,8 @@ describe("CommunicationCenter page store integration", () => {
     const authStore = useAuthStore();
     authStore.applyContext({
       user: "manager@example.com",
-      full_name: "Manager",
-      roles: ["Manager"],
+      full_name: "AT Manager",
+      roles: ["AT Manager"],
       preferred_home: "/at",
       interface_mode: "spa",
       locale: "tr",

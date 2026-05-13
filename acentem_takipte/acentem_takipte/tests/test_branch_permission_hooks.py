@@ -57,7 +57,7 @@ def test_customer_permission_query_conditions_combine_agent_and_branch_scope(mon
     monkeypatch.setattr(
         at_customer,
         "frappe",
-        SimpleNamespace(get_roles=lambda user: ["Agent"], db=SimpleNamespace(escape=lambda value: f"'{value}'")),
+        SimpleNamespace(get_roles=lambda user: ["AT Agent"], db=SimpleNamespace(escape=lambda value: f"'{value}'")),
     )
     monkeypatch.setattr(
         at_customer,
@@ -95,7 +95,7 @@ def test_has_branch_and_sales_entity_permission_denies_when_entity_out_of_scope(
 
 def test_customer_has_permission_requires_matching_branch_for_agent(monkeypatch):
     monkeypatch.setattr(at_customer, "_can_access_all_customers", lambda user: False)
-    monkeypatch.setattr(at_customer.frappe, "get_roles", lambda user: ["Agent"])
+    monkeypatch.setattr(at_customer.frappe, "get_roles", lambda user: ["AT Agent"])
     monkeypatch.setattr(at_customer, "has_office_branch_permission", lambda doc, user=None: False)
 
     doc = SimpleNamespace(assigned_agent="agent@example.com", owner="owner@example.com", office_branch="IST")

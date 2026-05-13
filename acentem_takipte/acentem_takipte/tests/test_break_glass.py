@@ -321,7 +321,7 @@ class TestBreakGlassAuditUtilities(unittest.TestCase):
     @patch("acentem_takipte.acentem_takipte.services.break_glass.frappe.get_site_config")
     def test_can_view_break_glass_audit_with_configured_role(self, mock_site_config, mock_get_roles):
         mock_site_config.return_value = {"at_break_glass_audit_roles": ["Compliance Officer"]}
-        mock_get_roles.return_value = ["Agent", "Compliance Officer"]
+        mock_get_roles.return_value = ["AT Agent", "Compliance Officer"]
 
         assert can_view_break_glass_audit("compliance.user@example.com") is True
 

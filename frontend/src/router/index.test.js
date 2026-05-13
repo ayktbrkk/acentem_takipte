@@ -6,7 +6,7 @@ import { getDeskRedirectTarget, hasSystemManagerRole } from "./index";
 
 describe("router home guard", () => {
   it("keeps spa users inside /at", () => {
-    expect(getDeskRedirectTarget("/at", "spa", "agent@example.com", ["Agent"])).toBeNull();
+    expect(getDeskRedirectTarget("/at", "spa", "agent@example.com", ["AT Agent"])).toBeNull();
   });
 
   it("redirects regular desk-only users to /app", () => {
@@ -52,6 +52,6 @@ describe("break-glass manager role helper", () => {
   });
 
   it("returns false for non-manager roles", () => {
-    expect(hasSystemManagerRole(["Agent", "Desk User"])).toBe(false);
+    expect(hasSystemManagerRole(["AT Agent", "Desk User"])).toBe(false);
   });
 });

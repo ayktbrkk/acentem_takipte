@@ -26,7 +26,7 @@ class TestSessionInterfaceRouting(IntegrationTestCase):
         with patch.object(session_api, "resolve_current_user", return_value="agent@example.com"):
             with patch.object(session_api, "_build_session_capabilities", return_value={}):
                 with patch.object(session_api.frappe, "get_site_config", return_value={}):
-                    with patch.object(session_api.frappe, "get_roles", return_value=["Agent"]):
+                    with patch.object(session_api.frappe, "get_roles", return_value=["AT Agent"]):
                         with patch.object(
                             session_api.frappe.db,
                             "get_value",
@@ -45,7 +45,7 @@ class TestSessionInterfaceRouting(IntegrationTestCase):
                                             result = session_api.get_session_context()
 
         self.assertEqual(result["user"], "agent@example.com")
-        self.assertEqual(result["roles"], ["Agent"])
+        self.assertEqual(result["roles"], ["AT Agent"])
         self.assertEqual(result["preferred_home"], "/at")
         self.assertEqual(result["interface_mode"], "spa")
         self.assertEqual(result["branch"], "AT-Istanbul")
