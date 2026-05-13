@@ -53,7 +53,9 @@ export function useSidebarNavigation() {
   const userInitials = computed(() => {
     const parts = userDisplayName.value.split(/\s+/).filter(Boolean);
     if (!parts.length) return "AT";
-    return parts.slice(0, 2).map((part) => String(part[0] || "")).join("").toUpperCase();
+    const raw = parts.slice(0, 2).map((part) => String(part[0] || "")).join("");
+    const locale = String(authStore.locale || "en").toLowerCase();
+    return locale.startsWith("tr") ? raw.toLocaleUpperCase("tr-TR") : raw.toUpperCase();
   });
   const branchLabel = computed(() => String(branchStore.requestBranch || authStore.defaultOfficeBranch || "-").trim() || "-");
   const isSystemManager = computed(() => Boolean(authStore.isDeskUser));

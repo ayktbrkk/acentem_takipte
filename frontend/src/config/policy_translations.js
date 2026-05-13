@@ -257,6 +257,16 @@ export const POLICY_TRANSLATIONS = {
     document_serial_no: "Belge Seri-No",
     brand_code: "Marka Kodu",
     model_year: "Model Yılı",
+    fxRate: "Kur",
+    fxDate: "Kur Tarihi",
+    productFamily: "Urun Ailesi",
+    insuredSubject: "Sigortali Konu",
+    coverageFocus: "Teminat Odagi",
+    readinessScore: "Hazirlik Puani",
+    completedFields: "Tamamlanan Alanlar",
+    missingFields: "Eksik Alanlar",
+    missingProductFields: "Eksik Urun Alanlari",
+    noMissingProductField: "Eksik zorunlu alan bulunamadi.",
   },
   en: {
     // List Page
@@ -288,6 +298,7 @@ export const POLICY_TRANSLATIONS = {
     end_date: "End Date",
     status: "Status",
     quick_policy_entry: "Quick Policy Entry",
+    "create_a_policy_with_an_auto-generated_record_number_and_an_optional_carrier_policy_number": "Create a policy with an auto-generated record number and an optional carrier policy number",
 
     breadcrumb: "Insurance Operations → Policies",
     title: "Policy Workbench",

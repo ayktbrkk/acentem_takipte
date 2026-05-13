@@ -111,10 +111,12 @@ const userInitials = computed(() => {
     .map((part) => part.trim())
     .filter(Boolean);
 
-  if (parts.length >= 2) {
-    return uppercaseText(`${parts[0][0]}${parts[1][0]}`, authStore.locale);
-  }
-  return uppercaseText(source[0], authStore.locale);
+  const raw = parts.length >= 2
+    ? `${parts[0][0]}${parts[1][0]}`
+    : source[0];
+
+  const locale = String(authStore.locale || "en").toLowerCase();
+  return locale.startsWith("tr") ? raw.toLocaleUpperCase("tr-TR") : raw.toUpperCase();
 });
 const accountMenuItems = computed(() => [
   { key: "account", label: t("account"), action: "account" },
