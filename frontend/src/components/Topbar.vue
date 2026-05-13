@@ -159,7 +159,17 @@ function runAccountAction(action) {
     return;
   }
   if (action === "logout") {
-    window.location.assign("/logout");
+    const csrfToken = window.csrf_token || "";
+    fetch("/api/method/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "X-Frappe-CSRF-Token": csrfToken,
+      },
+    }).finally(() => {
+      window.location.assign("/login?redirect-to=/at");
+    });
     return;
   }
   if (action === "desk") {
