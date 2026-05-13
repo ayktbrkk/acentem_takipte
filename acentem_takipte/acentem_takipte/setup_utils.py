@@ -410,6 +410,7 @@ def ensure_core_setup():
     changed = False
     ensure_site_asset_symlink()
     changed |= ensure_roles()
+    changed |= ensure_role_desk_access()
     changed |= ensure_role_permissions()
     changed |= ensure_default_notification_templates()
     changed |= ensure_workspace_sidebar()
@@ -452,20 +453,44 @@ def ensure_user_default_role(user: str | None = None) -> bool:
     return False
 
 
+ROLE_DESK_ACCESS: dict[str, int] = {
+    "AT Agent": 0,
+    "AT Manager": 0,
+    "AT Accountant": 0,
+    "AT System Manager": 1,
+    "AT User": 0,
+    "AT Customer": 0,
+}
+
+
 def ensure_roles() -> bool:
     changed = False
     for role_name in CORE_ROLES:
         if frappe.db.exists("Role", role_name):
             continue
+        desk_access = ROLE_DESK_ACCESS.get(role_name, 1)
         doc = frappe.get_doc(
             {
                 "doctype": "Role",
                 "role_name": role_name,
-                "desk_access": 1,
+                "desk_access": desk_access,
             }
         )
         # ignore_permissions: App install/migrate setup; runs as Administrator context.
         doc.insert(ignore_permissions=True)
+        changed = True
+    return changed
+
+
+def ensure_role_desk_access() -> bool:
+    changed = False
+    for role_name, expected in ROLE_DESK_ACCESS.items():
+        current = frappe.db.get_value("Role", role_name, "desk_access")
+        if current is None:
+            continue
+        if int(current) == expected:
+            continue
+        frappe.db.set_value("Role", role_name, "desk_access", expected)
         changed = True
     return changed
 
