@@ -8,7 +8,6 @@ from .utils.i18n import translate_text
 
 CORE_ROLES = ("AT Agent", "AT Manager", "AT Accountant", "AT System Manager", "AT User", "AT Customer")
 CORE_ACCESS_ROLES = {"System Manager", "AT Agent", "AT Manager", "AT Accountant", "AT System Manager", "AT User", "AT Customer"}
-AT_USER_READ_DOCTYPES = {"AT Policy", "AT Claim", "AT Payment", "AT Renewal Task", "AT Customer"}
 CORE_SETUP_CACHE_KEY = "acentem_takipte:core_setup_done"
 DESKTOP_ICON_LABEL = "Acentem Takipte"
 DESKTOP_ICON_URL = "/at"
@@ -186,121 +185,40 @@ FULL_ACCESS_ALL = {
     "print": 1,
     "email": 1,
 }
-FULL_ACCESS = {
-    "read": 1,
-    "write": 1,
-    "create": 1,
-    "delete": 1,
-    "report": 1,
-    "export": 1,
-    "share": 1,
-    "print": 1,
-    "email": 1,
-}
-RW_ACCESS = {
-    "read": 1,
-    "write": 1,
-    "create": 1,
-    "report": 1,
-    "print": 1,
-    "email": 1,
-}
-READ_ACCESS = {
-    "read": 1,
-    "report": 1,
-    "print": 1,
-}
 
-PERMISSION_MATRIX = {
-    "AT Lead": {
-        "AT Agent": {0: RW_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: READ_ACCESS},
-    },
-    "AT Offer": {
-        "AT Agent": {0: RW_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: READ_ACCESS},
-    },
-    "AT Policy": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: RW_ACCESS},
-    },
-    "AT Policy Endorsement": {
-        "AT Agent": {0: RW_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: RW_ACCESS},
-    },
-    "AT Policy Snapshot": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: READ_ACCESS},
-    },
-    "AT Claim": {
-        "AT Agent": {0: RW_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: RW_ACCESS},
-    },
-    "AT Payment": {
-        "AT Agent": {0: RW_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: FULL_ACCESS},
-    },
-    "AT Renewal Task": {
-        "AT Agent": {0: RW_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: RW_ACCESS},
-    },
-    "AT Customer": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS, 1: {"read": 1, "write": 1}},
-        "AT Accountant": {0: READ_ACCESS, 1: {"read": 1}},
-    },
-    "AT Sales Entity": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: READ_ACCESS},
-    },
-    "AT Insurance Company": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: READ_ACCESS},
-    },
-    "AT Branch": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: READ_ACCESS},
-    },
-    "AT Notification Template": {
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: READ_ACCESS},
-    },
-    "AT Notification Draft": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: RW_ACCESS},
-    },
-    "AT Notification Outbox": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: RW_ACCESS},
-    },
-    "AT Accounting Entry": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: FULL_ACCESS},
-    },
-    "AT Reconciliation Item": {
-        "AT Agent": {0: READ_ACCESS},
-        "AT Manager": {0: FULL_ACCESS},
-        "AT Accountant": {0: FULL_ACCESS},
-    },
-    "AT Access Log": {
-        "AT Manager": {0: READ_ACCESS},
-        "AT Accountant": {0: READ_ACCESS},
-    },
-}
+PERMISSION_MATRIX: dict[str, dict[str, dict[int, dict[str, int]]]] = {}
+
+# Doctypes where AT Agent, AT Manager, AT Accountant get FULL_ALL
+for _dt in (
+    "AT Lead",
+    "AT Offer",
+    "AT Policy",
+    "AT Policy Endorsement",
+    "AT Policy Snapshot",
+    "AT Customer",
+):
+    PERMISSION_MATRIX[_dt] = {
+        "AT Agent": {0: FULL_ACCESS_ALL},
+        "AT Manager": {0: FULL_ACCESS_ALL},
+        "AT Accountant": {0: FULL_ACCESS_ALL},
+    }
+
+# Remaining 12 doctypes — only AT System Manager (added by ensure_role_permissions)
+for _dt in (
+    "AT Access Log",
+    "AT Accounting Entry",
+    "AT Branch",
+    "AT Claim",
+    "AT Insurance Company",
+    "AT Notification Draft",
+    "AT Notification Outbox",
+    "AT Notification Template",
+    "AT Payment",
+    "AT Reconciliation Item",
+    "AT Renewal Task",
+    "AT Sales Entity",
+):
+    PERMISSION_MATRIX[_dt] = {}
 
 DEFAULT_NOTIFICATION_TEMPLATES = (
     {
@@ -502,8 +420,6 @@ def ensure_role_permissions() -> bool:
         extended = dict(role_map)
         if "AT System Manager" not in extended:
             extended["AT System Manager"] = {0: FULL_ACCESS_ALL}
-        if doctype in AT_USER_READ_DOCTYPES and "AT User" not in extended:
-            extended["AT User"] = {0: READ_ACCESS}
         matrix[doctype] = extended
 
     for doctype, role_map in matrix.items():
