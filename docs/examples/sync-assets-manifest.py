@@ -20,8 +20,21 @@ def ensure_symlink(target: Path, link_path: Path) -> None:
     link_path.symlink_to(target)
 
 
+def _is_rtl_manifest(manifest_name: str) -> bool:
+    return "rtl" in manifest_name
+
+
+def _should_keep_entry(key: str, is_rtl: bool) -> bool:
+    if not key.endswith(".css") or ".bundle." not in key:
+        return True
+    if is_rtl:
+        return key.startswith("rtl_")
+    return True
+
+
 def rewrite_manifest(manifest_name: str, css_dir_name: str) -> None:
     manifest_path = ASSETS_DIR / manifest_name
+    is_rtl = _is_rtl_manifest(manifest_name)
     manifest = {}
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text())
@@ -43,6 +56,7 @@ def rewrite_manifest(manifest_name: str, css_dir_name: str) -> None:
         key = ".".join(parts[:-2] + [parts[-1]])
         manifest[key] = f"/assets/frappe/dist/{css_dir_name}/{file_path.name}"
 
+    manifest = {k: v for k, v in manifest.items() if _should_keep_entry(k, is_rtl)}
     manifest_path.write_text(json.dumps(manifest, indent=4) + "\n")
 
 
