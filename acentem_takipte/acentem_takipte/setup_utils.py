@@ -6,8 +6,9 @@ from frappe.permissions import add_permission, update_permission_property
 from .utils.assets import ensure_site_asset_symlink
 from .utils.i18n import translate_text
 
-CORE_ROLES = ("AT Agent", "AT Manager", "AT Accountant")
-CORE_ACCESS_ROLES = {"System Manager", "AT Agent", "AT Manager", "AT Accountant"}
+CORE_ROLES = ("AT Agent", "AT Manager", "AT Accountant", "AT System Manager", "AT User", "AT Customer")
+CORE_ACCESS_ROLES = {"System Manager", "AT Agent", "AT Manager", "AT Accountant", "AT System Manager", "AT User", "AT Customer"}
+AT_USER_READ_DOCTYPES = {"AT Policy", "AT Claim", "AT Payment", "AT Renewal Task", "AT Customer"}
 CORE_SETUP_CACHE_KEY = "acentem_takipte:core_setup_done"
 DESKTOP_ICON_LABEL = "Acentem Takipte"
 DESKTOP_ICON_URL = "/at"
@@ -170,6 +171,21 @@ PERMISSION_KEYS = (
     "email",
 )
 
+FULL_ACCESS_ALL = {
+    "read": 1,
+    "write": 1,
+    "create": 1,
+    "delete": 1,
+    "submit": 1,
+    "cancel": 1,
+    "amend": 1,
+    "report": 1,
+    "export": 1,
+    "import": 1,
+    "share": 1,
+    "print": 1,
+    "email": 1,
+}
 FULL_ACCESS = {
     "read": 1,
     "write": 1,
@@ -456,7 +472,16 @@ def ensure_roles() -> bool:
 
 def ensure_role_permissions() -> bool:
     changed = False
+    matrix = {}
     for doctype, role_map in PERMISSION_MATRIX.items():
+        extended = dict(role_map)
+        if "AT System Manager" not in extended:
+            extended["AT System Manager"] = {0: FULL_ACCESS_ALL}
+        if doctype in AT_USER_READ_DOCTYPES and "AT User" not in extended:
+            extended["AT User"] = {0: READ_ACCESS}
+        matrix[doctype] = extended
+
+    for doctype, role_map in matrix.items():
         if not frappe.db.exists("DocType", doctype):
             continue
         for role, permlevels in role_map.items():

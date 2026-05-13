@@ -72,7 +72,7 @@ function handleScopeChanged(payload) {
 function handleEmergencyAccessGranted(payload) {
   // Only show to System Managers (Role check happens here)
   const userRoles = authStore.roles || [];
-  if (!userRoles.includes("System Manager")) {
+  if (!userRoles.includes("System Manager") && !userRoles.includes("AT System Manager")) {
     return;
   }
 

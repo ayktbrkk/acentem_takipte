@@ -23,7 +23,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const isAuthenticated = computed(() => Boolean(userId.value));
   const isDeskUser = computed(() =>
-    roles.value.some((role) => role === "System Manager" || role === "Administrator")
+    roles.value.some((role) => role === "System Manager" || role === "Administrator" || role === "AT System Manager")
   );
   const isSpaUser = computed(() => preferredHome.value === "/at" || interfaceMode.value === "spa");
 

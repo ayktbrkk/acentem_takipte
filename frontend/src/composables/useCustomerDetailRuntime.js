@@ -13,7 +13,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
   const authStore = useAuthStore();
   const UNKNOWN_VALUE_SET = new Set(["", "unknown", "none", "null", "undefined"]);
-  const ASSIGNED_AGENT_ROLE_SET = new Set(["AT Agent", "System Manager"]);
+  const ASSIGNED_AGENT_ROLE_SET = new Set(["AT Agent", "System Manager", "AT System Manager"]);
   const customerName = computed(() => String(unref(name) || "").trim());
   const localeValue = computed(() => String(unref(activeLocale) || "en").trim() || "en");
   const localeCode = computed(() => (localeValue.value.startsWith("tr") ? "tr-TR" : "en-US"));
