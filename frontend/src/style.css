@@ -47,18 +47,21 @@
     min-height: 100dvh;
     overflow-x: hidden;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(241, 245, 249, 0.72));
+    direction: ltr;
+    text-align: left;
   }
 
   .at-shell-content {
     min-width: 0;
+    direction: ltr;
   }
 
   .at-shell-topbar {
-    /* width: 100%; removed to prevent overflow with padding */
+    direction: ltr;
   }
 
   .at-shell-main {
-    /* width: 100%; removed to prevent overflow with padding */
+    direction: ltr;
   }
 
   .surface-card {

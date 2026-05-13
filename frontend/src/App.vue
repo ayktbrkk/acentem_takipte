@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell min-h-screen w-full">
+  <div class="app-shell min-h-screen w-full" dir="ltr">
     <div
       v-if="scopeRefreshNotice"
       class="fixed right-4 top-4 z-50 flex max-w-sm items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 shadow"
@@ -126,6 +126,7 @@ watch(
     // transformations. Setting this dynamically ensures consistency across 
     // the entire application shell.
     document.documentElement.lang = newLocale || "en";
+    document.documentElement.dir = "ltr";
   },
   { immediate: true }
 );
