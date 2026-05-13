@@ -4,6 +4,13 @@
 {% block footer %}{% endblock %}
 {% block page_footer %}{% endblock %}
 
+{% block base_scripts %}
+<script>
+	frappe.boot = {{ boot | json }}
+	frappe.sys_defaults = frappe.boot.sysdefaults;
+</script>
+{% endblock %}
+
 {% block page_content %}
 <style>
   .at-webapp-breakout {
