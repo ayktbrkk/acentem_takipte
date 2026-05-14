@@ -92,6 +92,43 @@
               </span>
             </div>
 
+            <div v-else-if="col.type === 'compound'" class="min-w-[280px]">
+              <p class="font-medium text-slate-800">{{ row[col.primaryKey] ?? '-' }}</p>
+              <p class="text-xs text-slate-500">{{ row[col.secondaryKey] ?? '-' }}</p>
+              <div v-if="col.badgeKey && row[col.badgeKey]" class="mt-1 flex flex-wrap items-center gap-1">
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-700">
+                  {{ row[col.badgeKey] }}
+                </span>
+                <span v-if="col.badgeSecondaryKey && row[col.badgeSecondaryKey]" class="text-xs text-slate-500">{{ row[col.badgeSecondaryKey] }}</span>
+              </div>
+            </div>
+
+            <div v-else-if="col.type === 'status-meta'" class="min-w-[220px]">
+              <StatusBadge v-if="row[col.key]" :domain="col.domain" :status="row[col.key]" />
+              <span v-else class="text-slate-700">-</span>
+              <p v-if="col.metaKey && row[col.metaKey]" class="mt-1 max-w-[320px] truncate text-xs text-rose-600">
+                {{ row[col.metaKey] }}
+              </p>
+            </div>
+
+            <div v-else-if="col.type === 'attempts'">
+              <span class="text-slate-700">{{ row[col.currentKey] ?? 0 }}/{{ row[col.maxKey] ?? 0 }}</span>
+            </div>
+
+            <div v-else-if="col.type === 'actions-advanced'" class="min-w-[240px]" @click.stop>
+              <InlineActionRow>
+                <ActionButton
+                  v-for="action in (row[col.actionKey] || [])"
+                  :key="action.label"
+                  :variant="action.variant"
+                  size="xs"
+                  @click.stop="action.onClick?.(row)"
+                >
+                  {{ action.label }}
+                </ActionButton>
+              </InlineActionRow>
+            </div>
+
           </td>
           <td v-if="clickable" class="px-4 py-3 text-right">
             <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-gray-300 group-hover:text-gray-400" />
@@ -107,6 +144,8 @@ import { computed } from "vue";
 import { FeatherIcon } from "frappe-ui";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
+import InlineActionRow from "../app-shell/InlineActionRow.vue";
 import { translateText, uppercaseText } from "@/utils/i18n";
 import { useAuthStore } from "@/stores/auth";
 
