@@ -95,8 +95,3 @@ const quickDialogs = useCommunicationCenterQuickDialogs({
 });
 </script>
 
-<style scoped>
-.input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm;
-}
-</style>

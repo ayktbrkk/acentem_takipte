@@ -33,12 +33,12 @@
     <template #body-content>
       <div class="space-y-4">
         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_120px]">
-          <select v-model="campaignRunSelection" class="input" data-testid="campaign-run-select">
-            <option value="">{{ t('selectCampaign') }}</option>
-            <option v-for="option in communicationQuickOptionsMap.campaigns" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
+          <ATSelect
+            v-model="campaignRunSelection"
+            :placeholder="t('selectCampaign')"
+            :options="communicationQuickOptionsMap.campaigns"
+            data-testid="campaign-run-select"
+          />
           <ActionButton
             variant="primary"
             size="sm"
@@ -87,12 +87,12 @@
     <template #body-content>
       <div class="space-y-4">
         <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_140px]">
-          <select v-model="segmentPreviewSegment" class="input" data-testid="segment-preview-select">
-            <option value="">{{ t('selectSegment') }}</option>
-            <option v-for="option in communicationQuickOptionsMap.segments" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
+          <ATSelect
+            v-model="segmentPreviewSegment"
+            :placeholder="t('selectSegment')"
+            :options="communicationQuickOptionsMap.segments"
+            data-testid="segment-preview-select"
+          />
           <ActionButton
             variant="primary"
             size="sm"
@@ -209,6 +209,7 @@ import { computed, unref } from "vue";
 import { Dialog } from "frappe-ui";
 
 import ActionButton from "../app-shell/ActionButton.vue";
+import ATSelect from "../ui/ATSelect.vue";
 import DataTableCell from "../app-shell/DataTableCell.vue";
 import QuickCreateManagedDialog from "../app-shell/QuickCreateManagedDialog.vue";
 

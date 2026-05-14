@@ -6,18 +6,18 @@
       @open-advanced="showAdvanced = !showAdvanced"
     >
       <template #primary-filters>
-        <select v-model="filters.status" class="input h-9 py-1 text-sm min-w-[140px]" @change="runtime.applySnapshotFilters">
-          <option value="">{{ t('allStatuses') }}</option>
-          <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        <select v-model="filters.channel" class="input h-9 py-1 text-sm min-w-[140px]" @change="runtime.applySnapshotFilters">
-          <option value="">{{ t('allChannels') }}</option>
-          <option v-for="option in channelOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
+        <ATSelect
+          v-model="filters.status"
+          :placeholder="t('allStatuses')"
+          :options="statusOptions"
+          @change="runtime.applySnapshotFilters"
+        />
+        <ATSelect
+          v-model="filters.channel"
+          :placeholder="t('allChannels')"
+          :options="channelOptions"
+          @change="runtime.applySnapshotFilters"
+        />
         <div class="h-4 w-px bg-slate-200 mx-1"></div>
         <ActionButton variant="primary" size="sm" @click="runtime.applySnapshotFilters">
           {{ t('applyFilters') }}
@@ -129,6 +129,7 @@ import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
 import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
 import { FeatherIcon } from "frappe-ui";
+import ATSelect from "../ui/ATSelect.vue";
 
 const props = defineProps({
   filters: {

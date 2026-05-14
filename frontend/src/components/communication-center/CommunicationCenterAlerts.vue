@@ -1,12 +1,12 @@
 <template>
-  <article v-if="snapshotErrorText" class="qc-error-banner">
-    <p class="qc-error-banner__text font-semibold">{{ t('loadErrorTitle') }}</p>
-    <p class="qc-error-banner__text mt-1">{{ snapshotErrorText }}</p>
+  <article v-if="snapshotErrorText" class="rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 mb-6">
+    <p class="text-sm font-semibold text-rose-800">{{ t('loadErrorTitle') }}</p>
+    <p class="mt-1 text-sm text-rose-700">{{ snapshotErrorText }}</p>
   </article>
 
-  <article v-if="operationErrorText" class="qc-error-banner">
-    <p class="qc-error-banner__text font-semibold">{{ t('actions') }}</p>
-    <p class="qc-error-banner__text mt-1">{{ operationErrorText }}</p>
+  <article v-if="operationErrorText" class="rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 mb-6">
+    <p class="text-sm font-semibold text-rose-800">{{ t('actions') }}</p>
+    <p class="mt-1 text-sm text-rose-700">{{ operationErrorText }}</p>
   </article>
 </template>
 

@@ -87,6 +87,12 @@ const QuickCreateManagedDialogStub = {
   template: `<div class="quick-create-managed-dialog-stub" :data-config-key="configKey"></div>`,
 };
 
+const ATSelectStub = {
+  props: ["modelValue", "placeholder", "options"],
+  emits: ["update:modelValue"],
+  template: `<select :data-testid="$attrs.dataTestid" :value="modelValue" @change="$emit('update:modelValue', $event.target.value)" class="at-select-stub"><option value="">{{ placeholder }}</option><option v-for="opt in (options || [])" :key="opt.value" :value="opt.value">{{ opt.label }}</option></select>`,
+};
+
 describe("CommunicationCenter page store integration", () => {
   beforeEach(() => {
     routeState.query = {};
@@ -210,7 +216,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -270,7 +277,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -332,7 +340,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -389,7 +398,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -479,7 +489,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -569,7 +580,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -626,7 +638,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -683,7 +696,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -740,7 +754,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -797,7 +812,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -854,7 +870,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -911,7 +928,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -962,7 +980,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -997,7 +1016,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -1032,7 +1052,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
@@ -1068,7 +1089,8 @@ describe("CommunicationCenter page store integration", () => {
       global: {
         stubs: {
           ActionButton: ActionButtonStub,
-          DataTableCell: genericStub,
+          ListTable: true,
+          ATSelect: ATSelectStub,
           InlineActionRow: genericStub,
           PageToolbar: genericStub,
           QuickCreateLauncher: true,
