@@ -221,8 +221,8 @@ const router = createRouter({
       name: "communication-center",
       component: CommunicationHub,
       meta: {
-        title: "Communication Center",
-        section: "Control Center",
+        title: "communication_title",
+        section: "communication_section",
       },
     },
     {
