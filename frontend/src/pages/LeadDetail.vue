@@ -150,12 +150,9 @@
               class="!p-3"
             >
               <template #trailing>
-                <button 
-                  class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50/50 text-slate-400 opacity-60 transition-all hover:opacity-100 hover:bg-white hover:text-brand-600 hover:border-brand-200 shadow-sm active:scale-95"
-                  @click="openDocument(doc)"
-                >
+                <ActionButton variant="ghost" size="xs" aria-label="Open document" @click="openDocument(doc)">
                   <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
-                </button>
+                </ActionButton>
               </template>
             </MetaListCard>
             <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openLeadDocuments">

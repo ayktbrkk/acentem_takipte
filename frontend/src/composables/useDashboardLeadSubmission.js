@@ -37,11 +37,11 @@ export function useDashboardLeadSubmission({
       if (!selectedCustomer && !shouldCreateCustomer) {
         leadDialogFieldErrors.customer = buildLeadDialogError(
           activeLocale.value,
-          "Select a customer or add a new customer."
+          t("leadSubmitSelectCustomer")
         );
         leadDialogError.value = buildLeadDialogError(
           activeLocale.value,
-          "Complete the customer section."
+          t("leadSubmitCompleteCustomer")
         );
         return;
       }
@@ -49,11 +49,11 @@ export function useDashboardLeadSubmission({
       if (shouldCreateCustomer && !fullName) {
         leadDialogFieldErrors.customer = buildLeadDialogError(
           activeLocale.value,
-          "New customer name is required."
+          t("leadSubmitNameRequired")
         );
         leadDialogError.value = buildLeadDialogError(
           activeLocale.value,
-          "Complete the customer section."
+          t("leadSubmitCompleteCustomer")
         );
         return;
       }

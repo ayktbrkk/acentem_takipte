@@ -1,6 +1,6 @@
-import { onMounted, ref } from "vue";
+import { onMounted, ref, unref } from "vue";
 
-export function useCustomerSearchPage() {
+export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
   const hasSearched = ref(false);
   const accessRequestHistory = ref([]);
   const showRequestHistory = ref(false);
@@ -15,7 +15,8 @@ export function useCustomerSearchPage() {
 
   function formatDate(dateStr) {
     try {
-      return new Date(dateStr).toLocaleDateString("tr-TR", {
+      const loc = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr-TR" : "en-US";
+      return new Date(dateStr).toLocaleDateString(loc, {
         year: "numeric",
         month: "short",
         day: "numeric",

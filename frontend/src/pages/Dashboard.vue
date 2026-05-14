@@ -239,7 +239,7 @@
               :disabled="isSubmitting"
               :locale="activeLocale"
               :office-branch="branchStore.requestBranch || ''"
-              :customer-label="{ tr: 'Müşteri / Ad Soyad', en: 'Customer / Full Name' }"
+              :customer-label="t('customerLabel')"
             />
             
             <div class="grid gap-1.5">

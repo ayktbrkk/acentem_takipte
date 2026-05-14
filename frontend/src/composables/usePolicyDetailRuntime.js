@@ -219,7 +219,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   const profileFields = computed(() => {
     return [
-      { key: "name", label: t("record_no") || "Kayıt No", value: policy.value.name || unref(name), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+      { key: "name", label: t("record_no"), value: policy.value.name || unref(name), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
       { key: "policy_no", label: t("carrier_policy_no"), value: policy.value.policy_no, type: "text", required: true, copyable: true, unspecifiedLabel: t("unspecified") },
       { 
         key: "insurance_company", 
@@ -283,9 +283,9 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     if (branch.includes("kasko") || branch.includes("trafik")) {
       fields.push(
         { key: "plate", label: t("plate"), value: policy.value.plate, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "document_serial_no", label: t("document_serial_no") || "Belge Seri-No", value: policy.value.document_serial_no, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "brand_code", label: t("brand_code") || "Marka Kodu", value: policy.value.brand_code, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "model_year", label: t("model_year") || "Model Yılı", value: policy.value.model_year, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "document_serial_no", label: t("document_serial_no"), value: policy.value.document_serial_no, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "brand_code", label: t("brand_code"), value: policy.value.brand_code, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "model_year", label: t("model_year"), value: policy.value.model_year, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "vehicle_make_model", label: t("vehicle_make_model"), value: policy.value.vehicle_make_model, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "motor_no", label: t("motor_no"), value: policy.value.motor_no, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "chassis_no", label: t("chassis_no"), value: policy.value.chassis_no, type: "text", unspecifiedLabel: t("unspecified") }

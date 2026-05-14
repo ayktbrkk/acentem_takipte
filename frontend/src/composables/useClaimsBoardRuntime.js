@@ -164,12 +164,12 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   const claimsListFilterConfig = computed(() => [
     {
       key: "status",
-      label: "Durum",
+      label: t("status"),
       options: claimStatusOptions.value.map((item) => ({ value: item.value, label: item.label })),
     },
     {
       key: "amountState",
-      label: "Tutar Durumu",
+      label: t("amountStateLabel"),
       options: [
         { value: "paid", label: t("amountStatePaid") },
         { value: "unpaid", label: t("amountStateUnpaid") },

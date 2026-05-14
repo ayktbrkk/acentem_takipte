@@ -141,5 +141,5 @@ const {
   onCustomerSelected,
   resetSearch,
   formatDate,
-} = useCustomerSearchPage();
+} = useCustomerSearchPage({ activeLocale });
 </script>

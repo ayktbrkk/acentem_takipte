@@ -115,9 +115,9 @@
               class="!p-3"
             >
               <template #trailing>
-                 <button class="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors" @click="openDocument(doc)">
+                 <ActionButton variant="link" size="xs" @click="openDocument(doc)">
                   <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
-                </button>
+                </ActionButton>
               </template>
             </MetaListCard>
             <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openClaimDocuments">

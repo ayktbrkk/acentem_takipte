@@ -64,8 +64,8 @@ const router = createRouter({
       name: "dashboard",
       component: Dashboard,
       meta: {
-        title: "Dashboard",
-        section: "Overview",
+        title: { tr: "Pano", en: "Dashboard" },
+        section: { tr: "Genel Görünüm", en: "Overview" },
       },
     },
     {
@@ -89,8 +89,8 @@ const router = createRouter({
       name: "lead-list",
       component: LeadList,
       meta: {
-        title: "Fırsatlar",
-        section: "Sales & Portfolio",
+        title: { tr: "Fırsatlar", en: "Leads" },
+        section: { tr: "Satış & Portföy", en: "Sales & Portfolio" },
       },
     },
     {
@@ -99,8 +99,8 @@ const router = createRouter({
       component: LeadDetail,
       props: true,
       meta: {
-        title: "Fırsat Detayı",
-        section: "Sales & Portfolio",
+        title: { tr: "Fırsat Detayı", en: "Lead Details" },
+        section: { tr: "Satış & Portföy", en: "Sales & Portfolio" },
       },
     },
     {
@@ -108,8 +108,8 @@ const router = createRouter({
       name: "offer-board",
       component: OfferBoard,
       meta: {
-        title: "Teklifler",
-        section: "Insurance Operations",
+        title: { tr: "Teklifler", en: "Offers" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -118,8 +118,8 @@ const router = createRouter({
       component: OfferDetail,
       props: true,
       meta: {
-        title: "Teklif Detayı",
-        section: "Insurance Operations",
+        title: { tr: "Teklif Detayı", en: "Offer Details" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -127,8 +127,8 @@ const router = createRouter({
       name: "policy-list",
       component: PolicyList,
       meta: {
-        title: "Poliçeler",
-        section: "Insurance Operations",
+        title: { tr: "Poliçeler", en: "Policies" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -137,8 +137,8 @@ const router = createRouter({
       component: PolicyDetail,
       props: true,
       meta: {
-        title: "Poliçe Detayı",
-        section: "Insurance Operations",
+        title: { tr: "Poliçe Detayı", en: "Policy Details" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -146,8 +146,8 @@ const router = createRouter({
       name: "customer-list",
       component: CustomerList,
       meta: {
-        title: "Müşteriler",
-        section: "Sales & Portfolio",
+        title: { tr: "Müşteriler", en: "Customers" },
+        section: { tr: "Satış & Portföy", en: "Sales & Portfolio" },
       },
     },
     {
@@ -155,8 +155,8 @@ const router = createRouter({
       name: "customer-search",
       component: CustomerSearchPage,
       meta: {
-        title: "Müşteri Ara",
-        section: "Satış ve Portföy",
+        title: { tr: "Müşteri Ara", en: "Customer Search" },
+        section: { tr: "Satış & Portföy", en: "Sales & Portfolio" },
       },
     },
     {
@@ -164,8 +164,8 @@ const router = createRouter({
       name: "claims-board",
       component: ClaimsBoard,
       meta: {
-        title: "Hasarlar",
-        section: "Sigorta Operasyonları",
+        title: { tr: "Hasarlar", en: "Claims" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -174,8 +174,8 @@ const router = createRouter({
       component: ClaimDetail,
       props: true,
       meta: {
-        title: "Hasar Detayı",
-        section: "Sigorta Operasyonları",
+        title: { tr: "Hasar Detayı", en: "Claim Details" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -183,8 +183,8 @@ const router = createRouter({
       name: "payments-board",
       component: PaymentsBoard,
       meta: {
-        title: "Ödemeler",
-        section: "Sigorta Operasyonları",
+        title: { tr: "Ödemeler", en: "Payments" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -193,8 +193,8 @@ const router = createRouter({
       component: PaymentDetail,
       props: true,
       meta: {
-        title: "Ödeme Detayı",
-        section: "Sigorta Operasyonları",
+        title: { tr: "Ödeme Detayı", en: "Payment Details" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -202,8 +202,8 @@ const router = createRouter({
       name: "renewals-board",
       component: RenewalsBoard,
       meta: {
-        title: "Yenilemeler",
-        section: "Sigorta Operasyonları",
+        title: { tr: "Yenilemeler", en: "Renewals" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -212,8 +212,8 @@ const router = createRouter({
       component: RenewalTaskDetail,
       props: true,
       meta: {
-        title: "Yenileme Detayı",
-        section: "Sigorta Operasyonları",
+        title: { tr: "Yenileme Detayı", en: "Renewal Details" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
       },
     },
     {
@@ -221,8 +221,8 @@ const router = createRouter({
       name: "communication-center",
       component: CommunicationHub,
       meta: {
-        title: "communication_title",
-        section: "communication_section",
+        title: { tr: "İletişim Merkezi", en: "Communication Center" },
+        section: { tr: "İletişim", en: "Communication" },
       },
     },
     {
@@ -234,8 +234,8 @@ const router = createRouter({
       name: "break-glass-request",
       component: BreakGlassRequest,
       meta: {
-        title: "Acil Erişim Talebi",
-        section: "Finans ve Kontrol",
+        title: { tr: "Acil Erişim Talebi", en: "Break-Glass Request" },
+        section: { tr: "Finans ve Kontrol", en: "Finance & Control" },
       },
     },
     {
@@ -243,8 +243,8 @@ const router = createRouter({
       name: "break-glass-approvals",
       component: BreakGlassApprovals,
       meta: {
-        title: "Acil Erişim Onayları",
-        section: "Finans ve Kontrol",
+        title: { tr: "Acil Erişim Onayları", en: "Break-Glass Approvals" },
+        section: { tr: "Finans ve Kontrol", en: "Finance & Control" },
         requiresBreakGlassManager: true,
       },
     },
@@ -253,8 +253,8 @@ const router = createRouter({
       name: "reconciliation-workbench",
       component: ReconciliationWorkbench,
       meta: {
-        title: "Mutabakat",
-        section: "Kontrol Merkezi",
+        title: { tr: "Mutabakat", en: "Reconciliation" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -263,8 +263,8 @@ const router = createRouter({
       component: ReconciliationDetail,
       props: true,
       meta: {
-        title: "Mutabakat Detayı",
-        section: "Kontrol Merkezi",
+        title: { tr: "Mutabakat Detayı", en: "Reconciliation Details" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -272,8 +272,8 @@ const router = createRouter({
       name: "reports",
       component: Reports,
       meta: {
-        title: "Raporlar",
-        section: "Kontrol Merkezi",
+        title: { tr: "Raporlar", en: "Reports" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -301,8 +301,8 @@ const router = createRouter({
       name: "premium-report",
       component: PremiumReport,
       meta: {
-        title: "Premium Report",
-        section: "Control Center",
+        title: { tr: "Prim Raporu", en: "Premium Report" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -310,8 +310,8 @@ const router = createRouter({
       name: "claim-ratio-report",
       component: ClaimRatioReport,
       meta: {
-        title: "Claim Ratio Report",
-        section: "Control Center",
+        title: { tr: "Hasar Oranı Raporu", en: "Claim Ratio Report" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -319,8 +319,8 @@ const router = createRouter({
       name: "agent-performance-report",
       component: AgentPerformanceReport,
       meta: {
-        title: "Agent Performance Report",
-        section: "Control Center",
+        title: { tr: "Temsilci Performans Raporu", en: "Agent Performance Report" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -328,8 +328,8 @@ const router = createRouter({
       name: "customer-segmentation-report",
       component: CustomerSegmentationReport,
       meta: {
-        title: "Customer Segmentation Report",
-        section: "Control Center",
+        title: { tr: "Müşteri Segmentasyon Raporu", en: "Customer Segmentation Report" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -337,8 +337,8 @@ const router = createRouter({
       name: "import-data",
       component: ImportData,
       meta: {
-        title: "Veri İçe Aktarma",
-        section: "Kontrol Merkezi",
+        title: { tr: "Veri İçe Aktarma", en: "Data Import" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -346,8 +346,8 @@ const router = createRouter({
       name: "export-data",
       component: ExportData,
       meta: {
-        title: "Veri Dışa Aktarma",
-        section: "Kontrol Merkezi",
+        title: { tr: "Veri Dışa Aktarma", en: "Data Export" },
+        section: { tr: "Kontrol Merkezi", en: "Control Center" },
       },
     },
     {
@@ -356,8 +356,8 @@ const router = createRouter({
       component: CustomerDetail,
       props: true,
       meta: {
-        title: "Müşteri Detayı",
-        section: "Müşteri",
+        title: { tr: "Müşteri Detayı", en: "Customer Details" },
+        section: { tr: "Müşteri", en: "Customer" },
       },
     },
     {
@@ -365,8 +365,8 @@ const router = createRouter({
       name: "at-documents-upload",
       component: QuickDocumentUpload,
       meta: {
-        title: "Hızlı Doküman Yükle",
-        section: "Doküman Merkezi",
+        title: { tr: "Hızlı Doküman Yükle", en: "Quick Document Upload" },
+        section: { tr: "Doküman Merkezi", en: "Document Center" },
       },
     },
     ...AUX_WORKBENCH_ROUTE_DEFS.flatMap((def) => [

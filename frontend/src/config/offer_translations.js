@@ -98,6 +98,12 @@ export const OFFER_TRANSLATIONS = {
     validity: "Geçerlilik",
     unspecified: "Belirtilmemiş",
     offer_details: "Teklif Detayları",
+    refresh: "Yenile",
+    presetActionable: "Sadece aksiyon alınabilir teklifler",
+    createPolicy: "Poliçe Oluştur",
+    netPremium: "Net Prim",
+    taxAmount: "Vergi Tutarı",
+    commissionAmount: "Komisyon Tutarı",
   },
   en: {
     title: "Offer Management",
@@ -198,6 +204,12 @@ export const OFFER_TRANSLATIONS = {
     validity: "Validity",
     unspecified: "Not provided",
     offer_details: "Offer Details",
+    refresh: "Refresh",
+    presetActionable: "Actionable offers only",
+    createPolicy: "Create Policy",
+    netPremium: "Net Premium",
+    taxAmount: "Tax Amount",
+    commissionAmount: "Commission Amount",
   }
 };
 

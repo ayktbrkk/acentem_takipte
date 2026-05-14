@@ -62,7 +62,7 @@ describe("useDashboardSummary", () => {
       t: (key) => key,
     });
 
-    expect(summary.dashboardBranchLabel.value).toBe("Tum Subeler");
+    expect(summary.dashboardBranchLabel.value).toBe("allBranches");
     expect(summary.dashboardAccessScope.value).toBe("all");
     expect(summary.dashboardAccessReason.value).toBe("scope");
     expect(summary.dashboardComparisonTrendHint.value).toBe("trendAgainstPrevious");

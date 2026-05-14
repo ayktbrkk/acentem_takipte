@@ -28,7 +28,7 @@ export function useDashboardSummary({
     ...(dashboardData.value.cards || {}),
     ...(dashboardTabCards.value || {}),
   }));
-  const dashboardBranchLabel = computed(() => branchStore.requestBranch || "Tum Subeler");
+  const dashboardBranchLabel = computed(() => branchStore.requestBranch || t("allBranches"));
   const previousDashboardCards = computed(() => dashboardStore.previousCards || {});
   const dashboardComparisonTrendHint = computed(() =>
     buildTrendHint(t, dashboardComparison.value?.mode)
