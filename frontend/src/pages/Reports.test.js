@@ -378,8 +378,10 @@ describe("Reports page communication operations report", () => {
     expect(headerCells.some((text) => text.startsWith("Poliçe"))).toBe(true);
   });
 
-  it("persists column visibility changes to the route", async () => {
-    frappeRequestMock.mockResolvedValue({ message: { columns: ["customer", "policy", "office_branch"], rows: [] } });
+  it("persists column visibility changes to localStorage only", async () => {
+    const routerReplace = vi.fn();
+    const storageSetItem = vi.spyOn(window.localStorage, "setItem");
+    frappeRequestMock.mockResolvedValue({ message: { columns: ["customer_full_name", "policy_no", "gross_premium"], rows: [] } });
 
     const wrapper = mount(Reports, {
       global: {
@@ -398,12 +400,18 @@ describe("Reports page communication operations report", () => {
     const policyToggle = toggleButtons.find((node) => node.text().includes("Poliçe"));
     expect(policyToggle).toBeTruthy();
     await policyToggle.trigger("click");
+    await settleReport();
 
-    expect(routerReplace).toHaveBeenLastCalledWith(
+    // Column visibility is persisted to localStorage, not the URL
+    const localStorageCallArgs = storageSetItem.mock.calls.find(
+      ([key]) => key.startsWith("at:reports:view:")
+    );
+    expect(localStorageCallArgs).toBeTruthy();
+
+    // URL query does NOT contain report_cols
+    expect(routerReplace).not.toHaveBeenCalledWith(
       expect.objectContaining({
-        query: expect.objectContaining({
-          report_cols: expect.not.stringContaining("policy"),
-        }),
+        query: expect.objectContaining({ report_cols: expect.anything() }),
       }),
     );
   });

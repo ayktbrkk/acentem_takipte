@@ -409,7 +409,7 @@ onMounted(() => {
   syncReportKeyFromRoute();
   persistReportKeyToRoute();
   syncViewStateFromRoute();
-  if (!String(route.query?.report_cols || "") && !String(route.query?.report_sort || "")) syncViewStateFromStorage();
+  if (!String(route.query?.report_sort || "")) syncViewStateFromStorage();
   void loadReport();
   void loadScheduledReports();
 });

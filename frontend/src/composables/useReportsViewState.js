@@ -90,13 +90,7 @@ export function useReportsViewState({
   }
 
   function syncViewStateFromRoute() {
-    const visibleColumnsFromRoute = String(route.query?.report_cols || "")
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
     applyViewState({
-      visibleColumnKeys: visibleColumnsFromRoute,
       sortColumn: String(route.query?.report_sort || ""),
       sortDirection: String(route.query?.report_dir || ""),
     });
@@ -106,7 +100,6 @@ export function useReportsViewState({
     const nextQuery = {
       ...route.query,
       report: filters.reportKey,
-      report_cols: visibleColumnKeys.value.length ? visibleColumnKeys.value.join(",") : undefined,
       report_sort: sortState.column || undefined,
       report_dir: sortState.direction || undefined,
     };

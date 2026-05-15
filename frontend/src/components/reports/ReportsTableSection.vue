@@ -17,13 +17,9 @@
           <span class="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500">
             {{ columnsSummaryLabel }}
           </span>
-          <button
-            type="button"
-            class="btn btn-outline btn-xs"
-            @click="onShowAllColumns"
-          >
+          <ActionButton variant="secondary" size="sm" @click="onShowAllColumns">
             {{ t("showAllColumns") }}
-          </button>
+          </ActionButton>
         </div>
       </div>
 
@@ -138,7 +134,7 @@
                       v-if="row.name || row.policy || row.customer"
                       type="button"
                       class="rounded-full p-1.5 text-slate-400 opacity-0 transition-all hover:bg-slate-100 hover:text-brand-600 group-hover:opacity-100"
-                      title="Preview"
+                      :title="t('preview')"
                       @click.stop="$emit('on-preview-click', row)"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -164,6 +160,7 @@
 <script setup>
 import EmptyState from "../app-shell/EmptyState.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 
 defineProps({
   activeReportLabel: {
