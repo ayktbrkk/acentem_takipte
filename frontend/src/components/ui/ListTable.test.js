@@ -153,6 +153,34 @@ describe("ListTable extended column types", () => {
     expect(wrapper.text()).toContain("b1");
   });
 
+  it("shows preview button when showPreview is true", async () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [{ key: "name", label: "Name" }],
+        rows: [{ name: "test", id: "1" }],
+        showPreview: true,
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    expect(wrapper.find('svg').exists()).toBe(true);
+  });
+
+  it("emits preview-click when preview button clicked", async () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [{ key: "name", label: "Name" }],
+        rows: [{ name: "test", id: "1" }],
+        showPreview: true,
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    await wrapper.find('button[title="Preview"]').trigger("click");
+    expect(wrapper.emitted("preview-click")).toBeTruthy();
+    expect(wrapper.emitted("preview-click")[0][0]).toEqual({ name: "test", id: "1" });
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
   });
