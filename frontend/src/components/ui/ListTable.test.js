@@ -15,6 +15,44 @@ vi.mock("@/stores/auth", () => ({
 }));
 
 describe("ListTable extended column types", () => {
+  it("renders using custom format function when provided", () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [
+          { key: "name", label: "Name", format: (val) => val.toUpperCase() },
+        ],
+        rows: [{ name: "hello" }],
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    expect(wrapper.text()).toContain("HELLO");
+  });
+
+  it("renders raw value when no type and no format", () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [{ key: "foo", label: "Foo" }],
+        rows: [{ foo: "bar" }],
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    expect(wrapper.text()).toContain("bar");
+  });
+
+  it("renders dash for null value when no type and no format", () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [{ key: "foo", label: "Foo" }],
+        rows: [{ foo: null }],
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    expect(wrapper.text()).toContain("-");
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
   });

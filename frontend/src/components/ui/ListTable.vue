@@ -47,7 +47,11 @@
               resolveCellClass(col, row),
             ]"
           >
-            <StatusBadge v-if="col.type === 'status'" :status="row[col.key]" :domain="col.domain || null" />
+            <template v-if="col.format">
+              {{ col.format(row[col.key], row) }}
+            </template>
+
+            <StatusBadge v-else-if="col.type === 'status'" :status="row[col.key]" :domain="col.domain || null" />
 
             <span v-else-if="col.type === 'badge'" :class="['badge', 'badge-' + (row[col.key + '_color'] ?? 'gray')]">
               {{ row[col.key] }}
@@ -128,6 +132,10 @@
                 </ActionButton>
               </InlineActionRow>
             </div>
+
+            <span v-else class="text-[13px] text-slate-900">
+              {{ row[col.key] != null ? row[col.key] : '-' }}
+            </span>
 
           </td>
           <td v-if="clickable" class="px-4 py-3 text-right">
