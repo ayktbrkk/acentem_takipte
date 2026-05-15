@@ -129,6 +129,30 @@ describe("ListTable extended column types", () => {
     expect(wrapper.find("th").text()).toContain("▲");
   });
 
+  it("renders group header rows with merged colspan", () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [
+          { key: "name", label: "Name" },
+          { key: "value", label: "Value" },
+        ],
+        rows: [
+          { _isGroupHeader: true, _groupTitle: "Group: A (2)", value: 100 },
+          { name: "a1", value: 50 },
+          { name: "a2", value: 50 },
+          { _isGroupHeader: true, _groupTitle: "Group: B (1)", value: 200 },
+          { name: "b1", value: 200 },
+        ],
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    expect(wrapper.text()).toContain("Group: A (2)");
+    expect(wrapper.text()).toContain("Group: B (1)");
+    expect(wrapper.text()).toContain("a1");
+    expect(wrapper.text()).toContain("b1");
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
   });

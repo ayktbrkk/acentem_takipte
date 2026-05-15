@@ -34,14 +34,27 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-if="!rows.length">
-          <td :colspan="effectiveColumns.length" class="px-4 py-12 text-center text-sm text-gray-400">
+        <tr v-if="!sortedRows.length">
+          <td :colspan="effectiveColumns.length + (showPreview ? 1 : 0) + (clickable ? 1 : 0)" class="px-4 py-12 text-center text-sm text-gray-400">
             {{ emptyMessage }}
           </td>
         </tr>
-        <tr
-          v-for="row in sortedRows"
-          :key="row.name ?? row.id"
+        <template v-for="row in sortedRows" :key="row.name ?? row.id">
+          <tr v-if="row._isGroupHeader" class="bg-slate-100/80 border-y border-slate-200">
+            <td
+              :colspan="effectiveColumns.length + (showPreview ? 1 : 0) + (clickable ? 1 : 0)"
+              class="px-4 py-2"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                  {{ row._groupTitle }}
+                </span>
+              </div>
+            </td>
+          </tr>
+          <tr
+            v-else
+            :key="row.name ?? row.id"
           :class="[
             'cursor-pointer border-b border-gray-100 transition-colors duration-100 last:border-0',
             row._urgency || 'hover:bg-gray-50',
@@ -153,6 +166,7 @@
             <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-gray-300 group-hover:text-gray-400" />
           </td>
         </tr>
+        </template>
       </tbody>
     </table>
   </div>
