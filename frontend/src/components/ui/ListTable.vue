@@ -17,7 +17,18 @@
               col.align === 'center' && 'text-center',
             ]"
           >
-            {{ formatHeaderLabel(col.label) }}
+            <button
+              v-if="col.sortable"
+              type="button"
+              class="inline-flex w-full items-center justify-between gap-2 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400 transition-colors hover:text-slate-600"
+              @click="onSortClick(col.key)"
+            >
+              <span>{{ formatHeaderLabel(col.label) }}</span>
+              <span v-if="activeSortColumn === col.key" class="text-[10px] text-slate-400">
+                {{ activeSortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </button>
+            <span v-else>{{ formatHeaderLabel(col.label) }}</span>
           </th>
           <th v-if="clickable" class="w-10 bg-gray-50 px-4 py-2.5"></th>
         </tr>
@@ -29,7 +40,7 @@
           </td>
         </tr>
         <tr
-          v-for="row in rows"
+          v-for="row in sortedRows"
           :key="row.name ?? row.id"
           :class="[
             'cursor-pointer border-b border-gray-100 transition-colors duration-100 last:border-0',
@@ -148,7 +159,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { FeatherIcon } from "frappe-ui";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
@@ -167,13 +178,41 @@ const props = defineProps({
   emptyMessage: { type: String, default: "No records found." },
   locale: { type: String, default: "" },
   visibleColumns: { type: Array, default: null },
+  sortColumn: { type: String, default: "" },
+  sortDirection: { type: String, default: "" },
 });
 
-defineEmits(["row-click"]);
+const emit = defineEmits(["row-click", "update:sortColumn", "update:sortDirection", "preview-click"]);
 
 const effectiveColumns = computed(() => {
   if (!props.visibleColumns || !props.visibleColumns.length) return props.columns;
   return props.columns.filter((col) => props.visibleColumns.includes(col.key));
+});
+
+const isControlledSort = computed(() => props.sortColumn !== undefined && props.sortColumn !== "");
+const internalSortColumn = ref("");
+const internalSortDirection = ref("");
+
+const activeSortColumn = computed(() => isControlledSort.value ? props.sortColumn : internalSortColumn.value);
+const activeSortDirection = computed(() => isControlledSort.value ? props.sortDirection : internalSortDirection.value);
+
+const sortedRows = computed(() => {
+  if (!props.rows || !props.rows.length) return props.rows;
+  if (isControlledSort.value) return props.rows;
+  if (!internalSortColumn.value || !internalSortDirection.value) return props.rows;
+
+  const col = internalSortColumn.value;
+  const dir = internalSortDirection.value === "asc" ? 1 : -1;
+  return [...props.rows].sort((a, b) => {
+    const aVal = a[col];
+    const bVal = b[col];
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+    if (typeof aVal === "number" && typeof bVal === "number") {
+      return (aVal - bVal) * dir;
+    }
+    return String(aVal).localeCompare(String(bVal)) * dir;
+  });
 });
 
 // Prefer explicit prop, then fall back to the user's actual locale from auth store.
@@ -206,5 +245,31 @@ function formatDateCell(value) {
 
 function formatHeaderLabel(value) {
   return uppercaseText(value, locale);
+}
+
+function onSortClick(column) {
+  if (isControlledSort.value) {
+    const nextDir = nextSortDirection(props.sortColumn === column ? props.sortDirection : "");
+    if (props.sortColumn !== column) {
+      emit("update:sortColumn", column);
+      emit("update:sortDirection", "asc");
+    } else {
+      emit("update:sortDirection", nextDir);
+    }
+  } else {
+    const nextDir = nextSortDirection(internalSortColumn.value === column ? internalSortDirection.value : "");
+    if (internalSortColumn.value !== column) {
+      internalSortColumn.value = column;
+      internalSortDirection.value = "asc";
+    } else {
+      internalSortDirection.value = nextDir;
+    }
+  }
+}
+
+function nextSortDirection(current) {
+  if (current === "" || current === "desc") return "asc";
+  if (current === "asc") return "desc";
+  return "asc";
 }
 </script>

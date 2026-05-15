@@ -72,6 +72,63 @@ describe("ListTable extended column types", () => {
     expect(wrapper.text()).toContain("3");
   });
 
+  it("sorts rows internally when sortColumn is not provided and column is sortable", async () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [
+          { key: "name", label: "Name", sortable: true },
+        ],
+        rows: [{ name: "beta" }, { name: "alpha" }, { name: "gamma" }],
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    const cells = wrapper.findAll("td");
+    expect(cells[0].text()).toBe("beta");
+    await wrapper.find("th button").trigger("click");
+    const cellsAsc = wrapper.findAll("td");
+    expect(cellsAsc[0].text()).toBe("alpha");
+    await wrapper.find("th button").trigger("click");
+    const cellsDesc = wrapper.findAll("td");
+    expect(cellsDesc[0].text()).toBe("gamma");
+  });
+
+  it("emits sort events in controlled mode when sortColumn prop is set", async () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [
+          { key: "name", label: "Name", sortable: true },
+        ],
+        rows: [{ name: "beta" }, { name: "alpha" }],
+        sortColumn: "name",
+        sortDirection: "",
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    await wrapper.find("th button").trigger("click");
+    expect(wrapper.emitted("update:sortDirection")[0]).toEqual(["asc"]);
+    await wrapper.setProps({ sortDirection: "asc" });
+    await wrapper.find("th button").trigger("click");
+    expect(wrapper.emitted("update:sortDirection")[1]).toEqual(["desc"]);
+  });
+
+  it("shows sort indicator when column is sorted", () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [
+          { key: "name", label: "Name", sortable: true },
+        ],
+        rows: [{ name: "alpha" }],
+        sortColumn: "name",
+        sortDirection: "asc",
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    expect(wrapper.find("th").text()).toContain("▲");
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
   });
