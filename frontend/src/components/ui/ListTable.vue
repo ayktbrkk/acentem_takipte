@@ -36,14 +36,14 @@
       </thead>
       <tbody>
         <tr v-if="!sortedRows.length">
-          <td :colspan="effectiveColumns.length + (showPreview ? 1 : 0) + (clickable ? 1 : 0)" class="px-4 py-12 text-center text-sm text-gray-400">
+          <td :colspan="tableColspan" class="px-4 py-12 text-center text-sm text-gray-400">
             {{ emptyMessage }}
           </td>
         </tr>
         <template v-for="row in sortedRows" :key="row.name ?? row.id">
           <tr v-if="row._isGroupHeader" class="bg-slate-100/80 border-y border-slate-200">
             <td
-              :colspan="effectiveColumns.length + (showPreview ? 1 : 0) + (clickable ? 1 : 0)"
+              :colspan="tableColspan"
               class="px-4 py-2"
             >
               <div class="flex items-center justify-between">
@@ -218,7 +218,9 @@ const effectiveColumns = computed(() => {
   return props.columns.filter((col) => props.visibleColumns.includes(col.key));
 });
 
-const isControlledSort = computed(() => props.sortColumn !== undefined && props.sortColumn !== "");
+const tableColspan = computed(() => effectiveColumns.value.length + (props.showPreview ? 1 : 0) + (props.clickable ? 1 : 0));
+
+const isControlledSort = computed(() => props.sortColumn !== "");
 const internalSortColumn = ref("");
 const internalSortDirection = ref("");
 
