@@ -53,6 +53,25 @@ describe("ListTable extended column types", () => {
     expect(wrapper.text()).toContain("-");
   });
 
+  it("filters columns when visibleColumns prop is provided", () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [
+          { key: "a", label: "A" },
+          { key: "b", label: "B" },
+          { key: "c", label: "C" },
+        ],
+        visibleColumns: ["a", "c"],
+        rows: [{ a: "1", b: "2", c: "3" }],
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    expect(wrapper.text()).toContain("1");
+    expect(wrapper.text()).not.toContain("2");
+    expect(wrapper.text()).toContain("3");
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
   });

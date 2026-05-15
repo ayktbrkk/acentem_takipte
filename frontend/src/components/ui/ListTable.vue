@@ -8,7 +8,7 @@
       <thead>
         <tr class="border-b border-gray-200 bg-gray-50">
           <th
-            v-for="col in columns"
+            v-for="col in effectiveColumns"
             :key="col.key"
             :style="col.width ? `width: ${col.width}` : ''"
             :class="[
@@ -24,7 +24,7 @@
       </thead>
       <tbody>
         <tr v-if="!rows.length">
-          <td :colspan="columns.length" class="px-4 py-12 text-center text-sm text-gray-400">
+          <td :colspan="effectiveColumns.length" class="px-4 py-12 text-center text-sm text-gray-400">
             {{ emptyMessage }}
           </td>
         </tr>
@@ -38,7 +38,7 @@
           @click="$emit('row-click', row)"
         >
           <td
-            v-for="col in columns"
+            v-for="col in effectiveColumns"
             :key="col.key"
             :class="[
               'px-4 py-3',
@@ -166,9 +166,15 @@ const props = defineProps({
   clickable: { type: Boolean, default: false },
   emptyMessage: { type: String, default: "No records found." },
   locale: { type: String, default: "" },
+  visibleColumns: { type: Array, default: null },
 });
 
 defineEmits(["row-click"]);
+
+const effectiveColumns = computed(() => {
+  if (!props.visibleColumns || !props.visibleColumns.length) return props.columns;
+  return props.columns.filter((col) => props.visibleColumns.includes(col.key));
+});
 
 // Prefer explicit prop, then fall back to the user's actual locale from auth store.
 const locale = computed(() => props.locale || authStore.locale || "en");
