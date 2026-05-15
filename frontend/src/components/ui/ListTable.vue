@@ -128,7 +128,7 @@
               <p class="text-[13px] font-semibold text-slate-900">{{ row[col.primaryKey] ?? '-' }}</p>
               <p class="text-[11px] font-normal text-slate-400 tracking-wider">{{ row[col.secondaryKey] ?? '-' }}</p>
               <div v-if="col.badgeKey && row[col.badgeKey]" class="mt-1 flex flex-wrap items-center gap-1">
-                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-700">
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-700">
                   {{ row[col.badgeKey] }}
                 </span>
                 <span v-if="col.badgeSecondaryKey && row[col.badgeSecondaryKey]" class="text-xs text-slate-500">{{ row[col.badgeSecondaryKey] }}</span>

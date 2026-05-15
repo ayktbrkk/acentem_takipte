@@ -2,14 +2,14 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h3 class="text-lg font-bold text-slate-900">{{ t('calendar_title') }}</h3>
+        <h3 class="text-lg font-semibold text-slate-900">{{ t('calendar_title') }}</h3>
         <p class="text-sm text-slate-500">{{ t('calendar_subtitle') }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button 
           v-for="range in ranges" 
           :key="range.value"
-          class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+          class="px-3 py-1.5 text-xs font-semibold rounded-xl transition-all"
           :class="activeRange === range.value ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'"
           @click="activeRange = range.value"
         >
@@ -39,10 +39,10 @@
       >
         <div class="flex items-center justify-between mb-3">
           <div class="flex flex-col">
-            <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">{{ formatDayName(day.date) }}</span>
-            <span class="text-sm font-bold text-slate-900">{{ formatDateDisplay(day.date) }}</span>
+            <span class="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider">{{ formatDayName(day.date) }}</span>
+            <span class="text-sm font-semibold text-slate-900">{{ formatDateDisplay(day.date) }}</span>
           </div>
-          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-50 text-[10px] font-bold text-slate-600 border border-slate-100">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-50 text-[11px] font-semibold text-slate-600 border border-slate-100">
             {{ day.count }}
           </span>
         </div>
@@ -54,9 +54,9 @@
             class="p-2 rounded-lg border border-slate-50 bg-slate-50/50 hover:bg-white hover:border-indigo-100 transition-all group"
           >
             <div class="flex items-start justify-between gap-2">
-              <span class="text-xs font-semibold text-slate-800 line-clamp-1">{{ event.title }}</span>
+              <span class="text-[13px] font-semibold text-slate-900 line-clamp-1">{{ event.title }}</span>
               <span 
-                class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter"
+                class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider"
                 :class="formatBadgeClass(event.format)"
               >
                 {{ event.format }}

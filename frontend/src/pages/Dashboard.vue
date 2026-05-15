@@ -243,7 +243,7 @@
             />
             
             <div class="grid gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 pl-1">{{ t('estPremiumInput') }}</label>
+              <label class="text-[11px] font-normal uppercase tracking-widest text-slate-400 pl-1">{{ t('estPremiumInput') }}</label>
               <div class="relative group">
                 <input
                   v-model="newLead.estimated_gross_premium"
@@ -258,7 +258,7 @@
             </div>
 
             <div class="grid gap-1.5">
-              <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 pl-1">{{ t('note') }}</label>
+              <label class="text-[11px] font-normal uppercase tracking-widest text-slate-400 pl-1">{{ t('note') }}</label>
               <textarea
                 v-model="newLead.notes"
                 class="input min-h-[100px] py-3"

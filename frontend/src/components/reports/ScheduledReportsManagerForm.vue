@@ -98,7 +98,7 @@
     <div class="space-y-3 border-t border-slate-100 pt-3">
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">{{ t('alerts') }}</span>
-        <ActionButton variant="link" size="xs" class="!text-[10px] !font-bold !text-indigo-600 hover:!text-indigo-800 !uppercase !no-underline" @click="addAlert">
+        <ActionButton variant="link" size="xs" class="!text-[10px] !font-semibold !text-indigo-600 hover:!text-indigo-800 !uppercase !no-underline" @click="addAlert">
           + {{ t('add_alert') }}
         </ActionButton>
       </div>
@@ -151,7 +151,7 @@
       <ActionButton
         variant="secondary"
         size="sm"
-        class="!rounded-xl !px-4 !py-2 !font-bold"
+        class="!rounded-xl !px-4 !py-2 !font-semibold"
         @click="$emit('cancel')"
       >
         {{ cancelLabel }}
@@ -160,7 +160,7 @@
         variant="primary"
         size="sm"
         type="submit"
-        class="!rounded-xl !bg-indigo-600 hover:!bg-indigo-700 !px-6 !py-2 !font-bold !shadow-md"
+        class="!rounded-xl !bg-indigo-600 hover:!bg-indigo-700 !px-6 !py-2 !font-semibold !shadow-md"
       >
         {{ saveLabel }}
       </ActionButton>

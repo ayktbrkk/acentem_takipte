@@ -5,7 +5,7 @@
       <ActionButton variant="secondary" size="xs" :disabled="page <= 1" @click="$emit('previous')">
         <FeatherIcon name="chevron-left" class="h-3 w-3" />
       </ActionButton>
-      <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ page }}</span>
+      <span class="text-xs font-semibold text-slate-900 w-8 text-center">{{ page }}</span>
       <ActionButton variant="secondary" size="xs" :disabled="!hasNext" @click="$emit('next')">
         <FeatherIcon name="chevron-right" class="h-3 w-3" />
       </ActionButton>

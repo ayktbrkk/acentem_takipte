@@ -32,7 +32,7 @@
         <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
           <span
             v-if="draft.reference_doctype"
-              class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-700"
+              class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-700"
           >
             {{ referenceTypeLabel(draft.reference_doctype) }}
           </span>

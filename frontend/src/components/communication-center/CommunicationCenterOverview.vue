@@ -46,14 +46,14 @@
       <div class="space-y-1">
         <div class="flex items-center gap-2">
           <div class="h-2 w-2 rounded-full bg-brand-500 animate-pulse"></div>
-          <p v-if="filters.customer" class="text-sm font-bold text-slate-900">
+          <p v-if="filters.customer" class="text-sm font-semibold text-slate-900">
             {{ t('customerContext') }}: <span class="text-brand-600">{{ customerContextLabel }}</span>
           </p>
         </div>
         <p v-if="referenceContextLabel" class="text-xs font-medium text-slate-500 pl-4">
           {{ t('referenceContext') }}: {{ referenceContextLabel }}
         </p>
-        <p v-if="channelStatusContextLabel" class="text-[11px] font-bold uppercase tracking-wider text-slate-400 pl-4">
+        <p v-if="channelStatusContextLabel" class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 pl-4">
           {{ channelStatusContextLabel }}
         </p>
       </div>

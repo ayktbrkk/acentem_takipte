@@ -26,7 +26,7 @@
           <h3 class="font-bold text-slate-900 truncate leading-tight group-hover:text-brand-600 transition-colors">
             {{ customer.full_name || t('unspecified') }}
           </h3>
-          <p class="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
+          <p class="text-[10px] font-semibold text-slate-400 mt-0.5 uppercase tracking-wider">
             {{ customer.customer_type === 'Corporate' ? t('corporate') : t('individual') }}
           </p>
         </div>
@@ -44,7 +44,7 @@
         <ActionButton
           variant="secondary"
           size="sm"
-          class="group/btn w-full font-bold text-slate-500 hover:text-brand-600 hover:!bg-transparent !py-1.5"
+          class="group/btn w-full font-semibold text-slate-500 hover:text-brand-600 hover:!bg-transparent !py-1.5"
           @click="$emit('view-full')"
         >
           {{ t('view_full_profile') }}
@@ -64,7 +64,7 @@
               v-for="type in ['Individual', 'Corporate']"
               :key="type"
               type="button"
-              class="flex-1 py-1.5 text-xs font-bold rounded-md transition-all"
+              class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-all"
               :class="editData.customer_type === type ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
               @click="editData.customer_type = type"
             >
@@ -130,7 +130,7 @@
     <div v-if="saving" class="absolute inset-0 z-20 flex items-center justify-center bg-white/60 backdrop-blur-[2px] transition-opacity">
       <div class="flex flex-col items-center gap-2">
         <FeatherIcon name="loader" class="h-6 w-6 animate-spin text-brand-600" />
-        <span class="text-[10px] font-black uppercase tracking-widest text-brand-700">{{ t('updating') }}...</span>
+        <span class="text-[10px] font-semibold uppercase tracking-widest text-brand-700">{{ t('updating') }}...</span>
       </div>
     </div>
   </SectionPanel>

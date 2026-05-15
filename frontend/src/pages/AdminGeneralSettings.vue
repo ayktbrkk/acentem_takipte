@@ -43,14 +43,14 @@
           <SectionPanel :title="t('appDefaultsTitle')" :meta="t('appDefaultsSubtitle')" :show-count="false">
             <div class="grid gap-4 md:grid-cols-2">
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('defaultLanguageLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('defaultLanguageLabel') }}</p>
                 <select v-model="settings.default_locale" class="mt-2 input" data-testid="general-default-locale" @change="markDirty">
                   <option value="tr">{{ t('languageOptionTr') }}</option>
                   <option value="en">{{ t('languageOptionEn') }}</option>
                 </select>
               </label>
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('dateFormatLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('dateFormatLabel') }}</p>
                 <select v-model="settings.default_date_format" class="mt-2 input" data-testid="general-date-format" @change="markDirty">
                   <option value="DD.MM.YYYY">DD.MM.YYYY</option>
                   <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -63,7 +63,7 @@
           <SectionPanel :title="t('opsDefaultsTitle')" :meta="t('opsDefaultsSubtitle')" :show-count="false">
             <div class="grid gap-4 md:grid-cols-2">
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('followUpWindowLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('followUpWindowLabel') }}</p>
                 <select v-model="settings.follow_up_due_soon_days" class="mt-2 input" data-testid="general-follow-up-window" @change="markDirty">
                   <option :value="3">{{ t('followUpWindowOption3') }}</option>
                   <option :value="5">{{ t('followUpWindowOption5') }}</option>
@@ -74,7 +74,7 @@
                 <p class="mt-2 text-xs text-slate-500">{{ t('followUpWindowHint') }}</p>
               </label>
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('followUpPreviewLimitLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('followUpPreviewLimitLabel') }}</p>
                 <select v-model="settings.follow_up_preview_limit" class="mt-2 input" data-testid="general-follow-up-preview-limit" @change="markDirty">
                   <option :value="5">5</option>
                   <option :value="8">8</option>
@@ -89,7 +89,7 @@
           <SectionPanel :title="t('insuranceDefaultsTitle')" :meta="t('insuranceDefaultsSubtitle')" :show-count="false">
             <div class="grid gap-4 md:grid-cols-2">
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('policyTermLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('policyTermLabel') }}</p>
                 <select v-model="settings.default_policy_term_days" class="mt-2 input" data-testid="general-policy-term" @change="markDirty">
                   <option :value="180">{{ t('policyTermOption180') }}</option>
                   <option :value="365">{{ t('policyTermOption365') }}</option>
@@ -97,7 +97,7 @@
                 <p class="mt-2 text-xs text-slate-500">{{ t('policyTermHint') }}</p>
               </label>
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('commissionRateLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('commissionRateLabel') }}</p>
                 <select v-model="settings.default_commission_rate" class="mt-2 input" data-testid="general-commission-rate" @change="markDirty">
                   <option :value="0">%0</option>
                   <option :value="5">%5</option>
@@ -112,7 +112,7 @@
                 <p class="mt-2 text-xs text-slate-500">{{ t('commissionRateHint') }}</p>
               </label>
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('defaultCurrencyLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('defaultCurrencyLabel') }}</p>
                 <select v-model="settings.default_currency" class="mt-2 input" data-testid="general-currency" @change="markDirty">
                   <option value="TRY">TRY (₺)</option>
                   <option value="EUR">EUR (€)</option>
@@ -121,7 +121,7 @@
                 <p class="mt-2 text-xs text-slate-500">{{ t('defaultCurrencyHint') }}</p>
               </label>
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('renewalReminderLeadLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('renewalReminderLeadLabel') }}</p>
                 <select v-model="settings.renewal_reminder_lead_days" class="mt-2 input" data-testid="general-renewal-lead" @change="markDirty">
                   <option :value="0">{{ t('renewalReminderOption0') }}</option>
                   <option :value="15">{{ t('renewalReminderOption15') }}</option>
@@ -132,7 +132,7 @@
                 <p class="mt-2 text-xs text-slate-500">{{ t('renewalReminderLeadHint') }}</p>
               </label>
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer md:col-span-2">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('kvkkConsentLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('kvkkConsentLabel') }}</p>
                 <select v-model="settings.kvkk_consent_default" class="mt-2 input" data-testid="general-kvkk-consent" @change="markDirty">
                   <option value="Unknown">{{ t('kvkkConsentOptionUnknown') }}</option>
                   <option value="Granted">{{ t('kvkkConsentOptionGranted') }}</option>
@@ -145,7 +145,7 @@
           <SectionPanel :title="t('uiDefaultsTitle')" :meta="t('uiDefaultsSubtitle')" :show-count="false">
             <div class="grid gap-4 md:grid-cols-2">
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('dashboardRefreshLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('dashboardRefreshLabel') }}</p>
                 <select v-model="settings.dashboard_refresh_seconds" class="mt-2 input" data-testid="general-dashboard-refresh" @change="markDirty">
                   <option :value="0">{{ t('dashboardRefreshOption0') }}</option>
                   <option :value="60">{{ t('dashboardRefreshOption60') }}</option>
@@ -155,7 +155,7 @@
                 <p class="mt-2 text-xs text-slate-500">{{ t('dashboardRefreshHint') }}</p>
               </label>
               <label class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm block cursor-pointer">
-                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t('pageSizeLabel') }}</p>
+                <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('pageSizeLabel') }}</p>
                 <select v-model="settings.default_page_size" class="mt-2 input" data-testid="general-page-size" @change="markDirty">
                   <option :value="10">10</option>
                   <option :value="20">20</option>
@@ -173,7 +173,7 @@
               <div class="flex items-center justify-between gap-3"><span class="text-xs text-slate-400">{{ t('siteNameLabel') }}</span><span class="text-sm font-semibold text-slate-900">{{ siteName }}</span></div>
               <div class="flex items-center justify-between gap-3"><span class="text-xs text-slate-400">{{ t('environmentLabel') }}</span><span class="text-sm font-semibold text-slate-900">{{ environment }}</span></div>
               <div class="flex items-center justify-between gap-3"><span class="text-xs text-slate-400">{{ t('activeLocaleLabel') }}</span><span class="text-sm font-semibold text-slate-900">{{ activeLocaleDisplay }}</span></div>
-              <div v-if="hasUnsavedChanges" class="flex items-center justify-between gap-3"><span class="text-xs text-at-amber">{{ t('unsavedChanges') }}</span><span class="rounded-full bg-at-amber/10 px-2 py-0.5 text-[10px] font-bold text-at-amber">{{ t('pending') }}</span></div>
+              <div v-if="hasUnsavedChanges" class="flex items-center justify-between gap-3"><span class="text-xs text-at-amber">{{ t('unsavedChanges') }}</span><span class="rounded-full bg-at-amber/10 px-2 py-0.5 text-[10px] font-semibold text-at-amber">{{ t('pending') }}</span></div>
             </div>
           </SectionPanel>
           <SectionPanel :title="t('actionsTitle')" :meta="t('actionsSubtitle')" :show-count="false">

@@ -22,14 +22,14 @@
 
         <div class="space-y-4">
           <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5">
-            <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{{ t("channelStatusLabel") }}</p>
+            <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t("channelStatusLabel") }}</p>
             <p class="mt-1 text-sm font-semibold" :class="localConfig.slack_configured ? 'text-emerald-700' : 'text-amber-700'">
               {{ localConfig.slack_configured ? t("slackConnected") : t("slackNotConfigured") }}
             </p>
           </div>
 
           <label class="space-y-2 text-sm text-slate-700">
-            <span class="font-medium text-slate-900">{{ t("slackWebhookLabel") }}</span>
+            <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t("slackWebhookLabel") }}</span>
             <input
               v-model="localConfig.slack_webhook_url"
               class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
@@ -58,14 +58,14 @@
 
         <div class="space-y-4">
           <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5">
-            <p class="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">{{ t("channelStatusLabel") }}</p>
+            <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t("channelStatusLabel") }}</p>
             <p class="mt-1 text-sm font-semibold" :class="localConfig.telegram_configured ? 'text-emerald-700' : 'text-amber-700'">
               {{ localConfig.telegram_configured ? t("telegramConnected") : t("telegramNotConfigured") }}
             </p>
           </div>
 
           <label class="space-y-2 text-sm text-slate-700">
-            <span class="font-medium text-slate-900">{{ t("telegramBotTokenLabel") }}</span>
+            <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t("telegramBotTokenLabel") }}</span>
             <input
               v-model="localConfig.telegram_bot_token"
               class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
@@ -77,7 +77,7 @@
           </label>
 
           <label class="space-y-2 text-sm text-slate-700">
-            <span class="font-medium text-slate-900">{{ t("telegramChatIdLabel") }}</span>
+            <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t("telegramChatIdLabel") }}</span>
             <input
               v-model="localConfig.telegram_chat_id"
               class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"

@@ -7,7 +7,7 @@
   >
     <div class="space-y-3">
       <div class="flex flex-wrap items-center gap-2">
-        <select v-model="filters.reportKey" class="report-filter-control min-w-[180px]">
+        <select v-model="filters.reportKey" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 min-w-[180px]">
           <option v-for="option in reportOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </option>
@@ -16,7 +16,7 @@
         <select
           v-if="filters.reportKey === 'policy_list'"
           :value="activePreset"
-          class="report-filter-control min-w-[210px]"
+          class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 min-w-[210px]"
           @change="$emit('apply-date-preset', $event.target.value)"
         >
           <option value="">{{ t("date_range_label") }}</option>
@@ -25,10 +25,10 @@
           </option>
         </select>
 
-        <div class="flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-1.5 py-1">
+        <div class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5">
           <input
             v-model="filters.fromDate"
-            class="report-filter-control report-filter-control--date"
+            class="w-full rounded-lg border-0 bg-transparent px-1 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-0"
             type="date"
             :placeholder="t('date_from')"
             :title="t('date_from')"
@@ -36,7 +36,7 @@
           <span class="text-xs text-slate-400">-</span>
           <input
             v-model="filters.toDate"
-            class="report-filter-control report-filter-control--date"
+            class="w-full rounded-lg border-0 bg-transparent px-1 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-0"
             type="date"
             :placeholder="t('date_to')"
             :title="t('date_to')"
@@ -51,7 +51,7 @@
 
         <span
           v-if="activeFilterCount > 0"
-          class="flex h-8 items-center gap-1 rounded-md border border-slate-200 px-2.5 text-xs text-slate-500"
+          class="flex h-8 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-600"
         >
           {{ activeFilterCount }} {{ t('active_filters') }}
         </span>
@@ -91,7 +91,7 @@
       </div>
     </div>
 
-    <div v-if="reportsAdvancedOpen" class="mt-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
+    <div v-if="reportsAdvancedOpen" class="mt-3 rounded-xl border border-slate-200 bg-slate-50/50 p-3">
       <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
         <label
           v-for="field in visibleAdvancedFilters"
@@ -101,7 +101,7 @@
           <span class="text-[11px] font-normal text-slate-400">{{ field.label }}</span>
           <input
             v-model.trim="filters[field.modelKey]"
-            class="report-filter-control"
+            class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10"
             type="search"
             :placeholder="field.label"
             :list="`advanced-${field.key}-options`"
