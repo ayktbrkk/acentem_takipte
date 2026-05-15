@@ -504,7 +504,8 @@ export function useReportsTableData({
           ...group,
           // Format header label for display
           _isGroupHeader: true,
-          _groupTitle: `${getColumnLabel(groupByColumn.value)}: ${formatCellValue(groupByColumn.value, key)} (${group.rows.length})`
+          _groupTitle: `${getColumnLabel(groupByColumn.value)}: ${formatCellValue(groupByColumn.value, key)} (${group.rows.length})`,
+          _groupSubtitle: `${formatCellValue('gross_premium', group.gross_premium || 0)} / ${formatCellValue('commission_amount', group.commission_amount || 0)}`
         });
         grouped.push(...group.rows);
       });
