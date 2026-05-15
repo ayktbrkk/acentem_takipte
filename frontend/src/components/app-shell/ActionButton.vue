@@ -13,7 +13,7 @@ const props = defineProps({
   disabled: { type: Boolean, default: false },
   variant: {
     type: String,
-    default: "secondary", // secondary | primary
+    default: "secondary", // secondary | primary | link | ghost
   },
   size: {
     type: String,
@@ -47,6 +47,10 @@ const buttonClass = computed(() => {
 
   if (props.variant === "primary") {
     return `${base} bg-brand-600 text-white hover:bg-brand-700 shadow-sm active:scale-95 transition-all duration-200${sizeClass}`;
+  }
+
+  if (props.variant === "ghost") {
+    return `inline-flex items-center gap-1 font-semibold text-slate-500 hover:text-slate-700 disabled:text-slate-400${sizeClass}`;
   }
 
   return `${base} border border-slate-300 text-slate-700 hover:bg-slate-100${sizeClass}`;

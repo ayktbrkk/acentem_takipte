@@ -23,38 +23,38 @@
         </span>
       </div>
 
-      <dl class="mt-3 space-y-2 text-sm text-slate-600">
+      <dl class="mt-3 space-y-2">
         <div class="flex items-start justify-between gap-3">
-          <dt class="font-medium text-slate-500">{{ frequencyLabel }}</dt>
-          <dd class="text-right">{{ item.frequency }}</dd>
+          <dt class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ frequencyLabel }}</dt>
+          <dd class="text-right text-[13px] font-semibold text-slate-900">{{ item.frequency }}</dd>
         </div>
         <div class="flex items-start justify-between gap-3">
-          <dt class="font-medium text-slate-500">{{ formatLabel }}</dt>
-          <dd class="text-right">{{ item.format }}</dd>
+          <dt class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ formatLabel }}</dt>
+          <dd class="text-right text-[13px] font-semibold text-slate-900">{{ item.format }}</dd>
         </div>
         <div class="flex items-start justify-between gap-3">
-          <dt class="font-medium text-slate-500">{{ deliveryChannelLabel }}</dt>
-          <dd class="text-right">{{ formatDeliveryChannel(item.delivery_channel) }}</dd>
+          <dt class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ deliveryChannelLabel }}</dt>
+          <dd class="text-right text-[13px] font-semibold text-slate-900">{{ formatDeliveryChannel(item.delivery_channel) }}</dd>
         </div>
         <div class="flex items-start justify-between gap-3">
-          <dt class="font-medium text-slate-500">{{ limitLabel }}</dt>
-          <dd class="text-right">{{ item.limit }}</dd>
+          <dt class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ limitLabel }}</dt>
+          <dd class="text-right text-[13px] font-semibold text-slate-900">{{ item.limit }}</dd>
         </div>
         <div class="flex items-start justify-between gap-3">
-          <dt class="font-medium text-slate-500">{{ lastRunLabel }}</dt>
-          <dd class="text-right">{{ formatLastRun(item.last_run_at) }}</dd>
+          <dt class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ lastRunLabel }}</dt>
+          <dd class="text-right text-[13px] font-semibold text-slate-900">{{ formatLastRun(item.last_run_at) }}</dd>
         </div>
         <div class="flex items-start justify-between gap-3">
-          <dt class="font-medium text-slate-500">{{ lastStatusLabel }}</dt>
-          <dd class="text-right">{{ formatLastStatus(item.last_status) }}</dd>
+          <dt class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ lastStatusLabel }}</dt>
+          <dd class="text-right text-[13px] font-semibold text-slate-900">{{ formatLastStatus(item.last_status) }}</dd>
         </div>
         <div class="flex items-start justify-between gap-3">
-          <dt class="font-medium text-slate-500">{{ recipientsLabel }}</dt>
-          <dd class="max-w-[65%] break-words text-right">{{ item.recipients?.join(", ") || "-" }}</dd>
+          <dt class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ recipientsLabel }}</dt>
+          <dd class="max-w-[65%] break-words text-right text-[13px] font-semibold text-slate-900">{{ item.recipients?.join(", ") || "-" }}</dd>
         </div>
         <div class="flex items-start justify-between gap-3">
-          <dt class="font-medium text-slate-500">{{ filtersLabel }}</dt>
-          <dd class="max-w-[65%] break-words text-right">{{ formatFilters(item.filters) }}</dd>
+          <dt class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ filtersLabel }}</dt>
+          <dd class="max-w-[65%] break-words text-right text-[13px] font-semibold text-slate-900">{{ formatFilters(item.filters) }}</dd>
         </div>
       </dl>
 

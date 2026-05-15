@@ -13,9 +13,9 @@
       <div class="border-b border-gray-100 px-4 py-4">
         <div class="mb-4 flex items-center justify-between lg:hidden">
           <p class="text-xs font-semibold tracking-[0.22em] text-slate-500">{{ upper(t("menu")) }}</p>
-          <button class="rounded-lg border border-slate-300 px-2 py-1 text-xs" type="button" @click="$emit('close')">
+          <ActionButton variant="secondary" size="xs" class="!px-2" :title="t('close')" @click="$emit('close')">
             X
-          </button>
+          </ActionButton>
         </div>
 
         <div class="flex items-start gap-2.5">
@@ -123,21 +123,23 @@
             <p class="truncate text-[10px] text-gray-400">{{ branchLabel }}</p>
           </div>
         </div>
-        <button
-          class="hidden w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 lg:flex"
-          type="button"
+        <ActionButton
+          variant="secondary"
+          size="xs"
+          class="hidden w-full items-center justify-center gap-2 !px-3 !py-2 lg:flex"
           :title="isCollapsed ? t('expandSidebar') : t('collapseSidebar')"
           @click="toggleSidebarCollapsedDesktop"
         >
           <span class="text-[11px]">{{ isCollapsed ? t("expandShort") : t("collapseShort") }}</span>
           <span v-if="!isCollapsed">{{ t("collapseSidebar") }}</span>
-        </button>
+        </ActionButton>
       </footer>
     </aside>
   </div>
 </template>
 
 <script setup>
+import ActionButton from "./app-shell/ActionButton.vue";
 import { useSidebarNavigation } from "../composables/useSidebarNavigation";
 
 const props = defineProps({

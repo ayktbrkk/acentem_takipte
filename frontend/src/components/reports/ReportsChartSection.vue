@@ -6,16 +6,16 @@
       class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
     >
       <div class="flex items-center justify-between mb-6">
-        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+        <h3 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <span class="h-2 w-2 rounded-full bg-brand-600"></span>
           {{ t_title(chartConfig.title) }}
         </h3>
         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-           <button class="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400" @click="downloadChart(chartConfig.id)">
-             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-             </svg>
-           </button>
+           <ActionButton variant="secondary" size="xs" @click="downloadChart(chartConfig.id)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+           </ActionButton>
         </div>
       </div>
 
@@ -32,6 +32,7 @@
 <script setup>
 import { computed, onMounted, watch, onBeforeUnmount, ref } from 'vue';
 import { Chart, registerables } from 'chart.js';
+import ActionButton from "../app-shell/ActionButton.vue";
 
 Chart.register(...registerables);
 

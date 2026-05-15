@@ -107,97 +107,18 @@ import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
 import { useAuthStore } from "../stores/auth";
-
-const copy = {
-  tr: {
-    breadcrumb: "Doküman Merkezi → Hızlı Doküman Yükle",
-    title: "Hızlı Doküman Yükle",
-    subtitle: "Dosyayı seçin, belge sınıfını belirleyin ve gerekirse bağlı kaydı tek akışta tamamlayın.",
-    backToList: "Doküman Kayıtlarına Dön",
-    openUploader: "Yükleyiciyi Aç",
-    metricFlow: "Akış",
-    metricFlowValue: "3 adım",
-    metricLimit: "Yükleme Limiti",
-    metricLimitValue: "10 MB",
-    metricLinks: "Bağlanabilir Kayıt",
-    metricLinksValue: "3 tür",
-    flowTitle: "Yükleme Akışı",
-    flowEyebrow: "Operasyon Hızı",
-    flowLead: "Bu yüzey, doküman kaydını tek seferde üretmek için tasarlandı.",
-    flowBody: "Dosyayı seçin, gerekirse müşteri, poliçe veya hasar kaydına bağlayın; ardından sistem metadata kaydını ve bağlı dosya adlandırmasını otomatik tamamlasın.",
-    step1: "Dosya Seç",
-    step1Desc: "PDF, ofis dokümanı ya da görsel dosyayı seçin ve özel dosya alanında saklayın.",
-    step2: "Sınıflandır",
-    step2Desc: "Doküman türü, alt türü ve hassas veri işaretini belirleyin.",
-    step3: "Bağla ve Bitir",
-    step3Desc: "İsterseniz kaydı bir müşteri, poliçe veya hasar dosyasına bağlayın ve detay ekranına geçin.",
-    contextEyebrow: "Bağlam",
-    genericContext: "Bu yükleme kaydı bağımsız başlatıldı. İsterseniz yükleme sırasında bir müşteri, poliçe veya hasar kaydı seçebilirsiniz.",
-    linkedContext: "Yükleme bağlamlı başlatıldı. Doküman, seçili kayıtla ilişkilendirilecek ve detaydan izlenebilecek.",
-    guideTitle: "Yükleme Rehberi",
-    guideBody: "Liste ekranındaki hızlı yükleme aksiyonu artık doğrudan bu sayfaya gelir. Böylece yükleme akışı, liste ve detay yüzeyleriyle aynı tasarım dilinde kalır.",
-    rulePrivacy: "Saklama",
-    rulePrivacyValue: "Bağlı dokümanlar özel dosya alanında tutulur.",
-    ruleNaming: "Adlandırma",
-    ruleNamingValue: "Metadata kaydı oluşturulunca sistem dosya adını standart formata çevirir.",
-    ruleRouting: "Yönlendirme",
-    ruleRoutingValue: "Başarılı yükleme sonrası yeni doküman detayına geçilir.",
-    statusTitle: "Yükleyici",
-    statusOpen: "Yükleyici açık. Dosyayı seçip akışı tamamlayabilirsiniz.",
-    statusClosed: "Yükleyici kapandı. Aynı akışı yeniden başlatmak için aşağıdaki butonu kullanın.",
-    reopenUploader: "Yükleyiciyi Yeniden Aç",
-  },
-  en: {
-    breadcrumb: "Document Center → Quick Upload",
-    title: "Quick Document Upload",
-    subtitle: "Select the file, classify the document, and complete the linked record in a single flow.",
-    backToList: "Back to Document Registry",
-    openUploader: "Open Uploader",
-    metricFlow: "Flow",
-    metricFlowValue: "3 steps",
-    metricLimit: "Upload Limit",
-    metricLimitValue: "10 MB",
-    metricLinks: "Linkable Records",
-    metricLinksValue: "3 types",
-    flowTitle: "Upload Flow",
-    flowEyebrow: "Operational Speed",
-    flowLead: "This surface is designed to create the document record in one pass.",
-    flowBody: "Pick the file, optionally link it to a customer, policy, or claim, and let the system complete metadata creation and file naming automatically.",
-    step1: "Select File",
-    step1Desc: "Choose the PDF, office document, or image file and store it in the private area.",
-    step2: "Classify",
-    step2Desc: "Set the document kind, sub type, and sensitive data marker.",
-    step3: "Link and Finish",
-    step3Desc: "Optionally link the upload to a customer, policy, or claim, then continue to the detail screen.",
-    contextEyebrow: "Context",
-    genericContext: "This upload started without a linked record. You can select a customer, policy, or claim during upload.",
-    linkedContext: "This upload started with context. The document will be linked to the selected record and tracked from detail surfaces.",
-    guideTitle: "Upload Guide",
-    guideBody: "The quick upload action on the list now routes here so the upload flow stays aligned with the same design language as the list and detail surfaces.",
-    rulePrivacy: "Storage",
-    rulePrivacyValue: "Linked documents are stored in the private files area.",
-    ruleNaming: "Naming",
-    ruleNamingValue: "Once metadata is created, the system renames the file into the standard format.",
-    ruleRouting: "Routing",
-    ruleRoutingValue: "After a successful upload, you are taken to the new document detail.",
-    statusTitle: "Uploader",
-    statusOpen: "The uploader is open. Select the file and finish the flow.",
-    statusClosed: "The uploader is closed. Use the button below to start the same flow again.",
-    reopenUploader: "Reopen Uploader",
-  },
-};
+import { translateText } from "../utils/i18n";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const showUploadModal = ref(false);
 
-const locale = computed(() => (String(authStore.locale || "en").toLowerCase().startsWith("tr") ? "tr" : "en"));
 const linkedDoctype = computed(() => String(route.query.reference_doctype || ""));
 const linkedName = computed(() => String(route.query.reference_name || ""));
 
 function t(key) {
-  return copy[locale.value]?.[key] || copy.en[key] || key;
+  return translateText(key, authStore.locale);
 }
 
 const steps = computed(() => [

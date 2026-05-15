@@ -4,20 +4,20 @@
       <h4 class="text-sm font-semibold text-slate-900">
         {{ form.index ? editTitle : createTitle }}
       </h4>
-      <button type="button" class="text-sm text-slate-500 transition hover:text-slate-800" @click="$emit('cancel')">
+      <ActionButton variant="link" size="sm" @click="$emit('cancel')">
         {{ cancelLabel }}
-      </button>
+      </ActionButton>
     </div>
 
     <div class="grid gap-3 md:grid-cols-2">
       <label class="space-y-1">
-        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ reportKeyLabel }}</span>
+        <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ reportKeyLabel }}</span>
         <select v-model="form.reportKey" class="input">
           <option v-for="option in reportOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
         </select>
       </label>
       <label class="space-y-1">
-        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ frequencyLabel }}</span>
+        <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ frequencyLabel }}</span>
         <select v-model="form.frequency" class="input">
           <option value="daily">{{ t('daily') }}</option>
           <option value="weekly">{{ t('weekly') }}</option>
@@ -25,29 +25,29 @@
         </select>
       </label>
       <label class="space-y-1">
-        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ formatLabel }}</span>
+        <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ formatLabel }}</span>
         <select v-model="form.format" class="input">
           <option value="xlsx">{{ t('xlsx') }}</option>
           <option value="pdf">{{ t('pdf') }}</option>
         </select>
       </label>
       <label class="space-y-1">
-        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ deliveryChannelLabel }}</span>
+        <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ deliveryChannelLabel }}</span>
         <select v-model="form.deliveryChannel" class="input">
           <option value="email">{{ deliveryEmailLabel }}</option>
           <option value="notification_outbox">{{ deliveryOutboxLabel }}</option>
         </select>
       </label>
       <label class="space-y-1">
-        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ limitLabel }}</span>
+        <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ limitLabel }}</span>
         <input v-model.number="form.limit" class="input" type="number" min="1" step="1" />
       </label>
       <label v-if="form.frequency === 'weekly'" class="space-y-1">
-        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ weekdayLabel }}</span>
+        <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ weekdayLabel }}</span>
         <input v-model.number="form.weekday" class="input" type="number" min="0" max="6" step="1" />
       </label>
       <label v-if="form.frequency === 'monthly'" class="space-y-1">
-        <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ dayOfMonthLabel }}</span>
+        <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ dayOfMonthLabel }}</span>
         <input v-model.number="form.dayOfMonth" class="input" type="number" min="1" max="31" step="1" />
       </label>
       <label class="flex items-center gap-2 pt-6 text-sm text-slate-700">
@@ -57,39 +57,39 @@
     </div>
 
     <label class="space-y-1">
-      <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ recipientsLabel }}</span>
+      <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ recipientsLabel }}</span>
       <textarea v-model.trim="form.recipients" class="input min-h-24" :placeholder="recipientsPlaceholder" />
     </label>
 
     <div class="space-y-2">
-      <span class="text-xs font-medium tracking-[0.12em] text-slate-500">{{ filtersLabel }}</span>
+      <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ filtersLabel }}</span>
       <div class="grid gap-3 md:grid-cols-2">
         <label v-if="isFilterVisible('office_branch')" class="space-y-1">
-          <span class="text-xs text-slate-500">{{ officeBranchLabel }}</span>
+          <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ officeBranchLabel }}</span>
           <input v-model.trim="form.filterOfficeBranch" class="input" type="search" />
         </label>
         <label v-if="isFilterVisible('branch')" class="space-y-1">
-          <span class="text-xs text-slate-500">{{ insuranceBranchLabel }}</span>
+          <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ insuranceBranchLabel }}</span>
           <input v-model.trim="form.filterBranch" class="input" type="search" />
         </label>
         <label v-if="isFilterVisible('insurance_company')" class="space-y-1">
-          <span class="text-xs text-slate-500">{{ insuranceCompanyLabel }}</span>
+          <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ insuranceCompanyLabel }}</span>
           <input v-model.trim="form.filterInsuranceCompany" class="input" type="search" />
         </label>
         <label v-if="isFilterVisible('sales_entity')" class="space-y-1">
-          <span class="text-xs text-slate-500">{{ salesEntityLabel }}</span>
+          <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ salesEntityLabel }}</span>
           <input v-model.trim="form.filterSalesEntity" class="input" type="search" />
         </label>
         <label v-if="isFilterVisible('status')" class="space-y-1">
-          <span class="text-xs text-slate-500">{{ statusLabel }}</span>
+          <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ statusLabel }}</span>
           <input v-model.trim="form.filterStatus" class="input" type="search" />
         </label>
         <label v-if="isFilterVisible('from_date')" class="space-y-1">
-          <span class="text-xs text-slate-500">{{ fromDateLabel }}</span>
+          <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ fromDateLabel }}</span>
           <input v-model="form.filterFromDate" class="input" type="date" />
         </label>
         <label v-if="isFilterVisible('to_date')" class="space-y-1">
-          <span class="text-xs text-slate-500">{{ toDateLabel }}</span>
+          <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ toDateLabel }}</span>
           <input v-model="form.filterToDate" class="input" type="date" />
         </label>
       </div>
@@ -97,10 +97,10 @@
 
     <div class="space-y-3 border-t border-slate-100 pt-3">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold tracking-[0.12em] text-indigo-600 uppercase">{{ t('alerts') }}</span>
-        <button type="button" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 uppercase" @click="addAlert">
-          + {{ t('addAlert') }}
-        </button>
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">{{ t('alerts') }}</span>
+        <ActionButton variant="link" size="xs" class="!text-[10px] !font-bold !text-indigo-600 hover:!text-indigo-800 !uppercase !no-underline" @click="addAlert">
+          + {{ t('add_alert') }}
+        </ActionButton>
       </div>
 
       <div v-if="form.alerts.length" class="space-y-3">
@@ -116,11 +116,11 @@
           </button>
           
           <label class="space-y-1">
-            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alert_field') }}</span>
+            <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('alert_field') }}</span>
             <input v-model.trim="alert.field" class="input input--sm" type="text" :placeholder="t('eg_gross_premium')" />
           </label>
           <label class="space-y-1">
-            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertOp') }}</span>
+            <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('alert_op') }}</span>
             <select v-model="alert.operator" class="input input--sm">
               <option value=">">&gt;</option>
               <option value="<">&lt;</option>
@@ -129,14 +129,14 @@
             </select>
           </label>
           <label class="space-y-1">
-            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertVal') }}</span>
+            <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('alert_val') }}</span>
             <input v-model.trim="alert.value" class="input input--sm" type="text" />
           </label>
           <label class="space-y-1">
-            <span class="text-[10px] text-slate-500 font-bold uppercase">{{ t('alertLogic') }}</span>
+            <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t('alert_logic') }}</span>
             <select v-model="alert.logic" class="input input--sm">
-              <option value="any">{{ t('alertLogicAny') }}</option>
-              <option value="all">{{ t('alertLogicAll') }}</option>
+              <option value="any">{{ t('alert_logic_any') }}</option>
+              <option value="all">{{ t('alert_logic_all') }}</option>
             </select>
           </label>
         </div>
@@ -148,24 +148,29 @@
     </div>
 
     <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-3">
-      <button
-        type="button"
-        class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+      <ActionButton
+        variant="secondary"
+        size="sm"
+        class="!rounded-xl !px-4 !py-2 !font-bold"
         @click="$emit('cancel')"
       >
         {{ cancelLabel }}
-      </button>
-      <button
+      </ActionButton>
+      <ActionButton
+        variant="primary"
+        size="sm"
         type="submit"
-        class="rounded-xl bg-indigo-600 px-6 py-2 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition-all active:scale-95"
+        class="!rounded-xl !bg-indigo-600 hover:!bg-indigo-700 !px-6 !py-2 !font-bold !shadow-md"
       >
         {{ saveLabel }}
-      </button>
+      </ActionButton>
     </div>
   </form>
 </template>
 
 <script setup>
+import ActionButton from "../app-shell/ActionButton.vue";
+
 defineProps({
   visible: { type: Boolean, default: false },
   form: { type: Object, required: true },

@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden rounded-lg border border-gray-200">
+  <div class="overflow-x-auto rounded-lg border border-gray-200">
     <div v-if="loading" class="flex items-center justify-center py-16">
       <div class="h-5 w-5 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
     </div>
@@ -47,10 +47,10 @@
               class="px-4 py-2"
             >
               <div class="flex flex-col gap-0.5">
-                <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                   {{ row._groupTitle }}
                 </span>
-                <span v-if="row._groupSubtitle" class="text-[11px] font-normal text-slate-500">
+                <span v-if="row._groupSubtitle" class="text-[11px] font-normal text-slate-400">
                   {{ row._groupSubtitle }}
                 </span>
               </div>
@@ -75,9 +75,9 @@
               resolveCellClass(col, row),
             ]"
           >
-            <template v-if="col.format">
+            <span v-if="col.format" class="text-[13px] font-semibold text-slate-900">
               {{ col.format(row[col.key], row) }}
-            </template>
+            </span>
 
             <StatusBadge v-else-if="col.type === 'status'" :status="row[col.key]" :domain="col.domain || null" />
 
@@ -97,7 +97,7 @@
               {{ row[col.key] != null ? row[col.key] + ' ' + translateText('days', locale) : '-' }}
             </span>
 
-            <span v-else-if="col.type === 'date'" class="text-[13px] text-slate-600">
+            <span v-else-if="col.type === 'date'" class="text-[13px] font-semibold text-slate-900">
               {{ formatDateCell(row[col.key]) }}
             </span>
 
@@ -119,14 +119,14 @@
 
             <div v-else-if="col.type === 'stacked'" class="flex flex-col">
               <span class="text-[13px] font-semibold text-slate-900">{{ row[col.key] ?? '-' }}</span>
-              <span v-if="col.secondaryKey" class="text-[11px] text-slate-400 leading-tight mt-0.5">
+              <span v-if="col.secondaryKey" class="text-[11px] font-normal text-slate-400 tracking-wider leading-tight mt-0.5">
                 {{ row[col.secondaryKey] ?? '-' }}
               </span>
             </div>
 
             <div v-else-if="col.type === 'compound'" class="min-w-[280px]">
-              <p class="font-medium text-slate-800">{{ row[col.primaryKey] ?? '-' }}</p>
-              <p class="text-xs text-slate-500">{{ row[col.secondaryKey] ?? '-' }}</p>
+              <p class="text-[13px] font-semibold text-slate-900">{{ row[col.primaryKey] ?? '-' }}</p>
+              <p class="text-[11px] font-normal text-slate-400 tracking-wider">{{ row[col.secondaryKey] ?? '-' }}</p>
               <div v-if="col.badgeKey && row[col.badgeKey]" class="mt-1 flex flex-wrap items-center gap-1">
                 <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-slate-700">
                   {{ row[col.badgeKey] }}
@@ -161,7 +161,7 @@
               </InlineActionRow>
             </div>
 
-            <span v-else class="text-[13px] text-slate-900">
+            <span v-else class="text-[13px] font-semibold text-slate-900">
               {{ row[col.key] != null ? row[col.key] : '-' }}
             </span>
 
@@ -170,7 +170,7 @@
             <button
               type="button"
               class="rounded-full p-1.5 text-slate-400 transition-all hover:bg-slate-100 hover:text-brand-600"
-              :title="'Preview'"
+              :title="translateText('preview', locale)"
               @click.stop="$emit('preview-click', row)"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

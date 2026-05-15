@@ -1,5 +1,6 @@
-import { computed, reactive, ref, watch } from "vue";
+import { computed, reactive, ref, unref, watch } from "vue";
 import { translateText } from "../utils/i18n";
+import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 
 export function useScheduledReportsManager(props, emit) {
   const reportFilterConfig = {
@@ -47,7 +48,8 @@ export function useScheduledReportsManager(props, emit) {
   const visibleFilters = computed(() => new Set(reportFilterConfig[form.reportKey] || []));
 
   function t(key) {
-    return translateText(key, props.locale);
+    const locale = String(unref(props.locale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+    return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || translateText(key, props.locale);
   }
 
   function isFilterVisible(key) {

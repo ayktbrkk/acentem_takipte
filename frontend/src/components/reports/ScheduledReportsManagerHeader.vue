@@ -5,14 +5,15 @@
       <p class="mt-1 text-sm text-slate-500">{{ subtitle }}</p>
     </div>
     <div class="flex flex-wrap gap-2">
-      <button
-        type="button"
-        class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+      <ActionButton
+        variant="secondary"
+        size="sm"
+        class="!rounded-xl !py-2 !font-medium hover:!border-slate-400 hover:!text-slate-900 hover:!bg-transparent"
         :disabled="loading || running"
         @click="$emit('run')"
       >
         {{ runLabel }}
-      </button>
+      </ActionButton>
       <button
         type="button"
         class="rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-brand-700 transition hover:border-sky-400 hover:text-sky-900"
@@ -26,6 +27,8 @@
 </template>
 
 <script setup>
+import ActionButton from "../app-shell/ActionButton.vue";
+
 defineProps({
   title: { type: String, required: true },
   subtitle: { type: String, required: true },

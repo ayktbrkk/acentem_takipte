@@ -8,7 +8,7 @@
   <div v-else-if="preview" class="space-y-6">
     <!-- Header Summary -->
     <div class="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-      <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">{{ preview.subtitle }}</h3>
+      <h3 class="text-[11px] font-normal text-slate-400 uppercase tracking-widest">{{ preview.subtitle }}</h3>
       <p class="text-2xl font-black text-slate-900 mt-1">{{ preview.title }}</p>
     </div>
 
@@ -19,7 +19,7 @@
         :key="metric.label"
         class="rounded-2xl bg-brand-50/50 p-4 border border-brand-100"
       >
-        <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{{ metric.label }}</p>
+        <p class="text-[11px] font-normal text-blue-400 uppercase tracking-wider">{{ t(metric.label) }}</p>
         <p class="text-xl font-black text-blue-900 mt-1">
           {{ formatValue(metric.value, metric.currency) }}
         </p>
@@ -30,8 +30,8 @@
     <SectionPanel :title="t('Details')" panel-class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
       <div class="grid grid-cols-1 gap-4">
         <div v-for="field in preview.fields" :key="field.label" class="flex flex-col border-b border-slate-50 pb-2 last:border-0">
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ field.label }}</span>
-          <span class="text-sm font-semibold text-slate-700 mt-0.5">{{ field.value || '-' }}</span>
+          <span class="text-[11px] font-normal text-slate-400 uppercase tracking-wider">{{ t(field.label) }}</span>
+          <span class="text-[13px] font-semibold text-slate-900 mt-0.5">{{ t(field.value) || '-' }}</span>
         </div>
       </div>
     </SectionPanel>
@@ -63,7 +63,7 @@ const router = useRouter();
 const loading = ref(false);
 const preview = ref(null);
 const authStore = useAuthStore(getAppPinia());
-const activeLocale = computed(() => unref(authStore.locale) || "en");
+const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 function t(source) {
   return translateText(source, activeLocale.value);

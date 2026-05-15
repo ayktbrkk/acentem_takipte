@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h3 class="text-lg font-bold text-slate-900">{{ t('calendarTitle') }}</h3>
-        <p class="text-sm text-slate-500">{{ t('calendarSubtitle') }}</p>
+        <h3 class="text-lg font-bold text-slate-900">{{ t('calendar_title') }}</h3>
+        <p class="text-sm text-slate-500">{{ t('calendar_subtitle') }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button 
@@ -28,7 +28,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
-      <p class="text-slate-500 font-medium">{{ t('noEvents') }}</p>
+      <p class="text-slate-500 font-medium">{{ t('no_events') }}</p>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -95,9 +95,9 @@ const loading = ref(false);
 const activeRange = ref(7);
 
 const ranges = computed(() => [
-  { label: props.t('next7Days'), value: 7 },
-  { label: props.t('next14Days'), value: 14 },
-  { label: props.t('next30Days'), value: 30 }
+  { label: props.t('next_7_days'), value: 7 },
+  { label: props.t('next_14_days'), value: 14 },
+  { label: props.t('next_30_days'), value: 30 }
 ]);
 
 const filteredTimeline = computed(() => {

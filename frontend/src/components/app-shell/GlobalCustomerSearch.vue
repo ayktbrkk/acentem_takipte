@@ -111,13 +111,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, unref } from "vue";
+import { computed } from "vue";
 
 import MaskedDataNotice from "./MaskedDataNotice.vue";
 import AccessRequestForm from "./AccessRequestForm.vue";
 import { useGlobalCustomerSearch } from "../../composables/useGlobalCustomerSearch";
 import { getAppPinia } from "../../pinia";
 import { useAuthStore } from "../../stores/auth";
+import { translateText } from "../../utils/i18n";
 
 interface SearchResult {
   exists: boolean;
@@ -149,50 +150,10 @@ const emit = defineEmits<{
   "customer-selected": [customer: SearchResult["customer"]];
 }>();
 
-const copy = {
-  tr: {
-    searchInputPlaceholder: "Vergi No (10-11 hane) veya Müşteri No girin",
-    searching: "Aranıyor...",
-    search: "Ara",
-    emptySearchPrompt: "Aramak için müşteri kimlik bilgisini girin",
-    notFoundTitle: "Bu kimlik bilgisiyle müşteri bulunamadı.",
-    notFoundHint: "Vergi No veya Müşteri No bilgisini kontrol edip tekrar deneyin.",
-    maskedTitle: "Müşteri Bilgisi Kısmen Maskelendi",
-    maskedHintRequest: "Bu aramada hassas veriler maskelidir. Tüm detayları görmek için erişim talebi gönderin.",
-    maskedHintContact: "Bu aramada hassas veriler maskelidir. Erişim için yöneticinizle iletişime geçin.",
-    customerName: "Müşteri Adı",
-    taxId: "Vergi No",
-    phone: "Telefon",
-    email: "E-posta",
-    officeBranch: "Şube",
-    viewFullProfile: "Tam Profili Gör",
-    requestAccess: "Erişim Talep Et",
-  },
-  en: {
-    searchInputPlaceholder: "Enter Tax ID (10-11 digits) or Customer ID",
-    searching: "Searching...",
-    search: "Search",
-    emptySearchPrompt: "Enter a customer identification to search",
-    notFoundTitle: "No customer found with that identification.",
-    notFoundHint: "Please verify the Tax ID or customer ID and try again.",
-    maskedTitle: "Customer Information Partially Masked",
-    maskedHintRequest: "Sensitive data is masked for this search. Submit a request to view full details.",
-    maskedHintContact: "Sensitive data is masked for this search. Contact your administrator for access.",
-    customerName: "Customer Name",
-    taxId: "Tax ID",
-    phone: "Phone",
-    email: "Email",
-    officeBranch: "Office Branch",
-    viewFullProfile: "View Full Profile",
-    requestAccess: "Request Access",
-  },
-};
-
 const authStore = useAuthStore(getAppPinia());
-const activeLocale = computed(() => unref(authStore.locale) || "en");
 
 function t(key: string) {
-  return copy[activeLocale.value]?.[key] || copy.en[key] || key;
+  return translateText(key, authStore.locale);
 }
 
 const {

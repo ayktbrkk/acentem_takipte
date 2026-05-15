@@ -12,13 +12,13 @@
         class="mini-metric shadow-sm border border-slate-200 bg-white/95"
         :class="item.cardClass"
       >
-        <p class="mini-metric-label">
+        <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">
           {{ item.label }}
         </p>
-        <p class="mini-metric-value" :class="item.valueClass">
+        <p class="text-[13px] font-semibold text-slate-900" :class="item.valueClass">
           {{ item.value }}
         </p>
-        <p class="mt-1 text-[11px] font-bold" :class="item.delta >= 0 ? 'text-at-green' : 'text-at-amber'">
+        <p class="mt-1 text-[11px] font-semibold" :class="item.delta >= 0 ? 'text-at-green' : 'text-at-amber'">
           {{ formatComparisonDelta(item.delta, item.previous) }}
         </p>
       </article>

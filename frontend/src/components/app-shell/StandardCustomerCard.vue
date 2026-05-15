@@ -41,13 +41,15 @@
       </div>
 
       <div class="pt-1">
-        <button 
-          class="btn btn-full btn-outline btn-sm font-bold text-slate-500 hover:text-brand-600 group/btn !py-1.5"
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          class="group/btn w-full font-bold text-slate-500 hover:text-brand-600 hover:!bg-transparent !py-1.5"
           @click="$emit('view-full')"
         >
           {{ t('view_full_profile') }}
           <FeatherIcon name="arrow-right" class="h-3 w-3 ml-1 transition-transform group-hover/btn:translate-x-0.5" />
-        </button>
+        </ActionButton>
       </div>
     </div>
 
@@ -114,13 +116,13 @@
       </div>
 
       <div class="flex items-center justify-end gap-2 border-t border-slate-100 pt-4 mt-6">
-        <button type="button" class="btn btn-sm btn-ghost px-4 font-semibold text-slate-500" @click="isEditing = false">
+        <ActionButton variant="ghost" size="sm" class="!px-4" @click="isEditing = false">
           {{ t('cancel') }}
-        </button>
-        <button type="submit" class="btn btn-sm btn-primary min-w-[80px] px-6 font-bold" :disabled="saving">
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" type="submit" :disabled="saving">
           <FeatherIcon v-if="saving" name="loader" class="mr-2 h-3.5 w-3.5 animate-spin" />
           {{ t('save') }}
-        </button>
+        </ActionButton>
       </div>
     </form>
 
@@ -138,6 +140,7 @@
 import { ref, computed, reactive, watch } from 'vue';
 import { FeatherIcon } from 'frappe-ui';
 import SectionPanel from './SectionPanel.vue';
+import ActionButton from './ActionButton.vue';
 
 const props = defineProps({
   customer: { type: Object, required: true },

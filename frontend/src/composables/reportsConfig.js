@@ -122,6 +122,21 @@ export const columnLabels = {
   unique_key: { tr: "Benzersiz Anahtar", en: "Unique Key" },
 };
 
+export const reportDefaultColumns = {
+  policy_list: [
+    "policy_no",
+    "customer_full_name",
+    "customer_tax_id",
+    "insurance_company",
+    "branch",
+    "status",
+    "issue_date",
+    "start_date",
+    "end_date",
+    "gross_premium",
+  ],
+};
+
 export const reportFilterConfig = {
   policy_list: ["branch", "insuranceCompany", "policyNo", "customerTaxId", "status"],
   payment_status: ["branch", "insuranceCompany", "status"],

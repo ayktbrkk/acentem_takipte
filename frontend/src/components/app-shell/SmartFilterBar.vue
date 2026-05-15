@@ -8,7 +8,7 @@
         :value="modelValue"
         type="text"
         class="block w-full rounded-lg border-gray-200 pl-10 text-sm focus:border-brand-500 focus:ring-brand-500"
-        :placeholder="placeholder || 'Ara...'"
+        :placeholder="placeholder || ''"
         @input="$emit('update:modelValue', $event.target.value)"
       />
     </div>
@@ -23,7 +23,7 @@
         @click="$emit('open-advanced')"
       >
         <FeatherIcon name="filter" class="h-4 w-4" />
-        {{ advancedLabel || 'Gelişmiş Filtre' }}
+        {{ advancedLabel || '' }}
       </button>
     </div>
   </div>

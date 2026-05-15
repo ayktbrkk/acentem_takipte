@@ -111,10 +111,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, unref } from "vue";
+import { computed } from "vue";
 import { useAccessRequestForm } from "../../composables/useAccessRequestForm";
 import { getAppPinia } from "../../pinia";
 import { useAuthStore } from "../../stores/auth";
+import { translateText } from "../../utils/i18n";
 
 interface Props {
   customerName: string;
@@ -129,49 +130,9 @@ const emit = defineEmits<{
 }>();
 
 const authStore = useAuthStore(getAppPinia());
-const activeLocale = computed(() => unref(authStore.locale) || "en");
-
-const copy = {
-  tr: {
-    title: "Müşteri Erişim Talebi",
-    for: "için",
-    requestType: "Talep Türü",
-    viewAccessLabel: "Görüntüleme Erişimi",
-    viewAccessDesc: "Müşteri bilgilerine geçici salt okunur erişim",
-    transferLabel: "Sahiplik Devri",
-    transferDesc: "Bu müşteriyi satış entitinize atayın",
-    shareLabel: "Erişim Paylaşımı",
-    shareDesc: "Bir ekip üyesine okuma erişimi verin",
-    justification: "İş Gerekçesi",
-    justificationPlaceholder: "Bu müşteriye neden erişmeniz gerektiğini açıklayın. En az 10 karakter.",
-    cancel: "İptal",
-    submitting: "Gönderiliyor...",
-    submit: "Talep Gönder",
-    successTitle: "✓ Talep başarıyla gönderildi!",
-    successDesc: "Erişim talebiniz kaydedildi ve incelenecek.",
-  },
-  en: {
-    title: "Request Customer Access",
-    for: "for",
-    requestType: "Request Type",
-    viewAccessLabel: "View Access",
-    viewAccessDesc: "Temporary read-only access to customer details",
-    transferLabel: "Transfer Ownership",
-    transferDesc: "Assign this customer to your sales entity",
-    shareLabel: "Share Access",
-    shareDesc: "Grant read access to a team member",
-    justification: "Business Justification",
-    justificationPlaceholder: "Explain why you need access to this customer. Minimum 10 characters.",
-    cancel: "Cancel",
-    submitting: "Submitting...",
-    submit: "Submit Request",
-    successTitle: "✓ Request submitted successfully!",
-    successDesc: "Your access request has been logged and will be reviewed.",
-  },
-};
 
 function t(key: string) {
-  return copy[activeLocale.value as keyof typeof copy]?.[key as keyof typeof copy.en] || copy.en[key as keyof typeof copy.en] || key;
+  return translateText(key, authStore.locale);
 }
 
 const {

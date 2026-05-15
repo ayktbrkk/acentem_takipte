@@ -157,7 +157,7 @@ import ReportsComparisonSection from "../components/reports/ReportsComparisonSec
 import ReportsTableSection from "../components/reports/ReportsTableSection.vue";
 import ReportsChartSection from "../components/reports/ReportsChartSection.vue";
 import ReportsScheduledSection from "../components/reports/ReportsScheduledSection.vue";
-import { reportCatalog } from "../composables/reportsConfig";
+import { reportCatalog, reportDefaultColumns } from "../composables/reportsConfig";
 import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 import { useReportsFilters } from "../composables/useReportsFilters";
 import { useReportsRuntime } from "../composables/useReportsRuntime";
@@ -332,7 +332,7 @@ function openPreview(row) {
 
   previewTarget.value = { doctype, name };
   previewTitle.value = name;
-  previewSubtitle.value = doctype;
+  previewSubtitle.value = translateText(doctype, activeLocale) || doctype;
   showPreview.value = true;
 }
 
@@ -391,10 +391,11 @@ watch(columns, (nextColumns) => {
     if (!visibleColumnKeys.value.length) visibleColumnKeys.value = [...nextColumns];
     pendingVisibleColumnKeys.value = [];
   } else if (!visibleColumnKeys.value.length) {
-    visibleColumnKeys.value = [...nextColumns];
+    const defaults = reportDefaultColumns[filters.reportKey] || nextColumns;
+    visibleColumnKeys.value = nextColumns.filter((column) => defaults.includes(column));
+    if (!visibleColumnKeys.value.length) visibleColumnKeys.value = [...nextColumns];
   } else {
     visibleColumnKeys.value = visibleColumnKeys.value.filter((column) => nextColumns.includes(column));
-    if (!visibleColumnKeys.value.length) visibleColumnKeys.value = [...nextColumns];
   }
 }, { immediate: true });
 

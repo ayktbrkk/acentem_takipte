@@ -53,6 +53,7 @@ export const SIDEBAR_TRANSLATIONS = {
     account: "Hesabım",
     logout: "Çıkış Yap",
     desk: "Desk'i Aç",
+    close: "Kapat",
   },
   en: {
     menu: "Menu",
@@ -108,5 +109,6 @@ export const SIDEBAR_TRANSLATIONS = {
     account: "My Account",
     logout: "Logout",
     desk: "Open Desk",
+    close: "Close",
   },
 };

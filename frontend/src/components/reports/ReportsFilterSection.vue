@@ -98,7 +98,7 @@
           :key="field.key"
           class="flex flex-col gap-1"
         >
-          <span class="text-xs font-medium text-slate-600">{{ field.label }}</span>
+          <span class="text-[11px] font-normal text-slate-400">{{ field.label }}</span>
           <input
             v-model.trim="filters[field.modelKey]"
             class="report-filter-control"

@@ -149,7 +149,6 @@ const props = defineProps({
 
 const emit = defineEmits(["close", "uploaded"]);
 
-// Bağlam değiştiğinde yeniden yükle
 watch(() => [props.attachedToDoctype, props.attachedToName], () => {
   loadContextInfo();
 });
@@ -184,6 +183,7 @@ const copy = {
     kindPolicy: "Poliçe",
     kindEndorsement: "Zeyilname",
     kindClaim: "Hasar",
+    kindCustomer: "Müşteri",
     kindOther: "Diğer",
     subRuhsat: "Ruhsat",
     subKimlik: "Kimlik",
@@ -216,6 +216,7 @@ const copy = {
     kindPolicy: "Policy",
     kindEndorsement: "Endorsement",
     kindClaim: "Claim",
+    kindCustomer: "Customer",
     kindOther: "Other",
     subRuhsat: "Registration Certificate",
     subKimlik: "ID / Passport",
@@ -242,7 +243,6 @@ const documentSubType = ref("");
 const isSensitive = ref(false);
 const notes = ref("");
 
-// P3.5: Standalone bağlantı seçici state
 const linkDoctype = ref("");
 const linkName = ref("");
 const linkSearch = ref("");
@@ -250,7 +250,6 @@ const linkResults = ref([]);
 const linkSearching = ref(false);
 let linkSearchTimer = null;
 
-// Bağlam bilgisi (otomatik yükle)
 const contextInfo = ref(null);
 
 async function loadContextInfo() {
@@ -258,9 +257,9 @@ async function loadContextInfo() {
     contextInfo.value = null;
     return;
   }
-  const doctypeLabel = props.attachedToDoctype === "AT Policy" ? "Poliçe" :
-                      props.attachedToDoctype === "AT Claim" ? "Hasar" :
-                      props.attachedToDoctype === "AT Customer" ? "Müşteri" : props.attachedToDoctype;
+  const doctypeLabel = props.attachedToDoctype === "AT Policy" ? translateLabel("kindPolicy") :
+                      props.attachedToDoctype === "AT Claim" ? translateLabel("kindClaim") :
+                      props.attachedToDoctype === "AT Customer" ? translateLabel("kindCustomer") : props.attachedToDoctype;
   try {
     const csrfT = (typeof window !== "undefined" && window.csrf_token) || "";
     const params = new URLSearchParams({
@@ -284,7 +283,6 @@ async function loadContextInfo() {
   }
 }
 
-// mounted'da bağlamı yükle
 onMounted(() => {
   loadContextInfo();
 });
@@ -337,7 +335,7 @@ async function fetchLinkResults() {
       }));
     }
   } catch {
-    // arama hatalarını sessizce geç
+    // silently ignore search errors
   } finally {
     linkSearching.value = false;
   }
@@ -688,7 +686,7 @@ async function submit() {
   gap: 0.5rem;
 }
 
-/* P3.5 - bağlantı seçici */
+/* link selector */
 .link-section {
   display: flex;
   flex-direction: column;

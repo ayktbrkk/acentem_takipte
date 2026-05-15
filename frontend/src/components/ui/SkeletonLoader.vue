@@ -8,7 +8,7 @@
       <SkeletonLoader variant="chart" />       → chart placeholder
       <SkeletonLoader variant="text" :rows="3" /> → text lines
   -->
-  <div :class="wrapClass" aria-busy="true" aria-label="Yükleniyor...">
+  <div :class="wrapClass" aria-busy="true" :aria-label="loadingLabel">
     <!-- STAT CARDS (e.g. Dashboard KPI row) -->
     <template v-if="variant === 'card'">
       <div
@@ -85,6 +85,8 @@ const props = defineProps({
   count: { type: Number, default: 4 },
   /** Extra CSS classes on the wrapper */
   class: { type: String, default: '' },
+  /** aria-label for loading state */
+  loadingLabel: { type: String, default: 'Loading...' },
 })
 
 const wrapClass = [

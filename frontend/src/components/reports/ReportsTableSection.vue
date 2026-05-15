@@ -25,7 +25,7 @@
 
       <div class="mt-3 rounded-xl border border-slate-200 bg-white/90 p-3">
         <div class="flex items-center justify-between gap-2">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{{ t("columns") }}</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ t("columns") }}</p>
           <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
             {{ columnsSummaryLabel }}
           </span>
@@ -47,8 +47,8 @@
 
       <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3">
         <div class="flex items-center justify-between gap-2">
-          <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-700">{{ t("groupBy") || 'Group By' }}</p>
-          <span v-if="groupByColumn" class="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-amber-700">{{ t("groupBy") || 'Group By' }}</p>
+            <span v-if="groupByColumn" class="rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
             {{ getColumnLabel(groupByColumn) }}
           </span>
         </div>
@@ -58,7 +58,7 @@
             :key="`group-${column}`"
             type="button"
             :class="groupByColumn === column
-              ? 'inline-flex items-center rounded-full border border-amber-400 bg-amber-200 px-2.5 py-1 text-xs font-bold text-amber-900 transition'
+              ? 'inline-flex items-center rounded-full border border-amber-400 bg-amber-200 px-2.5 py-1 text-[11px] font-semibold text-amber-900 transition'
               : 'inline-flex items-center rounded-full border border-amber-100 bg-white px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100'"
             @click="$emit('on-group-by-change', column)"
           >

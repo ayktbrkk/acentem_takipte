@@ -39,8 +39,8 @@
         </template>
       </div>
       <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
-        <button class="btn btn-outline btn-sm shadow-sm" type="button" @click="$emit('reset')">{{ resetLabel }}</button>
-        <button class="btn btn-primary btn-sm px-6 shadow-sm" type="button" @click="$emit('apply')">{{ applyLabel }}</button>
+        <ActionButton variant="secondary" size="sm" @click="$emit('reset')">{{ resetLabel }}</ActionButton>
+        <ActionButton variant="primary" size="sm" @click="$emit('apply')">{{ applyLabel }}</ActionButton>
       </div>
     </div>
   </div>
@@ -48,6 +48,7 @@
 
 <script setup>
 import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import { ref } from "vue";
 
 const showAdvanced = ref(false);

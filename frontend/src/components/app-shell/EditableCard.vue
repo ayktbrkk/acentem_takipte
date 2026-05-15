@@ -156,22 +156,23 @@
         </div>
 
         <div class="mt-8 flex items-center justify-end gap-3 border-t border-slate-100 pt-5">
-          <button
-            type="button"
-            class="btn btn-sm btn-ghost font-semibold text-slate-500 hover:text-slate-700"
+          <ActionButton
+            variant="ghost"
+            size="sm"
             :disabled="saving"
             @click="handleCancel"
           >
             {{ t('cancel') }}
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            size="sm"
             type="submit"
-            class="btn btn-sm btn-primary min-w-[100px] font-bold shadow-lg shadow-brand-500/20"
             :disabled="saving"
           >
             <FeatherIcon v-if="saving" name="loader" class="mr-2 h-3.5 w-3.5 animate-spin" />
             {{ saving ? t('saving') : t('save') }}
-          </button>
+          </ActionButton>
         </div>
       </form>
 
@@ -203,6 +204,7 @@ import { ref, computed, reactive, watch } from 'vue';
 import { FeatherIcon } from 'frappe-ui';
 import SectionPanel from './SectionPanel.vue';
 import FieldGroup from '../ui/FieldGroup.vue';
+import ActionButton from './ActionButton.vue';
 
 const props = defineProps({
   title: { type: String, required: true },
