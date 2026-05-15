@@ -445,31 +445,6 @@ export function useReportsTableData({
     visibleColumnKeys.value = [...columns.value];
   }
 
-  function toggleSort(column) {
-    if (sortState.column !== column) {
-      sortState.column = column;
-      sortState.direction = "asc";
-      return;
-    }
-    if (sortState.direction === "asc") {
-      sortState.direction = "desc";
-      return;
-    }
-    if (sortState.direction === "desc") {
-      sortState.column = "";
-      sortState.direction = "";
-      return;
-    }
-    sortState.direction = "asc";
-  }
-
-  function getSortIndicator(column) {
-    if (sortState.column !== column) {
-      return "";
-    }
-    return sortState.direction === "desc" ? "▼" : "▲";
-  }
-
   const visibleColumns = computed(() => {
     const base = !visibleColumnKeys.value.length
       ? columns.value
@@ -528,8 +503,8 @@ export function useReportsTableData({
         grouped.push({
           ...group,
           // Format header label for display
-          is_group_header: true,
-          _group_title: `${getColumnLabel(groupByColumn.value)}: ${formatCellValue(groupByColumn.value, key)} (${group.rows.length})`
+          _isGroupHeader: true,
+          _groupTitle: `${getColumnLabel(groupByColumn.value)}: ${formatCellValue(groupByColumn.value, key)} (${group.rows.length})`
         });
         grouped.push(...group.rows);
       });
@@ -565,8 +540,6 @@ export function useReportsTableData({
     isColumnVisible,
     toggleColumn,
     showAllColumns,
-    toggleSort,
-    getSortIndicator,
     formatComparisonDelta,
     toggleGroupBy: (col) => {
       groupByColumn.value = groupByColumn.value === col ? "" : col;

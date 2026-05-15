@@ -79,7 +79,7 @@
       :branch-scope-label="branchScopeLabel"
       :columns-summary-label="columnsSummaryLabel"
       :columns="columns"
-      :visible-columns="visibleColumns"
+      :visible-column-keys="visibleColumnKeys"
       :sorted-rows="sortedRows"
       :loading="loading"
       :error="error"
@@ -88,16 +88,17 @@
       :on-toggle-column="toggleColumn"
       :on-show-all-columns="showAllColumns"
       :get-column-label="getColumnLabel"
-      :on-toggle-sort="toggleSort"
-      :get-sort-indicator="getSortIndicator"
       :format-cell-value="formatCellValue"
-      :is-row-clickable="isRowClickable"
-      :on-row-click="onRowClick"
-      :t="t"
+      :sort-column="sortState.column"
+      :sort-direction="sortState.direction"
       :group-by-column="groupByColumn"
       :groupable-columns="groupableColumns"
+      :t="t"
       @on-preview-click="openPreview"
       @on-group-by-change="toggleGroupBy"
+      @update:sort-column="sortState.column = $event"
+      @update:sort-direction="sortState.direction = $event"
+      @on-row-click="onRowClick"
     />
 
     <ReportsComparisonSection
@@ -260,7 +261,6 @@ const reportTableData = useReportsTableData({
 });
 
 const {
-  visibleColumns,
   columnsSummaryLabel,
   heroSummaryCells,
   summaryItems,
@@ -273,8 +273,6 @@ const {
   isColumnVisible,
   toggleColumn,
   showAllColumns,
-  toggleSort,
-  getSortIndicator,
   formatComparisonDelta,
 } = reportTableData;
 
@@ -344,7 +342,7 @@ function closePreview() {
 }
 
 
-const { isRowClickable, onRowClick } = useReportsRowActions({ filters, router });
+const { onRowClick } = useReportsRowActions({ filters, router });
 
 const {
   persistViewStateToStorage,

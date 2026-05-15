@@ -37,10 +37,11 @@ describe("useReportsTableData", () => {
     expect(result.getColumnLabel("name")).toBe("Kayıt No");
     expect(result.formatCellValue("gross_premium", 1200)).toContain("1");
 
-    result.toggleSort("gross_premium");
+    result.sortState.column = "gross_premium";
+    result.sortState.direction = "asc";
     expect(result.sortedRows.value[0].gross_premium).toBe(50);
 
-    result.toggleSort("gross_premium");
+    result.sortState.direction = "desc";
     expect(result.sortedRows.value[0].gross_premium).toBe(150);
     expect(result.summaryItems.value).toHaveLength(4);
   });
