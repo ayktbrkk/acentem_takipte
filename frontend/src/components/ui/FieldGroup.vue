@@ -13,7 +13,7 @@
       ]"
     >
       <template v-if="field.type === 'divider'">
-         <div v-if="field.label" class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mt-2">{{ field.label }}</div>
+         <div v-if="field.label" class="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400 mt-2">{{ field.label }}</div>
       </template>
       <template v-else>
         <div class="field-label" :class="[layout === 'list' && 'mb-0']">{{ field.label }}</div>

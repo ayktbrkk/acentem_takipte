@@ -23,7 +23,7 @@
           :key="row.snapshotDate"
           class="rounded-xl border border-slate-100 bg-slate-50/50 p-4"
         >
-          <p class="text-sm font-bold text-slate-900 mb-3">{{ row.snapshotDateLabel }}</p>
+          <p class="text-sm font-semibold text-slate-900 mb-3">{{ row.snapshotDateLabel }}</p>
           <div class="space-y-2">
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-500">{{ totalSnapshotsLabel }}</span>

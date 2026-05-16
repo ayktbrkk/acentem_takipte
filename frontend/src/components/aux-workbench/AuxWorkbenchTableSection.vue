@@ -17,7 +17,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
         </svg>
       </div>
-      <p class="text-sm text-slate-500 font-bold">{{ emptyTitle }}</p>
+      <p class="text-sm text-slate-500 font-semibold">{{ emptyTitle }}</p>
       <p class="text-xs text-slate-400 mt-1 font-medium">{{ emptyDescription }}</p>
     </div>
     <template v-else>
@@ -41,20 +41,20 @@
             >
               <td class="px-4 py-4">
                 <div class="flex flex-col">
-                  <span class="text-sm font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{{ rowTitle(row) }}</span>
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-600 transition-colors">{{ rowTitle(row) }}</span>
                   <div class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
                     <span v-for="fact in factItems(row, config.primaryFields)" :key="fact.label" class="text-[11px] text-slate-400">
                       {{ fact.label }}: <span class="text-slate-700 font-semibold">{{ fact.value }}</span>
                     </span>
                   </div>
-                  <span class="mt-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ modifiedLabel }}: {{ formatField(row.modified, 'modified') }}</span>
+                  <span class="mt-1 text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ modifiedLabel }}: {{ formatField(row.modified, 'modified') }}</span>
                 </div>
               </td>
 
               <td class="px-4 py-4">
                 <div class="grid grid-cols-1 gap-1">
                   <div v-for="fact in factItems(row, config.detailFields)" :key="fact.label" class="flex flex-col">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{{ fact.label }}</span>
+                    <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400 mb-0.5">{{ fact.label }}</span>
                     <span class="text-xs font-semibold text-slate-700 truncate max-w-[200px]">{{ fact.value }}</span>
                   </div>
                 </div>
@@ -70,8 +70,8 @@
               <td class="px-4 py-4">
                 <div class="flex flex-wrap gap-4">
                   <div v-for="fact in factItems(row, config.metricFields)" :key="fact.label" class="flex flex-col items-center">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{{ fact.label }}</span>
-                    <span class="text-xs font-black text-slate-900">{{ fact.value }}</span>
+                    <span class="text-[11px] font-normal uppercase tracking-wider text-slate-400 mb-0.5">{{ fact.label }}</span>
+                    <span class="text-xs font-semibold text-slate-900">{{ fact.value }}</span>
                   </div>
                 </div>
               </td>
@@ -85,7 +85,7 @@
       </div>
 
       <div class="mt-6 flex items-center justify-between border-t border-slate-50 pt-4">
-        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
           {{ pageLabel }} {{ pagination.page }} / {{ totalPages }}
         </p>
         <div class="flex items-center gap-2">
