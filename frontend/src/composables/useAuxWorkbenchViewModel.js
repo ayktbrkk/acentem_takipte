@@ -17,6 +17,22 @@ function asArray(value) {
 }
 
 const AUX_FIELD_LABELS = {
+  "notification-drafts": {
+    name: "Record",
+    customer: "Customer",
+    recipient: "Recipient",
+    event_key: "Event Key",
+    channel: "Channel",
+    reference_doctype: "Reference Type",
+    reference_name: "Reference Record",
+    template: "Template",
+    subject: "Subject",
+    language: "Language",
+    sent_at: "Sent At",
+    outbox_record: "Outbox Record",
+    owner: "Owner",
+    modified: "Modified",
+  },
   "notification-outbox": {
     name: "Record",
     customer: "Customer",

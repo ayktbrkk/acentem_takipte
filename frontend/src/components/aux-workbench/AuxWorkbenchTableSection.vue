@@ -89,20 +89,12 @@
           {{ pageLabel }} {{ pagination.page }} / {{ totalPages }}
         </p>
         <div class="flex items-center gap-2">
-          <button
-            class="btn btn-outline btn-sm shadow-sm"
-            :disabled="pagination.page <= 1 || isLoading"
-            @click="$emit('previous')"
-          >
+          <ActionButton variant="secondary" size="sm" :disabled="pagination.page <= 1 || isLoading" @click="$emit('previous')">
             <FeatherIcon name="chevron-left" class="h-3 w-3" />
-          </button>
-          <button
-            class="btn btn-outline btn-sm shadow-sm"
-            :disabled="!hasNextPage || isLoading"
-            @click="$emit('next')"
-          >
+          </ActionButton>
+          <ActionButton variant="secondary" size="sm" :disabled="!hasNextPage || isLoading" @click="$emit('next')">
             <FeatherIcon name="chevron-right" class="h-3 w-3" />
-          </button>
+          </ActionButton>
         </div>
       </div>
     </template>
@@ -113,6 +105,7 @@
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 import SkeletonLoader from "../ui/SkeletonLoader.vue";
+import ActionButton from "../app-shell/ActionButton.vue";
 import { FeatherIcon } from "frappe-ui";
 
 defineProps({
