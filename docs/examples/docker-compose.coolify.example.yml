@@ -9,7 +9,7 @@ services:
       - -lc
       - |
         python3 /usr/local/bin/sync-assets-manifest.py
-        export PATH=/home/frappe/.nvm/versions/node/v20.20.2/bin:$PATH
+        export PATH=/home/frappe/.nvm/versions/node/v20.20.2/bin:$$PATH
         exec /home/frappe/frappe-bench/env/bin/gunicorn --bind=0.0.0.0:8000 --threads=4 --workers=2 --worker-class=gthread --worker-tmp-dir=/dev/shm --timeout=120 --preload frappe.app:application
     environment:
       SITE_NAME: ${SITE_NAME:?}
@@ -17,13 +17,21 @@ services:
       FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:?}
     volumes:
       - app_sites:/home/frappe/frappe-bench/sites
+    healthcheck:
+      test: ["CMD-SHELL", "python3 - <<'PY'\nimport urllib.request\nurllib.request.urlopen('http://127.0.0.1:8000/api/method/ping', timeout=5)\nPY"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   frontend:
     image: ${APP_IMAGE:?}
     restart: always
     depends_on:
-      - backend
-      - websocket
+      backend:
+        condition: service_healthy
+      websocket:
+        condition: service_healthy
     expose:
       - "8080"
     command:
@@ -39,6 +47,12 @@ services:
       CLIENT_MAX_BODY_SIZE: 50m
     volumes:
       - app_sites:/home/frappe/frappe-bench/sites
+    healthcheck:
+      test: ["CMD-SHELL", "python3 - <<'PY'\nimport urllib.request\nurllib.request.urlopen('http://127.0.0.1:8080/login', timeout=5)\nPY"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   websocket:
     image: ${APP_IMAGE:?}
@@ -49,6 +63,12 @@ services:
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     volumes:
       - app_sites:/home/frappe/frappe-bench/sites
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('net').connect(9000, '127.0.0.1').on('connect', function(){ this.end(); process.exit(0); }).on('error', function(){ process.exit(1); })\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   configurator:
     image: ${APP_IMAGE:?}
@@ -56,10 +76,14 @@ services:
     working_dir: /home/frappe/frappe-bench/sites
     restart: "no"
     depends_on:
-      - mariadb
-      - redis-cache
-      - redis-queue
-      - redis-socketio
+      mariadb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+      redis-socketio:
+        condition: service_healthy
     command:
       - /bin/sh
       - -lc
@@ -80,7 +104,7 @@ services:
                 "redis_cache": "redis://redis-cache:6379",
                 "redis_queue": "redis://redis-queue:6379",
                 "redis_socketio": "redis://redis-socketio:6379",
-            "dns_multitenant": True,
+                "dns_multitenant": True,
                 "default_site": "${SITE_NAME}",
                 "serve_default_site": True,
                 "socketio_port": 9000,
@@ -118,18 +142,39 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   redis-cache:
     image: redis:6.2
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   redis-queue:
     image: redis:6.2
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   redis-socketio:
     image: redis:6.2
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   app_sites:

@@ -29,10 +29,20 @@ export default defineConfig({
     rollupOptions: {
       input: resolve(__dirname, "src/main.js"),
       output: {
-        manualChunks: {
-          vue: ["vue", "vue-router"],
-          frappe_ui: ["frappe-ui"],
-          chart: ["chart.js"],
+        manualChunks(id) {
+          if (!id.includes("node_modules")) {
+            return undefined;
+          }
+          if (id.includes("node_modules/vue") || id.includes("node_modules/vue-router")) {
+            return "vue";
+          }
+          if (id.includes("node_modules/frappe-ui")) {
+            return "frappe_ui";
+          }
+          if (id.includes("node_modules/chart.js")) {
+            return "chart";
+          }
+          return undefined;
         },
       },
     },

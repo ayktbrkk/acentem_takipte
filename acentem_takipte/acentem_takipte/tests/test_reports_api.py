@@ -1,6 +1,7 @@
 import pytest
 
 from acentem_takipte.acentem_takipte.api import reports
+from acentem_takipte.acentem_takipte.services import ops_alert_settings
 
 
 @pytest.mark.parametrize(
@@ -248,11 +249,13 @@ def test_get_ops_alert_channel_settings_coerces_response_shape(monkeypatch):
     payload = reports.get_ops_alert_channel_settings()
 
     assert payload == {
-        "slack_webhook_url": "https://hooks.slack.test/services/demo",
-        "telegram_bot_token": "bot-token",
+        "slack_webhook_url": "",
+        "telegram_bot_token": "",
         "telegram_chat_id": "909781070",
         "slack_configured": True,
         "telegram_configured": True,
+        "slack_webhook_mask": "****demo",
+        "telegram_bot_token_mask": "****oken",
     }
 
 
@@ -271,6 +274,23 @@ def test_save_ops_alert_channel_settings_api_passes_config(monkeypatch):
 
     assert captured["config"] == {"slack_webhook_url": "https://hooks.slack.test/services/demo"}
     assert payload["slack_configured"] is True
+
+
+def test_alert_channel_sanitizer_preserves_existing_secrets_when_form_is_blank():
+    payload = ops_alert_settings._sanitize_settings_payload(
+        {"telegram_chat_id": "909781070"},
+        current_config={
+            "at_ops_alert_slack_webhook_url": "https://hooks.slack.test/services/current",
+            "at_ops_alert_telegram_bot_token": "current-token",
+            "at_ops_alert_telegram_chat_id": "old-chat",
+        },
+    )
+
+    assert payload == {
+        "at_ops_alert_slack_webhook_url": "https://hooks.slack.test/services/current",
+        "at_ops_alert_telegram_bot_token": "current-token",
+        "at_ops_alert_telegram_chat_id": "909781070",
+    }
 
 
 def test_send_ops_alert_channel_test_api_coerces_channels(monkeypatch):

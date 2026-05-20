@@ -55,6 +55,8 @@ const alertChannelConfig = ref({
   telegram_chat_id: "",
   slack_configured: false,
   telegram_configured: false,
+  slack_webhook_mask: "",
+  telegram_bot_token_mask: "",
 });
 const alertChannelsLoading = ref(false);
 const alertChannelsSaving = ref(false);
@@ -92,11 +94,13 @@ async function loadAlertChannelSettings() {
     });
     const message = payload?.message || payload || {};
     alertChannelConfig.value = {
-      slack_webhook_url: String(message.slack_webhook_url || ""),
-      telegram_bot_token: String(message.telegram_bot_token || ""),
+      slack_webhook_url: "",
+      telegram_bot_token: "",
       telegram_chat_id: String(message.telegram_chat_id || ""),
       slack_configured: Boolean(message.slack_configured),
       telegram_configured: Boolean(message.telegram_configured),
+      slack_webhook_mask: String(message.slack_webhook_mask || ""),
+      telegram_bot_token_mask: String(message.telegram_bot_token_mask || ""),
     };
   } catch (err) {
     error.value = String(err?.message || err || t("loadError"));
@@ -116,11 +120,13 @@ async function saveAlertChannelSettings(config) {
     });
     const message = payload?.message || payload || {};
     alertChannelConfig.value = {
-      slack_webhook_url: String(message.slack_webhook_url || ""),
-      telegram_bot_token: String(message.telegram_bot_token || ""),
+      slack_webhook_url: "",
+      telegram_bot_token: "",
       telegram_chat_id: String(message.telegram_chat_id || ""),
       slack_configured: Boolean(message.slack_configured),
       telegram_configured: Boolean(message.telegram_configured),
+      slack_webhook_mask: String(message.slack_webhook_mask || ""),
+      telegram_bot_token_mask: String(message.telegram_bot_token_mask || ""),
     };
   } catch (err) {
     error.value = String(err?.message || err || t("saveError"));

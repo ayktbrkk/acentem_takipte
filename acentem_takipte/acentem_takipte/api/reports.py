@@ -325,18 +325,29 @@ def _coerce_alert_channel_payload(value: Any) -> dict[str, Any]:
             "telegram_chat_id": "",
             "slack_configured": False,
             "telegram_configured": False,
+            "slack_webhook_mask": "",
+            "telegram_bot_token_mask": "",
         }
     payload = dict(value)
     slack_webhook_url = str(payload.get("slack_webhook_url") or "").strip()
     telegram_bot_token = str(payload.get("telegram_bot_token") or "").strip()
     telegram_chat_id = str(payload.get("telegram_chat_id") or "").strip()
     return {
-        "slack_webhook_url": slack_webhook_url,
-        "telegram_bot_token": telegram_bot_token,
+        "slack_webhook_url": "",
+        "telegram_bot_token": "",
         "telegram_chat_id": telegram_chat_id,
         "slack_configured": bool(payload.get("slack_configured") or slack_webhook_url),
         "telegram_configured": bool(payload.get("telegram_configured") or (telegram_bot_token and telegram_chat_id)),
+        "slack_webhook_mask": _mask_secret(slack_webhook_url),
+        "telegram_bot_token_mask": _mask_secret(telegram_bot_token),
     }
+
+
+def _mask_secret(value: Any) -> str:
+    secret = str(value or "").strip()
+    if not secret:
+        return ""
+    return f"****{secret[-4:]}"
 
 
 def _coerce_alert_test_payload(value: Any) -> dict[str, Any]:

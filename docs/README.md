@@ -32,10 +32,10 @@ This directory contains the main repository documentation for `Acentem Takipte`.
 
 ## Audit and Supporting Material
 
-- [Audit Progress](AUDIT_PROGRESS.md)
-  - Current audit status and historical progress notes.
 - [audit/](audit/)
-  - Audit artifacts and detailed review outputs.
+  - Current production preflight audit report and detailed review outputs.
+- [Production Preflight Audit 2026-05-20](audit/production_preflight_audit_2026-05-20.md)
+  - Current evidence-backed production readiness audit and remediation tracker.
 - [superpowers/](superpowers/)
   - Additional supporting notes and working materials.
 

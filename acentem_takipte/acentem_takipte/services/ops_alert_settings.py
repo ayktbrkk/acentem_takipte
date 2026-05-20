@@ -23,9 +23,9 @@ def load_ops_alert_channel_settings() -> dict[str, Any]:
 
 
 def save_ops_alert_channel_settings(config: dict[str, Any] | str | None = None) -> dict[str, Any]:
-    sanitized = _sanitize_settings_payload(config)
     site_config_path = _get_site_config_path()
     site_config = _read_site_config()
+    sanitized = _sanitize_settings_payload(config, current_config=site_config)
 
     for config_key in OPS_ALERT_CHANNEL_KEYS:
         site_config[config_key] = sanitized.get(config_key, "")
@@ -38,7 +38,7 @@ def save_ops_alert_channel_settings(config: dict[str, Any] | str | None = None) 
 def send_ops_alert_channel_test(config: dict[str, Any] | str | None = None) -> dict[str, Any]:
     current_config = dict(frappe.get_site_config() or {})
     test_config = dict(current_config)
-    test_config.update(_sanitize_settings_payload(config))
+    test_config.update(_sanitize_settings_payload(config, current_config=current_config))
 
     if not _has_any_channel(test_config):
         frappe.throw(_("Configure at least one alert channel before sending a test alert."))
@@ -57,7 +57,11 @@ def send_ops_alert_channel_test(config: dict[str, Any] | str | None = None) -> d
     return {"ok": bool(channels), "channels": channels}
 
 
-def _sanitize_settings_payload(config: dict[str, Any] | str | None) -> dict[str, str]:
+def _sanitize_settings_payload(
+    config: dict[str, Any] | str | None,
+    *,
+    current_config: dict[str, Any] | None = None,
+) -> dict[str, str]:
     if isinstance(config, str):
         try:
             config = json.loads(config)
@@ -68,11 +72,43 @@ def _sanitize_settings_payload(config: dict[str, Any] | str | None) -> dict[str,
     if not isinstance(config, dict):
         frappe.throw(_("Alert channel settings payload must be a JSON object."))
 
+    current_config = current_config or {}
     return {
-        "at_ops_alert_slack_webhook_url": str(config.get("slack_webhook_url") or config.get("at_ops_alert_slack_webhook_url") or "").strip(),
-        "at_ops_alert_telegram_bot_token": str(config.get("telegram_bot_token") or config.get("at_ops_alert_telegram_bot_token") or "").strip(),
+        "at_ops_alert_slack_webhook_url": _coerce_secret_config_value(
+            config,
+            public_key="slack_webhook_url",
+            config_key="at_ops_alert_slack_webhook_url",
+            clear_key="clear_slack_webhook_url",
+            current_config=current_config,
+        ),
+        "at_ops_alert_telegram_bot_token": _coerce_secret_config_value(
+            config,
+            public_key="telegram_bot_token",
+            config_key="at_ops_alert_telegram_bot_token",
+            clear_key="clear_telegram_bot_token",
+            current_config=current_config,
+        ),
         "at_ops_alert_telegram_chat_id": str(config.get("telegram_chat_id") or config.get("at_ops_alert_telegram_chat_id") or "").strip(),
     }
+
+
+def _coerce_secret_config_value(
+    config: dict[str, Any],
+    *,
+    public_key: str,
+    config_key: str,
+    clear_key: str,
+    current_config: dict[str, Any],
+) -> str:
+    if config.get(clear_key):
+        return ""
+    raw_value = config.get(public_key)
+    if raw_value is None:
+        raw_value = config.get(config_key)
+    value = str(raw_value or "").strip()
+    if value:
+        return value
+    return str(current_config.get(config_key) or "").strip()
 
 
 def _build_settings_payload(site_config: dict[str, Any]) -> dict[str, Any]:

@@ -45,6 +45,8 @@ describe("AdminAlertChannelsSettings", () => {
           telegram_chat_id: "6391020707",
           slack_configured: true,
           telegram_configured: true,
+          slack_webhook_mask: "****demo",
+          telegram_bot_token_mask: "****oken",
         },
       })
       .mockResolvedValueOnce({ message: { slack_configured: true, telegram_configured: true } })
@@ -72,12 +74,21 @@ describe("AdminAlertChannelsSettings", () => {
     expect(wrapper.text()).toContain("Bağlı");
     expect(wrapper.text()).toContain("Uyarı Kanalları");
     expect(wrapper.text()).toContain("Slack Webhook URL");
+    expect(wrapper.find('[data-testid="alert-slack-webhook"]').element.value).toBe("");
+    expect(wrapper.find('[data-testid="alert-telegram-token"]').element.value).toBe("");
 
     await wrapper.find('[data-testid="alert-settings-save"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_ops_alert_channel_settings_api",
         method: "POST",
+        params: {
+          config: {
+            slack_webhook_url: "",
+            telegram_bot_token: "",
+            telegram_chat_id: "6391020707",
+          },
+        },
       }),
     );
 

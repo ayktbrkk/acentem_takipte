@@ -36,7 +36,7 @@
               type="password"
               autocomplete="off"
               data-testid="alert-slack-webhook"
-              :placeholder="t('slackWebhookPlaceholder')"
+              :placeholder="localConfig.slack_webhook_mask || t('slackWebhookPlaceholder')"
             >
           </label>
         </div>
@@ -72,7 +72,7 @@
               type="password"
               autocomplete="off"
               data-testid="alert-telegram-token"
-              :placeholder="t('telegramBotTokenPlaceholder')"
+              :placeholder="localConfig.telegram_bot_token_mask || t('telegramBotTokenPlaceholder')"
             >
           </label>
 
@@ -160,14 +160,18 @@ const localConfig = reactive({
   telegram_chat_id: "",
   slack_configured: false,
   telegram_configured: false,
+  slack_webhook_mask: "",
+  telegram_bot_token_mask: "",
 });
 
 watch(
   () => props.config,
   (nextConfig) => {
-    localConfig.slack_webhook_url = String(nextConfig?.slack_webhook_url || "");
-    localConfig.telegram_bot_token = String(nextConfig?.telegram_bot_token || "");
+    localConfig.slack_webhook_url = "";
+    localConfig.telegram_bot_token = "";
     localConfig.telegram_chat_id = String(nextConfig?.telegram_chat_id || "");
+    localConfig.slack_webhook_mask = String(nextConfig?.slack_webhook_mask || "");
+    localConfig.telegram_bot_token_mask = String(nextConfig?.telegram_bot_token_mask || "");
     localConfig.slack_configured = Boolean(nextConfig?.slack_configured || localConfig.slack_webhook_url);
     localConfig.telegram_configured = Boolean(
       nextConfig?.telegram_configured || (localConfig.telegram_bot_token && localConfig.telegram_chat_id)

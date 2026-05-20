@@ -324,6 +324,31 @@ def restore_document(docname: str) -> dict:
 
 
 @frappe.whitelist(methods=["POST"])
+def share_document(docname: str, channel: str = "url") -> dict:
+    doc = _load_at_document(docname)
+    frappe.has_permission("AT Document", ptype="read", doc=doc, throw=True)
+
+    if bool(getattr(doc, "is_sensitive", 0)):
+        frappe.throw(_("Sensitive documents cannot be shared."), frappe.PermissionError)
+
+    linked_file_name = str(getattr(doc, "file", "") or "").strip()
+    if not linked_file_name:
+        frappe.throw(_("Document file is required before sharing."), frappe.DoesNotExistError)
+
+    file_doc = frappe.get_doc("File", linked_file_name)
+    file_url = str(getattr(file_doc, "file_url", "") or "").strip()
+    file_url_path = urlparse(file_url).path
+    if bool(getattr(file_doc, "is_private", 0)) or file_url_path.startswith("/private/"):
+        frappe.throw(_("Private files cannot be shared."), frappe.PermissionError)
+
+    return {
+        "status": "success",
+        "channel": str(channel or "url").strip() or "url",
+        "file_url": file_url,
+    }
+
+
+@frappe.whitelist(methods=["POST"])
 def permanent_delete_document(docname: str) -> dict:
     doc = _load_at_document(docname)
     _assert_at_document_delete_access(doc)
@@ -565,8 +590,17 @@ def get_document_context(doctype: str, docname: str) -> dict:
     Returns:
         {"record_name": str, "customer_name": str | None, "customer_id": str | None}
     """
+    doctype = str(doctype or "").strip()
+    docname = str(docname or "").strip()
     if not doctype or not docname:
         return {"record_name": docname, "customer_name": None, "customer_id": None}
+    if doctype not in _ALLOWED_REFERENCE_DOCTYPES or doctype == "":
+        frappe.throw(
+            _("Invalid reference doctype: {0}").format(doctype),
+            frappe.ValidationError,
+        )
+
+    assert_doc_permission(doctype, docname, "read")
 
     record_name = docname
     customer_name = None
@@ -598,12 +632,12 @@ def get_document_context(doctype: str, docname: str) -> dict:
 
     elif doctype == "AT Customer":
         row = frappe.db.get_value(
-            "AT Customer", docname, ["name", "full_name", "tax_id"], as_dict=True
+            "AT Customer", docname, ["name", "full_name", "masked_tax_id"], as_dict=True
         )
         if row:
             record_name = row.full_name or row.name
             customer_name = row.full_name or row.name
-            customer_id = row.tax_id or ""
+            customer_id = row.masked_tax_id or row.name or ""
 
     return {
         "record_name": record_name,

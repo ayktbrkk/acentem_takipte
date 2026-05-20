@@ -222,6 +222,7 @@ def _dashboard_tab_cache_key(
 @frappe.whitelist()
 def get_offer_detail_payload(name: str) -> dict[str, Any]:
     """Expose high-performance offer 360 payload to the dashboard."""
+    _assert_dashboard_endpoint_method("get_offer_detail_payload")
     if not name:
         frappe.throw(_("Offer name is required."))
 
@@ -236,6 +237,7 @@ def get_offer_detail_payload(name: str) -> dict[str, Any]:
 @frappe.whitelist()
 def get_lead_detail_payload(name: str) -> dict[str, Any]:
     """Expose high-performance lead 360 payload to the dashboard."""
+    _assert_dashboard_endpoint_method("get_lead_detail_payload")
     if not name:
         frappe.throw(_("Lead name is required."))
 
@@ -245,6 +247,51 @@ def get_lead_detail_payload(name: str) -> dict[str, Any]:
 
     from acentem_takipte.acentem_takipte.services.lead_360 import build_lead_360_payload
     return build_lead_360_payload(name)
+
+
+@frappe.whitelist()
+def update_customer_profile(name: str, values: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Update editable customer profile fields from dashboard surfaces."""
+    _assert_dashboard_endpoint_method("update_customer_profile")
+    customer_name = str(name or "").strip()
+    if not customer_name:
+        frappe.throw(_("Customer name is required."))
+
+    if not frappe.has_permission("AT Customer", "write", customer_name):
+        frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+    payload = values or {}
+    if isinstance(payload, str):
+        payload = frappe.parse_json(payload) or {}
+    if not isinstance(payload, dict):
+        frappe.throw(_("Customer profile values must be an object."))
+
+    updates: dict[str, Any] = {}
+    for field, value in payload.items():
+        if field not in CUSTOMER_PROFILE_EDIT_FIELDS:
+            continue
+        updates[field] = value
+
+    if "gender" in updates and str(updates.get("gender") or "") not in CUSTOMER_GENDER_OPTIONS:
+        frappe.throw(_("Invalid customer gender."))
+    if (
+        "marital_status" in updates
+        and str(updates.get("marital_status") or "") not in CUSTOMER_MARITAL_OPTIONS
+    ):
+        frappe.throw(_("Invalid customer marital status."))
+    if (
+        "consent_status" in updates
+        and str(updates.get("consent_status") or "") not in CUSTOMER_CONSENT_OPTIONS
+    ):
+        frappe.throw(_("Invalid customer consent status."))
+
+    customer = frappe.get_doc("AT Customer", customer_name)
+    for field, value in updates.items():
+        customer.set(field, value)
+    if updates:
+        customer.save(ignore_permissions=False)
+
+    return {"name": customer.name, "updated_fields": sorted(updates)}
 
 
 @frappe.whitelist()

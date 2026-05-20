@@ -44,6 +44,9 @@ describe("Sidebar localization", () => {
         mobileOpen: false,
       },
       global: {
+        directives: {
+          prefetch: {},
+        },
         stubs: {
           RouterLink: RouterLinkStub,
           OfficeBranchSelect: OfficeBranchSelectStub,
@@ -52,10 +55,9 @@ describe("Sidebar localization", () => {
     });
 
     expect(wrapper.text()).toContain("MENÜ");
-    expect(wrapper.text()).toContain("GENEL GÖRÜNÜM");
-    expect(wrapper.text()).toContain("Pano");
+    expect(wrapper.text()).toContain("SATIŞ & PORTFÖY");
     expect(wrapper.text()).toContain("Fırsatlar");
-    expect(wrapper.text()).toContain("Acil Erişim Talebi");
+    expect(wrapper.text()).toContain("Doküman Merkezi");
     expect(wrapper.text()).toContain("Kenar Menüsünü Daralt");
   });
 
@@ -73,6 +75,9 @@ describe("Sidebar localization", () => {
         mobileOpen: false,
       },
       global: {
+        directives: {
+          prefetch: {},
+        },
         stubs: {
           RouterLink: RouterLinkStub,
           OfficeBranchSelect: OfficeBranchSelectStub,
@@ -99,6 +104,9 @@ describe("Sidebar localization", () => {
         mobileOpen: false,
       },
       global: {
+        directives: {
+          prefetch: {},
+        },
         stubs: {
           RouterLink: RouterLinkStub,
           OfficeBranchSelect: OfficeBranchSelectStub,
@@ -107,10 +115,9 @@ describe("Sidebar localization", () => {
     });
 
     expect(wrapper.text()).toContain("MENU");
-    expect(wrapper.text()).toContain("OVERVIEW");
-    expect(wrapper.text()).toContain("Dashboard");
+    expect(wrapper.text()).toContain("SALES & PORTFOLIO");
     expect(wrapper.text()).toContain("Leads");
-    expect(wrapper.text()).toContain("Break-Glass Request");
+    expect(wrapper.text()).toContain("Document Center");
     expect(wrapper.text()).toContain("Collapse Sidebar");
   });
 });

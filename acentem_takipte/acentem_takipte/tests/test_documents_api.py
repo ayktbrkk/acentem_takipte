@@ -8,6 +8,7 @@ from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 from acentem_takipte.acentem_takipte.api.documents import (
     _resolve_reference_token,
     archive_document,
+    get_document_context,
     share_document,
     track_document_view,
     permanent_delete_document,
@@ -196,3 +197,38 @@ class TestDocumentsApi(IntegrationTestCase):
                 share_document("AT-DOC-001", "whatsapp")
 
         self.assertIn("private", str(err.exception).lower())
+
+    def test_get_document_context_checks_permission_before_customer_lookup(self):
+        with (
+            patch(
+                "acentem_takipte.acentem_takipte.api.documents.assert_doc_permission",
+                side_effect=PermissionError("denied"),
+            ) as permission_mock,
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.get_value") as get_value_mock,
+        ):
+            with self.assertRaises(PermissionError):
+                get_document_context("AT Customer", "AT-CUST-001")
+
+        permission_mock.assert_called_once_with("AT Customer", "AT-CUST-001", "read")
+        get_value_mock.assert_not_called()
+
+    def test_get_document_context_masks_customer_identity(self):
+        def fake_get_value(doctype, name, fields=None, as_dict=False):
+            if doctype == "AT Customer":
+                return SimpleNamespace(
+                    name=name,
+                    full_name="Aykut Bekir",
+                    masked_tax_id="123******01",
+                )
+            raise AssertionError(f"Unexpected get_value call: {doctype} {name}")
+
+        with (
+            patch("acentem_takipte.acentem_takipte.api.documents.assert_doc_permission"),
+            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.get_value", side_effect=fake_get_value),
+        ):
+            payload = get_document_context("AT Customer", "AT-CUST-001")
+
+        self.assertEqual(payload["record_name"], "Aykut Bekir")
+        self.assertEqual(payload["customer_name"], "Aykut Bekir")
+        self.assertEqual(payload["customer_id"], "123******01")
+        self.assertNotEqual(payload["customer_id"], "12345678901")
