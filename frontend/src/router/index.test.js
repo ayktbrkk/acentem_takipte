@@ -2,7 +2,12 @@
 
 import { describe, expect, it } from "vitest";
 
-import { getDeskRedirectTarget, hasSystemManagerRole } from "./index";
+import {
+  getDeskRedirectTarget,
+  getPreferredSpaLandingRoute,
+  getUnauthorizedRouteFallback,
+  hasSystemManagerRole,
+} from "./index";
 
 describe("router home guard", () => {
   it("keeps spa users inside /at", () => {
@@ -53,5 +58,33 @@ describe("break-glass manager role helper", () => {
 
   it("returns false for non-manager roles", () => {
     expect(hasSystemManagerRole(["AT Agent", "Desk User"])).toBe(false);
+  });
+});
+
+describe("unauthorized route fallback", () => {
+  it("routes AT Agent away from manager-only dashboard", () => {
+    expect(getUnauthorizedRouteFallback(["AT Agent"])).toEqual({ name: "lead-list" });
+  });
+
+  it("keeps managers on dashboard fallback", () => {
+    expect(getUnauthorizedRouteFallback(["AT Manager"])).toEqual({ name: "dashboard" });
+  });
+
+  it("returns null when no supported app role exists", () => {
+    expect(getUnauthorizedRouteFallback(["Website User"])).toBeNull();
+  });
+});
+
+describe("preferred spa landing route", () => {
+  it("lands managers on dashboard", () => {
+    expect(getPreferredSpaLandingRoute(["AT Manager"])).toEqual({ name: "dashboard" });
+  });
+
+  it("lands agents on leads", () => {
+    expect(getPreferredSpaLandingRoute(["AT Agent"])).toEqual({ name: "lead-list" });
+  });
+
+  it("returns null for unsupported role-only payloads", () => {
+    expect(getPreferredSpaLandingRoute(["Website User"])).toBeNull();
   });
 });

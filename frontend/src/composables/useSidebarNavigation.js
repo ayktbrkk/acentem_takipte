@@ -87,7 +87,7 @@ export function useSidebarNavigation() {
       ? [{
         title: t("sectionOverview"),
         items: filterByRoles([
-          { key: "dashboard", label: t("dashboard"), to: "/", short: "DB", icon: shallowRef(IconLucideLayoutDashboard), badgeClass: "text-emerald-700", roles: ROLE_MANAGER },
+          { key: "dashboard", label: t("dashboard"), to: "/dashboard", short: "DB", icon: shallowRef(IconLucideLayoutDashboard), badgeClass: "text-emerald-700", roles: ROLE_MANAGER },
         ]),
       }]
       : []),

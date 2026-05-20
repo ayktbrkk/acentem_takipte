@@ -35,6 +35,83 @@ SMOKE_MUTATION_DOCTYPES = (
     "AT Notification Draft",
     "AT Renewal Task",
 )
+MAIL_DELIVERY_ERROR_METHODS = (
+    "Password reset email could not be sent",
+    "Unable to send new password notification",
+)
+
+
+def _flag_enabled(value: object) -> bool:
+    try:
+        return int(value or 0) == 1
+    except (TypeError, ValueError):
+        return False
+
+
+def _get_mail_delivery_preflight_payload() -> dict:
+    accounts = frappe.get_all(
+        "Email Account",
+        fields=[
+            "name",
+            "email_id",
+            "default_outgoing",
+            "enable_outgoing",
+            "smtp_server",
+            "smtp_port",
+            "use_tls",
+            "use_ssl",
+        ],
+        order_by="name asc",
+        ignore_permissions=True,
+    )
+
+    normalized_accounts = []
+    for row in accounts:
+        normalized_accounts.append(
+            {
+                "name": row.get("name"),
+                "email_id": row.get("email_id"),
+                "default_outgoing": _flag_enabled(row.get("default_outgoing")),
+                "enable_outgoing": _flag_enabled(row.get("enable_outgoing")),
+                "smtp_server": row.get("smtp_server"),
+                "smtp_port": row.get("smtp_port"),
+                "use_tls": _flag_enabled(row.get("use_tls")),
+                "use_ssl": _flag_enabled(row.get("use_ssl")),
+            }
+        )
+
+    enabled_accounts = [row for row in normalized_accounts if row["enable_outgoing"]]
+    default_accounts = [
+        row
+        for row in normalized_accounts
+        if row["enable_outgoing"] and row["default_outgoing"]
+    ]
+
+    recent_queue = frappe.get_all(
+        "Email Queue",
+        fields=["name", "status", "sender", "reference_doctype", "creation"],
+        order_by="creation desc",
+        limit_page_length=10,
+        ignore_permissions=True,
+    )
+    recent_errors = frappe.get_all(
+        "Error Log",
+        filters={"method": ["in", list(MAIL_DELIVERY_ERROR_METHODS)]},
+        fields=["name", "method", "creation"],
+        order_by="creation desc",
+        limit_page_length=10,
+        ignore_permissions=True,
+    )
+
+    return {
+        "ok": bool(default_accounts),
+        "default_outgoing_configured": bool(default_accounts),
+        "enabled_outgoing_account_count": len(enabled_accounts),
+        "default_outgoing_account_count": len(default_accounts),
+        "accounts": normalized_accounts,
+        "recent_queue": recent_queue,
+        "recent_errors": recent_errors,
+    }
 
 
 def _assert_smoke_write_access() -> None:
@@ -413,4 +490,10 @@ def inspect_at_doctype_modules() -> list[dict]:
         fields=["name", "module", "app", "custom"],
         order_by="name asc",
     )
+
+
+@frappe.whitelist()
+def inspect_mail_delivery_preflight() -> dict:
+    _assert_smoke_read_access()
+    return _get_mail_delivery_preflight_payload()
 

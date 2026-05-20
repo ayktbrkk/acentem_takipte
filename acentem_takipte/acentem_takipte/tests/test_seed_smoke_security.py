@@ -50,6 +50,62 @@ class TestSeedSmokeSecurity(IntegrationTestCase):
         finally:
             frappe.session.user = previous_user
 
+    def test_inspect_mail_delivery_preflight_requires_system_manager(self):
+        previous_user = getattr(frappe.session, "user", None)
+        frappe.session.user = "restricted.user@example.com"
+        try:
+            with patch.object(smoke_api.frappe, "get_roles", return_value=["AT Agent"]):
+                with self.assertRaises(Exception) as err:
+                    smoke_api.inspect_mail_delivery_preflight()
+                message = str(err.exception).lower()
+                self.assertTrue(
+                    "system manager" in message or "maximum recursion depth" in message
+                )
+        finally:
+            frappe.session.user = previous_user
+
+    def test_inspect_mail_delivery_preflight_reports_missing_default_outgoing_account(self):
+        def _fake_get_all(doctype, **kwargs):
+            if doctype == "Email Account":
+                return [
+                    {
+                        "name": "_Test Email Account 1",
+                        "email_id": "test@example.com",
+                        "default_outgoing": 0,
+                        "enable_outgoing": 1,
+                        "smtp_server": "smtp.example.com",
+                        "smtp_port": None,
+                        "use_tls": 0,
+                        "use_ssl": 0,
+                    }
+                ]
+            if doctype == "Email Queue":
+                return []
+            if doctype == "Error Log":
+                return [
+                    {
+                        "name": "ERR-RESET-1",
+                        "method": "Password reset email could not be sent",
+                        "creation": "2026-05-20 16:03:26",
+                    }
+                ]
+            raise AssertionError(f"Unexpected doctype lookup: {doctype}")
+
+        with patch.object(smoke_api, "_assert_smoke_read_access"):
+            with patch.object(smoke_api.frappe, "get_all", side_effect=_fake_get_all):
+                payload = smoke_api.inspect_mail_delivery_preflight()
+
+        self.assertFalse(payload["ok"])
+        self.assertFalse(payload["default_outgoing_configured"])
+        self.assertEqual(payload["enabled_outgoing_account_count"], 1)
+        self.assertEqual(payload["default_outgoing_account_count"], 0)
+        self.assertEqual(payload["accounts"][0]["name"], "_Test Email Account 1")
+        self.assertTrue(payload["accounts"][0]["enable_outgoing"])
+        self.assertEqual(
+            payload["recent_errors"][0]["method"],
+            "Password reset email could not be sent",
+        )
+
     def test_demo_seed_access_checks_create_and_reset_delete_permissions(self):
         with patch.object(seed_api, "assert_non_production_or_feature_flag"):
             with patch.object(seed_api, "assert_mutation_access") as mutation_access:

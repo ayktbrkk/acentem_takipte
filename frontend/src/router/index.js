@@ -77,6 +77,11 @@ const router = createRouter({
   routes: [
     {
       path: "/",
+      name: "home",
+      redirect: () => getPreferredSpaLandingRoute(sessionState.roles) || { name: "dashboard" },
+    },
+    {
+      path: "/dashboard",
       name: "dashboard",
       component: Dashboard,
       meta: {
@@ -506,16 +511,38 @@ export function hasSystemManagerRole(roles = []) {
   return normalizedRoles.has("system manager") || normalizedRoles.has("administrator");
 }
 
+export function getPreferredSpaLandingRoute(roles = []) {
+  const normalizedRoles = normalizeRoles(roles);
+
+  if (hasSystemManagerRole(roles) || normalizedRoles.has("at manager")) {
+    return { name: "dashboard" };
+  }
+
+  if (normalizedRoles.has("at agent") || normalizedRoles.has("at accountant")) {
+    return { name: "lead-list" };
+  }
+
+  return null;
+}
+
 function hasAnyRoleFromSession(allowedRoles = []) {
   if (!allowedRoles.length) return true;
   const userRoles = normalizeRoles(sessionState.roles);
   return allowedRoles.some((r) => userRoles.has(String(r).trim().toLowerCase()));
 }
 
+export function getUnauthorizedRouteFallback(roles = []) {
+  return getPreferredSpaLandingRoute(roles);
+}
+
 router.beforeEach((to) => {
   const requiredRoles = to.meta?.requiredRoles;
   if (Array.isArray(requiredRoles) && requiredRoles.length > 0 && !hasAnyRoleFromSession(requiredRoles)) {
-    return { name: "dashboard" };
+    const fallback = getUnauthorizedRouteFallback(sessionState.roles);
+    if (fallback) {
+      return fallback;
+    }
+    return false;
   }
 
   const target = getDeskRedirectTarget(

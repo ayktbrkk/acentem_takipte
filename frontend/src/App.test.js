@@ -7,8 +7,8 @@ import App from "./App.vue";
 import { useUiStore } from "./stores/ui";
 
 const routeState = reactive({
-  fullPath: "/at",
-  path: "/at",
+  fullPath: "/at/dashboard",
+  path: "/at/dashboard",
   name: "dashboard",
   params: {},
 });
@@ -61,7 +61,7 @@ const RouterViewStub = {
   template: `
     <slot
       :Component="{ template: '<div class=&quot;route-component&quot; />' }"
-      :route="{ name: 'dashboard', path: '/at', params: {} }"
+      :route="{ name: 'dashboard', path: '/at/dashboard', params: {} }"
     />
   `,
 };
@@ -69,8 +69,8 @@ const RouterViewStub = {
 describe("App shell ui store integration", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
-    routeState.fullPath = "/at";
-    routeState.path = "/at";
+    routeState.fullPath = "/at/dashboard";
+    routeState.path = "/at/dashboard";
     routeState.name = "dashboard";
     routeState.params = {};
   });
