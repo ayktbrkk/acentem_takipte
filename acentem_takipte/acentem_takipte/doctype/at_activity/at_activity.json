@@ -107,7 +107,7 @@
       "delete": 1
     },
     {
-      "role": "Manager",
+      "role": "AT Manager",
       "read": 1,
       "write": 1,
       "create": 1,
@@ -120,7 +120,7 @@
       "create": 1
     },
     {
-      "role": "Accountant",
+      "role": "AT Accountant",
       "read": 1
     }
   ]

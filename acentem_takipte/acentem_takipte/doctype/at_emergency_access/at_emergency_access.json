@@ -111,7 +111,7 @@
    "print": 0,
    "read": 1,
    "report": 0,
-   "role": "Manager",
+   "role": "AT Manager",
    "share": 0,
    "write": 0
   }

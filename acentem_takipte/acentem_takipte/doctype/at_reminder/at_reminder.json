@@ -139,7 +139,7 @@
    "create": 1,
    "delete": 1,
    "read": 1,
-   "role": "Manager",
+   "role": "AT Manager",
    "write": 1
   },
   {
@@ -150,7 +150,7 @@
   },
   {
    "read": 1,
-   "role": "Accountant"
+   "role": "AT Accountant"
   }
  ],
  "sort_field": "modified",
