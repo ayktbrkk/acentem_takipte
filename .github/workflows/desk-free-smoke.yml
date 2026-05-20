@@ -154,13 +154,17 @@ jobs:
           node scripts/e2e/print-playwright-summary.mjs test-results/smoke-report.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: Optional webhook notification (Slack-compatible)
-        if: always() && secrets.SMOKE_WEBHOOK_URL != ''
+        if: always()
         shell: bash
         env:
           SMOKE_WEBHOOK_URL: ${{ secrets.SMOKE_WEBHOOK_URL }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
+          if [ -z "${SMOKE_WEBHOOK_URL:-}" ]; then
+            echo "SMOKE_WEBHOOK_URL is not configured; skipping webhook notification."
+            exit 0
+          fi
           STATUS="${{ job.status }}"
           MSG="Desk-Free ${E2E_PROFILE} smoke run: ${STATUS}\nTarget: ${E2E_TARGET_LABEL}\nBase URL: ${E2E_BASE_URL}\nRun: ${RUN_URL}"
           jq -n --arg text "$MSG" '{text:$text}' > /tmp/smoke-webhook.json
@@ -169,7 +173,14 @@ jobs:
       - name: Job summary
         if: always()
         shell: bash
+        env:
+          SMOKE_WEBHOOK_URL: ${{ secrets.SMOKE_WEBHOOK_URL }}
         run: |
+          if [ -n "${SMOKE_WEBHOOK_URL:-}" ]; then
+            WEBHOOK_STATUS="enabled"
+          else
+            WEBHOOK_STATUS="disabled"
+          fi
           {
             echo "## Desk-Free Smoke Run"
             echo ""
@@ -182,7 +193,7 @@ jobs:
             echo "- Trigger: \`${{ github.event_name }}\`"
             echo "- JUnit: \`test-results/smoke-junit.xml\`"
             echo "- JSON: \`test-results/smoke-report.json\`"
-            echo "- Webhook: \`${{ secrets.SMOKE_WEBHOOK_URL != '' && 'enabled' || 'disabled' }}\`"
+            echo "- Webhook: \`${WEBHOOK_STATUS}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Open or comment failure issue (dedupe)
