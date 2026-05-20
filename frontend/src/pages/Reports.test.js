@@ -650,6 +650,41 @@ describe("Reports page communication operations report", () => {
     expect(wrapper.text()).toContain("Load failed");
   });
 
+  it("does not request scheduled report configs for operational spa users", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "agent@example.com",
+      full_name: "Agent",
+      roles: ["AT Agent"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+      capabilities: {},
+    });
+
+    frappeRequestMock.mockResolvedValue({ message: { columns: [], rows: [] } });
+
+    mount(Reports, {
+      global: {
+        stubs: {
+          ...commonStubs,
+          ScheduledReportsManager: scheduledManagerStub,
+        },
+      },
+    });
+
+    await settleReport();
+
+    expect(
+      frappeRequestMock.mock.calls.some(([request]) =>
+        String(request?.url || "").includes("get_scheduled_report_configs"),
+      ),
+    ).toBe(false);
+  });
+
   it("shows load error when report fetch fails", async () => {
     frappeRequestMock.mockRejectedValueOnce(new Error("Fetch failed"));
 

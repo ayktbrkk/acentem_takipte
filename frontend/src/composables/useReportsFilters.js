@@ -83,8 +83,7 @@ export function useReportsFilters({
   const visibleFilters = computed(() => new Set(reportFilterConfig[filters.reportKey] || []));
 
   const canManageScheduledReports = computed(() => {
-    const roles = Array.isArray(unref(authStore.roles)) ? unref(authStore.roles) : [];
-    return Boolean(unref(authStore.isDeskUser)) || roles.includes("AT Manager");
+    return Boolean(unref(authStore.isDeskUser));
   });
 
   const activeFilterCount = computed(() => {

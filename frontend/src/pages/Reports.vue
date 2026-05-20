@@ -285,7 +285,7 @@ const reportsRuntime = useReportsRuntime({
   t,
   buildFiltersPayload,
   buildPreviousPeriodFiltersPayload,
-  canManageScheduledReports: ref(true),
+  canManageScheduledReports: filterCanManage,
   filtersSectionRef,
   visibleColumnKeys,
   groupByColumn,
@@ -361,7 +361,7 @@ const {
   t,
 });
 
-const canManageScheduledReports = computed(() => Boolean(authStore.isDeskUser));
+const canManageScheduledReports = filterCanManage;
 
 watch(() => branchStore.selected, () => scheduleReportLoad());
 

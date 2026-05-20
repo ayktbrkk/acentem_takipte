@@ -61,7 +61,7 @@ describe("useReportsFilters", () => {
     expect(result.branchScopeLabel.value).toContain("Istanbul");
     expect(result.activeFilterCount.value).toBeGreaterThan(0);
     expect(result.visibleAdvancedFilters.value.length).toBeGreaterThan(0);
-    expect(result.canManageScheduledReports.value).toBe(true);
+    expect(result.canManageScheduledReports.value).toBe(false);
     expect(result.buildFiltersPayload()).toMatchObject({
       from_date: "2026-03-10",
       to_date: "2026-03-15",
@@ -87,5 +87,34 @@ describe("useReportsFilters", () => {
       from_date: expect.any(String),
       to_date: expect.any(String),
     });
+  });
+
+  it("allows scheduled report management only for desk users", () => {
+    const route = reactive({ query: {} });
+    const router = { replace: vi.fn() };
+    const authStore = reactive({
+      roles: ["AT System Manager"],
+      isDeskUser: true,
+    });
+    const branchStore = reactive({
+      requestBranch: "IST",
+      activeBranch: { label: "Istanbul" },
+    });
+
+    const result = useReportsFilters({
+      props: { initialReportKey: "policy_list" },
+      t: (key) => key,
+      activeLocale: ref("tr"),
+      localeCode: ref("tr-TR"),
+      route,
+      router,
+      authStore,
+      branchStore,
+      refresh: vi.fn(),
+      visibleColumnKeys: ref([]),
+      groupByColumn: ref(""),
+    });
+
+    expect(result.canManageScheduledReports.value).toBe(true);
   });
 });

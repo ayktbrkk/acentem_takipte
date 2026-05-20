@@ -13,6 +13,8 @@ This directory contains the main repository documentation for `Acentem Takipte`.
   - Short executive summary of the verified application architecture.
 - [Architecture Map](ARCHITECTURE_MAP.md)
   - Full repository-grounded architecture map with runtime flows and module boundaries.
+- [AT Role Page Permission Matrix](AT_ROLE_PAGE_PERMISSION_MATRIX.md)
+  - Current role-family, page visibility, backing-doctype/API, and permission-alignment matrix for the `/at` SPA.
 
 ## Product and UI
 

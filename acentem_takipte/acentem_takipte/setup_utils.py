@@ -186,9 +186,26 @@ FULL_ACCESS_ALL = {
     "email": 1,
 }
 
+OPERATIONAL_DOCUMENT_ACCESS = {
+    "read": 1,
+    "write": 1,
+    "create": 1,
+    "delete": 0,
+    "submit": 0,
+    "cancel": 0,
+    "amend": 0,
+    "report": 1,
+    "export": 1,
+    "import": 0,
+    "share": 1,
+    "print": 1,
+    "email": 1,
+}
+
 PERMISSION_MATRIX: dict[str, dict[str, dict[int, dict[str, int]]]] = {}
 
-# Doctypes where AT Agent, AT Manager, AT Accountant get FULL_ALL
+# Doctypes behind visible operational pages where AT Agent, AT Manager,
+# and AT Accountant must have direct DocType access.
 for _dt in (
     "AT Lead",
     "AT Offer",
@@ -196,6 +213,17 @@ for _dt in (
     "AT Policy Endorsement",
     "AT Policy Snapshot",
     "AT Customer",
+    "AT Claim",
+    "AT Payment",
+    "AT Payment Installment",
+    "AT Renewal Task",
+    "AT Call Note",
+    "AT Segment",
+    "AT Campaign",
+    "AT Ownership Assignment",
+    "AT Activity",
+    "AT Task",
+    "AT Reminder",
 ):
     PERMISSION_MATRIX[_dt] = {
         "AT Agent": {0: FULL_ACCESS_ALL},
@@ -203,19 +231,22 @@ for _dt in (
         "AT Accountant": {0: FULL_ACCESS_ALL},
     }
 
+PERMISSION_MATRIX["AT Document"] = {
+    "AT Agent": {0: OPERATIONAL_DOCUMENT_ACCESS},
+    "AT Manager": {0: OPERATIONAL_DOCUMENT_ACCESS},
+    "AT Accountant": {0: OPERATIONAL_DOCUMENT_ACCESS},
+}
+
 # Remaining 12 doctypes — only AT System Manager (added by ensure_role_permissions)
 for _dt in (
     "AT Access Log",
     "AT Accounting Entry",
     "AT Branch",
-    "AT Claim",
     "AT Insurance Company",
     "AT Notification Draft",
     "AT Notification Outbox",
     "AT Notification Template",
-    "AT Payment",
     "AT Reconciliation Item",
-    "AT Renewal Task",
     "AT Sales Entity",
 ):
     PERMISSION_MATRIX[_dt] = {}
