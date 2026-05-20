@@ -14,9 +14,11 @@ def ensure_symlink(target: Path, link_path: Path) -> None:
     if link_path.is_symlink() or link_path.exists():
         if link_path.is_symlink() and link_path.resolve() == target.resolve():
             return
+        import shutil
         if link_path.is_dir() and not link_path.is_symlink():
-            return
-        link_path.unlink()
+            shutil.rmtree(link_path)
+        elif link_path.exists():
+            link_path.unlink()
     link_path.symlink_to(target)
 
 
