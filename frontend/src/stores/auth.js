@@ -35,6 +35,12 @@ export const useAuthStore = defineStore("auth", () => {
     return setPreferredLocale(localeValue);
   }
 
+  function hasAnyRole(...allowedRoles) {
+    if (!allowedRoles.length) return true;
+    const userRoles = new Set(roles.value.map((r) => String(r).trim().toLowerCase()));
+    return allowedRoles.some((r) => userRoles.has(String(r).trim().toLowerCase()));
+  }
+
   function can(path, fallback = false) {
     return hasSessionCapability(path, fallback);
   }
@@ -59,6 +65,7 @@ export const useAuthStore = defineStore("auth", () => {
     isSpaUser,
     hydrate,
     setLocale,
+    hasAnyRole,
     can,
     applyContext,
   };
