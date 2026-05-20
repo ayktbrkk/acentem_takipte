@@ -9,8 +9,13 @@ Verified project environment in this repository:
 - Bench path: `~/frappe-bench`
 - Main site used during verification: `at.localhost`
 - Application route: `http://at.localhost:8000/at/`
+- Live Coolify site verified on 2026-05-20: `https://kipsigorta.acentemtakipte.com/at/`
+- Live image source: `ghcr.io/ayktbrkk/acentem-worker:latest`
+- Latest verified production commit: `1cbed0d16d7cb0bb18387d83d708a247319f37fb`
 
 For real production, replace `at.localhost` and the localhost URL with the actual site and public domain, but keep the same command order and safety checks.
+
+The current production path for this repository is Coolify + GHCR. A push to `main` publishes the app image through `.github/workflows/coolify-ghcr-image.yml`; the server then pulls `ghcr.io/ayktbrkk/acentem-worker:latest` and recreates the `backend`, `frontend`, and `websocket` services.
 
 ## 1. Pre-Deploy Gate
 
@@ -83,7 +88,11 @@ cp site_config.json "site_config.json.$(date +%Y%m%d%H%M%S).bak"
 
 ## 4. Build And Deploy Sequence
 
-Run the deploy in this order to avoid asset/schema mismatches.
+Use the path that matches the target environment.
+
+### Raw Bench path
+
+Run this sequence only for a non-containerized Bench deployment.
 
 ```bash
 cd ~/frappe-bench/apps/acentem_takipte/frontend
@@ -108,6 +117,33 @@ sudo systemctl reload nginx
 
 If you use `bench setup production`, treat it as one-time infrastructure setup, not as the normal per-release deploy command.
 
+### Coolify/GHCR path
+
+For the live Coolify deployment, use this order:
+
+1. Push the intended commit to `main`.
+2. Wait for the `Coolify GHCR Image` GitHub Actions workflow to complete successfully.
+3. On the server, take a fresh backup before replacing containers.
+4. Pull the new `ghcr.io/ayktbrkk/acentem-worker:latest` image.
+5. Recreate only app services: `backend`, `frontend`, and `websocket`.
+6. Run `bench --site <site> migrate`, `clear-cache`, and `clear-website-cache` inside the backend container.
+7. Smoke test `/api/method/ping`, `/at/`, login redirect, security headers, and logs.
+
+Example commands used for the verified 2026-05-20 deployment:
+
+```bash
+cd /data/coolify/applications/<coolify-app-id>
+docker compose pull backend frontend websocket configurator
+docker compose up -d --no-deps --force-recreate backend websocket frontend
+
+docker exec <backend-container> bash -lc '
+  cd /home/frappe/frappe-bench &&
+  bench --site kipsigorta.acentemtakipte.com migrate &&
+  bench --site kipsigorta.acentemtakipte.com clear-cache &&
+  bench --site kipsigorta.acentemtakipte.com clear-website-cache
+'
+```
+
 ## 5. Post-Deploy Verification
 
 Validate both the Frappe shell and the `/at` frontend route.
@@ -124,6 +160,13 @@ Suggested checks:
 cd ~/frappe-bench
 bench --site at.localhost list-apps
 bench --site at.localhost doctor
+```
+
+For Coolify/GHCR, also verify the running image revision:
+
+```bash
+docker inspect <backend-container> --format '{{.Image}}'
+docker image inspect ghcr.io/ayktbrkk/acentem-worker:latest --format '{{json .Config.Labels}}'
 ```
 
 Application checks:
@@ -189,3 +232,4 @@ Do not call the release complete until all of the following are true:
 - Scheduled report configuration persists through `site_config.json`; treat manual config edits as sensitive operations and back them up first.
 - Backend validations should be run in the Bench environment, not a standalone Windows Python environment without Frappe.
 - If a deployment changes frontend assets, validate both `npm run build` and `bench build --app acentem_takipte`.
+- In the Coolify/GHCR path, frontend assets are built into the image; do not rebuild them inside one running container unless you intentionally rebuild and redeploy the image.

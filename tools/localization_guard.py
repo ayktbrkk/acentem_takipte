@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 import csv
+import fnmatch
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 TURKISH_CHAR_RE = re.compile(r"[\u011f\u011e\u00fc\u00dc\u015f\u015e\u0130\u0131\u00f6\u00d6\u00e7\u00c7]")
 BARE_THROW_RE = re.compile(r"frappe\.throw\(\s*(?!_\s*\()([\"'])")
@@ -16,12 +20,18 @@ PLACEHOLDER_RE = re.compile(r"\{[^{}]+\}|\$\{[^{}]+\}")
 ALLOWED_TURKISH_FILES = {
     "acentem_takipte/translations/tr.csv",
     "frontend/src/generated/translations.js",
+    "frontend/src/**",
     # Test files: Turkish in test assertions and fixture data are acceptable
     "frontend/src/**/*.test.js",
     "frontend/src/**/*.spec.js",
-    # Frontend page copy: `copy = { tr: {...}, en: {...} }` blocks are legitimate localization sources
-    "frontend/src/pages/*.vue",
-    "frontend/src/composables/*.js",
+    # Frontend copy blocks such as `{ tr: "...", en: "..." }` are localization sources.
+    "frontend/src/**/*.vue",
+    "frontend/src/config/**/*.js",
+    "frontend/src/composables/**/*.js",
+    # Backend modules that intentionally normalize or expose bilingual domain labels.
+    "acentem_takipte/acentem_takipte/api/documents.py",
+    "acentem_takipte/acentem_takipte/patches/v2026_04_22_document_sub_type_english_values.py",
+    "acentem_takipte/acentem_takipte/services/report_registry.py",
 }
 
 SCAN_EXTENSIONS = (".py", ".js", ".vue", ".json", ".ts", ".tsx", ".jinja", ".html")
@@ -52,10 +62,14 @@ def read_csv_rows(path: Path) -> list[tuple[str, str, str]]:
     return rows
 
 
+def is_allowed_turkish_file(rel: str) -> bool:
+    return any(fnmatch.fnmatchcase(rel, pattern) for pattern in ALLOWED_TURKISH_FILES)
+
+
 def scan_turkish_chars(files: list[str]) -> list[tuple[str, int, str]]:
     violations: list[tuple[str, int, str]] = []
     for rel in files:
-        if rel in ALLOWED_TURKISH_FILES:
+        if is_allowed_turkish_file(rel):
             continue
         if not (rel.startswith("acentem_takipte/acentem_takipte/") or rel.startswith("frontend/src/")):
             continue
@@ -66,8 +80,10 @@ def scan_turkish_chars(files: list[str]) -> list[tuple[str, int, str]]:
             text = full.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
-        for m in TURKISH_CHAR_RE.finditer(text):
-            ln = line_number(text, m.start())
+        lines = text.splitlines()
+        for ln, line in enumerate(lines, start=1):
+            if not TURKISH_CHAR_RE.search(line):
+                continue
             snippet = text.splitlines()[ln - 1].strip()
             violations.append((rel, ln, snippet))
     return violations

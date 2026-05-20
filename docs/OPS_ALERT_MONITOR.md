@@ -13,7 +13,7 @@ Generic application errors are intentionally excluded by default to keep the sig
 
 ## Scheduler
 
-The monitor runs hourly from [acentem_takipte/hooks.py](acentem_takipte/hooks.py).
+The monitor runs hourly from [acentem_takipte/hooks.py](../acentem_takipte/hooks.py).
 
 Registered job:
 
@@ -26,6 +26,8 @@ Add these keys to the site config when you want live delivery:
 - `at_ops_alert_slack_webhook_url`
 - `at_ops_alert_telegram_bot_token`
 - `at_ops_alert_telegram_chat_id`
+
+These values are secrets. Keep them in site/server configuration only; do not commit them. The admin API and Vue settings surfaces return only configured flags and masked secret hints for webhook URLs and bot tokens.
 
 Optional tuning:
 
@@ -74,7 +76,7 @@ Each grouped row includes:
 
 ## Break-Glass Audit Logging
 
-Canonical break-glass `Error Log` audit entries are emitted from the service layer in [acentem_takipte/acentem_takipte/services/break_glass.py](acentem_takipte/acentem_takipte/services/break_glass.py).
+Canonical break-glass `Error Log` audit entries are emitted from the service layer in [acentem_takipte/acentem_takipte/services/break_glass.py](../acentem_takipte/acentem_takipte/services/break_glass.py).
 
 The `AT Break Glass Request` DocType submit hook intentionally does not write a second `Error Log` row. This prevents duplicate alert incidents for the same approval or rejection.
 

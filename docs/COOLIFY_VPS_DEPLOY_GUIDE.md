@@ -6,6 +6,8 @@ It is written for the actual structure of this repository, not for a generic Fra
 
 It also reflects the live deployment path that was verified against a real Coolify v4 installation on a Hetzner VPS, including the fixes that were required to make the public domain and `/at` route work correctly.
 
+Last production verification: 2026-05-20. The live stack at `https://kipsigorta.acentemtakipte.com/at/` was redeployed from `ghcr.io/ayktbrkk/acentem-worker:latest` built from commit `1cbed0d16d7cb0bb18387d83d708a247319f37fb`.
+
 Important constraint up front:
 
 - this repository does not ship a ready-to-run `Dockerfile`
@@ -248,6 +250,10 @@ The app image and Docker Compose examples under `docs/examples/` were also valid
 - the configurator shell loop escapes `$$app` correctly so Docker Compose does not eat the variable before runtime
 - the configurator mounts the shared `app_sites` volume so it can see the real site directory before deciding whether `bench new-site` is needed
 - the configurator does not run runtime asset builds, which would otherwise desynchronize backend/frontend asset hashes across separate containers
+- backend, frontend, websocket, MariaDB, and Redis healthchecks are present
+- frontend waits for backend and websocket readiness before starting
+- the nginx template includes minimum production security headers
+- the app image workflow and example workflow pin third-party GitHub Actions by full commit SHA
 
 The app Dockerfile example now follows the same broad shape as `frappe_docker`: build Bench in a `build` image, then copy the finished bench into a `base` image that can serve `backend`, `frontend`, and `websocket` roles.
 
@@ -266,6 +272,16 @@ APP_IMAGE=ghcr.io/ayktbrkk/acentem-worker:latest
 If you switch an existing Coolify stack from a host-local image to GHCR, make the image reference change first, then trigger a redeploy after the workflow has published at least one successful `latest` tag.
 
 If Coolify cannot pull the image from GHCR, either make the package public in GitHub Packages or add a GHCR registry credential in Coolify and attach it to the resource before redeploying.
+
+For the current live stack, the operational sequence is:
+
+1. push to `main`
+2. wait for the `Coolify GHCR Image` workflow to publish `latest`
+3. take a site backup
+4. pull the new image on the VPS
+5. recreate `backend`, `frontend`, and `websocket`
+6. run `migrate`, `clear-cache`, and `clear-website-cache` in the backend container
+7. verify `/api/method/ping`, `/at/`, security headers, and container logs
 
 Use the app repository itself as source code, but keep deployment mechanics separate if you do not want infrastructure files mixed into the main app repository.
 

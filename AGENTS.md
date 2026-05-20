@@ -184,4 +184,4 @@ CI also runs backend tests by creating a fresh Frappe v15 bench and site; see [b
 
 ## Local Environment Notes
 
-Verified local setup for this repository uses WSL2 Ubuntu, Frappe Bench at `~/frappe-bench`, site `at.localhost`, and Node.js 20. If commands behave differently on Windows vs WSL, prefer the Bench environment as the source of truth for backend validation.
+Verified local setup for this repository uses WSL2 Ubuntu, Frappe Bench at `~/frappe-bench`, site `at.localhost`, and Node.js 20.19+ for the current Vite 8 frontend toolchain. If commands behave differently on Windows vs WSL, prefer the Bench environment as the source of truth for backend validation.

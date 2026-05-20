@@ -24,7 +24,7 @@ This directory contains the main repository documentation for `Acentem Takipte`.
 ## Operations and Deployment
 
 - [Production Deploy Checklist](PRODUCTION_DEPLOY_CHECKLIST.md)
-  - Production-safe deployment and rollback checklist.
+  - Production-safe deployment and rollback checklist, including the current Coolify/GHCR path.
 - [Coolify VPS Deployment Guide](COOLIFY_VPS_DEPLOY_GUIDE.md)
   - End-to-end guide for installing Coolify on a VPS and deploying this repository as a multi-service Frappe stack.
 - [OPS Alert Monitor](OPS_ALERT_MONITOR.md)
@@ -37,7 +37,7 @@ This directory contains the main repository documentation for `Acentem Takipte`.
 - [Production Preflight Audit 2026-05-20](audit/production_preflight_audit_2026-05-20.md)
   - Current evidence-backed production readiness audit and remediation tracker.
 - [superpowers/](superpowers/)
-  - Additional supporting notes and working materials.
+  - Historical planning notes and working materials. These are not part of the current source-of-truth review set.
 
 ## Suggested Reading Order
 

@@ -418,7 +418,7 @@ def _get_customer_files(customer_name: str) -> list[dict[str, Any]]:
             limit_page_length=100,
         )
 
-    # N+1 önleme: önce merge/deduplicate, sonra tek batch File sorgusu
+    # Avoid N+1 file lookups: merge/deduplicate first, then query File once.
     seen: set[str] = set()
     merged: list[dict[str, Any]] = []
     for doc in direct + policy_docs + claim_docs:

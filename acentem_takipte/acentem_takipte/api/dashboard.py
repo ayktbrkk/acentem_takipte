@@ -93,9 +93,9 @@ DASHBOARD_TAB_CACHE_TTL_SECONDS = 300
 DASHBOARD_TAB_CACHE_TTL_CONFIG_KEY = "at_dashboard_tab_cache_ttl_seconds"
 
 
-# audit(dead-code): Eski sistemden kalan 'Completed' statüsü artık tüm poliçelerde 'Done' 
-# olarak migrate edildiği için bu köprü metoduna (bridge) teknik olarak ihtiyaç kalmamıştır.
-# Aktif bir referans bulunamadığı için izlemeye alındı.
+# audit(dead-code): The legacy `Completed` status has been migrated to `Done`
+# across policy records, so this bridge method is kept only as a compatibility
+# fallback until old data paths are fully retired.
 def _normalize_renewal_status(value: str | None) -> str:
     status = str(value or "")
     if status == LEGACY_RENEWAL_STATUS_COMPLETED:
@@ -911,9 +911,9 @@ def get_lead_workbench_rows(filters=None, page: int = 1, page_length: int = 20) 
     )
 
 
-# audit(duplicate): 901-1000 satırları arasındaki metodlar (lead, offer, claim, payment detail),
-# 235-305 satırları arasında daha optimize bir şekilde tanımlanmıştır. 
-# Bu blok refactor kalıntısıdır ve frontend tarafından çağrılmamaktadır.
+# audit(duplicate): The old detail endpoint block below is a refactor artifact.
+# The active lead, offer, claim, and payment detail handlers are defined above
+# and are the only versions called by the frontend.
 
 # @frappe.whitelist()
 # def get_lead_detail_payload(name: str) -> dict:

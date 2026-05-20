@@ -2,8 +2,8 @@
 
 Tarih: 2026-05-20
 Kapsam: `acentem_takipte` yerel repo, remediation düzeltmeleri ve pasif local/prod URL kontrolleri
-İncelenen branch/commit: `main` / `dabbded7573b0da4e7f9ede97bc283a488b802ba`
-Not: İlk planda geçen `c7a9174782171182e9ca0039e1d5030b1244c6d7` bu çalışma ağacında aktif `main` commit'i değildir. Yerel ve remote `main` aynı commit'e işaret etmektedir.
+İncelenen branch/commit: `main` / `1cbed0d16d7cb0bb18387d83d708a247319f37fb`
+Not: İlk planda geçen `c7a9174782171182e9ca0039e1d5030b1244c6d7` ve ilk audit snapshot'ındaki `dabbded7573b0da4e7f9ede97bc283a488b802ba` artık güncel `main` değildir. Yerel ve remote `main` remediation commit'i olan `1cbed0d16d7cb0bb18387d83d708a247319f37fb` üzerindedir.
 
 ## 1 Sayfalık Özet
 
@@ -28,7 +28,7 @@ Doğrulama özeti:
 - `docker compose -f docs/examples/docker-compose.coolify.example.yml config`: geçti.
 - `git ls-files` generated/secret artifact taraması: takip edilen riskli build/cache/env artefact yok.
 
-Prod ortamına uygulama notu: Bu çalışma yerel repo ve deploy örneklerini hazır hale getirir; uzak sunucudaki Nginx/Coolify stack'e deploy, cache clear ve smoke test ayrıca uygulanmalıdır.
+Prod ortamına uygulama notu: Remediation commit'i 2026-05-20 tarihinde GHCR image olarak yayınlandı ve Coolify stack'e uygulandı. Prod smoke testte `/api/method/ping` 200 döndü, `/at/` login redirect'i çalıştı ve security header'lar response'ta göründü.
 
 ## 7 Günlük Acil Aksiyon Listesi
 
@@ -49,7 +49,7 @@ Prod ortamına uygulama notu: Bu çalışma yerel repo ve deploy örneklerini ha
 | F-001 | High | Backend test suite başlamıyor | `api/documents.py:327`, `tests/test_documents_api.py:160` | `share_document` güvenli POST endpoint olarak eklendi; Bench full suite `Ran 196 tests ... OK`. | Backend release gate yeniden güvenilir hale geldi. | `wsl bash -lc 'cd ~/frappe-bench && bench --site at.localhost run-tests --app acentem_takipte'` | Endpoint POST/read-permission/sensitive/private-file guard'larını koruyun. | Sensitive/private file rejection ve permission testleri eklendi/geçti. | Kapalı |
 | F-002 | High | Frontend dependency audit High advisory döndürüyor | `frontend/package.json`, `frontend/package-lock.json` | `npm audit --json`: `total: 0`; `frappe-ui`, `vue`, `postcss`, `vite`, `vitest`, `jsdom`, Playwright güncellendi; `dompurify` override güncellendi. | Bilinen npm advisory release blocker'ı kapandı. | `cd frontend; npm audit --json` | Upgrade seti lockfile ile korunmalı; CI audit gate kalmalı. | `npm audit`, lint, typecheck, unit, build geçti. | Kapalı |
 | F-003 | Medium | Ops alert secret'ları API/UI'ye düz metin dönüyor | `api/reports.py:320`, `services/ops_alert_settings.py:63`, `AdminAlertChannelsSettings.vue:58`, `ReportsAlertChannelsSection.vue:39` | Response artık raw Slack webhook/Telegram token döndürmüyor; mask/configured alanları dönüyor; blank submit mevcut secret'ı koruyor. | Privileged browser/log/screen secret exposure riski azaltıldı. | System Manager ile alert settings load/save; password input value boş kalır. | Secret clear işlemi gerekiyorsa explicit `clear_*` flag kullanılmalı. | Backend sanitizer testi ve frontend admin alert channel testi geçti. | Kapalı |
-| F-004 | Medium | Prod/local security headers eksik | `docs/examples/nginx.default.conf.coolify.example.template:16-21` | Coolify Nginx örneğine HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy eklendi. | Deploy edilen stack'te clickjacking/MIME/HSTS hardening sağlanır. | Prod deploy sonrası `curl -I -L https://.../at/`. | Uzak Nginx/Coolify config deploy edilmeli ve header smoke tekrar edilmeli. | Header smoke testi prod deploy sonrası çalıştırılacak. | Kod/config kapalı; prod deploy bekliyor |
+| F-004 | Medium | Prod/local security headers eksik | `docs/examples/nginx.default.conf.coolify.example.template:16-21` | Coolify Nginx örneğine HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy eklendi ve prod response'ta doğrulandı. | Deploy edilen stack'te clickjacking/MIME/HSTS hardening sağlanır. | `curl.exe -I -L https://kipsigorta.acentemtakipte.com/at/`. | Header seti yeni deploy'larda korunmalı. | Header smoke testi prod deploy sonrası geçti. | Kapalı |
 | F-005 | Medium | Frontend unit test release gate kırık | `frontend/src/components/Sidebar.test.js:58-60`, `:118-120` | Sidebar TR/EN beklentileri güncel Agent menüsüne hizalandı; `npm run test:unit`: 88 file, 292 test passed. | CI gate tekrar güvenilir. | `cd frontend; npm run test:unit` | Testler gerçek role navigation kontratını takip etmeli. | Full frontend unit suite geçti. | Kapalı |
 | F-006 | Medium | Docker/Coolify healthcheck/readiness yok | `docs/examples/docker-compose.coolify.example.yml:20`, `:50`, `:66`, `:145-173` | Backend/frontend/websocket/MariaDB/Redis healthcheck ve `service_healthy` readiness koşulları eklendi; `docker compose config` geçti. | Deploy readiness ve rollback sinyali iyileşti. | `docker compose -f docs/examples/docker-compose.coolify.example.yml config` | Staging/prod restart sırasında health transition gözlenmeli. | Compose config validasyonu geçti. | Kapalı |
 | F-007 | Medium | GitHub Actions tag ile pinlenmiş | `.github/workflows/*.yml`, `docs/examples/github-actions.ghcr.coolify-image.example.yml` | `uses: ...@v*` taraması gerçek workflow'larda boş; action'lar full commit SHA ile pinlendi. | Supply-chain tag hareketi riski azaltıldı. | `Select-String -Path .github/workflows/*.yml -Pattern 'uses: .+@v[0-9]'` | Dependabot action update PR akışı ayrıca eklenebilir. | Workflow tag taraması geçti. | Kapalı |
@@ -136,10 +136,12 @@ redis-cache:
 
 ## Komut Çıktıları
 
+Bu bölüm ilk audit snapshot'ındaki ham çıktıları kanıt olarak korur. Başarısız görünen ilk snapshot kontrollerinin güncel durumu `Remediation Sonrası Komutlar` tablosunda ayrıca gösterilmiştir.
+
 | Komut | Çalışma Dizini | Sonuç Özeti | Önemli Çıktı / Not | Exit |
 | --- | --- | --- | --- | --- |
 | `git status --short --branch` | repo root | Branch doğrulandı | `## main...origin/main`; son durumda `?? .dockerignore` untracked, dokunulmadı. | 0 |
-| `git rev-parse HEAD` | repo root | Commit doğrulandı | `dabbded7573b0da4e7f9ede97bc283a488b802ba` | 0 |
+| `git rev-parse HEAD` | repo root | İlk audit commit'i doğrulandı | `dabbded7573b0da4e7f9ede97bc283a488b802ba`; remediation sonrası güncel commit `1cbed0d16d7cb0bb18387d83d708a247319f37fb`. | 0 |
 | `git ls-remote origin refs/heads/main` | repo root | Remote main doğrulandı | Remote `main` aynı commit. | 0 |
 | `rg --files ... | Measure-Object` | repo root | Envanter | 943 dosya. | 0 |
 | Risk pattern taramaları | repo root | Whitelist ve riskli pattern sayımı | `@frappe.whitelist`: 133; `allow_guest`: 2; `ignore_permissions=True`: 109; `frappe.db.sql`: 189. Sayımlar bulgu değildir, inceleme yönlendirmesidir. | 0 |
@@ -147,11 +149,11 @@ redis-cache:
 | `npm outdated --json` | `frontend` | Güncellik | Öne çıkanlar: `frappe-ui 0.1.262 -> 0.1.278`, `postcss 8.5.6 -> 8.5.15`, `vite 5.4.21 -> latest 8.0.13`, `vue 3.5.28 -> 3.5.34`. | 0/non-zero npm davranışı |
 | `npm run lint` | `frontend` | Geçti | Script banner dışında önemli hata yok. | 0 |
 | `npm run typecheck` | `frontend` | Geçti | Script banner dışında önemli hata yok. | 0 |
-| `npm run build` | `frontend` | Geçti | Vite 5.4.21; build yaklaşık 2m 9s; frontend assets üretildi. | 0 |
+| `npm run build` | `frontend` | İlk audit build'i geçti | İlk snapshot Vite 5.4.21 ile geçti; remediation sonrası Vite 8.0.13/Rolldown build de geçti. | 0 |
 | `npm run test:unit` | `frontend` | Başarısız | 88 test file içinde 1 failed; 292 test içinde 2 failed; Sidebar TR/EN assertions. | 1 |
 | `bench --site at.localhost run-tests --app acentem_takipte` | WSL `~/frappe-bench` | Başarısız | `share_document` import hatası nedeniyle testler başlamadı. | 1 |
 | `curl.exe -I -L http://at.localhost:8000/at/` | repo root | Pasif local URL kontrolü | 301 login redirect, sonra 200 login; security headers görünmedi. | 0 |
-| `curl.exe -I -L https://kipsigorta.acentemtakipte.com/at/` | repo root | Pasif prod URL kontrolü | 301 login redirect, sonra 200 login; `nginx/1.22.1`; security headers görünmedi. | 0 |
+| `curl.exe -I -L https://kipsigorta.acentemtakipte.com/at/` | repo root | Pasif prod URL kontrolü | İlk auditte security headers eksikti; remediation deploy sonrası HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy ve Permissions-Policy göründü. | 0 |
 | `bench --site at.localhost show-config` | WSL bench | Local config incelendi | Secret değerler redakte edildi. `developer_mode=0`, `maintenance_mode=0`, `pause_scheduler=0`; local `allow_tests=True`, `live_reload=True` görüldü. | 0 |
 | `rg -n "get_document_context|...|assert_doc_permission" ...` | repo root | F-008 doğrulandı | `get_document_context` içinde permission helper yok; aynı modülde başka endpoint kullanıyor. | 0 |
 | `rg -n "allow_guest|csrf|rate_limit|..." ...` | repo root | Ek hardening geçişi | Admin job, privacy masking ve notification template özel rate limitleri var; frontend CSRF token handling mevcut; global prod rate-limit config ayrıca doğrulanmalı. | 0 |
@@ -171,6 +173,8 @@ redis-cache:
 | `docker compose -f docs/examples/docker-compose.coolify.example.yml config` | repo root | Geçti | Healthcheck ve `service_healthy` koşulları config çıktısında doğrulandı; host PATH sızıntısı `$$PATH` ile önlendi. | 0 |
 | `Select-String -Path .github/workflows/*.yml -Pattern 'uses: .+@v[0-9]'` | repo root | Geçti | Gerçek workflow dosyalarında tag pin kalmadı. | 0 |
 | `git ls-files \| rg '(^frontend/playwright-report/...|\.env$|__pycache__)'` | repo root | Geçti | Takip edilen generated/cache/env artefact bulunmadı; `rg` match yok. | 1 |
+| `python tools/localization_guard.py` | repo root | Geçti | Turkish-char, bare throw, missing en key ve placeholder mismatch sayıları 0. | 0 |
+| Prod deploy smoke | remote VPS | Geçti | `ghcr.io/ayktbrkk/acentem-worker:latest` image revision `1cbed0d...`; `/api/method/ping` 200 `pong`; `/at/` login redirect ve security headers doğrulandı. | 0 |
 
 ## Deferred / Ek Bilgi Gerektiren Alanlar
 
@@ -181,4 +185,4 @@ redis-cache:
 
 ## Release Kararı
 
-Yerel repo ve deploy örnekleri açısından bu snapshot prod hazırlık eşiğini geçmiştir. Uzak sunucuya çıkıştan önce yapılması gereken son adımlar: değişiklikleri review/commit/push etmek, Coolify/Nginx config'i deploy etmek, Frappe migrate/cache clear çalıştırmak, ardından prod `/at/` login/header/static asset smoke testlerini tekrar almaktır. Canlı sistemde destructive işlem yapılmamıştır.
+Yerel repo, CI guard ve canlı Coolify deploy açısından bu snapshot prod hazırlık eşiğini geçmiştir. Remediation commit'i `1cbed0d16d7cb0bb18387d83d708a247319f37fb` uzak sunucuda çalışmaktadır. Canlı sistemde destructive işlem yapılmamış, deploy öncesi backup alınmış ve deploy sonrası ping/login/header smoke testleri geçmiştir.

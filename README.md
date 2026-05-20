@@ -93,7 +93,7 @@ Before installing the app, make sure you have:
 - a working Frappe Bench environment
 - Frappe v15
 - Python 3.10 or newer
-- Node.js 20 or newer
+- Node.js 20.19 or newer (Node 22.12+ also works with the current Vite 8 toolchain)
 - MariaDB
 - Redis
 
@@ -179,6 +179,8 @@ If you want to self-host the app on your own VPS with Coolify, use [docs/COOLIFY
 
 Production boot is also guarded by the app itself: if `at_enable_demo_endpoints=1`, desk boot fails fast; if `developer_mode=1`, the app logs a deployment warning so the issue is visible before release validation is signed off.
 
+The current public Coolify deployment path builds and publishes `ghcr.io/ayktbrkk/acentem-worker:latest` from pushes to `main`, then runs the same app image for `backend`, `frontend`, and `websocket`. The latest verified production deployment is commit `1cbed0d16d7cb0bb18387d83d708a247319f37fb` on `https://kipsigorta.acentemtakipte.com/at/`.
+
 ## First-Time Access
 
 After installation:
@@ -186,7 +188,7 @@ After installation:
 1. Sign in to your Frappe site.
 2. Open `/at` on the same site.
 3. Confirm the Vue workspace loads successfully.
-4. Verify the user has an appropriate role such as `Manager`, `Agent`, `Accountant`, `System Manager`, or `Administrator`.
+4. Verify the user has an appropriate role such as `AT Manager`, `AT Agent`, `AT Accountant`, `System Manager`, or `Administrator`.
 
 Example:
 
@@ -218,6 +220,7 @@ acentem_takipte/
   www/                       Web route entry for /at
 frontend/                    Vue application source, unit tests, Playwright tests
 scripts/                     Optional benchmark and seed helpers
+tools/                       Repository utilities such as localization guard checks
 .github/workflows/           CI workflows for lint, tests, build, and optional E2E gates
 ```
 
@@ -228,6 +231,8 @@ Even though this README is product-focused, a few implementation details are use
 - frontend UI work should follow `docs/DESIGN_GUIDELINES.md` as the canonical design constitution
 - PR and self-review for user-facing frontend changes should use `docs/UI_REVIEW_CHECKLIST.md`
 - ops alert monitor setup, preview, and webhook configuration are documented in `docs/OPS_ALERT_MONITOR.md`
+- production deployment and rollback expectations are documented in `docs/PRODUCTION_DEPLOY_CHECKLIST.md`
+- Coolify/GHCR deployment mechanics are documented in `docs/COOLIFY_VPS_DEPLOY_GUIDE.md`
 - canonical Frappe hooks live in `acentem_takipte/hooks.py`; the repository-root `hooks.py` is only a lightweight pointer and is not loaded at runtime
 - if you need to change hooks, scheduler events, or app metadata, edit only `acentem_takipte/hooks.py`; changing the repository-root `hooks.py` has no runtime effect
 - `frontend/` contains the SPA source and test setup.
@@ -242,12 +247,14 @@ Even though this README is product-focused, a few implementation details are use
 
 The repository CI policy for frontend quality is:
 
-- Node.js 20
+- Node.js 20.19+ (or Node 22.12+)
 - `npm ci`
 - `npm run lint`
 - `npm run typecheck`
 - `npm run test:unit`
 - `npm run build`
+
+The repository also has a localization guard at `tools/localization_guard.py`. It verifies CSV placeholder parity, missing English translation keys, bare `frappe.throw` strings, and code-level Turkish text outside approved bilingual copy surfaces.
 
 If smoke E2E credentials are configured in CI, smoke jobs run as an additional gate.
 

@@ -1,6 +1,6 @@
 # Acentem Takipte Architecture Map
 
-Last verified: 2026-05-12
+Last verified: 2026-05-20
 
 This document is a repository-grounded architecture map for the current workspace. It is intended to replace approximate auto-generated summaries with a file-accurate view of how the application is structured and how its main runtime flows work.
 
@@ -113,8 +113,9 @@ Representative modules:
 - `details_lead.py`
 - `details_offer.py`
 - `dashboard_security.py`
+- compatibility alias modules such as `dashboard.py`, `quick_create.py`, `reports.py`, `session.py`, and `break_glass.py`
 
-The orchestration entry point remains `api/dashboard.py`, which imports and composes these V2 modules.
+The orchestration entry point remains `api/dashboard.py`, which imports and composes these V2 modules. The alias modules keep `api.v2.<module>.<method>` paths importable for versioned API method builders without duplicating business logic.
 
 ### Service layer
 
