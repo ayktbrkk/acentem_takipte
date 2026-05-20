@@ -30,6 +30,8 @@ describe("useAuthStore", () => {
     expect(store.isDeskUser).toBe(false);
     expect(store.can("quickCreate.ATPolicy")).toBe(true);
 
+    store.setLocale("en");
+
     store.applyContext({
       user: "Administrator",
       full_name: "Administrator",
