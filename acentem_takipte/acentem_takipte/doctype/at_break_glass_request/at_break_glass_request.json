@@ -639,7 +639,7 @@
      "print": 0,
      "read": 1,
      "report": 0,
-     "role": "Agent",
+     "role": "AT Agent",
      "set_user_permissions": 0,
      "share": 0,
      "submit": 0,

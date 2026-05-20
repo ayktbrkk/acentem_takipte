@@ -114,7 +114,7 @@
       "delete": 1
     },
     {
-      "role": "Agent",
+      "role": "AT Agent",
       "read": 1,
       "write": 1,
       "create": 1
