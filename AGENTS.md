@@ -174,6 +174,7 @@ CI also runs backend tests by creating a fresh Frappe v15 bench and site; see [b
 - [docs/DESIGN_GUIDELINES.md](docs/DESIGN_GUIDELINES.md): frontend design constitution and shared-component rules
 - [docs/UI_REVIEW_CHECKLIST.md](docs/UI_REVIEW_CHECKLIST.md): quick review checklist for user-facing changes
 - [docs/PRODUCTION_DEPLOY_CHECKLIST.md](docs/PRODUCTION_DEPLOY_CHECKLIST.md): production-safe deploy sequence and post-deploy checks
+- `scripts/deploy_prod_coolify_ghcr.ps1`: Windows-host helper that waits for the GHCR workflow, redeploys the live Coolify app image, reruns migrate and permission convergence, and smoke tests the critical `/at` routes
 
 ## Preference Order For Changes
 

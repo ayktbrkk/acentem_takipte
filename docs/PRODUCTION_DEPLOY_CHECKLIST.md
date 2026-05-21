@@ -11,11 +11,20 @@ Verified project environment in this repository:
 - Application route: `http://at.localhost:8000/at/`
 - Live Coolify site verified on 2026-05-20: `https://kipsigorta.acentemtakipte.com/at/`
 - Live image source: `ghcr.io/ayktbrkk/acentem-worker:latest`
-- Latest verified production commit: `1cbed0d16d7cb0bb18387d83d708a247319f37fb`
+- Latest verified production commit: `fcaece85c1364094e5fc8b66070bedf50fd51f7c`
 
 For real production, replace `at.localhost` and the localhost URL with the actual site and public domain, but keep the same command order and safety checks.
 
 The current production path for this repository is Coolify + GHCR. A push to `main` publishes the app image through `.github/workflows/coolify-ghcr-image.yml`; the server then pulls `ghcr.io/ayktbrkk/acentem-worker:latest` and recreates the `backend`, `frontend`, and `websocket` services.
+
+## 0. Verified 2026-05-20 Release Note
+
+- Commit `fcaece85c1364094e5fc8b66070bedf50fd51f7c` aligned visible AT operational routes with actual runtime permission convergence.
+- `AT Payment Installment`, `AT Task`, and related visible operational DocTypes now receive converged `Custom DocPerm` read access plus runtime scope hooks.
+- `AT Document` now uses linked-record scope plus unlinked-owner fallback, while permanent delete remains restricted to system roles.
+- Reports scheduled-config management is now limited to desk/system users, so operational SPA users no longer hit `get_scheduled_report_configs` validation failures.
+- Windows operators can use `scripts/deploy_prod_coolify_ghcr.ps1` after pushing to `main` to wait for the GHCR workflow, redeploy the live Coolify stack, rerun migrate/permission convergence, and smoke test the four critical `/at` routes.
+- If a host-local emergency image is ever required again, build it from the already working app image `ghcr.io/ayktbrkk/acentem-worker:latest`, not from `frappe/erpnext-worker:latest`; otherwise the frontend runtime can lose `nginx-entrypoint.sh`.
 
 ## 1. Pre-Deploy Gate
 
@@ -143,6 +152,15 @@ docker exec <backend-container> bash -lc '
   bench --site kipsigorta.acentemtakipte.com clear-website-cache
 '
 ```
+
+For the Windows-hosted operator flow used in this repository, the equivalent helper is:
+
+```powershell
+.\scripts\deploy_prod_coolify_ghcr.ps1
+```
+
+By default the script waits for the `Coolify GHCR Image` workflow for the current `HEAD`, updates `APP_IMAGE` back to `ghcr.io/ayktbrkk/acentem-worker:latest`, recreates `backend`, `frontend`, and `websocket`, runs `migrate`, reruns `ensure_role_permissions`, clears caches, and smoke tests the four critical AT routes.
+Use `-DryRun` to print the exact workflow, remote deploy, and smoke-test plan without touching GitHub, SSH, or the live stack.
 
 ## 5. Post-Deploy Verification
 
