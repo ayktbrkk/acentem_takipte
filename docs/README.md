@@ -15,6 +15,8 @@ This directory contains the main repository documentation for `Acentem Takipte`.
   - Full repository-grounded architecture map with runtime flows and module boundaries.
 - [AT Role Page Permission Matrix](AT_ROLE_PAGE_PERMISSION_MATRIX.md)
   - Current role-family, page visibility, backing-doctype/API, and permission-alignment matrix for the `/at` SPA.
+- [AT Access Protocol Report](AT_ACCESS_PROTOCOL_REPORT.md)
+  - Consolidated repository-backed report for branch scope, portfolio logic, doctype access model, validation notes, and future policy direction.
 
 ## Product and UI
 
@@ -36,8 +38,12 @@ This directory contains the main repository documentation for `Acentem Takipte`.
 
 - [audit/](audit/)
   - Current production preflight audit report and detailed review outputs.
+- [Production Preflight Audit 2026-05-21](audit/production_preflight_audit_2026-05-21.md)
+  - Current local + CI evidence-backed production readiness audit.
 - [Production Preflight Audit 2026-05-20](audit/production_preflight_audit_2026-05-20.md)
-  - Current evidence-backed production readiness audit and remediation tracker.
+  - Previous evidence-backed production readiness audit and remediation tracker.
+- [examples/access_policy_template.yml](examples/access_policy_template.yml)
+  - Proposed declarative template for making access protocols easier to review and adjust from one place.
 - [superpowers/](superpowers/)
   - Historical planning notes and working materials. These are not part of the current source-of-truth review set.
 

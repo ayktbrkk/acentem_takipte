@@ -1,4 +1,5 @@
 from acentem_takipte import __version__
+from acentem_takipte.acentem_takipte.services.access_policy_runtime import build_runtime_permission_hooks
 
 
 app_name = "acentem_takipte"
@@ -145,55 +146,7 @@ doc_events = {
     },
 }
 
-_branch_perms = "acentem_takipte.acentem_takipte.doctype.branch_permissions"
-
-permission_query_conditions = {
-    "AT Lead": f"{_branch_perms}.get_lead_permission_query_conditions",
-    "AT Offer": f"{_branch_perms}.get_offer_permission_query_conditions",
-    "AT Policy": f"{_branch_perms}.get_policy_permission_query_conditions",
-    "AT Payment": f"{_branch_perms}.get_payment_permission_query_conditions",
-    "AT Claim": f"{_branch_perms}.get_claim_permission_query_conditions",
-    "AT Renewal Task": f"{_branch_perms}.get_renewal_task_permission_query_conditions",
-    "AT Accounting Entry": f"{_branch_perms}.get_accounting_entry_permission_query_conditions",
-    "AT Reconciliation Item": f"{_branch_perms}.get_reconciliation_item_permission_query_conditions",
-    "AT Notification Draft": f"{_branch_perms}.get_notification_draft_permission_query_conditions",
-    "AT Renewal Outcome": f"{_branch_perms}.get_renewal_outcome_permission_query_conditions",
-    "AT Payment Installment": f"{_branch_perms}.get_payment_installment_permission_query_conditions",
-    "AT Call Note": f"{_branch_perms}.get_call_note_permission_query_conditions",
-    "AT Segment": f"{_branch_perms}.get_segment_permission_query_conditions",
-    "AT Campaign": f"{_branch_perms}.get_campaign_permission_query_conditions",
-    "AT Document": "acentem_takipte.acentem_takipte.doctype.at_document.at_document.get_permission_query_conditions",
-    "AT Notification Outbox": f"{_branch_perms}.get_notification_outbox_permission_query_conditions",
-    "AT Activity": f"{_branch_perms}.get_activity_permission_query_conditions",
-    "AT Task": f"{_branch_perms}.get_task_permission_query_conditions",
-    "AT Reminder": f"{_branch_perms}.get_reminder_permission_query_conditions",
-    "AT Ownership Assignment": f"{_branch_perms}.get_ownership_assignment_permission_query_conditions",
-    "AT Policy Endorsement": f"{_branch_perms}.get_policy_endorsement_permission_query_conditions",
-}
-
-has_permission = {
-    "AT Lead": f"{_branch_perms}.has_lead_permission",
-    "AT Offer": f"{_branch_perms}.has_offer_permission",
-    "AT Policy": f"{_branch_perms}.has_policy_permission",
-    "AT Payment": f"{_branch_perms}.has_payment_permission",
-    "AT Claim": f"{_branch_perms}.has_claim_permission",
-    "AT Renewal Task": f"{_branch_perms}.has_renewal_task_permission",
-    "AT Accounting Entry": f"{_branch_perms}.has_accounting_entry_permission",
-    "AT Reconciliation Item": f"{_branch_perms}.has_reconciliation_item_permission",
-    "AT Notification Draft": f"{_branch_perms}.has_notification_draft_permission",
-    "AT Renewal Outcome": f"{_branch_perms}.has_renewal_outcome_permission",
-    "AT Payment Installment": f"{_branch_perms}.has_payment_installment_permission",
-    "AT Call Note": f"{_branch_perms}.has_call_note_permission",
-    "AT Segment": f"{_branch_perms}.has_segment_permission",
-    "AT Campaign": f"{_branch_perms}.has_campaign_permission",
-    "AT Document": "acentem_takipte.acentem_takipte.doctype.at_document.at_document.has_permission",
-    "AT Notification Outbox": f"{_branch_perms}.has_notification_outbox_permission",
-    "AT Activity": f"{_branch_perms}.has_activity_permission",
-    "AT Task": f"{_branch_perms}.has_task_permission",
-    "AT Reminder": f"{_branch_perms}.has_reminder_permission",
-    "AT Ownership Assignment": f"{_branch_perms}.has_ownership_assignment_permission",
-    "AT Policy Endorsement": f"{_branch_perms}.has_policy_endorsement_permission",
-}
+permission_query_conditions, has_permission = build_runtime_permission_hooks()
 
 # ---------------------------------------------------------------------------
 # Scheduler Events

@@ -1,0 +1,309 @@
+# Proposed declarative access policy template for Acentem Takipte.
+#
+# This file now feeds the loader sketches for permission convergence and
+# runtime hook registration. Legacy doctypes not modeled here still use
+# explicit fallback mappings in code.
+
+version: 1
+
+role_families:
+  operational:
+    roles:
+      - AT Agent
+      - AT Accountant
+      - AT Manager
+  system:
+    roles:
+      - AT System Manager
+      - System Manager
+      - Administrator
+  non_operational_spa:
+    roles:
+      - AT User
+      - AT Customer
+
+scope_sources:
+  office_branch:
+    doctype: AT User Branch Access
+    expansion_modes:
+      - self_only
+      - self_and_descendants
+    admin_bypass_roles:
+      - System Manager
+      - Administrator
+  sales_entity:
+    doctype: AT User Sales Entity Access
+    expansion_modes:
+      - self_only
+      - self_and_descendants
+    admin_bypass_roles:
+      - System Manager
+      - Administrator
+
+doctype_policies:
+  - doctype: AT Customer
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_plus_personal_portfolio
+      branch_field: origin_office_branch
+      personal_rules:
+        AT Agent:
+          any_of:
+            - assigned_agent == current_user
+            - owner == current_user
+    notes:
+      - Keep person-based portfolio only for customers.
+
+  - doctype: AT Lead
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_and_sales_entity
+      branch_field: origin_office_branch
+      sales_entity_field: sales_entity
+
+  - doctype: AT Offer
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_and_sales_entity
+      branch_field: origin_office_branch
+      sales_entity_field: sales_entity
+
+  - doctype: AT Policy
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_and_sales_entity
+      branch_field: origin_office_branch
+      sales_entity_field: sales_entity
+
+  - doctype: AT Payment
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_and_sales_entity
+      branch_field: origin_office_branch
+      sales_entity_field: sales_entity
+
+  - doctype: AT Claim
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+      exceptions:
+        - active_break_glass_may_expand_access
+
+  - doctype: AT Document
+    visible_to: operational
+    permission_bundle: operational_document_limited
+    runtime_scope:
+      type: linked_record_or_owner_fallback
+      linked_doctypes:
+        - AT Policy
+        - AT Customer
+        - AT Claim
+      unlinked_rule:
+        owner_only: true
+    notes:
+      - Do not force this doctype into plain branch-only scope.
+
+  - doctype: AT Policy Endorsement
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: policy_link_scope
+      parent_doctype: AT Policy
+      parent_field: policy
+
+  - doctype: AT Policy Snapshot
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: docperm_only
+    notes:
+      - Current runtime does not register a dedicated scope hook for snapshots.
+
+  - doctype: AT Payment Installment
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: payment_link_scope
+      parent_doctype: AT Payment
+      parent_field: payment
+
+  - doctype: AT Renewal Task
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Call Note
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Segment
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Campaign
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Ownership Assignment
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Activity
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Task
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Reminder
+    visible_to: operational
+    permission_bundle: operational_full
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Accounting Entry
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: branch_and_sales_entity
+      branch_field: origin_office_branch
+      sales_entity_field: sales_entity
+
+  - doctype: AT Reconciliation Item
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: accounting_entry_link_scope
+      parent_doctype: AT Accounting Entry
+      parent_field: accounting_entry
+
+  - doctype: AT Renewal Outcome
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Notification Template
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: docperm_only
+
+  - doctype: AT Insurance Company
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: docperm_only
+
+  - doctype: AT Branch
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: docperm_only
+
+  - doctype: AT Sales Entity
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: docperm_only
+
+  - doctype: AT Access Log
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: docperm_only
+
+  - doctype: AT Notification Draft
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+  - doctype: AT Notification Outbox
+    visible_to: system
+    permission_bundle: system_only
+    runtime_scope:
+      type: branch_only
+      branch_field: origin_office_branch
+
+permission_bundles:
+  operational_full:
+    read: true
+    write: true
+    create: true
+    delete: true
+    submit: true
+    cancel: true
+    amend: true
+    report: true
+    export: true
+    import: true
+    share: true
+    print: true
+    email: true
+  operational_document_limited:
+    read: true
+    write: true
+    create: true
+    delete: false
+    submit: false
+    cancel: false
+    amend: false
+    report: true
+    export: true
+    import: false
+    share: true
+    print: true
+    email: true
+  system_only:
+    apply_to_roles:
+      - AT System Manager
+      - System Manager
+      - Administrator
+
+governance_rules:
+  customer_personal_portfolio:
+    enabled_for_roles:
+      - AT Agent
+    note: Personal portfolio should remain customer-specific unless product intentionally widens it.
+  branch_scope_is_primary_boundary:
+    enabled: true
+  sales_entity_scope_is_secondary_boundary:
+    enabled: true
+
+risk_checks:
+  - Compare declarative policies against setup_utils.PERMISSION_MATRIX.
+  - Compare declarative policies against hooks.permission_query_conditions.
+  - Compare declarative policies against controller special cases.
+  - Compare declarative policies against live Custom DocPerm rows before rollout.

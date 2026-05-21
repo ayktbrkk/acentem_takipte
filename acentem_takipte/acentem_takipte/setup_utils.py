@@ -3,6 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.permissions import add_permission, update_permission_property
 
+from .services.access_policy_runtime import build_permission_matrix
 from .utils.assets import ensure_site_asset_symlink
 from .utils.i18n import translate_text
 
@@ -202,54 +203,7 @@ OPERATIONAL_DOCUMENT_ACCESS = {
     "email": 1,
 }
 
-PERMISSION_MATRIX: dict[str, dict[str, dict[int, dict[str, int]]]] = {}
-
-# Doctypes behind visible operational pages where AT Agent, AT Manager,
-# and AT Accountant must have direct DocType access.
-for _dt in (
-    "AT Lead",
-    "AT Offer",
-    "AT Policy",
-    "AT Policy Endorsement",
-    "AT Policy Snapshot",
-    "AT Customer",
-    "AT Claim",
-    "AT Payment",
-    "AT Payment Installment",
-    "AT Renewal Task",
-    "AT Call Note",
-    "AT Segment",
-    "AT Campaign",
-    "AT Ownership Assignment",
-    "AT Activity",
-    "AT Task",
-    "AT Reminder",
-):
-    PERMISSION_MATRIX[_dt] = {
-        "AT Agent": {0: FULL_ACCESS_ALL},
-        "AT Manager": {0: FULL_ACCESS_ALL},
-        "AT Accountant": {0: FULL_ACCESS_ALL},
-    }
-
-PERMISSION_MATRIX["AT Document"] = {
-    "AT Agent": {0: OPERATIONAL_DOCUMENT_ACCESS},
-    "AT Manager": {0: OPERATIONAL_DOCUMENT_ACCESS},
-    "AT Accountant": {0: OPERATIONAL_DOCUMENT_ACCESS},
-}
-
-# Remaining 12 doctypes — only AT System Manager (added by ensure_role_permissions)
-for _dt in (
-    "AT Access Log",
-    "AT Accounting Entry",
-    "AT Branch",
-    "AT Insurance Company",
-    "AT Notification Draft",
-    "AT Notification Outbox",
-    "AT Notification Template",
-    "AT Reconciliation Item",
-    "AT Sales Entity",
-):
-    PERMISSION_MATRIX[_dt] = {}
+PERMISSION_MATRIX: dict[str, dict[str, dict[int, dict[str, int]]]] = build_permission_matrix()
 
 DEFAULT_NOTIFICATION_TEMPLATES = (
     {

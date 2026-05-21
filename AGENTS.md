@@ -4,6 +4,18 @@ This repository is a hybrid Frappe + Vue application for insurance agency operat
 
 Start with [docs/README.md](docs/README.md) for the documentation index, [docs/ARCHITECTURE_OVERVIEW.md](docs/ARCHITECTURE_OVERVIEW.md) for the short architecture summary, and [docs/ARCHITECTURE_MAP.md](docs/ARCHITECTURE_MAP.md) for the full verified architecture map.
 
+## AI Workflow Tools
+
+When available, use the local `acentem-takipte-workflow` Codex skill for this repository before changing code. It summarizes these repo rules for Frappe, Vue, bilingual UI copy, hooks, and validation.
+
+Use Superpowers process skills for planning, debugging, TDD, verification, and branch finishing when the task fits. Use gstack skills as optional local support for product framing (`gstack-office-hours`), branch review (`gstack-review`), browser QA (`gstack-qa`), release checks (`gstack-ship`), and security review (`gstack-cso`).
+
+Use Firecrawl for current external web research, scraping, or web QA workflows that benefit from a dedicated crawl/search CLI. Use Context7 for current library/framework documentation lookups, Chrome DevTools for browser debugging/performance evidence, and Sequential Thinking only for unusually tangled planning or root-cause analysis.
+
+Use Vercel composition and React best-practice skills for React component architecture and frontend performance review, and use Trail of Bits skills for security-focused diff review, insecure-default checks, supply-chain review, GitHub Actions agent-risk review, Semgrep rules, and property-based testing ideas. Use `senior-architect` for architecture trade-off reviews, `drawio-diagrams-enhanced` for diagrams.net deliverables, `pdf-to-markdown` for whole-PDF extraction, `ui-ux-pro-max` as a secondary UI reference after this repo's design docs, and `svg-precision` only when a task explicitly needs deterministic SVG output.
+
+GitHub, CodeRabbit, Sentry, Browser, Playwright, Chrome DevTools, Context7, Firecrawl, and MarkItDown integrations are evidence tools, not substitutes for local source-of-truth checks. Use them when the task needs live PR or CI context, review triage, production error evidence, current external documentation, browser validation, web research, or document-to-Markdown conversion.
+
 ## First 15 Minutes
 
 Use this order when you are new to the repository or returning after a gap:

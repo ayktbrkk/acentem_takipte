@@ -147,32 +147,60 @@ def test_activity_task_reminder_and_ownership_queries_use_branch_scope(monkeypat
 
 
 def test_policy_endorsement_permission_query_inherits_policy_scope(monkeypatch):
-    monkeypatch.setattr(
-        branch_permissions,
-        "get_policy_permission_query_conditions",
-        lambda user=None: "`tabAT Policy`.`office_branch` in ('IST')",
-    )
+    monkeypatch.setattr(branch_permissions, "user_can_access_all_office_branches", lambda user=None: False)
+    monkeypatch.setattr(branch_permissions, "user_can_access_all_sales_entities", lambda user=None: False)
+    monkeypatch.setattr(branch_permissions, "get_allowed_office_branch_names", lambda user=None: {"IST"})
+    monkeypatch.setattr(branch_permissions, "get_allowed_sales_entity_names", lambda user=None: {"ENT-1"})
+    monkeypatch.setattr(branch_permissions, "is_break_glass_active", lambda user=None, doctype=None: False)
 
     condition = branch_permissions.get_policy_endorsement_permission_query_conditions("manager@example.com")
 
-    assert "`tabAT Policy Endorsement`.`policy` in (" in condition
-    assert "`tabAT Policy`" in condition
+    assert "policy IN (" in condition
+    assert "SELECT `name` FROM `tabAT Policy`" in condition
 
 
 def test_policy_endorsement_has_permission_resolves_policy_scope(monkeypatch):
-    monkeypatch.setattr(branch_permissions, "user_can_access_all_office_branches", lambda user=None: False)
     monkeypatch.setattr(
         branch_permissions.frappe,
         "db",
-        SimpleNamespace(get_value=lambda *args, **kwargs: {"office_branch": "IST", "sales_entity": "ENT-1"}),
+        SimpleNamespace(get_value=lambda *args, **kwargs: {"origin_office_branch": "IST", "sales_entity": "ENT-1"}),
     )
     monkeypatch.setattr(
         branch_permissions,
-        "has_policy_permission",
-        lambda doc, user=None, permission_type="read": doc.get("office_branch") == "IST",
+        "has_policy_scoped_permission",
+        lambda doctype, doc, user=None, permission_type="read": doctype == "AT Policy" and doc.get("origin_office_branch") == "IST",
     )
 
     doc = SimpleNamespace(policy="POL-001")
 
     assert branch_permissions.has_policy_endorsement_permission(doc, user="manager@example.com") is True
+
+
+def test_payment_installment_permission_query_inherits_payment_scope(monkeypatch):
+    monkeypatch.setattr(branch_permissions, "user_can_access_all_office_branches", lambda user=None: False)
+    monkeypatch.setattr(branch_permissions, "user_can_access_all_sales_entities", lambda user=None: False)
+    monkeypatch.setattr(branch_permissions, "get_allowed_office_branch_names", lambda user=None: {"IST"})
+    monkeypatch.setattr(branch_permissions, "get_allowed_sales_entity_names", lambda user=None: {"ENT-1"})
+
+    condition = branch_permissions.get_payment_installment_permission_query_conditions("manager@example.com")
+
+    assert "payment IN (" in condition
+    assert "SELECT `name` FROM `tabAT Payment`" in condition
+
+
+def test_payment_installment_has_permission_resolves_payment_scope(monkeypatch):
+    monkeypatch.setattr(
+        branch_permissions.frappe,
+        "db",
+        SimpleNamespace(get_value=lambda *args, **kwargs: {"origin_office_branch": "IST", "sales_entity": "ENT-1"}),
+    )
+    monkeypatch.setattr(
+        branch_permissions,
+        "has_policy_scoped_permission",
+        lambda doctype, doc, user=None, permission_type="read": doctype == "AT Payment" and doc.get("origin_office_branch") == "IST",
+    )
+
+    doc = SimpleNamespace(payment="PAY-001")
+
+    assert branch_permissions.has_payment_installment_permission(doc, user="manager@example.com") is True
 
