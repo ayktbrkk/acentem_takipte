@@ -4,13 +4,14 @@
       <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
         <FeatherIcon name="search" class="h-4 w-4 text-gray-400" />
       </div>
-      <input
-        :value="modelValue"
-        type="text"
-        class="block w-full rounded-lg border-gray-200 pl-10 text-sm focus:border-brand-500 focus:ring-brand-500"
-        :placeholder="placeholder || ''"
-        @input="$emit('update:modelValue', $event.target.value)"
-      />
+        <input
+          :value="modelValue"
+          type="text"
+          class="block w-full rounded-lg pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          :placeholder="placeholder || ''"
+          data-search-input
+          @input="$emit('update:modelValue', $event.target.value)"
+        />
     </div>
 
     <div class="flex flex-wrap items-center gap-2">

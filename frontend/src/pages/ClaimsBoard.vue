@@ -124,7 +124,7 @@ const claimsTableColumns = computed(() => [
 ]);
 
 function focusClaimSearch() {
-  const searchInput = document.querySelector('input[placeholder*="Hasar"], input[placeholder*="claim"]');
+  const searchInput = document.querySelector('[data-search-input]');
   if (searchInput instanceof HTMLInputElement) {
     searchInput.focus();
     searchInput.select();

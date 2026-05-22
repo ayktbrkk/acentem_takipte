@@ -51,7 +51,7 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   function backToList() {
-    router.push("/payments");
+    router.push({ name: "payments-board" });
   }
 
   function openCustomer() {
