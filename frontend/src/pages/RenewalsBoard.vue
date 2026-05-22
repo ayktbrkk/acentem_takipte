@@ -38,6 +38,10 @@
       </div>
     </template>
 
+    <div v-if="renewalsError" class="rounded-xl border border-at-red/20 bg-at-red/5 p-4 mb-4" role="alert">
+      <p class="text-sm font-semibold text-at-red">{{ renewalsError }}</p>
+    </div>
+
     <div class="mb-6">
       <SmartFilterBar
         v-model="filters.query"
@@ -169,6 +173,7 @@ const {
   renewalStatusOptions,
   renewalsLoading,
   renewals,
+  renewalsError,
   showQuickRenewalDialog,
   renewalQuickOptionsMap,
   quickRenewalEyebrow,

@@ -43,7 +43,6 @@
 
 <script setup>
 import { FeatherIcon } from "frappe-ui";
-import EmptyState from "../app-shell/EmptyState.vue";
 import ListTable from "../ui/ListTable.vue";
 import SkeletonLoader from "../ui/SkeletonLoader.vue";
 
