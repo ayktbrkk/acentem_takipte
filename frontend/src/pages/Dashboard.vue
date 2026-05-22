@@ -253,7 +253,7 @@
                   step="0.01"
                   type="number"
                 />
-                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₺</div>
+                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">TL</div>
               </div>
             </div>
 

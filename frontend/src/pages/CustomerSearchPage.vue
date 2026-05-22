@@ -124,7 +124,7 @@ function mapStatus(value: string) {
   if (normalized === "pending") return t("status_pending");
   if (normalized === "approved") return t("status_approved");
   if (normalized === "rejected") return t("status_rejected");
-  return value || "-";
+  return value || t("unspecified");
 }
 
 function mapRequestKind(value: string) {
@@ -132,7 +132,7 @@ function mapRequestKind(value: string) {
   if (normalized === "access") return t("request_kind_access");
   if (normalized === "transfer") return t("request_kind_transfer");
   if (normalized === "share") return t("request_kind_share");
-  return value || "-";
+  return value || t("unspecified");
 }
 
 const {

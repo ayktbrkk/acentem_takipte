@@ -12,7 +12,7 @@
           <button
             type="button"
             class="rounded px-3 py-1 text-xs font-medium transition-all"
-            :class="isListView ? 'bg-brand-50 text-brand-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            :class="isListView ? 'bg-brand-50 text-brand-600 shadow-sm' : 'text-slate-400 hover:text-slate-700'"
             :aria-pressed="isListView"
             :aria-label="t('viewList')"
             @click="setOfferViewMode('list')"

@@ -97,7 +97,7 @@
                 <StatusBadge domain="renewal" :status="task.status || 'Open'" />
                 <span
                   v-if="task.status !== 'Done' && task.status !== 'Cancelled'"
-                  class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-200 text-slate-600"
+                  class="inline-flex items-center rounded-full bg-at-amber/10 text-at-amber text-[10px] font-bold px-2 py-0.5"
                 >
                   {{ task.priorityLabel }}
                 </span>
