@@ -532,7 +532,7 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   }
 
   async function rejectClaim(claim) {
-    const rejectionReason = String(window.prompt(t("rejectReasonPrompt"), claim?.rejection_reason || "") || "").trim();
+    const rejectionReason = String(globalThis.prompt?.(t("rejectReasonPrompt"), claim?.rejection_reason || "") || "").trim();
     if (!rejectionReason) return;
     await claimMutationResource.submit({
       doctype: "AT Claim",

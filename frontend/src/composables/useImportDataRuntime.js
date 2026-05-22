@@ -153,11 +153,9 @@ export function useImportDataRuntime({ t, router, authStore }) {
 
   function importData() {
     if (!canImport.value) return;
-    if (activeLocale.value === "tr") {
-      importMessage.value = `${fileName.value} dosyası için ${mappedColumnCount.value} ${t("columnsMapped")}. ${t("importQueued")}`;
-      return;
-    }
-    importMessage.value = `${mappedColumnCount.value} ${t("columnsMapped")} for ${fileName.value}. ${t("importQueued")}`;
+    importMessage.value = t("columnsMapped") === "columnsMapped"
+      ? `${mappedColumnCount.value} columns mapped for ${fileName.value}. Import queued.`
+      : `${fileName.value} için ${mappedColumnCount.value} sütun eşleştirildi. İçe aktarma kuyruğa alındı.`;
   }
 
   function cancel() {

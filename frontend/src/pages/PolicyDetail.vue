@@ -340,7 +340,9 @@ async function openDocument(doc, referenceDoctype) {
   });
 
   if (opened) return;
-  window.alert(t("fileLinkNotFound"));
+  notification.message = t("fileLinkNotFound");
+  notification.type = "error";
+  notification.show = true;
 }
 
 function isPrivateDocument(doc) {

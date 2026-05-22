@@ -206,7 +206,7 @@ const historyEntries = computed(() => {
     { label: t("updated"), value: formatDateTime(item.value.modified), active: true },
     { label: t("resolvedOn"), value: formatDateTime(item.value.resolved_on), active: Boolean(item.value.resolved_on) },
     { label: t("synced"), value: formatDateTime(entry.value.last_synced_on), active: Boolean(entry.value.last_synced_on) },
-    ...(details.auto_closed ? [{ label: "Auto Close", value: stringifyDetailValue(details.auto_closed), active: false }] : []),
+    ...(details.auto_closed ? [{ label: t("autoClose"), value: stringifyDetailValue(details.auto_closed), active: false }] : []),
   ].filter((row) => row.value !== "-");
 });
 
@@ -319,7 +319,8 @@ function formatDateTime(value) {
 
 function formatMoney(value) {
   try {
-    return new Intl.NumberFormat("tr-TR", {
+    const loc = activeLocale.value === "tr" ? "tr-TR" : "en-US";
+    return new Intl.NumberFormat(loc, {
       style: "currency",
       currency: "TRY",
       maximumFractionDigits: 2,
