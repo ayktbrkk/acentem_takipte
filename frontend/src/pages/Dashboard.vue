@@ -1,24 +1,28 @@
 <template>
-  <section class="page-shell space-y-4 lg:space-y-5">
-    <DashboardHeader
-      :active-dashboard-tab="activeDashboardTab"
-      :dashboard-tabs="dashboardTabs"
-      :hero-subtitle="dashboardHeroSubtitle"
-      :hero-tag="t('heroTag')"
-      :hero-title="dashboardHeroTitle"
-      :new-lead-label="t('newLead')"
-      :range-label="rangeLabel"
-      :range-label-text="t('rangeLabel')"
-      :range-options="rangeOptions"
-      :refresh-label="t('refresh')"
-      :selected-range="selectedRange"
-      :show-new-lead-action="showNewLeadAction"
-      :visible-range="visibleRange"
-      @apply-range="applyRange"
-      @new-lead="openLeadDialog"
-      @reload="reloadData"
-      @set-dashboard-tab="setDashboardTab"
-    />
+  <WorkbenchPageLayout
+    :show-record-count="false"
+  >
+    <template #topbar>
+      <DashboardHeader
+        :active-dashboard-tab="activeDashboardTab"
+        :dashboard-tabs="dashboardTabs"
+        :hero-subtitle="dashboardHeroSubtitle"
+        :hero-tag="t('heroTag')"
+        :hero-title="dashboardHeroTitle"
+        :new-lead-label="t('newLead')"
+        :range-label="rangeLabel"
+        :range-label-text="t('rangeLabel')"
+        :range-options="rangeOptions"
+        :refresh-label="t('refresh')"
+        :selected-range="selectedRange"
+        :show-new-lead-action="showNewLeadAction"
+        :visible-range="visibleRange"
+        @apply-range="applyRange"
+        @new-lead="openLeadDialog"
+        @reload="reloadData"
+        @set-dashboard-tab="setDashboardTab"
+      />
+    </template>
 
     <div
       v-if="dashboardAccessMessage"
@@ -32,12 +36,13 @@
     </div>
 
     <!-- audit(perf/P-04): Skeleton loader hides the blank white screen while KPIs load -->
-    <SkeletonLoader
-      v-if="dashboardLoading && !visibleQuickStatCards.length"
-      variant="card"
-      :count="4"
-    />
-    <div v-else class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <template #metrics>
+      <SkeletonLoader
+        v-if="dashboardLoading && !visibleQuickStatCards.length"
+        variant="card"
+        :count="4"
+      />
+      <div v-else class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <DashboardStatCard
         v-for="card in visibleQuickStatCards"
         :key="card.key"
@@ -47,6 +52,7 @@
         :t="t"
       />
     </div>
+    </template>
 
     <DashboardAnalyticsRow
       :commission-trend="commissionTrend"
@@ -281,7 +287,7 @@
         </div>
       </template>
     </Dialog>
-  </section>
+  </WorkbenchPageLayout>
 </template>
 
 <script setup>
@@ -293,6 +299,7 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useDashboardStore } from "../stores/dashboard";
 import ActionButton from "../components/app-shell/ActionButton.vue";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import DashboardHeader from "../components/dashboard/DashboardHeader.vue";
 import DashboardStatCard from "../components/DashboardStatCard.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
