@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path";
 import { SIDEBAR_TRANSLATIONS } from "./sidebar_translations";
 import { OFFER_TRANSLATIONS } from "./offer_translations";
 import { REPORTS_TRANSLATIONS } from "./reports_translations";
+import { COMMON_TRANSLATIONS } from "./common_translations";
 import { AUX_WORKBENCH_ROUTE_DEFS } from "./auxWorkbench";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -46,6 +47,7 @@ describe("sidebar page audit guardrails", () => {
     expectTranslationParity("sidebar", SIDEBAR_TRANSLATIONS);
     expectTranslationParity("offers", OFFER_TRANSLATIONS);
     expectTranslationParity("reports", REPORTS_TRANSLATIONS);
+    expectTranslationParity("common", COMMON_TRANSLATIONS);
   });
 
   it("uses domain-correct TR and EN insurance terms for audited shell links", () => {
@@ -59,5 +61,13 @@ describe("sidebar page audit guardrails", () => {
     expect(SIDEBAR_TRANSLATIONS.en.reconciliation).toBe("Reconciliation");
     expect(SIDEBAR_TRANSLATIONS.tr.accountingEntries).toBe("Muhasebe Kayıtları");
     expect(SIDEBAR_TRANSLATIONS.en.accountingEntries).toBe("Accounting Entries");
+  });
+
+  it("keeps common Turkish labels compatible with Turkish casing and diacritics", () => {
+    expect(COMMON_TRANSLATIONS.tr.colValidity).toBe("Geçerlilik");
+    expect(COMMON_TRANSLATIONS.tr.daysRemaining).toBe("Kalan Gün");
+    expect(COMMON_TRANSLATIONS.tr.customer_type).toBe("Müşteri Tipi");
+    expect(COMMON_TRANSLATIONS.tr.searchFailed).toBe("Müşteri araması tamamlanamadı. Lütfen tekrar deneyin.");
+    expect(COMMON_TRANSLATIONS.tr.requestSubmitFailed).toBe("Talep gönderilemedi. Lütfen tekrar deneyin.");
   });
 });
