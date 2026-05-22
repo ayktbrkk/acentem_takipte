@@ -416,6 +416,7 @@ export function useAuxRecordDetailSummary({
     if (config.key === "customer-segment-snapshots") return "segment_snapshot";
     if (config.key === "ownership-assignments") return "ownership_assignment";
     if (config.key === "access-logs") return "access_log";
+    if (config.key === "at-documents") return "at_document";
     return "";
   });
 
@@ -446,6 +447,15 @@ export function useAuxRecordDetailSummary({
       const badges = [];
       if (doc.value.status) badges.push({ key: "status", type: "notification_status", status: String(doc.value.status) });
       if (doc.value.channel) badges.push({ key: "channel", type: "notification_channel", status: String(doc.value.channel) });
+      return badges;
+    }
+    if (specialDetailMode.value === "at_document") {
+      const badges = [];
+      if (doc.value.status) badges.push({ key: "status", type: "at_document_status", status: String(doc.value.status) });
+      if (doc.value.document_kind) badges.push({ key: "document_kind", type: "document_kind", status: String(doc.value.document_kind) });
+      if (doc.value.is_sensitive === 1 || String(doc.value.is_sensitive).trim().toLowerCase() === "true") {
+        badges.push({ key: "is_sensitive", type: "boolean_active", status: "1" });
+      }
       return badges;
     }
     return [];

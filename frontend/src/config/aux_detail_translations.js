@@ -125,6 +125,8 @@ export const AUX_DETAIL_TRANSLATIONS = {
     valIdDocument: "Kimlik",
     valPolicyCopy: "Poliçe Kopyası",
     valDamagePhoto: "Hasar Fotoğrafı",
+    // Document lifecycle alerts
+    fileLinkNotFound: "Dosya bağlantısı bulunamadı",
   },
   en: {
     backToList: "Back to List",
@@ -252,5 +254,7 @@ export const AUX_DETAIL_TRANSLATIONS = {
     valIdDocument: "ID Document",
     valPolicyCopy: "Policy Copy",
     valDamagePhoto: "Damage Photo",
+    // Document lifecycle alerts
+    fileLinkNotFound: "File link not found",
   }
 };

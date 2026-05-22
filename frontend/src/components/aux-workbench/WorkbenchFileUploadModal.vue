@@ -23,10 +23,15 @@
         <div
           class="drop-zone"
           :class="{ 'drop-zone-active': isDragging }"
+          tabindex="0"
+          role="button"
+          :aria-label="translateLabel('chooseFile')"
           @dragover.prevent="isDragging = true"
           @dragleave.prevent="isDragging = false"
           @drop.prevent="onDrop"
           @click="fileInput.click()"
+          @keydown.enter.prevent="fileInput.click()"
+          @keydown.space.prevent="fileInput.click()"
         >
           <input
             id="workbench-document-file"
@@ -184,6 +189,7 @@
 import { computed, ref, watch, onMounted } from "vue";
 import { useAuthStore } from "../../stores/auth";
 import ATQuickEntryModal from "../app-shell/ATQuickEntryModal.vue";
+import { WORKBENCH_FILE_UPLOAD_TRANSLATIONS } from "../../config/workbench_file_upload_translations";
 
 const props = defineProps({
   open: { type: Boolean, required: true },
@@ -216,84 +222,7 @@ function translateLabel(key) {
   return translated;
 }
 
-const copy = {
-  tr: {
-    uploadDocument: "Doküman Yükle",
-    uploadEyebrow: "Hızlı Doküman Yükleme",
-    uploadSubtitle: "Doküman merkezine güvenli bir dosya yükleyin ve kayıt bilgilerini tamamlayın",
-    uploadSectionTitle: "Dosya",
-    linkSectionTitle: "Bağlı Kayıt",
-    metaSectionTitle: "Doküman Detayları",
-    close: "Kapat",
-    chooseFile: "Dosya seçin veya buraya sürükleyin",
-    uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.",
-    fileTypeNotSupported: "Bu dosya tipi desteklenmiyor. PDF, DOC veya JPEG/PNG kullanın.",
-    fileTooLarge: "Dosya çok büyük (maks. 10 MB)",
-    cancel: "İptal",
-    upload: "Yükle",
-    uploading: "Yükleniyor...",
-    documentKind: "Doküman Türü",
-    documentSubType: "Doküman Alt Türü",
-    documentDate: "Doküman Tarihi",
-    isSensitive: "Hassas Veri",
-    notes: "Notlar",
-    kindPolicy: "Poliçe",
-    kindEndorsement: "Zeyilname",
-    kindClaim: "Hasar",
-    kindCustomer: "Müşteri",
-    kindOther: "Diğer",
-    subRuhsat: "Ruhsat",
-    subKimlik: "Kimlik",
-    subPoliceCopyasi: "Poliçe Kopyası",
-    subHasarFotografi: "Hasar Fotoğrafı",
-    subDiger: "Diğer",
-    linkDoctypeLabel: "Bağlantı Türü",
-    linkNameLabel: "Bağlı Kayıt",
-    linkCustomer: "Müşteri",
-    linkPolicy: "Poliçe",
-    linkClaim: "Hasar",
-    linkSearchPlaceholder: "Kayıt ara...",
-    linkSearching: "Aranıyor...",
-  },
-  en: {
-    uploadDocument: "Upload Document",
-    uploadEyebrow: "Quick Document Upload",
-    uploadSubtitle: "Upload a secure file to the document center and complete the record details",
-    uploadSectionTitle: "File",
-    linkSectionTitle: "Linked Record",
-    metaSectionTitle: "Document Details",
-    close: "Close",
-    chooseFile: "Choose a file or drag it here",
-    uploadError: "Upload failed. Please try again.",
-    fileTypeNotSupported: "This file type is not supported. Use PDF, DOC or JPEG/PNG.",
-    fileTooLarge: "File is too large (max 10 MB)",
-    cancel: "Cancel",
-    upload: "Upload",
-    uploading: "Uploading...",
-    documentKind: "Document Kind",
-    documentSubType: "Document Sub Type",
-    documentDate: "Document Date",
-    isSensitive: "Sensitive Data",
-    notes: "Notes",
-    kindPolicy: "Policy",
-    kindEndorsement: "Endorsement",
-    kindClaim: "Claim",
-    kindCustomer: "Customer",
-    kindOther: "Other",
-    subRuhsat: "Registration Certificate",
-    subKimlik: "ID / Passport",
-    subPoliceCopyasi: "Policy Copy",
-    subHasarFotografi: "Damage Photo",
-    subDiger: "Other",
-    linkDoctypeLabel: "Link Type",
-    linkNameLabel: "Linked Record",
-    linkCustomer: "Customer",
-    linkPolicy: "Policy",
-    linkClaim: "Claim",
-    linkSearchPlaceholder: "Search record...",
-    linkSearching: "Searching...",
-  },
-};
+const copy = WORKBENCH_FILE_UPLOAD_TRANSLATIONS;
 
 const fileInput = ref(null);
 const selectedFile = ref(null);
@@ -615,8 +544,13 @@ async function submit() {
 
 .drop-zone:hover,
 .drop-zone-active {
-  border-color: #6366f1;
-  background: #f0f0ff;
+  border-color: #3B82F6;
+  background: #EBF3FF;
+}
+
+.drop-zone:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
 }
 
 .hidden-input {
@@ -675,7 +609,7 @@ async function submit() {
 .field-checkbox {
   width: 1rem;
   height: 1rem;
-  accent-color: #6366f1;
+  accent-color: #3B82F6;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -683,7 +617,7 @@ async function submit() {
 .field-label {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #475569;
+  color: #94a3b8;
 }
 
 .field-input {
@@ -700,8 +634,8 @@ async function submit() {
 
 .field-input:focus {
   outline: none;
-  border-color: rgb(99 102 241 / 0.45);
-  box-shadow: 0 0 0 4px rgb(99 102 241 / 0.1);
+  border-color: rgb(59 130 246 / 0.45);
+  box-shadow: 0 0 0 4px rgb(59 130 246 / 0.1);
   background: white;
 }
 
@@ -742,7 +676,7 @@ async function submit() {
 }
 
 .link-result-item:hover {
-  background: #f0f0ff;
+  background: #EBF3FF;
 }
 
 .link-result-name {
@@ -756,7 +690,7 @@ async function submit() {
 }
 
 .link-result-tax {
-  color: #6366f1;
+  color: #3B82F6;
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -801,7 +735,7 @@ async function submit() {
 }
 
 .context-taxid {
-  color: #6366f1;
+  color: #3B82F6;
   font-size: 0.75rem;
 }
 

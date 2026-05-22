@@ -141,8 +141,7 @@ export function useAuxRecordDetailActions({
       referenceName: String(unref(doc)?.name || ""),
     });
     if (opened) return;
-    const locale = String(unref(authStore?.locale) || "en").trim();
-    window.alert(locale === "tr" ? "Dosya bağlantısı bulunamadı" : "File link not found");
+    window.alert(t("fileLinkNotFound"));
   }
 
   async function archiveDocument() {
