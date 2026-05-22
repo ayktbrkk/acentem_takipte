@@ -210,6 +210,54 @@ const AUX_DETAIL_FIELD_LABELS = {
       owner: "Owner",
     },
   },
+  "sales-entities": {
+    tr: { name: "Kayıt", entity_type: "Birim Türü", full_name: "Tam Ad", office_branch: "Ofis Şubesi", parent_entity: "Üst Birim", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", entity_type: "Entity Type", full_name: "Full Name", office_branch: "Office Branch", parent_entity: "Parent Entity", owner: "Owner", modified: "Modified" },
+  },
+  companies: {
+    tr: { name: "Kayıt", company_name: "Şirket Adı", company_code: "Şirket Kodu", is_active: "Aktif", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", company_name: "Company Name", company_code: "Company Code", is_active: "Active", owner: "Owner", modified: "Modified" },
+  },
+  branches: {
+    tr: { name: "Kayıt", branch_name: "Branş Adı", branch_code: "Branş Kodu", insurance_company: "Sigorta Şirketi", is_active: "Aktif", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", branch_name: "Branch Name", branch_code: "Branch Code", insurance_company: "Insurance Company", is_active: "Active", owner: "Owner", modified: "Modified" },
+  },
+  segments: {
+    tr: { name: "Kayıt", segment_name: "Segment Adı", segment_type: "Segment Türü", channel_focus: "Kanal Odağı", office_branch: "Ofis Şubesi", status: "Durum", estimated_customer_count: "Tahmini Müşteri Sayısı", criteria_json: "Kriterler", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", segment_name: "Segment Name", segment_type: "Segment Type", channel_focus: "Channel Focus", office_branch: "Office Branch", status: "Status", estimated_customer_count: "Estimated Customer Count", criteria_json: "Criteria", notes: "Notes", owner: "Owner", modified: "Modified" },
+  },
+  templates: {
+    tr: { name: "Kayıt", template_key: "Şablon Anahtarı", event_key: "Etkinlik Anahtarı", channel: "Kanal", language: "Dil", subject: "Konu", is_active: "Aktif", body_template: "Şablon İçeriği", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", template_key: "Template Key", event_key: "Event Key", channel: "Channel", language: "Language", subject: "Subject", is_active: "Active", body_template: "Template Body", owner: "Owner", modified: "Modified" },
+  },
+  "notification-drafts": {
+    tr: { name: "Kayıt", event_key: "Etkinlik Anahtarı", channel: "Kanal", customer: "Müşteri", recipient: "Alıcı", reference_doctype: "Referans Tipi", reference_name: "Referans Kayıt", template: "Şablon", status: "Durum", language: "Dil", subject: "Konu", body: "İçerik", outbox_record: "Giden Kayıt", sent_at: "Gönderim Tarihi", error_message: "Hata Mesajı", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", event_key: "Event Key", channel: "Channel", customer: "Customer", recipient: "Recipient", reference_doctype: "Reference Type", reference_name: "Reference Record", template: "Template", status: "Status", language: "Language", subject: "Subject", body: "Body", outbox_record: "Outbox Record", sent_at: "Sent At", error_message: "Error Message", owner: "Owner", modified: "Modified" },
+  },
+  "notification-outbox": {
+    tr: { name: "Kayıt", event_key: "Etkinlik Anahtarı", channel: "Kanal", customer: "Müşteri", recipient: "Alıcı", reference_doctype: "Referans Tipi", reference_name: "Referans Kayıt", provider: "Sağlayıcı", status: "Durum", priority: "Öncelik", attempt_count: "Deneme Sayısı", max_attempts: "Maks. Deneme", draft: "Taslak", next_retry_on: "Sonraki Deneme", last_attempt_on: "Son Deneme", provider_message_id: "Sağlayıcı Mesaj ID", error_message: "Hata Mesajı", response_log: "Yanıt Logu", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", event_key: "Event Key", channel: "Channel", customer: "Customer", recipient: "Recipient", reference_doctype: "Reference Type", reference_name: "Reference Record", provider: "Provider", status: "Status", priority: "Priority", attempt_count: "Attempt Count", max_attempts: "Max Attempts", draft: "Draft", next_retry_on: "Next Retry On", last_attempt_on: "Last Attempt On", provider_message_id: "Provider Message ID", error_message: "Error Message", response_log: "Response Log", owner: "Owner", modified: "Modified" },
+  },
+  "insured-assets": {
+    tr: { name: "Kayıt", customer: "Müşteri", policy: "Poliçe", asset_type: "Varlık Türü", asset_label: "Varlık Etiketi", asset_identifier: "Varlık Tanımlayıcı", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", customer: "Customer", policy: "Policy", asset_type: "Asset Type", asset_label: "Asset Label", asset_identifier: "Asset Identifier", notes: "Notes", owner: "Owner", modified: "Modified" },
+  },
+  "customer-relations": {
+    tr: { name: "Kayıt", customer: "Müşteri", related_customer: "İlişkili Müşteri", relation_type: "İlişki Türü", is_household: "Hane Halkı", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", customer: "Customer", related_customer: "Related Customer", relation_type: "Relation Type", is_household: "Household", notes: "Notes", owner: "Owner", modified: "Modified" },
+  },
+  "customer-segment-snapshots": {
+    tr: { name: "Kayıt", customer: "Müşteri", office_branch: "Ofis Şubesi", snapshot_date: "Snapshot Tarihi", segment: "Segment", value_band: "Değer Aralığı", claim_risk: "Hasar Riski", score: "Skor", source_version: "Kaynak Sürüm", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", customer: "Customer", office_branch: "Office Branch", snapshot_date: "Snapshot Date", segment: "Segment", value_band: "Value Band", claim_risk: "Claim Risk", score: "Score", source_version: "Source Version", owner: "Owner", modified: "Modified" },
+  },
+  activities: {
+    tr: { name: "Kayıt", activity_title: "Aktivite Başlığı", activity_type: "Aktivite Türü", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kayıt", customer: "Müşteri", policy: "Poliçe", claim: "Hasar", office_branch: "Ofis Şubesi", assigned_to: "Atanan Kişi", status: "Durum", activity_at: "Aktivite Tarihi", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", activity_title: "Activity Title", activity_type: "Activity Type", source_doctype: "Source Type", source_name: "Source Record", customer: "Customer", policy: "Policy", claim: "Claim", office_branch: "Office Branch", assigned_to: "Assigned To", status: "Status", activity_at: "Activity Date", notes: "Notes", owner: "Owner", modified: "Modified" },
+  },
+  reminders: {
+    tr: { name: "Kayıt", reminder_title: "Hatırlatıcı Başlığı", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kayıt", customer: "Müşteri", policy: "Poliçe", claim: "Hasar", office_branch: "Ofis Şubesi", assigned_to: "Atanan Kişi", status: "Durum", priority: "Öncelik", remind_at: "Hatırlatma Tarihi", completed_on: "Tamamlanma Tarihi", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", reminder_title: "Reminder Title", source_doctype: "Source Type", source_name: "Source Record", customer: "Customer", policy: "Policy", claim: "Claim", office_branch: "Office Branch", assigned_to: "Assigned To", status: "Status", priority: "Priority", remind_at: "Remind At", completed_on: "Completed On", notes: "Notes", owner: "Owner", modified: "Modified" },
+  },
 };
 
 export function useAuxRecordDetailSummary({

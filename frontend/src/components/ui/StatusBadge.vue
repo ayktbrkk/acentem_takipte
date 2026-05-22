@@ -278,9 +278,9 @@ const DOMAIN_LABELS = {
     false: "status_cancelled",
   },
   sales_entity_type: {
-    Agency: "Agency",
-    Representative: "Representative",
-    "Sub-Account": "Sub-Account",
+    Agency: "valAgency",
+    Representative: "valRepresentative",
+    "Sub-Account": "valSubAccount",
   },
   accounting_sync: {
     Draft: "status_draft",

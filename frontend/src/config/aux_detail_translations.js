@@ -127,6 +127,10 @@ export const AUX_DETAIL_TRANSLATIONS = {
     valDamagePhoto: "Hasar Fotoğrafı",
     // Document lifecycle alerts
     fileLinkNotFound: "Dosya bağlantısı bulunamadı",
+    // Sales entity type values
+    valAgency: "Acente",
+    valRepresentative: "Temsilci",
+    valSubAccount: "Alt Hesap",
   },
   en: {
     backToList: "Back to List",
@@ -256,5 +260,9 @@ export const AUX_DETAIL_TRANSLATIONS = {
     valDamagePhoto: "Damage Photo",
     // Document lifecycle alerts
     fileLinkNotFound: "File link not found",
+    // Sales entity type values
+    valAgency: "Agency",
+    valRepresentative: "Representative",
+    valSubAccount: "Sub-Account",
   }
 };
