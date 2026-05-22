@@ -116,11 +116,12 @@
         </template>
         <template #cell(priority)="{ row }">
           <span
-            v-if="row.status !== 'Done' && row.status !== 'Cancelled'"
+            v-if="row.status !== 'Done' && row.status !== 'Cancelled' && row.priorityLabel"
             class="inline-flex items-center rounded-full bg-at-amber/10 text-at-amber text-[10px] font-bold px-2 py-0.5"
           >
             {{ row.priorityLabel }}
           </span>
+          <span v-else class="text-xs text-slate-400">{{ t("unspecified") }}</span>
         </template>
       </ListTable>
     </section>

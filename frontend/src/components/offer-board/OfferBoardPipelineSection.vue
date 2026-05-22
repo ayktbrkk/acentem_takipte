@@ -31,7 +31,7 @@
 
         <div class="space-y-3 overflow-y-auto pr-1">
           <article
-            v-for="offer in rowsForLane(lane.key)"
+            v-for="offer in rowsForLane(lane.key).slice(0, 5)"
             :key="offer.name"
             class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
             draggable="true"
