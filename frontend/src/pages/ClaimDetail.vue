@@ -29,7 +29,26 @@
       </div>
     </template>
 
-    <div class="detail-body at-detail-split-wide">
+    <!-- Loading State - Main Body -->
+    <div v-if="loading" class="mt-4 space-y-6">
+      <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+        <SkeletonLoader variant="detail" />
+      </div>
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="space-y-6">
+          <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+            <SkeletonLoader variant="card" :count="2" />
+          </div>
+        </div>
+        <div class="lg:col-span-2 space-y-6">
+          <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+            <SkeletonLoader variant="text" :rows="12" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="detail-body at-detail-split-wide">
       <!-- Main Content (8) -->
       <div class="detail-main space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
