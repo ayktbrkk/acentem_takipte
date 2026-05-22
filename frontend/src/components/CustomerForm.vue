@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import ATQuickEntryModal from "./app-shell/ATQuickEntryModal.vue";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import { translateText } from "../utils/i18n";
@@ -92,7 +92,12 @@ const props = defineProps({
 
 const emit = defineEmits(["cancel", "save"]);
 
-const show = ref(true);
+const show = computed({
+  get: () => true,
+  set: (value) => {
+    if (!value) emit("cancel");
+  },
+});
 
 const identityFields = computed(() => 
   props.fields.filter(f => ['full_name', 'tax_id', 'birth_date'].includes(f.name))

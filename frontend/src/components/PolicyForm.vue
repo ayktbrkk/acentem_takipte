@@ -102,7 +102,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import ATQuickEntryModal from "./app-shell/ATQuickEntryModal.vue";
 import QuickCreateFormRenderer from "./app-shell/QuickCreateFormRenderer.vue";
 import QuickCustomerPicker from "./app-shell/QuickCustomerPicker.vue";
@@ -126,7 +126,12 @@ const props = defineProps({
 
 const emit = defineEmits(["cancel", "submit", "submit-and-open"]);
 
-const show = ref(true);
+const show = computed({
+  get: () => true,
+  set: (value) => {
+    if (!value) emit("cancel");
+  },
+});
 
 const config = getQuickCreateConfig("policy");
 const allFields = computed(() => config?.fields || []);

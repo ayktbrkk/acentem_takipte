@@ -470,7 +470,12 @@ export const AUX_WORKBENCH_CONFIGS = {
     detailFields: ["document_sub_type", "document_date", "is_sensitive", "is_verified"],
     metricFields: ["version_no", "status", "creation"],
     summaryFields: ["secondary_file_name", "original_file_name", "reference_doctype", "reference_name", "document_kind", "document_sub_type", "is_sensitive", "is_verified", "upload_date", "sequence_no", "version_no", "status"],
-    detailGroups: [{ key: "document", fields: ["file", "display_name", "secondary_file_name", "original_file_name", "reference_doctype", "reference_name", "policy", "customer", "claim", "document_kind", "document_sub_type", "is_sensitive", "is_verified", "document_date", "upload_date", "sequence_no", "version_no", "status", "notes", "creation", "owner", "modified"] }],
+    detailGroups: [
+      { key: "file", fields: ["display_name", "secondary_file_name", "original_file_name", "upload_date"] },
+      { key: "link", fields: ["reference_doctype", "reference_name", "customer", "policy", "claim"] },
+      { key: "meta", fields: ["document_kind", "document_sub_type", "document_date", "is_sensitive", "is_verified", "status"] },
+      { key: "lifecycle", fields: ["sequence_no", "version_no", "creation", "owner", "modified", "file"] },
+    ],
     textFields: ["notes"],
     boolFields: ["is_sensitive", "is_verified"],
     defaultFilters: { status: "Active" },
@@ -493,9 +498,9 @@ export const AUX_WORKBENCH_CONFIGS = {
     ],
     sortOptions: ["creation desc", "modified desc", "document_date desc"],
     defaultSort: "creation desc",
-    dateFields: ["document_date"],
+    dateFields: ["document_date", "upload_date"],
     dateTimeFields: ["creation", "modified"],
-    numberFields: ["version_no"],
+    numberFields: ["sequence_no", "version_no"],
     toolbarActions: [
       {
         key: "quick_upload_document",

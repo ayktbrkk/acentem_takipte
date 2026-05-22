@@ -13,6 +13,9 @@ const auxUpdateSubmitMock = vi.fn();
 const sendDraftSubmitMock = vi.fn();
 const retryOutboxSubmitMock = vi.fn();
 const requeueOutboxSubmitMock = vi.fn();
+const archiveDocumentSubmitMock = vi.fn();
+const restoreDocumentSubmitMock = vi.fn();
+const permanentDeleteDocumentSubmitMock = vi.fn();
 
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
@@ -157,6 +160,34 @@ vi.mock("frappe-ui", () => ({
                     viewed_on: "2026-03-09T11:00:00Z",
                   },
                 }
+            : params?.doctype === "AT Document"
+              ? {
+                  message: {
+                    name: "DOC-001",
+                    display_name: "POLICE_KOPYASI_20260522_001.pdf",
+                    secondary_file_name: "Poliçe Kopyası",
+                    original_file_name: "police-kopyasi-murat-can.pdf",
+                    file: "FILE-001",
+                    reference_doctype: "AT Policy",
+                    reference_name: "POL-001",
+                    policy: "POL-001",
+                    customer: "CUST-001",
+                    claim: "",
+                    document_kind: "Policy",
+                    document_sub_type: "Policy Copy",
+                    is_sensitive: 1,
+                    is_verified: 0,
+                    document_date: "2026-05-22",
+                    upload_date: "2026-05-22",
+                    sequence_no: 1,
+                    version_no: 1,
+                    status: "Active",
+                    notes: "İmzalı poliçe kopyası",
+                    creation: "2026-05-22T08:30:00Z",
+                    modified: "2026-05-22T08:45:00Z",
+                    owner: "agent@example.com",
+                  },
+                }
             : {
                 message: {
                   name: "SNAP-001",
@@ -224,6 +255,48 @@ vi.mock("frappe-ui", () => ({
       };
     }
 
+    if (url.includes("archive_document")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: archiveDocumentSubmitMock,
+      };
+    }
+
+    if (url.includes("restore_document")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: restoreDocumentSubmitMock,
+      };
+    }
+
+    if (url.includes("permanent_delete_document")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: permanentDeleteDocumentSubmitMock,
+      };
+    }
+
     if (url.includes("requeue_outbox_item")) {
       return {
         data,
@@ -286,10 +359,16 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     sendDraftSubmitMock.mockReset();
     retryOutboxSubmitMock.mockReset();
     requeueOutboxSubmitMock.mockReset();
+    archiveDocumentSubmitMock.mockReset();
+    restoreDocumentSubmitMock.mockReset();
+    permanentDeleteDocumentSubmitMock.mockReset();
     auxUpdateSubmitMock.mockResolvedValue({ ok: true });
     sendDraftSubmitMock.mockResolvedValue({ ok: true });
     retryOutboxSubmitMock.mockResolvedValue({ ok: true });
     requeueOutboxSubmitMock.mockResolvedValue({ ok: true });
+    archiveDocumentSubmitMock.mockResolvedValue({ ok: true });
+    restoreDocumentSubmitMock.mockResolvedValue({ ok: true });
+    permanentDeleteDocumentSubmitMock.mockResolvedValue({ ok: true });
     setActivePinia(createPinia());
 
     const authStore = useAuthStore();
@@ -304,6 +383,8 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
       default_office_branch: "IST",
       can_access_all_office_branches: true,
     });
+    authStore.can = vi.fn(() => true);
+    globalThis.confirm = vi.fn(() => true);
   });
 
   it("renders snapshot context and signal summaries", async () => {
@@ -390,7 +471,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     expect(wrapper.text()).toContain("Atama Bağlamı");
     expect(wrapper.text()).toContain("Atama Yaşam Döngüsü");
-    expect(wrapper.text()).toContain("AT Claim");
+    expect(wrapper.text()).toContain("Hasar");
     expect(wrapper.text()).toContain("CLM-001");
     expect(wrapper.text()).toContain("agent@example.com");
     expect(wrapper.text()).toContain("High");
@@ -816,5 +897,68 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     expect(wrapper.text()).toContain("created=12");
     expect(wrapper.text()).toContain("skipped=3");
     expect(wrapper.text()).toContain("matched=15");
+  });
+
+  it("renders document detail groups aligned with upload semantics", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "at-documents",
+        name: "DOC-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Dosya");
+    expect(wrapper.text()).toContain("Bağlı Kayıt");
+    expect(wrapper.text()).toContain("Doküman Detayları");
+    expect(wrapper.text()).toContain("Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Doküman Adı");
+    expect(wrapper.text()).toContain("Poliçe Kopyası");
+    expect(wrapper.text()).toContain("Bağlantı Türü");
+    expect(wrapper.text()).toContain("Poliçe");
+    expect(wrapper.text()).toContain("Hassas Veri");
+  });
+
+  it("runs at-document lifecycle actions from detail header", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "at-documents",
+        name: "DOC-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Arşivle");
+    expect(wrapper.text()).toContain("Kalıcı Sil");
+
+    await wrapper.vm.archiveDocument();
+    expect(archiveDocumentSubmitMock).toHaveBeenCalledWith({ docname: "DOC-001" });
+
+    await wrapper.vm.permanentDeleteDocument();
+    expect(permanentDeleteDocumentSubmitMock).toHaveBeenCalledWith({ docname: "DOC-001" });
   });
 });

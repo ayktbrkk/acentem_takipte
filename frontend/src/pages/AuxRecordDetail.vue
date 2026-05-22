@@ -34,9 +34,25 @@
         <FeatherIcon name="edit-3" class="h-4 w-4" />
         {{ t('quickEdit') }}
       </ActionButton>
+      <ActionButton v-if="panelConfig?.url" variant="secondary" size="sm" @click="openPanel">
+        <FeatherIcon name="link-2" class="h-4 w-4" />
+        {{ t('panel') }}
+      </ActionButton>
       <ActionButton v-if="canOpenDocument" variant="secondary" size="sm" @click="openDocument">
         <FeatherIcon name="file-text" class="h-4 w-4" />
         {{ t('openDocument') }}
+      </ActionButton>
+      <ActionButton v-if="canArchiveDocument" variant="secondary" size="sm" @click="archiveDocument">
+        <FeatherIcon name="archive" class="h-4 w-4" />
+        {{ t('archiveDocument') }}
+      </ActionButton>
+      <ActionButton v-if="canRestoreDocument" variant="secondary" size="sm" @click="restoreDocument">
+        <FeatherIcon name="rotate-ccw" class="h-4 w-4" />
+        {{ t('restoreDocument') }}
+      </ActionButton>
+      <ActionButton v-if="canPermanentDeleteDocument" variant="ghost" size="sm" @click="permanentDeleteDocument">
+        <FeatherIcon name="trash-2" class="h-4 w-4" />
+        {{ t('permanentDeleteDocument') }}
       </ActionButton>
       <ActionButton v-if="showDeskAction" variant="secondary" size="sm" @click="openDesk">
         <FeatherIcon name="external-link" class="h-4 w-4" />
@@ -245,9 +261,9 @@ const {
   permanentDeleteDocument,
   panelConfig,
   canOpenDocument,
-  canArchiveDocument: canArchiveDocumentFn,
-  canRestoreDocument: canRestoreDocumentFn,
-  canPermanentDeleteDocument: canPermanentDeleteDocumentFn,
+  canArchiveDocument,
+  canRestoreDocument,
+  canPermanentDeleteDocument,
   canOpenCommunicationContext,
   isTaskDetail,
   isReminderDetail,
@@ -265,10 +281,6 @@ const {
   canBlockAssignmentLifecycle,
   canCloseAssignmentLifecycle,
 } = detailActions;
-
-const canArchiveDocument = computed(() => canArchiveDocumentFn(doc.value));
-const canRestoreDocument = computed(() => canRestoreDocumentFn(doc.value));
-const canPermanentDeleteDocument = computed(() => canPermanentDeleteDocumentFn(doc.value));
 
 const detailQuickDialogs = useAuxRecordDetailQuickDialogs({
   props,

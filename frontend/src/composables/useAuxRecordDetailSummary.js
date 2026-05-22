@@ -161,12 +161,12 @@ const AUX_DETAIL_FIELD_LABELS = {
   "at-documents": {
     tr: {
       name: "Kayıt",
-      display_name: "Görünen Ad",
-      secondary_file_name: "İkincil Dosya Adı",
+      display_name: "Sistem Dosya Adı",
+      secondary_file_name: "Doküman Adı",
       original_file_name: "Orijinal Dosya Adı",
-      file: "Dosya",
-      reference_doctype: "Referans Tipi",
-      reference_name: "Referans Kayıt",
+      file: "Dosya Kaydı",
+      reference_doctype: "Bağlantı Türü",
+      reference_name: "Bağlı Kayıt",
       policy: "Poliçe",
       customer: "Müşteri",
       claim: "Hasar",
@@ -186,12 +186,12 @@ const AUX_DETAIL_FIELD_LABELS = {
     },
     en: {
       name: "Record",
-      display_name: "Display Name",
-      secondary_file_name: "Secondary File Name",
+      display_name: "System File Name",
+      secondary_file_name: "Document Name",
       original_file_name: "Original File Name",
-      file: "File",
-      reference_doctype: "Reference Type",
-      reference_name: "Reference Record",
+      file: "File Record",
+      reference_doctype: "Link Type",
+      reference_name: "Linked Record",
       policy: "Policy",
       customer: "Customer",
       claim: "Claim",
@@ -379,6 +379,16 @@ export function useAuxRecordDetailSummary({
   const recordSubtitle = computed(() => {
     const d = doc.value;
     if (!d) return localize(config.subtitle);
+    if (config.key === "at-documents") {
+      const linkedType = formatValue("reference_doctype", d.reference_doctype);
+      const linkedName = formatValue("reference_name", d.reference_name);
+      const customerValue = d.customer ? formatValue("customer", d.customer) : "";
+      const subtitleParts = [localize(config.labels?.list) || config.doctype, d.name];
+      if (linkedType && linkedType !== "-") subtitleParts.push(linkedType);
+      if (linkedName && linkedName !== "-") subtitleParts.push(linkedName);
+      if (customerValue && customerValue !== "-" && customerValue !== linkedName) subtitleParts.push(customerValue);
+      return subtitleParts.join(" | ");
+    }
     const officeBranch = String(d.office_branch || "").trim();
     const localizedDoctype = localize(config.labels?.list) || config.doctype;
     return officeBranch ? `${localizedDoctype} | ${d.name} | ${officeBranch}` : `${localizedDoctype} | ${d.name}`;
@@ -719,6 +729,10 @@ export function useAuxRecordDetailSummary({
     const titles = {
       base: t("baseInfo"),
       document: localize(config.labels?.detail) || humanizeField(key),
+      file: t("fileInfo"),
+      link: t("linkInfo"),
+      meta: t("metaInfo"),
+      lifecycle: t("lifecycleInfo"),
       schedule: t("scheduleInfo"),
       assignment: t("assignmentInfo"),
       draft: t("draftInfo"),

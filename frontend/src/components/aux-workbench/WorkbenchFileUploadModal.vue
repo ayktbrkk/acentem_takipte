@@ -1,132 +1,158 @@
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="upload-modal-wrapper">
-      <div class="modal-backdrop" @click.self="$emit('close')">
-        <div class="modal-box" role="dialog" aria-modal="true">
-          <div class="modal-header">
-            <h2 class="modal-title">{{ translateLabel("uploadDocument") }}</h2>
-            <ActionButton class="modal-close-btn" variant="ghost" size="xs" :aria-label="translateLabel('close')" @click="$emit('close')">✕</ActionButton>
-          </div>
+  <ATQuickEntryModal
+    v-model="openProxy"
+    :error="errorMessage"
+    :title="translateLabel('uploadDocument')"
+    :subtitle="translateLabel('uploadSubtitle')"
+    :eyebrow="translateLabel('uploadEyebrow')"
+    :loading="uploading"
+    :disabled="!selectedFile || uploading"
+    :locale="locale"
+    :show-save-and-open="false"
+    :labels="modalLabels"
+    @cancel="$emit('close')"
+    @save="submit"
+  >
+    <div class="space-y-6 py-2">
+      <section class="at-card-premium">
+        <header class="flex items-center gap-3 mb-6">
+          <span class="at-label shrink-0 text-brand-600">{{ translateLabel("uploadSectionTitle") }}</span>
+          <div class="h-px flex-1 bg-slate-100"></div>
+        </header>
 
-          <div
-            class="drop-zone"
-            :class="{ 'drop-zone-active': isDragging }"
-            @dragover.prevent="isDragging = true"
-            @dragleave.prevent="isDragging = false"
-            @drop.prevent="onDrop"
-            @click="fileInput.click()"
-          >
-            <input
-              id="workbench-document-file"
-              ref="fileInput"
-              name="document_file"
-              type="file"
-              :aria-label="translateLabel('chooseFile')"
-              class="hidden-input"
-              @change="onFileChange"
-            />
-            <p v-if="!selectedFile" class="drop-zone-text">{{ translateLabel("chooseFile") }}</p>
-            <p v-else class="drop-zone-selected">
-              {{ selectedFile.name }}
-              <span class="drop-zone-size">{{ fmtFileSize(selectedFile.size) }}</span>
-            </p>
-          </div>
+        <div
+          class="drop-zone"
+          :class="{ 'drop-zone-active': isDragging }"
+          @dragover.prevent="isDragging = true"
+          @dragleave.prevent="isDragging = false"
+          @drop.prevent="onDrop"
+          @click="fileInput.click()"
+        >
+          <input
+            id="workbench-document-file"
+            ref="fileInput"
+            name="document_file"
+            type="file"
+            :aria-label="translateLabel('chooseFile')"
+            class="hidden-input"
+            @change="onFileChange"
+          />
+          <p v-if="!selectedFile" class="drop-zone-text">{{ translateLabel("chooseFile") }}</p>
+          <p v-else class="drop-zone-selected">
+            {{ selectedFile.name }}
+            <span class="drop-zone-size">{{ fmtFileSize(selectedFile.size) }}</span>
+          </p>
+        </div>
 
-          <p v-if="errorMessage" class="upload-error">{{ errorMessage }}</p>
+        <div v-if="contextInfo" class="context-badge mt-4">
+          <span class="context-label">{{ contextInfo.record_type }}</span>
+          <span class="context-name">{{ contextInfo.record_name }}</span>
+          <span v-if="contextInfo.customer_name" class="context-customer">
+            → {{ contextInfo.customer_name }}
+            <span v-if="contextInfo.customer_id" class="context-taxid">({{ contextInfo.customer_id }})</span>
+          </span>
+        </div>
+      </section>
 
-          <div v-if="contextInfo" class="context-badge">
-            <span class="context-label">{{ contextInfo.record_type }}</span>
-            <span class="context-name">{{ contextInfo.record_name }}</span>
-            <span v-if="contextInfo.customer_name" class="context-customer">
-              → {{ contextInfo.customer_name }}
-              <span v-if="contextInfo.customer_id" class="context-taxid">({{ contextInfo.customer_id }})</span>
-            </span>
-          </div>
+      <section v-if="!canUseAttachedReference" class="at-card-premium">
+        <header class="flex items-center gap-3 mb-6">
+          <span class="at-label shrink-0 text-brand-600">{{ translateLabel("linkSectionTitle") }}</span>
+          <div class="h-px flex-1 bg-slate-100"></div>
+        </header>
 
-          <div v-if="!canUseAttachedReference" class="link-section">
-            <label class="field-row">
-              <span class="field-label">{{ translateLabel('linkDoctypeLabel') }}</span>
-              <select
-                id="workbench-document-link-doctype"
-                v-model="linkDoctype"
-                name="link_doctype"
+        <div class="meta-grid">
+          <label class="field-row">
+            <span class="field-label">{{ translateLabel('linkDoctypeLabel') }}</span>
+            <select
+              id="workbench-document-link-doctype"
+              v-model="linkDoctype"
+              name="link_doctype"
+              class="field-input"
+              :aria-label="translateLabel('linkDoctypeLabel')"
+              @change="onLinkDoctypeChange"
+            >
+              <option value="">—</option>
+              <option value="AT Customer">{{ translateLabel('linkCustomer') }}</option>
+              <option value="AT Policy">{{ translateLabel('linkPolicy') }}</option>
+              <option value="AT Claim">{{ translateLabel('linkClaim') }}</option>
+            </select>
+          </label>
+          <div v-if="linkDoctype" class="field-row field-row-span">
+            <span class="field-label">{{ translateLabel('linkNameLabel') }}</span>
+            <div class="link-input-wrap">
+              <input
+                id="workbench-document-link-name"
+                v-model="linkSearch"
+                name="link_name"
+                type="text"
                 class="field-input"
-                :aria-label="translateLabel('linkDoctypeLabel')"
-                @change="onLinkDoctypeChange"
-              >
-                <option value="">—</option>
-                <option value="AT Customer">{{ translateLabel('linkCustomer') }}</option>
-                <option value="AT Policy">{{ translateLabel('linkPolicy') }}</option>
-                <option value="AT Claim">{{ translateLabel('linkClaim') }}</option>
-              </select>
-            </label>
-            <div v-if="linkDoctype" class="field-row">
-              <span class="field-label">{{ translateLabel('linkNameLabel') }}</span>
-              <div class="link-input-wrap">
-                <input
-                  id="workbench-document-link-name"
-                  v-model="linkSearch"
-                  name="link_name"
-                  type="text"
-                  class="field-input"
-                  :aria-label="translateLabel('linkNameLabel')"
-                  :placeholder="translateLabel('linkSearchPlaceholder')"
-                  @input="onLinkSearch"
-                  autocomplete="off"
-                />
-                <ul v-if="linkResults.length" class="link-results">
-                  <li
-                    v-for="r in linkResults"
-                    :key="r.name"
-                    class="link-result-item"
-                    @mousedown.prevent="selectLinkResult(r)"
-                  >
-                    <span class="link-result-name">{{ r.label || r.name }}</span>
-                    <span v-if="r.taxId" class="link-result-tax">{{ r.taxId }}</span>
-                    <span class="link-result-id">{{ r.name }}</span>
-                  </li>
-                </ul>
-                <p v-if="linkSearching" class="link-searching">{{ translateLabel('linkSearching') }}</p>
-              </div>
-              <span v-if="linkName" class="link-selected">✓ {{ linkName }}</span>
+                :aria-label="translateLabel('linkNameLabel')"
+                :placeholder="translateLabel('linkSearchPlaceholder')"
+                @input="onLinkSearch"
+                autocomplete="off"
+              />
+              <ul v-if="linkResults.length" class="link-results">
+                <li
+                  v-for="r in linkResults"
+                  :key="r.name"
+                  class="link-result-item"
+                  @mousedown.prevent="selectLinkResult(r)"
+                >
+                  <span class="link-result-name">{{ r.label || r.name }}</span>
+                  <span v-if="r.taxId" class="link-result-tax">{{ r.taxId }}</span>
+                  <span class="link-result-id">{{ r.name }}</span>
+                </li>
+              </ul>
+              <p v-if="linkSearching" class="link-searching">{{ translateLabel('linkSearching') }}</p>
             </div>
+            <span v-if="linkName" class="link-selected">✓ {{ linkName }}</span>
           </div>
+        </div>
+      </section>
 
-          <div class="meta-fields">
-            <label class="field-row">
-              <span class="field-label">{{ translateLabel("documentKind") }}</span>
-              <select
-                id="workbench-document-kind"
-                v-model="documentKind"
-                name="document_kind"
-                class="field-input"
-                :aria-label="translateLabel('documentKind')"
-              >
-                <option value="">—</option>
-                <option value="Policy">{{ translateLabel("kindPolicy") }}</option>
-                <option value="Endorsement">{{ translateLabel("kindEndorsement") }}</option>
-                <option value="Claim">{{ translateLabel("kindClaim") }}</option>
-                <option value="Other">{{ translateLabel("kindOther") }}</option>
-              </select>
-            </label>
-            <label class="field-row">
-              <span class="field-label">{{ translateLabel("documentSubType") }}</span>
-              <select
-                id="workbench-document-sub-type"
-                v-model="documentSubType"
-                name="document_sub_type"
-                class="field-input"
-                :aria-label="translateLabel('documentSubType')"
-              >
-                <option value="">—</option>
-                  <option value="Vehicle Registration">{{ translateLabel("subRuhsat") }}</option>
-                  <option value="ID Document">{{ translateLabel("subKimlik") }}</option>
-                  <option value="Policy Copy">{{ translateLabel("subPoliceCopyasi") }}</option>
-                  <option value="Damage Photo">{{ translateLabel("subHasarFotografi") }}</option>
-                  <option value="Other">{{ translateLabel("subDiger") }}</option>
-              </select>
-            </label>
-            <label class="field-row field-row-check">
+      <section class="at-card-premium">
+        <header class="flex items-center gap-3 mb-6">
+          <span class="at-label shrink-0 text-brand-600">{{ translateLabel("metaSectionTitle") }}</span>
+          <div class="h-px flex-1 bg-slate-100"></div>
+        </header>
+
+        <div class="meta-grid">
+          <label class="field-row">
+            <span class="field-label">{{ translateLabel("documentKind") }}</span>
+            <select
+              id="workbench-document-kind"
+              v-model="documentKind"
+              name="document_kind"
+              class="field-input"
+              :aria-label="translateLabel('documentKind')"
+            >
+              <option value="">—</option>
+              <option value="Policy">{{ translateLabel("kindPolicy") }}</option>
+              <option value="Endorsement">{{ translateLabel("kindEndorsement") }}</option>
+              <option value="Claim">{{ translateLabel("kindClaim") }}</option>
+              <option value="Other">{{ translateLabel("kindOther") }}</option>
+            </select>
+          </label>
+          <label class="field-row">
+            <span class="field-label">{{ translateLabel("documentSubType") }}</span>
+            <select
+              id="workbench-document-sub-type"
+              v-model="documentSubType"
+              name="document_sub_type"
+              class="field-input"
+              :aria-label="translateLabel('documentSubType')"
+            >
+              <option value="">—</option>
+              <option value="Vehicle Registration">{{ translateLabel("subRuhsat") }}</option>
+              <option value="ID Document">{{ translateLabel("subKimlik") }}</option>
+              <option value="Policy Copy">{{ translateLabel("subPoliceCopyasi") }}</option>
+              <option value="Damage Photo">{{ translateLabel("subHasarFotografi") }}</option>
+              <option value="Other">{{ translateLabel("subDiger") }}</option>
+            </select>
+          </label>
+          <label class="field-row field-row-check">
+            <span class="field-label">{{ translateLabel("isSensitive") }}</span>
+            <div class="checkbox-wrap">
               <input
                 id="workbench-document-sensitive"
                 v-model="isSensitive"
@@ -135,50 +161,29 @@
                 class="field-checkbox"
                 :aria-label="translateLabel('isSensitive')"
               />
-              <span class="field-label">{{ translateLabel("isSensitive") }}</span>
-            </label>
-            <label class="field-row">
-              <span class="field-label">{{ translateLabel("notes") }}</span>
-              <textarea
-                id="workbench-document-notes"
-                v-model="notes"
-                name="notes"
-                class="field-input field-textarea"
-                rows="2"
-                :aria-label="translateLabel('notes')"
-              />
-            </label>
-          </div>
-
-          <div class="modal-actions">
-            <ActionButton
-              variant="secondary"
-              size="sm"
-              :disabled="uploading"
-              @click="$emit('close')"
-            >
-              {{ translateLabel("cancel") }}
-            </ActionButton>
-            <ActionButton
-              variant="primary"
-              size="sm"
-              :disabled="!selectedFile || uploading"
-              @click="submit"
-            >
-              <span v-if="uploading">{{ translateLabel("uploading") }}</span>
-              <span v-else>{{ translateLabel("upload") }}</span>
-            </ActionButton>
-          </div>
+            </div>
+          </label>
+          <label class="field-row field-row-span">
+            <span class="field-label">{{ translateLabel("notes") }}</span>
+            <textarea
+              id="workbench-document-notes"
+              v-model="notes"
+              name="notes"
+              class="field-input field-textarea"
+              rows="3"
+              :aria-label="translateLabel('notes')"
+            />
+          </label>
         </div>
-      </div>
+      </section>
     </div>
-  </Teleport>
+  </ATQuickEntryModal>
 </template>
 
 <script setup>
 import { computed, ref, watch, onMounted } from "vue";
 import { useAuthStore } from "../../stores/auth";
-import ActionButton from "../app-shell/ActionButton.vue";
+import ATQuickEntryModal from "../app-shell/ATQuickEntryModal.vue";
 
 const props = defineProps({
   open: { type: Boolean, required: true },
@@ -188,6 +193,13 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close", "uploaded"]);
+
+const openProxy = computed({
+  get: () => props.open,
+  set: (value) => {
+    if (!value) emit("close");
+  },
+});
 
 watch(() => [props.attachedToDoctype, props.attachedToName], () => {
   loadContextInfo();
@@ -207,6 +219,11 @@ function translateLabel(key) {
 const copy = {
   tr: {
     uploadDocument: "Doküman Yükle",
+    uploadEyebrow: "Hızlı Doküman Yükleme",
+    uploadSubtitle: "Doküman merkezine güvenli bir dosya yükleyin ve kayıt bilgilerini tamamlayın",
+    uploadSectionTitle: "Dosya",
+    linkSectionTitle: "Bağlı Kayıt",
+    metaSectionTitle: "Doküman Detayları",
     close: "Kapat",
     chooseFile: "Dosya seçin veya buraya sürükleyin",
     uploadError: "Yükleme başarısız. Lütfen tekrar deneyin.",
@@ -240,6 +257,11 @@ const copy = {
   },
   en: {
     uploadDocument: "Upload Document",
+    uploadEyebrow: "Quick Document Upload",
+    uploadSubtitle: "Upload a secure file to the document center and complete the record details",
+    uploadSectionTitle: "File",
+    linkSectionTitle: "Linked Record",
+    metaSectionTitle: "Document Details",
     close: "Close",
     chooseFile: "Choose a file or drag it here",
     uploadError: "Upload failed. Please try again.",
@@ -295,6 +317,10 @@ const ALLOWED_LINK_DOCTYPES = new Set(["AT Customer", "AT Policy", "AT Claim"]);
 const canUseAttachedReference = computed(() => ALLOWED_LINK_DOCTYPES.has(props.attachedToDoctype) && Boolean(props.attachedToName));
 const effectiveAttachedToDoctype = computed(() => (canUseAttachedReference.value ? props.attachedToDoctype : ""));
 const effectiveAttachedToName = computed(() => (canUseAttachedReference.value ? props.attachedToName : ""));
+const modalLabels = computed(() => ({
+  cancel: translateLabel("cancel"),
+  save: uploading.value ? translateLabel("uploading") : translateLabel("upload"),
+}));
 
 async function loadContextInfo() {
   if (!canUseAttachedReference.value) {
@@ -577,63 +603,9 @@ async function submit() {
 </script>
 
 <style scoped>
-.upload-modal-wrapper {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.modal-box {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 28rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.modal-close-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #64748b;
-  line-height: 1;
-  padding: 0.25rem;
-}
-
-.modal-close-btn:hover {
-  color: #1e293b;
-}
-
 .drop-zone {
   border: 2px dashed #cbd5e1;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   padding: 2rem 1rem;
   text-align: center;
   cursor: pointer;
@@ -673,22 +645,31 @@ async function submit() {
   color: #dc2626;
 }
 
-.meta-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
 .field-row {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.4rem;
 }
 
 .field-row-check {
-  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.field-row-span {
+  grid-column: 1 / -1;
+}
+
+.checkbox-wrap {
+  min-height: 42px;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  padding: 0 0.25rem;
 }
 
 .field-checkbox {
@@ -707,38 +688,29 @@ async function submit() {
 
 .field-input {
   width: 100%;
-  padding: 0.375rem 0.5rem;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
   border: 1px solid #e2e8f0;
-  border-radius: 0.375rem;
+  border-radius: 0.75rem;
   font-size: 0.875rem;
   color: #1e293b;
   background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .field-input:focus {
-  outline: 2px solid #6366f1;
-  outline-offset: -1px;
+  outline: none;
+  border-color: rgb(99 102 241 / 0.45);
+  box-shadow: 0 0 0 4px rgb(99 102 241 / 0.1);
+  background: white;
 }
 
 .field-textarea {
   resize: vertical;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  min-height: 88px;
 }
 
 /* link selector */
-.link-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-}
-
 .link-input-wrap {
   position: relative;
 }
@@ -805,12 +777,13 @@ async function submit() {
 
 .context-badge {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 0.9rem;
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   font-size: 0.8125rem;
 }
 
@@ -830,5 +803,11 @@ async function submit() {
 .context-taxid {
   color: #6366f1;
   font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
