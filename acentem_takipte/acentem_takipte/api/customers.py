@@ -36,6 +36,7 @@ def _safe_translate(message: str) -> str:
 @frappe.whitelist()
 def search_customer_by_identity(identity_number: str, office_branch: str | None = None) -> dict:
     user = assert_authenticated()
+    assert_post_request("Only POST requests are allowed for customer identity search.")
     identity = normalize_identity_number(identity_number)
     if len(identity) not in {10, 11}:
         frappe.throw(_safe_translate("Identity number must be 10 or 11 digits."))

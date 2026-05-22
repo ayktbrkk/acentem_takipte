@@ -7,6 +7,7 @@ from acentem_takipte.acentem_takipte.api import customers as customers_api
 
 def test_search_customer_by_identity_returns_masked_payload_for_non_sensitive_user(monkeypatch):
     monkeypatch.setattr(customers_api, "assert_authenticated", lambda: "partner@example.com")
+    monkeypatch.setattr(customers_api, "assert_post_request", lambda message=None: None)
     monkeypatch.setattr(customers_api, "normalize_requested_office_branch", lambda office_branch, user=None: office_branch)
     monkeypatch.setattr(customers_api, "normalize_identity_number", lambda value: "12345678901")
     monkeypatch.setattr(customers_api, "has_sensitive_access", lambda user=None: False)
@@ -45,6 +46,7 @@ def test_search_customer_by_identity_returns_masked_payload_for_non_sensitive_us
 
 def test_search_customer_by_identity_returns_clear_payload_for_sensitive_user(monkeypatch):
     monkeypatch.setattr(customers_api, "assert_authenticated", lambda: "manager@example.com")
+    monkeypatch.setattr(customers_api, "assert_post_request", lambda message=None: None)
     monkeypatch.setattr(customers_api, "normalize_requested_office_branch", lambda office_branch, user=None: office_branch)
     monkeypatch.setattr(customers_api, "normalize_identity_number", lambda value: "12345678901")
     monkeypatch.setattr(customers_api, "has_sensitive_access", lambda user=None: True)
@@ -71,6 +73,27 @@ def test_search_customer_by_identity_returns_clear_payload_for_sensitive_user(mo
     assert result["exists"] is True
     assert result["is_masked"] is False
     assert result["customer"]["tax_id"] == "12345678901"
+
+
+def test_search_customer_by_identity_requires_post_request(monkeypatch):
+    monkeypatch.setattr(customers_api, "assert_authenticated", lambda: "partner@example.com")
+
+    calls = []
+    monkeypatch.setattr(customers_api, "assert_post_request", lambda message=None: calls.append(message))
+    monkeypatch.setattr(customers_api, "normalize_requested_office_branch", lambda office_branch, user=None: office_branch)
+    monkeypatch.setattr(customers_api, "normalize_identity_number", lambda value: "12345678901")
+    monkeypatch.setattr(customers_api, "has_sensitive_access", lambda user=None: False)
+    monkeypatch.setattr(customers_api, "masked_query_gate", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        customers_api.frappe,
+        "db",
+        SimpleNamespace(get_value=lambda *args, **kwargs: None),
+    )
+
+    result = customers_api.search_customer_by_identity.__wrapped__("12345678901", office_branch="ANK")
+
+    assert result["exists"] is False
+    assert calls == ["Only POST requests are allowed for customer identity search."]
 
 
 def test_create_customer_access_request_logs_decision_event(monkeypatch):
