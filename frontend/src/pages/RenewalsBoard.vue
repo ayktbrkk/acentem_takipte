@@ -112,7 +112,7 @@
           <span class="text-sm text-slate-600">{{ formatDate(row.dueDate) }}</span>
         </template>
         <template #cell(status)="{ row }">
-          <StatusBadge domain="renewal" :status="row.status || 'Open'" />
+          <StatusBadge domain="renewal" :status="row.status || 'Open'" :locale="activeLocale" />
         </template>
         <template #cell(priority)="{ row }">
           <span
@@ -160,7 +160,7 @@
               </div>
 
               <div class="mt-3 flex items-center gap-2">
-                <StatusBadge domain="renewal" :status="task.status || 'Open'" />
+                <StatusBadge domain="renewal" :status="task.status || 'Open'" :locale="activeLocale" />
                 <span
                   v-if="task.status !== 'Done' && task.status !== 'Cancelled'"
                   class="inline-flex items-center rounded-full bg-at-amber/10 text-at-amber text-[10px] font-bold px-2 py-0.5"
