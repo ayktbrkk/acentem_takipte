@@ -69,8 +69,8 @@ export const DOCUMENT_TRANSLATIONS = {
     linkSearching: "Aranıyor...",
     // Quick Edit dialog
     edit_document: "Doküman Düzenle",
-    update_secondary_file_name_and_notes: "Dosya adı ve notları güncelle",
-    secondary_file_name: "Dosya Adı",
+    update_secondary_file_name_and_notes: "Doküman adı ve notları güncelle",
+    secondary_file_name: "Doküman Adı",
   },
   en: {
     breadcrumb: "Document Center → Quick Upload",
@@ -142,7 +142,7 @@ export const DOCUMENT_TRANSLATIONS = {
     linkSearching: "Searching...",
     // Quick Edit dialog
     edit_document: "Edit Document",
-    update_secondary_file_name_and_notes: "Update file name and notes",
-    secondary_file_name: "File Name",
+    update_secondary_file_name_and_notes: "Update document name and notes",
+    secondary_file_name: "Document Name",
   },
 };
