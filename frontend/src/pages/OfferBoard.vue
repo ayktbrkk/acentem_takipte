@@ -92,8 +92,8 @@
           <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
             <span>{{ t("gross_premium") }}</span>
             <div class="grid grid-cols-2 gap-2">
-              <input v-model="state.offerListFilters.gross_min" class="input" type="number" min="0" placeholder="Min" />
-              <input v-model="state.offerListFilters.gross_max" class="input" type="number" min="0" placeholder="Max" />
+              <input v-model="state.offerListFilters.gross_min" class="input" type="number" min="0" :placeholder="t('rangeMin')" />
+              <input v-model="state.offerListFilters.gross_max" class="input" type="number" min="0" :placeholder="t('rangeMax')" />
             </div>
           </label>
         </div>

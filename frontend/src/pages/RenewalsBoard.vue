@@ -42,7 +42,7 @@
         </ActionButton>
         <ActionButton variant="primary" size="sm" @click="showQuickRenewalDialog = true">
           <FeatherIcon name="plus" class="h-4 w-4" />
-          {{ t("newTask") }}
+          {{ t("newRenewalTask") }}
         </ActionButton>
       </div>
     </template>
@@ -70,6 +70,7 @@
       <SmartFilterBar
         v-model="filters.query"
         :placeholder="t('searchPlaceholder')"
+        :advanced-label="t('filtersTitle')"
         @open-advanced="showAdvanced = !showAdvanced"
       >
         <template #primary-filters>
@@ -89,6 +90,33 @@
       </SmartFilterBar>
     </div>
 
+    <div v-if="showAdvanced" class="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+          <span>{{ t("policySearchLabel") }}</span>
+          <input v-model="filters.policyQuery" class="input" type="text" @keyup.enter="applyRenewalFilters" />
+        </label>
+      </div>
+      <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          @click="
+            filters.policyQuery = '';
+            filters.query = '';
+            filters.status = '';
+            filters.dueScope = '';
+            applyRenewalFilters();
+          "
+        >
+          {{ t("clearFilters") }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" class="px-6" @click="applyRenewalFilters">
+          {{ t("applyFilters") }}
+        </ActionButton>
+      </div>
+    </div>
+
     <!-- List View -->
     <section v-if="isListView" class="mt-6">
       <div v-if="renewalsLoading && !renewals.length" class="p-10 text-center">
@@ -99,7 +127,7 @@
         :columns="listColumns"
         :rows="renewals"
         :loading="renewalsLoading"
-        :empty-message="t('emptyColumn')"
+        :empty-message="t('emptyList')"
         @row-click="openRenewalDetail"
       >
         <template #cell(policy)="{ row }">
@@ -142,7 +170,7 @@
           </header>
 
           <div class="space-y-3 overflow-y-auto pr-1">
-            <div v-if="column.cards.length === 0" class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-3 py-8 text-center text-xs text-slate-400 font-medium">{{ t("emptyColumn") }}</div>
+            <div v-if="column.cards.length === 0" class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-3 py-8 text-center text-xs text-slate-400 font-medium">{{ t("emptyBoardColumn") }}</div>
             <article
               v-for="task in column.cards"
               :key="task.name"
@@ -194,7 +222,7 @@
       v-model="showQuickRenewalDialog"
       config-key="renewal_task"
       :locale="activeLocale"
-      :title-override="t('newTask')"
+      :title-override="t('newRenewalTask')"
       :options-map="renewalQuickOptionsMap"
       :eyebrow="quickRenewalEyebrow"
       :before-open="prepareQuickRenewalDialog"
@@ -225,12 +253,12 @@ const renewalsViewMode = ref("board");
 const isListView = computed(() => renewalsViewMode.value === "list");
 
 const authStore = useAuthStore();
-const activeLocale = computed(() => unref(authStore.locale) || "tr");
+const activeLocale = computed(() => (String(unref(authStore.locale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-US"));
 
 function t(key) {
   const locale = activeLocale.value === "tr" ? "tr" : "en";
-  return RENEWAL_TRANSLATIONS[locale]?.[key] || translateText(key, activeLocale);
+  return RENEWAL_TRANSLATIONS[locale]?.[key] || translateText(key, activeLocale.value);
 }
 
 const {

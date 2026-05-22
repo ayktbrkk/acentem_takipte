@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mount } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { nextTick, reactive, ref } from "vue";
 
@@ -189,5 +189,68 @@ describe("RenewalsBoard page store integration", () => {
       },
     });
     expect(reloadMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("normalizes tr-TR locale and renders localized renewal actions and filters", async () => {
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      ...authStore.sessionContext,
+      locale: "tr-TR",
+    });
+
+    resourceQueue.push(
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+      {
+        data: ref([]),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => []),
+      },
+    );
+
+    const wrapper = mount(RenewalsBoard, {
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          QuickCreateManagedDialog: true,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Yeni Yenileme Görevi");
+    expect(wrapper.text()).toContain("Filtreler");
+
+    const toolbarButtons = wrapper.findAll("button");
+    const filtersButton = toolbarButtons.find((button) => button.text().includes("Filtreler"));
+    expect(filtersButton).toBeTruthy();
+    await filtersButton.trigger("click");
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Poliçe No");
+
+    const listButton = toolbarButtons.find((button) => button.text().includes("Liste"));
+    expect(listButton).toBeTruthy();
+    await listButton.trigger("click");
+    await nextTick();
+
+    expect(wrapper.text()).toContain("Henüz yenileme kaydı yok.");
   });
 });
