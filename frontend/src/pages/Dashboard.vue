@@ -22,11 +22,11 @@
 
     <div
       v-if="dashboardAccessMessage"
-      :class="dashboardAccessMessageKind === 'permission' ? 'qc-error-banner' : 'qc-warning-banner'"
+      :class="dashboardAccessMessageKind === 'permission' ? 'rounded-xl border border-at-red/20 bg-at-red/5 p-4' : 'rounded-xl border border-at-amber/20 bg-at-amber/5 p-4'"
       role="alert"
       aria-live="polite"
     >
-      <p :class="dashboardAccessMessageKind === 'permission' ? 'qc-error-banner__text' : 'qc-warning-banner__text'">
+      <p :class="dashboardAccessMessageKind === 'permission' ? 'text-sm font-semibold text-at-red' : 'text-sm font-semibold text-at-amber'">
         {{ dashboardAccessMessage }}
       </p>
     </div>
@@ -228,8 +228,8 @@
     >
       <template #body-content>
         <div class="grid gap-5 p-6 bg-slate-50/50">
-          <div v-if="leadDialogError" class="qc-error-banner shadow-sm" role="alert" aria-live="polite">
-            <p class="qc-error-banner__text">{{ leadDialogError }}</p>
+          <div v-if="leadDialogError" class="rounded-xl border border-at-red/20 bg-at-red/5 p-4 shadow-sm" role="alert" aria-live="polite">
+            <p class="text-sm font-semibold text-at-red">{{ leadDialogError }}</p>
           </div>
           
           <div class="space-y-4">

@@ -39,6 +39,7 @@ import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ReportsAlertChannelsSection from "../components/reports/ReportsAlertChannelsSection.vue";
 import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 import { ADMIN_ALERT_CHANNELS_TRANSLATIONS } from "../config/admin_alert_channels_translations";
+import { translateText } from "../utils/i18n";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 
@@ -67,7 +68,7 @@ const canManageAlertChannels = computed(() => Boolean(authStore.isDeskUser));
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key) {
-  return TRANSLATIONS[activeLocale.value]?.[key] || TRANSLATIONS.en[key] || key;
+  return TRANSLATIONS[activeLocale.value]?.[key] || TRANSLATIONS.en[key] || translateText(key, activeLocale.value);
 }
 
 const configuredChannelCount = computed(() => {

@@ -221,6 +221,7 @@ import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { ADMIN_GENERAL_SETTINGS_TRANSLATIONS } from "../config/admin_general_settings_translations";
 import { ADMIN_ALERT_CHANNELS_TRANSLATIONS } from "../config/admin_alert_channels_translations";
+import { translateText } from "../utils/i18n";
 
 const DEFAULTS = {
   default_locale: "tr",
@@ -257,8 +258,8 @@ const alertError = ref("");
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 const alertLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
-function t(key) { return ADMIN_GENERAL_SETTINGS_TRANSLATIONS[activeLocale.value]?.[key] || ADMIN_GENERAL_SETTINGS_TRANSLATIONS.en[key] || key; }
-function alertT(key) { return ADMIN_ALERT_CHANNELS_TRANSLATIONS[alertLocale.value]?.[key] || ADMIN_ALERT_CHANNELS_TRANSLATIONS.en[key] || key; }
+function t(key) { return ADMIN_GENERAL_SETTINGS_TRANSLATIONS[activeLocale.value]?.[key] || ADMIN_GENERAL_SETTINGS_TRANSLATIONS.en[key] || translateText(key, activeLocale.value); }
+function alertT(key) { return ADMIN_ALERT_CHANNELS_TRANSLATIONS[alertLocale.value]?.[key] || ADMIN_ALERT_CHANNELS_TRANSLATIONS.en[key] || translateText(key, alertLocale.value); }
 
 const hasUnsavedChanges = computed(() => isDirty.value);
 const editableSettingCount = computed(() => 11);
