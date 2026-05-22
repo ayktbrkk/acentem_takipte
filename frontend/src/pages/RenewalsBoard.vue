@@ -103,10 +103,10 @@
         @row-click="openRenewalDetail"
       >
         <template #cell(policy)="{ row }">
-          <span class="text-sm font-medium text-slate-900">{{ row.policy || '-' }}</span>
+          <span class="text-sm font-medium text-slate-900">{{ row.policy || t("unspecified") }}</span>
         </template>
         <template #cell(customer)="{ row }">
-          <span class="text-sm font-medium text-slate-800">{{ row.customerLabel || '-' }}</span>
+          <span class="text-sm font-medium text-slate-800">{{ row.customerLabel || t("unspecified") }}</span>
         </template>
         <template #cell(due_date)="{ row }">
           <span class="text-sm text-slate-600">{{ formatDate(row.dueDate) }}</span>
@@ -126,26 +126,26 @@
     </section>
 
     <!-- Board View -->
-    <section v-else class="kanban-board mt-6">
+    <section v-else class="mt-6">
       <div v-if="renewalsLoading && !renewals.length" class="p-10 text-center">
         <SkeletonLoader variant="list" :rows="5" />
       </div>
-      <div v-else class="kanban-grid">
-        <article v-for="column in boardColumns" :key="column.key" class="kanban-column">
-          <div class="kanban-column-header">
+      <div v-else class="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
+        <article v-for="column in boardColumns.slice(0, 4)" :key="column.key" class="flex min-h-[500px] flex-col rounded-2xl border border-slate-200 bg-slate-50/50 p-3">
+          <header class="mb-3 flex items-center justify-between border-b border-slate-200 pb-3">
             <div>
-              <p class="kanban-column-title">{{ column.label }}</p>
-              <p class="kanban-column-hint">{{ column.hint }}</p>
+              <p class="text-sm font-bold text-slate-900">{{ column.label }}</p>
+              <p class="mt-0.5 text-[11px] text-slate-500 font-medium">{{ column.hint }}</p>
             </div>
-            <span class="kanban-column-count">{{ column.cards.length }}</span>
-          </div>
+            <span class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-600 px-2 text-[10px] font-bold text-white">{{ column.cards.length }}</span>
+          </header>
 
-          <div class="kanban-column-body">
-            <div v-if="column.cards.length === 0" class="kanban-empty">{{ t("emptyColumn") }}</div>
+          <div class="space-y-3 overflow-y-auto pr-1">
+            <div v-if="column.cards.length === 0" class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-3 py-8 text-center text-xs text-slate-400 font-medium">{{ t("emptyColumn") }}</div>
             <article
               v-for="task in column.cards"
               :key="task.name"
-              class="kanban-card"
+              class="cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-brand-200"
               @click="openRenewalDetail(task)"
             >
               <div class="flex items-start justify-between gap-3">
@@ -153,7 +153,7 @@
                   <p class="truncate text-sm font-bold text-slate-900">{{ task.customerLabel }}</p>
                   <p class="mt-0.5 truncate text-xs text-slate-500 font-medium">{{ task.branchLabel }} · {{ task.premiumLabel }}</p>
                 </div>
-                <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase">
+                <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase shrink-0">
                   {{ task.avatarInitials }}
                 </div>
               </div>
@@ -169,7 +169,7 @@
               </div>
 
               <div class="mt-3 space-y-1 text-[11px] text-slate-500 font-medium border-t border-slate-50 pt-2">
-                <p class="flex justify-between"><span>{{ t("policy") }}:</span> <span class="text-slate-700">{{ task.policy || "-" }}</span></p>
+                <p class="flex justify-between"><span>{{ t("policy") }}:</span> <span class="text-slate-700">{{ task.policy || t("unspecified") }}</span></p>
                 <p class="flex justify-between"><span>{{ t("due") }}:</span> <span class="text-slate-700">{{ formatDate(task.dueDate) }}</span></p>
               </div>
 
@@ -180,7 +180,7 @@
                   size="xs"
                   @click.stop="updateRenewalStatus(task, 'In Progress')"
                 >
-                  {{ t("markInProgress") }}
+                  {{ t("mark_in_progress") }}
                 </ActionButton>
               </div>
             </article>
@@ -268,43 +268,12 @@ const listColumns = computed(() => [
 </script>
 
 <style scoped>
-.kanban-board {
-  @apply overflow-x-auto pb-4;
-}
-
-.kanban-grid {
-  @apply flex gap-6 min-w-max pb-4;
-}
-
-.kanban-column {
-  @apply flex flex-col w-[320px] rounded-2xl border border-slate-200 bg-slate-50/50 backdrop-blur-sm;
-}
-
-.kanban-column-header {
-  @apply flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-3;
-}
-
-.kanban-column-title {
-  @apply text-sm font-bold text-slate-900 uppercase tracking-tight;
-}
-
-.kanban-column-hint {
-  @apply mt-0.5 text-[11px] text-slate-500 font-medium;
-}
-
-.kanban-column-count {
-  @apply inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-600 px-2 text-[10px] font-bold text-white;
-}
-
-.kanban-column-body {
-  @apply flex flex-col gap-3 p-3 overflow-y-auto max-h-[calc(100vh-400px)];
-}
-
-.kanban-empty {
-  @apply rounded-xl border border-dashed border-slate-200 bg-white/50 px-3 py-8 text-center text-xs text-slate-400 font-medium;
-}
-
-.kanban-card {
-  @apply cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-brand-200 hover:-translate-y-0.5 active:scale-[0.98];
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
 }
 </style>
