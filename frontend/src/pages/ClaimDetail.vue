@@ -224,7 +224,9 @@ async function openDocument(doc) {
     referenceName: doc?.name || "",
   });
   if (opened) return;
-  window.alert(t("file_link_not_found"));
+  notification.message = t("file_link_not_found");
+  notification.type = "error";
+  notification.show = true;
 }
 
 function canArchiveDocument(doc) {

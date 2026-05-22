@@ -48,6 +48,12 @@
       </div>
     </div>
 
+    <!-- Error State -->
+    <div v-else-if="loadErrorText" class="qc-error-banner mt-4">
+      <p class="qc-error-banner__text font-semibold">{{ t("load_error_title") }}</p>
+      <p class="qc-error-banner__text mt-1">{{ loadErrorText }}</p>
+    </div>
+
     <!-- Ready State -->
     <template v-else>
 
@@ -59,9 +65,7 @@
           @click="activeCustomerTab = tab.key"
         >
           {{ tab.label }}
-          <span v-if="tab.count" class="ml-2 badge badge-brand">
-            {{ tab.count }}
-          </span>
+          <span v-if="tab.count" class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold px-1.5">{{ tab.count }}</span>
         </button>
       </div>
 
@@ -125,9 +129,7 @@
                <div v-else class="space-y-2">
                  <p class="text-sm font-medium text-slate-700">{{ t("cross_sell") }}</p>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="opp in crossSell.opportunity_branches" :key="opp.branch" class="badge badge-brand">
-                      {{ opp.branch }}
-                    </span>
+                    <span v-for="opp in crossSell.opportunity_branches" :key="opp.branch" class="inline-flex items-center rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold px-2 py-0.5">{{ opp.branch }}</span>
                   </div>
                </div>
             </SectionPanel>
@@ -137,7 +139,7 @@
           <template v-if="activeCustomerTab === 'portfolio'">
             <SectionPanel :title="t('policies')">
               <template #trailing>
-                <span class="badge badge-brand">{{ portfolio.policies?.length || 0 }}</span>
+                <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold px-1.5">{{ portfolio.policies?.length || 0 }}</span>
               </template>
               <div v-if="!portfolio.policies?.length" class="card-empty">
                 <div class="card-empty-icon">
@@ -168,7 +170,7 @@
 
             <SectionPanel :title="t('offers')">
               <template #trailing>
-                <span class="badge badge-brand">{{ portfolio.offers?.length || 0 }}</span>
+                <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold px-1.5">{{ portfolio.offers?.length || 0 }}</span>
               </template>
               <div v-if="!portfolio.offers?.length" class="card-empty">
                 <div class="card-empty-icon">
@@ -199,7 +201,7 @@
 
             <SectionPanel :title="t('claims')">
               <template #trailing>
-                <span class="badge badge-blue">{{ portfolio.claims?.length || 0 }}</span>
+                <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold px-1.5">{{ portfolio.claims?.length || 0 }}</span>
               </template>
               <div v-if="!portfolio.claims?.length" class="card-empty">
                 <div class="card-empty-icon">
@@ -401,6 +403,7 @@ const {
   restoreDocument,
   permanentDeleteDocument,
   formatFileSize,
+  loadErrorText,
   backToList,
   openNewOffer,
   openPolicy,
@@ -456,7 +459,9 @@ async function openDocument(doc) {
     referenceName: doc?.name || "",
   });
   if (opened) return;
-  window.alert(t("file_link_not_found"));
+  notification.message = t("file_link_not_found");
+  notification.type = "error";
+  notification.show = true;
 }
 
 function canArchiveDocument(doc) {

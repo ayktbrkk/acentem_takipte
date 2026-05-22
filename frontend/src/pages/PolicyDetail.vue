@@ -151,7 +151,7 @@
                    <p class="text-[10px] text-slate-500">{{ t('active_tasks_hint') }}</p>
                  </div>
                </div>
-               <span class="badge badge-blue">0</span>
+                <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold px-1.5">0</span>
              </div>
 
              <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -164,7 +164,7 @@
                    <p class="text-[10px] text-slate-500">{{ t('active_reminders_hint') }}</p>
                  </div>
                </div>
-               <span class="badge badge-amber">0</span>
+                <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold px-1.5">0</span>
              </div>
           </div>
         </SectionPanel>
