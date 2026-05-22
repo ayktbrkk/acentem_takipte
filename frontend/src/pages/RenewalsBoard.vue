@@ -7,20 +7,44 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
-      <ActionButton variant="secondary" size="sm" @click="reloadRenewals">
-        <FeatherIcon name="refresh-cw" :class="['h-4 w-4', renewalsLoading && 'animate-spin']" />
-        {{ t("refresh") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="downloadRenewalExport('xlsx')">
-        {{ t("exportExcel") }}
-      </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="downloadRenewalExport('pdf')">
-        {{ t("exportPdf") }}
-      </ActionButton>
-      <ActionButton variant="primary" size="sm" @click="showQuickRenewalDialog = true">
-        <FeatherIcon name="plus" class="h-4 w-4" />
-        {{ t("newTask") }}
-      </ActionButton>
+      <div class="flex items-center gap-2">
+        <div class="mr-2 flex rounded-lg border border-slate-200 bg-white p-1" role="group" :aria-label="t('viewMode')">
+          <button
+            type="button"
+            class="rounded px-3 py-1 text-xs font-medium transition-all"
+            :class="isListView ? 'bg-brand-50 text-brand-600 shadow-sm' : 'text-slate-400 hover:text-slate-700'"
+            :aria-pressed="isListView"
+            :aria-label="t('viewList')"
+            @click="renewalsViewMode = 'list'"
+          >
+            {{ t('viewList') }}
+          </button>
+          <button
+            type="button"
+            class="rounded px-3 py-1 text-xs font-medium transition-all"
+            :class="!isListView ? 'bg-brand-50 text-brand-600 shadow-sm' : 'text-slate-400 hover:text-slate-700'"
+            :aria-pressed="!isListView"
+            :aria-label="t('viewBoard')"
+            @click="renewalsViewMode = 'board'"
+          >
+            {{ t('viewBoard') }}
+          </button>
+        </div>
+        <ActionButton variant="secondary" size="sm" @click="reloadRenewals">
+          <FeatherIcon name="refresh-cw" :class="['h-4 w-4', renewalsLoading && 'animate-spin']" />
+          {{ t("refresh") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="downloadRenewalExport('xlsx')">
+          {{ t("exportExcel") }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="downloadRenewalExport('pdf')">
+          {{ t("exportPdf") }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" @click="showQuickRenewalDialog = true">
+          <FeatherIcon name="plus" class="h-4 w-4" />
+          {{ t("newTask") }}
+        </ActionButton>
+      </div>
     </template>
 
     <template #metrics>
@@ -65,7 +89,44 @@
       </SmartFilterBar>
     </div>
 
-    <section class="kanban-board mt-6">
+    <!-- List View -->
+    <section v-if="isListView" class="mt-6">
+      <div v-if="renewalsLoading && !renewals.length" class="p-10 text-center">
+        <SkeletonLoader variant="list" :rows="5" />
+      </div>
+      <ListTable
+        v-else
+        :columns="listColumns"
+        :rows="renewals"
+        :loading="renewalsLoading"
+        :empty-message="t('emptyColumn')"
+        @row-click="openRenewalDetail"
+      >
+        <template #cell(policy)="{ row }">
+          <span class="text-sm font-medium text-slate-900">{{ row.policy || '-' }}</span>
+        </template>
+        <template #cell(customer)="{ row }">
+          <span class="text-sm font-medium text-slate-800">{{ row.customerLabel || '-' }}</span>
+        </template>
+        <template #cell(due_date)="{ row }">
+          <span class="text-sm text-slate-600">{{ formatDate(row.dueDate) }}</span>
+        </template>
+        <template #cell(status)="{ row }">
+          <StatusBadge domain="renewal" :status="row.status || 'Open'" />
+        </template>
+        <template #cell(priority)="{ row }">
+          <span
+            v-if="row.status !== 'Done' && row.status !== 'Cancelled'"
+            class="inline-flex items-center rounded-full bg-at-amber/10 text-at-amber text-[10px] font-bold px-2 py-0.5"
+          >
+            {{ row.priorityLabel }}
+          </span>
+        </template>
+      </ListTable>
+    </section>
+
+    <!-- Board View -->
+    <section v-else class="kanban-board mt-6">
       <div v-if="renewalsLoading && !renewals.length" class="p-10 text-center">
         <SkeletonLoader variant="list" :rows="5" />
       </div>
@@ -154,10 +215,13 @@ import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import ListTable from "../components/ui/ListTable.vue";
 import { FeatherIcon } from "frappe-ui";
 import { ref } from "vue";
 
 const showAdvanced = ref(false);
+const renewalsViewMode = ref("board");
+const isListView = computed(() => renewalsViewMode.value === "list");
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => unref(authStore.locale) || "tr");
@@ -193,6 +257,14 @@ const {
   localeCode,
   t,
 });
+
+const listColumns = computed(() => [
+  { key: "policy", label: t("colPolicy"), type: "component", width: "1fr" },
+  { key: "customer", label: t("colCustomer"), type: "component", width: "1fr" },
+  { key: "due_date", label: t("colDueDate"), type: "component", width: "120px" },
+  { key: "status", label: t("colStatus"), type: "component", width: "100px" },
+  { key: "priority", label: t("colPriority"), type: "component", width: "90px" },
+]);
 </script>
 
 <style scoped>
