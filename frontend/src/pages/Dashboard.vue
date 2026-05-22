@@ -43,15 +43,15 @@
         :count="4"
       />
       <div v-else class="grid gap-3 md:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <DashboardStatCard
-        v-for="card in visibleQuickStatCards"
-        :key="card.key"
-        :title="card.title"
-        :value="card.value"
-        :icon="card.icon"
-        :t="t"
-      />
-    </div>
+        <DashboardStatCard
+          v-for="card in visibleQuickStatCards"
+          :key="card.key"
+          :title="card.title"
+          :value="card.value"
+          :icon="card.icon"
+          :t="t"
+        />
+      </div>
     </template>
 
     <DashboardAnalyticsRow
