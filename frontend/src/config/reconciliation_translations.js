@@ -8,7 +8,7 @@ export const RECONCILIATION_TRANSLATIONS = {
     detailSubtitle: "Mutabakat kalemini inceleyin, farkı doğrulayın ve çözüm kaydını netleştirin",
     recordCount: "kayıt",
     showing: "gösterilen",
-    unspecified: "Belirtilmemiş",
+    unspecified: "Belirtilmedi",
     summaryTotal: "Toplam Kayıt",
     summaryMatched: "Eşleşti",
     summaryPending: "Beklemede",

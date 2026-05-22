@@ -1,6 +1,12 @@
 import { computed, ref } from "vue";
 
-export function useAccessRequestForm(props, emit) {
+function formatTranslatedMessage(template, params = {}) {
+  return Object.entries(params).reduce((message, [key, value]) => {
+    return message.replace(`{${key}}`, String(value ?? ""));
+  }, template);
+}
+
+export function useAccessRequestForm(props, emit, t) {
   const formData = ref({
     request_kind: "access",
     justification: "",
@@ -40,7 +46,7 @@ export function useAccessRequestForm(props, emit) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        formError.value = errorData.message || "Failed to submit request. Please try again.";
+        formError.value = errorData.message || t("requestSubmitFailed");
         return;
       }
 
@@ -51,7 +57,9 @@ export function useAccessRequestForm(props, emit) {
         emit("closed");
       }, 2000);
     } catch (error) {
-      formError.value = `Error submitting request: ${error instanceof Error ? error.message : "Unknown error"}`;
+      formError.value = formatTranslatedMessage(t("requestSubmitError"), {
+        message: error instanceof Error ? error.message : t("unknown"),
+      });
     } finally {
       isSubmitting.value = false;
     }

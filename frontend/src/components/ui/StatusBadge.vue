@@ -184,9 +184,9 @@ const DOMAIN_MAP = {
 
 const DOMAIN_LABELS = {
   consent: {
-    Unknown: "Unknown",
-    Granted: "Granted",
-    Revoked: "Revoked",
+    Unknown: "status_unknown",
+    Granted: "status_granted",
+    Revoked: "status_revoked",
   },
   lead: {
     Draft: "Draft",

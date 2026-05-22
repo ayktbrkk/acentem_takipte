@@ -107,6 +107,7 @@
         <div v-for="(alert, idx) in form.alerts" :key="idx" class="relative grid gap-2 rounded-xl border border-slate-100 bg-slate-50/30 p-3 md:grid-cols-4">
           <button 
             type="button" 
+            :aria-label="t('remove_alert')"
             class="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm hover:bg-rose-600 transition-colors"
             @click="removeAlert(idx)"
           >

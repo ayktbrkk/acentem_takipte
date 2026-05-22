@@ -18,36 +18,43 @@
     </div>
 
     <div v-if="showFooter" class="at-quick-create-shell__footer">
-      <button
-        class="btn btn-outline"
+      <ActionButton
+        class="justify-center"
+        variant="secondary"
+        size="sm"
         type="button"
         :disabled="loading"
         @click="$emit('cancel')"
       >
         {{ labels.cancel || fallbackLabels.cancel }}
-      </button>
-      <button
-        :class="saveButtonClass"
+      </ActionButton>
+      <ActionButton
+        class="justify-center"
+        :variant="showSaveAndOpen ? 'secondary' : 'primary'"
+        size="sm"
         type="button"
         :disabled="loading || saveDisabled"
         @click="$emit('save')"
       >
         {{ labels.save || fallbackLabels.save }}
-      </button>
-      <button
+      </ActionButton>
+      <ActionButton
         v-if="showSaveAndOpen"
-        class="btn btn-primary bg-brand-700"
+        class="justify-center"
+        variant="primary"
+        size="sm"
         type="button"
         :disabled="loading || saveAndOpenDisabled"
         @click="$emit('saveAndOpen')"
       >
         {{ labels.saveAndOpen || fallbackLabels.saveAndOpen }}
-      </button>
+      </ActionButton>
     </div>
   </div>
 </template>
 
 <script setup>
+import ActionButton from "./ActionButton.vue";
 import { useAuthStore } from "../../stores/auth";
 import { useQuickCreateDialogShell } from "../../composables/useQuickCreateDialogShell";
 
@@ -70,5 +77,5 @@ const props = defineProps({
 
 defineEmits(["cancel", "save", "saveAndOpen"]);
 
-const { fallbackLabels, saveButtonClass } = useQuickCreateDialogShell(props, authStore);
+const { fallbackLabels } = useQuickCreateDialogShell(props, authStore);
 </script>

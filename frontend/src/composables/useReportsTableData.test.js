@@ -45,4 +45,33 @@ describe("useReportsTableData", () => {
     expect(result.sortedRows.value[0].gross_premium).toBe(150);
     expect(result.summaryItems.value).toHaveLength(4);
   });
+
+  it("uses translated fallback labels for empty group keys", () => {
+    const filters = ref({
+      reportKey: "policy_list",
+      fromDate: "",
+      toDate: "",
+      granularity: "",
+    });
+    const rows = ref([
+      { name: "R1", branch: "", gross_premium: 50, commission_amount: 5 },
+      { name: "R2", branch: null, gross_premium: 75, commission_amount: 7.5 },
+    ]);
+    const columns = ref(["name", "branch", "gross_premium", "commission_amount"]);
+
+    const result = useReportsTableData({
+      filters: filters.value,
+      rows,
+      columns,
+      comparisonRows: ref([]),
+      activeLocale: ref("tr"),
+      localeCode: ref("tr-TR"),
+      branchScopeLabel: computed(() => "Ofis Şube: IST"),
+      t: (key) => (key === "notProvided" ? "Belirtilmedi" : key),
+    });
+
+    result.groupByColumn.value = "branch";
+
+    expect(result.sortedRows.value[0]._groupTitle).toContain("Belirtilmedi");
+  });
 });

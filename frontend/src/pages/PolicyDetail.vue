@@ -187,9 +187,9 @@
               class="!p-3"
             >
               <template #trailing>
-                <button class="text-slate-400 hover:text-brand-600" @click="openDocument(doc, 'AT Document')">
+                <ActionButton variant="ghost" size="xs" :aria-label="t('openDocument')" @click="openDocument(doc, 'AT Document')">
                   <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
-                </button>
+                </ActionButton>
               </template>
             </MetaListCard>
             <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openPolicyDocuments">

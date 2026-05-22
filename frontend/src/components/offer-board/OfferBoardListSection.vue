@@ -11,13 +11,25 @@
     <div class="mt-4 flex items-center justify-between px-2">
       <p class="text-xs font-medium text-slate-400">{{ rowCount }} / {{ total }} {{ showingLabel }}</p>
       <div class="flex items-center gap-2">
-        <button class="btn btn-outline btn-sm" :disabled="page <= 1" @click="$emit('previous-page')">
+        <ActionButton
+          variant="secondary"
+          size="xs"
+          :aria-label="previousLabel"
+          :disabled="page <= 1"
+          @click="$emit('previous-page')"
+        >
           <FeatherIcon name="chevron-left" class="h-3 w-3" />
-        </button>
+        </ActionButton>
         <span class="text-xs font-bold text-slate-900 w-8 text-center">{{ page }}</span>
-        <button class="btn btn-outline btn-sm" :disabled="!hasNextPage" @click="$emit('next-page')">
+        <ActionButton
+          variant="secondary"
+          size="xs"
+          :aria-label="nextLabel"
+          :disabled="!hasNextPage"
+          @click="$emit('next-page')"
+        >
           <FeatherIcon name="chevron-right" class="h-3 w-3" />
-        </button>
+        </ActionButton>
       </div>
     </div>
   </div>
@@ -25,6 +37,7 @@
 
 <script setup>
 import { FeatherIcon } from "frappe-ui";
+import ActionButton from "../app-shell/ActionButton.vue";
 import ListTable from "../ui/ListTable.vue";
 
 defineProps({
@@ -38,6 +51,8 @@ defineProps({
   rowCount: { type: [String, Number], default: 0 },
   total: { type: [String, Number], default: 0 },
   showingLabel: { type: String, default: "" },
+  previousLabel: { type: String, default: "Previous page" },
+  nextLabel: { type: String, default: "Next page" },
   page: { type: Number, default: 1 },
   hasNextPage: { type: Boolean, default: false },
 });

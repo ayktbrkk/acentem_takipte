@@ -2,8 +2,8 @@
   <div class="space-y-4">
     <!-- Search Header -->
     <div class="rounded-lg bg-slate-50 p-4">
-      <h3 class="text-base font-semibold text-slate-900 mb-3">{{ title }}</h3>
-      <p class="text-sm text-slate-600 mb-4">{{ description }}</p>
+      <h3 class="text-base font-semibold text-slate-900 mb-3">{{ resolvedTitle }}</h3>
+      <p class="text-sm text-slate-600 mb-4">{{ resolvedDescription }}</p>
 
       <div class="flex gap-2">
         <input
@@ -15,13 +15,15 @@
           :disabled="isSearching"
           @keyup.enter="performSearch"
         />
-        <button
-          class="btn btn-primary btn-sm"
+        <ActionButton
+          class="search-submit-btn justify-center"
+          variant="primary"
+          size="sm"
           :disabled="isSearching || searchIdentity.trim().length === 0"
           @click="performSearch"
         >
           {{ isSearching ? t("searching") : t("search") }}
-        </button>
+        </ActionButton>
       </div>
 
       <p v-if="searchError" class="mt-2 text-sm text-red-600">{{ searchError }}</p>
@@ -84,16 +86,18 @@
           </div>
 
           <div class="mt-4 flex gap-2 border-t border-slate-200 pt-4">
-            <button class="btn btn-primary btn-sm" @click="openCustomerDetail">
+            <ActionButton class="justify-center" variant="primary" size="sm" @click="openCustomerDetail">
               {{ t("viewFullProfile") }}
-            </button>
-            <button
+            </ActionButton>
+            <ActionButton
               v-if="searchResult.access_request_allowed && searchResult.is_masked"
-              class="btn btn-outline btn-sm"
+              class="justify-center"
+              variant="secondary"
+              size="sm"
               @click="openAccessRequestForm"
             >
               {{ t("requestAccess") }}
-            </button>
+            </ActionButton>
           </div>
         </div>
       </template>
@@ -113,6 +117,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
+import ActionButton from "./ActionButton.vue";
 import MaskedDataNotice from "./MaskedDataNotice.vue";
 import AccessRequestForm from "./AccessRequestForm.vue";
 import { useGlobalCustomerSearch } from "../../composables/useGlobalCustomerSearch";
@@ -142,8 +147,8 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: "Global Customer Search",
-  description: "Search for customers across branches by Tax ID or customer ID.",
+  title: "",
+  description: "",
 });
 
 const emit = defineEmits<{
@@ -155,6 +160,9 @@ const authStore = useAuthStore(getAppPinia());
 function t(key: string) {
   return translateText(key, authStore.locale);
 }
+
+const resolvedTitle = computed(() => props.title || t("global_search_title"));
+const resolvedDescription = computed(() => props.description || t("global_search_subtitle"));
 
 const {
   searchIdentity,
@@ -169,7 +177,7 @@ const {
   onAccessRequestSubmitted,
   dismissMaskedNotice,
   openCustomerDetail,
-} = useGlobalCustomerSearch(props, emit);
+} = useGlobalCustomerSearch(props, emit, t);
 </script>
 
 <style scoped>
@@ -179,25 +187,5 @@ const {
 
 .input:disabled {
   @apply bg-slate-100 text-slate-500 cursor-not-allowed;
-}
-
-.btn {
-  @apply rounded-lg font-medium transition-colors;
-}
-
-.btn-primary {
-  @apply bg-brand-600 text-white hover:bg-brand-700;
-}
-
-.btn-outline {
-  @apply border border-slate-300 text-slate-700 hover:bg-slate-50;
-}
-
-.btn-sm {
-  @apply px-3 py-2 text-sm;
-}
-
-.btn:disabled {
-  @apply cursor-not-allowed opacity-60;
 }
 </style>

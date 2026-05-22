@@ -11,8 +11,13 @@
           {{ t_title(chartConfig.title) }}
         </h3>
         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-           <ActionButton variant="secondary" size="xs" @click="downloadChart(chartConfig.id)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+           <ActionButton
+             variant="secondary"
+             size="xs"
+             :aria-label="`${props.t('downloadChart')}: ${t_title(chartConfig.title)}`"
+             @click="downloadChart(chartConfig.id)"
+           >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
            </ActionButton>
@@ -65,7 +70,7 @@ const visibleCharts = computed(() => {
 
 function t_title(titleObj) {
   if (typeof titleObj === 'string') return titleObj;
-  return titleObj[props.locale] || titleObj['en'] || 'Chart';
+  return titleObj[props.locale] || titleObj['en'] || props.t('chart');
 }
 
 function getChartData(cfg) {
@@ -77,7 +82,7 @@ function getChartData(cfg) {
   const map = {};
 
   data.forEach(row => {
-    const label = row[cfg.label_field] || 'N/A';
+    const label = row[cfg.label_field] || props.t('notProvided');
     const val = Number(row[cfg.value_field] || 0);
 
     if (!map[label]) {

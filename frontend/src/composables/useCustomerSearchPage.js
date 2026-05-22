@@ -1,9 +1,11 @@
-import { onMounted, ref, unref } from "vue";
+import { onBeforeUnmount, onMounted, ref, unref } from "vue";
 
 export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
   const hasSearched = ref(false);
   const accessRequestHistory = ref([]);
   const showRequestHistory = ref(false);
+  let requestHistoryController = null;
+  let isMounted = false;
 
   function onCustomerSelected() {
     hasSearched.value = true;
@@ -29,17 +31,22 @@ export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
   }
 
   async function loadRequestHistory() {
+    requestHistoryController?.abort();
+    requestHistoryController = typeof AbortController === "undefined" ? null : new AbortController();
+    const activeController = requestHistoryController;
+
     try {
       const response = await fetch("/api/resource/AT Access Log?filters=[[\"action\",\"=\",\"Create\"]]&fields=[\"name\",\"reference_name\",\"action_summary\",\"viewed_on\"]&limit_page_length=10", {
         headers: {
           "X-Frappe-CSRF-Token": window?.frappe?.csrf_token || "",
         },
+        signal: requestHistoryController?.signal,
       });
 
-      if (!response.ok) return;
+      if (!isMounted || activeController?.signal.aborted || !response.ok) return;
 
       const data = await response.json();
-      if (data.data) {
+      if (isMounted && data.data) {
         accessRequestHistory.value = data.data
           .filter((log) => log.action_summary?.includes("REQUEST"))
           .map((log) => ({
@@ -56,11 +63,19 @@ export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
         showRequestHistory.value = accessRequestHistory.value.length > 0;
       }
     } catch (error) {
+      if (!isMounted || activeController?.signal.aborted || error?.name === "AbortError") return;
       console.error("Failed to load access request history:", error);
     }
   }
 
-  onMounted(loadRequestHistory);
+  onMounted(() => {
+    isMounted = true;
+    loadRequestHistory();
+  });
+  onBeforeUnmount(() => {
+    isMounted = false;
+    requestHistoryController?.abort();
+  });
 
   return {
     hasSearched,

@@ -35,6 +35,7 @@
             v-for="column in columns"
             :key="`all-${column}`"
             type="button"
+            :aria-pressed="isColumnVisible(column)"
             :class="isColumnVisible(column)
               ? 'inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-brand-700 transition hover:bg-sky-100'
               : 'inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100'"
@@ -47,7 +48,7 @@
 
       <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50/50 p-3">
         <div class="flex items-center justify-between gap-2">
-          <p class="text-[11px] font-semibold uppercase tracking-wider text-amber-700">{{ t("groupBy") || 'Group By' }}</p>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-amber-700">{{ t("groupBy") }}</p>
             <span v-if="groupByColumn" class="rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
             {{ getColumnLabel(groupByColumn) }}
           </span>
@@ -57,6 +58,7 @@
             v-for="column in Array.from(groupableColumns)"
             :key="`group-${column}`"
             type="button"
+            :aria-pressed="groupByColumn === column"
             :class="groupByColumn === column
               ? 'inline-flex items-center rounded-full border border-amber-400 bg-amber-200 px-2.5 py-1 text-[11px] font-semibold text-amber-900 transition'
               : 'inline-flex items-center rounded-full border border-amber-100 bg-white px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100'"

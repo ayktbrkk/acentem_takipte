@@ -185,7 +185,7 @@ describe("OfferDetail", () => {
 
     const buttons = wrapper.findAll(".action-button-stub");
     const documentCenterButton = buttons.find((button) => button.text().includes("View All Documents"));
-    const openDocumentButton = wrapper.find("button.text-slate-400");
+    const openDocumentButton = buttons.find((button) => button.text().includes("external-link"));
 
     await documentCenterButton.trigger("click");
     expect(routerPush).toHaveBeenCalledWith({

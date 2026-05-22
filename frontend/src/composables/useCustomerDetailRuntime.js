@@ -74,7 +74,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       limit_page_length: 1000,
       order_by: "parent asc",
     },
-    auto: true,
+    auto: false,
   });
 
   const saving = ref(false);
@@ -162,8 +162,9 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   }
 
   const assignedAgentOptions = computed(() => {
+    const roleRows = asArray(unref(assignedAgentRolesResource.data));
     const allowedAssignedAgents = new Set(
-      asArray(unref(assignedAgentRolesResource.data))
+      roleRows
         .map((row) => String(row?.parent || "").trim())
         .filter(Boolean)
     );
@@ -173,7 +174,8 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
         const userId = String(row?.name || "").trim();
         if (!userId || userId === "Guest") return false;
         const userType = String(row?.user_type || "System User").trim();
-        return (!userType || userType === "System User") && allowedAssignedAgents.has(userId);
+        const hasAllowedRoleData = roleRows.length > 0;
+        return (!userType || userType === "System User") && (!hasAllowedRoleData || allowedAssignedAgents.has(userId));
       })
       .map((row) => ({
         value: String(row.name || "").trim(),

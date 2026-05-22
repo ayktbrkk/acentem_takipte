@@ -105,7 +105,7 @@ export const RENEWAL_TRANSLATIONS = {
     metricCancelled: "İptal",
     metricDue: "Vadesi Gelen",
     loadError: "Yenileme kayıtları yüklenemedi.",
-    unspecified: "Belirtilmemiş",
+    unspecified: "Belirtilmedi",
     detailSubtitle: "Yenileme görevini takip edin, ilgili poliçeyi kontrol edin ve süreci netleştirin",
     priorityCritical: "Kritik",
     prioritySoon: "Yaklaşan",

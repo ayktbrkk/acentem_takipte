@@ -36,34 +36,40 @@
 
     <template #actions>
       <div class="flex items-center justify-end gap-3 w-full py-1">
-        <button 
-          class="btn btn-outline min-w-[80px]" 
+        <ActionButton
+          class="min-w-[80px] justify-center"
+          variant="secondary"
+          size="sm"
           type="button"
           :disabled="loading"
           @click="emit('cancel')"
         >
           {{ labels.cancel || translateText('cancel', locale) }}
-        </button>
+        </ActionButton>
         
-        <button 
-          class="btn btn-primary min-w-[100px]" 
+        <ActionButton
+          class="min-w-[100px] justify-center"
+          variant="primary"
+          size="sm"
           type="button"
           :disabled="loading || disabled"
           @click="emit('save')"
         >
           <span v-if="loading" class="animate-spin mr-2">⏳</span>
           {{ labels.save || translateText('save', locale) }}
-        </button>
+        </ActionButton>
 
-        <button 
+        <ActionButton
           v-if="showSaveAndOpen"
-          class="btn btn-primary bg-slate-900 border-slate-900 min-w-[120px] shadow-lg shadow-slate-200" 
+          class="min-w-[120px] justify-center"
+          variant="primary"
+          size="sm"
           type="button"
           :disabled="loading || disabled"
           @click="emit('save-and-open')"
         >
           {{ labels.saveAndOpen || translateText('save_and_open', locale) }}
-        </button>
+        </ActionButton>
       </div>
     </template>
   </Dialog>
@@ -72,6 +78,7 @@
 <script setup>
 import { computed } from "vue";
 import { Dialog } from "frappe-ui";
+import ActionButton from "./ActionButton.vue";
 import { translateText } from "../../utils/i18n";
 
 const props = defineProps({

@@ -14,7 +14,7 @@ describe("QuickCreateDialogShell", () => {
     });
   });
 
-  it("renders fallback Turkish labels and save button class", () => {
+  it("renders fallback Turkish labels and shared action hierarchy", () => {
     const wrapper = mount(QuickCreateDialogShell, {
       props: {
         loading: false,
@@ -28,7 +28,8 @@ describe("QuickCreateDialogShell", () => {
     expect(wrapper.text()).toContain("İptal");
     expect(wrapper.text()).toContain("Kaydet");
     expect(wrapper.text()).toContain("Kaydet ve Aç");
-    expect(wrapper.findAll("button")[1].classes()).toContain("border-brand-700");
+    expect(wrapper.findAll("button")[1].classes()).toContain("border");
+    expect(wrapper.findAll("button")[2].classes()).toContain("bg-brand-600");
   });
 
   it("emits save and cancel actions", async () => {

@@ -53,4 +53,32 @@ describe("usePolicyListTableData", () => {
     expect(data.policyListTotalCount.value).toBe(2);
     expect(data.policyListTotalPages.value).toBe(1);
   });
+
+  it("uses standardized missing-data copy for policy list fallbacks", () => {
+    const rows = ref([
+      {
+        name: "POL-003",
+        record_name: "AT-POL-2026-000003",
+        status: "Draft",
+        gross_premium: 0,
+        gwp_try: 0,
+      },
+    ]);
+    const policyStore = {
+      state: reactive({ pagination: { total: 1 } }),
+    };
+
+    const data = usePolicyListTableData({
+      rows,
+      policyStore,
+      policyListSearchQuery: ref(""),
+      policyListLocalFilters: reactive({ status: "", branch: "" }),
+      localeCode: ref("en-US"),
+      policyListPageSize: ref(20),
+    });
+
+    expect(data.policyListMappedRows.value[0].carrier_policy_no).toBe("Not provided");
+    expect(data.policyListMappedRows.value[0].customer_label).toBe("Not provided");
+    expect(data.policyListMappedRows.value[0].customer_type_label).toBe("Not provided");
+  });
 });

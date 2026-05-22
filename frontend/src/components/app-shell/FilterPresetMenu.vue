@@ -1,8 +1,11 @@
 <template>
   <div class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
-    <label class="text-xs font-semibold text-slate-500 sm:whitespace-nowrap">{{ label }}</label>
+    <label :for="selectId" class="text-xs font-semibold text-slate-500 sm:whitespace-nowrap">{{ label }}</label>
     <select
+      :id="selectId"
       :value="modelValue"
+      :name="name"
+      :aria-label="label"
       class="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 sm:min-w-[180px]"
       :disabled="disabled"
       @change="onChange"
@@ -78,12 +81,17 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  name: {
+    type: String,
+    default: "filter_preset",
+  },
 });
 
 const emit = defineEmits(["update:modelValue", "change", "save", "delete"]);
 
 const authStore = useAuthStore(getAppPinia());
 const activeLocale = computed(() => unref(authStore.locale) || "en");
+const selectId = computed(() => `${props.name}-select`);
 const effectiveSaveLabel = computed(() => props.saveLabel || translateText("Save", activeLocale.value));
 const effectiveDeleteLabel = computed(() => props.deleteLabel || translateText("Delete", activeLocale.value));
 

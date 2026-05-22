@@ -14,15 +14,19 @@
       />
       <div class="flex items-center bg-slate-100 p-1 rounded-xl ml-4">
         <button 
+          type="button"
           class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
           :class="activeView === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+          :aria-pressed="activeView === 'list'"
           @click="activeView = 'list'"
         >
           {{ t('list_view') }}
         </button>
         <button 
+          type="button"
           class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
           :class="activeView === 'calendar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+          :aria-pressed="activeView === 'calendar'"
           @click="activeView = 'calendar'"
         >
           {{ t('calendar_view') }}

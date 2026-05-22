@@ -473,7 +473,7 @@ export function useReportsTableData({
     if (groupByColumn.value) {
       const groups = {};
       result.forEach(row => {
-        const groupKey = row[groupByColumn.value] || "N/A";
+        const groupKey = row[groupByColumn.value] || t("notProvided");
         if (!groups[groupKey]) {
           groups[groupKey] = {
             isHeader: true,

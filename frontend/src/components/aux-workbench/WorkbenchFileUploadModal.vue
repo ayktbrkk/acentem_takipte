@@ -5,7 +5,7 @@
         <div class="modal-box" role="dialog" aria-modal="true">
           <div class="modal-header">
             <h2 class="modal-title">{{ translateLabel("uploadDocument") }}</h2>
-            <button class="modal-close-btn" type="button" :aria-label="translateLabel('close')" @click="$emit('close')">✕</button>
+            <ActionButton class="modal-close-btn" variant="ghost" size="xs" :aria-label="translateLabel('close')" @click="$emit('close')">✕</ActionButton>
           </div>
 
           <div
@@ -17,8 +17,11 @@
             @click="fileInput.click()"
           >
             <input
+              id="workbench-document-file"
               ref="fileInput"
+              name="document_file"
               type="file"
+              :aria-label="translateLabel('chooseFile')"
               class="hidden-input"
               @change="onFileChange"
             />
@@ -40,10 +43,17 @@
             </span>
           </div>
 
-          <div v-if="!props.attachedToDoctype" class="link-section">
+          <div v-if="!canUseAttachedReference" class="link-section">
             <label class="field-row">
               <span class="field-label">{{ translateLabel('linkDoctypeLabel') }}</span>
-              <select v-model="linkDoctype" class="field-input" @change="onLinkDoctypeChange">
+              <select
+                id="workbench-document-link-doctype"
+                v-model="linkDoctype"
+                name="link_doctype"
+                class="field-input"
+                :aria-label="translateLabel('linkDoctypeLabel')"
+                @change="onLinkDoctypeChange"
+              >
                 <option value="">—</option>
                 <option value="AT Customer">{{ translateLabel('linkCustomer') }}</option>
                 <option value="AT Policy">{{ translateLabel('linkPolicy') }}</option>
@@ -54,9 +64,12 @@
               <span class="field-label">{{ translateLabel('linkNameLabel') }}</span>
               <div class="link-input-wrap">
                 <input
+                  id="workbench-document-link-name"
                   v-model="linkSearch"
+                  name="link_name"
                   type="text"
                   class="field-input"
+                  :aria-label="translateLabel('linkNameLabel')"
                   :placeholder="translateLabel('linkSearchPlaceholder')"
                   @input="onLinkSearch"
                   autocomplete="off"
@@ -82,7 +95,13 @@
           <div class="meta-fields">
             <label class="field-row">
               <span class="field-label">{{ translateLabel("documentKind") }}</span>
-              <select v-model="documentKind" class="field-input">
+              <select
+                id="workbench-document-kind"
+                v-model="documentKind"
+                name="document_kind"
+                class="field-input"
+                :aria-label="translateLabel('documentKind')"
+              >
                 <option value="">—</option>
                 <option value="Policy">{{ translateLabel("kindPolicy") }}</option>
                 <option value="Endorsement">{{ translateLabel("kindEndorsement") }}</option>
@@ -92,7 +111,13 @@
             </label>
             <label class="field-row">
               <span class="field-label">{{ translateLabel("documentSubType") }}</span>
-              <select v-model="documentSubType" class="field-input">
+              <select
+                id="workbench-document-sub-type"
+                v-model="documentSubType"
+                name="document_sub_type"
+                class="field-input"
+                :aria-label="translateLabel('documentSubType')"
+              >
                 <option value="">—</option>
                   <option value="Vehicle Registration">{{ translateLabel("subRuhsat") }}</option>
                   <option value="ID Document">{{ translateLabel("subKimlik") }}</option>
@@ -102,33 +127,47 @@
               </select>
             </label>
             <label class="field-row field-row-check">
-              <input v-model="isSensitive" type="checkbox" class="field-checkbox" />
+              <input
+                id="workbench-document-sensitive"
+                v-model="isSensitive"
+                name="is_sensitive"
+                type="checkbox"
+                class="field-checkbox"
+                :aria-label="translateLabel('isSensitive')"
+              />
               <span class="field-label">{{ translateLabel("isSensitive") }}</span>
             </label>
             <label class="field-row">
               <span class="field-label">{{ translateLabel("notes") }}</span>
-              <textarea v-model="notes" class="field-input field-textarea" rows="2" />
+              <textarea
+                id="workbench-document-notes"
+                v-model="notes"
+                name="notes"
+                class="field-input field-textarea"
+                rows="2"
+                :aria-label="translateLabel('notes')"
+              />
             </label>
           </div>
 
           <div class="modal-actions">
-            <button
-              class="btn btn-sm btn-secondary"
-              type="button"
+            <ActionButton
+              variant="secondary"
+              size="sm"
               :disabled="uploading"
               @click="$emit('close')"
             >
               {{ translateLabel("cancel") }}
-            </button>
-            <button
-              class="btn btn-sm btn-primary"
-              type="button"
+            </ActionButton>
+            <ActionButton
+              variant="primary"
+              size="sm"
               :disabled="!selectedFile || uploading"
               @click="submit"
             >
               <span v-if="uploading">{{ translateLabel("uploading") }}</span>
               <span v-else>{{ translateLabel("upload") }}</span>
-            </button>
+            </ActionButton>
           </div>
         </div>
       </div>
@@ -139,6 +178,7 @@
 <script setup>
 import { computed, ref, watch, onMounted } from "vue";
 import { useAuthStore } from "../../stores/auth";
+import ActionButton from "../app-shell/ActionButton.vue";
 
 const props = defineProps({
   open: { type: Boolean, required: true },
@@ -251,20 +291,24 @@ const linkSearching = ref(false);
 let linkSearchTimer = null;
 
 const contextInfo = ref(null);
+const ALLOWED_LINK_DOCTYPES = new Set(["AT Customer", "AT Policy", "AT Claim"]);
+const canUseAttachedReference = computed(() => ALLOWED_LINK_DOCTYPES.has(props.attachedToDoctype) && Boolean(props.attachedToName));
+const effectiveAttachedToDoctype = computed(() => (canUseAttachedReference.value ? props.attachedToDoctype : ""));
+const effectiveAttachedToName = computed(() => (canUseAttachedReference.value ? props.attachedToName : ""));
 
 async function loadContextInfo() {
-  if (!props.attachedToDoctype || !props.attachedToName) {
+  if (!canUseAttachedReference.value) {
     contextInfo.value = null;
     return;
   }
-  const doctypeLabel = props.attachedToDoctype === "AT Policy" ? translateLabel("kindPolicy") :
-                      props.attachedToDoctype === "AT Claim" ? translateLabel("kindClaim") :
-                      props.attachedToDoctype === "AT Customer" ? translateLabel("kindCustomer") : props.attachedToDoctype;
+  const doctypeLabel = effectiveAttachedToDoctype.value === "AT Policy" ? translateLabel("kindPolicy") :
+                      effectiveAttachedToDoctype.value === "AT Claim" ? translateLabel("kindClaim") :
+                      effectiveAttachedToDoctype.value === "AT Customer" ? translateLabel("kindCustomer") : effectiveAttachedToDoctype.value;
   try {
     const csrfT = (typeof window !== "undefined" && window.csrf_token) || "";
     const params = new URLSearchParams({
-      doctype: props.attachedToDoctype,
-      docname: props.attachedToName,
+      doctype: effectiveAttachedToDoctype.value,
+      docname: effectiveAttachedToName.value,
     });
     const resp = await fetch(`/api/method/acentem_takipte.acentem_takipte.api.documents.get_document_context?${params}`, {
       headers: csrfT ? { "X-Frappe-CSRF-Token": csrfT } : {},
@@ -273,13 +317,13 @@ async function loadContextInfo() {
       const data = await resp.json();
       contextInfo.value = {
         record_type: doctypeLabel,
-        record_name: data.message?.record_name || props.attachedToName,
+        record_name: data.message?.record_name || effectiveAttachedToName.value,
         customer_name: data.message?.customer_name || null,
         customer_id: data.message?.customer_id || null,
       };
     }
   } catch {
-    contextInfo.value = { record_type: doctypeLabel, record_name: props.attachedToName, customer_name: null, customer_id: null };
+    contextInfo.value = { record_type: doctypeLabel, record_name: effectiveAttachedToName.value, customer_name: null, customer_id: null };
   }
 }
 
@@ -424,8 +468,8 @@ async function submit() {
   const fd = new FormData();
   fd.append("file", selectedFile.value);
   fd.append("is_private", "1");
-  const effectiveDoctype = props.attachedToDoctype || linkDoctype.value;
-  const effectiveName = props.attachedToName || (linkDoctype.value ? linkName.value : "");
+  const effectiveDoctype = effectiveAttachedToDoctype.value || linkDoctype.value;
+  const effectiveName = effectiveAttachedToName.value || (linkDoctype.value ? linkName.value : "");
 
   if (effectiveDoctype) {
     fd.append("attached_to_doctype", effectiveDoctype);

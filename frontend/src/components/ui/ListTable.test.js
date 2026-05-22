@@ -253,6 +253,23 @@ describe("ListTable extended column types", () => {
     expect(clickMock).toHaveBeenCalled();
   });
 
+  it("renders basic actions column with shared action buttons", async () => {
+    const clickMock = vi.fn();
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [{ key: "actions", type: "actions", label: "Actions" }],
+        rows: [{ _actions: [{ label: "Open", variant: "outline", onClick: clickMock }] }],
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+
+    const btn = wrapper.find("button");
+    expect(btn.text()).toBe("Open");
+    await btn.trigger("click");
+    expect(clickMock).toHaveBeenCalled();
+  });
+
   it("renders compound column with badge", () => {
     const wrapper = mount(ListTable, {
       props: {

@@ -9,8 +9,10 @@
         <button 
           v-for="range in ranges" 
           :key="range.value"
+          type="button"
           class="px-3 py-1.5 text-xs font-semibold rounded-xl transition-all"
           :class="activeRange === range.value ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'"
+          :aria-pressed="activeRange === range.value"
           @click="activeRange = range.value"
         >
           {{ range.label }}

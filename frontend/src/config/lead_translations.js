@@ -55,7 +55,7 @@ export const LEAD_TRANSLATIONS = {
     lead_type: "Fırsat Tipi",
     campaign: "Kampanya",
     next_step: "Sonraki Adım",
-    unspecified: "Belirtilmemiş",
+    unspecified: "Belirtilmedi",
     advanced_filters_placeholder: "Gelişmiş filtreleme seçenekleri bu ekran için bir sonraki dilimde genişletilecek.",
     applyFilters: "Filtreleri Uygula",
     clearFilters: "Filtreleri Temizle",

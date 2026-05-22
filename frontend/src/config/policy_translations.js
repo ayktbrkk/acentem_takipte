@@ -192,7 +192,7 @@ export const POLICY_TRANSLATIONS = {
     structure_type: "Yapı Tarzı",
     coverage_type: "Teminat Tipi",
     network_type: "Network Tipi",
-    unspecified: "Belirtilmemiş",
+    unspecified: "Belirtilmedi",
     inpatient_outpatient: "Yatarak/Ayakta",
     endorsementTitle: "Zeyilname Geçmişi",
     emptyEndorsement: "Zeyilname yok.",

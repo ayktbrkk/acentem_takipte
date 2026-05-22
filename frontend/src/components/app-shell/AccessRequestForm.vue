@@ -83,21 +83,25 @@
 
         <!-- Action Buttons -->
         <div class="flex gap-2 border-t border-slate-200 pt-4">
-          <button
+          <ActionButton
             type="button"
-            class="btn btn-outline flex-1"
+            variant="secondary"
+            size="sm"
+            class="flex-1 justify-center"
             :disabled="isSubmitting"
             @click="$emit('closed')"
           >
             {{ t('cancel') }}
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
             type="submit"
-            class="btn btn-primary flex-1"
+            variant="primary"
+            size="sm"
+            class="flex-1 justify-center"
             :disabled="isSubmitting || !isFormValid"
           >
             {{ isSubmitting ? t('submitting') : t('submit') }}
-          </button>
+          </ActionButton>
         </div>
 
         <!-- Success Message -->
@@ -111,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import ActionButton from "./ActionButton.vue";
 import { useAccessRequestForm } from "../../composables/useAccessRequestForm";
 import { getAppPinia } from "../../pinia";
 import { useAuthStore } from "../../stores/auth";
@@ -142,7 +146,7 @@ const {
   showSuccess,
   isFormValid,
   submitAccessRequest,
-} = useAccessRequestForm(props, emit);
+} = useAccessRequestForm(props, emit, t);
 </script>
 
 <style scoped>
@@ -152,21 +156,5 @@ const {
 
 .input:disabled {
   @apply bg-slate-100 text-slate-500 cursor-not-allowed;
-}
-
-.btn {
-  @apply rounded-lg font-medium transition-colors;
-}
-
-.btn-primary {
-  @apply bg-brand-600 text-white hover:bg-brand-700;
-}
-
-.btn-outline {
-  @apply border border-slate-300 text-slate-700 hover:bg-slate-50;
-}
-
-.btn:disabled {
-  @apply cursor-not-allowed opacity-60;
 }
 </style>

@@ -65,7 +65,7 @@ describe("GlobalCustomerSearch", () => {
     });
 
     await wrapper.find("input").setValue("1234567890");
-    await wrapper.find("button.btn-primary").trigger("click");
+    await wrapper.find(".search-submit-btn").trigger("click");
     await Promise.resolve();
     await Promise.resolve();
 
@@ -114,7 +114,7 @@ describe("GlobalCustomerSearch", () => {
     });
 
     await wrapper.find("input").setValue("1234567891");
-    await wrapper.find("button.btn-primary").trigger("click");
+    await wrapper.find(".search-submit-btn").trigger("click");
     await Promise.resolve();
     await Promise.resolve();
 

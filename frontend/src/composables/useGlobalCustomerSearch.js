@@ -1,6 +1,12 @@
 import { computed, ref } from "vue";
 
-export function useGlobalCustomerSearch(props, emit) {
+function formatTranslatedMessage(template, params = {}) {
+  return Object.entries(params).reduce((message, [key, value]) => {
+    return message.replace(`{${key}}`, String(value ?? ""));
+  }, template);
+}
+
+export function useGlobalCustomerSearch(props, emit, t) {
   const searchIdentity = ref("");
   const isSearching = ref(false);
   const hasSearched = ref(false);
@@ -33,7 +39,7 @@ export function useGlobalCustomerSearch(props, emit) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        searchError.value = errorData.message || "Search failed. Please try again.";
+        searchError.value = errorData.message || t("searchFailed");
         return;
       }
 
@@ -45,7 +51,9 @@ export function useGlobalCustomerSearch(props, emit) {
         emit("customer-selected", searchResult.value.customer);
       }
     } catch (error) {
-      searchError.value = `Error searching customer: ${error instanceof Error ? error.message : "Unknown error"}`;
+      searchError.value = formatTranslatedMessage(t("searchError"), {
+        message: error instanceof Error ? error.message : t("unknown"),
+      });
     } finally {
       isSearching.value = false;
     }

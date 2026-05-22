@@ -155,7 +155,7 @@ const isEditing = ref(false);
 const editData = reactive({});
 
 const genderOptions = computed(() => [
-  { label: props.t('unknown'), value: 'Unknown' },
+  { label: props.t('unspecified'), value: 'Unknown' },
   { label: props.t('male'), value: 'Male' },
   { label: props.t('female'), value: 'Female' },
   { label: props.t('other'), value: 'Other' },

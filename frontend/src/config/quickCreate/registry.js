@@ -14,6 +14,11 @@ function option(value, label) {
   return { value, label };
 }
 
+const UNSPECIFIED_OPTION_LABEL = {
+  tr: "Belirtilmedi",
+  en: "Not provided",
+};
+
 function hasValue(value) {
   return String(value ?? "").trim() !== "";
 }
@@ -344,20 +349,20 @@ export const quickCreateRegistry = {
       { name: "phone", type: "text", label: i18nLabel("phone") },
       { name: "email", type: "email", label: i18nLabel("email") },
       { name: "gender", type: "select", label: i18nLabel("Gender"), options: [
-        option("Unknown", "Unknown"),
+        option("Unknown", UNSPECIFIED_OPTION_LABEL),
         option("Male", "Male"),
         option("Female", "Female"),
         option("Other", "Other"),
       ] },
       { name: "marital_status", type: "select", label: i18nLabel("marital_status"), options: [
-        option("Unknown", "Unknown"),
+        option("Unknown", UNSPECIFIED_OPTION_LABEL),
         option("Single", "Single"),
         option("Married", "Married"),
         option("Divorced", "Divorced"),
         option("Widowed", "Widowed"),
       ] },
       { name: "consent_status", type: "select", label: i18nLabel("consent_status"), options: [
-        option("Unknown", "Unknown"),
+        option("Unknown", UNSPECIFIED_OPTION_LABEL),
         option("Granted", "Granted"),
         option("Revoked", "Revoked"),
       ] },
@@ -1318,7 +1323,7 @@ if (customerQuickCreateConfig) {
       label: i18nLabel("Gender"),
       disabled: ({ model }) => String(model?.customer_type || "Individual") === "Corporate",
       options: [
-        option("Unknown", "Unknown"),
+        option("Unknown", UNSPECIFIED_OPTION_LABEL),
         option("Male", "Male"),
         option("Female", "Female"),
         option("Other", "Other"),
@@ -1330,7 +1335,7 @@ if (customerQuickCreateConfig) {
       label: i18nLabel("marital_status"),
       disabled: ({ model }) => String(model?.customer_type || "Individual") === "Corporate",
       options: [
-        option("Unknown", "Unknown"),
+        option("Unknown", UNSPECIFIED_OPTION_LABEL),
         option("Single", "Single"),
         option("Married", "Married"),
         option("Divorced", "Divorced"),
@@ -1342,7 +1347,7 @@ if (customerQuickCreateConfig) {
       type: "select",
       label: i18nLabel("consent_status"),
       options: [
-        option("Unknown", "Unknown"),
+        option("Unknown", UNSPECIFIED_OPTION_LABEL),
         option("Granted", "Granted"),
         option("Revoked", "Revoked"),
       ],

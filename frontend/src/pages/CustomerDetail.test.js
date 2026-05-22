@@ -238,7 +238,7 @@ describe("CustomerDetail page", () => {
     expect(wrapper.vm.moreProfileFields.find((field) => field.key === "gender")?.displayValue).toBe("Erkek");
     expect(wrapper.vm.moreProfileFields.find((field) => field.key === "marital_status")?.displayValue).toBe("Bekar");
     expect(wrapper.vm.moreProfileFields.find((field) => field.key === "occupation")?.displayValue).toBe("Operator");
-    expect(wrapper.vm.operationalFields.find((field) => field.key === "assigned_agent")?.displayValue).toBe("Belirtilmemiş");
+    expect(wrapper.vm.operationalFields.find((field) => field.key === "assigned_agent")?.displayValue).toBe("Belirtilmedi");
     expect(wrapper.vm.operationalFields.find((field) => field.key === "assigned_agent")?.type).toBe("autocomplete");
     expect(wrapper.vm.operationalFields.find((field) => field.key === "assigned_agent")?.options).toEqual([
       { value: "agent@example.com", label: "Agent User (agent@example.com)" },

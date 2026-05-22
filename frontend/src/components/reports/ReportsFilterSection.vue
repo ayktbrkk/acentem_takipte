@@ -7,15 +7,26 @@
   >
     <div class="space-y-3">
       <div class="flex flex-wrap items-center gap-2">
-        <select v-model="filters.reportKey" class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 min-w-[180px]">
+        <label class="sr-only" for="reports-report-key">{{ t("report_key") }}</label>
+        <select
+          id="reports-report-key"
+          v-model="filters.reportKey"
+          name="report_key"
+          :aria-label="t('report_key')"
+          class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 min-w-[180px]"
+        >
           <option v-for="option in reportOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </option>
         </select>
 
+        <label v-if="filters.reportKey === 'policy_list'" class="sr-only" for="reports-date-preset">{{ t("date_range_label") }}</label>
         <select
           v-if="filters.reportKey === 'policy_list'"
+          id="reports-date-preset"
+          name="date_preset"
           :value="activePreset"
+          :aria-label="t('date_range_label')"
           class="w-full h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 transition-all placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 min-w-[210px]"
           @change="$emit('apply-date-preset', $event.target.value)"
         >
@@ -27,17 +38,23 @@
 
         <div class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5">
           <input
+            id="reports-from-date"
             v-model="filters.fromDate"
+            name="from_date"
             class="w-full rounded-lg border-0 bg-transparent px-1 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-0"
             type="date"
+            :aria-label="t('date_from')"
             :placeholder="t('date_from')"
             :title="t('date_from')"
           />
           <span class="text-xs text-slate-400">-</span>
           <input
+            id="reports-to-date"
             v-model="filters.toDate"
+            name="to_date"
             class="w-full rounded-lg border-0 bg-transparent px-1 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-0"
             type="date"
+            :aria-label="t('date_to')"
             :placeholder="t('date_to')"
             :title="t('date_to')"
           />

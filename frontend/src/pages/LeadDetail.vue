@@ -150,7 +150,7 @@
               class="!p-3"
             >
               <template #trailing>
-                <ActionButton variant="ghost" size="xs" aria-label="Open document" @click="openDocument(doc)">
+                <ActionButton variant="ghost" size="xs" :aria-label="t('openDocument')" @click="openDocument(doc)">
                   <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
                 </ActionButton>
               </template>

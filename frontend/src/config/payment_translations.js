@@ -82,7 +82,7 @@ export const PAYMENT_TRANSLATIONS = {
     activity_timeline: "İşlem Geçmişi",
     save_success: "Kayıt başarıyla güncellendi.",
     save_failed: "Güncelleme başarısız oldu. Lütfen tekrar deneyin.",
-    unspecified: "Belirtilmemiş",
+    unspecified: "Belirtilmedi",
     file_link_not_found: "Doküman bağlantısı bulunamadı.",
     status_overdue: "Gecikmiş",
     status_outstanding: "Bekleyen",

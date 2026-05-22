@@ -124,6 +124,8 @@
       :row-count="pagedOfferRows.length"
       :total="offerListTotal"
       :showing-label="t('showingRecords')"
+      :previous-label="t('previousPage')"
+      :next-label="t('nextPage')"
       :page="offerListPagination.page"
       :has-next-page="offerListHasNextPage"
       @row-click="(row) => openOfferDetail(row.name)"

@@ -102,19 +102,16 @@
             </span>
 
             <div v-else-if="col.type === 'actions'" class="flex flex-wrap justify-end gap-2" @click.stop>
-              <button
+              <ActionButton
                 v-for="action in row[col.key] || row._actions || []"
                 :key="action.key || action.label"
-                :class="[
-                  'btn btn-sm',
-                  action.variant === 'primary' ? 'btn-primary' : action.variant === 'outline' ? 'btn-outline' : '',
-                ]"
+                :variant="action.variant === 'outline' ? 'secondary' : (action.variant || 'secondary')"
+                size="xs"
                 :disabled="Boolean(action.disabled)"
-                type="button"
                 @click.stop="action.onClick?.(row)"
               >
                 {{ action.label }}
-              </button>
+              </ActionButton>
             </div>
 
             <div v-else-if="col.type === 'stacked'" class="flex flex-col">
@@ -167,9 +164,11 @@
 
           </td>
           <td v-if="showPreview" class="w-10 px-4 py-3 text-right">
-            <button
-              type="button"
-              class="rounded-full p-1.5 text-slate-400 transition-all hover:bg-slate-100 hover:text-brand-600"
+            <ActionButton
+              variant="ghost"
+              size="xs"
+              class="rounded-full !p-1.5"
+              :aria-label="translateText('preview', locale)"
               :title="translateText('preview', locale)"
               @click.stop="$emit('preview-click', row)"
             >
@@ -177,7 +176,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-            </button>
+            </ActionButton>
           </td>
           <td v-if="clickable" class="px-4 py-3 text-right">
             <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-gray-300 group-hover:text-gray-400" />

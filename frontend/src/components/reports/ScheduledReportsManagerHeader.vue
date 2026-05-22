@@ -14,14 +14,15 @@
       >
         {{ runLabel }}
       </ActionButton>
-      <button
-        type="button"
-        class="rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-brand-700 transition hover:border-sky-400 hover:text-sky-900"
+      <ActionButton
+        variant="primary"
+        size="sm"
+        class="!rounded-xl !py-2 !font-medium"
         :disabled="loading || running"
         @click="$emit('new')"
       >
         {{ newLabel }}
-      </button>
+      </ActionButton>
     </div>
   </div>
 </template>

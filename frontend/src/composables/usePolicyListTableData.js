@@ -26,11 +26,11 @@ function mapCustomerTypeLabel(value, localeCode) {
   if (normalized === "individual" || normalized === "bireysel") {
     return isTr ? "Bireysel" : "Individual";
   }
-  return isTr ? "Belirtilmemiş" : "Unspecified";
+  return isTr ? "Belirtilmedi" : "Not provided";
 }
 
 function fallbackLabel(localeCode) {
-  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmemiş" : "Unspecified";
+  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
 }
 
 export function usePolicyListTableData({

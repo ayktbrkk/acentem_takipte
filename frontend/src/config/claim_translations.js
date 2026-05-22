@@ -115,7 +115,7 @@ export const CLAIM_TRANSLATIONS = {
     claim_amount: "Hasar Tutarı",
     reserve_amount: "Rezerv Tutar",
     paid_amount: "Ödenen Tutar",
-    unspecified: "Belirtilmemiş",
+    unspecified: "Belirtilmedi",
   },
   en: {
     claims: "Claims",

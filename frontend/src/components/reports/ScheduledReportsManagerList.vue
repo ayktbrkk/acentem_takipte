@@ -59,28 +59,32 @@
       </dl>
 
       <div class="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          class="!rounded-xl !py-2 !font-medium"
           :disabled="loading || running"
           @click="$emit('edit', item)"
         >
           {{ editLabel }}
-        </button>
-        <button
-          type="button"
-          class="qc-danger-button rounded-xl px-3 py-2 text-sm font-medium"
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          size="sm"
+          class="qc-danger-button !rounded-xl !py-2 !font-medium"
           :disabled="loading || running"
           @click="$emit('remove', item)"
         >
           {{ removeLabel }}
-        </button>
+        </ActionButton>
       </div>
     </article>
   </div>
 </template>
 
 <script setup>
+import ActionButton from "../app-shell/ActionButton.vue";
+
 defineProps({
   items: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
