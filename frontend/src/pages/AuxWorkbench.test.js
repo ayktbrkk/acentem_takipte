@@ -35,6 +35,11 @@ const resourceQueue = [];
 let reminderMutationSubmit;
 
 vi.mock("frappe-ui", () => ({
+  Dialog: {
+    props: ["modelValue"],
+    emits: ["update:modelValue"],
+    template: `<div class="dialog-stub"><slot /><slot name="actions" /></div>`,
+  },
   FeatherIcon: {
     props: ["name"],
     template: `<i class="feather-icon-stub">{{ name }}</i>`,

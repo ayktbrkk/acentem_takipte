@@ -125,13 +125,14 @@
       <ListTable
         v-else
         :columns="listColumns"
-        :rows="renewals"
+        :rows="pagedRenewals"
+        :locale="activeLocale"
         :loading="renewalsLoading"
         :empty-message="t('emptyList')"
         @row-click="openRenewalDetail"
       >
         <template #cell(policy)="{ row }">
-          <span class="text-sm font-medium text-slate-900">{{ row.policy || t("unspecified") }}</span>
+          <span class="text-sm font-medium text-slate-900">{{ row.policyLabel || t("unspecified") }}</span>
         </template>
         <template #cell(customer)="{ row }">
           <span class="text-sm font-medium text-slate-800">{{ row.customerLabel || t("unspecified") }}</span>
@@ -152,6 +153,15 @@
           <span v-else class="text-xs text-slate-400">{{ t("unspecified") }}</span>
         </template>
       </ListTable>
+      <ListPager
+        :shown="renewalListShownCount"
+        :total="renewalsTotal"
+        :page="listPagination.page"
+        :has-next="renewalListHasNextPage"
+        :showing-label="t('showingRecords')"
+        @previous="previousRenewalPage"
+        @next="nextRenewalPage"
+      />
     </section>
 
     <!-- Board View -->
@@ -166,13 +176,13 @@
               <p class="text-sm font-bold text-slate-900">{{ column.label }}</p>
               <p class="mt-0.5 text-[11px] text-slate-500 font-medium">{{ column.hint }}</p>
             </div>
-            <span class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-600 px-2 text-[10px] font-bold text-white">{{ column.cards.length }}</span>
+            <span class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-600 px-2 text-[10px] font-bold text-white">{{ column.cards.length > renewalBoardDisplayLimit ? `${renewalBoardDisplayLimit}+` : column.cards.length }}</span>
           </header>
 
           <div class="space-y-3 overflow-y-auto pr-1">
             <div v-if="column.cards.length === 0" class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-3 py-8 text-center text-xs text-slate-400 font-medium">{{ t("emptyBoardColumn") }}</div>
             <article
-              v-for="task in column.cards"
+              v-for="task in column.cards.slice(0, renewalBoardDisplayLimit)"
               :key="task.name"
               class="cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-brand-200"
               @click="openRenewalDetail(task)"
@@ -198,7 +208,7 @@
               </div>
 
               <div class="mt-3 space-y-1 text-[11px] text-slate-500 font-medium border-t border-slate-50 pt-2">
-                <p class="flex justify-between"><span>{{ t("policy") }}:</span> <span class="text-slate-700">{{ task.policy || t("unspecified") }}</span></p>
+                <p class="flex justify-between"><span>{{ t("policy") }}:</span> <span class="text-slate-700">{{ task.policyLabel || t("unspecified") }}</span></p>
                 <p class="flex justify-between"><span>{{ t("due") }}:</span> <span class="text-slate-700">{{ formatDate(task.dueDate) }}</span></p>
               </div>
 
@@ -245,6 +255,7 @@ import ActionButton from "../components/app-shell/ActionButton.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import ListTable from "../components/ui/ListTable.vue";
+import ListPager from "../components/app-shell/ListPager.vue";
 import { FeatherIcon } from "frappe-ui";
 import { ref } from "vue";
 
@@ -273,9 +284,17 @@ const {
   quickRenewalSuccessHandlers,
   renewalSummaryItems,
   boardColumns,
+  listPagination,
+  pagedRenewals,
+  renewalsTotal,
+  renewalListHasNextPage,
+  renewalListShownCount,
+  renewalBoardDisplayLimit,
   reloadRenewals,
   downloadRenewalExport,
   applyRenewalFilters,
+  previousRenewalPage,
+  nextRenewalPage,
   prepareQuickRenewalDialog,
   canMoveRenewalToStatus,
   updateRenewalStatus,

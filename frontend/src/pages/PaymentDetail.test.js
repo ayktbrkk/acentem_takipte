@@ -204,7 +204,7 @@ describe("PaymentDetail page", () => {
 
     const buttons = wrapper.findAll("button");
     await buttons.find((button) => button.text() === "Listeye Dön").trigger("click");
-    expect(routerPush).toHaveBeenCalledWith("/payments");
+    expect(routerPush).toHaveBeenCalledWith({ name: "payments-board" });
 
     await buttons.find((button) => button.text() === "Hatırlatma Gönder").trigger("click");
     expect(routerPush).toHaveBeenCalledWith({

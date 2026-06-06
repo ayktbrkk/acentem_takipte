@@ -153,9 +153,10 @@ export function useImportDataRuntime({ t, router, authStore }) {
 
   function importData() {
     if (!canImport.value) return;
-    importMessage.value = t("columnsMapped") === "columnsMapped"
+    const mappedColumnsLabel = t("columnsMapped");
+    importMessage.value = mappedColumnsLabel === "columnsMapped"
       ? `${mappedColumnCount.value} columns mapped for ${fileName.value}. Import queued.`
-      : `${fileName.value} için ${mappedColumnCount.value} sütun eşleştirildi. İçe aktarma kuyruğa alındı.`;
+      : `${fileName.value} için ${mappedColumnCount.value} ${mappedColumnsLabel}. ${t("importQueued")}`;
   }
 
   function cancel() {

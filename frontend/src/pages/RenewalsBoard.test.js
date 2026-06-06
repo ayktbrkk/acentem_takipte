@@ -253,4 +253,60 @@ describe("RenewalsBoard page store integration", () => {
 
     expect(wrapper.text()).toContain("Henüz yenileme kaydı yok.");
   });
+
+  it("paginates renewal list at twenty rows per page", async () => {
+    const rows = Array.from({ length: 21 }, (_, index) => ({
+      name: `REN-${String(index + 1).padStart(3, "0")}`,
+      policy: `POL-${String(index + 1).padStart(3, "0")}`,
+      policy_policy_no: `POLICE-${String(index + 1).padStart(3, "0")}`,
+      customer: `Customer ${index + 1}`,
+      customer_full_name: `Müşteri ${index + 1}`,
+      status: "Open",
+    }));
+
+    resourceQueue.push(
+      {
+        data: ref(rows),
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        reload: vi.fn(async () => rows),
+      },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+      { data: ref([]), loading: ref(false), error: ref(null), params: {}, reload: vi.fn(async () => []) },
+    );
+
+    const wrapper = mount(RenewalsBoard, {
+      global: {
+        stubs: {
+          QuickCreateManagedDialog: true,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await flushPromises();
+    await nextTick();
+
+    const listButton = wrapper.findAll("button").find((button) => button.text().includes("Liste"));
+    expect(listButton).toBeTruthy();
+    await listButton.trigger("click");
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("20 / 21 Gösterilen kayıt");
+    expect(wrapper.text()).toContain("POLICE-020");
+    expect(wrapper.text()).toContain("Müşteri 20");
+    expect(wrapper.text()).not.toContain("POL-021");
+
+    const pagerButtons = wrapper.findAll("button");
+    const nextButton = pagerButtons[pagerButtons.length - 1];
+    await nextButton.trigger("click");
+    await flushPromises();
+    await nextTick();
+
+    expect(wrapper.text()).toContain("1 / 21 Gösterilen kayıt");
+    expect(wrapper.text()).toContain("POLICE-021");
+    expect(wrapper.text()).toContain("Müşteri 21");
+  });
 });

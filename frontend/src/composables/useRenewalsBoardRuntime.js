@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, unref, watch } from "vue";
+import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRoute, useRouter } from "vue-router";
 
@@ -27,6 +27,9 @@ function buildOfficeBranchOptions(branches) {
   }));
 }
 
+const RENEWAL_BOARD_DISPLAY_LIMIT = 5;
+const RENEWAL_FETCH_LIMIT = 500;
+
 export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   const appPinia = getAppPinia();
   useAuthStore(appPinia);
@@ -48,6 +51,10 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   }
 
   const filters = renewalStore.state.filters;
+  const listPagination = reactive({
+    page: 1,
+    pageLength: 20,
+  });
 
   const renewalStatusOptions = computed(() =>
     [
@@ -118,7 +125,8 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
       const policySummary = renewalPolicyLookupMap.value[task.policy];
       const daysUntilDue = getRenewalDaysUntilDue(task.due_date || task.renewal_date);
       const priorityMeta = getRenewalPriorityMeta(task, daysUntilDue);
-      const displayCustomer = renewalCustomerLookupMap.value[task.customer]?.full_name || task.customer;
+      const displayCustomer = task.customer_full_name || renewalCustomerLookupMap.value[task.customer]?.full_name || task.customer;
+      const policyLabel = policySummary?.policy_no || task.policy_policy_no || task.policy;
       return {
         ...task,
         customerLabel: fallbackLabel(displayCustomer),
@@ -132,9 +140,18 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
         competitorName: fallbackLabel(formatLostReason(task)),
         status: task.status || "",
         policy: fallbackLabel(task.policy),
+        policyLabel: fallbackLabel(policyLabel),
       };
       });
   });
+  const renewalsTotal = computed(() => renewals.value.length);
+  const renewalsTotalPages = computed(() => Math.max(1, Math.ceil((renewalsTotal.value || 0) / listPagination.pageLength)));
+  const pagedRenewals = computed(() => {
+    const start = (listPagination.page - 1) * listPagination.pageLength;
+    return renewals.value.slice(start, start + listPagination.pageLength);
+  });
+  const renewalListHasNextPage = computed(() => listPagination.page < renewalsTotalPages.value);
+  const renewalListShownCount = computed(() => pagedRenewals.value.length);
 
   const showQuickRenewalDialog = ref(false);
   const renewalQuickOptionsMap = computed(() => ({
@@ -221,6 +238,17 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
         return;
       }
       renewalStore.setError(err.message || t("loadError"));
+    },
+    { immediate: true }
+  );
+
+  watch(
+    renewalsTotal,
+    (total) => {
+      const totalPages = Math.max(1, Math.ceil((total || 0) / listPagination.pageLength));
+      if (listPagination.page > totalPages) {
+        listPagination.page = totalPages;
+      }
     },
     { immediate: true }
   );
@@ -339,7 +367,8 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
     const policySummary = renewalPolicyLookupMap.value[task.policy];
     const daysUntilDue = getRenewalDaysUntilDue(task.due_date || task.renewal_date);
     const priorityMeta = getRenewalPriorityMeta(task, daysUntilDue);
-    const displayCustomer = renewalCustomerLookupMap.value[task.customer]?.full_name || task.customer;
+    const displayCustomer = task.customer_full_name || renewalCustomerLookupMap.value[task.customer]?.full_name || task.customer;
+    const policyLabel = policySummary?.policy_no || task.policy_policy_no || task.policy;
     return {
       ...task,
       boardKey: getRenewalBoardColumnKey(task, daysUntilDue),
@@ -354,6 +383,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
       renewalDate: task.renewal_date || "",
       competitorName: formatLostReason(task),
       policy: task.policy || "",
+      policyLabel: fallbackLabel(policyLabel),
     };
   }
 
@@ -391,7 +421,9 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
       fields: [
         "name",
         "policy",
+        "policy.policy_no as policy_policy_no",
         "customer",
+        "customer.full_name as customer_full_name",
         "office_branch",
         "status",
         "due_date",
@@ -399,7 +431,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
         "lost_reason_code",
       ],
       order_by: "due_date asc, modified desc",
-      limit_page_length: Number(filters.limit) || 40,
+      limit_page_length: RENEWAL_FETCH_LIMIT,
     };
     const clauses = [];
     const query = normalizeText(filters.query);
@@ -437,7 +469,18 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
   }
 
   function applyRenewalFilters() {
+    listPagination.page = 1;
     return reloadRenewals();
+  }
+
+  function previousRenewalPage() {
+    if (listPagination.page <= 1) return;
+    listPagination.page -= 1;
+  }
+
+  function nextRenewalPage() {
+    if (!renewalListHasNextPage.value) return;
+    listPagination.page += 1;
   }
 
   function resetRenewalFilterState() {
@@ -573,6 +616,12 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
     renewalsLoading,
     renewalMutationLoading,
     renewals,
+    listPagination,
+    pagedRenewals,
+    renewalsTotal,
+    renewalListHasNextPage,
+    renewalListShownCount,
+    renewalBoardDisplayLimit: RENEWAL_BOARD_DISPLAY_LIMIT,
     showQuickRenewalDialog,
     renewalQuickOptionsMap,
     quickRenewalEyebrow,
@@ -601,6 +650,8 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
     buildRenewalListParams,
     withOfficeBranchFilter,
     applyRenewalFilters,
+    previousRenewalPage,
+    nextRenewalPage,
     resetRenewalFilterState,
     currentRenewalPresetPayload,
     setRenewalFilterStateFromPayload,

@@ -75,11 +75,19 @@
               resolveCellClass(col, row),
             ]"
           >
-            <span v-if="col.format" class="text-[13px] font-semibold text-slate-900">
+            <slot
+              v-if="hasCellSlot(col.key)"
+              :name="cellSlotName(col.key)"
+              :row="row"
+              :value="row[col.key]"
+              :column="col"
+            />
+
+            <span v-else-if="col.format" class="text-[13px] font-semibold text-slate-900">
               {{ col.format(row[col.key], row) }}
             </span>
 
-            <StatusBadge v-else-if="col.type === 'status'" :status="row[col.key]" :domain="col.domain || null" />
+            <StatusBadge v-else-if="col.type === 'status'" :status="row[col.key]" :domain="col.domain || null" :locale="locale" />
 
             <span v-else-if="col.type === 'badge'" :class="['badge', 'badge-' + (row[col.key + '_color'] ?? 'gray')]">
               {{ row[col.key] }}
@@ -133,7 +141,7 @@
             </div>
 
             <div v-else-if="col.type === 'status-meta'" class="min-w-[220px]">
-              <StatusBadge v-if="row[col.key]" :domain="col.domain" :status="row[col.key]" />
+              <StatusBadge v-if="row[col.key]" :domain="col.domain" :status="row[col.key]" :locale="locale" />
               <span v-else class="text-slate-700">-</span>
               <p v-if="col.metaKey && row[col.metaKey]" class="mt-1 max-w-[320px] truncate text-xs text-rose-600">
                 {{ row[col.metaKey] }}
@@ -189,7 +197,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, useSlots } from "vue";
 import { FeatherIcon } from "frappe-ui";
 
 import StatusBadge from "@/components/ui/StatusBadge.vue";
@@ -199,6 +207,7 @@ import { translateText, uppercaseText } from "@/utils/i18n";
 import { useAuthStore } from "@/stores/auth";
 
 const authStore = useAuthStore();
+const slots = useSlots();
 
 const props = defineProps({
   columns: { type: Array, required: true },
@@ -257,6 +266,14 @@ function urgencyClass(days) {
   if (days <= 30) return "urgency-warning";
   if (days <= 90) return "urgency-normal";
   return "urgency-safe";
+}
+
+function cellSlotName(key) {
+  return `cell(${key})`;
+}
+
+function hasCellSlot(key) {
+  return Boolean(slots[cellSlotName(key)]);
 }
 
 function resolveCellClass(col, row) {

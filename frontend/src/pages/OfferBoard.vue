@@ -46,7 +46,7 @@
     </template>
 
     <template #metrics>
-      <div v-if="isListView" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <SaaSMetricCard :label="t('summaryTotal')" :value="formatCount(offerSummary.total)" />
         <SaaSMetricCard :label="t('summaryDraft')" :value="formatCount(offerSummary.draft)" value-class="text-gray-500" />
         <SaaSMetricCard :label="t('summarySent')" :value="formatCount(offerSummary.sent)" value-class="text-at-amber" />
@@ -138,6 +138,7 @@
       :title="t('pipelineTitle')"
       :count="formatCount(offers.length)"
       :lanes="lanes"
+      :locale="activeLocale"
       :loading="Boolean(offersResource.loading)"
       :error-text="offersLoadErrorText"
       :empty="offers.length === 0"

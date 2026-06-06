@@ -35,7 +35,7 @@
             >
               <template #caption>
                 <div class="flex items-center gap-1.5 overflow-hidden">
-                  <span :class="typePillClass(followUpType(item))">{{ typePillToken(followUpType(item)) }}</span>
+                  <DashboardTypeBadge :kind="followUpType(item)" :t="t" />
                   <span v-if="followUpDelay(item)" class="truncate text-[10px] font-semibold text-red-600">{{ followUpDelay(item) }}</span>
                 </div>
               </template>
@@ -43,7 +43,7 @@
                 <p class="text-[10px] text-slate-500">{{ followUpDate(item) }}</p>
               </template>
               <template #trailing>
-                <StatusBadge v-if="followUpStatus(item)" :domain="followUpStatusDomain(item)" :status="followUpStatus(item)" size="xs" />
+                <StatusBadge v-if="followUpStatus(item)" :domain="followUpStatusDomain(item)" :status="followUpStatus(item)" :locale="locale" size="xs" />
               </template>
             </MetaListCard>
           </ul>
@@ -81,7 +81,7 @@
           >
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass('renewal')">{{ typePillToken('renewal') }}</span>
+                <DashboardTypeBadge kind="renewal" :t="t" />
                 <span v-if="renewalAlertDelay(task)" class="truncate text-[10px] font-semibold text-red-600">{{ renewalAlertDelay(task) }}</span>
               </div>
             </template>
@@ -89,7 +89,7 @@
               <p class="text-[10px] text-slate-500">{{ renewalAlertDate(task) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" size="xs" />
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" :locale="locale" size="xs" />
             </template>
           </MetaListCard>
         </ul>
@@ -129,7 +129,7 @@
               >
                 <template #caption>
                   <div class="flex items-center gap-1.5 overflow-hidden">
-                    <span :class="typePillClass(task.task_type || 'task')">{{ typePillToken(task.task_type || 'task') }}</span>
+                    <DashboardTypeBadge :kind="task.task_type || 'task'" :t="t" />
                     <span v-if="taskDelayLabel(task)" class="truncate text-[10px] font-semibold text-red-600">{{ taskDelayLabel(task) }}</span>
                   </div>
                 </template>
@@ -137,7 +137,7 @@
                   <p class="text-[10px] text-slate-500">{{ taskDate(task) }}</p>
                 </template>
                 <template #trailing>
-                  <StatusBadge v-if="task.status" domain="task" :status="task.status" size="xs" />
+                  <StatusBadge v-if="task.status" domain="task" :status="task.status" :locale="locale" size="xs" />
                 </template>
               </MetaListCard>
             </ul>
@@ -174,7 +174,7 @@
           >
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass(activity.activity_type || 'activity')">{{ typePillToken(activity.activity_type || 'activity') }}</span>
+                <DashboardTypeBadge :kind="activity.activity_type || 'activity'" :t="t" />
                 <span v-if="activityDelayLabel(activity)" class="truncate text-[10px] font-semibold text-red-600">{{ activityDelayLabel(activity) }}</span>
               </div>
             </template>
@@ -182,7 +182,7 @@
               <p class="text-[10px] text-slate-500">{{ activityDate(activity) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge v-if="activity.status" domain="activity" :status="activity.status" size="xs" />
+              <StatusBadge v-if="activity.status" domain="activity" :status="activity.status" :locale="locale" size="xs" />
             </template>
           </MetaListCard>
         </ul>
@@ -217,7 +217,7 @@
             <p class="truncate text-sm font-semibold text-slate-900">{{ claimCustomer(claim) }}</p>
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass('claim')">{{ typePillToken('claim') }}</span>
+                <DashboardTypeBadge kind="claim" :t="t" />
                 <span v-if="claimDelayLabel(claim)" class="truncate text-[10px] font-semibold text-red-600">{{ claimDelayLabel(claim) }}</span>
               </div>
             </template>
@@ -228,7 +228,7 @@
               <p class="text-[10px] text-slate-500">{{ claimDate(claim) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="claim" :status="claim.claim_status" size="xs" />
+              <StatusBadge domain="claim" :status="claim.claim_status" :locale="locale" size="xs" />
             </template>
           </EntityPreviewCard>
         </ul>
@@ -250,6 +250,7 @@
 <script setup>
 import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
+import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
@@ -321,12 +322,6 @@ function upperLabel(text) {
   return loc.startsWith("tr") ? String(text ?? "").toLocaleUpperCase("tr-TR") : String(text ?? "").toUpperCase();
 }
 
-function localizeStatus(rawStatus) {
-  const s = String(rawStatus || "").trim();
-  if (!s || s === "-") return s || "-";
-  return props.t(s) || s;
-}
-
 function normalizeText(value) {
   return String(value ?? "").trim();
 }
@@ -348,36 +343,6 @@ function compactDate(value) {
   if (!raw) return "";
   const match = raw.match(/\d{4}-\d{2}-\d{2}/);
   return match ? match[0] : raw.slice(0, 10);
-}
-
-function typePillToken(value) {
-  const key = normalizeText(value).toLowerCase();
-  const tokens = {
-    activity: "ACT",
-    call_note: "CALL",
-    claim: "CLM",
-    lead: "LED",
-    reminder: "REM",
-    renewal: "REN",
-    task: "TSK",
-    todo: "TODO",
-  };
-  return tokens[key] || (key.replace(/[^a-z0-9]/g, "").slice(0, 4).toUpperCase() || "ROW");
-}
-
-function typePillClass(value) {
-  const key = normalizeText(value).toLowerCase();
-  const palette = {
-    activity: "bg-slate-200 text-slate-700",
-    call_note: "bg-sky-100 text-sky-700",
-    claim: "bg-emerald-100 text-emerald-700",
-    lead: "bg-fuchsia-100 text-fuchsia-700",
-    reminder: "bg-amber-100 text-amber-700",
-    renewal: "bg-orange-100 text-orange-700",
-    task: "bg-indigo-100 text-indigo-700",
-    todo: "bg-indigo-100 text-indigo-700",
-  };
-  return `inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${palette[key] || 'bg-slate-200 text-slate-700'}`;
 }
 
 function dayDelayLabel(days) {

@@ -27,7 +27,7 @@
             <p class="truncate text-sm font-semibold text-slate-900">{{ paymentCustomer(payment) }}</p>
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass(payment.payment_direction || 'payment')">{{ typePillToken(payment.payment_direction || 'payment') }}</span>
+                <DashboardTypeBadge :kind="payment.payment_direction || 'payment'" :t="t" />
                 <span v-if="paymentDelayLabel(payment)" class="truncate text-[10px] font-semibold text-red-600">{{ paymentDelayLabel(payment) }}</span>
               </div>
             </template>
@@ -38,7 +38,7 @@
               <p class="text-[10px] text-slate-500">{{ paymentDate(payment) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="payment_direction" :status="payment.payment_direction" size="xs" />
+              <StatusBadge domain="payment_direction" :status="payment.payment_direction" :locale="locale" size="xs" />
             </template>
           </EntityPreviewCard>
         </ul>
@@ -69,7 +69,7 @@
             <p class="truncate text-sm font-semibold text-slate-900">{{ paymentCustomer(payment) }}</p>
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass(payment.payment_direction || 'payment')">{{ typePillToken(payment.payment_direction || 'payment') }}</span>
+                <DashboardTypeBadge :kind="payment.payment_direction || 'payment'" :t="t" />
                 <span v-if="paymentDelayLabel(payment)" class="truncate text-[10px] font-semibold text-red-600">{{ paymentDelayLabel(payment) }}</span>
               </div>
             </template>
@@ -80,7 +80,7 @@
               <p class="text-[10px] text-slate-500">{{ paymentDate(payment) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="payment_direction" :status="payment.payment_direction" size="xs" />
+              <StatusBadge domain="payment_direction" :status="payment.payment_direction" :locale="locale" size="xs" />
             </template>
           </EntityPreviewCard>
         </ul>
@@ -152,7 +152,7 @@
           >
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass('risk')">{{ typePillToken('risk') }}</span>
+                <DashboardTypeBadge kind="risk" :t="t" />
                 <span v-if="riskDelayLabel(row)" class="truncate text-[10px] font-semibold text-red-600">{{ riskDelayLabel(row) }}</span>
               </div>
             </template>
@@ -160,7 +160,7 @@
               <p class="text-[10px] text-slate-500">{{ riskDate(row) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="risk_level" :status="riskBadge(row)" size="xs" />
+              <StatusBadge domain="risk_level" :status="riskBadge(row)" :locale="locale" size="xs" />
             </template>
           </MetaListCard>
         </ul>
@@ -192,7 +192,7 @@
             >
               <template #caption>
                 <div class="flex items-center gap-1.5 overflow-hidden">
-                  <span :class="typePillClass('reconciliation')">{{ typePillToken('reconciliation') }}</span>
+                  <DashboardTypeBadge kind="reconciliation" :t="t" />
                   <span v-if="reconciliationDelayLabel(row)" class="truncate text-[10px] font-semibold text-red-600">{{ reconciliationDelayLabel(row) }}</span>
                 </div>
               </template>
@@ -200,7 +200,7 @@
                 <p class="text-[10px] text-slate-500">{{ reconciliationDate(row) }}</p>
               </template>
               <template #trailing>
-                <StatusBadge domain="reconciliation" :status="row.status" size="xs" />
+                <StatusBadge domain="reconciliation" :status="row.status" :locale="locale" size="xs" />
               </template>
             </MetaListCard>
           </ul>
@@ -223,6 +223,7 @@
 <script setup>
 import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
+import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
@@ -243,6 +244,7 @@ const props = defineProps({
   formatCurrency: { type: Function, required: true },
   formatNumber: { type: Function, required: true },
   isCollectionsTab: { type: Boolean, required: true },
+  locale: { type: String, default: "en" },
   openCollectionRiskItem: { type: Function, required: true },
   openPaymentItem: { type: Function, required: true },
   openPreviewList: { type: Function, required: true },
@@ -280,30 +282,6 @@ function compactDate(value) {
   if (!raw) return "-";
   const match = raw.match(/\d{4}-\d{2}-\d{2}/);
   return match ? match[0] : raw.slice(0, 10);
-}
-
-function typePillToken(value) {
-  const key = normalizeText(value).toLowerCase();
-  const tokens = {
-    inbound: "COL",
-    outbound: "PAY",
-    payment: "PMT",
-    reconciliation: "REC",
-    risk: "RSK",
-  };
-  return tokens[key] || (key.replace(/[^a-z0-9]/g, "").slice(0, 4).toUpperCase() || "ROW");
-}
-
-function typePillClass(value) {
-  const key = normalizeText(value).toLowerCase();
-  const palette = {
-    inbound: "bg-emerald-100 text-emerald-700",
-    outbound: "bg-rose-100 text-rose-700",
-    payment: "bg-slate-200 text-slate-700",
-    reconciliation: "bg-violet-100 text-violet-700",
-    risk: "bg-amber-100 text-amber-700",
-  };
-  return `inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${palette[key] || 'bg-slate-200 text-slate-700'}`;
 }
 
 function delayFromDate(value) {
@@ -351,7 +329,7 @@ function riskDelayLabel(row) {
 }
 
 function reconciliationCustomer(row) {
-  return row?.party_name || row?.customer || row?.source_doctype || '-';
+  return row?.party_name || row?.customer || localizeSourceDoctype(row?.source_doctype);
 }
 
 function reconciliationReference(row) {
@@ -363,6 +341,21 @@ function reconciliationDate(row) {
 }
 
 function reconciliationDelayLabel(row) {
-  return row?.mismatch_type || '';
+  return localizeMismatchType(row?.mismatch_type);
+}
+
+function localizeSourceDoctype(value) {
+  const raw = normalizeText(value);
+  if (raw === "AT Policy") return props.t("reconciliationSourcePolicy");
+  if (raw === "AT Claim") return props.t("reconciliationSourceClaim");
+  if (raw === "AT Customer") return props.t("reconciliationSourceCustomer");
+  return raw || "-";
+}
+
+function localizeMismatchType(value) {
+  const raw = normalizeText(value);
+  if (raw === "Amount") return props.t("reconciliationMismatchAmount");
+  if (raw === "Status") return props.t("reconciliationMismatchStatus");
+  return raw || "";
 }
 </script>

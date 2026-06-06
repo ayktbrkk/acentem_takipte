@@ -41,6 +41,23 @@ describe("ListTable extended column types", () => {
     expect(wrapper.text()).toContain("bar");
   });
 
+  it("renders named cell slot content when provided", () => {
+    const wrapper = mount(ListTable, {
+      props: {
+        ...baseProps,
+        columns: [{ key: "status", label: "Status" }],
+        rows: [{ status: "Done" }],
+      },
+      slots: {
+        "cell(status)": "<span class='slot-status'>Tamamlandı</span>",
+      },
+      global: { stubs: { StatusBadge: true } },
+    });
+    expect(wrapper.find(".slot-status").exists()).toBe(true);
+    expect(wrapper.text()).toContain("Tamamlandı");
+    expect(wrapper.text()).not.toContain("Done");
+  });
+
   it("renders dash for null value when no type and no format", () => {
     const wrapper = mount(ListTable, {
       props: {

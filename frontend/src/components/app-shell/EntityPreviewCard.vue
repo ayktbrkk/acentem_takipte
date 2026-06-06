@@ -2,7 +2,7 @@
   <article
     :class="[
       isDense
-        ? 'group relative border-b border-slate-100 bg-white px-3.5 py-2 last:border-b-0'
+        ? 'group relative border-b border-slate-100 bg-white px-4 py-3 last:border-b-0'
         : 'rounded-xl border border-slate-200 bg-slate-50/80 p-4',
       isDense && emphasisClass,
       stretch && 'flex h-full flex-col',
@@ -16,13 +16,13 @@
   >
     <div
       v-if="isDense"
-      class="grid min-h-[56px] grid-cols-[132px_minmax(0,1fr)_112px] items-center gap-3.5"
+      class="grid min-h-[64px] grid-cols-[148px_minmax(0,1fr)_128px] items-center gap-4"
     >
       <div class="flex min-w-0 flex-col justify-center overflow-hidden">
-        <div v-if="$slots.caption" class="mb-1 flex min-h-4 items-center gap-1.5 overflow-hidden text-[10px] leading-4 text-slate-500">
+        <div v-if="$slots.caption" class="mb-1.5 flex min-h-5 items-center gap-1.5 overflow-hidden text-[10px] leading-4 text-slate-500">
           <slot name="caption" />
         </div>
-        <p v-if="denseIdentityText" class="truncate text-sm font-medium text-slate-700" :class="titleClass">{{ denseIdentityText }}</p>
+        <p v-if="denseIdentityText" class="truncate text-[13px] font-semibold leading-5 text-slate-800" :class="titleClass">{{ denseIdentityText }}</p>
         <p v-if="denseIdentityMeta" class="truncate text-xs text-slate-400" :class="subtitleClass">{{ denseIdentityMeta }}</p>
       </div>
 
@@ -30,7 +30,7 @@
         <div class="truncate text-sm font-semibold text-slate-800">
           <slot />
         </div>
-        <div v-if="$slots.footer" class="mt-0.5 truncate text-xs text-slate-500">
+        <div v-if="$slots.footer" class="mt-1 truncate text-xs leading-5 text-slate-500">
           <slot name="footer" />
         </div>
       </div>
@@ -38,11 +38,11 @@
       <div class="flex min-w-0 flex-col items-end justify-center text-right">
         <slot name="trailing" />
 
-        <div v-if="$slots.date" class="mt-1 min-w-0 text-right">
+        <div v-if="$slots.date" class="mt-1.5 min-w-0 text-right">
           <slot name="date" />
         </div>
 
-        <div class="mt-1 flex items-center justify-end">
+        <div class="mt-1.5 flex items-center justify-end">
           <slot v-if="$slots.actions" name="actions" />
           <svg
             v-else-if="clickable"

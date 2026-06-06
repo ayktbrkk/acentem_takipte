@@ -29,7 +29,7 @@ describe("ui/StatusBadge", () => {
 
   it("maps consent and lead statuses with localized labels", () => {
     const granted = mountBadge({ domain: "consent", status: "Granted" });
-    expect(granted.text()).toBe(translateText("Granted", "tr"));
+    expect(granted.text()).toBe("Onay Verildi");
     expect(granted.find("span").classes()).toContain("status-active");
 
     const replied = mountBadge({ domain: "lead", status: "Replied" });

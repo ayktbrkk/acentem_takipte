@@ -49,7 +49,7 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
     t,
   });
 
-  const loading = computed(() => claimResource.loading);
+  const loading = computed(() => Boolean(unref(claimResource.loading)));
 
   async function reload() {
     const claimName = unref(name);

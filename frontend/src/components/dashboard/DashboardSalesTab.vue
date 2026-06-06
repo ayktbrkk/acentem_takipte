@@ -28,7 +28,7 @@
             <p class="truncate text-sm font-semibold text-slate-900">{{ offerCustomer(offer) }}</p>
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass('offer')">{{ typePillToken('offer') }}</span>
+                <DashboardTypeBadge kind="offer" :t="t" />
                 <span v-if="offerDelayLabel(offer)" class="truncate text-[10px] font-semibold text-red-600">{{ offerDelayLabel(offer) }}</span>
               </div>
             </template>
@@ -39,7 +39,7 @@
               <p class="text-[10px] text-slate-500">{{ offerDate(offer) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="offer" :status="offer.status" size="xs" />
+              <StatusBadge domain="offer" :status="offer.status" :locale="locale" size="xs" />
             </template>
           </EntityPreviewCard>
         </ul>
@@ -69,7 +69,7 @@
             <p class="truncate text-sm font-semibold text-slate-900">{{ offerCustomer(offer) }}</p>
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass('offer')">{{ typePillToken('offer') }}</span>
+                <DashboardTypeBadge kind="offer" :t="t" />
                 <span v-if="offerDelayLabel(offer)" class="truncate text-[10px] font-semibold text-red-600">{{ offerDelayLabel(offer) }}</span>
               </div>
             </template>
@@ -80,7 +80,7 @@
               <p class="text-[10px] text-slate-500">{{ offerDate(offer) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="offer" :status="offer.status" size="xs" />
+              <StatusBadge domain="offer" :status="offer.status" :locale="locale" size="xs" />
             </template>
           </EntityPreviewCard>
         </ul>
@@ -112,7 +112,7 @@
             <p class="truncate text-sm font-semibold text-slate-900">{{ [lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.name }}</p>
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass('lead')">{{ typePillToken('lead') }}</span>
+                <DashboardTypeBadge kind="lead" :t="t" />
               </div>
             </template>
             <template #footer>
@@ -122,7 +122,7 @@
               <p class="text-[10px] text-slate-500">{{ leadDate(lead) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="lead" :status="lead.status" size="xs" />
+              <StatusBadge domain="lead" :status="lead.status" :locale="locale" size="xs" />
             </template>
           </EntityPreviewCard>
         </ul>
@@ -154,7 +154,7 @@
           >
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="typePillClass(action.kind || 'task')">{{ typePillToken(action.kind || 'task') }}</span>
+                <DashboardTypeBadge :kind="action.kind || 'task'" :t="t" />
                 <span v-if="salesActionDelayLabel(action)" class="truncate text-[10px] font-semibold text-red-600">{{ salesActionDelayLabel(action) }}</span>
               </div>
             </template>
@@ -162,7 +162,7 @@
               <p class="text-[10px] text-slate-500">{{ salesActionDate(action) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="dashboard_action_kind" :status="salesActionBadge(action)" size="xs" />
+              <StatusBadge domain="dashboard_action_kind" :status="salesActionBadge(action)" :locale="locale" size="xs" />
             </template>
           </MetaListCard>
         </ul>
@@ -184,6 +184,7 @@
 <script setup>
 import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
+import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
@@ -199,6 +200,7 @@ const props = defineProps({
   formatCurrencyBy: { type: Function, required: true },
   formatNumber: { type: Function, required: true },
   isSalesTab: { type: Boolean, required: true },
+  locale: { type: String, default: "en" },
   myRemindersLoading: { type: Boolean, required: true },
   myTasksLoading: { type: Boolean, required: true },
   openConvertedPolicyItem: { type: Function, required: true },
@@ -240,23 +242,6 @@ function compactDate(value) {
   if (!raw) return "-";
   const match = raw.match(/\d{4}-\d{2}-\d{2}/);
   return match ? match[0] : raw.slice(0, 10);
-}
-
-function typePillToken(value) {
-  const key = normalizeText(value).toLowerCase();
-  const tokens = { lead: "LED", offer: "OFR", reminder: "REM", task: "TSK" };
-  return tokens[key] || (key.replace(/[^a-z0-9]/g, "").slice(0, 4).toUpperCase() || "ROW");
-}
-
-function typePillClass(value) {
-  const key = normalizeText(value).toLowerCase();
-  const palette = {
-    lead: "bg-fuchsia-100 text-fuchsia-700",
-    offer: "bg-sky-100 text-sky-700",
-    reminder: "bg-amber-100 text-amber-700",
-    task: "bg-indigo-100 text-indigo-700",
-  };
-  return `inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${palette[key] || 'bg-slate-200 text-slate-700'}`;
 }
 
 function delayFromDate(value) {

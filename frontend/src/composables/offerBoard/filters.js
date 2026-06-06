@@ -65,6 +65,8 @@ function isoDateOffset(days) {
   return `${year}-${month}-${day}`;
 }
 
+const OFFER_BOARD_FETCH_LIMIT = 500;
+
 export function useOfferBoardFilters({
   t,
   localeCode,
@@ -218,7 +220,7 @@ export function useOfferBoardFilters({
       filters: payload.filters,
       ...(payload.or_filters ? { or_filters: payload.or_filters } : {}),
       order_by: buildOfferListOrderBy(offerListFilters),
-      limit_page_length: 100,
+      limit_page_length: OFFER_BOARD_FETCH_LIMIT,
     };
   }
 

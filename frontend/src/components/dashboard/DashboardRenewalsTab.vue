@@ -29,14 +29,14 @@
           >
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="renewalTypePillClass('offer')">{{ renewalTypePillToken('offer') }}</span>
+                <DashboardTypeBadge kind="offer" :t="t" />
               </div>
             </template>
             <template #date>
               <p class="text-[10px] text-slate-500">{{ renewalTaskDate(task) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" size="xs" />
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" :locale="locale" size="xs" />
             </template>
           </MetaListCard>
         </ul>
@@ -67,14 +67,14 @@
           >
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="renewalTypePillClass('renewal')">{{ renewalTypePillToken('renewal') }}</span>
+                <DashboardTypeBadge kind="renewal" :t="t" />
               </div>
             </template>
             <template #date>
               <p class="text-[10px] text-slate-500">{{ renewalTaskDate(task) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" size="xs" />
+              <StatusBadge v-if="task.status" domain="renewal" :status="task.status" :locale="locale" size="xs" />
             </template>
           </MetaListCard>
         </ul>
@@ -142,7 +142,7 @@
             <p class="truncate text-sm font-semibold text-slate-900">{{ renewalPolicyCustomer(policy) }}</p>
             <template #caption>
               <div class="flex items-center gap-1.5 overflow-hidden">
-                <span :class="renewalTypePillClass('policy')">{{ renewalTypePillToken('policy') }}</span>
+                <DashboardTypeBadge kind="policy" :t="t" />
               </div>
             </template>
             <template #footer>
@@ -152,7 +152,7 @@
               <p class="text-[10px] text-slate-500">{{ renewalPolicyDate(policy) }}</p>
             </template>
             <template #trailing>
-              <StatusBadge domain="policy" :status="policy.status" size="xs" />
+              <StatusBadge domain="policy" :status="policy.status" :locale="locale" size="xs" />
             </template>
           </EntityPreviewCard>
         </ul>
@@ -174,6 +174,7 @@
 <script setup>
 import { computed } from "vue";
 import EmptyState from "../app-shell/EmptyState.vue";
+import DashboardTypeBadge from "./DashboardTypeBadge.vue";
 import EntityPreviewCard from "../app-shell/EntityPreviewCard.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import PreviewPager from "../app-shell/PreviewPager.vue";
@@ -188,6 +189,7 @@ const props = defineProps({
   formatCurrencyBy: { type: Function, required: true },
   formatNumber: { type: Function, required: true },
   isRenewalsTab: { type: Boolean, required: true },
+  locale: { type: String, default: "en" },
   openPolicyItem: { type: Function, required: true },
   openPreviewList: { type: Function, required: true },
   openRenewalTaskItem: { type: Function, required: true },
@@ -224,22 +226,6 @@ function compactDate(value) {
   if (!raw) return "-";
   const match = raw.match(/\d{4}-\d{2}-\d{2}/);
   return match ? match[0] : raw.slice(0, 10);
-}
-
-function renewalTypePillToken(value) {
-  const key = normalizeText(value).toLowerCase();
-  const tokens = { offer: "OFR", renewal: "REN", policy: "PLC" };
-  return tokens[key] || (key.replace(/[^a-z0-9]/g, "").slice(0, 4).toUpperCase() || "ROW");
-}
-
-function renewalTypePillClass(value) {
-  const key = normalizeText(value).toLowerCase();
-  const palette = {
-    offer: "bg-amber-100 text-amber-700",
-    renewal: "bg-sky-100 text-sky-700",
-    policy: "bg-emerald-100 text-emerald-700",
-  };
-  return `inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${palette[key] || 'bg-slate-200 text-slate-700'}`;
 }
 
 function renewalTaskPolicy(task) {
