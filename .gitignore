@@ -32,6 +32,7 @@ acentem_takipte/translations/*.csv
 .plan/
 .vscode/
 .playwright-cli/
+.playwright-mcp/
 .pytest_cache/
 .ruff_cache/
 .coverage

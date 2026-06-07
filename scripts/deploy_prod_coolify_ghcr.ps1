@@ -118,7 +118,8 @@ function Invoke-Ssh {
     if ($PSBoundParameters.ContainsKey("StandardInput")) {
         $tempFile = [System.IO.Path]::GetTempFileName()
         try {
-            Set-Content -Path $tempFile -Value $StandardInput -NoNewline
+            $normalizedInput = $StandardInput -replace "`r`n", "`n"
+            Set-Content -Path $tempFile -Value $normalizedInput -NoNewline
             Get-Content -Path $tempFile -Raw | & ssh -i $SshKeyPath $SshTarget @Arguments
         }
         finally {
@@ -157,8 +158,8 @@ function Invoke-RemoteDeploy {
         Write-Step "Dry-run: remote deploy plan"
         Write-DryRun "Would connect to $SshTarget using key '$SshKeyPath'."
         Write-DryRun "Would pull image $ImageName inside $CoolifyAppDir."
-        Write-DryRun "Would update APP_IMAGE in .env and recreate backend, frontend, and websocket services."
-        Write-DryRun "Would run bench migrate, ensure_role_permissions, clear-cache, and clear-website-cache for site $SiteName."
+        Write-DryRun "Would update APP_IMAGE in .env and recreate backend, frontend, websocket, worker-short, worker-long, and scheduler services."
+        Write-DryRun "Would verify production safety flags, run bench migrate, ensure_role_permissions, clear-cache, clear-website-cache, and bench doctor for site $SiteName."
         return
     }
 
@@ -172,13 +173,50 @@ image_name="$3"
 cd "$coolify_app_dir"
 docker pull "$image_name"
 sed -i "s#^APP_IMAGE=.*#APP_IMAGE=$image_name#" .env
-docker compose --env-file .env -f docker-compose.yaml up -d backend frontend websocket
+docker compose --env-file .env -f docker-compose.yaml up -d backend frontend websocket worker-short worker-long scheduler
 
 backend_container_id="$(docker compose --env-file .env -f docker-compose.yaml ps -q backend)"
 if [ -z "$backend_container_id" ]; then
   echo "Backend container not found after compose up." >&2
   exit 1
 fi
+
+docker exec "$backend_container_id" bash -lc "cd /home/frappe/frappe-bench/sites && SITE_NAME='$site_name' python3 -" <<'PY'
+import json
+import os
+from pathlib import Path
+
+site_name = os.environ["SITE_NAME"]
+config = {}
+for path in (Path("common_site_config.json"), Path(site_name) / "site_config.json"):
+    if path.exists():
+        config.update(json.loads(path.read_text()))
+
+def enabled(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return False
+
+developer_mode = config.get("developer_mode", 0)
+demo_endpoints = config.get("at_enable_demo_endpoints", 0)
+if enabled(developer_mode) or enabled(demo_endpoints):
+    raise SystemExit(
+        "Unsafe production flags: "
+        f"developer_mode={developer_mode!r}, "
+        f"at_enable_demo_endpoints={demo_endpoints!r}"
+    )
+
+print(
+    "Production safety flags OK: "
+    f"developer_mode={developer_mode!r}, "
+    f"at_enable_demo_endpoints={demo_endpoints!r}, "
+    f"sentry_dsn_set={bool(config.get('sentry_dsn'))}"
+)
+PY
 
 docker exec "$backend_container_id" bench --site "$site_name" migrate
 docker exec "$backend_container_id" bench --site "$site_name" execute acentem_takipte.acentem_takipte.setup_utils.ensure_role_permissions
@@ -187,6 +225,7 @@ docker exec "$backend_container_id" bench --site "$site_name" clear-website-cach
 
 echo "APP_IMAGE=$(awk -F= '/^APP_IMAGE=/{print $2}' .env)"
 docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' | grep 'h1d0pwvazwy9u59vrca160q9'
+docker exec "$backend_container_id" bench --site "$site_name" doctor
 '@
 
     Write-Step "Redeploying Coolify app services on $SshTarget"

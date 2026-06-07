@@ -15,7 +15,7 @@ Verified project environment in this repository:
 
 For real production, replace `at.localhost` and the localhost URL with the actual site and public domain, but keep the same command order and safety checks.
 
-The current production path for this repository is Coolify + GHCR. A push to `main` publishes the app image through `.github/workflows/coolify-ghcr-image.yml`; the server then pulls `ghcr.io/ayktbrkk/acentem-worker:latest` and recreates the `backend`, `frontend`, and `websocket` services.
+The current production path for this repository is Coolify + GHCR. A push to `main` publishes the app image through `.github/workflows/coolify-ghcr-image.yml`; the server then pulls `ghcr.io/ayktbrkk/acentem-worker:latest` and recreates the `backend`, `frontend`, `websocket`, `worker-short`, `worker-long`, and `scheduler` services.
 
 ## 0. Verified 2026-05-20 Release Note
 
@@ -134,22 +134,48 @@ For the live Coolify deployment, use this order:
 2. Wait for the `Coolify GHCR Image` GitHub Actions workflow to complete successfully.
 3. On the server, take a fresh backup before replacing containers.
 4. Pull the new `ghcr.io/ayktbrkk/acentem-worker:latest` image.
-5. Recreate only app services: `backend`, `frontend`, and `websocket`.
-6. Run `bench --site <site> migrate`, `clear-cache`, and `clear-website-cache` inside the backend container.
-7. Smoke test `/api/method/ping`, `/at/`, login redirect, security headers, and logs.
+5. Recreate only app services: `backend`, `frontend`, `websocket`, `worker-short`, `worker-long`, and `scheduler`.
+6. Verify production safety flags inside the backend container without printing secrets.
+7. Run `bench --site <site> migrate`, `clear-cache`, and `clear-website-cache` inside the backend container.
+8. Smoke test `/api/method/ping`, `/at/`, login redirect, security headers, worker/scheduler health, and logs.
 
 Example commands used for the verified 2026-05-20 deployment:
 
 ```bash
 cd /data/coolify/applications/<coolify-app-id>
-docker compose pull backend frontend websocket configurator
-docker compose up -d --no-deps --force-recreate backend websocket frontend
+docker compose pull backend frontend websocket worker-short worker-long scheduler configurator
+docker compose up -d --no-deps --force-recreate backend websocket frontend worker-short worker-long scheduler
 
 docker exec <backend-container> bash -lc '
   cd /home/frappe/frappe-bench &&
+  python3 - <<'PY' &&
+import json
+from pathlib import Path
+
+site_name = "kipsigorta.acentemtakipte.com"
+config = {}
+for path in (Path("sites/common_site_config.json"), Path("sites") / site_name / "site_config.json"):
+    if path.exists():
+        config.update(json.loads(path.read_text()))
+
+def enabled(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return False
+
+if enabled(config.get("developer_mode", 0)) or enabled(config.get("at_enable_demo_endpoints", 0)):
+    raise SystemExit("Unsafe production flags are enabled.")
+
+print("Production safety flags OK.")
+PY
   bench --site kipsigorta.acentemtakipte.com migrate &&
   bench --site kipsigorta.acentemtakipte.com clear-cache &&
-  bench --site kipsigorta.acentemtakipte.com clear-website-cache
+  bench --site kipsigorta.acentemtakipte.com clear-website-cache &&
+  bench --site kipsigorta.acentemtakipte.com doctor
 '
 ```
 
@@ -159,7 +185,7 @@ For the Windows-hosted operator flow used in this repository, the equivalent hel
 .\scripts\deploy_prod_coolify_ghcr.ps1
 ```
 
-By default the script waits for the `Coolify GHCR Image` workflow for the current `HEAD`, updates `APP_IMAGE` back to `ghcr.io/ayktbrkk/acentem-worker:latest`, recreates `backend`, `frontend`, and `websocket`, runs `migrate`, reruns `ensure_role_permissions`, clears caches, and smoke tests the four critical AT routes.
+By default the script waits for the `Coolify GHCR Image` workflow for the current `HEAD`, updates `APP_IMAGE` back to `ghcr.io/ayktbrkk/acentem-worker:latest`, recreates `backend`, `frontend`, `websocket`, `worker-short`, `worker-long`, and `scheduler`, runs `migrate`, reruns `ensure_role_permissions`, clears caches, verifies `bench doctor`, and smoke tests the four critical AT routes.
 Use `-DryRun` to print the exact workflow, remote deploy, and smoke-test plan without touching GitHub, SSH, or the live stack.
 
 ## 5. Post-Deploy Verification
@@ -170,6 +196,7 @@ Validate both the Frappe shell and the `/at` frontend route.
 - authenticated users can open the workspace
 - a non-admin business flow can still read only authorized records
 - background jobs are processed
+- `bench doctor` reports at least one online worker and no unexpected queue buildup
 - no demo/smoke endpoint is enabled accidentally
 
 Suggested checks:
