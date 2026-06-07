@@ -115,23 +115,31 @@ function Invoke-Ssh {
         throw "SSH key not found at '$SshKeyPath'."
     }
 
+    $exitCode = 0
     if ($PSBoundParameters.ContainsKey("StandardInput")) {
-        $tempFile = [System.IO.Path]::GetTempFileName()
-        try {
-            $normalizedInput = $StandardInput -replace "`r`n", "`n"
-            Set-Content -Path $tempFile -Value $normalizedInput -NoNewline
-            Get-Content -Path $tempFile -Raw | & ssh -i $SshKeyPath $SshTarget @Arguments
-        }
-        finally {
-            Remove-Item -Path $tempFile -Force -ErrorAction SilentlyContinue
-        }
+        $normalizedInput = $StandardInput -replace "`r`n", "`n" -replace "`r", "`n"
+        $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+        $startInfo.FileName = "ssh"
+        $startInfo.UseShellExecute = $false
+        $startInfo.RedirectStandardInput = $true
+        $sshArguments = @("-i", $SshKeyPath, $SshTarget) + $Arguments
+        $startInfo.Arguments = ($sshArguments | ForEach-Object {
+            '"' + ($_ -replace '"', '\"') + '"'
+        }) -join " "
+
+        $process = [System.Diagnostics.Process]::Start($startInfo)
+        $process.StandardInput.Write($normalizedInput)
+        $process.StandardInput.Close()
+        $process.WaitForExit()
+        $exitCode = $process.ExitCode
     }
     else {
         & ssh -i $SshKeyPath $SshTarget @Arguments
+        $exitCode = $LASTEXITCODE
     }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "SSH command failed with exit code $LASTEXITCODE."
+    if ($exitCode -ne 0) {
+        throw "SSH command failed with exit code $exitCode."
     }
 }
 
