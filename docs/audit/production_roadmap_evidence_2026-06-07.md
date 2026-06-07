@@ -96,3 +96,5 @@ No production secret value was identified in the second pass. The remaining find
 - Authenticated production smoke cannot be run from this local environment because `E2E_USER`, `E2E_PASSWORD`, `E2E_BASE_URL`, and `AT_PROD_ADMIN_PASSWORD` are not present.
 - Sentry cannot be completed from this local environment because no `SENTRY_DSN` or `SENTRY_AUTH_TOKEN` is present.
 - Slack/Telegram alert delivery cannot be completed unless production webhook settings are configured and an approved test destination is available.
+
+The repository now includes `scripts/check_production_readiness.ps1` and the `Production Readiness Audit` GitHub Actions workflow to make these open items measurable. Run the script in report mode for a JSON readiness summary, or with `-FailOnOpenBlockers` when the environment is expected to have branch protection and required secret inputs configured. Set repository variable `PRODUCTION_READINESS_STRICT=true` to make the workflow enforce the same blocker policy in CI.

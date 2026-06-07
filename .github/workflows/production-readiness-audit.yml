@@ -1,0 +1,67 @@
+name: Production Readiness Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/production-readiness-audit.yml"
+      - "scripts/check_production_readiness.ps1"
+      - "docs/PRODUCTION_DEPLOY_CHECKLIST.md"
+      - "docs/audit/production_roadmap_evidence_2026-06-07.md"
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - ".github/workflows/production-readiness-audit.yml"
+      - "scripts/check_production_readiness.ps1"
+      - "docs/PRODUCTION_DEPLOY_CHECKLIST.md"
+      - "docs/audit/production_roadmap_evidence_2026-06-07.md"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+
+      - name: Run readiness audit
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./scripts/check_production_readiness.ps1 | Tee-Object -FilePath production-readiness.json
+
+      - name: Append readiness summary
+        shell: pwsh
+        run: |
+          $report = Get-Content -Raw -Path production-readiness.json | ConvertFrom-Json
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "## Production Readiness Audit"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Repository: ``$($report.repository)``"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Branch: ``$($report.branch)``"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Head: ``$($report.headSha)``"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Branch protected: ``$($report.branchProtected)``"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Ready: ``$($report.ready)``"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value ""
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### Open Blockers"
+          if ($report.openBlockers.Count -eq 0) {
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- None"
+          }
+          else {
+            foreach ($blocker in $report.openBlockers) {
+              Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- $blocker"
+            }
+          }
+
+      - name: Enforce strict readiness
+        if: ${{ vars.PRODUCTION_READINESS_STRICT == 'true' }}
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./scripts/check_production_readiness.ps1 -FailOnOpenBlockers

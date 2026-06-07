@@ -199,6 +199,22 @@ For the Windows-hosted operator flow used in this repository, the equivalent hel
 By default the script waits for the `Coolify GHCR Image` workflow for the current `HEAD`, updates `APP_IMAGE` back to `ghcr.io/ayktbrkk/acentem-worker:latest`, recreates `backend`, `frontend`, `websocket`, `worker-short`, `worker-long`, and `scheduler`, runs `migrate`, reruns `ensure_role_permissions`, clears caches, verifies `bench doctor`, and smoke tests the four critical AT routes.
 Use `-DryRun` to print the exact workflow, remote deploy, and smoke-test plan without touching GitHub, SSH, or the live stack.
 
+Before declaring production readiness, run the local readiness audit:
+
+```powershell
+.\scripts\check_production_readiness.ps1
+```
+
+The script reports the current `main` branch protection state, required workflow status for local `HEAD`, and whether local validation inputs for authenticated smoke, Sentry, and webhook delivery are present. Use the strict mode in CI or an operator shell when those values are expected:
+
+```powershell
+.\scripts\check_production_readiness.ps1 -FailOnOpenBlockers
+```
+
+This audit does not mutate GitHub settings or production secrets. Branch protection must still be enabled by a repository administrator, and secret values must stay in GitHub/Coolify/Frappe configuration.
+
+The same audit is available in GitHub Actions as `Production Readiness Audit`. It runs in report mode for roadmap/checklist/script changes. Set repository variable `PRODUCTION_READINESS_STRICT=true` after branch protection, authenticated smoke credentials, Sentry, and webhook settings are configured; in strict mode the workflow fails on any open blocker reported by `check_production_readiness.ps1`.
+
 ## 5. Post-Deploy Verification
 
 Validate both the Frappe shell and the `/at` frontend route.
