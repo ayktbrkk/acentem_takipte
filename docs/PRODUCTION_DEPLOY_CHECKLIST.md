@@ -11,11 +11,22 @@ Verified project environment in this repository:
 - Application route: `http://at.localhost:8000/at/`
 - Live Coolify site verified on 2026-05-20: `https://kipsigorta.acentemtakipte.com/at/`
 - Live image source: `ghcr.io/ayktbrkk/acentem-worker:latest`
-- Latest verified production commit: `fcaece85c1364094e5fc8b66070bedf50fd51f7c`
+- Latest verified production deploy-helper commit: `02173de020d9bd7f27bcac3bd3b4c533ebf56b99`
+- Latest verified production image commit: `c7ffeb76edd41ece442bc24e766d7637fdcc8e20`
 
 For real production, replace `at.localhost` and the localhost URL with the actual site and public domain, but keep the same command order and safety checks.
 
 The current production path for this repository is Coolify + GHCR. A push to `main` publishes the app image through `.github/workflows/coolify-ghcr-image.yml`; the server then pulls `ghcr.io/ayktbrkk/acentem-worker:latest` and recreates the `backend`, `frontend`, `websocket`, `worker-short`, `worker-long`, and `scheduler` services.
+
+## 0.1 Verified 2026-06-07 Production Roadmap Note
+
+- Commit `c7ffeb76edd41ece442bc24e766d7637fdcc8e20` was published by the `Coolify GHCR Image` workflow and deployed to the live Coolify stack.
+- Production tag `production-2026-06-07-c7ffeb7` points at the deployed runtime image commit for rollback/reference.
+- Commit `02173de020d9bd7f27bcac3bd3b4c533ebf56b99` fixed the Windows SSH stdin path in `scripts/deploy_prod_coolify_ghcr.ps1`; it did not publish a new runtime image because it only changed deployment tooling.
+- The live stack now runs separate `worker-short`, `worker-long`, and `scheduler` services.
+- Live `bench doctor` reported `Workers online: 2` and no queued jobs after the final helper run.
+- Production safety flags were checked without printing secrets: `developer_mode` and `at_enable_demo_endpoints` were not enabled; `sentry_dsn_set=false` remains an open observability item.
+- `detect-secrets` was run against git-tracked files. The generated `frontend/tsconfig.tsbuildinfo` cache file was removed from git, and the remaining findings were classified as local CI/test placeholders or environment variable names. See [production_roadmap_evidence_2026-06-07.md](audit/production_roadmap_evidence_2026-06-07.md).
 
 ## 0. Verified 2026-05-20 Release Note
 
