@@ -6,12 +6,12 @@ It is intentionally limited to non-secret metadata and reproducible commands.
 ## GitHub And Release State
 
 - Repository: `ayktbrkk/acentem_takipte`
-- `main` head: `02173de020d9bd7f27bcac3bd3b4c533ebf56b99`
+- Deploy-time `main` and image commit: `928264d021b4926e55b03a0aef78801434779c30`
 - GitHub branch API: `main protected=false`
-- Last GHCR image workflow: `Coolify GHCR Image` succeeded for `c7ffeb76edd41ece442bc24e766d7637fdcc8e20`
-- Live backend image label: `org.opencontainers.image.revision=c7ffeb76edd41ece442bc24e766d7637fdcc8e20`
-- Production tag: `production-2026-06-07-c7ffeb7`
-- The later `02173de` commit only changed the Windows deploy helper, so the GHCR path filter did not publish a new runtime image.
+- Last GHCR image workflow: `Coolify GHCR Image` succeeded for `928264d021b4926e55b03a0aef78801434779c30`
+- Live backend image label: `org.opencontainers.image.revision=928264d021b4926e55b03a0aef78801434779c30`
+- Latest production tag: `production-2026-06-07-928264d`
+- Previous production tag: `production-2026-06-07-c7ffeb7`
 
 ## Live Production Evidence
 
@@ -28,7 +28,7 @@ curl -fsSL -o /dev/null -w 'final_code=%{http_code} final_url=%{url_effective}\n
 
 Observed result:
 
-- `backend`, `frontend`, `websocket`, `worker-short`, `worker-long`, and `scheduler` were running.
+- `backend`, `frontend`, `websocket`, `worker-short`, `worker-long`, and `scheduler` were running after the `928264d` deploy.
 - `bench doctor` reported `Workers online: 2`.
 - `bench doctor` did not show queued jobs after the final deploy helper run.
 - `/at` returned `200` after redirecting to `/login?redirect-to=/at`.
