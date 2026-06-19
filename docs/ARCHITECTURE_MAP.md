@@ -428,6 +428,23 @@ Primary backend surfaces:
 - `api/admin_settings.py`
 - `services/admin_general_settings.py`
 
+### Data import
+
+- CSV/XLSX bulk import for customers, offers, and policies
+- preview with duplicate skip policy, async execution on `long` queue
+- bilingual `/at/data-import` workbench
+
+Primary backend surfaces:
+
+- `api/data_import.py`
+- `doctype/at_data_import_job`
+- `services/data_import/` (`preview.py`, `executor.py`, `registry.py`, parsers)
+- `tasks.py` → `enqueue_data_import_job`, `_process_data_import_job_logic`
+- realtime events: `at_import_ready`, `at_import_failed`
+
+Operator docs: `docs/DATA_IMPORT_GUIDE.md`  
+WSL smoke: `scripts/smoke_data_import_wsl.py`
+
 ### Break-glass and access control
 
 - emergency access request/approval workflow
@@ -521,6 +538,7 @@ Use these files as the quickest entry points when orienting in the codebase:
 - service layer root: `acentem_takipte/acentem_takipte/services/`
 - DocType root: `acentem_takipte/acentem_takipte/doctype/`
 - jobs: `acentem_takipte/acentem_takipte/tasks.py`
+- data import: `acentem_takipte/acentem_takipte/api/data_import.py`, `services/data_import/`
 
 ## 9. Practical Reading Order
 
