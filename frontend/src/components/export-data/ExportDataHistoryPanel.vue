@@ -1,40 +1,48 @@
 <template>
-  <SectionPanel :title="t('step3Title')" panel-class="surface-card rounded-2xl p-5">
-    <div v-if="!historyRows.length" class="card-empty">{{ t("historyEmpty") }}</div>
-    <div v-else class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead>
-          <tr>
-            <th class="table-header">{{ t("historyDate") }}</th>
-            <th class="table-header">{{ t("historyDataset") }}</th>
-            <th class="table-header">{{ t("historyFormat") }}</th>
-            <th class="table-header">{{ t("historyFile") }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in historyRows" :key="row.id">
-            <td class="table-cell">{{ row.date }}</td>
-            <td class="table-cell">{{ row.screenLabel }}</td>
-            <td class="table-cell">{{ row.format.toUpperCase() }}</td>
-            <td class="table-cell">{{ row.filename }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <SectionPanel :title="t('step3Title')" :show-count="false">
+    <EmptyState
+      v-if="!historyRows.length"
+      compact
+      :title="t('historyEmpty')"
+      :description="t('historyEmptyHint')"
+    />
+    <ListTable
+      v-else
+      :columns="tableColumns"
+      :rows="historyRows"
+      :empty-message="t('historyEmpty')"
+      :locale="locale"
+      :clickable="false"
+    />
   </SectionPanel>
 </template>
 
 <script setup>
-import SectionPanel from "../app-shell/SectionPanel.vue";
+import { computed } from "vue";
 
-defineProps({
+import EmptyState from "../app-shell/EmptyState.vue";
+import SectionPanel from "../app-shell/SectionPanel.vue";
+import ListTable from "../ui/ListTable.vue";
+
+const props = defineProps({
   historyRows: {
     type: Array,
     required: true,
+  },
+  locale: {
+    type: String,
+    default: "tr",
   },
   t: {
     type: Function,
     required: true,
   },
 });
+
+const tableColumns = computed(() => [
+  { key: "date", label: props.t("historyDate") },
+  { key: "screenLabel", label: props.t("historyDataset") },
+  { key: "format", label: props.t("historyFormat"), format: (value) => String(value || "").toUpperCase() },
+  { key: "filename", label: props.t("historyFile") },
+]);
 </script>

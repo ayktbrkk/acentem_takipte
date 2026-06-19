@@ -1,5 +1,18 @@
 import { computed, onUnmounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
+import { useAtFormatting } from "./useAtFormatting";
+import {
+  buildCustomerListPreviewColumns,
+  mapCustomerImportPreviewToTableRow,
+} from "./customerListTableModel";
+import {
+  buildOfferListPreviewColumns,
+  mapOfferImportPreviewToTableRow,
+} from "./offerListTableModel";
+import {
+  buildPolicyListPreviewColumns,
+  mapPolicyImportPreviewToTableRow,
+} from "./policyListTableModel";
 
 const datasets = [
   {
@@ -20,15 +33,16 @@ const datasets = [
     supported: true,
     fields: [
       { value: "customer", labelKey: "customer" },
-      { value: "sales_entity", labelKey: "salesEntity" },
       { value: "insurance_company", labelKey: "insuranceCompany" },
       { value: "branch", labelKey: "branch" },
       { value: "offer_date", labelKey: "offerDate" },
+      { value: "valid_until", labelKey: "validUntil" },
       { value: "gross_premium", labelKey: "grossPremium" },
-      { value: "net_premium", labelKey: "netPremium" },
-      { value: "tax_amount", labelKey: "taxAmount" },
       { value: "commission_amount", labelKey: "commissionAmount" },
       { value: "status", labelKey: "status" },
+      { value: "sales_entity", labelKey: "salesEntity" },
+      { value: "net_premium", labelKey: "netPremium" },
+      { value: "tax_amount", labelKey: "taxAmount" },
     ],
   },
   {
@@ -38,13 +52,14 @@ const datasets = [
     fields: [
       { value: "policy_no", labelKey: "policyNo" },
       { value: "customer", labelKey: "customer" },
-      { value: "sales_entity", labelKey: "salesEntity" },
-      { value: "insurance_company", labelKey: "insuranceCompany" },
       { value: "branch", labelKey: "branch" },
+      { value: "insurance_company", labelKey: "insuranceCompany" },
+      { value: "sales_entity", labelKey: "salesEntity" },
       { value: "issue_date", labelKey: "issueDate" },
       { value: "start_date", labelKey: "startDate" },
       { value: "end_date", labelKey: "endDate" },
       { value: "gross_premium", labelKey: "grossPremium" },
+      { value: "commission_amount", labelKey: "commissionAmount" },
       { value: "status", labelKey: "status" },
     ],
   },
@@ -83,7 +98,11 @@ function suggestColumnMapping(headers, fieldOptions) {
     baslangic_tarihi: "start_date",
     bitis_tarihi: "end_date",
     police_no: "policy_no",
+    gecerlilik_tarihi: "valid_until",
+    valid_until: "valid_until",
     brut_prim: "gross_premium",
+    komisyon: "commission_amount",
+    commission: "commission_amount",
   };
   Object.entries(aliasIndex).forEach(([alias, target]) => {
     fieldIndex.set(alias, target);
@@ -207,6 +226,50 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
   const canCancelImport = computed(() => {
     return ["Draft", "Previewed", "Queued"].includes(String(jobStatus.value || ""));
   });
+
+  const { formatDate, formatCurrency } = useAtFormatting(
+    computed(() => (String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en")),
+  );
+
+  const translateField = (key) => label(t, key);
+
+  const workbenchPreviewColumns = computed(() => {
+    if (selectedDataset.value === "customers") return buildCustomerListPreviewColumns(translateField);
+    if (selectedDataset.value === "offers") return buildOfferListPreviewColumns(translateField);
+    if (selectedDataset.value === "policies") return buildPolicyListPreviewColumns(translateField);
+    return [];
+  });
+
+  const workbenchPreviewRows = computed(() => {
+    const locale = unref(activeLocale);
+    if (selectedDataset.value === "customers") {
+      return previewRows.value.map((row) =>
+        mapCustomerImportPreviewToTableRow(row, { t: translateField, localeCode: locale }),
+      );
+    }
+    if (selectedDataset.value === "offers") {
+      return previewRows.value.map((row) =>
+        mapOfferImportPreviewToTableRow(row, {
+          formatDate,
+          formatCurrency,
+          localeCode: locale,
+          t: translateField,
+        }),
+      );
+    }
+    if (selectedDataset.value === "policies") {
+      return previewRows.value.map((row) =>
+        mapPolicyImportPreviewToTableRow(row, {
+          formatDate,
+          formatCurrency,
+          localeCode: locale,
+        }),
+      );
+    }
+    return [];
+  });
+
+  const useWorkbenchTable = computed(() => ["customers", "offers", "policies"].includes(selectedDataset.value));
 
   function clearPreviewResults() {
     previewRows.value = [];
@@ -363,6 +426,7 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
         ...row.raw,
         row_status: row.row_status,
         error_message: row.error_message,
+        normalized_values: row.values || {},
       }));
       previewSummary.value = result?.summary || {};
       jobStatus.value = "Previewed";
@@ -560,6 +624,9 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
     fileName,
     columns,
     previewRows,
+    workbenchPreviewColumns,
+    workbenchPreviewRows,
+    useWorkbenchTable,
     previewSummary,
     importMessage,
     errorMessage,

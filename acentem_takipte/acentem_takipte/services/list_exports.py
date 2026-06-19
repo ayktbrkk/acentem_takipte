@@ -44,6 +44,44 @@ def _column(
     }
 
 
+def _renewal_days_until_due(value: Any) -> int | None:
+    if not value:
+        return None
+    try:
+        target = frappe.utils.getdate(value)
+        today = frappe.utils.getdate()
+        return (target - today).days
+    except Exception:
+        return None
+
+
+def _renewal_priority_label(row: dict[str, Any]) -> str:
+    status = str(row.get("status") or "").strip()
+    days = _renewal_days_until_due(row.get("due_date") or row.get("renewal_date"))
+    if status == "Cancelled":
+        return _t("Cancelled")
+    if status == "Done":
+        return _t("Completed")
+    if days is None:
+        return _t("Unknown")
+    if days <= 7:
+        return _t("Critical")
+    if days <= 30:
+        return _t("Upcoming")
+    return _t("Scheduled")
+
+
+def _payment_amount(row: dict[str, Any]) -> float:
+    return flt(row.get("amount_try") or row.get("amount") or 0)
+
+
+def _policy_customer_details(row: dict[str, Any]) -> str:
+    customer_type = str(row.get("customer_customer_type") or "").strip()
+    tax_id = str(row.get("customer_masked_tax_id") or "").strip()
+    parts = [part for part in (customer_type, tax_id) if part]
+    return " | ".join(parts)
+
+
 SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
     "lead_list": {
         "permission_doctype": "AT Lead",
@@ -83,19 +121,16 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
         "columns": [
             _column("full_name", _t("Customer"), getter=lambda row: row.get("full_name") or row.get("name")),
             _column("name", _t("Record")),
+            _column("customer_type", _t("Customer Type")),
             _column("tax_id", _t("Tax ID")),
             _column("phone", _t("Phone")),
             _column("email", _t("Email")),
-            _column("consent_status", _t("Consent Status")),
-            _column("assigned_agent", _t("Assigned Agent")),
-            _column("birth_date", _t("Birth Date"), formatter="date"),
-            _column("gender", _t("Gender")),
             _column("marital_status", _t("Marital Status")),
+            _column("gender", _t("Gender")),
+            _column("birth_date", _t("Birth Date"), formatter="date"),
             _column("occupation", _t("Occupation")),
-            _column("active_policy_count", _t("Active Policies")),
-            _column("open_offer_count", _t("Open Offers")),
-            _column("active_policy_gross_premium", _t("Active Gross Premium"), formatter="currency"),
-            _column("modified", _t("Modified"), formatter="datetime"),
+            _column("assigned_agent", _t("Assigned Agent")),
+            _column("consent_status", _t("Consent Status")),
         ],
     },
     "policy_list": {
@@ -108,33 +143,39 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
             "name",
             "policy_no",
             "customer",
+            "customer.full_name as customer_full_name",
+            "customer.customer_type as customer_customer_type",
+            "customer.masked_tax_id as customer_masked_tax_id",
             "insurance_company",
+            "branch",
             "status",
             "currency",
+            "issue_date",
             "end_date",
             "gross_premium",
             "commission_amount",
-            "commission",
-            "gwp_try",
-            "modified",
         ],
         "columns": [
             _column("name", _t("Record Number")),
-            _column("policy_no", _t("Carrier Policy Number")),
-            _column("customer", _t("Customer")),
+            _column("policy_no", _t("Policy No")),
+            _column(
+                "customer_full_name",
+                _t("Customer"),
+                getter=lambda row: row.get("customer_full_name") or row.get("customer"),
+            ),
+            _column("customer_details", _t("Customer Details"), getter=_policy_customer_details),
+            _column("branch", _t("Branch")),
             _column("insurance_company", _t("Insurance Company")),
-            _column("status", _t("Status")),
             _column("end_date", _t("End Date"), formatter="date"),
+            _column("issue_date", _t("Issue Date"), formatter="date"),
             _column("gross_premium", _t("Gross Premium"), formatter="currency", currency_field="currency"),
             _column(
-                "commission_display",
+                "commission_amount",
                 _t("Commission"),
                 formatter="currency",
                 currency_field="currency",
-                getter=lambda row: row.get("commission_amount") if row.get("commission_amount") not in (None, "") else row.get("commission"),
             ),
-            _column("gwp_try", _t("GWP TRY"), formatter="currency", getter=lambda row: row.get("gwp_try"), currency_field=None),
-            _column("modified", _t("Modified"), formatter="datetime"),
+            _column("status", _t("Policy Status")),
         ],
     },
     "offer_list": {
@@ -146,30 +187,37 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
         "fields": [
             "name",
             "customer",
+            "customer.full_name as customer_full_name",
+            "customer.customer_type as customer_customer_type",
+            "customer.masked_tax_id as customer_masked_tax_id",
             "insurance_company",
+            "branch",
             "status",
             "currency",
             "offer_date",
             "valid_until",
-            "net_premium",
-            "tax_amount",
-            "commission_amount",
             "gross_premium",
-            "converted_policy",
-            "modified",
+            "commission_amount",
         ],
         "columns": [
             _column("name", _t("Offer")),
-            _column("customer", _t("Customer")),
             _column("insurance_company", _t("Insurance Company")),
-            _column("status", _t("Status")),
-            _column("offer_date", _t("Offer Date"), formatter="date"),
+            _column(
+                "customer_full_name",
+                _t("Customer"),
+                getter=lambda row: row.get("customer_full_name") or row.get("customer"),
+            ),
+            _column("customer_details", _t("Customer Details"), getter=_policy_customer_details),
             _column("valid_until", _t("Valid Until"), formatter="date"),
+            _column("offer_date", _t("Offer Date"), formatter="date"),
             _column("gross_premium", _t("Gross Premium"), formatter="currency", currency_field="currency"),
-            _column("net_premium", _t("Net Premium"), formatter="currency", currency_field="currency"),
-            _column("commission_amount", _t("Commission"), formatter="currency", currency_field="currency"),
-            _column("converted_policy", _t("Converted Policy")),
-            _column("modified", _t("Modified"), formatter="datetime"),
+            _column(
+                "commission_amount",
+                _t("Commission"),
+                formatter="currency",
+                currency_field="currency",
+            ),
+            _column("status", _t("Offer Status")),
         ],
     },
 }
@@ -184,7 +232,7 @@ SCREEN_FILTER_FIELDS: dict[str, dict[str, str | None]] = {
     "renewals_board": {"status_field": "status", "date_field": "due_date"},
     "policy_list": {"status_field": "status", "date_field": "end_date"},
     "offer_list": {"status_field": "status", "date_field": "offer_date"},
-    "customer_list": {"status_field": None, "date_field": "modified"},
+    "customer_list": {"status_field": "consent_status", "date_field": "modified"},
     "lead_list": {"status_field": "status", "date_field": "modified"},
 }
 
@@ -200,31 +248,36 @@ SCREEN_EXPORTS.update(
                 "name",
                 "claim_no",
                 "policy",
+                "policy.policy_no as policy_no",
                 "customer",
+                "customer.full_name as customer_full_name",
                 "claim_status",
-                "approved_amount",
+                "claim_type",
+                "policy.branch as branch",
+                "incident_date",
+                "estimated_amount",
                 "paid_amount",
                 "currency",
-                "assigned_expert",
-                "appeal_status",
-                "next_follow_up_on",
-                "rejection_reason",
-                "incident_date",
-                "modified",
             ],
             "columns": [
                 _column("claim_no", _t("Claim No")),
-                _column("policy", _t("Policy")),
-                _column("customer", _t("Customer")),
-                _column("claim_status", _t("Status")),
-                _column("approved_amount", _t("Approved Amount"), formatter="currency", currency_field="currency"),
+                _column("policy_no", _t("Policy No")),
+                _column(
+                    "customer_full_name",
+                    _t("Customer"),
+                    getter=lambda row: row.get("customer_full_name") or row.get("customer"),
+                ),
+                _column("claim_type", _t("Claim Type")),
+                _column("branch", _t("Branch")),
+                _column(
+                    "estimated_amount",
+                    _t("Estimated Amount"),
+                    formatter="currency",
+                    currency_field="currency",
+                ),
                 _column("paid_amount", _t("Paid Amount"), formatter="currency", currency_field="currency"),
-                _column("assigned_expert", _t("Assigned Expert")),
-                _column("appeal_status", _t("Appeal Status")),
-                _column("next_follow_up_on", _t("Next Follow Up"), formatter="date"),
-                _column("rejection_reason", _t("Rejection Reason")),
                 _column("incident_date", _t("Incident Date"), formatter="date"),
-                _column("modified", _t("Modified"), formatter="datetime"),
+                _column("claim_status", _t("Claim Status")),
             ],
         },
         "payments_board": {
@@ -237,25 +290,35 @@ SCREEN_EXPORTS.update(
                 "name",
                 "payment_no",
                 "policy",
+                "policy.policy_no as policy_no",
                 "customer",
+                "customer.full_name as customer_full_name",
+                "customer.customer_type as customer_customer_type",
+                "customer.masked_tax_id as customer_masked_tax_id",
                 "status",
-                "payment_date",
                 "due_date",
                 "amount",
+                "amount_try",
                 "currency",
-                "payment_direction",
-                "modified",
             ],
             "columns": [
                 _column("payment_no", _t("Payment No")),
-                _column("policy", _t("Policy")),
-                _column("customer", _t("Customer")),
-                _column("status", _t("Status")),
-                _column("payment_date", _t("Payment Date"), formatter="date"),
+                _column("policy_no", _t("Policy No")),
+                _column(
+                    "customer_full_name",
+                    _t("Customer"),
+                    getter=lambda row: row.get("customer_full_name") or row.get("customer"),
+                ),
+                _column("customer_details", _t("Customer Details"), getter=_policy_customer_details),
                 _column("due_date", _t("Due Date"), formatter="date"),
-                _column("amount", _t("Amount"), formatter="currency", currency_field="currency"),
-                _column("payment_direction", _t("Direction")),
-                _column("modified", _t("Modified"), formatter="datetime"),
+                _column("status", _t("Payment Status")),
+                _column(
+                    "amount",
+                    _t("Amount"),
+                    formatter="currency",
+                    currency_field="currency",
+                    getter=_payment_amount,
+                ),
             ],
         },
         "renewals_board": {
@@ -267,24 +330,27 @@ SCREEN_EXPORTS.update(
             "fields": [
                 "name",
                 "policy",
+                "policy.policy_no as policy_policy_no",
                 "customer",
-                "policy_end_date",
+                "customer.full_name as customer_full_name",
                 "due_date",
+                "renewal_date",
                 "status",
-                "assigned_to",
-                "lost_reason_code",
-                "modified",
             ],
             "columns": [
-                _column("name", _t("Renewal Task")),
-                _column("policy", _t("Policy")),
-                _column("customer", _t("Customer")),
-                _column("policy_end_date", _t("Policy End Date"), formatter="date"),
+                _column(
+                    "policy_policy_no",
+                    _t("Policy No"),
+                    getter=lambda row: row.get("policy_policy_no") or row.get("policy"),
+                ),
+                _column(
+                    "customer_full_name",
+                    _t("Customer"),
+                    getter=lambda row: row.get("customer_full_name") or row.get("customer"),
+                ),
                 _column("due_date", _t("Due Date"), formatter="date"),
                 _column("status", _t("Status")),
-                _column("assigned_to", _t("Assigned To")),
-                _column("lost_reason_code", _t("Lost Reason")),
-                _column("modified", _t("Modified"), formatter="datetime"),
+                _column("priority", _t("Priority"), getter=_renewal_priority_label),
             ],
         },
     }

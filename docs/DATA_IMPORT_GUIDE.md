@@ -58,8 +58,9 @@ Duplicates are **skipped** and reported in preview and job summary.
 | Branch | `branch` | yes |
 | Issue date | `issue_date` | yes |
 | Start date | `start_date` | yes |
-| End date | `end_date` | yes |
+| End date | `end_date` | no (defaults to start date + 1 year) |
 | Gross premium | `gross_premium` | yes |
+| Commission | `commission_amount` | no |
 | Status | `status` | no (default Active) |
 
 ## Link resolution

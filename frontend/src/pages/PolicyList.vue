@@ -131,7 +131,7 @@ import { usePolicyListActions } from "../composables/usePolicyListActions";
 import { usePolicyListFilters } from "../composables/usePolicyListFilters";
 import { usePolicyListPresetSync } from "../composables/usePolicyListPresetSync";
 import { usePolicyListQuickPolicy } from "../composables/usePolicyListQuickPolicy";
-import { usePolicyListRuntime } from "../composables/usePolicyListRuntime";
+import { buildPolicyListTableColumns } from "../composables/policyListTableModel";
 import { usePolicyListTableData } from "../composables/usePolicyListTableData";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
@@ -247,14 +247,7 @@ const {
   openPolicyDetail,
 });
 
-const columns = computed(() => [
-  { key: "policy_primary", secondaryKey: "policy_secondary", label: t("colPolicy"), type: "stacked" },
-  { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
-  { key: "product_primary", secondaryKey: "product_secondary", label: t("colProduct"), type: "stacked" },
-  { key: "vade_primary", secondaryKey: "vade_secondary", label: t("colVade"), type: "stacked" },
-  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked", align: "right" },
-  { key: "status", label: t("colStatus"), type: "status", domain: "policy" },
-]);
+const columns = computed(() => buildPolicyListTableColumns(t));
 
 function clearFilters() {
   onPolicyListFilterReset();

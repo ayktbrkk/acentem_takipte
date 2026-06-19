@@ -41,16 +41,18 @@ def test_build_screen_export_payload_formats_policy_rows(monkeypatch):
             {
                 "name": "POL-001",
                 "policy_no": "P-001",
-                "customer": "Acme",
+                "customer": "CUST-001",
+                "customer_full_name": "Acme A.Ş.",
+                "customer_customer_type": "Corporate",
+                "customer_masked_tax_id": "12*******01",
                 "insurance_company": "Demo Sigorta",
+                "branch": "Kasko",
                 "status": "Active",
                 "currency": "TRY",
+                "issue_date": "2026-03-01",
                 "end_date": "2026-03-31",
                 "gross_premium": 1250,
                 "commission_amount": 175,
-                "commission": None,
-                "gwp_try": 1250,
-                "modified": "2026-03-10 09:15:00",
             }
         ],
     )
@@ -63,7 +65,10 @@ def test_build_screen_export_payload_formats_policy_rows(monkeypatch):
 
     assert payload["title"] == translate_text("Policy List", "tr")
     assert payload["columns"][0] == translate_text("Record Number", "tr")
+    assert payload["columns"][1] == translate_text("Policy No", "tr")
     assert payload["rows"][0][translate_text("Record Number", "tr")] == "POL-001"
+    assert payload["rows"][0][translate_text("Policy No", "tr")] == "P-001"
+    assert payload["rows"][0][translate_text("Customer", "tr")] == "Acme A.Ş."
     assert payload["rows"][0][translate_text("Commission", "tr")] == "175.00 TRY"
 
 

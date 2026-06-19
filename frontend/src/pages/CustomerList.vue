@@ -89,6 +89,7 @@
 
 <script setup>
 import { computed, ref, unref } from "vue";
+import { buildCustomerListTableColumns } from "../composables/customerListTableModel";
 import { useCustomerBoardRuntime } from "../composables/useCustomerBoardRuntime";
 import { useAuthStore } from "../stores/auth";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
@@ -119,12 +120,7 @@ const {
   openCustomer,
 } = useCustomerBoardRuntime({ activeLocale });
 
-const columns = computed(() => [
-  { key: "identity_primary", secondaryKey: "identity_secondary", label: t("colIdentity"), type: "stacked" },
-  { key: "contact_primary", secondaryKey: "contact_secondary", label: t("colContact"), type: "stacked" },
-  { key: "personal_primary", secondaryKey: "personal_secondary", label: t("colPersonal"), type: "stacked" },
-  { key: "mgmt_primary", secondaryKey: "mgmt_secondary", label: t("colManagement"), type: "stacked" },
-]);
+const columns = computed(() => buildCustomerListTableColumns(t));
 
 const filterConfig = computed(() => [
   {

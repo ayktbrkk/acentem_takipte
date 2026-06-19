@@ -1,6 +1,6 @@
 <template>
-  <SectionPanel :title="t('step2Title')" panel-class="surface-card rounded-2xl p-5">
-    <div v-if="!columns.length" class="card-empty">{{ t("mappingEmpty") }}</div>
+  <SectionPanel :title="t('step2Title')" :show-count="false">
+    <EmptyState v-if="!columns.length" compact :title="t('mappingEmpty')" />
     <div v-else class="overflow-x-auto">
       <table class="min-w-full text-sm">
         <thead>
@@ -13,7 +13,7 @@
           <tr v-for="col in columns" :key="col">
             <td class="table-cell">{{ col }}</td>
             <td class="table-cell">
-              <select v-model="columnMapping[col]" class="input">
+              <select v-model="columnMapping[col]" class="form-input">
                 <option value="">{{ t("selectOption") }}</option>
                 <option v-for="field in selectedFieldOptions" :key="field.value" :value="field.value">
                   {{ field.label }}
@@ -28,6 +28,7 @@
 </template>
 
 <script setup>
+import EmptyState from "../app-shell/EmptyState.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 
 defineProps({

@@ -1,2 +1,2 @@
-policy_no,customer,sales_entity,insurance_company,branch,issue_date,start_date,end_date,gross_premium,status
-POL-IMPORT-001,11111111110,SE-001,IC-001,BR-001,2026-06-01,2026-06-01,2027-06-01,1230,Active
+policy_no,customer,branch,insurance_company,sales_entity,issue_date,start_date,end_date,gross_premium,commission_amount,status
+POL-IMPORT-001,11111111110,BR-001,IC-001,SE-001,2026-06-01,2026-06-01,2027-06-01,1230,175,Active

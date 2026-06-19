@@ -1,9 +1,9 @@
 <template>
-  <SectionPanel :title="t('step1Title')" panel-class="surface-card rounded-2xl p-5">
+  <SectionPanel :title="t('step1Title')" :show-count="false">
     <div class="grid gap-4 md:grid-cols-2">
       <div class="form-field">
-        <label class="form-label">{{ t("datasetLabel") }}</label>
-        <select v-model="selectedDatasetModel" class="form-input">
+        <label class="form-label" :for="datasetId">{{ t("datasetLabel") }}</label>
+        <select :id="datasetId" v-model="selectedDatasetModel" class="form-input">
           <option v-for="dataset in localizedDatasets" :key="dataset.key" :value="dataset.key">
             {{ dataset.label }}
           </option>
@@ -17,6 +17,7 @@
           class="hidden"
           type="file"
           accept=".xlsx,.csv"
+          :aria-label="t('chooseFile')"
           @change="$emit('file-select', $event)"
         />
         <button type="button" class="file-trigger" @click="openFilePicker">
@@ -27,8 +28,8 @@
       </div>
 
       <div v-if="isSpreadsheetFile && sheetNames.length" class="form-field md:col-span-2">
-        <label class="form-label">{{ t("sheetLabel") }}</label>
-        <select v-model="selectedSheetModel" class="form-input" :disabled="headersLoading">
+        <label class="form-label" :for="sheetId">{{ t("sheetLabel") }}</label>
+        <select :id="sheetId" v-model="selectedSheetModel" class="form-input" :disabled="headersLoading">
           <option v-for="sheet in sheetNames" :key="sheet" :value="sheet">{{ sheet }}</option>
         </select>
         <p v-if="headersLoading" class="mt-2 text-xs text-slate-500">{{ t("headersRefreshing") }}</p>
@@ -38,7 +39,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, useId } from "vue";
 
 import SectionPanel from "../app-shell/SectionPanel.vue";
 
@@ -79,6 +80,8 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue", "update:selectedSheet", "file-select"]);
 const fileInput = ref(null);
+const datasetId = useId();
+const sheetId = useId();
 
 const selectedDatasetModel = computed({
   get: () => props.modelValue,
@@ -110,6 +113,11 @@ function openFilePicker() {
   border-color: rgb(27 93 184 / 0.55);
   background: rgb(248 250 252);
   box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.file-trigger:focus-visible {
+  outline: 2px solid rgb(27 93 184 / 0.45);
+  outline-offset: 2px;
 }
 
 .file-trigger__label {

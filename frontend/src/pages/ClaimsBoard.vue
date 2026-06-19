@@ -70,6 +70,7 @@ import ClaimsBoardMetricsPanel from "../components/claims-board/ClaimsBoardMetri
 import ClaimsBoardTableSection from "../components/claims-board/ClaimsBoardTableSection.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import { useClaimsBoardRuntime } from "../composables/useClaimsBoardRuntime";
+import { buildClaimsListTableColumns } from "../composables/claimsListTableModel";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useClaimStore } from "../stores/claim";
@@ -114,12 +115,10 @@ const {
 });
 
 const claimsTableColumns = computed(() => [
-  { key: "claim_primary", secondaryKey: "claim_secondary", label: t("colClaim"), type: "stacked" },
-  { key: "customer_label", label: t("colCustomer"), width: "180px" },
-  { key: "type_primary", secondaryKey: "type_secondary", label: t("colDetail"), type: "stacked" },
-  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colFinance"), type: "stacked" },
-  { key: "incident_date_label", label: t("colIncidentDate"), width: "120px" },
-  { key: "claim_status", label: t("colStatus"), width: "120px", type: "status", domain: "claim" },
+  ...buildClaimsListTableColumns(t).map((column) => ({
+    ...column,
+    width: column.key === "customer_label" ? "180px" : column.key === "incident_date_label" ? "120px" : column.key === "claim_status" ? "120px" : column.width,
+  })),
   { key: "_actions", label: t("payments"), width: "240px", type: "actions", align: "right" },
 ]);
 

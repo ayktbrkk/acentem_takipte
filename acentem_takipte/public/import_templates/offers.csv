@@ -1,2 +1,2 @@
-customer,sales_entity,insurance_company,branch,offer_date,gross_premium,net_premium,tax_amount,commission_amount,status
-11111111110,SE-001,IC-001,BR-001,2026-06-01,1230,1000,180,50,Draft
+customer,insurance_company,branch,offer_date,valid_until,gross_premium,commission_amount,status,sales_entity,net_premium,tax_amount
+11111111110,IC-001,BR-001,2026-06-01,2026-07-01,1230,50,Draft,SE-001,1000,180

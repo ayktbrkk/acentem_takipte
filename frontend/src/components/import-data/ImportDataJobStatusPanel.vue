@@ -1,9 +1,12 @@
 <template>
-  <SectionPanel :title="t('jobStatusTitle')" panel-class="surface-card rounded-2xl p-5">
+  <SectionPanel :title="t('jobStatusTitle')" :show-count="false">
     <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
       <div>
         <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("status") }}</p>
-        <p class="text-sm font-semibold text-slate-900">{{ jobStatus || "-" }}</p>
+        <div class="mt-1">
+          <StatusBadge v-if="jobStatus" :status="jobStatus" domain="import_job" :locale="locale" />
+          <p v-else class="text-sm font-semibold text-slate-900">{{ t("unspecified") }}</p>
+        </div>
       </div>
       <div>
         <p class="text-xs uppercase tracking-wide text-slate-500">{{ t("createdLabel") }}</p>
@@ -32,6 +35,7 @@
 
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
+import StatusBadge from "../ui/StatusBadge.vue";
 
 defineProps({
   jobStatus: {
@@ -45,6 +49,10 @@ defineProps({
   errorLogFile: {
     type: String,
     default: "",
+  },
+  locale: {
+    type: String,
+    default: "tr",
   },
   t: {
     type: Function,

@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 
+vi.mock("frappe-ui", () => ({
+  createResource: () => ({
+    submit: vi.fn().mockResolvedValue([]),
+    reload: vi.fn().mockResolvedValue({ rows: [] }),
+    loading: false,
+  }),
+}));
+
 import { useExportDataRuntime } from "./useExportDataRuntime";
 
 describe("useExportDataRuntime", () => {
@@ -21,6 +29,7 @@ describe("useExportDataRuntime", () => {
         })[key] || key,
       router: { push: routerPush },
       authStore: { locale: ref("tr") },
+      branchStore: { requestBranch: "" },
     });
 
     runtime.form.screen = "claims_board";

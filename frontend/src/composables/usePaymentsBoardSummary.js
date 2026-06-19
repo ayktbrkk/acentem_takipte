@@ -1,6 +1,7 @@
 import { computed } from "vue";
 
 import { buildPaymentSnapshot, formatCount, formatCurrency } from "./paymentsBoard/helpers";
+import { buildPaymentsListTableColumns } from "./paymentsListTableModel";
 import { translateText } from "../utils/i18n";
 
 export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSummaryByPayment, buildPaymentRowActions, paymentStore }) {
@@ -47,10 +48,7 @@ export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSu
   });
 
   const paymentListColumns = computed(() => [
-    { key: "payment_primary", secondaryKey: "payment_secondary", label: t("colPayment"), type: "stacked" },
-    { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
-    { key: "due_primary", secondaryKey: "due_secondary", label: t("colDueDate"), type: "stacked" },
-    { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colFinance"), type: "stacked" },
+    ...buildPaymentsListTableColumns(t),
     { key: "_actions", label: t("actions"), width: "200px", type: "actions", align: "right" },
   ]);
 

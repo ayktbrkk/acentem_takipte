@@ -13,6 +13,15 @@ from acentem_takipte.acentem_takipte.services.data_import.resolvers import (
 from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
 from acentem_takipte.acentem_takipte.utils.normalization import normalize_date
 from acentem_takipte.acentem_takipte.utils.statuses import ATOfferStatus, ATPolicyStatus
+from frappe.utils import add_to_date
+
+
+def _resolve_policy_end_date(start_date, end_date):
+    if end_date:
+        return end_date
+    if start_date:
+        return add_to_date(start_date, years=1)
+    return None
 
 
 def apply_column_mapping(
@@ -135,9 +144,9 @@ def normalize_policy_row(fields: dict[str, str], *, office_branch: str | None) -
 
     issue_date = normalize_date(fields.get("issue_date"))
     start_date = normalize_date(fields.get("start_date"))
-    end_date = normalize_date(fields.get("end_date"))
-    if not issue_date or not start_date or not end_date:
-        return {}, "Issue, start and end dates are required."
+    end_date = _resolve_policy_end_date(start_date, normalize_date(fields.get("end_date")))
+    if not issue_date or not start_date:
+        return {}, "Issue and start dates are required."
 
     status = str(fields.get("status") or "Active").strip() or "Active"
     if status not in ATPolicyStatus.VALID:

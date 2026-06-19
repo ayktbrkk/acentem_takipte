@@ -1,6 +1,137 @@
-import { computed, reactive, ref, unref } from "vue";
+import { computed, reactive, ref, unref, watch } from "vue";
+import { createResource } from "frappe-ui";
+import { useAtFormatting } from "./useAtFormatting";
+import {
+  buildClaimsListTableColumns,
+  mapClaimRecordToTableRow,
+} from "./claimsListTableModel";
+import {
+  buildCustomerListTableColumns,
+  mapCustomerRecordToTableRow,
+} from "./customerListTableModel";
+import {
+  buildOfferListTableColumns,
+  mapOfferRecordToTableRow,
+} from "./offerListTableModel";
+import {
+  buildPaymentsListTableColumns,
+  mapPaymentRecordToTableRow,
+} from "./paymentsListTableModel";
+import { buildPolicyListTableColumns, mapPolicyRecordToTableRow } from "./policyListTableModel";
+import {
+  buildRenewalsListTableColumns,
+  mapRenewalRecordToTableRow,
+} from "./renewalsListTableModel";
+import { translateText } from "../utils/i18n";
 
-export function useExportDataRuntime({ t, router, authStore }) {
+const LIST_PREVIEW_SCREENS = new Set([
+  "policy_list",
+  "dashboard",
+  "customer_list",
+  "offer_list",
+  "claims_board",
+  "payments_board",
+  "renewals_board",
+]);
+
+const PREVIEW_FIELD_SETS = {
+  offer_list: [
+    "name",
+    "customer",
+    "customer.full_name as customer_full_name",
+    "customer.customer_type as customer_customer_type",
+    "customer.masked_tax_id as customer_masked_tax_id",
+    "insurance_company",
+    "branch",
+    "status",
+    "currency",
+    "offer_date",
+    "valid_until",
+    "gross_premium",
+    "commission_amount",
+  ],
+  claims_board: [
+    "name",
+    "claim_no",
+    "policy",
+    "policy.policy_no as policy_no",
+    "customer",
+    "customer.full_name as customer_full_name",
+    "claim_status",
+    "claim_type",
+    "policy.branch as branch",
+    "incident_date",
+    "estimated_amount",
+    "paid_amount",
+  ],
+  payments_board: [
+    "name",
+    "payment_no",
+    "status",
+    "amount",
+    "amount_try",
+    "due_date",
+    "payment_date",
+    "customer",
+    "customer.full_name as customer_full_name",
+    "customer.customer_type as customer_customer_type",
+    "customer.masked_tax_id as customer_masked_tax_id",
+    "policy",
+    "policy.policy_no as policy_no",
+  ],
+  renewals_board: [
+    "name",
+    "policy",
+    "policy.policy_no as policy_policy_no",
+    "customer",
+    "customer.full_name as customer_full_name",
+    "status",
+    "due_date",
+    "renewal_date",
+  ],
+};
+
+const POLICY_PREVIEW_FIELDS = [
+  "name as record_name",
+  "name",
+  "policy_no",
+  "customer",
+  "customer.full_name as customer_full_name",
+  "customer.customer_type as customer_customer_type",
+  "customer.masked_tax_id as customer_masked_tax_id",
+  "insurance_company",
+  "branch",
+  "status",
+  "currency",
+  "issue_date",
+  "end_date",
+  "gross_premium",
+  "commission_amount",
+];
+
+function getPreviewDateField(screen) {
+  if (screen === "offer_list") return "offer_date";
+  if (screen === "claims_board") return "incident_date";
+  if (screen === "payments_board" || screen === "renewals_board") return "due_date";
+  return "end_date";
+}
+
+function getPreviewStatusField(screen) {
+  if (screen === "claims_board") return "claim_status";
+  return "status";
+}
+
+function getPreviewDoctype(screen) {
+  const map = {
+    offer_list: "AT Offer",
+    claims_board: "AT Claim",
+    payments_board: "AT Payment",
+    renewals_board: "AT Renewal Task",
+  };
+  return map[screen] || "AT Policy";
+}
+
+export function useExportDataRuntime({ t, router, authStore, branchStore }) {
   const activeLocale = computed(() => unref(authStore.locale) || "en");
 
   const screenOptions = [
@@ -31,6 +162,164 @@ export function useExportDataRuntime({ t, router, authStore }) {
 
   const message = ref("");
   const historyRows = ref([]);
+  const listPreviewLoading = ref(false);
+  const listPreviewRows = ref([]);
+
+  const listPreviewResource = createResource({
+    url: "frappe.client.get_list",
+    auto: false,
+  });
+
+  const customerPreviewResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows",
+    auto: false,
+  });
+
+  const { formatDate, formatCurrency } = useAtFormatting(
+    computed(() => (String(unref(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en")),
+  );
+
+  const showListPreview = computed(() => LIST_PREVIEW_SCREENS.has(form.screen));
+
+  const listPreviewColumns = computed(() => {
+    if (form.screen === "customer_list") return buildCustomerListTableColumns(t);
+    if (form.screen === "offer_list") return buildOfferListTableColumns(t);
+    if (form.screen === "claims_board") return buildClaimsListTableColumns(t);
+    if (form.screen === "payments_board") return buildPaymentsListTableColumns(t);
+    if (form.screen === "renewals_board") return buildRenewalsListTableColumns(t);
+    return buildPolicyListTableColumns(t);
+  });
+
+  const listPreviewTableRows = computed(() => {
+    const locale = unref(activeLocale);
+    const translateValue = (value) => translateText(value, locale) || value;
+
+    if (form.screen === "customer_list") {
+      return listPreviewRows.value.map((row) => mapCustomerRecordToTableRow(row, { t, localeCode: locale }));
+    }
+    if (form.screen === "offer_list") {
+      return listPreviewRows.value.map((row) =>
+        mapOfferRecordToTableRow(row, {
+          formatDate,
+          formatCurrency,
+          localeCode: locale,
+          t,
+        }),
+      );
+    }
+    if (form.screen === "claims_board") {
+      return listPreviewRows.value.map((row) =>
+        mapClaimRecordToTableRow(row, {
+          formatDate,
+          formatCurrency,
+          localeCode: locale,
+          translateValue,
+        }),
+      );
+    }
+    if (form.screen === "payments_board") {
+      return listPreviewRows.value.map((row) =>
+        mapPaymentRecordToTableRow(row, {
+          localeCode: locale,
+          t,
+        }),
+      );
+    }
+    if (form.screen === "renewals_board") {
+      return listPreviewRows.value.map((row) =>
+        mapRenewalRecordToTableRow(row, {
+          formatDate,
+          localeCode: locale,
+          t,
+        }),
+      );
+    }
+    return listPreviewRows.value.map((row) =>
+      mapPolicyRecordToTableRow(row, {
+        formatDate,
+        formatCurrency,
+        localeCode: locale,
+      }),
+    );
+  });
+
+  function buildListPreviewFilters() {
+    const filters = {};
+
+    if (form.screen === "customer_list") {
+      return filters;
+    }
+
+    const statusField = getPreviewStatusField(form.screen);
+    if (form.status) {
+      filters[statusField] = form.status;
+    }
+
+    const dateField = getPreviewDateField(form.screen);
+    if (form.startDate && form.endDate) {
+      filters[dateField] = ["between", [form.startDate, form.endDate]];
+    } else if (form.startDate) {
+      filters[dateField] = [">=", form.startDate];
+    } else if (form.endDate) {
+      filters[dateField] = ["<=", form.endDate];
+    }
+
+    const officeBranch = branchStore?.requestBranch || "";
+    if (officeBranch) filters.office_branch = officeBranch;
+    return filters;
+  }
+
+  async function refreshListPreview() {
+    if (!showListPreview.value) {
+      listPreviewRows.value = [];
+      return;
+    }
+
+    listPreviewLoading.value = true;
+    try {
+      if (form.screen === "customer_list") {
+        const payload = await customerPreviewResource.reload({
+          filters: JSON.stringify({
+            consent_status: form.status || "",
+            office_branch: branchStore?.requestBranch || "",
+          }),
+          page: 1,
+          page_length: 10,
+        });
+        listPreviewRows.value = payload?.rows || [];
+        return;
+      }
+
+      const doctype = getPreviewDoctype(form.screen);
+      const fields = PREVIEW_FIELD_SETS[form.screen] || POLICY_PREVIEW_FIELDS;
+      const orderBy =
+        form.screen === "renewals_board"
+          ? "`tabAT Renewal Task`.due_date asc, `tabAT Renewal Task`.modified desc"
+          : `\`tab${doctype}\`.modified desc`;
+
+      const rows = await listPreviewResource.submit({
+        doctype,
+        fields,
+        filters: buildListPreviewFilters(),
+        order_by: orderBy,
+        limit_start: 0,
+        limit_page_length: 10,
+      });
+      listPreviewRows.value = Array.isArray(rows) ? rows : [];
+    } catch {
+      listPreviewRows.value = [];
+    } finally {
+      listPreviewLoading.value = false;
+    }
+  }
+
+  watch(
+    () => [form.screen, form.startDate, form.endDate, form.status, branchStore?.requestBranch],
+    () => {
+      void refreshListPreview();
+    },
+    { immediate: true },
+  );
 
   function buildExportUrl() {
     const params = new URLSearchParams({
@@ -95,10 +384,15 @@ export function useExportDataRuntime({ t, router, authStore }) {
     form,
     message,
     historyRows,
+    showListPreview,
+    listPreviewColumns,
+    listPreviewTableRows,
+    listPreviewLoading,
     buildExportUrl,
     addHistory,
     downloadExport,
     resetForm,
     cancel,
+    refreshListPreview,
   };
 }

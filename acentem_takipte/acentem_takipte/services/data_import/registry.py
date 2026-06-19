@@ -37,6 +37,8 @@ FIELD_ALIASES = {
     "policyNo": "policy_no",
     "offer_date": "offer_date",
     "teklif_tarihi": "offer_date",
+    "gecerlilik_tarihi": "valid_until",
+    "valid_until": "valid_until",
     "issue_date": "issue_date",
     "start_date": "start_date",
     "end_date": "end_date",
@@ -65,7 +67,6 @@ POLICY_REQUIRED_FIELDS = (
     "policy_no",
     "issue_date",
     "start_date",
-    "end_date",
     "gross_premium",
 )
 

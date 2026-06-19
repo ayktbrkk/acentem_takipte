@@ -216,6 +216,7 @@ import { useOfferBoardConversion } from "../composables/offerBoard/conversion";
 import { useOfferBoardFilters } from "../composables/offerBoard/filters";
 import { useOfferBoardQuickOffer } from "../composables/offerBoard/quickOffer";
 import { useOfferBoardState } from "../composables/offerBoard/state";
+import { buildOfferListTableColumns } from "../composables/offerListTableModel";
 import { OFFER_TRANSLATIONS } from "../config/offer_translations";
 import { translateText } from "../utils/i18n";
 import { useAuthStore } from "../stores/auth";
@@ -382,13 +383,7 @@ const quickOfferLabels = computed(() => ({
   saveAndOpen: t("createQuickOfferAndOpen"),
 }));
 
-const offerListColumns = computed(() => [
-  { key: "offer_primary", secondaryKey: "offer_secondary", label: t("colOffer"), type: "stacked" },
-  { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
-  { key: "validity_primary", secondaryKey: "validity_secondary", label: t("colValidity"), type: "stacked" },
-  { key: "finance_primary", secondaryKey: "finance_secondary", label: t("colPremium"), type: "stacked", align: "right" },
-  { key: "status", label: t("colStatus"), type: "status", domain: "offer" },
-]);
+const offerListColumns = computed(() => buildOfferListTableColumns(t));
 
 function focusOfferSearch() {
   const searchInput = document.querySelector('input[placeholder*="Teklif"], input[placeholder*="Offer"]');

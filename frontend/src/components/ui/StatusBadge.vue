@@ -180,6 +180,20 @@ const DOMAIN_MAP = {
     "Active":   "active",
     "Archived": "draft",
   },
+  import_job: {
+    Draft: "draft",
+    Previewed: "waiting",
+    Queued: "waiting",
+    Running: "waiting",
+    Completed: "active",
+    Failed: "cancel",
+    Cancelled: "cancel",
+  },
+  import_row: {
+    ready: "active",
+    skipped: "waiting",
+    error: "cancel",
+  },
   };
 
 const DOMAIN_LABELS = {
@@ -286,6 +300,20 @@ const DOMAIN_LABELS = {
     Draft: "status_draft",
     Synced: "active",
     Failed: "status_cancelled",
+  },
+  import_job: {
+    Draft: "Draft",
+    Previewed: "Previewed",
+    Queued: "Queued",
+    Running: "Running",
+    Completed: "Completed",
+    Failed: "Failed",
+    Cancelled: "Cancelled",
+  },
+  import_row: {
+    ready: "rowStatusReady",
+    skipped: "rowStatusSkipped",
+    error: "rowStatusError",
   },
   risk_level: {
     high: "riskLevelHigh",

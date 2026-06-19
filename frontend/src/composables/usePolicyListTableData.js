@@ -1,5 +1,6 @@
 import { computed, unref } from "vue";
 import { useAtFormatting } from "./useAtFormatting";
+import { mapPolicyRecordToTableRow } from "./policyListTableModel";
 
 function normalizePolicyListStatus(value) {
   const raw = String(value || "").trim().toLowerCase();
@@ -17,18 +18,6 @@ function computeRemainingDays(endDate) {
   return Math.ceil((target.getTime() - Date.now()) / 86400000);
 }
 
-function mapCustomerTypeLabel(value, localeCode) {
-  const normalized = String(value || "").trim().toLowerCase();
-  const isTr = String(localeCode || "").toLowerCase().startsWith("tr");
-  if (normalized === "corporate" || normalized === "kurumsal") {
-    return isTr ? "Kurumsal" : "Corporate";
-  }
-  if (normalized === "individual" || normalized === "bireysel") {
-    return isTr ? "Bireysel" : "Individual";
-  }
-  return isTr ? "Belirtilmedi" : "Not provided";
-}
-
 function fallbackLabel(localeCode) {
   return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
 }
@@ -44,26 +33,23 @@ export function usePolicyListTableData({
   const { formatDate, formatCurrency } = useAtFormatting(computed(() => (unref(localeCode) === "tr-TR" ? "tr" : "en")));
 
   const policyListMappedRows = computed(() =>
-    unref(rows).map((row) => ({
-      ...row,
-      name: row.record_name || row.name,
-      carrier_policy_no: row.carrier_policy_no || row.policy_no || fallbackLabel(unref(localeCode)),
-      customer_label: row.customer_full_name || row.customer_name || row.customer || fallbackLabel(unref(localeCode)),
-      customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode))} | ${row.customer_masked_tax_id || fallbackLabel(unref(localeCode))}`,
-      policy_primary: row.record_name || row.name,
-      policy_secondary: row.policy_no || fallbackLabel(unref(localeCode)),
-      product_primary: row.branch || fallbackLabel(unref(localeCode)),
-      product_secondary: row.insurance_company || fallbackLabel(unref(localeCode)),
-      vade_primary: formatDate(row.end_date),
-      vade_secondary: formatDate(row.issue_date),
-      finance_primary: formatCurrency(row.gross_premium, row.currency || "TRY"),
-      finance_secondary: `${formatCurrency(row.commission_amount || 0, row.currency || "TRY")} (${row.currency || "TRY"})`,
-      customer_type_label: mapCustomerTypeLabel(row.customer_customer_type, unref(localeCode)),
-      customer_tax_id: row.customer_masked_tax_id || fallbackLabel(unref(localeCode)),
-      customer_birth_date: row.customer_birth_date || null,
-      branch: row.branch || fallbackLabel(unref(localeCode)),
-      remaining_days: computeRemainingDays(row.end_date),
-    }))
+    unref(rows).map((row) => {
+      const mapped = mapPolicyRecordToTableRow(row, {
+        formatDate,
+        formatCurrency,
+        localeCode: unref(localeCode),
+      });
+      return {
+        ...mapped,
+        carrier_policy_no: row.carrier_policy_no || row.policy_no || fallbackLabel(unref(localeCode)),
+        finance_secondary: `${formatCurrency(row.commission_amount || 0, row.currency || "TRY")} (${row.currency || "TRY"})`,
+        customer_type_label: mapped.customer_secondary.split(" | ")[0],
+        customer_tax_id: row.customer_masked_tax_id || fallbackLabel(unref(localeCode)),
+        customer_birth_date: row.customer_birth_date || null,
+        branch: row.branch || fallbackLabel(unref(localeCode)),
+        remaining_days: computeRemainingDays(row.end_date),
+      };
+    }),
   );
 
   const policyListFilteredRows = computed(() => {
@@ -95,7 +81,7 @@ export function usePolicyListTableData({
     policyListPagedRows.value.map((row) => ({
       ...row,
       _urgency: row.remaining_days <= 7 ? "row-critical" : row.remaining_days <= 30 ? "row-warning" : "",
-    }))
+    })),
   );
   const policySummary = computed(() => {
     const rowsAll = policyListMappedRows.value;

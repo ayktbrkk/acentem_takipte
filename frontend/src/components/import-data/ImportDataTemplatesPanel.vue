@@ -1,11 +1,11 @@
 <template>
-  <SectionPanel :title="t('templatesTitle')" panel-class="surface-card rounded-2xl p-5">
+  <SectionPanel :title="t('templatesTitle')" :show-count="false">
     <p class="mb-3 text-sm text-slate-600">{{ t("templatesHint") }}</p>
     <div class="flex flex-wrap gap-2">
       <a
         v-for="item in templates"
         :key="item.key"
-        class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-slate-50"
+        class="inline-flex items-center rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
         :href="item.href"
         download
       >

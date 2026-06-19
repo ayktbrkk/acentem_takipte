@@ -20,3 +20,5 @@ def test_translate_text_uses_repaired_turkish_catalog():
     load_translation_catalog.cache_clear()
     assert translate_text("Customer", "tr") == "Müşteri"
     assert translate_text("Policy", "tr") == "Poliçe"
+    assert translate_text("Active Gross Premium", "tr") == "Aktif Brüt Prim"
+    assert translate_text("Lead", "tr") == "Fırsat"
