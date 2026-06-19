@@ -14,6 +14,8 @@
     "e2e:ci": "playwright test --reporter=line,json,junit",
     "e2e:smoke": "playwright test at-smoke.spec.js",
     "e2e:smoke:ci": "playwright test at-smoke.spec.js --reporter=line,json,junit",
+    "e2e:import-export": "playwright test import-export-flows.spec.js",
+    "e2e:import-export:ci": "playwright test import-export-flows.spec.js --reporter=line,json,junit",
     "e2e:site-map": "playwright test site-haritasi-tarama.spec.js --reporter=line",
     "e2e:site-map:kpi": "node scripts/e2e/validate-site-haritasi-kpi.mjs",
     "e2e:site-map:kpi:warn": "node scripts/e2e/validate-site-haritasi-kpi.mjs --external-warn=100",
