@@ -1,0 +1,135 @@
+{
+ "actions": [],
+ "autoname": "AT-IMP-.YYYY.-.######",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "dataset",
+  "status",
+  "source_file",
+  "column_mapping",
+  "import_options",
+  "preview_summary",
+  "preview_rows_json",
+  "result_summary",
+  "error_log_file",
+  "requested_by",
+  "started_at",
+  "finished_at",
+  "queue_job_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "dataset",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Dataset",
+   "options": "customers\noffers\npolicies",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nPreviewed\nQueued\nRunning\nCompleted\nFailed\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_file",
+   "fieldtype": "Attach",
+   "label": "Source File",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_mapping",
+   "fieldtype": "Long Text",
+   "label": "Column Mapping JSON"
+  },
+  {
+   "fieldname": "import_options",
+   "fieldtype": "Long Text",
+   "label": "Import Options JSON"
+  },
+  {
+   "fieldname": "preview_summary",
+   "fieldtype": "Long Text",
+   "label": "Preview Summary JSON"
+  },
+  {
+   "fieldname": "preview_rows_json",
+   "fieldtype": "Long Text",
+   "label": "Preview Rows JSON"
+  },
+  {
+   "fieldname": "result_summary",
+   "fieldtype": "Long Text",
+   "label": "Result Summary JSON"
+  },
+  {
+   "fieldname": "error_log_file",
+   "fieldtype": "Attach",
+   "label": "Error Log File"
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "finished_at",
+   "fieldtype": "Datetime",
+   "label": "Finished At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "queue_job_id",
+   "fieldtype": "Data",
+   "label": "Queue Job ID",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Data Import Job",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "AT System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

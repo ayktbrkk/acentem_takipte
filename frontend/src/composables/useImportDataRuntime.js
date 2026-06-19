@@ -1,31 +1,11 @@
-import { computed, reactive, ref, unref, watch } from "vue";
+import { computed, onUnmounted, reactive, ref, unref, watch } from "vue";
+import { createResource } from "frappe-ui";
 
 const datasets = [
   {
-    key: "policies",
-    labelKey: "policyLabel",
-    fields: [
-      { value: "policy_no", labelKey: "policyNo" },
-      { value: "customer", labelKey: "customer" },
-      { value: "branch", labelKey: "branch" },
-      { value: "gross_premium", labelKey: "grossPremium" },
-      { value: "status", labelKey: "status" },
-    ],
-  },
-  {
-    key: "offers",
-    labelKey: "offerLabel",
-    fields: [
-      { value: "offer_no", labelKey: "offerNo" },
-      { value: "customer", labelKey: "customer" },
-      { value: "insurance_company", labelKey: "insuranceCompany" },
-      { value: "gross_premium", labelKey: "grossPremium" },
-      { value: "status", labelKey: "status" },
-    ],
-  },
-  {
     key: "customers",
     labelKey: "customerLabel",
+    supported: true,
     fields: [
       { value: "full_name", labelKey: "fullName" },
       { value: "tax_id", labelKey: "taxId" },
@@ -34,45 +14,158 @@ const datasets = [
       { value: "customer_type", labelKey: "customerType" },
     ],
   },
+  {
+    key: "offers",
+    labelKey: "offerLabel",
+    supported: true,
+    fields: [
+      { value: "customer", labelKey: "customer" },
+      { value: "sales_entity", labelKey: "salesEntity" },
+      { value: "insurance_company", labelKey: "insuranceCompany" },
+      { value: "branch", labelKey: "branch" },
+      { value: "offer_date", labelKey: "offerDate" },
+      { value: "gross_premium", labelKey: "grossPremium" },
+      { value: "net_premium", labelKey: "netPremium" },
+      { value: "tax_amount", labelKey: "taxAmount" },
+      { value: "commission_amount", labelKey: "commissionAmount" },
+      { value: "status", labelKey: "status" },
+    ],
+  },
+  {
+    key: "policies",
+    labelKey: "policyLabel",
+    supported: true,
+    fields: [
+      { value: "policy_no", labelKey: "policyNo" },
+      { value: "customer", labelKey: "customer" },
+      { value: "sales_entity", labelKey: "salesEntity" },
+      { value: "insurance_company", labelKey: "insuranceCompany" },
+      { value: "branch", labelKey: "branch" },
+      { value: "issue_date", labelKey: "issueDate" },
+      { value: "start_date", labelKey: "startDate" },
+      { value: "end_date", labelKey: "endDate" },
+      { value: "gross_premium", labelKey: "grossPremium" },
+      { value: "status", labelKey: "status" },
+    ],
+  },
 ];
 
 function label(t, key) {
   return t(key);
 }
 
-function parseCsv(text) {
-  const lines = String(text || "")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  if (!lines.length) return { headers: [], rows: [] };
-
-  const headers = lines[0].split(",").map((h) => h.trim());
-  const rows = lines.slice(1).map((line) => {
-    const parts = line.split(",");
-    const row = {};
-    headers.forEach((head, idx) => {
-      row[head] = String(parts[idx] ?? "").trim();
-    });
-    return row;
-  });
-
-  return { headers, rows };
+function normalizeToken(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
-export function useImportDataRuntime({ t, router, authStore }) {
+function suggestColumnMapping(headers, fieldOptions) {
+  const suggestions = {};
+  const fieldIndex = new Map();
+  fieldOptions.forEach((field) => {
+    fieldIndex.set(normalizeToken(field.value), field.value);
+    fieldIndex.set(normalizeToken(field.label), field.value);
+  });
+  const aliasIndex = {
+    ad_soyad: "full_name",
+    fullname: "full_name",
+    tckn: "tax_id",
+    vergi_no: "tax_id",
+    cep_telefonu: "mobile_phone",
+    mobilephone: "mobile_phone",
+    sigorta_sirketi: "insurance_company",
+    satis_kanali: "sales_entity",
+    teklif_tarihi: "offer_date",
+    tanzim_tarihi: "issue_date",
+    baslangic_tarihi: "start_date",
+    bitis_tarihi: "end_date",
+    police_no: "policy_no",
+    brut_prim: "gross_premium",
+  };
+  Object.entries(aliasIndex).forEach(([alias, target]) => {
+    fieldIndex.set(alias, target);
+  });
+
+  headers.forEach((header) => {
+    const token = normalizeToken(header);
+    if (fieldIndex.has(token)) {
+      suggestions[header] = fieldIndex.get(token);
+    }
+  });
+  return suggestions;
+}
+
+function guessDatasetFromFileName(fileName) {
+  const lowerName = String(fileName || "").toLowerCase();
+  if (lowerName.includes("muster") || lowerName.includes("customer")) return "customers";
+  if (lowerName.includes("teklif") || lowerName.includes("offer")) return "offers";
+  if (lowerName.includes("polic") || lowerName.includes("poli")) return "policies";
+  return null;
+}
+
+export function useImportDataRuntime({ t, router, authStore, branchStore }) {
   const activeLocale = computed(() => unref(authStore.locale) || "en");
-  const selectedDataset = ref(datasets[0].key);
+  const selectedDataset = ref("customers");
   const fileName = ref("");
+  const selectedFile = ref(null);
   const columns = ref([]);
   const previewRows = ref([]);
+  const previewSummary = ref({});
   const importMessage = ref("");
+  const errorMessage = ref("");
+  const jobName = ref("");
+  const jobStatus = ref("");
+  const resultSummary = ref({});
+  const errorLogFile = ref("");
   const columnMapping = reactive({});
+  const uploading = ref(false);
+  const previewLoading = ref(false);
+  const importLoading = ref(false);
+  const sheetNames = ref([]);
+  const selectedSheet = ref("");
+  const jobHistory = ref([]);
+
+  const createDraftResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.data_import.create_import_job_draft",
+    auto: false,
+  });
+  const previewResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.data_import.preview_data_import",
+    auto: false,
+  });
+  const enqueueResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.data_import.enqueue_data_import",
+    auto: false,
+  });
+  const statusResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.data_import.get_import_job_status",
+    auto: false,
+  });
+  const listJobsResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.data_import.list_import_jobs",
+    auto: false,
+  });
+  const headersResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.data_import.get_import_file_headers",
+    auto: false,
+  });
+  const cancelResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.data_import.cancel_import_job",
+    auto: false,
+  });
+  const statusPolling = ref(null);
+  const headersLoading = ref(false);
+  let importReadyHandler = null;
+  let importFailedHandler = null;
 
   const localizedDatasets = computed(() =>
     datasets.map((dataset) => ({
       key: dataset.key,
       label: label(t, dataset.labelKey),
+      supported: dataset.supported,
     })),
   );
 
@@ -88,28 +181,129 @@ export function useImportDataRuntime({ t, router, authStore }) {
     return columns.value.filter((col) => String(columnMapping[col] || "").trim() !== "").length;
   });
 
-  const canImport = computed(() => {
-    return Boolean(fileName.value && columns.value.length && mappedColumnCount.value > 0);
+  const isDatasetSupported = computed(() => {
+    const dataset = datasets.find((item) => item.key === selectedDataset.value);
+    return Boolean(dataset?.supported);
   });
+
+  const isSpreadsheetFile = computed(() => /\.xlsx$/i.test(fileName.value || ""));
+
+  const canPreview = computed(() => {
+    return Boolean(
+      isDatasetSupported.value
+      && jobName.value
+      && columns.value.length
+      && mappedColumnCount.value > 0
+      && !uploading.value
+      && !previewLoading.value,
+    );
+  });
+
+  const canImport = computed(() => {
+    const readyCount = Number(previewSummary.value?.ready || 0);
+    return Boolean(canPreview.value && readyCount > 0 && jobStatus.value === "Previewed" && !importLoading.value);
+  });
+
+  const canCancelImport = computed(() => {
+    return ["Draft", "Previewed", "Queued"].includes(String(jobStatus.value || ""));
+  });
+
+  function clearPreviewResults() {
+    previewRows.value = [];
+    previewSummary.value = {};
+    importMessage.value = "";
+    if (jobStatus.value === "Previewed") {
+      jobStatus.value = "Draft";
+    }
+  }
+
+  function applyColumnSuggestions() {
+    const suggestions = suggestColumnMapping(columns.value, selectedFieldOptions.value);
+    Object.entries(suggestions).forEach(([header, field]) => {
+      if (!columnMapping[header]) {
+        columnMapping[header] = field;
+      }
+    });
+  }
+
+  function resetPreviewState() {
+    previewRows.value = [];
+    previewSummary.value = {};
+    importMessage.value = "";
+    errorMessage.value = "";
+    jobStatus.value = "";
+    resultSummary.value = {};
+    errorLogFile.value = "";
+    stopStatusPolling();
+  }
 
   function resetAll() {
     fileName.value = "";
+    selectedFile.value = null;
     columns.value = [];
-    previewRows.value = [];
-    importMessage.value = "";
+    jobName.value = "";
     Object.keys(columnMapping).forEach((key) => delete columnMapping[key]);
+    resetPreviewState();
   }
 
-  function applyParsedData(headers, rows) {
+  function applyHeaders(headers) {
     columns.value = headers;
-    previewRows.value = rows.slice(0, 8);
     Object.keys(columnMapping).forEach((key) => delete columnMapping[key]);
     headers.forEach((head) => {
       columnMapping[head] = "";
     });
+    applyColumnSuggestions();
   }
 
-  function handleFileSelect(event) {
+  async function uploadSelectedFile(file) {
+    const maxBytes = 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      errorMessage.value = t("fileTooLarge");
+      return;
+    }
+
+    uploading.value = true;
+    errorMessage.value = "";
+    resetPreviewState();
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("is_private", "1");
+
+    try {
+      const csrfToken = (typeof window !== "undefined" && window.csrf_token) || "";
+      const response = await fetch("/api/method/upload_file", {
+        method: "POST",
+        body: formData,
+        headers: csrfToken ? { "X-Frappe-CSRF-Token": csrfToken } : {},
+      });
+      const payload = await response.json();
+      const uploadedName = payload?.message?.name || "";
+      const uploadedUrl = payload?.message?.file_url || "";
+      if (!uploadedName) {
+        errorMessage.value = t("uploadError");
+        return;
+      }
+
+      const draft = await createDraftResource.submit({
+        dataset: selectedDataset.value,
+        file_name: uploadedName,
+        file_url: uploadedUrl,
+      });
+      jobName.value = draft?.job_name || "";
+      sheetNames.value = draft?.sheet_names || [];
+      selectedSheet.value = draft?.active_sheet || sheetNames.value[0] || "";
+      applyHeaders(draft?.headers || []);
+      jobStatus.value = "Draft";
+      await loadJobHistory();
+    } catch (error) {
+      errorMessage.value = error?.messages?.join(" ") || error?.message || t("uploadError");
+    } finally {
+      uploading.value = false;
+    }
+  }
+
+  async function handleFileSelect(event) {
     const input = event?.target;
     const file = input?.files?.[0];
     if (!file) {
@@ -117,58 +311,239 @@ export function useImportDataRuntime({ t, router, authStore }) {
       return;
     }
 
-    const lowerName = String(file.name || "").toLowerCase();
-    if (lowerName.includes("muster") || lowerName.includes("customer")) {
-      selectedDataset.value = "customers";
-    } else if (lowerName.includes("teklif") || lowerName.includes("offer")) {
-      selectedDataset.value = "offers";
-    } else if (lowerName.includes("polic") || lowerName.includes("poli")) {
-      selectedDataset.value = "policies";
+    const guessedDataset = guessDatasetFromFileName(file.name);
+    if (guessedDataset) {
+      selectedDataset.value = guessedDataset;
     }
 
-    fileName.value = file.name;
-    importMessage.value = "";
-
-    if (/\.csv$/i.test(file.name)) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const parsed = parseCsv(String(reader.result || ""));
-        applyParsedData(parsed.headers, parsed.rows);
-      };
-      reader.readAsText(file);
+    if (!isDatasetSupported.value) {
+      errorMessage.value = t("datasetNotSupported");
+      fileName.value = file.name;
+      selectedFile.value = file;
       return;
     }
 
-    const fallbackHeaders = selectedFieldOptions.value.map((field) => field.label);
-    const fallbackRows = Array.from({ length: 5 }).map((_, index) => {
-      const row = {};
-      fallbackHeaders.forEach((head) => {
-        row[head] = `${t("rowsPrefix")} ${index + 1}`;
-      });
-      return row;
-    });
-    applyParsedData(fallbackHeaders, fallbackRows);
-    importMessage.value = t("xlsPreviewWarning");
+    if (!/\.(csv|xlsx)$/i.test(file.name)) {
+      errorMessage.value = t("unsupportedFileMessage");
+      fileName.value = file.name;
+      selectedFile.value = file;
+      return;
+    }
+
+    fileName.value = file.name;
+    selectedFile.value = file;
+    await uploadSelectedFile(file);
   }
 
-  function importData() {
-    if (!canImport.value) return;
-    const mappedColumnsLabel = t("columnsMapped");
-    importMessage.value = mappedColumnsLabel === "columnsMapped"
-      ? `${mappedColumnCount.value} columns mapped for ${fileName.value}. Import queued.`
-      : `${fileName.value} için ${mappedColumnCount.value} ${mappedColumnsLabel}. ${t("importQueued")}`;
+  async function previewData() {
+    if (!canPreview.value || !jobName.value) return;
+    previewLoading.value = true;
+    errorMessage.value = "";
+    importMessage.value = "";
+
+    const mapping = {};
+    columns.value.forEach((column) => {
+      if (columnMapping[column]) {
+        mapping[column] = columnMapping[column];
+      }
+    });
+
+    try {
+      const result = await previewResource.submit({
+        job_name: jobName.value,
+        column_mapping: mapping,
+        import_options: {
+          office_branch: branchStore?.requestBranch || null,
+          delimiter: ",",
+          duplicate_policy: "skip",
+          sheet_name: selectedSheet.value || null,
+        },
+      });
+      previewRows.value = (result?.rows || []).map((row) => ({
+        ...row.raw,
+        row_status: row.row_status,
+        error_message: row.error_message,
+      }));
+      previewSummary.value = result?.summary || {};
+      jobStatus.value = "Previewed";
+      importMessage.value = t("previewReadyMessage");
+    } catch (error) {
+      errorMessage.value = error?.messages?.join(" ") || error?.message || t("previewFailed");
+    } finally {
+      previewLoading.value = false;
+    }
+  }
+
+  function stopStatusPolling() {
+    if (statusPolling.value) {
+      clearInterval(statusPolling.value);
+      statusPolling.value = null;
+    }
+  }
+
+  async function refreshJobStatus() {
+    if (!jobName.value) return;
+    try {
+      const result = await statusResource.submit({ job_name: jobName.value });
+      jobStatus.value = result?.status || jobStatus.value;
+      resultSummary.value = result?.result_summary || {};
+      errorLogFile.value = result?.error_log_file || "";
+      if (["Completed", "Failed", "Cancelled"].includes(jobStatus.value)) {
+        stopStatusPolling();
+        importMessage.value = jobStatus.value === "Completed" ? t("importCompleted") : t("importFailed");
+      }
+    } catch (error) {
+      errorMessage.value = error?.messages?.join(" ") || error?.message || t("statusFailed");
+      stopStatusPolling();
+    }
+  }
+
+  function startStatusPolling() {
+    stopStatusPolling();
+    statusPolling.value = setInterval(() => {
+      refreshJobStatus();
+    }, 2000);
+  }
+
+  async function importData() {
+    if (!canImport.value || !jobName.value) return;
+    importLoading.value = true;
+    errorMessage.value = "";
+
+    try {
+      await enqueueResource.submit({ job_name: jobName.value });
+      jobStatus.value = "Queued";
+      importMessage.value = t("importQueued");
+      startStatusPolling();
+      await refreshJobStatus();
+    } catch (error) {
+      errorMessage.value = error?.messages?.join(" ") || error?.message || t("importFailed");
+    } finally {
+      importLoading.value = false;
+    }
+  }
+
+  async function refreshHeadersForSheet() {
+    if (!jobName.value || !selectedSheet.value) return;
+    headersLoading.value = true;
+    errorMessage.value = "";
+    clearPreviewResults();
+
+    try {
+      const result = await headersResource.submit({
+        job_name: jobName.value,
+        sheet_name: selectedSheet.value,
+      });
+      sheetNames.value = result?.sheet_names || sheetNames.value;
+      selectedSheet.value = result?.active_sheet || selectedSheet.value;
+      applyHeaders(result?.headers || []);
+    } catch (error) {
+      errorMessage.value = error?.messages?.join(" ") || error?.message || t("headersRefreshFailed");
+    } finally {
+      headersLoading.value = false;
+    }
+  }
+
+  function handleImportRealtime(payload) {
+    if (!payload?.job_name || payload.job_name !== jobName.value) {
+      return;
+    }
+    stopStatusPolling();
+    jobStatus.value = payload?.status || jobStatus.value;
+    resultSummary.value = payload?.result_summary || resultSummary.value;
+    errorLogFile.value = payload?.error_log_file || errorLogFile.value;
+    importMessage.value = jobStatus.value === "Completed" ? t("importCompleted") : t("importFailed");
+    loadJobHistory();
+  }
+
+  function bindImportRealtimeListeners() {
+    const realtime = typeof window !== "undefined" ? window?.frappe?.realtime : null;
+    if (!realtime || typeof realtime.on !== "function") {
+      return;
+    }
+
+    importReadyHandler = (payload) => handleImportRealtime(payload);
+    importFailedHandler = (payload) => {
+      if (!payload?.job_name || payload.job_name !== jobName.value) {
+        return;
+      }
+      stopStatusPolling();
+      jobStatus.value = "Failed";
+      importMessage.value = t("importFailed");
+      errorMessage.value = payload?.error || t("importFailed");
+      loadJobHistory();
+    };
+    realtime.on("at_import_ready", importReadyHandler);
+    realtime.on("at_import_failed", importFailedHandler);
+  }
+
+  function unbindImportRealtimeListeners() {
+    const realtime = typeof window !== "undefined" ? window?.frappe?.realtime : null;
+    if (!realtime || typeof realtime.off !== "function") {
+      return;
+    }
+    if (importReadyHandler) {
+      realtime.off("at_import_ready", importReadyHandler);
+      importReadyHandler = null;
+    }
+    if (importFailedHandler) {
+      realtime.off("at_import_failed", importFailedHandler);
+      importFailedHandler = null;
+    }
+  }
+
+  async function cancelImportJob(targetJobName = "") {
+    const safeJobName = String(targetJobName || jobName.value || "").trim();
+    if (!safeJobName) return;
+
+    try {
+      await cancelResource.submit({ job_name: safeJobName });
+      if (safeJobName === jobName.value) {
+        stopStatusPolling();
+        jobStatus.value = "Cancelled";
+        importMessage.value = t("importCancelled");
+      }
+      await loadJobHistory();
+    } catch (error) {
+      errorMessage.value = error?.messages?.join(" ") || error?.message || t("cancelFailed");
+    }
   }
 
   function cancel() {
+    stopStatusPolling();
     router.push({ name: "dashboard" });
   }
 
+  async function loadJobHistory() {
+    try {
+      const rows = await listJobsResource.submit({ limit: 10 });
+      jobHistory.value = Array.isArray(rows) ? rows : [];
+    } catch {
+      jobHistory.value = [];
+    }
+  }
+
+  watch(selectedSheet, async (sheet, previous) => {
+    if (!sheet || !previous || !jobName.value || !isSpreadsheetFile.value) return;
+    await refreshHeadersForSheet();
+  });
   watch(selectedDataset, () => {
     columns.value.forEach((col) => {
       columnMapping[col] = "";
     });
-    importMessage.value = "";
+    clearPreviewResults();
+    if (selectedFile.value && isDatasetSupported.value) {
+      uploadSelectedFile(selectedFile.value);
+    }
   });
+
+  bindImportRealtimeListeners();
+  onUnmounted(() => {
+    stopStatusPolling();
+    unbindImportRealtimeListeners();
+  });
+
+  loadJobHistory();
 
   return {
     activeLocale,
@@ -178,14 +553,33 @@ export function useImportDataRuntime({ t, router, authStore }) {
     fileName,
     columns,
     previewRows,
+    previewSummary,
     importMessage,
+    errorMessage,
     columnMapping,
     selectedFieldOptions,
     mappedColumnCount,
+    canPreview,
     canImport,
+    canCancelImport,
+    isDatasetSupported,
+    uploading,
+    previewLoading,
+    importLoading,
+    headersLoading,
+    jobName,
+    jobStatus,
+    resultSummary,
+    errorLogFile,
+    sheetNames,
+    selectedSheet,
+    isSpreadsheetFile,
+    jobHistory,
     resetAll,
     handleFileSelect,
+    previewData,
     importData,
+    cancelImportJob,
     cancel,
   };
 }

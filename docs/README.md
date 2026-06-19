@@ -27,6 +27,8 @@ This directory contains the main repository documentation for `Acentem Takipte`.
 
 ## Operations and Deployment
 
+- [Data Import Guide](DATA_IMPORT_GUIDE.md)
+  - Operator guide for `/at/data-import` with required columns, duplicate rules, and WSL validation steps.
 - [Production Deploy Checklist](PRODUCTION_DEPLOY_CHECKLIST.md)
   - Production-safe deployment and rollback checklist, including the current Coolify/GHCR path.
 - [Coolify VPS Deployment Guide](COOLIFY_VPS_DEPLOY_GUIDE.md)

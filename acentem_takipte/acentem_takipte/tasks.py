@@ -490,3 +490,51 @@ def _policy_renewal_notification_exists_today(policy_name: str, business_date) -
     )
     return bool(rows)
 
+
+def enqueue_data_import_job(job_name: str) -> dict[str, Any]:
+    safe_job_name = str(job_name or "").strip()
+    if not safe_job_name:
+        frappe.throw("Import job name is required.")
+
+    requested_by = frappe.db.get_value("AT Data Import Job", safe_job_name, "requested_by") or frappe.session.user
+    job = frappe.enqueue(
+        "acentem_takipte.acentem_takipte.tasks._process_data_import_job_logic",
+        queue="long",
+        timeout=1500,
+        job_name=safe_job_name,
+        requested_by=requested_by,
+        now=frappe.flags.in_test,
+    )
+    return _queued_response(
+        job=job,
+        queue="long",
+        method="acentem_takipte.acentem_takipte.tasks._process_data_import_job_logic",
+    )
+
+
+def _process_data_import_job_logic(job_name: str, requested_by: str) -> dict[str, Any]:
+    from acentem_takipte.acentem_takipte.services.data_import.executor import execute_data_import_job
+
+    frappe.set_user(requested_by or frappe.session.user)
+    try:
+        result = execute_data_import_job(job_name)
+        job = frappe.get_doc("AT Data Import Job", job_name)
+        frappe.publish_realtime(
+            "at_import_ready",
+            {
+                "job_name": job.name,
+                "status": job.status,
+                "result_summary": result,
+                "error_log_file": job.error_log_file,
+            },
+            user=requested_by,
+        )
+        return result
+    except Exception:
+        frappe.publish_realtime(
+            "at_import_failed",
+            {"job_name": job_name, "error": "Data import failed."},
+            user=requested_by,
+        )
+        raise
+

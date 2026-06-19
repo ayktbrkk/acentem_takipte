@@ -16,7 +16,7 @@
           ref="fileInput"
           class="hidden"
           type="file"
-          accept=".xlsx,.xls,.csv"
+          accept=".xlsx,.csv"
           @change="$emit('file-select', $event)"
         />
         <button type="button" class="file-trigger" @click="openFilePicker">
@@ -24,6 +24,13 @@
           <span class="file-trigger__hint">{{ t("chooseFileHint") }}</span>
         </button>
         <p v-if="fileName" class="mt-2 text-xs font-medium text-slate-600">{{ t("selectedFile") }}: {{ fileName }}</p>
+      </div>
+
+      <div v-if="isSpreadsheetFile && sheetNames.length > 1" class="form-field md:col-span-2">
+        <label class="form-label">{{ t("sheetLabel") }}</label>
+        <select v-model="selectedSheetModel" class="form-input">
+          <option v-for="sheet in sheetNames" :key="sheet" :value="sheet">{{ sheet }}</option>
+        </select>
       </div>
     </div>
   </SectionPanel>
@@ -39,6 +46,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  selectedSheet: {
+    type: String,
+    default: "",
+  },
   localizedDatasets: {
     type: Array,
     required: true,
@@ -47,18 +58,31 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  sheetNames: {
+    type: Array,
+    default: () => [],
+  },
+  isSpreadsheetFile: {
+    type: Boolean,
+    default: false,
+  },
   t: {
     type: Function,
     required: true,
   },
 });
 
-const emit = defineEmits(["update:modelValue", "file-select"]);
+const emit = defineEmits(["update:modelValue", "update:selectedSheet", "file-select"]);
 const fileInput = ref(null);
 
 const selectedDatasetModel = computed({
   get: () => props.modelValue,
   set: (value) => emit("update:modelValue", value),
+});
+
+const selectedSheetModel = computed({
+  get: () => props.selectedSheet,
+  set: (value) => emit("update:selectedSheet", value),
 });
 
 function openFilePicker() {
