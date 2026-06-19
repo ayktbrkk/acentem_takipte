@@ -267,7 +267,9 @@ function Invoke-SmokeTest {
             "/at/payments",
             "/at/tasks",
             "/at/at-documents",
-            "/at/reports?report=policy_list"
+            "/at/reports?report=policy_list",
+            "/at/data-import",
+            "/at/data-export"
         )) {
             Write-DryRun "Would request $PublicBaseUrl$path with authenticated session."
         }
@@ -301,7 +303,9 @@ function Invoke-SmokeTest {
         "/at/payments",
         "/at/tasks",
         "/at/at-documents",
-        "/at/reports?report=policy_list"
+        "/at/reports?report=policy_list",
+        "/at/data-import",
+        "/at/data-export"
     )
 
     foreach ($path in $paths) {
