@@ -57,6 +57,61 @@ def test_get_screen_export_payload_enforces_auth_and_permission(monkeypatch):
     ]
 
 
+def test_download_export_builds_query_and_sets_download_response(monkeypatch):
+    monkeypatch.setattr(list_exports, "assert_authenticated", lambda: None)
+    monkeypatch.setattr(list_exports, "assert_doctype_permission", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        list_exports,
+        "get_screen_export_definition",
+        lambda screen: {"permission_doctype": "AT Claim"},
+    )
+    captured = {}
+
+    def _fake_build(screen, query=None, export_format="xlsx", limit=1000):
+        captured["screen"] = screen
+        captured["query"] = query
+        captured["export_format"] = export_format
+        captured["limit"] = limit
+        return {
+            "filename": "claims_board.xlsx",
+            "filecontent": b"xlsx-bytes",
+            "type": "download",
+            "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        }
+
+    monkeypatch.setattr(list_exports, "build_screen_export_response", _fake_build)
+    monkeypatch.setattr(list_exports.frappe, "response", {})
+    monkeypatch.setattr(list_exports.frappe, "form_dict", {})
+
+    list_exports.download_export(
+        "claims_board",
+        export_format="xlsx",
+        start_date="2026-03-01",
+        end_date="2026-03-31",
+        status="Open",
+        filename="hasar_export",
+    )
+
+    assert captured["screen"] == "claims_board"
+    assert captured["query"]["filters"]["claim_status"] == "Open"
+    assert list_exports.frappe.response["filename"] == "hasar_export.xlsx"
+    assert list_exports.frappe.response["filecontent"] == b"xlsx-bytes"
+
+
+def test_build_workbench_export_query_maps_claim_status():
+    from acentem_takipte.acentem_takipte.services.list_exports import build_workbench_export_query
+
+    query = build_workbench_export_query(
+        "claims_board",
+        start_date="2026-03-01",
+        end_date="2026-03-31",
+        status="Open",
+    )
+
+    assert query["filters"]["claim_status"] == "Open"
+    assert query["filters"]["incident_date"] == ["between", ["2026-03-01", "2026-03-31"]]
+
+
 def test_export_screen_list_sets_download_response(monkeypatch):
     monkeypatch.setattr(list_exports, "assert_authenticated", lambda: None)
     monkeypatch.setattr(list_exports, "assert_doctype_permission", lambda doctype, permtype: None)

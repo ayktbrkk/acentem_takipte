@@ -1,10 +1,13 @@
-export function openListExport({ screen, query, format = "xlsx", limit = 1000 }) {
+export function openListExport({ screen, query, format = "xlsx", limit = 1000, filename = "" }) {
   const params = new URLSearchParams({
     screen: String(screen || "").trim(),
     query: JSON.stringify(query || {}),
     export_format: String(format || "xlsx").trim().toLowerCase() === "pdf" ? "pdf" : "xlsx",
     limit: String(Number(limit) > 0 ? Number(limit) : 1000),
   });
+  if (filename) {
+    params.set("filename", String(filename).trim());
+  }
   window.open(
     `/api/method/acentem_takipte.acentem_takipte.api.list_exports.export_screen_list?${params.toString()}`,
     "_blank",

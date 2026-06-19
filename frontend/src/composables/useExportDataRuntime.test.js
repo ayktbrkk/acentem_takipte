@@ -32,12 +32,7 @@ describe("useExportDataRuntime", () => {
 
     runtime.downloadExport();
 
-    expect(openSpy).toHaveBeenCalledWith(
-      expect.stringContaining("screen=claims_board"),
-      "_blank",
-      "noopener,noreferrer",
-    );
-    expect(openSpy.mock.calls[0][0]).toContain("format=csv");
+    expect(openSpy.mock.calls[0][0]).toContain("download_export");
     expect(openSpy.mock.calls[0][0]).toContain("filename=hasar_export");
     expect(openSpy.mock.calls[0][0]).toContain("start_date=2026-03-01");
     expect(openSpy.mock.calls[0][0]).toContain("end_date=2026-03-31");

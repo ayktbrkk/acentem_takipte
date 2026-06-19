@@ -174,9 +174,160 @@ SCREEN_EXPORTS: dict[str, dict[str, Any]] = {
     },
 }
 
+SCREEN_ALIASES: dict[str, str] = {
+    "dashboard": "policy_list",
+}
+
+SCREEN_FILTER_FIELDS: dict[str, dict[str, str | None]] = {
+    "claims_board": {"status_field": "claim_status", "date_field": "incident_date"},
+    "payments_board": {"status_field": "status", "date_field": "due_date"},
+    "renewals_board": {"status_field": "status", "date_field": "due_date"},
+    "policy_list": {"status_field": "status", "date_field": "end_date"},
+    "offer_list": {"status_field": "status", "date_field": "offer_date"},
+    "customer_list": {"status_field": None, "date_field": "modified"},
+    "lead_list": {"status_field": "status", "date_field": "modified"},
+}
+
+SCREEN_EXPORTS.update(
+    {
+        "claims_board": {
+            "permission_doctype": "AT Claim",
+            "export_key": "claims_board",
+            "title": _t("Claims Board"),
+            "type": "doctype",
+            "doctype": "AT Claim",
+            "fields": [
+                "name",
+                "claim_no",
+                "policy",
+                "customer",
+                "claim_status",
+                "approved_amount",
+                "paid_amount",
+                "currency",
+                "assigned_expert",
+                "appeal_status",
+                "next_follow_up_on",
+                "rejection_reason",
+                "incident_date",
+                "modified",
+            ],
+            "columns": [
+                _column("claim_no", _t("Claim No")),
+                _column("policy", _t("Policy")),
+                _column("customer", _t("Customer")),
+                _column("claim_status", _t("Status")),
+                _column("approved_amount", _t("Approved Amount"), formatter="currency", currency_field="currency"),
+                _column("paid_amount", _t("Paid Amount"), formatter="currency", currency_field="currency"),
+                _column("assigned_expert", _t("Assigned Expert")),
+                _column("appeal_status", _t("Appeal Status")),
+                _column("next_follow_up_on", _t("Next Follow Up"), formatter="date"),
+                _column("rejection_reason", _t("Rejection Reason")),
+                _column("incident_date", _t("Incident Date"), formatter="date"),
+                _column("modified", _t("Modified"), formatter="datetime"),
+            ],
+        },
+        "payments_board": {
+            "permission_doctype": "AT Payment",
+            "export_key": "payments_board",
+            "title": _t("Payments Board"),
+            "type": "doctype",
+            "doctype": "AT Payment",
+            "fields": [
+                "name",
+                "payment_no",
+                "policy",
+                "customer",
+                "status",
+                "payment_date",
+                "due_date",
+                "amount",
+                "currency",
+                "payment_direction",
+                "modified",
+            ],
+            "columns": [
+                _column("payment_no", _t("Payment No")),
+                _column("policy", _t("Policy")),
+                _column("customer", _t("Customer")),
+                _column("status", _t("Status")),
+                _column("payment_date", _t("Payment Date"), formatter="date"),
+                _column("due_date", _t("Due Date"), formatter="date"),
+                _column("amount", _t("Amount"), formatter="currency", currency_field="currency"),
+                _column("payment_direction", _t("Direction")),
+                _column("modified", _t("Modified"), formatter="datetime"),
+            ],
+        },
+        "renewals_board": {
+            "permission_doctype": "AT Renewal Task",
+            "export_key": "renewals_board",
+            "title": _t("Renewals Board"),
+            "type": "doctype",
+            "doctype": "AT Renewal Task",
+            "fields": [
+                "name",
+                "policy",
+                "customer",
+                "policy_end_date",
+                "due_date",
+                "status",
+                "assigned_to",
+                "lost_reason_code",
+                "modified",
+            ],
+            "columns": [
+                _column("name", _t("Renewal Task")),
+                _column("policy", _t("Policy")),
+                _column("customer", _t("Customer")),
+                _column("policy_end_date", _t("Policy End Date"), formatter="date"),
+                _column("due_date", _t("Due Date"), formatter="date"),
+                _column("status", _t("Status")),
+                _column("assigned_to", _t("Assigned To")),
+                _column("lost_reason_code", _t("Lost Reason")),
+                _column("modified", _t("Modified"), formatter="datetime"),
+            ],
+        },
+    }
+)
+
+
+def build_workbench_export_query(
+    screen: str,
+    *,
+    start_date: str = "",
+    end_date: str = "",
+    status: str = "",
+) -> dict[str, Any]:
+    resolved_screen = SCREEN_ALIASES.get(str(screen or "").strip(), str(screen or "").strip())
+    field_map = SCREEN_FILTER_FIELDS.get(
+        resolved_screen,
+        {"status_field": "status", "date_field": "modified"},
+    )
+    filters: dict[str, Any] = {}
+    safe_status = str(status or "").strip()
+    status_field = field_map.get("status_field")
+    if safe_status and status_field:
+        filters[str(status_field)] = safe_status
+
+    safe_start = str(start_date or "").strip()
+    safe_end = str(end_date or "").strip()
+    date_field = str(field_map.get("date_field") or "modified")
+    if safe_start and safe_end:
+        if date_field == "modified":
+            filters[date_field] = ["between", [f"{safe_start} 00:00:00", f"{safe_end} 23:59:59"]]
+        else:
+            filters[date_field] = ["between", [safe_start, safe_end]]
+    elif safe_start:
+        filters[date_field] = [">=", f"{safe_start} 00:00:00" if date_field == "modified" else safe_start]
+    elif safe_end:
+        filters[date_field] = ["<=", f"{safe_end} 23:59:59" if date_field == "modified" else safe_end]
+
+    return {"filters": filters, "order_by": "modified desc"}
+
 
 def get_screen_export_definition(screen: str) -> dict[str, Any]:
     key = str(screen or "").strip()
+    key = SCREEN_ALIASES.get(key, key)
     definition = SCREEN_EXPORTS.get(key)
     if not definition:
         frappe.throw(_("Unsupported export screen"))

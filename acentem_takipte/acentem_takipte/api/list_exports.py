@@ -20,6 +20,7 @@ from acentem_takipte.acentem_takipte.services.list_exports import (
     build_tabular_payload_export_response,
     build_screen_export_payload,
     build_screen_export_response,
+    build_workbench_export_query,
     get_screen_export_definition,
 )
 
@@ -42,19 +43,55 @@ def get_screen_export_payload(screen: str, query: dict | str | None = None, limi
 
 
 @frappe.whitelist()
-def export_screen_list(screen: str, query: dict | str | None = None, export_format: str = "xlsx", limit: int = 1000):
+def export_screen_list(
+    screen: str,
+    query: dict | str | None = None,
+    export_format: str = "xlsx",
+    limit: int = 1000,
+    filename: str = "",
+):
     assert_authenticated()
     definition = get_screen_export_definition(screen)
     assert_doctype_permission(str(definition["permission_doctype"]), "read")
-    frappe.response.update(
-        _coerce_download_payload(
-            build_screen_export_response(
+    download_payload = _coerce_download_payload(
+        build_screen_export_response(
             screen,
             query=query,
             export_format=export_format,
             limit=max(cint(limit), 1),
         )
+    )
+    _apply_filename_override(download_payload, filename=filename, export_format=export_format)
+    frappe.response.update(download_payload)
+
+
+@frappe.whitelist()
+def download_export(
+    screen: str,
+    query: dict | str | None = None,
+    export_format: str = "",
+    limit: int = 1000,
+    filename: str = "",
+    start_date: str = "",
+    end_date: str = "",
+    status: str = "",
+):
+    """Compatibility entrypoint used by /at/data-export before export_screen_list wiring."""
+    request_format = str(export_format or frappe.form_dict.get("format") or "xlsx").strip()
+    merged_query = query
+    if merged_query in (None, "", {}):
+        merged_query = build_workbench_export_query(
+            screen,
+            start_date=str(start_date or frappe.form_dict.get("start_date") or "").strip(),
+            end_date=str(end_date or frappe.form_dict.get("end_date") or "").strip(),
+            status=str(status or frappe.form_dict.get("status") or "").strip(),
         )
+    export_screen_list(
+        screen=screen,
+        query=merged_query,
+        export_format=request_format,
+        limit=limit,
+        filename=str(filename or frappe.form_dict.get("filename") or "").strip(),
     )
 
 
@@ -115,4 +152,13 @@ def _coerce_screen_payload(value: Any) -> dict[str, Any]:
 
 def _coerce_download_payload(value: Any) -> dict[str, Any]:
     return coerce_download_payload(value, default_filename="report.xlsx", default_type="download")
+
+
+def _apply_filename_override(payload: dict[str, Any], *, filename: str, export_format: str) -> None:
+    safe_filename = str(filename or "").strip()
+    if not safe_filename:
+        return
+    extension = "pdf" if str(export_format or "").strip().lower() == "pdf" else "xlsx"
+    stem = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in safe_filename) or "export"
+    payload["filename"] = f"{stem}.{extension}"
 
