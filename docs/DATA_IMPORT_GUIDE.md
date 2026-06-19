@@ -108,4 +108,10 @@ cd ~/frappe-bench/sites
 
 ## Fixtures
 
-Example CSV: `acentem_takipte/acentem_takipte/tests/fixtures/data_import/customers_valid.csv`
+Example CSV files:
+
+- `acentem_takipte/acentem_takipte/tests/fixtures/data_import/customers_valid.csv`
+- `acentem_takipte/acentem_takipte/tests/fixtures/data_import/offers_valid.csv`
+- `acentem_takipte/acentem_takipte/tests/fixtures/data_import/policies_valid.csv`
+
+Offer and policy fixtures expect the smoke reference links `IC-001`, `BR-001`, and sales entity `SE-001`, plus customer tax id `11111111110` from the customer fixture.

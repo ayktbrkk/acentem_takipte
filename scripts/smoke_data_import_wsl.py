@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-"""One-shot WSL smoke for /at/data-import customer CSV flow."""
+"""One-shot WSL smoke for /at/data-import customers, offers, and policies."""
 
 from __future__ import annotations
 
-import json
 import os
 import sys
 from pathlib import Path
+
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+from smoke_import_helpers import ensure_smoke_reference_data, print_payload, run_dataset_smoke
 
 
 def _init_frappe() -> None:
@@ -28,63 +33,63 @@ def _init_frappe() -> None:
         frappe.init(site=site)
 
 
+def _verify_customer(_: dict) -> bool:
+    import frappe
+
+    return bool(frappe.db.get_value("AT Customer", {"tax_id": "11111111110"}, "name"))
+
+
+def _verify_offer(_: dict) -> bool:
+    import frappe
+
+    customer = frappe.db.get_value("AT Customer", {"tax_id": "11111111110"}, "name")
+    if not customer:
+        return False
+    return bool(
+        frappe.db.get_value(
+            "AT Offer",
+            {
+                "customer": customer,
+                "insurance_company": "IC-001",
+                "offer_date": "2026-06-01",
+            },
+            "name",
+        )
+    )
+
+
+def _verify_policy(_: dict) -> bool:
+    import frappe
+
+    return bool(
+        frappe.db.get_value(
+            "AT Policy",
+            {"insurance_company": "IC-001", "policy_no": "POL-SMOKE-IMPORT-001"},
+            "name",
+        )
+    )
+
+
 def main() -> int:
     import frappe
-    from frappe.utils.file_manager import save_file
-
-    from acentem_takipte.acentem_takipte.api.data_import import (
-        create_import_job_draft,
-        enqueue_data_import,
-        get_import_job_status,
-        preview_data_import,
-    )
-    from acentem_takipte.acentem_takipte.tasks import _process_data_import_job_logic
 
     _init_frappe()
     frappe.connect()
     frappe.set_user("Administrator")
+    ensure_smoke_reference_data()
 
-    fixture = frappe.get_app_path(
-        "acentem_takipte",
-        "acentem_takipte",
-        "tests",
-        "fixtures",
-        "data_import",
-        "customers_valid.csv",
-    )
-    with open(fixture, "rb") as handle:
-        content = handle.read()
+    steps = [
+        ("customers", "customers_valid.csv", _verify_customer),
+        ("offers", "offers_valid.csv", _verify_offer),
+        ("policies", "policies_valid.csv", _verify_policy),
+    ]
 
-    file_doc = save_file("smoke_customers.csv", content, None, None, is_private=1)
-    draft = create_import_job_draft("customers", file_name=file_doc.name)
-    job_name = draft["job_name"]
-    mapping = {header: header for header in draft.get("headers", [])}
-    preview = preview_data_import(
-        job_name,
-        column_mapping=mapping,
-        import_options={"duplicate_policy": "skip"},
-    )
-    ready = int((preview.get("summary") or {}).get("ready") or 0)
-    if ready <= 0:
-        print(json.dumps({"error": "preview has no ready rows", "summary": preview.get("summary")}))
-        return 1
+    for dataset, fixture_file, verify in steps:
+        payload = run_dataset_smoke(dataset=dataset, fixture_file=fixture_file, verify=verify)
+        print_payload(payload)
+        if payload.get("error"):
+            return 1
 
-    enqueue = enqueue_data_import(job_name)
-    frappe.flags.in_test = True
-    result = _process_data_import_job_logic(job_name, "Administrator")
-    status = get_import_job_status(job_name)
-    customer = frappe.db.get_value("AT Customer", {"tax_id": "11111111110"}, "name")
-    payload = {
-        "job_name": job_name,
-        "preview_ready": ready,
-        "enqueue_status": enqueue.get("status"),
-        "result": result,
-        "final_status": status.get("status"),
-        "customer_created": customer,
-    }
-    print(json.dumps(payload, ensure_ascii=False))
-    if status.get("status") != "Completed" or not customer:
-        return 1
     print("SMOKE OK")
     return 0
 

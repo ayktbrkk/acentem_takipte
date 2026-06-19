@@ -12,7 +12,7 @@ from acentem_takipte.acentem_takipte.services.data_import.resolvers import (
 )
 from acentem_takipte.acentem_takipte.utils.financials import normalize_financial_amounts
 from acentem_takipte.acentem_takipte.utils.normalization import normalize_date
-from acentem_takipte.acentem_takipte.utils.statuses import ATOfferStatus
+from acentem_takipte.acentem_takipte.utils.statuses import ATOfferStatus, ATPolicyStatus
 
 
 def apply_column_mapping(
@@ -76,7 +76,7 @@ def normalize_offer_row(fields: dict[str, str], *, office_branch: str | None) ->
         return {}, "Offer date is required."
 
     status = str(fields.get("status") or ATOfferStatus.DRAFT).strip() or ATOfferStatus.DRAFT
-    if status not in ATOfferStatus.VALID:
+    if status not in ATOfferStatus.CREATION_ALLOWED:
         return {}, f"Unsupported offer status: {status}"
 
     financial_error = None

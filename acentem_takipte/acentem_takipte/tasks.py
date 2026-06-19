@@ -501,7 +501,8 @@ def enqueue_data_import_job(job_name: str) -> dict[str, Any]:
         "acentem_takipte.acentem_takipte.tasks._process_data_import_job_logic",
         queue="long",
         timeout=1500,
-        job_name=safe_job_name,
+        job_name=f"data-import-{safe_job_name}",
+        import_job_name=safe_job_name,
         requested_by=requested_by,
         now=frappe.flags.in_test,
     )
@@ -512,13 +513,13 @@ def enqueue_data_import_job(job_name: str) -> dict[str, Any]:
     )
 
 
-def _process_data_import_job_logic(job_name: str, requested_by: str) -> dict[str, Any]:
+def _process_data_import_job_logic(import_job_name: str, requested_by: str) -> dict[str, Any]:
     from acentem_takipte.acentem_takipte.services.data_import.executor import execute_data_import_job
 
     frappe.set_user(requested_by or frappe.session.user)
     try:
-        result = execute_data_import_job(job_name)
-        job = frappe.get_doc("AT Data Import Job", job_name)
+        result = execute_data_import_job(import_job_name)
+        job = frappe.get_doc("AT Data Import Job", import_job_name)
         frappe.publish_realtime(
             "at_import_ready",
             {
@@ -533,7 +534,7 @@ def _process_data_import_job_logic(job_name: str, requested_by: str) -> dict[str
     except Exception:
         frappe.publish_realtime(
             "at_import_failed",
-            {"job_name": job_name, "error": "Data import failed."},
+            {"job_name": import_job_name, "error": "Data import failed."},
             user=requested_by,
         )
         raise
