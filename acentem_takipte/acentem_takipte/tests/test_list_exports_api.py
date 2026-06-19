@@ -98,6 +98,41 @@ def test_download_export_builds_query_and_sets_download_response(monkeypatch):
     assert list_exports.frappe.response["filecontent"] == b"xlsx-bytes"
 
 
+def test_download_export_policy_list_without_query_uses_qualified_order_by(monkeypatch):
+    """Regression: /data-export policy_list with no query must not pass bare modified to get_list."""
+    monkeypatch.setattr(list_exports, "assert_authenticated", lambda: None)
+    monkeypatch.setattr(list_exports, "assert_doctype_permission", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        list_exports,
+        "get_screen_export_definition",
+        lambda screen: {"permission_doctype": "AT Policy"},
+    )
+    captured = {}
+
+    def _fake_build(screen, query=None, export_format="xlsx", limit=1000):
+        captured["screen"] = screen
+        captured["query"] = query
+        captured["export_format"] = export_format
+        captured["limit"] = limit
+        return {
+            "filename": "policy_list_workbench.xlsx",
+            "filecontent": b"xlsx-bytes",
+            "type": "download",
+            "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        }
+
+    monkeypatch.setattr(list_exports, "build_screen_export_response", _fake_build)
+    monkeypatch.setattr(list_exports.frappe, "response", {})
+    monkeypatch.setattr(list_exports.frappe, "form_dict", {})
+
+    list_exports.download_export("policy_list", export_format="xlsx", limit=5000)
+
+    assert captured["screen"] == "policy_list"
+    assert captured["query"]["order_by"] == "`tabAT Policy`.modified desc"
+    assert captured["export_format"] == "xlsx"
+    assert captured["limit"] == 5000
+
+
 def test_build_workbench_export_query_maps_claim_status():
     from acentem_takipte.acentem_takipte.services.list_exports import build_workbench_export_query
 
