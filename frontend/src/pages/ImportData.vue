@@ -68,6 +68,7 @@
             :file-name="fileName"
             :sheet-names="sheetNames"
             :is-spreadsheet-file="isSpreadsheetFile"
+            :headers-loading="headersLoading"
             :t="t"
             @file-select="handleFileSelect"
           />
@@ -149,6 +150,7 @@ const {
   canPreview,
   canImport,
   canCancelImport,
+  headersLoading,
   isDatasetSupported,
   previewLoading,
   importLoading,

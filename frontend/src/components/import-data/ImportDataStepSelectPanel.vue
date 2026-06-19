@@ -26,11 +26,12 @@
         <p v-if="fileName" class="mt-2 text-xs font-medium text-slate-600">{{ t("selectedFile") }}: {{ fileName }}</p>
       </div>
 
-      <div v-if="isSpreadsheetFile && sheetNames.length > 1" class="form-field md:col-span-2">
+      <div v-if="isSpreadsheetFile && sheetNames.length" class="form-field md:col-span-2">
         <label class="form-label">{{ t("sheetLabel") }}</label>
-        <select v-model="selectedSheetModel" class="form-input">
+        <select v-model="selectedSheetModel" class="form-input" :disabled="headersLoading">
           <option v-for="sheet in sheetNames" :key="sheet" :value="sheet">{{ sheet }}</option>
         </select>
+        <p v-if="headersLoading" class="mt-2 text-xs text-slate-500">{{ t("headersRefreshing") }}</p>
       </div>
     </div>
   </SectionPanel>
@@ -63,6 +64,10 @@ const props = defineProps({
     default: () => [],
   },
   isSpreadsheetFile: {
+    type: Boolean,
+    default: false,
+  },
+  headersLoading: {
     type: Boolean,
     default: false,
   },

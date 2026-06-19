@@ -390,7 +390,14 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
       errorLogFile.value = result?.error_log_file || "";
       if (["Completed", "Failed", "Cancelled"].includes(jobStatus.value)) {
         stopStatusPolling();
-        importMessage.value = jobStatus.value === "Completed" ? t("importCompleted") : t("importFailed");
+        if (jobStatus.value === "Completed") {
+          importMessage.value = t("importCompleted");
+        } else if (jobStatus.value === "Cancelled") {
+          importMessage.value = t("importCancelled");
+        } else {
+          importMessage.value = t("importFailed");
+        }
+        loadJobHistory();
       }
     } catch (error) {
       errorMessage.value = error?.messages?.join(" ") || error?.message || t("statusFailed");

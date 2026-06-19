@@ -89,6 +89,7 @@ export const IMPORT_TRANSLATIONS = {
     importCancelled: "İçe aktarma işi iptal edildi.",
     cancelFailed: "İş iptal edilemedi.",
     headersRefreshFailed: "Sayfa başlıkları yenilenemedi.",
+    headersRefreshing: "Sayfa başlıkları yenileniyor...",
     datasetNotSupported: "Bu veri kümesi henüz desteklenmiyor.",
   },
   en: {
@@ -181,6 +182,7 @@ export const IMPORT_TRANSLATIONS = {
     importCancelled: "Import job cancelled.",
     cancelFailed: "Could not cancel the job.",
     headersRefreshFailed: "Could not refresh sheet headers.",
+    headersRefreshing: "Refreshing sheet headers...",
     datasetNotSupported: "This dataset is not supported yet.",
   },
 };

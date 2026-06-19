@@ -10,17 +10,39 @@ vi.mock("frappe-ui", () => ({
 import { useImportDataRuntime } from "./useImportDataRuntime";
 
 describe("useImportDataRuntime", () => {
-  it("computes mapped column count from reactive mapping", () => {
-    const t = (key) => key;
-    const router = { push: vi.fn() };
-    const authStore = { locale: "tr" };
-    const branchStore = { requestBranch: "IST" };
+  const baseContext = () => ({
+    t: (key) => key,
+    router: { push: vi.fn() },
+    authStore: { locale: "tr" },
+    branchStore: { requestBranch: "IST" },
+  });
 
-    const runtime = useImportDataRuntime({ t, router, authStore, branchStore });
+  it("computes mapped column count from reactive mapping", () => {
+    const runtime = useImportDataRuntime(baseContext());
     runtime.columns.value = ["full_name", "tax_id"];
     runtime.columnMapping["full_name"] = "full_name";
     runtime.columnMapping["tax_id"] = "tax_id";
 
     expect(runtime.mappedColumnCount.value).toBe(2);
+  });
+
+  it("enables cancel while job is previewed", () => {
+    const runtime = useImportDataRuntime(baseContext());
+    runtime.jobStatus.value = "Previewed";
+    expect(runtime.canCancelImport.value).toBe(true);
+  });
+
+  it("disables import until preview has ready rows", () => {
+    const runtime = useImportDataRuntime(baseContext());
+    runtime.jobName.value = "AT-IMP-2026-000001";
+    runtime.columns.value = ["full_name"];
+    runtime.columnMapping["full_name"] = "full_name";
+    runtime.jobStatus.value = "Previewed";
+    runtime.previewSummary.value = { ready: 0 };
+
+    expect(runtime.canImport.value).toBe(false);
+
+    runtime.previewSummary.value = { ready: 2 };
+    expect(runtime.canImport.value).toBe(true);
   });
 });

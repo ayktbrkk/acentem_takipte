@@ -71,6 +71,16 @@ Reference fields accept DocType `name` or common lookup labels:
 - `AT Insurance Company`: name, company_name, company_code
 - `AT Sales Entity`: name, full_name
 
+## Sample templates
+
+Download from the import workbench UI or directly:
+
+- `/assets/acentem_takipte/import_templates/customers.csv`
+- `/assets/acentem_takipte/import_templates/offers.csv`
+- `/assets/acentem_takipte/import_templates/policies.csv`
+
+Source copies also live under `docs/examples/import_templates/`.
+
 ## Operator flow
 
 1. Upload file (Frappe private `upload_file`)
@@ -88,6 +98,13 @@ bench worker --queue long   # separate terminal
 ```
 
 Then open `http://at.localhost:8000/at/data-import`.
+
+API smoke (from bench `sites/` directory):
+
+```bash
+cd ~/frappe-bench/sites
+../env/bin/python ../apps/acentem_takipte/scripts/smoke_data_import_wsl.py
+```
 
 ## Fixtures
 
