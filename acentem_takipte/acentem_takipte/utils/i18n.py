@@ -14,6 +14,24 @@ def _normalize_locale(locale: str | None) -> str:
     return value or "en"
 
 
+def _looks_like_mojibake(text: str) -> bool:
+    return any(marker in text for marker in ("Ã", "Ä", "Å", "â€", "ÄŸ", "Ä±", "ÅŸ", "Ã¶", "Ã¼", "Ã§"))
+
+
+def repair_mojibake(text: str) -> str:
+    value = str(text or "")
+    if not value or not _looks_like_mojibake(value):
+        return value
+    for encoding in ("cp1252", "latin-1"):
+        try:
+            repaired = value.encode(encoding).decode("utf-8")
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            continue
+        if repaired and not _looks_like_mojibake(repaired):
+            return repaired
+    return value
+
+
 @lru_cache(maxsize=None)
 def load_translation_catalog(locale: str | None) -> dict[str, str]:
     normalized_locale = _normalize_locale(locale)
@@ -29,7 +47,7 @@ def load_translation_catalog(locale: str | None) -> dict[str, str]:
             if len(row) < 2:
                 continue
             source = str(row[0] or "").strip()
-            translation = str(row[1] or "").strip()
+            translation = repair_mojibake(str(row[1] or "").strip())
             if source and source not in catalog:
                 catalog[source] = translation or source
     return catalog
@@ -45,4 +63,5 @@ def translate_text(source: str, locale: str | None = None) -> str:
         return text
 
     catalog = load_translation_catalog(normalized_locale)
-    return catalog.get(text, text)
+    translated = catalog.get(text, text)
+    return repair_mojibake(translated)

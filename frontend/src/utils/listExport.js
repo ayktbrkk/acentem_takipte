@@ -1,8 +1,15 @@
+export function normalizeExportFormat(format) {
+  const normalized = String(format || "xlsx").trim().toLowerCase();
+  if (normalized === "pdf") return "pdf";
+  if (normalized === "csv") return "csv";
+  return "xlsx";
+}
+
 export function openListExport({ screen, query, format = "xlsx", limit = 1000, filename = "" }) {
   const params = new URLSearchParams({
     screen: String(screen || "").trim(),
     query: JSON.stringify(query || {}),
-    export_format: String(format || "xlsx").trim().toLowerCase() === "pdf" ? "pdf" : "xlsx",
+    export_format: normalizeExportFormat(format),
     limit: String(Number(limit) > 0 ? Number(limit) : 1000),
   });
   if (filename) {
@@ -71,7 +78,7 @@ export function openTabularExport({
       rows: Array.isArray(rows) ? rows : [],
       filters: filters || {},
     }),
-    export_format: String(format || "xlsx").trim().toLowerCase() === "pdf" ? "pdf" : "xlsx",
+    export_format: normalizeExportFormat(format),
   });
 }
 

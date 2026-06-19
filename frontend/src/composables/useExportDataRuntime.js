@@ -35,7 +35,9 @@ export function useExportDataRuntime({ t, router, authStore }) {
   function buildExportUrl() {
     const params = new URLSearchParams({
       screen: form.screen,
-      export_format: form.format === "pdf" ? "pdf" : "xlsx",
+      export_format: ["pdf", "csv"].includes(String(form.format || "xlsx").trim().toLowerCase())
+        ? String(form.format).trim().toLowerCase()
+        : "xlsx",
       limit: "5000",
     });
 

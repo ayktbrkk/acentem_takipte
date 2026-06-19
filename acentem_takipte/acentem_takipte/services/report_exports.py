@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from io import BytesIO
+from io import BytesIO, StringIO
 from typing import Any
+
+import csv
+import json
 
 import frappe
 from frappe.utils.pdf import get_pdf
@@ -30,7 +33,13 @@ def build_export_filename(export_key: str, export_format: str) -> str:
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     raw_key = str(export_key or "").strip() or "report"
     safe_key = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in raw_key) or "report"
-    extension = "pdf" if str(export_format or "").strip().lower() == "pdf" else "xlsx"
+    normalized_format = str(export_format or "").strip().lower()
+    if normalized_format == "pdf":
+        extension = "pdf"
+    elif normalized_format == "csv":
+        extension = "csv"
+    else:
+        extension = "xlsx"
     return f"{safe_key}_{timestamp}.{extension}"
 
 
@@ -63,8 +72,9 @@ def render_tabular_pdf(
         """
         <html>
           <head>
+            <meta charset="UTF-8" />
             <style>
-              body { font-family: Arial, sans-serif; font-size: 11px; color: #0f172a; }
+              body { font-family: "DejaVu Sans", "Noto Sans", Arial, sans-serif; font-size: 11px; color: #0f172a; }
               .header { margin-bottom: 16px; }
               .title { font-size: 18px; font-weight: 700; }
               .meta { margin-top: 6px; color: #475569; font-size: 10px; }
@@ -147,7 +157,7 @@ def render_tabular_xlsx(
 
     sheet["A1"] = safe_title
     sheet["A1"].font = Font(bold=True, size=14)
-    sheet["A2"] = f"{translate_text('Filters:', locale)} {safe_filters}"
+    sheet["A2"] = f"{translate_text('Filters:', locale)} {json.dumps(safe_filters, ensure_ascii=False)}"
     sheet["A3"] = f"{translate_text('Total rows:', locale)} {len(safe_rows)}"
 
     header_row = 5
@@ -157,11 +167,35 @@ def render_tabular_xlsx(
 
     for row_index, row in enumerate(safe_rows, start=header_row + 1):
         for column_index, column in enumerate(safe_columns, start=1):
-            sheet.cell(row=row_index, column=column_index, value=row.get(column))
+            value = row.get(column)
+            if value is None:
+                value = ""
+            sheet.cell(row=row_index, column=column_index, value=value)
 
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
+
+
+def render_tabular_csv(
+    *,
+    title: str,
+    columns: list[str],
+    rows: list[dict[str, Any]],
+    filters: dict[str, Any],
+) -> bytes:
+    locale = coerce_locale(getattr(frappe.local, "lang", "en"), "en")
+    safe_columns = _coerce_columns(columns)
+    safe_rows = _coerce_rows(rows)
+
+    buffer = StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=safe_columns, lineterminator="\n")
+    writer.writeheader()
+    for row in safe_rows:
+        writer.writerow({column: row.get(column, "") for column in safe_columns})
+
+    # Excel on Windows expects UTF-8 with BOM for Turkish characters.
+    return buffer.getvalue().encode("utf-8-sig")
 
 
 def render_report_html_summary(

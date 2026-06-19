@@ -157,3 +157,17 @@ def test_render_tabular_xlsx_accepts_mapping_rows():
     assert sheet["A6"].value == "A"
     assert sheet["B6"].value == 3
 
+
+def test_render_tabular_csv_uses_utf8_bom_for_turkish_characters():
+    payload = report_exports.render_tabular_csv(
+        title="Sample",
+        columns=["Müşteri"],
+        rows=[{"Müşteri": "İstanbul"}],
+        filters={},
+    )
+
+    assert payload.startswith(b"\xef\xbb\xbf")
+    text = payload.decode("utf-8-sig")
+    assert "Müşteri" in text
+    assert "İstanbul" in text
+

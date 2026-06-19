@@ -158,7 +158,13 @@ def _apply_filename_override(payload: dict[str, Any], *, filename: str, export_f
     safe_filename = str(filename or "").strip()
     if not safe_filename:
         return
-    extension = "pdf" if str(export_format or "").strip().lower() == "pdf" else "xlsx"
+    fmt = str(export_format or "").strip().lower()
+    if fmt == "pdf":
+        extension = "pdf"
+    elif fmt == "csv":
+        extension = "csv"
+    else:
+        extension = "xlsx"
     stem = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in safe_filename) or "export"
     payload["filename"] = f"{stem}.{extension}"
 

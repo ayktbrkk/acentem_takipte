@@ -121,6 +121,8 @@ def coerce_export_format(value: Any, fallback: str = "xlsx") -> str:
         return "xlsx"
     if normalized in {"application/pdf", "application/x-pdf"}:
         return "pdf"
+    if normalized in {"csv", "text/csv", "application/csv"}:
+        return "csv"
     return "pdf" if normalized == "pdf" else "xlsx"
 
 
@@ -133,6 +135,8 @@ def infer_content_type(filename: Any, content_type: Any = None) -> str:
         return "application/pdf"
     if safe_filename.endswith(".xlsx"):
         return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    if safe_filename.endswith(".csv"):
+        return "text/csv; charset=utf-8"
     return "application/octet-stream"
 
 

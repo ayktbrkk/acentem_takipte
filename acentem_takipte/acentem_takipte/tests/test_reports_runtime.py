@@ -15,6 +15,8 @@ def test_normalize_export_format_accepts_pdf_and_defaults_to_xlsx():
     assert reports_runtime.normalize_export_format("excel") == "xlsx"
     assert reports_runtime.normalize_export_format("application/vnd.ms-excel") == "xlsx"
     assert reports_runtime.normalize_export_format("xlsx") == "xlsx"
+    assert reports_runtime.normalize_export_format("csv") == "csv"
+    assert reports_runtime.normalize_export_format("text/csv") == "csv"
     assert reports_runtime.normalize_export_format(None) == "xlsx"
     assert reports_runtime.normalize_export_format("unknown") == "xlsx"
 

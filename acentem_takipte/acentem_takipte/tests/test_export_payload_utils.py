@@ -34,6 +34,7 @@ def test_coerce_locale_and_export_format_use_fallbacks():
     assert export_payload_utils.coerce_locale(" tr-TR ") == "tr-TR"
     assert export_payload_utils.coerce_locale("   ") == "tr"
     assert export_payload_utils.coerce_export_format(" application/pdf ") == "pdf"
+    assert export_payload_utils.coerce_export_format("text/csv") == "csv"
     assert export_payload_utils.coerce_export_format("xlsb") == "xlsx"
 
 
@@ -43,6 +44,7 @@ def test_infer_content_type_uses_filename_extension():
         export_payload_utils.infer_content_type("file.xlsx", "")
         == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+    assert export_payload_utils.infer_content_type("file.csv", "") == "text/csv; charset=utf-8"
 
 
 def test_coerce_download_payload_normalizes_content_and_defaults():

@@ -154,7 +154,7 @@ describe("Import and export pages", () => {
 
     expect(openSpy.mock.calls[0][0]).toContain("download_export");
     expect(openSpy.mock.calls[0][0]).toContain("screen=claims_board");
-    expect(openSpy.mock.calls[0][0]).toContain("export_format=xlsx");
+    expect(openSpy.mock.calls[0][0]).toContain("export_format=csv");
     expect(openSpy.mock.calls[0][0]).toContain("filename=hasar_export");
     expect(openSpy.mock.calls[0][0]).toContain("start_date=2026-03-01");
     expect(openSpy.mock.calls[0][0]).toContain("end_date=2026-03-31");

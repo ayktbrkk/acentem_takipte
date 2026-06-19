@@ -21,6 +21,7 @@ from acentem_takipte.acentem_takipte.services.export_payload_utils import (
 from acentem_takipte.acentem_takipte.services.report_exports import (
     build_export_filename,
     build_report_title,
+    render_tabular_csv,
     render_tabular_pdf,
     render_tabular_xlsx,
 )
@@ -145,6 +146,14 @@ def _build_download_response(
             filters=safe_filters,
         )
         content_type = "application/pdf"
+    elif normalized_format == "csv":
+        content = render_tabular_csv(
+            title=safe_title,
+            columns=safe_columns,
+            rows=safe_rows,
+            filters=safe_filters,
+        )
+        content_type = "text/csv; charset=utf-8"
     else:
         content = render_tabular_xlsx(
             title=safe_title,
