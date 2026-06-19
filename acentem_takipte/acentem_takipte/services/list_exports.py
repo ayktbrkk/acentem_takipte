@@ -388,7 +388,30 @@ def build_workbench_export_query(
     elif safe_end:
         filters[date_field] = ["<=", f"{safe_end} 23:59:59" if date_field == "modified" else safe_end]
 
-    return {"filters": filters, "order_by": "modified desc"}
+    order_by = "modified desc"
+    definition = SCREEN_EXPORTS.get(resolved_screen)
+    if definition and definition.get("type") == "doctype":
+        order_by = _qualified_order_by(definition["doctype"], order_by)
+    return {"filters": filters, "order_by": order_by}
+
+
+def _qualified_order_by(doctype: str, order_by: str) -> str:
+    table = f"`tab{doctype}`"
+    normalized = str(order_by or "").strip() or "modified desc"
+    clauses: list[str] = []
+    for raw_clause in normalized.split(","):
+        clause = raw_clause.strip()
+        if not clause:
+            continue
+        parts = clause.split()
+        field = parts[0]
+        direction = parts[1].lower() if len(parts) > 1 else "asc"
+        if direction not in {"asc", "desc"}:
+            direction = "asc"
+        if "." not in field and not field.startswith("`"):
+            field = f"{table}.{field}"
+        clauses.append(f"{field} {direction}")
+    return ", ".join(clauses) if clauses else f"{table}.modified desc"
 
 
 def get_screen_export_definition(screen: str) -> dict[str, Any]:
@@ -515,7 +538,8 @@ def _collect_dashboard_rows(fetcher: Callable[..., dict[str, Any]], *, filters: 
 def _fetch_doctype_rows(definition: dict[str, Any], query: dict[str, Any], limit: int) -> list[dict[str, Any]]:
     filters = _coerce_filters((query or {}).get("filters"))
     or_filters = _coerce_or_filters((query or {}).get("or_filters"))
-    order_by = str((query or {}).get("order_by") or "modified desc").strip() or "modified desc"
+    raw_order_by = str((query or {}).get("order_by") or "modified desc").strip() or "modified desc"
+    order_by = _qualified_order_by(str(definition["doctype"]), raw_order_by)
     return frappe.get_list(
         definition["doctype"],
         fields=list(definition["fields"]),

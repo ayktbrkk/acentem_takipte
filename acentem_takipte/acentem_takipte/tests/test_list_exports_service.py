@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from acentem_takipte.acentem_takipte.services import list_exports
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
@@ -313,7 +315,66 @@ def test_build_screen_export_payload_ignores_invalid_filter_shapes(monkeypatch):
 
     assert captured["filters"] == {}
     assert captured["or_filters"] is None
-    assert captured["order_by"] == "modified desc"
+    assert captured["order_by"] == "`tabAT Policy`.modified desc"
+
+
+def test_qualified_order_by_qualifies_joined_doctype_fields():
+    assert (
+        list_exports._qualified_order_by("AT Policy", "modified desc")
+        == "`tabAT Policy`.modified desc"
+    )
+    assert (
+        list_exports._qualified_order_by("AT Renewal Task", "due_date asc, modified desc")
+        == "`tabAT Renewal Task`.due_date asc, `tabAT Renewal Task`.modified desc"
+    )
+
+
+def test_build_workbench_export_query_policy_list_uses_qualified_order_in_fetch(monkeypatch):
+    monkeypatch.setattr(list_exports.frappe, "local", SimpleNamespace(lang="tr"))
+    captured = {}
+    monkeypatch.setattr(
+        list_exports.frappe,
+        "get_list",
+        lambda doctype, fields=None, filters=None, or_filters=None, order_by=None, limit_start=0, limit_page_length=0: captured.update(
+            {"doctype": doctype, "filters": filters, "order_by": order_by}
+        ) or [],
+    )
+
+    query = list_exports.build_workbench_export_query(
+        "policy_list",
+        start_date="2026-01-19",
+        end_date="2026-06-19",
+    )
+    list_exports.build_screen_export_payload("policy_list", query=query, limit=100)
+
+    assert query["order_by"] == "`tabAT Policy`.modified desc"
+    assert captured["doctype"] == "AT Policy"
+    assert captured["filters"]["end_date"] == ["between", ["2026-01-19", "2026-06-19"]]
+    assert captured["order_by"] == "`tabAT Policy`.modified desc"
+
+
+@pytest.mark.parametrize(
+    "doctype",
+    [
+        "AT Policy",
+        "AT Offer",
+        "AT Claim",
+        "AT Payment",
+        "AT Renewal Task",
+    ],
+)
+def test_qualified_order_by_for_all_doctype_exports(doctype):
+    assert (
+        list_exports._qualified_order_by(doctype, "modified desc")
+        == f"`tab{doctype}`.modified desc"
+    )
+
+
+def test_qualified_order_by_preserves_already_qualified_clauses():
+    assert (
+        list_exports._qualified_order_by("AT Policy", "due_date asc, `tabAT Policy`.modified desc")
+        == "`tabAT Policy`.due_date asc, `tabAT Policy`.modified desc"
+    )
 
 
 def test_build_screen_export_payload_accepts_json_filter_shapes(monkeypatch):
