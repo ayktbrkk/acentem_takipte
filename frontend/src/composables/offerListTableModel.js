@@ -51,7 +51,7 @@ export function mapOfferRecordToTableRow(row, { formatDate, formatCurrency, loca
   };
 }
 
-export function mapOfferImportPreviewToTableRow(row, { formatDate, formatCurrency, localeCode, t }) {
+export function mapOfferImportPreviewToTableRow(row, { formatDate, formatCurrency, localeCode }) {
   const values = row.normalized_values || {};
   const locale = localeCode || "tr";
   const customerRef = values.customer || row.customer || fallbackLabel(locale);

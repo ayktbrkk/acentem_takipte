@@ -30,7 +30,7 @@ function normalizeMaritalStatus(value, t, unspecified) {
   return unspecified;
 }
 
-export function mapCustomerRecordToTableRow(row, { t, localeCode }) {
+export function mapCustomerRecordToTableRow(row, { t }) {
   const unspecified = t("unspecified");
   const customerType = row.customer_type === "Corporate" ? t("corporate") : t("individual");
   const maritalStatus = normalizeValue(row.marital_status);

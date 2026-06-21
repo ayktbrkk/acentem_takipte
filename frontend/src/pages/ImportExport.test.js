@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { nextTick } from "vue";
-
 import ExportData from "./ExportData.vue";
 import ImportData from "./ImportData.vue";
 import { useAuthStore } from "../stores/auth";
