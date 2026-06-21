@@ -98,8 +98,6 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
-
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
@@ -123,6 +121,8 @@ const props = defineProps({
   emptyLaneLabel: { type: String, default: "" },
   convertLabel: { type: String, default: "" },
   openPolicyLabel: { type: String, default: "" },
+  companyLabel: { type: String, default: "" },
+  validityLabel: { type: String, default: "" },
   rowsForLane: { type: Function, required: true },
   rowCountForLane: { type: Function, required: true },
   offerCardFacts: { type: Function, required: true },
@@ -131,9 +131,6 @@ const props = defineProps({
 });
 
 defineEmits(["lane-drop", "drag-start", "drag-end", "open-offer", "convert-offer", "open-policy"]);
-
-const companyLabel = computed(() => (props.locale.toLowerCase().startsWith("tr") ? "Şirket:" : "Company:"));
-const validityLabel = computed(() => (props.locale.toLowerCase().startsWith("tr") ? "Geçerlilik:" : "Validity:"));
 
 function displayedRowsForLane(laneKey) {
   return props.rowsForLane(laneKey).slice(0, BOARD_DISPLAY_LIMIT);

@@ -6,6 +6,7 @@ import { mapCustomerRecordToTableRow } from "./customerListTableModel";
 
 export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
+  const loadErrorText = ref("");
 
   function t(key) {
     return translateText(key, activeLocale);
@@ -29,6 +30,13 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
     auto: false,
   });
 
+  const totalCount = computed(() => {
+    const total = Number(unref(customerResource.data)?.total || 0);
+    return Number.isFinite(total) ? total : 0;
+  });
+
+  const hasNextPage = computed(() => pagination.page * pagination.pageLength < totalCount.value);
+
   const summary = computed(() => {
     unref(activeLocale);
     const data = unref(customerResource.data) || {};
@@ -51,18 +59,32 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const loading = computed(() => unref(customerResource.loading));
 
   async function reload() {
-    const payload = await customerResource.reload({
-      filters: JSON.stringify(filters),
-      page: pagination.page,
-      page_length: pagination.pageLength,
-    });
-    if (payload !== undefined && typeof customerResource.setData === "function") {
-      customerResource.setData(payload);
+    const result = await customerResource
+      .reload({
+        filters: JSON.stringify(filters),
+        page: pagination.page,
+        page_length: pagination.pageLength,
+      })
+      .catch((error) => ({ __error: error }));
+
+    if (!result?.__error) {
+      if (result !== undefined && typeof customerResource.setData === "function") {
+        customerResource.setData(result);
+      }
+      loadErrorText.value = "";
+      return;
     }
+
+    if (typeof customerResource.setData === "function") {
+      customerResource.setData({ rows: [], total: 0, active_count: 0, individual_count: 0, corporate_count: 0 });
+    }
+    loadErrorText.value = t("loadError");
   }
 
-  function setPage(p) {
-    pagination.page = p;
+  function setPage(page) {
+    const nextPage = Number(page);
+    if (!Number.isFinite(nextPage) || nextPage < 1) return;
+    pagination.page = nextPage;
     reload();
   }
 
@@ -84,6 +106,8 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
     summary,
     rows,
     loading,
+    loadErrorText,
+    hasNextPage,
     t,
     reload,
     setPage,

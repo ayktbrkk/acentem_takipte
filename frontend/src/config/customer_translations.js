@@ -1,7 +1,9 @@
 export const CUSTOMER_TRANSLATIONS = {
   tr: {
     customers: "Müşteriler",
+    subtitle: "Müşteri listesini filtreleyin, arayın ve portföy özetini görün",
     customers_breadcrumb: "Sigorta Operasyonları → Müşteriler",
+    searchPlaceholder: "Ad, TCKN/VKN veya kayıt no ile ara",
     total_customers: "Toplam Müşteri",
     recordCount: "kayıt",
     showingRecords: "müşteri gösteriliyor",
@@ -100,11 +102,14 @@ export const CUSTOMER_TRANSLATIONS = {
     // Tooltips/Status
     load_error_title: "Veri Yüklenemedi",
     load_error_msg: "Müşteri verileri yüklenirken bir hata oluştu.",
+    loadError: "Müşteri listesi yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
     file_link_not_found: "Dosya bağlantısı bulunamadı.",
   },
   en: {
     customers: "Customers",
+    subtitle: "Filter, search, and review your customer portfolio summary",
     customers_breadcrumb: "Insurance Operations → Customers",
+    searchPlaceholder: "Search by name, tax ID, or record no",
     total_customers: "Total Customers",
     recordCount: "records",
     showingRecords: "customers shown",
@@ -203,6 +208,7 @@ export const CUSTOMER_TRANSLATIONS = {
     // Tooltips/Status
     load_error_title: "Failed to Load",
     load_error_msg: "An error occurred while loading customer data.",
+    loadError: "An error occurred while loading the customer list. Please try again.",
     file_link_not_found: "File link not found.",
   }
 };

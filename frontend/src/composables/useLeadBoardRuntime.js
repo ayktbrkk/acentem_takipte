@@ -7,6 +7,7 @@ import { maskPhone } from "@/utils/atMasks";
 
 export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
+  const loadErrorText = ref("");
 
   function formatCurrency(value, currency = "TRY") {
     const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr-TR" : "en-US";
@@ -129,10 +130,20 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
 
   async function reload() {
     const params = buildListParams();
-    const payload = await leadResource.reload(params);
-    if (payload !== undefined && typeof leadResource.setData === "function") {
-      leadResource.setData(payload);
+    const result = await leadResource.reload(params).catch((error) => ({ __error: error }));
+
+    if (!result?.__error) {
+      if (result !== undefined && typeof leadResource.setData === "function") {
+        leadResource.setData(result);
+      }
+      loadErrorText.value = "";
+      return;
     }
+
+    if (typeof leadResource.setData === "function") {
+      leadResource.setData({ rows: [], total: 0, page: pagination.page, page_length: pagination.pageLength });
+    }
+    loadErrorText.value = t("loadError");
   }
 
   function setPage(page) {
@@ -160,6 +171,7 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
     summary,
     rows,
     loading,
+    loadErrorText,
     hasNextPage,
     t,
     reload,

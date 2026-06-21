@@ -22,7 +22,7 @@
           <button
             type="button"
             class="rounded px-3 py-1 text-xs font-medium transition-all"
-            :class="!isListView ? 'bg-brand-50 text-brand-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            :class="!isListView ? 'bg-brand-50 text-brand-600 shadow-sm' : 'text-slate-400 hover:text-slate-700'"
             :aria-pressed="!isListView"
             :aria-label="t('viewBoard')"
             @click="setOfferViewMode('board')"
@@ -48,7 +48,7 @@
     <template #metrics>
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <SaaSMetricCard :label="t('summaryTotal')" :value="formatCount(offerSummary.total)" />
-        <SaaSMetricCard :label="t('summaryDraft')" :value="formatCount(offerSummary.draft)" value-class="text-gray-500" />
+        <SaaSMetricCard :label="t('summaryDraft')" :value="formatCount(offerSummary.draft)" value-class="text-slate-500" />
         <SaaSMetricCard :label="t('summarySent')" :value="formatCount(offerSummary.sent)" value-class="text-at-amber" />
         <SaaSMetricCard :label="t('summaryAccepted')" :value="formatCount(offerSummary.accepted)" value-class="text-at-green" />
         <SaaSMetricCard :label="t('summaryConversion')" :value="`${offerConversionRate}%`" value-class="text-brand-600" />
@@ -64,8 +64,9 @@
       >
         <template #primary-filters>
           <select
+            v-model="state.offerListFilters.status"
             class="input h-9 py-1 text-sm"
-            @change="onOfferListFilterBarChange({ key: 'status', value: $event.target.value })"
+            @change="onOfferListFilterBarChange({ key: 'status', value: state.offerListFilters.status })"
           >
             <option value="">{{ t("colStatus") }}: {{ t("all") }}</option>
             <option v-for="opt in offerListFilterConfig[1].options" :key="opt.value" :value="opt.value">
@@ -77,19 +78,19 @@
 
       <div v-if="showAdvancedFilters" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             <span>{{ t("insurance_company") }}</span>
             <input v-model="state.offerListFilters.insurance_company" class="input" type="text" />
           </label>
-          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             <span>{{ t("branch") }}</span>
             <input v-model="state.offerListFilters.branch" class="input" type="text" />
           </label>
-          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             <span>{{ t("valid_until") }}</span>
             <input v-model="state.offerListFilters.valid_until" class="input" type="date" />
           </label>
-          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             <span>{{ t("gross_premium") }}</span>
             <div class="grid grid-cols-2 gap-2">
               <input v-model="state.offerListFilters.gross_min" class="input" type="number" min="0" :placeholder="t('rangeMin')" />
@@ -97,8 +98,8 @@
             </div>
           </label>
         </div>
-        <label class="mt-4 flex items-center gap-2 text-sm text-gray-700">
-          <input v-model="state.offerListFilters.actionable_only" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+        <label class="mt-4 flex items-center gap-2 text-sm text-slate-700">
+          <input v-model="state.offerListFilters.actionable_only" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
           <span>{{ t("presetActionable") }}</span>
         </label>
         <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
@@ -120,6 +121,8 @@
       :rows="offerListRowsWithUrgency"
       :locale="localeCode"
       :loading="isOfferListInitialLoading"
+      :error-text="offerListLoadErrorText"
+      :load-error-title="t('loadErrorTitle')"
       :empty-message="t('empty')"
       :row-count="pagedOfferRows.length"
       :total="offerListTotal"
@@ -150,6 +153,8 @@
       :empty-lane-label="t('emptyLane')"
       :convert-label="t('convert')"
       :open-policy-label="t('openPolicy')"
+      :company-label="`${t('company')}:`"
+      :validity-label="`${t('validUntil')}:`"
       :rows-for-lane="laneRows"
       :row-count-for-lane="(laneKey) => laneRows(laneKey).length"
       :offer-card-facts="offerCardFacts"
@@ -409,6 +414,7 @@ const {
   offerQuickUi,
   offerQuickOptionsMap,
   offersLoadErrorText,
+  offerListLoadErrorText,
   isListView,
   offerListTotal,
   offerListHasNextPage,

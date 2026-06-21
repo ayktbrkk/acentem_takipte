@@ -2,6 +2,7 @@
   <WorkbenchPageLayout
     :breadcrumb="t('customers_breadcrumb')"
     :title="t('customers')"
+    :subtitle="t('subtitle')"
     :record-count="summary.total"
     :record-count-label="t('recordCount')"
   >
@@ -31,14 +32,15 @@
     <div class="space-y-4">
       <SmartFilterBar
         v-model="filters.query"
-        :placeholder="t('search')"
+        :placeholder="t('searchPlaceholder')"
         :advanced-label="t('filters')"
         @open-advanced="showAdvancedFilters = !showAdvancedFilters"
       >
         <template #primary-filters>
           <select
+            v-model="filters.consent_status"
             class="input h-9 py-1 text-sm"
-            @change="updateFilter('consent_status', $event.target.value)"
+            @change="updateFilter('consent_status', filters.consent_status)"
           >
             <option value="">{{ t("consent") }}: {{ t("all") }}</option>
             <option v-for="opt in filterConfig[0].options" :key="opt.value" :value="opt.value">
@@ -54,7 +56,13 @@
     </div>
 
     <div class="mt-8 space-y-4">
-      <template v-if="loading && !rows.length">
+      <div
+        v-if="loadErrorText"
+        class="rounded-xl border border-at-red/20 bg-at-red/5 px-4 py-3 text-sm text-at-red shadow-sm"
+      >
+        {{ loadErrorText }}
+      </div>
+      <template v-if="loading && !rows.length && !loadErrorText">
         <SkeletonLoader variant="list" :rows="10" />
       </template>
       <template v-else>
@@ -71,7 +79,7 @@
           :shown="rows.length"
           :total="summary.total"
           :page="pagination.page"
-          :has-next="rows.length >= pagination.pageLength"
+          :has-next="hasNextPage"
           :showing-label="t('showingRecords')"
           @previous="setPage(pagination.page - 1)"
           @next="setPage(pagination.page + 1)"
@@ -115,6 +123,8 @@ const {
   loading,
   t,
   reload,
+  loadErrorText,
+  hasNextPage,
   setPage,
   updateFilter,
   openCustomer,

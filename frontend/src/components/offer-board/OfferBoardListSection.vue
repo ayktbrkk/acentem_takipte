@@ -1,5 +1,9 @@
 <template>
   <div class="mt-8 space-y-4">
+    <article v-if="errorText" class="qc-error-banner">
+      <p class="qc-error-banner__text font-semibold">{{ loadErrorTitle }}</p>
+      <p class="qc-error-banner__text mt-1">{{ errorText }}</p>
+    </article>
     <ListTable
       :columns="columns"
       :rows="rows"
@@ -47,6 +51,8 @@ defineProps({
   rows: { type: Array, default: () => [] },
   locale: { type: String, default: "en" },
   loading: { type: Boolean, default: false },
+  errorText: { type: String, default: "" },
+  loadErrorTitle: { type: String, default: "" },
   emptyMessage: { type: String, default: "" },
   rowCount: { type: [String, Number], default: 0 },
   total: { type: [String, Number], default: 0 },

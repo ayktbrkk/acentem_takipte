@@ -76,7 +76,13 @@
     </div>
 
     <div class="mt-8 space-y-4">
-      <template v-if="loading && !rows.length">
+      <div
+        v-if="loadErrorText"
+        class="rounded-xl border border-at-red/20 bg-at-red/5 px-4 py-3 text-sm text-at-red shadow-sm"
+      >
+        {{ loadErrorText }}
+      </div>
+      <template v-if="loading && !rows.length && !loadErrorText">
         <SkeletonLoader variant="list" :rows="10" />
       </template>
       <template v-else>
@@ -152,6 +158,7 @@ const {
   loading,
   t,
   reload,
+  loadErrorText,
   hasNextPage,
   setPage,
   updateFilter,
