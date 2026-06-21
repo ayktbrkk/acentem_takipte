@@ -5,17 +5,14 @@
     :subtitle="policy.policy_no || policy.name || name"
   >
     <template #actions>
-      <ActionButton variant="secondary" size="sm" @click="reload">
+      <ActionButton variant="secondary" size="sm" :aria-label="t('refresh')" @click="reload">
         <FeatherIcon name="refresh-cw" class="h-4 w-4" />
-        {{ t("refresh") }}
       </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="handleExportPdf">
+      <ActionButton variant="secondary" size="sm" :aria-label="t('exportPdf')" @click="handleExportPdf">
         <FeatherIcon name="printer" class="h-4 w-4" />
-        {{ t("exportPdf") }}
       </ActionButton>
-      <ActionButton variant="secondary" size="sm" @click="handleShareWhatsApp">
+      <ActionButton variant="secondary" size="sm" :aria-label="t('shareWhatsApp')" @click="handleShareWhatsApp">
         <FeatherIcon name="share-2" class="h-4 w-4" />
-        {{ t("shareWhatsApp") }}
       </ActionButton>
       <ActionButton variant="primary" size="sm" @click="handleCreateEndorsement">
         <FeatherIcon name="plus" class="h-4 w-4" />
@@ -119,12 +116,15 @@
         </SectionPanel>
 
         <SectionPanel :title="t('activity_timeline')">
-          <div class="card-empty">
-            <div class="card-empty-icon">
-              <FeatherIcon name="activity" class="h-6 w-6" />
-            </div>
-            <p class="card-empty-text">{{ t('emptyActivities') }}</p>
-          </div>
+          <EmptyState
+            :title="t('emptyActivities')"
+            compact
+            compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center"
+          >
+            <template #icon>
+              <FeatherIcon name="activity" class="h-6 w-6 text-slate-400" />
+            </template>
+          </EmptyState>
         </SectionPanel>
       </div>
 
@@ -228,6 +228,7 @@ import { useAuthStore } from "../stores/auth";
 import { usePolicyDetailRuntime } from "../composables/usePolicyDetailRuntime";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import EditableCard from "../components/app-shell/EditableCard.vue";
 import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";

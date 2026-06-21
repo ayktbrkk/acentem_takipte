@@ -283,7 +283,7 @@ describe("PolicyDetail document management", () => {
     expect(wrapper.text()).toContain("Müşteri Bilgileri");
     expect(wrapper.text()).toContain("Dokümanlar");
     expect(wrapper.text()).toContain("Listeye Dön");
-    expect(wrapper.text()).toContain("Yenile");
+    expect(wrapper.find('button[aria-label="Yenile"]').exists()).toBe(true);
     expect(wrapper.text()).toContain("Profilin Tamamını Gör");
   });
 

@@ -141,6 +141,7 @@ import { ref, computed, reactive, watch } from 'vue';
 import { FeatherIcon } from 'frappe-ui';
 import SectionPanel from './SectionPanel.vue';
 import ActionButton from './ActionButton.vue';
+import { maskPhone, maskTaxId } from '../../utils/atMasks';
 
 const props = defineProps({
   customer: { type: Object, required: true },
@@ -162,9 +163,12 @@ const genderOptions = computed(() => [
 ]);
 
 const displayFields = computed(() => {
+  const taxDisplay =
+    props.customer.masked_tax_id || maskTaxId(props.customer.tax_id);
+  const phoneDisplay = maskPhone(props.customer.phone) || props.customer.phone;
   const fields = [
-    { key: 'tax_id', label: props.t('tax_id'), value: props.customer.tax_id },
-    { key: 'phone', label: props.t('phone'), value: props.customer.phone },
+    { key: 'tax_id', label: props.t('tax_id'), value: taxDisplay },
+    { key: 'phone', label: props.t('phone'), value: phoneDisplay },
     { key: 'email', label: props.t('email'), value: props.customer.email },
   ];
   

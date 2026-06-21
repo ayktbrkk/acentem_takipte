@@ -40,11 +40,13 @@
             {{ field.value || field.unspecifiedLabel || '—' }}
           </div>
           
-          <button 
-            v-if="field.copyable && field.value" 
+          <button
+            v-if="field.copyable && field.value"
+            type="button"
             class="text-slate-300 hover:text-brand-600 transition-colors p-0.5"
-            @click.stop="$emit('copy', field.value)"
+            :aria-label="copyTitle"
             :title="copyTitle"
+            @click.stop="$emit('copy', field.value)"
           >
             <FeatherIcon name="copy" class="h-3 w-3" />
           </button>

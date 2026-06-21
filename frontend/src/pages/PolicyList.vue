@@ -2,6 +2,7 @@
   <WorkbenchPageLayout
     :breadcrumb="t('breadcrumb')"
     :title="t('title')"
+    :subtitle="t('subtitle')"
     :record-count="policyListTotalCount"
     :record-count-label="t('recordCount')"
   >
@@ -54,7 +55,7 @@
             <span>{{ t("endDateFilter") }}</span>
             <input v-model="filters.end_date" class="input" type="date" @change="applyFilters" />
           </label>
-          <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             <span>{{ t("customerFilter") }}</span>
             <input v-model="filters.customer" class="input" type="text" @change="applyFilters" />
           </label>
@@ -127,6 +128,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { POLICY_TRANSLATIONS } from "../config/policy_translations";
 import { translateText } from "../utils/i18n";
+import { usePolicyListRuntime } from "../composables/usePolicyListRuntime";
 import { usePolicyListActions } from "../composables/usePolicyListActions";
 import { usePolicyListFilters } from "../composables/usePolicyListFilters";
 import { usePolicyListPresetSync } from "../composables/usePolicyListPresetSync";

@@ -177,10 +177,11 @@
       </form>
 
       <div v-else class="animate-in fade-in slide-in-from-top-1 duration-300">
-        <FieldGroup 
-          :fields="displayFields" 
-          :cols="cols" 
-          :layout="layout" 
+        <FieldGroup
+          :fields="displayFields"
+          :cols="cols"
+          :layout="layout"
+          :locale="locale"
           @copy="handleCopy"
         />
       </div>
@@ -215,6 +216,7 @@ const props = defineProps({
   layout: { type: String, default: 'grid' },
   saving: { type: Boolean, default: false },
   panelClass: { type: String, default: 'surface-card rounded-xl p-5 transition-all duration-300' },
+  locale: { type: String, default: 'tr' },
   t: { type: Function, required: true }
 });
 
