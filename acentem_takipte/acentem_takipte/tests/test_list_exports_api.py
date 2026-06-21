@@ -128,7 +128,7 @@ def test_download_export_policy_list_without_query_uses_qualified_order_by(monke
     list_exports.download_export("policy_list", export_format="xlsx", limit=5000)
 
     assert captured["screen"] == "policy_list"
-    assert captured["query"]["order_by"] == "`tabAT Policy`.modified desc"
+    assert captured["query"]["order_by"] == "`tabAT Policy`.`modified` desc"
     assert captured["export_format"] == "xlsx"
     assert captured["limit"] == 5000
 

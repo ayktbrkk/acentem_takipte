@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Callable
@@ -395,23 +396,40 @@ def build_workbench_export_query(
     return {"filters": filters, "order_by": order_by}
 
 
+_QUALIFIED_ORDER_CLAUSE = re.compile(
+    r"^(`tab[^`]+`)(?:\.(`[^`]+`)|\.([\w]+))(?:\s+(asc|desc))?$",
+    re.IGNORECASE,
+)
+_SIMPLE_ORDER_CLAUSE = re.compile(r"^([\w]+)(?:\s+(asc|desc))?$", re.IGNORECASE)
+
+
 def _qualified_order_by(doctype: str, order_by: str) -> str:
     table = f"`tab{doctype}`"
     normalized = str(order_by or "").strip() or "modified desc"
+    if table in normalized:
+        return normalized
+
     clauses: list[str] = []
     for raw_clause in normalized.split(","):
         clause = raw_clause.strip()
         if not clause:
             continue
-        parts = clause.split()
-        field = parts[0]
-        direction = parts[1].lower() if len(parts) > 1 else "asc"
-        if direction not in {"asc", "desc"}:
-            direction = "asc"
-        if "." not in field and not field.startswith("`"):
-            field = f"{table}.{field}"
-        clauses.append(f"{field} {direction}")
-    return ", ".join(clauses) if clauses else f"{table}.modified desc"
+
+        qualified = _QUALIFIED_ORDER_CLAUSE.match(clause)
+        if qualified:
+            clauses.append(clause)
+            continue
+
+        simple = _SIMPLE_ORDER_CLAUSE.match(clause)
+        if not simple:
+            clauses.append(clause)
+            continue
+
+        field_name = simple.group(1)
+        direction = (simple.group(2) or "asc").lower()
+        clauses.append(f"{table}.`{field_name}` {direction}")
+
+    return ", ".join(clauses) if clauses else f"{table}.`modified` desc"
 
 
 def get_screen_export_definition(screen: str) -> dict[str, Any]:
