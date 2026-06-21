@@ -70,6 +70,7 @@ const AUX_ROLE_MAP = {
   templates: ROLE_SYSTEM,
   "accounting-entries": ROLE_SYSTEM,
   "reconciliation-items": ROLE_SYSTEM,
+  "access-logs": ROLE_SYSTEM,
 };
 
 const router = createRouter({

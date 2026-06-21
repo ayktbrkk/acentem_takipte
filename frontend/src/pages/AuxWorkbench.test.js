@@ -905,3 +905,116 @@ describe("AuxWorkbench notification lists", () => {
     expect(wrapper.text()).toContain("yeni gönderim kayıtlarının oluşmasını bekleyin");
   });
 });
+
+describe("AuxWorkbench finance lists", () => {
+  beforeEach(() => {
+    routeState.query = {};
+    routeState.params = {};
+    routeState.hash = "";
+    routerPush.mockClear();
+    routerReplace.mockClear();
+    resourceQueue.length = 0;
+
+    setActivePinia(createPinia());
+
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "manager@example.com",
+      full_name: "AT Manager",
+      roles: ["AT Manager"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      capabilities: {},
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+    });
+
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+  });
+
+  function pushDefaultFinanceResources(listData = [], total = 0) {
+    resourceQueue.push(
+      {
+        data: listData,
+        reload: vi.fn(async function () {
+          this.data.value = listData;
+          return listData;
+        }),
+      },
+      {
+        data: total,
+        reload: vi.fn(async function () {
+          this.data.value = total;
+          return total;
+        }),
+      },
+      { data: {} },
+      { data: {} },
+      { data: {} },
+      { data: {}, submit: vi.fn(async () => ({})) },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+    );
+  }
+
+  it("shows screen-specific empty state for accounting entries", async () => {
+    pushDefaultFinanceResources([], 0);
+    routeState.path = "/accounting-entries";
+    routeState.fullPath = "/accounting-entries";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "accounting-entries" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Muhasebe kaydı bulunamadı");
+    expect(wrapper.text()).toContain("yeni muhasebe kaydı oluşturun");
+  });
+
+  it("shows screen-specific empty state for reconciliation items", async () => {
+    pushDefaultFinanceResources([], 0);
+    routeState.path = "/reconciliation-items";
+    routeState.fullPath = "/reconciliation-items";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "reconciliation-items" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Mutabakat kalemi bulunamadı");
+    expect(wrapper.text()).toContain("yeni mutabakat kalemi oluşturun");
+  });
+
+  it("shows screen-specific empty state for access logs", async () => {
+    pushDefaultFinanceResources([], 0);
+    routeState.path = "/access-logs";
+    routeState.fullPath = "/access-logs";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "access-logs" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Erişim kaydı bulunamadı");
+    expect(wrapper.text()).toContain("yeni denetim olaylarının oluşmasını bekleyin");
+  });
+});

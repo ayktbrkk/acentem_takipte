@@ -140,6 +140,18 @@ const AUX_FIELD_LABELS = {
     owner: "Owner",
     modified: "Modified",
   },
+  "access-logs": {
+    name: "Record",
+    reference_doctype: "Reference Type",
+    reference_name: "Reference Record",
+    viewed_by: "Viewed By",
+    action: "Action",
+    action_summary: "Action Summary",
+    decision_context: "Decision Context",
+    ip_address: "IP Address",
+    viewed_on: "Viewed On",
+    modified: "Modified",
+  },
   files: {
     name: "Record",
     file_name: "File Name",
