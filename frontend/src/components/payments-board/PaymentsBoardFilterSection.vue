@@ -1,8 +1,9 @@
 <template>
-  <div class="mb-6">
+  <div class="mb-6 space-y-4">
     <SmartFilterBar
       v-model="filters.query"
       :placeholder="t('searchPlaceholder')"
+      :advanced-label="t('filtersTitle')"
       @open-advanced="showAdvanced = !showAdvanced"
     >
       <template #primary-filters>
@@ -38,42 +39,50 @@
           <FeatherIcon name="x" class="h-4 w-4" />
         </ActionButton>
       </template>
-
-      <template #advanced>
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-3 pt-2">
-          <label class="flex flex-col gap-1">
-            <span class="field-label">{{ t('customerFilter') }}</span>
-            <input
-              v-model.trim="filters.customerQuery"
-              class="input"
-              type="search"
-              :placeholder="t('customerFilter')"
-              @keyup.enter="$emit('apply')"
-            />
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="field-label">{{ t('policyFilter') }}</span>
-            <input
-              v-model.trim="filters.policyQuery"
-              class="input"
-              type="search"
-              :placeholder="t('policyFilter')"
-              @keyup.enter="$emit('apply')"
-            />
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="field-label">{{ t('purposeFilter') }}</span>
-            <input
-              v-model.trim="filters.purposeQuery"
-              class="input"
-              type="search"
-              :placeholder="t('purposeFilter')"
-              @keyup.enter="$emit('apply')"
-            />
-          </label>
-        </div>
-      </template>
     </SmartFilterBar>
+
+    <div v-if="showAdvanced" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <label class="flex flex-col gap-1">
+          <span class="field-label">{{ t('customerFilter') }}</span>
+          <input
+            v-model.trim="filters.customerQuery"
+            class="input"
+            type="search"
+            :placeholder="t('customerFilter')"
+            @keyup.enter="$emit('apply')"
+          />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="field-label">{{ t('policyFilter') }}</span>
+          <input
+            v-model.trim="filters.policyQuery"
+            class="input"
+            type="search"
+            :placeholder="t('policyFilter')"
+            @keyup.enter="$emit('apply')"
+          />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="field-label">{{ t('purposeFilter') }}</span>
+          <input
+            v-model.trim="filters.purposeQuery"
+            class="input"
+            type="search"
+            :placeholder="t('purposeFilter')"
+            @keyup.enter="$emit('apply')"
+          />
+        </label>
+      </div>
+      <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+        <ActionButton variant="secondary" size="sm" @click="$emit('reset')">
+          {{ t('clearFilters') }}
+        </ActionButton>
+        <ActionButton variant="primary" size="sm" class="px-6" @click="$emit('apply')">
+          {{ t('applyFilters') }}
+        </ActionButton>
+      </div>
+    </div>
   </div>
 </template>
 

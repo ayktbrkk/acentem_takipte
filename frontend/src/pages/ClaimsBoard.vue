@@ -37,9 +37,11 @@
       :rows="claimsListRowsWithActions"
       :locale="localeCode"
       :loading="claimsLoading"
+      :error-text="claimsErrorText"
       :format-count="formatCount"
       :t="t"
       @row-click="openClaimDetail"
+      @retry="reloadClaims"
     />
 
     <ClaimsBoardDialogs
@@ -94,6 +96,7 @@ const {
   ownershipAssignmentEyebrow,
   claimSummary,
   claimsListActiveCount,
+  claimsErrorText,
   quickClaimSuccessHandlers,
   ownershipAssignmentSuccessHandlers,
   onClaimsListFilterChange,
@@ -119,7 +122,7 @@ const claimsTableColumns = computed(() => [
     ...column,
     width: column.key === "customer_label" ? "180px" : column.key === "incident_date_label" ? "120px" : column.key === "claim_status" ? "120px" : column.width,
   })),
-  { key: "_actions", label: t("payments"), width: "240px", type: "actions", align: "right" },
+  { key: "_actions", label: t("actions"), width: "240px", type: "actions", align: "right" },
 ]);
 
 function focusClaimSearch() {
