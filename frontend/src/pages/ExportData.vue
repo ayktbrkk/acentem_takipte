@@ -14,7 +14,13 @@
     </template>
 
     <template #actions>
-      <ExportDataHeaderActions :t="t" @reset="resetForm" @cancel="cancel" @export="downloadExport" />
+      <ExportDataHeaderActions
+        :t="t"
+        :export-loading="exportLoading"
+        @reset="resetForm"
+        @cancel="cancel"
+        @export="downloadExport"
+      />
     </template>
 
     <SectionPanel :title="t('workflowTitle')" :show-count="false">
@@ -68,10 +74,10 @@ const appPinia = getAppPinia();
 const authStore = useAuthStore(appPinia);
 const branchStore = useBranchStore(appPinia);
 
-const activeLocale = computed(() => unref(authStore.locale) || "en");
+const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 function t(key) {
-  const locale = String(unref(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+  const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
   return EXPORT_TRANSLATIONS[locale]?.[key] || EXPORT_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
 }
 
@@ -86,6 +92,7 @@ const {
   listPreviewTableRows,
   listPreviewLoading,
   listPreviewError,
+  exportLoading,
   downloadExport,
   resetForm,
   cancel,

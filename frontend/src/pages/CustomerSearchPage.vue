@@ -15,8 +15,8 @@
     <template #metrics>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <SaaSMetricCard :label="t('recent_access_requests')" :value="accessRequestHistory.length" />
-        <SaaSMetricCard :label="t('visibility_summary')" :value="t('role_based')" value-class="text-brand-600" />
-        <SaaSMetricCard :label="t('scope_summary')" :value="t('all_branches')" value-class="text-at-green" />
+        <SaaSMetricCard :label="t('visibility_summary')" :value="visibilityLabel" value-class="text-brand-600" />
+        <SaaSMetricCard :label="t('scope_summary')" :value="scopeLabel" value-class="text-at-green" />
       </div>
     </template>
 
@@ -104,6 +104,7 @@
 <script setup lang="ts">
 import { computed, unref } from "vue";
 import { useAuthStore } from "../stores/auth";
+import { useBranchStore } from "../stores/branch";
 import { normalizeStatus } from "../utils/statusMapping";
 import { useCustomerSearchPage } from "../composables/useCustomerSearchPage";
 import { CUSTOMER_SEARCH_TRANSLATIONS } from "../config/customer_search_translations";
@@ -119,7 +120,24 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import GlobalCustomerSearch from "../components/app-shell/GlobalCustomerSearch.vue";
 
 const authStore = useAuthStore();
+const branchStore = useBranchStore();
 const activeLocale = computed(() => (String(unref(authStore.locale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
+
+const visibilityLabel = computed(() => {
+  if (
+    authStore.hasAnyRole("AT Manager", "AT System Manager", "System Manager", "Administrator")
+  ) {
+    return t("visibility_full");
+  }
+  return t("role_based");
+});
+
+const scopeLabel = computed(() => {
+  if (authStore.canAccessAllOfficeBranches || !branchStore.requestBranch) {
+    return t("all_branches");
+  }
+  return branchStore.requestBranch || t("scope_branch_only");
+});
 
 function t(key: string) {
   return CUSTOMER_SEARCH_TRANSLATIONS[activeLocale.value]?.[key]
@@ -137,6 +155,7 @@ const columns = computed(() => [
 function mapStatus(value: string) {
   const normalized = String(value || "").trim().toLowerCase();
   if (normalized === "pending") return t("status_pending");
+  if (normalized === "submitted") return t("status_submitted");
   if (normalized === "approved") return t("status_approved");
   if (normalized === "rejected") return t("status_rejected");
   return value || t("unspecified");
@@ -159,5 +178,5 @@ const {
   resetSearch,
   formatDate,
   loadRequestHistory,
-} = useCustomerSearchPage({ activeLocale, t });
+} = useCustomerSearchPage({ activeLocale, t, authStore });
 </script>

@@ -74,7 +74,6 @@
     </div>
 
     <ImportDataJobHistoryPanel
-      v-if="jobHistory.length"
       :jobs="jobHistory"
       :locale="activeLocale"
       :t="t"

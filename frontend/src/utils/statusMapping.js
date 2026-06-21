@@ -13,6 +13,7 @@ export const STATUS_DOMAIN_MAP = {
   breakGlass: {
     approved: "active",
     pending: "hold",
+    submitted: "hold",
     rejected: "cancel",
     expired: "warn",
   },

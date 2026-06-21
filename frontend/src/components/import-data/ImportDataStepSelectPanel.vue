@@ -29,10 +29,12 @@
 
       <div v-if="isSpreadsheetFile && sheetNames.length" class="form-field md:col-span-2">
         <label class="form-label" :for="sheetId">{{ t("sheetLabel") }}</label>
-        <select :id="sheetId" v-model="selectedSheetModel" class="form-input" :disabled="headersLoading">
-          <option v-for="sheet in sheetNames" :key="sheet" :value="sheet">{{ sheet }}</option>
-        </select>
-        <p v-if="headersLoading" class="mt-2 text-xs text-slate-500">{{ t("headersRefreshing") }}</p>
+        <SkeletonLoader v-if="headersLoading" variant="list" :rows="2" />
+        <template v-else>
+          <select :id="sheetId" v-model="selectedSheetModel" class="form-input">
+            <option v-for="sheet in sheetNames" :key="sheet" :value="sheet">{{ sheet }}</option>
+          </select>
+        </template>
       </div>
     </div>
   </SectionPanel>
@@ -42,6 +44,7 @@
 import { computed, ref, useId } from "vue";
 
 import SectionPanel from "../app-shell/SectionPanel.vue";
+import SkeletonLoader from "../ui/SkeletonLoader.vue";
 
 const props = defineProps({
   modelValue: {

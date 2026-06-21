@@ -70,13 +70,13 @@
             <div>
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("phone") }}</p>
               <p class="mt-1 text-sm text-slate-700">
-                {{ searchResult.customer.phone || "—" }}
+                {{ searchResult.customer.phone || t("unspecified") }}
               </p>
             </div>
             <div>
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t("email") }}</p>
               <p class="mt-1 text-sm text-slate-700">
-                {{ searchResult.customer.email || "—" }}
+                {{ searchResult.customer.email || t("unspecified") }}
               </p>
             </div>
             <div v-if="searchResult.customer.office_branch" class="md:col-span-2">

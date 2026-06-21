@@ -132,7 +132,7 @@ function getPreviewDoctype(screen) {
 }
 
 export function useExportDataRuntime({ t, router, authStore, branchStore }) {
-  const activeLocale = computed(() => unref(authStore.locale) || "en");
+  const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
   const screenOptions = [
     { value: "dashboard", labelKey: "screenDashboard" },
@@ -162,6 +162,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
 
   const message = ref("");
   const historyRows = ref([]);
+  const exportLoading = ref(false);
   const listPreviewLoading = ref(false);
   const listPreviewError = ref("");
   const listPreviewRows = ref([]);
@@ -361,10 +362,15 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
   }
 
   function downloadExport() {
+    if (exportLoading.value) return;
+    exportLoading.value = true;
     const url = buildExportUrl();
     window.open(url, "_blank", "noopener,noreferrer");
     addHistory();
     message.value = t("exportStarted");
+    window.setTimeout(() => {
+      exportLoading.value = false;
+    }, 800);
   }
 
   function resetForm() {
@@ -393,6 +399,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
     listPreviewTableRows,
     listPreviewLoading,
     listPreviewError,
+    exportLoading,
     buildExportUrl,
     addHistory,
     downloadExport,

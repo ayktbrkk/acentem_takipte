@@ -1,9 +1,15 @@
 <template>
-  <SectionPanel :title="t('jobHistoryTitle')" :show-count="false">
+  <SectionPanel :title="t('jobHistoryTitle')" :count="jobs.length">
+    <EmptyState
+      v-if="!jobs.length"
+      compact
+      :title="t('jobHistoryEmpty')"
+      :description="t('jobHistoryEmptyHint')"
+    />
     <ListTable
+      v-else
       :columns="tableColumns"
       :rows="tableRows"
-      :empty-message="t('jobHistoryEmpty')"
       :locale="locale"
       :clickable="false"
     />
@@ -13,6 +19,7 @@
 <script setup>
 import { computed } from "vue";
 
+import EmptyState from "../app-shell/EmptyState.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import ListTable from "../ui/ListTable.vue";
 

@@ -2,7 +2,15 @@
   <div class="flex flex-wrap items-center justify-end gap-2">
     <ActionButton variant="secondary" size="sm" type="button" @click="$emit('reset')">{{ t("reset") }}</ActionButton>
     <ActionButton variant="secondary" size="sm" type="button" @click="$emit('cancel')">{{ t("cancel") }}</ActionButton>
-    <ActionButton variant="primary" size="sm" type="button" @click="$emit('export')">{{ t("exportAction") }}</ActionButton>
+    <ActionButton
+      variant="primary"
+      size="sm"
+      type="button"
+      :disabled="exportLoading"
+      @click="$emit('export')"
+    >
+      {{ exportLoading ? t("exportLoading") : t("exportAction") }}
+    </ActionButton>
   </div>
 </template>
 
@@ -13,6 +21,10 @@ defineProps({
   t: {
     type: Function,
     required: true,
+  },
+  exportLoading: {
+    type: Boolean,
+    default: false,
   },
 });
 
