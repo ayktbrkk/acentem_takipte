@@ -80,8 +80,8 @@
       :loading-label="t('loading')"
       :load-error-title="t('loadErrorTitle')"
       :load-error-text="loadError.text"
-      :empty-title="t('emptyTitle')"
-      :empty-description="t('emptyDescription')"
+      :empty-title="emptyTitle"
+      :empty-description="emptyDescription"
       :record-label="t('record')"
       :details-label="t('details')"
       :status-label="t('status')"
@@ -96,6 +96,7 @@
       :panel-label="t('panel')"
       :send-now-label="t('sendNow')"
       :retry-label="t('retry')"
+      :showing-records-label="t('showingRecords')"
       :requeue-label="t('requeue')"
       :open-communication-label="t('openCommunication')"
       :start-task-label="t('startTask')"
@@ -235,6 +236,8 @@ const {
   factItems,
   rowTitle,
   subtitleLabel,
+  emptyTitle,
+  emptyDescription,
   toolbarActions,
   visibleToolbarActions,
   canLaunchAuxQuickCreate,

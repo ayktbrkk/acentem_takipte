@@ -88,19 +88,16 @@
         </table>
       </div>
 
-      <div class="mt-6 flex items-center justify-between border-t border-slate-50 pt-4">
-        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
-          {{ pageLabel }} {{ pagination.page }} / {{ totalPages }}
-        </p>
-        <div class="flex items-center gap-2">
-          <ActionButton variant="secondary" size="sm" :disabled="pagination.page <= 1 || isLoading" @click="$emit('previous')">
-            <FeatherIcon name="chevron-left" class="h-3 w-3" />
-          </ActionButton>
-          <ActionButton variant="secondary" size="sm" :disabled="!hasNextPage || isLoading" @click="$emit('next')">
-            <FeatherIcon name="chevron-right" class="h-3 w-3" />
-          </ActionButton>
-        </div>
-      </div>
+      <ListPager
+        class="mt-6 border-t border-slate-50 pt-4"
+        :shown="rows.length"
+        :total="pagination.total"
+        :page="pagination.page"
+        :has-next="hasNextPage"
+        :showing-label="showingRecordsLabel"
+        @previous="$emit('previous')"
+        @next="$emit('next')"
+      />
     </template>
   </SectionPanel>
 </template>
@@ -111,6 +108,7 @@ import EmptyState from "../app-shell/EmptyState.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 import SkeletonLoader from "../ui/SkeletonLoader.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
+import ListPager from "../app-shell/ListPager.vue";
 import { FeatherIcon } from "frappe-ui";
 
 defineProps({
@@ -136,6 +134,7 @@ defineProps({
   panelLabel: { type: String, default: "" },
   sendNowLabel: { type: String, default: "" },
   retryLabel: { type: String, default: "" },
+  showingRecordsLabel: { type: String, default: "" },
   requeueLabel: { type: String, default: "" },
   openCommunicationLabel: { type: String, default: "" },
   startTaskLabel: { type: String, default: "" },

@@ -184,6 +184,10 @@ export const AUX_WORKBENCH_CONFIGS = {
     ],
     quickCreate: { registryKey: "insurance_company", label: L("New Company", "Yeni Şirket"), showSaveAndOpen: true },
     quickEdit: { registryKey: "insurance_company_edit", label: L("Quick Edit", "Hızlı Düzenle") },
+    empty: {
+      title: L("No insurance companies found", "Sigorta şirketi bulunamadı"),
+      description: L("Adjust your filters or create a new company record.", "Filtreleri değiştirin veya yeni şirket kaydı oluşturun."),
+    },
     sortOptions: ["company_name asc", "modified desc"],
     defaultSort: "company_name asc",
     boolFields: ["is_active"],
@@ -213,6 +217,10 @@ export const AUX_WORKBENCH_CONFIGS = {
     ],
     quickCreate: { registryKey: "branch_master", label: L("New Branch", "Yeni Branş"), showSaveAndOpen: true },
     quickEdit: { registryKey: "branch_master_edit", label: L("Quick Edit", "Hızlı Düzenle") },
+    empty: {
+      title: L("No branches found", "Branş bulunamadı"),
+      description: L("Adjust your filters or create a new branch record.", "Filtreleri değiştirin veya yeni branş kaydı oluşturun."),
+    },
     sortOptions: ["branch_name asc", "modified desc"],
     defaultSort: "branch_name asc",
     boolFields: ["is_active"],
@@ -242,6 +250,10 @@ export const AUX_WORKBENCH_CONFIGS = {
     ],
     quickCreate: { registryKey: "sales_entity_master", label: L("New Sales Entity", "Yeni Satış Birimi"), showSaveAndOpen: true },
     quickEdit: { registryKey: "sales_entity_master_edit", label: L("Quick Edit", "Hızlı Düzenle") },
+    empty: {
+      title: L("No sales entities found", "Satış birimi bulunamadı"),
+      description: L("Adjust your filters or create a new sales entity record.", "Filtreleri değiştirin veya yeni satış birimi kaydı oluşturun."),
+    },
     sortOptions: ["full_name asc", "modified desc"],
     defaultSort: "full_name asc",
     dateTimeFields: ["modified"],

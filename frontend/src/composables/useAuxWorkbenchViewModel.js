@@ -46,20 +46,28 @@ const AUX_FIELD_LABELS = {
   },
   companies: {
     name: "Record",
+    company_name: "Company Name",
     company_code: "Company Code",
+    is_active: "Active",
     owner: "Owner",
     modified: "Modified",
   },
   branches: {
     name: "Record",
+    branch_name: "Branch Name",
     branch_code: "Branch Code",
     insurance_company: "Insurance Company",
+    is_active: "Active",
+    owner: "Owner",
     modified: "Modified",
   },
   "sales-entities": {
     name: "Record",
-    parent_entity: "Parent Entity",
+    full_name: "Full Name",
     entity_type: "Entity Type",
+    office_branch: "Office Branch",
+    parent_entity: "Parent Entity",
+    owner: "Owner",
     modified: "Modified",
   },
   templates: {
@@ -428,6 +436,9 @@ export function useAuxWorkbenchViewModel({
   }
 
   const subtitleLabel = computed(() => localize(config?.subtitle));
+
+  const emptyTitle = computed(() => localize(config?.empty?.title) || t("emptyTitle"));
+  const emptyDescription = computed(() => localize(config?.empty?.description) || t("emptyDescription"));
   const toolbarActions = computed(() => (Array.isArray(config?.toolbarActions) ? config.toolbarActions : []));
   const visibleToolbarActions = computed(() =>
     toolbarActions.value.filter((action) => {
@@ -652,6 +663,8 @@ export function useAuxWorkbenchViewModel({
     factItems,
     rowTitle,
     subtitleLabel,
+    emptyTitle,
+    emptyDescription,
     toolbarActions,
     visibleToolbarActions,
     canLaunchAuxQuickCreate,

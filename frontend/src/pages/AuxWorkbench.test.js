@@ -681,3 +681,114 @@ describe("AuxWorkbench reminders", () => {
     });
   });
 });
+
+describe("AuxWorkbench master data", () => {
+  beforeEach(() => {
+    routeState.path = "/insurance-companies";
+    routeState.fullPath = "/insurance-companies";
+    routeState.query = {};
+    routeState.params = {};
+    routeState.hash = "";
+    routerPush.mockClear();
+    routerReplace.mockClear();
+    resourceQueue.length = 0;
+
+    setActivePinia(createPinia());
+
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "manager@example.com",
+      full_name: "AT Manager",
+      roles: ["AT Manager"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      capabilities: {},
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+    });
+
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+  });
+
+  function pushDefaultMasterDataResources(listData = [], total = 0) {
+    resourceQueue.push(
+      {
+        data: listData,
+        reload: vi.fn(async function () {
+          this.data.value = listData;
+          return listData;
+        }),
+      },
+      {
+        data: total,
+        reload: vi.fn(async function () {
+          this.data.value = total;
+          return total;
+        }),
+      },
+      { data: {} },
+      { data: {} },
+      { data: {} },
+      { data: {}, submit: vi.fn(async () => ({})) },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+    );
+  }
+
+  it("shows screen-specific empty state for insurance companies", async () => {
+    pushDefaultMasterDataResources([], 0);
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "companies" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Sigorta şirketi bulunamadı");
+    expect(wrapper.text()).toContain("yeni şirket kaydı oluşturun");
+  });
+
+  it("shows screen-specific empty state for branches", async () => {
+    pushDefaultMasterDataResources([], 0);
+    routeState.path = "/branches";
+    routeState.fullPath = "/branches";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "branches" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Branş bulunamadı");
+  });
+
+  it("shows screen-specific empty state for sales entities", async () => {
+    pushDefaultMasterDataResources([], 0);
+    routeState.path = "/sales-entities";
+    routeState.fullPath = "/sales-entities";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "sales-entities" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Satış birimi bulunamadı");
+  });
+});
