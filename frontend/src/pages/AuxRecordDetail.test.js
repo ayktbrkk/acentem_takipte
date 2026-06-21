@@ -223,6 +223,21 @@ vi.mock("frappe-ui", () => ({
                     owner: "Administrator",
                   },
                 }
+            : params?.doctype === "AT Notification Template"
+              ? {
+                  message: {
+                    name: "TPL-001",
+                    template_key: "reminder_followup",
+                    event_key: "reminder_followup",
+                    channel: "Email",
+                    language: "tr",
+                    subject: "Hatırlatma şablonu",
+                    body_template: "Merhaba {{ customer_name }}",
+                    is_active: 1,
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
             : {
                 message: {
                   name: "SNAP-001",
@@ -1067,5 +1082,102 @@ describe("AuxRecordDetail master data detail pages", () => {
     expect(wrapper.text()).toContain("Birim Türü");
     expect(wrapper.text()).toContain("Agency");
     expect(wrapper.text()).toContain("Ofis Şubesi");
+  });
+});
+
+describe("AuxRecordDetail notification detail pages", () => {
+  const detailStubs = {
+    ActionButton: ActionButtonStub,
+    DetailActionRow: genericStub,
+    DetailTabsBar: DetailTabsBarStub,
+    MetaListCard: genericStub,
+    QuickCreateManagedDialog: true,
+    StatusBadge: true,
+    SkeletonLoader: true,
+  };
+
+  beforeEach(() => {
+    routerPush.mockReset();
+    detailReload.mockReset();
+    sendDraftSubmitMock.mockReset();
+    retryOutboxSubmitMock.mockReset();
+    requeueOutboxSubmitMock.mockReset();
+    sendDraftSubmitMock.mockResolvedValue({ ok: true });
+    retryOutboxSubmitMock.mockResolvedValue({ ok: true });
+    requeueOutboxSubmitMock.mockResolvedValue({ ok: true });
+    setActivePinia(createPinia());
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      locale: "tr",
+    });
+  });
+
+  it("renders notification draft detail with localized labels and send action", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "notification-drafts", name: "DRF-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("reminder_followup");
+    expect(wrapper.text()).toContain("Taslak Bilgisi");
+    expect(wrapper.text()).toContain("Alıcı");
+    expect(wrapper.text()).toContain("Listeye Dön");
+    expect(wrapper.text()).toContain("Hemen Gönder");
+    expect(wrapper.text()).toContain("İletişim Merkezini Aç");
+    expect(wrapper.text()).toContain("Durum Özeti");
+  });
+
+  it("renders notification outbox detail with delivery groups and retry/requeue actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "notification-outbox", name: "OUT-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Tekrar Dene");
+    expect(wrapper.text()).toContain("Kuyruğa Al");
+    expect(wrapper.text()).toContain("Listeye Dön");
+
+    const operationsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Operasyon"));
+    await operationsTab.trigger("click");
+
+    expect(wrapper.text()).toContain("Gönderim Özeti");
+    expect(wrapper.text()).toContain("Deneme ve Zamanlama");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+
+    expect(wrapper.text()).toContain("SMTP timeout");
+  });
+
+  it("renders notification template detail with template meta and body block", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "templates", name: "TPL-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("reminder_followup");
+    expect(wrapper.text()).toContain("Şablon Özeti");
+    expect(wrapper.text()).toContain("Şablon Anahtarı");
+    expect(wrapper.text()).toContain("Yayın ve Kayıt");
+    expect(wrapper.text()).toContain("Listeye Dön");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+
+    expect(wrapper.text()).toContain("Şablon İçeriği");
+    expect(wrapper.text()).toContain("Merhaba {{ customer_name }}");
   });
 });

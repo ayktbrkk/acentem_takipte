@@ -424,6 +424,12 @@ export function useAuxRecordDetailSummary({
     ) {
       return translateDetailValue(value);
     }
+    if (
+      ["channel", "priority"].includes(field) &&
+      ["notification-drafts", "notification-outbox", "templates", "campaigns"].includes(config.key)
+    ) {
+      return translateDetailValue(value);
+    }
     return String(value);
   }
 
@@ -468,6 +474,7 @@ export function useAuxRecordDetailSummary({
     if (config.key === "accounting-entries") return "accounting";
     if (config.key === "reconciliation-items") return "reconciliation";
     if (config.key === "templates") return "template";
+    if (config.key === "notification-drafts") return "draft";
     if (config.key === "notification-outbox") return "outbox";
     if (config.key === "customer-segment-snapshots") return "segment_snapshot";
     if (config.key === "ownership-assignments") return "ownership_assignment";
@@ -529,8 +536,14 @@ export function useAuxRecordDetailSummary({
       const badges = [];
       if (doc.value.channel) badges.push({ key: "channel", type: "notification_channel", status: String(doc.value.channel) });
       if (doc.value.is_active !== undefined && doc.value.is_active !== null && doc.value.is_active !== "") {
-        badges.push({ key: "is_active", type: "boolean_active", status: String(doc.value.is_active) });
+        badges.push({ key: "is_active", type: "boolean_active", status: normalizeBadgeStatus(doc.value.is_active, "boolean_active") });
       }
+      return badges;
+    }
+    if (specialDetailMode.value === "draft") {
+      const badges = [];
+      if (doc.value.status) badges.push({ key: "status", type: "notification_status", status: String(doc.value.status) });
+      if (doc.value.channel) badges.push({ key: "channel", type: "notification_channel", status: String(doc.value.channel) });
       return badges;
     }
     if (specialDetailMode.value === "outbox") {
@@ -759,6 +772,42 @@ export function useAuxRecordDetailSummary({
         },
       ];
     }
+    if (specialDetailMode.value === "draft") {
+      return [
+        {
+          key: "draft-content",
+          title: t("draftInfo"),
+          items: [
+            item("template"),
+            item("event_key"),
+            item("language"),
+            item("subject"),
+            item("channel"),
+            item("status"),
+          ],
+        },
+        {
+          key: "draft-recipient",
+          title: t("referenceContext"),
+          items: [
+            item("recipient"),
+            item("customer"),
+            item("reference_doctype"),
+            item("reference_name"),
+          ],
+        },
+        {
+          key: "draft-delivery",
+          title: t("deliveryInfo"),
+          items: [
+            item("outbox_record"),
+            item("sent_at"),
+            item("owner"),
+            item("modified"),
+          ],
+        },
+      ];
+    }
     if (specialDetailMode.value === "outbox") {
       return [
         {
@@ -814,11 +863,11 @@ export function useAuxRecordDetailSummary({
 
   function isOperationGroup(group) {
     const key = String(group?.key || "");
-    return ["accounting-sync", "outbox-delivery", "outbox-retry", "outbox-queue"].includes(key);
+    return ["accounting-sync", "draft-delivery", "outbox-delivery", "outbox-retry", "outbox-queue"].includes(key);
   }
   function isRelatedGroup(group) {
     const key = String(group?.key || "");
-    return ["accounting-source", "outbox-reference", "reference"].includes(key);
+    return ["accounting-source", "draft-recipient", "outbox-reference", "reference"].includes(key);
   }
 
   const generalGroups = computed(() => renderedGroups.value.filter((g) => !isOperationGroup(g) && !isRelatedGroup(g)));
@@ -873,6 +922,12 @@ export function useAuxRecordDetailSummary({
     if (specialDetailMode.value === "template") {
       return [
         { key: "body_template", field: "body_template", title: t("bodyTemplate"), value: doc.value?.body_template, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
+    if (specialDetailMode.value === "draft") {
+      return [
+        { key: "body", field: "body", title: fieldLabel("body"), value: doc.value?.body, fullWidth: true },
+        { key: "error_message", field: "error_message", title: fieldLabel("error_message"), value: doc.value?.error_message },
       ].filter((item) => item.value != null && String(item.value).trim() !== "");
     }
     if (specialDetailMode.value === "outbox") {

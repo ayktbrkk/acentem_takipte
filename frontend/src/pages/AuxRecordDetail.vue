@@ -25,6 +25,10 @@
         <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t('retry') }}
       </ActionButton>
+      <ActionButton v-if="canRequeueOutboxLifecycle" variant="secondary" size="sm" @click="requeueOutboxLifecycle">
+        <FeatherIcon name="rotate-cw" class="h-4 w-4" />
+        {{ t('requeue') }}
+      </ActionButton>
       <ActionButton
         v-if="quickEditConfig && canUseQuickEdit"
         variant="secondary"
