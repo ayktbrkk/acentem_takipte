@@ -179,8 +179,6 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   const claimsLoading = computed(() => Boolean(unref(claimsResource.loading)));
   const mutationLoading = computed(() => Boolean(unref(claimMutationResource.loading)));
   const claims = computed(() => claimStore.filteredItems);
-  const claimsListSearchQuery = ref("");
-  const claimsListLocalFilters = ref({ status: "", amountState: "" });
   const claimsHasNextPage = computed(
     () => claimsListPagination.page * claimsListPagination.pageLength < claimsTotalCount.value,
   );
@@ -211,16 +209,6 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     const target = new Date(nextFollowUpOn);
     if (Number.isNaN(target.getTime())) return null;
     return Math.ceil((target.getTime() - Date.now()) / 86400000);
-  }
-
-  function matchAmountState(claim, amountState) {
-    const approved = Number(claim.approved_amount || 0);
-    const paid = Number(claim.paid_amount || 0);
-    if (amountState === "paid") return paid > 0;
-    if (amountState === "unpaid") return paid <= 0;
-    if (amountState === "approved_only") return approved > 0 && paid <= 0;
-    if (amountState === "pending_payment") return approved > paid;
-    return true;
   }
 
   function formatCurrency(value) {
@@ -321,25 +309,12 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     ];
   }
 
-  const claimsListFilteredRows = computed(() => {
-    const q = claimsListSearchQuery.value.trim().toLocaleLowerCase(localeCode.value);
-    return claims.value
-      .map((claim) => ({
-        ...claim,
-        remaining_days: computeRemainingFollowUpDays(claim.next_follow_up_on),
-      }))
-      .filter((claim) => {
-        const matchesQuery =
-          !q ||
-          [claim.claim_no, claim.name, claim.policy_no, claim.policy, claim.customer_full_name, claim.customer]
-            .map((value) => String(value || "").toLocaleLowerCase(localeCode.value))
-            .some((value) => value.includes(q));
-        const matchesStatus = !claimsListLocalFilters.value.status || claim.claim_status === claimsListLocalFilters.value.status;
-        const matchesAmountState =
-          !claimsListLocalFilters.value.amountState || matchAmountState(claim, claimsListLocalFilters.value.amountState);
-        return matchesQuery && matchesStatus && matchesAmountState;
-      });
-  });
+  const claimsListFilteredRows = computed(() =>
+    claims.value.map((claim) => ({
+      ...claim,
+      remaining_days: computeRemainingFollowUpDays(claim.next_follow_up_on),
+    }))
+  );
 
   const claimSummary = computed(() => {
     const rows = claimsListFilteredRows.value;
@@ -380,24 +355,20 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     }))
   );
 
-  const claimsListActiveCount = computed(
-    () =>
-      (claimsListSearchQuery.value.trim() ? 1 : 0) +
-      Object.values(claimsListLocalFilters.value).filter((value) => String(value || "").trim() !== "").length
-  );
+  const claimsListActiveCount = computed(() => claimStore.activeFilterCount);
 
   function onClaimsListFilterChange({ key, value }) {
-    claimsListLocalFilters.value = {
-      ...claimsListLocalFilters.value,
-      [key]: String(value || ""),
-    };
+    claimStore.setFilters({ [key]: String(value || "") });
     claimsListPagination.page = 1;
+    if (key === "status") {
+      void reloadClaims();
+    }
   }
 
   function onClaimsListFilterReset() {
-    claimsListSearchQuery.value = "";
-    claimsListLocalFilters.value = { status: "", amountState: "" };
+    resetClaimFilters();
     claimsListPagination.page = 1;
+    void reloadClaims();
   }
 
   function setClaimsPage(page) {
@@ -710,15 +681,15 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
         t("rejectionReason"),
       ],
       rows: claims.value.map((claim) => ({
-        [t("claim")]: claim.claim_no || claim.name || "-",
-        [t("policy")]: claim.policy || "-",
-        [t("status")]: claim.claim_status || "-",
-        [t("approved")]: claim.approved_amount ?? "-",
-        [t("paid")]: claim.paid_amount ?? "-",
+        [t("claim")]: claim.claim_no || claim.name || fallbackLabel(),
+        [t("policy")]: claim.policy || fallbackLabel(),
+        [t("status")]: claim.claim_status || fallbackLabel(),
+        [t("approved")]: claim.approved_amount ?? fallbackLabel(),
+        [t("paid")]: claim.paid_amount ?? fallbackLabel(),
         [t("assignedExpert")]: claim.assigned_expert || t("noExpert"),
-        [t("appealStatus")]: claim.appeal_status || "-",
-        [t("nextFollowUpOn")]: claim.next_follow_up_on || "-",
-        [t("rejectionReason")]: claim.rejection_reason || "-",
+        [t("appealStatus")]: claim.appeal_status || fallbackLabel(),
+        [t("nextFollowUpOn")]: claim.next_follow_up_on || fallbackLabel(),
+        [t("rejectionReason")]: claim.rejection_reason || fallbackLabel(),
       })),
       filters: currentClaimPresetPayload(),
       format,
@@ -870,8 +841,6 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     claimsLoading,
     mutationLoading,
     claims,
-    claimsListSearchQuery,
-    claimsListLocalFilters,
     claimsListPagination,
     claimsTotalCount,
     claimsHasNextPage,

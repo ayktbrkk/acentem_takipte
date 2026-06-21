@@ -56,6 +56,7 @@ export const CLAIM_TRANSLATIONS = {
     status_rejected: "Reddedildi",
     status_paid: "Ödendi",
     status_closed: "Kapalı",
+    status_cancelled: "İptal",
     status_reopened: "Yeniden Açıldı",
     claim_date: "Hasar Tarihi",
     claim_type: "Hasar Türü",
@@ -118,6 +119,10 @@ export const CLAIM_TRANSLATIONS = {
     reserve_amount: "Rezerv Tutar",
     paid_amount: "Ödenen Tutar",
     unspecified: "Belirtilmedi",
+    presetLabel: "Filtre Şablonu",
+    savePreset: "Şablonu Kaydet",
+    deletePreset: "Şablonu Sil",
+    applyFilters: "Uygula",
   },
   en: {
     claims: "Claims",
@@ -176,6 +181,7 @@ export const CLAIM_TRANSLATIONS = {
     status_rejected: "Rejected",
     status_paid: "Paid",
     status_closed: "Closed",
+    status_cancelled: "Cancelled",
     status_reopened: "Reopened",
     claim_date: "Claim Date",
     claim_type: "Claim Type",
@@ -238,6 +244,10 @@ export const CLAIM_TRANSLATIONS = {
     reserve_amount: "Reserve Amount",
     paid_amount: "Paid Amount",
     unspecified: "Not provided",
+    presetLabel: "Filter Preset",
+    savePreset: "Save Preset",
+    deletePreset: "Delete Preset",
+    applyFilters: "Apply filters",
   }
 };
 

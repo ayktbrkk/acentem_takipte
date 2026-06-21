@@ -218,7 +218,7 @@ describe("ClaimsBoard page store integration", () => {
     expect(wrapper.text()).toContain("Toplam Hasar");
     expect(wrapper.vm.claimsListRowsWithActions[0]._actions.map((action) => action.label)).toEqual(["Dosya Görüntüle", "Ödeme Yap"]);
 
-    wrapper.vm.claimsListSearchQuery = "POL-001";
+    wrapper.vm.filters.query = "POL-001";
     await settleAsyncWork();
 
     expect(wrapper.text()).toContain("POL-001");

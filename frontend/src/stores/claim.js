@@ -28,7 +28,9 @@ function filterClaimItems(items, filters, localeCode) {
   const query = normalizeText(filters?.query, localeCode);
   if (query) {
     rows = rows.filter((row) =>
-      [row?.claim_no, row?.name, row?.policy].some((value) => normalizeText(value, localeCode).includes(query))
+      [row?.claim_no, row?.name, row?.policy, row?.customer_full_name, row?.customer].some((value) =>
+        normalizeText(value, localeCode).includes(query)
+      )
     );
   }
   const policyQuery = normalizeText(filters?.policyQuery, localeCode);

@@ -1,7 +1,3 @@
-function fallbackLabel(localeCode) {
-  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
-}
-
 export function buildClaimsListTableColumns(t) {
   return [
     { key: "claim_primary", secondaryKey: "claim_secondary", label: t("colClaim"), type: "stacked" },
@@ -13,9 +9,8 @@ export function buildClaimsListTableColumns(t) {
   ];
 }
 
-export function mapClaimRecordToTableRow(row, { formatDate, formatCurrency, localeCode, translateValue }) {
-  const locale = localeCode || "tr";
-  const unspecified = fallbackLabel(locale);
+export function mapClaimRecordToTableRow(row, { formatDate, formatCurrency, translateValue, t }) {
+  const unspecified = t ? t("unspecified") : "";
   const format = (value) => (translateValue ? translateValue(value) : value) || unspecified;
 
   return {

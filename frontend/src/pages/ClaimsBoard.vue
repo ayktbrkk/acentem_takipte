@@ -22,14 +22,21 @@
     </template>
 
     <ClaimsBoardFilterSection
+      v-model:preset-key="presetKey"
       :claims-list-active-count="claimsListActiveCount"
       :claims-list-filter-config="claimsListFilterConfig"
-      :local-filters="claimsListLocalFilters"
-      :search-query="claimsListSearchQuery"
+      :filters="filters"
+      :search-query="filters.query"
+      :preset-options="presetOptions"
+      :can-delete-preset="canDeletePreset"
       :t="t"
-      @update:search-query="claimsListSearchQuery = $event"
+      @update:search-query="filters.query = $event"
       @filter-change="onClaimsListFilterChange"
-      @reset="onClaimsListFilterReset"
+      @reset="resetClaimFilters"
+      @apply="applyClaimFilters"
+      @preset-change="onPresetChange"
+      @preset-save="savePreset"
+      @preset-delete="deletePreset"
       @focus-search="focusClaimSearch"
     />
 
@@ -96,22 +103,28 @@ const {
   claimsLoading,
   showQuickClaimDialog,
   showOwnershipAssignmentDialog,
-  claimsListSearchQuery,
   claimsListFilterConfig,
   claimsListRowsWithActions,
   claimQuickOptionsMap,
   ownershipAssignmentEyebrow,
   claimSummary,
   claimsListActiveCount,
-  claimsListLocalFilters,
   claimsListPagination,
   claimsHasNextPage,
+  filters,
+  presetKey,
+  presetOptions,
+  canDeletePreset,
+  onPresetChange,
+  savePreset,
+  deletePreset,
+  applyClaimFilters,
+  resetClaimFilters,
   setClaimsPage,
   claimsErrorText,
   quickClaimSuccessHandlers,
   ownershipAssignmentSuccessHandlers,
   onClaimsListFilterChange,
-  onClaimsListFilterReset,
   formatCount,
   reloadClaims,
   downloadClaimExport,

@@ -207,8 +207,14 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
 
   const renewalsError = computed(() => {
     const err = unref(renewalsResource.error);
-    return err?.messages?.join(" ") || err?.message || "";
+    const resourceMessage = err?.messages?.join(" ") || err?.message || "";
+    const storeMessage = String(renewalStore.state.error || "").trim();
+    return resourceMessage || storeMessage;
   });
+
+  const renewalsErrorText = computed(() => renewalsError.value || "");
+
+  const renewalsFetchTruncated = computed(() => renewalsRaw.value.length >= RENEWAL_FETCH_LIMIT);
 
   watch(
     () => unref(renewalsResource.data),
@@ -630,6 +636,8 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
     renewalCards,
     boardColumns,
     renewalsError,
+    renewalsErrorText,
+    renewalsFetchTruncated,
     reloadRenewals,
     downloadRenewalExport,
     canMoveRenewalToStatus,

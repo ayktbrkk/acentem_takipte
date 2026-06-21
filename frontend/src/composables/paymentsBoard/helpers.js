@@ -27,10 +27,10 @@ export function formatCount(localeCode, value) {
   return new Intl.NumberFormat(localeCode).format(Number(value || 0));
 }
 
-export function formatDate(localeCode, value) {
-  if (!value) return "-";
+export function formatDate(localeCode, value, fallback = "") {
+  if (!value) return fallback;
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
+  if (Number.isNaN(date.getTime())) return fallback;
   return new Intl.DateTimeFormat(localeCode, {
     day: "2-digit",
     month: "2-digit",
@@ -191,13 +191,22 @@ export function withOfficeBranchFilter(params, officeBranch) {
 }
 
 export function paymentIdentityFacts(t, payment) {
-  return [mutedFact("purpose", t("purpose"), payment?.payment_purpose || "-", "at-clamp-2"), subtleFact("record", t("recordId"), payment?.name || "-")];
+  const unspecified = t("unspecified");
+  return [
+    mutedFact("purpose", t("purpose"), payment?.payment_purpose || unspecified, "at-clamp-2"),
+    subtleFact("record", t("recordId"), payment?.name || unspecified),
+  ];
 }
 
 export function paymentDetailFacts(t, payment, installmentSummary) {
+  const unspecified = t("unspecified");
   const items = [
-    mutedFact("date", t("date"), payment?.payment_date || "-"),
-    mutedFact("customer", t("customer"), payment?.customer_label || payment?.customer_full_name || payment?.customer_name || payment?.customer || "-"),
+    mutedFact("date", t("date"), payment?.payment_date || unspecified),
+    mutedFact(
+      "customer",
+      t("customer"),
+      payment?.customer_label || payment?.customer_full_name || payment?.customer_name || payment?.customer || unspecified
+    ),
   ];
   pushMutedFactIf(items, Boolean(payment?.policy), "policy", t("policy"), payment?.policy);
   const installmentCount = Number(installmentSummary?.total || payment?.installment_count || 0);

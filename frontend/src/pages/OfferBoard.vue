@@ -365,23 +365,6 @@ const conversionRuntime = useOfferBoardConversion({
   oneYearLater: state.oneYearLater,
 });
 
-const toolbarLabels = computed(() => ({
-  viewList: t("viewList"),
-  viewBoard: t("viewBoard"),
-  newOffer: t("newOffer"),
-  refresh: t("refresh"),
-  focusFilters: t("focusFilters"),
-  exportXlsx: t("exportXlsx"),
-}));
-
-const summaryLabels = computed(() => ({
-  total: t("summaryTotal"),
-  draft: t("summaryDraft"),
-  sent: t("summarySent"),
-  accepted: t("summaryAccepted"),
-  conversion: t("summaryConversion"),
-}));
-
 const quickOfferLabels = computed(() => ({
   cancel: t("cancel"),
   save: t("createQuickOffer"),
@@ -389,16 +372,6 @@ const quickOfferLabels = computed(() => ({
 }));
 
 const offerListColumns = computed(() => buildOfferListTableColumns(t));
-
-function focusOfferSearch() {
-  const searchInput = document.querySelector('input[placeholder*="Teklif"], input[placeholder*="Offer"]');
-  if (searchInput instanceof HTMLInputElement) searchInput.focus();
-}
-
-function onOfferSearchChange(value) {
-  offerListSearchQuery.value = value;
-  filtersRuntime.applyOfferListFilters();
-}
 
 function onOfferListFilterBarChange({ key, value }) {
   state.offerListFilters[key] = value;

@@ -3,7 +3,7 @@
     :breadcrumb="t('renewals_breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
-    :record-count="renewals.length"
+    :record-count="renewalsTotal"
     :record-count-label="t('recordCount')"
   >
     <template #actions>
@@ -62,8 +62,19 @@
       </div>
     </template>
 
-    <div v-if="renewalsError" class="rounded-xl border border-at-red/20 bg-at-red/5 p-4 mb-4" role="alert">
-      <p class="text-sm font-semibold text-at-red">{{ renewalsError }}</p>
+    <div v-if="renewalsErrorText" class="rounded-xl border border-at-red/20 bg-at-red/5 p-4 mb-4 flex items-center justify-between gap-4" role="alert">
+      <p class="text-sm font-semibold text-at-red">{{ renewalsErrorText || t('loadError') }}</p>
+      <ActionButton variant="secondary" size="sm" @click="reloadRenewals">
+        {{ t('retry') }}
+      </ActionButton>
+    </div>
+
+    <div
+      v-if="renewalsFetchTruncated"
+      class="rounded-xl border border-at-amber/20 bg-at-amber/5 px-4 py-3 mb-4 text-sm text-at-amber font-medium"
+      role="status"
+    >
+      {{ t('fetchLimitWarning') }}
     </div>
 
     <div class="mb-6">
@@ -86,6 +97,30 @@
             <option value="7">{{ t("dueScope7") }}</option>
             <option value="30">{{ t("dueScope30") }}</option>
           </select>
+          <div class="h-4 w-px bg-slate-200 mx-1"></div>
+          <FilterPresetMenu
+            v-model="presetKey"
+            :label="t('presetLabel')"
+            :options="presetOptions"
+            :can-delete="canDeletePreset"
+            :show-save="true"
+            :show-delete="true"
+            :save-label="t('savePreset')"
+            :delete-label="t('deletePreset')"
+            @change="onPresetChange"
+            @save="savePreset"
+            @delete="deletePreset"
+          />
+          <ActionButton variant="primary" size="sm" @click="applyRenewalFilters">
+            {{ t('applyFilters') }}
+          </ActionButton>
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            @click="resetRenewalFilters"
+          >
+            <FeatherIcon name="x" class="h-4 w-4" />
+          </ActionButton>
         </template>
       </SmartFilterBar>
     </div>
@@ -256,6 +291,7 @@ import StatusBadge from "../components/ui/StatusBadge.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import ListTable from "../components/ui/ListTable.vue";
 import ListPager from "../components/app-shell/ListPager.vue";
+import FilterPresetMenu from "../components/app-shell/FilterPresetMenu.vue";
 import { FeatherIcon } from "frappe-ui";
 import { ref } from "vue";
 
@@ -277,7 +313,8 @@ const {
   renewalStatusOptions,
   renewalsLoading,
   renewals,
-  renewalsError,
+  renewalsErrorText,
+  renewalsFetchTruncated,
   showQuickRenewalDialog,
   renewalQuickOptionsMap,
   quickRenewalEyebrow,
@@ -290,6 +327,13 @@ const {
   renewalListHasNextPage,
   renewalListShownCount,
   renewalBoardDisplayLimit,
+  presetKey,
+  presetOptions,
+  canDeletePreset,
+  onPresetChange,
+  savePreset,
+  deletePreset,
+  resetRenewalFilters,
   reloadRenewals,
   downloadRenewalExport,
   applyRenewalFilters,

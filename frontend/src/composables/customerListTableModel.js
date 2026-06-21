@@ -1,7 +1,3 @@
-function fallbackLabel(localeCode) {
-  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
-}
-
 function normalizeValue(value) {
   const normalized = String(value ?? "").trim();
   if (!normalized || ["unknown", "none", "null", "undefined"].includes(normalized.toLowerCase())) {
@@ -20,25 +16,23 @@ export function buildCustomerListTableColumns(t) {
 }
 
 function normalizeGender(value, t, unspecified) {
-  if (value === "Male") return t("genderMale") || "Male";
-  if (value === "Female") return t("genderFemale") || "Female";
-  if (value === "Other") return t("genderOther") || "Other";
+  if (value === "Male") return t("genderMale");
+  if (value === "Female") return t("genderFemale");
+  if (value === "Other") return t("genderOther");
   return unspecified;
 }
 
 function normalizeMaritalStatus(value, t, unspecified) {
-  if (value === "Single") return t("maritalSingle") || "Single";
-  if (value === "Married") return t("maritalMarried") || "Married";
-  if (value === "Divorced") return t("maritalDivorced") || "Divorced";
-  if (value === "Widowed") return t("maritalWidowed") || "Widowed";
+  if (value === "Single") return t("maritalSingle");
+  if (value === "Married") return t("maritalMarried");
+  if (value === "Divorced") return t("maritalDivorced");
+  if (value === "Widowed") return t("maritalWidowed");
   return unspecified;
 }
 
 export function mapCustomerRecordToTableRow(row, { t, localeCode }) {
-  const locale = localeCode || "tr";
-  const unspecified = t("unspecified") || fallbackLabel(locale);
-  const customerType =
-    row.customer_type === "Corporate" ? t("corporate") || "Corporate" : t("individual") || "Individual";
+  const unspecified = t("unspecified");
+  const customerType = row.customer_type === "Corporate" ? t("corporate") : t("individual");
   const maritalStatus = normalizeValue(row.marital_status);
   const gender = normalizeValue(row.gender);
   const birthDate = normalizeValue(row.birth_date);
@@ -67,11 +61,10 @@ export function mapCustomerRecordToTableRow(row, { t, localeCode }) {
   };
 }
 
-export function mapCustomerImportPreviewToTableRow(row, { t, localeCode }) {
+export function mapCustomerImportPreviewToTableRow(row, { t }) {
   const values = row.normalized_values || {};
-  const locale = localeCode || "tr";
-  const unspecified = t("unspecified") || fallbackLabel(locale);
-  const customerType = values.customer_type === "Corporate" ? t("corporate") || "Corporate" : t("individual") || "Individual";
+  const unspecified = t("unspecified");
+  const customerType = values.customer_type === "Corporate" ? t("corporate") : t("individual");
 
   return {
     id: `${row.row_number || ""}-${values.tax_id || ""}`,

@@ -3,6 +3,7 @@ import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
 import { mapCustomerRecordToTableRow } from "./customerListTableModel";
+import { openListExport } from "../utils/listExport";
 
 export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
@@ -98,6 +99,19 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
     router.push({ name: "customer-detail", params: { name } });
   }
 
+  function buildCustomerExportQuery() {
+    return { filters: JSON.parse(JSON.stringify(filters)) };
+  }
+
+  function downloadCustomerExport(format) {
+    openListExport({
+      screen: "customer_list",
+      query: buildCustomerExportQuery(),
+      format,
+      limit: 1000,
+    });
+  }
+
   reload();
 
   return {
@@ -113,5 +127,6 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
     setPage,
     updateFilter,
     openCustomer,
+    downloadCustomerExport,
   };
 }

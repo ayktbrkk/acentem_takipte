@@ -7,6 +7,10 @@
     :record-count-label="t('recordCount')"
   >
     <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="downloadCustomerExport('xlsx')">
+        <FeatherIcon name="download" class="h-4 w-4" />
+        {{ t("exportXlsx") }}
+      </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="reload">
         <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t("refresh") }}
@@ -128,6 +132,7 @@ const {
   setPage,
   updateFilter,
   openCustomer,
+  downloadCustomerExport,
 } = useCustomerBoardRuntime({ activeLocale });
 
 const columns = computed(() => buildCustomerListTableColumns(t));

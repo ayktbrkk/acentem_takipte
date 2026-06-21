@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { translateText } from "@/utils/i18n";
 import { LEAD_TRANSLATIONS } from "@/config/lead_translations";
 import { maskPhone } from "@/utils/atMasks";
+import { openListExport } from "@/utils/listExport";
 
 export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
   const router = useRouter();
@@ -81,13 +82,14 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
     const total = totalCount.value;
     const metricsCoverFullResultSet = total > 0 && rows.length === total;
 
+    const partial = t("partialMetrics");
     return {
       total,
       active: metricsCoverFullResultSet
         ? rows.filter((row) => String(row.status || "") !== "Closed").length
-        : 0,
-      individual: metricsCoverFullResultSet ? rows.filter((row) => isIndividualLead(row)).length : 0,
-      corporate: metricsCoverFullResultSet ? rows.filter((row) => isCorporateLead(row)).length : 0,
+        : partial,
+      individual: metricsCoverFullResultSet ? rows.filter((row) => isIndividualLead(row)).length : partial,
+      corporate: metricsCoverFullResultSet ? rows.filter((row) => isCorporateLead(row)).length : partial,
     };
   });
 
@@ -163,6 +165,19 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
     router.push({ name: "lead-detail", params: { name } });
   }
 
+  function buildLeadExportQuery() {
+    return { filters: buildListParams().filters || {} };
+  }
+
+  function downloadLeadExport(format) {
+    openListExport({
+      screen: "lead_list",
+      query: buildLeadExportQuery(),
+      format,
+      limit: 1000,
+    });
+  }
+
   reload();
 
   return {
@@ -178,5 +193,6 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
     setPage,
     updateFilter,
     openLead,
+    downloadLeadExport,
   };
 }
