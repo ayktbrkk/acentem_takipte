@@ -7,18 +7,22 @@
     <div v-if="isLoading && rows.length === 0" class="mt-4">
       <SkeletonLoader variant="list" :rows="10" />
     </div>
-    <article v-else-if="loadErrorText" class="qc-error-banner mt-4">
-      <p class="qc-error-banner__text font-semibold">{{ loadErrorTitle }}</p>
-      <p class="qc-error-banner__text mt-1 text-xs opacity-90">{{ loadErrorText }}</p>
-    </article>
-    <div v-else-if="rows.length === 0" class="mt-4 py-12 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-      <div class="mx-auto h-12 w-12 text-slate-200 mb-3">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-        </svg>
+    <div
+      v-else-if="loadErrorText"
+      class="mt-4 rounded-xl border border-at-red/20 bg-at-red/5 px-5 py-4 flex flex-wrap items-center justify-between gap-4"
+      role="alert"
+      aria-live="polite"
+    >
+      <div>
+        <p class="text-sm font-semibold text-at-red">{{ loadErrorTitle }}</p>
+        <p class="mt-1 text-sm text-at-red/90">{{ loadErrorText }}</p>
       </div>
-      <p class="text-sm text-slate-500 font-semibold">{{ emptyTitle }}</p>
-      <p class="text-xs text-slate-400 mt-1 font-medium">{{ emptyDescription }}</p>
+      <ActionButton variant="secondary" size="sm" :disabled="isLoading" @click="$emit('retry')">
+        {{ retryLabel }}
+      </ActionButton>
+    </div>
+    <div v-else-if="rows.length === 0" class="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-5">
+      <EmptyState :title="emptyTitle" :description="emptyDescription" />
     </div>
     <template v-else>
       <div class="overflow-x-auto mt-4 -mx-5 px-5">
@@ -103,6 +107,7 @@
 
 <script setup>
 import SectionPanel from "../app-shell/SectionPanel.vue";
+import EmptyState from "../app-shell/EmptyState.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
 import SkeletonLoader from "../ui/SkeletonLoader.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
@@ -197,5 +202,6 @@ defineEmits([
   "permanent-delete-document",
   "previous",
   "next",
+  "retry",
 ]);
 </script>

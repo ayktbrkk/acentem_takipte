@@ -14,34 +14,30 @@
       </div>
     </template>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
-        <div class="surface-card rounded-2xl p-6">
-          <BreakGlassRequestFormPanel
-            :form="form"
-            :access-type-options="accessTypeOptions"
-            :submit-error="submitError"
-            :submit-result="submitResult"
-            :submitting="submitting"
-            :t="t"
-            @submit="submitRequest"
-            @reset="resetForm"
-          />
-        </div>
+        <BreakGlassRequestFormPanel
+          :form="form"
+          :access-type-options="accessTypeOptions"
+          :submit-error="submitError"
+          :submit-result="submitResult"
+          :submitting="submitting"
+          :t="t"
+          @submit="submitRequest"
+          @reset="resetForm"
+        />
       </div>
 
       <div class="space-y-6">
-        <div class="surface-card rounded-2xl p-6">
-          <BreakGlassRequestValidationPanel
-            :validation="validation"
-            :access-type-options="accessTypeOptions"
-            :validation-message="validationMessage"
-            :validation-ok="validationOk"
-            :validating="validating"
-            :t="t"
-            @validate="validateAccess"
-          />
-        </div>
+        <BreakGlassRequestValidationPanel
+          :validation="validation"
+          :access-type-options="accessTypeOptions"
+          :validation-message="validationMessage"
+          :validation-ok="validationOk"
+          :validating="validating"
+          :t="t"
+          @validate="validateAccess"
+        />
       </div>
     </div>
   </WorkbenchPageLayout>
@@ -87,7 +83,7 @@ const {
 const accessTypeLabelMap = computed(() => Object.fromEntries(accessTypeOptions.value.map((option) => [option.value, option.label])));
 const activeAccessTypeLabel = computed(() => accessTypeLabelMap.value[form.accessType] || t("accessType"));
 const validationSummaryLabel = computed(() => {
-  if (validationMessage) return validationMessage;
-  return validationOk ? (t("validation_granted") || "-") : (t("validation_idle") || "-");
+  if (validationMessage.value) return validationMessage.value;
+  return validationOk.value ? (t("validation_granted") || "-") : (t("validation_idle") || "-");
 });
 </script>

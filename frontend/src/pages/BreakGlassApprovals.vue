@@ -6,11 +6,14 @@
     :record-count="pendingRows.length"
     :record-count-label="t('approvalRecordCount')"
   >
+    <template #actions>
+      <BreakGlassApprovalsActionBar v-if="canManage" :loading="loading" :t="t" @refresh="loadPending" />
+    </template>
+
     <article v-if="!canManage" class="qc-warning-banner" role="status" aria-live="polite">
       <p class="qc-warning-banner__text">{{ t("permissionDenied") }}</p>
     </article>
 
-    <BreakGlassApprovalsActionBar v-if="canManage" :loading="loading" :t="t" @refresh="loadPending" />
     <BreakGlassApprovalsTableSection
       v-if="canManage"
       :pending-rows="pendingRows"

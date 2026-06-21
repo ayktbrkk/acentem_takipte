@@ -1,21 +1,27 @@
 <template>
   <SectionPanel :title="t('pendingTitle')" :count="pendingRows.length">
-    <article v-if="errorText" class="qc-error-banner" role="alert" aria-live="polite">
-      <p class="qc-error-banner__text">{{ errorText }}</p>
-    </article>
-
-    <article
-      v-if="actionResult"
-      class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
-      role="status"
+    <div
+      v-if="errorText"
+      class="rounded-xl border border-at-red/20 bg-at-red/5 px-5 py-4 flex flex-wrap items-center justify-between gap-4"
+      role="alert"
       aria-live="polite"
     >
-      <p class="font-semibold">{{ t("actionDone") }}</p>
-      <p class="mt-1">{{ actionResult }}</p>
+      <div>
+        <p class="text-sm font-semibold text-at-red">{{ t("loadErrorTitle") }}</p>
+        <p class="mt-1 text-sm text-at-red/90">{{ errorText }}</p>
+      </div>
+      <ActionButton variant="secondary" size="sm" :disabled="loading" @click="$emit('refresh')">
+        {{ t("retry") }}
+      </ActionButton>
+    </div>
+
+    <article v-if="actionResult" class="qc-success-banner mb-4" role="status" aria-live="polite">
+      <p class="qc-success-banner__text font-semibold">{{ t("actionDone") }}</p>
+      <p class="qc-success-banner__text mt-1">{{ actionResult }}</p>
     </article>
 
-    <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-      {{ t("loading") }}
+    <div v-if="loading" class="mt-4">
+      <SkeletonLoader variant="list" :rows="6" />
     </div>
     <div v-else-if="pendingRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
       <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
@@ -96,6 +102,7 @@
 import ActionButton from "../app-shell/ActionButton.vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
+import SkeletonLoader from "../ui/SkeletonLoader.vue";
 
 const props = defineProps({
   pendingRows: {

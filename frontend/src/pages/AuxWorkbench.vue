@@ -159,6 +159,7 @@
       @complete-ownership-assignment="completeOwnershipAssignmentRow"
       @previous="previousPage"
       @next="nextPage"
+      @retry="refreshList"
     />
 
     <QuickCreateManagedDialog

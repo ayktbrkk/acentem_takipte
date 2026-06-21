@@ -41,14 +41,9 @@
         <p class="qc-error-banner__text">{{ submitError }}</p>
       </article>
 
-      <article
-        v-if="submitResult"
-        class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
-        role="status"
-        aria-live="polite"
-      >
-        <p class="font-semibold">{{ t("submitSuccessTitle") }}</p>
-        <p class="mt-1">{{ submitResult }}</p>
+      <article v-if="submitResult" class="qc-success-banner" role="status" aria-live="polite">
+        <p class="qc-success-banner__text font-semibold">{{ t("submitSuccessTitle") }}</p>
+        <p class="qc-success-banner__text mt-1">{{ submitResult }}</p>
       </article>
 
       <div class="flex flex-wrap items-center gap-2">
