@@ -104,6 +104,7 @@
       :block-task-label="t('blockTaskAction')"
       :complete-task-label="t('completeTaskAction')"
       :cancel-task-label="t('cancelTaskAction')"
+      :complete-reminder-label="t('completeReminderAction')"
       :cancel-reminder-label="t('cancelReminderAction')"
       :running-label="t('running')"
       :page-label="t('page')"

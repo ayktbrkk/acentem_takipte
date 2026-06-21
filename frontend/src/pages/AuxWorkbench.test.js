@@ -231,6 +231,29 @@ describe("AuxWorkbench reminders", () => {
     });
   });
 
+  it("shows reminder cancel row action and cancels from the table", async () => {
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "reminders" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Hatırlatıcıyı İptal Et");
+
+    const cancelButton = wrapper.findAll("button").find((node) => node.text().includes("Hatırlatıcıyı İptal Et"));
+    expect(cancelButton).toBeTruthy();
+    await cancelButton.trigger("click");
+
+    expect(reminderMutationSubmit).toHaveBeenCalledWith({
+      doctype: "AT Reminder",
+      name: "REM-001",
+      data: { status: "Cancelled" },
+    });
+  });
+
   it("runs ownership assignment lifecycle row actions", async () => {
     resourceQueue.length = 0;
 

@@ -33,7 +33,7 @@
               <th class="px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-[0.05em] text-slate-400 uppercase">{{ detailsLabel }}</th>
               <th class="px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-[0.05em] text-slate-400 uppercase">{{ statusLabel }}</th>
               <th class="px-4 py-2.5 text-left text-[10.5px] font-semibold tracking-[0.05em] text-slate-400 uppercase">{{ infoLabel }}</th>
-              <th class="w-10 bg-slate-50/50 px-4 py-2.5"></th>
+              <th class="w-10 bg-slate-50/50 px-4 py-2.5 text-right text-[10.5px] font-semibold tracking-[0.05em] text-slate-400 uppercase">{{ actionsLabel }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white">
@@ -80,8 +80,24 @@
                 </div>
               </td>
 
-              <td class="px-4 py-4 text-right">
-                <FeatherIcon name="chevron-right" class="inline-block h-4 w-4 text-slate-200 group-hover:text-slate-400 transition-colors" />
+              <td class="px-4 py-4 text-right align-top" @click.stop>
+                <div v-if="visibleRowActions(row).length" class="flex flex-col items-end gap-1.5">
+                  <ActionButton
+                    v-for="action in visibleRowActions(row)"
+                    :key="`${row.name}-${action.event}`"
+                    :variant="action.variant"
+                    size="xs"
+                    :disabled="rowActionBusyName === row.name"
+                    @click="$emit(action.event, row)"
+                  >
+                    {{ rowActionBusyName === row.name ? runningLabel : action.label }}
+                  </ActionButton>
+                </div>
+                <FeatherIcon
+                  v-else
+                  name="chevron-right"
+                  class="inline-block h-4 w-4 text-slate-200 group-hover:text-slate-400 transition-colors"
+                />
               </td>
             </tr>
           </tbody>
@@ -111,7 +127,32 @@ import ActionButton from "../app-shell/ActionButton.vue";
 import ListPager from "../app-shell/ListPager.vue";
 import { FeatherIcon } from "frappe-ui";
 
-defineProps({
+defineEmits([
+  "open-detail",
+  "open-document",
+  "open-panel",
+  "send-draft-now",
+  "retry-outbox",
+  "requeue-outbox",
+  "open-communication-context",
+  "start-task",
+  "block-task",
+  "complete-task",
+  "cancel-task",
+  "complete-reminder",
+  "cancel-reminder",
+  "start-ownership-assignment",
+  "block-ownership-assignment",
+  "complete-ownership-assignment",
+  "archive-document",
+  "restore-document",
+  "permanent-delete-document",
+  "previous",
+  "next",
+  "retry",
+]);
+
+const props = defineProps({
   listLabel: { type: String, default: "" },
   subtitleLabel: { type: String, default: "" },
   showingLabel: { type: String, default: "" },
@@ -141,6 +182,7 @@ defineProps({
   blockTaskLabel: { type: String, default: "" },
   completeTaskLabel: { type: String, default: "" },
   cancelTaskLabel: { type: String, default: "" },
+  completeReminderLabel: { type: String, default: "" },
   cancelReminderLabel: { type: String, default: "" },
   runningLabel: { type: String, default: "" },
   pageLabel: { type: String, default: "" },
@@ -180,28 +222,33 @@ defineProps({
   canPermanentDeleteDocumentRow: { type: Function, required: true },
 });
 
-defineEmits([
-  "open-detail",
-  "open-document",
-  "open-panel",
-  "send-draft-now",
-  "retry-outbox",
-  "requeue-outbox",
-  "open-communication-context",
-  "start-task",
-  "block-task",
-  "complete-task",
-  "cancel-task",
-  "complete-reminder",
-  "cancel-reminder",
-  "start-ownership-assignment",
-  "block-ownership-assignment",
-  "complete-ownership-assignment",
-  "archive-document",
-  "restore-document",
-  "permanent-delete-document",
-  "previous",
-  "next",
-  "retry",
-]);
+function pushAction(actions, enabled, event, label, variant = "secondary") {
+  if (!enabled) return;
+  actions.push({ event, label, variant });
+}
+
+function visibleRowActions(row) {
+  const actions = [];
+
+  pushAction(actions, props.canOpenDocumentRow(row), "open-document", props.openDocumentLabel);
+  pushAction(actions, props.canArchiveDocumentRow(row), "archive-document", props.archiveDocumentLabel, "ghost");
+  pushAction(actions, props.canRestoreDocumentRow(row), "restore-document", props.restoreDocumentLabel);
+  pushAction(actions, props.canPermanentDeleteDocumentRow(row), "permanent-delete-document", props.permanentDeleteDocumentLabel, "ghost");
+  pushAction(actions, props.canSendDraftNowRow(row), "send-draft-now", props.sendNowLabel);
+  pushAction(actions, props.canRetryOutboxRow(row), "retry-outbox", props.retryLabel);
+  pushAction(actions, props.canRequeueOutboxRow(row), "requeue-outbox", props.requeueLabel);
+  pushAction(actions, props.canOpenCommunicationContextRow(row), "open-communication-context", props.openCommunicationLabel);
+  pushAction(actions, props.panelCfgForRow(row)?.url, "open-panel", props.panelLabel);
+  pushAction(actions, props.canStartTaskRow(row), "start-task", props.startTaskLabel);
+  pushAction(actions, props.canStartOwnershipAssignmentRow(row), "start-ownership-assignment", props.startTaskLabel);
+  pushAction(actions, props.canBlockTaskRow(row), "block-task", props.blockTaskLabel);
+  pushAction(actions, props.canBlockOwnershipAssignmentRow(row), "block-ownership-assignment", props.blockTaskLabel);
+  pushAction(actions, props.canCompleteTaskRow(row), "complete-task", props.completeTaskLabel);
+  pushAction(actions, props.canCompleteOwnershipAssignmentRow(row), "complete-ownership-assignment", props.completeTaskLabel);
+  pushAction(actions, props.canCompleteReminderRow(row), "complete-reminder", props.completeReminderLabel);
+  pushAction(actions, props.canCancelTaskRow(row), "cancel-task", props.cancelTaskLabel, "ghost");
+  pushAction(actions, props.canCancelReminderRow(row), "cancel-reminder", props.cancelReminderLabel, "ghost");
+
+  return actions;
+}
 </script>
