@@ -1357,3 +1357,116 @@ describe("AuxWorkbench customer and document aux lists", () => {
     expect(wrapper.text()).toContain("yeni doküman yükleyin");
   });
 });
+
+describe("AuxWorkbench remaining aux lists", () => {
+  beforeEach(() => {
+    routeState.query = {};
+    routeState.params = {};
+    routeState.hash = "";
+    routerPush.mockClear();
+    routerReplace.mockClear();
+    resourceQueue.length = 0;
+
+    setActivePinia(createPinia());
+
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "manager@example.com",
+      full_name: "AT Manager",
+      roles: ["AT Manager"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      capabilities: {},
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+    });
+
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+  });
+
+  function pushDefaultRemainingResources(listData = [], total = 0) {
+    resourceQueue.push(
+      {
+        data: listData,
+        reload: vi.fn(async function () {
+          this.data.value = listData;
+          return listData;
+        }),
+      },
+      {
+        data: total,
+        reload: vi.fn(async function () {
+          this.data.value = total;
+          return total;
+        }),
+      },
+      { data: {} },
+      { data: {} },
+      { data: {} },
+      { data: {}, submit: vi.fn(async () => ({})) },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+    );
+  }
+
+  it("shows screen-specific empty state for tasks", async () => {
+    pushDefaultRemainingResources([], 0);
+    routeState.path = "/tasks";
+    routeState.fullPath = "/tasks";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "tasks" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Görev bulunamadı");
+    expect(wrapper.text()).toContain("yeni görev oluşturun");
+  });
+
+  it("shows screen-specific empty state for customer segment snapshots", async () => {
+    pushDefaultRemainingResources([], 0);
+    routeState.path = "/customer-segment-snapshots";
+    routeState.fullPath = "/customer-segment-snapshots";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "customer-segment-snapshots" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Müşteri segment kaydı bulunamadı");
+    expect(wrapper.text()).toContain("yeni snapshot kayıtlarının oluşmasını bekleyin");
+  });
+
+  it("shows screen-specific empty state for files", async () => {
+    pushDefaultRemainingResources([], 0);
+    routeState.path = "/files";
+    routeState.fullPath = "/files";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "files" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Dosya bulunamadı");
+    expect(wrapper.text()).toContain("yeni doküman yükleyin");
+  });
+});

@@ -33,6 +33,8 @@ import IconLucideLayers from '~icons/lucide/layers';
 import IconLucideMegaphone from '~icons/lucide/megaphone';
 import IconLucideShare2 from '~icons/lucide/share-2';
 import IconLucidePackage from '~icons/lucide/package';
+import IconLucidePieChart from '~icons/lucide/pie-chart';
+import IconLucidePaperclip from '~icons/lucide/paperclip';
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -110,6 +112,7 @@ export function useSidebarNavigation() {
           { key: "customers", label: t("customers"), to: "/customers", short: "CU", icon: shallowRef(IconLucideUsers), badgeClass: "text-cyan-700", roles: ROLE_ACCOUNTANT },
           { key: "customer-relations", label: t("customerRelations"), to: "/customer-relations", short: "CR", icon: shallowRef(IconLucideShare2), badgeClass: "text-blue-700", roles: ROLE_ACCOUNTANT },
           { key: "insured-assets", label: t("insuredAssets"), to: "/insured-assets", short: "IA", icon: shallowRef(IconLucidePackage), badgeClass: "text-emerald-700", roles: ROLE_ACCOUNTANT },
+          { key: "customer-segment-snapshots", label: t("customerSegmentSnapshots"), to: "/customer-segment-snapshots", short: "SS", icon: shallowRef(IconLucidePieChart), badgeClass: "text-indigo-700", roles: ROLE_ACCOUNTANT },
           { key: "customer-search", label: t("customerSearch"), to: "/customer-search", short: "CS", icon: shallowRef(IconLucideSearch), badgeClass: "text-teal-700", roles: ROLE_SYSTEM },
         ]),
       }]
@@ -123,6 +126,7 @@ export function useSidebarNavigation() {
           { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", icon: shallowRef(IconLucideCalendarClock), badgeClass: "text-amber-700", roles: ROLE_ACCOUNTANT },
           { key: "reconciliation", label: t("reconciliation"), to: "/reconciliation", short: "RC", icon: shallowRef(IconLucideCheckSquare), badgeClass: "text-cyan-700", roles: ROLE_SYSTEM },
           { key: "at-documents", label: t("documentCenter"), to: "/at-documents", short: "DC", icon: shallowRef(IconLucideFolderOpen), badgeClass: "text-violet-700", roles: ROLE_ACCOUNTANT },
+          { key: "files", label: t("files"), to: "/files", short: "FL", icon: shallowRef(IconLucidePaperclip), badgeClass: "text-slate-700", roles: ROLE_ACCOUNTANT },
           { key: "reports", label: t("reports"), to: "/reports", short: "RP", icon: shallowRef(IconLucideBarChart2), badgeClass: "text-sky-700", roles: ROLE_ACCOUNTANT },
           { key: "data-import", label: t("dataImport"), to: "/data-import", short: "IM", icon: shallowRef(IconLucideDownload), badgeClass: "text-emerald-700", roles: ROLE_SYSTEM },
           { key: "data-export", label: t("dataExport"), to: "/data-export", short: "EX", icon: shallowRef(IconLucideUpload), badgeClass: "text-indigo-700", roles: ROLE_SYSTEM },
