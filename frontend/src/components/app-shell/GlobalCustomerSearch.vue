@@ -26,7 +26,7 @@
         </ActionButton>
       </div>
 
-      <p v-if="searchError" class="mt-2 text-sm text-red-600">{{ searchError }}</p>
+      <p v-if="searchError" class="mt-2 text-sm text-at-red">{{ searchError }}</p>
     </div>
 
     <!-- Empty State -->
@@ -37,9 +37,9 @@
     <!-- Search Results -->
     <template v-else>
       <!-- Customer Not Found -->
-      <div v-if="!searchResult?.exists" class="rounded-lg border border-red-200 bg-red-50 p-4">
-        <p class="text-sm font-medium text-red-900">{{ t("notFoundTitle") }}</p>
-        <p class="mt-1 text-xs text-red-700">{{ t("notFoundHint") }}</p>
+      <div v-if="!searchResult?.exists" class="rounded-lg border border-at-red/20 bg-at-red/5 p-4">
+        <p class="text-sm font-medium text-at-red">{{ t("notFoundTitle") }}</p>
+        <p class="mt-1 text-xs text-at-red/90">{{ t("notFoundHint") }}</p>
       </div>
 
       <!-- Customer Found -->

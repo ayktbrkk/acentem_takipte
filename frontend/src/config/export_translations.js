@@ -87,6 +87,9 @@ export const EXPORT_TRANSLATIONS = {
     screenPayments: "Ödemeler",
     screenRenewals: "Yenilemeler",
     screenNoLabel: "Kayıt",
+    previewLoadError: "Önizleme yüklenemedi.",
+    loadErrorTitle: "Veri yüklenemedi",
+    retry: "Tekrar Dene",
   },
   en: {
     breadcrumb: "Data Management → Export",
@@ -176,5 +179,8 @@ export const EXPORT_TRANSLATIONS = {
     screenPayments: "Payments",
     screenRenewals: "Renewals",
     screenNoLabel: "Record",
+    previewLoadError: "Preview could not be loaded.",
+    loadErrorTitle: "Failed to load data",
+    retry: "Retry",
   }
 };

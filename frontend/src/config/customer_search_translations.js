@@ -45,6 +45,10 @@ export const CUSTOMER_SEARCH_TRANSLATIONS = {
     officeBranch: "Şube",
     viewFullProfile: "Tam Profili Gör",
     requestAccess: "Erişim Talep Et",
+    unspecified: "Belirtilmedi",
+    loadErrorTitle: "Talep geçmişi yüklenemedi",
+    loadError: "Erişim talepleri yüklenirken bir hata oluştu. Lütfen tekrar deneyin.",
+    retry: "Tekrar Dene",
   },
   en: {
     breadcrumb: "Customer Search",
@@ -92,5 +96,9 @@ export const CUSTOMER_SEARCH_TRANSLATIONS = {
     officeBranch: "Office Branch",
     viewFullProfile: "View Full Profile",
     requestAccess: "Request Access",
+    unspecified: "Not specified",
+    loadErrorTitle: "Failed to load request history",
+    loadError: "An error occurred while loading access requests. Please try again.",
+    retry: "Retry",
   }
 };

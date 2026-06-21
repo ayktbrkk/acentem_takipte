@@ -163,6 +163,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
   const message = ref("");
   const historyRows = ref([]);
   const listPreviewLoading = ref(false);
+  const listPreviewError = ref("");
   const listPreviewRows = ref([]);
 
   const listPreviewResource = createResource({
@@ -276,6 +277,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
     }
 
     listPreviewLoading.value = true;
+    listPreviewError.value = "";
     try {
       if (form.screen === "customer_list") {
         const payload = await customerPreviewResource.reload({
@@ -306,8 +308,10 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
         limit_page_length: 10,
       });
       listPreviewRows.value = Array.isArray(rows) ? rows : [];
-    } catch {
+    } catch (error) {
       listPreviewRows.value = [];
+      listPreviewError.value =
+        error?.messages?.join(" ") || error?.message || t("previewLoadError");
     } finally {
       listPreviewLoading.value = false;
     }
@@ -388,6 +392,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
     listPreviewColumns,
     listPreviewTableRows,
     listPreviewLoading,
+    listPreviewError,
     buildExportUrl,
     addHistory,
     downloadExport,

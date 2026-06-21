@@ -1,9 +1,11 @@
 import { onBeforeUnmount, onMounted, ref, unref } from "vue";
 
-export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
+export function useCustomerSearchPage({ activeLocale = "tr", t } = {}) {
   const hasSearched = ref(false);
   const accessRequestHistory = ref([]);
   const showRequestHistory = ref(false);
+  const historyLoading = ref(false);
+  const historyError = ref("");
   let requestHistoryController = null;
   let isMounted = false;
 
@@ -35,6 +37,9 @@ export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
     requestHistoryController = typeof AbortController === "undefined" ? null : new AbortController();
     const activeController = requestHistoryController;
 
+    historyLoading.value = true;
+    historyError.value = "";
+
     try {
       const response = await fetch("/api/resource/AT Access Log?filters=[[\"action\",\"=\",\"Create\"]]&fields=[\"name\",\"reference_name\",\"action_summary\",\"viewed_on\"]&limit_page_length=10", {
         headers: {
@@ -43,7 +48,12 @@ export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
         signal: requestHistoryController?.signal,
       });
 
-      if (!isMounted || activeController?.signal.aborted || !response.ok) return;
+      if (!isMounted || activeController?.signal.aborted) return;
+
+      if (!response.ok) {
+        historyError.value = t?.("loadError") || "loadError";
+        return;
+      }
 
       const data = await response.json();
       if (isMounted && data.data) {
@@ -64,7 +74,11 @@ export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
       }
     } catch (error) {
       if (!isMounted || activeController?.signal.aborted || error?.name === "AbortError") return;
-      console.error("Failed to load access request history:", error);
+      historyError.value = t?.("loadError") || "loadError";
+    } finally {
+      if (isMounted) {
+        historyLoading.value = false;
+      }
     }
   }
 
@@ -81,6 +95,8 @@ export function useCustomerSearchPage({ activeLocale = "tr" } = {}) {
     hasSearched,
     accessRequestHistory,
     showRequestHistory,
+    historyLoading,
+    historyError,
     onCustomerSelected,
     resetSearch,
     formatDate,

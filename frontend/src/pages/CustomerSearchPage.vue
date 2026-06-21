@@ -52,22 +52,36 @@
 
       <!-- Request History Section -->
       <SectionPanel :title="t('recent_access_requests')">
-        <div v-if="accessRequestHistory.length === 0" class="py-12 text-center">
-          <div class="mx-auto h-12 w-12 text-slate-300 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
+        <SkeletonLoader v-if="historyLoading" variant="list" :rows="4" />
+        <div
+          v-else-if="historyError"
+          class="rounded-xl border border-at-red/20 bg-at-red/5 px-5 py-4 flex flex-wrap items-center justify-between gap-4"
+          role="alert"
+          aria-live="polite"
+        >
+          <div>
+            <p class="text-sm font-semibold text-at-red">{{ t("loadErrorTitle") }}</p>
+            <p class="mt-1 text-sm text-at-red/90">{{ historyError }}</p>
           </div>
-          <p class="text-sm text-slate-500 font-medium">{{ t("no_access_requests") }}</p>
+          <ActionButton variant="secondary" size="sm" @click="loadRequestHistory">
+            {{ t("retry") }}
+          </ActionButton>
         </div>
-        <div v-else>
-          <ListTable
-            :columns="columns"
-            :rows="accessRequestHistory"
-          >
-            <template #cell(customer_name)="{ row }">
-              {{ row.customer_name || t("unknown_customer") }}
-            </template>
+        <EmptyState
+          v-else-if="accessRequestHistory.length === 0"
+          compact
+          :title="t('no_access_requests')"
+          :description="t('help_history')"
+        />
+        <ListTable
+          v-else
+          :columns="columns"
+          :rows="accessRequestHistory"
+          :locale="activeLocale"
+        >
+          <template #cell(customer_name)="{ row }">
+            {{ row.customer_name || t("unspecified") }}
+          </template>
             <template #cell(request_kind)="{ row }">
               {{ mapRequestKind(row.request_kind) }}
             </template>
@@ -82,7 +96,6 @@
               />
             </template>
           </ListTable>
-        </div>
       </SectionPanel>
     </div>
   </WorkbenchPageLayout>
@@ -98,8 +111,10 @@ import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ListTable from "../components/ui/ListTable.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import StatusBadge from "../components/ui/StatusBadge.vue";
 import GlobalCustomerSearch from "../components/app-shell/GlobalCustomerSearch.vue";
 
@@ -138,8 +153,11 @@ function mapRequestKind(value: string) {
 const {
   hasSearched,
   accessRequestHistory,
+  historyLoading,
+  historyError,
   onCustomerSelected,
   resetSearch,
   formatDate,
-} = useCustomerSearchPage({ activeLocale });
+  loadRequestHistory,
+} = useCustomerSearchPage({ activeLocale, t });
 </script>

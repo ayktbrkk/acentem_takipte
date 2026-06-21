@@ -111,6 +111,8 @@ export const IMPORT_TRANSLATIONS = {
     headersRefreshFailed: "Sayfa başlıkları yenilenemedi.",
     headersRefreshing: "Sayfa başlıkları yenileniyor...",
     datasetNotSupported: "Bu veri kümesi henüz desteklenmiyor.",
+    retry: "Tekrar Dene",
+    dismiss: "Kapat",
   },
   en: {
     breadcrumb: "Data Management → Import",
@@ -224,5 +226,7 @@ export const IMPORT_TRANSLATIONS = {
     headersRefreshFailed: "Could not refresh sheet headers.",
     headersRefreshing: "Refreshing sheet headers...",
     datasetNotSupported: "This dataset is not supported yet.",
+    retry: "Retry",
+    dismiss: "Dismiss",
   },
 };

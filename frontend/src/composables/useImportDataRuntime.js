@@ -580,6 +580,10 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
     }
   }
 
+  function clearError() {
+    errorMessage.value = "";
+  }
+
   function cancel() {
     stopStatusPolling();
     router.push({ name: "dashboard" });
@@ -654,6 +658,7 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
     previewData,
     importData,
     cancelImportJob,
+    clearError,
     cancel,
   };
 }
