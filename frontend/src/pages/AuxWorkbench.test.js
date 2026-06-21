@@ -1131,3 +1131,116 @@ describe("AuxWorkbench operations lists", () => {
     expect(wrapper.text()).toContain("yeni atama oluşturun");
   });
 });
+
+describe("AuxWorkbench communication aux lists", () => {
+  beforeEach(() => {
+    routeState.query = {};
+    routeState.params = {};
+    routeState.hash = "";
+    routerPush.mockClear();
+    routerReplace.mockClear();
+    resourceQueue.length = 0;
+
+    setActivePinia(createPinia());
+
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "manager@example.com",
+      full_name: "AT Manager",
+      roles: ["AT Manager"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      capabilities: {},
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+    });
+
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+  });
+
+  function pushDefaultCommunicationResources(listData = [], total = 0) {
+    resourceQueue.push(
+      {
+        data: listData,
+        reload: vi.fn(async function () {
+          this.data.value = listData;
+          return listData;
+        }),
+      },
+      {
+        data: total,
+        reload: vi.fn(async function () {
+          this.data.value = total;
+          return total;
+        }),
+      },
+      { data: {} },
+      { data: {} },
+      { data: {} },
+      { data: {}, submit: vi.fn(async () => ({})) },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+    );
+  }
+
+  it("shows screen-specific empty state for call notes", async () => {
+    pushDefaultCommunicationResources([], 0);
+    routeState.path = "/call-notes";
+    routeState.fullPath = "/call-notes";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "call-notes" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Arama notu bulunamadı");
+    expect(wrapper.text()).toContain("yeni arama notu oluşturun");
+  });
+
+  it("shows screen-specific empty state for segments", async () => {
+    pushDefaultCommunicationResources([], 0);
+    routeState.path = "/segments";
+    routeState.fullPath = "/segments";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "segments" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Segment bulunamadı");
+    expect(wrapper.text()).toContain("yeni segment oluşturun");
+  });
+
+  it("shows screen-specific empty state for campaigns", async () => {
+    pushDefaultCommunicationResources([], 0);
+    routeState.path = "/campaigns";
+    routeState.fullPath = "/campaigns";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "campaigns" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Kampanya bulunamadı");
+    expect(wrapper.text()).toContain("yeni kampanya oluşturun");
+  });
+});

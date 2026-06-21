@@ -196,6 +196,25 @@ const DOMAIN_MAP = {
     "Active":   "active",
     "Archived": "draft",
   },
+  call_status: {
+    "Planned": "waiting",
+    "Completed": "active",
+    "Missed": "cancel",
+    "No Answer": "cancel",
+    "Cancelled": "cancel",
+  },
+  segment_status: {
+    "Draft": "draft",
+    "Active": "active",
+    "Archived": "draft",
+  },
+  campaign_status: {
+    "Draft": "draft",
+    "Planned": "waiting",
+    "Running": "waiting",
+    "Completed": "active",
+    "Cancelled": "cancel",
+  },
   import_job: {
     Draft: "draft",
     Previewed: "waiting",
@@ -365,6 +384,25 @@ const DOMAIN_LABELS = {
   at_document_status: {
     Active:   "status_active",
     Archived: "draft",
+  },
+  call_status: {
+    Planned: "Planned",
+    Completed: "Completed",
+    Missed: "Missed",
+    "No Answer": "No Answer",
+    Cancelled: "Cancelled",
+  },
+  segment_status: {
+    Draft: "Draft",
+    Active: "Active",
+    Archived: "Archived",
+  },
+  campaign_status: {
+    Draft: "Draft",
+    Planned: "Planned",
+    Running: "Running",
+    Completed: "Completed",
+    Cancelled: "Cancelled",
   },
   claim: {
     Draft: "Draft",
