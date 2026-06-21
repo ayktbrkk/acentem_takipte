@@ -1,10 +1,10 @@
-import { computed } from "vue";
+import { computed, unref } from "vue";
 
 import { buildPaymentSnapshot, formatCount, formatCurrency } from "./paymentsBoard/helpers";
 import { buildPaymentsListTableColumns } from "./paymentsListTableModel";
 import { translateText } from "../utils/i18n";
 
-export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSummaryByPayment, buildPaymentRowActions, paymentStore }) {
+export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSummaryByPayment, buildPaymentRowActions, paymentStore, totalCount }) {
   function fallbackLabel() {
     return t("unspecified");
   }
@@ -38,8 +38,9 @@ export function usePaymentsBoardSummary({ t, localeCode, payments, installmentSu
 
   const paymentSummary = computed(() => {
     const rows = paymentSnapshots.value;
+    const serverTotal = Number(unref(totalCount) || 0);
     return {
-      total: rows.length,
+      total: serverTotal || rows.length,
       pending: rows.filter((row) => row.isPending).length,
       collected: rows.filter((row) => row.isCollected).length,
       overdue: rows.filter((row) => row.isOverdue).length,

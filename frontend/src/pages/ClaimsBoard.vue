@@ -24,6 +24,7 @@
     <ClaimsBoardFilterSection
       :claims-list-active-count="claimsListActiveCount"
       :claims-list-filter-config="claimsListFilterConfig"
+      :local-filters="claimsListLocalFilters"
       :search-query="claimsListSearchQuery"
       :t="t"
       @update:search-query="claimsListSearchQuery = $event"
@@ -39,9 +40,15 @@
       :loading="claimsLoading"
       :error-text="claimsErrorText"
       :format-count="formatCount"
+      :page="claimsListPagination.page"
+      :total="claimSummary.total"
+      :has-next-page="claimsHasNextPage"
+      :showing-label="t('showing')"
       :t="t"
       @row-click="openClaimDetail"
       @retry="reloadClaims"
+      @previous-page="setClaimsPage(claimsListPagination.page - 1)"
+      @next-page="setClaimsPage(claimsListPagination.page + 1)"
     />
 
     <ClaimsBoardDialogs
@@ -96,6 +103,10 @@ const {
   ownershipAssignmentEyebrow,
   claimSummary,
   claimsListActiveCount,
+  claimsListLocalFilters,
+  claimsListPagination,
+  claimsHasNextPage,
+  setClaimsPage,
   claimsErrorText,
   quickClaimSuccessHandlers,
   ownershipAssignmentSuccessHandlers,

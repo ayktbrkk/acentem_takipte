@@ -2,7 +2,7 @@
   <article class="surface-card p-5">
     <div class="flex items-center justify-between gap-3">
       <div>
-        <h3 class="text-base font-semibold text-slate-900">{{ t("title") }}</h3>
+        <h3 class="text-base font-semibold text-slate-900">{{ t("payment_list") }}</h3>
         <p class="text-xs text-slate-500">{{ t("showing") }} {{ payments.length }}</p>
       </div>
     </div>
@@ -16,6 +16,9 @@
         <div>
           <p class="qc-error-banner__text font-bold">{{ t("loadErrorTitle") }}</p>
           <p class="qc-error-banner__text mt-0.5">{{ errorText }}</p>
+          <ActionButton class="mt-3" variant="secondary" size="sm" @click="$emit('retry')">
+            {{ t("refresh") }}
+          </ActionButton>
         </div>
       </div>
     </article>
@@ -28,7 +31,7 @@
         <p class="mt-1 text-xs text-slate-500">{{ t('empty') }}</p>
       </div>
     </div>
-    <div v-else class="mt-4">
+    <div v-else class="mt-4 space-y-4">
       <ListTable
         :columns="paymentListColumns"
         :rows="paymentsWithActions"
@@ -37,13 +40,24 @@
         :empty-message="t('empty')"
         @row-click="$emit('row-click', $event)"
       />
+      <ListPager
+        :shown="paymentsWithActions.length"
+        :total="total"
+        :page="page"
+        :has-next="hasNextPage"
+        :showing-label="t('showingRecords')"
+        @previous="$emit('previous-page')"
+        @next="$emit('next-page')"
+      />
     </div>
   </article>
 </template>
 
 <script setup>
 import { FeatherIcon } from "frappe-ui";
+import ActionButton from "../app-shell/ActionButton.vue";
 import ListTable from "../ui/ListTable.vue";
+import ListPager from "../app-shell/ListPager.vue";
 import SkeletonLoader from "../ui/SkeletonLoader.vue";
 
 defineProps({
@@ -71,11 +85,23 @@ defineProps({
     type: String,
     default: "en",
   },
+  page: {
+    type: Number,
+    default: 1,
+  },
+  total: {
+    type: Number,
+    default: 0,
+  },
+  hasNextPage: {
+    type: Boolean,
+    default: false,
+  },
   t: {
     type: Function,
     required: true,
   },
 });
 
-defineEmits(["row-click"]);
+defineEmits(["row-click", "retry", "previous-page", "next-page"]);
 </script>

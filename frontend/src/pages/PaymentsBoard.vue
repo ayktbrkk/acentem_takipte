@@ -48,8 +48,14 @@
       :loading="paymentsLoading"
       :error-text="paymentsErrorText"
       :locale="localeCode"
+      :page="paymentListPagination.page"
+      :total="paymentSummary.total"
+      :has-next-page="paymentHasNextPage"
       :t="t"
       @row-click="openPaymentDetail"
+      @retry="reloadPayments"
+      @previous-page="setPaymentPage(paymentListPagination.page - 1)"
+      @next-page="setPaymentPage(paymentListPagination.page + 1)"
     />
 
     <PaymentsBoardQuickPaymentDialog
@@ -102,6 +108,9 @@ const {
   quickPaymentEyebrow,
   quickPaymentSuccessHandlers,
   paymentsErrorText,
+  paymentListPagination,
+  paymentHasNextPage,
+  setPaymentPage,
   paymentSnapshots,
   paymentSummary,
   paymentListColumns,

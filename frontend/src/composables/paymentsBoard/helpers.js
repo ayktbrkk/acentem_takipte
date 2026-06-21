@@ -81,8 +81,8 @@ export function buildPaymentSnapshot(payment, installmentSummary, localeCode) {
   const dueDate = String(payment?.due_date || payment?.payment_date || "").trim();
   const isOverdue = Boolean(installmentSummary?.overdue > 0) || (isPastDate(dueDate) && remainingAmount > 0);
   const status = buildPaymentStatus(payment, collectedAmount, remainingAmount, isOverdue);
-  const isCollected = status === "Paid" || collectedAmount >= totalAmount;
-  const isPending = !isCollected && !isOverdue && status !== "Cancelled";
+  const isCollected = status === "status_paid" || (totalAmount > 0 && collectedAmount >= totalAmount);
+  const isPending = !isCollected && !isOverdue && status !== "status_cancelled";
 
   return {
     ...payment,
@@ -101,7 +101,9 @@ export function buildPaymentSnapshot(payment, installmentSummary, localeCode) {
   };
 }
 
-export function buildPaymentListParams({ filters, officeBranch }) {
+export function buildPaymentListParams({ filters, officeBranch, pagination } = {}) {
+  const pageLength = pagination?.pageLength || Number(filters?.limit) || 24;
+  const page = Math.max(Number(pagination?.page) || 1, 1);
   const params = {
     doctype: "AT Payment",
     fields: [
@@ -130,7 +132,8 @@ export function buildPaymentListParams({ filters, officeBranch }) {
       "sales_entity",
     ],
     order_by: normalizePaymentOrderBy(filters.sort),
-    limit_page_length: Number(filters.limit) || 24,
+    limit_start: (page - 1) * pageLength,
+    limit_page_length: pageLength,
   };
   if (filters.direction) {
     params.filters = { payment_direction: filters.direction };

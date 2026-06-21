@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, unref, watch } from "vue";
+import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import { getLocalizedText, getQuickCreateConfig } from "../config/quickCreateRegistry";
@@ -46,8 +46,19 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
 
   const filters = claimStore.state.filters;
 
+  const claimsListPagination = reactive({ page: 1, pageLength: 20 });
+  const claimsTotalCount = ref(0);
+
   const claimStatusOptions = computed(() =>
-    ["Open", "Under Review", "Approved", "Paid", "Closed", "Rejected", "Cancelled"].map((value) => ({ value, label: value }))
+    [
+      { value: "Open", label: t("status_open") },
+      { value: "Under Review", label: t("status_under_review") },
+      { value: "Approved", label: t("status_approved") },
+      { value: "Paid", label: t("status_paid") },
+      { value: "Closed", label: t("status_closed") },
+      { value: "Rejected", label: t("status_rejected") },
+      { value: "Cancelled", label: t("status_cancelled") },
+    ]
   );
   const activeFilterCount = computed(() => claimStore.activeFilterCount);
 
@@ -84,12 +95,21 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
         "paid_amount",
       ],
       order_by: "`tabAT Claim`.modified desc",
-      limit_page_length: Number(filters.limit) || 30,
+      limit_start: (claimsListPagination.page - 1) * claimsListPagination.pageLength,
+      limit_page_length: claimsListPagination.pageLength,
     };
     if (filters.status) {
       params.filters = { claim_status: filters.status };
     }
     return withOfficeBranchFilter(params);
+  }
+
+  function buildClaimCountParams() {
+    const listParams = buildClaimListParams();
+    return {
+      doctype: "AT Claim",
+      filters: listParams.filters || {},
+    };
   }
 
   function withOfficeBranchFilter(params) {
@@ -108,6 +128,10 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     url: "frappe.client.get_list",
     params: buildClaimListParams(),
     auto: true,
+  });
+  const claimsCountResource = createResource({
+    url: "frappe.client.get_count",
+    auto: false,
   });
   const claimMutationResource = createResource({
     url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
@@ -157,6 +181,9 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   const claims = computed(() => claimStore.filteredItems);
   const claimsListSearchQuery = ref("");
   const claimsListLocalFilters = ref({ status: "", amountState: "" });
+  const claimsHasNextPage = computed(
+    () => claimsListPagination.page * claimsListPagination.pageLength < claimsTotalCount.value,
+  );
   const showQuickClaimDialog = ref(false);
   const showOwnershipAssignmentDialog = ref(false);
   const selectedClaimForAssignment = ref(null);
@@ -319,7 +346,7 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     const reserveTotal = rows.reduce((sum, claim) => sum + Number(claim.estimated_amount || 0), 0);
     const paidTotal = rows.reduce((sum, claim) => sum + Number(claim.paid_amount || 0), 0);
     return {
-      total: rows.length,
+      total: claimsTotalCount.value || rows.length,
       open: rows.filter((claim) => String(claim.claim_status || "").trim() === "Open").length,
       approved: rows.filter((claim) => String(claim.claim_status || "").trim() === "Approved").length,
       paid: rows.filter((claim) => String(claim.claim_status || "").trim() === "Paid").length,
@@ -364,11 +391,20 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
       ...claimsListLocalFilters.value,
       [key]: String(value || ""),
     };
+    claimsListPagination.page = 1;
   }
 
   function onClaimsListFilterReset() {
     claimsListSearchQuery.value = "";
     claimsListLocalFilters.value = { status: "", amountState: "" };
+    claimsListPagination.page = 1;
+  }
+
+  function setClaimsPage(page) {
+    const nextPage = Number(page);
+    if (!Number.isFinite(nextPage) || nextPage < 1) return;
+    claimsListPagination.page = nextPage;
+    void reloadClaims();
   }
 
   const claimQuickOptionsMap = computed(() => ({
@@ -637,15 +673,19 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     claimStore.setLocaleCode(localeCode.value);
     claimStore.setLoading(true);
     claimStore.clearError();
-    return claimsResource
-      .reload()
-      .then((result) => {
+    return Promise.all([
+      claimsResource.reload(),
+      claimsCountResource.reload(buildClaimCountParams()),
+    ])
+      .then(([result, total]) => {
+        claimsTotalCount.value = Number(total) || 0;
         claimStore.setItems(result || []);
         void Promise.allSettled([reloadClaimNotifications(result || []), reloadClaimAssignments(result || []), reloadClaimFiles(result || [])]);
         claimStore.setLoading(false);
         return result;
       })
       .catch((error) => {
+        claimsTotalCount.value = 0;
         claimStore.setItems([]);
         claimStore.setError(error?.messages?.join(" ") || error?.message || t("loadError"));
         claimStore.setLoading(false);
@@ -832,6 +872,10 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     claims,
     claimsListSearchQuery,
     claimsListLocalFilters,
+    claimsListPagination,
+    claimsTotalCount,
+    claimsHasNextPage,
+    setClaimsPage,
     showQuickClaimDialog,
     showOwnershipAssignmentDialog,
     selectedClaimForAssignment,

@@ -1,5 +1,5 @@
 <template>
-  <SectionPanel :title="t('claimsTableTitle')" :count="formatCount(rows.length)" panel-class="surface-card rounded-2xl p-5">
+  <SectionPanel :title="t('claimsTableTitle')" :count="formatCount(total)" panel-class="surface-card rounded-2xl p-5">
     <div
       v-if="errorText"
       class="mb-4 rounded-xl border border-at-red/20 bg-at-red/5 px-4 py-3 text-sm text-at-red shadow-sm"
@@ -18,6 +18,17 @@
       :empty-message="t('empty')"
       @row-click="$emit('row-click', $event)"
     />
+    <ListPager
+      v-if="!errorText"
+      class="mt-4"
+      :shown="rows.length"
+      :total="total"
+      :page="page"
+      :has-next="hasNextPage"
+      :showing-label="showingLabel"
+      @previous="$emit('previous-page')"
+      @next="$emit('next-page')"
+    />
   </SectionPanel>
 </template>
 
@@ -25,6 +36,7 @@
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
 import ListTable from "../ui/ListTable.vue";
+import ListPager from "../app-shell/ListPager.vue";
 
 defineProps({
   claimsTableColumns: {
@@ -55,11 +67,27 @@ defineProps({
     type: Function,
     required: true,
   },
+  page: {
+    type: Number,
+    default: 1,
+  },
+  total: {
+    type: Number,
+    default: 0,
+  },
+  hasNextPage: {
+    type: Boolean,
+    default: false,
+  },
+  showingLabel: {
+    type: String,
+    default: "",
+  },
   t: {
     type: Function,
     required: true,
   },
 });
 
-defineEmits(["row-click", "retry"]);
+defineEmits(["row-click", "retry", "previous-page", "next-page"]);
 </script>

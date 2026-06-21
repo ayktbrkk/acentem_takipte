@@ -92,7 +92,7 @@
 
     <div v-if="showAdvanced" class="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <label class="flex flex-col gap-1.5 text-sm font-medium text-gray-700">
+        <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
           <span>{{ t("policySearchLabel") }}</span>
           <input v-model="filters.policyQuery" class="input" type="text" @keyup.enter="applyRenewalFilters" />
         </label>

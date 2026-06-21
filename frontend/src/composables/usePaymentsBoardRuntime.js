@@ -1,4 +1,4 @@
-import { computed, onMounted, unref, watch } from "vue";
+import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 
 import { usePaymentsBoardActions } from "./usePaymentsBoardActions";
@@ -46,10 +46,31 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
     { value: "amount_try desc", label: t("sortAmountDesc") },
   ]);
   const activeFilterCount = computed(() => paymentStore.activeFilterCount);
+  const paymentListPagination = reactive({ page: 1, pageLength: 20 });
+  const paymentTotalCount = ref(0);
+  const paymentHasNextPage = computed(
+    () => paymentListPagination.page * paymentListPagination.pageLength < paymentTotalCount.value,
+  );
+
+  function buildPaymentCountParams() {
+    const listParams = buildPaymentListParams({
+      filters,
+      officeBranch: branchStore.requestBranch,
+      pagination: paymentListPagination,
+    });
+    return {
+      doctype: "AT Payment",
+      filters: listParams.filters || {},
+    };
+  }
 
   const paymentsResource = createResource({
     url: "frappe.client.get_list",
-    params: buildPaymentListParams({ filters, officeBranch: branchStore.requestBranch }),
+    params: buildPaymentListParams({ filters, officeBranch: branchStore.requestBranch, pagination: paymentListPagination }),
+    auto: false,
+  });
+  const paymentCountResource = createResource({
+    url: "frappe.client.get_count",
     auto: false,
   });
   const paymentsLoading = computed(() => Boolean(unref(paymentsResource.loading)));
@@ -99,6 +120,7 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
     installmentSummaryByPayment,
     buildPaymentRowActions: actionsUi.buildPaymentRowActions,
     paymentStore,
+    totalCount: paymentTotalCount,
   });
 
   const paymentsErrorText = computed(() => {
@@ -138,18 +160,28 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
   });
 
   function reloadPayments() {
-    paymentsResource.params = buildPaymentListParams({ filters, officeBranch: branchStore.requestBranch });
+    paymentsResource.params = buildPaymentListParams({
+      filters,
+      officeBranch: branchStore.requestBranch,
+      pagination: paymentListPagination,
+    });
     paymentInstallmentResource.params = buildPaymentInstallmentListParams(branchStore.requestBranch);
     paymentStore.setLocaleCode(localeCode.value);
     paymentStore.setLoading(true);
     paymentStore.clearError();
-    return Promise.all([runResource(paymentsResource), runResource(paymentInstallmentResource)])
-      .then(([result]) => {
+    return Promise.all([
+      runResource(paymentsResource),
+      runResource(paymentInstallmentResource),
+      paymentCountResource.reload(buildPaymentCountParams()),
+    ])
+      .then(([result, , total]) => {
+        paymentTotalCount.value = Number(total) || 0;
         paymentStore.setItems(result || []);
         paymentStore.setLoading(false);
         return result;
       })
       .catch((error) => {
+        paymentTotalCount.value = 0;
         paymentStore.setItems([]);
         paymentStore.setError(error?.messages?.join(" ") || error?.message || t("loadError"));
         paymentStore.setLoading(false);
@@ -179,6 +211,14 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
   }
 
   function applyPaymentFilters() {
+    paymentListPagination.page = 1;
+    return reloadPayments();
+  }
+
+  function setPaymentPage(page) {
+    const nextPage = Number(page);
+    if (!Number.isFinite(nextPage) || nextPage < 1) return reloadPayments();
+    paymentListPagination.page = nextPage;
     return reloadPayments();
   }
 
@@ -256,6 +296,10 @@ export function usePaymentsBoardRuntime({ route, router, authStore, branchStore,
     quickPaymentEyebrow: quickPaymentUi.quickPaymentEyebrow,
     quickPaymentSuccessHandlers: quickPaymentUi.quickPaymentSuccessHandlers,
     paymentsErrorText,
+    paymentListPagination,
+    paymentTotalCount,
+    paymentHasNextPage,
+    setPaymentPage,
     paymentSnapshots: summaryUi.paymentSnapshots,
     paymentSummary: summaryUi.paymentSummary,
     paymentListColumns: summaryUi.paymentListColumns,
