@@ -1,5 +1,11 @@
 <template>
-  <button :type="type" :class="buttonClass" :disabled="disabled" @click="handleClick">
+  <button
+    :type="type"
+    :class="buttonClass"
+    :disabled="disabled"
+    :aria-pressed="pressed == null ? undefined : pressed"
+    @click="handleClick"
+  >
     <slot />
     <span v-if="trailingIcon" aria-hidden="true">{{ trailingIcon }}</span>
   </button>
@@ -11,6 +17,7 @@ import { computed } from "vue";
 const props = defineProps({
   type: { type: String, default: "button" },
   disabled: { type: Boolean, default: false },
+  pressed: { type: Boolean, default: null },
   variant: {
     type: String,
     default: "secondary", // secondary | primary | link | ghost
@@ -22,6 +29,10 @@ const props = defineProps({
   trailingIcon: {
     type: String,
     default: "",
+  },
+  tone: {
+    type: String,
+    default: "default", // default | amber
   },
 });
 
@@ -51,6 +62,13 @@ const buttonClass = computed(() => {
 
   if (props.variant === "ghost") {
     return `inline-flex items-center gap-1 font-semibold text-slate-500 hover:text-slate-700 disabled:text-slate-400${sizeClass}`;
+  }
+
+  if (props.pressed) {
+    if (props.tone === "amber") {
+      return `${base} border border-amber-400 bg-amber-200 text-amber-900${sizeClass}`;
+    }
+    return `${base} border border-sky-200 bg-sky-50 text-brand-700${sizeClass}`;
   }
 
   return `${base} border border-slate-300 text-slate-700 hover:bg-slate-100${sizeClass}`;

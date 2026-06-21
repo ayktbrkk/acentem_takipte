@@ -31,18 +31,16 @@
           </span>
         </div>
         <div class="mt-2 max-h-40 overflow-y-auto flex flex-wrap gap-2">
-          <button
+          <ActionButton
             v-for="column in columns"
             :key="`all-${column}`"
-            type="button"
-            :aria-pressed="isColumnVisible(column)"
-            :class="isColumnVisible(column)
-              ? 'inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-brand-700 transition hover:bg-sky-100'
-              : 'inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100'"
+            variant="secondary"
+            size="xs"
+            :pressed="isColumnVisible(column)"
             @click="onToggleColumn(column)"
           >
             {{ getColumnLabel(column) }}
-          </button>
+          </ActionButton>
         </div>
       </div>
 
@@ -54,35 +52,48 @@
           </span>
         </div>
         <div class="mt-2 flex flex-wrap gap-2">
-          <button
+          <ActionButton
             v-for="column in Array.from(groupableColumns)"
             :key="`group-${column}`"
-            type="button"
-            :aria-pressed="groupByColumn === column"
-            :class="groupByColumn === column
-              ? 'inline-flex items-center rounded-full border border-amber-400 bg-amber-200 px-2.5 py-1 text-[11px] font-semibold text-amber-900 transition'
-              : 'inline-flex items-center rounded-full border border-amber-100 bg-white px-2.5 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-100'"
+            variant="secondary"
+            size="xs"
+            tone="amber"
+            :pressed="groupByColumn === column"
             @click="$emit('on-group-by-change', column)"
           >
             {{ getColumnLabel(column) }}
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>
 
-    <div v-if="loading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-      {{ t("loading") }}
+    <div v-if="fetchTruncated" class="mt-4 rounded-xl border border-at-amber/20 bg-at-amber/5 px-4 py-3 text-sm font-medium text-at-amber" role="status">
+      {{ t("fetchLimitWarning") }}
     </div>
-    <div v-else-if="error" class="mt-4 qc-error-banner" role="alert" aria-live="polite">
-      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-      <p class="qc-error-banner__text mt-1">{{ error }}</p>
+
+    <div v-if="loading" class="mt-4">
+      <SkeletonLoader variant="list" :rows="8" />
+    </div>
+    <div
+      v-else-if="error"
+      class="mt-4 rounded-xl border border-at-red/20 bg-at-red/5 px-5 py-4 flex items-center justify-between gap-4"
+      role="alert"
+      aria-live="polite"
+    >
+      <div>
+        <p class="text-sm font-semibold text-at-red">{{ t("loadErrorTitle") }}</p>
+        <p class="mt-1 text-sm text-at-red/90">{{ error }}</p>
+      </div>
+      <ActionButton variant="secondary" size="sm" @click="$emit('retry')">
+        {{ t("retry") }}
+      </ActionButton>
     </div>
     <template v-else>
       <div v-if="sortedRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <EmptyState :title="t('emptyTitle')" :description="t('emptyDescription')" />
       </div>
 
-      <div class="mt-4">
+      <div class="mt-4 space-y-4">
         <ListTable
           :columns="columnDefs"
           :rows="sortedRows"
@@ -96,6 +107,16 @@
           @preview-click="$emit('on-preview-click', $event)"
           @row-click="$emit('on-row-click', $event)"
         />
+        <ListPager
+          v-if="totalCount > 0"
+          :shown="shownCount"
+          :total="totalCount"
+          :page="page"
+          :has-next="hasNextPage"
+          :showing-label="t('showingRecords')"
+          @previous="$emit('previous-page')"
+          @next="$emit('next-page')"
+        />
       </div>
     </template>
   </SectionPanel>
@@ -105,6 +126,8 @@
 import { computed } from "vue";
 import ListTable from "../ui/ListTable.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
+import ListPager from "../app-shell/ListPager.vue";
+import SkeletonLoader from "../ui/SkeletonLoader.vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 
@@ -128,9 +151,23 @@ const props = defineProps({
   sortDirection: { type: String, default: "" },
   groupByColumn: { type: String, default: "" },
   groupableColumns: { type: [Set, Array], default: () => new Set() },
+  page: { type: Number, default: 1 },
+  shownCount: { type: Number, default: 0 },
+  totalCount: { type: Number, default: 0 },
+  hasNextPage: { type: Boolean, default: false },
+  fetchTruncated: { type: Boolean, default: false },
 });
 
-defineEmits(["on-preview-click", "on-group-by-change", "update:sort-column", "update:sort-direction", "on-row-click"]);
+defineEmits([
+  "on-preview-click",
+  "on-group-by-change",
+  "update:sort-column",
+  "update:sort-direction",
+  "on-row-click",
+  "retry",
+  "previous-page",
+  "next-page",
+]);
 
 const columnDefs = computed(() => {
   const cols = props.columns || [];

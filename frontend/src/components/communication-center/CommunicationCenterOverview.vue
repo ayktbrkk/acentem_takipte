@@ -3,6 +3,7 @@
     <SmartFilterBar
       v-model="filters.customer"
       :placeholder="t('customerFilter')"
+      :advanced-label="t('advancedFilters')"
       @open-advanced="showAdvanced = !showAdvanced"
     >
       <template #primary-filters>
@@ -19,23 +20,57 @@
           @change="runtime.applySnapshotFilters"
         />
         <div class="h-4 w-px bg-slate-200 mx-1"></div>
-        <ActionButton variant="primary" size="sm" @click="runtime.applySnapshotFilters">
+        <FilterPresetMenu
+          :model-value="presetKey"
+          :label="t('presetLabel')"
+          :options="presetOptions"
+          :can-delete="canDeletePreset"
+          :show-save="true"
+          :show-delete="true"
+          :save-label="t('savePreset')"
+          :delete-label="t('deletePreset')"
+          @update:model-value="$emit('update:presetKey', $event)"
+          @change="onPresetChange"
+          @save="savePreset"
+          @delete="deletePreset"
+        />
+        <ActionButton variant="primary" size="sm" @click="$emit('apply-filters')">
           {{ t('applyFilters') }}
         </ActionButton>
-        <ActionButton variant="secondary" size="sm" @click="runtime.resetSnapshotFilters">
+        <ActionButton variant="secondary" size="sm" :aria-label="t('clearFilters')" @click="$emit('reset-filters')">
           <FeatherIcon name="x" class="h-4 w-4" />
+          {{ t('clearFilters') }}
         </ActionButton>
       </template>
     </SmartFilterBar>
-  </div>
 
-  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-    <SaaSMetricCard
-      v-for="card in statusCards"
-      :key="card.key"
-      :label="card.label"
-      :value="card.value"
-    />
+    <div v-if="showAdvanced" class="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+          <span>{{ t('allReferenceTypes') }}</span>
+          <ATSelect
+            v-model="filters.referenceDoctype"
+            :placeholder="t('allReferenceTypes')"
+            :options="referenceDoctypeOptions"
+          />
+        </label>
+        <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+          <span>{{ t('referenceNameFilter') }}</span>
+          <input v-model.trim="filters.referenceName" class="input" type="search" />
+        </label>
+        <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+          <span>{{ t('limitLabel') }}</span>
+          <select v-model.number="filters.limit" class="input">
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+        </label>
+      </div>
+      <p v-if="activeFilterCount > 0" class="mt-4 text-xs font-medium text-slate-500">
+        {{ activeFilterCount }} {{ t('activeFilters') }}
+      </p>
+    </div>
   </div>
 
   <article
@@ -126,8 +161,8 @@
 <script setup>
 import { computed, ref, unref } from "vue";
 import SmartFilterBar from "../app-shell/SmartFilterBar.vue";
-import SaaSMetricCard from "../app-shell/SaaSMetricCard.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
+import FilterPresetMenu from "../app-shell/FilterPresetMenu.vue";
 import { FeatherIcon } from "frappe-ui";
 import ATSelect from "../ui/ATSelect.vue";
 
@@ -148,13 +183,40 @@ const props = defineProps({
     type: Function,
     required: true,
   },
+  presetKey: {
+    type: String,
+    default: "",
+  },
+  presetOptions: {
+    type: Array,
+    default: () => [],
+  },
+  canDeletePreset: {
+    type: Boolean,
+    default: false,
+  },
+  onPresetChange: {
+    type: Function,
+    required: true,
+  },
+  savePreset: {
+    type: Function,
+    required: true,
+  },
+  deletePreset: {
+    type: Function,
+    required: true,
+  },
 });
+
+defineEmits(["update:presetKey", "apply-filters", "reset-filters"]);
 
 const showAdvanced = ref(false);
 
 const statusOptions = computed(() => unref(props.state.statusOptions));
 const channelOptions = computed(() => unref(props.state.channelOptions));
-const statusCards = computed(() => unref(props.state.statusCards));
+const referenceDoctypeOptions = computed(() => unref(props.state.referenceDoctypeOptions));
+const activeFilterCount = computed(() => unref(props.state.activeFilterCount));
 const customerContextLabel = computed(() => unref(props.state.customerContextLabel));
 const referenceContextLabel = computed(() => unref(props.state.referenceContextLabel));
 const channelStatusContextLabel = computed(() => unref(props.state.channelStatusContextLabel));

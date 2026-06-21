@@ -1,6 +1,10 @@
 <template>
   <SectionPanel :title="t('outboxTitle')" :count="outboxItems.length" panel-class="surface-card rounded-2xl p-5">
+    <div v-if="snapshotLoading && !outboxRows.length" class="mt-4">
+      <SkeletonLoader variant="list" :rows="5" />
+    </div>
     <ListTable
+      v-else
       :columns="outboxColumns"
       :rows="outboxRows"
       :loading="snapshotLoading"
@@ -9,8 +13,8 @@
   </SectionPanel>
 
   <SectionPanel :title="t('draftTitle')" :count="draftItems.length" panel-class="surface-card rounded-2xl p-5">
-    <div v-if="snapshotLoading" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-      {{ t('loading') }}
+    <div v-if="snapshotLoading && !draftItems.length" class="mt-4">
+      <SkeletonLoader variant="list" :rows="4" />
     </div>
     <div v-else-if="draftItems.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
       <EmptyState :title="t('emptyDraftsTitle')" :description="t('emptyDrafts')" />
@@ -22,20 +26,20 @@
         class="rounded-xl border border-slate-200 bg-slate-50/80 p-4"
       >
         <div class="flex items-start justify-between gap-2">
-          <p class="text-sm font-semibold text-slate-900">{{ draft.event_key }}</p>
+          <p class="text-sm font-semibold text-slate-900">{{ eventKeyLabel(draft.event_key) }}</p>
           <StatusBadge v-if="draft.status" domain="notification_status" :status="draft.status" />
         </div>
         <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
           <StatusBadge v-if="draft.channel" domain="notification_channel" :status="draft.channel" />
-          <span>{{ draft.recipient || "-" }}</span>
+          <span>{{ draft.recipient || t('unspecified') }}</span>
         </div>
         <div class="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">
-          <span
+          <StatusBadge
             v-if="draft.reference_doctype"
-              class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-700"
-          >
-            {{ referenceTypeLabel(draft.reference_doctype) }}
-          </span>
+            domain="reference_doctype"
+            size="xs"
+            :status="draft.reference_doctype"
+          />
           <span v-if="draft.reference_name">{{ draft.reference_name }}</span>
         </div>
         <p v-if="draft.error_message" class="mt-2 max-h-10 overflow-hidden text-xs text-rose-600">
@@ -72,6 +76,7 @@ import EmptyState from "../app-shell/EmptyState.vue";
 import InlineActionRow from "../app-shell/InlineActionRow.vue";
 import SectionPanel from "../app-shell/SectionPanel.vue";
 import StatusBadge from "../ui/StatusBadge.vue";
+import SkeletonLoader from "../ui/SkeletonLoader.vue";
 import ListTable from "../ui/ListTable.vue";
 
 const props = defineProps({
@@ -84,6 +89,7 @@ const props = defineProps({
 const outboxItems = computed(() => unref(props.state.outboxItems));
 const draftItems = computed(() => unref(props.state.draftItems));
 const referenceTypeLabel = (doctype) => props.state.referenceTypeLabel(doctype);
+const eventKeyLabel = (eventKey) => props.state.eventKeyLabel(eventKey);
 const snapshotLoading = computed(() => props.runtime.snapshotResource.loading);
 
 const actionsApi = props.actions;

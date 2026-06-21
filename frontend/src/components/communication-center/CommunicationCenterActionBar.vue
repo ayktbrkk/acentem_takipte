@@ -31,7 +31,7 @@
 
     <ActionButton
       v-if="canCreateQuickMessage"
-      variant="primary"
+      variant="secondary"
       size="sm"
       @click="runtime.openQuickMessageDialog()"
     >
@@ -51,6 +51,7 @@
 
     <ActionButton variant="secondary" size="sm" @click="runtime.reloadSnapshot">
       <FeatherIcon name="refresh-cw" :class="['h-4 w-4', runtime.snapshotResource.loading && 'animate-spin']" />
+      {{ t('refresh') }}
     </ActionButton>
 
     <ActionButton
@@ -60,6 +61,7 @@
       @click="runtime.downloadCommunicationExport('xlsx')"
     >
       <FeatherIcon name="download" class="h-4 w-4" />
+      {{ t('exportXlsx') }}
     </ActionButton>
 
     <ActionButton

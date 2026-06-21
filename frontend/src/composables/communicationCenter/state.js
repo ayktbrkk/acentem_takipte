@@ -4,12 +4,12 @@ import { useCustomFilterPresets } from "../useCustomFilterPresets";
 import {
   buildCommunicationQuickOptionsMap,
   channelLabel,
+  eventKeyLabel,
   referenceTypeLabel,
   statusLabel,
   isPermissionDeniedError,
 } from "./helpers";
 import { resolveSameOriginPath } from "../../utils/safeNavigation";
-import { translateText } from "../../utils/i18n";
 
 export function useCommunicationCenterState({
   route,
@@ -138,11 +138,11 @@ export function useCommunicationCenterState({
       channelLabel: (value) => channelLabel(value, t),
     }),
   );
-  const quickSegmentEyebrow = computed(() => translateText("Quick Segment", activeLocale.value));
-  const quickCampaignEyebrow = computed(() => translateText("Quick Campaign", activeLocale.value));
-  const quickCallNoteEyebrow = computed(() => translateText("Quick Call Note", activeLocale.value));
-  const quickReminderEyebrow = computed(() => translateText("Quick Reminder", activeLocale.value));
-  const quickMessageEyebrow = computed(() => translateText("Quick Message", activeLocale.value));
+  const quickSegmentEyebrow = computed(() => t("quickSegment"));
+  const quickCampaignEyebrow = computed(() => t("quickCampaign"));
+  const quickCallNoteEyebrow = computed(() => t("quickCallNote"));
+  const quickReminderEyebrow = computed(() => t("quickReminder"));
+  const quickMessageEyebrow = computed(() => t("quickMessage"));
   const canCreateQuickMessage = computed(() => authStore.can(["quickCreate", "communication_message"]));
   const canSendDraftNowAction = computed(() => authStore.can(["actions", "communication", "sendDraftNow"]));
   const canRetryOutboxAction = computed(() => authStore.can(["actions", "communication", "retryOutbox"]));
@@ -150,7 +150,13 @@ export function useCommunicationCenterState({
   const returnToTarget = computed(() => String(route.query.return_to || "").trim());
   const safeReturnTo = computed(() => resolveSameOriginPath(returnToTarget.value) || "");
   const canReturnToContext = computed(() => Boolean(safeReturnTo.value || hasContextFilters.value));
-  const returnToLabel = computed(() => (safeReturnTo.value ? translateText("Back to Source", activeLocale.value) : translateText("Back", activeLocale.value)));
+  const returnToLabel = computed(() => (safeReturnTo.value ? t("backToSource") : t("back")));
+  const statusCards = computed(() =>
+    communicationStore.statusCards.map((card) => ({
+      ...card,
+      label: statusLabel(card.status, t),
+    })),
+  );
   const quickMessageDialogLabels = computed(() => ({
     save: t("saveDraft"),
     saveAndOpen: t("sendImmediately"),
@@ -263,11 +269,13 @@ export function useCommunicationCenterState({
     safeReturnTo,
     canReturnToContext,
     returnToLabel,
+    statusCards,
     quickMessageDialogLabels,
     segmentPreviewSummary,
     segmentPreviewRows,
     applySnapshotFilters,
     resetSnapshotFilters,
     referenceTypeLabel: (doctype) => referenceTypeLabel(doctype, t),
+    eventKeyLabel: (eventKey) => eventKeyLabel(eventKey, t),
   };
 }

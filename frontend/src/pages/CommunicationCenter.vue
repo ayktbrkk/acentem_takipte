@@ -10,12 +10,39 @@
       <CommunicationCenterActionBar :state="state" :runtime="runtime" :t="t" />
     </template>
 
-    <CommunicationCenterOverview :filters="filters" :state="state" :runtime="runtime" :t="t" />
+    <template #metrics>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <SaaSMetricCard
+          v-for="card in statusCards"
+          :key="card.key"
+          :label="card.label"
+          :value="card.value"
+        />
+      </div>
+    </template>
+
+    <CommunicationCenterOverview
+      :filters="filters"
+      :state="state"
+      :runtime="runtime"
+      :t="t"
+      :preset-key="presetKey"
+      :preset-options="presetOptions"
+      :can-delete-preset="canDeletePreset"
+      :on-preset-change="onPresetChange"
+      :save-preset="savePreset"
+      :delete-preset="deletePreset"
+      @update:preset-key="updatePresetKey"
+      @apply-filters="applySnapshotFilters"
+      @reset-filters="resetSnapshotFilters"
+    />
 
     <CommunicationCenterAlerts
       :snapshot-error-message="state.snapshotErrorMessage"
       :operation-error="runtime.operationError"
       :t="t"
+      @retry="reloadSnapshot"
+      @clear-operation-error="clearOperationError"
     />
 
     <CommunicationCenterQueueSections :state="state" :runtime="runtime" :actions="actions" :t="t" />
@@ -38,6 +65,7 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useCommunicationStore } from "../stores/communication";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import CommunicationCenterActionBar from "../components/communication-center/CommunicationCenterActionBar.vue";
 import CommunicationCenterAlerts from "../components/communication-center/CommunicationCenterAlerts.vue";
 import CommunicationCenterDialogs from "../components/communication-center/CommunicationCenterDialogs.vue";
@@ -56,8 +84,7 @@ const authStore = useAuthStore();
 const branchStore = useBranchStore();
 const communicationStore = useCommunicationStore();
 
-const activeLocale = computed(() => (String(unref(authStore.locale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en"));
-const recordCount = computed(() => (unref(state.outboxItems)?.length || 0) + (unref(state.draftItems)?.length || 0));
+const activeLocale = computed(() => (String(unref(authStore.locale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key) {
   return COMMUNICATION_TRANSLATIONS[activeLocale.value]?.[key]
@@ -78,6 +105,7 @@ const state = useCommunicationCenterState({
   activeLocale,
   runtime,
 });
+const recordCount = computed(() => (unref(state.outboxItems)?.length || 0) + (unref(state.draftItems)?.length || 0));
 const actions = useCommunicationCenterActions({
   router,
   canRetryOutboxAction: state.canRetryOutboxAction,
@@ -93,5 +121,29 @@ const quickDialogs = useCommunicationCenterQuickDialogs({
   reloadSnapshot: runtime.reloadSnapshot,
   runtime,
 });
-</script>
 
+const {
+  presetKey,
+  presetOptions,
+  canDeletePreset,
+  onPresetChange,
+  savePreset,
+  deletePreset,
+  statusCards,
+  applySnapshotFilters,
+  resetSnapshotFilters,
+} = state;
+
+function updatePresetKey(value) {
+  presetKey.value = value;
+}
+
+function reloadSnapshot() {
+  return runtime.reloadSnapshot();
+}
+
+function clearOperationError() {
+  runtime.operationError.value = "";
+  return reloadSnapshot();
+}
+</script>

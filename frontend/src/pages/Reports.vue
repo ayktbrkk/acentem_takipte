@@ -3,10 +3,14 @@
     :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
-    :record-count="summaryItems.length ? `${sortedRows.length}` : '0'"
+    :record-count="sortedRows.length"
     :record-count-label="t('record_count')"
   >
     <template #actions>
+      <ActionButton variant="primary" size="sm" :disabled="loading" @click="loadReport">
+        <FeatherIcon name="refresh-cw" :class="['h-4 w-4', loading && 'animate-spin']" />
+        {{ t("runReport") }}
+      </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="focusFilters">
         <FeatherIcon name="search" class="h-4 w-4" />
         {{ t("focus_filters") }}
@@ -80,10 +84,15 @@
       :columns-summary-label="columnsSummaryLabel"
       :columns="columns"
       :visible-column-keys="visibleColumnKeys"
-      :sorted-rows="sortedRows"
+      :sorted-rows="pagedSortedRows"
       :loading="loading"
       :error="error"
       :export-loading="exportLoading"
+      :page="reportListPagination.page"
+      :shown-count="reportListShownCount"
+      :total-count="sortedRows.length"
+      :has-next-page="reportListHasNextPage"
+      :fetch-truncated="reportFetchTruncated"
       :is-column-visible="isColumnVisible"
       :on-toggle-column="toggleColumn"
       :on-show-all-columns="showAllColumns"
@@ -99,6 +108,9 @@
       @update:sort-column="sortState.column = $event"
       @update:sort-direction="sortState.direction = $event"
       @on-row-click="onRowClick"
+      @retry="loadReport"
+      @previous-page="reportListPagination.page -= 1"
+      @next-page="reportListPagination.page += 1"
     />
 
     <ReportsComparisonSection
@@ -311,6 +323,25 @@ const {
   focusFilters,
 } = reportsRuntime;
 
+const reportListPagination = reactive({ page: 1, pageLength: 50 });
+
+watch(
+  () => [filters.reportKey, sortedRows.value.length],
+  () => {
+    reportListPagination.page = 1;
+  },
+);
+
+const pagedSortedRows = computed(() => {
+  const start = (reportListPagination.page - 1) * reportListPagination.pageLength;
+  return sortedRows.value.slice(start, start + reportListPagination.pageLength);
+});
+const reportListShownCount = computed(() => pagedSortedRows.value.length);
+const reportListHasNextPage = computed(
+  () => reportListPagination.page * reportListPagination.pageLength < sortedRows.value.length,
+);
+const reportFetchTruncated = computed(() => sortedRows.value.length >= 500);
+
 function openPreview(row) {
   if (!row) return;
 
@@ -331,8 +362,9 @@ function openPreview(row) {
   if (!name) return;
 
   previewTarget.value = { doctype, name };
-  previewTitle.value = name;
-  previewSubtitle.value = translateText(doctype, activeLocale) || doctype;
+  const doctypeLabel = translateText(doctype, activeLocale) || doctype;
+  previewTitle.value = `${doctypeLabel}: ${name}`;
+  previewSubtitle.value = doctypeLabel;
   showPreview.value = true;
 }
 

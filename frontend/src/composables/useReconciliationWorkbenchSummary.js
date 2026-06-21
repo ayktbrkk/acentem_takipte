@@ -8,7 +8,6 @@ import {
   normalizeReconciliationStatus,
   sourceRowFacts,
 } from "./reconciliationWorkbench/helpers";
-import { translateText } from "../utils/i18n";
 
 export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData, rows, metrics, openReconciliationDetail, openReconciliationActionDialog }) {
   const collectionPreviewRows = computed(() => workbenchData.value.collection_preview?.overdue_rows || []);
@@ -24,16 +23,17 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
     };
   });
   const reconciliationListColumns = computed(() => [
-    { key: "reconciliationNo", label: translateText("Reconciliation No", localeCode.value), type: "mono" },
-    { key: "company", label: translateText("Company", localeCode.value) },
-    { key: "period", label: translateText("Period", localeCode.value) },
-    { key: "totalPolicy", label: translateText("Total Policy", localeCode.value), align: "center" },
-    { key: "totalPremium", label: translateText("Total Premium", localeCode.value), type: "amount", align: "right" },
-    { key: "companyStatement", label: translateText("Company Statement", localeCode.value), type: "amount", align: "right" },
-    { key: "difference", label: translateText("Difference", localeCode.value), type: "amount", align: "right" },
-    { key: "status", label: translateText("Status", localeCode.value), type: "status", domain: "reconciliation" },
-    { key: "_actions", label: translateText("Actions", localeCode.value), type: "actions", align: "right" },
+    { key: "reconciliationNo", label: t("reconciliationNo"), type: "mono" },
+    { key: "company", label: t("colCompany") },
+    { key: "period", label: t("colPeriod") },
+    { key: "totalPolicy", label: t("colTotalPolicy"), align: "center" },
+    { key: "totalPremium", label: t("colTotalPremium"), type: "amount", align: "right" },
+    { key: "companyStatement", label: t("colCompanyStatement"), type: "amount", align: "right" },
+    { key: "difference", label: t("colDifference"), type: "amount", align: "right" },
+    { key: "status", label: t("status"), type: "status", domain: "reconciliation" },
+    { key: "_actions", label: t("colActions"), type: "actions", align: "right" },
   ]);
+  const unspecified = () => t("unspecified");
   const reconciliationListRows = computed(() =>
     rows.value.map((row) => {
       const difference = Number(row?.difference_try || 0);
@@ -41,14 +41,14 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
       return {
         id: row?.name,
         name: row?.name,
-        reconciliationNo: row?.name || "-",
-        company: accounting.insurance_company || row?.insurance_company || "-",
+        reconciliationNo: row?.name || unspecified(),
+        company: accounting.insurance_company || row?.insurance_company || unspecified(),
         period: deriveReconciliationPeriod(localeCode.value, row),
         totalPolicy: accounting.policy ? "1" : "0",
         totalPremium: formatMoney(localeCode.value, row?.local_amount_try || 0),
         companyStatement: formatMoney(localeCode.value, row?.external_amount_try || 0),
         difference: formatMoney(localeCode.value, Math.abs(difference)),
-        difference_class: difference > 0 ? "text-green-600" : difference < 0 ? "text-amber-700" : "text-gray-600",
+        difference_class: difference > 0 ? "text-at-green" : difference < 0 ? "text-at-amber" : "text-slate-600",
         status: normalizeReconciliationStatus(row?.status, difference),
         _actions: buildReconciliationRowActions({
           row,

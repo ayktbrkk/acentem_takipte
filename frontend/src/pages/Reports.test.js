@@ -396,7 +396,7 @@ describe("Reports page communication operations report", () => {
 
     const toggleButtons = wrapper
       .findAll("button")
-      .filter((node) => node.attributes("class")?.includes("rounded-full"));
+      .filter((node) => node.text().trim().length > 0);
     const policyToggle = toggleButtons.find((node) => node.text().includes("Poliçe"));
     expect(policyToggle).toBeTruthy();
     await policyToggle.trigger("click");
@@ -798,7 +798,7 @@ describe("Reports page communication operations report", () => {
 
     await wrapper.vm.downloadReport("pdf");
 
-    expect(wrapper.vm.error).toContain("Popup blocked");
+    expect(wrapper.vm.error).toContain("Açılır pencere engellendi");
 
     openSpy.mockRestore();
   });

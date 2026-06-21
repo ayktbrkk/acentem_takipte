@@ -86,16 +86,17 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
   }
 
   function downloadReconciliationExport(format) {
+    const fallback = t("unspecified");
     const rowsForExport = rows.value.map((row) => ({
-      [t("source")]: `${row.source_doctype || "-"} / ${row.source_name || "-"}`,
-      [t("type")]: row.mismatch_type || "-",
-      [t("status")]: row.status || "-",
+      [t("source")]: `${row.source_doctype || fallback} / ${row.source_name || fallback}`,
+      [t("type")]: row.mismatch_type || fallback,
+      [t("status")]: row.status || fallback,
       [t("localTry")]: formatMoneyForLocale(localeCode.value, row.local_amount_try || 0),
       [t("externalTry")]: formatMoneyForLocale(localeCode.value, row.external_amount_try || 0),
       [t("difference")]: formatMoneyForLocale(localeCode.value, row.difference_try || 0),
-      [t("accountingEntry")]: row.accounting_entry || "-",
-      [t("resolution")]: row.resolution_action || "-",
-      [t("noteLabel")]: row.notes || "-",
+      [t("accountingEntry")]: row.accounting_entry || fallback,
+      [t("resolution")]: row.resolution_action || fallback,
+      [t("noteLabel")]: row.notes || fallback,
     }));
 
     openTabularExport({

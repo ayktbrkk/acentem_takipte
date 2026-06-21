@@ -10,7 +10,7 @@
           <span class="h-2 w-2 rounded-full bg-brand-600"></span>
           {{ t_title(chartConfig.title) }}
         </h3>
-        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div class="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
            <ActionButton
              variant="secondary"
              size="xs"

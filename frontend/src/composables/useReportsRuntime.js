@@ -103,7 +103,7 @@ export function useReportsRuntime({
       });
       const popup = window.open(`/api/method/${method}?${params.toString()}`, "_blank", "noopener");
       if (!popup) {
-        throw new Error("Popup blocked");
+        throw new Error(t("popupBlocked"));
       }
     } catch (err) {
       error.value = String(err?.message || err || t("exportError"));

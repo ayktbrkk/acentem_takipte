@@ -347,7 +347,7 @@ export function useReportsTableData({
 
   function formatCellValue(column, value) {
     if (value === null || value === undefined || value === "") {
-      return "-";
+      return t("notProvided");
     }
 
     if (["loss_ratio_percent", "offer_conversion_rate", "renewal_success_rate"].includes(column)) {

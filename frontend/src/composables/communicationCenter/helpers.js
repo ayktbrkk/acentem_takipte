@@ -18,20 +18,37 @@ export function isPermissionDeniedError(error) {
   );
 }
 
+const EVENT_KEY_TRANSLATION_KEYS = {
+  renewal_due: "eventKeyRenewalDue",
+  payment_due: "eventKeyPaymentDue",
+  claim_status_update: "eventKeyClaimStatusUpdate",
+  policy_created: "eventKeyPolicyCreated",
+  scheduled_report_delivery: "eventKeyScheduledReportDelivery",
+  reminder_followup: "eventKeyReminderFollowup",
+};
+
+export function eventKeyLabel(eventKey, t) {
+  const value = String(eventKey || "").trim();
+  if (!value) return t("unspecified");
+  const translationKey = EVENT_KEY_TRANSLATION_KEYS[value];
+  if (translationKey) return t(translationKey);
+  return value;
+}
+
 export function statusLabel(status, t) {
   if (status === "Queued") return t("queued");
   if (status === "Processing") return t("processing");
   if (status === "Sent") return t("sent");
   if (status === "Failed") return t("failed");
   if (status === "Dead") return t("dead");
-  return status || "-";
+  return status || t("unspecified");
 }
 
 export function channelLabel(channel, t) {
   if (channel === "SMS") return t("sms");
   if (channel === "Email") return t("email");
   if (channel === "WHATSAPP") return t("whatsapp");
-  return channel || "-";
+  return channel || t("unspecified");
 }
 
 export function referenceTypeLabel(doctype, t) {
@@ -45,7 +62,7 @@ export function referenceTypeLabel(doctype, t) {
   if (value === "AT Renewal Task") return t("referenceRenewalTask");
   if (value === "AT Accounting Entry") return t("referenceAccountingEntry");
   if (value === "AT Reconciliation Item") return t("referenceReconciliationItem");
-  return value || "-";
+  return value || t("unspecified");
 }
 
 export function buildCommunicationQuickOptionsMap({

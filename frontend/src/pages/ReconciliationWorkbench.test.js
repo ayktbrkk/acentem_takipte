@@ -325,12 +325,12 @@ describe("ReconciliationWorkbench page store integration", () => {
     expect(wrapper.text()).toContain("Toplam Tutar");
     expect(wrapper.text()).toContain("MUTABAKAT NO");
     expect(wrapper.text()).toContain("ŞİRKET");
-    expect(wrapper.text()).toContain("TOPLAM POLİÇE");
-    expect(wrapper.text()).toContain("ŞİRKET BİLDİRİMİ");
+    expect(wrapper.text()).toContain("POLİÇE");
+    expect(wrapper.text()).toContain("ŞİRKET EKSTRESİ");
     expect(wrapper.text()).toContain("REC-001");
     expect(wrapper.text()).toContain("REC-002");
-    expect(wrapper.html()).toContain("text-green-600");
-    expect(wrapper.html()).toContain("text-amber-700");
+    expect(wrapper.html()).toContain("text-at-green");
+    expect(wrapper.html()).toContain("text-at-amber");
 
     const sourceQueryInput = wrapper.find(`input[placeholder="Kaynak kayıt / ref ara"]`);
     await sourceQueryInput.setValue("PAY-001");

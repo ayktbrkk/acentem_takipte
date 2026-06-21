@@ -12,21 +12,23 @@
         @run="$emit('run')"
         @new="beginCreate"
       />
-      <div class="flex items-center bg-slate-100 p-1 rounded-xl ml-4">
-        <button 
+      <div class="flex items-center bg-slate-100 p-1 rounded-xl ml-4" role="group" :aria-label="t('viewMode')">
+        <button
           type="button"
-          class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+          class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
           :class="activeView === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
           :aria-pressed="activeView === 'list'"
+          :aria-label="t('list_view')"
           @click="activeView = 'list'"
         >
           {{ t('list_view') }}
         </button>
-        <button 
+        <button
           type="button"
-          class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all"
+          class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
           :class="activeView === 'calendar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
           :aria-pressed="activeView === 'calendar'"
+          :aria-label="t('calendar_view')"
           @click="activeView = 'calendar'"
         >
           {{ t('calendar_view') }}

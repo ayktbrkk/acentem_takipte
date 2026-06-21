@@ -3,7 +3,7 @@
     :breadcrumb="t('breadcrumb')"
     :title="t('title')"
     :subtitle="t('subtitle')"
-    :record-count="rows.length"
+    :record-count="reconciliationTotalCount"
     :record-count-label="t('recordCount')"
   >
     <template #actions>
@@ -26,11 +26,14 @@
     </template>
 
     <template #metrics>
-      <ReconciliationWorkbenchMetricsPanel :t="t" :summary="reconciliationSummary" :format-money="formatMoney" />
+      <ReconciliationWorkbenchMetricsPanel :t="t" :summary="reconciliationSummary" :format-money="formatMoney" :format-count="formatCount" />
     </template>
 
-    <div v-if="operationError" class="qc-error-banner" role="alert" aria-live="polite">
+    <div v-if="operationError" class="qc-error-banner flex items-center justify-between gap-4" role="alert" aria-live="polite">
       <p class="qc-error-banner__text">{{ operationError }}</p>
+      <ActionButton variant="secondary" size="sm" @click="reloadWorkbench">
+        {{ t("retry") }}
+      </ActionButton>
     </div>
 
     <ReconciliationWorkbenchFilterSection
@@ -84,8 +87,16 @@
       :workbench-error-text="workbenchErrorText"
       :rows="rows"
       :reconciliation-list-columns="reconciliationListColumns"
-      :reconciliation-list-rows="reconciliationListRows"
+      :reconciliation-list-rows="pagedReconciliationListRows"
+      :page="listPagination.page"
+      :shown-count="reconciliationShownCount"
+      :total-count="reconciliationTotalCount"
+      :has-next-page="reconciliationHasNextPage"
+      :fetch-truncated="reconciliationFetchTruncated"
       @row-click="handleReconciliationRowClick"
+      @retry="reloadWorkbench"
+      @previous-page="listPagination.page -= 1"
+      @next-page="listPagination.page += 1"
     />
 
     <ReconciliationWorkbenchActionDialog
@@ -107,7 +118,7 @@
 </template>
 
 <script setup>
-import { computed, unref } from "vue";
+import { computed, reactive, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { getAppPinia } from "../pinia";
@@ -123,8 +134,10 @@ import ReconciliationWorkbenchImportDialog from "../components/reconciliation-wo
 import ReconciliationWorkbenchMetricsPanel from "../components/reconciliation-workbench/ReconciliationWorkbenchMetricsPanel.vue";
 import ReconciliationWorkbenchPreviewSections from "../components/reconciliation-workbench/ReconciliationWorkbenchPreviewSections.vue";
 import ReconciliationWorkbenchTableSection from "../components/reconciliation-workbench/ReconciliationWorkbenchTableSection.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import { RECONCILIATION_TRANSLATIONS } from "../config/reconciliation_translations";
 import { translateText } from "../utils/i18n";
+import { useAtFormatting } from "../composables/useAtFormatting";
 
 const appPinia = getAppPinia();
 const authStore = useAuthStore(appPinia);
@@ -133,6 +146,7 @@ const accountingStore = useAccountingStore();
 const route = useRoute();
 const router = useRouter();
 const activeLocale = computed(() => (String(unref(authStore.locale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en"));
+const { formatCount } = useAtFormatting(activeLocale);
 
 function t(key) {
   const locale = unref(activeLocale) || "en";
@@ -223,6 +237,26 @@ const {
   deriveReconciliationPeriod,
   buildReconciliationRowActions,
 } = reconciliationRuntime;
+
+const listPagination = reactive({ page: 1, pageLength: 20 });
+
+watch(
+  () => [filters.status, filters.mismatchType, filters.sourceQuery, filters.sourceDoctype, filters.limit],
+  () => {
+    listPagination.page = 1;
+  },
+);
+
+const reconciliationTotalCount = computed(() => reconciliationListRows.value.length);
+const pagedReconciliationListRows = computed(() => {
+  const start = (listPagination.page - 1) * listPagination.pageLength;
+  return reconciliationListRows.value.slice(start, start + listPagination.pageLength);
+});
+const reconciliationShownCount = computed(() => pagedReconciliationListRows.value.length);
+const reconciliationHasNextPage = computed(
+  () => listPagination.page * listPagination.pageLength < reconciliationListRows.value.length,
+);
+const reconciliationFetchTruncated = computed(() => rows.value.length >= Number(filters.limit || 100));
 </script>
 
 <style scoped>

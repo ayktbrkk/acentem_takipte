@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { isPermissionDeniedError } from "./helpers";
+import { isPermissionDeniedError, statusLabel, channelLabel, referenceTypeLabel } from "./helpers";
 import { useCommunicationCenterOperations } from "./operations";
 import { useCommunicationCenterResources } from "./resources";
 import { resolveSameOriginPath } from "../../utils/safeNavigation";
@@ -137,23 +137,23 @@ export function useCommunicationCenterRuntime({ route, router, branchStore, comm
       rows: [
         ...communicationStore.outboxItems.map((row) => ({
           [t("recordType")]: t("outboxTitle"),
-          [t("status")]: `${t("outboxTitle")} / ${row.status || "-"}`,
-          [t("channel")]: row.channel || "-",
-          [t("recipient")]: row.recipient || "-",
+          [t("status")]: `${t("outboxTitle")} / ${statusLabel(row.status, t)}`,
+          [t("channel")]: channelLabel(row.channel, t),
+          [t("recipient")]: row.recipient || t("unspecified"),
           [t("attempts")]: `${row.attempt_count || 0}/${row.max_attempts || 0}`,
-          [t("nextRetry")]: row.next_retry_on || "-",
-          [t("referenceContext")]: [row.reference_doctype, row.reference_name].filter(Boolean).join(" / ") || "-",
-          [t("error")]: row.error_message || "-",
+          [t("nextRetry")]: row.next_retry_on || t("unspecified"),
+          [t("referenceContext")]: [referenceTypeLabel(row.reference_doctype, t), row.reference_name].filter(Boolean).join(" / ") || t("unspecified"),
+          [t("error")]: row.error_message || t("unspecified"),
         })),
         ...communicationStore.draftItems.map((row) => ({
           [t("recordType")]: t("draftTitle"),
-          [t("status")]: `${t("draftTitle")} / ${row.status || "-"}`,
-          [t("channel")]: row.channel || "-",
-          [t("recipient")]: row.recipient || "-",
-          [t("attempts")]: "-",
-          [t("nextRetry")]: "-",
-          [t("referenceContext")]: [row.reference_doctype, row.reference_name].filter(Boolean).join(" / ") || "-",
-          [t("error")]: row.error_message || "-",
+          [t("status")]: `${t("draftTitle")} / ${statusLabel(row.status, t)}`,
+          [t("channel")]: channelLabel(row.channel, t),
+          [t("recipient")]: row.recipient || t("unspecified"),
+          [t("attempts")]: t("unspecified"),
+          [t("nextRetry")]: t("unspecified"),
+          [t("referenceContext")]: [referenceTypeLabel(row.reference_doctype, t), row.reference_name].filter(Boolean).join(" / ") || t("unspecified"),
+          [t("error")]: row.error_message || t("unspecified"),
         })),
       ],
       filters: currentCommunicationPresetPayload(),
