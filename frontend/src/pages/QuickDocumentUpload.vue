@@ -23,6 +23,10 @@
       </div>
     </template>
 
+    <SectionPanel :title="t('workflowTitle')" :show-count="false">
+      <StepBar :steps="uploadSteps" />
+    </SectionPanel>
+
     <div class="grid gap-6 xl:grid-cols-[minmax(0,8fr)_minmax(320px,4fr)]">
       <SectionPanel :title="t('flowTitle')">
         <div class="space-y-4 text-sm text-slate-600">
@@ -106,25 +110,42 @@ import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
+import StepBar from "../components/ui/StepBar.vue";
+import { DOCUMENT_TRANSLATIONS } from "../config/document_translations";
+import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { translateText } from "../utils/i18n";
 
+const LINK_DOCTYPE_LABELS = {
+  "AT Customer": "linkCustomer",
+  "AT Policy": "linkPolicy",
+  "AT Claim": "linkClaim",
+};
+
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
+const authStore = useAuthStore(getAppPinia());
 const showUploadModal = ref(false);
 
 const linkedDoctype = computed(() => String(route.query.reference_doctype || ""));
 const linkedName = computed(() => String(route.query.reference_name || ""));
 
+const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
+
 function t(key) {
-  return translateText(key, authStore.locale);
+  return DOCUMENT_TRANSLATIONS[activeLocale.value]?.[key] || DOCUMENT_TRANSLATIONS.en[key] || translateText(key, activeLocale.value);
 }
 
 const steps = computed(() => [
   { key: "select", step: "01", title: t("step1"), description: t("step1Desc") },
   { key: "classify", step: "02", title: t("step2"), description: t("step2Desc") },
   { key: "finish", step: "03", title: t("step3"), description: t("step3Desc") },
+]);
+
+const uploadSteps = computed(() => [
+  { label: t("step1"), state: showUploadModal.value ? "current" : "pending" },
+  { label: t("step2"), state: "pending" },
+  { label: t("step3"), state: "pending" },
 ]);
 
 const rules = computed(() => [
@@ -135,8 +156,13 @@ const rules = computed(() => [
 
 const contextChips = computed(() => {
   const chips = [];
-  if (linkedDoctype.value) chips.push(linkedDoctype.value);
-  if (linkedName.value) chips.push(linkedName.value);
+  if (linkedDoctype.value) {
+    const labelKey = LINK_DOCTYPE_LABELS[linkedDoctype.value];
+    chips.push(labelKey ? t(labelKey) : linkedDoctype.value);
+  }
+  if (linkedName.value) {
+    chips.push(linkedName.value);
+  }
   return chips;
 });
 

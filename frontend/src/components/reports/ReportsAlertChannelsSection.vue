@@ -14,7 +14,7 @@
       >
         <template #trailing>
           <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="localConfig.slack_configured ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
+            :class="localConfig.slack_configured ? 'bg-at-green/10 text-at-green' : 'bg-at-amber/10 text-at-amber'"
           >
             {{ localConfig.slack_configured ? t("channelConfigured") : t("channelNeedsSetup") }}
           </span>
@@ -23,7 +23,7 @@
         <div class="space-y-4">
           <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5">
             <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t("channelStatusLabel") }}</p>
-            <p class="mt-1 text-sm font-semibold" :class="localConfig.slack_configured ? 'text-emerald-700' : 'text-amber-700'">
+            <p class="mt-1 text-sm font-semibold" :class="localConfig.slack_configured ? 'text-at-green' : 'text-at-amber'">
               {{ localConfig.slack_configured ? t("slackConnected") : t("slackNotConfigured") }}
             </p>
           </div>
@@ -50,7 +50,7 @@
       >
         <template #trailing>
           <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-            :class="localConfig.telegram_configured ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
+            :class="localConfig.telegram_configured ? 'bg-at-green/10 text-at-green' : 'bg-at-amber/10 text-at-amber'"
           >
             {{ localConfig.telegram_configured ? t("channelConfigured") : t("channelNeedsSetup") }}
           </span>
@@ -59,7 +59,7 @@
         <div class="space-y-4">
           <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5">
             <p class="text-[11px] font-normal uppercase tracking-wider text-slate-400">{{ t("channelStatusLabel") }}</p>
-            <p class="mt-1 text-sm font-semibold" :class="localConfig.telegram_configured ? 'text-emerald-700' : 'text-amber-700'">
+            <p class="mt-1 text-sm font-semibold" :class="localConfig.telegram_configured ? 'text-at-green' : 'text-at-amber'">
               {{ localConfig.telegram_configured ? t("telegramConnected") : t("telegramNotConfigured") }}
             </p>
           </div>

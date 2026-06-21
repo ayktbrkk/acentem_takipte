@@ -88,6 +88,7 @@ describe("AdminGeneralSettings", () => {
           SectionPanel: { props: ["title", "meta"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><slot /></section>` },
           ActionButton: { emits: ["click"], template: `<button @click="$emit('click')" :disabled="disabled"><slot /></button>` },
           ToastNotification: { props: ["show", "message", "type"], emits: ["close"], template: `<div v-if="show" class="toast-stub">{{ message }}</div>` },
+          SkeletonLoader: { props: ["variant", "count", "rows"], template: `<div class="skeleton-stub" />` },
         },
       },
     });
@@ -119,6 +120,7 @@ describe("AdminGeneralSettings", () => {
           SectionPanel: { props: ["title", "meta"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><slot /></section>` },
           ActionButton: { emits: ["click"], template: `<button @click="$emit('click')" :disabled="disabled"><slot /></button>` },
           ToastNotification: { props: ["show", "message", "type"], emits: ["close"], template: `<div v-if="show" class="toast-stub">{{ message }}</div>` },
+          SkeletonLoader: { props: ["variant", "count", "rows"], template: `<div class="skeleton-stub" />` },
         },
       },
     });
@@ -162,6 +164,7 @@ describe("AdminGeneralSettings", () => {
           ActionButton: { emits: ["click"], template: `<button @click="$emit('click')"><slot /></button>` },
           ToastNotification: { props: ["show", "message"], template: `<div v-if="show">{{ message }}</div>` },
           ReportsAlertChannelsSection: { props: ["t", "config", "canManageAlertChannels"], template: `<div class="alert-section-stub">Alert Channels</div>` },
+          SkeletonLoader: { props: ["variant", "count", "rows"], template: `<div class="skeleton-stub" />` },
         },
       },
     });
@@ -189,6 +192,7 @@ describe("AdminGeneralSettings", () => {
           SectionPanel: { props: ["title", "meta"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><slot /></section>` },
           ActionButton: { emits: ["click"], template: `<button @click="$emit('click')" :disabled="disabled"><slot /></button>` },
           ToastNotification: { props: ["show", "message"], template: `<div v-if="show">{{ message }}</div>` },
+          SkeletonLoader: { props: ["variant", "count", "rows"], template: `<div class="skeleton-stub" />` },
         },
       },
     });

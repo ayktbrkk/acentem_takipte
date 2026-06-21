@@ -38,7 +38,29 @@
     </div>
 
     <template v-if="activeTab === 'settings'">
-      <div class="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <div
+        v-if="error"
+        class="mb-4 rounded-xl border border-at-red/20 bg-at-red/5 px-5 py-4 flex flex-wrap items-center justify-between gap-4"
+        role="alert"
+        aria-live="polite"
+      >
+        <div>
+          <p class="text-sm font-semibold text-at-red">{{ t('loadErrorTitle') }}</p>
+          <p class="mt-1 text-sm text-at-red/90">{{ error }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <ActionButton variant="secondary" size="sm" :disabled="loading" @click="loadSettings">
+            {{ t('retry') }}
+          </ActionButton>
+          <ActionButton variant="secondary" size="sm" @click="error = ''">
+            {{ t('dismiss') }}
+          </ActionButton>
+        </div>
+      </div>
+
+      <SkeletonLoader v-if="loading" variant="card" :count="4" />
+
+      <div v-else class="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
         <div class="space-y-4">
           <SectionPanel :title="t('appDefaultsTitle')" :meta="t('appDefaultsSubtitle')" :show-count="false">
             <div class="grid gap-4 md:grid-cols-2">
@@ -183,11 +205,33 @@
           </SectionPanel>
         </div>
       </div>
-      <p v-if="error" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ error }}</p>
     </template>
 
     <template v-if="activeTab === 'alerts'">
+      <div
+        v-if="alertError"
+        class="mb-4 rounded-xl border border-at-red/20 bg-at-red/5 px-5 py-4 flex flex-wrap items-center justify-between gap-4"
+        role="alert"
+        aria-live="polite"
+      >
+        <div>
+          <p class="text-sm font-semibold text-at-red">{{ alertT('loadErrorTitle') }}</p>
+          <p class="mt-1 text-sm text-at-red/90">{{ alertError }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <ActionButton variant="secondary" size="sm" :disabled="alertChannelsLoading" @click="loadAlertChannels">
+            {{ alertT('retry') }}
+          </ActionButton>
+          <ActionButton variant="secondary" size="sm" @click="alertError = ''">
+            {{ alertT('dismiss') }}
+          </ActionButton>
+        </div>
+      </div>
+
+      <SkeletonLoader v-if="alertChannelsLoading" variant="card" :count="2" />
+
       <ReportsAlertChannelsSection
+        v-else
         :t="alertT"
         :can-manage-alert-channels="canManageAlertChannels"
         :config="alertChannelConfig"
@@ -197,7 +241,6 @@
         @save="saveAlertChannels"
         @test="testAlertChannels"
       />
-      <p v-if="alertError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 mt-4">{{ alertError }}</p>
     </template>
 
     <div class="fixed right-6 top-24 z-[100] w-full max-w-sm pointer-events-none">
@@ -209,18 +252,19 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { frappeRequest, FeatherIcon } from "frappe-ui";
-import { useRouter } from "vue-router";
 
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import ToastNotification from "../components/ui/ToastNotification.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import ReportsAlertChannelsSection from "../components/reports/ReportsAlertChannelsSection.vue";
 import { getAppPinia } from "../pinia";
 import { useAuthStore } from "../stores/auth";
 import { ADMIN_GENERAL_SETTINGS_TRANSLATIONS } from "../config/admin_general_settings_translations";
 import { ADMIN_ALERT_CHANNELS_TRANSLATIONS } from "../config/admin_alert_channels_translations";
+import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 import { translateText } from "../utils/i18n";
 
 const DEFAULTS = {
@@ -238,7 +282,6 @@ const DEFAULTS = {
 };
 
 const authStore = useAuthStore(getAppPinia());
-const router = useRouter();
 const activeTab = ref("settings");
 const error = ref("");
 const loading = ref(false);
@@ -258,8 +301,13 @@ const alertError = ref("");
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 const alertLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
+const ALERT_TRANSLATIONS = {
+  tr: { ...REPORTS_TRANSLATIONS.tr, ...ADMIN_ALERT_CHANNELS_TRANSLATIONS.tr },
+  en: { ...REPORTS_TRANSLATIONS.en, ...ADMIN_ALERT_CHANNELS_TRANSLATIONS.en },
+};
+
 function t(key) { return ADMIN_GENERAL_SETTINGS_TRANSLATIONS[activeLocale.value]?.[key] || ADMIN_GENERAL_SETTINGS_TRANSLATIONS.en[key] || translateText(key, activeLocale.value); }
-function alertT(key) { return ADMIN_ALERT_CHANNELS_TRANSLATIONS[alertLocale.value]?.[key] || ADMIN_ALERT_CHANNELS_TRANSLATIONS.en[key] || translateText(key, alertLocale.value); }
+function alertT(key) { return ALERT_TRANSLATIONS[alertLocale.value]?.[key] || ALERT_TRANSLATIONS.en[key] || translateText(key, alertLocale.value); }
 
 const hasUnsavedChanges = computed(() => isDirty.value);
 const editableSettingCount = computed(() => 11);
@@ -293,7 +341,7 @@ async function saveSettings() { saving.value = true; error.value = ""; try { con
 
 async function loadAlertChannels() { if (!canManageAlertChannels.value) return; alertChannelsLoading.value = true; alertError.value = ""; try { const payload = await frappeRequest({ url: "/api/method/acentem_takipte.acentem_takipte.api.reports.get_ops_alert_channel_settings", method: "GET" }); const m = payload?.message || payload || {}; alertChannelConfig.value = { slack_webhook_url: "", telegram_bot_token: "", telegram_chat_id: String(m.telegram_chat_id || ""), slack_configured: Boolean(m.slack_configured), telegram_configured: Boolean(m.telegram_configured), slack_webhook_mask: String(m.slack_webhook_mask || ""), telegram_bot_token_mask: String(m.telegram_bot_token_mask || "") }; } catch (err) { alertError.value = String(err?.message || err || alertT("loadError")); } finally { alertChannelsLoading.value = false; } }
 
-async function saveAlertChannels(config) { alertChannelsSaving.value = true; alertError.value = ""; try { const payload = await frappeRequest({ url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_ops_alert_channel_settings_api", method: "POST", params: { config } }); const m = payload?.message || payload || {}; alertChannelConfig.value = { slack_webhook_url: "", telegram_bot_token: "", telegram_chat_id: String(m.telegram_chat_id || ""), slack_configured: Boolean(m.slack_configured), telegram_configured: Boolean(m.telegram_configured), slack_webhook_mask: String(m.slack_webhook_mask || ""), telegram_bot_token_mask: String(m.telegram_bot_token_mask || "") }; showToast(alertT("saveSuccess") || "Saved", "success"); } catch (err) { alertError.value = String(err?.message || err || alertT("saveError")); } finally { alertChannelsSaving.value = false; } }
+async function saveAlertChannels(config) { alertChannelsSaving.value = true; alertError.value = ""; try { const payload = await frappeRequest({ url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_ops_alert_channel_settings_api", method: "POST", params: { config } }); const m = payload?.message || payload || {}; alertChannelConfig.value = { slack_webhook_url: "", telegram_bot_token: "", telegram_chat_id: String(m.telegram_chat_id || ""), slack_configured: Boolean(m.slack_configured), telegram_configured: Boolean(m.telegram_configured), slack_webhook_mask: String(m.slack_webhook_mask || ""), telegram_bot_token_mask: String(m.telegram_bot_token_mask || "") }; showToast(alertT("saveSuccess"), "success"); } catch (err) { alertError.value = String(err?.message || err || alertT("saveError")); } finally { alertChannelsSaving.value = false; } }
 
 async function testAlertChannels(config) { alertChannelsTesting.value = true; alertError.value = ""; try { await frappeRequest({ url: "/api/method/acentem_takipte.acentem_takipte.api.reports.send_ops_alert_channel_test_api", method: "POST", params: { config } }); } catch (err) { alertError.value = String(err?.message || err || alertT("testError")); } finally { alertChannelsTesting.value = false; } }
 

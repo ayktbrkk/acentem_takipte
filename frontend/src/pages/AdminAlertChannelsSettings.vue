@@ -13,7 +13,36 @@
       </div>
     </template>
 
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" :disabled="alertChannelsLoading" @click="loadAlertChannelSettings">
+        {{ t('refresh') }}
+      </ActionButton>
+    </template>
+
+    <div
+      v-if="error"
+      class="mb-4 rounded-xl border border-at-red/20 bg-at-red/5 px-5 py-4 flex flex-wrap items-center justify-between gap-4"
+      role="alert"
+      aria-live="polite"
+    >
+      <div>
+        <p class="text-sm font-semibold text-at-red">{{ t('loadErrorTitle') }}</p>
+        <p class="mt-1 text-sm text-at-red/90">{{ error }}</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <ActionButton variant="secondary" size="sm" :disabled="alertChannelsLoading" @click="loadAlertChannelSettings">
+          {{ t('retry') }}
+        </ActionButton>
+        <ActionButton variant="secondary" size="sm" @click="error = ''">
+          {{ t('dismiss') }}
+        </ActionButton>
+      </div>
+    </div>
+
+    <SkeletonLoader v-if="alertChannelsLoading" variant="card" :count="2" />
+
     <ReportsAlertChannelsSection
+      v-else
       :t="t"
       :can-manage-alert-channels="canManageAlertChannels"
       :config="alertChannelConfig"
@@ -24,18 +53,21 @@
       @test="testAlertChannels"
     />
 
-    <p v-if="error" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-      {{ error }}
-    </p>
+    <div class="fixed right-6 top-24 z-[100] w-full max-w-sm pointer-events-none">
+      <ToastNotification :show="toast.show" :message="toast.message" :type="toast.type" @close="toast.show = false" />
+    </div>
   </WorkbenchPageLayout>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { frappeRequest } from "frappe-ui";
 
+import ActionButton from "../components/app-shell/ActionButton.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import ToastNotification from "../components/ui/ToastNotification.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 import ReportsAlertChannelsSection from "../components/reports/ReportsAlertChannelsSection.vue";
 import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 import { ADMIN_ALERT_CHANNELS_TRANSLATIONS } from "../config/admin_alert_channels_translations";
@@ -63,12 +95,22 @@ const alertChannelsLoading = ref(false);
 const alertChannelsSaving = ref(false);
 const alertChannelsTesting = ref(false);
 const error = ref("");
+const toast = reactive({ show: false, message: "", type: "success" });
 
 const canManageAlertChannels = computed(() => Boolean(authStore.isDeskUser));
 const activeLocale = computed(() => (String(authStore.locale || "tr").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key) {
   return TRANSLATIONS[activeLocale.value]?.[key] || TRANSLATIONS.en[key] || translateText(key, activeLocale.value);
+}
+
+function showToast(message, type = "success") {
+  toast.message = message;
+  toast.type = type;
+  toast.show = true;
+  setTimeout(() => {
+    toast.show = false;
+  }, 4000);
 }
 
 const configuredChannelCount = computed(() => {
@@ -129,6 +171,7 @@ async function saveAlertChannelSettings(config) {
       slack_webhook_mask: String(message.slack_webhook_mask || ""),
       telegram_bot_token_mask: String(message.telegram_bot_token_mask || ""),
     };
+    showToast(t("saveSuccess"), "success");
   } catch (err) {
     error.value = String(err?.message || err || t("saveError"));
   } finally {

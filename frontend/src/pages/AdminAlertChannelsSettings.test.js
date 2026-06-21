@@ -55,9 +55,12 @@ describe("AdminAlertChannelsSettings", () => {
     const wrapper = mount(AdminAlertChannelsSettings, {
       global: {
         stubs: {
-          WorkbenchPageLayout: { template: `<div><slot name="metrics" /><slot /></div>` },
+          WorkbenchPageLayout: { template: `<div><slot name="metrics" /><slot name="actions" /><slot /></div>` },
           SaaSMetricCard: { props: ["label", "value"], template: `<div>{{ label }} {{ value }}</div>` },
           SectionPanel: { props: ["title", "meta", "count"], template: `<section><h2>{{ title }}</h2><p>{{ meta }}</p><span>{{ count }}</span><slot /></section>` },
+          ActionButton: { emits: ["click"], template: `<button @click="$emit('click')" :disabled="disabled"><slot /></button>` },
+          ToastNotification: { props: ["show", "message", "type"], emits: ["close"], template: `<div v-if="show" class="toast-stub">{{ message }}</div>` },
+          SkeletonLoader: { props: ["variant", "count", "rows"], template: `<div class="skeleton-stub" />` },
         },
       },
     });
