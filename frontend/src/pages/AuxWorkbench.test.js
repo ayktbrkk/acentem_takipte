@@ -792,3 +792,116 @@ describe("AuxWorkbench master data", () => {
     expect(wrapper.text()).toContain("Satış birimi bulunamadı");
   });
 });
+
+describe("AuxWorkbench notification lists", () => {
+  beforeEach(() => {
+    routeState.query = {};
+    routeState.params = {};
+    routeState.hash = "";
+    routerPush.mockClear();
+    routerReplace.mockClear();
+    resourceQueue.length = 0;
+
+    setActivePinia(createPinia());
+
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "manager@example.com",
+      full_name: "AT Manager",
+      roles: ["AT Manager"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      capabilities: {},
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+    });
+
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+  });
+
+  function pushDefaultNotificationResources(listData = [], total = 0) {
+    resourceQueue.push(
+      {
+        data: listData,
+        reload: vi.fn(async function () {
+          this.data.value = listData;
+          return listData;
+        }),
+      },
+      {
+        data: total,
+        reload: vi.fn(async function () {
+          this.data.value = total;
+          return total;
+        }),
+      },
+      { data: {} },
+      { data: {} },
+      { data: {} },
+      { data: {}, submit: vi.fn(async () => ({})) },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+    );
+  }
+
+  it("shows screen-specific empty state for notification templates", async () => {
+    pushDefaultNotificationResources([], 0);
+    routeState.path = "/notification-templates";
+    routeState.fullPath = "/notification-templates";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "templates" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Bildirim şablonu bulunamadı");
+    expect(wrapper.text()).toContain("yeni şablon kaydı oluşturun");
+  });
+
+  it("shows screen-specific empty state for notification drafts", async () => {
+    pushDefaultNotificationResources([], 0);
+    routeState.path = "/notification-drafts";
+    routeState.fullPath = "/notification-drafts";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "notification-drafts" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Bildirim taslağı bulunamadı");
+    expect(wrapper.text()).toContain("yeni taslak kaydı oluşturun");
+  });
+
+  it("shows screen-specific empty state for notification outbox", async () => {
+    pushDefaultNotificationResources([], 0);
+    routeState.path = "/notification-outbox";
+    routeState.fullPath = "/notification-outbox";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "notification-outbox" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Giden bildirim bulunamadı");
+    expect(wrapper.text()).toContain("yeni gönderim kayıtlarının oluşmasını bekleyin");
+  });
+});

@@ -111,6 +111,10 @@ export const AUX_WORKBENCH_CONFIGS = {
     ],
     quickCreate: { registryKey: "notification_draft", label: L("New Draft", "Yeni Taslak"), showSaveAndOpen: true },
     rowQuickActions: { sendDraftNow: true },
+    empty: {
+      title: L("No notification drafts found", "Bildirim taslağı bulunamadı"),
+      description: L("Adjust your filters or create a new draft record.", "Filtreleri değiştirin veya yeni taslak kaydı oluşturun."),
+    },
     sortOptions: ["modified desc", "sent_at desc", "event_key asc"],
     defaultSort: "modified desc",
     panelRef: { doctypeField: "reference_doctype", nameField: "reference_name" },
@@ -154,6 +158,10 @@ export const AUX_WORKBENCH_CONFIGS = {
       },
     ],
     rowQuickActions: { retry: true, requeue: true },
+    empty: {
+      title: L("No outbox notifications found", "Giden bildirim bulunamadı"),
+      description: L("Adjust your filters or wait for new delivery records to appear.", "Filtreleri değiştirin veya yeni gönderim kayıtlarının oluşmasını bekleyin."),
+    },
     sortOptions: ["modified desc", "next_retry_on asc", "attempt_count desc"],
     defaultSort: "modified desc",
     panelRef: { doctypeField: "reference_doctype", nameField: "reference_name" },
@@ -286,6 +294,10 @@ export const AUX_WORKBENCH_CONFIGS = {
     ],
     quickCreate: { registryKey: "notification_template_master", label: L("New Template", "Yeni Şablon"), showSaveAndOpen: true },
     quickEdit: { registryKey: "notification_template_master_edit", label: L("Quick Edit", "Hızlı Düzenle") },
+    empty: {
+      title: L("No notification templates found", "Bildirim şablonu bulunamadı"),
+      description: L("Adjust your filters or create a new template record.", "Filtreleri değiştirin veya yeni şablon kaydı oluşturun."),
+    },
     sortOptions: ["template_key asc", "modified desc"],
     defaultSort: "template_key asc",
     boolFields: ["is_active"],
