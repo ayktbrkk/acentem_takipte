@@ -1244,3 +1244,116 @@ describe("AuxWorkbench communication aux lists", () => {
     expect(wrapper.text()).toContain("yeni kampanya oluşturun");
   });
 });
+
+describe("AuxWorkbench customer and document aux lists", () => {
+  beforeEach(() => {
+    routeState.query = {};
+    routeState.params = {};
+    routeState.hash = "";
+    routerPush.mockClear();
+    routerReplace.mockClear();
+    resourceQueue.length = 0;
+
+    setActivePinia(createPinia());
+
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "manager@example.com",
+      full_name: "AT Manager",
+      roles: ["AT Manager"],
+      preferred_home: "/at",
+      interface_mode: "spa",
+      locale: "tr",
+      capabilities: {},
+      office_branches: [{ name: "IST", office_branch_name: "Istanbul", is_default: 1 }],
+      default_office_branch: "IST",
+      can_access_all_office_branches: false,
+    });
+
+    const branchStore = useBranchStore();
+    branchStore.hydrateFromSession();
+  });
+
+  function pushDefaultCustomerDocumentResources(listData = [], total = 0) {
+    resourceQueue.push(
+      {
+        data: listData,
+        reload: vi.fn(async function () {
+          this.data.value = listData;
+          return listData;
+        }),
+      },
+      {
+        data: total,
+        reload: vi.fn(async function () {
+          this.data.value = total;
+          return total;
+        }),
+      },
+      { data: {} },
+      { data: {} },
+      { data: {} },
+      { data: {}, submit: vi.fn(async () => ({})) },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+      { data: [] },
+    );
+  }
+
+  it("shows screen-specific empty state for customer relations", async () => {
+    pushDefaultCustomerDocumentResources([], 0);
+    routeState.path = "/customer-relations";
+    routeState.fullPath = "/customer-relations";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "customer-relations" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Müşteri ilişkisi bulunamadı");
+    expect(wrapper.text()).toContain("yeni ilişki oluşturun");
+  });
+
+  it("shows screen-specific empty state for insured assets", async () => {
+    pushDefaultCustomerDocumentResources([], 0);
+    routeState.path = "/insured-assets";
+    routeState.fullPath = "/insured-assets";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "insured-assets" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Sigortalanan varlık bulunamadı");
+    expect(wrapper.text()).toContain("yeni sigortalanan varlık oluşturun");
+  });
+
+  it("shows screen-specific empty state for document center", async () => {
+    pushDefaultCustomerDocumentResources([], 0);
+    routeState.path = "/at-documents";
+    routeState.fullPath = "/at-documents";
+
+    const wrapper = mount(AuxWorkbench, {
+      props: { screenKey: "at-documents" },
+      global: {
+        stubs: commonStubs,
+      },
+    });
+
+    await settle();
+
+    expect(wrapper.text()).toContain("Doküman bulunamadı");
+    expect(wrapper.text()).toContain("yeni doküman yükleyin");
+  });
+});

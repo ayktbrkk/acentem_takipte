@@ -31,6 +31,8 @@ import IconLucideUserCheck from '~icons/lucide/user-check';
 import IconLucidePhone from '~icons/lucide/phone';
 import IconLucideLayers from '~icons/lucide/layers';
 import IconLucideMegaphone from '~icons/lucide/megaphone';
+import IconLucideShare2 from '~icons/lucide/share-2';
+import IconLucidePackage from '~icons/lucide/package';
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -106,6 +108,8 @@ export function useSidebarNavigation() {
           { key: "offers", label: t("offers"), to: "/offers", short: "OF", icon: shallowRef(IconLucideFileText), badgeClass: "text-teal-700", roles: ROLE_ACCOUNTANT },
           { key: "policies", label: t("policies"), to: "/policies", short: "PL", icon: shallowRef(IconLucideShield), badgeClass: "text-sky-700", roles: ROLE_ACCOUNTANT },
           { key: "customers", label: t("customers"), to: "/customers", short: "CU", icon: shallowRef(IconLucideUsers), badgeClass: "text-cyan-700", roles: ROLE_ACCOUNTANT },
+          { key: "customer-relations", label: t("customerRelations"), to: "/customer-relations", short: "CR", icon: shallowRef(IconLucideShare2), badgeClass: "text-blue-700", roles: ROLE_ACCOUNTANT },
+          { key: "insured-assets", label: t("insuredAssets"), to: "/insured-assets", short: "IA", icon: shallowRef(IconLucidePackage), badgeClass: "text-emerald-700", roles: ROLE_ACCOUNTANT },
           { key: "customer-search", label: t("customerSearch"), to: "/customer-search", short: "CS", icon: shallowRef(IconLucideSearch), badgeClass: "text-teal-700", roles: ROLE_SYSTEM },
         ]),
       }]
