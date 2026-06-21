@@ -25,6 +25,9 @@ import IconLucideKey from '~icons/lucide/key';
 import IconLucideReceipt from '~icons/lucide/receipt';
 import IconLucideListChecks from '~icons/lucide/list-checks';
 import IconLucideScrollText from '~icons/lucide/scroll-text';
+import IconLucideBell from '~icons/lucide/bell';
+import IconLucideActivity from '~icons/lucide/activity';
+import IconLucideUserCheck from '~icons/lucide/user-check';
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -125,6 +128,9 @@ export function useSidebarNavigation() {
         items: filterByRoles([
           { key: "communication", label: t("communication"), to: "/communication", short: "CM", icon: shallowRef(IconLucideMessageSquare), badgeClass: "text-violet-700", roles: ROLE_ACCOUNTANT },
           { key: "tasks", label: t("tasks"), to: "/tasks", short: "TS", icon: shallowRef(IconLucideCheckCircle), badgeClass: "text-slate-700", roles: ROLE_ACCOUNTANT },
+          { key: "reminders", label: t("reminders"), to: "/reminders", short: "RM", icon: shallowRef(IconLucideBell), badgeClass: "text-amber-700", roles: ROLE_ACCOUNTANT },
+          { key: "activities", label: t("activities"), to: "/activities", short: "AC", icon: shallowRef(IconLucideActivity), badgeClass: "text-teal-700", roles: ROLE_ACCOUNTANT },
+          { key: "ownership-assignments", label: t("ownershipAssignments"), to: "/ownership-assignments", short: "OA", icon: shallowRef(IconLucideUserCheck), badgeClass: "text-violet-700", roles: ROLE_ACCOUNTANT },
           { key: "notification-drafts", label: t("notificationDrafts"), to: "/notification-drafts", short: "ND", icon: shallowRef(IconLucideEdit3), badgeClass: "text-blue-700", roles: ROLE_SYSTEM },
           { key: "notification-outbox", label: t("notificationOutbox"), to: "/notification-outbox", short: "NO", icon: shallowRef(IconLucideSend), badgeClass: "text-green-700", roles: ROLE_SYSTEM },
         ]),
