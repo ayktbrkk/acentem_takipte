@@ -38,8 +38,9 @@
       >
         <template #primary-filters>
           <select
+            v-model="filters.status"
             class="input h-9 py-1 text-sm"
-            @change="updateFilter('status', $event.target.value)"
+            @change="updateFilter('status', filters.status)"
           >
             <option value="">{{ t("status") }}: {{ t("all") }}</option>
             <option v-for="opt in filterConfig[0].options" :key="opt.value" :value="opt.value">
@@ -58,8 +59,8 @@
           <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
             <span>{{ t("sort") }}</span>
             <select v-model="filters.sort" class="input">
-              <option value="creation desc">{{ t("sortNewest") }}</option>
-              <option value="creation asc">{{ t("sortOldest") }}</option>
+              <option value="modified desc">{{ t("sortNewest") }}</option>
+              <option value="first_name asc">{{ t("sortOldest") }}</option>
             </select>
           </label>
         </div>
@@ -92,7 +93,7 @@
           :shown="rows.length"
           :total="summary.total"
           :page="pagination.page"
-          :has-next="rows.length >= pagination.pageLength"
+          :has-next="hasNextPage"
           :showing-label="t('showingRecords')"
           @previous="setPage(pagination.page - 1)"
           @next="setPage(pagination.page + 1)"
@@ -151,6 +152,7 @@ const {
   loading,
   t,
   reload,
+  hasNextPage,
   setPage,
   updateFilter,
   openLead,
@@ -208,7 +210,7 @@ function clearFilters() {
   filters.query = "";
   filters.status = "";
   filters.office_branch = "";
-  filters.sort = "creation desc";
+  filters.sort = "modified desc";
   pagination.page = 1;
   reload();
 }
