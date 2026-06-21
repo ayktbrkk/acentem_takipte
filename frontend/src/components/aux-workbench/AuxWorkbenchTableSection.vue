@@ -141,6 +141,7 @@ defineProps({
   blockTaskLabel: { type: String, default: "" },
   completeTaskLabel: { type: String, default: "" },
   cancelTaskLabel: { type: String, default: "" },
+  cancelReminderLabel: { type: String, default: "" },
   runningLabel: { type: String, default: "" },
   pageLabel: { type: String, default: "" },
   prevLabel: { type: String, default: "" },

@@ -75,12 +75,17 @@
     </template>
 
     <div v-if="activeLoading && !doc" class="surface-card rounded-2xl p-5">
-      <div class="card-empty">{{ t("loading") }}</div>
+      <SkeletonLoader variant="detail" />
     </div>
 
-    <article v-else-if="errorText" class="qc-error-banner">
-      <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
-      <p class="qc-error-banner__text mt-1">{{ errorText }}</p>
+    <article v-else-if="errorText" class="qc-error-banner flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="qc-error-banner__text font-semibold">{{ t("loadErrorTitle") }}</p>
+        <p class="qc-error-banner__text mt-1">{{ errorText }}</p>
+      </div>
+      <ActionButton variant="secondary" size="sm" :disabled="activeLoading" @click="reloadDetail">
+        {{ t("retry") }}
+      </ActionButton>
     </article>
 
     <div v-else-if="isEmpty" class="surface-card rounded-2xl p-5">

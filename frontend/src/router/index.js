@@ -47,6 +47,7 @@ const SalesEntityDetail = () => import("../pages/SalesEntityDetail.vue");
 const NotificationTemplatesList = () => import("../pages/NotificationTemplatesList.vue");
 const NotificationTemplateEditor = () => import("../pages/NotificationTemplateEditor.vue");
 const AccountingEntriesList = () => import("../pages/AccountingEntriesList.vue");
+const AccessLogsList = () => import("../pages/AccessLogsList.vue");
 const AccountingEntryDetail = () => import("../pages/AccountingEntryDetail.vue");
 const ReconciliationItemsList = () => import("../pages/ReconciliationItemsList.vue");
 const ReconciliationItemDetail = () => import("../pages/ReconciliationItemDetail.vue");
@@ -439,10 +440,12 @@ const router = createRouter({
                       ? NotificationTemplatesList
                       : def.key === "accounting-entries"
                         ? AccountingEntriesList
-                        : def.key === "reconciliation-items"
-                          ? ReconciliationItemsList
+                        : def.key === "access-logs"
+                          ? AccessLogsList
+                          : def.key === "reconciliation-items"
+                            ? ReconciliationItemsList
             : AuxWorkbench,
-        props: ["tasks", "notification-drafts", "notification-outbox", "companies", "branches", "sales-entities", "templates", "accounting-entries", "reconciliation-items"].includes(def.key) ? false : { screenKey: def.key },
+        props: ["tasks", "notification-drafts", "notification-outbox", "companies", "branches", "sales-entities", "templates", "accounting-entries", "access-logs", "reconciliation-items"].includes(def.key) ? false : { screenKey: def.key },
         meta: { ...def.meta, requiredRoles: AUX_ROLE_MAP[def.key] || ROLE_ACCOUNTANT },
       },
       {

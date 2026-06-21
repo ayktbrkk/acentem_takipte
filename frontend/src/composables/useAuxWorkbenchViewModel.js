@@ -525,7 +525,7 @@ export function useAuxWorkbenchViewModel({
 
   function formatSignalSummary(value, field) {
     const entries = parseSignalEntries(value);
-    if (!entries.length) return "-";
+    if (!entries.length) return t("unspecified");
     const first = entries[0];
     const count = entries.length;
     if (field === "score_reason_json") {
@@ -540,7 +540,7 @@ export function useAuxWorkbenchViewModel({
   }
 
   function formatField(value, field) {
-    if (value == null || value === "") return "-";
+    if (value == null || value === "") return t("unspecified");
     if (["strengths_json", "risks_json", "score_reason_json"].includes(field)) {
       return formatSignalSummary(value, field);
     }

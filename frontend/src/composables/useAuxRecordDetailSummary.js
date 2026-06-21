@@ -226,6 +226,14 @@ const AUX_DETAIL_FIELD_LABELS = {
     tr: { name: "Kayıt", segment_name: "Segment Adı", segment_type: "Segment Türü", channel_focus: "Kanal Odağı", office_branch: "Ofis Şubesi", status: "Durum", estimated_customer_count: "Tahmini Müşteri Sayısı", criteria_json: "Kriterler", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
     en: { name: "Record", segment_name: "Segment Name", segment_type: "Segment Type", channel_focus: "Channel Focus", office_branch: "Office Branch", status: "Status", estimated_customer_count: "Estimated Customer Count", criteria_json: "Criteria", notes: "Notes", owner: "Owner", modified: "Modified" },
   },
+  "call-notes": {
+    tr: { name: "Kayıt", customer: "Müşteri", policy: "Poliçe", claim: "Hasar", channel: "Kanal", direction: "Yön", call_status: "Arama Durumu", call_outcome: "Arama Sonucu", note_at: "Not Tarihi", next_follow_up_on: "Sonraki Takip", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", customer: "Customer", policy: "Policy", claim: "Claim", channel: "Channel", direction: "Direction", call_status: "Call Status", call_outcome: "Call Outcome", note_at: "Note At", next_follow_up_on: "Next Follow Up", notes: "Notes", owner: "Owner", modified: "Modified" },
+  },
+  campaigns: {
+    tr: { name: "Kayıt", campaign_name: "Kampanya Adı", segment: "Segment", template: "Şablon", channel: "Kanal", office_branch: "Ofis Şubesi", status: "Durum", scheduled_for: "Planlanan Tarih", sent_count: "Gönderim Sayısı", matched_customer_count: "Eşleşen Müşteri", skipped_count: "Atlanan", last_run_on: "Son Çalıştırma", last_run_summary: "Son Çalıştırma Özeti", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
+    en: { name: "Record", campaign_name: "Campaign Name", segment: "Segment", template: "Template", channel: "Channel", office_branch: "Office Branch", status: "Status", scheduled_for: "Scheduled For", sent_count: "Sent Count", matched_customer_count: "Matched Customers", skipped_count: "Skipped Count", last_run_on: "Last Run On", last_run_summary: "Last Run Summary", notes: "Notes", owner: "Owner", modified: "Modified" },
+  },
   templates: {
     tr: { name: "Kayıt", template_key: "Şablon Anahtarı", event_key: "Etkinlik Anahtarı", channel: "Kanal", language: "Dil", subject: "Konu", is_active: "Aktif", body_template: "Şablon İçeriği", owner: "Kayıt Sahibi", modified: "Güncellendi" },
     en: { name: "Record", template_key: "Template Key", event_key: "Event Key", channel: "Channel", language: "Language", subject: "Subject", is_active: "Active", body_template: "Template Body", owner: "Owner", modified: "Modified" },
@@ -319,7 +327,7 @@ export function useAuxRecordDetailSummary({
 
   function translateDetailValue(value) {
     const key = String(value ?? "");
-    if (!key) return "-";
+    if (!key) return t("unspecified");
     const lookupKey = "val" + key.replace(/\s+/g, "");
     const translated = t(lookupKey);
     return translated === lookupKey ? key : translated;
@@ -348,7 +356,7 @@ export function useAuxRecordDetailSummary({
   }
 
   function formatValue(field, value) {
-    if (value == null) return "-";
+    if (value == null) return t("unspecified");
 
     if (config.key === "at-documents") {
       const isCustomerReference =
@@ -356,7 +364,7 @@ export function useAuxRecordDetailSummary({
         (field === "reference_name" && String(doc.value?.reference_doctype || "").trim() === "AT Customer");
       if (isCustomerReference) {
         const key = String(value || "").trim();
-        if (!key) return "-";
+        if (!key) return t("unspecified");
         return customerLabelById.value[key] || key;
       }
     }
@@ -368,7 +376,7 @@ export function useAuxRecordDetailSummary({
       if (["0", "false", "no"].includes(normalized)) return translateDetailValue("No");
     }
     if (typeof value === "number") return formatNumber(value);
-    if (typeof value === "string" && value.trim() === "") return "-";
+    if (typeof value === "string" && value.trim() === "") return t("unspecified");
 
     if (["amount_try", "difference_try", "local_amount_try", "external_amount_try"].includes(field)) {
       const n = Number(value);
@@ -476,6 +484,40 @@ export function useAuxRecordDetailSummary({
     };
   }
 
+  function normalizeBadgeStatus(value, statusType) {
+    if (statusType === "boolean_active") {
+      if (value === true || String(value) === "1") return "1";
+      if (value === false || String(value) === "0") return "0";
+    }
+    return String(value ?? "");
+  }
+
+  function configStatusBadges() {
+    const badges = [];
+    if (!doc.value) return badges;
+    if (config.statusField) {
+      const raw = doc.value[config.statusField];
+      if (raw !== undefined && raw !== null && raw !== "") {
+        badges.push({
+          key: config.statusField,
+          type: config.statusType || "policy",
+          status: normalizeBadgeStatus(raw, config.statusType),
+        });
+      }
+    }
+    if (config.secondaryStatusField) {
+      const raw = doc.value[config.secondaryStatusField];
+      if (raw !== undefined && raw !== null && raw !== "") {
+        badges.push({
+          key: config.secondaryStatusField,
+          type: config.secondaryStatusType || "policy",
+          status: normalizeBadgeStatus(raw, config.secondaryStatusType),
+        });
+      }
+    }
+    return badges;
+  }
+
   const specialBadges = computed(() => {
     if (!doc.value) return [];
     if (specialDetailMode.value === "reconciliation") {
@@ -506,7 +548,7 @@ export function useAuxRecordDetailSummary({
       }
       return badges;
     }
-    return [];
+    return configStatusBadges();
   });
 
   function parseSignalEntries(value) {

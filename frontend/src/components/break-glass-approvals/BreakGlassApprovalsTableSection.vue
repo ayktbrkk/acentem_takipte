@@ -81,7 +81,7 @@
                   {{ t("approve") }}
                 </ActionButton>
                 <ActionButton
-                  variant="secondary"
+                  variant="danger"
                   size="xs"
                   type="button"
                   :disabled="isRowBusy(row.name)"

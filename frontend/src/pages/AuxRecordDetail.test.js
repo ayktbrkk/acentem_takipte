@@ -188,6 +188,41 @@ vi.mock("frappe-ui", () => ({
                     owner: "agent@example.com",
                   },
                 }
+            : params?.doctype === "AT Insurance Company"
+              ? {
+                  message: {
+                    name: "IC-001",
+                    company_name: "Anadolu Sigorta",
+                    company_code: "ANS",
+                    is_active: 1,
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Branch"
+              ? {
+                  message: {
+                    name: "BR-001",
+                    branch_name: "Kasko",
+                    branch_code: "KAS",
+                    insurance_company: "IC-001",
+                    is_active: 1,
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Sales Entity"
+              ? {
+                  message: {
+                    name: "SE-001",
+                    full_name: "Merkez Acente",
+                    entity_type: "Agency",
+                    office_branch: "IST",
+                    parent_entity: "",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
             : {
                 message: {
                   name: "SNAP-001",
@@ -960,5 +995,77 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     await wrapper.vm.permanentDeleteDocument();
     expect(permanentDeleteDocumentSubmitMock).toHaveBeenCalledWith({ docname: "DOC-001" });
+  });
+});
+
+describe("AuxRecordDetail master data detail pages", () => {
+  const detailStubs = {
+    ActionButton: ActionButtonStub,
+    DetailActionRow: genericStub,
+    DetailTabsBar: DetailTabsBarStub,
+    MetaListCard: genericStub,
+    QuickCreateManagedDialog: true,
+    StatusBadge: true,
+    SkeletonLoader: true,
+  };
+
+  beforeEach(() => {
+    routerPush.mockReset();
+    detailReload.mockReset();
+    setActivePinia(createPinia());
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      locale: "tr",
+    });
+  });
+
+  it("renders company detail with localized field labels and summary", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "companies", name: "IC-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Anadolu Sigorta");
+    expect(wrapper.text()).toContain("Şirket Adı");
+    expect(wrapper.text()).toContain("Şirket Kodu");
+    expect(wrapper.text()).toContain("Listeye Dön");
+    expect(wrapper.text()).toContain("Durum Özeti");
+  });
+
+  it("renders branch detail with insurance company context", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "branches", name: "BR-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Kasko");
+    expect(wrapper.text()).toContain("Branş Adı");
+    expect(wrapper.text()).toContain("Sigorta Şirketi");
+    expect(wrapper.text()).toContain("IC-001");
+  });
+
+  it("renders sales entity detail with entity type summary", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "sales-entities", name: "SE-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Merkez Acente");
+    expect(wrapper.text()).toContain("Birim Türü");
+    expect(wrapper.text()).toContain("Agency");
+    expect(wrapper.text()).toContain("Ofis Şubesi");
   });
 });

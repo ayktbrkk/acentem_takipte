@@ -1,5 +1,6 @@
 <template>
   <WorkbenchPageLayout
+    :breadcrumb="label('section')"
     :title="label('list')"
     :subtitle="subtitleLabel"
     :record-count="pagination.total"
@@ -103,6 +104,7 @@
       :block-task-label="t('blockTaskAction')"
       :complete-task-label="t('completeTaskAction')"
       :cancel-task-label="t('cancelTaskAction')"
+      :cancel-reminder-label="t('cancelReminderAction')"
       :running-label="t('running')"
       :page-label="t('page')"
       :prev-label="t('prev')"
