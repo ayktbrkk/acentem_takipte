@@ -181,6 +181,14 @@ export const RECONCILIATION_TRANSLATIONS = {
     entryStatusPending: "Bekliyor",
     entryStatusFailed: "Başarısız",
     autoClose: "Otomatik Kapatma",
+    detailMatchedBy: "Eşleştiren",
+    sourceDoctypeAtPolicy: "Poliçe",
+    sourceDoctypeAtCustomer: "Müşteri",
+    sourceDoctypeAtOffer: "Teklif",
+    sourceDoctypeAtClaim: "Hasar",
+    sourceDoctypeAtPayment: "Ödeme",
+    sourceDoctypeAtAccountingEntry: "Muhasebe Kaydı",
+    statusCancelled: "İptal",
   },
   en: {
     breadcrumb: "Control Center → Reconciliation",
@@ -364,5 +372,13 @@ export const RECONCILIATION_TRANSLATIONS = {
     entryStatusPending: "Pending",
     entryStatusFailed: "Failed",
     autoClose: "Auto Close",
+    detailMatchedBy: "Matched By",
+    sourceDoctypeAtPolicy: "Policy",
+    sourceDoctypeAtCustomer: "Customer",
+    sourceDoctypeAtOffer: "Offer",
+    sourceDoctypeAtClaim: "Claim",
+    sourceDoctypeAtPayment: "Payment",
+    sourceDoctypeAtAccountingEntry: "Accounting Entry",
+    statusCancelled: "Cancelled",
   }
 };

@@ -1,7 +1,6 @@
 import { computed, reactive, ref } from "vue";
 
 import { columnLabels } from "./reportsConfig";
-import { translateText } from "@/utils/i18n";
 import { useAtFormatting } from "./useAtFormatting";
 
 function isDateLikeValue(value) {
@@ -38,6 +37,58 @@ export function useReportsTableData({
     "claim_type",
     "purpose",
   ]);
+
+  const MISMATCH_TYPE_KEYS = {
+    Amount: "mismatchAmount",
+    Currency: "mismatchCurrency",
+    "Missing External": "mismatchMissingExternal",
+    "Missing Local": "mismatchMissingLocal",
+    Status: "mismatchStatus",
+    Other: "mismatchOther",
+  };
+
+  const DOCTYPE_KEYS = {
+    "AT Policy": "doctypeAtPolicy",
+    "AT Customer": "doctypeAtCustomer",
+    "AT Claim": "doctypeAtClaim",
+  };
+
+  const STATUS_VALUE_KEYS = {
+    Open: "statusOpen",
+    Resolved: "statusResolved",
+    Ignored: "statusIgnored",
+    Matched: "statusMatched",
+    "In Review": "claimStatusInReview",
+    Rejected: "claimStatusRejected",
+    Approved: "claimStatusApproved",
+    Paid: "claimStatusPaid",
+    Closed: "claimStatusClosed",
+    Cancelled: "claimStatusCancelled",
+  };
+
+  function translateCategoricalValue(column, value) {
+    const text = String(value || "").trim();
+    if (!text) return t("notProvided");
+
+    const lowerColumn = String(column || "").toLowerCase();
+
+    if (lowerColumn === "mismatch_type") {
+      const mismatchKey = MISMATCH_TYPE_KEYS[text];
+      if (mismatchKey) return t(mismatchKey);
+    }
+
+    if (lowerColumn.endsWith("_doctype") || lowerColumn === "source_doctype" || lowerColumn === "reference_doctype") {
+      const doctypeKey = DOCTYPE_KEYS[text];
+      if (doctypeKey) return t(doctypeKey);
+    }
+
+    if (lowerColumn.endsWith("_status") || lowerColumn === "status" || lowerColumn === "resolution_action") {
+      const statusKey = STATUS_VALUE_KEYS[text];
+      if (statusKey) return t(statusKey);
+    }
+
+    return text;
+  }
 
   const visibleColumnKeys = existingVisibleColumnKeys || ref([]);
   const pendingVisibleColumnKeys = existingPendingVisibleColumnKeys || ref([]);
@@ -367,7 +418,7 @@ export function useReportsTableData({
         || lowerColumn.endsWith("_type")
         || lowerColumn.endsWith("_doctype");
       if (shouldTranslateCategory) {
-        return translateText(value, activeLocale.value || "en");
+        return translateCategoricalValue(column, value);
       }
 
       const numeric = Number(value);

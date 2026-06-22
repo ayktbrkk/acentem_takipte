@@ -207,7 +207,7 @@ export const IMPORT_TRANSLATIONS = {
     colOffer: "Offer",
     colValidity: "Validity",
     validUntil: "Valid Until",
-    unspecified: "Not specified",
+    unspecified: "Not provided",
     sheetLabel: "Excel Sheet",
     unsupportedFileMessage: "Only CSV and XLSX files are supported.",
     jobHistoryTitle: "Recent Import Jobs",

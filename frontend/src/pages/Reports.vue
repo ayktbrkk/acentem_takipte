@@ -157,7 +157,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { translateText } from "../utils/i18n";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
@@ -210,8 +209,14 @@ const localeCode = computed(() => (activeLocale.value === "tr" ? "tr-TR" : "en-U
 
 function t(key) {
   const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
-  return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
+  return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || key;
 }
+
+const PREVIEW_DOCTYPE_KEYS = {
+  "AT Policy": "doctypeAtPolicy",
+  "AT Customer": "doctypeAtCustomer",
+  "AT Claim": "doctypeAtClaim",
+};
 
 const reportFilterComposables = useReportsFilters({
   props,
@@ -362,7 +367,8 @@ function openPreview(row) {
   if (!name) return;
 
   previewTarget.value = { doctype, name };
-  const doctypeLabel = translateText(doctype, activeLocale) || doctype;
+  const doctypeKey = PREVIEW_DOCTYPE_KEYS[doctype];
+  const doctypeLabel = doctypeKey ? t(doctypeKey) : doctype;
   previewTitle.value = `${doctypeLabel}: ${name}`;
   previewSubtitle.value = doctypeLabel;
   showPreview.value = true;

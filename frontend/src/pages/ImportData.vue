@@ -133,7 +133,6 @@ import { computed, unref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
-import { translateText } from "../utils/i18n";
 import { IMPORT_TRANSLATIONS } from "../config/import_translations";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
@@ -155,7 +154,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 function t(key) {
   const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
-  return IMPORT_TRANSLATIONS[locale]?.[key] || IMPORT_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
+  return IMPORT_TRANSLATIONS[locale]?.[key] || IMPORT_TRANSLATIONS.en?.[key] || key;
 }
 
 const runtime = useImportDataRuntime({ t, router, authStore, branchStore });

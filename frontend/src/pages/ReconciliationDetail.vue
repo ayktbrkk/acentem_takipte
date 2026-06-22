@@ -107,7 +107,6 @@ import { useRouter } from "vue-router";
 import { getAppPinia } from "../pinia";
 import { RECONCILIATION_TRANSLATIONS } from "../config/reconciliation_translations";
 import { useAuthStore } from "../stores/auth";
-import { translateText } from "../utils/i18n";
 
 import { FeatherIcon } from "frappe-ui";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
@@ -125,8 +124,22 @@ const authStore = useAuthStore(getAppPinia());
 const activeLocale = computed(() => (String(unref(authStore.locale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en"));
 
 function t(key) {
-  return RECONCILIATION_TRANSLATIONS[activeLocale.value]?.[key] || RECONCILIATION_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
+  return RECONCILIATION_TRANSLATIONS[activeLocale.value]?.[key] || RECONCILIATION_TRANSLATIONS.en?.[key] || key;
 }
+
+const SOURCE_DOCTYPE_KEYS = {
+  "AT Policy": "sourceDoctypeAtPolicy",
+  "AT Customer": "sourceDoctypeAtCustomer",
+  "AT Offer": "sourceDoctypeAtOffer",
+  "AT Claim": "sourceDoctypeAtClaim",
+  "AT Payment": "sourceDoctypeAtPayment",
+  "AT Accounting Entry": "sourceDoctypeAtAccountingEntry",
+};
+
+const DETAIL_LABEL_KEYS = {
+  matched_by: "detailMatchedBy",
+  auto_closed: "autoClose",
+};
 
 const itemResource = createResource({ url: "frappe.client.get", auto: false });
 const entryResource = createResource({ url: "frappe.client.get", auto: false });
@@ -299,9 +312,9 @@ function stringifyDetailValue(value) {
 function humanizeDetailLabel(value) {
   const text = String(value || "").trim();
   if (!text) return t("unspecified");
-  if (text === "auto_closed") return t("autoClose");
-  const normalized = text.replace(/_/g, " ");
-  return translateText(normalized, activeLocale) || normalized;
+  const labelKey = DETAIL_LABEL_KEYS[text];
+  if (labelKey) return t(labelKey);
+  return text.replace(/_/g, " ");
 }
 
 function formatDateTime(value) {
@@ -336,7 +349,9 @@ function formatValue(value) {
 }
 
 function translateSource(value) {
-  return value ? translateText(String(value), activeLocale) || String(value) : "";
+  const key = SOURCE_DOCTYPE_KEYS[value];
+  if (key) return t(key);
+  return value ? String(value) : "";
 }
 
 function translateMismatch(value) {
@@ -346,13 +361,13 @@ function translateMismatch(value) {
   if (value === "Missing Local") return t("mismatchMissingLocal");
   if (value === "Status") return t("mismatchStatus");
   if (value === "Other") return t("mismatchOther");
-  return value ? translateText(String(value), activeLocale) || String(value) : "";
+  return value ? String(value) : "";
 }
 
 function translateResolution(value) {
   if (value === "Matched") return t("summaryMatched");
   if (value === "Ignored") return t("statusIgnored");
-  return value ? translateText(String(value), activeLocale) || String(value) : "";
+  return value ? String(value) : "";
 }
 
 function translateStatus(value) {
@@ -362,10 +377,11 @@ function translateStatus(value) {
   if (value === "Resolved") return t("statusResolved");
   if (value === "Ignored") return t("statusIgnored");
   if (value === "Open") return t("statusOpen");
+  if (value === "Cancelled") return t("statusCancelled");
   if (value === "Synced") return t("entryStatusSynced");
   if (value === "Pending Sync") return t("entryStatusPending");
   if (value === "Failed") return t("entryStatusFailed");
-  return value ? translateText(String(value), activeLocale) || String(value) : "";
+  return value ? String(value) : "";
 }
 
 function goBack() {

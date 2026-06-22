@@ -1,5 +1,4 @@
 import { computed, reactive, ref, unref, watch } from "vue";
-import { translateText } from "../utils/i18n";
 import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
 
 export function useScheduledReportsManager(props, emit) {
@@ -47,10 +46,10 @@ export function useScheduledReportsManager(props, emit) {
   );
   const visibleFilters = computed(() => new Set(reportFilterConfig[form.reportKey] || []));
 
-  function t(key) {
-    const locale = String(unref(props.locale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
-    return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || translateText(key, props.locale);
-  }
+function t(key) {
+  const locale = String(unref(props.locale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+  return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || key;
+}
 
   function isFilterVisible(key) {
     return visibleFilters.value.has(key);
@@ -261,7 +260,7 @@ export function useScheduledReportsManager(props, emit) {
       });
       resetForm();
     } catch (error) {
-      formError.value = String(error?.message || error || t("recipientsError"));
+      formError.value = String(error?.message || error || t("recipients_error"));
     }
   }
 

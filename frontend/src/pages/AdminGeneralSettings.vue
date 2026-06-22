@@ -158,6 +158,7 @@
                 <select v-model="settings.kvkk_consent_default" class="mt-2 input" data-testid="general-kvkk-consent" @change="markDirty">
                   <option value="Unknown">{{ t('kvkkConsentOptionUnknown') }}</option>
                   <option value="Granted">{{ t('kvkkConsentOptionGranted') }}</option>
+                  <option value="Revoked">{{ t('kvkkConsentOptionRevoked') }}</option>
                 </select>
                 <p class="mt-2 text-xs text-slate-500">{{ t('kvkkConsentHint') }}</p>
               </label>
@@ -265,7 +266,6 @@ import { useAuthStore } from "../stores/auth";
 import { ADMIN_GENERAL_SETTINGS_TRANSLATIONS } from "../config/admin_general_settings_translations";
 import { ADMIN_ALERT_CHANNELS_TRANSLATIONS } from "../config/admin_alert_channels_translations";
 import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
-import { translateText } from "../utils/i18n";
 
 const DEFAULTS = {
   default_locale: "tr",
@@ -306,8 +306,8 @@ const ALERT_TRANSLATIONS = {
   en: { ...REPORTS_TRANSLATIONS.en, ...ADMIN_ALERT_CHANNELS_TRANSLATIONS.en },
 };
 
-function t(key) { return ADMIN_GENERAL_SETTINGS_TRANSLATIONS[activeLocale.value]?.[key] || ADMIN_GENERAL_SETTINGS_TRANSLATIONS.en[key] || translateText(key, activeLocale.value); }
-function alertT(key) { return ALERT_TRANSLATIONS[alertLocale.value]?.[key] || ALERT_TRANSLATIONS.en[key] || translateText(key, alertLocale.value); }
+function t(key) { return ADMIN_GENERAL_SETTINGS_TRANSLATIONS[activeLocale.value]?.[key] || ADMIN_GENERAL_SETTINGS_TRANSLATIONS.en[key] || key; }
+function alertT(key) { return ALERT_TRANSLATIONS[alertLocale.value]?.[key] || ALERT_TRANSLATIONS.en[key] || key; }
 
 const hasUnsavedChanges = computed(() => isDirty.value);
 const editableSettingCount = computed(() => 11);
