@@ -1,7 +1,6 @@
 import { getSourcePanelConfig } from "../../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../../utils/safeNavigation";
 import { subtleFact, mutedFact } from "../../utils/factItems";
-import { translateText } from "../../utils/i18n";
 
 export function isPermissionDeniedError(error) {
   const status = Number(
@@ -55,11 +54,11 @@ export function mismatchTypeLabel(t, type) {
   if (type === "Missing Local") return t("mismatchMissingLocal");
   if (type === "Status") return t("mismatchStatus");
   if (type === "Other") return t("mismatchOther");
-  return type || "-";
+  return type || t("unspecified");
 }
 
 export function sourceRowFacts(t, row) {
-  return [subtleFact("externalRef", t("externalRef"), row?.accounting?.external_ref || "-")];
+  return [subtleFact("externalRef", t("externalRef"), row?.accounting?.external_ref || t("unspecified"))];
 }
 
 export function mismatchTypeFacts(t, row) {
@@ -75,7 +74,7 @@ export function normalizeReconciliationStatus(status, difference) {
   return normalizedStatus || "Pending";
 }
 
-export function deriveReconciliationPeriod(localeCode, row) {
+export function deriveReconciliationPeriod(localeCode, row, fallbackLabel = "") {
   const rawValue =
     row?.resolved_on ||
     row?.posting_date ||
@@ -84,17 +83,17 @@ export function deriveReconciliationPeriod(localeCode, row) {
     row?.accounting?.posting_date ||
     "";
   const trimmedValue = String(rawValue || "").trim();
-  if (!trimmedValue) return "-";
+  if (!trimmedValue) return fallbackLabel;
   const parsedDate = new Date(trimmedValue);
   if (Number.isNaN(parsedDate.getTime())) return trimmedValue.slice(0, 7);
   return new Intl.DateTimeFormat(localeCode, { month: "short", year: "numeric" }).format(parsedDate);
 }
 
-export function buildReconciliationRowActions({ row, t, localeCode, openReconciliationDetail, openReconciliationActionDialog }) {
+export function buildReconciliationRowActions({ row, t, openReconciliationDetail, openReconciliationActionDialog }) {
   const actions = [];
   actions.push({
     key: `${row?.name}-detail`,
-    label: translateText("Record Detail", localeCode),
+    label: t("recordDetail"),
     variant: "primary",
     onClick: () => openReconciliationDetail(row),
   });

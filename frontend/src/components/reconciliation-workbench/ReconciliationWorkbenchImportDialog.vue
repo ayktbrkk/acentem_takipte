@@ -36,7 +36,7 @@
               <input v-model.trim="delimiterModel" class="at-control-premium" type="text" maxlength="1" :placeholder="props.t('delimiter')" />
             </div>
             <div class="at-input-group">
-              <label class="at-label block">Limit</label>
+              <label class="at-label block">{{ props.t('limitLabel') }}</label>
               <input v-model.number="limitModel" class="at-control-premium at-control-right" type="number" min="1" max="500" />
             </div>
           </div>
@@ -86,11 +86,11 @@
             :key="`${row.external_ref}-${row.policy_no}-${row.payment_no}`"
             class="grid grid-cols-5 gap-2 px-4 py-2.5 text-xs font-medium text-slate-700 border-b border-slate-100 last:border-0 hover:bg-slate-50"
           >
-            <span>{{ row.external_ref || "-" }}</span>
-            <span>{{ row.policy_no || "-" }}</span>
-            <span>{{ row.payment_no || "-" }}</span>
+            <span>{{ row.external_ref || props.t('unspecified') }}</span>
+            <span>{{ row.policy_no || props.t('unspecified') }}</span>
+            <span>{{ row.payment_no || props.t('unspecified') }}</span>
             <span class="text-right font-mono">{{ props.formatMoney(row.amount_try || 0) }}</span>
-            <span class="font-semibold" :class="row.match_status === 'Matched' ? 'text-emerald-600' : 'text-amber-600'">{{ row.match_status || "-" }}</span>
+            <span class="font-semibold" :class="row.match_status === 'Matched' ? 'text-emerald-600' : 'text-amber-600'">{{ matchStatusLabel(row.match_status) }}</span>
           </div>
         </div>
       </section>
@@ -118,6 +118,14 @@ const props = defineProps({
   rows: { type: Array, default: () => [] },
   formatMoney: { type: Function, required: true },
 });
+
+function matchStatusLabel(status) {
+  const text = String(status || "").trim();
+  if (!text) return props.t("unspecified");
+  if (text === "Matched") return props.t("importMatchStatusMatched");
+  if (text === "Unmatched") return props.t("importMatchStatusUnmatched");
+  return text;
+}
 
 defineEmits(["close", "preview", "import"]);
 </script>

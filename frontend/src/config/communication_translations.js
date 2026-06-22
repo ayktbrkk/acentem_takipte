@@ -117,7 +117,7 @@ export const COMMUNICATION_TRANSLATIONS = {
     closeAssignmentContext: "Atamayı Kapat",
     clearCallFollowUpContext: "Arama Takibini Temizle",
     completeReminderContext: "Hatırlatıcıyı Tamamla",
-    cancelReminderContext: "İptal",
+    cancelReminderContext: "Hatırlatıcıyı İptal Et",
     clearContext: "Bağlamı Temizle",
     eventKeyRenewalDue: "Yenileme Vadesi",
     eventKeyPaymentDue: "Ödeme Vadesi",

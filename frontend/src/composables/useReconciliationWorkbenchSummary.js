@@ -43,7 +43,7 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
         name: row?.name,
         reconciliationNo: row?.name || unspecified(),
         company: accounting.insurance_company || row?.insurance_company || unspecified(),
-        period: deriveReconciliationPeriod(localeCode.value, row),
+        period: deriveReconciliationPeriod(localeCode.value, row, unspecified()),
         totalPolicy: accounting.policy ? "1" : "0",
         totalPremium: formatMoney(localeCode.value, row?.local_amount_try || 0),
         companyStatement: formatMoney(localeCode.value, row?.external_amount_try || 0),
@@ -53,7 +53,6 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
         _actions: buildReconciliationRowActions({
           row,
           t,
-          localeCode: localeCode.value,
           openReconciliationDetail,
           openReconciliationActionDialog,
         }),
@@ -72,6 +71,6 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
     sourceRowFacts: (row) => sourceRowFacts(t, row),
     mismatchTypeFacts: (row) => mismatchTypeFacts(t, row),
     normalizeReconciliationStatus,
-    deriveReconciliationPeriod: (row) => deriveReconciliationPeriod(localeCode.value, row),
+    deriveReconciliationPeriod: (row) => deriveReconciliationPeriod(localeCode.value, row, t("unspecified")),
   };
 }

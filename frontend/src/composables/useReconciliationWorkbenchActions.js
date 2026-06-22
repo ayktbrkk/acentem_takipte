@@ -6,7 +6,6 @@ import {
   openSourcePanel,
   sourcePanelLabel as resolveSourcePanelLabel,
 } from "./reconciliationWorkbench/helpers";
-import { translateText } from "../utils/i18n";
 
 export function useReconciliationWorkbenchActions({
   t,
@@ -18,7 +17,6 @@ export function useReconciliationWorkbenchActions({
   bulkResolveResource,
   resolveResource,
   setValueResource,
-  localeCode,
 }) {
   const syncing = ref(false);
   const reconciling = ref(false);
@@ -31,11 +29,9 @@ export function useReconciliationWorkbenchActions({
   const actionDialogLoading = ref(false);
   const actionDialogError = ref("");
 
-  const actionDialogEyebrow = computed(() =>
-    translateText("Reconciliation Action", localeCode.value)
-  );
+  const actionDialogEyebrow = computed(() => t("actionDialogEyebrow"));
   const actionDialogLabels = computed(() => ({
-    cancel: translateText("Cancel", localeCode.value),
+    cancel: t("cancel"),
     save:
       actionDialogMode.value === "Matched"
         ? t("actionSaveResolve")

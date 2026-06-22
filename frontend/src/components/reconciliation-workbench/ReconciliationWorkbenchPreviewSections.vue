@@ -55,7 +55,14 @@ import SectionPanel from "../app-shell/SectionPanel.vue";
 import MetaListCard from "../app-shell/MetaListCard.vue";
 import EmptyState from "../app-shell/EmptyState.vue";
 import SkeletonLoader from "../ui/SkeletonLoader.vue";
-import { translateText } from "@/utils/i18n";
+
+const PREVIEW_STATUS_KEYS = {
+  overdue: "previewStatus_overdue",
+  open: "previewStatus_open",
+  pending: "previewStatus_pending",
+  paid: "previewStatus_paid",
+  accrued: "previewStatus_accrued",
+};
 
 const props = defineProps({
   t: { type: Function, required: true },
@@ -69,6 +76,8 @@ const props = defineProps({
 function statusLabel(value) {
   const text = String(value || "").trim();
   if (!text) return props.t("unspecified");
-  return translateText(text, props.locale);
+  const translationKey = PREVIEW_STATUS_KEYS[text.toLowerCase()];
+  if (translationKey) return props.t(translationKey);
+  return text;
 }
 </script>

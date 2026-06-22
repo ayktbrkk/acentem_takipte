@@ -145,7 +145,6 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
     bulkResolveResource,
     resolveResource,
     setValueResource,
-    localeCode,
   });
 
   const summaryUi = useReconciliationWorkbenchSummary({
@@ -164,7 +163,6 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
     reloadWorkbench,
     previewStatementImportResource,
     importStatementPreviewResource,
-    localeCode,
   });
 
   const mismatchOptions = filtersUi.mismatchOptions;

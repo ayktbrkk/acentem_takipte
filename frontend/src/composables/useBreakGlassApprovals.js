@@ -28,7 +28,7 @@ export function useBreakGlassApprovals({ authStore, t }) {
     if (value === "customer_financials") return t("customerFinancials");
     if (value === "system_admin") return t("systemAdmin");
     if (value === "reporting_override") return t("reportingOverride");
-    return value || "-";
+    return value || t("notProvided");
   }
 
   async function loadPending() {
@@ -80,7 +80,9 @@ export function useBreakGlassApprovals({ authStore, t }) {
         return;
       }
 
-      actionResult.value = String(message?.message || `${requestId} ${action}`);
+      actionResult.value = String(
+        message?.message || (action === "approve" ? t("actionApproved") : t("actionRejected")),
+      );
       await loadPending();
     } catch (error) {
       errorText.value = String(error?.message || error || t("unknownError"));

@@ -20,7 +20,7 @@
 
         <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 mb-6 text-sm text-slate-700">
           <p class="font-medium text-slate-900">
-            {{ props.actionDialogRow?.source_doctype || "-" }} / {{ props.actionDialogRow?.source_name || "-" }}
+            {{ props.actionDialogRow?.source_doctype || props.t('unspecified') }} / {{ props.actionDialogRow?.source_name || props.t('unspecified') }}
           </p>
           <p class="mt-2 text-brand-700 font-semibold">
             {{ props.t("difference") }}:

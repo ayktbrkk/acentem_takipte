@@ -69,8 +69,8 @@
             <div v-for="item in communications" :key="item.name" class="flex gap-4">
               <div class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-500" />
               <div>
-                <p class="text-sm font-bold text-slate-900">{{ item.subject || item.call_outcome || item.channel || '-' }}</p>
-                <p class="mt-0.5 text-[11px] text-slate-400 font-medium">{{ formatDate(item.note_at) }} · {{ item.owner || '-' }}</p>
+                <p class="text-sm font-bold text-slate-900">{{ item.subject || item.call_outcome || item.channel || t('unspecified') }}</p>
+                <p class="mt-0.5 text-[11px] text-slate-400 font-medium">{{ formatDate(item.note_at) }} · {{ item.owner || t('unspecified') }}</p>
               </div>
             </div>
           </div>
