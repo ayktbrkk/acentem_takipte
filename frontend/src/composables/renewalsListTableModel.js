@@ -1,7 +1,3 @@
-function fallbackLabel(localeCode) {
-  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
-}
-
 function getRenewalDaysUntilDue(value) {
   if (!value) return null;
   const target = new Date(value);
@@ -29,8 +25,7 @@ export function buildRenewalsListTableColumns(t) {
 }
 
 export function mapRenewalRecordToTableRow(row, { formatDate, localeCode, t }) {
-  const locale = localeCode || "tr";
-  const unspecified = fallbackLabel(locale);
+  const unspecified = t("unspecified");
   const dueDate = row.due_date || row.renewal_date;
   const daysUntilDue = getRenewalDaysUntilDue(dueDate);
 

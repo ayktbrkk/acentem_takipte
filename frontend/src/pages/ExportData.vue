@@ -66,7 +66,6 @@ import ExportDataOptionsPanel from "../components/export-data/ExportDataOptionsP
 import ExportDataFiltersPanel from "../components/export-data/ExportDataFiltersPanel.vue";
 import ExportDataPreviewPanel from "../components/export-data/ExportDataPreviewPanel.vue";
 import ExportDataHistoryPanel from "../components/export-data/ExportDataHistoryPanel.vue";
-import { translateText } from "../utils/i18n";
 import { EXPORT_TRANSLATIONS } from "../config/export_translations";
 
 const router = useRouter();
@@ -78,7 +77,7 @@ const activeLocale = computed(() => unref(authStore.locale) || "tr");
 
 function t(key) {
   const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
-  return EXPORT_TRANSLATIONS[locale]?.[key] || EXPORT_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
+  return EXPORT_TRANSLATIONS[locale]?.[key] || EXPORT_TRANSLATIONS.en?.[key] || key;
 }
 
 const runtime = useExportDataRuntime({ t, router, authStore, branchStore });

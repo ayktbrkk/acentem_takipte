@@ -1,9 +1,9 @@
-function fallbackLabel(localeCode) {
-  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
+function fallbackLabel(t) {
+  return t("unspecified");
 }
 
-function customerDisplayLabel(row) {
-  return row.customer_full_name || row.customer_name || row.customer || fallbackLabel("tr");
+function customerDisplayLabel(row, t) {
+  return row.customer_full_name || row.customer_name || row.customer || fallbackLabel(t);
 }
 
 function computeRemainingDays(validUntil) {
@@ -13,11 +13,11 @@ function computeRemainingDays(validUntil) {
   return Math.ceil((target.getTime() - Date.now()) / 86400000);
 }
 
-function mapCustomerTypeLabel(value, localeCode, t) {
+function mapCustomerTypeLabel(value, t) {
   const normalized = String(value || "").trim();
   if (!normalized || normalized === "-") return "-";
-  if (normalized === "Corporate") return t("corporate") || "Corporate";
-  if (normalized === "Individual") return t("individual") || "Individual";
+  if (normalized === "Corporate") return t("corporate");
+  if (normalized === "Individual") return t("individual");
   return normalized;
 }
 
@@ -32,16 +32,15 @@ export function buildOfferListTableColumns(t) {
 }
 
 export function mapOfferRecordToTableRow(row, { formatDate, formatCurrency, localeCode, t }) {
-  const locale = localeCode || "tr";
   const remainingDays = computeRemainingDays(row.valid_until);
-  const daysLabel = t("daysRemaining") || "days";
+  const daysLabel = t("daysRemaining");
 
   return {
     ...row,
-    offer_primary: row.name || fallbackLabel(locale),
+    offer_primary: row.name || fallbackLabel(t),
     offer_secondary: row.insurance_company || "-",
-    customer_label: customerDisplayLabel(row),
-    customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, locale, t)} | ${row.customer_masked_tax_id || "-"}`,
+    customer_label: customerDisplayLabel(row, t),
+    customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, t)} | ${row.customer_masked_tax_id || "-"}`,
     validity_primary: formatDate(row.valid_until),
     validity_secondary: remainingDays != null ? `${remainingDays} ${daysLabel}` : "-",
     finance_primary: formatCurrency(row.gross_premium || 0, row.currency || "TRY"),

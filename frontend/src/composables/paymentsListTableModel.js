@@ -1,9 +1,5 @@
 import { buildPaymentSnapshot } from "./paymentsBoard/helpers";
 
-function fallbackLabel(localeCode) {
-  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
-}
-
 export function buildPaymentsListTableColumns(t) {
   return [
     { key: "payment_primary", secondaryKey: "payment_secondary", label: t("colPayment"), type: "stacked" },
@@ -16,7 +12,7 @@ export function buildPaymentsListTableColumns(t) {
 export function mapPaymentRecordToTableRow(row, { localeCode, t }) {
   const locale = localeCode || "tr-TR";
   const snapshot = buildPaymentSnapshot(row, null, locale);
-  const unspecified = fallbackLabel(locale);
+  const unspecified = t("unspecified");
   const custType = snapshot.customer_customer_type
     ? t(snapshot.customer_customer_type) || snapshot.customer_customer_type
     : unspecified;

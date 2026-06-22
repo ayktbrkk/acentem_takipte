@@ -1,7 +1,7 @@
 <template>
   <WorkbenchPageLayout
-    :breadcrumb="t('breadcrumb')"
-    :title="t('title')"
+    :breadcrumb="pageBreadcrumb"
+    :title="pageTitle"
     :subtitle="t('subtitle')"
     :record-count="sortedRows.length"
     :record-count-label="t('record_count')"
@@ -212,6 +212,12 @@ function t(key) {
   return REPORTS_TRANSLATIONS[locale]?.[key] || REPORTS_TRANSLATIONS.en?.[key] || key;
 }
 
+function localizedRouteMeta(field) {
+  const entry = route.meta?.[field];
+  if (!entry || typeof entry !== "object") return "";
+  return entry[activeLocale.value] || entry.en || "";
+}
+
 const PREVIEW_DOCTYPE_KEYS = {
   "AT Policy": "doctypeAtPolicy",
   "AT Customer": "doctypeAtCustomer",
@@ -261,6 +267,23 @@ const {
   presetOptionsList,
   canDeletePresetFlag,
 } = reportFilterComposables;
+
+const pageTitle = computed(() => {
+  if (route.name !== "reports") {
+    return localizedRouteMeta("title") || activeReportLabel.value || t("title");
+  }
+  return t("title");
+});
+
+const pageBreadcrumb = computed(() => {
+  if (route.name !== "reports") {
+    const section = localizedRouteMeta("section");
+    const title = localizedRouteMeta("title");
+    if (section && title) return `${section} → ${title}`;
+    return activeReportLabel.value ? `${t("breadcrumb").split(" → ")[0]} → ${activeReportLabel.value}` : t("breadcrumb");
+  }
+  return t("breadcrumb");
+});
 
 const reportTableData = useReportsTableData({
   filters,

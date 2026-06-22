@@ -74,4 +74,56 @@ describe("useReportsTableData", () => {
 
     expect(result.sortedRows.value[0]._groupTitle).toContain("Belirtilmedi");
   });
+
+  it("translates customer segmentation values", () => {
+    const filters = ref({
+      reportKey: "customer_segmentation",
+      fromDate: "",
+      toDate: "",
+      granularity: "",
+    });
+    const rows = ref([
+      {
+        name: "C1",
+        claim_history_segment: "HAS_CLAIM",
+        loyalty_segment: "LOYAL",
+        premium_segment: "HIGH",
+        policy_segment: "5+",
+        claim_status: "Under Review",
+      },
+    ]);
+    const columns = ref([
+      "claim_history_segment",
+      "loyalty_segment",
+      "premium_segment",
+      "policy_segment",
+      "claim_status",
+    ]);
+
+    const translations = {
+      segmentHasClaim: "Hasarlı",
+      segmentLoyal: "Sadık",
+      segmentPremiumHigh: "Yüksek Prim",
+      segmentPolicy5Plus: "5+ Poliçe",
+      claimStatusUnderReview: "İncelemede",
+      notProvided: "Belirtilmedi",
+    };
+
+    const result = useReportsTableData({
+      filters: filters.value,
+      rows,
+      columns,
+      comparisonRows: ref([]),
+      activeLocale: ref("tr"),
+      localeCode: ref("tr-TR"),
+      branchScopeLabel: computed(() => "Ofis Şube: IST"),
+      t: (key) => translations[key] || key,
+    });
+
+    expect(result.formatCellValue("claim_history_segment", "HAS_CLAIM")).toBe("Hasarlı");
+    expect(result.formatCellValue("loyalty_segment", "LOYAL")).toBe("Sadık");
+    expect(result.formatCellValue("premium_segment", "HIGH")).toBe("Yüksek Prim");
+    expect(result.formatCellValue("policy_segment", "5+")).toBe("5+ Poliçe");
+    expect(result.formatCellValue("claim_status", "Under Review")).toBe("İncelemede");
+  });
 });

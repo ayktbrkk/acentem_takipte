@@ -58,12 +58,31 @@ export function useReportsTableData({
     Resolved: "statusResolved",
     Ignored: "statusIgnored",
     Matched: "statusMatched",
+    Draft: "claimStatusDraft",
     "In Review": "claimStatusInReview",
+    "Under Review": "claimStatusUnderReview",
     Rejected: "claimStatusRejected",
     Approved: "claimStatusApproved",
     Paid: "claimStatusPaid",
     Closed: "claimStatusClosed",
     Cancelled: "claimStatusCancelled",
+  };
+
+  const SEGMENT_VALUE_KEYS = {
+    HAS_CLAIM: "segmentHasClaim",
+    NO_CLAIM: "segmentNoClaim",
+    LOYAL: "segmentLoyal",
+    GROWING: "segmentGrowing",
+    NEW: "segmentNew",
+    DORMANT: "segmentDormant",
+    HIGH: "segmentPremiumHigh",
+    MID: "segmentPremiumMid",
+    LOW: "segmentPremiumLow",
+    NONE: "segmentPremiumNone",
+    "5+": "segmentPolicy5Plus",
+    "2-5": "segmentPolicy2To5",
+    "1": "segmentPolicy1",
+    "0": "segmentPolicy0",
   };
 
   function translateCategoricalValue(column, value) {
@@ -85,6 +104,11 @@ export function useReportsTableData({
     if (lowerColumn.endsWith("_status") || lowerColumn === "status" || lowerColumn === "resolution_action") {
       const statusKey = STATUS_VALUE_KEYS[text];
       if (statusKey) return t(statusKey);
+    }
+
+    if (lowerColumn.endsWith("_segment") || lowerColumn === "premium_segment" || lowerColumn === "policy_segment") {
+      const segmentKey = SEGMENT_VALUE_KEYS[text];
+      if (segmentKey) return t(segmentKey);
     }
 
     return text;
@@ -308,7 +332,7 @@ export function useReportsTableData({
         buildMetricItem(
           "open_claims",
           t("summaryOpenClaims"),
-          formatCount(rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length),
+          formatCount(rows.value.filter((row) => ["Open", "Under Review"].includes(String(row?.claim_status || ""))).length),
         ),
         buildMetricItem(
           "rejected_claims",
@@ -371,8 +395,8 @@ export function useReportsTableData({
     }
 
     if (filters.reportKey === "claims_operations") {
-      const currentOpen = rows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length;
-      const previousOpen = comparisonRows.value.filter((row) => ["Open", "In Review"].includes(String(row?.claim_status || ""))).length;
+      const currentOpen = rows.value.filter((row) => ["Open", "Under Review"].includes(String(row?.claim_status || ""))).length;
+      const previousOpen = comparisonRows.value.filter((row) => ["Open", "Under Review"].includes(String(row?.claim_status || ""))).length;
       const currentRejected = rows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length;
       const previousRejected = comparisonRows.value.filter((row) => String(row?.claim_status || "") === "Rejected").length;
       const currentNotifications = numericTotalFromRows(rows.value, ["sent_outbox_count"]);
@@ -416,6 +440,7 @@ export function useReportsTableData({
         translatableCategoricalColumns.has(lowerColumn)
         || lowerColumn.endsWith("_status")
         || lowerColumn.endsWith("_type")
+        || lowerColumn.endsWith("_segment")
         || lowerColumn.endsWith("_doctype");
       if (shouldTranslateCategory) {
         return translateCategoricalValue(column, value);

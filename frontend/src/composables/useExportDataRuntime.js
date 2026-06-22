@@ -22,7 +22,6 @@ import {
   buildRenewalsListTableColumns,
   mapRenewalRecordToTableRow,
 } from "./renewalsListTableModel";
-import { translateText } from "../utils/i18n";
 
 const LIST_PREVIEW_SCREENS = new Set([
   "policy_list",
@@ -194,7 +193,6 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
 
   const listPreviewTableRows = computed(() => {
     const locale = unref(activeLocale);
-    const translateValue = (value) => translateText(value, locale) || value;
 
     if (form.screen === "customer_list") {
       return listPreviewRows.value.map((row) => mapCustomerRecordToTableRow(row, { t, localeCode: locale }));
@@ -215,7 +213,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
           formatDate,
           formatCurrency,
           localeCode: locale,
-          translateValue,
+          t,
         }),
       );
     }

@@ -1,5 +1,5 @@
 <template>
-  <SectionPanel v-if="showPanel" :title="t('exportStepTitle')" :show-count="false">
+  <SectionPanel v-if="showPanel" :title="t('previewTitle')" :show-count="false">
     <p class="mb-4 text-sm text-slate-600">{{ t("previewHint") }}</p>
     <SkeletonLoader v-if="loading && !rows.length && !error" variant="list" :rows="6" />
     <div
