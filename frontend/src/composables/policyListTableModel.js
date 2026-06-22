@@ -9,33 +9,31 @@ export function buildPolicyListTableColumns(t) {
   ];
 }
 
-function mapCustomerTypeLabel(value, localeCode) {
+function mapCustomerTypeLabel(value, t) {
   const normalized = String(value || "").trim().toLowerCase();
-  const isTr = String(localeCode || "").toLowerCase().startsWith("tr");
   if (normalized === "corporate" || normalized === "kurumsal") {
-    return isTr ? "Kurumsal" : "Corporate";
+    return t("corporate");
   }
   if (normalized === "individual" || normalized === "bireysel") {
-    return isTr ? "Bireysel" : "Individual";
+    return t("individual");
   }
-  return isTr ? "Belirtilmedi" : "Not provided";
+  return t("unspecified");
 }
 
-function fallbackLabel(localeCode) {
-  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
+function fallbackLabel(t) {
+  return t("unspecified");
 }
 
-export function mapPolicyRecordToTableRow(row, { formatDate, formatCurrency, localeCode }) {
-  const locale = localeCode || "en";
+export function mapPolicyRecordToTableRow(row, { formatDate, formatCurrency, t }) {
   return {
     ...row,
     name: row.record_name || row.name,
-    policy_primary: row.record_name || row.name || row.policy_no || fallbackLabel(locale),
-    policy_secondary: row.policy_no || fallbackLabel(locale),
-    customer_label: row.customer_full_name || row.customer_name || row.customer || fallbackLabel(locale),
-    customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, locale)} | ${row.customer_masked_tax_id || fallbackLabel(locale)}`,
-    product_primary: row.branch || fallbackLabel(locale),
-    product_secondary: row.insurance_company || fallbackLabel(locale),
+    policy_primary: row.record_name || row.name || row.policy_no || fallbackLabel(t),
+    policy_secondary: row.policy_no || fallbackLabel(t),
+    customer_label: row.customer_full_name || row.customer_name || row.customer || fallbackLabel(t),
+    customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, t)} | ${row.customer_masked_tax_id || fallbackLabel(t)}`,
+    product_primary: row.branch || fallbackLabel(t),
+    product_secondary: row.insurance_company || fallbackLabel(t),
     vade_primary: formatDate(row.end_date),
     vade_secondary: formatDate(row.issue_date),
     finance_primary: formatCurrency(row.gross_premium, row.currency || "TRY"),
@@ -44,20 +42,19 @@ export function mapPolicyRecordToTableRow(row, { formatDate, formatCurrency, loc
   };
 }
 
-export function mapPolicyImportPreviewToTableRow(row, { formatDate, formatCurrency, localeCode }) {
+export function mapPolicyImportPreviewToTableRow(row, { formatDate, formatCurrency, t }) {
   const values = row.normalized_values || {};
-  const locale = localeCode || "en";
-  const customerRef = values.customer || row.customer || fallbackLabel(locale);
+  const customerRef = values.customer || row.customer || fallbackLabel(t);
   return {
     id: `${row.row_number || ""}-${values.policy_no || ""}`,
     row_status: row.row_status,
     error_message: row.error_message,
-    policy_primary: values.policy_no || fallbackLabel(locale),
+    policy_primary: values.policy_no || fallbackLabel(t),
     policy_secondary: customerRef,
     customer_label: customerRef,
-    customer_secondary: fallbackLabel(locale),
-    product_primary: values.branch || fallbackLabel(locale),
-    product_secondary: values.insurance_company || fallbackLabel(locale),
+    customer_secondary: fallbackLabel(t),
+    product_primary: values.branch || fallbackLabel(t),
+    product_secondary: values.insurance_company || fallbackLabel(t),
     vade_primary: formatDate(values.end_date),
     vade_secondary: formatDate(values.issue_date),
     finance_primary: formatCurrency(values.gross_premium, values.currency || "TRY"),

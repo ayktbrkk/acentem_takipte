@@ -262,7 +262,7 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
         mapPolicyImportPreviewToTableRow(row, {
           formatDate,
           formatCurrency,
-          localeCode: locale,
+          t: translateField,
         }),
       );
     }

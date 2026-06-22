@@ -26,7 +26,6 @@ export const CUSTOMER_TRANSLATIONS = {
     consent_revoked: "Onay Geri Çekildi",
     consent_unknown: "Bilinmiyor",
     type: "Tip",
-    branch: "Şube",
     customer_details: "Müşteri Detayları",
     snapshot_date: "Analiz Tarihi",
     back_to_list: "Listeye Dön",
@@ -84,8 +83,33 @@ export const CUSTOMER_TRANSLATIONS = {
     new_policy: "Poliçe Ekle",
     new_claim: "Hasar Dosyası Aç",
     upload_document: "Dosya Yükle",
+    uploadDocument: "Doküman Yükle",
+    openDocument: "Dokümanı Aç",
+    openDocumentCenter: "Doküman Merkezine Git",
+    archiveDocument: "Arşivle",
+    restoreDocument: "Geri Yükle",
+    permanentDeleteDocument: "Kalıcı Sil",
+    private: "Gizli",
+    status_verified: "Doğrulandı",
     add_note: "Not Ekle",
     edit_profile: "Profili Düzenle",
+    advanced_filters_placeholder: "Gelişmiş filtreleme seçenekleri yakında eklenecek.",
+
+    // Portfolio facts
+    branch: "Branş",
+    start_date: "Başlangıç Tarihi",
+    gross_premium: "Brüt Prim",
+    offer_date: "Teklif Tarihi",
+    reported_date: "Bildirim Tarihi",
+    claim_amount: "Hasar Tutarı",
+
+    // Shared status labels
+    status_active: "Aktif",
+    status_draft: "Taslak",
+    status_waiting: "Bekliyor",
+    status_cancelled: "İptal",
+    status_sent: "Gönderildi",
+    status_open: "Açık",
     
     // Empty states
     no_policies: "Poliçe bulunamadı.",
@@ -133,7 +157,6 @@ export const CUSTOMER_TRANSLATIONS = {
     consent_revoked: "Revoked",
     consent_unknown: "Unknown",
     type: "Type",
-    branch: "Branch",
     customer_details: "Customer Details",
     snapshot_date: "Analysis Date",
     back_to_list: "Back to List",
@@ -191,8 +214,33 @@ export const CUSTOMER_TRANSLATIONS = {
     new_policy: "Add Policy",
     new_claim: "Open Claim",
     upload_document: "Upload Document",
+    uploadDocument: "Upload Document",
+    openDocument: "Open Document",
+    openDocumentCenter: "Open Document Center",
+    archiveDocument: "Archive",
+    restoreDocument: "Restore",
+    permanentDeleteDocument: "Delete Permanently",
+    private: "Private",
+    status_verified: "Verified",
     add_note: "Add Note",
     edit_profile: "Edit Profile",
+    advanced_filters_placeholder: "Advanced filtering options will be added soon.",
+
+    // Portfolio facts
+    branch: "Branch",
+    start_date: "Start Date",
+    gross_premium: "Gross Premium",
+    offer_date: "Offer Date",
+    reported_date: "Reported Date",
+    claim_amount: "Claim Amount",
+
+    // Shared status labels
+    status_active: "Active",
+    status_draft: "Draft",
+    status_waiting: "Waiting",
+    status_cancelled: "Cancelled",
+    status_sent: "Sent",
+    status_open: "Open",
     
     // Empty states
     no_policies: "No policies found.",

@@ -223,6 +223,7 @@ const {
   policyListLocalFilters,
   localeCode,
   policyListPageSize,
+  t,
 });
 
 const {

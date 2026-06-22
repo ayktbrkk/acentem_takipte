@@ -18,10 +18,6 @@ function computeRemainingDays(endDate) {
   return Math.ceil((target.getTime() - Date.now()) / 86400000);
 }
 
-function fallbackLabel(localeCode) {
-  return String(localeCode || "").toLowerCase().startsWith("tr") ? "Belirtilmedi" : "Not provided";
-}
-
 export function usePolicyListTableData({
   rows,
   policyStore,
@@ -29,6 +25,7 @@ export function usePolicyListTableData({
   policyListLocalFilters,
   localeCode,
   policyListPageSize,
+  t,
 }) {
   const { formatDate, formatCurrency } = useAtFormatting(computed(() => (unref(localeCode) === "tr-TR" ? "tr" : "en")));
 
@@ -37,16 +34,17 @@ export function usePolicyListTableData({
       const mapped = mapPolicyRecordToTableRow(row, {
         formatDate,
         formatCurrency,
-        localeCode: unref(localeCode),
+        t,
       });
+      const unspecified = t("unspecified");
       return {
         ...mapped,
-        carrier_policy_no: row.carrier_policy_no || row.policy_no || fallbackLabel(unref(localeCode)),
+        carrier_policy_no: row.carrier_policy_no || row.policy_no || unspecified,
         finance_secondary: `${formatCurrency(row.commission_amount || 0, row.currency || "TRY")} (${row.currency || "TRY"})`,
         customer_type_label: mapped.customer_secondary.split(" | ")[0],
-        customer_tax_id: row.customer_masked_tax_id || fallbackLabel(unref(localeCode)),
+        customer_tax_id: row.customer_masked_tax_id || unspecified,
         customer_birth_date: row.customer_birth_date || null,
-        branch: row.branch || fallbackLabel(unref(localeCode)),
+        branch: row.branch || unspecified,
         remaining_days: computeRemainingDays(row.end_date),
       };
     }),

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { reactive, ref } from "vue";
 
+import { POLICY_TRANSLATIONS } from "../config/policy_translations";
 import { usePolicyListTableData } from "./usePolicyListTableData";
+
+function t(key) {
+  return POLICY_TRANSLATIONS.en?.[key] || key;
+}
 
 describe("usePolicyListTableData", () => {
   it("derives filtered rows, counts, and summary metrics", () => {
@@ -38,6 +43,7 @@ describe("usePolicyListTableData", () => {
       policyListLocalFilters: reactive({ status: "active", branch: "Life" }),
       localeCode: ref("tr-TR"),
       policyListPageSize: ref(20),
+      t: (key) => POLICY_TRANSLATIONS.tr?.[key] || POLICY_TRANSLATIONS.en?.[key] || key,
     });
 
     expect(data.policyListMappedRows.value).toHaveLength(2);
@@ -75,6 +81,7 @@ describe("usePolicyListTableData", () => {
       policyListLocalFilters: reactive({ status: "", branch: "" }),
       localeCode: ref("en-US"),
       policyListPageSize: ref(20),
+      t,
     });
 
     expect(data.policyListMappedRows.value[0].carrier_policy_no).toBe("Not provided");

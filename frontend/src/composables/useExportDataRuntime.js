@@ -240,7 +240,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
       mapPolicyRecordToTableRow(row, {
         formatDate,
         formatCurrency,
-        localeCode: locale,
+        t,
       }),
     );
   });
