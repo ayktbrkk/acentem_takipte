@@ -10,7 +10,6 @@ import { buildQuickCreateIntentQuery, readQuickCreateIntent, stripQuickCreateInt
 import { buildRelatedQuickCreateNavigation } from "../utils/relatedQuickCreate";
 import { isValidTckn, normalizeCustomerType, normalizeIdentityNumber } from "../utils/customerIdentity";
 import { getCustomerOptionLabel } from "../utils/customerOptions";
-import { translateText } from "../utils/i18n";
 import { parseActionError } from "../utils/error";
 
 const QUICK_OPTION_LIMIT = 2000;
@@ -112,12 +111,12 @@ export function useLeadListQuickLead({ t, activeLocale, refreshLeadList, openLea
     eyebrow: getQuickCreateEyebrow("lead", activeLocale.value),
     title: getLocalizedText(quickLeadConfig?.title, activeLocale.value),
     subtitle: getLocalizedText(quickLeadConfig?.subtitle, activeLocale.value),
-    newLabel: translateText("New Lead", activeLocale.value),
+    newLabel: t("quickCreateNewLabel"),
   }));
   const quickCreateCommon = computed(() => ({
     ...getQuickCreateLabels("create", activeLocale.value),
-    validation: translateText("Please fill required fields.", activeLocale.value),
-    failed: translateText("Quick lead create failed.", activeLocale.value),
+    validation: t("quickCreateValidation"),
+    failed: t("quickCreateFailed"),
   }));
 
   function buildOfficeBranchLookupFilters() {
@@ -176,11 +175,11 @@ export function useLeadListQuickLead({ t, activeLocale, refreshLeadList, openLea
     const fullName = String(quickLeadForm.queryText || "").trim();
     const shouldCreateCustomer = !selectedCustomer && Boolean(quickLeadForm.createCustomerMode);
     if (!selectedCustomer && !shouldCreateCustomer) {
-      quickLeadFieldErrors.customer = translateText("Select a customer or add a new customer.", activeLocale.value);
+      quickLeadFieldErrors.customer = t("leadSubmitSelectCustomer");
       valid = false;
     }
     if (shouldCreateCustomer && !fullName) {
-      quickLeadFieldErrors.customer = translateText("New customer name is required.", activeLocale.value);
+      quickLeadFieldErrors.customer = t("leadSubmitNameRequired");
       valid = false;
     }
     const identityNumber = normalizeIdentityNumber(quickLeadForm.tax_id);

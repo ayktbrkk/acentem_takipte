@@ -2,6 +2,7 @@ import { computed, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
+import { LEAD_TRANSLATIONS } from "../config/lead_translations";
 import { useAuthStore } from "../stores/auth";
 
 // --- Exported helper functions ---
@@ -83,7 +84,8 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   const authStore = useAuthStore();
 
   function t(key) {
-    return translateText(key, activeLocale);
+    const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+    return LEAD_TRANSLATIONS[locale]?.[key] || LEAD_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
   }
 
   const leadResource = createResource({
