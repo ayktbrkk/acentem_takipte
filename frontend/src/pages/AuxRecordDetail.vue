@@ -29,6 +29,30 @@
         <FeatherIcon name="rotate-cw" class="h-4 w-4" />
         {{ t('requeue') }}
       </ActionButton>
+      <ActionButton v-if="canStartTaskLifecycle" variant="secondary" size="sm" @click="markTaskLifecycle('In Progress')">
+        <FeatherIcon name="play" class="h-4 w-4" />
+        {{ t('startTask') }}
+      </ActionButton>
+      <ActionButton v-if="canBlockTaskLifecycle" variant="secondary" size="sm" @click="markTaskLifecycle('Blocked')">
+        <FeatherIcon name="pause-circle" class="h-4 w-4" />
+        {{ t('blockTaskAction') }}
+      </ActionButton>
+      <ActionButton v-if="canCompleteTaskLifecycle" variant="secondary" size="sm" @click="markTaskLifecycle('Done')">
+        <FeatherIcon name="check-circle" class="h-4 w-4" />
+        {{ t('completeTaskAction') }}
+      </ActionButton>
+      <ActionButton v-if="canCancelTaskLifecycle" variant="ghost" size="sm" @click="markTaskLifecycle('Cancelled')">
+        <FeatherIcon name="x-circle" class="h-4 w-4" />
+        {{ t('cancelTaskAction') }}
+      </ActionButton>
+      <ActionButton v-if="canResolveReconciliationLifecycle" variant="secondary" size="sm" @click="resolveReconciliationLifecycle('Matched')">
+        <FeatherIcon name="check" class="h-4 w-4" />
+        {{ t('resolveReconciliation') }}
+      </ActionButton>
+      <ActionButton v-if="canIgnoreReconciliationLifecycle" variant="ghost" size="sm" @click="resolveReconciliationLifecycle('Ignored')">
+        <FeatherIcon name="slash" class="h-4 w-4" />
+        {{ t('ignoreReconciliation') }}
+      </ActionButton>
       <ActionButton
         v-if="quickEditConfig && canUseQuickEdit"
         variant="secondary"
@@ -289,6 +313,9 @@ const {
   canStartAssignmentLifecycle,
   canBlockAssignmentLifecycle,
   canCloseAssignmentLifecycle,
+  canResolveReconciliationLifecycle,
+  canIgnoreReconciliationLifecycle,
+  resolveReconciliationLifecycle,
 } = detailActions;
 
 const detailQuickDialogs = useAuxRecordDetailQuickDialogs({

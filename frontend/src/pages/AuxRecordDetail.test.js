@@ -16,6 +16,7 @@ const requeueOutboxSubmitMock = vi.fn();
 const archiveDocumentSubmitMock = vi.fn();
 const restoreDocumentSubmitMock = vi.fn();
 const permanentDeleteDocumentSubmitMock = vi.fn();
+const resolveReconciliationSubmitMock = vi.fn();
 
 vi.mock("vue-router", () => ({
   createRouter: () => ({ beforeEach: vi.fn() }),
@@ -81,6 +82,51 @@ vi.mock("frappe-ui", () => ({
                     priority: "High",
                     due_date: "2026-03-18",
                     notes: "Yenileme öncesi teklif kontrolü",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Accounting Entry"
+              ? {
+                  message: {
+                    name: "ACC-001",
+                    status: "Synced",
+                    entry_type: "Policy",
+                    source_doctype: "AT Policy",
+                    source_name: "POL-001",
+                    policy: "POL-001",
+                    customer: "CUST-001",
+                    insurance_company: "IC-001",
+                    currency: "TRY",
+                    local_amount_try: 12500,
+                    external_amount_try: 12450,
+                    difference_try: 50,
+                    needs_reconciliation: 1,
+                    external_ref: "EXT-REF-001",
+                    last_synced_on: "2026-03-09T09:30:00Z",
+                    sync_attempt_count: 2,
+                    payload_json: "{\"policy\":\"POL-001\"}",
+                    error_message: "",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Reconciliation Item"
+              ? {
+                  message: {
+                    name: "REC-001",
+                    status: "Open",
+                    accounting_entry: "ACC-001",
+                    source_doctype: "AT Policy",
+                    source_name: "POL-001",
+                    mismatch_type: "Amount",
+                    local_amount_try: 12500,
+                    external_amount_try: 12450,
+                    difference_try: 50,
+                    resolution_action: "",
+                    unique_key: "POL-001-202603",
+                    notes: "Harici tutar farkı",
+                    details_json: "{\"delta\":50}",
                     modified: "2026-03-09T10:00:00Z",
                     owner: "Administrator",
                   },
@@ -361,6 +407,20 @@ vi.mock("frappe-ui", () => ({
       };
     }
 
+    if (url.includes("resolve_item")) {
+      return {
+        data,
+        loading: ref(false),
+        error: ref(null),
+        params: {},
+        setData(payload) {
+          data.value = payload;
+        },
+        reload: vi.fn(async () => ({})),
+        submit: resolveReconciliationSubmitMock,
+      };
+    }
+
     return {
       data,
       loading: ref(false),
@@ -524,7 +584,7 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     expect(wrapper.text()).toContain("Hasar");
     expect(wrapper.text()).toContain("CLM-001");
     expect(wrapper.text()).toContain("agent@example.com");
-    expect(wrapper.text()).toContain("High");
+    expect(wrapper.text()).toContain("Yüksek");
 
     const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
     await logsTab.trigger("click");
@@ -1179,5 +1239,125 @@ describe("AuxRecordDetail notification detail pages", () => {
 
     expect(wrapper.text()).toContain("Şablon İçeriği");
     expect(wrapper.text()).toContain("Merhaba {{ customer_name }}");
+  });
+});
+
+describe("AuxRecordDetail finance and task detail pages", () => {
+  const detailStubs = {
+    ActionButton: ActionButtonStub,
+    DetailActionRow: genericStub,
+    DetailTabsBar: DetailTabsBarStub,
+    MetaListCard: genericStub,
+    QuickCreateManagedDialog: true,
+    StatusBadge: true,
+    SkeletonLoader: true,
+  };
+
+  beforeEach(() => {
+    routerPush.mockReset();
+    detailReload.mockReset();
+    auxUpdateSubmitMock.mockReset();
+    resolveReconciliationSubmitMock.mockReset();
+    auxUpdateSubmitMock.mockResolvedValue({ ok: true });
+    resolveReconciliationSubmitMock.mockResolvedValue({ ok: true });
+    setActivePinia(createPinia());
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      locale: "tr",
+    });
+  });
+
+  it("renders accounting entry detail with finance groups and localized labels", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "accounting-entries", name: "ACC-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Tutarlar");
+    expect(wrapper.text()).toContain("Yerel Tutar (TRY)");
+    expect(wrapper.text()).toContain("12.500");
+    expect(wrapper.text()).toContain("Listeye Dön");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Kaynak Bağlamı");
+
+    const operationsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Operasyon"));
+    await operationsTab.trigger("click");
+    expect(wrapper.text()).toContain("Senkronizasyon");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("Payload (JSON)");
+  });
+
+  it("renders reconciliation item detail with resolve actions and amount groups", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "reconciliation-items", name: "REC-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Kaynak ve Kayıt Bağlamı");
+    expect(wrapper.text()).toContain("Mutabakat Tutar Özeti");
+    expect(wrapper.text()).toContain("Çözüm ve Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Çöz");
+    expect(wrapper.text()).toContain("Yoksay");
+    expect(wrapper.text()).toContain("Fark (TRY)");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("Harici tutar farkı");
+  });
+
+  it("resolves reconciliation item from detail header actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "reconciliation-items", name: "REC-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    await wrapper.vm.resolveReconciliationLifecycle("Matched");
+    expect(resolveReconciliationSubmitMock).toHaveBeenCalledWith({
+      item_name: "REC-001",
+      resolution_action: "Matched",
+    });
+    expect(detailReload).toHaveBeenCalled();
+  });
+
+  it("renders task detail with lifecycle groups and header actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "tasks", name: "TASK-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Görev Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Takibe Al");
+    expect(wrapper.text()).toContain("Tamamla");
+    expect(wrapper.text()).toContain("İletişim Merkezini Aç");
+    expect(wrapper.text()).toContain("Yenileme");
+    expect(wrapper.text()).toContain("Yüksek");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Görev Bağlamı");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("Yenileme öncesi teklif kontrolü");
   });
 });

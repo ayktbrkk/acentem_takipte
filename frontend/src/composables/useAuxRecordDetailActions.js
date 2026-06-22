@@ -32,6 +32,10 @@ export function useAuxRecordDetailActions({
     url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
     auto: false,
   });
+  const resolveReconciliationResource = createResource({
+    url: "acentem_takipte.acentem_takipte.api.accounting.resolve_item",
+    auto: false,
+  });
   const atDocumentLifecycle = useAtDocumentLifecycle({ authStore, t });
 
   const canOpenCommunicationContext = computed(
@@ -64,6 +68,7 @@ export function useAuxRecordDetailActions({
   const isOwnershipAssignmentDetail = computed(
     () => String(unref(config?.doctype) || "") === "AT Ownership Assignment"
   );
+  const isReconciliationDetail = computed(() => String(unref(config?.key) || "") === "reconciliation-items");
 
   const draftLifecycleStatus = computed(() => String(unref(doc)?.status || "").trim());
   const canSendDraftLifecycle = computed(
@@ -97,6 +102,12 @@ export function useAuxRecordDetailActions({
   const canStartAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(unref(doc)?.name) && assignmentLifecycleStatus.value !== "In Progress");
   const canBlockAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(unref(doc)?.name) && assignmentLifecycleStatus.value !== "Blocked");
   const canCloseAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(unref(doc)?.name) && assignmentLifecycleStatus.value !== "Done");
+
+  const reconciliationLifecycleStatus = computed(() => String(unref(doc)?.status || "").trim());
+  const canResolveReconciliationLifecycle = computed(
+    () => isReconciliationDetail.value && Boolean(unref(doc)?.name) && reconciliationLifecycleStatus.value === "Open"
+  );
+  const canIgnoreReconciliationLifecycle = computed(() => canResolveReconciliationLifecycle.value);
 
   function goBack() {
     router.push({ name: `${config.key}-list` });
@@ -207,11 +218,21 @@ export function useAuxRecordDetailActions({
     await reloadDetail();
   }
 
+  async function resolveReconciliationLifecycle(resolutionAction) {
+    if (!canResolveReconciliationLifecycle.value || !unref(doc)?.name || !String(resolutionAction || "").trim()) return;
+    await resolveReconciliationResource.submit({
+      item_name: unref(doc).name,
+      resolution_action: resolutionAction,
+    });
+    await reloadDetail();
+  }
+
   return {
     auxMutationResource,
     sendDraftNowResource,
     retryOutboxResource,
     requeueOutboxResource,
+    resolveReconciliationResource,
     canOpenCommunicationContext,
     isTaskDetail,
     isReminderDetail,
@@ -228,12 +249,15 @@ export function useAuxRecordDetailActions({
     canStartAssignmentLifecycle,
     canBlockAssignmentLifecycle,
     canCloseAssignmentLifecycle,
+    canResolveReconciliationLifecycle,
+    canIgnoreReconciliationLifecycle,
     sendDraftLifecycle,
     retryOutboxLifecycle,
     requeueOutboxLifecycle,
     markTaskLifecycle,
     markReminderLifecycle,
     markAssignmentLifecycle,
+    resolveReconciliationLifecycle,
     goBack,
     openCommunicationContext,
     openDesk,

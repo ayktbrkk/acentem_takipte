@@ -42,6 +42,10 @@ const AUX_DETAIL_FIELD_LABELS = {
       synced_on: "Senkronizasyon Tarihi",
       local_amount: "Yerel Tutar",
       external_amount: "Harici Tutar",
+      last_synced_on: "Son Senkronizasyon",
+      sync_attempt_count: "Senkron Deneme Sayısı",
+      needs_reconciliation: "Mutabakat Gerekli",
+      error_message: "Hata Mesajı",
       owner: "Kayıt Sahibi",
       modified: "Güncellendi",
     },
@@ -68,6 +72,10 @@ const AUX_DETAIL_FIELD_LABELS = {
       synced_on: "Synced On",
       local_amount: "Local Amount",
       external_amount: "External Amount",
+      last_synced_on: "Last Synced On",
+      sync_attempt_count: "Sync Attempt Count",
+      needs_reconciliation: "Needs Reconciliation",
+      error_message: "Error Message",
       owner: "Owner",
       modified: "Modified",
     },
@@ -266,6 +274,48 @@ const AUX_DETAIL_FIELD_LABELS = {
     tr: { name: "Kayıt", reminder_title: "Hatırlatıcı Başlığı", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kayıt", customer: "Müşteri", policy: "Poliçe", claim: "Hasar", office_branch: "Ofis Şubesi", assigned_to: "Atanan Kişi", status: "Durum", priority: "Öncelik", remind_at: "Hatırlatma Tarihi", completed_on: "Tamamlanma Tarihi", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
     en: { name: "Record", reminder_title: "Reminder Title", source_doctype: "Source Type", source_name: "Source Record", customer: "Customer", policy: "Policy", claim: "Claim", office_branch: "Office Branch", assigned_to: "Assigned To", status: "Status", priority: "Priority", remind_at: "Remind At", completed_on: "Completed On", notes: "Notes", owner: "Owner", modified: "Modified" },
   },
+  tasks: {
+    tr: {
+      name: "Kayıt",
+      task_title: "Görev Başlığı",
+      task_type: "Görev Türü",
+      source_doctype: "Kaynak Tipi",
+      source_name: "Kaynak Kayıt",
+      customer: "Müşteri",
+      policy: "Poliçe",
+      claim: "Hasar",
+      office_branch: "Ofis Şubesi",
+      assigned_to: "Atanan Kişi",
+      status: "Durum",
+      priority: "Öncelik",
+      due_date: "Bitiş Tarihi",
+      reminder_at: "Hatırlatma Tarihi",
+      completed_on: "Tamamlanma Tarihi",
+      notes: "Notlar",
+      owner: "Kayıt Sahibi",
+      modified: "Güncellendi",
+    },
+    en: {
+      name: "Record",
+      task_title: "Task Title",
+      task_type: "Task Type",
+      source_doctype: "Source Type",
+      source_name: "Source Record",
+      customer: "Customer",
+      policy: "Policy",
+      claim: "Claim",
+      office_branch: "Office Branch",
+      assigned_to: "Assigned To",
+      status: "Status",
+      priority: "Priority",
+      due_date: "Due Date",
+      reminder_at: "Reminder At",
+      completed_on: "Completed On",
+      notes: "Notes",
+      owner: "Owner",
+      modified: "Modified",
+    },
+  },
 };
 
 export function useAuxRecordDetailSummary({
@@ -328,7 +378,7 @@ export function useAuxRecordDetailSummary({
   function translateDetailValue(value) {
     const key = String(value ?? "");
     if (!key) return t("unspecified");
-    const lookupKey = "val" + key.replace(/\s+/g, "");
+    const lookupKey = "val" + key.replace(/[\s-]+/g, "");
     const translated = t(lookupKey);
     return translated === lookupKey ? key : translated;
   }
@@ -420,6 +470,8 @@ export function useAuxRecordDetailSummary({
         "reference_doctype",
         "document_kind",
         "document_sub_type",
+        "task_type",
+        "priority",
       ].includes(field)
     ) {
       return translateDetailValue(value);
@@ -478,6 +530,7 @@ export function useAuxRecordDetailSummary({
     if (config.key === "notification-outbox") return "outbox";
     if (config.key === "customer-segment-snapshots") return "segment_snapshot";
     if (config.key === "ownership-assignments") return "ownership_assignment";
+    if (config.key === "tasks") return "task";
     if (config.key === "access-logs") return "access_log";
     if (config.key === "at-documents") return "at_document";
     return "";
@@ -643,6 +696,37 @@ export function useAuxRecordDetailSummary({
             item("status"),
             item("priority"),
             item("due_date"),
+          ],
+        },
+      ];
+    }
+    if (specialDetailMode.value === "task") {
+      return [
+        {
+          key: "task-context",
+          title: t("taskContext"),
+          items: [
+            item("source_doctype"),
+            item("source_name"),
+            item("customer"),
+            item("policy"),
+            item("claim"),
+            item("office_branch", t("officeBranch")),
+          ],
+        },
+        {
+          key: "task-lifecycle",
+          title: t("taskLifecycle"),
+          items: [
+            item("assigned_to"),
+            item("task_type"),
+            item("status"),
+            item("priority"),
+            item("due_date"),
+            item("reminder_at"),
+            item("completed_on"),
+            item("owner"),
+            item("modified"),
           ],
         },
       ];
@@ -867,7 +951,7 @@ export function useAuxRecordDetailSummary({
   }
   function isRelatedGroup(group) {
     const key = String(group?.key || "");
-    return ["accounting-source", "draft-recipient", "outbox-reference", "reference"].includes(key);
+    return ["accounting-source", "task-context", "draft-recipient", "outbox-reference", "reference"].includes(key);
   }
 
   const generalGroups = computed(() => renderedGroups.value.filter((g) => !isOperationGroup(g) && !isRelatedGroup(g)));
@@ -953,6 +1037,11 @@ export function useAuxRecordDetailSummary({
         { key: "decision_context", field: "decision_context", title: t("auditDecisionContext"), value: formatSignalText(doc.value?.decision_context), fullWidth: true },
       ].filter((item) => item.value != null && String(item.value).trim() !== "");
     }
+    if (specialDetailMode.value === "task") {
+      return [
+        { key: "notes", field: "notes", title: fieldLabel("notes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
     return [];
   });
 
@@ -978,6 +1067,7 @@ export function useAuxRecordDetailSummary({
 
     pushRef("customer", t("relatedCustomer"), "AT Customer", d.customer);
     pushRef("policy", t("relatedPolicy"), "AT Policy", d.policy);
+    pushRef("claim", t("relatedClaim"), "AT Claim", d.claim);
     pushRef("draft", t("relatedDraft"), "AT Notification Draft", d.draft);
     pushRef("outbox", t("relatedOutbox"), "AT Notification Outbox", d.outbox_record);
     pushRef("accounting_entry", t("relatedAccountingEntry"), "AT Accounting Entry", d.accounting_entry);
@@ -1031,6 +1121,7 @@ export function useAuxRecordDetailSummary({
     add("creation", t("createdAt"), d.creation, d.owner || "");
     add("modified", t("modifiedAt"), d.modified, d.modified_by || d.owner || "");
     add("resolved_on", t("resolvedAt"), d.resolved_on, d.resolved_by || "");
+    add("completed_on", t("completedAt"), d.completed_on, d.status || "");
     add("sent_at", t("sentAt"), d.sent_at, d.channel || "");
     add("last_attempt_on", t("lastAttemptAt"), d.last_attempt_on, d.provider || "");
     add("next_retry_on", t("nextRetryAt"), d.next_retry_on, d.status || "");

@@ -82,6 +82,8 @@ const DOMAIN_MAP = {
   },
   reconciliation: {
     "Open": "open",
+    "Resolved": "active",
+    "Ignored": "draft",
     "Matched": "active",
     "Pending": "waiting",
     "Mismatch": "waiting",
@@ -496,6 +498,8 @@ const DOMAIN_LABELS = {
   },
   reconciliation: {
     Open: "status_open",
+    Resolved: "statusResolved",
+    Ignored: "statusIgnored",
     Matched: "summaryMatched",
     Pending: "waiting",
     Mismatch: "summaryMismatch",
