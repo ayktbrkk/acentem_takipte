@@ -509,13 +509,16 @@ export function useAuxRecordDetailSummary({
         "task_type",
         "activity_type",
         "priority",
+        "call_status",
+        "segment_type",
+        "direction",
       ].includes(field)
     ) {
       return translateDetailValue(value);
     }
     if (
-      ["channel", "priority"].includes(field) &&
-      ["notification-drafts", "notification-outbox", "templates", "campaigns"].includes(config.key)
+      ["channel", "channel_focus"].includes(field) &&
+      ["notification-drafts", "notification-outbox", "templates", "campaigns", "call-notes", "segments"].includes(config.key)
     ) {
       return translateDetailValue(value);
     }
@@ -572,6 +575,9 @@ export function useAuxRecordDetailSummary({
     if (config.key === "tasks") return "task";
     if (config.key === "access-logs") return "access_log";
     if (config.key === "at-documents") return "at_document";
+    if (config.key === "call-notes") return "call_note";
+    if (config.key === "segments") return "segment";
+    if (config.key === "campaigns") return "campaign";
     return "";
   });
 
@@ -827,6 +833,99 @@ export function useAuxRecordDetailSummary({
         },
       ];
     }
+    if (specialDetailMode.value === "call_note") {
+      return [
+        {
+          key: "call-context",
+          title: t("callContext"),
+          items: [
+            item("customer"),
+            item("policy"),
+            item("claim"),
+            item("office_branch", t("officeBranch")),
+          ],
+        },
+        {
+          key: "call-communication",
+          title: t("callCommunication"),
+          items: [
+            item("channel"),
+            item("direction"),
+            item("call_status"),
+            item("call_outcome"),
+            item("note_at"),
+            item("next_follow_up_on"),
+          ],
+        },
+        {
+          key: "call-lifecycle",
+          title: t("callLifecycle"),
+          items: [item("owner"), item("modified")],
+        },
+      ];
+    }
+    if (specialDetailMode.value === "segment") {
+      return [
+        {
+          key: "segment-context",
+          title: t("segmentContext"),
+          items: [
+            item("segment_name"),
+            item("segment_type"),
+            item("office_branch", t("officeBranch")),
+          ],
+        },
+        {
+          key: "segment-communication",
+          title: t("segmentCommunication"),
+          items: [
+            item("channel_focus"),
+            item("status"),
+            item("estimated_customer_count"),
+          ],
+        },
+        {
+          key: "segment-lifecycle",
+          title: t("segmentLifecycle"),
+          items: [item("owner"), item("modified")],
+        },
+      ];
+    }
+    if (specialDetailMode.value === "campaign") {
+      return [
+        {
+          key: "campaign-context",
+          title: t("campaignContext"),
+          items: [
+            item("campaign_name"),
+            item("segment"),
+            item("template"),
+            item("channel"),
+            item("office_branch", t("officeBranch")),
+          ],
+        },
+        {
+          key: "campaign-communication",
+          title: t("campaignCommunication"),
+          items: [item("status"), item("scheduled_for")],
+        },
+        {
+          key: "campaign-delivery",
+          title: t("campaignDelivery"),
+          items: [
+            item("sent_count"),
+            item("matched_customer_count"),
+            item("skipped_count"),
+            item("last_run_on"),
+          ],
+        },
+        {
+          key: "campaign-lifecycle",
+          title: t("campaignLifecycle"),
+          items: [item("owner"), item("modified")],
+        },
+      ];
+    }
     if (specialDetailMode.value === "access_log") {
       return [
         {
@@ -1043,11 +1142,11 @@ export function useAuxRecordDetailSummary({
 
   function isOperationGroup(group) {
     const key = String(group?.key || "");
-    return ["accounting-sync", "draft-delivery", "outbox-delivery", "outbox-retry", "outbox-queue"].includes(key);
+    return ["accounting-sync", "draft-delivery", "outbox-delivery", "outbox-retry", "outbox-queue", "campaign-delivery"].includes(key);
   }
   function isRelatedGroup(group) {
     const key = String(group?.key || "");
-    return ["accounting-source", "task-context", "reminder-context", "activity-context", "draft-recipient", "outbox-reference", "reference"].includes(key);
+    return ["accounting-source", "task-context", "reminder-context", "activity-context", "call-context", "campaign-context", "draft-recipient", "outbox-reference", "reference"].includes(key);
   }
 
   const generalGroups = computed(() => renderedGroups.value.filter((g) => !isOperationGroup(g) && !isRelatedGroup(g)));
@@ -1148,6 +1247,23 @@ export function useAuxRecordDetailSummary({
         { key: "notes", field: "notes", title: fieldLabel("notes"), value: doc.value?.notes, fullWidth: true },
       ].filter((item) => item.value != null && String(item.value).trim() !== "");
     }
+    if (specialDetailMode.value === "call_note") {
+      return [
+        { key: "notes", field: "notes", title: t("callNotes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
+    if (specialDetailMode.value === "segment") {
+      return [
+        { key: "criteria_json", field: "criteria_json", title: fieldLabel("criteria_json"), value: doc.value?.criteria_json, fullWidth: true },
+        { key: "notes", field: "notes", title: t("segmentNotes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
+    if (specialDetailMode.value === "campaign") {
+      return [
+        { key: "last_run_summary", field: "last_run_summary", title: fieldLabel("last_run_summary"), value: doc.value?.last_run_summary, fullWidth: true },
+        { key: "notes", field: "notes", title: t("campaignNotes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
     return [];
   });
 
@@ -1174,6 +1290,8 @@ export function useAuxRecordDetailSummary({
     pushRef("customer", t("relatedCustomer"), "AT Customer", d.customer);
     pushRef("policy", t("relatedPolicy"), "AT Policy", d.policy);
     pushRef("claim", t("relatedClaim"), "AT Claim", d.claim);
+    pushRef("segment", t("relatedSegment"), "AT Segment", d.segment);
+    pushRef("template", t("relatedTemplate"), "AT Notification Template", d.template);
     pushRef("draft", t("relatedDraft"), "AT Notification Draft", d.draft);
     pushRef("outbox", t("relatedOutbox"), "AT Notification Outbox", d.outbox_record);
     pushRef("accounting_entry", t("relatedAccountingEntry"), "AT Accounting Entry", d.accounting_entry);
@@ -1226,6 +1344,9 @@ export function useAuxRecordDetailSummary({
     };
     add("creation", t("createdAt"), d.creation, d.owner || "");
     add("modified", t("modifiedAt"), d.modified, d.modified_by || d.owner || "");
+    add("note_at", t("noteRecordedAt"), d.note_at, d.channel || "");
+    add("scheduled_for", t("scheduledAt"), d.scheduled_for, d.status || "");
+    add("last_run_on", t("lastRunAt"), d.last_run_on, d.status || "");
     add("resolved_on", t("resolvedAt"), d.resolved_on, d.resolved_by || "");
     add("completed_on", t("completedAt"), d.completed_on, d.status || "");
     add("sent_at", t("sentAt"), d.sent_at, d.channel || "");

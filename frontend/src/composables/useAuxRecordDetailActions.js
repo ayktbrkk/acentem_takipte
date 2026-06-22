@@ -47,6 +47,9 @@ export function useAuxRecordDetailActions({
         "AT Task",
         "AT Renewal Task",
         "AT Ownership Assignment",
+        "AT Call Note",
+        "AT Segment",
+        "AT Campaign",
       ].includes(String(unref(config?.doctype) || "")) && Boolean(unref(doc)?.name)
   );
 

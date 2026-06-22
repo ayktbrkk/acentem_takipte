@@ -303,6 +303,62 @@ vi.mock("frappe-ui", () => ({
                     owner: "Administrator",
                   },
                 }
+            : params?.doctype === "AT Call Note"
+              ? {
+                  message: {
+                    name: "CN-001",
+                    customer: "CUST-001",
+                    policy: "POL-001",
+                    claim: "",
+                    channel: "Phone Call",
+                    direction: "Outbound",
+                    call_status: "Completed",
+                    call_outcome: "Teklif gönderildi",
+                    note_at: "2026-03-10T10:30:00Z",
+                    next_follow_up_on: "2026-03-17",
+                    notes: "Müşteri yenileme teklifini değerlendirecek",
+                    office_branch: "IST",
+                    modified: "2026-03-10T10:35:00Z",
+                    owner: "agent@example.com",
+                  },
+                }
+            : params?.doctype === "AT Segment"
+              ? {
+                  message: {
+                    name: "SEG-001",
+                    segment_name: "Yenileme Riski",
+                    segment_type: "Dynamic",
+                    channel_focus: "WHATSAPP",
+                    office_branch: "IST",
+                    status: "Active",
+                    estimated_customer_count: 128,
+                    criteria_json: "{\"renewal_window_days\":30}",
+                    notes: "Yüksek primli yenileme segmenti",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Campaign"
+              ? {
+                  message: {
+                    name: "CMP-001",
+                    campaign_name: "Mart Yenileme",
+                    segment: "SEG-001",
+                    template: "TPL-001",
+                    channel: "WHATSAPP",
+                    office_branch: "IST",
+                    status: "Running",
+                    scheduled_for: "2026-03-12T09:00:00Z",
+                    sent_count: 45,
+                    matched_customer_count: 52,
+                    skipped_count: 7,
+                    last_run_on: "2026-03-11T14:00:00Z",
+                    last_run_summary: "45 gönderim, 7 atlama",
+                    notes: "Mart yenileme kampanyası",
+                    modified: "2026-03-11T14:05:00Z",
+                    owner: "Administrator",
+                  },
+                }
             : {
                 message: {
                   name: "SNAP-001",
@@ -1414,5 +1470,116 @@ describe("AuxRecordDetail finance and task detail pages", () => {
     const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
     await logsTab.trigger("click");
     expect(wrapper.text()).toContain("Yüz yüze görüşme yapıldı");
+  });
+});
+
+describe("AuxRecordDetail communication aux detail pages", () => {
+  const detailStubs = {
+    ActionButton: ActionButtonStub,
+    DetailActionRow: genericStub,
+    DetailTabsBar: DetailTabsBarStub,
+    MetaListCard: genericStub,
+    QuickCreateManagedDialog: true,
+    StatusBadge: true,
+    SkeletonLoader: true,
+  };
+
+  beforeEach(() => {
+    routerPush.mockReset();
+    detailReload.mockReset();
+    setActivePinia(createPinia());
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      locale: "tr",
+    });
+  });
+
+  it("renders call note detail with context and communication groups", async () => {
+    routeState.fullPath = "/at/call-notes/CN-001";
+    routeState.path = "/at/call-notes/CN-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "call-notes", name: "CN-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Teklif gönderildi");
+    expect(wrapper.text()).toContain("İletişim Detayı");
+    expect(wrapper.text()).toContain("Tamamlandı");
+    expect(wrapper.text()).toContain("Telefon Görüşmesi");
+    expect(wrapper.text()).toContain("İletişim Merkezini Aç");
+    expect(wrapper.text()).toContain("Listeye Dön");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Arama Bağlamı");
+    expect(wrapper.text()).toContain("CUST-001");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("Müşteri yenileme teklifini değerlendirecek");
+  });
+
+  it("renders segment detail with communication and lifecycle groups", async () => {
+    routeState.fullPath = "/at/segments/SEG-001";
+    routeState.path = "/at/segments/SEG-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "segments", name: "SEG-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Yenileme Riski");
+    expect(wrapper.text()).toContain("Segment Bağlamı");
+    expect(wrapper.text()).toContain("İletişim Kanalı");
+    expect(wrapper.text()).toContain("Segment Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("WhatsApp");
+    expect(wrapper.text()).toContain("Dinamik");
+    expect(wrapper.text()).toContain("İletişim Merkezini Aç");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("Yüksek primli yenileme segmenti");
+    expect(wrapper.text()).toContain("renewal_window_days");
+  });
+
+  it("renders campaign detail with delivery groups and related records", async () => {
+    routeState.fullPath = "/at/campaigns/CMP-001";
+    routeState.path = "/at/campaigns/CMP-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "campaigns", name: "CMP-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Mart Yenileme");
+    expect(wrapper.text()).toContain("Kampanya İletişimi");
+    expect(wrapper.text()).toContain("Devam Ediyor");
+    expect(wrapper.text()).toContain("İletişim Merkezini Aç");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Kampanya Bağlamı");
+    expect(wrapper.text()).toContain("SEG-001");
+    expect(wrapper.text()).toContain("TPL-001");
+
+    const operationsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Operasyon"));
+    await operationsTab.trigger("click");
+    expect(wrapper.text()).toContain("Gönderim Özeti");
+    expect(wrapper.text()).toContain("45");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("45 gönderim, 7 atlama");
   });
 });
