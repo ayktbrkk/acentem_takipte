@@ -212,7 +212,10 @@ watch(() => [props.attachedToDoctype, props.attachedToName], () => {
 });
 
 const authStore = useAuthStore();
-const locale = computed(() => authStore.locale || "en");
+const locale = computed(() => {
+  const raw = String(authStore.locale || "en").toLowerCase();
+  return raw.startsWith("tr") ? "tr" : "en";
+});
 
 function translateLabel(key) {
   const local = copy[locale.value]?.[key] || copy.en[key] || key;

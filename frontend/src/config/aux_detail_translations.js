@@ -466,6 +466,5 @@ export const AUX_DETAIL_TRANSLATIONS = {
     valStandard: "Standard",
     valMidValue: "Mid Value",
     valHighValue: "High Value",
-    valOther: "Other",
   }
 };

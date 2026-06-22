@@ -4,6 +4,7 @@ import { buildOfficeBranchOptions } from "../utils/officeBranchTree";
 import { openTabularExport } from "../utils/listExport";
 import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { AUX_WORKBENCH_TRANSLATIONS } from "../config/aux_workbench_translations";
+import { AUX_WORKBENCH_FIELD_LABELS } from "../config/aux_workbench_field_labels";
 import { translateText } from "@/utils/i18n";
 
 function humanizeField(field) {
@@ -15,336 +16,6 @@ function humanizeField(field) {
 function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
-
-const AUX_FIELD_LABELS = {
-  "notification-drafts": {
-    name: "Record",
-    customer: "Customer",
-    recipient: "Recipient",
-    event_key: "Event Key",
-    channel: "Channel",
-    status: "Status",
-    reference_doctype: "Reference Type",
-    reference_name: "Reference Record",
-    template: "Template",
-    subject: "Subject",
-    language: "Language",
-    body: "Body",
-    sent_at: "Sent At",
-    outbox_record: "Outbox Record",
-    error_message: "Error Message",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "notification-outbox": {
-    name: "Record",
-    customer: "Customer",
-    recipient: "Recipient",
-    event_key: "Event Key",
-    channel: "Channel",
-    status: "Status",
-    provider: "Provider",
-    reference_doctype: "Reference Type",
-    reference_name: "Reference Record",
-    draft: "Draft",
-    priority: "Priority",
-    attempt_count: "Attempt Count",
-    max_attempts: "Max Attempts",
-    next_retry_on: "Next Retry",
-    last_attempt_on: "Last Attempt",
-    provider_message_id: "Provider Message ID",
-    error_message: "Error Message",
-    response_log: "Response Log",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  companies: {
-    name: "Record",
-    company_name: "Company Name",
-    company_code: "Company Code",
-    is_active: "Active",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  branches: {
-    name: "Record",
-    branch_name: "Branch Name",
-    branch_code: "Branch Code",
-    insurance_company: "Insurance Company",
-    is_active: "Active",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "sales-entities": {
-    name: "Record",
-    full_name: "Full Name",
-    entity_type: "Entity Type",
-    office_branch: "Office Branch",
-    parent_entity: "Parent Entity",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  templates: {
-    name: "Record",
-    template_key: "Template Key",
-    event_key: "Event Key",
-    channel: "Channel",
-    subject: "Subject",
-    language: "Language",
-    is_active: "Active",
-    body_template: "Body Template",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "accounting-entries": {
-    name: "Record",
-    source_doctype: "Source DocType",
-    source_name: "Source Record",
-    policy: "Policy",
-    customer: "Customer",
-    local_amount_try: "Local Amount (TRY)",
-    external_amount_try: "External Amount (TRY)",
-    difference_try: "Difference (TRY)",
-    local_amount: "Local Amount",
-    external_amount: "External Amount",
-    status: "Status",
-    entry_type: "Entry Type",
-    insurance_company: "Insurance Company",
-    external_ref: "External Reference",
-    needs_reconciliation: "Needs Reconciliation",
-    last_synced_on: "Last Synced",
-    sync_attempt_count: "Sync Attempts",
-    payload_json: "Payload (JSON)",
-    error_message: "Error Message",
-    currency: "Currency",
-    accounting_entry: "Accounting Entry",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "reconciliation-items": {
-    name: "Record",
-    accounting_entry: "Accounting Entry",
-    source_doctype: "Source DocType",
-    source_name: "Source Record",
-    mismatch_type: "Mismatch Type",
-    difference_try: "Difference (TRY)",
-    local_amount_try: "Local Amount (TRY)",
-    external_amount_try: "External Amount (TRY)",
-    resolution_action: "Resolution Action",
-    resolved_by: "Resolved By",
-    resolved_on: "Resolved On",
-    unique_key: "Unique Key",
-    notes: "Notes",
-    details_json: "Raw JSON",
-    status: "Status",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "access-logs": {
-    name: "Record",
-    reference_doctype: "Reference Type",
-    reference_name: "Reference Record",
-    viewed_by: "Viewed By",
-    action: "Action",
-    action_summary: "Action Summary",
-    decision_context: "Decision Context",
-    ip_address: "IP Address",
-    viewed_on: "Viewed On",
-    modified: "Modified",
-  },
-  reminders: {
-    name: "Record",
-    reminder_title: "Reminder Title",
-    source_doctype: "Source DocType",
-    source_name: "Source Record",
-    customer: "Customer",
-    policy: "Policy",
-    claim: "Claim",
-    office_branch: "Office Branch",
-    assigned_to: "Assigned To",
-    status: "Status",
-    priority: "Priority",
-    remind_at: "Remind At",
-    completed_on: "Completed On",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  activities: {
-    name: "Record",
-    activity_title: "Activity Title",
-    activity_type: "Activity Type",
-    source_doctype: "Source DocType",
-    source_name: "Source Record",
-    customer: "Customer",
-    policy: "Policy",
-    claim: "Claim",
-    office_branch: "Office Branch",
-    assigned_to: "Assigned To",
-    status: "Status",
-    activity_at: "Activity At",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "ownership-assignments": {
-    name: "Record",
-    source_doctype: "Source DocType",
-    source_name: "Source Record",
-    customer: "Customer",
-    policy: "Policy",
-    assigned_to: "Assigned To",
-    assignment_role: "Assignment Role",
-    status: "Status",
-    priority: "Priority",
-    due_date: "Due Date",
-    office_branch: "Office Branch",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  tasks: {
-    name: "Record",
-    task_title: "Task Title",
-    task_type: "Task Type",
-    source_doctype: "Source DocType",
-    source_name: "Source Record",
-    customer: "Customer",
-    policy: "Policy",
-    claim: "Claim",
-    office_branch: "Office Branch",
-    assigned_to: "Assigned To",
-    status: "Status",
-    priority: "Priority",
-    due_date: "Due Date",
-    reminder_at: "Reminder At",
-    completed_on: "Completed On",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "customer-segment-snapshots": {
-    name: "Record",
-    customer: "Customer",
-    office_branch: "Office Branch",
-    snapshot_date: "Snapshot Date",
-    segment: "Segment",
-    value_band: "Value Band",
-    claim_risk: "Claim Risk",
-    score: "Score",
-    source_version: "Source Version",
-    strengths_json: "Strength Signals",
-    risks_json: "Risk Signals",
-    score_reason_json: "Score Reason",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "call-notes": {
-    name: "Record",
-    customer: "Customer",
-    policy: "Policy",
-    claim: "Claim",
-    channel: "Channel",
-    direction: "Direction",
-    call_status: "Call Status",
-    call_outcome: "Call Outcome",
-    note_at: "Note At",
-    next_follow_up_on: "Next Follow Up",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  segments: {
-    name: "Record",
-    segment_name: "Segment Name",
-    segment_type: "Segment Type",
-    channel_focus: "Channel Focus",
-    office_branch: "Office Branch",
-    status: "Status",
-    estimated_customer_count: "Estimated Customer Count",
-    criteria_json: "Criteria JSON",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  campaigns: {
-    name: "Record",
-    campaign_name: "Campaign Name",
-    segment: "Segment",
-    template: "Template",
-    channel: "Channel",
-    office_branch: "Office Branch",
-    status: "Status",
-    scheduled_for: "Scheduled For",
-    sent_count: "Sent Count",
-    matched_customer_count: "Matched Customer Count",
-    skipped_count: "Skipped Count",
-    last_run_on: "Last Run On",
-    last_run_summary: "Last Run Summary",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "customer-relations": {
-    name: "Record",
-    customer: "Customer",
-    related_customer: "Related Customer",
-    relation_type: "Relation Type",
-    is_household: "Household",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  "insured-assets": {
-    name: "Record",
-    customer: "Customer",
-    policy: "Policy",
-    asset_type: "Asset Type",
-    asset_label: "Asset Label",
-    asset_identifier: "Asset Identifier",
-    notes: "Notes",
-    owner: "Owner",
-    modified: "Modified",
-  },
-  files: {
-    name: "Record",
-    file_name: "File Name",
-    attached_to_doctype: "Attached To",
-    attached_to_name: "Attached Record",
-    file_type: "File Type",
-    file_size: "File Size",
-    is_private: "Private",
-    creation: "Upload Date",
-    modified: "Modified",
-    owner: "Owner",
-    file_url: "File URL",
-  },
-  "at-documents": {
-    name: "Record",
-    display_name: "Display Name",
-    secondary_file_name: "Secondary File Name",
-    original_file_name: "Original File Name",
-    file: "File",
-    reference_doctype: "Reference Type",
-    reference_name: "Reference Record",
-    policy: "Policy",
-    customer: "Customer",
-    claim: "Claim",
-    document_kind: "Document Kind",
-    document_sub_type: "Document Sub Type",
-    is_sensitive: "Sensitive Data",
-    is_verified: "Verified",
-    document_date: "Document Date",
-    upload_date: "Upload Date",
-    sequence_no: "Sequence No",
-    version_no: "Version No",
-    status: "Status",
-    notes: "Notes",
-    creation: "Created On",
-    modified: "Modified",
-    owner: "Owner",
-  },
-};
 
 function currentLocale(activeLocale) {
   return String(unref(activeLocale) || "en").trim() || "en";
@@ -482,7 +153,7 @@ export function useAuxWorkbenchViewModel({
 
   function t(key) {
     const locale = String(currentLocale(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
-    return AUX_WORKBENCH_TRANSLATIONS[locale]?.[key] || AUX_WORKBENCH_TRANSLATIONS.en?.[key] || translateText(key, activeLocale);
+    return AUX_WORKBENCH_TRANSLATIONS[locale]?.[key] || AUX_WORKBENCH_TRANSLATIONS.en?.[key] || key;
   }
 
   function label(kind) {
@@ -492,27 +163,25 @@ export function useAuxWorkbenchViewModel({
   function sortLabel(orderBy) {
     const [field, dir] = String(orderBy || "").split(/\s+/);
     const base = fieldLabel(field);
-    const suffix = String(dir || "").toLowerCase() === "asc"
-      ? translateText("Ascending", currentLocale(activeLocale))
-      : translateText("Descending", currentLocale(activeLocale));
+    const suffix = String(dir || "").toLowerCase() === "asc" ? t("ascending") : t("descending");
     return `${base} (${suffix})`;
   }
 
   function fieldLabel(field) {
-    const source = AUX_FIELD_LABELS[config?.key]?.[field] || humanizeField(field);
-    return translateText(source, currentLocale(activeLocale));
+    const locale = String(currentLocale(activeLocale) || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
+    const table = AUX_WORKBENCH_FIELD_LABELS[locale]?.[config?.key] || AUX_WORKBENCH_FIELD_LABELS.en?.[config?.key] || {};
+    return table[field] || humanizeField(field);
   }
 
   function optionLabel(fd, opt) {
-    const locale = currentLocale(activeLocale);
-    if (opt === "") return translateText("All", locale);
+    if (opt === "") return t("all");
     if (fd.field === "is_active") {
-      if (String(opt) === "1") return translateText("Active", locale);
-      if (String(opt) === "0") return translateText("Inactive", locale);
+      if (String(opt) === "1") return t("active");
+      if (String(opt) === "0") return t("inactive");
     }
     if (fd.field === "is_private") {
-      if (String(opt) === "1") return translateText("Private", locale);
-      if (String(opt) === "0") return translateText("Public", locale);
+      if (String(opt) === "1") return t("private");
+      if (String(opt) === "0") return t("public");
     }
     return translateFieldValue(opt, activeLocale);
   }
@@ -532,10 +201,7 @@ export function useAuxWorkbenchViewModel({
       return count > 1 ? `${first} (+${count - 1})` : first;
     }
     const locale = currentLocale(activeLocale);
-    const prefix =
-      field === "strengths_json"
-        ? translateText("Strengths", locale)
-        : translateText("Risks", locale);
+    const prefix = field === "strengths_json" ? t("strengths") : t("risks");
     return `${prefix}: ${count}`;
   }
 
@@ -548,7 +214,7 @@ export function useAuxWorkbenchViewModel({
     const lc = resolveLocaleCode(localeCode);
     if (isFieldType(config, field, "bool")) {
       const active = value === true || String(value) === "1";
-      return active ? translateText("Yes", locale) : translateText("No", locale);
+      return active ? t("yes") : t("no");
     }
     if (isFieldType(config, field, "currency")) {
       const n = Number(value);
