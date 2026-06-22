@@ -149,6 +149,9 @@ export function useAuxRecordDetailActions({
   const panelConfig = computed(() => {
     if (!config.panelRef) return null;
     const row = unref(doc) || {};
+    if (config.panelRef.mode === "fixed") {
+      return getSourcePanelConfig(config.panelRef.doctype, row?.[config.panelRef.nameField]);
+    }
     if (config.panelRef.mode === "source") {
       return getSourcePanelConfig(row?.[config.panelRef.doctypeField], row?.[config.panelRef.nameField]);
     }

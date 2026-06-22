@@ -454,6 +454,7 @@ export const AUX_WORKBENCH_CONFIGS = {
     defaultSort: "modified desc",
     boolFields: ["is_household"],
     dateTimeFields: ["modified"],
+    panelRef: { mode: "fixed", doctype: "AT Customer", nameField: "related_customer" },
   },
   "insured-assets": {
     key: "insured-assets",
@@ -486,6 +487,7 @@ export const AUX_WORKBENCH_CONFIGS = {
     sortOptions: ["modified desc", "asset_label asc", "customer asc"],
     defaultSort: "modified desc",
     dateTimeFields: ["modified"],
+    panelRef: { mode: "fixed", doctype: "AT Policy", nameField: "policy" },
   },
   files: {
     key: "files",

@@ -253,6 +253,33 @@ vi.mock("frappe-ui", () => ({
                     owner: "agent@example.com",
                   },
                 }
+            : params?.doctype === "AT Customer Relation"
+              ? {
+                  message: {
+                    name: "REL-001",
+                    customer: "CUST-001",
+                    related_customer: "CUST-002",
+                    relation_type: "Spouse",
+                    is_household: 1,
+                    notes: "Aynı hanede yaşayan eş kaydı",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
+            : params?.doctype === "AT Insured Asset"
+              ? {
+                  message: {
+                    name: "AST-001",
+                    customer: "CUST-001",
+                    policy: "POL-001",
+                    asset_type: "Vehicle",
+                    asset_label: "34 ABC 123",
+                    asset_identifier: "VIN-123456",
+                    notes: "Kasko kapsamındaki araç",
+                    modified: "2026-03-09T10:00:00Z",
+                    owner: "Administrator",
+                  },
+                }
             : params?.doctype === "AT Insurance Company"
               ? {
                   message: {
@@ -1117,14 +1144,18 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     await Promise.resolve();
 
     expect(wrapper.text()).toContain("Dosya");
-    expect(wrapper.text()).toContain("Bağlı Kayıt");
     expect(wrapper.text()).toContain("Doküman Detayları");
     expect(wrapper.text()).toContain("Yaşam Döngüsü");
     expect(wrapper.text()).toContain("Doküman Adı");
     expect(wrapper.text()).toContain("Poliçe Kopyası");
+    expect(wrapper.text()).toContain("Hassas Veri");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+
+    expect(wrapper.text()).toContain("Bağlı Kayıt");
     expect(wrapper.text()).toContain("Bağlantı Türü");
     expect(wrapper.text()).toContain("Poliçe");
-    expect(wrapper.text()).toContain("Hassas Veri");
   });
 
   it("runs at-document lifecycle actions from detail header", async () => {
@@ -1156,6 +1187,122 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     await wrapper.vm.permanentDeleteDocument();
     expect(permanentDeleteDocumentSubmitMock).toHaveBeenCalledWith({ docname: "DOC-001" });
+  });
+});
+
+describe("AuxRecordDetail customer and document detail pages", () => {
+  const detailStubs = {
+    ActionButton: ActionButtonStub,
+    DetailActionRow: genericStub,
+    DetailTabsBar: DetailTabsBarStub,
+    MetaListCard: genericStub,
+    QuickCreateManagedDialog: true,
+    StatusBadge: true,
+    SkeletonLoader: true,
+  };
+
+  beforeEach(() => {
+    routerPush.mockReset();
+    detailReload.mockReset();
+    archiveDocumentSubmitMock.mockReset();
+    permanentDeleteDocumentSubmitMock.mockReset();
+    archiveDocumentSubmitMock.mockResolvedValue({ ok: true });
+    permanentDeleteDocumentSubmitMock.mockResolvedValue({ ok: true });
+    setActivePinia(createPinia());
+    const authStore = useAuthStore();
+    authStore.applyContext({
+      user: "admin@example.com",
+      full_name: "Admin",
+      roles: ["System Manager"],
+      preferred_home: "/app",
+      locale: "tr",
+    });
+    authStore.can = vi.fn(() => true);
+    globalThis.confirm = vi.fn(() => true);
+  });
+
+  it("renders customer relation detail with context groups and related customers", async () => {
+    routeState.fullPath = "/at/customer-relations/REL-001";
+    routeState.path = "/at/customer-relations/REL-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "customer-relations", name: "REL-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("CUST-002");
+    expect(wrapper.text()).toContain("İlişki Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Eş");
+    expect(wrapper.text()).toContain("Hane Halkı");
+    expect(wrapper.text()).toContain("Listeye Dön");
+    expect(wrapper.text()).toContain("Bağlı Kayda Git");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("İlişki Bağlamı");
+    expect(wrapper.text()).toContain("CUST-001");
+    expect(wrapper.text()).toContain("CUST-002");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("Aynı hanede yaşayan eş kaydı");
+  });
+
+  it("renders insured asset detail with context groups and policy panel", async () => {
+    routeState.fullPath = "/at/insured-assets/AST-001";
+    routeState.path = "/at/insured-assets/AST-001";
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "insured-assets", name: "AST-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("34 ABC 123");
+    expect(wrapper.text()).toContain("Varlık Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Araç");
+    expect(wrapper.text()).toContain("VIN-123456");
+    expect(wrapper.text()).toContain("Bağlı Kayda Git");
+    expect(wrapper.text()).toContain("Listeye Dön");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Varlık Bağlamı");
+    expect(wrapper.text()).toContain("CUST-001");
+    expect(wrapper.text()).toContain("POL-001");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("Kasko kapsamındaki araç");
+  });
+
+  it("renders document detail groups aligned with upload semantics", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "at-documents",
+        name: "DOC-001",
+      },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Dosya");
+    expect(wrapper.text()).toContain("Doküman Detayları");
+    expect(wrapper.text()).toContain("Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Poliçe Kopyası");
+    expect(wrapper.text()).toContain("Arşivle");
+    expect(wrapper.text()).toContain("Dokümanı Aç");
+    expect(wrapper.text()).toContain("Bağlı Kayda Git");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Bağlı Kayıt");
+    expect(wrapper.text()).toContain("POL-001");
   });
 });
 

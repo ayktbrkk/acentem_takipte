@@ -400,8 +400,23 @@ export function useAuxRecordDetailSummary({
   }
 
   watch(
-    () => [config.key, doc.value?.customer, doc.value?.reference_doctype, doc.value?.reference_name],
-    ([screenKey, customerName, referenceDoctype, referenceName]) => {
+    () => [
+      config.key,
+      doc.value?.customer,
+      doc.value?.related_customer,
+      doc.value?.reference_doctype,
+      doc.value?.reference_name,
+    ],
+    ([screenKey, customerName, relatedCustomer, referenceDoctype, referenceName]) => {
+      if (screenKey === "customer-relations") {
+        void ensureCustomerLabel(customerName);
+        void ensureCustomerLabel(relatedCustomer);
+        return;
+      }
+      if (screenKey === "insured-assets") {
+        void ensureCustomerLabel(customerName);
+        return;
+      }
       if (screenKey !== "at-documents") return;
       void ensureCustomerLabel(customerName);
       if (String(referenceDoctype || "").trim() === "AT Customer") {
@@ -444,9 +459,10 @@ export function useAuxRecordDetailSummary({
   function formatValue(field, value) {
     if (value == null) return t("unspecified");
 
-    if (config.key === "at-documents") {
+    if (["at-documents", "customer-relations", "insured-assets"].includes(config.key)) {
       const isCustomerReference =
         field === "customer" ||
+        field === "related_customer" ||
         (field === "reference_name" && String(doc.value?.reference_doctype || "").trim() === "AT Customer");
       if (isCustomerReference) {
         const key = String(value || "").trim();
@@ -512,6 +528,8 @@ export function useAuxRecordDetailSummary({
         "call_status",
         "segment_type",
         "direction",
+        "relation_type",
+        "asset_type",
       ].includes(field)
     ) {
       return translateDetailValue(value);
@@ -575,6 +593,8 @@ export function useAuxRecordDetailSummary({
     if (config.key === "tasks") return "task";
     if (config.key === "access-logs") return "access_log";
     if (config.key === "at-documents") return "at_document";
+    if (config.key === "customer-relations") return "customer_relation";
+    if (config.key === "insured-assets") return "insured_asset";
     if (config.key === "call-notes") return "call_note";
     if (config.key === "segments") return "segment";
     if (config.key === "campaigns") return "campaign";
@@ -829,6 +849,89 @@ export function useAuxRecordDetailSummary({
             item("completed_on"),
             item("owner"),
             item("modified"),
+          ],
+        },
+      ];
+    }
+    if (specialDetailMode.value === "customer_relation") {
+      return [
+        {
+          key: "relation-context",
+          title: t("relationContext"),
+          items: [item("customer"), item("related_customer")],
+        },
+        {
+          key: "relation-lifecycle",
+          title: t("relationLifecycle"),
+          items: [item("relation_type"), item("is_household"), item("owner"), item("modified")],
+        },
+      ];
+    }
+    if (specialDetailMode.value === "insured_asset") {
+      return [
+        {
+          key: "asset-context",
+          title: t("assetContext"),
+          items: [item("customer"), item("policy")],
+        },
+        {
+          key: "asset-lifecycle",
+          title: t("assetLifecycle"),
+          items: [
+            item("asset_type"),
+            item("asset_label"),
+            item("asset_identifier"),
+            item("owner"),
+            item("modified"),
+          ],
+        },
+      ];
+    }
+    if (specialDetailMode.value === "at_document") {
+      return [
+        {
+          key: "document-file",
+          title: t("fileInfo"),
+          items: [
+            item("display_name"),
+            item("secondary_file_name"),
+            item("original_file_name"),
+            item("upload_date"),
+          ],
+        },
+        {
+          key: "document-link",
+          title: t("linkInfo"),
+          items: [
+            item("reference_doctype"),
+            item("reference_name"),
+            item("customer"),
+            item("policy"),
+            item("claim"),
+          ],
+        },
+        {
+          key: "document-meta",
+          title: t("metaInfo"),
+          items: [
+            item("document_kind"),
+            item("document_sub_type"),
+            item("document_date"),
+            item("is_sensitive"),
+            item("is_verified"),
+            item("status"),
+          ],
+        },
+        {
+          key: "document-lifecycle",
+          title: t("lifecycleInfo"),
+          items: [
+            item("sequence_no"),
+            item("version_no"),
+            item("creation"),
+            item("owner"),
+            item("modified"),
+            item("file"),
           ],
         },
       ];
@@ -1146,7 +1249,20 @@ export function useAuxRecordDetailSummary({
   }
   function isRelatedGroup(group) {
     const key = String(group?.key || "");
-    return ["accounting-source", "task-context", "reminder-context", "activity-context", "call-context", "campaign-context", "draft-recipient", "outbox-reference", "reference"].includes(key);
+    return [
+      "accounting-source",
+      "task-context",
+      "reminder-context",
+      "activity-context",
+      "call-context",
+      "campaign-context",
+      "draft-recipient",
+      "outbox-reference",
+      "reference",
+      "relation-context",
+      "asset-context",
+      "document-link",
+    ].includes(key);
   }
 
   const generalGroups = computed(() => renderedGroups.value.filter((g) => !isOperationGroup(g) && !isRelatedGroup(g)));
@@ -1247,6 +1363,21 @@ export function useAuxRecordDetailSummary({
         { key: "notes", field: "notes", title: fieldLabel("notes"), value: doc.value?.notes, fullWidth: true },
       ].filter((item) => item.value != null && String(item.value).trim() !== "");
     }
+    if (specialDetailMode.value === "customer_relation") {
+      return [
+        { key: "notes", field: "notes", title: t("relationNotes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
+    if (specialDetailMode.value === "insured_asset") {
+      return [
+        { key: "notes", field: "notes", title: t("assetNotes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
+    if (specialDetailMode.value === "at_document") {
+      return [
+        { key: "notes", field: "notes", title: fieldLabel("notes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
     if (specialDetailMode.value === "call_note") {
       return [
         { key: "notes", field: "notes", title: t("callNotes"), value: doc.value?.notes, fullWidth: true },
@@ -1288,6 +1419,7 @@ export function useAuxRecordDetailSummary({
     };
 
     pushRef("customer", t("relatedCustomer"), "AT Customer", d.customer);
+    pushRef("related_customer", t("relatedLinkedCustomer"), "AT Customer", d.related_customer);
     pushRef("policy", t("relatedPolicy"), "AT Policy", d.policy);
     pushRef("claim", t("relatedClaim"), "AT Claim", d.claim);
     pushRef("segment", t("relatedSegment"), "AT Segment", d.segment);
