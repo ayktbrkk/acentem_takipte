@@ -226,15 +226,6 @@ export function useAuxRecordDetailActions({
     await reloadDetail();
   }
 
-  async function resolveReconciliationLifecycle(resolutionAction) {
-    if (!canResolveReconciliationLifecycle.value || !unref(doc)?.name || !String(resolutionAction || "").trim()) return;
-    await resolveReconciliationResource.submit({
-      item_name: unref(doc).name,
-      resolution_action: resolutionAction,
-    });
-    await reloadDetail();
-  }
-
   return {
     auxMutationResource,
     sendDraftNowResource,
@@ -265,7 +256,6 @@ export function useAuxRecordDetailActions({
     markTaskLifecycle,
     markReminderLifecycle,
     markAssignmentLifecycle,
-    resolveReconciliationLifecycle,
     goBack,
     openCommunicationContext,
     openDesk,

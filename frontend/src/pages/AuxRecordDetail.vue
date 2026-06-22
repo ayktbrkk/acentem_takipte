@@ -65,11 +65,11 @@
         <FeatherIcon name="check-circle" class="h-4 w-4" />
         {{ t('closeAssignment') }}
       </ActionButton>
-      <ActionButton v-if="canResolveReconciliationLifecycle" variant="secondary" size="sm" @click="resolveReconciliationLifecycle('Matched')">
+      <ActionButton v-if="canResolveReconciliationLifecycle" variant="secondary" size="sm" @click="openReconciliationActionDialog('Matched')">
         <FeatherIcon name="check" class="h-4 w-4" />
         {{ t('resolveReconciliation') }}
       </ActionButton>
-      <ActionButton v-if="canIgnoreReconciliationLifecycle" variant="ghost" size="sm" @click="resolveReconciliationLifecycle('Ignored')">
+      <ActionButton v-if="canIgnoreReconciliationLifecycle" variant="ghost" size="sm" @click="openReconciliationActionDialog('Ignored')">
         <FeatherIcon name="slash" class="h-4 w-4" />
         {{ t('ignoreReconciliation') }}
       </ActionButton>
@@ -176,6 +176,23 @@
       :quick-edit-success-handlers="quickEditSuccessHandlers"
       :labels="{ save: t('saveChanges'), cancel: t('cancel') }"
     />
+
+    <ReconciliationWorkbenchActionDialog
+      v-if="isReconciliationDetail"
+      v-model:show="showReconciliationActionDialog"
+      v-model:notes="reconciliationActionDialogNotes"
+      :t="reconciliationT"
+      :action-dialog-eyebrow="reconciliationActionDialogEyebrow"
+      :action-dialog-labels="reconciliationActionDialogLabels"
+      :action-dialog-row="reconciliationActionDialogRow"
+      :action-dialog-loading="reconciliationActionDialogLoading"
+      :action-dialog-error="reconciliationActionDialogError"
+      :reconciliation-action-dialog-title="reconciliationActionDialogTitle"
+      :reconciliation-action-dialog-subtitle="reconciliationActionDialogSubtitle"
+      :format-money="formatReconciliationMoney"
+      @close="closeReconciliationActionDialog"
+      @save="submitReconciliationActionDialog"
+    />
   </WorkbenchPageLayout>
 </template>
 
@@ -193,7 +210,9 @@ import AuxRecordDetailContent from "../components/aux-record-detail/AuxRecordDet
 import AuxRecordDetailSidebar from "../components/aux-record-detail/AuxRecordDetailSidebar.vue";
 import AuxRecordDetailQuickEditDialog from "../components/aux-record-detail/AuxRecordDetailQuickEditDialog.vue";
 import { useAuxRecordDetailActions } from "../composables/useAuxRecordDetailActions";
+import { useAuxRecordDetailReconciliationDialog } from "../composables/useAuxRecordDetailReconciliationDialog";
 import { useAuxRecordDetailQuickDialogs } from "../composables/useAuxRecordDetailQuickDialogs";
+import ReconciliationWorkbenchActionDialog from "../components/reconciliation-workbench/ReconciliationWorkbenchActionDialog.vue";
 import { FeatherIcon } from "frappe-ui";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
@@ -335,8 +354,36 @@ const {
   canCloseAssignmentLifecycle,
   canResolveReconciliationLifecycle,
   canIgnoreReconciliationLifecycle,
-  resolveReconciliationLifecycle,
+  resolveReconciliationResource,
 } = detailActions;
+
+const isReconciliationDetail = computed(() => String(config?.key || "") === "reconciliation-items");
+
+const reconciliationDialog = useAuxRecordDetailReconciliationDialog({
+  activeLocale,
+  localeCode,
+  doc,
+  canResolveReconciliationLifecycle,
+  resolveReconciliationResource,
+  reloadDetail,
+});
+
+const {
+  showReconciliationActionDialog,
+  reconciliationActionDialogNotes,
+  reconciliationActionDialogLoading,
+  reconciliationActionDialogError,
+  reconciliationActionDialogEyebrow,
+  reconciliationActionDialogLabels,
+  reconciliationActionDialogTitle,
+  reconciliationActionDialogSubtitle,
+  reconciliationActionDialogRow,
+  reconciliationT,
+  formatMoney: formatReconciliationMoney,
+  openReconciliationActionDialog,
+  closeReconciliationActionDialog,
+  submitReconciliationActionDialog,
+} = reconciliationDialog;
 
 const detailQuickDialogs = useAuxRecordDetailQuickDialogs({
   props,

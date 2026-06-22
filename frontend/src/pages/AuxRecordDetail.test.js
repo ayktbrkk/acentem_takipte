@@ -28,6 +28,11 @@ vi.mock("vue-router", () => ({
 }));
 
 vi.mock("frappe-ui", () => ({
+  Dialog: {
+    props: ["modelValue"],
+    emits: ["update:modelValue"],
+    template: `<div class="dialog-stub"><slot /><slot name="actions" /></div>`,
+  },
   FeatherIcon: {
     props: ["name"],
     template: `<i class="feather-icon-stub">{{ name }}</i>`,
@@ -1540,6 +1545,7 @@ describe("AuxRecordDetail finance and task detail pages", () => {
     DetailTabsBar: DetailTabsBarStub,
     MetaListCard: genericStub,
     QuickCreateManagedDialog: true,
+    ReconciliationWorkbenchActionDialog: true,
     StatusBadge: true,
     SkeletonLoader: true,
   };
@@ -1610,7 +1616,7 @@ describe("AuxRecordDetail finance and task detail pages", () => {
     expect(wrapper.text()).toContain("Harici tutar farkı");
   });
 
-  it("resolves reconciliation item from detail header actions", async () => {
+  it("resolves reconciliation item from detail header actions with notes dialog", async () => {
     const wrapper = mount(AuxRecordDetail, {
       props: { screenKey: "reconciliation-items", name: "REC-001" },
       global: { stubs: detailStubs },
@@ -1619,12 +1625,20 @@ describe("AuxRecordDetail finance and task detail pages", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    await wrapper.vm.resolveReconciliationLifecycle("Matched");
+    await wrapper.vm.openReconciliationActionDialog("Matched");
+    expect(wrapper.vm.showReconciliationActionDialog).toBe(true);
+    expect(wrapper.vm.reconciliationActionDialogNotes).toBe("Harici tutar farkı");
+
+    wrapper.vm.reconciliationActionDialogNotes = "Çözüm notu eklendi";
+    await wrapper.vm.submitReconciliationActionDialog();
+
     expect(resolveReconciliationSubmitMock).toHaveBeenCalledWith({
       item_name: "REC-001",
       resolution_action: "Matched",
+      notes: "Çözüm notu eklendi",
     });
     expect(detailReload).toHaveBeenCalled();
+    expect(wrapper.vm.showReconciliationActionDialog).toBe(false);
   });
 
   it("renders task detail with lifecycle groups and header actions", async () => {

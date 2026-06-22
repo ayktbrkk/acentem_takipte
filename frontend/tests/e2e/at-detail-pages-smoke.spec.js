@@ -69,4 +69,43 @@ test.describe("Acentem Takipte detail pages smoke", () => {
       });
     }
   });
+
+  test("aux detail shells render for task, reconciliation item, and call note", async ({ page }) => {
+    test.setTimeout(90000);
+    await ensureAuthenticated(page);
+
+    const configs = [
+      {
+        label: "task",
+        doctype: "AT Task",
+        routePrefix: "/at/tasks",
+        requiredTexts: [/Listeye Dön|Back to List/i],
+      },
+      {
+        label: "reconciliation-item",
+        doctype: "AT Reconciliation Item",
+        routePrefix: "/at/reconciliation-items",
+        requiredTexts: [/Listeye Dön|Back to List/i],
+      },
+      {
+        label: "call-note",
+        doctype: "AT Call Note",
+        routePrefix: "/at/call-notes",
+        requiredTexts: [/Listeye Dön|Back to List/i],
+      },
+    ];
+
+    for (const config of configs) {
+      const name = await getFirstRecordName(page, config.doctype);
+      test.skip(!name, `${config.doctype} kaydi bulunamadi, aux detail smoke atlandi.`);
+
+      await test.step(`${config.label} detail page shell`, async () => {
+        await page.goto(`${config.routePrefix}/${encodeURIComponent(name)}`);
+        await expect(page.locator(".page-shell").first()).toBeVisible();
+        for (const textPattern of config.requiredTexts) {
+          await expect(page.getByText(textPattern).first()).toBeVisible();
+        }
+      });
+    }
+  });
 });
