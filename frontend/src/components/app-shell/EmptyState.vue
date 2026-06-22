@@ -5,7 +5,7 @@
         <FeatherIcon name="inbox" :class="iconGlyphClass" />
       </slot>
     </div>
-    <h4 v-if="title" :class="titleClass">{{ title }}</h4>
+    <h4 v-if="resolvedTitle" :class="titleClass">{{ resolvedTitle }}</h4>
     <p v-if="description" :class="descriptionClass">{{ description }}</p>
     <div v-if="$slots.actions" :class="actionsClass">
       <slot name="actions" />
@@ -16,15 +16,25 @@
 <script setup>
 import { computed } from "vue";
 import { FeatherIcon } from "frappe-ui";
+import { translateText } from "@/utils/i18n";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
 
 const props = defineProps({
-  title: { type: String, default: "No records found." },
+  title: { type: String, default: "" },
   description: { type: String, default: "" },
   compact: { type: Boolean, default: false },
   compactContainerClass: {
     type: String,
     default: 'rounded-xl border border-dashed border-slate-200 bg-slate-50/40',
   },
+  locale: { type: String, default: "" },
+});
+
+const resolvedTitle = computed(() => {
+  if (props.title) return props.title;
+  return translateText("no_records_found", props.locale || authStore.locale || "en");
 });
 
 const compactBaseClass =

@@ -22,9 +22,11 @@ import { ROUTER_TRANSLATIONS } from "@/config/router_translations";
 import { DOCUMENT_TRANSLATIONS } from "@/config/document_translations";
 import { WORKBENCH_FILE_UPLOAD_TRANSLATIONS } from "@/config/workbench_file_upload_translations";
 import { ACCESS_REQUEST_TRANSLATIONS } from "@/config/access_request_translations";
+import { QUICK_CREATE_TRANSLATIONS } from "@/config/quick_create_translations";
 
 const ALL_TRANSLATIONS = {
   common: COMMON_TRANSLATIONS,
+  quick_create: QUICK_CREATE_TRANSLATIONS,
   lead: LEAD_TRANSLATIONS,
   customer: CUSTOMER_TRANSLATIONS,
   policy: POLICY_TRANSLATIONS,

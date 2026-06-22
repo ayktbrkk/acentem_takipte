@@ -37,7 +37,7 @@
       <tbody>
         <tr v-if="!sortedRows.length">
           <td :colspan="tableColspan" class="px-4 py-12 text-center text-sm text-gray-400">
-            {{ emptyMessage }}
+            {{ resolvedEmptyMessage }}
           </td>
         </tr>
         <template v-for="row in sortedRows" :key="row.name ?? row.id">
@@ -214,7 +214,7 @@ const props = defineProps({
   rows: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
   clickable: { type: Boolean, default: false },
-  emptyMessage: { type: String, default: "No records found." },
+  emptyMessage: { type: String, default: "" },
   locale: { type: String, default: "" },
   visibleColumns: { type: Array, default: null },
   sortColumn: { type: String, default: "" },
@@ -259,6 +259,11 @@ const sortedRows = computed(() => {
 
 // Prefer explicit prop, then fall back to the user's actual locale from auth store.
 const locale = computed(() => props.locale || authStore.locale || "en");
+
+const resolvedEmptyMessage = computed(() => {
+  if (props.emptyMessage) return props.emptyMessage;
+  return translateText("no_records_found", locale.value);
+});
 
 function urgencyClass(days) {
   if (days == null) return "text-sm text-gray-400";
