@@ -1,7 +1,7 @@
 import { computed, unref } from "vue";
 import { createResource } from "frappe-ui";
 
-import { getSourcePanelConfig } from "../utils/sourcePanel";
+import { resolveAuxPanelRef } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
@@ -146,17 +146,7 @@ export function useAuxRecordDetailActions({
     navigateToSameOriginPath(`/app/Form/${encodeURIComponent(String(config.doctype || ""))}/${encodeURIComponent(props.name)}`);
   }
 
-  const panelConfig = computed(() => {
-    if (!config.panelRef) return null;
-    const row = unref(doc) || {};
-    if (config.panelRef.mode === "fixed") {
-      return getSourcePanelConfig(config.panelRef.doctype, row?.[config.panelRef.nameField]);
-    }
-    if (config.panelRef.mode === "source") {
-      return getSourcePanelConfig(row?.[config.panelRef.doctypeField], row?.[config.panelRef.nameField]);
-    }
-    return getSourcePanelConfig(row?.reference_doctype, row?.reference_name);
-  });
+  const panelConfig = computed(() => resolveAuxPanelRef(config.panelRef, unref(doc) || {}));
 
   function openPanel() {
     if (!panelConfig.value?.url) return;

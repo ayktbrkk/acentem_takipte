@@ -124,6 +124,9 @@ const AUX_DETAIL_FIELD_LABELS = {
   },
   "access-logs": {
     tr: {
+      reference_doctype: "Referans Tipi",
+      reference_name: "Referans Kayıt",
+      ip_address: "IP Adresi",
       action_summary: "Eylem Özeti",
       decision_context: "Karar Bağlamı",
       viewed_by: "Görüntüleyen",
@@ -131,6 +134,9 @@ const AUX_DETAIL_FIELD_LABELS = {
       action: "Eylem",
     },
     en: {
+      reference_doctype: "Reference Type",
+      reference_name: "Reference Record",
+      ip_address: "IP Address",
       action_summary: "Action Summary",
       decision_context: "Decision Context",
       viewed_by: "Viewed By",
@@ -263,8 +269,38 @@ const AUX_DETAIL_FIELD_LABELS = {
     en: { name: "Record", customer: "Customer", related_customer: "Related Customer", relation_type: "Relation Type", is_household: "Household", notes: "Notes", owner: "Owner", modified: "Modified" },
   },
   "customer-segment-snapshots": {
-    tr: { name: "Kayıt", customer: "Müşteri", office_branch: "Ofis Şubesi", snapshot_date: "Snapshot Tarihi", segment: "Segment", value_band: "Değer Aralığı", claim_risk: "Hasar Riski", score: "Skor", source_version: "Kaynak Sürüm", owner: "Kayıt Sahibi", modified: "Güncellendi" },
-    en: { name: "Record", customer: "Customer", office_branch: "Office Branch", snapshot_date: "Snapshot Date", segment: "Segment", value_band: "Value Band", claim_risk: "Claim Risk", score: "Score", source_version: "Source Version", owner: "Owner", modified: "Modified" },
+    tr: {
+      name: "Kayıt",
+      customer: "Müşteri",
+      office_branch: "Ofis Şubesi",
+      snapshot_date: "Snapshot Tarihi",
+      segment: "Segment",
+      value_band: "Değer Aralığı",
+      claim_risk: "Hasar Riski",
+      score: "Skor",
+      source_version: "Kaynak Sürüm",
+      strengths_json: "Güçlü Sinyaller",
+      risks_json: "Risk Sinyalleri",
+      score_reason_json: "Skor Gerekçeleri",
+      owner: "Kayıt Sahibi",
+      modified: "Güncellendi",
+    },
+    en: {
+      name: "Record",
+      customer: "Customer",
+      office_branch: "Office Branch",
+      snapshot_date: "Snapshot Date",
+      segment: "Segment",
+      value_band: "Value Band",
+      claim_risk: "Claim Risk",
+      score: "Score",
+      source_version: "Source Version",
+      strengths_json: "Strength Signals",
+      risks_json: "Risk Signals",
+      score_reason_json: "Score Reasons",
+      owner: "Owner",
+      modified: "Modified",
+    },
   },
   activities: {
     tr: { name: "Kayıt", activity_title: "Aktivite Başlığı", activity_type: "Aktivite Türü", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kayıt", customer: "Müşteri", policy: "Poliçe", claim: "Hasar", office_branch: "Ofis Şubesi", assigned_to: "Atanan Kişi", status: "Durum", activity_at: "Aktivite Tarihi", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
@@ -413,7 +449,7 @@ export function useAuxRecordDetailSummary({
         void ensureCustomerLabel(relatedCustomer);
         return;
       }
-      if (screenKey === "insured-assets") {
+      if (screenKey === "insured-assets" || screenKey === "customer-segment-snapshots") {
         void ensureCustomerLabel(customerName);
         return;
       }
@@ -456,10 +492,18 @@ export function useAuxRecordDetailSummary({
     }
   }
 
+  function formatFileSize(bytes) {
+    const size = Number(bytes);
+    if (!Number.isFinite(size) || size <= 0) return t("unspecified");
+    const kilobytes = size / 1024;
+    if (kilobytes < 1024) return `${kilobytes.toFixed(1)} KB`;
+    return `${(kilobytes / 1024).toFixed(1)} MB`;
+  }
+
   function formatValue(field, value) {
     if (value == null) return t("unspecified");
 
-    if (["at-documents", "customer-relations", "insured-assets"].includes(config.key)) {
+    if (["at-documents", "customer-relations", "insured-assets", "customer-segment-snapshots"].includes(config.key)) {
       const isCustomerReference =
         field === "customer" ||
         field === "related_customer" ||
@@ -471,6 +515,7 @@ export function useAuxRecordDetailSummary({
       }
     }
 
+    if (field === "file_size") return formatFileSize(value);
     if (typeof value === "boolean") return translateDetailValue(value ? "Yes" : "No");
     if (Array.isArray(config.boolFields) && config.boolFields.includes(field)) {
       const normalized = String(value ?? "").trim().toLowerCase();
@@ -498,7 +543,7 @@ export function useAuxRecordDetailSummary({
         return String(value);
       }
     }
-    if (["modified", "creation", "resolved_on", "sent_at", "next_retry_on", "last_attempt_on"].includes(field)) {
+    if (["modified", "creation", "resolved_on", "sent_at", "next_retry_on", "last_attempt_on", "viewed_on"].includes(field)) {
       try {
         return new Intl.DateTimeFormat(localeCode.value, { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
       } catch {
@@ -530,6 +575,9 @@ export function useAuxRecordDetailSummary({
         "direction",
         "relation_type",
         "asset_type",
+        "value_band",
+        "claim_risk",
+        "action",
       ].includes(field)
     ) {
       return translateDetailValue(value);
@@ -592,6 +640,7 @@ export function useAuxRecordDetailSummary({
     if (config.key === "activities") return "activity";
     if (config.key === "tasks") return "task";
     if (config.key === "access-logs") return "access_log";
+    if (config.key === "files") return "file";
     if (config.key === "at-documents") return "at_document";
     if (config.key === "customer-relations") return "customer_relation";
     if (config.key === "insured-assets") return "insured_asset";
@@ -676,6 +725,17 @@ export function useAuxRecordDetailSummary({
       if (doc.value.document_kind) badges.push({ key: "document_kind", type: "document_kind", status: String(doc.value.document_kind) });
       if (doc.value.is_sensitive === 1 || String(doc.value.is_sensitive).trim().toLowerCase() === "true") {
         badges.push({ key: "is_sensitive", type: "boolean_active", status: "1" });
+      }
+      return badges;
+    }
+    if (specialDetailMode.value === "file") {
+      const badges = [];
+      if (doc.value.is_private !== undefined && doc.value.is_private !== null && doc.value.is_private !== "") {
+        badges.push({
+          key: "is_private",
+          type: "boolean_active",
+          status: normalizeBadgeStatus(doc.value.is_private, "boolean_active"),
+        });
       }
       return badges;
     }
@@ -1057,6 +1117,37 @@ export function useAuxRecordDetailSummary({
         },
       ];
     }
+    if (specialDetailMode.value === "file") {
+      return [
+        {
+          key: "file-info",
+          title: t("fileInfo"),
+          items: [
+            item("file_name"),
+            item("file_type"),
+            item("file_size"),
+            item("is_private"),
+          ],
+        },
+        {
+          key: "file-link",
+          title: t("linkInfo"),
+          items: [
+            item("attached_to_doctype"),
+            item("attached_to_name"),
+          ],
+        },
+        {
+          key: "file-lifecycle",
+          title: t("lifecycleInfo"),
+          items: [
+            item("creation"),
+            item("owner"),
+            item("modified"),
+          ],
+        },
+      ];
+    }
     if (specialDetailMode.value === "accounting") {
       return [
         {
@@ -1262,6 +1353,7 @@ export function useAuxRecordDetailSummary({
       "relation-context",
       "asset-context",
       "document-link",
+      "file-link",
     ].includes(key);
   }
 
@@ -1355,7 +1447,13 @@ export function useAuxRecordDetailSummary({
     }
     if (specialDetailMode.value === "access_log") {
       return [
+        { key: "action_summary", field: "action_summary", title: t("auditActionSummary"), value: doc.value?.action_summary, fullWidth: true },
         { key: "decision_context", field: "decision_context", title: t("auditDecisionContext"), value: formatSignalText(doc.value?.decision_context), fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
+    if (specialDetailMode.value === "file") {
+      return [
+        { key: "file_url", field: "file_url", title: fieldLabel("file_url"), value: doc.value?.file_url, fullWidth: true },
       ].filter((item) => item.value != null && String(item.value).trim() !== "");
     }
     if (specialDetailMode.value === "task") {
@@ -1428,6 +1526,9 @@ export function useAuxRecordDetailSummary({
     pushRef("outbox", t("relatedOutbox"), "AT Notification Outbox", d.outbox_record);
     pushRef("accounting_entry", t("relatedAccountingEntry"), "AT Accounting Entry", d.accounting_entry);
     if (d.reference_doctype && d.reference_name) pushRef("reference", t("relatedReference"), d.reference_doctype, d.reference_name);
+    if (d.attached_to_doctype && d.attached_to_name) {
+      pushRef("attached", t("relatedReference"), d.attached_to_doctype, d.attached_to_name);
+    }
     if (d.source_doctype && d.source_name) pushRef("source", t("relatedSource"), d.source_doctype, d.source_name);
 
     if (config.doctype === "AT Campaign") {
@@ -1474,6 +1575,7 @@ export function useAuxRecordDetailSummary({
         meta: meta || "-",
       });
     };
+    add("viewed_on", t("viewedAt"), d.viewed_on, d.viewed_by || "");
     add("creation", t("createdAt"), d.creation, d.owner || "");
     add("modified", t("modifiedAt"), d.modified, d.modified_by || d.owner || "");
     add("note_at", t("noteRecordedAt"), d.note_at, d.channel || "");

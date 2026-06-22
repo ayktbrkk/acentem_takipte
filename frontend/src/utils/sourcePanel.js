@@ -1,3 +1,14 @@
+export function resolveAuxPanelRef(panelRef, row = {}) {
+  if (!panelRef) return null;
+  if (panelRef.mode === "fixed") {
+    return getSourcePanelConfig(panelRef.doctype, row?.[panelRef.nameField]);
+  }
+  if (panelRef.doctypeField && panelRef.nameField) {
+    return getSourcePanelConfig(row?.[panelRef.doctypeField], row?.[panelRef.nameField]);
+  }
+  return getSourcePanelConfig(row?.reference_doctype, row?.reference_name);
+}
+
 export function getSourcePanelConfig(sourceDoctype, sourceName) {
   if (!sourceDoctype || !sourceName) return null;
 

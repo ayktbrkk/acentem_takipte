@@ -496,6 +496,8 @@ export const AUX_WORKBENCH_CONFIGS = {
     labels: { list: L("Files", "Dosyalar"), detail: L("File Details", "Dosya Detayı"), section: L("Document Center", "Doküman Merkezi") },
     subtitle: L("Uploaded file and document records", "Yüklenen dosya ve doküman kayıtları"),
     titleField: "file_name",
+    statusField: "is_private",
+    statusType: "boolean_active",
     listFields: ["name", "file_name", "attached_to_doctype", "attached_to_name", "file_type", "file_size", "is_private", "creation", "modified"],
     searchFields: ["name", "file_name", "attached_to_doctype", "attached_to_name", "file_url"],
     primaryFields: ["file_name", "attached_to_doctype"],
@@ -634,6 +636,7 @@ export const AUX_WORKBENCH_CONFIGS = {
     numberFields: ["score"],
     dateFields: ["snapshot_date"],
     dateTimeFields: ["modified"],
+    panelRef: { mode: "fixed", doctype: "AT Customer", nameField: "customer" },
   },
   "access-logs": {
     key: "access-logs",
@@ -671,6 +674,7 @@ export const AUX_WORKBENCH_CONFIGS = {
     sortOptions: ["viewed_on desc", "modified desc", "reference_name asc"],
     defaultSort: "viewed_on desc",
     dateTimeFields: ["viewed_on"],
+    panelRef: { doctypeField: "reference_doctype", nameField: "reference_name" },
   },
   "ownership-assignments": {
     key: "ownership-assignments",

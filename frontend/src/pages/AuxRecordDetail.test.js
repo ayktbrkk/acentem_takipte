@@ -386,6 +386,22 @@ vi.mock("frappe-ui", () => ({
                     owner: "Administrator",
                   },
                 }
+            : params?.doctype === "File"
+              ? {
+                  message: {
+                    name: "FILE-001",
+                    file_name: "police-kopyasi.pdf",
+                    attached_to_doctype: "AT Policy",
+                    attached_to_name: "POL-001",
+                    file_type: "PDF",
+                    file_size: 153600,
+                    is_private: 1,
+                    file_url: "/private/files/police-kopyasi.pdf",
+                    creation: "2026-05-22T08:30:00Z",
+                    modified: "2026-05-22T08:45:00Z",
+                    owner: "agent@example.com",
+                  },
+                }
             : {
                 message: {
                   name: "SNAP-001",
@@ -624,8 +640,9 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     expect(wrapper.text()).toContain("Snapshot Bağlamı");
     expect(wrapper.text()).toContain("Segment Sinyalleri");
     expect(wrapper.text()).toContain("Gold");
-    expect(wrapper.text()).toContain("High");
+    expect(wrapper.text()).toContain("Yüksek");
     expect(wrapper.text()).toContain("82");
+    expect(wrapper.text()).toContain("Bağlı Kayda Git");
   });
 
   it("renders parsed signal blocks on logs tab", async () => {
@@ -1111,6 +1128,9 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     expect(wrapper.text()).toContain("AT Campaign");
     expect(wrapper.text()).toContain("CMP-001");
     expect(wrapper.text()).toContain("Campaign executed via segment SEG-001");
+    expect(wrapper.text()).toContain("Bağlı Kayda Git");
+    expect(wrapper.text()).not.toContain("Hızlı Düzenle");
+    expect(wrapper.text()).not.toContain("Takibe Al");
 
     const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
     await logsTab.trigger("click");
@@ -1120,6 +1140,44 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     expect(wrapper.text()).toContain("created=12");
     expect(wrapper.text()).toContain("skipped=3");
     expect(wrapper.text()).toContain("matched=15");
+  });
+
+  it("renders file detail with context groups and document actions", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: {
+        screenKey: "files",
+        name: "FILE-001",
+      },
+      global: {
+        stubs: {
+          ActionButton: ActionButtonStub,
+          DetailActionRow: genericStub,
+          DetailTabsBar: DetailTabsBarStub,
+          MetaListCard: genericStub,
+          QuickCreateManagedDialog: true,
+          StatusBadge: true,
+        },
+      },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Dosya");
+    expect(wrapper.text()).toContain("Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("police-kopyasi.pdf");
+    expect(wrapper.text()).toContain("150.0 KB");
+    expect(wrapper.text()).toContain("Dokümanı Aç");
+    expect(wrapper.text()).toContain("Bağlı Kayda Git");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Bağlı Kayıt");
+    expect(wrapper.text()).toContain("POL-001");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("/private/files/police-kopyasi.pdf");
   });
 
   it("renders document detail groups aligned with upload semantics", async () => {

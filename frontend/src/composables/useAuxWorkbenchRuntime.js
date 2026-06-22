@@ -5,7 +5,7 @@ import {
   writeFilterPresetKey,
 } from "../utils/filterPresetState";
 import { getQuickCreateConfig } from "../config/quickCreateRegistry";
-import { getSourcePanelConfig } from "../utils/sourcePanel";
+import { resolveAuxPanelRef } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 import { useAuxWorkbenchPresets } from "./useAuxWorkbenchPresets";
@@ -562,14 +562,10 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
   }
 
   function panelCfg(row) {
-    if (!config.panelRef) return null;
-    return getSourcePanelConfig(row?.[config.panelRef.doctypeField], row?.[config.panelRef.nameField]);
+    return resolveAuxPanelRef(config.panelRef, row);
   }
 
   function panelCfgForRow(row) {
-    if (config.key === "access-logs") {
-      return getSourcePanelConfig(row?.reference_doctype, row?.reference_name);
-    }
     return panelCfg(row);
   }
 
