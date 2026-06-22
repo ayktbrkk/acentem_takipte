@@ -99,9 +99,21 @@ export function useAuxRecordDetailActions({
   const canCancelReminderLifecycle = computed(() => isReminderDetail.value && Boolean(unref(doc)?.name) && reminderLifecycleStatus.value === "Open");
 
   const assignmentLifecycleStatus = computed(() => String(unref(doc)?.status || "").trim());
-  const canStartAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(unref(doc)?.name) && assignmentLifecycleStatus.value !== "In Progress");
-  const canBlockAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(unref(doc)?.name) && assignmentLifecycleStatus.value !== "Blocked");
-  const canCloseAssignmentLifecycle = computed(() => isOwnershipAssignmentDetail.value && Boolean(unref(doc)?.name) && assignmentLifecycleStatus.value !== "Done");
+  const canStartAssignmentLifecycle = computed(
+    () => isOwnershipAssignmentDetail.value && Boolean(unref(doc)?.name) && assignmentLifecycleStatus.value === "Open"
+  );
+  const canBlockAssignmentLifecycle = computed(
+    () =>
+      isOwnershipAssignmentDetail.value &&
+      Boolean(unref(doc)?.name) &&
+      ["Open", "In Progress"].includes(assignmentLifecycleStatus.value)
+  );
+  const canCloseAssignmentLifecycle = computed(
+    () =>
+      isOwnershipAssignmentDetail.value &&
+      Boolean(unref(doc)?.name) &&
+      ["Open", "In Progress", "Blocked"].includes(assignmentLifecycleStatus.value)
+  );
 
   const reconciliationLifecycleStatus = computed(() => String(unref(doc)?.status || "").trim());
   const canResolveReconciliationLifecycle = computed(

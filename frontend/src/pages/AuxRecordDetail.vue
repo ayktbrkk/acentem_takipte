@@ -45,6 +45,26 @@
         <FeatherIcon name="x-circle" class="h-4 w-4" />
         {{ t('cancelTaskAction') }}
       </ActionButton>
+      <ActionButton v-if="canCompleteReminderLifecycle" variant="secondary" size="sm" @click="markReminderLifecycle('Done')">
+        <FeatherIcon name="check-circle" class="h-4 w-4" />
+        {{ t('completeReminderAction') }}
+      </ActionButton>
+      <ActionButton v-if="canCancelReminderLifecycle" variant="ghost" size="sm" @click="markReminderLifecycle('Cancelled')">
+        <FeatherIcon name="x-circle" class="h-4 w-4" />
+        {{ t('cancelReminderAction') }}
+      </ActionButton>
+      <ActionButton v-if="canStartAssignmentLifecycle" variant="secondary" size="sm" @click="markAssignmentLifecycle('In Progress')">
+        <FeatherIcon name="play" class="h-4 w-4" />
+        {{ t('startAssignment') }}
+      </ActionButton>
+      <ActionButton v-if="canBlockAssignmentLifecycle" variant="secondary" size="sm" @click="markAssignmentLifecycle('Blocked')">
+        <FeatherIcon name="pause-circle" class="h-4 w-4" />
+        {{ t('blockAssignment') }}
+      </ActionButton>
+      <ActionButton v-if="canCloseAssignmentLifecycle" variant="secondary" size="sm" @click="markAssignmentLifecycle('Done')">
+        <FeatherIcon name="check-circle" class="h-4 w-4" />
+        {{ t('closeAssignment') }}
+      </ActionButton>
       <ActionButton v-if="canResolveReconciliationLifecycle" variant="secondary" size="sm" @click="resolveReconciliationLifecycle('Matched')">
         <FeatherIcon name="check" class="h-4 w-4" />
         {{ t('resolveReconciliation') }}

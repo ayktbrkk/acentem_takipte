@@ -188,6 +188,25 @@ vi.mock("frappe-ui", () => ({
                     owner: "Administrator",
                   },
                 }
+            : params?.doctype === "AT Activity"
+              ? {
+                  message: {
+                    name: "ACT-001",
+                    activity_title: "Müşteri ziyareti",
+                    activity_type: "Visit",
+                    source_doctype: "AT Customer",
+                    source_name: "CUST-001",
+                    customer: "CUST-001",
+                    policy: "POL-001",
+                    office_branch: "IST",
+                    assigned_to: "agent@example.com",
+                    status: "Logged",
+                    activity_at: "2026-03-10T14:00:00Z",
+                    notes: "Yüz yüze görüşme yapıldı",
+                    modified: "2026-03-10T14:30:00Z",
+                    owner: "Administrator",
+                  },
+                }
             : params?.doctype === "AT Access Log"
               ? {
                   message: {
@@ -585,6 +604,9 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
     expect(wrapper.text()).toContain("CLM-001");
     expect(wrapper.text()).toContain("agent@example.com");
     expect(wrapper.text()).toContain("Yüksek");
+    expect(wrapper.text()).toContain("İşleme Al");
+    expect(wrapper.text()).toContain("Bloke Et");
+    expect(wrapper.text()).toContain("Kapat");
 
     const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
     await logsTab.trigger("click");
@@ -721,6 +743,14 @@ describe("AuxRecordDetail customer segment snapshot rendering", () => {
 
     await Promise.resolve();
     await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Hatırlatıcıyı Tamamla");
+    expect(wrapper.text()).toContain("Hatırlatıcıyı İptal Et");
+    expect(wrapper.text()).toContain("Hatırlatıcı Yaşam Döngüsü");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Hatırlatıcı Bağlamı");
 
     await wrapper.vm.markReminderLifecycle("Done");
     expect(auxUpdateSubmitMock).toHaveBeenCalledWith({
@@ -1359,5 +1389,30 @@ describe("AuxRecordDetail finance and task detail pages", () => {
     const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
     await logsTab.trigger("click");
     expect(wrapper.text()).toContain("Yenileme öncesi teklif kontrolü");
+  });
+
+  it("renders activity detail with context and lifecycle groups", async () => {
+    const wrapper = mount(AuxRecordDetail, {
+      props: { screenKey: "activities", name: "ACT-001" },
+      global: { stubs: detailStubs },
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(wrapper.text()).toContain("Müşteri ziyareti");
+    expect(wrapper.text()).toContain("Aktivite Yaşam Döngüsü");
+    expect(wrapper.text()).toContain("Ziyaret");
+    expect(wrapper.text()).toContain("Durum Özeti");
+    expect(wrapper.text()).toContain("Listeye Dön");
+
+    const relatedTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("İlişkili"));
+    await relatedTab.trigger("click");
+    expect(wrapper.text()).toContain("Aktivite Bağlamı");
+    expect(wrapper.text()).toContain("CUST-001");
+
+    const logsTab = wrapper.findAll(".detail-tab-stub").find((node) => node.text().includes("Log"));
+    await logsTab.trigger("click");
+    expect(wrapper.text()).toContain("Yüz yüze görüşme yapıldı");
   });
 });

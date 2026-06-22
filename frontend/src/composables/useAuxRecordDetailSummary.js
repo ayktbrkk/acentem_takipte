@@ -274,6 +274,42 @@ const AUX_DETAIL_FIELD_LABELS = {
     tr: { name: "Kayıt", reminder_title: "Hatırlatıcı Başlığı", source_doctype: "Kaynak Tipi", source_name: "Kaynak Kayıt", customer: "Müşteri", policy: "Poliçe", claim: "Hasar", office_branch: "Ofis Şubesi", assigned_to: "Atanan Kişi", status: "Durum", priority: "Öncelik", remind_at: "Hatırlatma Tarihi", completed_on: "Tamamlanma Tarihi", notes: "Notlar", owner: "Kayıt Sahibi", modified: "Güncellendi" },
     en: { name: "Record", reminder_title: "Reminder Title", source_doctype: "Source Type", source_name: "Source Record", customer: "Customer", policy: "Policy", claim: "Claim", office_branch: "Office Branch", assigned_to: "Assigned To", status: "Status", priority: "Priority", remind_at: "Remind At", completed_on: "Completed On", notes: "Notes", owner: "Owner", modified: "Modified" },
   },
+  "ownership-assignments": {
+    tr: {
+      name: "Kayıt",
+      source_doctype: "Kaynak Tipi",
+      source_name: "Kaynak Kayıt",
+      customer: "Müşteri",
+      policy: "Poliçe",
+      claim: "Hasar",
+      office_branch: "Ofis Şubesi",
+      assigned_to: "Atanan Kişi",
+      assignment_role: "Atama Rolü",
+      status: "Durum",
+      priority: "Öncelik",
+      due_date: "Bitiş Tarihi",
+      notes: "Notlar",
+      owner: "Kayıt Sahibi",
+      modified: "Güncellendi",
+    },
+    en: {
+      name: "Record",
+      source_doctype: "Source Type",
+      source_name: "Source Record",
+      customer: "Customer",
+      policy: "Policy",
+      claim: "Claim",
+      office_branch: "Office Branch",
+      assigned_to: "Assigned To",
+      assignment_role: "Assignment Role",
+      status: "Status",
+      priority: "Priority",
+      due_date: "Due Date",
+      notes: "Notes",
+      owner: "Owner",
+      modified: "Modified",
+    },
+  },
   tasks: {
     tr: {
       name: "Kayıt",
@@ -471,6 +507,7 @@ export function useAuxRecordDetailSummary({
         "document_kind",
         "document_sub_type",
         "task_type",
+        "activity_type",
         "priority",
       ].includes(field)
     ) {
@@ -530,6 +567,8 @@ export function useAuxRecordDetailSummary({
     if (config.key === "notification-outbox") return "outbox";
     if (config.key === "customer-segment-snapshots") return "segment_snapshot";
     if (config.key === "ownership-assignments") return "ownership_assignment";
+    if (config.key === "reminders") return "reminder";
+    if (config.key === "activities") return "activity";
     if (config.key === "tasks") return "task";
     if (config.key === "access-logs") return "access_log";
     if (config.key === "at-documents") return "at_document";
@@ -696,6 +735,63 @@ export function useAuxRecordDetailSummary({
             item("status"),
             item("priority"),
             item("due_date"),
+          ],
+        },
+      ];
+    }
+    if (specialDetailMode.value === "reminder") {
+      return [
+        {
+          key: "reminder-context",
+          title: t("reminderContext"),
+          items: [
+            item("source_doctype"),
+            item("source_name"),
+            item("customer"),
+            item("policy"),
+            item("claim"),
+            item("office_branch", t("officeBranch")),
+          ],
+        },
+        {
+          key: "reminder-lifecycle",
+          title: t("reminderLifecycle"),
+          items: [
+            item("assigned_to"),
+            item("status"),
+            item("priority"),
+            item("remind_at"),
+            item("completed_on"),
+            item("owner"),
+            item("modified"),
+          ],
+        },
+      ];
+    }
+    if (specialDetailMode.value === "activity") {
+      return [
+        {
+          key: "activity-context",
+          title: t("activityContext"),
+          items: [
+            item("source_doctype"),
+            item("source_name"),
+            item("customer"),
+            item("policy"),
+            item("claim"),
+            item("office_branch", t("officeBranch")),
+          ],
+        },
+        {
+          key: "activity-lifecycle",
+          title: t("activityLifecycle"),
+          items: [
+            item("assigned_to"),
+            item("activity_type"),
+            item("status"),
+            item("activity_at"),
+            item("owner"),
+            item("modified"),
           ],
         },
       ];
@@ -951,7 +1047,7 @@ export function useAuxRecordDetailSummary({
   }
   function isRelatedGroup(group) {
     const key = String(group?.key || "");
-    return ["accounting-source", "task-context", "draft-recipient", "outbox-reference", "reference"].includes(key);
+    return ["accounting-source", "task-context", "reminder-context", "activity-context", "draft-recipient", "outbox-reference", "reference"].includes(key);
   }
 
   const generalGroups = computed(() => renderedGroups.value.filter((g) => !isOperationGroup(g) && !isRelatedGroup(g)));
@@ -1030,6 +1126,16 @@ export function useAuxRecordDetailSummary({
     if (specialDetailMode.value === "ownership_assignment") {
       return [
         { key: "notes", field: "notes", title: t("assignmentNotes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
+    if (specialDetailMode.value === "reminder") {
+      return [
+        { key: "notes", field: "notes", title: t("reminderNotes"), value: doc.value?.notes, fullWidth: true },
+      ].filter((item) => item.value != null && String(item.value).trim() !== "");
+    }
+    if (specialDetailMode.value === "activity") {
+      return [
+        { key: "notes", field: "notes", title: t("activityNotes"), value: doc.value?.notes, fullWidth: true },
       ].filter((item) => item.value != null && String(item.value).trim() !== "");
     }
     if (specialDetailMode.value === "access_log") {
