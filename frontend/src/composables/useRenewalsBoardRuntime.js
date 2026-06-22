@@ -64,7 +64,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
       { value: "Cancelled", label: t("status_cancelled") },
     ]
   );
-  const lostReasonColumnLabel = computed(() => translateText("Lost Reason", localeCode.value));
+  const lostReasonColumnLabel = computed(() => t("competitor"));
   const activeFilterCount = computed(() => renewalStore.activeFilterCount);
 
   const renewalsResource = createResource({

@@ -7,7 +7,7 @@
     >
       <p>{{ errorText }}</p>
       <ActionButton v-if="showRetry" class="mt-3" variant="secondary" size="sm" @click="$emit('retry')">
-        {{ t("refresh") }}
+        {{ t("retry") }}
       </ActionButton>
     </div>
     <ListTable

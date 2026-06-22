@@ -36,7 +36,7 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
   const ownershipAssignmentEyebrow = computed(
     () =>
       getLocalizedText(getQuickCreateConfig("ownership_assignment")?.title, activeLocale.value) ||
-      translateText("Quick Assignment", activeLocale.value)
+      t("ownershipAssignmentEyebrow")
   );
 
   function buildOfficeBranchLookupFilters() {

@@ -17,7 +17,7 @@
           <p class="qc-error-banner__text font-bold">{{ t("loadErrorTitle") }}</p>
           <p class="qc-error-banner__text mt-0.5">{{ errorText }}</p>
           <ActionButton class="mt-3" variant="secondary" size="sm" @click="$emit('retry')">
-            {{ t("refresh") }}
+            {{ t("retry") }}
           </ActionButton>
         </div>
       </div>
