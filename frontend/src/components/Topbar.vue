@@ -67,7 +67,7 @@ import { createResource } from "frappe-ui";
 
 import OfficeBranchSelect from "./app-shell/OfficeBranchSelect.vue";
 import { useAuthStore } from "../stores/auth";
-import { translateText, uppercaseText } from "@/utils/i18n";
+import { translateText, uppercaseText } from "@/platform/i18n";
 
 defineEmits(["toggle-sidebar"]);
 

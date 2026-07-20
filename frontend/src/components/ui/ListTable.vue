@@ -200,11 +200,11 @@
 import { computed, ref, useSlots } from "vue";
 import { FeatherIcon } from "frappe-ui";
 
-import StatusBadge from "@/components/ui/StatusBadge.vue";
+import StatusBadge from "@/platform/ui/base/StatusBadge.vue";
 import ActionButton from "../app-shell/ActionButton.vue";
 import InlineActionRow from "../app-shell/InlineActionRow.vue";
-import { translateText, uppercaseText } from "@/utils/i18n";
-import { useAuthStore } from "@/stores/auth";
+import { translateText, uppercaseText } from "@/platform/i18n";
+import { useAuthStore } from "@/platform/state/authStore";
 
 const authStore = useAuthStore();
 const slots = useSlots();

@@ -5,7 +5,7 @@ import { openTabularExport } from "../utils/listExport";
 import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { AUX_WORKBENCH_TRANSLATIONS } from "../config/aux_workbench_translations";
 import { AUX_WORKBENCH_FIELD_LABELS } from "../config/aux_workbench_field_labels";
-import { translateText } from "@/utils/i18n";
+import { translateText } from "@/platform/i18n";
 
 function humanizeField(field) {
   return String(field || "")

@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import { ref } from "vue";
 
 import RenewalTaskDetail from "./RenewalTaskDetail.vue";
-import { sessionState } from "@/state/session";
+import { sessionState } from "@/platform/state/session";
 
 const resourceQueue = [];
 const routerPush = vi.fn();

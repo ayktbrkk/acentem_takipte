@@ -10,7 +10,7 @@ import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { openDocumentInNewTab } from "../utils/documentOpen";
 import { useAuxWorkbenchPresets } from "./useAuxWorkbenchPresets";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
-import { translateText } from "@/utils/i18n";
+import { translateText } from "@/platform/i18n";
 
 const OFFICE_BRANCH_FILTER_DOCTYPES = new Set([
   "AT Renewal Task",

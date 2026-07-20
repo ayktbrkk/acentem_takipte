@@ -1,7 +1,7 @@
 import { computed, reactive, ref, unref } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
-import { translateText } from "@/utils/i18n";
+import { translateText } from "@/platform/i18n";
 import { LEAD_TRANSLATIONS } from "@/config/lead_translations";
 import { maskPhone } from "@/utils/atMasks";
 import { openListExport } from "@/utils/listExport";

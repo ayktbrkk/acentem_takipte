@@ -113,9 +113,9 @@ import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
 import ActionButton from "../components/app-shell/ActionButton.vue";
 import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
 import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import FieldGroup from "@/components/ui/FieldGroup.vue";
-import ListTable from "@/components/ui/ListTable.vue";
-import SkeletonLoader from "@/components/ui/SkeletonLoader.vue";
+import FieldGroup from "@/platform/ui/base/FieldGroup.vue";
+import ListTable from "@/platform/ui/base/ListTable.vue";
+import SkeletonLoader from "@/platform/ui/base/SkeletonLoader.vue";
 
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || "");

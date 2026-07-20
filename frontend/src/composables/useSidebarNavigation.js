@@ -39,7 +39,7 @@ import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
 import { useUiStore } from "../stores/ui";
 import { SIDEBAR_TRANSLATIONS } from "../config/sidebar_translations";
-import { translateText } from "@/utils/i18n";
+import { translateText } from "@/platform/i18n";
 
 export function useSidebarNavigation() {
   const authStore = useAuthStore();
