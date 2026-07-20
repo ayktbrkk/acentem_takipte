@@ -4,16 +4,16 @@ import re
 
 import frappe
 
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.platform.permissions.branches import (
     get_allowed_office_branch_names,
     user_can_access_all_office_branches,
 )
-from acentem_takipte.acentem_takipte.services.access_policy_runtime import (
+from acentem_takipte.acentem_takipte.platform.permissions.access_policy_runtime import (
     get_branch_scoped_doctype_policy,
     get_doctype_policy_definition,
 )
 
-from acentem_takipte.acentem_takipte.services.sales_entities import (
+from acentem_takipte.acentem_takipte.platform.permissions.sales_entities import (
     get_allowed_sales_entity_names,
     user_can_access_all_sales_entities,
 )
@@ -142,8 +142,6 @@ def get_policy_scoped_permission_query_conditions(doctype: str, user=None):
     scope_type = str(runtime_scope.get("type") or "").strip()
     branch_field = str(runtime_scope.get("branch_field") or "office_branch")
 
-    if _allows_break_glass(runtime_scope):
-        return ""
     if scope_type == "branch_only":
         return build_office_branch_permission_query(doctype, fieldname=branch_field, user=user)
     if scope_type == "branch_and_sales_entity":
@@ -185,10 +183,6 @@ def _require_branch_scoped_policy(doctype: str):
     if doctype_policy is None:
         raise KeyError(f"No policy-backed branch scope registered for {doctype}.")
     return doctype_policy
-
-
-def _allows_break_glass(runtime_scope: dict[str, object]) -> bool:
-    return False
 
 
 def _validated_sql_identifier(value: str, *, field_name: str) -> str:
@@ -256,8 +250,6 @@ def _build_policy_scope_criterion(doctype: str, table, *, user=None):
     user_id = user or frappe.session.user
 
     if scope_type == "branch_only":
-        if _allows_break_glass(runtime_scope):
-            return None
         if user_can_access_all_office_branches(user_id):
             return None
         allowed_branch_names = sorted(get_allowed_office_branch_names(user_id))

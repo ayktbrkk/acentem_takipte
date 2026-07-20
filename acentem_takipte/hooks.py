@@ -1,5 +1,5 @@
 from acentem_takipte import __version__
-from acentem_takipte.acentem_takipte.services.access_policy_runtime import build_runtime_permission_hooks
+from acentem_takipte.acentem_takipte.platform.permissions.access_policy_runtime import build_runtime_permission_hooks
 
 
 app_name = "acentem_takipte"

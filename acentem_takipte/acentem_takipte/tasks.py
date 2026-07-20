@@ -19,8 +19,8 @@ from acentem_takipte.acentem_takipte.services.customer_segments import refresh_d
 from acentem_takipte.acentem_takipte.services.report_snapshots import refresh_report_snapshots
 from acentem_takipte.acentem_takipte.services.payments import build_payment_reminder_payload
 from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_scheduled_reports
-from acentem_takipte.acentem_takipte.utils.metrics import build_metric_event
-from acentem_takipte.acentem_takipte.utils.statuses import ATPaymentStatus
+from acentem_takipte.acentem_takipte.platform.utils.metrics import build_metric_event
+from acentem_takipte.acentem_takipte.platform.utils.statuses import ATPaymentStatus
 from acentem_takipte.acentem_takipte.renewal.service import (
     build_renewal_key,
     RENEWAL_LOOKAHEAD_DAYS,
