@@ -1,8 +1,9 @@
 # AT Yenileme Planı — Kesin Sürüm
 
 > Domain-Slice mimarisine geçiş için adım adım uygulama planı.
-> Son güncelleme: 2026-07-20 — çift denetim (kıdemli yazılım mühendisi + sigorta domain uzmanı) tamamlandı.
-> Doğrulandı: 23 hooks.py dotted path, 17 tasks.py import, 13 enqueue string, 15 main.js import, 8 App.vue import, 14 utils modülü, 38 doctype JSON.
+> Dörtlü denetim: kıdemli yazılım mühendisi + sigorta domain uzmanı + full-stack developer + EN/TR tercüman.
+> Son güncelleme: 2026-07-20.
+> Doğrulandı: 23 hooks.py, 17 tasks.py import, 13 enqueue, 15 main.js, 8 App.vue, 14 utils, 38 doctype JSON, 26 i18n dosyası (~3.200 key).
 
 ---
 
@@ -22,6 +23,11 @@
 | 10 | `_dash` handler'ı `domains/reports/api/cache.py` — dashboard-wide ama reports altında | Not eklendi, cross-cutting olduğu için kabul edilebilir |
 | 11 | `branches.py`'deki `invalidate_scope_cache_*` fonksiyonları | Faz 1'de `platform/permissions/branches.py` ile taşınır |
 | 12 | Faz sırası: `policy_360` diğer tüm 360'lar tarafından import ediliyor | Policies Faz 9'da, tüm consumer'lar shim ile çalışır |
+| 13 | `common_translations.js` EN dupe `colStatus` key | Faz 0'da silindi |
+| 14 | `policy_translations.js` key mismatch (`carrierPolicyNo` vs `carrier_policy_no`) | Faz 0'da `carrierPolicyNo` ile standardize edildi |
+| 15 | `policy_translations.js` EN `company` key TR'de eksik | Faz 0'da TR bloğa `company` eklendi |
+| 16 | i18n `ALL_TRANSLATIONS` map path güncellemesi yoktu | Faz 2'ye KRİTİK adım eklendi |
+| 17 | `sidebar_translations.js` import path'i broken kalacaktı | Faz 2'de `useSidebarNavigation.js` import'u güncellenir |
 
 ---
 
@@ -60,6 +66,13 @@ Her yeni Python dizini `__init__.py` içermeli. Yoksa Python paket olarak tanım
 ### seed.py kısa path düzeltmesi (bug fix, migration'dan bağımsız)
 
 - [ ] `api/seed.py:498`: `"acentem_takipte.api.dashboard.get_dashboard_kpis"` → `"acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis"` (tam dotted path)
+
+### i18n çeviri düzeltmeleri (tercüman denetimi)
+
+- [ ] `config/common_translations.js`: EN bloğunda dupe `colStatus: "Status"` satırını sil (satır ~251)
+- [ ] `config/policy_translations.js`: `carrierPolicyNo` vs `carrier_policy_no` → `carrierPolicyNo` ile standardize et (her iki dilde)
+- [ ] `config/policy_translations.js`: TR bloğa `company: "Sigorta Şirketi"` ekle (EN'de var, TR'de yok)
+- [ ] Tüm 26 çeviri dosyasında TR/EN key sayısı eşitliğini doğrula
 
 ### Break-glass tam temizlik (bench migrate yeniden oluşturdu)
 
@@ -212,6 +225,19 @@ Her yeni Python dizini `__init__.py` içermeli. Yoksa Python paket olarak tanım
 - [ ] `@/composables/useAtFormatting` → `@/platform/composables/useAtFormatting`
 - [ ] `@/components/ui/` → `@/platform/ui/base/`
 - [ ] `@/components/app-shell/` → `@/platform/ui/shell/`
+
+### KRİTİK: i18n ALL_TRANSLATIONS map güncellemesi (tercüman denetimi)
+
+`platform/i18n/index.js` içindeki `ALL_TRANSLATIONS` haritası **22 modülü** tek tek import eder. Taşınan her translation dosyası için import yolu güncellenmeli:
+
+- [ ] Domain translation'ları: `@/config/X_translations` → `@/domains/X/i18n/translations` (claims, payments, offers, renewals, leads, customers, policies, communications, reports)
+- [ ] Platform translation'ları: `@/config/common_translations` → `@/platform/i18n/common` vb.
+- [ ] Admin translation'ları: `@/config/dashboard_translations` → `@/domains/admin/i18n/dashboard` vb.
+- [ ] **NOT:** Domain translation'ların import'ları ancak o domain'in fazı tamamlandıktan SONRA güncellenir (Faz 3-11 arası)
+
+### KRİTİK: Sidebar translations import yolu
+
+- [ ] `platform/composables/useSidebarNavigation.js`: `../config/sidebar_translations` → `@/platform/i18n/sidebar`
 
 ### Doğrula
 
@@ -448,10 +474,22 @@ Tüm consumer'lar güncellendikten SONRA:
 - `doctype/` dizini ve tüm JSON/JSON tanımları — Frappe'nin bulması için yerinde kalır
 - `vite.config.js`, `tsconfig.json` — `@` alias'ı `src/` olarak kalır
 - `frontend/src/pinia.js` — kök modül, taşınmaz
-- `frontend/src/generated/`, `frontend/src/assets/` — build/CSS asset'leri
+- `frontend/src/generated/` — build artifact (translations.js dahil)
+- `frontend/src/assets/` — CSS asset'leri
 - `frontend/src/style.css` — Tailwind giriş noktası
 - `desktop.py` — Frappe desk config, sadece DocType string referansları
 - `dev_seed.py` — dev-only
+
+## İki Dilli (TR/EN) Kalite Kontrolü
+
+Her faz sonunda ve Faz 13 tamamlandıktan sonra:
+
+- [ ] `npm run test:unit` — çeviri audit testleri (`group8TranslationAudit.test.js`, `auxGroup7TranslationAudit.test.js`)
+- [ ] Tüm 26 çeviri dosyasında TR/EN key count eşleşmesi
+- [ ] `platform/i18n/index.js` ALL_TRANSLATIONS map'inde eksik import yok
+- [ ] Sidebar: TR ve EN'de tüm 44 navigasyon öğesi görünür
+- [ ] Spot-check: `/at/dashboard`, `/at/policies`, `/at/customers` — TR/EN geçişinde çeviri kopması yok
+- [ ] Hardcoded string taraması: `grep -r '>[A-ZÇĞİÖŞÜ][a-zçğıöşü]{2,}<' frontend/src/domains/` → hiçbir şey dönmemeli
 
 ---
 
