@@ -1,0 +1,229 @@
+<template>
+  <WorkbenchPageLayout
+    :breadcrumb="t('leads_breadcrumb')"
+    :title="t('leads')"
+    :subtitle="t('subtitle')"
+    :record-count="summary.total"
+    :record-count-label="t('recordCount')"
+  >
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="downloadLeadExport('xlsx')">
+        <FeatherIcon name="download" class="h-4 w-4" />
+        {{ t("exportXlsx") }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" @click="reload">
+        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+        {{ t("refresh") }}
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="openQuickLeadDialog()">
+        <FeatherIcon name="plus" class="h-4 w-4" />
+        {{ t("new_lead") }}
+      </ActionButton>
+    </template>
+
+    <template #metrics>
+      <div v-if="loading && !rows.length" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
+      </div>
+      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SaaSMetricCard :label="t('total')" :value="summary.total" />
+        <SaaSMetricCard :label="t('active')" :value="summary.active" value-class="text-brand-600" />
+        <SaaSMetricCard :label="t('individual')" :value="summary.individual" value-class="text-at-green" />
+        <SaaSMetricCard :label="t('corporate')" :value="summary.corporate" value-class="text-slate-900" />
+      </div>
+    </template>
+
+    <div class="space-y-4">
+      <SmartFilterBar
+        v-model="filters.query"
+        :placeholder="t('search')"
+        :advanced-label="t('filters')"
+        @open-advanced="showAdvancedFilters = !showAdvancedFilters"
+      >
+        <template #primary-filters>
+          <select
+            v-model="filters.status"
+            class="input h-9 py-1 text-sm"
+            @change="updateFilter('status', filters.status)"
+          >
+            <option value="">{{ t("status") }}: {{ t("all") }}</option>
+            <option v-for="opt in filterConfig[0].options" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </template>
+      </SmartFilterBar>
+
+      <div v-if="showAdvancedFilters" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+            <span>{{ t("branch") }}</span>
+            <input v-model="filters.office_branch" class="input" type="text" />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm font-medium text-slate-700">
+            <span>{{ t("sort") }}</span>
+            <select v-model="filters.sort" class="input">
+              <option value="modified desc">{{ t("sortNewest") }}</option>
+              <option value="first_name asc">{{ t("sortOldest") }}</option>
+            </select>
+          </label>
+        </div>
+        <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+          <ActionButton variant="secondary" size="sm" @click="clearFilters">
+            {{ t("clearFilters") }}
+          </ActionButton>
+          <ActionButton variant="primary" size="sm" class="px-6" @click="applyAdvancedFilters">
+            {{ t("applyFilters") }}
+          </ActionButton>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 space-y-4">
+      <div
+        v-if="loadErrorText"
+        class="rounded-xl border border-at-red/20 bg-at-red/5 px-4 py-3 text-sm text-at-red shadow-sm"
+      >
+        {{ loadErrorText }}
+      </div>
+      <template v-if="loading && !rows.length && !loadErrorText">
+        <SkeletonLoader variant="list" :rows="10" />
+      </template>
+      <template v-else>
+        <ListTable
+          :columns="columns"
+          :rows="rows"
+          :loading="loading"
+          :empty-message="t('no_leads_found')"
+          clickable
+          @row-click="row => openLead(row.name)"
+        />
+
+        <ListPager
+          :shown="rows.length"
+          :total="summary.total"
+          :page="pagination.page"
+          :has-next="hasNextPage"
+          :showing-label="t('showingRecords')"
+          @previous="setPage(pagination.page - 1)"
+          @next="setPage(pagination.page + 1)"
+        />
+      </template>
+    </div>
+
+    <LeadListQuickLeadDialog
+      :show-quick-lead-dialog="showQuickLeadDialog"
+      :quick-lead-ui="quickLeadUi"
+      :quick-lead-error="quickLeadError"
+      :quick-create-common="quickCreateCommon"
+      :quick-lead-loading="quickLeadLoading"
+      :quick-lead-form="quickLeadForm"
+      :quick-lead-field-errors="quickLeadFieldErrors"
+      :active-locale="activeLocale"
+      :lead-quick-form-fields="leadQuickFormFields"
+      :lead-quick-options-map="leadQuickOptionsMap"
+      @update:show-quick-lead-dialog="showQuickLeadDialog = $event"
+      @cancel="cancelQuickLeadDialog"
+      @save="submitQuickLead"
+      @request-related-create="onLeadRelatedCreateRequested"
+    />
+  </WorkbenchPageLayout>
+</template>
+
+<script setup>
+/**
+ * Lead List Page (Version 2.2)
+ * Synchronized with AT Lead doctype (first_name, last_name)
+ */
+import { computed } from "vue";
+import { useAuthStore } from "../stores/auth";
+import { useLeadBoardRuntime } from "../composables/useLeadBoardRuntime";
+import { useLeadListQuickLead } from "../composables/useLeadListQuickLead";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
+import ListTable from "../components/ui/ListTable.vue";
+import ListPager from "../components/app-shell/ListPager.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import LeadListQuickLeadDialog from "../components/lead-list/LeadListQuickLeadDialog.vue";
+import { FeatherIcon } from "frappe-ui";
+import { ref } from "vue";
+
+const authStore = useAuthStore();
+const activeLocale = computed(() => authStore.locale || "tr");
+const showAdvancedFilters = ref(false);
+
+const {
+  filters,
+  pagination,
+  summary,
+  rows,
+  loading,
+  t,
+  reload,
+  loadErrorText,
+  hasNextPage,
+  setPage,
+  updateFilter,
+  openLead,
+  downloadLeadExport,
+} = useLeadBoardRuntime({ activeLocale });
+
+const {
+  showQuickLeadDialog,
+  quickLeadLoading,
+  quickLeadError,
+  quickLeadFieldErrors,
+  quickLeadForm,
+  leadQuickFormFields,
+  leadQuickOptionsMap,
+  quickLeadUi,
+  quickCreateCommon,
+  openQuickLeadDialog,
+  cancelQuickLeadDialog,
+  submitQuickLead,
+  onLeadRelatedCreateRequested,
+} = useLeadListQuickLead({
+  t,
+  activeLocale,
+  refreshLeadList: reload,
+  openLeadDetail: openLead,
+});
+
+// Standard lead columns - creation date and name fields prioritized
+const columns = computed(() => [
+  { key: "lead_primary", secondaryKey: "lead_secondary", label: t("colLead"), type: "stacked" },
+  { key: "customer_label", secondaryKey: "customer_secondary", label: t("colCustomer"), type: "stacked" },
+  { key: "status_label", secondaryKey: "takip_label", label: t("colStatus"), type: "stacked" },
+  { key: "finance_primary", secondaryKey: "date_secondary", label: t("colPotential"), type: "stacked", align: "right" },
+]);
+
+const filterConfig = computed(() => [
+  {
+    key: "status",
+    label: t("status"),
+    options: [
+      { value: "", label: t("all") },
+      { value: "Draft", label: t("status_draft") },
+      { value: "Open", label: t("status_open") },
+      { value: "Replied", label: t("status_replied") },
+      { value: "Closed", label: t("status_closed") },
+    ],
+  },
+]);
+
+function applyAdvancedFilters() {
+  pagination.page = 1;
+  reload();
+}
+
+function clearFilters() {
+  filters.query = "";
+  filters.status = "";
+  filters.office_branch = "";
+  filters.sort = "modified desc";
+  pagination.page = 1;
+  reload();
+}
+</script>

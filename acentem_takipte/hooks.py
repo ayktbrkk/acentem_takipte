@@ -27,10 +27,10 @@ boot_session = "acentem_takipte.acentem_takipte.startup.enforce_production_safet
 # ---------------------------------------------------------------------------
 
 _p360 = "acentem_takipte.acentem_takipte.services.policy_360.invalidate_policy_from_doc_event"
-_o360 = "acentem_takipte.acentem_takipte.services.offer_360.invalidate_offer_from_doc_event"
+_o360 = "acentem_takipte.acentem_takipte.domains.offers.services.offer_360.invalidate_offer_from_doc_event"
 _c360 = "acentem_takipte.acentem_takipte.services.customer_360.invalidate_customer_from_doc_event"
-_l360 = "acentem_takipte.acentem_takipte.services.lead_360.invalidate_lead_from_doc_event"
-_pay360 = "acentem_takipte.acentem_takipte.services.payment_360.invalidate_payment_from_doc_event"
+_l360 = "acentem_takipte.acentem_takipte.domains.leads.services.lead_360.invalidate_lead_from_doc_event"
+_pay360 = "acentem_takipte.acentem_takipte.domains.payments.services.payment_360.invalidate_payment_from_doc_event"
 _cl360 = "acentem_takipte.acentem_takipte.domains.claims.services.claim_360.invalidate_claim_from_doc_event"
 _acct = "acentem_takipte.acentem_takipte.accounting.sync_doc_event"
 _dash = "acentem_takipte.acentem_takipte.api.dashboard_cache.invalidate_dashboard_cache"
