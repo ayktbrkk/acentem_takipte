@@ -57,6 +57,10 @@ Her yeni Python dizini `__init__.py` içermeli. Yoksa Python paket olarak tanım
   - `platform/quick_create/__init__.py`, `platform/utils/__init__.py`
   - `domains/__init__.py`
 
+### seed.py kısa path düzeltmesi (bug fix, migration'dan bağımsız)
+
+- [ ] `api/seed.py:498`: `"acentem_takipte.api.dashboard.get_dashboard_kpis"` → `"acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis"` (tam dotted path)
+
 ### Break-glass tam temizlik (bench migrate yeniden oluşturdu)
 
 - [ ] `Remove-Item -Force acentem_takipte/.../api/break_glass.py`
@@ -67,6 +71,9 @@ Her yeni Python dizini `__init__.py` içermeli. Yoksa Python paket olarak tanım
 - [ ] `Remove-Item -Force acentem_takipte/.../tests/test_break_glass.py`
 - [ ] `Remove-Item -Force acentem_takipte/.../patches/v2026_03_25_add_break_glass_timestamp_fields.py`
 - [ ] `Remove-Item -Force frontend/src/config/break_glass_translations.js`
+- [ ] `Remove-Item -Force frontend/src/composables/useBreakGlassRequest.js`
+- [ ] `Remove-Item -Force frontend/src/composables/useBreakGlassRequest.test.js`
+- [ ] `Remove-Item -Force frontend/src/composables/useBreakGlassApprovals.js`
 - [ ] Tüm `__pycache__/break_glass*` dosyalarını temizle
 - [ ] **KRİTİK:** DB'den DocType kayıtlarını sil (yoksa bench migrate tekrar oluşturur):
   ```sql
@@ -445,3 +452,30 @@ Tüm consumer'lar güncellendikten SONRA:
 - `frontend/src/style.css` — Tailwind giriş noktası
 - `desktop.py` — Frappe desk config, sadece DocType string referansları
 - `dev_seed.py` — dev-only
+
+---
+
+## Her Fazda Standart İş Akışı
+
+```
+1. git checkout -b refactor/phase-N-<name>
+2. Dosyayı taşı, import'ları güncelle, eski konuma shim bırak
+3. hooks.py + tasks.py'deki ilgili dotted path/enqueue string'i güncelle
+4. python -c "import acentem_takipte.acentem_takipte"  (import zinciri testi)
+5. npm run build
+6. npm run lint && npm run typecheck
+7. npm run test:unit (varsa)
+8. git diff --stat → sadece import/path değişikliği
+9. git add -A && git commit
+10. PR → onay → merge main
+```
+
+## Rollback Stratejisi
+
+| Durum | Aksiyon |
+|---|---|
+| Faz branch'inde hata | `git checkout main && git branch -D refactor/phase-N-...` |
+| Merge sonrası hata | `git revert <merge-commit-sha>` |
+| Shim kırılması | Shim dosyasını düzelt, commit, push |
+| Build kırılması | `git diff` ile hangi import'un kırıldığını bul, düzelt |
+| tasks.py enqueue sessiz hatası | Faz 12 audit'inde yakalanır; cron log'larından teyit et |
