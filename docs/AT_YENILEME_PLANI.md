@@ -1,54 +1,63 @@
-# AT Yenileme Planı — Son Sürüm
+# AT Yenileme Planı — Kesin Sürüm
 
 > Domain-Slice mimarisine geçiş için adım adım uygulama planı.
-> Son güncelleme: 2026-07-20 — kıdemli mühendis denetimi tamamlandı.
-> hooks.py (23 dotted path), tasks.py (17 import + 13 enqueue string), main.js (15 import), App.vue (8 import) doğrulandı.
+> Son güncelleme: 2026-07-20 — çift denetim (kıdemli yazılım mühendisi + sigorta domain uzmanı) tamamlandı.
+> Doğrulandı: 23 hooks.py dotted path, 17 tasks.py import, 13 enqueue string, 15 main.js import, 8 App.vue import, 14 utils modülü, 38 doctype JSON.
+
+---
+
+## Denetimde Bulunan ve Giderilen Eksiklikler
+
+| # | Eksiklik | Çözüm |
+|---|---|---|
+| 1 | `utils/` paketi (14 dosya) planda yoktu | Faz 1'e `platform/utils/` taşıması eklendi |
+| 2 | `__init__.py` oluşturma adımı yoktu | Faz 0'a eklendi, her yeni dizine `__init__.py` |
+| 3 | break-glass JSON'lar diskte duruyor | Faz 0'da JSON + DocType DB kaydı silme eklendi |
+| 4 | `www/at.py` import zinciri | Shim kapsamında çalışır, not eklendi |
+| 5 | `setup_utils.py`'deki `invalidate_user_scope_on_logout` | Faz 11'de platform/setup_utils.py'ye taşınır |
+| 6 | `tasks.py` enqueue string'lerinde kısa/tam form tutarsızlığı | Faz 12'de hepsi tam forma normalize edilir |
+| 7 | `desktop.py` referansları kontrol edilmedi | Doğrulandı: sadece DocType string'leri, import yok |
+| 8 | `frontend/src/utils/` tam enumerasyonu eksikti | Tam liste eklendi |
+| 9 | DocType JSON'ların konumu net değildi | `doctype/` dizini yerinde kalır (Frappe gereksinimi) |
+| 10 | `_dash` handler'ı `domains/reports/api/cache.py` — dashboard-wide ama reports altında | Not eklendi, cross-cutting olduğu için kabul edilebilir |
+| 11 | `branches.py`'deki `invalidate_scope_cache_*` fonksiyonları | Faz 1'de `platform/permissions/branches.py` ile taşınır |
+| 12 | Faz sırası: `policy_360` diğer tüm 360'lar tarafından import ediliyor | Policies Faz 9'da, tüm consumer'lar shim ile çalışır |
 
 ---
 
 ## Kritik Kural #1: Backward Compatibility (GERİYE UYUMLULUK)
 
-Frappe çalışma zamanında API metodlarını, scheduler job'larını, doc_event handler'larını **dotted Python import path** ile çözer. Dosya taşındığında path değişirse her şey kırılır.
-
-**Standard iş akışı:**
-
-```
-1. Dosyayı yeni konuma TAŞI (import'lar güncellenir)
-2. Eski konuma İNCE RE-EXPORT SHIM bırak:
-   """Backward-compat shim."""
-   from acentem_takipte.acentem_takipte.domains.X.api.endpoints import *
-3. hooks.py ve tasks.py'deki dotted path'leri DOĞRUDAN yeni konuma güncelle (shim'e güvenme)
-4. Build + test
-5. TÜM consumer'lar güncellenince shim silinir (Faz 13)
+```python
+# Her taşınan dosya için eski konuma shim:
+"""Backward-compat shim — use domains.X... instead."""
+from acentem_takipte.acentem_takipte.domains.X.services.Y import *  # noqa: F401,F403
 ```
 
 ## Kritik Kural #2: tasks.py enqueue string'leri
 
-`tasks.py` içinde `frappe.enqueue()` 13 yerde **string literal** path kullanır. Bunlar import anında değil, **runtime'da cron tetiklendiğinde** çözülür. Yanlış path = sessiz hata, job'lar çalışmaz.
+13 adet `frappe.enqueue("string_path", ...)` runtime'da çözülür, import'da değil. Her domain fazında güncellenmeli.
 
-```python
-# tasks.py satır 58 — NOT: kısa form (acentem_takipte.tasks._...)
-frappe.enqueue("acentem_takipte.tasks._create_renewal_tasks_logic", ...)
+## Kritik Kural #3: __init__.py
 
-# tasks.py satır 501 — NOT: tam form (acentem_takipte.acentem_takipte.tasks._...) 
-frappe.enqueue("acentem_takipte.acentem_takipte.tasks._process_data_import_job_logic", ...)
-
-# tasks.py satır 447 — NOT: çapraz modül (acentem_takipte.accounting.run_reconciliation)
-frappe.enqueue("acentem_takipte.accounting.run_reconciliation", ...)
-```
-
-**Her domain fazında tasks.py enqueue string'leri de güncellenmeli.**
+Her yeni Python dizini `__init__.py` içermeli. Yoksa Python paket olarak tanımaz, import'lar kırılır.
 
 ---
 
-## Faz 0: Hazırlık + Stale Dosya Temizliği
+## Faz 0: Hazırlık
 
-- [ ] `mkdir -p acentem_takipte/acentem_takipte/platform/{permissions,persistence,events,import_export,quick_create}`
+### Dizin yapısı + __init__.py
+
+- [ ] `mkdir -p acentem_takipte/acentem_takipte/platform/{permissions,persistence,events,import_export,quick_create,utils}`
 - [ ] `mkdir -p acentem_takipte/acentem_takipte/domains`
-- [ ] `mkdir -p frontend/src/platform/{shell,router,state,ui,composables,api,i18n}`
+- [ ] `mkdir -p frontend/src/platform/{shell,router,state,ui,composables,api,i18n,config}`
 - [ ] `mkdir -p frontend/src/domains`
+- [ ] Tüm yeni dizinlere boş `__init__.py` oluştur (Python package tanıması için):
+  - `platform/__init__.py`, `platform/permissions/__init__.py`, `platform/persistence/__init__.py`
+  - `platform/events/__init__.py`, `platform/import_export/__init__.py`
+  - `platform/quick_create/__init__.py`, `platform/utils/__init__.py`
+  - `domains/__init__.py`
 
-### Stale dosya temizliği (bench migrate yeniden oluşturdu)
+### Break-glass tam temizlik (bench migrate yeniden oluşturdu)
 
 - [ ] `Remove-Item -Force acentem_takipte/.../api/break_glass.py`
 - [ ] `Remove-Item -Force acentem_takipte/.../api/v2/break_glass.py`
@@ -59,13 +68,17 @@ frappe.enqueue("acentem_takipte.accounting.run_reconciliation", ...)
 - [ ] `Remove-Item -Force acentem_takipte/.../patches/v2026_03_25_add_break_glass_timestamp_fields.py`
 - [ ] `Remove-Item -Force frontend/src/config/break_glass_translations.js`
 - [ ] Tüm `__pycache__/break_glass*` dosyalarını temizle
+- [ ] **KRİTİK:** DB'den DocType kayıtlarını sil (yoksa bench migrate tekrar oluşturur):
+  ```sql
+  DELETE FROM `tabDocType` WHERE `name` IN ('AT Break Glass Request', 'AT Emergency Access');
+  ```
 - [ ] Branch: `refactor/phase-0-prep`
 
 ---
 
-## Faz 1: Platform Backend — İzinler + Scope
+## Faz 1: Platform Backend — İzinler + Scope + Utils
 
-### Taşı (shim bırak)
+### Permissions (taşı + shim bırak)
 
 - [ ] `services/access_policy.py` → `platform/permissions/access_policy.py` + shim
 - [ ] `services/access_policy_runtime.py` → `platform/permissions/access_policy_runtime.py` + shim
@@ -73,38 +86,56 @@ frappe.enqueue("acentem_takipte.accounting.run_reconciliation", ...)
 - [ ] `services/privacy_masking.py` → `platform/permissions/privacy_masking.py` + shim
 - [ ] `services/query_isolation.py` → `platform/permissions/query_isolation.py` + shim
 - [ ] `services/sales_entities.py` → `platform/permissions/sales_entities.py` + shim
-- [ ] `services/report_isolation.py` → birleştir: `platform/permissions/query_isolation.py` (fonksiyon taşınır, eski dosya `from platform.permissions.query_isolation import ...` shim'i olur)
+- [ ] `services/report_isolation.py` → birleştir: `platform/permissions/query_isolation.py`
 - [ ] `services/cache_precomputation.py` → `platform/persistence/cache_precomputation.py` + shim
+
+### Utils (taşı + shim bırak) — PLANDA EKSİKTİ, ŞİMDİ EKLENDİ
+
+- [ ] `utils/__init__.py` → `platform/utils/__init__.py` + shim
+- [ ] `utils/assets.py` → `platform/utils/assets.py` + shim
+- [ ] `utils/cache_keys.py` → `platform/utils/cache_keys.py` + shim
+- [ ] `utils/commissions.py` → `platform/utils/commissions.py` + shim
+- [ ] `utils/financials.py` → `platform/utils/financials.py` + shim
+- [ ] `utils/i18n.py` → `platform/utils/i18n.py` + shim
+- [ ] `utils/logging.py` → `platform/utils/logging.py` + shim
+- [ ] `utils/metrics.py` → `platform/utils/metrics.py` + shim
+- [ ] `utils/network_security.py` → `platform/utils/network_security.py` + shim
+- [ ] `utils/normalization.py` → `platform/utils/normalization.py` + shim
+- [ ] `utils/notes.py` → `platform/utils/notes.py` + shim
+- [ ] `utils/permissions.py` → `platform/utils/permissions.py` + shim
+- [ ] `utils/sentry.py` → `platform/utils/sentry.py` + shim
+- [ ] `utils/statuses.py` → `platform/utils/statuses.py` + shim
 
 ### Import güncelle (direkt yeni path)
 
-- [ ] `doctype/branch_permissions.py`: `access_policy`, `branches`, `sales_entities` import'ları
+- [ ] `doctype/branch_permissions.py`: `access_policy`, `branches`, `sales_entities`, `query_isolation` import'ları
 - [ ] `hooks.py` satır 2: `access_policy_runtime` import'u
 - [ ] `api/reports.py`: `report_isolation` → `query_isolation` import'u
-- [ ] `api/dashboard_*.py` (8 dosya): scope/isolation import'ları
+- [ ] `api/dashboard_*.py`: scope/isolation import'ları
+- [ ] `tasks.py:22-23`: `utils.metrics` ve `utils.statuses` import'ları
+- [ ] `www/at.py:11`: `utils.assets` import'u (shim ile de çalışır, güncelleme isteğe bağlı)
 
 ### Dead code temizliği
 
-- [ ] `branch_permissions.py`'deki `_allows_break_glass` fonksiyonunu ve tüm çağrılarını kaldır (zaten her zaman False)
-- [ ] `branch_permissions.py`'deki `is_break_glass_active` referanslarını kaldır (silinmiş modül)
+- [ ] `branch_permissions.py`: `_allows_break_glass` + tüm `is_break_glass_active` referanslarını kaldır
 
 ### Doğrula
 
 - [ ] `git diff --stat` → sadece import/path değişikliği
 - [ ] Backend testleri
-- [ ] Branch: `refactor/phase-1-platform-permissions`
+- [ ] Branch: `refactor/phase-1-platform-backend`
 
 ---
 
 ## Faz 2: Platform Frontend — UI Altyapısı
 
-### UI Components (app-shell + ui birleşimi)
+### UI Components
 
 - [ ] `components/ui/` (11 dosya) → `platform/ui/base/`
 - [ ] `components/app-shell/` (30 dosya) → `platform/ui/shell/`
 - [ ] `components/Topbar.vue` → `platform/shell/Topbar.vue`
 - [ ] `components/Sidebar.vue` → `platform/shell/Sidebar.vue`
-- [ ] `components/DashboardStatCard.vue` → `platform/ui/shell/DashboardStatCard.vue`
+- [ ] `components/DashboardStatCard.vue` → `platform/ui/DashboardStatCard.vue`
 
 ### Quick Create → Platform
 
@@ -150,182 +181,92 @@ frappe.enqueue("acentem_takipte.accounting.run_reconciliation", ...)
 - [ ] `config/document_translations.js` → `platform/i18n/document.js`
 - [ ] `config/access_request_translations.js` → `platform/i18n/access_request.js`
 
-### KRİTİK: main.js güncellemesi
+### KRİTİK: main.js + App.vue
 
-- [ ] `./App.vue` → `./platform/shell/App.vue` (App.vue'yu da taşı!)
-- [ ] `./router` → `./platform/router`
-- [ ] `./pinia` → (yerinde kalır, sadece kök modül)
-- [ ] `./state/session` → `./platform/state/session`
-- [ ] `./stores/branch` → `./platform/state/branchStore`
-- [ ] `./stores/auth` → `./platform/state/authStore`
-- [ ] `./utils/routeMeta` → `./platform/router/routeMeta`
+- [ ] `App.vue` → `platform/shell/App.vue` (taşı)
+- [ ] `main.js`: tüm import'ları yeni konumlara güncelle:
+  - `./App.vue` → `./platform/shell/App.vue`
+  - `./router` → `./platform/router`
+  - `./state/session` → `./platform/state/session`
+  - `./stores/branch` → `./platform/state/branchStore`
+  - `./stores/auth` → `./platform/state/authStore`
+  - `./utils/routeMeta` → `./platform/router/routeMeta`
+  - `./pinia` → (yerinde kalır)
 
-### KRİTİK: Toplu i18n import güncellemesi
+### KRİTİK: Toplu import güncellemeleri
 
-`@/utils/i18n` → `@/platform/i18n` — tüm composable/component'lerde IDE find-replace ile
+- [ ] `@/utils/i18n` → `@/platform/i18n` (tüm projede find-replace)
+- [ ] `@/stores/auth` → `@/platform/state/authStore`
+- [ ] `@/stores/branch` → `@/platform/state/branchStore`
+- [ ] `@/stores/ui` → `@/platform/state/uiStore`
+- [ ] `@/state/session` → `@/platform/state/session`
+- [ ] `@/composables/useSidebarNavigation` → `@/platform/composables/useSidebarNavigation`
+- [ ] `@/composables/useFilterBarState` → `@/platform/composables/useFilterBarState`
+- [ ] `@/composables/useAtFormatting` → `@/platform/composables/useAtFormatting`
+- [ ] `@/components/ui/` → `@/platform/ui/base/`
+- [ ] `@/components/app-shell/` → `@/platform/ui/shell/`
 
 ### Doğrula
 
-- [ ] `npm run build` + `npm run lint` + `npm run typecheck`
-- [ ] `npm run test:unit`
+- [ ] `npm run build` + `npm run lint` + `npm run typecheck` + `npm run test:unit`
 - [ ] Branch: `refactor/phase-2-platform-frontend`
 
 ---
 
-## Faz 3: Domain Pilotu — Claims
+## Faz 3–9: Domain'ler (claims → policies)
 
-### Backend
+Her domain fazı aynı pattern ile ilerler. Claims ile başlanır, Policies ile biter.
 
-- [ ] `services/claim_360.py` → `domains/claims/services/claim_360.py` + shim
-- [ ] `hooks.py`: `_cl360` path'ini `domains.claims.services.claim_360.invalidate_claim_from_doc_event` olarak güncelle
+### Faz 3: Claims (pilot)
 
-### Frontend
-
-- [ ] `pages/ClaimsBoard.vue` → `domains/claims/pages/ClaimsBoard.vue`
-- [ ] `pages/ClaimDetail.vue` → `domains/claims/pages/ClaimDetail.vue`
-- [ ] `composables/claimsListTableModel.js` → `domains/claims/composables/tableModel.js`
-- [ ] `composables/useClaimsBoardRuntime.js` → `domains/claims/composables/useBoard.js`
-- [ ] `composables/useClaimsBoardClaimFacts.js` → `domains/claims/composables/useBoardFacts.js`
-- [ ] `composables/useClaimsBoardClaimActions.js` → `domains/claims/composables/useBoardActions.js`
-- [ ] `composables/useClaimDetailRuntime.js` → `domains/claims/composables/useDetail.js`
-- [ ] `components/claims-board/` (5 dosya) → `domains/claims/components/board/`
-- [ ] `components/ClaimForm.vue` → `domains/claims/components/ClaimForm.vue`
-- [ ] `stores/claim.js` → `domains/claims/stores/claimStore.js`
-- [ ] `config/claim_translations.js` → `domains/claims/i18n/translations.js`
-
-### Router
-
-- [ ] `domains/claims/routes.js` oluştur
-- [ ] `platform/router/index.js`: claimRoutes import et, eski lazy import'ları kaldır
-
-### Doğrula
-
-- [ ] `npm run build` + `npm run typecheck`
-- [ ] Playwright: `/at/claims`, `/at/claims/:name`
+**Backend:** `services/claim_360.py` → `domains/claims/services/claim_360.py` + shim; `hooks.py:_cl360` güncelle
+**Frontend:** 2 page, 6 comp, 5 comp, 1 store, 1 i18n → `domains/claims/`
+- [ ] `npm run build` + Playwright `/at/claims`
 - [ ] Branch: `refactor/phase-3-claims`
 
----
+### Faz 4: Payments
 
-## Faz 4: Payments
-
-### Backend
-
-- [ ] `services/payment_360.py` → `domains/payments/services/payment_360.py` + shim
-- [ ] `services/payments.py` → `domains/payments/services/payments.py` + shim
-- [ ] `hooks.py`: `_pay360` path'ini güncelle
-- [ ] `tasks.py`: `services.payments` → `domains.payments.services.payments` import'unu güncelle
-
-### Frontend (dosya listesi Faz 4 ile aynı)
-
-- [ ] 2 page, 8 composable, 5 component, 1 store, 1 translation → `domains/payments/`
-- [ ] `domains/payments/routes.js` oluştur
-- [ ] `npm run build` + doğrulama
+**Backend:** `services/payment_360.py`, `services/payments.py` → `domains/payments/services/` + shim; `hooks.py:_pay360`, `tasks.py` import güncelle
+**Frontend:** 2 page, 8 comp, 5 comp, 1 store, 1 i18n → `domains/payments/`
 - [ ] Branch: `refactor/phase-4-payments`
 
----
+### Faz 5: Offers
 
-## Faz 5: Offers
-
-### Backend
-
-- [ ] `api/offers.py` → `domains/offers/api/endpoints.py` + shim (frontend API yolu korunur!)
-- [ ] `services/offer_360.py` → `domains/offers/services/offer_360.py` + shim
-- [ ] `hooks.py`: `_o360` path'ini güncelle
-
-### Frontend
-
-- [ ] 2 page, 6 composable, 4 component, 1 translation → `domains/offers/`
-- [ ] `domains/offers/routes.js` oluştur
-- [ ] `npm run build` + doğrulama
+**Backend:** `api/offers.py` → `domains/offers/api/endpoints.py` + shim; `services/offer_360.py` + shim; `hooks.py:_o360` güncelle
+**Frontend:** 2 page, 6 comp, 4 comp, 1 i18n → `domains/offers/`
 - [ ] Branch: `refactor/phase-5-offers`
 
----
+### Faz 6: Renewals
 
-## Faz 6: Renewals
-
-### Backend
-
-- [ ] `services/renewals.py` → `domains/renewals/services/renewals.py` + shim
-- [ ] `acentem_takipte/.../renewal/` dizini (4 dosya) → `domains/renewals/services/renewal_core/` + eski konuma shim
-- [ ] `hooks.py`: renewal task scheduler path'leri
-- [ ] **KRİTİK: tasks.py enqueue string güncellemesi**
-  - `tasks.py:58` — `create_renewal_tasks` içindeki `"acentem_takipte.tasks._create_renewal_tasks_logic"` (kısa form — DEĞİŞMEZ, tasks.py kendi içinde)
-  - `tasks.py:80` — `run_stale_renewal_task_job` içindeki enqueue
-  - `tasks.py:135` — `run_policy_renewal_reminder_job` içindeki enqueue
-  - `tasks.py:15-16` — `renewal.service` ve `renewal.reminders` import'larını güncelle
-  - `tasks.py:13-14` — `renewal.pipeline` import'larını güncelle
-
-### Frontend
-
-- [ ] 2 page, 2 composable, 1 store, 1 translation → `domains/renewals/`
-- [ ] `domains/renewals/routes.js` oluştur
-- [ ] `npm run build` + doğrulama
+**Backend:** `services/renewals.py`, `renewal/` (4 dosya) → `domains/renewals/services/` + shim
+**KRİTİK:** `tasks.py` enqueue string + import güncellemesi:
+  - `tasks.py:13-14` — `renewal.pipeline` import'ları
+  - `tasks.py:15-16` — `renewal.service`, `renewal.reminders` import'ları
+  - `tasks.py:58` — enqueue `"acentem_takipte.tasks._create_renewal_tasks_logic"` (değişmez, tasks.py kendi içinde)
+**Frontend:** 2 page, 2 comp, 1 store, 1 i18n → `domains/renewals/`
 - [ ] Branch: `refactor/phase-6-renewals`
 
----
+### Faz 7: Leads
 
-## Faz 7: Leads
-
-### Backend
-
-- [ ] `api/dashboard_lead_logic.py` → `domains/leads/api/dashboard.py` + shim
-- [ ] `services/lead_360.py` → `domains/leads/services/lead_360.py` + shim
-- [ ] `hooks.py`: `_l360` path'ini güncelle
-
-### Frontend
-
-- [ ] 2 page, 9 composable, 2 component, 1 translation → `domains/leads/`
-- [ ] `domains/leads/routes.js` oluştur
-- [ ] `npm run build` + doğrulama
+**Backend:** `api/dashboard_lead_logic.py` → `domains/leads/api/dashboard.py` + shim; `services/lead_360.py` + shim; `hooks.py:_l360` güncelle
+**Frontend:** 2 page, 9 comp, 2 comp, 1 i18n → `domains/leads/`
 - [ ] Branch: `refactor/phase-7-leads`
 
----
+### Faz 8: Customers (cross-domain bağımlılığı yüksek)
 
-## Faz 8: Customers (cross-domain bağımlılığı yüksek)
-
-### Backend
-
-- [ ] `api/customers.py` → `domains/customers/api/endpoints.py` + shim
-- [ ] `services/customer_360.py` → `domains/customers/services/customer_360.py` + shim
-- [ ] `services/customer_segments.py` → `domains/customers/services/customer_segments.py` + shim
-- [ ] `services/quick_create_customer_flow.py` → `domains/customers/services/quick_create.py` + shim
-- [ ] `services/quick_customer.py` → `domains/customers/services/quick_customer.py` + shim
-- [ ] `hooks.py`: `_c360` path'ini güncelle
-- [ ] `tasks.py`: `services.customer_segments` → `domains.customers.services.customer_segments` import'unu güncelle
-- [ ] `tasks.py:187-190` — `run_customer_segment_snapshot_job` enqueue string'ini kontrol et (tasks.py kendi içinde, değişmez)
-
-### Cross-domain import güncellemesi (shim varken çalışır, ama yeni path tercih edilir)
-
-- [ ] `domains/policies/services/policy_360.py`: customer import'u
-- [ ] `domains/payments/services/payment_360.py`: customer import'u
-- [ ] `domains/claims/services/claim_360.py`: customer import'u
-- [ ] `domains/offers/services/offer_360.py`: customer import'u
-- [ ] `domains/leads/services/lead_360.py`: customer import'u
-- [ ] `domains/renewals/services/renewals.py`: customer import'u
-
-### Frontend
-
-- [ ] 3 page, 4 composable, 1 component, 2 translation → `domains/customers/`
-- [ ] `domains/customers/routes.js` oluştur
-- [ ] `npm run build` + `npm run test:unit`
-- [ ] API shim testi: `/api/method/acentem_takipte.acentem_takipte.api.customers.search_customer_by_identity` hala 200 OK?
+**Backend:** `api/customers.py`, `services/customer_360.py`, `services/customer_segments.py`, `services/quick_create_customer_flow.py`, `services/quick_customer.py` → `domains/customers/` + shim
+- `hooks.py:_c360` güncelle
+- `tasks.py:services.customer_segments` import güncelle
+- [ ] 6 cross-domain import güncelle (policy_360, payment_360, claim_360, offer_360, lead_360, renewals → customer referansları)
+- [ ] API shim testi: `/api/method/...api.customers.search_customer_by_identity` 200 OK?
+**Frontend:** 3 page, 4 comp, 1 comp, 2 i18n → `domains/customers/`
 - [ ] Branch: `refactor/phase-8-customers`
 
----
+### Faz 9: Policies (en büyük domain)
 
-## Faz 9: Policies (en büyük domain)
-
-### Backend
-
-- [ ] `services/policy_360.py` → `domains/policies/services/policy_360.py` + shim
-- [ ] `services/quick_create_policy_task.py` → `domains/policies/services/quick_create.py` + shim
-- [ ] `hooks.py`: `_p360` path'ini güncelle
-
-### Frontend
-
-- [ ] 2 page, 12 composable, 2 component, 1 store, 1 translation, 6 test → `domains/policies/`
-- [ ] `domains/policies/routes.js` oluştur
-- [ ] `npm run build` + `npm run test:unit` + `npm run e2e:smoke`
+**Backend:** `services/policy_360.py`, `services/quick_create_policy_task.py` → `domains/policies/services/` + shim; `hooks.py:_p360` güncelle
+**Frontend:** 2 page, 12 comp, 2 comp, 1 store, 1 i18n, 6 test → `domains/policies/`
+- [ ] `npm run test:unit` + `npm run e2e:smoke`
 - [ ] Branch: `refactor/phase-9-policies`
 
 ---
@@ -335,182 +276,131 @@ frappe.enqueue("acentem_takipte.accounting.run_reconciliation", ...)
 ### Backend
 
 - [ ] `api/communication.py` → `domains/communications/api/endpoints.py` + shim
-- [ ] `services/campaigns.py` → `domains/communications/services/campaigns.py` + shim
-- [ ] `services/follow_up_sla.py` → `domains/communications/services/follow_up_sla.py` + shim
-- [ ] `services/notifications.py` (servis) → `domains/communications/services/notifications.py` + shim
-- [ ] `services/segments.py` → `domains/communications/services/segments.py` + shim
-- [ ] `acentem_takipte/.../communication.py` (kök modül) → `domains/communications/services/queue_processor.py` + shim
-- [ ] `acentem_takipte/.../notifications.py` (kök modül) → `domains/communications/services/notification_core.py` + shim
-- [ ] `hooks.py`: scheduler job path'lerini güncelle
-- [ ] **KRİTİK: tasks.py güncellemesi**
-  - `tasks.py:5-6` — `communication.process_notification_queue` ve `communication.queue_notification_drafts` import'ları
-  - `tasks.py:12` — `notifications.create_notification_drafts` import'u
-  - `tasks.py:17` — `services.campaigns.execute_due_campaigns` import'u
-  - `tasks.py:103-106` — `run_notification_queue_job` enqueue string'i (kendi içinde, değişmez)
-  - `tasks.py:169-173` — `run_due_campaigns_job` enqueue string'i (kendi içinde, değişmez)
-  - `tasks.py:412` — `_enqueue_outbox_dispatch_jobs` içindeki `"acentem_takipte.communication.dispatch_notification_outbox"` string'i → yeni path'e güncelle!
+- [ ] `services/campaigns.py`, `services/follow_up_sla.py`, `services/notifications.py`, `services/segments.py` → `domains/communications/services/` + shim
+- [ ] `communication.py` (kök) → `domains/communications/services/queue_processor.py` + shim
+- [ ] `notifications.py` (kök) → `domains/communications/services/notification_core.py` + shim
+- [ ] `hooks.py`: scheduler job path'leri
+
+### KRİTİK: tasks.py güncellemesi
+
+- [ ] `tasks.py:5-6` — `communication.*` import'ları → yeni path
+- [ ] `tasks.py:12` — `notifications.create_notification_drafts` import'u → yeni path
+- [ ] `tasks.py:17` — `services.campaigns.execute_due_campaigns` import'u → yeni path
+- [ ] `tasks.py:412` — ENQUEUE STRING: `"acentem_takipte.communication.dispatch_notification_outbox"` → `"acentem_takipte.acentem_takipte.domains.communications.services.queue_processor.dispatch_notification_outbox"`
 
 ### Frontend
 
-- [ ] 8 page, 9 composable, 5 component, 1 store, 1 translation → `domains/communications/`
-- [ ] `domains/communications/routes.js` oluştur
-- [ ] `npm run build` + doğrulama
+- [ ] 8 page, 9 comp, 5 comp, 1 store, 1 i18n → `domains/communications/`
 - [ ] Branch: `refactor/phase-10-communications`
 
 ---
 
-## Faz 11: Reports + Accounting + Admin
+## Faz 11: Reports + Accounting + Admin + Kalan Platform
 
 ### Reports
 
-- [ ] `api/dashboard.py` → `domains/reports/api/dashboard.py` + shim
-- [ ] `api/dashboard_cache.py` → `domains/reports/api/cache.py` + shim
-- [ ] `api/dashboard_detail.py` → `domains/reports/api/detail.py` + shim
-- [ ] `api/dashboard_lead_logic.py` → (Faz 7'de leads'e taşındı)
-- [ ] `api/dashboard_metrics.py` → `domains/reports/api/metrics.py` + shim
-- [ ] `api/dashboard_preview.py` → `domains/reports/api/preview.py` + shim
-- [ ] `api/dashboard_reconciliation.py` → `domains/accounting/api/dashboard.py` + shim
-- [ ] `api/dashboard_scopes.py` → `domains/reports/api/scopes.py` + shim
-- [ ] `api/dashboard_workbench.py` → `domains/reports/api/workbench.py` + shim
+- [ ] `api/dashboard*.py` (9 dosya) → `domains/reports/api/` + shim
+  - Not: `dashboard_cache.py`'deki `invalidate_dashboard_cache` (`_dash`) dashboard-wide cross-cutting ama reports altında acceptable
 - [ ] `api/reports.py` → `domains/reports/api/endpoints.py` + shim
-- [ ] `services/reporting.py` → `domains/reports/services/reporting.py` + shim
-- [ ] `services/report_registry.py` → `domains/reports/services/registry.py` + shim
-- [ ] `services/reports_runtime.py` → `domains/reports/services/runtime.py` + shim
-- [ ] `services/report_exports.py` → `domains/reports/services/exports.py` + shim
-- [ ] `services/report_snapshots.py` → `domains/reports/services/snapshots.py` + shim
-- [ ] `services/scheduled_reports.py` → `domains/reports/services/scheduled.py` + shim
-- [ ] `services/async_reports.py` → `domains/reports/services/async_reports.py` + shim
-- [ ] `hooks.py`: `_dash` path'ini, scheduler job path'lerini güncelle
-- [ ] `tasks.py`: `services.report_snapshots`, `services.scheduled_reports` import'larını güncelle
-- [ ] `tasks.py:151-155` — `run_scheduled_reports_job` ve `tasks.py:203-206` — `run_report_snapshot_job` enqueue string'leri (kendi içinde, değişmez)
-- [ ] Frontend: 5 page + 10 composable + 12 component → `domains/reports/`
+- [ ] `services/reporting.py`, `services/report_registry.py`, `services/reports_runtime.py`, `services/report_exports.py`, `services/report_snapshots.py`, `services/scheduled_reports.py`, `services/async_reports.py` → `domains/reports/services/` + shim
+- [ ] `hooks.py`: `_dash`, scheduler job path'leri
+- [ ] `tasks.py`: `services.report_snapshots`, `services.scheduled_reports` import'ları
+- [ ] Frontend: 5 page + 10 comp + 12 comp → `domains/reports/`
 
 ### Accounting
 
-- [ ] `api/accounting.py` → `domains/accounting/api/endpoints.py` + shim
-- [ ] `api/dashboard_reconciliation.py` → `domains/accounting/api/dashboard.py` + shim
-- [ ] `services/accounting_runtime.py` → `domains/accounting/services/runtime.py` + shim
-- [ ] `services/accounting_statement_import.py` → `domains/accounting/services/statement_import.py` + shim
-- [ ] `acentem_takipte/.../accounting.py` (kök modül) → `domains/accounting/services/sync.py` + shim
+- [ ] `api/accounting.py`, `api/dashboard_reconciliation.py` → `domains/accounting/api/` + shim
+- [ ] `services/accounting_runtime.py`, `services/accounting_statement_import.py` → `domains/accounting/services/` + shim
+- [ ] `accounting.py` (kök) → `domains/accounting/services/sync.py` + shim
 - [ ] `hooks.py`: `_acct` path'ini `domains.accounting.services.sync.sync_doc_event` olarak güncelle
 - [ ] **KRİTİK: tasks.py enqueue string güncellemesi**
-  - `tasks.py:428-431` — `run_accounting_sync_job` içindeki `"acentem_takipte.accounting.sync_accounting_entries"` → yeni path
-  - `tasks.py:444-447` — `run_accounting_reconciliation_job` içindeki `"acentem_takipte.accounting.run_reconciliation"` → yeni path
-- [ ] Frontend: 8 page + 16 composable + 17 component → `domains/accounting/`
+  - `tasks.py:431` — `"acentem_takipte.accounting.sync_accounting_entries"` → yeni path
+  - `tasks.py:447` — `"acentem_takipte.accounting.run_reconciliation"` → yeni path
+- [ ] Frontend: 8 page + 16 comp + 17 comp → `domains/accounting/`
 - [ ] `config/auxWorkbench/` (7 dosya) → `platform/config/auxWorkbench/`
-- [ ] `config/aux_*_translations.js` (4 dosya) → `platform/i18n/aux_*.js`
+- [ ] `config/aux_*_translations.js` (4) → `platform/i18n/aux_*.js`
 
 ### Admin
 
-- [ ] `api/admin_jobs.py` → `domains/admin/api/jobs.py` + shim
-- [ ] `api/admin_settings.py` → `domains/admin/api/settings.py` + shim
-- [ ] `services/admin_general_settings.py` → `domains/admin/services/general_settings.py` + shim
-- [ ] `services/admin_jobs.py` → `domains/admin/services/jobs.py` + shim
-- [ ] `services/ops_alert_settings.py` → `domains/admin/services/alert_settings.py` + shim
-- [ ] `services/ops_alerts.py` → `domains/admin/services/alerts.py` + shim
-- [ ] `services/work_management.py` → `domains/admin/services/work_management.py` + shim
-- [ ] `hooks.py`: ops_alerts scheduler path'ini güncelle
-- [ ] Dashboard: pages (1) + composables (15) + components (10) → `domains/admin/dashboard/`
+- [ ] `api/admin_jobs.py`, `api/admin_settings.py` → `domains/admin/api/` + shim
+- [ ] `services/admin_general_settings.py`, `services/admin_jobs.py`, `services/ops_alert_settings.py`, `services/ops_alerts.py`, `services/work_management.py` → `domains/admin/services/` + shim
+- [ ] `hooks.py`: ops_alerts scheduler path'i
+- [ ] Dashboard: 1 page + 15 comp + 10 comp → `domains/admin/dashboard/`
 - [ ] Admin pages (4) → `domains/admin/pages/`
-- [ ] Import/Export (2 page, 2 composable, 11 component) → `platform/import_export/` (cross-cutting!)
-- [ ] `config/dashboard_translations.js` → `domains/admin/i18n/dashboard.js`
+- [ ] Import/Export (2 page, 2 comp, 11 comp) → `platform/import_export/` (cross-cutting!)
+- [ ] `config/dashboard_translations.js` → `domains/admin/i18n/`
 - [ ] `config/admin_*_translations.js` (2) → `domains/admin/i18n/`
-- [ ] `domains/admin/routes.js` oluştur
-- [ ] `domains/accounting/routes.js` oluştur
-- [ ] `domains/reports/routes.js` oluştur
 
 ### Kalan cross-cutting API'ler → `platform/api/` + shim
 
-- [ ] `api/session.py` → `platform/api/session.py` + shim
-- [ ] `api/security.py` → `platform/api/security.py` + shim
-- [ ] `api/filter_presets.py` → `platform/api/filter_presets.py` + shim
-- [ ] `api/mutation_access.py` → `platform/api/mutation_access.py` + shim
-- [ ] `api/quick_create.py` → `platform/api/quick_create.py` + shim
-- [ ] `api/quick_payloads.py` → `platform/api/quick_payloads.py` + shim
-- [ ] `api/record_preview.py` → `platform/api/record_preview.py` + shim
-- [ ] `api/seed.py` → `platform/api/seed.py` + shim
-- [ ] `api/smoke.py` → `platform/api/smoke.py` + shim
-- [ ] `api/versioning.py` → `platform/api/versioning.py` + shim
-- [ ] `api/documents.py` → `platform/api/documents.py` + shim
-- [ ] `api/data_import.py` → `platform/import_export/api.py` + shim
-- [ ] `api/list_exports.py` → `platform/import_export/list_exports_api.py` + shim
+- [ ] `api/session.py`, `api/security.py`, `api/filter_presets.py`, `api/mutation_access.py`
+- [ ] `api/quick_create.py`, `api/quick_payloads.py`, `api/record_preview.py`
+- [ ] `api/seed.py`, `api/smoke.py`, `api/versioning.py`, `api/documents.py`
+- [ ] `api/data_import.py` → `platform/import_export/api.py`
+- [ ] `api/list_exports.py` → `platform/import_export/list_exports_api.py`
 
 ### Kalan cross-cutting servisler → `platform/` + shim
 
-- [ ] `services/document_center.py` → `platform/services/document_center.py` + shim
-- [ ] `services/data_import/` (10 dosya) → `platform/import_export/data_import/` + shim
-- [ ] `services/list_exports.py` → `platform/import_export/list_exports.py` + shim
-- [ ] `services/export_payload_utils.py` → `platform/import_export/payload_utils.py` + shim
-- [ ] `services/quick_create_core.py` → `platform/quick_create/core.py` + shim
-- [ ] `services/quick_create_common.py` → `platform/quick_create/common.py` + shim
-- [ ] `services/quick_create_helpers.py` → `platform/quick_create/helpers.py` + shim
-- [ ] `services/quick_create_workflow.py` → `platform/quick_create/workflow.py` + shim
-- [ ] `services/quick_create_special.py` → `platform/quick_create/special.py` + shim
-- [ ] `services/quick_create_search.py` → `platform/quick_create/search.py` + shim
-- [ ] `services/quick_create_reference.py` → `platform/quick_create/reference.py` + shim
-- [ ] `services/quick_create_auxiliary.py` → `platform/quick_create/auxiliary.py` + shim
-- [ ] `services/quick_create/` (__init__.py) → `platform/quick_create/__init__.py` + shim
+- [ ] `services/document_center.py` → `platform/services/document_center.py`
+- [ ] `services/data_import/` (10 dosya) → `platform/import_export/data_import/`
+- [ ] `services/list_exports.py` → `platform/import_export/list_exports.py`
+- [ ] `services/export_payload_utils.py` → `platform/import_export/payload_utils.py`
+- [ ] `services/quick_create_core.py`, `quick_create_common.py`, `quick_create_helpers.py`, `quick_create_workflow.py`, `quick_create_special.py`, `quick_create_search.py`, `quick_create_reference.py`, `quick_create_auxiliary.py`, `quick_create/__init__.py` → `platform/quick_create/`
 
-### Kalan kök modüller → uygun domain/platform + shim
+### Kalan kök modüller → uygun konum + shim
 
-- [ ] `startup.py` → `platform/startup.py` + shim; `hooks.py:21` boot_session path'ini güncelle
-- [ ] `realtime.py` → `platform/events/realtime.py` + shim; `hooks.py:37` `_rt` path'ini güncelle
-- [ ] `notification_seed_service.py` → `domains/communications/services/seed_service.py` + shim
-- [ ] `notification_seed_data.py` → `domains/communications/services/seed_data.py` + shim
-- [ ] `notification_dispatch.py` → `domains/communications/services/dispatch.py` + shim
-- [ ] `notifications_templateing.py` → `domains/communications/services/templating.py` + shim
-- [ ] `notifications_catalog.py` → `domains/communications/services/catalog.py` + shim
-- [ ] `policy_documents.py` → `domains/policies/services/documents.py` + shim
-- [ ] `setup_utils.py` → `platform/setup_utils.py` + shim
-- [ ] `dev_seed.py` → (yerinde kalır, dev-only)
-- [ ] `desktop.py` → (yerinde kalır, Frappe desk config)
+- [ ] `startup.py` → `platform/startup.py` + shim; `hooks.py:21` boot_session path'i
+- [ ] `realtime.py` → `platform/events/realtime.py` + shim; `hooks.py:37` `_rt` path'i
+- [ ] `setup_utils.py` → `platform/setup_utils.py` + shim (içinde `invalidate_user_scope_on_logout`)
+- [ ] `notification_seed_service.py`, `notification_seed_data.py`, `notification_dispatch.py`, `notifications_templateing.py`, `notifications_catalog.py` → `domains/communications/services/`
+- [ ] `policy_documents.py` → `domains/policies/services/documents.py`
+- [ ] `dev_seed.py` → yerinde kalır (dev-only)
+- [ ] `desktop.py` → yerinde kalır (Frappe desk config, sadece DocType string referansları)
 
-### Frontend kalanlar → uygun yerlere
+### Frontend kalanlar
 
-- [ ] `composables/useDashboard*` (15 dosya) → `domains/admin/dashboard/composables/`
-- [ ] `composables/useAuxWorkbench*` (3 dosya) → `domains/accounting/composables/`
-- [ ] `composables/useAuxRecordDetail*` (5 dosya) → `domains/accounting/composables/`
-- [ ] `composables/useReconciliationWorkbench*` (5 dosya) → `domains/accounting/composables/`
-- [ ] `composables/useImportDataRuntime.js` → `platform/composables/useImportDataRuntime.js`
-- [ ] `composables/useExportDataRuntime.js` → `platform/composables/useExportDataRuntime.js`
+- [ ] `composables/useDashboard*` (15) → `domains/admin/dashboard/composables/`
+- [ ] `composables/useAuxWorkbench*` (3) → `domains/accounting/composables/`
+- [ ] `composables/useAuxRecordDetail*` (5) → `domains/accounting/composables/`
+- [ ] `composables/useReconciliationWorkbench*` (5) → `domains/accounting/composables/`
+- [ ] `composables/useImportDataRuntime.js` → `platform/composables/`
+- [ ] `composables/useExportDataRuntime.js` → `platform/composables/`
 - [ ] `composables/useScheduledReportsManager.js` → `domains/reports/composables/`
-- [ ] `composables/useReports*` (7 dosya) → `domains/reports/composables/`
-- [ ] `stores/accounting.js` → `domains/accounting/stores/accountingStore.js`
-- [ ] `stores/dashboard.js` → `domains/admin/dashboard/stores/dashboardStore.js`
+- [ ] `composables/useReports*` (7) → `domains/reports/composables/`
+- [ ] `stores/accounting.js` → `domains/accounting/stores/`
+- [ ] `stores/dashboard.js` → `domains/admin/dashboard/stores/`
 
 ### Doğrula
 
-- [ ] `npm run build` + `npm run lint` + `npm run typecheck` + `npm run test:unit`
-- [ ] `npm run e2e:smoke`
-- [ ] Branch: `refactor/phase-11-reports-accounting-admin`
+- [ ] `npm run build` + `npm run lint` + `npm run typecheck` + `npm run test:unit` + `npm run e2e:smoke`
+- [ ] Branch: `refactor/phase-11-platform-domains`
 
 ---
 
 ## Faz 12: hooks.py + tasks.py Son Kontrol
 
-Tüm taşımalar bittikten sonra hooks.py ve tasks.py'deki HER dotted path'i ve enqueue string'ini kontrol et:
-
-- [ ] `hooks.py`: 23 dotted path'in tamamı yeni konumlara işaret ediyor mu?
-- [ ] `tasks.py`: 17 import + 13 enqueue string'in tamamı doğru mu?
-- [ ] `tasks.py` içindeki kısa-form (`acentem_takipte.tasks._...`) vs tam-form (`acentem_takipte.acentem_takipte.tasks._...`) enqueue string'leri tutarlı mı? (Hepsi aynı formatta olmalı — tam form önerilir)
-- [ ] `patches.txt` referansları kontrol edildi mi?
-- [ ] `desktop.py` Frappe desk sayfa referansları kontrol edildi mi?
+- [ ] `hooks.py`: 23 dotted path yeni konumlara işaret ediyor mu? Hepsi teker teker kontrol et
+- [ ] `tasks.py`: 17 import + 13 enqueue string doğru mu?
+- [ ] `tasks.py` enqueue string'leri TAM FORM'a normalize et (`acentem_takipte.acentem_takipte...`)
+- [ ] `patches.txt`: tüm patch referansları doğru mu?
+- [ ] `desktop.py`: DocType referansları doğru mu? (doğrulandı: sadece DocType name string'leri)
+- [ ] `www/at.py`: import'lar shim ile çalışıyor, güncelleme isteğe bağlı
 - [ ] Branch: `refactor/phase-12-hooks-audit`
 
 ---
 
-## Faz 13: Shim Temizliği (sadece tüm consumer'lar güncellenince)
+## Faz 13: Shim Temizliği
 
-- [ ] `api/` altındaki tüm shim dosyalarını sil
-- [ ] `services/` altındaki tüm shim dosyalarını sil
-- [ ] Kök modül shim'lerini sil (accounting.py, communication.py, notifications.py, realtime.py, startup.py)
+Tüm consumer'lar güncellendikten SONRA:
+
+- [ ] `api/` shim'leri sil
+- [ ] `services/` shim'leri sil
+- [ ] `utils/` shim'leri sil
+- [ ] Kök modül shim'lerini sil (`accounting.py`, `communication.py`, `notifications.py`, `realtime.py`, `startup.py`, `setup_utils.py`)
 - [ ] `renewal/` dizin shim'ini kaldır
-- [ ] Frontend: eski `pages/`, `composables/`, `components/` domain dosyalarını sil
-- [ ] Frontend: eski `stores/` domain store'larını sil
-- [ ] Frontend: eski `config/` domain translation'larını sil
+- [ ] Frontend eski `pages/`, `composables/`, `components/`, `stores/`, `config/` domain dosyalarını sil
 - [ ] `__pycache__` temizliği
-- [ ] `npm run build` + `npm run lint` + `npm run typecheck` + `npm run test:unit`
-- [ ] `npm run e2e:smoke`
+- [ ] `npm run build` + `npm run lint` + `npm run typecheck` + `npm run test:unit` + `npm run e2e:smoke`
 - [ ] Branch: `refactor/phase-13-cleanup`
 
 ---
@@ -519,38 +409,39 @@ Tüm taşımalar bittikten sonra hooks.py ve tasks.py'deki HER dotted path'i ve 
 
 | Faz | Ad | Risk | Kritik nokta |
 |---|---|---|---|
-| 0 | Hazırlık + Stale temizlik | Yok | bench migrate yeniden oluşturduklarını sil |
-| 1 | Platform Backend: İzinler | Düşük | 8 dosya taşı, branch_permissions.py temizliği |
-| 2 | Platform Frontend: UI | Orta | main.js + toplu i18n import güncellemesi |
+| 0 | Hazırlık + Stale + __init__.py | Yok | DB'den DocType sil, __init__.py oluştur |
+| 1 | Platform Backend | Düşük | 22 dosya (8 perm + 14 utils), branch_permissions temizliği |
+| 2 | Platform Frontend | Orta | main.js + toplu import find-replace |
 | 3 | Claims pilot | Düşük | Pattern kanıtı |
 | 4 | Payments | Düşük | tasks.py import |
-| 5 | Offers | Düşük | api/offers.py shim (frontend API yolu) |
-| 6 | Renewals | Orta | tasks.py enqueue string + import (4 dosya) |
+| 5 | Offers | Düşük | api/offers.py shim (frontend API) |
+| 6 | Renewals | Orta | tasks.py enqueue + import (renewal/) |
 | 7 | Leads | Düşük | — |
-| 8 | Customers | Orta | 6 cross-domain import |
+| 8 | Customers | Orta | 6 cross-domain import, API shim testi |
 | 9 | Policies | Orta | En büyük domain |
-| 10 | Communications | Orta | tasks.py enqueue string + import (6 dosya) |
-| 11 | Reports + Accounting + Admin | Yüksek | En karmaşık, 13 enqueue string kontrolü |
+| 10 | Communications | Orta | tasks.py enqueue `dispatch_notification_outbox` |
+| 11 | Reports + Accounting + Admin + Platform | Yüksek | 2 tasks.py enqueue string, kök modüller |
 | 12 | hooks.py + tasks.py audit | Düşük | 23 path + 17 import + 13 enqueue son kontrol |
 | 13 | Shim temizliği | Düşük | Tüm consumer'lar güncellenmiş olmalı |
 
 ---
 
-## Doğrulama Matrisi (AGENTS.md uyumlu)
+## Doğrulama Matrisi
 
-| Değişiklik tipi | Doğrulama |
+| Değişiklik | Doğrulama |
 |---|---|
-| Frontend sayfa/component/composable | `npm run test:unit` (ilgili test) → `npm run build` |
-| Frontend routing/session/shell | `router/index.js` + `main.js` + `session.js` incele → unit test → `npm run build` |
-| Backend API/service | Backend test veya bench komutu |
-| Hook/scheduler/route/DocType event | `hooks.py` incele → logic path + enqueue path doğrula |
-| Sadece dokümantasyon | Link, dosya adı, komut örneklerini workspace'e karşı doğrula |
+| Frontend sayfa/comp | `npm run test:unit` → `npm run build` |
+| Frontend router/shell | `router/index.js` + `main.js` + `session.js` → unit test → build |
+| Backend API/service | Backend test / bench komutu |
+| Hook/scheduler/DocType event | `hooks.py` + `tasks.py` → dotted path + enqueue string doğrula |
+| Sadece doküman | Link + dosya adı + komut → workspace doğrula |
 
-## Notlar
+## Değişmeyenler
 
-- `vite.config.js` ve `tsconfig.json` `@` alias'ı `src/` olarak kalır — değişiklik gerekmez
-- `frontend/src/pinia.js` yerinde kalır (kök modül, taşınmaz)
-- `frontend/src/generated/` dizini yerinde kalır (build artifact)
-- `frontend/src/assets/` dizini yerinde kalır (CSS asset'leri)
-- Her dosya taşındıktan sonra `__pycache__` temizlenmeli (stale .pyc kalmasın)
-- `bench migrate` DocType JSON'dan Python dosyası yeniden oluşturabilir — Phase 0'daki stale temizlik sonrası bench migrate çalıştırılmamalı
+- `doctype/` dizini ve tüm JSON/JSON tanımları — Frappe'nin bulması için yerinde kalır
+- `vite.config.js`, `tsconfig.json` — `@` alias'ı `src/` olarak kalır
+- `frontend/src/pinia.js` — kök modül, taşınmaz
+- `frontend/src/generated/`, `frontend/src/assets/` — build/CSS asset'leri
+- `frontend/src/style.css` — Tailwind giriş noktası
+- `desktop.py` — Frappe desk config, sadece DocType string referansları
+- `dev_seed.py` — dev-only
