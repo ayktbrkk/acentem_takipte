@@ -25,7 +25,7 @@ export function useGlobalCustomerSearch(props, emit, t) {
     hasSearched.value = true;
 
     try {
-      const response = await fetch("/api/method/search_customer_by_identity", {
+      const response = await fetch("/api/method/acentem_takipte.acentem_takipte.api.customers.search_customer_by_identity", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

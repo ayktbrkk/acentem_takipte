@@ -70,7 +70,7 @@ describe("GlobalCustomerSearch", () => {
     await Promise.resolve();
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/method/search_customer_by_identity",
+      "/api/method/acentem_takipte.acentem_takipte.api.customers.search_customer_by_identity",
       expect.objectContaining({
         method: "POST",
       })

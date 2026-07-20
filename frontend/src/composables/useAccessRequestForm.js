@@ -31,7 +31,7 @@ export function useAccessRequestForm(props, emit, t) {
     formError.value = "";
 
     try {
-      const response = await fetch("/api/method/create_customer_access_request", {
+      const response = await fetch("/api/method/acentem_takipte.acentem_takipte.api.customers.create_customer_access_request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
