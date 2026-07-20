@@ -1,4 +1,5 @@
 import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
 
 function formatTranslatedMessage(template, params = {}) {
   return Object.entries(params).reduce((message, [key, value]) => {
@@ -7,6 +8,7 @@ function formatTranslatedMessage(template, params = {}) {
 }
 
 export function useGlobalCustomerSearch(props, emit, t) {
+  const router = useRouter();
   const searchIdentity = ref("");
   const isSearching = ref(false);
   const hasSearched = ref(false);
@@ -73,7 +75,7 @@ export function useGlobalCustomerSearch(props, emit, t) {
 
   function openCustomerDetail() {
     if (searchResult.value?.customer?.name) {
-      window.location.href = `/app/at-customer/${searchResult.value.customer.name}`;
+      router.push({ name: "customer-detail", params: { name: searchResult.value.customer.name } });
     }
   }
 
