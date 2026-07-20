@@ -3,7 +3,6 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from acentem_takipte.acentem_takipte.services import branches
-from acentem_takipte.acentem_takipte.services import break_glass
 from acentem_takipte.acentem_takipte.services import privacy_masking
 from acentem_takipte.acentem_takipte.services import reports_runtime
 
@@ -103,45 +102,6 @@ def test_masked_query_gate_logs_fingerprint_without_raw_identity(monkeypatch):
     assert entries[0]["title"] == "[KVKK Audit] Masked Query"
     assert "fingerprint=" in entries[0]["message"]
     assert "12345678901" not in entries[0]["message"]
-
-
-def test_break_glass_expire_stale_marks_records_expired(monkeypatch):
-    commits = []
-    rollbacks = []
-    docs = {}
-
-    class _Doc:
-        def __init__(self, name):
-            self.name = name
-            self.status = "Active"
-
-        def save(self, ignore_permissions=True):
-            docs[self.name] = self.status
-
-    def _get_doc(doctype, name):
-        return _Doc(name)
-
-    monkeypatch.setattr(
-        break_glass,
-        "frappe",
-        SimpleNamespace(
-            db=SimpleNamespace(
-                exists=lambda doctype, name: True,
-                commit=lambda: commits.append(True),
-                rollback=lambda: rollbacks.append(True),
-            ),
-            get_all=lambda *args, **kwargs: [SimpleNamespace(name="EA-0001"), SimpleNamespace(name="EA-0002")],
-            get_doc=_get_doc,
-        ),
-    )
-    monkeypatch.setattr(break_glass, "now_datetime", lambda: "2026-03-25 00:00:00")
-
-    result = break_glass.expire_stale()
-
-    assert result == {"expired": 2}
-    assert docs == {"EA-0001": "Expired", "EA-0002": "Expired"}
-    assert len(commits) == 2
-    assert not rollbacks
 
 
 def test_report_cache_key_changes_with_scope_hash(monkeypatch):

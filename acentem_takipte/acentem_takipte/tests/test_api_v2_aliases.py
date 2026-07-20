@@ -48,9 +48,3 @@ class TestApiV2Aliases(TestCase):
                 )
                 for attribute in attributes:
                     self.assertIs(getattr(alias_module, attribute), getattr(target_module, attribute))
-
-    def test_v2_break_glass_alias_imports_cleanly(self):
-        alias_module = importlib.import_module("acentem_takipte.acentem_takipte.api.v2.break_glass")
-        target_module = importlib.import_module("acentem_takipte.acentem_takipte.api.break_glass")
-        self.assertIs(alias_module.list_pending, target_module.list_pending)
-        self.assertIs(alias_module.create_request, target_module.create_request)

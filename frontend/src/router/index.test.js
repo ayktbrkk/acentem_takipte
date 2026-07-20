@@ -47,7 +47,7 @@ describe("router home guard", () => {
   });
 });
 
-describe("break-glass manager role helper", () => {
+describe("system manager role helper", () => {
   it("returns true for System Manager role", () => {
     expect(hasSystemManagerRole(["System Manager"])).toBe(true);
   });

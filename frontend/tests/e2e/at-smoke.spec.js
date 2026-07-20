@@ -69,8 +69,6 @@ test.describe("Acentem Takipte smoke", () => {
       { label: "branches", href: "/at/branches", url: /\/at\/branches/ },
       { label: "sales-entities", href: "/at/sales-entities", url: /\/at\/sales-entities/ },
       { label: "notification-templates", href: "/at/notification-templates", url: /\/at\/notification-templates/ },
-      { label: "break-glass", href: "/at/break-glass", url: /\/at\/break-glass/ },
-      { label: "break-glass-approvals", href: "/at/break-glass/approvals", url: /\/at\/break-glass\/approvals/ },
       { label: "accounting-entries", href: "/at/accounting-entries", url: /\/at\/accounting-entries/ },
       { label: "reconciliation-items", href: "/at/reconciliation-items", url: /\/at\/reconciliation-items/ },
     ];

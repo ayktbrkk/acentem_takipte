@@ -54,8 +54,6 @@ const ReconciliationItemDetail = () => import("../pages/ReconciliationItemDetail
 const TasksList = () => import("../pages/TasksList.vue");
 const TaskDetail = () => import("../pages/TaskDetail.vue");
 const AuxRecordDetail = () => import("../pages/AuxRecordDetail.vue");
-const BreakGlassRequest = () => import("../pages/BreakGlassRequest.vue");
-const BreakGlassApprovals = () => import("../pages/BreakGlassApprovals.vue");
 
 const ROLE_SYSTEM = ["AT System Manager", "System Manager", "Administrator"];
 const ROLE_MANAGER = [...ROLE_SYSTEM, "AT Manager"];
@@ -267,26 +265,6 @@ const router = createRouter({
     {
       path: "/communication-hub",
       redirect: { name: "communication-center" },
-    },
-    {
-      path: "/break-glass",
-      name: "break-glass-request",
-      component: BreakGlassRequest,
-      meta: {
-        title: { tr: "Acil Erişim Talebi", en: "Break-Glass Request" },
-        section: { tr: "Finans ve Kontrol", en: "Finance & Control" },
-        requiredRoles: ROLE_SYSTEM,
-      },
-    },
-    {
-      path: "/break-glass/approvals",
-      name: "break-glass-approvals",
-      component: BreakGlassApprovals,
-      meta: {
-        title: { tr: "Acil Erişim Onayları", en: "Break-Glass Approvals" },
-        section: { tr: "Finans ve Kontrol", en: "Finance & Control" },
-        requiredRoles: ROLE_SYSTEM,
-      },
     },
     {
       path: "/reconciliation",

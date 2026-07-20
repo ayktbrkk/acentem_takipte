@@ -9,12 +9,6 @@ from frappe.utils import add_to_date, get_url, now_datetime
 
 
 ALERT_CACHE_KEY = "at:ops-alerts:last-error-log-fingerprint"
-DEFAULT_BREAK_GLASS_KEYWORDS = (
-    "break-glass",
-    "break glass",
-    "emergency access",
-    "at break glass request",
-)
 DEFAULT_INTEGRATION_KEYWORDS = (
     "integration",
     "webhook",
@@ -84,7 +78,7 @@ def _coerce_keywords(raw_keywords: Any) -> list[str]:
 
 
 def _default_keywords() -> list[str]:
-    return [*DEFAULT_BREAK_GLASS_KEYWORDS, *DEFAULT_INTEGRATION_KEYWORDS]
+    return [*DEFAULT_INTEGRATION_KEYWORDS]
 
 
 def _get_recent_matching_error_logs(*, window_minutes: int, keywords: list[str]) -> list[dict[str, Any]]:
@@ -157,7 +151,7 @@ def _matches_alert_scope(*, haystack: str, keywords: list[str]) -> bool:
         normalized_keywords = _default_keywords()
 
     break_glass_keywords = [
-        keyword for keyword in normalized_keywords if keyword in DEFAULT_BREAK_GLASS_KEYWORDS
+        keyword for keyword in normalized_keywords if keyword in ()
     ]
     integration_keywords = [
         keyword for keyword in normalized_keywords if keyword in DEFAULT_INTEGRATION_KEYWORDS
@@ -166,7 +160,7 @@ def _matches_alert_scope(*, haystack: str, keywords: list[str]) -> bool:
     custom_keywords = [
         keyword
         for keyword in normalized_keywords
-        if keyword not in DEFAULT_BREAK_GLASS_KEYWORDS and keyword not in DEFAULT_INTEGRATION_KEYWORDS
+        if keyword not in () and keyword not in DEFAULT_INTEGRATION_KEYWORDS
     ]
 
     return (

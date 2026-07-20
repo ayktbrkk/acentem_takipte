@@ -151,7 +151,6 @@ def test_policy_endorsement_permission_query_inherits_policy_scope(monkeypatch):
     monkeypatch.setattr(branch_permissions, "user_can_access_all_sales_entities", lambda user=None: False)
     monkeypatch.setattr(branch_permissions, "get_allowed_office_branch_names", lambda user=None: {"IST"})
     monkeypatch.setattr(branch_permissions, "get_allowed_sales_entity_names", lambda user=None: {"ENT-1"})
-    monkeypatch.setattr(branch_permissions, "is_break_glass_active", lambda user=None, doctype=None: False)
 
     condition = branch_permissions.get_policy_endorsement_permission_query_conditions("manager@example.com")
 

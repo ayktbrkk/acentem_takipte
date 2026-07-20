@@ -18,7 +18,6 @@ from . import (
 from acentem_takipte.acentem_takipte.api import (
     accounting,
     admin_jobs,
-    break_glass,
     communication,
     customers,
     dashboard,
@@ -49,7 +48,6 @@ __all__ = [
     # Redirects
     "accounting",
     "admin_jobs",
-    "break_glass",
     "communication",
     "customers",
     "dashboard",

@@ -152,12 +152,12 @@ permission_query_conditions, has_permission = build_runtime_permission_hooks()
 # Scheduler Events
 #
 # Jobs are staggered across the night to avoid simultaneous heavy DB load:
-#   00:00  urgent daily ops (renewal tasks, payment due, break-glass cleanup)
+#   00:00  urgent daily ops (renewal tasks, payment due)
 #   01:00  marketing / segmentation (campaigns, customer segments)
 #   02:00  heavy reconciliation (accounting)
-#   03:00  report generation (snapshots, scheduled reports, audit monitor)
+#   03:00  report generation (snapshots, scheduled reports)
 #   */10m  notification queue
-#   hourly accounting sync + break-glass grant expiry
+#   hourly accounting sync
 # ---------------------------------------------------------------------------
 
 scheduler_events = {
@@ -166,10 +166,9 @@ scheduler_events = {
         "*/10 * * * *": [
             "acentem_takipte.acentem_takipte.tasks.run_notification_queue_job",
         ],
-        # Every hour — incremental accounting sync + break-glass grant cleanup
+        # Every hour — incremental accounting sync
         "0 * * * *": [
             "acentem_takipte.acentem_takipte.tasks.run_accounting_sync_job",
-            "acentem_takipte.acentem_takipte.services.break_glass.expire_break_glass_grants",
             "acentem_takipte.acentem_takipte.services.ops_alerts.run_error_log_alert_monitor",
         ],
         # 01:00 — campaign dispatch + customer segment snapshot
@@ -181,11 +180,10 @@ scheduler_events = {
         "0 2 * * *": [
             "acentem_takipte.acentem_takipte.tasks.run_accounting_reconciliation_job",
         ],
-        # 03:00 — report generation + break-glass audit monitor
+        # 03:00 — report generation
         "0 3 * * *": [
             "acentem_takipte.acentem_takipte.tasks.run_report_snapshot_job",
             "acentem_takipte.acentem_takipte.tasks.run_scheduled_reports_job",
-            "acentem_takipte.acentem_takipte.services.break_glass.run_break_glass_audit_monitor",
         ],
     },
     # 00:00 — urgent lightweight daily ops
@@ -194,6 +192,5 @@ scheduler_events = {
         "acentem_takipte.acentem_takipte.tasks.run_policy_renewal_reminder_job",
         "acentem_takipte.acentem_takipte.tasks.run_stale_renewal_task_job",
         "acentem_takipte.acentem_takipte.tasks.run_payment_due_job",
-        "acentem_takipte.acentem_takipte.services.break_glass.expire_stale",
     ],
 }

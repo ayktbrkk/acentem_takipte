@@ -12,7 +12,7 @@ from acentem_takipte.acentem_takipte.services.access_policy_runtime import (
     get_branch_scoped_doctype_policy,
     get_doctype_policy_definition,
 )
-from acentem_takipte.acentem_takipte.services.break_glass import is_break_glass_active
+
 from acentem_takipte.acentem_takipte.services.sales_entities import (
     get_allowed_sales_entity_names,
     user_can_access_all_sales_entities,
@@ -142,7 +142,7 @@ def get_policy_scoped_permission_query_conditions(doctype: str, user=None):
     scope_type = str(runtime_scope.get("type") or "").strip()
     branch_field = str(runtime_scope.get("branch_field") or "office_branch")
 
-    if _allows_break_glass(runtime_scope) and is_break_glass_active(user, doctype):
+    if _allows_break_glass(runtime_scope):
         return ""
     if scope_type == "branch_only":
         return build_office_branch_permission_query(doctype, fieldname=branch_field, user=user)
@@ -165,9 +165,7 @@ def has_policy_scoped_permission(doctype: str, doc, user=None, permission_type="
     branch_field = str(runtime_scope.get("branch_field") or "office_branch")
 
     if scope_type == "branch_only":
-        if has_office_branch_permission(doc, fieldname=branch_field, user=user):
-            return True
-        return _allows_break_glass(runtime_scope) and is_break_glass_active(user, doctype)
+        return has_office_branch_permission(doc, fieldname=branch_field, user=user)
 
     if scope_type == "branch_and_sales_entity":
         sales_entity_field = str(runtime_scope.get("sales_entity_field") or "sales_entity")
@@ -190,8 +188,7 @@ def _require_branch_scoped_policy(doctype: str):
 
 
 def _allows_break_glass(runtime_scope: dict[str, object]) -> bool:
-    exceptions = runtime_scope.get("exceptions") or []
-    return "active_break_glass_may_expand_access" in exceptions
+    return False
 
 
 def _validated_sql_identifier(value: str, *, field_name: str) -> str:
@@ -259,7 +256,7 @@ def _build_policy_scope_criterion(doctype: str, table, *, user=None):
     user_id = user or frappe.session.user
 
     if scope_type == "branch_only":
-        if _allows_break_glass(runtime_scope) and is_break_glass_active(user_id, doctype):
+        if _allows_break_glass(runtime_scope):
             return None
         if user_can_access_all_office_branches(user_id):
             return None

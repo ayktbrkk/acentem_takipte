@@ -12,7 +12,6 @@ import { REPORTS_TRANSLATIONS } from "@/config/reports_translations";
 import { IMPORT_TRANSLATIONS } from "@/config/import_translations";
 import { RECONCILIATION_TRANSLATIONS } from "@/config/reconciliation_translations";
 import { RENEWAL_TRANSLATIONS } from "@/config/renewal_translations";
-import { BREAK_GLASS_TRANSLATIONS } from "@/config/break_glass_translations";
 import { CUSTOMER_SEARCH_TRANSLATIONS } from "@/config/customer_search_translations";
 import { DASHBOARD_TRANSLATIONS } from "@/config/dashboard_translations";
 import { SIDEBAR_TRANSLATIONS } from "@/config/sidebar_translations";
@@ -38,7 +37,6 @@ const ALL_TRANSLATIONS = {
   import: IMPORT_TRANSLATIONS,
   reconciliation: RECONCILIATION_TRANSLATIONS,
   renewal: RENEWAL_TRANSLATIONS,
-  break_glass: BREAK_GLASS_TRANSLATIONS,
   customer_search: CUSTOMER_SEARCH_TRANSLATIONS,
   dashboard: DASHBOARD_TRANSLATIONS,
   sidebar: SIDEBAR_TRANSLATIONS,

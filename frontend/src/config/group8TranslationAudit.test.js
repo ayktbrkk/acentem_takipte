@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 
 import { COMMON_TRANSLATIONS } from "./common_translations";
 import { ACCESS_REQUEST_TRANSLATIONS } from "./access_request_translations";
-import { BREAK_GLASS_TRANSLATIONS } from "./break_glass_translations";
 import { ROUTER_TRANSLATIONS } from "./router_translations";
 import { QUICK_CREATE_TRANSLATIONS } from "./quick_create_translations";
 import { AUX_WORKBENCH_ROUTE_DEFS } from "./auxWorkbench";
@@ -37,7 +36,6 @@ describe("Group 8 translation audit", () => {
   it("keeps Group 8 translation maps symmetric", () => {
     expectTranslationParity("common", COMMON_TRANSLATIONS);
     expectTranslationParity("access_request", ACCESS_REQUEST_TRANSLATIONS);
-    expectTranslationParity("break_glass", BREAK_GLASS_TRANSLATIONS);
     expectTranslationParity("router", ROUTER_TRANSLATIONS);
     expectTranslationParity("quick_create", QUICK_CREATE_TRANSLATIONS);
   });
@@ -71,16 +69,6 @@ describe("Group 8 translation audit", () => {
     ];
     const unresolved = collectUnresolvedKeys(keys, "tr");
     expect(unresolved).toEqual([]);
-  });
-
-  it("keeps access request and break-glass flows semantically separate", () => {
-    expect(ACCESS_REQUEST_TRANSLATIONS.tr.title).toBe("Müşteri Erişim Talebi");
-    expect(BREAK_GLASS_TRANSLATIONS.tr.title).toBe("Acil Erişim Talebi");
-    expect(ACCESS_REQUEST_TRANSLATIONS.tr.viewAccessLabel).toBe("Görüntüleme Erişimi");
-    expect(BREAK_GLASS_TRANSLATIONS.tr.access_type).toBe("Erişim Tipi");
-    expect(ACCESS_REQUEST_TRANSLATIONS.tr.justificationPlaceholder).not.toBe(
-      BREAK_GLASS_TRANSLATIONS.tr.justificationPlaceholder,
-    );
   });
 
   it("covers router translation aliases for legacy string meta titles", () => {
