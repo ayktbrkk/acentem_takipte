@@ -1,0 +1,370 @@
+from __future__ import annotations
+
+from typing import Any
+
+import frappe
+from frappe.utils import cint
+
+# audit(f401): `_` became unused after report API error and permission messages
+# were inlined. Leave this note so the import is not silently reintroduced.
+
+from acentem_takipte.acentem_takipte.api.security import assert_authenticated, assert_doctype_permission, assert_post_request, assert_roles
+from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+    coerce_columns,
+    coerce_download_payload,
+    coerce_filters,
+    coerce_rows,
+    coerce_string_list,
+    normalize_export_key,
+)
+from acentem_takipte.acentem_takipte.platform.permissions.query_isolation import apply_scope_filters_to_report
+from acentem_takipte.acentem_takipte.services.report_registry import get_report_definition
+from acentem_takipte.acentem_takipte.services.reports_runtime import (
+    build_report_download_response,
+    build_safe_report_payload,
+    get_scheduled_report_config_summary,
+    remove_scheduled_report,
+    save_scheduled_report,
+)
+from acentem_takipte.acentem_takipte.services.ops_alert_settings import (
+    load_ops_alert_channel_settings,
+    save_ops_alert_channel_settings,
+    send_ops_alert_channel_test,
+)
+from acentem_takipte.acentem_takipte.services.scheduled_reports import (
+    get_scheduled_reports_timeline as get_timeline_service,
+)
+
+
+def _get_report_payload(report_key: str, filters: dict | None = None, limit: int = 500) -> dict:
+    safe_report_key = normalize_export_key(report_key)
+    assert_authenticated()
+    assert_doctype_permission(str(get_report_definition(safe_report_key)["permission_doctype"]), "read")
+    
+    try:
+        # Apply user's scope filters (branch + sales_entity) to report
+        scoped_filters = apply_scope_filters_to_report(
+            safe_report_key,
+            filters=_coerce_filters(filters),
+            auto_add_branch_filter=True,
+            auto_add_sales_entity_filter=True,
+        )
+        
+        return _coerce_report_payload(
+            build_safe_report_payload(safe_report_key, filters=scoped_filters, limit=max(cint(limit), 1)),
+            safe_report_key,
+            scoped_filters,
+        )
+    except Exception:
+        frappe.log_error(
+            title=f"Report Error: {safe_report_key}",
+            message=frappe.get_traceback()
+        )
+        raise
+
+
+def _export_report_payload(report_key: str, filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    payload = _get_report_payload(report_key, filters=filters, limit=limit)
+    _respond_with_report_file(
+        report_key=payload.get("report_key"),
+        columns=payload.get("columns"),
+        rows=payload.get("rows"),
+        filters=payload.get("filters"),
+        export_format=export_format,
+    )
+
+
+@frappe.whitelist()
+def get_policy_list_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("policy_list", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_payment_status_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("payment_status", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_renewal_performance_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("renewal_performance", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_claim_loss_ratio_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("claim_loss_ratio", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_agent_performance_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("agent_performance", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_customer_segmentation_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("customer_segmentation", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_communication_operations_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("communication_operations", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_reconciliation_operations_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("reconciliation_operations", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def get_claims_operations_report(filters: dict | None = None, limit: int = 500) -> dict:
+    return _get_report_payload("claims_operations", filters=filters, limit=limit)
+
+
+@frappe.whitelist()
+def export_policy_list_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("policy_list", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_payment_status_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("payment_status", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_renewal_performance_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("renewal_performance", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_claim_loss_ratio_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("claim_loss_ratio", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_agent_performance_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("agent_performance", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_customer_segmentation_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("customer_segmentation", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_communication_operations_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("communication_operations", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_reconciliation_operations_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("reconciliation_operations", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def export_claims_operations_report(filters: dict | None = None, export_format: str = "xlsx", limit: int = 1000):
+    _export_report_payload("claims_operations", filters=filters, export_format=export_format, limit=limit)
+
+
+@frappe.whitelist()
+def get_scheduled_report_configs() -> dict:
+    assert_authenticated()
+    assert_roles("System Manager", "Administrator", message="You do not have permission to view scheduled reports.")
+    return _coerce_summary_payload(get_scheduled_report_config_summary())
+
+
+@frappe.whitelist()
+def save_scheduled_report_config(index: int | None = None, config: dict | str | None = None) -> dict:
+    assert_authenticated()
+    assert_post_request("Only POST requests are allowed for scheduled report changes.")
+    assert_roles("System Manager", "Administrator", message="You do not have permission to manage scheduled reports.")
+    return _coerce_scheduled_mutation_payload(save_scheduled_report(index=_coerce_index(index), config=config))
+
+
+@frappe.whitelist()
+def remove_scheduled_report_config(index: int) -> dict:
+    assert_authenticated()
+    assert_post_request("Only POST requests are allowed for scheduled report changes.")
+    assert_roles("System Manager", "Administrator", message="You do not have permission to manage scheduled reports.")
+    return _coerce_scheduled_mutation_payload(remove_scheduled_report(_coerce_index(index) or 0))
+
+
+@frappe.whitelist()
+def get_scheduled_reports_timeline(days: int = 30) -> list[dict[str, Any]]:
+    assert_authenticated()
+    assert_roles("System Manager", "Administrator", message="You do not have permission to view report timelines.")
+    return get_timeline_service(days=max(cint(days), 1))
+
+
+@frappe.whitelist()
+def get_ops_alert_channel_settings() -> dict[str, Any]:
+    assert_authenticated()
+    assert_roles("System Manager", "Administrator", message="You do not have permission to view alert channel settings.")
+    return _coerce_alert_channel_payload(load_ops_alert_channel_settings())
+
+
+@frappe.whitelist()
+def save_ops_alert_channel_settings_api(config: dict | str | None = None) -> dict[str, Any]:
+    assert_authenticated()
+    assert_post_request("Only POST requests are allowed for alert channel changes.")
+    assert_roles("System Manager", "Administrator", message="You do not have permission to manage alert channel settings.")
+    return _coerce_alert_channel_payload(save_ops_alert_channel_settings(config=config))
+
+
+@frappe.whitelist()
+def send_ops_alert_channel_test_api(config: dict | str | None = None) -> dict[str, Any]:
+    assert_authenticated()
+    assert_post_request("Only POST requests are allowed for alert channel tests.")
+    assert_roles("System Manager", "Administrator", message="You do not have permission to test alert channels.")
+    return _coerce_alert_test_payload(send_ops_alert_channel_test(config=config))
+
+
+def _respond_with_report_file(
+    *,
+    report_key: str,
+    columns: list[str],
+    rows: list[dict],
+    filters: dict,
+    export_format: str,
+) -> None:
+    response_payload = _coerce_download_payload(
+        build_report_download_response(
+        report_key=report_key,
+        columns=columns,
+        rows=rows,
+        filters=filters,
+        export_format=export_format,
+        )
+    )
+    frappe.response.update(response_payload)
+
+
+def _coerce_filters(value: Any) -> dict[str, Any]:
+    return coerce_filters(value)
+
+
+def _coerce_index(value: Any) -> int | None:
+    if value in (None, ""):
+        return None
+    return max(cint(value), 0)
+
+
+def _coerce_summary_payload(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {"items": [], "total": 0}
+    items = value.get("items")
+    if not isinstance(items, list):
+        items = []
+    normalized_items = [_coerce_summary_item(item) for item in items if isinstance(item, dict)]
+    total = cint(value.get("total"))
+    return {
+        "items": normalized_items,
+        "total": max(total, len(normalized_items)),
+    }
+
+
+def _coerce_download_payload(value: Any) -> dict[str, Any]:
+    return coerce_download_payload(value, default_filename="report.xlsx", default_type="download")
+
+
+def _coerce_report_payload(value: Any, report_key: str, filters: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {
+            "report_key": report_key,
+            "columns": [],
+            "rows": [],
+            "filters": filters,
+        }
+    payload = dict(value)
+    return {
+        "report_key": normalize_export_key(payload.get("report_key"), report_key),
+        "columns": coerce_columns(payload.get("columns")),
+        "rows": coerce_rows(payload.get("rows")),
+        "filters": coerce_filters(payload.get("filters")) or filters,
+    }
+
+
+def _coerce_scheduled_mutation_payload(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {"ok": False}
+    payload = dict(value)
+    normalized = {"ok": bool(payload.get("ok", True))}
+    if "index" in payload:
+        normalized["index"] = _coerce_index(payload.get("index"))
+    if "remaining" in payload:
+        normalized["remaining"] = max(cint(payload.get("remaining")), 0)
+    if isinstance(payload.get("config"), dict):
+        normalized["config"] = dict(payload.get("config"))
+    return normalized
+
+
+def _coerce_summary_item(value: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "index": max(cint(value.get("index")), 0),
+        "enabled": bool(cint(value.get("enabled", 0))),
+        "report_key": str(value.get("report_key") or "").strip(),
+        "frequency": str(value.get("frequency") or "daily").strip().lower() or "daily",
+        "format": str(value.get("format") or "xlsx").strip().lower() or "xlsx",
+        "delivery_channel": str(value.get("delivery_channel") or "email").strip().lower() or "email",
+        "locale": str(value.get("locale") or "tr").strip() or "tr",
+        "recipients": _coerce_string_list(value.get("recipients")),
+        "filters": _coerce_filters(value.get("filters")),
+        "limit": max(cint(value.get("limit")) or 1, 1),
+        "weekday": max(cint(value.get("weekday")), 0),
+        "day_of_month": max(cint(value.get("day_of_month")) or 1, 1),
+        "is_valid_report_key": bool(value.get("is_valid_report_key")),
+        "last_run_at": value.get("last_run_at"),
+        "last_status": str(value.get("last_status") or "").strip().lower() or None,
+        "last_summary": _coerce_filters(value.get("last_summary")),
+    }
+
+
+def _coerce_alert_channel_payload(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {
+            "slack_webhook_url": "",
+            "telegram_bot_token": "",
+            "telegram_chat_id": "",
+            "slack_configured": False,
+            "telegram_configured": False,
+            "slack_webhook_mask": "",
+            "telegram_bot_token_mask": "",
+        }
+    payload = dict(value)
+    slack_webhook_url = str(payload.get("slack_webhook_url") or "").strip()
+    telegram_bot_token = str(payload.get("telegram_bot_token") or "").strip()
+    telegram_chat_id = str(payload.get("telegram_chat_id") or "").strip()
+    return {
+        "slack_webhook_url": "",
+        "telegram_bot_token": "",
+        "telegram_chat_id": telegram_chat_id,
+        "slack_configured": bool(payload.get("slack_configured") or slack_webhook_url),
+        "telegram_configured": bool(payload.get("telegram_configured") or (telegram_bot_token and telegram_chat_id)),
+        "slack_webhook_mask": _mask_secret(slack_webhook_url),
+        "telegram_bot_token_mask": _mask_secret(telegram_bot_token),
+    }
+
+
+def _mask_secret(value: Any) -> str:
+    secret = str(value or "").strip()
+    if not secret:
+        return ""
+    return f"****{secret[-4:]}"
+
+
+def _coerce_alert_test_payload(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {"ok": False, "channels": []}
+    payload = dict(value)
+    channels = payload.get("channels")
+    return {
+        "ok": bool(payload.get("ok", True)),
+        "channels": [str(channel).strip().lower() for channel in channels if str(channel).strip()] if isinstance(channels, list) else [],
+    }
+
+
+def _coerce_string_list(value: Any) -> list[str]:
+    return coerce_string_list(value)
+
+
+def _coerce_content_type(value: Any, filename: str) -> str:
+    return coerce_download_payload({"filename": filename, "content_type": value})["content_type"]
+

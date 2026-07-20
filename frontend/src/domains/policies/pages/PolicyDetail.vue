@@ -1,0 +1,368 @@
+<template>
+  <WorkbenchPageLayout
+    :breadcrumb="t('policies_breadcrumb')"
+    :title="t('policyDetailTitle')"
+    :subtitle="policy.policy_no || policy.name || name"
+  >
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" :aria-label="t('refresh')" @click="reload">
+        <FeatherIcon name="refresh-cw" class="h-4 w-4" />
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :aria-label="t('exportPdf')" @click="handleExportPdf">
+        <FeatherIcon name="printer" class="h-4 w-4" />
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :aria-label="t('shareWhatsApp')" @click="handleShareWhatsApp">
+        <FeatherIcon name="share-2" class="h-4 w-4" />
+      </ActionButton>
+      <ActionButton variant="primary" size="sm" @click="handleCreateEndorsement">
+        <FeatherIcon name="plus" class="h-4 w-4" />
+        {{ t("newEndorsement") }}
+      </ActionButton>
+      <ActionButton variant="link" size="sm" @click="backToList">
+        {{ t("back_to_list") }}
+      </ActionButton>
+    </template>
+
+    <template #metrics>
+      <div v-if="!loading" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SaaSMetricCard
+          v-for="cell in heroCells"
+          :key="cell.label"
+          :label="cell.label"
+          :value="cell.value"
+          :value-class="cell.variant === 'success-pill' ? 'text-at-green' : cell.variant === 'cancel-pill' ? 'text-at-red' : cell.variant === 'waiting-pill' ? 'text-at-amber' : 'text-slate-900'"
+        />
+      </div>
+      <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SkeletonLoader v-for="i in 4" :key="i" variant="card" />
+      </div>
+    </template>
+
+    <div class="detail-body at-detail-split-wide">
+      <!-- Main Content (8) -->
+      <div class="detail-main space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <EditableCard
+            :title="t('policy_technical_details')"
+            :icon="branchIcon"
+            :fields="profileFields"
+            :t="t"
+            :locale="activeLocale"
+            :saving="saving"
+            layout="list"
+            @save="updatePolicy"
+          />
+
+          <EditableCard
+            :title="t('premium_and_financial_details')"
+            :fields="premiumFields"
+            :t="t"
+            :locale="activeLocale"
+            :saving="saving"
+            layout="list"
+            @save="updatePolicy"
+          />
+
+          <EditableCard
+            v-if="riskFields.length"
+            :title="t('risk_info')"
+            :fields="riskFields"
+            :t="t"
+            :locale="activeLocale"
+            :saving="saving"
+            layout="list"
+            class="md:col-span-2"
+            @save="updatePolicy"
+          />
+        </div>
+
+        <SectionPanel v-if="endorsements.length" :title="t('endorsementTitle')">
+          <ListTable
+            :columns="endorsementColumns"
+            :rows="endorsements"
+            :loading="loading"
+            :locale="activeLocale"
+          >
+            <template #cell(endorsement_date)="{ row }">
+              {{ formatDate(row.endorsement_date) }}
+            </template>
+            <template #cell(status)="{ row }">
+              <StatusBadge 
+                domain="policy" 
+                :status="normalizeStatus(row.status)" 
+                :label="t('status_' + String(row.status || 'draft').toLowerCase())" 
+              />
+            </template>
+          </ListTable>
+        </SectionPanel>
+
+        <SectionPanel v-if="payments.length" :title="t('payments')">
+          <ListTable
+            :columns="paymentColumns"
+            :rows="payments"
+            :loading="loading"
+            :locale="activeLocale"
+          >
+            <template #cell(payment_date)="{ row }">
+              {{ formatDate(row.payment_date) }}
+            </template>
+            <template #cell(amount)="{ row }">
+              <span class="font-bold">{{ formatCurrency(row.amount, row.currency) }}</span>
+            </template>
+            <template #cell(status)="{ row }">
+              <StatusBadge domain="payment" :status="row.status" />
+            </template>
+          </ListTable>
+        </SectionPanel>
+
+        <SectionPanel :title="t('activity_timeline')">
+          <EmptyState
+            :title="t('emptyActivities')"
+            compact
+            compact-container-class="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 py-5 text-center"
+          >
+            <template #icon>
+              <FeatherIcon name="activity" class="h-6 w-6 text-slate-400" />
+            </template>
+          </EmptyState>
+        </SectionPanel>
+      </div>
+
+      <!-- Sidebar (4) -->
+      <aside class="detail-sidebar at-detail-aside space-y-6">
+        <StandardCustomerCard
+          :title="t('customer_details')"
+          :customer="customer"
+          :saving="customerSaving"
+          :t="t"
+          @save="updateCustomer"
+          @view-full="openCustomer"
+        />
+
+        <SectionPanel :title="t('operations')">
+          <div class="space-y-4">
+             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+               <div class="flex items-center gap-3">
+                 <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm">
+                   <FeatherIcon name="check-circle" class="h-4 w-4" />
+                 </div>
+                 <div>
+                   <p class="text-xs font-bold text-slate-800">{{ t('tasks') }}</p>
+                   <p class="text-[10px] text-slate-500">{{ t('active_tasks_hint') }}</p>
+                 </div>
+               </div>
+                <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold px-1.5">0</span>
+             </div>
+
+             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+               <div class="flex items-center gap-3">
+                 <div class="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm">
+                   <FeatherIcon name="bell" class="h-4 w-4" />
+                 </div>
+                 <div>
+                   <p class="text-xs font-bold text-slate-800">{{ t('reminders') }}</p>
+                   <p class="text-[10px] text-slate-500">{{ t('active_reminders_hint') }}</p>
+                 </div>
+               </div>
+                <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold px-1.5">0</span>
+             </div>
+          </div>
+        </SectionPanel>
+
+        <SectionPanel :title="t('documents')">
+          <template #trailing>
+            <div class="flex flex-wrap items-center gap-2">
+              <ActionButton v-if="canUploadDocuments" variant="secondary" size="xs" @click="openUploadModal">
+                {{ t("upload") }}
+              </ActionButton>
+            </div>
+          </template>
+          <div v-if="!documents.length && !atDocuments.length" class="text-sm text-slate-400 py-2">{{ t("emptyDocuments") }}</div>
+          <div v-else class="space-y-2">
+            <MetaListCard
+              v-for="doc in atDocuments.slice(0, 5)" 
+              :key="doc.name"
+              :title="doc.display_name || doc.file_name || doc.name"
+              :subtitle="doc.document_sub_type || doc.document_kind || ''"
+              class="!p-3"
+            >
+              <template #trailing>
+                <ActionButton variant="ghost" size="xs" :aria-label="t('openDocument')" @click="openDocument(doc, 'AT Document')">
+                  <FeatherIcon name="external-link" class="h-3.5 w-3.5" />
+                </ActionButton>
+              </template>
+            </MetaListCard>
+            <ActionButton variant="ghost" size="xs" class="w-full justify-center" @click="openPolicyDocuments">
+              {{ t("openDocumentCenter") }}
+            </ActionButton>
+          </div>
+        </SectionPanel>
+      </aside>
+    </div>
+
+    <!-- Notifications -->
+    <div class="fixed right-6 top-24 z-[100] w-full max-w-sm pointer-events-none">
+      <ToastNotification
+        :show="notification.show"
+        :message="notification.message"
+        :type="notification.type"
+        @close="notification.show = false"
+      />
+    </div>
+
+    <WorkbenchFileUploadModal
+      :open="showUploadModal"
+      attached-to-doctype="AT Policy"
+      :attached-to-name="name"
+      @close="closeUploadModal"
+      @uploaded="handleUploadComplete"
+    />
+  </WorkbenchPageLayout>
+</template>
+
+<script setup>
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import { FeatherIcon } from "frappe-ui";
+import { useAuthStore } from "../stores/auth";
+import { usePolicyDetailRuntime } from "../composables/usePolicyDetailRuntime";
+import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../components/app-shell/SectionPanel.vue";
+import EmptyState from "../components/app-shell/EmptyState.vue";
+import ActionButton from "../components/app-shell/ActionButton.vue";
+import EditableCard from "../components/app-shell/EditableCard.vue";
+import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
+import MetaListCard from "../components/app-shell/MetaListCard.vue";
+import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
+import ToastNotification from "../components/ui/ToastNotification.vue";
+import ListTable from "../components/ui/ListTable.vue";
+import StatusBadge from "../components/ui/StatusBadge.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
+import { openDocumentInNewTab } from "../utils/documentOpen";
+
+const props = defineProps({
+  name: { type: String, required: true },
+});
+
+const router = useRouter();
+const authStore = useAuthStore();
+const activeLocale = computed(() => authStore.locale || "tr");
+
+const branchIcon = computed(() => {
+  const branch = String(policy.value.branch || "").toLowerCase();
+  if (branch.includes("kasko") || branch.includes("trafik") || branch.includes("oto") || branch.includes("araç")) return "truck";
+  if (branch.includes("konut") || branch.includes("dask") || branch.includes("ev") || branch.includes("işyeri")) return "home";
+  if (branch.includes("sağlık") || branch.includes("saglik") || branch.includes("health")) return "heart";
+  return "shield";
+});
+
+const {
+  policy,
+  customer,
+  endorsements,
+  payments,
+  documents,
+  atDocuments,
+  loading,
+  t,
+  reload,
+  backToList,
+  openCustomer,
+  openPolicyDocuments,
+  showUploadModal,
+  openUploadModal,
+  closeUploadModal,
+  handleUploadComplete,
+  canUploadDocuments,
+  atDocumentLifecycle,
+  archiveDocument,
+  restoreDocument,
+  permanentDeleteDocument,
+  formatDate,
+  formatCurrency,
+  heroCells,
+  profileFields,
+  riskFields,
+  premiumFields,
+  saving,
+  customerSaving,
+  notification,
+  updatePolicy,
+  updateCustomer,
+  normalizeStatus,
+} = usePolicyDetailRuntime({ 
+  name: computed(() => props.name),
+  activeLocale 
+});
+
+const endorsementColumns = computed(() => [
+  { key: "endorsement_type", label: t("endorsement_type"), width: "150px" },
+  { key: "endorsement_date", label: t("date"), width: "120px" },
+  { key: "status", label: t("status"), width: "100px" },
+]);
+
+const paymentColumns = computed(() => [
+  { key: "payment_no", label: t("payment_no"), width: "150px" },
+  { key: "payment_date", label: t("date"), width: "120px" },
+  { key: "amount", label: t("amount"), width: "120px", align: "right" },
+  { key: "status", label: t("status"), width: "100px" },
+]);
+
+function handleExportPdf() {
+  window.print();
+}
+
+function handleShareWhatsApp() {
+  const policyRef = policy.value?.policy_no || policy.value?.name || props.name;
+  const customerRef = customer.value?.full_name || customer.value?.name || "-";
+  
+  const message = t("whatsapp_share_message")
+    .replace("{policy}", policyRef)
+    .replace("{customer}", customerRef);
+    
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+}
+
+function handleCreateEndorsement() {
+  router.push({
+    name: "offer-board",
+    query: {
+      from_policy: policy.value?.name || props.name,
+      intent: "endorsement",
+    },
+  });
+}
+
+async function openDocument(doc, referenceDoctype) {
+  const opened = await openDocumentInNewTab(doc || {}, {
+    referenceDoctype,
+    referenceName: doc?.name || "",
+  });
+
+  if (opened) return;
+  notification.message = t("fileLinkNotFound");
+  notification.type = "error";
+  notification.show = true;
+}
+
+function isPrivateDocument(doc) {
+  return Boolean(doc?.is_private);
+}
+
+function isVerifiedDocument(doc) {
+  return Boolean(doc?.is_verified);
+}
+
+function canArchiveDocument(doc) {
+  return atDocumentLifecycle.canArchiveDocument(doc);
+}
+
+function canRestoreDocument(doc) {
+  return atDocumentLifecycle.canRestoreDocument(doc);
+}
+
+function canPermanentDeleteDocument(doc) {
+  return atDocumentLifecycle.canPermanentDeleteDocument(doc);
+}
+</script>
