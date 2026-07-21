@@ -226,16 +226,16 @@ describe("PolicyList page store integration", () => {
       (entry) => entry?.config?.url === "frappe.client.get_list" && entry?.config?.params?.doctype === "AT Offer"
     );
     const presetReadResource = createdResources.find(
-      (entry) => entry?.config?.url === "acentem_takipte.acentem_takipte.platform.api.filter_presets.get_filter_preset_state"
+      (entry) => entry?.config?.url === "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state"
     );
     const presetWriteResource = createdResources.find(
-      (entry) => entry?.config?.url === "acentem_takipte.acentem_takipte.platform.api.filter_presets.set_filter_preset_state"
+      (entry) => entry?.config?.url === "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state"
     );
 
     expect(offerResource?.config?.params?.filters).toEqual({ status: ["in", ["Sent", "Accepted"]] });
     expect(presetReadResource).toBeTruthy();
     expect(presetReadResource?.resource?.reload).toHaveBeenCalledWith({ screen: "policy_list" });
-    expect(resourceCallSequence.indexOf("reload:acentem_takipte.acentem_takipte.platform.api.filter_presets.get_filter_preset_state")).toBeLessThan(
+    expect(resourceCallSequence.indexOf("reload:acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state")).toBeLessThan(
       resourceCallSequence.indexOf("get_list:AT Policy")
     );
     expect(presetWriteResource).toBeTruthy();

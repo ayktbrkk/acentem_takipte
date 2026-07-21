@@ -27,7 +27,7 @@ export function useCustomerBoardRuntime({ activeLocale = ref("tr") } = {}) {
   });
 
   const customerResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_customer_workbench_rows",
+    url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows",
     auto: false,
   });
 

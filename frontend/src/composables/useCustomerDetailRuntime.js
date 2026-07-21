@@ -24,7 +24,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   }
 
   const customer360Resource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_customer_360_payload",
+    url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_360_payload",
     auto: false,
   });
 

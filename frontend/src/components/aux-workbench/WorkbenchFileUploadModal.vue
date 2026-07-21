@@ -268,7 +268,7 @@ async function loadContextInfo() {
       doctype: effectiveAttachedToDoctype.value,
       docname: effectiveAttachedToName.value,
     });
-    const resp = await fetch(`/api/method/acentem_takipte.acentem_takipte.platform.api.documents.get_document_context?${params}`, {
+    const resp = await fetch(`/api/method/acentem_takipte.acentem_takipte.api.documents.get_document_context?${params}`, {
       headers: csrfT ? { "X-Frappe-CSRF-Token": csrfT } : {},
     });
     if (resp.ok) {
@@ -471,7 +471,7 @@ async function submit() {
         notes: notes.value,
         is_private: "1",
       });
-      const metaResp = await fetch("/api/method/acentem_takipte.acentem_takipte.platform.api.documents.upload_document", {
+      const metaResp = await fetch("/api/method/acentem_takipte.acentem_takipte.api.documents.upload_document", {
         method: "POST",
         body,
         headers: Object.assign(

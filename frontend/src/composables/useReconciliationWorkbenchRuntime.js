@@ -13,30 +13,30 @@ export function useReconciliationWorkbenchRuntime({ t, route, router, authStore,
   accountingStore.setLocaleCode(localeCode.value);
 
   const workbenchResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.get_reconciliation_workbench",
+    url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
     params: buildParams(),
     auto: true,
   });
   const syncResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.run_sync",
+    url: "acentem_takipte.acentem_takipte.api.accounting.run_sync",
   });
   const runReconciliationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.run_reconciliation_job",
+    url: "acentem_takipte.acentem_takipte.api.accounting.run_reconciliation_job",
   });
   const bulkResolveResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.bulk_resolve_items",
+    url: "acentem_takipte.acentem_takipte.api.accounting.bulk_resolve_items",
   });
   const resolveResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.resolve_item",
+    url: "acentem_takipte.acentem_takipte.api.accounting.resolve_item",
   });
   const setValueResource = createResource({
     url: "frappe.client.set_value",
   });
   const previewStatementImportResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.preview_statement_import",
+    url: "acentem_takipte.acentem_takipte.api.accounting.preview_statement_import",
   });
   const importStatementPreviewResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.import_statement_preview",
+    url: "acentem_takipte.acentem_takipte.api.accounting.import_statement_preview",
   });
 
   const rows = computed(() => accountingStore.rows);

@@ -16,7 +16,7 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const claimResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_claim_detail_payload",
+    url: "acentem_takipte.acentem_takipte.api.dashboard.get_claim_detail_payload",
     auto: false,
   });
 

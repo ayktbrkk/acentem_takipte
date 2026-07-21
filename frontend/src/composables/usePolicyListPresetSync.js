@@ -13,11 +13,11 @@ export function usePolicyListPresetSync({
   screen = "policy_list",
   presetListStorageKey = "at:policy-list:preset-list",
   policyPresetServerReadResource = createResource({
-    url: "acentem_takipte.acentem_takipte.platform.api.filter_presets.get_filter_preset_state",
+    url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
     auto: false,
   }),
   policyPresetServerWriteResource = createResource({
-    url: "acentem_takipte.acentem_takipte.platform.api.filter_presets.set_filter_preset_state",
+    url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
     auto: false,
   }),
 }) {

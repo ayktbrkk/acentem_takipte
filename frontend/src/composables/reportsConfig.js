@@ -1,48 +1,48 @@
 export const reportCatalog = {
   policy_list: {
     label: { tr: "Poliçe Listesi", en: "Policy List" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_policy_list_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_policy_list_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_policy_list_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_policy_list_report",
   },
   payment_status: {
     label: { tr: "Tahsilat Durumu", en: "Payment Status" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_payment_status_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_payment_status_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_payment_status_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_payment_status_report",
   },
   renewal_performance: {
     label: { tr: "Yenileme Performansı", en: "Renewal Performance" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_renewal_performance_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_renewal_performance_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_renewal_performance_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_renewal_performance_report",
   },
   claim_loss_ratio: {
     label: { tr: "Hasar/Prim Oranı", en: "Claim Loss Ratio" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_claim_loss_ratio_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_claim_loss_ratio_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claim_loss_ratio_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claim_loss_ratio_report",
   },
   agent_performance: {
     label: { tr: "Acente Üretim Karnesi", en: "Agency Performance Scorecard" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_agent_performance_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_agent_performance_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_agent_performance_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_agent_performance_report",
   },
   customer_segmentation: {
     label: { tr: "Müşteri Segmentasyonu", en: "Customer Segmentation" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_customer_segmentation_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_customer_segmentation_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_customer_segmentation_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_customer_segmentation_report",
   },
   communication_operations: {
     label: { tr: "İletişim Operasyonları", en: "Communication Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_communication_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_communication_operations_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_communication_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_communication_operations_report",
   },
   reconciliation_operations: {
     label: { tr: "Mutabakat Operasyonları", en: "Reconciliation Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_reconciliation_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_reconciliation_operations_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_reconciliation_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_reconciliation_operations_report",
   },
   claims_operations: {
     label: { tr: "Hasar Operasyonları", en: "Claims Operations" },
-    readMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_claims_operations_report",
-    exportMethod: "acentem_takipte.acentem_takipte.domains.reports.api.endpoints.export_claims_operations_report",
+    readMethod: "acentem_takipte.acentem_takipte.api.reports.get_claims_operations_report",
+    exportMethod: "acentem_takipte.acentem_takipte.api.reports.export_claims_operations_report",
   },
 };
 

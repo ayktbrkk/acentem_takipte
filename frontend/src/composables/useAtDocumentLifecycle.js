@@ -17,15 +17,15 @@ export function useAtDocumentLifecycle({ authStore, t, labels = {} }) {
   const actionBusyName = ref("");
 
   const archiveResource = createResource({
-    url: "acentem_takipte.acentem_takipte.platform.api.documents.archive_document",
+    url: "acentem_takipte.acentem_takipte.api.documents.archive_document",
     auto: false,
   });
   const restoreResource = createResource({
-    url: "acentem_takipte.acentem_takipte.platform.api.documents.restore_document",
+    url: "acentem_takipte.acentem_takipte.api.documents.restore_document",
     auto: false,
   });
   const permanentDeleteResource = createResource({
-    url: "acentem_takipte.acentem_takipte.platform.api.documents.permanent_delete_document",
+    url: "acentem_takipte.acentem_takipte.api.documents.permanent_delete_document",
     auto: false,
   });
 

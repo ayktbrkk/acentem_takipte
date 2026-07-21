@@ -324,21 +324,21 @@ const DashboardSalesTab = defineAsyncComponent(() =>
   import("../components/dashboard/DashboardSalesTab.vue")
 );
 import { getQuickCreateConfig, getLocalizedText } from "../config/quickCreateRegistry";
-import { useDashboardPresentation } from "../dashboard/composables/useDashboardPresentation";
-import { useDashboardFormatters } from "../dashboard/composables/useDashboardFormatters";
-import { useDashboardFacts } from "../dashboard/composables/useDashboardFacts";
-import { useDashboardSales } from "../dashboard/composables/useDashboardSales";
-import { useDashboardSummary } from "../dashboard/composables/useDashboardSummary";
-import { useDashboardOrchestration } from "../dashboard/composables/useDashboardOrchestration";
-import { useDashboardItemActions } from "../dashboard/composables/useDashboardItemActions";
-import { useDashboardLeadDialog } from "../dashboard/composables/useDashboardLeadDialog";
-import { useDashboardLeadSubmission } from "../dashboard/composables/useDashboardLeadSubmission";
-import { useDashboardLeadState } from "../dashboard/composables/useDashboardLeadState";
-import { useDashboardPreviewData } from "../dashboard/composables/useDashboardPreviewData";
-import { useDashboardPreviewPager } from "../dashboard/composables/useDashboardPreviewPager";
-import { useDashboardStatus } from "../dashboard/composables/useDashboardStatus";
-import { useDashboardTabHelpers } from "../dashboard/composables/useDashboardTabHelpers";
-import { useDashboardVisibleRange } from "../dashboard/composables/useDashboardVisibleRange";
+import { useDashboardPresentation } from "../composables/useDashboardPresentation";
+import { useDashboardFormatters } from "../composables/useDashboardFormatters";
+import { useDashboardFacts } from "../composables/useDashboardFacts";
+import { useDashboardSales } from "../composables/useDashboardSales";
+import { useDashboardSummary } from "../composables/useDashboardSummary";
+import { useDashboardOrchestration } from "../composables/useDashboardOrchestration";
+import { useDashboardItemActions } from "../composables/useDashboardItemActions";
+import { useDashboardLeadDialog } from "../composables/useDashboardLeadDialog";
+import { useDashboardLeadSubmission } from "../composables/useDashboardLeadSubmission";
+import { useDashboardLeadState } from "../composables/useDashboardLeadState";
+import { useDashboardPreviewData } from "../composables/useDashboardPreviewData";
+import { useDashboardPreviewPager } from "../composables/useDashboardPreviewPager";
+import { useDashboardStatus } from "../composables/useDashboardStatus";
+import { useDashboardTabHelpers } from "../composables/useDashboardTabHelpers";
+import { useDashboardVisibleRange } from "../composables/useDashboardVisibleRange";
 import {
   asArray,
   buildInitialClaimListParams,
@@ -410,35 +410,35 @@ const {
 } = useDashboardLeadState();
 
 const kpiResource = createResource({
-  url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_dashboard_kpis",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_kpis",
   params: buildInitialKpiParams(branchStore, selectedRange),
   auto: false,
 });
 
 const followUpResource = createResource({
-  url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_follow_up_sla_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_follow_up_sla_payload",
   params: withDashboardOfficeBranchFilter(branchStore, { filters: {} }),
   auto: true,
 });
 
 const myTasksResource = createResource({
-  url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_my_tasks_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_tasks_payload",
   params: withDashboardOfficeBranchFilter(branchStore, { filters: {} }),
   auto: true,
 });
 const myActivitiesResource = createResource({
-  url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_my_activities_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_activities_payload",
   params: withDashboardOfficeBranchFilter(branchStore, { filters: {} }),
   auto: true,
 });
 const myRemindersResource = createResource({
-  url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_my_reminders_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_my_reminders_payload",
   params: withDashboardOfficeBranchFilter(branchStore, { filters: {} }),
   auto: true,
 });
 
 const myTaskMutationResource = createResource({
-  url: "acentem_takipte.acentem_takipte.platform.api.quick_create.update_quick_aux_record",
+  url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
   auto: false,
 });
 
@@ -519,7 +519,7 @@ const claimListResource = createResource({
 });
 
 const reconciliationPreviewResource = createResource({
-  url: "acentem_takipte.acentem_takipte.domains.accounting.api.endpoints.get_reconciliation_workbench",
+  url: "acentem_takipte.acentem_takipte.api.accounting.get_reconciliation_workbench",
   params: {
     status: "Open",
     mismatch_type: null,
@@ -529,13 +529,13 @@ const reconciliationPreviewResource = createResource({
 });
 
 const dashboardTabPayloadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_dashboard_tab_payload",
+  url: "acentem_takipte.acentem_takipte.api.dashboard.get_dashboard_tab_payload",
   params: buildInitialTabPayloadParams(branchStore, selectedRange, "daily"),
   auto: true,
 });
 
 const createLeadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.platform.api.quick_create.create_quick_lead",
+  url: "acentem_takipte.acentem_takipte.api.quick_create.create_quick_lead",
 });
 
 const localeCode = computed(() => (unref(authStore.locale) === "tr" ? "tr-TR" : "en-US"));

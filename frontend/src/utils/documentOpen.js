@@ -37,7 +37,7 @@ async function trackDocumentView(referenceDoctype, referenceName) {
   });
   const csrfToken = (typeof window !== "undefined" && window.csrf_token) || "";
   try {
-    await fetch("/api/method/acentem_takipte.acentem_takipte.platform.api.documents.track_document_view", {
+    await fetch("/api/method/acentem_takipte.acentem_takipte.api.documents.track_document_view", {
       method: "POST",
       body,
       headers: Object.assign(

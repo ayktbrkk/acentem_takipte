@@ -7,7 +7,7 @@ function buildCustomerQuickFilters(branchStore) {
 
 export function useCommunicationCenterResources({ branchStore, filters }) {
   const snapshotResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.get_queue_snapshot",
+    url: "acentem_takipte.acentem_takipte.api.communication.get_queue_snapshot",
     params: buildParams(branchStore, filters),
     auto: true,
   });
@@ -85,27 +85,27 @@ export function useCommunicationCenterResources({ branchStore, filters }) {
   });
 
   const runCycleResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.run_dispatch_cycle",
+    url: "acentem_takipte.acentem_takipte.api.communication.run_dispatch_cycle",
   });
 
   const sendDraftResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.send_draft_now",
+    url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
   });
 
   const retryOutboxResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.retry_outbox_item",
+    url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
   });
 
   const auxMutationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.platform.api.quick_create.update_quick_aux_record",
+    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
   });
 
   const segmentPreviewResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.preview_segment_members",
+    url: "acentem_takipte.acentem_takipte.api.communication.preview_segment_members",
   });
 
   const campaignRunResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.execute_campaign",
+    url: "acentem_takipte.acentem_takipte.api.communication.execute_campaign",
   });
 
   return {

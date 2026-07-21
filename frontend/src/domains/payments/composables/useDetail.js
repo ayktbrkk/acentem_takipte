@@ -15,7 +15,7 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const paymentResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_payment_detail_payload",
+    url: "acentem_takipte.acentem_takipte.api.dashboard.get_payment_detail_payload",
     auto: false,
   });
 

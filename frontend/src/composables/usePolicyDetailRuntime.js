@@ -71,7 +71,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const policyResource = createResource({
-    url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_policy_detail_payload",
+    url: "acentem_takipte.acentem_takipte.api.dashboard.get_policy_detail_payload",
     auto: false,
   });
 

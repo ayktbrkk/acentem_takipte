@@ -73,7 +73,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
     params: buildRenewalListParams(),
   });
   const renewalMutationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.platform.api.quick_create.update_quick_aux_record",
+    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
     auto: false,
   });
   const renewalQuickPolicyResource = createResource({
