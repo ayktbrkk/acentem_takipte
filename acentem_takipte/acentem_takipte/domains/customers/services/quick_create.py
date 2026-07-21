@@ -14,7 +14,7 @@ from acentem_takipte.acentem_takipte.platform.services.quick_create_core import 
     create_lead as create_lead_service,
     create_payment as create_payment_service,
 )
-from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import (
     _assert_create_permission,
     _digits_only,
     _normalize_date,

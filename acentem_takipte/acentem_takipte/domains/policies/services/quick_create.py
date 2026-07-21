@@ -18,7 +18,7 @@ from acentem_takipte.acentem_takipte.platform.services.quick_create_core import 
     create_policy as create_policy_service,
     create_task as create_task_service,
 )
-from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import (
     _assert_create_permission,
     _normalize_date,
     _normalize_datetime,

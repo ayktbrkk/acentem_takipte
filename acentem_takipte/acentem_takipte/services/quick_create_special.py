@@ -11,7 +11,7 @@ from acentem_takipte.acentem_takipte.platform.api.quick_create import (
     delete_aux_record as delete_aux_record_service,
     update_aux_record as update_aux_record_service,
 )
-from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import (
     _apply_aux_edit_payload,
     _assert_create_permission,
     _assert_delete_permission,

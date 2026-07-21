@@ -16,7 +16,7 @@ from acentem_takipte.acentem_takipte.platform.services.quick_create_core import 
     create_renewal_task as create_renewal_task_service,
     create_segment as create_segment_service,
 )
-from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import (
     _as_check,
     _assert_create_permission,
     _normalize_date,

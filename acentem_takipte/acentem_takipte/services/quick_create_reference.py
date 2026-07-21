@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import (
     _as_check,
     _assert_create_permission,
     _normalize_link,

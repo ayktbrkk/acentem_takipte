@@ -23,7 +23,7 @@ from acentem_takipte.acentem_takipte.domains.customers.services.quick_create imp
     create_quick_lead,
     create_quick_payment,
 )
-from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import (
     ALLOWED_AUX_EDIT_FIELDS,
     _assert_create_permission,
     _normalize_doctype_or_blank,
