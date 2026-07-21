@@ -436,7 +436,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
         "renewal_date",
         "lost_reason_code",
       ],
-      order_by: "due_date asc, modified desc",
+      order_by: "due_date asc, `tabAT Renewal Task`.modified desc",
       limit_page_length: RENEWAL_FETCH_LIMIT,
     };
     const clauses = [];
