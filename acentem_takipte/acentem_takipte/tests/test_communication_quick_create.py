@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.api import communication
+import acentem_takipte.acentem_takipte.domains.communications.api.endpoints as communication
 
 
 def test_create_quick_notification_draft_uses_customer_office_branch(monkeypatch):

@@ -8,11 +8,11 @@ import frappe
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.tasks as task_jobs
-from acentem_takipte.acentem_takipte.api import admin_jobs as admin_jobs_api
-from acentem_takipte.acentem_takipte.api import communication as communication_api
-from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
-from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
-from acentem_takipte.acentem_takipte.api import session as session_api
+import acentem_takipte.acentem_takipte.domains.admin.api.jobs as admin_jobs_api
+import acentem_takipte.acentem_takipte.domains.communications.api.endpoints as communication_api
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard_api
+import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create_api
+import acentem_takipte.acentem_takipte.platform.api.session as session_api
 from acentem_takipte.acentem_takipte.doctype.at_policy_endorsement import (
     at_policy_endorsement as endorsement_api,
 )

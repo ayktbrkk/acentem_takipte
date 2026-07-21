@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from acentem_takipte.acentem_takipte.api import reports
+import acentem_takipte.acentem_takipte.domains.reports.api.endpoints as reports
 from acentem_takipte.acentem_takipte.domains.reports.services.scheduled import scheduled_reports
 
 

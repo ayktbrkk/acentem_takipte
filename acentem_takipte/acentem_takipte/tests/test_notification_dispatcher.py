@@ -6,7 +6,7 @@ from unittest.mock import patch
 import frappe
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import communication as communication_api
+import acentem_takipte.acentem_takipte.domains.communications.api.endpoints as communication_api
 from acentem_takipte.acentem_takipte.communication import process_notification_queue
 from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
 

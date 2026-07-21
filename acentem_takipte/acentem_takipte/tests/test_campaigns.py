@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from acentem_takipte.acentem_takipte.api import communication as communication_api
+import acentem_takipte.acentem_takipte.domains.communications.api.endpoints as communication_api
 from acentem_takipte.acentem_takipte.domains.communications.services.campaigns import campaigns as campaigns_service
 
 

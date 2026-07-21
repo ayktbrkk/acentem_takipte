@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.api import admin_jobs
+import acentem_takipte.acentem_takipte.domains.admin.api.jobs as admin_jobs
 
 
 def test_run_scheduled_reports_job_uses_admin_access(monkeypatch):

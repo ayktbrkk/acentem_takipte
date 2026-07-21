@@ -3,10 +3,10 @@ from __future__ import annotations
 import importlib
 from unittest import TestCase
 
-from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
-from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
-from acentem_takipte.acentem_takipte.api import reports as reports_api
-from acentem_takipte.acentem_takipte.api import session as session_api
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard_api
+import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create_api
+import acentem_takipte.acentem_takipte.domains.reports.api.endpoints as reports_api
+import acentem_takipte.acentem_takipte.platform.api.session as session_api
 from acentem_takipte.acentem_takipte.platform.api.versioning import build_versioned_api_method_path
 
 

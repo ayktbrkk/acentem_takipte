@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
+import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create_api
 from acentem_takipte.acentem_takipte.platform.services.quick_create_auxiliary import quick_create_auxiliary
 from acentem_takipte.acentem_takipte.domains.customers.services.quick_create import quick_create_customer_flow
 from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import quick_create_helpers

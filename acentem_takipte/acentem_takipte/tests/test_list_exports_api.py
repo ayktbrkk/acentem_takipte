@@ -2,7 +2,7 @@ import pytest
 from types import SimpleNamespace
 
 import frappe
-from acentem_takipte.acentem_takipte.api import list_exports
+import acentem_takipte.acentem_takipte.platform.api.list_exports as list_exports
 
 
 @pytest.fixture(autouse=True)

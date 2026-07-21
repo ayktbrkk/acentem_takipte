@@ -5,7 +5,7 @@ from unittest.mock import patch
 from frappe import _
 
 from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import quick_create_helpers
-from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
+import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create_api
 
 
 def test_assert_create_permission_uses_shared_mutation_helper():

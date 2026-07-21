@@ -1,4 +1,4 @@
-from acentem_takipte.acentem_takipte.api import reports
+import acentem_takipte.acentem_takipte.domains.reports.api.endpoints as reports
 
 
 def test_get_communication_operations_report_enforces_auth_and_builds_payload(monkeypatch):

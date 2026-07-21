@@ -1,4 +1,4 @@
-from acentem_takipte.acentem_takipte.api import admin_settings
+import acentem_takipte.acentem_takipte.domains.admin.api.settings as admin_settings
 
 
 def test_get_admin_general_settings_coerces_response_shape(monkeypatch):

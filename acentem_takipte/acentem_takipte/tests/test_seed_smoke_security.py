@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, call, patch
 import frappe
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import seed as seed_api
-from acentem_takipte.acentem_takipte.api import smoke as smoke_api
+import acentem_takipte.acentem_takipte.platform.api.seed as seed_api
+import acentem_takipte.acentem_takipte.platform.api.smoke as smoke_api
 from acentem_takipte.acentem_takipte.domains.customers.services.quick_create import quick_create_customer_flow
 
 

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import security as security_api
+import acentem_takipte.acentem_takipte.platform.api.security as security_api
 from acentem_takipte.acentem_takipte.utils.logging import (
     build_redacted_log_message,
     log_redacted_error,

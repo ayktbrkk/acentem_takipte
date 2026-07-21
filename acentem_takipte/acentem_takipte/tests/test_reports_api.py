@@ -1,6 +1,6 @@
 import pytest
 
-from acentem_takipte.acentem_takipte.api import reports
+import acentem_takipte.acentem_takipte.domains.reports.api.endpoints as reports
 from acentem_takipte.acentem_takipte.domains.admin.services.alert_settings import ops_alert_settings
 
 

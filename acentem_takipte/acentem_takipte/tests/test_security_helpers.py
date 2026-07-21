@@ -6,8 +6,8 @@ from unittest.mock import patch
 import frappe
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import record_preview as record_preview_api
-from acentem_takipte.acentem_takipte.api import security as security_api
+import acentem_takipte.acentem_takipte.platform.api.record_preview as record_preview_api
+import acentem_takipte.acentem_takipte.platform.api.security as security_api
 
 
 class TestSecurityHelpers(IntegrationTestCase):

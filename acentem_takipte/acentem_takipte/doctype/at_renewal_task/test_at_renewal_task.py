@@ -6,7 +6,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 from frappe.utils import add_days, nowdate
 
-from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard_api
 from acentem_takipte.acentem_takipte.patches.v2026_02_26_renewal_status_completed_to_done import (
     execute as run_renewal_status_completed_to_done_patch,
 )

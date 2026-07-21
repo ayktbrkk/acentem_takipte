@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import frappe
 
-from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard_api
 
 
 class TestDashboardScope(TestCase):

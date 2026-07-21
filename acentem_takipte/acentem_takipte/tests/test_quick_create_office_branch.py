@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.api import quick_create
+import acentem_takipte.acentem_takipte.platform.api.quick_create as quick_create
 
 
 def test_resolve_office_branch_prefers_explicit(monkeypatch):

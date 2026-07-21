@@ -4,7 +4,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard_api
 from acentem_takipte.acentem_takipte.api.v2 import queries_customers as customer_queries
 from acentem_takipte.acentem_takipte.api.v2 import queries_leads as lead_queries
 from acentem_takipte.acentem_takipte.api.v2 import dashboard_security

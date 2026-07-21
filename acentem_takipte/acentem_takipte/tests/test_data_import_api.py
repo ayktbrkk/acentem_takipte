@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from acentem_takipte.acentem_takipte.api import data_import as data_import_api
+import acentem_takipte.acentem_takipte.platform.api.data_import as data_import_api
 
 
 def test_create_import_job_draft_rejects_unsupported_dataset(monkeypatch):

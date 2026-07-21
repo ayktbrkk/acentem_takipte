@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.api import dashboard
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard
 
 
 def test_get_dashboard_kpis_normalizes_requested_office_branch(monkeypatch):

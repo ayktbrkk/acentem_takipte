@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api import admin_jobs as admin_jobs_api
-from acentem_takipte.acentem_takipte.api import communication as communication_api
+import acentem_takipte.acentem_takipte.domains.admin.api.jobs as admin_jobs_api
+import acentem_takipte.acentem_takipte.domains.communications.api.endpoints as communication_api
 
 
 class TestAdminCommunicationAccess(IntegrationTestCase):

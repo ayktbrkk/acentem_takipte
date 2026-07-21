@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.api import customers as customers_api
+import acentem_takipte.acentem_takipte.domains.customers.api.endpoints as customers_api
 
 
 def test_search_customer_by_identity_returns_masked_payload_for_non_sensitive_user(monkeypatch):

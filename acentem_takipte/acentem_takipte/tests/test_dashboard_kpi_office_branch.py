@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.api import dashboard
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard
 
 
 def test_build_policy_where_keeps_branch_and_office_branch_separate():

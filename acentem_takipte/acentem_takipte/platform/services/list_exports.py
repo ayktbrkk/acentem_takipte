@@ -9,7 +9,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt, format_datetime, formatdate
 
-from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard_api
 from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import (
     coerce_columns,
     coerce_filters,

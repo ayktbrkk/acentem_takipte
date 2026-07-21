@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
-from acentem_takipte.acentem_takipte.api import dashboard
+import acentem_takipte.acentem_takipte.domains.reports.api.dashboard as dashboard
 
 
 class _FakeCache:

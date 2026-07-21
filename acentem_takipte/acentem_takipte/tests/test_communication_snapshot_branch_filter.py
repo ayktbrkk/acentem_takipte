@@ -1,4 +1,4 @@
-from acentem_takipte.acentem_takipte.api import communication
+import acentem_takipte.acentem_takipte.domains.communications.api.endpoints as communication
 
 
 def test_get_queue_snapshot_applies_normalized_office_branch(monkeypatch):
