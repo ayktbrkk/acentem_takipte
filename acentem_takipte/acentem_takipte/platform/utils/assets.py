@@ -22,7 +22,7 @@ PUBLIC_DIR_CANDIDATES = (
 
 
 def _app_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    return Path(__file__).resolve().parents[3]
 
 
 def _existing_manifest_paths() -> list[Path]:

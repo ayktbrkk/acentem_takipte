@@ -6,7 +6,7 @@ from pathlib import Path
 
 import frappe
 
-TRANSLATIONS_DIR = Path(__file__).resolve().parents[2] / "translations"
+TRANSLATIONS_DIR = Path(__file__).resolve().parents[3] / "translations"
 
 
 def _normalize_locale(locale: str | None) -> str:

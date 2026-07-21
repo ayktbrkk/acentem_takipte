@@ -52,7 +52,7 @@ class AccessPolicy:
         )
 
 
-_DEFAULT_POLICY_PATH = Path(__file__).resolve().parents[3] / "docs" / "examples" / "access_policy_template.yml"
+_DEFAULT_POLICY_PATH = Path(__file__).resolve().parents[4] / "docs" / "examples" / "access_policy_template.yml"
 
 
 def get_default_access_policy_path() -> Path:
