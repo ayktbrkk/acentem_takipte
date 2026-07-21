@@ -4,9 +4,9 @@ from __future__ import annotations
 # endpoints. The imported callables below are intentionally re-exported so legacy
 # Frappe hooks/tests can keep importing `api.quick_create.<name>` without moving
 # every caller in one pass.
-from acentem_takipte.acentem_takipte.platform.api.quick_create import (
-    create_activity as create_activity_service,
-    create_reminder as create_reminder_service,
+from acentem_takipte.acentem_takipte.platform.services.quick_create_core import (
+    create_activity,
+    create_reminder,
 )
 from acentem_takipte.acentem_takipte.platform.services.quick_create_auxiliary import (
     create_quick_call_note,
@@ -58,7 +58,7 @@ __all__ = [
     "_assert_create_permission",
     "_normalize_doctype_or_blank",
     "_normalize_source_name",
-    "create_activity_service",
+    "create_activity",
     "create_quick_accounting_entry",
     "create_quick_activity",
     "create_quick_branch",
@@ -80,7 +80,7 @@ __all__ = [
     "create_quick_sales_entity",
     "create_quick_segment",
     "create_quick_task",
-    "create_reminder_service",
+    "create_reminder",
     "delete_quick_aux_record",
     "search_quick_options",
     "update_quick_aux_record",
