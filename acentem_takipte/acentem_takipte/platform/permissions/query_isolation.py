@@ -126,8 +126,6 @@ Integrates with query_isolation and dashboard_security to ensure reports
 respect user's branch and sales_entity scope.
 """
 
-from __future__ import annotations
-
 import frappe
 
 from acentem_takipte.acentem_takipte.api.v2 import dashboard_security
