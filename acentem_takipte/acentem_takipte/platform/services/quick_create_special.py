@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.api.quick_payloads import (
+from acentem_takipte.acentem_takipte.platform.api.quick_payloads import (
     QuickAccountingEntryPayload,
     QuickNotificationTemplatePayload,
 )

@@ -131,7 +131,7 @@ async function loadAlertChannelSettings() {
   error.value = "";
   try {
     const payload = await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.get_ops_alert_channel_settings",
+      url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_ops_alert_channel_settings",
       method: "GET",
     });
     const message = payload?.message || payload || {};
@@ -156,7 +156,7 @@ async function saveAlertChannelSettings(config) {
   error.value = "";
   try {
     const payload = await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_ops_alert_channel_settings_api",
+      url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.save_ops_alert_channel_settings_api",
       method: "POST",
       params: { config },
     });
@@ -183,7 +183,7 @@ async function testAlertChannels(config) {
   error.value = "";
   try {
     await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.reports.send_ops_alert_channel_test_api",
+      url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.send_ops_alert_channel_test_api",
       method: "POST",
       params: { config },
     });

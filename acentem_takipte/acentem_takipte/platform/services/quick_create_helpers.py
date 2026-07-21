@@ -397,7 +397,7 @@ def _parse_update_payload(data) -> dict:
 
 
 def _apply_aux_edit_payload(doc, payload: dict) -> None:
-    from acentem_takipte.acentem_takipte.api.aux_edit_registry import (
+    from acentem_takipte.acentem_takipte.platform.api.aux_edit_registry import (
         apply_field_value,
         resolve_handler,
     )

@@ -12,7 +12,7 @@ app_version = __version__
 export_python_type_annotations = True
 
 # Website routing
-get_website_user_home_page = "acentem_takipte.acentem_takipte.api.session.get_website_user_home_page"
+get_website_user_home_page = "acentem_takipte.acentem_takipte.platform.api.session.get_website_user_home_page"
 
 website_route_rules = [
     {"from_route": "/at/<path:path>", "to_route": "at"},

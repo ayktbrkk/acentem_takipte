@@ -252,7 +252,7 @@ function openOfferDetail(name) {
 }
 
 const offersResource = createResource({ url: "frappe.client.get_list", auto: false });
-const convertResource = createResource({ url: "acentem_takipte.acentem_takipte.api.offers.convert_offer_to_policy", auto: false });
+const convertResource = createResource({ url: "acentem_takipte.acentem_takipte.domains.offers.api.endpoints.convert_offer_to_policy", auto: false });
 const updateOfferStatusResource = createResource({ url: "frappe.client.set_value", auto: false });
 const branchResource = createResource({
   url: "frappe.client.get_list",
@@ -270,16 +270,16 @@ const salesEntityResource = createResource({
   params: { doctype: "AT Sales Entity", fields: ["name", "full_name"], order_by: "full_name asc" },
 });
 const customerSearchResource = createResource({ url: "frappe.client.get_list", auto: false });
-const createQuickOfferResource = createResource({ url: "acentem_takipte.acentem_takipte.api.offers.quick_create_offer", auto: false });
+const createQuickOfferResource = createResource({ url: "acentem_takipte.acentem_takipte.domains.offers.api.endpoints.quick_create_offer", auto: false });
 const offerLookupResource = createResource({ url: "frappe.client.get", auto: false });
 const offerListResource = createResource({ url: "frappe.client.get_list", auto: false });
 const offerListCountResource = createResource({ url: "frappe.client.get_count", auto: false });
 const offerPresetServerReadResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
+  url: "acentem_takipte.acentem_takipte.platform.api.filter_presets.get_filter_preset_state",
   auto: false,
 });
 const offerPresetServerWriteResource = createResource({
-  url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
+  url: "acentem_takipte.acentem_takipte.platform.api.filter_presets.set_filter_preset_state",
   auto: false,
 });
 

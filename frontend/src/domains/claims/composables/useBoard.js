@@ -134,7 +134,7 @@ export function useClaimsBoardRuntime({ authStore: _authStore, branchStore, clai
     auto: false,
   });
   const claimMutationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+    url: "acentem_takipte.acentem_takipte.platform.api.quick_create.update_quick_aux_record",
     auto: false,
   });
   const claimNotificationDraftResource = createResource({

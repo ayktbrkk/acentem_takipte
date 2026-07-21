@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
-from acentem_takipte.acentem_takipte.api.quick_payloads import (
+from acentem_takipte.acentem_takipte.platform.api.quick_payloads import (
     QuickAccountingEntryPayload,
     QuickNotificationTemplatePayload,
     QuickPaymentPayload,

@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, nowdate
 
-from acentem_takipte.acentem_takipte.api.quick_payloads import QuickPaymentPayload
+from acentem_takipte.acentem_takipte.platform.api.quick_payloads import QuickPaymentPayload
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     normalize_customer_type,
 )

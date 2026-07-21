@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, nowdate
 
-from acentem_takipte.acentem_takipte.api.quick_payloads import (
+from acentem_takipte.acentem_takipte.platform.api.quick_payloads import (
     QuickPolicyPayload,
     QuickTaskPayload,
 )

@@ -39,7 +39,7 @@ export function useLeadListFilters({ t, activeLocale }) {
   const loadErrorText = ref("");
 
   const leadListResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows",
+    url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_lead_workbench_rows",
     auto: false,
   });
 
@@ -280,7 +280,7 @@ export function useLeadListFilters({ t, activeLocale }) {
   async function persistPresetStateToServer() {
     try {
       const resource = createResource({
-        url: "acentem_takipte.acentem_takipte.api.filter_presets.set_filter_preset_state",
+        url: "acentem_takipte.acentem_takipte.platform.api.filter_presets.set_filter_preset_state",
         auto: false,
       });
       await resource.submit({
@@ -296,7 +296,7 @@ export function useLeadListFilters({ t, activeLocale }) {
   async function hydratePresetStateFromServer() {
     try {
       const resource = createResource({
-        url: "acentem_takipte.acentem_takipte.api.filter_presets.get_filter_preset_state",
+        url: "acentem_takipte.acentem_takipte.platform.api.filter_presets.get_filter_preset_state",
         auto: false,
       });
       const remote = await resource.reload({ screen: "lead_list" });
