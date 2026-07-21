@@ -7,10 +7,6 @@ from acentem_takipte.acentem_takipte.platform.api.quick_payloads import (
     QuickAccountingEntryPayload,
     QuickNotificationTemplatePayload,
 )
-from acentem_takipte.acentem_takipte.platform.api.quick_create import (
-    delete_aux_record as delete_aux_record_service,
-    update_aux_record as update_aux_record_service,
-)
 from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import (
     _apply_aux_edit_payload,
     _assert_create_permission,
@@ -244,7 +240,8 @@ def update_quick_aux_record(
 
     payload = _parse_update_payload(data)
     _apply_aux_edit_payload(doc, payload)
-    return update_aux_record_service(doc)
+    doc.save()
+    return {"name": doc.name, "updated": True}
 
 
 @frappe.whitelist()
@@ -262,4 +259,5 @@ def delete_quick_aux_record(
         frappe.throw(_("Record name is required."))
     doc = frappe.get_doc(normalized_doctype, record_name)
     doc.check_permission("delete")
-    return delete_aux_record_service(doc)
+    doc.delete()
+    return {"name": record_name, "deleted": True}
