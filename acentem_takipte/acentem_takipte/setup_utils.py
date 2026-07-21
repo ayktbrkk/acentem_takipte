@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.permissions import add_permission, update_permission_property
 
-from .services.access_policy_runtime import build_permission_matrix
+from .platform.permissions.access_policy_runtime import build_permission_matrix
 from .utils.assets import ensure_site_asset_symlink
 from .utils.i18n import translate_text
 
