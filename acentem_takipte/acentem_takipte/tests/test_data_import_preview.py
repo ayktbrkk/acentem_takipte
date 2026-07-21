@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from acentem_takipte.acentem_takipte.services.data_import import normalizers, preview
+from acentem_takipte.acentem_takipte.platform.import_export.data_import import normalizers, preview
 
 
 @pytest.fixture(autouse=True)

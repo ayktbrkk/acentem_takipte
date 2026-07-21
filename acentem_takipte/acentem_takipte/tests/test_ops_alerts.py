@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
-import acentem_takipte.acentem_takipte.services.ops_alerts as ops_alerts
+import acentem_takipte.acentem_takipte.domains.admin.services.alerts as ops_alerts
 
 
 class TestOpsAlerts(IntegrationTestCase):

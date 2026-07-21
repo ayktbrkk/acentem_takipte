@@ -281,7 +281,7 @@ def precompute_user_scope_on_session_creation(login_manager=None):
         return
 
     try:
-        from acentem_takipte.acentem_takipte.services.cache_precomputation import (
+        from acentem_takipte.acentem_takipte.platform.persistence.cache_precomputation import (
             precompute_user_scope,
         )
 
@@ -298,7 +298,7 @@ def invalidate_user_scope_on_logout(login_manager=None):
         return
 
     try:
-        from acentem_takipte.acentem_takipte.services.cache_precomputation import (
+        from acentem_takipte.acentem_takipte.platform.persistence.cache_precomputation import (
             invalidate_user_scope_cache,
         )
 

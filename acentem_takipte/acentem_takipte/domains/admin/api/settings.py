@@ -4,8 +4,8 @@ from typing import Any
 
 import frappe
 
-from acentem_takipte.acentem_takipte.api.security import assert_authenticated, assert_post_request, assert_roles
-from acentem_takipte.acentem_takipte.services.admin_general_settings import load_admin_general_settings, save_admin_general_settings
+from acentem_takipte.acentem_takipte.platform.api.security import assert_authenticated, assert_post_request, assert_roles
+from acentem_takipte.acentem_takipte.domains.admin.services.general_settings import load_admin_general_settings, save_admin_general_settings
 
 
 @frappe.whitelist()

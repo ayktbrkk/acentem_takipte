@@ -65,7 +65,7 @@ export function useLeadBoardRuntime({ activeLocale = ref("tr") } = {}) {
   });
 
   const leadResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.dashboard.get_lead_workbench_rows",
+    url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_lead_workbench_rows",
     auto: false,
   });
 

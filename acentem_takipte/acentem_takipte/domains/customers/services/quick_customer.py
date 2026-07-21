@@ -8,7 +8,7 @@ from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     normalize_customer_type,
     normalize_identity_number,
 )
-from acentem_takipte.acentem_takipte.services.branches import assert_office_branch_access
+from acentem_takipte.acentem_takipte.platform.permissions.branches import assert_office_branch_access
 
 
 def resolve_or_create_quick_customer(

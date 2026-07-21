@@ -2,7 +2,7 @@ from __future__ import annotations
 
 # audit(facade): These helper imports are re-exported as a compatibility layer
 # while quick-create callers migrate off the old common module path.
-from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
     _as_check,
     _assert_create_permission,
     _assert_delete_permission,

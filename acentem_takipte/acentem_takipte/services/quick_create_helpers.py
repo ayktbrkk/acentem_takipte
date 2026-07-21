@@ -6,7 +6,7 @@ from datetime import date, datetime
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.platform.permissions.branches import (
     assert_office_branch_access,
     get_default_office_branch,
 )

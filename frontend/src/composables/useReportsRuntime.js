@@ -141,7 +141,7 @@ export function useReportsRuntime({
     scheduledLoading.value = true;
     try {
       const payload = await frappeRequest({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.get_scheduled_report_configs",
+        url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_scheduled_report_configs",
         method: "GET",
       });
       const message = payload?.message || payload || {};
@@ -158,7 +158,7 @@ export function useReportsRuntime({
     scheduledRunLoading.value = true;
     try {
       await frappeRequest({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_scheduled_reports_job",
+        url: "/api/method/acentem_takipte.acentem_takipte.domains.admin.api.jobs.run_scheduled_reports_job",
         method: "POST",
         params: {
           frequency: "daily",
@@ -177,7 +177,7 @@ export function useReportsRuntime({
     snapshotRunLoading.value = true;
     try {
       await frappeRequest({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.admin_jobs.run_customer_segment_snapshot_job",
+        url: "/api/method/acentem_takipte.acentem_takipte.domains.admin.api.jobs.run_customer_segment_snapshot_job",
         method: "POST",
         params: {
           limit: 250,
@@ -193,7 +193,7 @@ export function useReportsRuntime({
   async function saveScheduledReport({ index, config }) {
     try {
       await frappeRequest({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_scheduled_report_config",
+        url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.save_scheduled_report_config",
         method: "POST",
         params: {
           index: index || "",
@@ -209,7 +209,7 @@ export function useReportsRuntime({
   async function removeScheduledReport(index) {
     try {
       await frappeRequest({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.remove_scheduled_report_config",
+        url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.remove_scheduled_report_config",
         method: "POST",
         params: { index },
       });

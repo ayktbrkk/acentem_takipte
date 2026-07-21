@@ -17,19 +17,19 @@ from acentem_takipte.acentem_takipte.services.quick_create_auxiliary import (
     create_quick_renewal_task,
     create_quick_segment,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_customer_flow import (
+from acentem_takipte.acentem_takipte.domains.customers.services.quick_create import (
     create_quick_claim,
     create_quick_customer,
     create_quick_lead,
     create_quick_payment,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
     ALLOWED_AUX_EDIT_FIELDS,
     _assert_create_permission,
     _normalize_doctype_or_blank,
     _normalize_source_name,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_policy_task import (
+from acentem_takipte.acentem_takipte.domains.policies.services.quick_create import (
     create_quick_policy,
     create_quick_task,
 )

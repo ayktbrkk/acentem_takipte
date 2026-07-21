@@ -3,8 +3,8 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.api.security import assert_post_request
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.platform.api.security import assert_post_request
+from acentem_takipte.acentem_takipte.platform.permissions.branches import (
     get_default_office_branch,
     get_user_office_branches,
     user_can_access_all_office_branches,
@@ -171,7 +171,7 @@ def get_session_context() -> dict:
         frappe.throw(_("Authentication required"))
 
     try:
-        from acentem_takipte.acentem_takipte.services.cache_precomputation import get_cached_user_scope
+        from acentem_takipte.acentem_takipte.platform.persistence.cache_precomputation import get_cached_user_scope
 
         get_cached_user_scope(user=user, use_precomputed=True)
     except Exception:

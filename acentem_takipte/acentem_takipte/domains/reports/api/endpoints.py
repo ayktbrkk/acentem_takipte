@@ -8,8 +8,8 @@ from frappe.utils import cint
 # audit(f401): `_` became unused after report API error and permission messages
 # were inlined. Leave this note so the import is not silently reintroduced.
 
-from acentem_takipte.acentem_takipte.api.security import assert_authenticated, assert_doctype_permission, assert_post_request, assert_roles
-from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+from acentem_takipte.acentem_takipte.platform.api.security import assert_authenticated, assert_doctype_permission, assert_post_request, assert_roles
+from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import (
     coerce_columns,
     coerce_download_payload,
     coerce_filters,
@@ -18,20 +18,20 @@ from acentem_takipte.acentem_takipte.services.export_payload_utils import (
     normalize_export_key,
 )
 from acentem_takipte.acentem_takipte.platform.permissions.query_isolation import apply_scope_filters_to_report
-from acentem_takipte.acentem_takipte.services.report_registry import get_report_definition
-from acentem_takipte.acentem_takipte.services.reports_runtime import (
+from acentem_takipte.acentem_takipte.domains.reports.services.registry import get_report_definition
+from acentem_takipte.acentem_takipte.domains.reports.services.runtime import (
     build_report_download_response,
     build_safe_report_payload,
     get_scheduled_report_config_summary,
     remove_scheduled_report,
     save_scheduled_report,
 )
-from acentem_takipte.acentem_takipte.services.ops_alert_settings import (
+from acentem_takipte.acentem_takipte.domains.admin.services.alert_settings import (
     load_ops_alert_channel_settings,
     save_ops_alert_channel_settings,
     send_ops_alert_channel_test,
 )
-from acentem_takipte.acentem_takipte.services.scheduled_reports import (
+from acentem_takipte.acentem_takipte.domains.reports.services.scheduled import (
     get_scheduled_reports_timeline as get_timeline_service,
 )
 

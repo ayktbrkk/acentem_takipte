@@ -36,7 +36,7 @@ from acentem_takipte.acentem_takipte.api.v2 import (
 from acentem_takipte.acentem_takipte.api.v2 import (
     serializers as dashboard_serializers,
 )
-from acentem_takipte.acentem_takipte.api.dashboard_scopes import (
+from acentem_takipte.acentem_takipte.domains.reports.api.dashboard_scopes import (
     _build_lead_where,
     _build_payment_collection_where,
     _build_payment_where,
@@ -50,20 +50,20 @@ from acentem_takipte.acentem_takipte.api.v2 import (
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     has_sensitive_access,
 )
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.platform.permissions.branches import (
     normalize_requested_office_branch,
 )
-from acentem_takipte.acentem_takipte.services.privacy_masking import masked_query_gate
+from acentem_takipte.acentem_takipte.platform.permissions.privacy_masking import masked_query_gate
 # audit(f401): `build_scope_filters_dict` and the eager 360 builder imports below
 # were used by the pre-refactor dashboard path. Current endpoints either compose
 # scope data via helpers in this file or import detail builders lazily.
-from acentem_takipte.acentem_takipte.services.customer_360 import (
+from acentem_takipte.acentem_takipte.domains.customers.services.customer_360 import (
     build_customer_360_payload,
 )
-from acentem_takipte.acentem_takipte.services.follow_up_sla import (
+from acentem_takipte.acentem_takipte.domains.communications.services.follow_up_sla import (
     build_follow_up_sla_payload,
 )
-from acentem_takipte.acentem_takipte.services.work_management import (
+from acentem_takipte.acentem_takipte.domains.admin.services.work_management import (
     build_my_activities_payload,
     build_my_reminders_payload,
     build_my_tasks_payload,
@@ -230,7 +230,7 @@ def get_offer_detail_payload(name: str) -> dict[str, Any]:
     if not frappe.has_permission("AT Offer", "read", name):
         frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-    from acentem_takipte.acentem_takipte.services.offer_360 import build_offer_360_payload
+    from acentem_takipte.acentem_takipte.domains.offers.services.offer_360 import build_offer_360_payload
     return build_offer_360_payload(name)
 
 
@@ -245,7 +245,7 @@ def get_lead_detail_payload(name: str) -> dict[str, Any]:
     if not frappe.has_permission("AT Lead", "read", name):
         frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-    from acentem_takipte.acentem_takipte.services.lead_360 import build_lead_360_payload
+    from acentem_takipte.acentem_takipte.domains.leads.services.lead_360 import build_lead_360_payload
     return build_lead_360_payload(name)
 
 
@@ -304,7 +304,7 @@ def get_policy_detail_payload(name: str) -> dict[str, Any]:
     if not frappe.has_permission("AT Policy", "read", name):
         frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-    from acentem_takipte.acentem_takipte.services.policy_360 import build_policy_360_payload
+    from acentem_takipte.acentem_takipte.domains.policies.services.policy_360 import build_policy_360_payload
     return build_policy_360_payload(name)
 
 
@@ -318,7 +318,7 @@ def get_claim_detail_payload(name: str) -> dict[str, Any]:
     if not frappe.has_permission("AT Claim", "read", name):
         frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-    from acentem_takipte.acentem_takipte.services.claim_360 import get_claim_360_payload
+    from acentem_takipte.acentem_takipte.domains.claims.services.claim_360 import get_claim_360_payload
     return get_claim_360_payload(name)
 
 
@@ -332,7 +332,7 @@ def get_payment_detail_payload(name: str) -> dict[str, Any]:
     if not frappe.has_permission("AT Payment", "read", name):
         frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-    from acentem_takipte.acentem_takipte.services.payment_360 import get_payment_360_payload
+    from acentem_takipte.acentem_takipte.domains.payments.services.payment_360 import get_payment_360_payload
     return get_payment_360_payload(name)
 
 

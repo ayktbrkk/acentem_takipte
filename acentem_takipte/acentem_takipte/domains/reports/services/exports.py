@@ -12,8 +12,8 @@ from frappe.utils.pdf import get_pdf
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_columns, coerce_filters, coerce_rows, normalize_title
-from acentem_takipte.acentem_takipte.services.export_payload_utils import coerce_locale
+from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import coerce_columns, coerce_filters, coerce_rows, normalize_title
+from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import coerce_locale
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 REPORT_TITLES = {

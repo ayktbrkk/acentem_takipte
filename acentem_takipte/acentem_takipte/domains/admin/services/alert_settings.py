@@ -8,7 +8,7 @@ from typing import Any
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.services.ops_alerts import _dispatch_alerts, _resolve_environment, _resolve_site_name
+from acentem_takipte.acentem_takipte.domains.admin.services.alerts import _dispatch_alerts, _resolve_environment, _resolve_site_name
 
 
 OPS_ALERT_CHANNEL_KEYS = (

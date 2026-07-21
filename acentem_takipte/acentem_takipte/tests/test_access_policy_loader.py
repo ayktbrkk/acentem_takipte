@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from acentem_takipte.acentem_takipte.services.access_policy import (
+from acentem_takipte.acentem_takipte.platform.permissions.access_policy import (
     AccessPolicyError,
         build_access_policy,
     clear_access_policy_cache,

@@ -134,7 +134,7 @@ def test_download_export_policy_list_without_query_uses_qualified_order_by(monke
 
 
 def test_build_workbench_export_query_maps_claim_status():
-    from acentem_takipte.acentem_takipte.services.list_exports import build_workbench_export_query
+    from acentem_takipte.acentem_takipte.platform.services.list_exports import build_workbench_export_query
 
     query = build_workbench_export_query(
         "claims_board",

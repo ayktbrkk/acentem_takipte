@@ -22,7 +22,7 @@ Usage
 -----
 ::
 
-    from acentem_takipte.acentem_takipte.services.privacy_masking import masked_query_gate
+    from acentem_takipte.acentem_takipte.platform.permissions.privacy_masking import masked_query_gate
 
     if not has_sensitive_access():
         masked_query_gate(frappe.session.user, endpoint="customer_workbench", row_count=len(rows))

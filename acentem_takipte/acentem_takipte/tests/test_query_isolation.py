@@ -3,7 +3,7 @@
 import unittest
 
 from acentem_takipte.acentem_takipte.api.v2 import dashboard_security
-from acentem_takipte.acentem_takipte.services.query_isolation import (
+from acentem_takipte.acentem_takipte.platform.permissions.query_isolation import (
     build_scope_filter_for_doctype,
     build_scope_filters_dict,
     get_user_scope_metadata,

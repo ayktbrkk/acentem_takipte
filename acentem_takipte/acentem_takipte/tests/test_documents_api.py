@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
-from acentem_takipte.acentem_takipte.api.documents import (
+from acentem_takipte.acentem_takipte.platform.api.documents import (
     _resolve_reference_token,
     archive_document,
     get_document_context,
@@ -38,7 +38,7 @@ class FakeFileDoc:
 class TestDocumentsApi(IntegrationTestCase):
     def test_customer_reference_token_uses_existing_customer_fields(self):
         with patch(
-            "acentem_takipte.acentem_takipte.api.documents.frappe.db.get_value",
+            "acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.get_value",
             return_value={"name": "AT-CUST-2026-000012", "tax_id": "12345678901"},
         ) as get_value_mock:
             token = _resolve_reference_token("AT Customer", "AT-CUST-2026-000012")
@@ -54,9 +54,9 @@ class TestDocumentsApi(IntegrationTestCase):
     def test_archive_document_sets_status_to_archived(self):
         fake_doc = FakeDoc("AT-DOC-001", "Active")
         with (
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", return_value=fake_doc),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.has_permission", return_value=True),
-            patch("acentem_takipte.acentem_takipte.api.documents.log_decision_event"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", return_value=fake_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.has_permission", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.log_decision_event"),
         ):
             result = archive_document("AT-DOC-001")
 
@@ -67,9 +67,9 @@ class TestDocumentsApi(IntegrationTestCase):
     def test_restore_document_sets_status_to_active(self):
         fake_doc = FakeDoc("AT-DOC-001", "Archived")
         with (
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", return_value=fake_doc),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.has_permission", return_value=True),
-            patch("acentem_takipte.acentem_takipte.api.documents.log_decision_event"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", return_value=fake_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.has_permission", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.log_decision_event"),
         ):
             result = restore_document("AT-DOC-001")
 
@@ -98,14 +98,14 @@ class TestDocumentsApi(IntegrationTestCase):
             raise AssertionError(f"Unexpected get_doc call: {doctype} {name}")
 
         with (
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", side_effect=fake_get_doc),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.exists", return_value=True),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.get_value", return_value="/private/files/FILE-001.pdf"),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.set_value", side_effect=fake_set_value),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.delete_doc", side_effect=fake_delete_doc),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_roles", return_value=["System Manager"]),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.has_permission", return_value=True),
-            patch("acentem_takipte.acentem_takipte.api.documents.log_decision_event"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", side_effect=fake_get_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.exists", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.get_value", return_value="/private/files/FILE-001.pdf"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.set_value", side_effect=fake_set_value),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.delete_doc", side_effect=fake_delete_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_roles", return_value=["System Manager"]),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.has_permission", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.log_decision_event"),
         ):
             result = permanent_delete_document("AT-DOC-001")
 
@@ -117,8 +117,8 @@ class TestDocumentsApi(IntegrationTestCase):
     def test_permanent_delete_document_requires_system_manager(self):
         fake_doc = FakeDoc("AT-DOC-001", "Active")
         with (
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", return_value=fake_doc),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_roles", return_value=["AT User"]),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", return_value=fake_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_roles", return_value=["AT User"]),
         ):
             with self.assertRaises(Exception):
                 permanent_delete_document("AT-DOC-001")
@@ -128,11 +128,11 @@ class TestDocumentsApi(IntegrationTestCase):
 
         with (
             patch(
-                "acentem_takipte.acentem_takipte.api.documents.assert_doc_permission",
+                "acentem_takipte.acentem_takipte.platform.api.documents.assert_doc_permission",
                 return_value=SimpleNamespace(name="AT-DOC-001"),
             ),
             patch(
-                "acentem_takipte.acentem_takipte.api.documents.log_access",
+                "acentem_takipte.acentem_takipte.platform.api.documents.log_access",
                 side_effect=lambda reference_doctype, reference_name, action="View": calls.append(
                     (reference_doctype, reference_name, action)
                 ),
@@ -146,10 +146,10 @@ class TestDocumentsApi(IntegrationTestCase):
     def test_upload_document_rejects_public_files_for_attached_documents(self):
         file_doc = SimpleNamespace(name="FILE-001", file_name="policy.pdf", file_url="/files/policy.pdf", is_private=0)
         with (
-            patch("acentem_takipte.acentem_takipte.api.documents._resolve_uploaded_file_name", return_value="FILE-001"),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.exists", return_value=True),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", return_value=file_doc),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.throw", side_effect=RuntimeError),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents._resolve_uploaded_file_name", return_value="FILE-001"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.exists", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", return_value=file_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.throw", side_effect=RuntimeError),
         ):
             with self.assertRaises(RuntimeError):
                 upload_document(
@@ -170,8 +170,8 @@ class TestDocumentsApi(IntegrationTestCase):
             raise AssertionError(f"Unexpected get_doc call: {doctype} {name}")
 
         with (
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", side_effect=fake_get_doc),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.has_permission", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", side_effect=fake_get_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.has_permission", return_value=True),
         ):
             with self.assertRaises(Exception) as err:
                 share_document("AT-DOC-001", "url")
@@ -190,8 +190,8 @@ class TestDocumentsApi(IntegrationTestCase):
             raise AssertionError(f"Unexpected get_doc call: {doctype} {name}")
 
         with (
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.get_doc", side_effect=fake_get_doc),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.has_permission", return_value=True),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.get_doc", side_effect=fake_get_doc),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.has_permission", return_value=True),
         ):
             with self.assertRaises(Exception) as err:
                 share_document("AT-DOC-001", "whatsapp")
@@ -201,10 +201,10 @@ class TestDocumentsApi(IntegrationTestCase):
     def test_get_document_context_checks_permission_before_customer_lookup(self):
         with (
             patch(
-                "acentem_takipte.acentem_takipte.api.documents.assert_doc_permission",
+                "acentem_takipte.acentem_takipte.platform.api.documents.assert_doc_permission",
                 side_effect=PermissionError("denied"),
             ) as permission_mock,
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.get_value") as get_value_mock,
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.get_value") as get_value_mock,
         ):
             with self.assertRaises(PermissionError):
                 get_document_context("AT Customer", "AT-CUST-001")
@@ -223,8 +223,8 @@ class TestDocumentsApi(IntegrationTestCase):
             raise AssertionError(f"Unexpected get_value call: {doctype} {name}")
 
         with (
-            patch("acentem_takipte.acentem_takipte.api.documents.assert_doc_permission"),
-            patch("acentem_takipte.acentem_takipte.api.documents.frappe.db.get_value", side_effect=fake_get_value),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.assert_doc_permission"),
+            patch("acentem_takipte.acentem_takipte.platform.api.documents.frappe.db.get_value", side_effect=fake_get_value),
         ):
             payload = get_document_context("AT Customer", "AT-CUST-001")
 

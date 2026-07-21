@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.services.access_policy_runtime import (
+from acentem_takipte.acentem_takipte.platform.permissions.access_policy_runtime import (
     build_permission_matrix,
     build_runtime_permission_hooks,
 )

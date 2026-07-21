@@ -1,6 +1,6 @@
 import frappe
 
-from acentem_takipte.acentem_takipte.services.list_exports import (
+from acentem_takipte.acentem_takipte.platform.services.list_exports import (
     SCREEN_EXPORTS,
     _qualified_order_by,
     build_screen_export_payload,

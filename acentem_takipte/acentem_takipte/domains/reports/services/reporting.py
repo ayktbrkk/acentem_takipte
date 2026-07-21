@@ -4,7 +4,7 @@ from typing import Any
 
 import frappe
 
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.platform.permissions.branches import (
     normalize_requested_office_branch,
 )
 from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr

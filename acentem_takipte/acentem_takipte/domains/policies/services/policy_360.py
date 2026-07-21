@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 from frappe.utils.logger import get_logger
 
-from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
+from acentem_takipte.acentem_takipte.platform.services.document_center import build_document_profile
 
 
 LOGGER = get_logger("acentem_takipte.policy_360")

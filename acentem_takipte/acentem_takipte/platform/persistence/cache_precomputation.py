@@ -38,10 +38,10 @@ def precompute_user_scope(user: str | None = None) -> dict:
     if user is None:
         user = frappe.session.user
 
-    from acentem_takipte.acentem_takipte.services.branches import (
+    from acentem_takipte.acentem_takipte.platform.permissions.branches import (
         get_allowed_office_branch_names,
     )
-    from acentem_takipte.acentem_takipte.services.sales_entities import (
+    from acentem_takipte.acentem_takipte.platform.permissions.sales_entities import (
         get_allowed_sales_entity_names,
     )
 
@@ -175,7 +175,7 @@ def setup_cache_invalidation_hooks() -> None:
         for event in events:
             try:
                 frappe.register_method(
-                    f"acentem_takipte.acentem_takipte.services.cache_precomputation.{event}_invalidate_cache",
+                    f"acentem_takipte.acentem_takipte.platform.persistence.cache_precomputation.{event}_invalidate_cache",
                     frappe.whitelist(allow_guest=False),
                 )
             except Exception:

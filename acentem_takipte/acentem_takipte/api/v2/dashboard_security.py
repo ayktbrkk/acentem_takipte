@@ -4,11 +4,11 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.platform.permissions.branches import (
     get_allowed_office_branch_names,
     user_can_access_all_office_branches,
 )
-from acentem_takipte.acentem_takipte.services.sales_entities import (
+from acentem_takipte.acentem_takipte.platform.permissions.sales_entities import (
     get_allowed_sales_entity_names,
 )
 

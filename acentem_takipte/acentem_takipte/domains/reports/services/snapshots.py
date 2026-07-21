@@ -8,7 +8,7 @@ from typing import Any, Iterable
 import frappe
 from frappe.utils import cint, getdate, now_datetime, today
 
-from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import (
     coerce_columns,
     coerce_filters,
     coerce_rows,
@@ -175,7 +175,7 @@ def refresh_report_snapshots(
     filters_by_report: dict[str, dict[str, Any]] | None = None,
     limit: int = DEFAULT_SNAPSHOT_LIMIT,
 ) -> dict[str, Any]:
-    from acentem_takipte.acentem_takipte.services.report_registry import (
+    from acentem_takipte.acentem_takipte.domains.reports.services.registry import (
         REPORT_DEFINITIONS,
         build_report_payload,
     )

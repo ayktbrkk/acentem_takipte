@@ -18,7 +18,7 @@ from acentem_takipte.acentem_takipte.services.quick_create_core import (
     create_policy as create_policy_service,
     create_task as create_task_service,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
     _assert_create_permission,
     _normalize_date,
     _normalize_datetime,
@@ -26,7 +26,7 @@ from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
     _normalize_option,
     _resolve_office_branch,
 )
-from acentem_takipte.acentem_takipte.services.quick_customer import (
+from acentem_takipte.acentem_takipte.domains.customers.services.quick_customer import (
     resolve_or_create_quick_customer,
 )
 from acentem_takipte.acentem_takipte.utils.normalization import (

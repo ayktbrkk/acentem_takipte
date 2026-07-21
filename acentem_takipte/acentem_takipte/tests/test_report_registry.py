@@ -1,5 +1,5 @@
 from acentem_takipte.acentem_takipte.services import report_registry
-from acentem_takipte.acentem_takipte.services.report_registry import get_report_definition
+from acentem_takipte.acentem_takipte.domains.reports.services.registry import get_report_definition
 
 
 def test_agent_performance_report_definition_includes_scorecard_columns():

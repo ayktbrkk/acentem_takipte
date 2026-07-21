@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe.utils.logger import get_logger
 
-from acentem_takipte.acentem_takipte.services.document_center import build_document_profile
+from acentem_takipte.acentem_takipte.platform.services.document_center import build_document_profile
 
 LOGGER = get_logger("acentem_takipte.lead_360")
 

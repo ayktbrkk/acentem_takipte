@@ -148,31 +148,31 @@ export function useImportDataRuntime({ t, router, authStore, branchStore }) {
   const jobHistory = ref([]);
 
   const createDraftResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.data_import.create_import_job_draft",
+    url: "acentem_takipte.acentem_takipte.platform.import_export.api.create_import_job_draft",
     auto: false,
   });
   const previewResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.data_import.preview_data_import",
+    url: "acentem_takipte.acentem_takipte.platform.import_export.api.preview_data_import",
     auto: false,
   });
   const enqueueResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.data_import.enqueue_data_import",
+    url: "acentem_takipte.acentem_takipte.platform.import_export.api.enqueue_data_import",
     auto: false,
   });
   const statusResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.data_import.get_import_job_status",
+    url: "acentem_takipte.acentem_takipte.platform.import_export.api.get_import_job_status",
     auto: false,
   });
   const listJobsResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.data_import.list_import_jobs",
+    url: "acentem_takipte.acentem_takipte.platform.import_export.api.list_import_jobs",
     auto: false,
   });
   const headersResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.data_import.get_import_file_headers",
+    url: "acentem_takipte.acentem_takipte.platform.import_export.api.get_import_file_headers",
     auto: false,
   });
   const cancelResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.data_import.cancel_import_job",
+    url: "acentem_takipte.acentem_takipte.platform.import_export.api.cancel_import_job",
     auto: false,
   });
   const statusPolling = ref(null);

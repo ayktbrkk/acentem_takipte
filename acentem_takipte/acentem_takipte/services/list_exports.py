@@ -10,7 +10,7 @@ from frappe import _
 from frappe.utils import cint, flt, format_datetime, formatdate
 
 from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
-from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import (
     coerce_columns,
     coerce_filters,
     coerce_rows,
@@ -20,7 +20,7 @@ from acentem_takipte.acentem_takipte.services.export_payload_utils import (
     normalize_export_key,
     normalize_title,
 )
-from acentem_takipte.acentem_takipte.services.reports_runtime import build_tabular_download_response
+from acentem_takipte.acentem_takipte.domains.reports.services.runtime import build_tabular_download_response
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 

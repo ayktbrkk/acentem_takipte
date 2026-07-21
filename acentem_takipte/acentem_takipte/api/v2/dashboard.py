@@ -1,3 +1,3 @@
 from __future__ import annotations
 
-from acentem_takipte.acentem_takipte.api.dashboard import *  # noqa: F403
+from acentem_takipte.acentem_takipte.domains.reports.api.dashboard import *  # noqa: F403

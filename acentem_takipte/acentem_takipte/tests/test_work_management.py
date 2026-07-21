@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.api.quick_create import create_quick_task
+from acentem_takipte.acentem_takipte.platform.api.quick_create import create_quick_task
 from acentem_takipte.acentem_takipte.services import quick_create_policy_task
 from acentem_takipte.acentem_takipte.services import work_management
-from acentem_takipte.acentem_takipte.services.work_management import build_my_tasks_payload
+from acentem_takipte.acentem_takipte.domains.admin.services.work_management import build_my_tasks_payload
 
 
 @pytest.fixture(autouse=True)
@@ -31,10 +31,10 @@ def test_build_my_tasks_payload_summarizes_due_buckets():
         {"name": "TASK-3", "task_title": "Visit branch", "due_date": "2026-03-12", "status": "Open"},
         {"name": "TASK-4", "task_title": "No due date", "due_date": None, "status": "Open"},
     ]
-    with patch("acentem_takipte.acentem_takipte.services.work_management.normalize_requested_office_branch", return_value=None):
-        with patch("acentem_takipte.acentem_takipte.services.work_management.nowdate", return_value="2026-03-09"):
-            with patch("acentem_takipte.acentem_takipte.services.work_management.frappe.get_list", return_value=rows):
-                with patch("acentem_takipte.acentem_takipte.services.work_management.frappe.session.user", "agent@example.com"):
+    with patch("acentem_takipte.acentem_takipte.domains.admin.services.work_management.normalize_requested_office_branch", return_value=None):
+        with patch("acentem_takipte.acentem_takipte.domains.admin.services.work_management.nowdate", return_value="2026-03-09"):
+            with patch("acentem_takipte.acentem_takipte.domains.admin.services.work_management.frappe.get_list", return_value=rows):
+                with patch("acentem_takipte.acentem_takipte.domains.admin.services.work_management.frappe.session.user", "agent@example.com"):
                     payload = build_my_tasks_payload(limit=10)
 
     assert payload["summary"] == {"total": 3, "overdue": 1, "due_today": 1, "due_soon": 1}

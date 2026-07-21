@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from acentem_takipte.acentem_takipte.services.access_policy import DoctypePolicy, load_access_policy
+from acentem_takipte.acentem_takipte.platform.permissions.access_policy import DoctypePolicy, load_access_policy
 
 
 PERMISSION_KEYS = (

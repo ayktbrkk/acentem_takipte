@@ -1,16 +1,16 @@
 from __future__ import annotations
 import frappe
 from frappe import _
-from acentem_takipte.acentem_takipte.services.reports_runtime import build_safe_report_payload, build_report_download_response
+from acentem_takipte.acentem_takipte.domains.reports.services.runtime import build_safe_report_payload, build_report_download_response
 
 @frappe.whitelist()
 def enqueue_report_export(report_key: str, filters: dict | None = None, export_format: str = "xlsx"):
-    from acentem_takipte.acentem_takipte.api.security import assert_authenticated
+    from acentem_takipte.acentem_takipte.platform.api.security import assert_authenticated
     assert_authenticated()
     
     user = frappe.session.user
     job = frappe.enqueue(
-        "acentem_takipte.acentem_takipte.services.async_reports.process_report_export",
+        "acentem_takipte.acentem_takipte.domains.reports.services.async_reports.process_report_export",
         report_key=report_key,
         filters=filters,
         export_format=export_format,

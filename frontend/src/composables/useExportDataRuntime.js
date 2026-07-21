@@ -172,7 +172,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
   });
 
   const customerPreviewResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.dashboard.get_customer_workbench_rows",
+    url: "acentem_takipte.acentem_takipte.domains.reports.api.dashboard.get_customer_workbench_rows",
     auto: false,
   });
 
@@ -338,7 +338,7 @@ export function useExportDataRuntime({ t, router, authStore, branchStore }) {
     if (form.endDate) params.set("end_date", form.endDate);
     if (form.status) params.set("status", form.status);
 
-    return `/api/method/acentem_takipte.acentem_takipte.api.list_exports.download_export?${params.toString()}`;
+    return `/api/method/acentem_takipte.acentem_takipte.platform.import_export.list_exports_api.download_export?${params.toString()}`;
   }
 
   function addHistory() {

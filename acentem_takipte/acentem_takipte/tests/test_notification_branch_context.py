@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 import acentem_takipte.acentem_takipte.notifications as notifications
-from acentem_takipte.acentem_takipte.services.notifications import build_notification_draft_payloads
+from acentem_takipte.acentem_takipte.domains.communications.services.notifications import build_notification_draft_payloads
 
 
 def test_get_customer_payload_includes_office_branch(monkeypatch):

@@ -14,7 +14,7 @@ from acentem_takipte.acentem_takipte.services.quick_create_core import (
     create_lead as create_lead_service,
     create_payment as create_payment_service,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
+from acentem_takipte.acentem_takipte.platform.quick_create.quick_create_helpers import (
     _assert_create_permission,
     _digits_only,
     _normalize_date,
@@ -23,7 +23,7 @@ from acentem_takipte.acentem_takipte.services.quick_create_helpers import (
     _resolve_office_branch,
     _split_full_name,
 )
-from acentem_takipte.acentem_takipte.services.quick_customer import (
+from acentem_takipte.acentem_takipte.domains.customers.services.quick_customer import (
     resolve_or_create_quick_customer,
 )
 from acentem_takipte.acentem_takipte.utils.normalization import (

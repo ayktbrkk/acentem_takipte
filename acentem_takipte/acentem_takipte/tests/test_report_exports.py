@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from openpyxl import load_workbook
 
 from acentem_takipte.acentem_takipte.services import report_exports
-from acentem_takipte.acentem_takipte.services.report_exports import build_export_filename, build_report_title
+from acentem_takipte.acentem_takipte.domains.reports.services.exports import build_export_filename, build_report_title
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 

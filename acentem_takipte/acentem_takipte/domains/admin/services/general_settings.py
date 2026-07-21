@@ -6,8 +6,8 @@ from typing import Any
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.services.ops_alert_settings import _read_site_config, _write_json_atomically
-from acentem_takipte.acentem_takipte.services.ops_alerts import _resolve_environment, _resolve_site_name
+from acentem_takipte.acentem_takipte.domains.admin.services.alert_settings import _read_site_config, _write_json_atomically
+from acentem_takipte.acentem_takipte.domains.admin.services.alerts import _resolve_environment, _resolve_site_name
 
 
 def _log_settings_changed(user: str, changed_keys: list[str]) -> None:

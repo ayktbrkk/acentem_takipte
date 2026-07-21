@@ -7,13 +7,13 @@ from acentem_takipte.acentem_takipte.api import dashboard as dashboard_api
 from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
 from acentem_takipte.acentem_takipte.api import reports as reports_api
 from acentem_takipte.acentem_takipte.api import session as session_api
-from acentem_takipte.acentem_takipte.api.versioning import build_versioned_api_method_path
+from acentem_takipte.acentem_takipte.platform.api.versioning import build_versioned_api_method_path
 
 
 class TestApiV2Aliases(TestCase):
     def test_versioned_api_method_path_builds_v2_namespace(self):
         self.assertEqual(
-            build_versioned_api_method_path("acentem_takipte.acentem_takipte.api.quick_create.create_quick_customer", "v2"),
+            build_versioned_api_method_path("acentem_takipte.acentem_takipte.platform.api.quick_create.create_quick_customer", "v2"),
             "acentem_takipte.acentem_takipte.api.v2.quick_create.create_quick_customer",
         )
 

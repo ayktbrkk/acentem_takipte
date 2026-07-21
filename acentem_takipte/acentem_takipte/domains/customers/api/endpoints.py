@@ -3,15 +3,15 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.api.security import assert_authenticated
-from acentem_takipte.acentem_takipte.api.security import assert_post_request
+from acentem_takipte.acentem_takipte.platform.api.security import assert_authenticated
+from acentem_takipte.acentem_takipte.platform.api.security import assert_post_request
 from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import log_decision_event
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     has_sensitive_access,
     normalize_identity_number,
 )
-from acentem_takipte.acentem_takipte.services.branches import normalize_requested_office_branch
-from acentem_takipte.acentem_takipte.services.privacy_masking import masked_query_gate
+from acentem_takipte.acentem_takipte.platform.permissions.branches import normalize_requested_office_branch
+from acentem_takipte.acentem_takipte.platform.permissions.privacy_masking import masked_query_gate
 
 
 def _mask_email(value: str | None) -> str:

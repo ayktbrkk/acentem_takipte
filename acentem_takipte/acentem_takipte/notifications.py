@@ -5,7 +5,7 @@ from typing import Any
 import frappe
 
 from acentem_takipte.acentem_takipte.notifications_catalog import is_valid_template_key
-from acentem_takipte.acentem_takipte.services.notifications import (
+from acentem_takipte.acentem_takipte.domains.communications.services.notifications import (
     build_notification_draft_payloads,
 )
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error

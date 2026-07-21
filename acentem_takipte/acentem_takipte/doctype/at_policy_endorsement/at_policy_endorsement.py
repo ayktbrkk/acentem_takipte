@@ -7,7 +7,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate, now_datetime
 
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.acentem_takipte.platform.api.security import (
     assert_authenticated,
     assert_doc_permission,
     assert_post_request,

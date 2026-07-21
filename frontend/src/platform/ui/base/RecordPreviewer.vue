@@ -74,7 +74,7 @@ async function loadPreview() {
   loading.value = true;
   try {
     const payload = await frappeRequest({
-      url: "/api/method/acentem_takipte.acentem_takipte.api.record_preview.get_record_preview",
+      url: "/api/method/acentem_takipte.acentem_takipte.platform.api.record_preview.get_record_preview",
       method: "GET",
       params: { doctype: props.doctype, name: props.name },
     });

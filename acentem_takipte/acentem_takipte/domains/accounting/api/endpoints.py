@@ -11,14 +11,14 @@ from acentem_takipte.acentem_takipte.accounting import (
 # audit(f401): `ATAccountingEntryStatus` was part of an older API surface but the
 # current accounting endpoints only read reconciliation status here.
 from acentem_takipte.acentem_takipte.utils.statuses import ATReconciliationItemStatus
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.acentem_takipte.platform.api.security import (
     assert_authenticated,
     assert_doctype_permission,
     assert_doc_permission,
 )
-from acentem_takipte.acentem_takipte.api.mutation_access import assert_role_based_write_access
-from acentem_takipte.acentem_takipte.services.accounting_runtime import build_reconciliation_workbench
-from acentem_takipte.acentem_takipte.services.accounting_statement_import import (
+from acentem_takipte.acentem_takipte.platform.api.mutation_access import assert_role_based_write_access
+from acentem_takipte.acentem_takipte.domains.accounting.services.runtime import build_reconciliation_workbench
+from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import (
     build_statement_import_preview,
     import_statement_preview_rows,
 )

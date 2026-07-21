@@ -9,7 +9,7 @@ from frappe.utils import add_days, date_diff, getdate, nowdate
 
 from acentem_takipte.acentem_takipte.notifications import create_notification_drafts
 from acentem_takipte.acentem_takipte.renewal.reminders import resolve_stage_for_days
-from acentem_takipte.acentem_takipte.services.renewals import (
+from acentem_takipte.acentem_takipte.domains.renewals.services.renewals import (
     build_renewal_stage_key,
     build_renewal_task_payload,
 )
@@ -260,7 +260,7 @@ def remediate_stale_renewal_tasks(
     if updated:
         frappe.db.commit()
         try:
-            from acentem_takipte.acentem_takipte.api.dashboard_cache import invalidate_dashboard_cache
+            from acentem_takipte.acentem_takipte.domains.reports.api.dashboard_cache import invalidate_dashboard_cache
             invalidate_dashboard_cache()
         except Exception:
             pass

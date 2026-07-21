@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest import TestCase
 
-from acentem_takipte.acentem_takipte.api.versioning import (
+from acentem_takipte.acentem_takipte.platform.api.versioning import (
     build_version_meta,
     build_versioned_method_path,
     normalize_api_version,

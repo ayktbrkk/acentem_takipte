@@ -5,7 +5,7 @@ from frappe.utils import cint
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.acentem_takipte.platform.api.security import (
     assert_authenticated,
     assert_doctype_permission,
 )

@@ -15,7 +15,7 @@ from acentem_takipte.acentem_takipte.doctype.branch_permissions import (
     build_office_branch_permission_query,
     has_office_branch_permission,
 )
-from acentem_takipte.acentem_takipte.services.branches import (
+from acentem_takipte.acentem_takipte.platform.permissions.branches import (
     user_can_access_all_office_branches,
 )
 from acentem_takipte.acentem_takipte.utils.logging import log_redacted_error

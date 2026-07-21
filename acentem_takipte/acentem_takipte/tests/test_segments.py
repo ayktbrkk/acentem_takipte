@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from acentem_takipte.acentem_takipte.api import communication as communication_api
 from acentem_takipte.acentem_takipte.services import segments as segments_module
-from acentem_takipte.acentem_takipte.services.segments import build_segment_membership_preview
+from acentem_takipte.acentem_takipte.domains.communications.services.segments import build_segment_membership_preview
 
 
 def test_build_segment_membership_preview_filters_customers_from_criteria(monkeypatch):
@@ -32,9 +32,9 @@ def test_build_segment_membership_preview_filters_customers_from_criteria(monkey
     )
     monkeypatch.setattr(segments_module, "nowdate", lambda: "2026-03-01")
 
-    with patch("acentem_takipte.acentem_takipte.services.segments.frappe.get_doc", return_value=segment):
+    with patch("acentem_takipte.acentem_takipte.domains.communications.services.segments.frappe.get_doc", return_value=segment):
         with patch(
-            "acentem_takipte.acentem_takipte.services.segments.frappe.get_all",
+            "acentem_takipte.acentem_takipte.domains.communications.services.segments.frappe.get_all",
             side_effect=[
                 [
                     {

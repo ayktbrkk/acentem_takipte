@@ -110,7 +110,7 @@ async function fetchTimeline() {
   loading.value = true;
   try {
     const payload = await frappeRequest({
-      url: '/api/method/acentem_takipte.acentem_takipte.api.reports.get_scheduled_reports_timeline',
+      url: '/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_scheduled_reports_timeline',
       method: 'GET',
       params: { days: 30 }
     });

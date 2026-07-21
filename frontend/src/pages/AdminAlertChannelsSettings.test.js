@@ -69,7 +69,7 @@ describe("AdminAlertChannelsSettings", () => {
 
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.get_ops_alert_channel_settings",
+        url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.get_ops_alert_channel_settings",
         method: "GET",
       }),
     );
@@ -83,7 +83,7 @@ describe("AdminAlertChannelsSettings", () => {
     await wrapper.find('[data-testid="alert-settings-save"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.save_ops_alert_channel_settings_api",
+        url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.save_ops_alert_channel_settings_api",
         method: "POST",
         params: {
           config: {
@@ -98,7 +98,7 @@ describe("AdminAlertChannelsSettings", () => {
     await wrapper.find('[data-testid="alert-settings-test"]').trigger("click");
     expect(frappeRequestMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/api/method/acentem_takipte.acentem_takipte.api.reports.send_ops_alert_channel_test_api",
+        url: "/api/method/acentem_takipte.acentem_takipte.domains.reports.api.endpoints.send_ops_alert_channel_test_api",
         method: "POST",
       }),
     );

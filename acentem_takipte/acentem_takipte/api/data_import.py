@@ -7,11 +7,11 @@ import frappe
 from frappe import _
 from frappe.utils import cint, now_datetime
 
-from acentem_takipte.acentem_takipte.api.documents import _resolve_uploaded_file_name
-from acentem_takipte.acentem_takipte.api.mutation_access import assert_role_based_write_access
-from acentem_takipte.acentem_takipte.api.security import assert_authenticated, assert_doc_permission, assert_doctype_permission
-from acentem_takipte.acentem_takipte.services.data_import.preview import build_data_import_preview
-from acentem_takipte.acentem_takipte.services.data_import.registry import (
+from acentem_takipte.acentem_takipte.platform.api.documents import _resolve_uploaded_file_name
+from acentem_takipte.acentem_takipte.platform.api.mutation_access import assert_role_based_write_access
+from acentem_takipte.acentem_takipte.platform.api.security import assert_authenticated, assert_doc_permission, assert_doctype_permission
+from acentem_takipte.acentem_takipte.platform.import_export.data_import.preview import build_data_import_preview
+from acentem_takipte.acentem_takipte.platform.import_export.data_import.registry import (
     DATASET_TARGET_DOCTYPE,
     SUPPORTED_PREVIEW_DATASETS,
 )
@@ -259,13 +259,13 @@ def _serialize_job(job) -> dict[str, Any]:
 
 
 def _list_file_sheets(source_file: str) -> list[str]:
-    from acentem_takipte.acentem_takipte.services.data_import.file_loader import list_job_file_sheets
+    from acentem_takipte.acentem_takipte.platform.import_export.data_import.file_loader import list_job_file_sheets
 
     return list_job_file_sheets(source_file)
 
 
 def _read_headers_from_file(source_file: str, sheet_name: str | None = None) -> list[str]:
-    from acentem_takipte.acentem_takipte.services.data_import.file_loader import parse_job_file
+    from acentem_takipte.acentem_takipte.platform.import_export.data_import.file_loader import parse_job_file
 
     parsed = parse_job_file(file_url=source_file, sheet_name=sheet_name, limit=1)
     return parsed.headers

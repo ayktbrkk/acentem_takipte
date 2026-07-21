@@ -8,7 +8,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.services.export_payload_utils import (
+from acentem_takipte.acentem_takipte.platform.services.export_payload_utils import (
     coerce_columns,
     coerce_export_format,
     coerce_filters,
@@ -18,15 +18,15 @@ from acentem_takipte.acentem_takipte.services.export_payload_utils import (
     normalize_export_key,
     normalize_title,
 )
-from acentem_takipte.acentem_takipte.services.report_exports import (
+from acentem_takipte.acentem_takipte.domains.reports.services.exports import (
     build_export_filename,
     build_report_title,
     render_tabular_csv,
     render_tabular_pdf,
     render_tabular_xlsx,
 )
-from acentem_takipte.acentem_takipte.services.report_registry import build_report_payload
-from acentem_takipte.acentem_takipte.services.scheduled_reports import (
+from acentem_takipte.acentem_takipte.domains.reports.services.registry import build_report_payload
+from acentem_takipte.acentem_takipte.domains.reports.services.scheduled import (
     delete_scheduled_report_config,
     summarize_scheduled_report_configs,
     upsert_scheduled_report_config,
@@ -36,7 +36,7 @@ from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 
 def build_safe_report_payload(report_key: str, filters: dict | None, limit: int) -> dict[str, Any]:
-    from acentem_takipte.acentem_takipte.services.branches import get_scope_hash
+    from acentem_takipte.acentem_takipte.platform.permissions.branches import get_scope_hash
 
     safe_key = normalize_export_key(report_key)
     coerced_filters = _coerce_filters(filters)

@@ -10,7 +10,7 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate
 
-from acentem_takipte.acentem_takipte.api.security import assert_doc_permission
+from acentem_takipte.acentem_takipte.platform.api.security import assert_doc_permission
 from acentem_takipte.acentem_takipte.doctype.at_access_log.at_access_log import (
     log_access,
     log_decision_event,

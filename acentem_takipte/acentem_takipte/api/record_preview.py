@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.api.security import assert_authenticated
+from acentem_takipte.acentem_takipte.platform.api.security import assert_authenticated
 from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     has_sensitive_access,
     mask_phone,

@@ -86,13 +86,13 @@ from acentem_takipte.acentem_takipte.services.quick_create_common import (  # no
     _split_full_name,
 )
 
-from acentem_takipte.acentem_takipte.services.quick_create_customer_flow import (  # noqa: E402
+from acentem_takipte.acentem_takipte.domains.customers.services.quick_create import (  # noqa: E402
     create_quick_customer,
     create_quick_claim,
     create_quick_lead,
     create_quick_payment,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_policy_task import (  # noqa: E402
+from acentem_takipte.acentem_takipte.domains.policies.services.quick_create import (  # noqa: E402
     create_quick_policy,
     create_quick_task,
 )

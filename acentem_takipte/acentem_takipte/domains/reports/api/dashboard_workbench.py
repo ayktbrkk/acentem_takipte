@@ -5,7 +5,7 @@ import frappe
 # removed when the workbench queries were split into smaller builders.
 from frappe.utils import cint, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.api.dashboard_scopes import (
+from acentem_takipte.acentem_takipte.domains.reports.api.dashboard_scopes import (
     _get_scoped_policy_names,
 )
 from acentem_takipte.acentem_takipte.utils.commissions import commission_sql_expr

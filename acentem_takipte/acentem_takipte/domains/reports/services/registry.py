@@ -4,7 +4,7 @@ from typing import Callable
 
 from frappe.utils import cint
 
-from acentem_takipte.acentem_takipte.services.reporting import (
+from acentem_takipte.acentem_takipte.domains.reports.services.reporting import (
     get_communication_operations_report_rows,
     get_agent_performance_report_rows,
     get_claim_loss_ratio_report_rows,
@@ -16,7 +16,7 @@ from acentem_takipte.acentem_takipte.services.reporting import (
     get_renewal_performance_report_rows,
     normalize_report_filters,
 )
-from acentem_takipte.acentem_takipte.services.report_snapshots import (
+from acentem_takipte.acentem_takipte.domains.reports.services.snapshots import (
     build_snapshot_aware_report_payload,
 )
 

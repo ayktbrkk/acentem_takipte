@@ -5,7 +5,7 @@ from typing import Any
 import frappe
 from frappe.utils import cint, getdate, nowdate
 
-from acentem_takipte.acentem_takipte.services.admin_general_settings import get_follow_up_defaults
+from acentem_takipte.acentem_takipte.domains.admin.services.general_settings import get_follow_up_defaults
 
 
 OPEN_RENEWAL_STATUSES = {"Open", "In Progress"}

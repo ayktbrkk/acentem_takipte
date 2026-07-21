@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.services.data_import import normalizers
+from acentem_takipte.acentem_takipte.platform.import_export.data_import import normalizers
 
 
 def _policy_fields(**overrides):
@@ -21,11 +21,11 @@ def _policy_fields(**overrides):
 
 
 @patch(
-    "acentem_takipte.acentem_takipte.services.data_import.normalizers.resolve_link_ref",
+    "acentem_takipte.acentem_takipte.platform.import_export.data_import.normalizers.resolve_link_ref",
     side_effect=lambda doctype, value, required=False: (value, None),
 )
 @patch(
-    "acentem_takipte.acentem_takipte.services.data_import.normalizers.resolve_customer_ref",
+    "acentem_takipte.acentem_takipte.platform.import_export.data_import.normalizers.resolve_customer_ref",
     return_value=("CUST-001", None),
 )
 def test_normalize_policy_row_derives_end_date_from_start_date(_mock_customer, _mock_link):
@@ -36,11 +36,11 @@ def test_normalize_policy_row_derives_end_date_from_start_date(_mock_customer, _
 
 
 @patch(
-    "acentem_takipte.acentem_takipte.services.data_import.normalizers.resolve_link_ref",
+    "acentem_takipte.acentem_takipte.platform.import_export.data_import.normalizers.resolve_link_ref",
     side_effect=lambda doctype, value, required=False: (value, None),
 )
 @patch(
-    "acentem_takipte.acentem_takipte.services.data_import.normalizers.resolve_customer_ref",
+    "acentem_takipte.acentem_takipte.platform.import_export.data_import.normalizers.resolve_customer_ref",
     return_value=("CUST-001", None),
 )
 def test_normalize_policy_row_keeps_explicit_end_date(_mock_customer, _mock_link):

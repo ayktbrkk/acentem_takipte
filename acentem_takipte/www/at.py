@@ -1,7 +1,7 @@
 import frappe
 from frappe.utils import now
 
-from acentem_takipte.acentem_takipte.api.session import (
+from acentem_takipte.acentem_takipte.platform.api.session import (
     _build_session_capabilities,
     _build_realtime_config,
     _resolve_session_interface,

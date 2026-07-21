@@ -53,19 +53,19 @@ export function useAuxWorkbenchRuntime({ config, activeLocale, authStore, branch
   const listResource = createResource({ url: "frappe.client.get_list", auto: false });
   const countResource = createResource({ url: "frappe.client.get_count", auto: false });
   const sendDraftNowRowResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.send_draft_now",
+    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.send_draft_now",
     auto: false,
   });
   const retryOutboxRowResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.retry_outbox_item",
+    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.retry_outbox_item",
     auto: false,
   });
   const requeueOutboxRowResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.communication.requeue_outbox_item",
+    url: "acentem_takipte.acentem_takipte.domains.communications.api.endpoints.requeue_outbox_item",
     auto: false,
   });
   const taskRowMutationResource = createResource({
-    url: "acentem_takipte.acentem_takipte.api.quick_create.update_quick_aux_record",
+    url: "acentem_takipte.acentem_takipte.platform.api.quick_create.update_quick_aux_record",
     auto: false,
   });
   const auxQuickCustomerResource = createResource({

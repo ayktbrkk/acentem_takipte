@@ -14,11 +14,11 @@ from acentem_takipte.acentem_takipte.renewal.pipeline import (
     run_renewal_task_creation,
     run_stale_renewal_task_remediation,
 )
-from acentem_takipte.acentem_takipte.services.campaigns import execute_due_campaigns
-from acentem_takipte.acentem_takipte.services.customer_segments import refresh_due_customer_segment_snapshots
-from acentem_takipte.acentem_takipte.services.report_snapshots import refresh_report_snapshots
-from acentem_takipte.acentem_takipte.services.payments import build_payment_reminder_payload
-from acentem_takipte.acentem_takipte.services.scheduled_reports import dispatch_scheduled_reports
+from acentem_takipte.acentem_takipte.domains.communications.services.campaigns import execute_due_campaigns
+from acentem_takipte.acentem_takipte.domains.customers.services.customer_segments import refresh_due_customer_segment_snapshots
+from acentem_takipte.acentem_takipte.domains.reports.services.snapshots import refresh_report_snapshots
+from acentem_takipte.acentem_takipte.domains.payments.services.payments import build_payment_reminder_payload
+from acentem_takipte.acentem_takipte.domains.reports.services.scheduled import dispatch_scheduled_reports
 from acentem_takipte.acentem_takipte.platform.utils.metrics import build_metric_event
 from acentem_takipte.acentem_takipte.platform.utils.statuses import ATPaymentStatus
 from acentem_takipte.acentem_takipte.renewal.service import (
@@ -28,7 +28,7 @@ from acentem_takipte.acentem_takipte.renewal.service import (
     MAX_PAYMENTS_PER_RUN,
 )
 from acentem_takipte.acentem_takipte.renewal.reminders import resolve_stage_for_days
-from acentem_takipte.acentem_takipte.services.renewals import build_renewal_stage_key
+from acentem_takipte.acentem_takipte.domains.renewals.services.renewals import build_renewal_stage_key
 
 # audit(facade): These renewal helpers remain re-exported from the task module
 # because dashboard, seed, and test code still import them from this stable
@@ -514,7 +514,7 @@ def enqueue_data_import_job(job_name: str) -> dict[str, Any]:
 
 
 def _process_data_import_job_logic(import_job_name: str, requested_by: str) -> dict[str, Any]:
-    from acentem_takipte.acentem_takipte.services.data_import.executor import execute_data_import_job
+    from acentem_takipte.acentem_takipte.platform.import_export.data_import.executor import execute_data_import_job
 
     frappe.set_user(requested_by or frappe.session.user)
     try:

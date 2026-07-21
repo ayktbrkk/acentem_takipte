@@ -5,7 +5,7 @@ from frappe.utils import add_days, now_datetime, nowdate
 import frappe
 import time
 
-from acentem_takipte.acentem_takipte.api.security import (
+from acentem_takipte.acentem_takipte.platform.api.security import (
     assert_authenticated,
     assert_doctype_permission,
     assert_non_production_or_feature_flag,
@@ -412,7 +412,7 @@ def run_backend_smoke_test() -> dict:
         customer.reload()
         policy.reload()
 
-        from acentem_takipte.acentem_takipte.api.dashboard import get_dashboard_kpis
+        from acentem_takipte.acentem_takipte.domains.reports.api.dashboard import get_dashboard_kpis
         dashboard = _timed_run("dashboard_kpi_load", get_dashboard_kpis, {"months": 3})
 
         result["created"] = {

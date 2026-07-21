@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from acentem_takipte.acentem_takipte.services.branches import get_allowed_office_branch_names
-from acentem_takipte.acentem_takipte.services.sales_entities import get_allowed_sales_entity_names
+from acentem_takipte.acentem_takipte.platform.permissions.branches import get_allowed_office_branch_names
+from acentem_takipte.acentem_takipte.platform.permissions.sales_entities import get_allowed_sales_entity_names
 
 
 def build_scope_filter_for_doctype(
@@ -131,7 +131,7 @@ from __future__ import annotations
 import frappe
 
 from acentem_takipte.acentem_takipte.api.v2 import dashboard_security
-from acentem_takipte.acentem_takipte.services.query_isolation import (
+from acentem_takipte.acentem_takipte.platform.permissions.query_isolation import (
     build_scope_filters_dict,
     get_user_scope_metadata,
 )
