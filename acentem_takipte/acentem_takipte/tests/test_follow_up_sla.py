@@ -1,4 +1,4 @@
-from acentem_takipte.acentem_takipte.services import follow_up_sla
+from acentem_takipte.acentem_takipte.domains.communications.services.follow_up_sla import follow_up_sla
 
 
 def test_build_follow_up_sla_payload_uses_admin_defaults(monkeypatch):

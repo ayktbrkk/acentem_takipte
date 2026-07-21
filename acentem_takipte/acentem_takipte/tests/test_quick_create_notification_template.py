@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from acentem_takipte.acentem_takipte.api import quick_create as quick_create_api
-from acentem_takipte.acentem_takipte.services import quick_create_helpers
-from acentem_takipte.acentem_takipte.services import quick_create_special
+from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import quick_create_helpers
+from acentem_takipte.acentem_takipte.platform.services.quick_create_special import quick_create_special
 
 
 @pytest.fixture(autouse=True)

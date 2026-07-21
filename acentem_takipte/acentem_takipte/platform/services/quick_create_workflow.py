@@ -3,7 +3,7 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.services.quick_create import (
+from acentem_takipte.acentem_takipte.platform.api.quick_create import (
     create_activity as create_activity_service,
     create_reminder as create_reminder_service,
 )

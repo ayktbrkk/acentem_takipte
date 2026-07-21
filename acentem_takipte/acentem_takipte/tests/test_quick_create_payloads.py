@@ -13,9 +13,9 @@ from acentem_takipte.acentem_takipte.platform.api.quick_payloads import (
     QuickPolicyPayload,
     QuickTaskPayload,
 )
-from acentem_takipte.acentem_takipte.services import quick_create_customer_flow
-from acentem_takipte.acentem_takipte.services import quick_create_special
-from acentem_takipte.acentem_takipte.services import quick_create_policy_task
+from acentem_takipte.acentem_takipte.domains.customers.services.quick_create import quick_create_customer_flow
+from acentem_takipte.acentem_takipte.platform.services.quick_create_special import quick_create_special
+from acentem_takipte.acentem_takipte.domains.policies.services.quick_create import quick_create_policy_task
 
 
 @pytest.fixture(autouse=True)

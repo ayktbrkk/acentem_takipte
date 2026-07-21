@@ -37,7 +37,7 @@ if "frappe" not in sys.modules:
     sys.modules["frappe.model"] = model_stub
     sys.modules["frappe.model.document"] = document_stub
 
-from acentem_takipte.acentem_takipte.services import sales_entities as sales_entity_service
+from acentem_takipte.acentem_takipte.platform.permissions.sales_entities import sales_entities as sales_entity_service
 
 
 def test_get_allowed_sales_entity_names_expands_descendants(monkeypatch):

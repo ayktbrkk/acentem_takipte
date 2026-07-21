@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.services import branches
-from acentem_takipte.acentem_takipte.services import privacy_masking
-from acentem_takipte.acentem_takipte.services import reports_runtime
+from acentem_takipte.acentem_takipte.platform.permissions.branches import branches
+from acentem_takipte.acentem_takipte.platform.permissions.privacy_masking import privacy_masking
+from acentem_takipte.acentem_takipte.domains.reports.services.runtime import reports_runtime
 
 
 class _FakeCache:

@@ -1,7 +1,7 @@
 import pytest
 
 from acentem_takipte.acentem_takipte.api import reports
-from acentem_takipte.acentem_takipte.services import ops_alert_settings
+from acentem_takipte.acentem_takipte.domains.admin.services.alert_settings import ops_alert_settings
 
 
 @pytest.mark.parametrize(

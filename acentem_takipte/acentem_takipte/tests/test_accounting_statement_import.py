@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from acentem_takipte.acentem_takipte.services import accounting_statement_import
+from acentem_takipte.acentem_takipte.domains.accounting.services.statement_import import accounting_statement_import
 
 
 def test_build_statement_import_preview_matches_policy_and_payment_rows():

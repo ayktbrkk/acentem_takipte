@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from acentem_takipte.acentem_takipte.services import quick_create_helpers
+from acentem_takipte.acentem_takipte.platform.services.quick_create_helpers import quick_create_helpers
 
 
 def _prefixed_option(value, allowed, default=None):

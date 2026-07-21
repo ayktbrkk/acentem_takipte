@@ -6,8 +6,8 @@ import pytest
 from types import SimpleNamespace
 
 from acentem_takipte.acentem_takipte.platform.api.quick_create import create_quick_task
-from acentem_takipte.acentem_takipte.services import quick_create_policy_task
-from acentem_takipte.acentem_takipte.services import work_management
+from acentem_takipte.acentem_takipte.domains.policies.services.quick_create import quick_create_policy_task
+from acentem_takipte.acentem_takipte.domains.admin.services.work_management import work_management
 from acentem_takipte.acentem_takipte.domains.admin.services.work_management import build_my_tasks_payload
 
 

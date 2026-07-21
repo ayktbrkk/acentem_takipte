@@ -16,7 +16,7 @@ from acentem_takipte.acentem_takipte.api import session as session_api
 from acentem_takipte.acentem_takipte.doctype.at_policy_endorsement import (
     at_policy_endorsement as endorsement_api,
 )
-from acentem_takipte.acentem_takipte.services import quick_create_search as quick_create_search_service
+from acentem_takipte.acentem_takipte.platform.services.quick_create_search import quick_create_search as quick_create_search_service
 
 
 @contextmanager

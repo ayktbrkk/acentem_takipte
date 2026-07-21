@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import frappe
 
-from acentem_takipte.acentem_takipte.services import branches as branch_service
+from acentem_takipte.acentem_takipte.platform.permissions.branches import branches as branch_service
 from acentem_takipte.acentem_takipte.platform.permissions.branches import (
     get_default_office_branch,
     get_user_office_branches,

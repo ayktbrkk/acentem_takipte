@@ -7,7 +7,7 @@ from acentem_takipte.acentem_takipte.api.quick_payloads import (
     QuickAccountingEntryPayload,
     QuickNotificationTemplatePayload,
 )
-from acentem_takipte.acentem_takipte.services.quick_create import (
+from acentem_takipte.acentem_takipte.platform.api.quick_create import (
     delete_aux_record as delete_aux_record_service,
     update_aux_record as update_aux_record_service,
 )

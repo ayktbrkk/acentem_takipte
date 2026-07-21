@@ -1,4 +1,4 @@
-from acentem_takipte.acentem_takipte.services import report_registry
+from acentem_takipte.acentem_takipte.domains.reports.services.registry import report_registry
 from acentem_takipte.acentem_takipte.domains.reports.services.registry import get_report_definition
 
 

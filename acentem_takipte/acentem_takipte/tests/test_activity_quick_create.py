@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from acentem_takipte.acentem_takipte.platform.api.quick_create import create_quick_activity
-from acentem_takipte.acentem_takipte.services import quick_create_workflow
+from acentem_takipte.acentem_takipte.platform.services.quick_create_workflow import quick_create_workflow
 
 
 @pytest.fixture(autouse=True)

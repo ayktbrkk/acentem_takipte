@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.services import reports_runtime
+from acentem_takipte.acentem_takipte.domains.reports.services.runtime import reports_runtime
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 

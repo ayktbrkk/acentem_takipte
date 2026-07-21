@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from acentem_takipte.acentem_takipte.doctype.at_payment.at_payment import ATPayment
-from acentem_takipte.acentem_takipte.services import accounting_runtime
+from acentem_takipte.acentem_takipte.domains.accounting.services.runtime import accounting_runtime
 
 
 def test_sync_installment_schedule_creates_equal_installments(monkeypatch):

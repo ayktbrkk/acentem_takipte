@@ -4,7 +4,7 @@ from frappe.utils import flt, getdate, nowdate
 
 
 def _insert_doc(payload: dict, result_key: str) -> dict[str, str]:
-    from acentem_takipte.acentem_takipte.services.quick_create import _insert_doc as insert_doc_impl
+    from acentem_takipte.acentem_takipte.platform.api.quick_create import _insert_doc as insert_doc_impl
 
     return insert_doc_impl(payload, result_key)
 

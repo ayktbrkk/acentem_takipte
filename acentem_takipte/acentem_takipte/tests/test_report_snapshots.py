@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import date
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.services import report_registry
-from acentem_takipte.acentem_takipte.services import report_snapshots
+from acentem_takipte.acentem_takipte.domains.reports.services.registry import report_registry
+from acentem_takipte.acentem_takipte.domains.reports.services.snapshots import report_snapshots
 
 
 def test_store_and_load_report_snapshot_payload_round_trip(monkeypatch):

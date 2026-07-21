@@ -4,7 +4,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from acentem_takipte.acentem_takipte.services import sales_entities as sales_entity_service
+from acentem_takipte.acentem_takipte.platform.permissions.sales_entities import sales_entities as sales_entity_service
 
 
 class ATSalesEntity(Document):

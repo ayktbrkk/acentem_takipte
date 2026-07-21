@@ -6,7 +6,7 @@ from typing import Any
 import frappe
 from frappe.utils import getdate, today
 
-from acentem_takipte.acentem_takipte.services import branches as branch_service
+from acentem_takipte.acentem_takipte.platform.permissions.branches import branches as branch_service
 
 
 DESK_ENTITY_ADMIN_ROLES = {"System Manager", "Administrator"}

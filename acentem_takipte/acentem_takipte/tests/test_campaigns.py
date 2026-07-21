@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from acentem_takipte.acentem_takipte.api import communication as communication_api
-from acentem_takipte.acentem_takipte.services import campaigns as campaigns_service
+from acentem_takipte.acentem_takipte.domains.communications.services.campaigns import campaigns as campaigns_service
 
 
 def test_execute_campaign_creates_drafts_for_matched_customers():

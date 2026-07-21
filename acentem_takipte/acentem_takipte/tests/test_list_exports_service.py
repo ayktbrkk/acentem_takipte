@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from acentem_takipte.acentem_takipte.services import list_exports
+from acentem_takipte.acentem_takipte.platform.services.list_exports import list_exports
 from acentem_takipte.acentem_takipte.utils.i18n import translate_text
 
 

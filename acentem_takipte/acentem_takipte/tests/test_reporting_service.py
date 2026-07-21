@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from acentem_takipte.acentem_takipte.services import reporting
+from acentem_takipte.acentem_takipte.domains.reports.services.reporting import reporting
 
 
 def test_normalize_report_filters_applies_normalized_office_branch(monkeypatch):

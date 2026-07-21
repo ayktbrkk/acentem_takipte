@@ -4,11 +4,11 @@ from __future__ import annotations
 # endpoints. The imported callables below are intentionally re-exported so legacy
 # Frappe hooks/tests can keep importing `api.quick_create.<name>` without moving
 # every caller in one pass.
-from acentem_takipte.acentem_takipte.services.quick_create import (
+from acentem_takipte.acentem_takipte.platform.api.quick_create import (
     create_activity as create_activity_service,
     create_reminder as create_reminder_service,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_auxiliary import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_auxiliary import (
     create_quick_call_note,
     create_quick_campaign,
     create_quick_customer_relation,
@@ -33,22 +33,22 @@ from acentem_takipte.acentem_takipte.domains.policies.services.quick_create impo
     create_quick_policy,
     create_quick_task,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_reference import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_reference import (
     create_quick_branch,
     create_quick_insurance_company,
     create_quick_sales_entity,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_search import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_search import (
     search_quick_options,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_special import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_special import (
     create_quick_accounting_entry,
     create_quick_notification_template,
     create_quick_reconciliation_item,
     delete_quick_aux_record,
     update_quick_aux_record,
 )
-from acentem_takipte.acentem_takipte.services.quick_create_workflow import (
+from acentem_takipte.acentem_takipte.platform.services.quick_create_workflow import (
     create_quick_activity,
     create_quick_reminder,
 )
