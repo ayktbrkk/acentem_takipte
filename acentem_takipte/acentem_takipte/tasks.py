@@ -514,7 +514,7 @@ def enqueue_data_import_job(job_name: str) -> dict[str, Any]:
 
 
 def _process_data_import_job_logic(import_job_name: str, requested_by: str) -> dict[str, Any]:
-    from acentem_takipte.acentem_takipte.platform.import_export.data_import.executor import execute_data_import_job
+    from acentem_takipte.acentem_takipte.services.data_import.executor import execute_data_import_job
 
     frappe.set_user(requested_by or frappe.session.user)
     try:

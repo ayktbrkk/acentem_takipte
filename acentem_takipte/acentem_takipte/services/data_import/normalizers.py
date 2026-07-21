@@ -5,8 +5,8 @@ from acentem_takipte.acentem_takipte.doctype.at_customer.at_customer import (
     normalize_identity_number,
     validate_customer_identity,
 )
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.registry import normalize_field_key
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.resolvers import (
+from acentem_takipte.acentem_takipte.services.data_import.registry import normalize_field_key
+from acentem_takipte.acentem_takipte.services.data_import.resolvers import (
     resolve_customer_ref,
     resolve_link_ref,
 )

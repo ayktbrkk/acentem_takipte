@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from acentem_takipte.acentem_takipte.platform.import_export.data_import import executor
+from acentem_takipte.acentem_takipte.services.data_import import executor
 
 
 @pytest.fixture(autouse=True)

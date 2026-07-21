@@ -8,22 +8,22 @@ from frappe import _
 from frappe.utils import getdate
 
 from acentem_takipte.acentem_takipte.platform.permissions.branches import assert_office_branch_access
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.file_loader import parse_job_file
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.normalizers import (
+from acentem_takipte.acentem_takipte.services.data_import.file_loader import parse_job_file
+from acentem_takipte.acentem_takipte.services.data_import.normalizers import (
     apply_column_mapping,
     normalize_customer_row,
     normalize_offer_row,
     normalize_policy_row,
     validate_customer_row,
 )
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.registry import (
+from acentem_takipte.acentem_takipte.services.data_import.registry import (
     IMPORT_ROW_LIMIT,
     PREVIEW_ROW_LIMIT,
     assert_dataset_supported,
     get_required_fields,
     normalize_field_key,
 )
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.resolvers import (
+from acentem_takipte.acentem_takipte.services.data_import.resolvers import (
     offer_duplicate_exists,
     policy_duplicate_exists,
 )

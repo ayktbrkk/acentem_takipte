@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import io
 
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.parsers.base import ParsedSheet
+from acentem_takipte.acentem_takipte.services.data_import.parsers.base import ParsedSheet
 
 
 def parse_csv_text(*, text: str, delimiter: str = ",", limit: int = 200) -> ParsedSheet:

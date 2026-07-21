@@ -3,7 +3,7 @@ from __future__ import annotations
 from io import BytesIO
 from typing import Any
 
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.parsers.base import ParsedSheet
+from acentem_takipte.acentem_takipte.services.data_import.parsers.base import ParsedSheet
 
 
 def list_xlsx_sheet_names(data: bytes) -> list[str]:

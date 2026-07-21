@@ -3,13 +3,13 @@ from __future__ import annotations
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.parsers.base import ParsedSheet
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.parsers.csv_parser import parse_csv_text
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.parsers.xlsx_parser import (
+from acentem_takipte.acentem_takipte.services.data_import.parsers.base import ParsedSheet
+from acentem_takipte.acentem_takipte.services.data_import.parsers.csv_parser import parse_csv_text
+from acentem_takipte.acentem_takipte.services.data_import.parsers.xlsx_parser import (
     list_xlsx_sheet_names,
     parse_xlsx_bytes,
 )
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.registry import MAX_FILE_BYTES, PREVIEW_ROW_LIMIT
+from acentem_takipte.acentem_takipte.services.data_import.registry import MAX_FILE_BYTES, PREVIEW_ROW_LIMIT
 
 
 def parse_job_file(

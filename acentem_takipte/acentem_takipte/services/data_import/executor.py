@@ -7,8 +7,8 @@ from typing import Any
 import frappe
 from frappe import _
 
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.preview import build_import_rows_for_job
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.registry import (
+from acentem_takipte.acentem_takipte.services.data_import.preview import build_import_rows_for_job
+from acentem_takipte.acentem_takipte.services.data_import.registry import (
     BATCH_COMMIT_SIZE,
     assert_dataset_supported,
 )

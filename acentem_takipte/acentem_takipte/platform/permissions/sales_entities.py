@@ -6,7 +6,7 @@ from typing import Any
 import frappe
 from frappe.utils import getdate, today
 
-from acentem_takipte.acentem_takipte.platform.permissions.branches import branches as branch_service
+from acentem_takipte.acentem_takipte.platform.permissions import branches as branch_service
 
 
 DESK_ENTITY_ADMIN_ROLES = {"System Manager", "Administrator"}
@@ -563,3 +563,4 @@ def _coerce_int(value, *, default: int = 0) -> int:
         return int(value)
     except (TypeError, ValueError):
         return default
+

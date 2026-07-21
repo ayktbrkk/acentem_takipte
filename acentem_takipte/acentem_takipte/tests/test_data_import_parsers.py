@@ -1,4 +1,4 @@
-from acentem_takipte.acentem_takipte.platform.import_export.data_import.parsers.csv_parser import parse_csv_text
+from acentem_takipte.acentem_takipte.services.data_import.parsers.csv_parser import parse_csv_text
 
 
 def test_parse_csv_text_reads_headers_and_rows_with_bom():
