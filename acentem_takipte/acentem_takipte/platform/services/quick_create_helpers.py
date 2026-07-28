@@ -359,6 +359,15 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
         "secondary_file_name",
         "notes",
     },
+    "AT Office Branch": {
+        "office_branch_name",
+        "office_branch_code",
+        "is_head_office",
+        "city",
+        "parent_office_branch",
+        "manager_user",
+        "is_active",
+    },
 }
 
 

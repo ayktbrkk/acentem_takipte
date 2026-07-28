@@ -85,6 +85,9 @@ FIELD_REGISTRY: dict[tuple[str, str], tuple] = {
     ("AT Reminder", "assigned_to"): ("link_req", "User"),
     ("AT Reminder", "office_branch"): ("link", "AT Office Branch"),
     ("AT Sales Entity", "office_branch"): ("link_req", "AT Office Branch"),
+    ("AT Office Branch", "parent_office_branch"): ("link", "AT Office Branch"),
+    ("AT Office Branch", "manager_user"): ("link", "User"),
+    ("AT Office Branch", "is_head_office"): ("check",),
     ("AT Activity", "assigned_to"): ("link", "User"),
     ("AT Claim", "assigned_expert"): ("link", "User"),
     # ── Option fields ──
