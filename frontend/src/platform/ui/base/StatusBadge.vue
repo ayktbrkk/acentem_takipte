@@ -560,12 +560,17 @@ const STANDARD_MAP = {
   cancel: { cls: "status-cancel", label: "status_cancelled" },
 };
 
-const authStore = getActivePinia() ? useAuthStore() : null;
-
 const activeLocale = computed(() => {
   const explicitLocale = String(props.locale || "").trim();
   if (explicitLocale) return explicitLocale.toLowerCase();
-  return String(authStore ? unref(authStore.locale) || "en" : "en").trim().toLowerCase();
+  try {
+    const pinia = getActivePinia();
+    if (pinia) {
+      const store = useAuthStore();
+      return String(unref(store.locale) || "en").trim().toLowerCase();
+    }
+  } catch {}
+  return "en";
 });
 
 const translateBadgeText = (source) => translateText(source, activeLocale.value);
