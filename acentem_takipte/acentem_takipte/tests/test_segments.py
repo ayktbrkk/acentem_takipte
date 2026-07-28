@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import acentem_takipte.acentem_takipte.domains.communications.api.endpoints as communication_api
-from acentem_takipte.acentem_takipte.domains.communications.services.segments import segments as segments_module
+import acentem_takipte.acentem_takipte.domains.communications.services.segments as segments_module
 from acentem_takipte.acentem_takipte.domains.communications.services.segments import build_segment_membership_preview
 
 

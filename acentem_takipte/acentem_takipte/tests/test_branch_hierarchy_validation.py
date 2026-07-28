@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from acentem_takipte.acentem_takipte.doctype.at_office_branch import at_office_branch as office_branch_module
-from acentem_takipte.acentem_takipte.doctype.at_sales_entity import at_sales_entity as sales_entity_module
+import acentem_takipte.acentem_takipte.doctype.at_office_branch as office_branch_module
+import acentem_takipte.acentem_takipte.doctype.at_sales_entity as sales_entity_module
 
 
 class DummyDoc:

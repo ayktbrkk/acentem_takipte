@@ -33,7 +33,7 @@ if "frappe" not in sys.modules:
     sys.modules["frappe.utils"] = utils_stub
 
 from acentem_takipte.acentem_takipte.doctype.at_sales_entity.at_sales_entity import ATSalesEntity
-from acentem_takipte.acentem_takipte.doctype.at_sales_entity import at_sales_entity as module
+import acentem_takipte.acentem_takipte.doctype.at_sales_entity as module
 
 
 def _raising_throw(message):

@@ -7,7 +7,7 @@ import pytest
 from acentem_takipte.acentem_takipte.doctype.at_accounting_entry.at_accounting_entry import (
     ATAccountingEntry,
 )
-from acentem_takipte.acentem_takipte.doctype.at_accounting_entry import at_accounting_entry as accounting_entry_module
+import acentem_takipte.acentem_takipte.doctype.at_accounting_entry as accounting_entry_module
 
 
 def test_accounting_entry_autofills_dimensions_from_policy(monkeypatch):
