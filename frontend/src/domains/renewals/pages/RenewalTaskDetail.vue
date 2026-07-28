@@ -6,6 +6,7 @@
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="goBack">
+        <FeatherIcon name="arrow-left" class="h-4 w-4" />
         {{ t('backList') }}
       </ActionButton>
       <ActionButton variant="secondary" size="sm" @click="reload">
@@ -124,12 +125,12 @@ import StandardCustomerCard from '@/platform/ui/shell/StandardCustomerCard.vue';
 import WorkbenchPageLayout from '@/platform/ui/shell/WorkbenchPageLayout.vue';
 import FieldGroup from '@/platform/ui/base/FieldGroup.vue';
 import StepBar from '@/platform/ui/base/StepBar.vue';
-import SectionPanel from '../components/app-shell/SectionPanel.vue';
+import SectionPanel from '../../../components/app-shell/SectionPanel.vue';
 import SkeletonLoader from '@/platform/ui/base/SkeletonLoader.vue';
-import { getAppPinia } from '../pinia';
-import { RENEWAL_TRANSLATIONS } from '../config/renewal_translations';
-import { useAuthStore } from '../stores/auth';
-import { translateText } from '../utils/i18n';
+import { getAppPinia } from '../../../pinia';
+import { RENEWAL_TRANSLATIONS } from '../../../config/renewal_translations';
+import { useAuthStore } from '../../../stores/auth';
+import { translateText } from '../../../utils/i18n';
 
 const _appPinia = getAppPinia();
 const _authStore = useAuthStore(_appPinia);

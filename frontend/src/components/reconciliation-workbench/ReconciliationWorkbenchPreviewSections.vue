@@ -31,22 +31,74 @@
     <div v-else-if="props.commissionPreviewRows.length === 0" class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
       <EmptyState :title="props.t('emptyCommissionPreviewTitle')" :description="props.t('emptyCommissionPreview')" compact />
     </div>
-    <ul v-else class="space-y-2 text-sm">
-      <MetaListCard
-        v-for="row in props.commissionPreviewRows"
-        :key="row.name"
-        :title="row.policy_no || row.name"
-        :description="`${row.customer || props.t('unspecified')} / ${row.insurance_company || props.t('unspecified')}`"
-        :meta="props.formatMoney(row.commission_amount_try || row.commission_amount)"
-      >
-        <template #trailing>
-          <div class="text-right">
-            <p class="text-xs text-slate-500">{{ row.office_branch || props.t("unspecified") }}</p>
-            <p class="text-xs text-brand-700">{{ statusLabel(row.status) }}</p>
-          </div>
-        </template>
-      </MetaListCard>
-    </ul>
+    <div v-else>
+      <div v-if="props.commissionAging" class="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div class="mb-2 flex items-center justify-between text-xs text-slate-500">
+          <span>{{ props.t('commissionAgingSummary') }}</span>
+          <span class="font-medium">{{ props.formatMoney(props.commissionAging.total_amount) }}</span>
+        </div>
+        <div class="flex h-3 gap-1 rounded-full overflow-hidden">
+          <div v-if="props.commissionAging.buckets.current > 0"
+               class="h-full bg-emerald-400"
+               :style="{ width: `${pct(props.commissionAging.buckets.current)}%` }"
+               :title="`${props.t('agingCurrent')}: ${props.formatMoney(props.commissionAging.buckets.current)}`" />
+          <div v-if="props.commissionAging.buckets['1_30'] > 0"
+               class="h-full bg-amber-400"
+               :style="{ width: `${pct(props.commissionAging.buckets['1_30'])}%` }"
+               :title="`${props.t('aging1to30')}: ${props.formatMoney(props.commissionAging.buckets['1_30'])}`" />
+          <div v-if="props.commissionAging.buckets['31_60'] > 0"
+               class="h-full bg-orange-400"
+               :style="{ width: `${pct(props.commissionAging.buckets['31_60'])}%` }"
+               :title="`${props.t('aging31to60')}: ${props.formatMoney(props.commissionAging.buckets['31_60'])}`" />
+          <div v-if="props.commissionAging.buckets['61_90'] > 0"
+               class="h-full bg-red-400"
+               :style="{ width: `${pct(props.commissionAging.buckets['61_90'])}%` }"
+               :title="`${props.t('aging61to90')}: ${props.formatMoney(props.commissionAging.buckets['61_90'])}`" />
+          <div v-if="props.commissionAging.buckets['90_plus'] > 0"
+               class="h-full bg-red-600"
+               :style="{ width: `${pct(props.commissionAging.buckets['90_plus'])}%` }"
+               :title="`${props.t('aging90plus')}: ${props.formatMoney(props.commissionAging.buckets['90_plus'])}`" />
+        </div>
+        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+          <span v-if="props.commissionAging.buckets.current > 0" class="flex items-center gap-1">
+            <span class="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+            {{ props.t('agingCurrentLabel') }}: {{ props.formatMoney(props.commissionAging.buckets.current) }}
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="inline-block h-2 w-2 rounded-full bg-amber-400" />
+            {{ props.t('aging1to30Label') }}: {{ props.formatMoney(props.commissionAging.buckets['1_30']) }}
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="inline-block h-2 w-2 rounded-full bg-orange-400" />
+            {{ props.t('aging31to60Label') }}: {{ props.formatMoney(props.commissionAging.buckets['31_60']) }}
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="inline-block h-2 w-2 rounded-full bg-red-400" />
+            {{ props.t('aging61to90Label') }}: {{ props.formatMoney(props.commissionAging.buckets['61_90']) }}
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="inline-block h-2 w-2 rounded-full bg-red-600" />
+            {{ props.t('aging90plusLabel') }}: {{ props.formatMoney(props.commissionAging.buckets['90_plus']) }}
+          </span>
+        </div>
+      </div>
+      <ul class="space-y-2 text-sm">
+        <MetaListCard
+          v-for="row in props.commissionPreviewRows"
+          :key="row.name"
+          :title="row.policy_no || row.name"
+          :description="`${row.customer || props.t('unspecified')} / ${row.insurance_company || props.t('unspecified')}`"
+          :meta="props.formatMoney(row.commission_amount_try || row.commission_amount)"
+        >
+          <template #trailing>
+            <div class="text-right">
+              <p class="text-xs text-slate-500">{{ row.office_branch || props.t('unspecified') }}</p>
+              <p class="text-xs text-brand-700">{{ statusLabel(row.status) }}</p>
+            </div>
+          </template>
+        </MetaListCard>
+      </ul>
+    </div>
   </SectionPanel>
 </template>
 
@@ -69,9 +121,15 @@ const props = defineProps({
   workbenchLoading: { type: Boolean, default: false },
   collectionPreviewRows: { type: Array, default: () => [] },
   commissionPreviewRows: { type: Array, default: () => [] },
+  commissionAging: { type: Object, default: null },
   formatMoney: { type: Function, required: true },
   locale: { type: String, default: "en" },
 });
+
+function pct(value) {
+  const total = props.commissionAging?.total_amount || 1;
+  return Math.max(0, Math.round((Number(value || 0) / total) * 100));
+}
 
 function statusLabel(value) {
   const text = String(value || "").trim();

@@ -1,4 +1,4 @@
-import { computed, reactive, ref, unref, watch } from "vue";
+import { computed, reactive, ref, unref, watch, onUnmounted } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
@@ -8,27 +8,13 @@ import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 import { useAtFormatting } from "./useAtFormatting";
 
 function resolvePolicyStatusPresentation(status, t) {
-  const normalized = String(status || "Active").trim().toLowerCase();
-
-  if (normalized === "active") {
-    return { label: t("status_active"), variant: "success-pill" };
-  }
-
-  if (["kyt", "waiting", "pending", "draft"].includes(normalized)) {
-    return {
-      label: normalized === "draft" ? t("status_draft") : t("status_waiting"),
-      variant: "waiting-pill",
-    };
-  }
-
-  if (["ipt", "cancelled", "expired"].includes(normalized)) {
-    return {
-      label: normalized === "expired" ? t("expired") : t("status_cancelled"),
-      variant: "cancel-pill",
-    };
-  }
-
-  return { label: status || t("unspecified"), variant: "waiting-pill" };
+  const s = String(status || "Record").trim();
+  if (s === "Record") return { label: t("status_kayit"), variant: "open-pill" };
+  if (s === "Pending") return { label: t("status_onay"), variant: "waiting-pill" };
+  if (s === "Active") return { label: t("status_active"), variant: "success-pill" };
+  if (s === "Cancelled") return { label: t("status_cancelled"), variant: "cancel-pill" };
+  if (s === "Archived") return { label: t("status_archived"), variant: "cancel-pill" };
+  return { label: s || t("unspecified"), variant: "waiting-pill" };
 }
 
 function getDateClass(dateStr) {
@@ -50,11 +36,70 @@ function getDateClass(dateStr) {
 }
 
 function normalizeStatus(status) {
+  const s = String(status || "Record").trim();
+  if (s === "Record") return "Record";
+  if (s === "Pending") return "Pending";
+  if (s === "Active") return "Active";
+  if (s === "Cancelled") return "Cancelled";
+  if (s === "Archived") return "Archived";
+  return s;
+}
+
+function normalizeEndorsementStatus(status) {
   const s = String(status || "Draft").toLowerCase();
-  if (["active", "yürürlükte"].includes(s)) return "active";
-  if (["iptal", "cancelled", "expired"].includes(s)) return "cancelled";
-  if (["waiting", "pending", "draft", "kyt"].includes(s)) return "waiting";
+  if (["applied"].includes(s)) return "active";
+  if (["cancelled"].includes(s)) return "cancelled";
+  if (["draft"].includes(s)) return "waiting";
   return "waiting";
+}
+
+function translateEndorsementType(t, typeValue) {
+  const key = `endorsement_type_${String(typeValue || "").toLowerCase().replace(/\s+/g, "_")}`;
+  return t(key) !== key ? t(key) : typeValue;
+}
+
+function translateEndorsementStatus(t, status) {
+  const s = String(status || "").toLowerCase();
+  const key = `endorsement_status_${s}`;
+  return t(key) !== key ? t(key) : (status || "-");
+}
+
+const PRODUCT_LABEL_MAP = {
+  "Record Number": "product_record_number", "Kayıt No": "product_record_number",
+  "Start Date": "product_start_date", "Başlangıç Tarihi": "product_start_date",
+  "End Date": "product_end_date", "Bitiş Tarihi": "product_end_date",
+  "Plate No": "product_plate_no", "Plaka No": "product_plate_no",
+  "Document Serial No": "product_doc_serial", "Belge Seri-No": "product_doc_serial",
+  "Model Year": "product_model_year", "Model Yılı": "product_model_year",
+  "Brand Code": "product_brand_code", "Marka Kodu": "product_brand_code",
+  "Chassis No": "product_chassis_no", "Şasi No": "product_chassis_no",
+  "Engine No": "product_engine_no", "Motor No": "product_engine_no",
+  "Address": "product_address", "Adres": "product_address",
+  "UAVT Code": "product_uavt_code", "UAVT Kodu": "product_uavt_code",
+  "Gross Area (m2)": "product_gross_area", "Brüt Alan (m2)": "product_gross_area",
+  "Usage Type": "product_usage_type", "Kullanım Şekli": "product_usage_type",
+  "Floor Count": "product_floor_count", "Kat Sayısı": "product_floor_count",
+  "Current Floor": "product_current_floor", "Bulunduğu Kat": "product_current_floor",
+  "Construction Year": "product_construction_year", "İnşa Yılı": "product_construction_year",
+  "Structure Type": "product_structure_type", "Yapı Tarzı": "product_structure_type",
+  "Damage Status": "product_damage_status", "Hasar Durumu": "product_damage_status",
+  "Insurance Type": "product_insurance_type", "Sigorta Tipi": "product_insurance_type",
+  "Coverage Type": "product_coverage_type", "Teminat Tipi": "product_coverage_type",
+  "Network Type": "product_network_type", "Network Tipi": "product_network_type",
+  "Inpatient Treatment": "product_inpatient", "Yatarak Tedavi": "product_inpatient",
+  "Outpatient Treatment": "product_outpatient", "Ayakta Tedavi": "product_outpatient",
+  "Maternity Coverage": "product_maternity", "Doğum": "product_maternity",
+  "Motor": "product_family_motor",
+  "Property": "product_family_property", "Konut": "product_family_property",
+  "Health": "product_family_health", "Sağlık": "product_family_health",
+  "Travel": "product_family_travel", "Seyahat": "product_family_travel",
+  "Life": "product_family_life", "Hayat": "product_family_life",
+  "General": "product_family_general", "Genel": "product_family_general",
+};
+
+function translateProductLabel(t, enLabel) {
+  const key = PRODUCT_LABEL_MAP[enLabel];
+  return key ? t(key) : enLabel;
 }
 
 function asArray(value) {
@@ -83,6 +128,15 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const documents = computed(() => data.value.files || []);
   const atDocuments = computed(() => data.value.at_documents || []);
   const productProfile = computed(() => data.value.product_profile || {});
+  const renewalTasks = computed(() => data.value.renewal_tasks || []);
+  const versionChain = computed(() => data.value.version_chain || []);
+
+  function translateRenewalStage(code) {
+    const normalized = String(code || "").trim().toUpperCase();
+    const key = `reminder_stage_${normalized.toLowerCase()}`;
+    const translated = t(key);
+    return translated !== key ? translated : normalized;
+  }
   const showUploadModal = ref(false);
   const saving = ref(false);
   const customerSaving = ref(false);
@@ -93,14 +147,45 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     auto: false,
   });
 
+  const auditSnapshotResource = createResource({
+    url: "acentem_takipte.acentem_takipte.domains.policies.services.quick_create.create_policy_audit_snapshot",
+    auto: false,
+  });
+
+  const applyEndorsementResource = createResource({
+    url: "acentem_takipte.acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement.apply_endorsement",
+    auto: false,
+  });
+
+  const deletePolicyResource = createResource({
+    url: "frappe.client.delete",
+    auto: false,
+  });
+
+  const rollbackEndorsementResource = createResource({
+    url: "acentem_takipte.acentem_takipte.doctype.at_policy_endorsement.at_policy_endorsement.delete_applied_endorsement",
+    auto: false,
+  });
+
+  let notifyTimer = null;
+
   function showNotification(message, type = "success") {
     notification.message = message;
     notification.type = type;
     notification.show = true;
-    setTimeout(() => {
+    if (notifyTimer) clearTimeout(notifyTimer);
+    notifyTimer = setTimeout(() => {
       notification.show = false;
+      notifyTimer = null;
     }, 4000);
   }
+
+  onUnmounted(() => {
+    if (notifyTimer) {
+      clearTimeout(notifyTimer);
+      notifyTimer = null;
+    }
+  });
 
   const atDocumentLifecycle = useAtDocumentLifecycle({
     authStore,
@@ -108,6 +193,34 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   });
 
   const loading = computed(() => policyResource.loading);
+
+  const timelineEntries = computed(() => {
+    const typeLabels = {
+      comment: t("timeline_comment"),
+      communication: t("timeline_communication"),
+      activity: t("timeline_activity"),
+      reminder: t("timeline_reminder"),
+      snapshot: t("timeline_snapshot"),
+    };
+    const items = [];
+    const addItems = (source, type, dateKey, extra = {}) => {
+      (source || []).forEach((item) => {
+        const dateStr = item[dateKey] || item.creation || item.modified;
+        if (!dateStr) return;
+        items.push({ ...item, _type: type, _typeLabel: typeLabels[type] || type, _date: dateStr, ...extra });
+      });
+    };
+    addItems(data.value.comments || [], "comment", "creation", { _icon: "message-square" });
+    addItems(data.value.communications || [], "communication", "communication_date", { _icon: "phone" });
+    addItems(data.value.activities || [], "activity", "activity_at", { _icon: "calendar" });
+    addItems(data.value.reminders || [], "reminder", "remind_at", { _icon: "bell" });
+    addItems(data.value.snapshots || [], "snapshot", "captured_on", { _icon: "camera" });
+    items.sort((a, b) => new Date(b._date) - new Date(a._date));
+    return items.slice(0, 50);
+  });
+
+  const tasksCount = computed(() => (data.value.assignments || []).length);
+  const remindersCount = computed(() => (data.value.reminders || []).length);
 
   async function reload() {
     const policyName = unref(name);
@@ -187,15 +300,6 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     value: s.name 
   })));
 
-  function formatFileSize(bytes) {
-    if (!bytes || Number(bytes) <= 0) return t("unspecified");
-    const kilobytes = Number(bytes) / 1024;
-    if (kilobytes < 1024) {
-      return `${kilobytes.toFixed(1)} KB`;
-    }
-    return `${(kilobytes / 1024).toFixed(1)} MB`;
-  }
-
   async function archiveDocument(doc) {
     return atDocumentLifecycle.archiveDocument(doc, reload);
   }
@@ -246,9 +350,11 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
         displayValue: policyStatusPresentation.value.label,
         type: "select", 
         options: [
+            { label: t("status_onay"), value: "Pending" },
+            { label: t("status_kayit"), value: "Record" },
             { label: t("status_active"), value: "Active" },
-            { label: t("status_waiting"), value: "Waiting" },
-            { label: t("status_cancelled"), value: "Cancelled" }
+            { label: t("status_cancelled"), value: "Cancelled" },
+            { label: t("status_archived"), value: "Archived" }
         ],
         required: true
       },
@@ -284,22 +390,31 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
       fields.push(
         { key: "plate", label: t("plate"), value: policy.value.plate, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "document_serial_no", label: t("document_serial_no"), value: policy.value.document_serial_no, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "brand_code", label: t("brand_code"), value: policy.value.brand_code, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "model_year", label: t("model_year"), value: policy.value.model_year, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "vehicle_make_model", label: t("vehicle_make_model"), value: policy.value.vehicle_make_model, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "motor_no", label: t("motor_no"), value: policy.value.motor_no, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "chassis_no", label: t("chassis_no"), value: policy.value.chassis_no, type: "text", unspecifiedLabel: t("unspecified") }
+        { key: "brand_code", label: t("brand_code"), value: policy.value.brand_code, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "chassis_no", label: t("chassis_no"), value: policy.value.chassis_no, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "motor_no", label: t("motor_no"), value: policy.value.motor_no, type: "text", unspecifiedLabel: t("unspecified") }
       );
     } else if (branch.includes("konut") || branch.includes("dask")) {
       fields.push(
+        { key: "address", label: t("address"), value: policy.value.address, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "uavt_code", label: t("uavt_code"), value: policy.value.uavt_code, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "gross_area_m2", label: t("gross_area_m2"), value: policy.value.gross_area_m2, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "usage_type", label: t("usage_type"), value: policy.value.usage_type, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "floor_count", label: t("floor_count"), value: policy.value.floor_count, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "structure_type", label: t("structure_type"), value: policy.value.structure_type, type: "text", unspecifiedLabel: t("unspecified") }
+        { key: "current_floor", label: t("current_floor"), value: policy.value.current_floor, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "construction_year", label: t("construction_year"), value: policy.value.construction_year, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "structure_type", label: t("structure_type"), value: policy.value.structure_type, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "damage_status", label: t("damage_status"), value: policy.value.damage_status, type: "text", unspecifiedLabel: t("unspecified") }
       );
     } else if (branch.includes("sağlık") || branch.includes("saglik") || branch.includes("health")) {
       fields.push(
+        { key: "insurance_type", label: t("insurance_type"), value: policy.value.insurance_type, type: "text", unspecifiedLabel: t("unspecified") },
         { key: "coverage_type", label: t("coverage_type"), value: policy.value.coverage_type, type: "text", unspecifiedLabel: t("unspecified") },
-        { key: "network_type", label: t("network_type"), value: policy.value.network_type, type: "text", unspecifiedLabel: t("unspecified") }
+        { key: "network_type", label: t("network_type"), value: policy.value.network_type, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "inpatient_treatment", label: t("inpatient_treatment"), value: policy.value.inpatient_treatment, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "outpatient_treatment", label: t("outpatient_treatment"), value: policy.value.outpatient_treatment, type: "text", unspecifiedLabel: t("unspecified") },
+        { key: "maternity_coverage", label: t("maternity_coverage"), value: policy.value.maternity_coverage, type: "text", unspecifiedLabel: t("unspecified") }
       );
     }
 
@@ -314,15 +429,47 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "commission_rate", label: t("commission_rate"), value: policy.value.commission_rate, displayValue: policy.value.commission_rate != null ? formatPercent(policy.value.commission_rate) : t("unspecified"), type: "number", step: "0.01", disabled: true },
   ]);
 
-  const customerFields = computed(() => [
-    { label: t("customer"), value: customer.value.full_name || policy.value.customer || t("unspecified") },
-    { label: t("tax_id"), value: customer.value.tax_id || t("unspecified") },
-    { label: t("phone"), value: customer.value.phone || t("unspecified") },
-    { label: t("email"), value: customer.value.email || t("unspecified") },
-  ]);
+  function validatePolicyUpdate(values) {
+    const errors = [];
+    const p = unref(policy);
+    const merged = { ...p, ...values };
+
+    const issue = merged.issue_date ? new Date(merged.issue_date) : null;
+    const start = merged.start_date ? new Date(merged.start_date) : null;
+    const end = merged.end_date ? new Date(merged.end_date) : null;
+
+    if (issue && start && issue > start) {
+      errors.push(t("validation_issue_after_start"));
+    }
+    if (start && end && start > end) {
+      errors.push(t("validation_start_after_end"));
+    }
+
+    const net = Number(values.net_premium ?? p.net_premium ?? 0);
+    const tax = Number(values.tax_amount ?? p.tax_amount ?? 0);
+    const comm = Number(values.commission_amount ?? p.commission_amount ?? 0);
+    const gross = Number(values.gross_premium ?? p.gross_premium ?? 0);
+
+    if (gross > 0) {
+      const expected = Math.round((net + tax + comm) * 100) / 100;
+      const actual = Math.round(gross * 100) / 100;
+      if (Math.abs(actual - expected) > 0.01) {
+        errors.push(t("validation_gross_mismatch"));
+      }
+    }
+
+    return errors;
+  }
 
   async function updatePolicy(values, onSuccess) {
     if (!unref(name)) return;
+
+    const validationErrors = validatePolicyUpdate(values);
+    if (validationErrors.length) {
+      showNotification(validationErrors[0], "error");
+      return;
+    }
+
     saving.value = true;
     try {
       await updateResource.submit({
@@ -333,9 +480,11 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
       showNotification(t("save_success"));
       if (onSuccess) onSuccess();
       await reload();
+      auditSnapshotResource.submit({ policy_name: unref(name) }).catch(() => {});
     } catch (err) {
       console.error(err);
       showNotification(t("save_failed"), "error");
+      throw err;
     } finally {
       saving.value = false;
     }
@@ -361,10 +510,74 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     }
   }
 
+  async function applyEndorsement(endorsementName) {
+    try {
+      await applyEndorsementResource.submit({ endorsement_name: endorsementName });
+      showNotification(t("endorsement_applied"));
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("endorsement_apply_failed"), "error");
+    }
+  }
+
+  async function deletePolicy() {
+    const policyName = unref(name);
+    if (!policyName) return;
+    try {
+      await deletePolicyResource.submit({
+        doctype: "AT Policy",
+        name: policyName,
+      });
+      showNotification(t("policy_permanently_deleted"));
+      backToList();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("save_failed"), "error");
+    }
+  }
+
+  async function deleteEndorsement(endorsementName) {
+    try {
+      await deletePolicyResource.submit({
+        doctype: "AT Policy Endorsement",
+        name: endorsementName,
+      });
+      showNotification(t("endorsement_deleted"));
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("endorsement_apply_failed"), "error");
+    }
+  }
+
+  async function deleteAppliedEndorsement(endorsementName) {
+    try {
+      await rollbackEndorsementResource.submit({
+        endorsement_name: endorsementName,
+      });
+      showNotification(t("endorsement_deleted"));
+      await reload();
+    } catch (err) {
+      console.error(err);
+      showNotification(t("endorsement_apply_failed"), "error");
+    }
+  }
+
   // Watch for name change
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
   }, { immediate: true });
+
+  const commissionDistribution = computed(() => {
+    const raw = policy.value?.commission_distribution;
+    if (!raw || raw === "[]") return [];
+    try {
+      return typeof raw === "string" ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+    } catch {
+      return [];
+    }
+  });
 
   return {
     policy,
@@ -374,6 +587,9 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     documents,
     atDocuments,
     productProfile,
+    renewalTasks,
+    translateRenewalStage,
+    versionChain,
     loading,
     t,
     reload,
@@ -391,18 +607,29 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     permanentDeleteDocument,
     formatDate,
     formatCurrency,
-    formatFileSize,
     heroCells,
     profileFields,
     riskFields,
     premiumFields,
-    customerFields,
     saving,
     customerSaving,
     notification,
+    timelineEntries,
+    tasksCount,
+    remindersCount,
     updatePolicy,
     updateCustomer,
     normalizeStatus,
+    normalizeEndorsementStatus,
+    translateEndorsementType,
+    translateEndorsementStatus,
+    translateProductLabel,
+    showNotification,
+    applyEndorsement,
+    deleteEndorsement,
+    deleteAppliedEndorsement,
+    deletePolicy,
+    commissionDistribution,
   };
 }
 

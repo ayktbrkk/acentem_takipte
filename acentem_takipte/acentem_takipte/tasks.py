@@ -74,7 +74,28 @@ def _create_renewal_tasks_logic() -> dict[str, int]:
 
 
 def run_renewal_task_job() -> dict[str, Any]:
-    return create_renewal_tasks()
+    return create_renewal_tasks(    )
+
+
+def expire_active_policies() -> dict[str, Any]:
+    """Move Active policies past end_date back to Record."""
+    from frappe.utils import nowdate
+    today = nowdate()
+    policies = frappe.get_all(
+        "AT Policy",
+        filters={"status": "Active", "end_date": ["<", today]},
+        fields=["name"],
+        limit_page_length=1000,
+    )
+    count = 0
+    for p in policies:
+        frappe.db.set_value("AT Policy", p.name, "status", "Record", update_modified=False)
+        count += 1
+    if count:
+        from acentem_takipte.acentem_takipte.domains.policies.services.policy_360 import invalidate_policy_360_cache
+        for p in policies:
+            invalidate_policy_360_cache(p.name)
+    return {"expired_count": count}
 
 
 def run_stale_renewal_task_job(limit: int = 500) -> dict[str, Any]:

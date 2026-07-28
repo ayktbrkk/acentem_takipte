@@ -4,34 +4,34 @@ import { sessionState } from "../state/session";
 
 export const OFFICE_BRANCH_QUERY_KEY = "office_branch";
 
-const Dashboard = () => import("../../pages/Dashboard.vue");
-const OfferBoard = () => import("../../pages/OfferBoard.vue");
-const PolicyList = () => import("../../pages/PolicyList.vue");
-const PolicyDetail = () => import("../../pages/PolicyDetail.vue");
-const LeadList = () => import("../../pages/LeadList.vue");
-const LeadDetail = () => import("../../pages/LeadDetail.vue");
-const CustomerList = () => import("../../pages/CustomerList.vue");
-const CustomerDetail = () => import("../../pages/CustomerDetail.vue");
-const CustomerSearchPage = () => import("../../pages/CustomerSearchPage.vue");
-const OfferDetail = () => import("../../pages/OfferDetail.vue");
-const ClaimsBoard = () => import("../../pages/ClaimsBoard.vue");
-const ClaimDetail = () => import("../../pages/ClaimDetail.vue");
-const PaymentsBoard = () => import("../../pages/PaymentsBoard.vue");
-const PaymentDetail = () => import("../../pages/PaymentDetail.vue");
-const RenewalsBoard = () => import("../../pages/RenewalsBoard.vue");
-const RenewalTaskDetail = () => import("../../pages/RenewalTaskDetail.vue");
+const Dashboard = () => import("../../domains/dashboard/pages/Dashboard.vue");
+const OfferBoard = () => import("../../domains/offers/pages/OfferBoard.vue");
+const PolicyList = () => import("../../domains/policies/pages/PolicyList.vue");
+const PolicyDetail = () => import("../../domains/policies/pages/PolicyDetail.vue");
+const LeadList = () => import("../../domains/leads/pages/LeadList.vue");
+const LeadDetail = () => import("../../domains/leads/pages/LeadDetail.vue");
+const CustomerList = () => import("../../domains/customers/pages/CustomerList.vue");
+const CustomerDetail = () => import("../../domains/customers/pages/CustomerDetail.vue");
+const CustomerSearchPage = () => import("../../domains/customers/pages/CustomerSearchPage.vue");
+const OfferDetail = () => import("../../domains/offers/pages/OfferDetail.vue");
+const ClaimsBoard = () => import("../../domains/claims/pages/ClaimsBoard.vue");
+const ClaimDetail = () => import("../../domains/claims/pages/ClaimDetail.vue");
+const PaymentsBoard = () => import("../../domains/payments/pages/PaymentsBoard.vue");
+const PaymentDetail = () => import("../../domains/payments/pages/PaymentDetail.vue");
+const RenewalsBoard = () => import("../../domains/renewals/pages/RenewalsBoard.vue");
+const RenewalTaskDetail = () => import("../../domains/renewals/pages/RenewalTaskDetail.vue");
 const ImportData = () => import("../../pages/ImportData.vue");
 const ExportData = () => import("../../pages/ExportData.vue");
-const ReconciliationWorkbench = () => import("../../pages/ReconciliationWorkbench.vue");
-const ReconciliationDetail = () => import("../../pages/ReconciliationDetail.vue");
-const CommunicationHub = () => import("../../pages/CommunicationHub.vue");
-const Reports = () => import("../../pages/Reports.vue");
-const AdminGeneralSettings = () => import("../../pages/AdminGeneralSettings.vue");
-const AdminAlertChannelsSettings = () => import("../../pages/AdminAlertChannelsSettings.vue");
-const PremiumReport = () => import("../../pages/PremiumReport.vue");
-const ClaimRatioReport = () => import("../../pages/ClaimRatioReport.vue");
-const AgentPerformanceReport = () => import("../../pages/AgentPerformanceReport.vue");
-const CustomerSegmentationReport = () => import("../../pages/CustomerSegmentationReport.vue");
+const ReconciliationWorkbench = () => import("../../domains/reconciliation/pages/ReconciliationWorkbench.vue");
+const ReconciliationDetail = () => import("../../domains/reconciliation/pages/ReconciliationDetail.vue");
+const CommunicationHub = () => import("../../domains/communication/pages/CommunicationHub.vue");
+const Reports = () => import("../../domains/reports/pages/Reports.vue");
+const AdminGeneralSettings = () => import("../../domains/admin/pages/AdminGeneralSettings.vue");
+const AdminAlertChannelsSettings = () => import("../../domains/admin/pages/AdminAlertChannelsSettings.vue");
+const PremiumReport = () => import("../../domains/reports/pages/PremiumReport.vue");
+const ClaimRatioReport = () => import("../../domains/claims/pages/ClaimRatioReport.vue");
+const AgentPerformanceReport = () => import("../../domains/reports/pages/AgentPerformanceReport.vue");
+const CustomerSegmentationReport = () => import("../../domains/reports/pages/CustomerSegmentationReport.vue");
 const AuxWorkbench = () => import("../../pages/AuxWorkbench.vue");
 const QuickDocumentUpload = () => import("../../pages/QuickDocumentUpload.vue");
 const NotificationDraftsList = () => import("../../pages/NotificationDraftsList.vue");
@@ -44,6 +44,8 @@ const BranchesList = () => import("../../pages/BranchesList.vue");
 const BranchDetail = () => import("../../pages/BranchDetail.vue");
 const SalesEntitiesList = () => import("../../pages/SalesEntitiesList.vue");
 const SalesEntityDetail = () => import("../../pages/SalesEntityDetail.vue");
+const OfficeBranchesList = () => import("../../pages/OfficeBranchesList.vue");
+const OfficeBranchDetail = () => import("../../pages/OfficeBranchDetail.vue");
 const NotificationTemplatesList = () => import("../../pages/NotificationTemplatesList.vue");
 const NotificationTemplateEditor = () => import("../../pages/NotificationTemplateEditor.vue");
 const AccountingEntriesList = () => import("../../pages/AccountingEntriesList.vue");
@@ -65,6 +67,7 @@ const AUX_ROLE_MAP = {
   "notification-outbox": ROLE_SYSTEM,
   companies: ROLE_SYSTEM,
   branches: ROLE_SYSTEM,
+  "office-branches": ROLE_SYSTEM,
   "sales-entities": ROLE_SYSTEM,
   templates: ROLE_SYSTEM,
   "accounting-entries": ROLE_SYSTEM,
@@ -414,7 +417,9 @@ const router = createRouter({
                   ? BranchesList
                   : def.key === "sales-entities"
                     ? SalesEntitiesList
-                    : def.key === "templates"
+                    : def.key === "office-branches"
+                      ? OfficeBranchesList
+                      : def.key === "templates"
                       ? NotificationTemplatesList
                       : def.key === "accounting-entries"
                         ? AccountingEntriesList
@@ -423,7 +428,7 @@ const router = createRouter({
                           : def.key === "reconciliation-items"
                             ? ReconciliationItemsList
             : AuxWorkbench,
-        props: ["tasks", "notification-drafts", "notification-outbox", "companies", "branches", "sales-entities", "templates", "accounting-entries", "access-logs", "reconciliation-items"].includes(def.key) ? false : { screenKey: def.key },
+        props: ["tasks", "notification-drafts", "notification-outbox", "companies", "branches", "sales-entities", "office-branches", "templates", "accounting-entries", "access-logs", "reconciliation-items"].includes(def.key) ? false : { screenKey: def.key },
         meta: { ...def.meta, requiredRoles: AUX_ROLE_MAP[def.key] || ROLE_ACCOUNTANT },
       },
       {
@@ -441,14 +446,16 @@ const router = createRouter({
                   ? BranchDetail
                   : def.key === "sales-entities"
                     ? SalesEntityDetail
-                    : def.key === "templates"
+                    : def.key === "office-branches"
+                      ? OfficeBranchDetail
+                      : def.key === "templates"
                       ? NotificationTemplateEditor
                       : def.key === "accounting-entries"
                         ? AccountingEntryDetail
                         : def.key === "reconciliation-items"
                           ? ReconciliationItemDetail
             : AuxRecordDetail,
-        props: def.key === "tasks" || def.key === "notification-drafts" || def.key === "notification-outbox" || def.key === "companies" || def.key === "branches" || def.key === "sales-entities" || def.key === "templates" || def.key === "accounting-entries" || def.key === "reconciliation-items"
+        props: def.key === "tasks" || def.key === "notification-drafts" || def.key === "notification-outbox" || def.key === "companies" || def.key === "branches" || def.key === "sales-entities" || def.key === "office-branches" || def.key === "templates" || def.key === "accounting-entries" || def.key === "reconciliation-items"
           ? (route) => ({ name: route.params.name })
           : (route) => ({ screenKey: def.key, name: route.params.name }),
         meta: { ...def.detailMeta, requiredRoles: AUX_ROLE_MAP[def.key] || ROLE_ACCOUNTANT },

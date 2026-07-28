@@ -62,6 +62,9 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
 
   function buildPolicyFilterPayload() {
     const out = { filters: {} };
+    if (filters.status) {
+      out.filters.status = filters.status;
+    }
     if (filters.insurance_company) out.filters.insurance_company = filters.insurance_company;
     if (filters.status) out.filters.status = filters.status;
     if (filters.end_date) out.filters.end_date = ["<=", filters.end_date];
@@ -106,7 +109,6 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
         "end_date",
         "gross_premium",
         "commission_amount",
-        "commission",
         "gwp_try",
       ],
       filters: payload.filters,
@@ -198,14 +200,6 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
     void refreshPolicyList();
   }
 
-  function focusPolicySearch() {
-    const searchInput = document.querySelector('input[placeholder*="ara"]');
-    if (searchInput instanceof HTMLInputElement) {
-      searchInput.focus();
-      searchInput.select();
-    }
-  }
-
   return {
     policyResource,
     policyCountResource,
@@ -227,6 +221,5 @@ export function usePolicyListRuntime({ t, branchStore, policyStore, filters, pag
     applyFilters,
     previousPage,
     nextPage,
-    focusPolicySearch,
   };
 }

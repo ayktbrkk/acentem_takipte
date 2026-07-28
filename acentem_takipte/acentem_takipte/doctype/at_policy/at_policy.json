@@ -35,12 +35,27 @@
   "vehicle_make_model",
   "motor_no",
   "chassis_no",
-  "uavt_code",
-  "floor_count",
-  "structure_type",
-  "coverage_type",
-  "network_type",
-  "notes"
+   "uavt_code",
+   "floor_count",
+   "structure_type",
+   "coverage_type",
+   "network_type",
+   "address",
+   "gross_area_m2",
+   "usage_type",
+   "current_floor",
+   "construction_year",
+   "damage_status",
+   "insurance_type",
+   "inpatient_treatment",
+   "outpatient_treatment",
+   "maternity_coverage",
+   "parent_policy",
+    "endorsement_reference",
+    "policy_version",
+    "archived",
+    "commission_distribution",
+    "notes"
  ],
  "fields": [
   {
@@ -118,7 +133,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Cancelled\nDraft\nActive",
+    "options": "Pending\nRecord\nActive\nCancelled\nArchived",
    "reqd": 1,
    "search_index": 1
   },
@@ -262,9 +277,96 @@
    "fieldname": "network_type",
    "fieldtype": "Data",
    "label": "Network Type"
-  },
-  {
-   "fieldname": "notes",
+   },
+   {
+    "fieldname": "address",
+    "fieldtype": "Small Text",
+    "label": "Address"
+   },
+   {
+    "fieldname": "gross_area_m2",
+    "fieldtype": "Float",
+    "label": "Gross Area (m2)"
+   },
+   {
+    "fieldname": "usage_type",
+    "fieldtype": "Data",
+    "label": "Usage Type"
+   },
+   {
+    "fieldname": "current_floor",
+    "fieldtype": "Data",
+    "label": "Current Floor"
+   },
+   {
+    "fieldname": "construction_year",
+    "fieldtype": "Data",
+    "label": "Construction Year"
+   },
+   {
+    "fieldname": "damage_status",
+    "fieldtype": "Data",
+    "label": "Damage Status"
+   },
+   {
+    "fieldname": "insurance_type",
+    "fieldtype": "Data",
+    "label": "Insurance Type"
+   },
+   {
+    "fieldname": "inpatient_treatment",
+    "fieldtype": "Data",
+    "label": "Inpatient Treatment"
+   },
+   {
+    "fieldname": "outpatient_treatment",
+    "fieldtype": "Data",
+    "label": "Outpatient Treatment"
+   },
+   {
+    "fieldname": "maternity_coverage",
+    "fieldtype": "Data",
+    "label": "Maternity Coverage"
+   },
+   {
+    "fieldname": "parent_policy",
+    "fieldtype": "Link",
+    "label": "Parent Policy",
+    "options": "AT Policy",
+    "description": "Original policy this version was created from."
+   },
+   {
+    "fieldname": "endorsement_reference",
+    "fieldtype": "Link",
+    "label": "Endorsement Reference",
+    "options": "AT Policy Endorsement",
+    "description": "The endorsement that created this policy version."
+   },
+   {
+    "default": "0",
+    "fieldname": "policy_version",
+    "fieldtype": "Int",
+    "label": "Policy Version",
+    "read_only": 1,
+    "description": "0 = original, 1 = first endorsement version, etc."
+   },
+   {
+    "default": "0",
+    "fieldname": "archived",
+    "fieldtype": "Int",
+    "label": "Archived",
+    "description": "1 = soft-deleted, hidden from active lists."
+   },
+   {
+    "default": "[]",
+    "fieldname": "commission_distribution",
+    "fieldtype": "Long Text",
+    "hidden": 1,
+    "label": "Commission Distribution",
+    "description": "JSON array of distribution entries: [{sales_entity, level, share_pct, amount, amount_try, status}]"
+   },
+   {
+    "fieldname": "notes",
    "fieldtype": "Small Text",
    "label": "User Note",
    "description": "Free-form text added by the user."

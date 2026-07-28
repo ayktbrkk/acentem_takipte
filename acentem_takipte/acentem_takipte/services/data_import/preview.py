@@ -30,7 +30,7 @@ from acentem_takipte.acentem_takipte.services.data_import.resolvers import (
 from acentem_takipte.acentem_takipte.utils.statuses import ATOfferStatus
 
 
-POLICY_IMPORT_STATUSES = frozenset({"Draft", "Active", "Cancelled", "IPT", "KYT"})
+POLICY_IMPORT_STATUSES = frozenset({"Draft", "Active", "Cancelled", "Record"})
 
 
 def build_data_import_preview(

@@ -108,6 +108,7 @@ from acentem_takipte.acentem_takipte.platform.services.quick_create_auxiliary im
 from acentem_takipte.acentem_takipte.platform.services.quick_create_reference import (  # noqa: E402
     create_quick_branch,
     create_quick_insurance_company,
+    create_quick_office_branch,
     create_quick_sales_entity,
 )
 from acentem_takipte.acentem_takipte.platform.services.quick_create_search import (  # noqa: E402
@@ -163,6 +164,7 @@ __all__ = [
     "create_quick_insured_asset",
     "create_quick_lead",
     "create_quick_notification_template",
+    "create_quick_office_branch",
     "create_quick_ownership_assignment",
     "create_quick_payment",
     "create_quick_policy",

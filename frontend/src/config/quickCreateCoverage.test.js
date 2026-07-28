@@ -56,8 +56,8 @@ describe("quick create coverage", () => {
     const statusField = policyConfig?.fields?.find((field) => field.name === "status");
 
     expect(statusField).toBeTruthy();
-    expect(statusField.options.map((option) => option.value)).toEqual(["Active", "KYT", "IPT"]);
-    expect(policyConfig?.defaults?.status).toBe("Active");
+    expect(statusField.options.map((option) => option.value)).toEqual(["Pending", "Record", "Active", "Cancelled", "Archived"]);
+    expect(policyConfig?.defaults?.status).toBe("Record");
   });
 
   it("keeps quick create copy localized", () => {

@@ -4,7 +4,7 @@ from collections import defaultdict, deque
 from typing import Any
 
 import frappe
-from frappe.utils import getdate, today
+from frappe.utils import flt, getdate, today
 
 from acentem_takipte.acentem_takipte.platform.permissions import branches as branch_service
 
@@ -30,7 +30,7 @@ POOL_ENTITY_OPEN_RECORD_CONFIG = (
         "doctype": "AT Policy",
         "fieldname": "sales_entity",
         "status_fieldname": "status",
-        "open_statuses": ("Active", "KYT"),
+        "open_statuses": ("Active", "Record", "Pending"),
     },
     {
         "doctype": "AT Payment",
@@ -354,6 +354,7 @@ def reassign_sales_entity_records_to_branch_pool(
         return {}
 
     updates: dict[str, int] = {}
+    policy_names_to_recompute: list[str] = []
     for config in POOL_ENTITY_OPEN_RECORD_CONFIG:
         doctype = str(config.get("doctype") or "").strip()
         fieldname = str(config.get("fieldname") or "").strip()
@@ -394,7 +395,73 @@ def reassign_sales_entity_records_to_branch_pool(
         )
         updates[doctype] = len(valid_names)
 
+        if doctype == "AT Policy":
+            policy_names_to_recompute.extend(valid_names)
+
+    _recompute_commission_distributions_for_policies(policy_names_to_recompute)
     return updates
+
+
+def _recompute_commission_distributions_for_policies(policy_names: list[str]) -> None:
+    if not policy_names:
+        return
+    from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import (
+        _build_commission_distribution,
+    )
+    if len(policy_names) <= 50:
+        for policy_name in policy_names:
+            try:
+                sales_entity, commission_amount, fx_rate = frappe.db.get_value(
+                    "AT Policy",
+                    policy_name,
+                    ["sales_entity", "commission_amount", "fx_rate"],
+                )
+                distribution = _build_commission_distribution(
+                    sales_entity, commission_amount, flt(fx_rate),
+                )
+                frappe.db.set_value(
+                    "AT Policy",
+                    policy_name,
+                    "commission_distribution",
+                    distribution,
+                    update_modified=False,
+                )
+            except Exception:
+                frappe.log_error(
+                    title="Commission Distribution Recompute Failed",
+                    message=f"Policy: {policy_name}",
+                )
+    else:
+        batch_size = 200
+        for i in range(0, len(policy_names), batch_size):
+            chunk = policy_names[i:i + batch_size]
+            try:
+                rows = frappe.get_all(
+                    "AT Policy",
+                    filters={"name": ["in", chunk]},
+                    fields=["name", "sales_entity", "commission_amount", "fx_rate"],
+                    limit_page_length=batch_size,
+                )
+                row_map = {r.name: r for r in rows}
+                for policy_name in chunk:
+                    row = row_map.get(policy_name)
+                    if not row:
+                        continue
+                    distribution = _build_commission_distribution(
+                        row.sales_entity, row.commission_amount, flt(row.fx_rate),
+                    )
+                    frappe.db.set_value(
+                        "AT Policy",
+                        policy_name,
+                        "commission_distribution",
+                        distribution,
+                        update_modified=False,
+                    )
+            except Exception:
+                frappe.log_error(
+                    title="Commission Distribution Batch Recompute Failed",
+                    message=f"Chunk start: {chunk[0] if chunk else 'unknown'}",
+                )
 
 
 def deactivate_branch_sales_entities_and_reassign(

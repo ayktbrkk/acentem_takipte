@@ -132,7 +132,7 @@ def _customer_names_by_portfolio_filters(
     offer_names = None
 
     if has_active_policy:
-        conditions = ["status in ('Active', 'KYT')"]
+        conditions = ["status in ('Active', 'Record')"]
         values = {}
         if allowed_customers is not None:
             conditions.append("customer in %(customers)s")

@@ -45,7 +45,7 @@ def _customer_portfolio_summary_for_names(customer_names: list[str]) -> dict[str
             ifnull(sum(gross_premium), 0) as active_policy_gross_premium
         from `tabAT Policy`
         where customer in %(customers)s
-            and status in ('Active', 'KYT')
+            and status in ('Active', 'Record')
         group by customer
         """,
         values=values,
@@ -184,7 +184,7 @@ def _dashboard_cards_summary(
         select
             ifnull(sum(gwp_try), 0) as total_gwp_try,
             ifnull(sum({commission_sql_expr()}), 0) as total_commission,
-            ifnull(avg(case when gross_premium > 0 then ({commission_sql_expr()} / gross_premium) * 100 else null end), 0) as avg_commission_rate,
+            ifnull(round((ifnull(sum({commission_sql_expr()}), 0) / nullif(sum(gross_premium), 0)) * 100, 2), 0) as avg_commission_rate,
             count(name) as total_policies
         from `tabAT Policy`
         where {policy_where}

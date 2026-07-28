@@ -524,7 +524,7 @@ def get_customer_segmentation_report_rows(
             c.assigned_agent,
             count(distinct p.name) as policy_count,
             count(distinct case when p.status = 'Active' then p.name end) as active_policy_count,
-            count(distinct case when p.status = 'IPT' then p.name end) as cancelled_policy_count,
+            count(distinct case when p.status = 'Cancelled' then p.name end) as cancelled_policy_count,
             ifnull(sum(distinct case when p.name is not null then ifnull(p.gross_premium, 0) end), 0) as total_premium,
             count(distinct cl.name) as claim_count,
             case when count(distinct cl.name) > 0 then 'HAS_CLAIM' else 'NO_CLAIM' end as claim_history_segment,

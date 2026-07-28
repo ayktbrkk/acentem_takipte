@@ -101,17 +101,17 @@
 
 <script setup>
 import { computed, ref, unref } from "vue";
-import { buildCustomerListTableColumns } from "../composables/customerListTableModel";
-import { useCustomerBoardRuntime } from "../composables/useCustomerBoardRuntime";
-import { useAuthStore } from "../stores/auth";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import ListPager from "../components/app-shell/ListPager.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
-import QuickCreateCustomer from "../components/QuickCreateCustomer.vue";
+import { buildCustomerListTableColumns } from "../../../composables/customerListTableModel";
+import { useCustomerBoardRuntime } from "../../../composables/useCustomerBoardRuntime";
+import { useAuthStore } from "../../../stores/auth";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import SmartFilterBar from "../../../components/app-shell/SmartFilterBar.vue";
+import ListTable from "../../../components/ui/ListTable.vue";
+import ListPager from "../../../components/app-shell/ListPager.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
+import QuickCreateCustomer from "../../../components/QuickCreateCustomer.vue";
 import { FeatherIcon } from "frappe-ui";
 
 const authStore = useAuthStore();

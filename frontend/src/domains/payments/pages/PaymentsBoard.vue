@@ -73,16 +73,16 @@
 <script setup>
 import { useRoute, useRouter } from "vue-router";
 
-import PaymentsBoardActionBar from "../components/payments-board/PaymentsBoardActionBar.vue";
-import PaymentsBoardFilterSection from "../components/payments-board/PaymentsBoardFilterSection.vue";
-import PaymentsBoardMetricsPanel from "../components/payments-board/PaymentsBoardMetricsPanel.vue";
-import PaymentsBoardQuickPaymentDialog from "../components/payments-board/PaymentsBoardQuickPaymentDialog.vue";
-import PaymentsBoardTableSection from "../components/payments-board/PaymentsBoardTableSection.vue";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import { usePaymentsBoardRuntime } from "../composables/usePaymentsBoardRuntime";
-import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
-import { usePaymentStore } from "../stores/payment";
+import PaymentsBoardActionBar from "../../../components/payments-board/PaymentsBoardActionBar.vue";
+import PaymentsBoardFilterSection from "../../../components/payments-board/PaymentsBoardFilterSection.vue";
+import PaymentsBoardMetricsPanel from "../../../components/payments-board/PaymentsBoardMetricsPanel.vue";
+import PaymentsBoardQuickPaymentDialog from "../../../components/payments-board/PaymentsBoardQuickPaymentDialog.vue";
+import PaymentsBoardTableSection from "../../../components/payments-board/PaymentsBoardTableSection.vue";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import { usePaymentsBoardRuntime } from "../../../composables/usePaymentsBoardRuntime";
+import { useAuthStore } from "../../../stores/auth";
+import { useBranchStore } from "../../../stores/branch";
+import { usePaymentStore } from "../../../stores/payment";
 
 const route = useRoute();
 const router = useRouter();

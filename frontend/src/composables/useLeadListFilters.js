@@ -44,10 +44,10 @@ export function useLeadListFilters({ t, activeLocale }) {
   });
 
   const leadStatusOptions = computed(() => [
-    { value: "Draft", label: t("statusDraft") },
-    { value: "Open", label: t("statusOpen") },
-    { value: "Replied", label: t("statusReplied") },
-    { value: "Closed", label: t("statusClosed") },
+    { value: "Draft", label: t("status_draft") },
+    { value: "Open", label: t("status_open") },
+    { value: "Replied", label: t("status_replied") },
+    { value: "Closed", label: t("status_closed") },
   ]);
   const conversionStateOptions = computed(() => [
     { value: "unconverted", label: t("conversionStateUnconverted") },

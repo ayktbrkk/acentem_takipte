@@ -200,7 +200,7 @@ export function useAuxWorkbenchViewModel({
     if (field === "score_reason_json") {
       return count > 1 ? `${first} (+${count - 1})` : first;
     }
-    const locale = currentLocale(activeLocale);
+    const _locale = currentLocale(activeLocale);
     const prefix = field === "strengths_json" ? t("strengths") : t("risks");
     return `${prefix}: ${count}`;
   }
@@ -210,7 +210,7 @@ export function useAuxWorkbenchViewModel({
     if (["strengths_json", "risks_json", "score_reason_json"].includes(field)) {
       return formatSignalSummary(value, field);
     }
-    const locale = currentLocale(activeLocale);
+    const _locale = currentLocale(activeLocale);
     const lc = resolveLocaleCode(localeCode);
     if (isFieldType(config, field, "bool")) {
       const active = value === true || String(value) === "1";

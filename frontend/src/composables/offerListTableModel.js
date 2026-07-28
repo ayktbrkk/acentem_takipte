@@ -31,7 +31,7 @@ export function buildOfferListTableColumns(t) {
   ];
 }
 
-export function mapOfferRecordToTableRow(row, { formatDate, formatCurrency, localeCode, t }) {
+export function mapOfferRecordToTableRow(row, { formatDate, formatCurrency, _localeCode, t }) {
   const remainingDays = computeRemainingDays(row.valid_until);
   const daysLabel = t("daysRemaining");
 

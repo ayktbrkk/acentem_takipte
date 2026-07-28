@@ -3,12 +3,13 @@ import { useAtFormatting } from "./useAtFormatting";
 import { mapPolicyRecordToTableRow } from "./policyListTableModel";
 
 function normalizePolicyListStatus(value) {
-  const raw = String(value || "").trim().toLowerCase();
-  if (!raw) return "";
-  if (["active"].includes(raw)) return "active";
-  if (["kyt", "ipt", "waiting"].includes(raw)) return "waiting";
-  if (["cancel", "cancelled", "expired"].includes(raw)) return "cancel";
-  return raw;
+  const raw = String(value || "").trim();
+  if (raw === "Record") return "waiting";
+  if (raw === "Pending") return "waiting";
+  if (raw === "Active") return "active";
+  if (raw === "Cancelled") return "cancel";
+  if (raw === "Archived") return "cancel";
+  return "waiting";
 }
 
 function computeRemainingDays(endDate) {
@@ -21,7 +22,6 @@ function computeRemainingDays(endDate) {
 export function usePolicyListTableData({
   rows,
   policyStore,
-  policyListSearchQuery,
   policyListLocalFilters,
   localeCode,
   policyListPageSize,
@@ -51,16 +51,7 @@ export function usePolicyListTableData({
   );
 
   const policyListFilteredRows = computed(() => {
-    const q = String(unref(policyListSearchQuery) || "")
-      .trim()
-      .toLocaleLowerCase(unref(localeCode));
     return policyListMappedRows.value.filter((row) => {
-      const matchesQuery =
-        !q ||
-        [row.name, row.carrier_policy_no, row.customer_label, row.customer, row.branch, row.status]
-          .map((value) => String(value || "").toLocaleLowerCase(unref(localeCode)))
-          .some((value) => value.includes(q));
-
       const matchesStatus =
         !unref(policyListLocalFilters).status ||
         normalizePolicyListStatus(row.status) === unref(policyListLocalFilters).status;
@@ -68,7 +59,7 @@ export function usePolicyListTableData({
       const matchesBranch =
         !unref(policyListLocalFilters).branch || String(row.branch || "") === unref(policyListLocalFilters).branch;
 
-      return matchesQuery && matchesStatus && matchesBranch;
+      return matchesStatus && matchesBranch;
     });
   });
 

@@ -79,17 +79,17 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
-import ClaimsBoardActionBar from "../components/claims-board/ClaimsBoardActionBar.vue";
-import ClaimsBoardDialogs from "../components/claims-board/ClaimsBoardDialogs.vue";
-import ClaimsBoardFilterSection from "../components/claims-board/ClaimsBoardFilterSection.vue";
-import ClaimsBoardMetricsPanel from "../components/claims-board/ClaimsBoardMetricsPanel.vue";
-import ClaimsBoardTableSection from "../components/claims-board/ClaimsBoardTableSection.vue";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import { useClaimsBoardRuntime } from "../composables/useClaimsBoardRuntime";
-import { buildClaimsListTableColumns } from "../composables/claimsListTableModel";
-import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
-import { useClaimStore } from "../stores/claim";
+import ClaimsBoardActionBar from "../../../components/claims-board/ClaimsBoardActionBar.vue";
+import ClaimsBoardDialogs from "../../../components/claims-board/ClaimsBoardDialogs.vue";
+import ClaimsBoardFilterSection from "../../../components/claims-board/ClaimsBoardFilterSection.vue";
+import ClaimsBoardMetricsPanel from "../../../components/claims-board/ClaimsBoardMetricsPanel.vue";
+import ClaimsBoardTableSection from "../../../components/claims-board/ClaimsBoardTableSection.vue";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import { useClaimsBoardRuntime } from "../../../composables/useClaimsBoardRuntime";
+import { buildClaimsListTableColumns } from "../../../composables/claimsListTableModel";
+import { useAuthStore } from "../../../stores/auth";
+import { useBranchStore } from "../../../stores/branch";
+import { useClaimStore } from "../../../stores/claim";
 
 const route = useRoute();
 const authStore = useAuthStore();

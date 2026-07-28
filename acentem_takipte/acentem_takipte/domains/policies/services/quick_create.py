@@ -34,6 +34,9 @@ from acentem_takipte.acentem_takipte.utils.normalization import (
 )
 from acentem_takipte.acentem_takipte.utils.notes import normalize_note_text
 from acentem_takipte.acentem_takipte.utils.statuses import ATPolicyStatus
+from acentem_takipte.acentem_takipte.domains.admin.services.general_settings import (
+    get_insurance_defaults,
+)
 
 
 @frappe.whitelist()
@@ -115,7 +118,11 @@ def create_quick_policy(
         else 0,
         "commission_amount": shared_safe_float(quick_payload.commission_amount)
         if quick_payload.commission_amount not in {None, ""}
-        else 0,
+        else _resolve_default_commission(
+            shared_safe_float(quick_payload.gross_premium),
+            shared_safe_float(quick_payload.net_premium),
+            shared_safe_float(quick_payload.tax_amount),
+        ),
         "gross_premium": shared_safe_float(quick_payload.gross_premium)
         if quick_payload.gross_premium not in {None, ""}
         else 0,
@@ -161,6 +168,21 @@ def _validate_manual_policy_payload(payload: dict) -> None:
         frappe.throw(
             _("Gross Premium must equal Net Premium + Commission + Tax.")
         )
+
+
+def _resolve_default_commission(
+    gross_premium: float,
+    net_premium: float,
+    tax_amount: float,
+) -> float:
+    if gross_premium <= 0:
+        return 0.0
+    defaults = get_insurance_defaults()
+    rate = float(defaults.get("default_commission_rate", 10))
+    if rate <= 0:
+        return max(round(gross_premium - net_premium - tax_amount, 2), 0.0)
+    commission = round(gross_premium * rate / 100, 2)
+    return max(commission, 0.0)
 
 
 @frappe.whitelist()
@@ -239,3 +261,135 @@ def create_quick_task(
         "notes": normalize_note_text(quick_payload.notes),
     }
     return create_task_service(payload)
+
+
+@frappe.whitelist()
+def create_quick_endorsement(**kwargs) -> dict[str, str]:
+    _assert_create_permission(
+        "AT Policy Endorsement", _("You do not have permission to create endorsements.")
+    )
+
+    normalized_policy = _normalize_link("AT Policy", kwargs.get("policy"), required=True)
+    today = _normalize_date(nowdate())
+    endorsement_date = _normalize_date(kwargs.get("endorsement_date")) or today
+
+    endorsement_type = _normalize_option(
+        kwargs.get("endorsement_type"),
+        {"Premium Update", "Coverage Update", "Date Update", "Cancellation", "Other"},
+        default="Other",
+    )
+
+    is_financial = endorsement_type in {"Premium Update", "Cancellation"}
+    change_payload = {}
+
+    if is_financial:
+        net = shared_safe_float(kwargs.get("net_premium")) if kwargs.get("net_premium") not in {None, ""} else 0
+        tax = shared_safe_float(kwargs.get("tax_amount")) if kwargs.get("tax_amount") not in {None, ""} else 0
+        comm = shared_safe_float(kwargs.get("commission_amount")) if kwargs.get("commission_amount") not in {None, ""} else 0
+        gross = shared_safe_float(kwargs.get("gross_premium")) if kwargs.get("gross_premium") not in {None, ""} else 0
+        change_payload = {
+            "net_premium": net,
+            "tax_amount": tax,
+            "commission_amount": comm,
+            "gross_premium": gross,
+        }
+
+    today_str = str(today)
+    original_end = frappe.db.get_value("AT Policy", normalized_policy, "end_date")
+
+    if endorsement_type == "Cancellation":
+        change_payload["issue_date"] = today_str
+        change_payload["start_date"] = today_str
+        change_payload["end_date"] = today_str
+    else:
+        change_payload["issue_date"] = today_str
+        change_payload["start_date"] = today_str
+        if original_end:
+            change_payload["end_date"] = str(original_end)
+
+    doc = frappe.get_doc(
+        {
+            "doctype": "AT Policy Endorsement",
+            "policy": normalized_policy,
+            "endorsement_type": endorsement_type,
+            "endorsement_date": endorsement_date,
+            "status": "Draft",
+            "change_payload": frappe.as_json(change_payload) if change_payload else None,
+            "notes": normalize_note_text(kwargs.get("notes")),
+        }
+    )
+    doc.insert(ignore_permissions=False)
+    return {"name": doc.name, "endorsement_type": doc.endorsement_type}
+
+
+@frappe.whitelist()
+def update_quick_endorsement(endorsement_name: str, **kwargs) -> dict[str, str]:
+    if not endorsement_name or not frappe.db.exists("AT Policy Endorsement", endorsement_name):
+        frappe.throw(_("Endorsement not found."))
+
+    endorsement = frappe.get_doc("AT Policy Endorsement", endorsement_name)
+    if endorsement.status != "Draft":
+        frappe.throw(_("Only draft endorsements can be edited."))
+
+    today = _normalize_date(nowdate())
+    endorsement_date = _normalize_date(kwargs.get("endorsement_date")) or today
+
+    endorsement_type = _normalize_option(
+        kwargs.get("endorsement_type"),
+        {"Premium Update", "Coverage Update", "Date Update", "Cancellation", "Other"},
+        default="Other",
+    )
+
+    is_financial = endorsement_type in {"Premium Update", "Cancellation"}
+    change_payload = {}
+
+    if is_financial:
+        net = shared_safe_float(kwargs.get("net_premium")) if kwargs.get("net_premium") not in {None, ""} else 0
+        tax = shared_safe_float(kwargs.get("tax_amount")) if kwargs.get("tax_amount") not in {None, ""} else 0
+        comm = shared_safe_float(kwargs.get("commission_amount")) if kwargs.get("commission_amount") not in {None, ""} else 0
+        gross = shared_safe_float(kwargs.get("gross_premium")) if kwargs.get("gross_premium") not in {None, ""} else 0
+        change_payload = {
+            "net_premium": net,
+            "tax_amount": tax,
+            "commission_amount": comm,
+            "gross_premium": gross,
+        }
+
+    today_str = str(today)
+    original_end = frappe.db.get_value("AT Policy", endorsement.policy, "end_date")
+
+    if endorsement_type == "Cancellation":
+        change_payload["issue_date"] = today_str
+        change_payload["start_date"] = today_str
+        change_payload["end_date"] = today_str
+    else:
+        change_payload["issue_date"] = today_str
+        change_payload["start_date"] = today_str
+        if original_end:
+            change_payload["end_date"] = str(original_end)
+
+    endorsement.endorsement_type = endorsement_type
+    endorsement.endorsement_date = endorsement_date
+    endorsement.change_payload = frappe.as_json(change_payload) if change_payload else None
+    endorsement.notes = normalize_note_text(kwargs.get("notes"))
+    endorsement.save(ignore_permissions=False)
+
+    return {"name": endorsement.name, "endorsement_type": endorsement.endorsement_type}
+
+
+@frappe.whitelist()
+def create_policy_audit_snapshot(policy_name: str) -> dict:
+    """Create an audit snapshot after a direct field edit (set_value)."""
+    if not policy_name or not frappe.db.exists("AT Policy", policy_name):
+        frappe.throw(_("Policy not found."))
+    from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import create_policy_snapshot
+    policy_doc = frappe.get_doc("AT Policy", policy_name)
+    snapshot = create_policy_snapshot(
+        policy_doc,
+        snapshot_type="Endorsement",
+        source_doctype="AT Policy",
+        source_name=policy_name,
+        notes=_("Snapshot created after direct field edit from detail page."),
+    )
+    policy_doc.db_set("current_version", snapshot.snapshot_version, update_modified=False)
+    return {"name": snapshot.name, "snapshot_version": snapshot.snapshot_version}

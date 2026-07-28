@@ -51,6 +51,12 @@
               {{ opt.label }}
             </option>
           </select>
+            <select v-model="presetValue" class="input h-9 py-1 text-sm" @change="onPresetChange">
+              <option value="default">{{ t("presetDefault") }}</option>
+              <option value="openLeads">{{ t("presetOpen") }}</option>
+              <option value="highPotential">{{ t("presetHighPotential") }}</option>
+              <option value="convertible">{{ t("presetConvertible") }}</option>
+            </select>
         </template>
       </SmartFilterBar>
 
@@ -136,23 +142,24 @@
  * Synchronized with AT Lead doctype (first_name, last_name)
  */
 import { computed } from "vue";
-import { useAuthStore } from "../stores/auth";
-import { useLeadBoardRuntime } from "../composables/useLeadBoardRuntime";
-import { useLeadListQuickLead } from "../composables/useLeadListQuickLead";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import ListPager from "../components/app-shell/ListPager.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
-import LeadListQuickLeadDialog from "../components/lead-list/LeadListQuickLeadDialog.vue";
+import { useAuthStore } from "../../../stores/auth";
+import { useLeadBoardRuntime } from "../../../composables/useLeadBoardRuntime";
+import { useLeadListQuickLead } from "../../../composables/useLeadListQuickLead";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import SmartFilterBar from "../../../components/app-shell/SmartFilterBar.vue";
+import ListTable from "../../../components/ui/ListTable.vue";
+import ListPager from "../../../components/app-shell/ListPager.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
+import LeadListQuickLeadDialog from "../../../components/lead-list/LeadListQuickLeadDialog.vue";
 import { FeatherIcon } from "frappe-ui";
 import { ref } from "vue";
 
 const authStore = useAuthStore();
 const activeLocale = computed(() => authStore.locale || "tr");
 const showAdvancedFilters = ref(false);
+const presetValue = ref("default");
 
 const {
   filters,
@@ -191,6 +198,17 @@ const {
   openLeadDetail: openLead,
 });
 
+function onPresetChange() {
+  if (presetValue.value === "openLeads") {
+    updateFilter("status", "Open");
+  } else if (presetValue.value === "convertible") {
+    updateFilter("status", "Replied");
+  } else {
+    updateFilter("status", "");
+  }
+  reload();
+}
+
 // Standard lead columns - creation date and name fields prioritized
 const columns = computed(() => [
   { key: "lead_primary", secondaryKey: "lead_secondary", label: t("colLead"), type: "stacked" },
@@ -224,6 +242,7 @@ function clearFilters() {
   filters.office_branch = "";
   filters.sort = "modified desc";
   pagination.page = 1;
+  presetValue.value = "default";
   reload();
 }
 </script>

@@ -278,20 +278,20 @@
 
 <script setup>
 import { computed, unref } from "vue";
-import { useAuthStore } from "../stores/auth";
-import { useRenewalsBoardRuntime } from "../composables/useRenewalsBoardRuntime";
-import { RENEWAL_TRANSLATIONS } from "../config/renewal_translations";
-import { translateText } from "../utils/i18n";
-import QuickCreateManagedDialog from "../components/app-shell/QuickCreateManagedDialog.vue";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import ListPager from "../components/app-shell/ListPager.vue";
-import FilterPresetMenu from "../components/app-shell/FilterPresetMenu.vue";
+import { useAuthStore } from "../../../stores/auth";
+import { useRenewalsBoardRuntime } from "../../../composables/useRenewalsBoardRuntime";
+import { RENEWAL_TRANSLATIONS } from "../../../config/renewal_translations";
+import { translateText } from "../../../utils/i18n";
+import QuickCreateManagedDialog from "../../../components/app-shell/QuickCreateManagedDialog.vue";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SmartFilterBar from "../../../components/app-shell/SmartFilterBar.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import StatusBadge from "../../../components/ui/StatusBadge.vue";
+import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
+import ListTable from "../../../components/ui/ListTable.vue";
+import ListPager from "../../../components/app-shell/ListPager.vue";
+import FilterPresetMenu from "../../../components/app-shell/FilterPresetMenu.vue";
 import { FeatherIcon } from "frappe-ui";
 import { ref } from "vue";
 

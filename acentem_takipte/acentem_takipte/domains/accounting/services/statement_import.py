@@ -16,6 +16,7 @@ def build_statement_import_preview(
     insurance_company: str | None = None,
     delimiter: str = ",",
     limit: int = 200,
+    statement_type: str = "premium",
 ) -> dict[str, Any]:
     rows = _parse_csv_rows(csv_text=csv_text, delimiter=delimiter, limit=limit)
     preview_rows = [_normalize_preview_row(row) for row in rows]
@@ -24,7 +25,8 @@ def build_statement_import_preview(
     payment_refs = [row["payment_no"] for row in preview_rows if row.get("payment_no")]
 
     policy_map = _build_policy_map(
-        policy_refs, office_branch=office_branch, insurance_company=insurance_company
+        policy_refs, office_branch=office_branch, insurance_company=insurance_company,
+        include_commission=(statement_type == "commission"),
     )
     payment_map = _build_payment_map(payment_refs, office_branch=office_branch)
 
@@ -64,6 +66,7 @@ def import_statement_preview_rows(
     insurance_company: str | None = None,
     delimiter: str = ",",
     limit: int = 200,
+    statement_type: str = "premium",
 ) -> dict[str, Any]:
     from acentem_takipte.acentem_takipte.accounting import (
         _close_open_items,
@@ -81,6 +84,7 @@ def import_statement_preview_rows(
         insurance_company=insurance_company,
         delimiter=delimiter,
         limit=limit,
+        statement_type=statement_type,
     )
 
     imported = 0
@@ -218,7 +222,8 @@ def _normalize_preview_row(row: dict[str, str]) -> dict[str, Any]:
 
 
 def _build_policy_map(
-    policy_refs: list[str], *, office_branch: str | None, insurance_company: str | None
+    policy_refs: list[str], *, office_branch: str | None, insurance_company: str | None,
+    include_commission: bool = False,
 ) -> dict[str, dict[str, Any]]:
     refs = [
         str(value or "").strip() for value in policy_refs if str(value or "").strip()
@@ -231,18 +236,21 @@ def _build_policy_map(
         filters["office_branch"] = office_branch
     if insurance_company:
         filters["insurance_company"] = insurance_company
+    fields = [
+        "name",
+        "policy_no",
+        "customer",
+        "insurance_company",
+        "office_branch",
+        "status",
+    ]
+    if include_commission:
+        fields.append("commission_amount")
     # unbounded: policy lookup by policy_no refs, filtered by reference set - expected max ~50k rows
     rows = frappe.get_all(
         "AT Policy",
         filters=filters,
-        fields=[
-            "name",
-            "policy_no",
-            "customer",
-            "insurance_company",
-            "office_branch",
-            "status",
-        ],
+        fields=fields,
         limit_page_length=0,
     )
     policy_map: dict[str, dict[str, Any]] = {}

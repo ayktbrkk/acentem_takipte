@@ -6,6 +6,9 @@ from frappe.utils import add_days, flt, nowdate
 
 
 class TestATPolicy(IntegrationTestCase):
+    def setUp(self) -> None:
+        frappe.flags.at_allow_rootless_branch = True
+
     def tearDown(self) -> None:
         frappe.db.rollback()
 

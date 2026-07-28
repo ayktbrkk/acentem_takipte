@@ -155,6 +155,7 @@ export function useSidebarNavigation() {
         items: filterByRoles([
           { key: "companies", label: t("companies"), to: "/insurance-companies", short: "IC", icon: shallowRef(IconLucideBuilding), badgeClass: "text-violet-700", roles: ROLE_SYSTEM },
           { key: "branches", label: t("branches"), to: "/branches", short: "BR", icon: shallowRef(IconLucideMapPin), badgeClass: "text-orange-700", roles: ROLE_SYSTEM },
+          { key: "office-branches", label: t("officeBranches"), to: "/office-branches", short: "OB", icon: shallowRef(IconLucideMapPin), badgeClass: "text-amber-700", roles: ROLE_SYSTEM },
           { key: "sales-entities", label: t("salesEntities"), to: "/sales-entities", short: "SE", icon: shallowRef(IconLucideBriefcase), badgeClass: "text-lime-700", roles: ROLE_SYSTEM },
           { key: "templates", label: t("templates"), to: "/notification-templates", short: "NT", icon: shallowRef(IconLucideFileSignature), badgeClass: "text-pink-700", roles: ROLE_SYSTEM },
         ]),

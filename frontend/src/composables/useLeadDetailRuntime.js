@@ -189,9 +189,10 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const heroCells = computed(() => [
-    { label: t("industry"), value: lead.value.industry || t("unspecified") },
     { label: t("lead_date"), value: formatDate(lead.value.creation) },
     { label: t("status"), value: t(`status_${String(lead.value.status || "Draft").toLowerCase()}`), variant: "accent" },
+    { label: t("estimated_gross_premium"), value: formatCurrency(lead.value.estimated_gross_premium, lead.value.currency), variant: "lg" },
+    { label: t("conversion"), value: lead.value.converted_offer ? t("converted_to_offer") : lead.value.converted_policy ? t("converted_to_policy") : t("not_converted"), variant: lead.value.converted_offer || lead.value.converted_policy ? "success-pill" : "waiting-pill" },
   ]);
 
   const profileFields = computed(() => [
@@ -199,16 +200,20 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "phone", label: t("phone"), value: lead.value.phone, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
     { key: "email", label: t("email"), value: lead.value.email, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
     { key: "tax_id", label: t("tax_id"), value: lead.value.tax_id, type: "text", copyable: true, unspecifiedLabel: t("unspecified") },
-    { key: "industry", label: t("industry"), value: lead.value.industry, displayValue: lead.value.industry || t("unspecified"), type: "text", unspecifiedLabel: t("unspecified") },
-    { key: "lead_type", label: t("lead_type"), value: lead.value.lead_type, displayValue: lead.value.lead_type || t("unspecified"), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "status", label: t("status"), value: lead.value.status, displayValue: t(`status_${String(lead.value.status || "Draft").toLowerCase()}`), type: "select", options: [
+      { label: t("status_draft"), value: "Draft" },
+      { label: t("status_open"), value: "Open" },
+      { label: t("status_replied"), value: "Replied" },
+      { label: t("status_closed"), value: "Closed" },
+    ], required: true },
+    { key: "sales_entity", label: t("sales_entity"), value: lead.value.sales_entity, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "insurance_company", label: t("insurance_company"), value: lead.value.insurance_company, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "branch", label: t("branch"), value: lead.value.branch, type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const estimationFields = computed(() => [
-    { key: "branch", label: t("branch"), value: lead.value.branch, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
     { key: "estimated_gross_premium", label: t("estimated_gross_premium"), value: lead.value.estimated_gross_premium, displayValue: formatCurrency(lead.value.estimated_gross_premium, lead.value.currency), type: "text", unspecifiedLabel: t("unspecified") },
-    { key: "probability", label: t("probability"), value: lead.value.probability, displayValue: `${lead.value.probability || 0}%`, type: "text", unspecifiedLabel: t("unspecified"), valueClass: "text-brand-600 font-bold" },
-    { key: "expected_closing", label: t("expected_closing"), value: lead.value.expected_closing, displayValue: formatDate(lead.value.expected_closing), type: "date", unspecifiedLabel: t("unspecified") },
-    { key: "next_step", label: t("next_step"), value: lead.value.next_step, displayValue: lead.value.next_step || t("unspecified"), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "notes", label: t("notes"), value: lead.value.notes, type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const customerFields = computed(() => [
@@ -258,6 +263,25 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
     }
   }
 
+  const convertResource = createResource({
+    url: "acentem_takipte.acentem_takipte.doctype.at_lead.at_lead.convert_to_offer",
+    auto: false,
+  });
+
+  async function convertToOffer() {
+    const leadName = unref(name);
+    if (!leadName) return;
+    try {
+      const result = await convertResource.submit({ lead_name: leadName });
+      showNotification(t("convert_success"));
+      await reload();
+      return result;
+    } catch (err) {
+      showNotification(t("convert_failed"), "error");
+      throw err;
+    }
+  }
+
   // Watch for name change
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
@@ -294,6 +318,7 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
     openUploadModal,
     closeUploadModal,
     handleUploadComplete,
+    convertToOffer,
   };
 }
 

@@ -157,27 +157,27 @@
 <script setup>
 import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
 import { FeatherIcon } from "frappe-ui";
-import SidePanel from "../components/ui/SidePanel.vue";
-import RecordPreviewer from "../components/ui/RecordPreviewer.vue";
-import ReportsFilterSection from "../components/reports/ReportsFilterSection.vue";
-import ReportsComparisonSection from "../components/reports/ReportsComparisonSection.vue";
-import ReportsTableSection from "../components/reports/ReportsTableSection.vue";
-import ReportsChartSection from "../components/reports/ReportsChartSection.vue";
-import ReportsScheduledSection from "../components/reports/ReportsScheduledSection.vue";
-import { reportCatalog, reportDefaultColumns } from "../composables/reportsConfig";
-import { REPORTS_TRANSLATIONS } from "../config/reports_translations";
-import { useReportsFilters } from "../composables/useReportsFilters";
-import { useReportsRuntime } from "../composables/useReportsRuntime";
-import { useReportsTableData } from "../composables/useReportsTableData";
-import { useReportsRowActions } from "../composables/useReportsRowActions";
-import { useReportsViewState } from "../composables/useReportsViewState";
-import { getAppPinia } from "../pinia";
-import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
+import SidePanel from "../../../components/ui/SidePanel.vue";
+import RecordPreviewer from "../../../components/ui/RecordPreviewer.vue";
+import ReportsFilterSection from "../../../components/reports/ReportsFilterSection.vue";
+import ReportsComparisonSection from "../../../components/reports/ReportsComparisonSection.vue";
+import ReportsTableSection from "../../../components/reports/ReportsTableSection.vue";
+import ReportsChartSection from "../../../components/reports/ReportsChartSection.vue";
+import ReportsScheduledSection from "../../../components/reports/ReportsScheduledSection.vue";
+import { reportCatalog, reportDefaultColumns } from "../../../composables/reportsConfig";
+import { REPORTS_TRANSLATIONS } from "../../../config/reports_translations";
+import { useReportsFilters } from "../../../composables/useReportsFilters";
+import { useReportsRuntime } from "../../../composables/useReportsRuntime";
+import { useReportsTableData } from "../../../composables/useReportsTableData";
+import { useReportsRowActions } from "../../../composables/useReportsRowActions";
+import { useReportsViewState } from "../../../composables/useReportsViewState";
+import { getAppPinia } from "../../../pinia";
+import { useAuthStore } from "../../../stores/auth";
+import { useBranchStore } from "../../../stores/branch";
 
 const props = defineProps({
   initialReportKey: { type: String, default: "policy_list" },

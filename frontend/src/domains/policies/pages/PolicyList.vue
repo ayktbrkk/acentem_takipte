@@ -37,9 +37,17 @@
           <div class="flex items-center gap-2">
             <select v-model="filters.status" class="input h-9 py-1 text-sm" @change="applyFilters">
               <option value="">{{ t("allStatuses") }}</option>
+              <option value="Pending">{{ t("statusOnay") }}</option>
+              <option value="Record">{{ t("statusWaiting") }}</option>
               <option value="Active">{{ t("statusActive") }}</option>
-              <option value="KYT">{{ t("statusWaiting") }}</option>
-              <option value="IPT">{{ t("cancelled") }}</option>
+              <option value="Cancelled">{{ t("statusCancelled") }}</option>
+              <option value="Archived">{{ t("statusArchived") }}</option>
+            </select>
+            <select v-model="sortValue" class="input h-9 py-1 text-sm" @change="onSortChange">
+              <option value="modified desc">{{ t("sortModifiedDesc") }}</option>
+              <option value="end_date asc">{{ t("sortEndDateAsc") }}</option>
+              <option value="end_date desc">{{ t("sortEndDateDesc") }}</option>
+              <option value="gross_premium desc">{{ t("sortGrossDesc") }}</option>
             </select>
           </div>
         </template>
@@ -97,6 +105,14 @@
           @previous="previousPage"
           @next="nextPage"
         />
+        <div class="flex items-center justify-end gap-2 text-sm text-slate-500 mt-2">
+          <span>{{ t("pageSize") }}</span>
+          <select v-model.number="pagination.pageLength" class="input h-8 py-0.5 text-xs w-16" @change="onPageLengthChange">
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+        </div>
       </template>
     </div>
 
@@ -126,28 +142,28 @@
 import { computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { POLICY_TRANSLATIONS } from "../config/policy_translations";
-import { translateText } from "../utils/i18n";
-import { usePolicyListRuntime } from "../composables/usePolicyListRuntime";
-import { usePolicyListActions } from "../composables/usePolicyListActions";
-import { usePolicyListFilters } from "../composables/usePolicyListFilters";
-import { usePolicyListPresetSync } from "../composables/usePolicyListPresetSync";
-import { usePolicyListQuickPolicy } from "../composables/usePolicyListQuickPolicy";
-import { buildPolicyListTableColumns } from "../composables/policyListTableModel";
-import { usePolicyListTableData } from "../composables/usePolicyListTableData";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import SmartFilterBar from "../components/app-shell/SmartFilterBar.vue";
-import PolicyListQuickPolicyDialog from "../components/policy-list/PolicyListQuickPolicyDialog.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import ListPager from "../components/app-shell/ListPager.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { POLICY_TRANSLATIONS } from "../../../config/policy_translations";
+import { translateText } from "../../../utils/i18n";
+import { usePolicyListRuntime } from "../../../composables/usePolicyListRuntime";
+import { usePolicyListActions } from "../../../composables/usePolicyListActions";
+import { usePolicyListFilters } from "../../../composables/usePolicyListFilters";
+import { usePolicyListPresetSync } from "../../../composables/usePolicyListPresetSync";
+import { usePolicyListQuickPolicy } from "../../../composables/usePolicyListQuickPolicy";
+import { buildPolicyListTableColumns } from "../../../composables/policyListTableModel";
+import { usePolicyListTableData } from "../../../composables/usePolicyListTableData";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import SmartFilterBar from "../../../components/app-shell/SmartFilterBar.vue";
+import PolicyListQuickPolicyDialog from "../../../components/policy-list/PolicyListQuickPolicyDialog.vue";
+import ListTable from "../../../components/ui/ListTable.vue";
+import ListPager from "../../../components/app-shell/ListPager.vue";
+import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
 import { FeatherIcon } from "frappe-ui";
 import { ref } from "vue";
-import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
-import { usePolicyStore } from "../stores/policy";
+import { useAuthStore } from "../../../stores/auth";
+import { useBranchStore } from "../../../stores/branch";
+import { usePolicyStore } from "../../../stores/policy";
 
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
@@ -178,7 +194,6 @@ const {
   applyFilters,
   previousPage,
   nextPage,
-  focusPolicySearch,
 } = usePolicyListRuntime({
   t,
   branchStore,
@@ -219,7 +234,6 @@ const {
 } = usePolicyListTableData({
   rows: computed(() => policyStore.state.items),
   policyStore,
-  policyListSearchQuery,
   policyListLocalFilters,
   localeCode,
   policyListPageSize,
@@ -277,6 +291,15 @@ function setQuickPolicyDialogVisibility(value) {
     return;
   }
   cancelQuickPolicyDialog();
+}
+
+const sortValue = computed({
+  get: () => filters.sort || "modified desc",
+  set: (val) => { filters.sort = val; },
+});
+
+function onSortChange() {
+  applyFilters();
 }
 
 onMounted(async () => {

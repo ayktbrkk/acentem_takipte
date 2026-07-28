@@ -9,9 +9,11 @@ class ATOfferStatus:
     ACCEPTED = "Accepted"
     REJECTED = "Rejected"
     CONVERTED = "Converted"
+    CANCELLED = "Cancelled"
 
     CONVERTIBLE = frozenset({SENT, ACCEPTED})
     CREATION_ALLOWED = frozenset({DRAFT, SENT, ACCEPTED, REJECTED})
+    VALID = frozenset({DRAFT, SENT, ACCEPTED, REJECTED, CONVERTED, CANCELLED})
 
 
 class ATLeadStatus:
@@ -24,11 +26,13 @@ class ATLeadStatus:
 
 
 class ATPolicyStatus:
-    IPT = "IPT"
-    KYT = "KYT"
+    PENDING = "Pending"
+    RECORD = "Record"
     ACTIVE = "Active"
+    CANCELLED = "Cancelled"
+    ARCHIVED = "Archived"
 
-    VALID = frozenset({ACTIVE, IPT, KYT})
+    VALID = frozenset({PENDING, RECORD, ACTIVE, CANCELLED, ARCHIVED})
 
 
 class ATPaymentStatus:

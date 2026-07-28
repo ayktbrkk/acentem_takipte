@@ -43,7 +43,7 @@ doc_events = {
     "AT Policy": {
         "after_insert": [_acct, _dash, _rt, _p360, _c360],
         "on_update":    [_acct, _dash, _rt, _p360, _c360],
-        "on_trash":     [_dash, _rt, _p360, _c360],
+        "on_trash":     [_acct, _dash, _rt, _p360, _c360],
     },
     # ------------------------------------------------------------------
     # AT Policy sub-documents — only need policy cache invalidation
@@ -78,16 +78,16 @@ doc_events = {
     "AT Claim": {
         "after_insert": [_acct, _dash, _rt, _cl360, _c360],
         "on_update":    [_acct, _dash, _rt, _cl360, _c360],
-        "on_trash":     [_dash, _rt, _cl360, _c360],
+        "on_trash":     [_acct, _dash, _rt, _cl360, _c360],
     },
     # ------------------------------------------------------------------
-    # AT Payment — affects payment, policy, customer and offer caches
-    # ------------------------------------------------------------------
-    "AT Payment": {
-        "after_insert": [_pay360, _p360, _c360, _o360],
-        "on_update":    [_pay360, _p360, _c360, _o360],
-        "on_trash":     [_pay360],
-    },
+     # AT Payment — affects payment, policy, customer and offer caches
+     # ------------------------------------------------------------------
+     "AT Payment": {
+         "after_insert": [_acct, _pay360, _p360, _c360, _o360],
+         "on_update":    [_acct, _pay360, _p360, _c360, _o360],
+         "on_trash":     [_acct, _pay360, _p360, _c360, _o360],
+     },
     "AT Payment Installment": {
         "on_update": [_pay360],
         "on_trash":  [_pay360],
@@ -189,6 +189,7 @@ scheduler_events = {
     # 00:00 — urgent lightweight daily ops
     "daily": [
         "acentem_takipte.acentem_takipte.tasks.create_renewal_tasks",
+        "acentem_takipte.acentem_takipte.tasks.expire_active_policies",
         "acentem_takipte.acentem_takipte.tasks.run_policy_renewal_reminder_job",
         "acentem_takipte.acentem_takipte.tasks.run_stale_renewal_task_job",
         "acentem_takipte.acentem_takipte.tasks.run_payment_due_job",

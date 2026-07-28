@@ -9,6 +9,7 @@ import { getActivePinia } from "pinia";
 import { useAuthStore } from "@/platform/state/authStore";
 import { translateText } from "@/platform/i18n";
 
+// Status badge component with bilingual domain mapping
 const props = defineProps({
   status: { type: String, required: true },
   locale: { type: String, default: "" },
@@ -44,10 +45,11 @@ const DOMAIN_MAP = {
     Converted: "active",
   },
   policy: {
+    "Pending": "waiting",
+    "Record": "open",
     "Active": "active",
-    "Draft": "draft",
-    "KYT": "waiting",
-    "IPT": "waiting",
+    "Cancelled": "cancel",
+    "Archived": "draft",
     "Expired": "cancel",
     "Cancelled": "cancel",
   },
@@ -506,10 +508,11 @@ const DOMAIN_LABELS = {
     Cancelled: "status_cancelled",
   },
   policy: {
+    Pending: "status_onay",
+    Record: "status_kayit",
     Active: "status_active",
-    Draft: "status_draft",
-    KYT: "status_kyt",
-    IPT: "status_ipt",
+    Cancelled: "status_cancelled",
+    Archived: "status_archived",
     Expired: "expired",
     Cancelled: "status_cancelled",
   },
@@ -555,6 +558,7 @@ const STANDARD_MAP = {
   draft: { cls: "status-draft", label: "draft" },
   waiting: { cls: "status-waiting", label: "waiting" },
   open: { cls: "status-open", label: "open" },
+  hold: { cls: "status-draft", label: "draft" },
   cancel: { cls: "status-cancel", label: "status_cancelled" },
 };
 

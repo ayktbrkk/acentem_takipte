@@ -65,6 +65,8 @@ def sync_doc_event(doc, method=None) -> None:
         return
 
     try:
+        if method == "on_trash":
+            frappe.flags.at_accounting_sync_is_trash = doc.name
         _enqueue_accounting_sync_doc(doc.doctype, doc.name)
     except Exception:
         log_redacted_error(
@@ -282,6 +284,13 @@ def build_accounting_payload(source_doctype: str, source_name: str) -> dict:
 
 
 def _build_policy_payload(policy_name: str) -> dict:
+    """Build accounting journal payload for an AT Policy.
+
+    Journal lines use a single-sign convention: positive for normal operations,
+    negative for reversals (Cancelled status or on_trash event). The external
+    accounting system is responsible for debit/credit assignment based on line_type.
+    Summary: Gross Production (revenue) + Commission Accrual (expense) should balance
+    when signed correctly by the external ledger."""
     policy = frappe.get_doc("AT Policy", policy_name)
     local_amount = flt(policy.gross_premium)
     local_amount_try = flt(policy.gwp_try) or (
@@ -291,6 +300,43 @@ def _build_policy_payload(policy_name: str) -> dict:
         policy.commission_amount,
         policy.commission,
     )
+
+    is_cancelled = str(policy.status or "").strip() == "Cancelled"
+    is_trash = getattr(frappe.flags, "at_accounting_sync_is_trash", None) == policy.name
+    has_endorsement_child = False
+    if is_cancelled:
+        has_endorsement_child = bool(
+            frappe.db.get_value("AT Policy", {"parent_policy": policy.name}, "name")
+        )
+    sign = -1 if (is_cancelled and not has_endorsement_child) or is_trash else 1
+
+    journal_lines: list[dict] = [
+        {
+            "line_type": "Commission Reversal" if is_cancelled else "Gross Production",
+            "amount_try": local_amount_try * sign,
+        },
+        {
+            "line_type": "Commission Reversal" if is_cancelled else "Commission Accrual",
+            "amount_try": commission_value * (flt(policy.fx_rate) or 1) * sign,
+        },
+    ]
+
+    distribution_raw = getattr(policy, "commission_distribution", None) or "[]"
+    try:
+        distributions = json.loads(distribution_raw) if isinstance(distribution_raw, str) else distribution_raw
+    except (json.JSONDecodeError, TypeError):
+        distributions = []
+
+    for entry in (distributions or []):
+        if flt(entry.get("amount_try", 0)) > 0:
+            journal_lines.append({
+                "line_type": "Commission Distribution" if not is_cancelled else "Commission Distribution Reversal",
+                "entity": entry.get("entity"),
+                "entity_name": entry.get("entity_name", ""),
+                "level": entry.get("level", 0),
+                "share_pct": entry.get("share_pct", 100),
+                "amount_try": flt(entry.get("amount_try", 0)) * sign,
+            })
 
     return {
         "entry_type": ENTRY_TYPE_MAP["AT Policy"],
@@ -304,16 +350,7 @@ def _build_policy_payload(policy_name: str) -> dict:
         "currency": cstr(policy.currency or "TRY").upper(),
         "local_amount": local_amount,
         "local_amount_try": local_amount_try,
-        "journal_lines": [
-            {
-                "line_type": "Gross Production",
-                "amount_try": local_amount_try,
-            },
-            {
-                "line_type": "Commission Accrual",
-                "amount_try": commission_value * (flt(policy.fx_rate) or 1),
-            },
-        ],
+        "journal_lines": journal_lines,
         "source_status": policy.status,
     }
 

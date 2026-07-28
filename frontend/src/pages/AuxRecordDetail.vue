@@ -6,6 +6,7 @@
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="goBack">
+        <FeatherIcon name="arrow-left" class="h-4 w-4" />
         {{ t('backToList') }}
       </ActionButton>
       <ActionButton

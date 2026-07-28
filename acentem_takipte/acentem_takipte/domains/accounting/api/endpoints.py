@@ -52,6 +52,10 @@ def get_reconciliation_workbench(
     mismatch_type: str | None = None,
     office_branch: str | None = None,
     limit: int = 100,
+    commission_limit: int = 50,
+    commission_page: int = 1,
+    collection_limit: int = 50,
+    collection_page: int = 1,
 ) -> dict:
     assert_authenticated()
     assert_doctype_permission(
@@ -69,6 +73,10 @@ def get_reconciliation_workbench(
         mismatch_type=mismatch_type,
         office_branch=office_branch,
         limit=limit,
+        commission_limit=commission_limit,
+        commission_page=commission_page,
+        collection_limit=collection_limit,
+        collection_page=collection_page,
     )
 
 
@@ -122,6 +130,7 @@ def preview_statement_import(
     insurance_company: str | None = None,
     delimiter: str = ",",
     limit: int = 200,
+    statement_type: str = "premium",
 ) -> dict:
     _assert_accounting_mutation_access(
         "api.accounting.preview_statement_import",
@@ -130,6 +139,7 @@ def preview_statement_import(
             "insurance_company": insurance_company,
             "delimiter": delimiter,
             "limit": max(cint(limit), 1),
+            "statement_type": statement_type,
         },
         permission_targets=ACCOUNTING_MUTATION_DOCTYPES["preview_statement_import"],
     )
@@ -139,6 +149,7 @@ def preview_statement_import(
         insurance_company=insurance_company,
         delimiter=delimiter,
         limit=limit,
+        statement_type=statement_type,
     )
 
 
@@ -149,6 +160,7 @@ def import_statement_preview(
     insurance_company: str | None = None,
     delimiter: str = ",",
     limit: int = 200,
+    statement_type: str = "premium",
 ) -> dict:
     _assert_accounting_mutation_access(
         "api.accounting.import_statement_preview",
@@ -166,6 +178,7 @@ def import_statement_preview(
         insurance_company=insurance_company,
         delimiter=delimiter,
         limit=limit,
+        statement_type=statement_type,
     )
 
 

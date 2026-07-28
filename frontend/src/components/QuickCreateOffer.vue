@@ -107,7 +107,10 @@ function validateRequired() {
   errorText.value = "";
   let valid = true;
   for (const field of fields.value) {
-    if (!field?.required) continue;
+    const isRequired = typeof field?.required === "function"
+      ? field.required({ model: form })
+      : field?.required;
+    if (!isRequired) continue;
     const value = form[field.name];
     const empty = typeof value === "boolean" ? false : String(value ?? "").trim() === "";
     if (empty) {

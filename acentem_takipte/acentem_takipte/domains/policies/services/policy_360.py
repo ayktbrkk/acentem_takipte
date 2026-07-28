@@ -51,7 +51,7 @@ def build_policy_360_payload(name: str) -> dict:
         "customer": customer,
         "endorsements": _get_rows(
             "AT Policy Endorsement",
-            fields=["name", "endorsement_type", "status", "notes", "endorsement_date", "snapshot_version", "applied_on", "applied_by", "owner", "creation"],
+            fields=["name", "endorsement_type", "status", "notes", "endorsement_date", "change_payload", "snapshot_version", "applied_on", "applied_by", "owner", "creation"],
             filters={"policy": policy_name},
             order_by="creation desc",
             limit_page_length=100,
@@ -122,6 +122,14 @@ def build_policy_360_payload(name: str) -> dict:
             order_by="remind_at asc, modified desc",
             limit_page_length=50,
         ) if frappe.db.exists("DocType", "AT Reminder") else [],
+        "renewal_tasks": _get_rows(
+            "AT Renewal Task",
+            fields=["name", "status", "renewal_date", "reminder_stage", "notes", "owner", "creation"],
+            filters={"policy": policy_name},
+            order_by="renewal_date desc",
+            limit_page_length=20,
+        ),
+        "version_chain": _get_version_chain(policy_name),
         "product_profile": _build_product_profile(policy),
     }
 
@@ -292,8 +300,8 @@ def _build_product_profile(policy: dict) -> dict:
     normalized_branch_value = _fold_ascii(branch_value)
     branch_label = branch_value or "-"
 
-    product_family = "General"
-    insured_subject = "Policy"
+    product_family = _("General")
+    insured_subject = _("Policy")
     coverage_focus = branch_label
     required_fields = [
         {"key": "name", "label": _("Record Number"), "value": policy.get("name")},
@@ -302,60 +310,58 @@ def _build_product_profile(policy: dict) -> dict:
     ]
 
     if any(_fold_ascii(token) in normalized_branch_value for token in ["trafik", "kasko", "vehicle", "motor"]):
-        product_family = "Motor"
-        insured_subject = "Vehicle"
-        coverage_focus = "Motor"
+        product_family = _("Motor")
+        insured_subject = _("Vehicle")
+        coverage_focus = _("Motor")
         required_fields.extend(
             [
-                {"key": "vehicle_plate_no", "label": "Plate No", "value": policy.get("vehicle_plate_no") or policy.get("plate_no")},
-                {"key": "vehicle_chassis_no", "label": "Chassis No", "value": policy.get("vehicle_chassis_no") or policy.get("chassis_no")},
-                {"key": "vehicle_engine_no", "label": "Engine No", "value": policy.get("vehicle_engine_no") or policy.get("engine_no")},
+                {"key": "plate", "label": _("Plate No"), "value": policy.get("plate")},
+                {"key": "document_serial_no", "label": _("Document Serial No"), "value": policy.get("document_serial_no")},
+                {"key": "model_year", "label": _("Model Year"), "value": policy.get("model_year")},
+                {"key": "brand_code", "label": _("Brand Code"), "value": policy.get("brand_code")},
+                {"key": "chassis_no", "label": _("Chassis No"), "value": policy.get("chassis_no")},
+                {"key": "motor_no", "label": _("Engine No"), "value": policy.get("motor_no")},
             ]
         )
     elif any(_fold_ascii(token) in normalized_branch_value for token in ["konut", "dask", "home"]):
-        product_family = "Property"
-        insured_subject = "Property"
-        coverage_focus = "Home"
+        product_family = _("Property")
+        insured_subject = _("Property")
+        coverage_focus = _("Home")
         required_fields.extend(
             [
-                {"key": "insured_address", "label": "Insured Address", "value": policy.get("insured_address") or policy.get("property_address")},
-                {"key": "building_area_m2", "label": "Building Area", "value": policy.get("building_area_m2")},
-                {"key": "usage_type", "label": "Usage Type", "value": policy.get("usage_type")},
+                {"key": "address", "label": _("Address"), "value": policy.get("address")},
+                {"key": "uavt_code", "label": _("UAVT Code"), "value": policy.get("uavt_code")},
+                {"key": "gross_area_m2", "label": _("Gross Area (m2)"), "value": policy.get("gross_area_m2")},
+                {"key": "usage_type", "label": _("Usage Type"), "value": policy.get("usage_type")},
+                {"key": "floor_count", "label": _("Floor Count"), "value": policy.get("floor_count")},
+                {"key": "current_floor", "label": _("Current Floor"), "value": policy.get("current_floor")},
+                {"key": "construction_year", "label": _("Construction Year"), "value": policy.get("construction_year")},
+                {"key": "structure_type", "label": _("Structure Type"), "value": policy.get("structure_type")},
+                {"key": "damage_status", "label": _("Damage Status"), "value": policy.get("damage_status")},
             ]
         )
     elif any(_fold_ascii(token) in normalized_branch_value for token in ["saglik", "health", "tamamlayici"]):
-        product_family = "Health"
-        insured_subject = "Person"
-        coverage_focus = "Health"
+        product_family = _("Health")
+        insured_subject = _("Person")
+        coverage_focus = _("Health")
         required_fields.extend(
             [
-                {"key": "insured_count", "label": "Insured Count", "value": policy.get("insured_count")},
-                {"key": "plan_name", "label": "Plan Name", "value": policy.get("plan_name")},
-                {"key": "provider_network", "label": "Provider Network", "value": policy.get("provider_network")},
+                {"key": "insurance_type", "label": _("Insurance Type"), "value": policy.get("insurance_type")},
+                {"key": "coverage_type", "label": _("Coverage Type"), "value": policy.get("coverage_type")},
+                {"key": "network_type", "label": _("Network Type"), "value": policy.get("network_type")},
+                {"key": "inpatient_treatment", "label": _("Inpatient Treatment"), "value": policy.get("inpatient_treatment")},
+                {"key": "outpatient_treatment", "label": _("Outpatient Treatment"), "value": policy.get("outpatient_treatment")},
+                {"key": "maternity_coverage", "label": _("Maternity Coverage"), "value": policy.get("maternity_coverage")},
             ]
         )
     elif any(_fold_ascii(token) in normalized_branch_value for token in ["seyahat", "travel"]):
-        product_family = "Travel"
-        insured_subject = "Trip"
-        coverage_focus = "Travel"
-        required_fields.extend(
-            [
-                {"key": "destination_country", "label": "Destination", "value": policy.get("destination_country")},
-                {"key": "trip_start_date", "label": "Trip Start", "value": policy.get("trip_start_date")},
-                {"key": "trip_end_date", "label": "Trip End", "value": policy.get("trip_end_date")},
-            ]
-        )
+        product_family = _("Travel")
+        insured_subject = _("Trip")
+        coverage_focus = _("Travel")
     elif any(_fold_ascii(token) in normalized_branch_value for token in ["hayat", "life", "bes", "emeklilik"]):
-        product_family = "Life"
-        insured_subject = "Person"
-        coverage_focus = "Life"
-        required_fields.extend(
-            [
-                {"key": "insured_person_name", "label": "Insured Person", "value": policy.get("insured_person_name")},
-                {"key": "beneficiary_name", "label": "Beneficiary", "value": policy.get("beneficiary_name")},
-                {"key": "plan_name", "label": "Plan Name", "value": policy.get("plan_name")},
-            ]
-        )
+        product_family = _("Life")
+        insured_subject = _("Person")
+        coverage_focus = _("Life")
 
     completed_fields = [item for item in required_fields if str(item.get("value") or "").strip()]
     missing_fields = [item for item in required_fields if not str(item.get("value") or "").strip()]
@@ -373,4 +379,63 @@ def _build_product_profile(policy: dict) -> dict:
         "missing_fields": missing_fields,
         "readiness_score": readiness_score,
     }
+
+
+def _get_version_chain(policy_name: str) -> list[dict]:
+    chain = []
+
+    # Walk up to find all ancestors
+    ancestor_names = []
+    parent = frappe.db.get_value("AT Policy", policy_name, "parent_policy")
+    while parent:
+        ancestor_names.insert(0, parent)
+        parent = frappe.db.get_value("AT Policy", parent, "parent_policy")
+
+    # Resolve root policy
+    root_policy = ancestor_names[0] if ancestor_names else policy_name
+
+    # Fetch all ancestors
+    if ancestor_names:
+        ancestors = frappe.get_list(
+            "AT Policy",
+            filters={"name": ["in", ancestor_names]},
+            fields=["name", "status", "gross_premium", "endorsement_reference", "policy_version", "parent_policy"],
+            order_by="policy_version asc",
+        )
+        for a in ancestors:
+            chain.append({**dict(a), "is_current": a.name == policy_name})
+
+    # Add current
+    current_status = frappe.db.get_value("AT Policy", policy_name, ["status", "gross_premium", "policy_version"], as_dict=True) or {}
+    chain.append({
+        "name": policy_name,
+        "status": current_status.get("status"),
+        "gross_premium": current_status.get("gross_premium"),
+        "policy_version": current_status.get("policy_version"),
+        "is_current": True,
+    })
+
+    # Fetch children
+    children = frappe.get_list(
+        "AT Policy",
+        filters={"parent_policy": policy_name},
+        fields=["name", "status", "gross_premium", "endorsement_reference", "policy_version"],
+        order_by="policy_version asc",
+    )
+    for child in children:
+        chain.append(dict(child))
+
+    # Fetch siblings from root (same parent, different names, include all descendants)
+    if root_policy != policy_name:
+        siblings = frappe.get_list(
+            "AT Policy",
+            filters={"parent_policy": root_policy, "name": ["!=", policy_name]},
+            fields=["name", "status", "gross_premium", "endorsement_reference", "policy_version"],
+            order_by="policy_version asc",
+        )
+        for sib in siblings:
+            if sib.name not in {v.get("name") for v in chain}:
+                chain.append(dict(sib))
+
+    return chain
 

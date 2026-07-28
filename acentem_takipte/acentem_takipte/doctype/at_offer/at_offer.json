@@ -127,7 +127,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Draft\nSent\nAccepted\nRejected\nConverted",
+   "options": "Draft\nSent\nAccepted\nRejected\nConverted\nCancelled",
    "reqd": 1
   },
   {

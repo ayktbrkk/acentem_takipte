@@ -3,16 +3,46 @@ from __future__ import annotations
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.utils import flt
 
-from acentem_takipte.acentem_takipte.platform.permissions.sales_entities import sales_entities as sales_entity_service
+import acentem_takipte.acentem_takipte.platform.permissions.sales_entities as sales_entity_service
 
 
 class ATSalesEntity(Document):
     def validate(self):
         self.is_active = int(self.get("is_active") or 0)
         self.is_pool = int(self.get("is_pool") or 0)
+        self.is_root = int(self.get("is_root") or 0)
+        self._validate_commission_share_pct()
+        self._validate_root_constraints()
         self._validate_parent_constraints()
         self._validate_pool_constraints()
+
+    def _validate_commission_share_pct(self) -> None:
+        share_pct = flt(self.get("commission_share_pct") if self.get("commission_share_pct") is not None else 100)
+        if share_pct < 0 or share_pct > 100:
+            frappe.throw(_("Commission Share % must be between 0 and 100."))
+        self.commission_share_pct = share_pct
+
+    def _validate_root_constraints(self) -> None:
+        office_branch = (self.office_branch or "").strip()
+        if not office_branch:
+            if self.is_root:
+                frappe.throw(_("Root entity must have an office branch."))
+            return
+        parent_name = (self.parent_entity or "").strip()
+        if self.is_root and parent_name:
+            frappe.throw(_("Root entity cannot have a parent entity."))
+        existing_root = frappe.db.get_value(
+            "AT Sales Entity",
+            {"office_branch": office_branch, "is_root": 1, "name": ["!=", self.name or ""]},
+            "name",
+        )
+        if self.is_root and existing_root:
+            frappe.throw(_("Only one root sales entity is allowed per office branch. Existing root: {0}").format(existing_root))
+        if not self.is_root and not existing_root and not frappe.flags.at_allow_rootless_branch:
+            if not frappe.db.get_value("AT Sales Entity", {"office_branch": office_branch, "is_root": 1}, "name"):
+                frappe.throw(_("Each office branch must have a root sales entity. Create the root entity first."))
 
     def _validate_parent_constraints(self) -> None:
         current_name = (self.name or "").strip()

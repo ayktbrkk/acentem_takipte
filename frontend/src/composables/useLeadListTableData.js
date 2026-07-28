@@ -7,10 +7,10 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
   const isInitialLoading = computed(() => leadListResource.loading && rows.value.length === 0);
 
   const leadStatusOptions = computed(() => [
-    { value: "Draft", label: t("statusDraft") },
-    { value: "Open", label: t("statusOpen") },
-    { value: "Replied", label: t("statusReplied") },
-    { value: "Closed", label: t("statusClosed") },
+    { value: "Draft", label: t("status_draft") },
+    { value: "Open", label: t("status_open") },
+    { value: "Replied", label: t("status_replied") },
+    { value: "Closed", label: t("status_closed") },
   ]);
   const conversionStateOptions = computed(() => [
     { value: "unconverted", label: t("conversionStateUnconverted") },
@@ -106,7 +106,7 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
       lead_secondary: row.branch || "-",
       customer_primary: row.customer_full_name || row.customer_name || row.customer || "-",
       customer_secondary: `${translateText(row.customer_customer_type || "-", activeLocale.value)} | ${row.customer_masked_tax_id || "-"}`,
-      process_primary: t(row.status === "Open" ? "statusOpen" : row.status === "Draft" ? "statusDraft" : row.status),
+      process_primary: t(row.status === "Open" ? "status_open" : row.status === "Draft" ? "status_draft" : row.status),
       process_secondary: t(leadStaleState(row)),
       potential_primary: fmtCurrency(row.estimated_gross_premium || 0),
       potential_secondary: fmtDateTime(row.creation),
@@ -156,38 +156,38 @@ export function useLeadListTableData({ t, activeLocale, leadListResource }) {
   const leadListFilterConfig = computed(() => [
     {
       key: "status",
-      label: "Durum",
+      label: t("colStatus"),
       options: leadStatusOptions.value.map((item) => ({ value: item.value, label: item.label })),
     },
     {
       key: "branch",
-      label: "Branş",
+      label: t("branch"),
       options: [...new Set(rows.value.map((row) => String(row.branch || "").trim()).filter(Boolean))]
         .sort((a, b) => a.localeCompare(b, localeCode.value))
         .map((value) => ({ value, label: value })),
     },
     {
       key: "sales_entity",
-      label: "Satış Birimi",
+      label: t("sales_entity"),
       options: [...new Set(rows.value.map((row) => String(row.sales_entity || "").trim()).filter(Boolean))]
         .sort((a, b) => a.localeCompare(b, localeCode.value))
         .map((value) => ({ value, label: value })),
     },
     {
       key: "insurance_company",
-      label: "Sigorta Şirketi",
+      label: t("insurance_company"),
       options: [...new Set(rows.value.map((row) => String(row.insurance_company || "").trim()).filter(Boolean))]
         .sort((a, b) => a.localeCompare(b, localeCode.value))
         .map((value) => ({ value, label: value })),
     },
     {
       key: "conversion_state",
-      label: "Dönüşüm",
+      label: t("conversion"),
       options: conversionStateOptions.value.map((item) => ({ value: item.value, label: item.label })),
     },
     {
       key: "stale_state",
-      label: "Takip Durumu",
+      label: t("stale_state"),
       options: staleStateOptions.value.map((item) => ({ value: item.value, label: item.label })),
     },
   ]);

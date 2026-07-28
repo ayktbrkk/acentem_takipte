@@ -11,6 +11,9 @@ from acentem_takipte.acentem_takipte.doctype.at_offer.at_offer import convert_to
 
 
 class TestATOffer(IntegrationTestCase):
+    def setUp(self) -> None:
+        frappe.flags.at_allow_rootless_branch = True
+
     def tearDown(self) -> None:
         frappe.db.rollback()
 

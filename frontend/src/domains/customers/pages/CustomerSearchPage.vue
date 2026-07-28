@@ -103,21 +103,21 @@
 
 <script setup lang="ts">
 import { computed, unref } from "vue";
-import { useAuthStore } from "../stores/auth";
-import { useBranchStore } from "../stores/branch";
-import { normalizeStatus } from "../utils/statusMapping";
-import { useCustomerSearchPage } from "../composables/useCustomerSearchPage";
-import { CUSTOMER_SEARCH_TRANSLATIONS } from "../config/customer_search_translations";
-import { translateText } from "../utils/i18n";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import EmptyState from "../components/app-shell/EmptyState.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import GlobalCustomerSearch from "../components/app-shell/GlobalCustomerSearch.vue";
+import { useAuthStore } from "../../../stores/auth";
+import { useBranchStore } from "../../../stores/branch";
+import { normalizeStatus } from "../../../utils/statusMapping";
+import { useCustomerSearchPage } from "../../../composables/useCustomerSearchPage";
+import { CUSTOMER_SEARCH_TRANSLATIONS } from "../../../config/customer_search_translations";
+import { translateText } from "../../../utils/i18n";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../../../components/app-shell/SectionPanel.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import EmptyState from "../../../components/app-shell/EmptyState.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import ListTable from "../../../components/ui/ListTable.vue";
+import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
+import StatusBadge from "../../../components/ui/StatusBadge.vue";
+import GlobalCustomerSearch from "../../../components/app-shell/GlobalCustomerSearch.vue";
 
 const authStore = useAuthStore();
 const branchStore = useBranchStore();

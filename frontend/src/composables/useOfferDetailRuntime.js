@@ -123,6 +123,12 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
     { key: "offer_no", label: t("offer_no"), value: offer.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
     { key: "insurance_company", label: t("insurance_company"), value: offer.value.insurance_company, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
     { key: "branch", label: t("branch"), value: offer.value.branch, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    { key: "status", label: t("status"), value: offer.value.status, displayValue: t(`status_${String(offer.value.status || "Draft").toLowerCase()}`), type: "select", options: [
+      { label: t("status_draft"), value: "Draft" },
+      { label: t("status_sent"), value: "Sent" },
+      { label: t("status_accepted"), value: "Accepted" },
+      { label: t("status_rejected"), value: "Rejected" },
+    ], required: true },
     { key: "offer_date", label: t("offer_date"), value: offer.value.offer_date, displayValue: formatDate(offer.value.offer_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
     { key: "valid_until", label: t("valid_until"), value: offer.value.valid_until, displayValue: formatDate(offer.value.valid_until), type: "date", required: true, unspecifiedLabel: t("unspecified"), valueClass: "text-amber-600 font-bold" },
   ]);
@@ -181,6 +187,29 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
     }
   }
 
+  const convertToPolicyResource = createResource({
+    url: "acentem_takipte.acentem_takipte.doctype.at_offer.at_offer.convert_to_policy",
+    auto: false,
+  });
+
+  async function convertToPolicy(commissionAmount, taxAmount, netPremium) {
+    const offerName = unref(name);
+    if (!offerName) return;
+    try {
+      await convertToPolicyResource.submit({
+        offer_name: offerName,
+        commission_amount: commissionAmount || 0,
+        tax_amount: taxAmount || 0,
+        net_premium: netPremium || 0,
+      });
+      showNotification(t("convert_success"));
+      await reload();
+    } catch (err) {
+      showNotification(t("convert_failed"), "error");
+      throw err;
+    }
+  }
+
   // Watch for name change
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
@@ -217,6 +246,7 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
     notification,
     updateOffer,
     updateCustomer,
+    convertToPolicy,
   };
 }
 

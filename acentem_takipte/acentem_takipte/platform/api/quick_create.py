@@ -33,9 +33,18 @@ from acentem_takipte.acentem_takipte.domains.policies.services.quick_create impo
     create_quick_policy,
     create_quick_task,
 )
+
+
+def _insert_doc(payload: dict, result_key: str) -> dict[str, str]:
+    """Insert a document via the quick-create pipeline."""
+    import frappe
+    doc = frappe.get_doc(payload)
+    doc.insert()
+    return {result_key: doc.name, "name": doc.name}
 from acentem_takipte.acentem_takipte.platform.services.quick_create_reference import (
     create_quick_branch,
     create_quick_insurance_company,
+    create_quick_office_branch,
     create_quick_sales_entity,
 )
 from acentem_takipte.acentem_takipte.platform.services.quick_create_search import (
@@ -71,6 +80,7 @@ __all__ = [
     "create_quick_insured_asset",
     "create_quick_lead",
     "create_quick_notification_template",
+    "create_quick_office_branch",
     "create_quick_ownership_assignment",
     "create_quick_payment",
     "create_quick_policy",

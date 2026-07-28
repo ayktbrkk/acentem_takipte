@@ -178,6 +178,14 @@ export function useAuxRecordDetailQuickDialogs({
     }
     if (["sales_entity_master_edit"].includes(registryKey)) {
       await auxQuickSalesEntityResource.reload().catch(() => {});
+      if (!branchStore.items?.length) {
+        branchStore.hydrateFromSession();
+      }
+    }
+    if (["office_branch_master_edit"].includes(registryKey)) {
+      if (!branchStore.items?.length) {
+        branchStore.hydrateFromSession();
+      }
     }
   }
 

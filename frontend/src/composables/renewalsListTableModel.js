@@ -24,7 +24,7 @@ export function buildRenewalsListTableColumns(t) {
   ];
 }
 
-export function mapRenewalRecordToTableRow(row, { formatDate, localeCode, t }) {
+export function mapRenewalRecordToTableRow(row, { formatDate, _localeCode, t }) {
   const unspecified = t("unspecified");
   const dueDate = row.due_date || row.renewal_date;
   const daysUntilDue = getRenewalDaysUntilDue(dueDate);

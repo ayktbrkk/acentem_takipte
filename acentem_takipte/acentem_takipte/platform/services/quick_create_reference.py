@@ -80,3 +80,32 @@ def create_quick_sales_entity(
     doc.insert()
     frappe.db.commit()
     return {"sales_entity": doc.name}
+
+
+@frappe.whitelist()
+def create_quick_office_branch(
+    office_branch_name: str | None = None,
+    office_branch_code: str | None = None,
+    is_head_office: int | str | bool | None = 0,
+    city: str | None = None,
+    parent_office_branch: str | None = None,
+    manager_user: str | None = None,
+    is_active: int | str | bool | None = 1,
+) -> dict[str, str]:
+    _assert_create_permission(
+        "AT Office Branch", _("You do not have permission to create office branches.")
+    )
+    payload = {
+        "doctype": "AT Office Branch",
+        "office_branch_name": (office_branch_name or "").strip(),
+        "office_branch_code": (office_branch_code or "").strip() or None,
+        "is_head_office": _as_check(is_head_office, default=0),
+        "city": (city or "").strip() or None,
+        "parent_office_branch": _normalize_link("AT Office Branch", parent_office_branch),
+        "manager_user": _normalize_link("User", manager_user),
+        "is_active": _as_check(is_active, default=1),
+    }
+    doc = frappe.get_doc(payload)
+    doc.insert()
+    frappe.db.commit()
+    return {"office_branch": doc.name}

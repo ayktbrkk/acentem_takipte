@@ -1,4 +1,10 @@
 export const STATUS_DOMAIN_MAP = {
+  policy: {
+    Active: "active",
+    KYT: "warn",
+    IPT: "cancel",
+    Archived: "hold",
+  },
   payment: {
     Paid: "active",
     Unpaid: "hold",

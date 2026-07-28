@@ -12,6 +12,9 @@ import {
 export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData, rows, metrics, openReconciliationDetail, openReconciliationActionDialog }) {
   const collectionPreviewRows = computed(() => workbenchData.value.collection_preview?.overdue_rows || []);
   const commissionPreviewRows = computed(() => workbenchData.value.commission_preview?.rows || []);
+  const commissionAging = computed(() => workbenchData.value.commission_preview?.aging || null);
+  const commissionPreviewLimit = computed(() => workbenchData.value.commission_preview?.limit || 50);
+  const commissionPreviewPage = computed(() => workbenchData.value.commission_preview?.page || 1);
   const reconciliationSummary = computed(() => {
     const list = rows.value || [];
     return {
@@ -64,6 +67,9 @@ export function useReconciliationWorkbenchSummary({ t, localeCode, workbenchData
     metrics,
     collectionPreviewRows,
     commissionPreviewRows,
+    commissionAging,
+    commissionPreviewLimit,
+    commissionPreviewPage,
     reconciliationSummary,
     reconciliationListColumns,
     reconciliationListRows,

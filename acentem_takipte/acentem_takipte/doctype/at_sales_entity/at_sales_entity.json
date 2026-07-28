@@ -3,14 +3,16 @@
  "autoname": "AT-ENT-.YYYY.-.#####.",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": [
-  "entity_type",
-  "full_name",
-  "office_branch",
-  "parent_entity",
-  "is_active",
-  "is_pool"
- ],
+  "field_order": [
+   "entity_type",
+   "full_name",
+   "office_branch",
+   "parent_entity",
+   "is_root",
+   "commission_share_pct",
+   "is_active",
+   "is_pool"
+  ],
  "fields": [
   {
    "fieldname": "entity_type",
@@ -37,6 +39,20 @@
    "fieldtype": "Link",
    "label": "Parent Entity",
    "options": "AT Sales Entity"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_root",
+   "fieldtype": "Check",
+   "label": "Is Root",
+   "description": "Top-level agency in the hierarchy. Exactly one root per office branch. Root entities may not have a parent entity."
+  },
+  {
+   "default": "50",
+   "fieldname": "commission_share_pct",
+   "fieldtype": "Float",
+   "label": "Commission Share %",
+   "description": "Percentage of commission this entity retains. Remainder flows upward to parent. Root entity (no parent) absorbs all remaining commission regardless of this value."
   },
   {
    "default": "1",

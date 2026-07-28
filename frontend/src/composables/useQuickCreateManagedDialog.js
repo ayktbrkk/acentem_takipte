@@ -78,7 +78,10 @@ export function useQuickCreateManagedDialog(props, emit) {
     errorText.value = "";
     let valid = true;
     for (const field of fields.value) {
-      if (!field?.required) continue;
+      const isRequired = typeof field?.required === "function"
+        ? field.required({ model: form })
+        : field?.required;
+      if (!isRequired) continue;
       const value = form[field.name];
       const empty = typeof value === "boolean" ? false : String(value ?? "").trim() === "";
       if (empty) {
@@ -121,8 +124,11 @@ export function useQuickCreateManagedDialog(props, emit) {
       const tax = Number(form.tax_amount) || 0;
       const gross = Number(form.gross_premium) || 0;
       const calcGross = Number((net + comm + tax).toFixed(2));
-      if (gross > 0 && Math.abs(gross - calcGross) > 0.01) {
-        errorText.value = translateText("Gross Premium must equal Net Premium + Commission + Tax.", props.locale);
+      if (gross > 0 && calcGross > 0 && Math.abs(gross - calcGross) > 0.01) {
+        const msg = props.locale === "tr"
+          ? `Brüt Prim (${gross}), Net Prim (${net}) + Vergi (${tax}) + Komisyon (${comm}) = ${calcGross} toplamına eşit olmalıdır.`
+          : `Gross Premium (${gross}) must equal Net Premium (${net}) + Tax (${tax}) + Commission (${comm}) = ${calcGross}.`;
+        errorText.value = msg;
         return;
       }
     }

@@ -64,7 +64,7 @@ export function useDashboardFormatters({ dashboardComparisonTrendHint, localeCod
     if (!dateValue) return "-";
     const days = daysUntil(dateValue);
     if (days == null) return "-";
-    if (days < 0) return `+${Math.abs(days)}d`;
+    if (days < 0) return `-${Math.abs(days)}d`;
     return `${days}d`;
   }
 

@@ -15,7 +15,7 @@ from acentem_takipte.acentem_takipte.platform.services.document_center import (
 
 
 OPEN_OFFER_STATUSES = {"Draft", "Sent", "Accepted", "Negotiation"}
-# Only statuses defined in AT Policy DocType options (IPT/KYT/Active).
+# Only statuses defined in AT Policy DocType options (Record/Cancelled/Active).
 # "Renewal"/"Pending Renewal" are not valid options in the field definition.
 ACTIVE_POLICY_STATUSES = {"Active"}
 OPEN_CLAIM_STATUSES = {"Open", "Under Review", "Approved"}

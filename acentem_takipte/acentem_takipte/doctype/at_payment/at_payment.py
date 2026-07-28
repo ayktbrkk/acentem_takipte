@@ -27,6 +27,7 @@ class ATPayment(Document):
 
         self._validate_status()
         self._validate_claim_links()
+        self._validate_commission_payout()
         self._validate_amounts()
         self._validate_installments()
         self._set_exchange_rate()
@@ -86,6 +87,41 @@ class ATPayment(Document):
 
         if self.payment_purpose != "Claim Payout":
             self.payment_purpose = "Claim Payout"
+
+    def _validate_commission_payout(self):
+        if self.payment_purpose != "Commission Payout":
+            return
+        if self.payment_direction != "Outbound":
+            self.payment_direction = "Outbound"
+        if not self.policy:
+            frappe.throw(_("A policy must be linked for commission payouts."))
+        policy_commission = flt(
+            frappe.db.get_value("AT Policy", self.policy, "commission_amount") or 0
+        )
+        if self.amount <= 0 and policy_commission > 0:
+            self.amount = policy_commission
+        already_paid = flt(
+            frappe.db.sql(
+                """
+                select ifnull(sum(amount), 0)
+                from `tabAT Payment`
+                where policy = %s
+                  and payment_purpose = 'Commission Payout'
+                  and status != 'Cancelled'
+                  and name != %s
+                """,
+                (self.policy, self.name or ""),
+            )[0][0]
+        )
+        total_with_new = already_paid + flt(self.amount)
+        if total_with_new > policy_commission + 0.01:
+            frappe.throw(
+                _(
+                    "Cumulative commission payouts ({0} + {1} = {2}) would exceed policy commission ({3})."
+                ).format(
+                    already_paid, self.amount, total_with_new, policy_commission
+                )
+            )
 
     def _validate_amounts(self):
         self.amount = flt(self.amount)

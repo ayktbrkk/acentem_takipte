@@ -9,7 +9,12 @@
         <FeatherIcon name="refresh-cw" class="h-4 w-4" />
         {{ t("refresh") }}
       </ActionButton>
+      <ActionButton v-if="offer.status !== 'Converted' && !offer.converted_policy" variant="primary" size="sm" @click="handleConvertToPolicy">
+        <FeatherIcon name="arrow-right-circle" class="h-4 w-4" />
+        {{ t("convert_to_policy") }}
+      </ActionButton>
       <ActionButton variant="link" size="sm" @click="backToList">
+        <FeatherIcon name="arrow-left" class="h-4 w-4" />
         {{ t("back_to_list") }}
       </ActionButton>
     </template>
@@ -185,21 +190,21 @@
 <script setup>
 import { computed } from "vue";
 import { FeatherIcon } from "frappe-ui";
-import { useAuthStore } from "../stores/auth";
-import { uppercaseText } from "../utils/i18n";
-import { useOfferDetailRuntime } from "../composables/useOfferDetailRuntime";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import EditableCard from "../components/app-shell/EditableCard.vue";
-import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
-import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import ToastNotification from "../components/ui/ToastNotification.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
-import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
-import { openDocumentInNewTab } from "../utils/documentOpen";
+import { useAuthStore } from "../../../stores/auth";
+import { uppercaseText } from "../../../utils/i18n";
+import { useOfferDetailRuntime } from "../../../composables/useOfferDetailRuntime";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../../../components/app-shell/SectionPanel.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import EditableCard from "../../../components/app-shell/EditableCard.vue";
+import StandardCustomerCard from "../../../components/app-shell/StandardCustomerCard.vue";
+import MetaListCard from "../../../components/app-shell/MetaListCard.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import ToastNotification from "../../../components/ui/ToastNotification.vue";
+import StatusBadge from "../../../components/ui/StatusBadge.vue";
+import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
+import WorkbenchFileUploadModal from "../../../components/aux-workbench/WorkbenchFileUploadModal.vue";
+import { openDocumentInNewTab } from "../../../utils/documentOpen";
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -239,6 +244,7 @@ const {
   notification,
   updateOffer,
   updateCustomer,
+  convertToPolicy,
 } = useOfferDetailRuntime({ 
   name: computed(() => props.name),
   activeLocale 
@@ -249,5 +255,12 @@ async function openDocument(doc) {
     referenceDoctype: "AT Offer",
     referenceName: props.name,
   });
+}
+
+async function handleConvertToPolicy() {
+  if (!confirm(t("convert_confirm"))) return;
+  try {
+    await convertToPolicy();
+  } catch {}
 }
 </script>

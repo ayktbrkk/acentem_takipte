@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import requests
 import xml.etree.ElementTree as ET
 
@@ -48,11 +49,27 @@ POLICY_SNAPSHOT_FIELDS = [
     "structure_type",
     "coverage_type",
     "network_type",
+    "address",
+    "gross_area_m2",
+    "usage_type",
+    "current_floor",
+    "construction_year",
+    "damage_status",
+    "insurance_type",
+    "inpatient_treatment",
+    "outpatient_treatment",
+    "maternity_coverage",
+    "parent_policy",
+    "endorsement_reference",
+    "policy_version",
 ]
 
 
 class ATPolicy(Document):
     def autoname(self):
+        # Versioned policies created via apply_endorsement have name set
+        # explicitly (e.g. AT-POL-2025-000001-01). Frappe desk manual
+        # creation uses the autoname pattern below.
         if self.name:
             return
         self.name = make_autoname("AT-POL-.YYYY.-.######")
@@ -104,6 +121,11 @@ class ATPolicy(Document):
         self._set_exchange_rate()
         # gwp_try will be recalculated in background if fx_rate is updated
         self.gwp_try = self.gross_premium * flt(self.fx_rate)
+        self.commission_distribution = _build_commission_distribution(
+            self.sales_entity,
+            self.commission_amount,
+            flt(self.fx_rate),
+        )
 
     def _validate_company_policy_number_uniqueness(self) -> None:
         if not self.policy_no or not self.insurance_company:
@@ -373,3 +395,74 @@ def _next_snapshot_version(policy_name: str) -> int:
         policy_name,
     )[0][0]
     return (int(current) if current else 0) + 1
+
+
+def _build_commission_distribution(
+    sales_entity: str | None,
+    commission_amount: float,
+    fx_rate: float,
+) -> str:
+    """Build a waterfall (cascading) commission distribution across the entity hierarchy.
+
+    Each entity in the chain retains commission_share_pct% of the *remaining* amount.
+    The remainder flows upward to the parent entity. The last entity in the chain
+    absorbs any unallocated residual.
+
+    Example: Commission = 1000 TL, Rep(60%) → Sub(50%) → Agency(100%):
+      - Rep:   1000 × 60% = 600, remaining = 400
+      - Sub:    400 × 50% = 200, remaining = 200
+      - Agency: 200 × 100% = 200, remaining = 0
+      Total: 600 + 200 + 200 = 1000
+
+    Returns a JSON array of {entity, entity_name, level, share_pct, amount, amount_try, status}.
+    Returns "[]" if commission <= 0 or no sales_entity."""
+    commission = flt(commission_amount)
+    fx = flt(fx_rate) or 1
+    if commission <= 0 or not sales_entity:
+        return "[]"
+    entries: list[dict] = []
+    remaining = commission
+    level = 0
+    current_entity: str | None = sales_entity
+    visited: set[str] = set()
+    while current_entity and current_entity not in visited:
+        visited.add(current_entity)
+        entity_data = frappe.db.get_value(
+            "AT Sales Entity",
+            current_entity,
+            ["commission_share_pct", "full_name", "parent_entity"],
+            as_dict=True,
+        ) or {}
+        share_pct = flt(entity_data.get("commission_share_pct") or 100)
+        share_pct = max(0.0, min(100.0, share_pct))
+        if share_pct <= 0:
+            entry_amount = 0.0
+        else:
+            amount_raw = round(remaining * share_pct / 100, 2)
+            if amount_raw >= remaining - 0.01:
+                entry_amount = remaining
+                remaining = 0.0
+            else:
+                entry_amount = amount_raw
+                remaining = round(remaining - entry_amount, 2)
+        entry_amount_try = round(entry_amount * fx, 2)
+        entity_name = entity_data.get("full_name") or current_entity
+        entries.append({
+            "entity": current_entity,
+            "entity_name": entity_name,
+            "level": level,
+            "share_pct": share_pct,
+            "amount": entry_amount,
+            "amount_try": entry_amount_try,
+            "status": "Accrued",
+        })
+        if remaining <= 0.01:
+            break
+        current_entity = entity_data.get("parent_entity")
+        level += 1
+        if level > 20:
+            break
+    if remaining > 0.01 and entries:
+        entries[-1]["amount"] = round(entries[-1]["amount"] + remaining, 2)
+        entries[-1]["amount_try"] = round(entries[-1]["amount"] * fx, 2)
+    return json.dumps(entries)

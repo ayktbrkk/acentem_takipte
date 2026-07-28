@@ -137,7 +137,7 @@ export function usePolicyQuickCreateRuntime({
       label: `${row.name}${row.customer ? ` - ${row.customer}` : ""}${row.status ? ` (${row.status})` : ""}`,
     })),
   }));
-  const policyQuickAllowedStatuses = new Set(["Active", "KYT", "IPT"]);
+  const policyQuickAllowedStatuses = new Set(["Onay", "Kayıt", "Aktif", "İptal", "Arşiv"]);
   const policyQuickAllowedOfferNames = computed(() =>
     new Set(policyQuickOptionsMap.value.offers.map((option) => String(option.value || "").trim()).filter(Boolean))
   );

@@ -14,8 +14,9 @@
   "before_snapshot",
   "after_snapshot",
   "applied_on",
-  "applied_by",
-  "notes"
+   "applied_by",
+   "pre_cancellation_status",
+   "notes"
  ],
  "fields": [
   {
@@ -91,6 +92,13 @@
    "fieldtype": "Link",
    "label": "Applied By",
    "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pre_cancellation_status",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Pre-Cancellation Status",
    "read_only": 1
   },
   {

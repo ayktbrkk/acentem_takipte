@@ -8,7 +8,6 @@ import { useBranchStore } from "../stores/branch";
 import { useRenewalStore } from "../stores/renewal";
 import { useCustomFilterPresets } from "./useCustomFilterPresets";
 import { openTabularExport } from "../utils/listExport";
-import { translateText } from "../utils/i18n";
 import { getCustomerOptionLabel } from "../utils/customerOptions";
 
 function asArray(value) {

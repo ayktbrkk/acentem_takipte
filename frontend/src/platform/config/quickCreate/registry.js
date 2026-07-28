@@ -32,7 +32,7 @@ export const quickCreateRegistry = {
     key: "offer",
     title: i18nLabel("detailed_quick_offer"),
     subtitle: i18nLabel("create_a_draft_offer_with_customer,_product_and_financial_fields"),
-    submitUrl: "acentem_takipte.doctype.at_offer.at_offer.create_quick_offer",
+    submitUrl: "acentem_takipte.acentem_takipte.doctype.at_offer.at_offer.create_quick_offer",
     resultKey: "offer",
     openRouteName: "offer-detail",
     successRefreshTargets: ["offer_list", "offer_board"],
@@ -55,9 +55,10 @@ export const quickCreateRegistry = {
       notes: "",
     },
     fields: [
-      { name: "sales_entity", type: "select", label: i18nLabel("sales_entity"), optionsSource: "salesEntities", fullWidth: false },
-      { name: "insurance_company", type: "select", label: i18nLabel("insurance_company"), optionsSource: "insuranceCompanies", fullWidth: false },
-      { name: "branch", type: "select", label: i18nLabel("branch"), optionsSource: "branches", fullWidth: false },
+      { name: "customer", type: "text", hidden: true },
+      { name: "sales_entity", type: "select", label: i18nLabel("sales_entity"), optionsSource: "salesEntities", required: true, fullWidth: false },
+      { name: "insurance_company", type: "select", label: i18nLabel("insurance_company"), optionsSource: "insuranceCompanies", required: true, fullWidth: false },
+      { name: "branch", type: "select", label: i18nLabel("branch"), optionsSource: "branches", required: true, fullWidth: false },
       {
         name: "customer_type",
         type: "select",
@@ -87,16 +88,16 @@ export const quickCreateRegistry = {
       },
       { name: "phone", type: "text", label: i18nLabel("phone"), disabled: ({ model }) => hasValue(model?.customerOption?.value), fullWidth: false },
       { name: "email", type: "email", label: i18nLabel("email"), disabled: ({ model }) => hasValue(model?.customerOption?.value), fullWidth: false },
-      { name: "status", type: "select", label: i18nLabel("status"), options: [
-        option("Draft", "Draft"),
-        option("Sent", "Sent"),
-        option("Accepted", "Accepted"),
-        option("Rejected", "Rejected"),
+      { name: "status", type: "select", label: i18nLabel("status"), required: true, options: [
+        option("Draft", "Taslak"),
+        option("Sent", "Gönderildi"),
+        option("Accepted", "Kabul Edildi"),
+        option("Rejected", "Reddedildi"),
       ], fullWidth: false },
-      { name: "offer_date", type: "date", label: i18nLabel("offer_date"), fullWidth: false },
-      { name: "valid_until", type: "date", label: i18nLabel("valid_until"), fullWidth: false },
-      { name: "currency", type: "select", label: i18nLabel("currency"), options: [option("TRY", "TRY"), option("USD", "USD"), option("EUR", "EUR")], fullWidth: false },
-      { name: "gross_premium", type: "number", label: i18nLabel("gross_premium"), min: 0, step: "0.01", fullWidth: false },
+      { name: "offer_date", type: "date", label: i18nLabel("offer_date"), required: true, fullWidth: false },
+      { name: "valid_until", type: "date", label: i18nLabel("valid_until"), required: true, fullWidth: false },
+      { name: "currency", type: "select", label: i18nLabel("currency"), required: true, options: [option("TRY", "TRY"), option("USD", "USD"), option("EUR", "EUR")], fullWidth: false },
+      { name: "gross_premium", type: "number", label: i18nLabel("gross_premium"), required: true, min: 0, step: "0.01", fullWidth: false },
       { name: "net_premium", type: "number", label: i18nLabel("net_premium"), min: 0, step: "0.01", fullWidth: false },
       { name: "tax_amount", type: "number", label: i18nLabel("tax_amount"), min: 0, step: "0.01", fullWidth: false },
       { name: "commission_amount", type: "number", label: i18nLabel("commission_amount"), min: 0, step: "0.01", fullWidth: false },
@@ -124,7 +125,7 @@ export const quickCreateRegistry = {
       branch: "",
       policy_no: "",
       source_offer: "",
-      status: "Active",
+      status: "Record",
       issue_date: "",
       start_date: "",
       end_date: "",
@@ -220,9 +221,11 @@ export const quickCreateRegistry = {
         required: ({ model }) => !hasValue(model?.source_offer),
         disabled: ({ model }) => hasValue(model?.source_offer),
         options: [
-          option("Active", "Active"),
-          option("KYT", "KYT"),
-          option("IPT", "IPT"),
+          option("Pending", "Onay Bekliyor"),
+          option("Record", "Kayıt"),
+          option("Active", "Aktif"),
+          option("Cancelled", "İptal"),
+          option("Archived", "Arşiv"),
         ],
       },
       {
@@ -310,8 +313,8 @@ export const quickCreateRegistry = {
       },
       { name: "email", type: "email", label: i18nLabel("email") },
       { name: "status", type: "select", label: i18nLabel("lead_status"), options: [
-        option("Draft", "Draft"),
-        option("Open", "Open"),
+        option("Draft", "Taslak"),
+        option("Open", "Açık"),
       ] },
       { name: "customer", type: "select", label: i18nLabel("customer_(optional)"), optionsSource: "customers" },
       { name: "sales_entity", type: "select", label: i18nLabel("sales_entity"), optionsSource: "salesEntities" },
@@ -840,6 +843,25 @@ export const quickCreateRegistry = {
       { name: "is_active", type: "checkbox", label: i18nLabel("Active"), checkboxLabel: i18nLabel("active_branch") },
     ],
   },
+  office_branch_master: {
+    key: "office_branch_master",
+    title: i18nLabel("quick_office_branch"),
+    subtitle: i18nLabel("create_an_organizational_branch"),
+    submitUrl: "acentem_takipte.acentem_takipte.platform.api.quick_create.create_quick_office_branch",
+    resultKey: "office_branch",
+    openRouteName: "office-branches-detail",
+    successRefreshTargets: ["aux_list"],
+    defaults: { office_branch_name: "", office_branch_code: "", is_head_office: "0", city: "", parent_office_branch: "", manager_user: "", is_active: "1" },
+    fields: [
+      { name: "office_branch_name", type: "text", label: i18nLabel("officeBranchName"), required: true, fullWidth: true },
+      { name: "office_branch_code", type: "text", label: i18nLabel("officeBranchCode") },
+      { name: "is_head_office", type: "select", label: i18nLabel("isHeadOffice"), options: [option("0", "No"), option("1", "Yes")] },
+      { name: "city", type: "text", label: i18nLabel("city") },
+      { name: "parent_office_branch", type: "select", label: i18nLabel("parentOfficeBranch"), optionsSource: "officeBranches" },
+      { name: "manager_user", type: "text", label: i18nLabel("managerUser") },
+      { name: "is_active", type: "select", label: i18nLabel("isActive"), options: [option("1", "Active"), option("0", "Inactive")] },
+    ],
+  },
   sales_entity_master: {
     key: "sales_entity_master",
     title: i18nLabel("quick_sales_entity"),
@@ -848,7 +870,7 @@ export const quickCreateRegistry = {
     resultKey: "sales_entity",
     openRouteName: "sales-entities-detail",
     successRefreshTargets: ["aux_list"],
-    defaults: { entity_type: "Agency", full_name: "", office_branch: "", parent_entity: "" },
+    defaults: { entity_type: "Agency", full_name: "", office_branch: "", parent_entity: "", is_root: "0", commission_share_pct: "50" },
     fields: [
       { name: "entity_type", type: "select", label: i18nLabel("entity_type"), required: true, options: [
         option("Agency", "Agency"),
@@ -856,6 +878,8 @@ export const quickCreateRegistry = {
         option("Representative", "Representative"),
       ] },
       { name: "full_name", type: "text", label: i18nLabel("full_name"), required: true, fullWidth: true },
+      { name: "is_root", type: "select", label: i18nLabel("isRoot"), options: [option("0", "No"), option("1", "Yes")] },
+      { name: "commission_share_pct", type: "number", label: i18nLabel("commissionSharePct"), min: 0, max: 100, step: "0.01" },
       { name: "office_branch", type: "select", label: i18nLabel("office_branch"), required: true, optionsSource: "officeBranches" },
       { name: "parent_entity", type: "select", label: i18nLabel("parent_entity"), optionsSource: "salesEntities" },
     ],
@@ -1239,6 +1263,7 @@ addQuickEditVariant("customer_relation", "customer_relation_edit", "Edit Custome
 addQuickEditVariant("insured_asset", "insured_asset_edit", "Edit Insured Asset", "Update insured asset fields");
 addQuickEditVariant("insurance_company", "insurance_company_edit", "Edit Insurance Company", "Update the insurance company master record");
 addQuickEditVariant("branch_master", "branch_master_edit", "Edit Branch", "Update branch and company mapping");
+addQuickEditVariant("office_branch_master", "office_branch_master_edit", "Edit Office Branch", "Update office branch record");
 addQuickEditVariant("sales_entity_master", "sales_entity_master_edit", "Edit Sales Entity", "Update sales organization record");
 addQuickEditVariant("call_note", "call_note_edit", "Edit Call Note", "Update call note fields");
 addQuickEditVariant("segment", "segment_edit", "Edit Segment", "Update segment fields");

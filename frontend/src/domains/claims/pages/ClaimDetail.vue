@@ -6,6 +6,7 @@
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="backToList">
+        <FeatherIcon name="arrow-left" class="h-4 w-4" />
         {{ t("back_to_list") }}
       </ActionButton>
       <ActionButton variant="primary" size="sm" @click="reload">
@@ -170,22 +171,22 @@
 <script setup>
 import { computed } from "vue";
 import { FeatherIcon } from "frappe-ui";
-import { useAuthStore } from "../stores/auth";
-import { useClaimDetailRuntime } from "../composables/useClaimDetailRuntime";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
-import SectionPanel from "../components/app-shell/SectionPanel.vue";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import EditableCard from "../components/app-shell/EditableCard.vue";
-import StandardCustomerCard from "../components/app-shell/StandardCustomerCard.vue";
-import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import ToastNotification from "../components/ui/ToastNotification.vue";
-import ListTable from "../components/ui/ListTable.vue";
-import StatusBadge from "../components/ui/StatusBadge.vue";
-import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
-import WorkbenchFileUploadModal from "../components/aux-workbench/WorkbenchFileUploadModal.vue";
-import { openDocumentInNewTab } from "../utils/documentOpen";
-import { normalizePaidStatus } from "../utils/statusMapping";
+import { useAuthStore } from "../../../stores/auth";
+import { useClaimDetailRuntime } from "../../../composables/useClaimDetailRuntime";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SectionPanel from "../../../components/app-shell/SectionPanel.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import EditableCard from "../../../components/app-shell/EditableCard.vue";
+import StandardCustomerCard from "../../../components/app-shell/StandardCustomerCard.vue";
+import MetaListCard from "../../../components/app-shell/MetaListCard.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import ToastNotification from "../../../components/ui/ToastNotification.vue";
+import ListTable from "../../../components/ui/ListTable.vue";
+import StatusBadge from "../../../components/ui/StatusBadge.vue";
+import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
+import WorkbenchFileUploadModal from "../../../components/aux-workbench/WorkbenchFileUploadModal.vue";
+import { openDocumentInNewTab } from "../../../utils/documentOpen";
+import { normalizePaidStatus } from "../../../utils/statusMapping";
 
 const props = defineProps({
   name: { type: String, required: true },

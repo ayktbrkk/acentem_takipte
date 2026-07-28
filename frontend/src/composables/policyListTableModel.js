@@ -59,7 +59,7 @@ export function mapPolicyImportPreviewToTableRow(row, { formatDate, formatCurren
     vade_secondary: formatDate(values.issue_date),
     finance_primary: formatCurrency(values.gross_premium, values.currency || "TRY"),
     finance_secondary: formatCurrency(values.commission_amount || 0, values.currency || "TRY"),
-    status: values.status || "Active",
+    status: values.status || "Kayıt",
   };
 }
 

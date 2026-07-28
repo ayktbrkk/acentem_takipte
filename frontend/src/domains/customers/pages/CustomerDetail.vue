@@ -6,6 +6,7 @@
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="backToList">
+        <FeatherIcon name="arrow-left" class="h-4 w-4" />
         {{ t("back_to_list") }}
       </ActionButton>
       <ActionButton variant="primary" size="sm" @click="openNewOffer">
@@ -334,35 +335,35 @@
 
 <script setup>
 import { computed, defineAsyncComponent, ref, unref } from "vue";
-import { useCustomerDetailRuntime } from "../composables/useCustomerDetailRuntime";
-import { useAuthStore } from "../stores/auth";
+import { useCustomerDetailRuntime } from "../../../composables/useCustomerDetailRuntime";
+import { useAuthStore } from "../../../stores/auth";
 
 import { FeatherIcon } from "frappe-ui";
-import ActionButton from "../components/app-shell/ActionButton.vue";
-import EditableCard from "../components/app-shell/EditableCard.vue";
-import MetaListCard from "../components/app-shell/MetaListCard.vue";
-import MiniFactList from "../components/app-shell/MiniFactList.vue";
-import SaaSMetricCard from "../components/app-shell/SaaSMetricCard.vue";
-import ToastNotification from "../components/ui/ToastNotification.vue";
-import WorkbenchPageLayout from "../components/app-shell/WorkbenchPageLayout.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import EditableCard from "../../../components/app-shell/EditableCard.vue";
+import MetaListCard from "../../../components/app-shell/MetaListCard.vue";
+import MiniFactList from "../../../components/app-shell/MiniFactList.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import ToastNotification from "../../../components/ui/ToastNotification.vue";
+import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
 
 // audit(perf/P-01): Heavy components in the detail view are lazy-loaded to speed up initial route transition.
 const WorkbenchFileUploadModal = defineAsyncComponent(() =>
-  import("../components/aux-workbench/WorkbenchFileUploadModal.vue")
+  import("../../../components/aux-workbench/WorkbenchFileUploadModal.vue")
 );
 const SectionPanel = defineAsyncComponent(() =>
-  import("../components/app-shell/SectionPanel.vue")
+  import("../../../components/app-shell/SectionPanel.vue")
 );
 const FieldGroup = defineAsyncComponent(() =>
-  import("../components/ui/FieldGroup.vue")
+  import("../../../components/ui/FieldGroup.vue")
 );
 const StatusBadge = defineAsyncComponent(() =>
-  import("../components/ui/StatusBadge.vue")
+  import("../../../components/ui/StatusBadge.vue")
 );
 const SkeletonLoader = defineAsyncComponent(() =>
-  import("../components/ui/SkeletonLoader.vue")
+  import("../../../components/ui/SkeletonLoader.vue")
 );
-import { openDocumentInNewTab } from "../utils/documentOpen";
+import { openDocumentInNewTab } from "../../../utils/documentOpen";
 
 const props = defineProps({
   name: { type: String, required: true }

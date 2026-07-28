@@ -4,6 +4,7 @@ import { pickAuxWorkbenchEntries } from "./common.js";
 export const masterDataWorkbenchConfigs = pickAuxWorkbenchEntries(AUX_WORKBENCH_CONFIGS, [
   "companies",
   "branches",
+  "office-branches",
   "sales-entities",
   "templates",
 ]);
