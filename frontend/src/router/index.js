@@ -44,6 +44,8 @@ const BranchesList = () => import("../pages/BranchesList.vue");
 const BranchDetail = () => import("../pages/BranchDetail.vue");
 const SalesEntitiesList = () => import("../pages/SalesEntitiesList.vue");
 const SalesEntityDetail = () => import("../pages/SalesEntityDetail.vue");
+const OfficeBranchesList = () => import("../pages/OfficeBranchesList.vue");
+const OfficeBranchDetail = () => import("../pages/OfficeBranchDetail.vue");
 const NotificationTemplatesList = () => import("../pages/NotificationTemplatesList.vue");
 const NotificationTemplateEditor = () => import("../pages/NotificationTemplateEditor.vue");
 const AccountingEntriesList = () => import("../pages/AccountingEntriesList.vue");
@@ -65,6 +67,7 @@ const AUX_ROLE_MAP = {
   "notification-outbox": ROLE_SYSTEM,
   companies: ROLE_SYSTEM,
   branches: ROLE_SYSTEM,
+  "office-branches": ROLE_SYSTEM,
   "sales-entities": ROLE_SYSTEM,
   templates: ROLE_SYSTEM,
   "accounting-entries": ROLE_SYSTEM,
@@ -412,9 +415,11 @@ const router = createRouter({
                 ? CompaniesList
                 : def.key === "branches"
                   ? BranchesList
-                  : def.key === "sales-entities"
-                    ? SalesEntitiesList
-                    : def.key === "templates"
+                   : def.key === "sales-entities"
+                     ? SalesEntitiesList
+                     : def.key === "office-branches"
+                       ? OfficeBranchesList
+                       : def.key === "templates"
                       ? NotificationTemplatesList
                       : def.key === "accounting-entries"
                         ? AccountingEntriesList
@@ -423,7 +428,7 @@ const router = createRouter({
                           : def.key === "reconciliation-items"
                             ? ReconciliationItemsList
             : AuxWorkbench,
-        props: ["tasks", "notification-drafts", "notification-outbox", "companies", "branches", "sales-entities", "templates", "accounting-entries", "access-logs", "reconciliation-items"].includes(def.key) ? false : { screenKey: def.key },
+        props: ["tasks", "notification-drafts", "notification-outbox", "companies", "branches", "sales-entities", "office-branches", "templates", "accounting-entries", "access-logs", "reconciliation-items"].includes(def.key) ? false : { screenKey: def.key },
         meta: { ...def.meta, requiredRoles: AUX_ROLE_MAP[def.key] || ROLE_ACCOUNTANT },
       },
       {
@@ -441,6 +446,8 @@ const router = createRouter({
                   ? BranchDetail
                   : def.key === "sales-entities"
                     ? SalesEntityDetail
+                    : def.key === "office-branches"
+                      ? OfficeBranchDetail
                     : def.key === "templates"
                       ? NotificationTemplateEditor
                       : def.key === "accounting-entries"
@@ -448,7 +455,7 @@ const router = createRouter({
                         : def.key === "reconciliation-items"
                           ? ReconciliationItemDetail
             : AuxRecordDetail,
-        props: def.key === "tasks" || def.key === "notification-drafts" || def.key === "notification-outbox" || def.key === "companies" || def.key === "branches" || def.key === "sales-entities" || def.key === "templates" || def.key === "accounting-entries" || def.key === "reconciliation-items"
+        props: def.key === "tasks" || def.key === "notification-drafts" || def.key === "notification-outbox" || def.key === "companies" || def.key === "branches" || def.key === "sales-entities" || def.key === "office-branches" || def.key === "templates" || def.key === "accounting-entries" || def.key === "reconciliation-items"
           ? (route) => ({ name: route.params.name })
           : (route) => ({ screenKey: def.key, name: route.params.name }),
         meta: { ...def.detailMeta, requiredRoles: AUX_ROLE_MAP[def.key] || ROLE_ACCOUNTANT },
