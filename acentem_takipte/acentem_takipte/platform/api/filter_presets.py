@@ -23,6 +23,7 @@ ALLOWED_SCREENS = {
     "notification_outbox",
     "companies",
     "branches",
+    "office_branches",
     "sales_entities",
     "templates",
     "accounting_entries",

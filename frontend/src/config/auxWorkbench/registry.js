@@ -287,7 +287,7 @@ export const AUX_WORKBENCH_CONFIGS = {
     titleField: "office_branch_name",
     statusField: "is_active",
     statusType: "boolean_active",
-    listFields: ["office_branch_name", "office_branch_code", "is_head_office", "city", "parent_office_branch", "is_active", "modified", "owner"],
+    listFields: ["name", "office_branch_name", "office_branch_code", "is_head_office", "city", "parent_office_branch", "is_active", "modified", "owner"],
     searchFields: ["office_branch_name", "office_branch_code", "city"],
     primaryFields: ["office_branch_code"],
     detailFields: ["is_head_office", "city", "parent_office_branch", "manager_user", "modified"],
