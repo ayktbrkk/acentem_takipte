@@ -206,6 +206,7 @@ export function useAuxRecordDetailSummary({
         "value_band",
         "claim_risk",
         "action",
+        "entity_type",
       ].includes(field)
     ) {
       return translateDetailValue(value);
