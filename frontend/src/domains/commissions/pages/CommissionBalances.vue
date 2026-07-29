@@ -1,15 +1,15 @@
 <template>
   <WorkbenchPageLayout
-    :breadcrumb="t('commissions')"
-    :title="t('commissions')"
+    :breadcrumb="t('title')"
+    :title="t('title')"
     :subtitle="t('subtitle')"
     :record-count="entities.length"
-    :record-count-label="t('entity_type')"
+    :record-count-label="t('record_count')"
   >
     <template #actions>
       <ActionButton variant="secondary" size="sm" @click="handleExport">
         <FeatherIcon name="download" class="h-4 w-4" />
-        {{ t('export') }}
+        {{ t('export_xlsx') }}
       </ActionButton>
       <div class="flex rounded-lg border border-slate-200 overflow-hidden">
         <button
@@ -234,7 +234,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, unref } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import { FeatherIcon } from "frappe-ui";
@@ -296,14 +296,14 @@ async function openDetail(entity) {
   detail.visible = true;
   detail.loading = true;
   detail.data = null;
-  detail.entityName = entity.entity_name;
-  detail.entityType = entity.entity_type;
+  detail.entityName = entity.entity_name || "";
+  detail.entityType = entity.entity_type || "";
   try {
-    const params = { entity_name: entity.entity_name };
+    const params = { entity_name: detail.entityName };
     if (filters.from_date) params.from_date = filters.from_date;
     if (filters.to_date) params.to_date = filters.to_date;
     await detailResource.reload(params);
-    detail.data = detailResource.data;
+    detail.data = unref(detailResource.data);
   } catch {
     detail.data = null;
   }
