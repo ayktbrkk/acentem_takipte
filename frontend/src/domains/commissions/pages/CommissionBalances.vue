@@ -53,8 +53,8 @@
           <option value="61_90">{{ t('aging_61_90') }}</option>
           <option value="90_plus">{{ t('aging_90_plus') }}</option>
         </select>
-        <input v-model="filters.from_date" type="date" class="input h-9 py-1 text-sm" @change="reload" />
-        <input v-model="filters.to_date" type="date" class="input h-9 py-1 text-sm" @change="reload" />
+        <input v-model="filters.from_date" type="date" class="input h-9 py-1 text-sm" :title="t('from_date') || 'Başlangıç'" @change="reload" />
+        <input v-model="filters.to_date" type="date" class="input h-9 py-1 text-sm" :title="t('to_date') || 'Bitiş'" @change="reload" />
       </template>
     </SmartFilterBar>
 
@@ -234,7 +234,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, unref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, unref } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import { FeatherIcon } from "frappe-ui";
@@ -418,13 +418,20 @@ function translateEntityType(type) {
 }
 
 function handleExport() {
+  const filtered = searchQuery.value
+    ? entities.value.filter((e) => {
+        const q = searchQuery.value.toLowerCase();
+        return e.entity_name.toLowerCase().includes(q) ||
+          (e.insurance_companies || []).some((ic) => ic.name.toLowerCase().includes(q));
+      })
+    : entities.value;
   const rows = [];
   rows.push([
     t("sales_entity"), t("entity_type"), t("office_branch"),
     t("accrued"), t("paid"), t("remaining"), "%",
-    t("policy_count"), t("insurance_company"),
+    t("policy_count"), t("company"),
   ].join(","));
-  for (const e of entities.value) {
+  for (const e of filtered) {
     const ics = (e.insurance_companies || []).map((ic) => ic.name).join("; ");
     rows.push(
       [e.entity_name, translateEntityType(e.entity_type), e.office_branch,
@@ -441,6 +448,12 @@ function handleExport() {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+function onKeydown(e) {
+  if (e.key === "Escape" && detail.visible) detail.visible = false;
+}
+onMounted(() => window.addEventListener("keydown", onKeydown));
+onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
 reload();
 </script>

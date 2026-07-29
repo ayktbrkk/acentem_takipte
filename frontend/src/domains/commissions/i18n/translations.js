@@ -48,6 +48,8 @@ export const COMMISSION_TRANSLATIONS = {
     type_Representative: "Temsilci",
     polices: "poliçe",
     unspecified: "Belirtilmedi",
+    from_date: "Başlangıç",
+    to_date: "Bitiş",
   },
   en: {
     title: "Commission Tracking",
@@ -98,5 +100,7 @@ export const COMMISSION_TRANSLATIONS = {
     type_Representative: "Representative",
     polices: "policies",
     unspecified: "Unspecified",
+    from_date: "From",
+    to_date: "To",
   },
 };
