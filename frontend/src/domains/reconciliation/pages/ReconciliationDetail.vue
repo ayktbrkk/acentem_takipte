@@ -118,7 +118,7 @@ import ListTable from "@/platform/ui/base/ListTable.vue";
 import SkeletonLoader from "@/platform/ui/base/SkeletonLoader.vue";
 import { useLinkLabelCache } from "../../../composables/useLinkLabelCache";
 
-const { getLinkLabel } = useLinkLabelCache();
+const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
 
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || "");
@@ -420,6 +420,8 @@ async function reload() {
       limit_page_length: 50,
     }),
   ]);
+  if (item.value?.name) resolveLinksFromDoc(item.value);
+  if (entry.value?.name) resolveLinksFromDoc(entry.value);
 }
 
 onMounted(reload);

@@ -110,7 +110,7 @@ function asArray(value) {
 export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
   const authStore = useAuthStore();
-  const { getLinkLabel } = useLinkLabelCache();
+  const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
 
   function t(key) {
     const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
@@ -582,6 +582,8 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
       return [];
     }
   });
+
+  watch(() => policy.value, (val) => { if (val?.name) resolveLinksFromDoc(val); }, { immediate: true });
 
   return {
     policy,

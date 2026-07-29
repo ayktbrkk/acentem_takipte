@@ -9,7 +9,7 @@ import { useLinkLabelCache } from "./useLinkLabelCache";
 
 export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
-  const { getLinkLabel } = useLinkLabelCache();
+  const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
   const authStore = useAuthStore();
 
   function t(key) {
@@ -215,6 +215,8 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
   }, { immediate: true });
+
+  watch(() => claim.value, (val) => { if (val?.name) resolveLinksFromDoc(val); }, { immediate: true });
 
   return {
     claim,

@@ -1,4 +1,4 @@
-import { computed, onMounted, reactive, ref, unref } from "vue";
+import { computed, onMounted, reactive, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useRouter } from "vue-router";
 
@@ -13,7 +13,7 @@ import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 export function useCustomerDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
   const authStore = useAuthStore();
-  const { getLinkLabel } = useLinkLabelCache();
+  const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
   const UNKNOWN_VALUE_SET = new Set(["", "unknown", "none", "null", "undefined"]);
   const ASSIGNED_AGENT_ROLE_SET = new Set(["AT Agent", "System Manager", "AT System Manager"]);
   const customerName = computed(() => String(unref(name) || "").trim());
@@ -413,6 +413,8 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
   onMounted(() => {
     reload();
   });
+
+  watch(() => customer.value, (val) => { if (val?.name) resolveLinksFromDoc(val); }, { immediate: true });
 
   return {
     customer,

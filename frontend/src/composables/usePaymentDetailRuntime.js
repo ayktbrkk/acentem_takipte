@@ -8,7 +8,7 @@ import { useLinkLabelCache } from "./useLinkLabelCache";
 
 export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
-  const { getLinkLabel } = useLinkLabelCache();
+  const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
   const authStore = useAuthStore();
 
   function t(key) {
@@ -182,6 +182,8 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
   }, { immediate: true });
+
+  watch(() => payment.value, (val) => { if (val?.name) resolveLinksFromDoc(val); }, { immediate: true });
 
   return {
     payment,

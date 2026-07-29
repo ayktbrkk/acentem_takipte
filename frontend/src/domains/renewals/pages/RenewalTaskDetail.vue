@@ -133,7 +133,7 @@ import { useAuthStore } from '../../../stores/auth';
 import { translateText } from '../../../utils/i18n';
 import { useLinkLabelCache } from '../../../composables/useLinkLabelCache';
 
-const { getLinkLabel } = useLinkLabelCache();
+const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
 
 const _appPinia = getAppPinia();
 const _authStore = useAuthStore(_appPinia);
@@ -351,6 +351,9 @@ async function reload() {
   } else {
     communicationsResource.setData([]);
   }
+
+  if (renewal.value?.name) resolveLinksFromDoc(renewal.value);
+  if (policy.value?.name) resolveLinksFromDoc(policy.value);
 }
 
 onMounted(reload);

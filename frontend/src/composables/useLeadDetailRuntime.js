@@ -82,7 +82,7 @@ export function parseLeadActionError(err) {
 
 export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
-  const { getLinkLabel } = useLinkLabelCache();
+  const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
   const authStore = useAuthStore();
 
   function t(key) {
@@ -288,6 +288,8 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
   watch(() => unref(name), (newVal) => {
     if (newVal) reload();
   }, { immediate: true });
+
+  watch(() => lead.value, (val) => { if (val?.name) resolveLinksFromDoc(val); }, { immediate: true });
 
   return {
     lead,
