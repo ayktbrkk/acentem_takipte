@@ -131,6 +131,9 @@ import { getAppPinia } from '../../../pinia';
 import { RENEWAL_TRANSLATIONS } from '../../../config/renewal_translations';
 import { useAuthStore } from '../../../stores/auth';
 import { translateText } from '../../../utils/i18n';
+import { useLinkLabelCache } from '../../../composables/useLinkLabelCache';
+
+const { getLinkLabel } = useLinkLabelCache();
 
 const _appPinia = getAppPinia();
 const _authStore = useAuthStore(_appPinia);
@@ -256,7 +259,9 @@ function priorityLabel(value) {
 
 function formatValue(value) {
   const text = String(value ?? '').trim();
-  return text || t('unspecified');
+  if (!text) return t('unspecified');
+  const label = getLinkLabel(text);
+  return label !== text ? label : text;
 }
 
 function translateStatus(value) {

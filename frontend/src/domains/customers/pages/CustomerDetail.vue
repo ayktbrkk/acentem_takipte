@@ -153,7 +153,7 @@
                   v-for="item in portfolio.policies"
                   :key="item.name"
                   :title="item.policy_no || item.name"
-                  :subtitle="item.insurance_company"
+                  :subtitle="getLinkLabel(item.insurance_company)"
                   clickable
                   @click="openPolicy(item.name)"
                 >
@@ -184,7 +184,7 @@
                   v-for="item in portfolio.offers"
                   :key="item.name"
                   :title="item.name"
-                  :subtitle="item.insurance_company"
+                  :subtitle="getLinkLabel(item.insurance_company)"
                   clickable
                   @click="openOffer(item.name)"
                 >
@@ -215,7 +215,7 @@
                   v-for="item in portfolio.claims"
                   :key="item.name"
                   :title="item.name"
-                  :subtitle="item.policy"
+                  :subtitle="getLinkLabel(item.policy)"
                   clickable
                   @click="openClaim(item.name)"
                 >
@@ -337,6 +337,9 @@
 import { computed, defineAsyncComponent, ref, unref } from "vue";
 import { useCustomerDetailRuntime } from "../../../composables/useCustomerDetailRuntime";
 import { useAuthStore } from "../../../stores/auth";
+import { useLinkLabelCache } from "../../../composables/useLinkLabelCache";
+
+const { getLinkLabel } = useLinkLabelCache();
 
 import { FeatherIcon } from "frappe-ui";
 import ActionButton from "../../../components/app-shell/ActionButton.vue";
@@ -434,7 +437,7 @@ function normalizeStatus(val) {
 // Map facts for list cards
 function policyFacts(p) {
   return [
-    { label: t("branch"), value: p.branch },
+    { label: t("branch"), value: getLinkLabel(p.branch) },
     { label: t("start_date"), value: formatDate(p.start_date) },
     { label: t("gross_premium"), value: formatCurrency(p.gross_premium) },
   ];

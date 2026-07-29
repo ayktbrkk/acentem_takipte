@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { formatDate as sharedFormatDate, formatMoney as sharedFormatMoney } from "../utils/detailFormatters";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
+import { useLinkLabelCache } from "./useLinkLabelCache";
 import { translateText } from "../utils/i18n";
 import { CUSTOMER_TRANSLATIONS } from "../config/customer_translations";
 import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
@@ -12,6 +13,7 @@ import { buildQuickCreateIntentQuery } from "../utils/quickRouteIntent";
 export function useCustomerDetailRuntime({ name, activeLocale }) {
   const router = useRouter();
   const authStore = useAuthStore();
+  const { getLinkLabel } = useLinkLabelCache();
   const UNKNOWN_VALUE_SET = new Set(["", "unknown", "none", "null", "undefined"]);
   const ASSIGNED_AGENT_ROLE_SET = new Set(["AT Agent", "System Manager", "AT System Manager"]);
   const customerName = computed(() => String(unref(name) || "").trim());
@@ -314,7 +316,7 @@ export function useCustomerDetailRuntime({ name, activeLocale }) {
       key: "office_branch",
       label: t("office_branch"),
       value: customer.value.office_branch,
-      displayValue: formatTextOrFallback(customer.value.office_branch),
+      displayValue: getLinkLabel(customer.value.office_branch) || formatTextOrFallback(customer.value.office_branch),
       type: "text", // Should be a link ideally, but for now text
       disabled: true, // Typically branch shouldn't be edited inline easily without a search
       unspecifiedLabel: t("unspecified"),

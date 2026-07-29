@@ -4,9 +4,11 @@ import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
 import { PAYMENT_TRANSLATIONS } from "../config/payment_translations";
 import { useAuthStore } from "../stores/auth";
+import { useLinkLabelCache } from "./useLinkLabelCache";
 
 export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
+  const { getLinkLabel } = useLinkLabelCache();
   const authStore = useAuthStore();
 
   function t(key) {
@@ -150,8 +152,8 @@ export function usePaymentDetailRuntime({ name, activeLocale = ref("tr") }) {
       { label: t("status_unpaid"), value: "Unpaid" },
       { label: t("status_cancelled"), value: "Cancelled" }
     ], unspecifiedLabel: t("unspecified")},
-    { key: "policy", label: t("policy"), value: payment.value.policy, type: "text", unspecifiedLabel: t("unspecified") },
-    { key: "claim", label: t("claim_detail"), value: payment.value.claim, type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "policy", label: t("policy"), value: payment.value.policy, displayValue: getLinkLabel(payment.value.policy), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "claim", label: t("claim_detail"), value: payment.value.claim, displayValue: getLinkLabel(payment.value.claim), type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   async function savePayment(values, onSuccess) {

@@ -4,9 +4,11 @@ import { useRouter } from "vue-router";
 import { translateText } from "../utils/i18n";
 import { OFFER_TRANSLATIONS } from "../config/offer_translations";
 import { useAuthStore } from "../stores/auth";
+import { useLinkLabelCache } from "./useLinkLabelCache";
 
 export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
+  const { getLinkLabel } = useLinkLabelCache();
   const authStore = useAuthStore();
 
   function t(key) {
@@ -113,7 +115,7 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
   }
 
   const heroCells = computed(() => [
-    { label: t("branch"), value: offer.value.branch || t("unspecified") },
+    { label: t("branch"), value: getLinkLabel(offer.value.branch) || t("unspecified") },
     { label: t("gross_premium"), value: formatCurrency(offer.value.gross_premium, offer.value.currency), variant: "lg" },
     { label: t("offer_date"), value: formatDate(offer.value.offer_date) },
     { label: t("status"), value: t(`status_${String(offer.value.status || "Draft").toLowerCase()}`), variant: "accent" },
@@ -121,8 +123,8 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   const profileFields = computed(() => [
     { key: "offer_no", label: t("offer_no"), value: offer.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
-    { key: "insurance_company", label: t("insurance_company"), value: offer.value.insurance_company, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
-    { key: "branch", label: t("branch"), value: offer.value.branch, type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    { key: "insurance_company", label: t("insurance_company"), value: offer.value.insurance_company, displayValue: getLinkLabel(offer.value.insurance_company), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "branch", label: t("branch"), value: offer.value.branch, displayValue: getLinkLabel(offer.value.branch), type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
     { key: "status", label: t("status"), value: offer.value.status, displayValue: t(`status_${String(offer.value.status || "Draft").toLowerCase()}`), type: "select", options: [
       { label: t("status_draft"), value: "Draft" },
       { label: t("status_sent"), value: "Sent" },

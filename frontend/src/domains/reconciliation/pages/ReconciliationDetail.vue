@@ -116,6 +116,9 @@ import SectionPanel from "../../../components/app-shell/SectionPanel.vue";
 import FieldGroup from "@/platform/ui/base/FieldGroup.vue";
 import ListTable from "@/platform/ui/base/ListTable.vue";
 import SkeletonLoader from "@/platform/ui/base/SkeletonLoader.vue";
+import { useLinkLabelCache } from "../../../composables/useLinkLabelCache";
+
+const { getLinkLabel } = useLinkLabelCache();
 
 const props = defineProps({ name: { type: String, required: true } });
 const name = computed(() => props.name || "");
@@ -345,7 +348,9 @@ function formatMoney(value) {
 
 function formatValue(value) {
   const text = String(value ?? "").trim();
-  return text || t("unspecified");
+  if (!text) return t("unspecified");
+  const label = getLinkLabel(text);
+  return label !== text ? label : text;
 }
 
 function translateSource(value) {
