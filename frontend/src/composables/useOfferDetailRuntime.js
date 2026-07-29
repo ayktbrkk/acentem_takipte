@@ -123,8 +123,8 @@ export function useOfferDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   const profileFields = computed(() => [
     { key: "offer_no", label: t("offer_no"), value: offer.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
-    { key: "insurance_company", label: t("insurance_company"), value: offer.value.insurance_company, displayValue: getLinkLabel(offer.value.insurance_company), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
-    { key: "branch", label: t("branch"), value: offer.value.branch, displayValue: getLinkLabel(offer.value.branch), type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
+    { key: "insurance_company", label: t("insurance_company"), value: getLinkLabel(offer.value.insurance_company), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "branch", label: t("branch"), value: getLinkLabel(offer.value.branch), type: "text", disabled: true, unspecifiedLabel: t("unspecified") },
     { key: "status", label: t("status"), value: offer.value.status, displayValue: t(`status_${String(offer.value.status || "Draft").toLowerCase()}`), type: "select", options: [
       { label: t("status_draft"), value: "Draft" },
       { label: t("status_sent"), value: "Sent" },

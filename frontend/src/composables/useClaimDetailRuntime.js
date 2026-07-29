@@ -141,8 +141,8 @@ export function useClaimDetailRuntime({ name, activeLocale = ref("tr") }) {
 
   const profileFields = computed(() => [
     { key: "claim_no", label: t("claim_no"), value: claim.value.name, type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
-    { key: "policy", label: t("policy_no"), value: claim.value.policy, displayValue: getLinkLabel(claim.value.policy), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
-    { key: "insurance_company", label: t("insurance_company"), value: claim.value.insurance_company, displayValue: getLinkLabel(claim.value.insurance_company), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "policy", label: t("policy_no"), value: getLinkLabel(claim.value.policy), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
+    { key: "insurance_company", label: t("insurance_company"), value: getLinkLabel(claim.value.insurance_company), type: "text", disabled: true, copyable: true, unspecifiedLabel: t("unspecified") },
     { type: "divider", label: t("incident_details") },
     { key: "incident_date", label: t("claim_date"), value: claim.value.incident_date, displayValue: formatDate(claim.value.incident_date), type: "date", required: true, unspecifiedLabel: t("unspecified") },
     { key: "claim_type", label: t("claim_type"), value: claim.value.claim_type, displayValue: translateValue(claim.value.claim_type), type: "text", unspecifiedLabel: t("unspecified") },

@@ -208,9 +208,9 @@ export function useLeadDetailRuntime({ name, activeLocale = ref("tr") }) {
       { label: t("status_replied"), value: "Replied" },
       { label: t("status_closed"), value: "Closed" },
     ], required: true },
-    { key: "sales_entity", label: t("sales_entity"), value: lead.value.sales_entity, displayValue: getLinkLabel(lead.value.sales_entity), type: "text", unspecifiedLabel: t("unspecified") },
-    { key: "insurance_company", label: t("insurance_company"), value: lead.value.insurance_company, displayValue: getLinkLabel(lead.value.insurance_company), type: "text", unspecifiedLabel: t("unspecified") },
-    { key: "branch", label: t("branch"), value: lead.value.branch, displayValue: getLinkLabel(lead.value.branch), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "sales_entity", label: t("sales_entity"), value: getLinkLabel(lead.value.sales_entity), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "insurance_company", label: t("insurance_company"), value: getLinkLabel(lead.value.insurance_company), type: "text", unspecifiedLabel: t("unspecified") },
+    { key: "branch", label: t("branch"), value: getLinkLabel(lead.value.branch), type: "text", unspecifiedLabel: t("unspecified") },
   ]);
 
   const estimationFields = computed(() => [
