@@ -117,15 +117,23 @@ RESPONSE:
 
 **Computation:**
 
-1. Query all Active/Record policies where `commission_distribution IS NOT NULL`.
-2. For each policy, parse `commission_distribution` JSON array.
+1. Query all policies with status IN ("Active", "Record") where `commission_amount > 0`.
+   - `commission_amount` is the primary field; fall back to legacy `commission` field if `commission_amount` is NULL/0 (mirrors `resolve_commission_amount` in `accounting.py`).
+2. For each policy, parse `commission_distribution` JSON array (schema: `[{entity, entity_name, level, share_pct, amount, amount_try, status}]`).
 3. For each `{entity, amount_try}` entry, accumulate into `accrued_try` per entity.
-4. Query all non-Cancelled Commission Payout payments. Accumulate `amount_try` per `sales_entity`.
+4. Query all Commission Payout payments with `status != "Cancelled"`. Accumulate `amount_try` per `sales_entity`.
 5. `remaining_try = accrued_try - paid_try`.
-6. Aging: for each policy's contribution, compute `days = today - (policy.issue_date + 30)`. Assign to bucket.
+6. Aging: for each policy's contribution, compute `days = today - (policy.issue_date + COMMISSION_DUE_DAYS)` where `COMMISSION_DUE_DAYS = 30`. Assign to bucket based on `days`:
+   - `current` — `days <= 0`
+   - `1_30` — `1 <= days <= 30`
+   - `31_60` — `31 <= days <= 60`
+   - `61_90` — `61 <= days <= 90`
+   - `90_plus` — `days > 90`
 7. If `aging_bucket` filter is set, return only entities with non-zero remaining in that bucket.
 
 **Permission:** `frappe.has_permission("AT Policy", "read")` and `frappe.has_permission("AT Payment", "read")`.
+
+**Error handling:** If `commission_distribution` JSON is malformed for a policy, skip that policy's entries but continue processing others. Log a warning.
 
 ### 3.2 `get_commission_entity_detail`
 
@@ -160,6 +168,13 @@ RESPONSE:
   ]
 }
 ```
+
+**Computation:**
+
+1. Query policies with status IN ("Active", "Record") where `commission_distribution` JSON contains the entity name.
+2. Parse JSON to find policies where this entity has an entry. Extract `commission_amount_try`.
+3. Query Commission Payout payments where `sales_entity == entity_name` and `status != "Cancelled"`.
+4. Aging: `days = today - (policy.issue_date + 30)`.
 
 ---
 
@@ -205,10 +220,13 @@ Added to `PolicyDetail.vue` as a `SectionPanel` with title "Komisyon Dagilimi":
 
 **Tree view rendering:**
 - Uses existing `commission_distribution` JSON array from policy data
+- JSON schema: `[{entity, entity_name, level, share_pct, amount, amount_try, status}]`
 - Sorts by level, indents child entities
 - Each node shows: entity name (via `getLinkLabel`), share_pct, amount_try
 - Horizontal bar proportional to amount
-- Bottom line: "Toplam Komisyon: ₺X.XXX" with gross premium commission total
+- Bottom line: "Toplam Komisyon: ₺X.XXX" with `commission_amount` (not gross premium)
+
+**Edge case:** If `commission_distribution` is empty or `[]`, panel shows "Henüz dağılım hesaplanmadı" (distribution not yet computed).
 
 ---
 
@@ -308,3 +326,9 @@ All new keys added to `frontend/src/domains/commissions/i18n/translations.js`:
 - Test coverage is specified for both backend and frontend.
 - No new DocTypes or DB tables are introduced — all data comes from existing `commission_distribution` JSON and `AT Payment`.
 - Existing code changes are limited to: router (route add), sidebar (menu entry), PolicyDetail (one new SectionPanel), usePolicyDetailRuntime (expose formatted distribution data).
+- `commission_amount` vs legacy `commission` field fallback is documented (mirrors `resolve_commission_amount` in `accounting.py`).
+- `commission_distribution` JSON schema is explicitly documented (`[{entity, entity_name, level, share_pct, amount, amount_try, status}]`).
+- Aging buckets use the same `COMMISSION_DUE_DAYS = 30` constant as the existing reconciliation service.
+- Malformed `commission_distribution` JSON is handled gracefully (skip + log, no crash).
+- Empty distribution edge case shows "Henüz dağılım hesaplanmadı" in PolicyDetail panel.
+- Payment accrual uses `status != "Cancelled"` (not just non-Draft) to mirror existing payout validation logic.
