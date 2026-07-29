@@ -186,6 +186,12 @@
               </div>
             </div>
 
+            <div v-if="agingSummary.length" class="flex flex-wrap gap-1 mb-4">
+              <span v-for="a in agingSummary" :key="a.label" :class="['text-[11px] px-1.5 py-0.5 rounded', a.cls]">
+                {{ a.label }}: {{ formatCurrency(a.value) }}
+              </span>
+            </div>
+
             <SectionPanel :title="t('insurance_company')" class="mb-4">
               <div class="space-y-1 text-sm">
                 <div
@@ -357,6 +363,21 @@ const paymentRows = computed(() =>
     .filter((p) => p.payment)
     .map((p) => ({ ...p.payment, policy_no: p.policy_no })),
 );
+
+const agingSummary = computed(() => {
+  const buckets = { current: 0, "1_30": 0, "31_60": 0, "61_90": 0, "90_plus": 0 };
+  for (const p of detailData.value?.policies || []) {
+    const b = p.aging_bucket || "current";
+    if (buckets[b] !== undefined) buckets[b] += p.commission_amount_try || 0;
+  }
+  return Object.entries(buckets)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => ({
+      label: t(`aging_${k}`),
+      value: v,
+      cls: k === "current" ? "bg-emerald-50 text-emerald-700" : k === "1_30" || k === "31_60" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-700",
+    }));
+});
 
 const icBreakdown = computed(() => {
   const map = {};

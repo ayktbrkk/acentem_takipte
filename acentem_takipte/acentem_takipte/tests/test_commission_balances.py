@@ -5,6 +5,7 @@ from frappe.tests.utils import FrappeTestCase
 
 from acentem_takipte.acentem_takipte.domains.commissions.services.balance import (
     compute_commission_balances,
+    compute_commission_policy_detail,
     compute_entity_detail,
 )
 
@@ -46,3 +47,18 @@ class TestCommissionEndpoints(FrappeTestCase):
         result = get_commission_balances()
         assert "summary" in result
         assert "entities" in result
+
+
+class TestCommissionPolicyDetail(FrappeTestCase):
+    def test_nonexistent_entity_returns_empty(self):
+        result = compute_commission_policy_detail("NonexistentEntity_XYZ")
+        assert "entity" in result
+        assert result["entity"]["name"] != ""
+        assert result["policies"] == []
+        assert result["totals"]["policies"] == 0
+        assert result["totals"]["commission"] == 0
+
+    def test_empty_name_handles_gracefully(self):
+        result = compute_commission_policy_detail("")
+        assert "policies" in result
+        assert result["policies"] == []

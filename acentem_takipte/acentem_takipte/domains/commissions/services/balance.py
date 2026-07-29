@@ -194,50 +194,12 @@ def compute_commission_balances(
         ic_breakdown.sort(key=lambda x: x["accrued_try"], reverse=True)
         entry["insurance_companies"] = ic_breakdown
 
-    # --- Build insurance company grouping ---------------------------
-    insurance_companies: list[dict] = []
-    ic_entity_map: dict[str, list[dict]] = {}
-    for name in {e["entity_name"] for e in entity_list}:
-        doc_name = _resolve_entity_doc_name(name)
-        entity_ics = entity_insurance_companies.get(doc_name, set())
-        for ic_name in entity_ics:
-            display_ic = ic_display_names.get(ic_name, ic_name)
-            key = (doc_name, ic_name)
-            ic_accrued = round(entity_ic_accrued.get(key, 0), 2)
-            entity_paid = round(paid_by_entity.get(doc_name, 0), 2)
-            entity_entry = {
-                "entity_name": name,
-                "entity_type": _entity_info(doc_name).get("entity_type") or "",
-                "office_branch": _entity_info(doc_name).get("office_branch") or "",
-                "accrued_try": ic_accrued,
-                "paid_try": entity_paid,
-                "remaining_try": round(ic_accrued - entity_paid, 2),
-                "policy_count": entity_ic_policy_count.get(key, 0),
-            }
-            ic_entity_map.setdefault(display_ic, []).append(entity_entry)
-
-    for display_ic, entities in ic_entity_map.items():
-        total_accrued = round(sum(e["accrued_try"] for e in entities), 2)
-        total_paid = round(sum(e["paid_try"] for e in entities), 2)
-        insurance_companies.append(
-            {
-                "name": display_ic,
-                "accrued_try": total_accrued,
-                "paid_try": total_paid,
-                "remaining_try": round(total_accrued - total_paid, 2),
-                "entity_count": len(entities),
-                "entities": sorted(entities, key=lambda e: e["remaining_try"], reverse=True),
-            }
-        )
-    insurance_companies.sort(key=lambda ic: ic["remaining_try"], reverse=True)
-
     return {
         "summary": {
             "total_accrued_try": round(sum(e["accrued_try"] for e in entity_list), 2),
             "total_paid_try": round(sum(e["paid_try"] for e in entity_list), 2),
             "total_remaining_try": round(sum(e["remaining_try"] for e in entity_list), 2),
         },
-        "insurance_companies": insurance_companies,
         "entities": entity_list,
     }
 
