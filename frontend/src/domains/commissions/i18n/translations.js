@@ -47,6 +47,7 @@ export const COMMISSION_TRANSLATIONS = {
     type_SubAccount: "Alt Ekip",
     type_Representative: "Temsilci",
     polices: "poliçe",
+    unspecified: "Belirtilmedi",
   },
   en: {
     title: "Commission Tracking",
@@ -96,5 +97,6 @@ export const COMMISSION_TRANSLATIONS = {
     type_SubAccount: "Sub-Account",
     type_Representative: "Representative",
     polices: "policies",
+    unspecified: "Unspecified",
   },
 };

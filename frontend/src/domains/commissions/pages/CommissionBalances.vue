@@ -129,17 +129,17 @@
               :key="ic.name"
               class="flex items-center gap-1.5"
             >
-              <span class="text-[10px]" :class="icBadgeClass(ic)">{{ icBadgeSymbol(ic) }}</span>
+              <span class="text-[10px]" :class="icBadgeClass(ic)" :title="icBadgeTitle(ic)">{{ icBadgeSymbol(ic) }}</span>
               <span class="truncate text-slate-600">{{ ic.name }}</span>
-              <span class="ml-auto text-slate-400">{{ formatCurrency(ic.remaining_try > 0 ? ic.remaining_try : ic.accrued_try) }}</span>
+              <span class="ml-auto tabular-nums text-slate-400">{{ formatCurrency(ic.remaining_try > 0 ? ic.remaining_try : ic.accrued_try) }}</span>
             </div>
-            <div v-if="entity.insurance_companies.length > 3" class="pl-4 text-slate-400">
-              +{{ entity.insurance_companies.length - 3 }} {{ t('more_companies').replace('{n}', entity.insurance_companies.length - 3) }}
+            <div v-if="entity.insurance_companies.length > 3" class="text-slate-400 text-[10px]">
+              +{{ entity.insurance_companies.length - 3 }}
             </div>
           </div>
 
-          <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>{{ entity.policy_count }} {{ t('policy_count').toLowerCase() }}</span>
+          <div class="flex items-center justify-between text-xs text-slate-400 border-t border-slate-50 pt-2">
+            <span>{{ entity.policy_count }} {{ t('polices') }}</span>
             <span class="font-medium text-brand-600">{{ t('view_details') }} &#8594;</span>
           </div>
         </div>
@@ -348,7 +348,7 @@ const paymentColumns = computed(() => [
 const enrichedPolicies = computed(() =>
   (detailData.value?.policies || []).map((p) => ({
     ...p,
-    status_icon: p.payment ? "\u2713" : p.aging_days > 90 ? "\u26A0" : "\u23F3",
+    status_icon: p.payment ? "✓" : p.aging_days > 90 ? "⚠" : "⏳",
   })),
 );
 
@@ -361,7 +361,7 @@ const paymentRows = computed(() =>
 const icBreakdown = computed(() => {
   const map = {};
   for (const p of detailData.value?.policies || []) {
-    const ic = p.insurance_company || "Bilinmeyen";
+    const ic = p.insurance_company || t("unspecified") || "—";
     if (!map[ic]) map[ic] = { name: ic, accrued: 0, paid: 0, remaining: 0 };
     map[ic].accrued += p.commission_amount_try || 0;
     if (p.payment) map[ic].paid += p.payment.amount_try || 0;
@@ -392,6 +392,12 @@ function icBadgeSymbol(ic) {
   if (ic.remaining_try <= 0) return "\u2713";
   if (ic.remaining_try === ic.accrued_try) return "\u26A0";
   return "\u23F3";
+}
+
+function icBadgeTitle(ic) {
+  if (ic.remaining_try <= 0) return t("paid");
+  if (ic.remaining_try === ic.accrued_try) return t("aging_90_plus");
+  return t("remaining");
 }
 
 function openPolicy(row) {
