@@ -153,35 +153,35 @@
           &times;
         </button>
 
-        <div v-if="detail.loading" class="flex h-full items-center justify-center">
+        <div v-if="detailLoading" class="flex h-full items-center justify-center">
           <SkeletonLoader variant="list" :rows="6" />
         </div>
 
-        <template v-else-if="detail.data">
+        <template v-else-if="detailData">
           <div class="p-6">
             <div class="mb-6">
               <div class="mb-1 flex items-center gap-2">
-                <h2 class="text-lg font-bold text-slate-900">{{ detail.data.entity?.full_name || detail.entityName }}</h2>
+                <h2 class="text-lg font-bold text-slate-900">{{ detailData.entity?.full_name || detail.entityName }}</h2>
                 <span class="rounded bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
-                  {{ translateEntityType(detail.data.entity?.entity_type || detail.entityType) }}
+                  {{ translateEntityType(detailData.entity?.entity_type || detail.entityType) }}
                 </span>
               </div>
-              <p class="text-sm text-slate-500">{{ detail.data.entity?.office_branch }}</p>
+              <p class="text-sm text-slate-500">{{ detailData.entity?.office_branch }}</p>
             </div>
 
             <div class="mb-6 grid grid-cols-3 gap-3">
               <div class="rounded-lg bg-slate-50 p-3 text-center">
                 <p class="text-xs text-slate-400">{{ t('policy_count') }}</p>
-                <p class="text-lg font-bold">{{ detail.data.totals?.policies || 0 }}</p>
+                <p class="text-lg font-bold">{{ detailData.totals?.policies || 0 }}</p>
               </div>
               <div class="rounded-lg bg-slate-50 p-3 text-center">
                 <p class="text-xs text-slate-400">{{ t('total_commission') }}</p>
-                <p class="text-lg font-bold text-brand-600">{{ formatCurrency(detail.data.totals?.commission) }}</p>
+                <p class="text-lg font-bold text-brand-600">{{ formatCurrency(detailData.totals?.commission) }}</p>
               </div>
               <div class="rounded-lg bg-slate-50 p-3 text-center">
                 <p class="text-xs text-slate-400">{{ t('remaining') }}</p>
-                <p class="text-lg font-bold" :class="(detail.data.totals?.remaining || 0) > 0 ? 'text-red-600' : 'text-at-green'">
-                  {{ formatCurrency(detail.data.totals?.remaining) }}
+                <p class="text-lg font-bold" :class="(detailData.totals?.remaining || 0) > 0 ? 'text-red-600' : 'text-at-green'">
+                  {{ formatCurrency(detailData.totals?.remaining) }}
                 </p>
               </div>
             </div>
@@ -279,31 +279,22 @@ const searchQuery = ref("");
 
 const branchOptions = computed(() => branchStore?.options || []);
 
+const detailResource = createResource({
+  url: "acentem_takipte.acentem_takipte.domains.commissions.api.endpoints.get_commission_policy_detail",
+  auto: false,
+});
+
+const detailData = computed(() => unref(detailResource.data) || null);
+const detailLoading = computed(() => Boolean(unref(detailResource.loading)));
+
 const detail = reactive({
   visible: false,
-  loading: false,
-  data: null,
   entityName: "",
   entityType: "",
 });
 
-const detailResource = createResource({
-  url: "acentem_takipte.acentem_takipte.domains.commissions.api.endpoints.get_commission_policy_detail",
-  auto: false,
-  onSuccess(data) {
-    detail.loading = false;
-    detail.data = data;
-  },
-  onError() {
-    detail.loading = false;
-    detail.data = null;
-  },
-});
-
 async function openDetail(entity) {
   detail.visible = true;
-  detail.loading = true;
-  detail.data = null;
   detail.entityName = entity.entity_name || "";
   detail.entityType = entity.entity_type || "";
   const params = { entity_name: detail.entityName };
@@ -354,21 +345,21 @@ const paymentColumns = computed(() => [
 ]);
 
 const enrichedPolicies = computed(() =>
-  (detail.data?.policies || []).map((p) => ({
+  (detailData.value?.policies || []).map((p) => ({
     ...p,
     status_icon: p.payment ? "\u2713" : p.aging_days > 90 ? "\u26A0" : "\u23F3",
   })),
 );
 
 const paymentRows = computed(() =>
-  (detail.data?.policies || [])
+  (detailData.value?.policies || [])
     .filter((p) => p.payment)
     .map((p) => ({ ...p.payment, policy_no: p.policy_no })),
 );
 
 const icBreakdown = computed(() => {
   const map = {};
-  for (const p of detail.data?.policies || []) {
+  for (const p of detailData.value?.policies || []) {
     const ic = p.insurance_company || "Bilinmeyen";
     if (!map[ic]) map[ic] = { name: ic, accrued: 0, paid: 0, remaining: 0 };
     map[ic].accrued += p.commission_amount_try || 0;
