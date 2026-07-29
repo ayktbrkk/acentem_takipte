@@ -290,6 +290,14 @@ const detail = reactive({
 const detailResource = createResource({
   url: "acentem_takipte.acentem_takipte.domains.commissions.api.endpoints.get_commission_policy_detail",
   auto: false,
+  onSuccess(data) {
+    detail.loading = false;
+    detail.data = data;
+  },
+  onError() {
+    detail.loading = false;
+    detail.data = null;
+  },
 });
 
 async function openDetail(entity) {
@@ -298,16 +306,11 @@ async function openDetail(entity) {
   detail.data = null;
   detail.entityName = entity.entity_name || "";
   detail.entityType = entity.entity_type || "";
-  try {
-    const params = { entity_name: detail.entityName };
-    if (filters.from_date) params.from_date = filters.from_date;
-    if (filters.to_date) params.to_date = filters.to_date;
-    await detailResource.reload(params);
-    detail.data = unref(detailResource.data);
-  } catch {
-    detail.data = null;
-  }
-  detail.loading = false;
+  const params = { entity_name: detail.entityName };
+  if (filters.from_date) params.from_date = filters.from_date;
+  if (filters.to_date) params.to_date = filters.to_date;
+  detailResource.params = params;
+  await detailResource.reload();
 }
 
 const tableColumns = computed(() => [
