@@ -20,6 +20,12 @@ def _mask_email(value: str | None) -> str:
         return f"***@{domain}"
     return f"{local[:1]}***@{domain}"
 
+def _link_label(doctype: str, name: str | None, field: str) -> str:
+    if not name:
+        return ""
+    return frappe.db.get_value(doctype, name, field) or name
+
+
 @frappe.whitelist()
 def get_record_preview(doctype: str, name: str) -> dict:
     assert_authenticated()
@@ -38,9 +44,11 @@ def get_record_preview(doctype: str, name: str) -> dict:
 
     if doctype == "AT Policy":
         preview["title"] = doc.policy_no or name
-        preview["subtitle"] = f"{doc.insurance_company} - {doc.branch}"
+        ic_label = _link_label("AT Insurance Company", doc.insurance_company, "company_name")
+        br_label = _link_label("AT Branch", doc.branch, "branch_name")
+        preview["subtitle"] = f"{ic_label} - {br_label}"
         preview["fields"] = [
-            {"label": _("Customer"), "value": doc.customer},
+            {"label": _("Customer"), "value": _link_label("AT Customer", doc.customer, "full_name")},
             {"label": _("Status"), "value": doc.status},
             {"label": _("Start Date"), "value": doc.start_date},
             {"label": _("End Date"), "value": doc.end_date},
@@ -67,9 +75,11 @@ def get_record_preview(doctype: str, name: str) -> dict:
 
     elif doctype == "AT Claim":
         preview["title"] = doc.claim_no or name
-        preview["subtitle"] = f"{doc.insurance_company} - {doc.branch}"
+        ic_label = _link_label("AT Insurance Company", getattr(doc, "insurance_company", None), "company_name")
+        br_label = _link_label("AT Branch", getattr(doc, "branch", None), "branch_name")
+        preview["subtitle"] = f"{ic_label} - {br_label}"
         preview["fields"] = [
-            {"label": _("Policy"), "value": doc.policy},
+            {"label": _("Policy"), "value": _link_label("AT Policy", doc.policy, "policy_no")},
             {"label": _("Status"), "value": doc.claim_status},
             {"label": _("Reported Date"), "value": doc.reported_date},
         ]
