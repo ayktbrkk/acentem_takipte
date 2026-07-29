@@ -577,7 +577,11 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     const raw = policy.value?.commission_distribution;
     if (!raw || raw === "[]") return [];
     try {
-      return typeof raw === "string" ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+      const entries = typeof raw === "string" ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+      return entries.map((entry) => ({
+        ...entry,
+        entity_label: getLinkLabel(entry.entity) || entry.entity_name || entry.entity,
+      }));
     } catch {
       return [];
     }

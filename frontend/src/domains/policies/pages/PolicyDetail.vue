@@ -102,7 +102,7 @@
                     ]"
                   >
                     <td class="py-2 px-3 text-slate-500">{{ entry.level }}</td>
-                    <td class="py-2 px-3">{{ entry.entity_name || entry.entity }}</td>
+                    <td class="py-2 px-3">{{ entry.entity_label || entry.entity_name || entry.entity }}</td>
                     <td class="py-2 px-3 text-right font-mono">{{ isTurkish ? '%' + entry.share_pct : entry.share_pct + '%' }}</td>
                     <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(entry.amount, policy.currency) }}</td>
                   </tr>

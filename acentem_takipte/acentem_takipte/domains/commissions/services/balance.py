@@ -101,9 +101,8 @@ def compute_commission_balances(
     if office_branch:
         office_branch = str(office_branch).strip()
         all_names = {
-            n
-            for n in all_names
-            if _entity_branch(n) == office_branch
+            n for n in all_names
+            if _entity_branch_raw(n) == office_branch
         }
 
     entity_list: list[dict] = []
@@ -121,9 +120,9 @@ def compute_commission_balances(
 
         entity_list.append(
             {
-                "entity_name": name,
-                "entity_type": _entity_type(name),
-                "office_branch": _entity_branch(name),
+                "entity_name": _display_name(name),
+                "entity_type": _entity_info(name).get("entity_type") or "",
+                "office_branch": _entity_info(name).get("office_branch") or "",
                 "accrued_try": round(accrued, 2),
                 "paid_try": round(paid, 2),
                 "remaining_try": round(remaining, 2),
@@ -154,19 +153,22 @@ def compute_commission_balances(
 def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
     """Drill-down: policies allocating commission to this entity, plus payment history."""
 
-    entity_name = str(entity_name or "").strip()
+    display_name = str(entity_name or "").strip()
     safe_limit = max(cint(limit), 1)
     today = getdate(nowdate())
 
-    entity_row = (
-        frappe.db.get_value(
-            "AT Sales Entity",
-            entity_name,
-            ["name", "full_name", "entity_type", "office_branch"],
-            as_dict=True,
-        )
-        or {}
-    )
+    # Resolve display name to doc name for lookups
+    doc_name = display_name
+    for ent_name in _entity_cache:
+        if _entity_cache[ent_name].get("full_name") == display_name:
+            doc_name = ent_name
+            break
+    if doc_name == display_name:
+        # Try to find by full_name lookup
+        doc_from_db = frappe.db.get_value("AT Sales Entity", {"full_name": display_name}, "name")
+        if doc_from_db:
+            doc_name = str(doc_from_db)
+            _entity_info(doc_name)  # prime cache
 
     # Policies where this entity appears in commission_distribution
     policies = frappe.get_all(
@@ -184,7 +186,8 @@ def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
             continue
 
         for entry in entries:
-            if entry.get("entity") != entity_name:
+            entry_entity = str(entry.get("entity") or "").strip()
+            if entry_entity != doc_name:
                 continue
             amount_try = flt(entry.get("amount_try") or 0)
             if amount_try <= 0:
@@ -218,7 +221,7 @@ def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
         "AT Payment",
         filters={
             "payment_purpose": "Commission Payout",
-            "sales_entity": entity_name,
+            "sales_entity": doc_name,
             "status": ["!=", "Cancelled"],
         },
         fields=["name", "payment_no", "amount_try", "payment_date", "reference_no"],
@@ -228,10 +231,10 @@ def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
 
     return {
         "entity": {
-            "name": entity_row.get("name", entity_name),
-            "full_name": entity_row.get("full_name") or "",
-            "entity_type": entity_row.get("entity_type") or "",
-            "office_branch": entity_row.get("office_branch") or "",
+            "name": doc_name,
+            "full_name": display_name,
+            "entity_type": _entity_info(doc_name).get("entity_type") or "",
+            "office_branch": _entity_info(doc_name).get("office_branch") or "",
         },
         "accrued_policies": accrued_policies[:safe_limit],
         "payments": payment_rows,
@@ -239,6 +242,33 @@ def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
 
 
 # -- helpers ---------------------------------------------------------
+
+_entity_cache: dict[str, dict] = {}
+
+
+def _entity_info(entity_name: str) -> dict:
+    """Resolve entity display fields with simple in-memory cache."""
+    if entity_name in _entity_cache:
+        return _entity_cache[entity_name]
+    row = frappe.db.get_value(
+        "AT Sales Entity",
+        entity_name,
+        ["full_name", "entity_type", "office_branch"],
+        as_dict=True,
+    )
+    info = row if row else {"full_name": entity_name, "entity_type": "", "office_branch": ""}
+    if info.get("office_branch"):
+        info["office_branch"] = (
+            frappe.db.get_value("AT Office Branch", info["office_branch"], "office_branch_name")
+            or info["office_branch"]
+        )
+    _entity_cache[entity_name] = info
+    return info
+
+
+def _display_name(entity_name: str) -> str:
+    return str(_entity_info(entity_name).get("full_name") or entity_name)
+
 
 def _aging_bucket(days: int) -> str:
     if days <= 0:
@@ -253,10 +283,13 @@ def _aging_bucket(days: int) -> str:
 
 
 def _entity_branch(entity_name: str) -> str:
+    return str(_entity_info(entity_name).get("office_branch") or "")
+
+
+def _entity_branch_raw(entity_name: str) -> str:
     val = frappe.db.get_value("AT Sales Entity", entity_name, "office_branch")
     return str(val or "")
 
 
 def _entity_type(entity_name: str) -> str:
-    val = frappe.db.get_value("AT Sales Entity", entity_name, "entity_type")
-    return str(val or "")
+    return str(_entity_info(entity_name).get("entity_type") or "")
