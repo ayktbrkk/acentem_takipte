@@ -16,18 +16,22 @@ export function useCommissionBalances({ t }) {
   const error = ref("");
   const summary = computed(() => unref(resource.data)?.summary || {});
   const entities = computed(() => unref(resource.data)?.entities || []);
+  const insuranceCompanies = computed(
+    () => unref(resource.data)?.insurance_companies || [],
+  );
 
   async function reload() {
     error.value = "";
     try {
       const params = {};
       if (filters.office_branch) params.office_branch = filters.office_branch;
-      if (filters.aging_bucket !== "all") params.aging_bucket = filters.aging_bucket;
+      if (filters.aging_bucket !== "all")
+        params.aging_bucket = filters.aging_bucket;
       await resource.reload(params);
     } catch {
       error.value = t("load_error");
     }
   }
 
-  return { filters, loading, error, summary, entities, reload };
+  return { filters, loading, error, summary, entities, insuranceCompanies, reload };
 }
