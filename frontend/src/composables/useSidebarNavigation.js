@@ -34,6 +34,7 @@ import IconLucideShare2 from '~icons/lucide/share-2';
 import IconLucidePackage from '~icons/lucide/package';
 import IconLucidePieChart from '~icons/lucide/pie-chart';
 import IconLucidePaperclip from '~icons/lucide/paperclip';
+import IconLucidePercent from '~icons/lucide/percent';
 
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -123,6 +124,7 @@ export function useSidebarNavigation() {
           { key: "claims", label: t("claims"), to: "/claims", short: "CL", icon: shallowRef(IconLucideAlertTriangle), badgeClass: "text-amber-700", roles: ROLE_ACCOUNTANT },
           { key: "payments", label: t("payments"), to: "/payments", short: "PM", icon: shallowRef(IconLucideCreditCard), badgeClass: "text-indigo-700", roles: ROLE_ACCOUNTANT },
           { key: "renewals", label: t("renewals"), to: "/renewals", short: "RN", icon: shallowRef(IconLucideCalendarClock), badgeClass: "text-amber-700", roles: ROLE_ACCOUNTANT },
+          { key: "commissions", label: t("commissions"), to: "/commissions", short: "CM", icon: shallowRef(IconLucidePercent), badgeClass: "text-green-700", roles: ROLE_ACCOUNTANT },
           { key: "reconciliation", label: t("reconciliation"), to: "/reconciliation", short: "RC", icon: shallowRef(IconLucideCheckSquare), badgeClass: "text-cyan-700", roles: ROLE_SYSTEM },
           { key: "at-documents", label: t("documentCenter"), to: "/at-documents", short: "DC", icon: shallowRef(IconLucideFolderOpen), badgeClass: "text-violet-700", roles: ROLE_ACCOUNTANT },
           { key: "files", label: t("files"), to: "/files", short: "FL", icon: shallowRef(IconLucidePaperclip), badgeClass: "text-slate-700", roles: ROLE_ACCOUNTANT },

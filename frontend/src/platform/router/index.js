@@ -20,6 +20,7 @@ const PaymentsBoard = () => import("../../domains/payments/pages/PaymentsBoard.v
 const PaymentDetail = () => import("../../domains/payments/pages/PaymentDetail.vue");
 const RenewalsBoard = () => import("../../domains/renewals/pages/RenewalsBoard.vue");
 const RenewalTaskDetail = () => import("../../domains/renewals/pages/RenewalTaskDetail.vue");
+const CommissionBalances = () => import("../../domains/commissions/pages/CommissionBalances.vue");
 const ImportData = () => import("../../pages/ImportData.vue");
 const ExportData = () => import("../../pages/ExportData.vue");
 const ReconciliationWorkbench = () => import("../../domains/reconciliation/pages/ReconciliationWorkbench.vue");
@@ -251,6 +252,16 @@ const router = createRouter({
       props: true,
       meta: {
         title: { tr: "Yenileme Detayı", en: "Renewal Details" },
+        section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
+        requiredRoles: ROLE_ACCOUNTANT,
+      },
+    },
+    {
+      path: "/commissions",
+      name: "commissions",
+      component: CommissionBalances,
+      meta: {
+        title: { tr: "Komisyon", en: "Commissions" },
         section: { tr: "Sigorta Operasyonları", en: "Insurance Operations" },
         requiredRoles: ROLE_ACCOUNTANT,
       },
