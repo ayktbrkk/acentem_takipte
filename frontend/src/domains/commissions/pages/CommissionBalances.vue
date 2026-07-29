@@ -94,7 +94,7 @@
               <h3 class="font-semibold text-slate-900">{{ entity.entity_name }}</h3>
               <p class="mt-0.5 text-xs text-slate-400">{{ entity.office_branch }}</p>
             </div>
-            <span class="rounded bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">{{ entity.entity_type }}</span>
+            <span class="rounded bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">{{ translateEntityType(entity.entity_type) }}</span>
           </div>
 
           <div class="mb-3 grid grid-cols-2 gap-2">
@@ -163,7 +163,7 @@
               <div class="mb-1 flex items-center gap-2">
                 <h2 class="text-lg font-bold text-slate-900">{{ detail.data.entity?.full_name || detail.entityName }}</h2>
                 <span class="rounded bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
-                  {{ detail.data.entity?.entity_type || detail.entityType }}
+                  {{ translateEntityType(detail.data.entity?.entity_type || detail.entityType) }}
                 </span>
               </div>
               <p class="text-sm text-slate-500">{{ detail.data.entity?.office_branch }}</p>
@@ -319,26 +319,35 @@ const tableColumns = computed(() => [
 ]);
 
 const tableRows = computed(() =>
-  entities.value.map((e) => ({
-    ...e,
-    pct: pct(e) + "%",
-    entity_name: `${e.entity_name} (${e.policy_count})`,
-  })),
+  entities.value
+    .filter((e) => {
+      if (!searchQuery.value) return true;
+      const q = searchQuery.value.toLowerCase();
+      return (
+        e.entity_name.toLowerCase().includes(q) ||
+        (e.insurance_companies || []).some((ic) => ic.name.toLowerCase().includes(q))
+      );
+    })
+    .map((e) => ({
+      ...e,
+      pct: pct(e) + "%",
+      entity_name: `${e.entity_name}  ·  ${e.policy_count} ${t('polices')}`,
+    })),
 );
 
 const policyColumns = computed(() => [
-  { key: "policy_no", label: "Poliçe No", type: "text" },
-  { key: "customer_name", label: "Müşteri", type: "text" },
-  { key: "insurance_company", label: "Şirket", type: "text" },
-  { key: "commission_amount_try", label: "Komisyon", type: "currency" },
-  { key: "status_icon", label: "Durum", type: "text" },
+  { key: "policy_no", label: t("policy_no"), type: "text" },
+  { key: "customer_name", label: t("customer"), type: "text" },
+  { key: "insurance_company", label: t("company"), type: "text" },
+  { key: "commission_amount_try", label: t("commission"), type: "currency" },
+  { key: "status_icon", label: t("status"), type: "text" },
 ]);
 
 const paymentColumns = computed(() => [
-  { key: "payment_no", label: "Ödeme No", type: "text" },
-  { key: "payment_date", label: "Tarih", type: "date" },
-  { key: "amount_try", label: "Tutar", type: "currency" },
-  { key: "reference_no", label: "Referans", type: "text" },
+  { key: "payment_no", label: t("payment_no"), type: "text" },
+  { key: "payment_date", label: t("date"), type: "date" },
+  { key: "amount_try", label: t("amount"), type: "currency" },
+  { key: "reference_no", label: t("reference"), type: "text" },
 ]);
 
 const enrichedPolicies = computed(() =>
@@ -402,19 +411,32 @@ function openPayment(row) {
   }
 }
 
+function translateEntityType(type) {
+  const key = `type_${String(type || "").replace(/[-\s]/g, "")}`;
+  return t(key) || type || "";
+}
+
 function handleExport() {
   const rows = [];
-  rows.push(["Satış Birimi", "Tahakkuk", "Tahsilat", "Bakiye", "%"].join(","));
+  rows.push([
+    t("sales_entity"), t("entity_type"), t("office_branch"),
+    t("accrued"), t("paid"), t("remaining"), "%",
+    t("policy_count"), t("insurance_company"),
+  ].join(","));
   for (const e of entities.value) {
+    const ics = (e.insurance_companies || []).map((ic) => ic.name).join("; ");
     rows.push(
-      [e.entity_name, e.accrued_try, e.paid_try, e.remaining_try, pct(e)].join(","),
+      [e.entity_name, translateEntityType(e.entity_type), e.office_branch,
+        e.accrued_try, e.paid_try, e.remaining_try, pct(e),
+        e.policy_count, ics,
+      ].join(","),
     );
   }
-  const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "komisyon.csv";
+  link.download = "komisyon_takip.csv";
   link.click();
   URL.revokeObjectURL(url);
 }
