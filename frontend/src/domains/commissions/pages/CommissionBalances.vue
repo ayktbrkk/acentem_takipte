@@ -3,379 +3,231 @@
     :breadcrumb="t('commissions')"
     :title="t('commissions')"
     :subtitle="t('subtitle')"
+    :record-count="entities.length"
+    :record-count-label="t('entity_type')"
   >
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-      <div class="flex items-center gap-3">
-        <select
-          v-model="filters.office_branch"
-          class="h-9 px-3 rounded-lg border border-slate-200 text-sm bg-white"
-          @change="reload"
+    <template #actions>
+      <ActionButton variant="secondary" size="sm" @click="handleExport">
+        <FeatherIcon name="download" class="h-4 w-4" />
+        {{ t('export') }}
+      </ActionButton>
+      <div class="flex rounded-lg border border-slate-200 overflow-hidden">
+        <button
+          :class="['px-3 py-1.5 text-sm', viewMode === 'table' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
+          @click="viewMode = 'table'"
         >
+          &#x1F4CB;
+        </button>
+        <button
+          :class="['px-3 py-1.5 text-sm', viewMode === 'card' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
+          @click="viewMode = 'card'"
+        >
+          &#x1F5C2;
+        </button>
+      </div>
+    </template>
+
+    <template #metrics>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <SaaSMetricCard :label="t('total_accrued')" :value="formatCurrency(summary.total_accrued_try)" />
+        <SaaSMetricCard :label="t('total_paid')" :value="formatCurrency(summary.total_paid_try)" value-class="text-at-green" />
+        <SaaSMetricCard :label="t('total_remaining')" :value="formatCurrency(summary.total_remaining_try)" value-class="text-brand-600" />
+      </div>
+    </template>
+
+    <SmartFilterBar
+      v-model="searchQuery"
+      class="mb-6"
+      :placeholder="t('searchPlaceholder') || 'Ara...'"
+    >
+      <template #primary-filters>
+        <select v-model="filters.office_branch" class="input h-9 py-1 text-sm" @change="reload">
           <option value="">{{ t('all') }} {{ t('office_branch') }}</option>
           <option v-for="b in branchOptions" :key="b.value" :value="b.value">{{ b.label }}</option>
         </select>
-        <div class="flex gap-1">
-          <button
-            v-for="bucket in agingOptions"
-            :key="bucket.value"
-            type="button"
-            :class="[
-              'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border',
-              filters.aging_bucket === bucket.value
-                ? 'bg-brand-600 text-white border-brand-600'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50',
-            ]"
-            @click="filters.aging_bucket = bucket.value; reload()"
-          >
-            {{ t(bucket.label) }}
-          </button>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button
-          class="h-9 px-3 rounded-lg border border-slate-200 text-sm bg-white hover:bg-slate-50"
-          @click="handleExport"
-        >
-          {{ t('export') || 'Export' }}
-        </button>
-        <div class="flex border border-slate-200 rounded-lg overflow-hidden">
-          <button
-            :class="['px-3 py-1.5 text-sm', viewMode === 'table' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
-            @click="viewMode = 'table'"
-          >&#x1F4CB;</button>
-          <button
-            :class="['px-3 py-1.5 text-sm', viewMode === 'card' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
-            @click="viewMode = 'card'"
-          >&#x1F5C2;</button>
-        </div>
-      </div>
-    </div>
+        <select v-model="filters.aging_bucket" class="input h-9 py-1 text-sm" @change="reload">
+          <option value="all">{{ t('all') }} {{ t('aging_filter') }}</option>
+          <option value="current">{{ t('aging_current') }}</option>
+          <option value="1_30">{{ t('aging_1_30') }}</option>
+          <option value="31_60">{{ t('aging_31_60') }}</option>
+          <option value="61_90">{{ t('aging_61_90') }}</option>
+          <option value="90_plus">{{ t('aging_90_plus') }}</option>
+        </select>
+      </template>
+    </SmartFilterBar>
 
-    <div v-if="loading" class="py-12">
-      <SkeletonLoader v-for="i in 5" :key="i" variant="list" :rows="1" />
-    </div>
-
-    <div v-else-if="error" class="py-12 text-center text-slate-500">
+    <div v-if="error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       {{ error }}
-      <button class="text-brand-600 ml-2 font-medium" @click="reload">
-        {{ t('retry') || 'Retry' }}
-      </button>
+      <button class="ml-2 font-medium underline" @click="reload">{{ t('retry') }}</button>
     </div>
 
-    <div v-else-if="!hasData" class="py-12 text-center text-slate-400">
+    <SkeletonLoader v-else-if="loading" variant="list" :rows="5" />
+
+    <div v-else-if="!entities.length" class="py-12 text-center text-slate-400">
       {{ t('no_commissions') }}
     </div>
 
     <template v-else-if="viewMode === 'table'">
-      <div class="grid grid-cols-3 gap-4 mb-4">
-        <div class="rounded-lg border border-slate-200 p-3 bg-white">
-          <p class="text-xs text-slate-400">{{ t('total_accrued') }}</p>
-          <p class="text-lg font-bold">{{ formatCurrency(summary.total_accrued_try) }}</p>
-        </div>
-        <div class="rounded-lg border border-slate-200 p-3 bg-white">
-          <p class="text-xs text-slate-400">{{ t('total_paid') }}</p>
-          <p class="text-lg font-bold text-emerald-600">{{ formatCurrency(summary.total_paid_try) }}</p>
-        </div>
-        <div class="rounded-lg border border-slate-200 p-3 bg-white">
-          <p class="text-xs text-slate-400">{{ t('total_remaining') }}</p>
-          <p class="text-lg font-bold text-brand-600">{{ formatCurrency(summary.total_remaining_try) }}</p>
-        </div>
-      </div>
-
-      <div class="rounded-lg border border-slate-200 overflow-hidden bg-white">
-        <table class="w-full text-sm">
-          <thead class="bg-slate-50 border-b border-slate-200">
-            <tr class="text-left text-xs font-semibold text-slate-500 uppercase">
-              <th class="py-2.5 px-3 w-8">
-                <input type="checkbox" :checked="allReconciled" class="rounded" @change="toggleAllReconciled">
-              </th>
-              <th class="py-2.5 px-3">{{ t('sales_entity') || 'Satış Birimi' }}</th>
-              <th class="py-2.5 px-3 text-right">{{ t('accrued') }}</th>
-              <th class="py-2.5 px-3 text-right">{{ t('paid') }}</th>
-              <th class="py-2.5 px-3 text-right">{{ t('remaining') }}</th>
-              <th class="py-2.5 px-3 text-center w-16">%</th>
-              <th class="py-2.5 px-3">{{ t('policy_count') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="entity in entities" :key="entity.entity_name">
-              <tr
-                class="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
-                @click="toggleTableEntity(entity.entity_name)"
-              >
-                <td class="py-2.5 px-3">
-                  <input
-                    type="checkbox"
-                    :checked="isEntityReconciled(entity.entity_name)"
-                    class="rounded"
-                    @click.stop
-                    @change="toggleEntityReconciled(entity.entity_name)"
-                  >
-                </td>
-                <td class="py-2.5 px-3 font-semibold text-slate-900">
-                  <span class="mr-1">{{ expandedTableEntity === entity.entity_name ? '\u25BC' : '\u25B6' }}</span>{{ entity.entity_name }}
-                  <span class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-brand-50 text-brand-700 ml-2">{{ entity.entity_type }}</span>
-                </td>
-                <td class="py-2.5 px-3 text-right font-mono">{{ formatCurrency(entity.accrued_try) }}</td>
-                <td class="py-2.5 px-3 text-right font-mono text-emerald-600">{{ formatCurrency(entity.paid_try) }}</td>
-                <td
-                  class="py-2.5 px-3 text-right font-mono"
-                  :class="entity.remaining_try > 0 ? 'text-brand-600 font-semibold' : 'text-slate-400'"
-                >{{ formatCurrency(entity.remaining_try) }}</td>
-                <td class="py-2.5 px-3 text-center">
-                  <div class="w-16 h-1 rounded-full bg-slate-100 mx-auto">
-                    <div
-                      class="h-full rounded-full"
-                      :class="barClass(entity)"
-                      :style="{ width: entityPct(entity) + '%' }"
-                    />
-                  </div>
-                </td>
-                <td class="py-2.5 px-3">
-                  <button
-                    class="text-brand-600 hover:underline text-xs font-medium"
-                    @click.stop="openPolicyDetail(entity.entity_name)"
-                  >{{ entity.policy_count }} poliçe</button>
-                </td>
-              </tr>
-              <template v-if="expandedTableEntity === entity.entity_name && entity.insurance_companies?.length">
-                <tr
-                  v-for="ic in entity.insurance_companies"
-                  :key="ic.name"
-                  class="border-b border-slate-50 hover:bg-brand-50/30 cursor-pointer"
-                  @click="openPolicyDetail(entity.entity_name, ic.name)"
-                >
-                  <td class="py-2 px-3"></td>
-                  <td class="py-2 px-3 pl-8 text-sm text-slate-600">\u2514 {{ ic.name }}</td>
-                  <td class="py-2 px-3 text-right text-xs font-mono">{{ formatCurrency(ic.accrued_try) }}</td>
-                  <td class="py-2 px-3 text-right text-xs font-mono text-emerald-600">{{ formatCurrency(ic.paid_try) }}</td>
-                  <td
-                    class="py-2 px-3 text-right text-xs font-mono"
-                    :class="ic.remaining_try > 0 ? 'text-brand-600' : 'text-slate-400'"
-                  >{{ formatCurrency(ic.remaining_try) }}</td>
-                  <td class="py-2 px-3 text-center">
-                    <div class="w-10 h-1 rounded-full bg-slate-100 mx-auto">
-                      <div
-                        class="h-full rounded-full bg-slate-400"
-                        :style="{ width: (ic.accrued_try > 0 ? Math.min(100, Math.round((ic.paid_try / ic.accrued_try) * 100)) : 0) + '%' }"
-                      />
-                    </div>
-                  </td>
-                  <td class="py-2 px-3 text-xs text-slate-400">{{ ic.policy_count }}</td>
-                </tr>
-              </template>
-            </template>
-            <tr class="bg-slate-50 font-semibold">
-              <td class="py-2.5 px-3"></td>
-              <td class="py-2.5 px-3 text-slate-700">{{ t('total') || 'TOPLAM' }}</td>
-              <td class="py-2.5 px-3 text-right">{{ formatCurrency(summary.total_accrued_try) }}</td>
-              <td class="py-2.5 px-3 text-right text-emerald-600">{{ formatCurrency(summary.total_paid_try) }}</td>
-              <td class="py-2.5 px-3 text-right text-brand-600">{{ formatCurrency(summary.total_remaining_try) }}</td>
-              <td colspan="2"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div
-        v-if="policyDetail.visible"
-        class="fixed inset-0 bg-black/30 z-40 flex items-start justify-center pt-20"
-        @click.self="policyDetail.visible = false"
-      >
-        <div class="bg-white rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-auto">
-          <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between z-10">
-            <div>
-              <h3 class="font-semibold text-lg">{{ policyDetail.entity }}</h3>
-              <p class="text-sm text-slate-500">{{ policyDetail.ic }}</p>
-            </div>
-            <button class="text-slate-400 hover:text-slate-600 text-xl" @click="policyDetail.visible = false">&times;</button>
-          </div>
-          <div v-if="policyDetail.loading" class="p-6 text-center text-slate-400">Yükleniyor...</div>
-          <div v-else class="p-6">
-            <div class="grid grid-cols-4 gap-3 mb-4">
-              <div class="bg-slate-50 rounded p-2 text-center">
-                <p class="text-xs text-slate-400">Poliçe</p>
-                <p class="font-bold">{{ policyDetail.totals?.policies || 0 }}</p>
-              </div>
-              <div class="bg-slate-50 rounded p-2 text-center">
-                <p class="text-xs text-slate-400">Prim</p>
-                <p class="font-bold">{{ formatCurrency(policyDetail.totals?.gross_premium) }}</p>
-              </div>
-              <div class="bg-slate-50 rounded p-2 text-center">
-                <p class="text-xs text-slate-400">Komisyon</p>
-                <p class="font-bold text-brand-600">{{ formatCurrency(policyDetail.totals?.commission) }}</p>
-              </div>
-              <div class="bg-slate-50 rounded p-2 text-center">
-                <p class="text-xs text-slate-400">Kalan</p>
-                <p
-                  class="font-bold"
-                  :class="(policyDetail.totals?.remaining || 0) > 0 ? 'text-red-600' : 'text-emerald-600'"
-                >{{ formatCurrency(policyDetail.totals?.remaining) }}</p>
-              </div>
-            </div>
-            <table class="w-full text-sm">
-              <thead class="bg-slate-50">
-                <tr class="text-left text-xs font-semibold text-slate-500 uppercase">
-                  <th class="py-2 px-2">#</th>
-                  <th class="py-2 px-2">Poliçe No</th>
-                  <th class="py-2 px-2">Müşteri</th>
-                  <th class="py-2 px-2">Branş</th>
-                  <th class="py-2 px-2 text-right">Komisyon</th>
-                  <th class="py-2 px-2 text-right">Prim</th>
-                  <th class="py-2 px-2">Ödeme</th>
-                  <th class="py-2 px-2 text-center w-12">Durum</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(p, idx) in policyDetail.policies"
-                  :key="p.policy_name"
-                  class="border-b border-slate-50 hover:bg-slate-50 cursor-pointer"
-                  @click="openPolicy(p.policy_name)"
-                >
-                  <td class="py-2 px-2 text-slate-400 text-xs">{{ idx + 1 }}</td>
-                  <td class="py-2 px-2 font-medium">{{ p.policy_no }}</td>
-                  <td class="py-2 px-2 text-xs">{{ p.customer_name }}</td>
-                  <td class="py-2 px-2 text-xs text-slate-500">{{ p.branch }}</td>
-                  <td class="py-2 px-2 text-right font-mono text-xs">{{ formatCurrency(p.commission_amount_try) }}</td>
-                  <td class="py-2 px-2 text-right font-mono text-xs text-slate-500">{{ formatCurrency(p.gross_premium) }}</td>
-                  <td class="py-2 px-2" @click.stop>
-                    <template v-if="p.payment">
-                      <span
-                        class="text-brand-600 hover:underline cursor-pointer text-xs"
-                        @click="openPayment(p.payment.name)"
-                      >{{ p.payment.payment_no }}</span>
-                      <span class="text-slate-400 text-xs ml-1">{{ formatDate(p.payment.payment_date) }}</span>
-                    </template>
-                    <span v-else class="text-xs text-slate-400">Bekliyor</span>
-                  </td>
-                  <td class="py-2 px-2 text-center">
-                    <span :class="['text-xs', agingLabelClass(p.aging_days)]">{{ agingLabel(p.aging_bucket) }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <ListTable
+        :columns="tableColumns"
+        :rows="tableRows"
+        :loading="false"
+        :empty-message="t('no_commissions')"
+        :locale="activeLocale"
+        clickable
+        @row-click="openDetail"
+      />
     </template>
 
-    <template v-else-if="viewMode === 'card'">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="rounded-xl border border-slate-200 p-4 bg-white">
-          <p class="text-xs text-slate-400 uppercase tracking-wider">{{ t('total_accrued') }}</p>
-          <p class="text-2xl font-bold text-slate-900 mt-1">{{ formatCurrency(summary.total_accrued_try) }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 p-4 bg-white">
-          <p class="text-xs text-slate-400 uppercase tracking-wider">{{ t('total_paid') }}</p>
-          <p class="text-2xl font-bold text-emerald-600 mt-1">{{ formatCurrency(summary.total_paid_try) }}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 p-4 bg-white">
-          <p class="text-xs text-slate-400 uppercase tracking-wider">{{ t('total_remaining') }}</p>
-          <p class="text-2xl font-bold text-brand-600 mt-1">{{ formatCurrency(summary.total_remaining_try) }}</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <template v-else>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div
           v-for="entity in entities"
           :key="entity.entity_name"
-          class="rounded-xl border border-slate-200 p-5 bg-white hover:shadow-sm transition-shadow"
+          class="rounded-xl border border-slate-200 bg-white p-5 hover:shadow-sm transition-shadow cursor-pointer"
+          @click="openDetail(entity)"
         >
-          <div class="flex items-start justify-between mb-3">
+          <div class="mb-3 flex items-start justify-between">
             <div>
               <h3 class="font-semibold text-slate-900">{{ entity.entity_name }}</h3>
-              <p class="text-xs text-slate-400 mt-0.5">{{ entity.office_branch }}</p>
+              <p class="mt-0.5 text-xs text-slate-400">{{ entity.office_branch }}</p>
             </div>
-            <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-brand-50 text-brand-700">{{ entity.entity_type }}</span>
+            <span class="rounded bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">{{ entity.entity_type }}</span>
           </div>
 
-          <div class="space-y-1.5 mb-3">
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-500">{{ t('accrued') }}</span>
-              <span class="font-semibold text-slate-900">{{ formatCurrency(entity.accrued_try) }}</span>
+          <div class="mb-3 grid grid-cols-2 gap-2">
+            <div class="rounded-lg bg-slate-50 p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-400">{{ t('accrued') }}</p>
+              <p class="text-sm font-bold text-slate-900">{{ formatCurrency(entity.accrued_try) }}</p>
             </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-500">{{ t('paid') }}</span>
-              <span class="font-semibold text-emerald-600">{{ formatCurrency(entity.paid_try) }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-slate-500">{{ t('remaining') }}</span>
-              <span class="font-semibold text-brand-600">{{ formatCurrency(entity.remaining_try) }}</span>
+            <div class="rounded-lg bg-slate-50 p-2 text-center">
+              <p class="text-[11px] uppercase text-slate-400">{{ t('paid') }}</p>
+              <p class="text-sm font-bold text-at-green">{{ formatCurrency(entity.paid_try) }}</p>
             </div>
           </div>
 
-          <div class="w-full h-1.5 rounded-full bg-slate-100 mb-3">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-xs text-slate-500">{{ t('remaining') }}</span>
+            <span class="text-sm font-bold" :class="entity.remaining_try > 0 ? 'text-brand-600' : 'text-slate-400'">
+              {{ formatCurrency(entity.remaining_try) }}
+            </span>
+          </div>
+
+          <div class="mb-3 h-1.5 w-full rounded-full bg-slate-100">
             <div
-              class="h-full rounded-full transition-all"
-              :class="progressBarClass(entity)"
-              :style="{ width: progressPct(entity) + '%' }"
+              class="h-full rounded-full"
+              :class="barClass(entity)"
+              :style="{ width: pct(entity) + '%' }"
             />
           </div>
 
-          <div v-if="hasAging(entity)" class="flex flex-wrap gap-1 mb-3">
-            <span v-if="entity.aging.current" class="text-[11px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">{{ t('aging_current') }} {{ formatCurrency(entity.aging.current) }}</span>
-            <span v-if="entity.aging['1_30']" class="text-[11px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">{{ t('aging_1_30') }} {{ formatCurrency(entity.aging['1_30']) }}</span>
-            <span v-if="entity.aging['31_60']" class="text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">{{ t('aging_31_60') }} {{ formatCurrency(entity.aging['31_60']) }}</span>
-            <span v-if="entity.aging['61_90']" class="text-[11px] px-1.5 py-0.5 rounded bg-red-50 text-red-700">{{ t('aging_61_90') }} {{ formatCurrency(entity.aging['61_90']) }}</span>
-            <span v-if="entity.aging['90_plus']" class="text-[11px] px-1.5 py-0.5 rounded bg-red-100 text-red-800">{{ t('aging_90_plus') }} {{ formatCurrency(entity.aging['90_plus']) }}</span>
-          </div>
-
-          <div v-if="entity.insurance_companies?.length" class="text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
-            <div v-for="ic in entity.insurance_companies.slice(0, 3)" :key="ic.name" class="flex justify-between">
-              <span class="truncate mr-2">{{ ic.name }}</span>
-              <span>{{ formatCurrency(ic.remaining_try > 0 ? ic.remaining_try : ic.accrued_try) }}</span>
+          <div v-if="entity.insurance_companies?.length" class="mb-3 space-y-1 text-xs">
+            <div
+              v-for="ic in entity.insurance_companies.slice(0, 3)"
+              :key="ic.name"
+              class="flex items-center gap-1.5"
+            >
+              <span class="text-[10px]" :class="icBadgeClass(ic)">{{ icBadgeSymbol(ic) }}</span>
+              <span class="truncate text-slate-600">{{ ic.name }}</span>
+              <span class="ml-auto text-slate-400">{{ formatCurrency(ic.remaining_try > 0 ? ic.remaining_try : ic.accrued_try) }}</span>
             </div>
-            <div v-if="entity.insurance_companies.length > 3" class="text-slate-400 mt-0.5">
-              {{ t('more_companies').replace('{n}', entity.insurance_companies.length - 3) }}
+            <div v-if="entity.insurance_companies.length > 3" class="pl-4 text-slate-400">
+              +{{ entity.insurance_companies.length - 3 }} {{ t('more_companies').replace('{n}', entity.insurance_companies.length - 3) }}
             </div>
           </div>
 
-          <button
-            class="w-full text-center text-sm text-brand-600 hover:text-brand-700 font-medium py-1.5 border border-brand-200 rounded-lg transition-colors hover:bg-brand-50"
-            @click="toggleDetail(entity.entity_name)"
-          >
-            {{ expandedEntity === entity.entity_name ? '\u25B2' : '\u25BC' }} {{ t('view_details') }}
-          </button>
-
-          <div v-if="expandedEntity === entity.entity_name" class="mt-3 pt-3 border-t border-slate-100">
-            <div v-if="detailLoading" class="py-4 text-center text-sm text-slate-400">Yükleniyor...</div>
-            <div v-else class="space-y-3">
-              <div v-if="detailPolicies.length" class="text-xs">
-                <h4 class="font-semibold text-slate-500 uppercase mb-1.5">{{ t('accrued_policies') }}</h4>
-                <div
-                  v-for="p in detailPolicies"
-                  :key="p.policy_name"
-                  class="flex items-center justify-between px-2 py-1.5 rounded bg-slate-50 hover:bg-slate-100 cursor-pointer mb-0.5"
-                  @click="openPolicy(p.policy_name)"
-                >
-                  <span class="font-medium text-slate-900 w-32 truncate">{{ p.policy_no }}</span>
-                  <span class="text-slate-500 w-24 truncate">{{ p.customer_name }}</span>
-                  <span class="font-semibold text-slate-900 w-20 text-right">{{ formatCurrency(p.commission_amount_try) }}</span>
-                  <span :class="agingColor(p.aging_days)" class="w-12 text-right">{{ p.aging_days }}g</span>
-                </div>
-              </div>
-              <div v-if="detailPayments.length" class="text-xs">
-                <h4 class="font-semibold text-slate-500 uppercase mb-1.5">{{ t('payment_history') }}</h4>
-                <div
-                  v-for="p in detailPayments"
-                  :key="p.name"
-                  class="flex items-center justify-between px-2 py-1.5 rounded bg-slate-50 mb-0.5"
-                >
-                  <span class="font-medium text-slate-900 w-32 truncate">{{ p.payment_no }}</span>
-                  <span class="text-slate-500 w-24">{{ formatDate(p.payment_date) }}</span>
-                  <span class="font-semibold text-slate-900 w-20 text-right">{{ formatCurrency(p.amount_try) }}</span>
-                  <span class="text-slate-400 w-20 truncate text-right">{{ p.reference_no }}</span>
-                </div>
-              </div>
-              <div v-if="!detailPolicies.length && !detailPayments.length" class="text-slate-400 text-center py-2">
-                {{ t('no_commissions') }}
-              </div>
-            </div>
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span>{{ entity.policy_count }} {{ t('policy_count').toLowerCase() }}</span>
+            <span class="font-medium text-brand-600">{{ t('view_details') }} &#8594;</span>
           </div>
         </div>
       </div>
     </template>
+
+    <div v-if="detail.visible" class="fixed inset-0 z-50 flex justify-end">
+      <div class="absolute inset-0 bg-black/20" @click="detail.visible = false" />
+      <div class="relative h-full w-full max-w-2xl overflow-auto bg-white shadow-2xl">
+        <button class="absolute right-4 top-4 z-10 text-xl text-slate-400 hover:text-slate-600" @click="detail.visible = false">
+          &times;
+        </button>
+
+        <div v-if="detail.loading" class="flex h-full items-center justify-center">
+          <SkeletonLoader variant="list" :rows="6" />
+        </div>
+
+        <template v-else-if="detail.data">
+          <div class="p-6">
+            <div class="mb-6">
+              <div class="mb-1 flex items-center gap-2">
+                <h2 class="text-lg font-bold text-slate-900">{{ detail.data.entity?.full_name || detail.entityName }}</h2>
+                <span class="rounded bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
+                  {{ detail.data.entity?.entity_type || detail.entityType }}
+                </span>
+              </div>
+              <p class="text-sm text-slate-500">{{ detail.data.entity?.office_branch }}</p>
+            </div>
+
+            <div class="mb-6 grid grid-cols-3 gap-3">
+              <div class="rounded-lg bg-slate-50 p-3 text-center">
+                <p class="text-xs text-slate-400">{{ t('policy_count') }}</p>
+                <p class="text-lg font-bold">{{ detail.data.totals?.policies || 0 }}</p>
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3 text-center">
+                <p class="text-xs text-slate-400">{{ t('total_commission') }}</p>
+                <p class="text-lg font-bold text-brand-600">{{ formatCurrency(detail.data.totals?.commission) }}</p>
+              </div>
+              <div class="rounded-lg bg-slate-50 p-3 text-center">
+                <p class="text-xs text-slate-400">{{ t('remaining') }}</p>
+                <p class="text-lg font-bold" :class="(detail.data.totals?.remaining || 0) > 0 ? 'text-red-600' : 'text-at-green'">
+                  {{ formatCurrency(detail.data.totals?.remaining) }}
+                </p>
+              </div>
+            </div>
+
+            <SectionPanel :title="t('insurance_company')" class="mb-4">
+              <div class="space-y-1 text-sm">
+                <div
+                  v-for="ic in icBreakdown"
+                  :key="ic.name"
+                  class="flex items-center justify-between border-b border-slate-50 py-1.5 last:border-0"
+                >
+                  <span class="text-slate-700">{{ ic.name }}</span>
+                  <div class="flex gap-4 text-xs">
+                    <span class="text-slate-500">{{ t('accrued') }} {{ formatCurrency(ic.accrued) }}</span>
+                    <span class="text-at-green">{{ t('paid') }} {{ formatCurrency(ic.paid) }}</span>
+                    <span :class="ic.remaining > 0 ? 'text-red-600' : 'text-at-green'">
+                      {{ ic.remaining > 0 ? formatCurrency(ic.remaining) : '&#x2713;' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </SectionPanel>
+
+            <SectionPanel :title="t('accrued_policies')" class="mb-4">
+              <ListTable
+                :columns="policyColumns"
+                :rows="enrichedPolicies"
+                :loading="false"
+                :locale="activeLocale"
+                clickable
+                @row-click="openPolicy"
+              />
+            </SectionPanel>
+
+            <SectionPanel :title="t('payment_history')" class="mb-4">
+              <ListTable
+                :columns="paymentColumns"
+                :rows="paymentRows"
+                :loading="false"
+                :locale="activeLocale"
+                clickable
+                @row-click="openPayment"
+              />
+            </SectionPanel>
+          </div>
+        </template>
+      </div>
+    </div>
   </WorkbenchPageLayout>
 </template>
 
@@ -383,13 +235,18 @@
 import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
+import { FeatherIcon } from "frappe-ui";
 import { useAuthStore } from "../../../stores/auth";
 import { useBranchStore } from "../../../stores/branch";
 import { useCommissionBalances } from "../../../composables/useCommissionBalances";
-import { useCommissionEntityDetail } from "../../../composables/useCommissionEntityDetail";
 import { COMMISSION_TRANSLATIONS } from "../i18n/translations";
 import { useAtFormatting } from "../../../composables/useAtFormatting";
 import WorkbenchPageLayout from "../../../components/app-shell/WorkbenchPageLayout.vue";
+import SaaSMetricCard from "../../../components/app-shell/SaaSMetricCard.vue";
+import SmartFilterBar from "../../../components/app-shell/SmartFilterBar.vue";
+import SectionPanel from "../../../components/app-shell/SectionPanel.vue";
+import ActionButton from "../../../components/app-shell/ActionButton.vue";
+import ListTable from "../../../components/ui/ListTable.vue";
 import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
 
 const authStore = useAuthStore();
@@ -412,216 +269,149 @@ const { formatCurrency, formatDate } = useAtFormatting(
   computed(() => activeLocale.value),
 );
 
-const {
-  filters,
-  loading,
-  error,
-  summary,
-  entities,
-  reload,
-} = useCommissionBalances({ t });
-
-const {
-  loading: detailLoading,
-  accruedPolicies: detailPolicies,
-  payments: detailPayments,
-  reload: reloadDetail,
-} = useCommissionEntityDetail({ t });
+const { filters, loading, error, summary, entities, reload } =
+  useCommissionBalances({ t });
 
 const viewMode = ref("table");
-const expandedTableEntity = ref(null);
-const expandedEntity = ref(null);
-const reconciledEntities = reactive(new Set());
+const searchQuery = ref("");
 
-const policyDetail = reactive({
+const branchOptions = computed(() => branchStore?.options || []);
+
+const detail = reactive({
   visible: false,
   loading: false,
-  entity: "",
-  ic: "",
-  policies: [],
-  totals: {},
+  data: null,
+  entityName: "",
+  entityType: "",
 });
 
-const policyDetailResource = createResource({
+const detailResource = createResource({
   url: "acentem_takipte.acentem_takipte.domains.commissions.api.endpoints.get_commission_policy_detail",
   auto: false,
 });
 
-const branchOptions = computed(() => branchStore?.options || []);
-
-const agingOptions = [
-  { value: "all", label: "all" },
-  { value: "current", label: "aging_current" },
-  { value: "1_30", label: "aging_1_30" },
-  { value: "31_60", label: "aging_31_60" },
-  { value: "61_90", label: "aging_61_90" },
-  { value: "90_plus", label: "aging_90_plus" },
-];
-
-const hasData = computed(() => entities.value.length > 0);
-
-function toggleTableEntity(entityName) {
-  expandedTableEntity.value = expandedTableEntity.value === entityName ? null : entityName;
+async function openDetail(entity) {
+  detail.visible = true;
+  detail.loading = true;
+  detail.data = null;
+  detail.entityName = entity.entity_name;
+  detail.entityType = entity.entity_type;
+  try {
+    await detailResource.reload({ entity_name: entity.entity_name });
+    detail.data = detailResource.data;
+  } catch {
+    detail.data = null;
+  }
+  detail.loading = false;
 }
 
-function entityPct(entity) {
-  if (!entity.accrued_try || entity.accrued_try <= 0) return 0;
+const tableColumns = computed(() => [
+  { key: "entity_name", label: t("sales_entity") || "Satış Birimi", type: "text" },
+  { key: "accrued_try", label: t("accrued"), type: "currency" },
+  { key: "paid_try", label: t("paid"), type: "currency" },
+  { key: "remaining_try", label: t("remaining"), type: "currency" },
+  { key: "pct", label: "%", type: "text" },
+]);
+
+const tableRows = computed(() =>
+  entities.value.map((e) => ({
+    ...e,
+    pct: pct(e) + "%",
+    entity_name: `${e.entity_name} (${e.policy_count})`,
+  })),
+);
+
+const policyColumns = computed(() => [
+  { key: "policy_no", label: "Poliçe No", type: "text" },
+  { key: "customer_name", label: "Müşteri", type: "text" },
+  { key: "insurance_company", label: "Şirket", type: "text" },
+  { key: "commission_amount_try", label: "Komisyon", type: "currency" },
+  { key: "status_icon", label: "Durum", type: "text" },
+]);
+
+const paymentColumns = computed(() => [
+  { key: "payment_no", label: "Ödeme No", type: "text" },
+  { key: "payment_date", label: "Tarih", type: "date" },
+  { key: "amount_try", label: "Tutar", type: "currency" },
+  { key: "reference_no", label: "Referans", type: "text" },
+]);
+
+const enrichedPolicies = computed(() =>
+  (detail.data?.policies || []).map((p) => ({
+    ...p,
+    status_icon: p.payment ? "\u2713" : p.aging_days > 90 ? "\u26A0" : "\u23F3",
+  })),
+);
+
+const paymentRows = computed(() =>
+  (detail.data?.policies || [])
+    .filter((p) => p.payment)
+    .map((p) => ({ ...p.payment, policy_no: p.policy_no })),
+);
+
+const icBreakdown = computed(() => {
+  const map = {};
+  for (const p of detail.data?.policies || []) {
+    const ic = p.insurance_company || "Bilinmeyen";
+    if (!map[ic]) map[ic] = { name: ic, accrued: 0, paid: 0, remaining: 0 };
+    map[ic].accrued += p.commission_amount_try || 0;
+    if (p.payment) map[ic].paid += p.payment.amount_try || 0;
+    map[ic].remaining = map[ic].accrued - map[ic].paid;
+  }
+  return Object.values(map);
+});
+
+function pct(entity) {
+  if (!entity.accrued_try) return 0;
   return Math.min(100, Math.round((entity.paid_try / entity.accrued_try) * 100));
 }
 
 function barClass(entity) {
-  const percent = entityPct(entity);
-  if (percent >= 75) return "bg-emerald-500";
-  if (percent >= 50) return "bg-amber-500";
+  const v = pct(entity);
+  if (v >= 75) return "bg-at-green";
+  if (v >= 50) return "bg-at-amber";
   return "bg-red-500";
 }
 
-function agingLabel(bucket) {
-  const map = {
-    current: "Güncel",
-    "1_30": "1-30g",
-    "31_60": "31-60g",
-    "61_90": "61-90g",
-    "90_plus": "90+g",
-  };
-  return map[bucket] || "";
+function icBadgeClass(ic) {
+  if (ic.remaining_try <= 0) return "text-at-green";
+  if (ic.remaining_try === ic.accrued_try) return "text-red-500";
+  return "text-at-amber";
 }
 
-function agingLabelClass(days) {
-  if (days <= 0) return "text-emerald-600";
-  if (days <= 30) return "text-amber-600";
-  return "text-red-600";
+function icBadgeSymbol(ic) {
+  if (ic.remaining_try <= 0) return "\u2713";
+  if (ic.remaining_try === ic.accrued_try) return "\u26A0";
+  return "\u23F3";
 }
 
-function toggleEntityReconciled(entityName) {
-  if (reconciledEntities.has(entityName)) {
-    reconciledEntities.delete(entityName);
-  } else {
-    reconciledEntities.add(entityName);
+function openPolicy(row) {
+  if (row.policy_name) {
+    router.push({ name: "policy-detail", params: { name: row.policy_name } });
   }
 }
 
-function isEntityReconciled(entityName) {
-  return reconciledEntities.has(entityName);
-}
-
-function toggleAllReconciled(event) {
-  if (event.target.checked) {
-    entities.value.forEach((e) => reconciledEntities.add(e.entity_name));
-  } else {
-    reconciledEntities.clear();
+function openPayment(row) {
+  if (row.name) {
+    router.push({ name: "payment-detail", params: { name: row.name } });
   }
-}
-
-const allReconciled = computed(() => {
-  return (
-    entities.value.length > 0 &&
-    entities.value.every((e) => reconciledEntities.has(e.entity_name))
-  );
-});
-
-async function openPolicyDetail(entity, ic) {
-  policyDetail.visible = true;
-  policyDetail.loading = true;
-  policyDetail.entity = entity;
-  policyDetail.ic = ic;
-  policyDetail.policies = [];
-  policyDetail.totals = {};
-  try {
-    await policyDetailResource.reload({
-      entity_name: entity,
-      insurance_company: ic,
-    });
-    const data = policyDetailResource.data;
-    if (data) {
-      policyDetail.policies = Array.isArray(data.policies)
-        ? data.policies
-        : [];
-      policyDetail.totals = data.totals || {};
-    }
-  } catch {
-    policyDetail.policies = [];
-    policyDetail.totals = {};
-  } finally {
-    policyDetail.loading = false;
-  }
-}
-
-function openPolicy(policyName) {
-  router.push({ name: "policy-detail", params: { name: policyName } });
-}
-
-function openPayment(paymentName) {
-  router.push({ name: "payment-detail", params: { name: paymentName } });
 }
 
 function handleExport() {
   const rows = [];
-  rows.push(
-    ["satis_birimi", "tahakkuk", "odenen", "kalan", "yuzde"].join(";"),
-  );
-  for (const entity of entities.value) {
+  rows.push(["Satış Birimi", "Tahakkuk", "Tahsilat", "Bakiye", "%"].join(","));
+  for (const e of entities.value) {
     rows.push(
-      [
-        entity.entity_name,
-        entity.accrued_try,
-        entity.paid_try,
-        entity.remaining_try,
-        entityPct(entity),
-      ].join(";"),
+      [e.entity_name, e.accrued_try, e.paid_try, e.remaining_try, pct(e)].join(","),
     );
-    for (const ic of entity.insurance_companies || []) {
-      rows.push(
-        [
-          "  " + ic.name,
-          ic.accrued_try,
-          ic.paid_try,
-          ic.remaining_try,
-          "",
-        ].join(";"),
-      );
-    }
   }
-  const csvContent = rows.join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "komisyon_raporu.csv";
+  link.download = "komisyon.csv";
   link.click();
   URL.revokeObjectURL(url);
-}
-
-function progressPct(entity) {
-  if (!entity.accrued_try || entity.accrued_try <= 0) return 0;
-  return Math.min(100, Math.round((entity.paid_try / entity.accrued_try) * 100));
-}
-
-function progressBarClass(entity) {
-  const pctVal = progressPct(entity);
-  if (pctVal >= 75) return "bg-emerald-500";
-  if (pctVal >= 50) return "bg-amber-500";
-  return "bg-red-500";
-}
-
-function hasAging(entity) {
-  const a = entity.aging || {};
-  return Object.values(a).some((v) => v > 0);
-}
-
-function toggleDetail(entityName) {
-  if (expandedEntity.value === entityName) {
-    expandedEntity.value = null;
-  } else {
-    expandedEntity.value = entityName;
-    reloadDetail(entityName);
-  }
-}
-
-function agingColor(days) {
-  if (days <= 0) return "text-emerald-600";
-  if (days <= 30) return "text-amber-600";
-  return "text-red-600";
 }
 
 reload();
