@@ -305,7 +305,7 @@ async function openDetail(entity) {
 }
 
 const tableColumns = computed(() => [
-  { key: "entity_name", label: t("sales_entity") || "Satış Birimi", type: "text" },
+  { key: "entity_display", label: t("sales_entity") || "Satış Birimi", type: "text" },
   { key: "accrued_try", label: t("accrued"), type: "currency" },
   { key: "paid_try", label: t("paid"), type: "currency" },
   { key: "remaining_try", label: t("remaining"), type: "currency" },
@@ -325,7 +325,8 @@ const tableRows = computed(() =>
     .map((e) => ({
       ...e,
       pct: pct(e) + "%",
-      entity_name: `${e.entity_name}  ·  ${e.policy_count} ${t('polices')}`,
+      entity_name: e.entity_name,
+      entity_display: `${e.entity_name}  ·  ${e.policy_count} ${t('polices')}`,
     })),
 );
 
