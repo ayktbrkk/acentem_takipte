@@ -89,72 +89,79 @@
               <th class="py-2.5 px-3 w-8">
                 <input type="checkbox" :checked="allReconciled" class="rounded" @change="toggleAllReconciled">
               </th>
-              <th class="py-2.5 px-3">{{ t('insurance_company') || 'Sigorta Şirketi' }}</th>
+              <th class="py-2.5 px-3">{{ t('sales_entity') || 'Satış Birimi' }}</th>
               <th class="py-2.5 px-3 text-right">{{ t('accrued') }}</th>
               <th class="py-2.5 px-3 text-right">{{ t('paid') }}</th>
               <th class="py-2.5 px-3 text-right">{{ t('remaining') }}</th>
               <th class="py-2.5 px-3 text-center w-16">%</th>
-              <th class="py-2.5 px-3">{{ t('aging_filter') || 'Bekleyen' }}</th>
+              <th class="py-2.5 px-3">{{ t('policy_count') }}</th>
             </tr>
           </thead>
           <tbody>
-            <template v-for="ic in insuranceCompanies" :key="ic.name">
+            <template v-for="entity in entities" :key="entity.entity_name">
               <tr
                 class="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
-                @click="toggleIcExpand(ic.name)"
+                @click="toggleTableEntity(entity.entity_name)"
               >
                 <td class="py-2.5 px-3">
                   <input
                     type="checkbox"
-                    :checked="isIcReconciled(ic.name)"
+                    :checked="isEntityReconciled(entity.entity_name)"
                     class="rounded"
                     @click.stop
-                    @change="toggleIcReconciled(ic.name)"
+                    @change="toggleEntityReconciled(entity.entity_name)"
                   >
                 </td>
                 <td class="py-2.5 px-3 font-semibold text-slate-900">
-                  <span class="mr-1">{{ expandedIc === ic.name ? '\u25BC' : '\u25B6' }}</span>{{ ic.name }}
-                  <span class="text-xs text-slate-400 ml-2">{{ ic.entity_count }} birim</span>
+                  <span class="mr-1">{{ expandedTableEntity === entity.entity_name ? '\u25BC' : '\u25B6' }}</span>{{ entity.entity_name }}
+                  <span class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-brand-50 text-brand-700 ml-2">{{ entity.entity_type }}</span>
                 </td>
-                <td class="py-2.5 px-3 text-right font-mono">{{ formatCurrency(ic.accrued_try) }}</td>
-                <td class="py-2.5 px-3 text-right font-mono text-emerald-600">{{ formatCurrency(ic.paid_try) }}</td>
+                <td class="py-2.5 px-3 text-right font-mono">{{ formatCurrency(entity.accrued_try) }}</td>
+                <td class="py-2.5 px-3 text-right font-mono text-emerald-600">{{ formatCurrency(entity.paid_try) }}</td>
                 <td
                   class="py-2.5 px-3 text-right font-mono"
-                  :class="ic.remaining_try > 0 ? 'text-brand-600 font-semibold' : 'text-slate-400'"
-                >{{ formatCurrency(ic.remaining_try) }}</td>
+                  :class="entity.remaining_try > 0 ? 'text-brand-600 font-semibold' : 'text-slate-400'"
+                >{{ formatCurrency(entity.remaining_try) }}</td>
                 <td class="py-2.5 px-3 text-center">
-                  <span :class="['px-1.5 py-0.5 rounded text-xs font-medium', pctClass(ic)]">{{ pctLabel(ic) }}</span>
+                  <div class="w-16 h-1 rounded-full bg-slate-100 mx-auto">
+                    <div
+                      class="h-full rounded-full"
+                      :class="barClass(entity)"
+                      :style="{ width: entityPct(entity) + '%' }"
+                    />
+                  </div>
                 </td>
-                <td class="py-2.5 px-3 text-xs text-slate-400">{{ ic.aging_summary || '' }}</td>
+                <td class="py-2.5 px-3">
+                  <button
+                    class="text-brand-600 hover:underline text-xs font-medium"
+                    @click.stop="openPolicyDetail(entity.entity_name)"
+                  >{{ entity.policy_count }} poliçe</button>
+                </td>
               </tr>
-              <template v-if="expandedIc === ic.name">
+              <template v-if="expandedTableEntity === entity.entity_name && entity.insurance_companies?.length">
                 <tr
-                  v-for="entity in ic.entities"
-                  :key="entity.entity_name"
+                  v-for="ic in entity.insurance_companies"
+                  :key="ic.name"
                   class="border-b border-slate-50 hover:bg-brand-50/30 cursor-pointer"
                   @click="openPolicyDetail(entity.entity_name, ic.name)"
                 >
                   <td class="py-2 px-3"></td>
-                  <td class="py-2 px-3 pl-8 text-sm">
-                    <span class="font-medium">{{ entity.entity_name }}</span>
-                    <span class="text-xs text-slate-400 ml-1.5">{{ entity.entity_type }}</span>
-                  </td>
-                  <td class="py-2 px-3 text-right text-xs font-mono">{{ formatCurrency(entity.accrued_try) }}</td>
-                  <td class="py-2 px-3 text-right text-xs font-mono text-emerald-600">{{ formatCurrency(entity.paid_try) }}</td>
+                  <td class="py-2 px-3 pl-8 text-sm text-slate-600">\u2514 {{ ic.name }}</td>
+                  <td class="py-2 px-3 text-right text-xs font-mono">{{ formatCurrency(ic.accrued_try) }}</td>
+                  <td class="py-2 px-3 text-right text-xs font-mono text-emerald-600">{{ formatCurrency(ic.paid_try) }}</td>
                   <td
                     class="py-2 px-3 text-right text-xs font-mono"
-                    :class="entity.remaining_try > 0 ? 'text-brand-600' : 'text-slate-400'"
-                  >{{ formatCurrency(entity.remaining_try) }}</td>
+                    :class="ic.remaining_try > 0 ? 'text-brand-600' : 'text-slate-400'"
+                  >{{ formatCurrency(ic.remaining_try) }}</td>
                   <td class="py-2 px-3 text-center">
-                    <div class="w-16 h-1 rounded-full bg-slate-100 mx-auto">
+                    <div class="w-10 h-1 rounded-full bg-slate-100 mx-auto">
                       <div
-                        class="h-full rounded-full"
-                        :class="barClass(entity)"
-                        :style="{ width: entityPct(entity) + '%' }"
+                        class="h-full rounded-full bg-slate-400"
+                        :style="{ width: (ic.accrued_try > 0 ? Math.min(100, Math.round((ic.paid_try / ic.accrued_try) * 100)) : 0) + '%' }"
                       />
                     </div>
                   </td>
-                  <td class="py-2 px-3 text-xs text-slate-400">{{ entity.policy_count }} poliçe</td>
+                  <td class="py-2 px-3 text-xs text-slate-400">{{ ic.policy_count }}</td>
                 </tr>
               </template>
             </template>
@@ -314,6 +321,16 @@
             <span v-if="entity.aging['90_plus']" class="text-[11px] px-1.5 py-0.5 rounded bg-red-100 text-red-800">{{ t('aging_90_plus') }} {{ formatCurrency(entity.aging['90_plus']) }}</span>
           </div>
 
+          <div v-if="entity.insurance_companies?.length" class="text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div v-for="ic in entity.insurance_companies.slice(0, 3)" :key="ic.name" class="flex justify-between">
+              <span class="truncate mr-2">{{ ic.name }}</span>
+              <span>{{ formatCurrency(ic.remaining_try > 0 ? ic.remaining_try : ic.accrued_try) }}</span>
+            </div>
+            <div v-if="entity.insurance_companies.length > 3" class="text-slate-400 mt-0.5">
+              {{ t('more_companies').replace('{n}', entity.insurance_companies.length - 3) }}
+            </div>
+          </div>
+
           <button
             class="w-full text-center text-sm text-brand-600 hover:text-brand-700 font-medium py-1.5 border border-brand-200 rounded-lg transition-colors hover:bg-brand-50"
             @click="toggleDetail(entity.entity_name)"
@@ -401,7 +418,6 @@ const {
   error,
   summary,
   entities,
-  insuranceCompanies,
   reload,
 } = useCommissionBalances({ t });
 
@@ -413,9 +429,9 @@ const {
 } = useCommissionEntityDetail({ t });
 
 const viewMode = ref("table");
-const expandedIc = ref(null);
+const expandedTableEntity = ref(null);
 const expandedEntity = ref(null);
-const reconciledIcs = reactive(new Set());
+const reconciledEntities = reactive(new Set());
 
 const policyDetail = reactive({
   visible: false,
@@ -442,26 +458,10 @@ const agingOptions = [
   { value: "90_plus", label: "aging_90_plus" },
 ];
 
-const hasData = computed(() => insuranceCompanies.value.length > 0);
+const hasData = computed(() => entities.value.length > 0);
 
-function toggleIcExpand(icName) {
-  expandedIc.value = expandedIc.value === icName ? null : icName;
-}
-
-function icPct(ic) {
-  if (!ic.accrued_try || ic.accrued_try <= 0) return 0;
-  return Math.min(100, Math.round((ic.paid_try / ic.accrued_try) * 100));
-}
-
-function pctClass(ic) {
-  const percent = icPct(ic);
-  if (percent >= 75) return "bg-emerald-100 text-emerald-700";
-  if (percent >= 50) return "bg-amber-100 text-amber-700";
-  return "bg-red-100 text-red-700";
-}
-
-function pctLabel(ic) {
-  return "%" + icPct(ic);
+function toggleTableEntity(entityName) {
+  expandedTableEntity.value = expandedTableEntity.value === entityName ? null : entityName;
 }
 
 function entityPct(entity) {
@@ -493,30 +493,30 @@ function agingLabelClass(days) {
   return "text-red-600";
 }
 
-function toggleIcReconciled(icName) {
-  if (reconciledIcs.has(icName)) {
-    reconciledIcs.delete(icName);
+function toggleEntityReconciled(entityName) {
+  if (reconciledEntities.has(entityName)) {
+    reconciledEntities.delete(entityName);
   } else {
-    reconciledIcs.add(icName);
+    reconciledEntities.add(entityName);
   }
 }
 
-function isIcReconciled(icName) {
-  return reconciledIcs.has(icName);
+function isEntityReconciled(entityName) {
+  return reconciledEntities.has(entityName);
 }
 
 function toggleAllReconciled(event) {
   if (event.target.checked) {
-    insuranceCompanies.value.forEach((ic) => reconciledIcs.add(ic.name));
+    entities.value.forEach((e) => reconciledEntities.add(e.entity_name));
   } else {
-    reconciledIcs.clear();
+    reconciledEntities.clear();
   }
 }
 
 const allReconciled = computed(() => {
   return (
-    insuranceCompanies.value.length > 0 &&
-    insuranceCompanies.value.every((ic) => reconciledIcs.has(ic.name))
+    entities.value.length > 0 &&
+    entities.value.every((e) => reconciledEntities.has(e.entity_name))
   );
 });
 
@@ -558,26 +558,26 @@ function openPayment(paymentName) {
 function handleExport() {
   const rows = [];
   rows.push(
-    ["sigorta_sirketi", "tahakkuk", "odenen", "kalan", "yuzde"].join(";"),
+    ["satis_birimi", "tahakkuk", "odenen", "kalan", "yuzde"].join(";"),
   );
-  for (const ic of insuranceCompanies.value) {
+  for (const entity of entities.value) {
     rows.push(
       [
-        ic.name,
-        ic.accrued_try,
-        ic.paid_try,
-        ic.remaining_try,
-        icPct(ic),
+        entity.entity_name,
+        entity.accrued_try,
+        entity.paid_try,
+        entity.remaining_try,
+        entityPct(entity),
       ].join(";"),
     );
-    for (const entity of ic.entities) {
+    for (const ic of entity.insurance_companies || []) {
       rows.push(
         [
-          "  " + entity.entity_name,
-          entity.accrued_try,
-          entity.paid_try,
-          entity.remaining_try,
-          entityPct(entity),
+          "  " + ic.name,
+          ic.accrued_try,
+          ic.paid_try,
+          ic.remaining_try,
+          "",
         ].join(";"),
       );
     }

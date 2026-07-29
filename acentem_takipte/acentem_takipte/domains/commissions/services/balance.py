@@ -156,6 +156,31 @@ def compute_commission_balances(
     entity_list.sort(key=lambda e: e["remaining_try"], reverse=True)
     entity_list = entity_list[:safe_limit]
 
+    # --- Add insurance_companies breakdown per entity ----------------
+    for entry in entity_list:
+        entry_doc_name = _resolve_entity_doc_name(entry["entity_name"])
+        ics = entity_insurance_companies.get(entry_doc_name, set())
+        ic_breakdown: list[dict] = []
+        total_entity_accrued = accrued_by_entity.get(entry_doc_name, 0)
+        total_entity_paid = paid_by_entity.get(entry_doc_name, 0)
+        for ic_name in sorted(ics):
+            display_ic = ic_display_names.get(ic_name, ic_name)
+            key = (entry_doc_name, ic_name)
+            ic_accrued = round(entity_ic_accrued.get(key, 0), 2)
+            if total_entity_accrued > 0 and total_entity_paid > 0:
+                ic_paid = round(ic_accrued / total_entity_accrued * total_entity_paid, 2)
+            else:
+                ic_paid = 0.0
+            ic_breakdown.append({
+                "name": display_ic,
+                "accrued_try": ic_accrued,
+                "paid_try": ic_paid,
+                "remaining_try": round(ic_accrued - ic_paid, 2),
+                "policy_count": entity_ic_policy_count.get(key, 0),
+            })
+        ic_breakdown.sort(key=lambda x: x["accrued_try"], reverse=True)
+        entry["insurance_companies"] = ic_breakdown
+
     # --- Build insurance company grouping ---------------------------
     insurance_companies: list[dict] = []
     ic_entity_map: dict[str, list[dict]] = {}
