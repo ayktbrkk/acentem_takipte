@@ -201,6 +201,8 @@ export const REPORTS_TRANSLATIONS = {
     statusResolved: "Çözüldü",
     statusIgnored: "Yoksayıldı",
     statusMatched: "Eşleşti",
+    statusActive: "Aktif",
+    statusRecord: "Kayıt",
     claimStatusOpen: "Açık",
     claimStatusDraft: "Taslak",
     claimStatusInReview: "İncelemede",

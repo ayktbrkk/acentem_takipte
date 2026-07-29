@@ -66,6 +66,8 @@ export function useReportsTableData({
     Paid: "claimStatusPaid",
     Closed: "claimStatusClosed",
     Cancelled: "claimStatusCancelled",
+    Active: "statusActive",
+    Record: "statusRecord",
   };
 
   const SEGMENT_VALUE_KEYS = {

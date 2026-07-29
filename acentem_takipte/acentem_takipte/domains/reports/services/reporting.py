@@ -165,7 +165,9 @@ def get_policy_list_report_rows(
             p.sales_entity,
             COALESCE(se.full_name, p.sales_entity) AS sales_entity_full_name,
             p.insurance_company,
+            COALESCE(ic.company_name, p.insurance_company) AS insurance_company_name,
             p.branch,
+            COALESCE(br.branch_name, p.branch) AS branch_name,
             p.office_branch,
             p.status,
             p.issue_date,
@@ -177,6 +179,8 @@ def get_policy_list_report_rows(
         FROM `tabAT Policy` p
         LEFT JOIN `tabAT Customer` c ON c.name = p.customer
         LEFT JOIN `tabAT Sales Entity` se ON se.name = p.sales_entity
+        LEFT JOIN `tabAT Insurance Company` ic ON ic.name = p.insurance_company
+        LEFT JOIN `tabAT Branch` br ON br.name = p.branch
         WHERE {where_clause}
         ORDER BY p.issue_date DESC, p.modified DESC
         LIMIT {max(int(limit or 500), 1)}
