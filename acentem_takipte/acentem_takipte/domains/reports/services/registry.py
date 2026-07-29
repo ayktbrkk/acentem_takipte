@@ -35,7 +35,6 @@ REPORT_DEFINITIONS: dict[str, dict[str, object]] = {
             "insurance_company",
             "branch",
             "office_branch",
-            "office_branch",
             "status",
             "issue_date",
             "start_date",

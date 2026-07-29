@@ -1,7 +1,14 @@
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 
 import { columnLabels } from "./reportsConfig";
 import { useAtFormatting } from "./useAtFormatting";
+import { useLinkLabelCache } from "./useLinkLabelCache";
+
+const LINK_LABEL_COLUMNS = new Set([
+  "insurance_company", "branch", "office_branch", "sales_entity",
+  "customer", "policy", "accounting_entry", "segment", "assigned_to",
+  "assigned_expert", "assigned_agent",
+]);
 
 function isDateLikeValue(value) {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -21,6 +28,8 @@ export function useReportsTableData({
   groupByColumn: existingGroupByColumn,
   sortState: existingSortState,
 }) {
+  const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
+
   const translatableCategoricalColumns = new Set([
     "status",
     "claim_status",
@@ -477,6 +486,10 @@ export function useReportsTableData({
       }
     }
 
+    if (LINK_LABEL_COLUMNS.has(column)) {
+      return getLinkLabel(value);
+    }
+
     return String(value);
   }
 
@@ -592,6 +605,15 @@ export function useReportsTableData({
 
     return result;
   });
+
+  watch(() => rows, (rowsList) => {
+    const list = rowsList?.value ?? rowsList;
+    if (Array.isArray(list)) {
+      for (const row of list) {
+        resolveLinksFromDoc(row);
+      }
+    }
+  }, { immediate: true, deep: true });
 
   return {
     columns,

@@ -429,6 +429,8 @@ export const REPORTS_TRANSLATIONS = {
     statusResolved: "Resolved",
     statusIgnored: "Ignored",
     statusMatched: "Matched",
+    statusActive: "Active",
+    statusRecord: "Record",
     claimStatusOpen: "Open",
     claimStatusDraft: "Draft",
     claimStatusInReview: "In Review",
