@@ -19,6 +19,8 @@ def get_commission_balances(
     office_branch: str | None = None,
     aging_bucket: str = "all",
     limit: int = 100,
+    from_date: str | None = None,
+    to_date: str | None = None,
 ) -> dict:
     assert_authenticated()
     assert_doctype_permission(
@@ -35,6 +37,8 @@ def get_commission_balances(
         office_branch=office_branch,
         aging_bucket=aging_bucket,
         limit=max(cint(limit), 1),
+        from_date=from_date,
+        to_date=to_date,
     )
 
 
@@ -57,6 +61,8 @@ def get_commission_policy_detail(
     entity_name: str,
     insurance_company: str | None = None,
     limit: int = 50,
+    from_date: str | None = None,
+    to_date: str | None = None,
 ) -> dict:
     assert_authenticated()
     assert_doctype_permission(
@@ -68,4 +74,6 @@ def get_commission_policy_detail(
         entity_name=entity_name,
         insurance_company=insurance_company,
         limit=max(cint(limit), 1),
+        from_date=from_date,
+        to_date=to_date,
     )

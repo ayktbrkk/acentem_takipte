@@ -5,6 +5,8 @@ export function useCommissionBalances({ t }) {
   const filters = reactive({
     office_branch: "",
     aging_bucket: "all",
+    from_date: "",
+    to_date: "",
   });
 
   const resource = createResource({
@@ -27,6 +29,8 @@ export function useCommissionBalances({ t }) {
       if (filters.office_branch) params.office_branch = filters.office_branch;
       if (filters.aging_bucket !== "all")
         params.aging_bucket = filters.aging_bucket;
+      if (filters.from_date) params.from_date = filters.from_date;
+      if (filters.to_date) params.to_date = filters.to_date;
       await resource.reload(params);
     } catch {
       error.value = t("load_error");

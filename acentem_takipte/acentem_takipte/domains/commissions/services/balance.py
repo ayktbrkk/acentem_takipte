@@ -18,6 +18,8 @@ def compute_commission_balances(
     office_branch: str | None = None,
     aging_bucket: str = "all",
     limit: int = 100,
+    from_date: str | None = None,
+    to_date: str | None = None,
 ) -> dict:
     """Compute accrued/paid/remaining commission per sales entity.
 
@@ -39,9 +41,20 @@ def compute_commission_balances(
     entity_insurance_companies: dict[str, set[str]] = {}
     ic_display_names: dict[str, str] = {}
 
+    policy_filters = {
+        "status": ["in", ["Active", "Record"]],
+        "commission_amount": [">", 0],
+    }
+    if from_date and to_date:
+        policy_filters["issue_date"] = ["between", [from_date, to_date]]
+    elif from_date:
+        policy_filters["issue_date"] = [">=", from_date]
+    elif to_date:
+        policy_filters["issue_date"] = ["<=", to_date]
+
     policies = frappe.get_all(
         "AT Policy",
-        filters={"status": ["in", ["Active", "Record"]], "commission_amount": [">", 0]},
+        filters=policy_filters,
         fields=["name", "issue_date", "sales_entity", "commission_distribution", "insurance_company"],
         limit_page_length=0,
     )
@@ -324,6 +337,8 @@ def compute_commission_policy_detail(
     entity_name: str,
     insurance_company: str | None = None,
     limit: int = 50,
+    from_date: str | None = None,
+    to_date: str | None = None,
 ) -> dict:
     """Policy-level ledger for an entity, optionally filtered by insurance company."""
 
@@ -333,9 +348,20 @@ def compute_commission_policy_detail(
 
     doc_name = _resolve_entity_doc_name(display_name)
 
+    policy_filters = {
+        "status": ["in", ["Active", "Record"]],
+        "commission_amount": [">", 0],
+    }
+    if from_date and to_date:
+        policy_filters["issue_date"] = ["between", [from_date, to_date]]
+    elif from_date:
+        policy_filters["issue_date"] = [">=", from_date]
+    elif to_date:
+        policy_filters["issue_date"] = ["<=", to_date]
+
     policies = frappe.get_all(
         "AT Policy",
-        filters={"status": ["in", ["Active", "Record"]], "commission_amount": [">", 0]},
+        filters=policy_filters,
         fields=[
             "name", "policy_no", "customer", "insurance_company", "branch",
             "gross_premium", "issue_date", "commission_distribution",

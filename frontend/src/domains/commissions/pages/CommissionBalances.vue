@@ -53,6 +53,8 @@
           <option value="61_90">{{ t('aging_61_90') }}</option>
           <option value="90_plus">{{ t('aging_90_plus') }}</option>
         </select>
+        <input v-model="filters.from_date" type="date" class="input h-9 py-1 text-sm" @change="reload" />
+        <input v-model="filters.to_date" type="date" class="input h-9 py-1 text-sm" @change="reload" />
       </template>
     </SmartFilterBar>
 
@@ -297,7 +299,10 @@ async function openDetail(entity) {
   detail.entityName = entity.entity_name;
   detail.entityType = entity.entity_type;
   try {
-    await detailResource.reload({ entity_name: entity.entity_name });
+    const params = { entity_name: entity.entity_name };
+    if (filters.from_date) params.from_date = filters.from_date;
+    if (filters.to_date) params.to_date = filters.to_date;
+    await detailResource.reload(params);
     detail.data = detailResource.data;
   } catch {
     detail.data = null;
