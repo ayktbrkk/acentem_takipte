@@ -2,6 +2,7 @@ import { computed, ref, unref, watch } from "vue";
 import { getSourcePanelConfig } from "../utils/sourcePanel";
 import { navigateToSameOriginPath } from "../utils/safeNavigation";
 import { AUX_DETAIL_FIELD_LABELS } from "../config/aux_detail_field_labels";
+import { useLinkLabelCache } from "./useLinkLabelCache";
 
 function asArray(value) {
   return Array.isArray(value) ? value : [];
@@ -31,6 +32,8 @@ export function useAuxRecordDetailSummary({
 }) {
   const customerLabelById = ref({});
   const _pendingLookups = new Set();
+
+  const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache(config);
 
   async function ensureCustomerLabel(customerName) {
     const key = String(customerName || "").trim();
@@ -86,6 +89,14 @@ export function useAuxRecordDetailSummary({
       if (String(referenceDoctype || "").trim() === "AT Customer") {
         void ensureCustomerLabel(referenceName);
       }
+    },
+    { immediate: true }
+  );
+
+  watch(
+    () => doc.value,
+    (d) => {
+      if (d) resolveLinksFromDoc(d);
     },
     { immediate: true }
   );
@@ -216,6 +227,9 @@ export function useAuxRecordDetailSummary({
       ["notification-drafts", "notification-outbox", "templates", "campaigns", "call-notes", "segments"].includes(config.key)
     ) {
       return translateDetailValue(value);
+    }
+    if (typeof value === "string") {
+      return getLinkLabel(value);
     }
     return String(value);
   }

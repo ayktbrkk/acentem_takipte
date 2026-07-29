@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "field:company_name",
+ "autoname": "AT-IC-.YYYY.-.#####",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -47,7 +47,7 @@
    "write": 1
   }
  ],
- "sort_field": "modified",
+ "title_field": "company_name",
  "sort_order": "DESC",
  "states": [],
  "track_changes": 1

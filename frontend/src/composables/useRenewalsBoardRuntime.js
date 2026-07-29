@@ -430,6 +430,7 @@ export function useRenewalsBoardRuntime({ activeLocale, localeCode, t }) {
         "customer",
         "customer.full_name as customer_full_name",
         "office_branch",
+        "office_branch.office_branch_name as office_branch_name",
         "status",
         "due_date",
         "renewal_date",

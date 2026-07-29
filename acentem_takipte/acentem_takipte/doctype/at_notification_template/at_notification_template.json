@@ -1,6 +1,6 @@
 {
  "actions": [],
- "autoname": "field:template_key",
+ "autoname": "AT-NTF-.YYYY.-.#####",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -124,7 +124,7 @@
    "write": 1
   }
  ],
- "sort_field": "modified",
+ "title_field": "template_key",
  "sort_order": "DESC",
  "states": []
 }

@@ -38,7 +38,7 @@ export function mapOfferRecordToTableRow(row, { formatDate, formatCurrency, _loc
   return {
     ...row,
     offer_primary: row.name || fallbackLabel(t),
-    offer_secondary: row.insurance_company || "-",
+    offer_secondary: row.insurance_company_name || row.insurance_company || "-",
     customer_label: customerDisplayLabel(row, t),
     customer_secondary: `${mapCustomerTypeLabel(row.customer_customer_type, t)} | ${row.customer_masked_tax_id || "-"}`,
     validity_primary: formatDate(row.valid_until),

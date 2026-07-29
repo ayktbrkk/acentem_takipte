@@ -1436,7 +1436,7 @@ describe("AuxRecordDetail master data detail pages", () => {
 
     expect(wrapper.text()).toContain("Merkez Acente");
     expect(wrapper.text()).toContain("Birim Türü");
-    expect(wrapper.text()).toContain("Agency");
+    expect(wrapper.text()).toContain("Acente");
     expect(wrapper.text()).toContain("Ofis Şubesi");
   });
 });

@@ -150,7 +150,7 @@ function premiumLabel(offer) {
 }
 
 function companyValue(offer) {
-  return offer?.insurance_company || "-";
+  return offer?.insurance_company_name || offer?.insurance_company || "-";
 }
 
 function validityValue(offer) {

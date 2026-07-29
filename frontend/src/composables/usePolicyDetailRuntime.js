@@ -6,6 +6,7 @@ import { POLICY_TRANSLATIONS } from "../config/policy_translations";
 import { useAuthStore } from "../stores/auth";
 import { useAtDocumentLifecycle } from "./useAtDocumentLifecycle";
 import { useAtFormatting } from "./useAtFormatting";
+import { useLinkLabelCache } from "./useLinkLabelCache";
 
 function resolvePolicyStatusPresentation(status, t) {
   const s = String(status || "Record").trim();
@@ -109,6 +110,7 @@ function asArray(value) {
 export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const router = useRouter();
   const authStore = useAuthStore();
+  const { getLinkLabel } = useLinkLabelCache();
 
   function t(key) {
     const locale = String(unref(activeLocale) || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
@@ -277,13 +279,13 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   // Resources for searchable selects
   const branchesResource = createResource({
     url: "frappe.client.get_list",
-    params: { doctype: "AT Branch", fields: ["name"], limit_page_length: 500, order_by: "name asc" },
+    params: { doctype: "AT Branch", fields: ["name", "branch_name"], limit_page_length: 500, order_by: "branch_name asc" },
     auto: true
   });
 
   const companiesResource = createResource({
     url: "frappe.client.get_list",
-    params: { doctype: "AT Insurance Company", fields: ["name"], limit_page_length: 500, order_by: "name asc" },
+    params: { doctype: "AT Insurance Company", fields: ["name", "company_name"], limit_page_length: 500, order_by: "company_name asc" },
     auto: true
   });
 
@@ -293,10 +295,10 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
     auto: true
   });
 
-  const branchOptions = computed(() => asArray(branchesResource.data).map(b => ({ label: b.name, value: b.name })));
-  const companyOptions = computed(() => asArray(companiesResource.data).map(c => ({ label: c.name, value: c.name })));
+  const branchOptions = computed(() => asArray(branchesResource.data).map(b => ({ label: b.branch_name || b.name, value: b.name })));
+  const companyOptions = computed(() => asArray(companiesResource.data).map(c => ({ label: c.company_name || c.name, value: c.name })));
   const salesEntityOptions = computed(() => asArray(salesEntitiesResource.data).map(s => ({ 
-    label: `${s.full_name} (${s.office_branch || t("unspecified")})`, 
+    label: `${s.full_name} (${getLinkLabel(s.office_branch) || t("unspecified")})`, 
     value: s.name 
   })));
 
@@ -315,7 +317,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   const policyStatusPresentation = computed(() => resolvePolicyStatusPresentation(policy.value.status, t));
 
   const heroCells = computed(() => [
-    { label: t("branch"), value: policy.value.branch || t("unspecified") },
+    { label: t("branch"), value: getLinkLabel(policy.value.branch_name) || getLinkLabel(policy.value.branch) || t("unspecified") },
     { label: t("gross_premium"), value: formatCurrency(policy.value.gross_premium, policy.value.currency), variant: "lg" },
     { label: t("end_date"), value: formatDateOrFallback(policy.value.end_date) },
     { label: t("status"), value: policyStatusPresentation.value.label, variant: policyStatusPresentation.value.variant },
@@ -329,6 +331,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
         key: "insurance_company", 
         label: t("insurance_company"), 
         value: policy.value.insurance_company, 
+        displayValue: policy.value.insurance_company_name || getLinkLabel(policy.value.insurance_company),
         type: "autocomplete", 
         options: companyOptions.value,
         required: true,
@@ -338,6 +341,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
         key: "branch", 
         label: t("branch"), 
         value: policy.value.branch, 
+        displayValue: policy.value.branch_name || getLinkLabel(policy.value.branch),
         type: "autocomplete", 
         options: branchOptions.value,
         required: true,
@@ -383,7 +387,7 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
   });
 
   const riskFields = computed(() => {
-    const branch = String(policy.value.branch || "").toLowerCase();
+    const branch = String(policy.value.branch_name || getLinkLabel(policy.value.branch) || "").toLowerCase();
     const fields = [];
 
     if (branch.includes("kasko") || branch.includes("trafik")) {

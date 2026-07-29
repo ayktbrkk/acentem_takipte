@@ -87,6 +87,51 @@ def reset_and_seed_10(
     )
 
 
+def reset_and_seed_full_demo(
+    seed_count: int = 5,
+    clean_first: int = 1,
+    print_output: int = 1,
+):
+    """Reset ALL AT data and seed 5 of every entity type with Turkish demo data.
+
+    Example:
+        bench --site at.localhost execute acentem_takipte.dev_seed.reset_and_seed_full_demo
+    """
+    if not frappe.conf.developer_mode:
+        frappe.throw(
+            _("Seed data operations are only allowed in developer mode."),
+            title=_("Security: Developer Mode Required"),
+        )
+
+    script_path = Path(__file__).resolve().parents[2] / "scripts" / "reset_and_seed_full_demo.py"
+    namespace = runpy.run_path(
+        str(script_path),
+        run_name="full_seed_module",
+    )
+    run_fn = namespace["run"]
+    return run_fn(
+        seed_count=int(seed_count),
+        clean_first=bool(int(clean_first)),
+        print_output=bool(int(print_output)),
+    )
+
+
+def full_seed_inspect():
+
+    if not frappe.conf.developer_mode:
+        frappe.throw(
+            _("Seed inspection is only allowed in developer mode."),
+            title=_("Security: Developer Mode Required"),
+        )
+
+    script_path = Path(__file__).resolve().parents[2] / "scripts" / "reset_and_seed_full_demo.py"
+    namespace = runpy.run_path(
+        str(script_path),
+        run_name="full_seed_inspect",
+    )
+    return namespace["inspect"]()
+
+
 def inspect_at_seed_snapshot():
     # Security guard: prevent accidental execution in production
     if not frappe.conf.developer_mode:

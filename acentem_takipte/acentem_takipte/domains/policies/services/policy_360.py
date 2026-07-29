@@ -36,6 +36,16 @@ def build_policy_360_payload(name: str) -> dict:
             policy["sales_entity_full_name"] = se_info.full_name
             policy["sales_entity_office"] = se_info.office_branch
 
+    if policy.get("insurance_company"):
+        ic_name = frappe.db.get_value("AT Insurance Company", policy["insurance_company"], "company_name")
+        if ic_name:
+            policy["insurance_company_name"] = ic_name
+
+    if policy.get("branch"):
+        br_name = frappe.db.get_value("AT Branch", policy["branch"], "branch_name")
+        if br_name:
+            policy["branch_name"] = br_name
+
     customer = _get_customer(policy.get("customer"))
 
     files = _get_rows(

@@ -435,8 +435,12 @@ const isTurkish = computed(() => String(activeLocale.value || "tr").toLowerCase(
 const showEndorsementDialog = ref(false);
 const editingEndorsementName = ref("");
 
+import { useLinkLabelCache } from "../../../composables/useLinkLabelCache";
+
+const { getLinkLabel } = useLinkLabelCache();
+
 const branchIcon = computed(() => {
-  const branch = String(policy.value.branch || "").toLowerCase();
+  const branch = String(policy.value.branch_name || getLinkLabel(policy.value.branch) || "").toLowerCase();
   if (branch.includes("kasko") || branch.includes("trafik") || branch.includes("oto") || branch.includes("araç") || branch.includes("motor") || branch.includes("car") || branch.includes("vehicle") || branch.includes("auto")) return "truck";
   if (branch.includes("konut") || branch.includes("dask") || branch.includes("ev") || branch.includes("işyeri") || branch.includes("home") || branch.includes("property") || branch.includes("building")) return "home";
   if (branch.includes("sağlık") || branch.includes("saglik") || branch.includes("health") || branch.includes("medical")) return "heart";

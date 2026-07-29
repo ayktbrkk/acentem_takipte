@@ -1,4 +1,4 @@
-import { computed, unref } from "vue";
+import { computed, unref, watch } from "vue";
 
 import { buildOfficeBranchOptions } from "../utils/officeBranchTree";
 import { openTabularExport } from "../utils/listExport";
@@ -6,6 +6,7 @@ import { getCustomerOptionLabel } from "../utils/customerOptions";
 import { AUX_WORKBENCH_TRANSLATIONS } from "../config/aux_workbench_translations";
 import { AUX_WORKBENCH_FIELD_LABELS } from "../config/aux_workbench_field_labels";
 import { translateText } from "@/platform/i18n";
+import { useLinkLabelCache } from "./useLinkLabelCache";
 
 function humanizeField(field) {
   return String(field || "")
@@ -144,6 +145,8 @@ export function useAuxWorkbenchViewModel({
   auxQuickSalesEntityResource,
   auxQuickAccountingEntryResource,
 }) {
+  const { getLinkLabel, resolveLinksFromDoc } = useLinkLabelCache();
+
   function localize(v) {
     if (!v) return "";
     if (typeof v === "string") return v;
@@ -255,6 +258,9 @@ export function useAuxWorkbenchViewModel({
     ].includes(field)) {
       const normalizedLabel = normalizeEnumLabel(field, value);
       return translateFieldValue(normalizedLabel, activeLocale);
+    }
+    if (typeof value === "string") {
+      return getLinkLabel(value);
     }
     return String(value);
   }
@@ -502,6 +508,18 @@ export function useAuxWorkbenchViewModel({
       format,
     });
   }
+
+  watch(
+    () => unref(rows),
+    (rowsList) => {
+      if (Array.isArray(rowsList)) {
+        for (const row of rowsList) {
+          resolveLinksFromDoc(row);
+        }
+      }
+    },
+    { immediate: true }
+  );
 
   return {
     t,
