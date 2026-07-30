@@ -154,23 +154,11 @@
             <span class="text-[11px] tabular-nums text-slate-400 w-8 text-right">{{ pct(entity) }}%</span>
           </div>
 
-          <div v-if="entity.insurance_companies?.length" class="mb-3 space-y-1 text-xs">
-            <div
-              v-for="ic in entity.insurance_companies.slice(0, 3)"
-              :key="ic.name"
-              class="flex items-center gap-1.5"
-            >
-              <span class="text-[10px]" :class="icBadgeClass(ic)" :title="icBadgeTitle(ic)">{{ icBadgeSymbol(ic) }}</span>
-              <span class="truncate text-slate-600">{{ ic.name }}</span>
-              <span class="ml-auto tabular-nums text-slate-400">{{ formatCurrency(ic.remaining_try > 0 ? ic.remaining_try : ic.accrued_try) }}</span>
-            </div>
-            <div v-if="entity.insurance_companies.length > 3" class="text-slate-400 text-[10px]">
-              +{{ entity.insurance_companies.length - 3 }}
-            </div>
-          </div>
-
           <div class="flex items-center justify-between text-xs text-slate-400 border-t border-slate-50 pt-2">
-            <span>{{ entity.policy_count }} {{ t('polices') }}</span>
+            <span>
+              {{ entity.policy_count }} {{ t('polices') }}
+              <template v-if="entity.insurance_companies?.length"> · {{ entity.insurance_companies.length }} {{ t('company_short') || 'şirket' }}</template>
+            </span>
             <span class="font-medium text-brand-600">{{ t('view_details') }} &#8594;</span>
           </div>
         </div>

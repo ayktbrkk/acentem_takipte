@@ -50,6 +50,7 @@ export const COMMISSION_TRANSLATIONS = {
     status_paid: "Tamam",
     status_pending: "Bekliyor",
     status_overdue: "Gecikmiş",
+    company_short: "şirket",
   },
   en: {
     title: "Commission Tracking",
@@ -102,5 +103,6 @@ export const COMMISSION_TRANSLATIONS = {
     status_paid: "Done",
     status_pending: "Pending",
     status_overdue: "Overdue",
+    company_short: "companies",
   },
 };
