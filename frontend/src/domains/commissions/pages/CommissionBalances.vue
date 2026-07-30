@@ -70,9 +70,9 @@
     </SmartFilterBar>
 
     <div v-if="viewMode === 'table' && selectedEntities.length" class="flex items-center gap-2 mb-3 px-3 py-2 bg-brand-50 rounded-lg border border-brand-200">
-      <span class="text-sm text-brand-700 font-medium">{{ selectedEntities.length }} {{ t('selected_count') || 'seçili' }}</span>
-      <button @click="markSelectedReconciled" class="text-xs px-2 py-1 rounded bg-at-green text-white hover:bg-at-green/90">✓ {{ t('mark_reconciled') || 'Mutabakat Yapıldı' }}</button>
-      <button @click="exportSelected" class="text-xs px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">📥 {{ t('export_selected') || 'Seçilenleri Export' }}</button>
+      <span class="text-sm text-brand-700 font-medium">{{ selectedEntities.length }} {{ t('selected_count') }}</span>
+      <button @click="markSelectedReconciled" class="text-xs px-2 py-1 rounded bg-at-green text-white hover:bg-at-green/90">✓ {{ t('mark_reconciled') }}</button>
+      <button @click="exportSelected" class="text-xs px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">📥 {{ t('export_selected') }}</button>
     </div>
 
     <div v-if="error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
