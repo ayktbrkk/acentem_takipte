@@ -108,6 +108,7 @@ class ATPolicy(Document):
             frappe.throw(_("Start date cannot be later than end date."))
 
         self._validate_company_policy_number_uniqueness()
+        self._validate_commission_period_lock()
         self.net_premium = normalized["net_premium"]
         self.tax_amount = normalized["tax_amount"]
         self.commission_amount = normalized["commission_amount"]
@@ -147,6 +148,26 @@ class ATPolicy(Document):
                     frappe.bold(self.policy_no),
                 )
             )
+
+    def _validate_commission_period_lock(self) -> None:
+        if not self.insurance_company or not self.issue_date:
+            return
+        from acentem_takipte.acentem_takipte.doctype.at_commission_period.at_commission_period import (
+            is_commission_period_locked,
+        )
+        if is_commission_period_locked(self.insurance_company, self.issue_date):
+            if not self.is_new():
+                old_commission = frappe.db.get_value(
+                    "AT Policy", self.name, "commission_amount"
+                )
+                if flt(old_commission) != flt(self.commission_amount):
+                    frappe.throw(
+                        _("Cannot change commission amount for a policy in a locked commission period.")
+                    )
+            else:
+                frappe.throw(
+                    _("Cannot create a policy in a locked commission period.")
+                )
 
     def after_insert(self):
         notification_policy_no = self.policy_no or self.name
@@ -402,17 +423,16 @@ def _build_commission_distribution(
     commission_amount: float,
     fx_rate: float,
 ) -> str:
-    """Build a waterfall (cascading) commission distribution across the entity hierarchy.
+    """Build a head-office-centric commission distribution across the entity hierarchy.
 
-    Each entity in the chain retains commission_share_pct% of the *remaining* amount.
-    The remainder flows upward to the parent entity. The last entity in the chain
-    absorbs any unallocated residual.
+    Each non-root entity retains commission_amount * share_pct / 100 of the original
+    commission amount. The root entity receives all remaining commission.
 
-    Example: Commission = 1000 TL, Rep(60%) → Sub(50%) → Agency(100%):
-      - Rep:   1000 × 60% = 600, remaining = 400
-      - Sub:    400 × 50% = 200, remaining = 200
-      - Agency: 200 × 100% = 200, remaining = 0
-      Total: 600 + 200 + 200 = 1000
+    Example: Commission = 1000 TL, Rep(40%) → Sub(30%) → Agency(root):
+      - Rep:     1000 × 40% = 400
+      - Sub:     1000 × 30% = 300
+      - Agency:  1000 − 400 − 300 = 300 (root gets remainder)
+      Total: 400 + 300 + 300 = 1000
 
     Returns a JSON array of {entity, entity_name, level, share_pct, amount, amount_try, status}.
     Returns "[]" if commission <= 0 or no sales_entity."""
@@ -421,10 +441,11 @@ def _build_commission_distribution(
     if commission <= 0 or not sales_entity:
         return "[]"
     entries: list[dict] = []
-    remaining = commission
     level = 0
     current_entity: str | None = sales_entity
     visited: set[str] = set()
+    non_root_total = 0.0
+    root_entry: dict | None = None
     while current_entity and current_entity not in visited:
         visited.add(current_entity)
         entity_data = frappe.db.get_value(
@@ -435,18 +456,22 @@ def _build_commission_distribution(
         ) or {}
         share_pct = flt(entity_data.get("commission_share_pct") or 100)
         share_pct = max(0.0, min(100.0, share_pct))
-        if share_pct <= 0:
-            entry_amount = 0.0
-        else:
-            amount_raw = round(remaining * share_pct / 100, 2)
-            if amount_raw >= remaining - 0.01:
-                entry_amount = remaining
-                remaining = 0.0
-            else:
-                entry_amount = amount_raw
-                remaining = round(remaining - entry_amount, 2)
-        entry_amount_try = round(entry_amount * fx, 2)
+        parent = entity_data.get("parent_entity")
         entity_name = entity_data.get("full_name") or current_entity
+        if not parent:
+            root_entry = {
+                "entity": current_entity,
+                "entity_name": entity_name,
+                "level": level,
+                "share_pct": share_pct,
+                "amount": 0.0,
+                "amount_try": 0.0,
+                "status": "Accrued",
+            }
+            break
+        entry_amount = round(commission * share_pct / 100, 2)
+        non_root_total = round(non_root_total + entry_amount, 2)
+        entry_amount_try = round(entry_amount * fx, 2)
         entries.append({
             "entity": current_entity,
             "entity_name": entity_name,
@@ -456,13 +481,13 @@ def _build_commission_distribution(
             "amount_try": entry_amount_try,
             "status": "Accrued",
         })
-        if remaining <= 0.01:
-            break
-        current_entity = entity_data.get("parent_entity")
+        current_entity = parent
         level += 1
         if level > 20:
             break
-    if remaining > 0.01 and entries:
-        entries[-1]["amount"] = round(entries[-1]["amount"] + remaining, 2)
-        entries[-1]["amount_try"] = round(entries[-1]["amount"] * fx, 2)
+    if root_entry is not None:
+        root_amount = round(commission - non_root_total, 2)
+        root_entry["amount"] = root_amount
+        root_entry["amount_try"] = round(root_amount * fx, 2)
+        entries.append(root_entry)
     return json.dumps(entries)
