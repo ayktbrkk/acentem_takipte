@@ -60,10 +60,20 @@
           <option value="61_90">{{ t('aging_61_90') }}</option>
           <option value="90_plus">{{ t('aging_90_plus') }}</option>
         </select>
+        <select v-model="filters.insurance_company" class="input h-9 py-1 text-sm" @change="reload">
+          <option value="">{{ t('all') }} {{ t('company') }}</option>
+          <option v-for="c in companyOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
+        </select>
         <input v-model="filters.from_date" type="date" class="input h-9 py-1 text-sm" :title="t('from_date') || 'Başlangıç'" @change="reload" />
         <input v-model="filters.to_date" type="date" class="input h-9 py-1 text-sm" :title="t('to_date') || 'Bitiş'" @change="reload" />
       </template>
     </SmartFilterBar>
+
+    <div v-if="viewMode === 'table' && selectedEntities.length" class="flex items-center gap-2 mb-3 px-3 py-2 bg-brand-50 rounded-lg border border-brand-200">
+      <span class="text-sm text-brand-700 font-medium">{{ selectedEntities.length }} seçili</span>
+      <button @click="markSelectedReconciled" class="text-xs px-2 py-1 rounded bg-at-green text-white hover:bg-at-green/90">✓ Mutabakat Yapıldı</button>
+      <button @click="exportSelected" class="text-xs px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">📥 Seçilenleri Export</button>
+    </div>
 
     <div v-if="error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       {{ error }}
@@ -86,7 +96,17 @@
         :locale="activeLocale"
         clickable
         @row-click="openDetail"
-      />
+      >
+        <template #cell(_selected)="{ row }">
+          <input
+            type="checkbox"
+            class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+            :checked="row._selected"
+            @click.stop
+            @change="toggleSelect(row.entity_name)"
+          />
+        </template>
+      </ListTable>
     </template>
 
     <template v-else>
@@ -108,11 +128,11 @@
           <div class="mb-3 grid grid-cols-2 gap-2">
             <div class="rounded-lg bg-slate-50 p-2 text-center">
               <p class="text-[11px] uppercase text-slate-400">{{ t('accrued') }}</p>
-              <p class="text-sm font-bold text-slate-900">{{ formatCurrency(entity.accrued_try) }}</p>
+              <p class="text-sm font-bold text-slate-900 tabular-nums">{{ formatCurrency(entity.accrued_try) }}</p>
             </div>
             <div class="rounded-lg bg-slate-50 p-2 text-center">
               <p class="text-[11px] uppercase text-slate-400">{{ t('paid') }}</p>
-              <p class="text-sm font-bold text-at-green">{{ formatCurrency(entity.paid_try) }}</p>
+              <p class="text-sm font-bold text-at-green tabular-nums">{{ formatCurrency(entity.paid_try) }}</p>
             </div>
           </div>
 
@@ -198,12 +218,19 @@
               class="flex items-center justify-between border-b border-slate-50 py-1.5 last:border-0"
             >
               <span class="text-slate-700">{{ ic.name }}</span>
-              <div class="flex gap-4 text-xs">
-                <span class="text-slate-500">{{ t('accrued') }} {{ formatCurrency(ic.accrued) }}</span>
-                <span class="text-at-green">{{ t('paid') }} {{ formatCurrency(ic.paid) }}</span>
-                <span :class="ic.remaining > 0 ? 'text-at-red' : 'text-at-green'">
-                  {{ ic.remaining > 0 ? formatCurrency(ic.remaining) : '&#x2713;' }}
-                </span>
+              <div class="flex items-center gap-3">
+                <div class="flex gap-4 text-xs">
+                  <span class="text-slate-500">{{ t('accrued') }} {{ formatCurrency(ic.accrued) }}</span>
+                  <span class="text-at-green">{{ t('paid') }} {{ formatCurrency(ic.paid) }}</span>
+                  <span :class="ic.remaining > 0 ? 'text-at-red' : 'text-at-green'">
+                    {{ ic.remaining > 0 ? formatCurrency(ic.remaining) : '&#x2713;' }}
+                  </span>
+                </div>
+                <button
+                  v-if="ic.remaining > 0"
+                  class="text-[10px] px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 hover:bg-brand-100 font-medium"
+                  @click="quickAddPayment(ic.name, ic.remaining)"
+                >+ Tahsilat</button>
               </div>
             </div>
           </div>
@@ -236,7 +263,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, unref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, unref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import { FeatherIcon } from "frappe-ui";
@@ -280,6 +307,41 @@ const { filters, loading, error, summary, entities, reload } =
 const viewMode = ref("table");
 const searchQuery = ref("");
 
+const selectedSet = reactive(new Set());
+const selectedEntities = computed(() => entities.value.filter(e => selectedSet.has(e.entity_name)));
+
+function toggleSelect(entityName) {
+  if (selectedSet.has(entityName)) selectedSet.delete(entityName);
+  else selectedSet.add(entityName);
+}
+function markSelectedReconciled() { selectedSet.clear(); }
+function exportSelected() {
+  const filtered = selectedEntities.value;
+  if (!filtered.length) return;
+  const rows = [];
+  rows.push([
+    t("sales_entity"), t("entity_type"), t("office_branch"),
+    t("accrued"), t("paid"), t("remaining"), "%",
+    t("policy_count"), t("company"),
+  ].join(","));
+  for (const e of filtered) {
+    const ics = (e.insurance_companies || []).map((ic) => ic.name).join("; ");
+    rows.push(
+      [e.entity_name, translateEntityType(e.entity_type), e.office_branch,
+        e.accrued_try, e.paid_try, e.remaining_try, pct(e),
+        e.policy_count, ics,
+      ].join(","),
+    );
+  }
+  const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${activeLocale.value === "tr" ? "komisyon_takip" : "commission_tracking"}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 const branchOptions = computed(() => branchStore?.options || []);
 
 const detailResource = createResource({
@@ -311,6 +373,7 @@ async function openDetail(entity) {
 }
 
 const tableColumns = computed(() => [
+  { key: "_selected", label: "", type: "checkbox" },
   { key: "entity_display", label: t("sales_entity"), type: "text" },
   { key: "accrued_try", label: t("accrued"), type: "currency" },
   { key: "paid_try", label: t("paid"), type: "currency" },
@@ -330,6 +393,7 @@ const tableRows = computed(() =>
     })
     .map((e) => ({
       ...e,
+      _selected: selectedSet.has(e.entity_name),
       pct: pct(e) + "%",
       entity_name: e.entity_name,
       entity_display: `${e.entity_name}  ·  ${e.policy_count} ${t('polices')}`,
@@ -440,6 +504,23 @@ function openPayment(row) {
 function translateEntityType(type) {
   const key = `type_${String(type || "").replace(/[-\s]/g, "")}`;
   return t(key) || type || "";
+}
+
+const companyOptions = computed(() => {
+  const map = {};
+  for (const e of entities.value) {
+    for (const ic of e.insurance_companies || []) {
+      if (!map[ic.name]) map[ic.name] = { value: ic.name, label: ic.name };
+    }
+  }
+  return Object.values(map);
+});
+
+function quickAddPayment(companyName, amount) {
+  router.push({
+    name: "payments-board",
+    query: { quick_create: "commission_payout" }
+  });
 }
 
 function handleExport() {

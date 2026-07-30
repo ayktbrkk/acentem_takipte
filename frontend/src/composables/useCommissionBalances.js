@@ -7,6 +7,7 @@ export function useCommissionBalances({ t }) {
     aging_bucket: "all",
     from_date: "",
     to_date: "",
+    insurance_company: "",
   });
 
   const resource = createResource({
@@ -28,6 +29,7 @@ export function useCommissionBalances({ t }) {
         params.aging_bucket = filters.aging_bucket;
       if (filters.from_date) params.from_date = filters.from_date;
       if (filters.to_date) params.to_date = filters.to_date;
+      if (filters.insurance_company) params.insurance_company = filters.insurance_company;
       await resource.reload(params);
     } catch {
       error.value = t("load_error");
