@@ -358,7 +358,11 @@ const paymentColumns = computed(() => [
 const enrichedPolicies = computed(() =>
   (detailData.value?.policies || []).map((p) => ({
     ...p,
-    status_icon: p.payment ? "✓" : p.aging_days > 90 ? "⚠" : "⏳",
+    status_icon: p.payment
+      ? "✓ " + t("status_paid")
+      : p.aging_days > 90
+        ? "⚠ " + t("status_overdue")
+        : "⏳ " + t("status_pending"),
   })),
 );
 
@@ -414,9 +418,9 @@ function icBadgeClass(ic) {
 }
 
 function icBadgeSymbol(ic) {
-  if (ic.remaining_try <= 0) return "\u2713";
-  if (ic.remaining_try === ic.accrued_try) return "\u26A0";
-  return "\u23F3";
+  if (ic.remaining_try <= 0) return "\u2713 " + t("status_paid");
+  if (ic.remaining_try === ic.accrued_try) return "\u26A0 " + t("status_overdue");
+  return "\u23F3 " + t("status_pending");
 }
 
 function icBadgeTitle(ic) {

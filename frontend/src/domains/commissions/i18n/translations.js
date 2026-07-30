@@ -47,6 +47,9 @@ export const COMMISSION_TRANSLATIONS = {
     unspecified: "Belirtilmedi",
     from_date: "Başlangıç",
     to_date: "Bitiş",
+    status_paid: "Tamam",
+    status_pending: "Bekliyor",
+    status_overdue: "Gecikmiş",
   },
   en: {
     title: "Commission Tracking",
@@ -96,5 +99,8 @@ export const COMMISSION_TRANSLATIONS = {
     unspecified: "Unspecified",
     from_date: "From",
     to_date: "To",
+    status_paid: "Done",
+    status_pending: "Pending",
+    status_overdue: "Overdue",
   },
 };
