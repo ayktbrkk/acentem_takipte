@@ -51,6 +51,10 @@ export const COMMISSION_TRANSLATIONS = {
     status_pending: "Bekliyor",
     status_overdue: "Gecikmiş",
     company_short: "şirket",
+    refresh_label: "Yenile",
+    selected_count: "seçili",
+    mark_reconciled: "Mutabakat Yapıldı",
+    export_selected: "Seçilenleri Export",
   },
   en: {
     title: "Commission Tracking",
@@ -104,5 +108,9 @@ export const COMMISSION_TRANSLATIONS = {
     status_pending: "Pending",
     status_overdue: "Overdue",
     company_short: "companies",
+    refresh_label: "Refresh",
+    selected_count: "selected",
+    mark_reconciled: "Mark Reconciled",
+    export_selected: "Export Selected",
   },
 };

@@ -9,7 +9,7 @@
     <template #actions>
       <ActionButton variant="primary" size="sm" :disabled="loading" @click="reload">
         <FeatherIcon name="refresh-cw" :class="['h-4 w-4', loading && 'animate-spin']" />
-        {{ t("refresh") || "Yenile" }}
+        {{ t("refresh_label") }}
       </ActionButton>
       <ActionButton variant="secondary" size="sm" :disabled="loading" @click="handleExport">
         <FeatherIcon name="download" class="h-4 w-4" />
@@ -32,10 +32,10 @@
     </template>
 
     <template #metrics>
-      <div v-if="loading" class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div v-if="loading" class="w-full grid grid-cols-1 gap-4 md:grid-cols-3">
         <SkeletonLoader v-for="i in 3" :key="i" variant="card" />
       </div>
-      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-3">
         <SaaSMetricCard :label="t('total_accrued')" :value="formatCurrency(summary.total_accrued_try)" />
         <SaaSMetricCard :label="t('total_paid')" :value="formatCurrency(summary.total_paid_try)" value-class="text-at-green" />
         <SaaSMetricCard :label="t('total_remaining')" :value="formatCurrency(summary.total_remaining_try)" value-class="text-brand-600" />
@@ -64,15 +64,15 @@
           <option value="">{{ t('all') }} {{ t('company') }}</option>
           <option v-for="c in companyOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
         </select>
-        <input v-model="filters.from_date" type="date" class="input h-9 py-1 text-sm" :title="t('from_date') || 'Başlangıç'" @change="reload" />
-        <input v-model="filters.to_date" type="date" class="input h-9 py-1 text-sm" :title="t('to_date') || 'Bitiş'" @change="reload" />
+        <input v-model="filters.from_date" type="date" class="input h-9 py-1 text-sm" :title="t('from_date')" @change="reload" />
+        <input v-model="filters.to_date" type="date" class="input h-9 py-1 text-sm" :title="t('to_date')" @change="reload" />
       </template>
     </SmartFilterBar>
 
     <div v-if="viewMode === 'table' && selectedEntities.length" class="flex items-center gap-2 mb-3 px-3 py-2 bg-brand-50 rounded-lg border border-brand-200">
-      <span class="text-sm text-brand-700 font-medium">{{ selectedEntities.length }} seçili</span>
-      <button @click="markSelectedReconciled" class="text-xs px-2 py-1 rounded bg-at-green text-white hover:bg-at-green/90">✓ Mutabakat Yapıldı</button>
-      <button @click="exportSelected" class="text-xs px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">📥 Seçilenleri Export</button>
+      <span class="text-sm text-brand-700 font-medium">{{ selectedEntities.length }} {{ t('selected_count') || 'seçili' }}</span>
+      <button @click="markSelectedReconciled" class="text-xs px-2 py-1 rounded bg-at-green text-white hover:bg-at-green/90">✓ {{ t('mark_reconciled') || 'Mutabakat Yapıldı' }}</button>
+      <button @click="exportSelected" class="text-xs px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">📥 {{ t('export_selected') || 'Seçilenleri Export' }}</button>
     </div>
 
     <div v-if="error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
