@@ -13,7 +13,7 @@
       </ActionButton>
       <div class="flex rounded-lg border border-slate-200 overflow-hidden">
         <button
-          :class="['px-3 py-1.5 text-sm flex items-center gap-1', viewMode === 'table' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
+          :class="['px-3 py-1.5 text-sm flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none', viewMode === 'table' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
           @click="viewMode = 'table'"
         >
           <FeatherIcon name="list" class="h-4 w-4" />
@@ -116,12 +116,15 @@
             </span>
           </div>
 
-          <div class="mb-3 h-1.5 w-full rounded-full bg-slate-100">
-            <div
-              class="h-full rounded-full"
-              :class="barClass(entity)"
-              :style="{ width: pct(entity) + '%' }"
-            />
+          <div class="mb-3 flex items-center gap-2">
+            <div class="h-1.5 flex-1 rounded-full bg-slate-100">
+              <div
+                class="h-full rounded-full"
+                :class="barClass(entity)"
+                :style="{ width: pct(entity) + '%' }"
+              />
+            </div>
+            <span class="text-[11px] tabular-nums text-slate-400 w-8 text-right">{{ pct(entity) }}%</span>
           </div>
 
           <div v-if="entity.insurance_companies?.length" class="mb-3 space-y-1 text-xs">
@@ -150,7 +153,7 @@
     <div v-if="detail.visible" class="fixed inset-0 z-50 flex justify-end">
       <div class="absolute inset-0 bg-black/20" @click="detail.visible = false" />
       <div class="relative h-full w-full max-w-2xl overflow-auto bg-white shadow-2xl">
-        <button class="absolute right-4 top-4 z-10 text-xl text-slate-400 hover:text-slate-600" @click="detail.visible = false">
+        <button class="absolute right-4 top-4 z-10 text-xl text-slate-400 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none rounded" @click="detail.visible = false">
           &times;
         </button>
 
@@ -312,7 +315,7 @@ async function openDetail(entity) {
 }
 
 const tableColumns = computed(() => [
-  { key: "entity_display", label: t("sales_entity") || "Satış Birimi", type: "text" },
+  { key: "entity_display", label: t("sales_entity"), type: "text" },
   { key: "accrued_try", label: t("accrued"), type: "currency" },
   { key: "paid_try", label: t("paid"), type: "currency" },
   { key: "remaining_try", label: t("remaining"), type: "currency" },
@@ -376,7 +379,7 @@ const agingSummary = computed(() => {
     .map(([k, v]) => ({
       label: t(`aging_${k}`),
       value: v,
-      cls: k === "current" ? "bg-emerald-50 text-emerald-700" : k === "1_30" || k === "31_60" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-700",
+      cls: k === "current" ? "bg-at-green/10 text-at-green" : k === "1_30" || k === "31_60" ? "bg-at-amber/10 text-at-amber" : "bg-at-red/10 text-at-red",
     }));
 });
 
@@ -401,12 +404,12 @@ function barClass(entity) {
   const v = pct(entity);
   if (v >= 75) return "bg-at-green";
   if (v >= 50) return "bg-at-amber";
-  return "bg-red-500";
+  return "bg-at-red";
 }
 
 function icBadgeClass(ic) {
   if (ic.remaining_try <= 0) return "text-at-green";
-  if (ic.remaining_try === ic.accrued_try) return "text-red-500";
+  if (ic.remaining_try === ic.accrued_try) return "text-at-red";
   return "text-at-amber";
 }
 
