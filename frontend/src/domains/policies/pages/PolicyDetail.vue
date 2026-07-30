@@ -81,33 +81,15 @@
           />
 
           <SectionPanel v-if="commissionDistribution.length" :title="t('commissionDistributionTitle')">
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-slate-200 text-left text-xs font-medium text-slate-500 uppercase">
-                    <th class="py-2 px-3">{{ t('level') }}</th>
-                    <th class="py-2 px-3">{{ t('salesEntity') }}</th>
-                    <th class="py-2 px-3 text-right">{{ t('sharePct') }}</th>
-                    <th class="py-2 px-3 text-right">{{ t('amount') }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(entry, idx) in commissionDistribution"
-                    :key="idx"
-                    :class="[
-                      'border-b border-slate-100',
-                      idx === 0 ? 'bg-brand-50/30 font-medium' : '',
-                      entry.status === 'Paid' ? 'text-slate-400' : '',
-                    ]"
-                  >
-                    <td class="py-2 px-3 text-slate-500">{{ entry.level }}</td>
-                    <td class="py-2 px-3">{{ entry.entity_label || entry.entity_name || entry.entity }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ isTurkish ? '%' + entry.share_pct : entry.share_pct + '%' }}</td>
-                    <td class="py-2 px-3 text-right font-mono">{{ formatCurrency(entry.amount, policy.currency) }}</td>
-                  </tr>
-                </tbody>
-              </table>
+            <ListTable
+              :columns="commissionColumns"
+              :rows="commissionDistribution"
+              :loading="false"
+              :locale="activeLocale"
+            />
+            <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+              <span class="font-semibold text-slate-500">{{ t('commission_amount') }}</span>
+              <span class="font-bold text-brand-600 tabular-nums">{{ formatCurrency(policy.commission_amount, policy.currency) }}</span>
             </div>
           </SectionPanel>
 
@@ -438,6 +420,13 @@ const editingEndorsementName = ref("");
 import { useLinkLabelCache } from "../../../composables/useLinkLabelCache";
 
 const { getLinkLabel } = useLinkLabelCache();
+
+const commissionColumns = computed(() => [
+  { key: "level", label: t("level"), type: "text" },
+  { key: "entity", label: t("sales_entity") || t("salesEntity") || "Satış Birimi", type: "text" },
+  { key: "share_pct_formatted", label: t("sharePct"), type: "text" },
+  { key: "amount_formatted", label: t("amount"), type: "currency" },
+]);
 
 const branchIcon = computed(() => {
   const branch = String(policy.value.branch_name || getLinkLabel(policy.value.branch) || "").toLowerCase();
