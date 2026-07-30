@@ -8,7 +8,7 @@
   >
     <template #actions>
       <span v-if="isReconciled" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-at-green/10 text-at-green text-sm font-semibold">
-        ✓ {{ t('period_reconciled') || 'Mutabakat Yapıldı' }}
+        ✓ {{ t('period_reconciled') }}
       </span>
       <ActionButton variant="primary" size="sm" :disabled="loading" @click="reload">
         <FeatherIcon name="refresh-cw" :class="['h-4 w-4', loading && 'animate-spin']" />
@@ -52,7 +52,7 @@
     >
       <template #primary-filters>
         <select v-model="period" class="input h-9 py-1 text-sm" @change="onPeriodChange">
-          <option value="">{{ t('all_periods') || 'Tüm Dönemler' }}</option>
+          <option value="">{{ t('all_periods') }}</option>
           <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
         </select>
         <select v-model="filters.office_branch" class="input h-9 py-1 text-sm" @change="reload">
