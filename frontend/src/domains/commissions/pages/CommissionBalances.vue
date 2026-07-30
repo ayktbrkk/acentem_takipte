@@ -13,16 +13,16 @@
       </ActionButton>
       <div class="flex rounded-lg border border-slate-200 overflow-hidden">
         <button
-          :class="['px-3 py-1.5 text-sm', viewMode === 'table' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
+          :class="['px-3 py-1.5 text-sm flex items-center gap-1', viewMode === 'table' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
           @click="viewMode = 'table'"
         >
-          &#x1F4CB;
+          <FeatherIcon name="list" class="h-4 w-4" />
         </button>
         <button
-          :class="['px-3 py-1.5 text-sm', viewMode === 'card' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
+          :class="['px-3 py-1.5 text-sm flex items-center gap-1', viewMode === 'card' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
           @click="viewMode = 'card'"
         >
-          &#x1F5C2;
+          <FeatherIcon name="grid" class="h-4 w-4" />
         </button>
       </div>
     </template>
@@ -38,7 +38,7 @@
     <SmartFilterBar
       v-model="searchQuery"
       class="mb-6"
-      :placeholder="t('searchPlaceholder') || 'Ara...'"
+      :placeholder="t('searchPlaceholder')"
     >
       <template #primary-filters>
         <select v-model="filters.office_branch" class="input h-9 py-1 text-sm" @change="reload">
@@ -65,8 +65,9 @@
 
     <SkeletonLoader v-else-if="loading" variant="list" :rows="5" />
 
-    <div v-else-if="!entities.length" class="py-12 text-center text-slate-400">
-      {{ t('no_commissions') }}
+    <div v-else-if="!entities.length" class="py-12 text-center">
+      <p class="text-slate-400 font-medium">{{ t('no_commissions') }}</p>
+      <p class="text-slate-400 text-sm mt-1">{{ t('no_commissions_desc') }}</p>
     </div>
 
     <template v-else-if="viewMode === 'table'">
@@ -180,7 +181,7 @@
               </div>
               <div class="rounded-lg bg-slate-50 p-3 text-center">
                 <p class="text-xs text-slate-400">{{ t('remaining') }}</p>
-                <p class="text-lg font-bold" :class="(detailData.totals?.remaining || 0) > 0 ? 'text-red-600' : 'text-at-green'">
+                <p class="text-lg font-bold" :class="(detailData.totals?.remaining || 0) > 0 ? 'text-at-red' : 'text-at-green'">
                   {{ formatCurrency(detailData.totals?.remaining) }}
                 </p>
               </div>
@@ -203,7 +204,7 @@
                   <div class="flex gap-4 text-xs">
                     <span class="text-slate-500">{{ t('accrued') }} {{ formatCurrency(ic.accrued) }}</span>
                     <span class="text-at-green">{{ t('paid') }} {{ formatCurrency(ic.paid) }}</span>
-                    <span :class="ic.remaining > 0 ? 'text-red-600' : 'text-at-green'">
+                    <span :class="ic.remaining > 0 ? 'text-at-red' : 'text-at-green'">
                       {{ ic.remaining > 0 ? formatCurrency(ic.remaining) : '&#x2713;' }}
                     </span>
                   </div>
@@ -465,7 +466,7 @@ function handleExport() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "komisyon_takip.csv";
+  link.download = `${activeLocale.value === "tr" ? "komisyon_takip" : "commission_tracking"}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }

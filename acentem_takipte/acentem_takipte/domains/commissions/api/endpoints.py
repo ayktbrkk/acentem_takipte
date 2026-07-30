@@ -10,7 +10,6 @@ from acentem_takipte.acentem_takipte.platform.api.security import (
 from acentem_takipte.acentem_takipte.domains.commissions.services.balance import (
     compute_commission_balances,
     compute_commission_policy_detail,
-    compute_entity_detail,
 )
 
 
@@ -40,20 +39,6 @@ def get_commission_balances(
         from_date=from_date,
         to_date=to_date,
     )
-
-
-@frappe.whitelist()
-def get_commission_entity_detail(
-    entity_name: str,
-    limit: int = 50,
-) -> dict:
-    assert_authenticated()
-    assert_doctype_permission(
-        "AT Policy",
-        "read",
-        "You do not have permission to view commission details.",
-    )
-    return compute_entity_detail(entity_name, limit=max(cint(limit), 1))
 
 
 @frappe.whitelist()
