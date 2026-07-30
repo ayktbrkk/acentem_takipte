@@ -682,6 +682,36 @@ class TestHeadOfficeDistribution(FrappeTestCase):
         assert entities_by_name["SUB-001"]["level"] == 1
         assert entities_by_name["AGENCY-001"]["level"] == 2
 
+    @patch("frappe.db.get_value")
+    def test_root_always_gets_remainder(self, mock_db_get_value):
+        """Root entity gets ALL remaining commission regardless of its share_pct."""
+        from acentem_takipte.acentem_takipte.doctype.at_policy.at_policy import (
+            _build_commission_distribution,
+        )
+
+        entity_data = {
+            "REP": {"commission_share_pct": 60, "full_name": "Temsilci", "parent_entity": "ROOT", "is_root": 0},
+            "ROOT": {"commission_share_pct": 50, "full_name": "Root Entity", "parent_entity": None, "is_root": 1},
+        }
+
+        def db_get_value_side_effect(doctype, name, fields=None, as_dict=False):
+            if doctype == "AT Sales Entity" and name in entity_data:
+                data = entity_data[name]
+                if as_dict:
+                    return data
+                return data.get(fields) if isinstance(fields, str) else data
+            return None
+
+        mock_db_get_value.side_effect = db_get_value_side_effect
+
+        result = json.loads(_build_commission_distribution("REP", 1000, 1))
+
+        assert len(result) == 2
+        assert result[0]["amount"] == 600  # Temsilci: 1000 * 60%
+        assert result[1]["amount"] == 400  # Root: kalan (50% share_pct'ye bakilmaksizin)
+        total = sum(e["amount"] for e in result)
+        assert total == 1000
+
 
 class TestCommissionEndpoints(FrappeTestCase):
     def test_get_balances_endpoint(self):
