@@ -643,9 +643,9 @@ class TestHeadOfficeDistribution(FrappeTestCase):
 
         # Hierarchy: REP(40%) -> SUB(30%) -> AGENCY(root)
         entity_data = {
-            "REP-001": {"commission_share_pct": 40, "full_name": "Mehmet Yilmaz", "parent_entity": "SUB-001"},
-            "SUB-001": {"commission_share_pct": 30, "full_name": "Sub Agency", "parent_entity": "AGENCY-001"},
-            "AGENCY-001": {"commission_share_pct": 100, "full_name": "Head Agency", "parent_entity": None},
+            "REP-001": {"commission_share_pct": 40, "full_name": "Mehmet Yilmaz", "parent_entity": "SUB-001", "is_root": 0},
+            "SUB-001": {"commission_share_pct": 30, "full_name": "Sub Agency", "parent_entity": "AGENCY-001", "is_root": 0},
+            "AGENCY-001": {"commission_share_pct": 100, "full_name": "Head Agency", "parent_entity": None, "is_root": 1},
         }
 
         def db_get_value_side_effect(doctype, name, fields, as_dict=False):
