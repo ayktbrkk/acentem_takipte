@@ -7,9 +7,13 @@
     :record-count-label="t('record_count')"
   >
     <template #actions>
-      <ActionButton variant="secondary" size="sm" @click="handleExport">
+      <ActionButton variant="primary" size="sm" :disabled="loading" @click="reload">
+        <FeatherIcon name="refresh-cw" :class="['h-4 w-4', loading && 'animate-spin']" />
+        {{ t("refresh") || "Yenile" }}
+      </ActionButton>
+      <ActionButton variant="secondary" size="sm" :disabled="loading" @click="handleExport">
         <FeatherIcon name="download" class="h-4 w-4" />
-        {{ t('export_xlsx') }}
+        {{ t("export_xlsx") }}
       </ActionButton>
       <div class="flex rounded-lg border border-slate-200 overflow-hidden">
         <button
@@ -19,7 +23,7 @@
           <FeatherIcon name="list" class="h-4 w-4" />
         </button>
         <button
-          :class="['px-3 py-1.5 text-sm flex items-center gap-1', viewMode === 'card' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
+          :class="['px-3 py-1.5 text-sm flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none', viewMode === 'card' ? 'bg-brand-600 text-white' : 'bg-white text-slate-600']"
           @click="viewMode = 'card'"
         >
           <FeatherIcon name="grid" class="h-4 w-4" />
@@ -28,7 +32,10 @@
     </template>
 
     <template #metrics>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div v-if="loading" class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
+        <SkeletonLoader v-for="i in 3" :key="i" variant="card" />
+      </div>
+      <div v-else class="w-full grid grid-cols-1 gap-4 md:grid-cols-4">
         <SaaSMetricCard :label="t('total_accrued')" :value="formatCurrency(summary.total_accrued_try)" />
         <SaaSMetricCard :label="t('total_paid')" :value="formatCurrency(summary.total_paid_try)" value-class="text-at-green" />
         <SaaSMetricCard :label="t('total_remaining')" :value="formatCurrency(summary.total_remaining_try)" value-class="text-brand-600" />
@@ -150,96 +157,81 @@
       </div>
     </template>
 
-    <div v-if="detail.visible" class="fixed inset-0 z-50 flex justify-end">
-      <div class="absolute inset-0 bg-black/20" @click="detail.visible = false" />
-      <div class="relative h-full w-full max-w-2xl overflow-auto bg-white shadow-2xl">
-        <button class="absolute right-4 top-4 z-10 text-xl text-slate-400 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none rounded" @click="detail.visible = false">
-          &times;
-        </button>
-
-        <div v-if="detailLoading" class="flex h-full items-center justify-center">
-          <SkeletonLoader variant="list" :rows="6" />
+    <SidePanel
+      :show="detail.visible"
+      :title="detailTitle"
+      :subtitle="detailSubtitle"
+      @close="detail.visible = false"
+    >
+      <div v-if="detailLoading" class="flex items-center justify-center p-12">
+        <SkeletonLoader variant="list" :rows="6" />
+      </div>
+      <template v-else-if="detailData">
+        <div class="mb-6 grid grid-cols-3 gap-3">
+          <div class="rounded-lg bg-white p-3 text-center">
+            <p class="text-xs text-slate-400">{{ t('policy_count') }}</p>
+            <p class="text-lg font-bold">{{ detailData.totals?.policies || 0 }}</p>
+          </div>
+          <div class="rounded-lg bg-white p-3 text-center">
+            <p class="text-xs text-slate-400">{{ t('total_commission') }}</p>
+            <p class="text-lg font-bold text-brand-600">{{ formatCurrency(detailData.totals?.commission) }}</p>
+          </div>
+          <div class="rounded-lg bg-white p-3 text-center">
+            <p class="text-xs text-slate-400">{{ t('remaining') }}</p>
+            <p class="text-lg font-bold" :class="(detailData.totals?.remaining || 0) > 0 ? 'text-at-red' : 'text-at-green'">
+              {{ formatCurrency(detailData.totals?.remaining) }}
+            </p>
+          </div>
         </div>
 
-        <template v-else-if="detailData">
-          <div class="p-6">
-            <div class="mb-6">
-              <div class="mb-1 flex items-center gap-2">
-                <h2 class="text-lg font-bold text-slate-900">{{ detailData.entity?.full_name || detail.entityName }}</h2>
-                <span class="rounded bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700">
-                  {{ translateEntityType(detailData.entity?.entity_type || detail.entityType) }}
+        <div v-if="agingSummary.length" class="flex flex-wrap gap-1 mb-4">
+          <span v-for="a in agingSummary" :key="a.label" :class="['text-[11px] px-1.5 py-0.5 rounded', a.cls]">
+            {{ a.label }}: {{ formatCurrency(a.value) }}
+          </span>
+        </div>
+
+        <SectionPanel :title="t('insurance_company')" class="mb-4">
+          <div class="space-y-1 text-sm">
+            <div
+              v-for="ic in icBreakdown"
+              :key="ic.name"
+              class="flex items-center justify-between border-b border-slate-50 py-1.5 last:border-0"
+            >
+              <span class="text-slate-700">{{ ic.name }}</span>
+              <div class="flex gap-4 text-xs">
+                <span class="text-slate-500">{{ t('accrued') }} {{ formatCurrency(ic.accrued) }}</span>
+                <span class="text-at-green">{{ t('paid') }} {{ formatCurrency(ic.paid) }}</span>
+                <span :class="ic.remaining > 0 ? 'text-at-red' : 'text-at-green'">
+                  {{ ic.remaining > 0 ? formatCurrency(ic.remaining) : '&#x2713;' }}
                 </span>
               </div>
-              <p class="text-sm text-slate-500">{{ detailData.entity?.office_branch }}</p>
             </div>
-
-            <div class="mb-6 grid grid-cols-3 gap-3">
-              <div class="rounded-lg bg-slate-50 p-3 text-center">
-                <p class="text-xs text-slate-400">{{ t('policy_count') }}</p>
-                <p class="text-lg font-bold">{{ detailData.totals?.policies || 0 }}</p>
-              </div>
-              <div class="rounded-lg bg-slate-50 p-3 text-center">
-                <p class="text-xs text-slate-400">{{ t('total_commission') }}</p>
-                <p class="text-lg font-bold text-brand-600">{{ formatCurrency(detailData.totals?.commission) }}</p>
-              </div>
-              <div class="rounded-lg bg-slate-50 p-3 text-center">
-                <p class="text-xs text-slate-400">{{ t('remaining') }}</p>
-                <p class="text-lg font-bold" :class="(detailData.totals?.remaining || 0) > 0 ? 'text-at-red' : 'text-at-green'">
-                  {{ formatCurrency(detailData.totals?.remaining) }}
-                </p>
-              </div>
-            </div>
-
-            <div v-if="agingSummary.length" class="flex flex-wrap gap-1 mb-4">
-              <span v-for="a in agingSummary" :key="a.label" :class="['text-[11px] px-1.5 py-0.5 rounded', a.cls]">
-                {{ a.label }}: {{ formatCurrency(a.value) }}
-              </span>
-            </div>
-
-            <SectionPanel :title="t('insurance_company')" class="mb-4">
-              <div class="space-y-1 text-sm">
-                <div
-                  v-for="ic in icBreakdown"
-                  :key="ic.name"
-                  class="flex items-center justify-between border-b border-slate-50 py-1.5 last:border-0"
-                >
-                  <span class="text-slate-700">{{ ic.name }}</span>
-                  <div class="flex gap-4 text-xs">
-                    <span class="text-slate-500">{{ t('accrued') }} {{ formatCurrency(ic.accrued) }}</span>
-                    <span class="text-at-green">{{ t('paid') }} {{ formatCurrency(ic.paid) }}</span>
-                    <span :class="ic.remaining > 0 ? 'text-at-red' : 'text-at-green'">
-                      {{ ic.remaining > 0 ? formatCurrency(ic.remaining) : '&#x2713;' }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </SectionPanel>
-
-            <SectionPanel :title="t('accrued_policies')" class="mb-4">
-              <ListTable
-                :columns="policyColumns"
-                :rows="enrichedPolicies"
-                :loading="false"
-                :locale="activeLocale"
-                clickable
-                @row-click="openPolicy"
-              />
-            </SectionPanel>
-
-            <SectionPanel :title="t('payment_history')" class="mb-4">
-              <ListTable
-                :columns="paymentColumns"
-                :rows="paymentRows"
-                :loading="false"
-                :locale="activeLocale"
-                clickable
-                @row-click="openPayment"
-              />
-            </SectionPanel>
           </div>
-        </template>
-      </div>
-    </div>
+        </SectionPanel>
+
+        <SectionPanel :title="t('accrued_policies')" class="mb-4">
+          <ListTable
+            :columns="policyColumns"
+            :rows="enrichedPolicies"
+            :loading="false"
+            :locale="activeLocale"
+            clickable
+            @row-click="openPolicy"
+          />
+        </SectionPanel>
+
+        <SectionPanel :title="t('payment_history')" class="mb-4">
+          <ListTable
+            :columns="paymentColumns"
+            :rows="paymentRows"
+            :loading="false"
+            :locale="activeLocale"
+            clickable
+            @row-click="openPayment"
+          />
+        </SectionPanel>
+      </template>
+    </SidePanel>
   </WorkbenchPageLayout>
 </template>
 
@@ -260,6 +252,7 @@ import SectionPanel from "../../../components/app-shell/SectionPanel.vue";
 import ActionButton from "../../../components/app-shell/ActionButton.vue";
 import ListTable from "../../../components/ui/ListTable.vue";
 import SkeletonLoader from "../../../components/ui/SkeletonLoader.vue";
+import SidePanel from "../../../components/ui/SidePanel.vue";
 
 const authStore = useAuthStore();
 const branchStore = useBranchStore();
@@ -302,6 +295,9 @@ const detail = reactive({
   entityName: "",
   entityType: "",
 });
+
+const detailTitle = computed(() => detailData.value?.entity?.full_name || detail.entityName);
+const detailSubtitle = computed(() => `${detailData.value?.entity?.entity_type || detail.entityType} · ${detailData.value?.entity?.office_branch || ""}`);
 
 async function openDetail(entity) {
   detail.visible = true;
