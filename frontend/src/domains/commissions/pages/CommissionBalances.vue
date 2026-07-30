@@ -157,7 +157,7 @@
           <div class="flex items-center justify-between text-xs text-slate-400 border-t border-slate-50 pt-2">
             <span>
               {{ entity.policy_count }} {{ t('polices') }}
-              <template v-if="entity.insurance_companies?.length"> · {{ entity.insurance_companies.length }} {{ t('company_short') || 'şirket' }}</template>
+              <template v-if="entity.insurance_companies?.length"> · {{ entity.insurance_companies.length }} {{ t('company_short') }}</template>
             </span>
             <span class="font-medium text-brand-600">{{ t('view_details') }} &#8594;</span>
           </div>
@@ -457,24 +457,6 @@ function barClass(entity) {
   if (v >= 75) return "bg-at-green";
   if (v >= 50) return "bg-at-amber";
   return "bg-at-red";
-}
-
-function icBadgeClass(ic) {
-  if (ic.remaining_try <= 0) return "text-at-green";
-  if (ic.remaining_try === ic.accrued_try) return "text-at-red";
-  return "text-at-amber";
-}
-
-function icBadgeSymbol(ic) {
-  if (ic.remaining_try <= 0) return "\u2713 " + t("status_paid");
-  if (ic.remaining_try === ic.accrued_try) return "\u26A0 " + t("status_overdue");
-  return "\u23F3 " + t("status_pending");
-}
-
-function icBadgeTitle(ic) {
-  if (ic.remaining_try <= 0) return t("paid");
-  if (ic.remaining_try === ic.accrued_try) return t("aging_90_plus");
-  return t("remaining");
 }
 
 function openPolicy(row) {
