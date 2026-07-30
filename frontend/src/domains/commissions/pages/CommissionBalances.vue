@@ -7,6 +7,9 @@
     :record-count-label="t('record_count')"
   >
     <template #actions>
+      <span v-if="isReconciled" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-at-green/10 text-at-green text-sm font-semibold">
+        ✓ {{ t('period_reconciled') || 'Mutabakat Yapıldı' }}
+      </span>
       <ActionButton variant="primary" size="sm" :disabled="loading" @click="reload">
         <FeatherIcon name="refresh-cw" :class="['h-4 w-4', loading && 'animate-spin']" />
         {{ t("refresh_label") }}
@@ -48,6 +51,10 @@
       :placeholder="t('searchPlaceholder')"
     >
       <template #primary-filters>
+        <select v-model="period" class="input h-9 py-1 text-sm" @change="onPeriodChange">
+          <option value="">{{ t('all_periods') || 'Tüm Dönemler' }}</option>
+          <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+        </select>
         <select v-model="filters.office_branch" class="input h-9 py-1 text-sm" @change="reload">
           <option value="">{{ t('all') }} {{ t('office_branch') }}</option>
           <option v-for="b in branchOptions" :key="b.value" :value="b.value">{{ b.label }}</option>
@@ -292,7 +299,39 @@ const { formatCurrency, formatDate } = useAtFormatting(
 const { filters, loading, error, summary, entities, reload } =
   useCommissionBalances({ t });
 
-const viewMode = ref("table");
+const period = ref("");
+const isReconciled = computed(() => {
+  if (!period.value) return false;
+  return entities.value.length > 0 && entities.value.every((e) => e.remaining_try <= 0);
+});
+
+const monthOptions = computed(() => {
+  const now = new Date();
+  const options = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    options.push({
+      value: `${y}-${m}`,
+      label: `${d.toLocaleDateString(activeLocale.value === "tr" ? "tr-TR" : "en-US", { month: "long", year: "numeric" })}`,
+    });
+  }
+  return options;
+});
+
+function onPeriodChange() {
+  if (period.value) {
+    const [y, m] = period.value.split("-");
+    const lastDay = new Date(Number(y), Number(m), 0).getDate();
+    filters.from_date = `${y}-${m}-01`;
+    filters.to_date = `${y}-${m}-${String(lastDay).padStart(2, "0")}`;
+  } else {
+    filters.from_date = "";
+    filters.to_date = "";
+  }
+  reload();
+}
 const searchQuery = ref("");
 
 const selectedSet = reactive(new Set());

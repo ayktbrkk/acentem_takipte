@@ -55,6 +55,8 @@ export const COMMISSION_TRANSLATIONS = {
     selected_count: "seçili",
     mark_reconciled: "Mutabakat Yapıldı",
     export_selected: "Seçilenleri Export",
+    all_periods: "Tüm Dönemler",
+    period_reconciled: "Mutabakat Yapıldı",
   },
   en: {
     title: "Commission Tracking",
@@ -112,5 +114,7 @@ export const COMMISSION_TRANSLATIONS = {
     selected_count: "selected",
     mark_reconciled: "Mark Reconciled",
     export_selected: "Export Selected",
+    all_periods: "All Periods",
+    period_reconciled: "Reconciled",
   },
 };
