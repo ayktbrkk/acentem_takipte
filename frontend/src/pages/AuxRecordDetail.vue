@@ -162,13 +162,15 @@
         :summary-items="summaryItems"
         :state-summary-label="t('stateSummary')"
         :no-decision-context-text="t('noDecisionContext')"
-      >
-        <HierarchyPanel
-          v-if="screenKey === 'sales-entities'"
-          :office-branch="doc?.office_branch"
-        />
-      </AuxRecordDetailSidebar>
+      />
     </div>
+
+    <HierarchyPanel
+      v-if="screenKey === 'sales-entities'"
+      ref="hierarchyPanelRef"
+      :office-branch="doc?.office_branch"
+      class="mt-6"
+    />
 
     <AuxRecordDetailQuickEditDialog
       v-model="showQuickEditDialog"
@@ -203,7 +205,7 @@
 </template>
 
 <script setup>
-import { computed, unref } from "vue";
+import { computed, ref, unref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useBranchStore } from "../stores/branch";
@@ -403,6 +405,11 @@ const detailQuickDialogs = useAuxRecordDetailQuickDialogs({
   reloadDetail,
   localize,
   t,
+});
+
+const hierarchyPanelRef = ref(null);
+watch(() => doc.value?.modified, () => {
+  hierarchyPanelRef.value?.reload();
 });
 
 const {

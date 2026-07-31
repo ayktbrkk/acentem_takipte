@@ -41,8 +41,6 @@ defineProps({
       <div v-else class="field-value-muted">{{ noDecisionContextText }}</div>
     </SectionPanel>
 
-    <slot />
-
     <SectionPanel :title="recordTitle">
       <FieldGroup :fields="summaryItems.slice(0, 4)" :cols="2" />
     </SectionPanel>

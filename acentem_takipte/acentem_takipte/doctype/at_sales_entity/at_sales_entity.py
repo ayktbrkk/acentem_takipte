@@ -26,43 +26,38 @@ class ATSalesEntity(Document):
         self._validate_share_pct_total()
 
     def _validate_share_pct_total(self) -> None:
-        """Validate that total share_pct of all entities in the hierarchy <= 100%.
+        """Validate that total share_pct of all non-root entities in the branch <= 100%.
 
-        Root entity's share_pct is not counted (it gets the remainder).
-        Only siblings under the same parent are checked.
+        In the head-office-centric model, each non-root entity gets share_pct% of the
+        original commission. The root gets the remainder. Therefore the sum of all
+        non-root share_pct values must not exceed 100%.
         """
         if self.is_root:
             return
 
-        parent_name = (self.parent_entity or "").strip()
         office_branch = (self.office_branch or "").strip()
-
-        if not parent_name and not office_branch:
+        if not office_branch:
             return
 
-        # Get all siblings (entities with same parent, or all non-root in branch)
-        filters = {"is_root": 0, "is_active": 1}
-        if parent_name:
-            filters["parent_entity"] = parent_name
-        elif office_branch:
-            filters["office_branch"] = office_branch
-            filters["parent_entity"] = ["is", "set"]
-
-        siblings = frappe.get_all(
+        # Track all non-root entities in this branch
+        all_non_root = frappe.get_all(
             "AT Sales Entity",
-            filters=filters,
+            filters={"office_branch": office_branch, "is_root": 0, "is_active": 1},
             fields=["name", "commission_share_pct"],
             limit_page_length=0,
         )
 
-        total_pct = sum(flt(s.get("commission_share_pct") or 0) for s in siblings)
+        # Use the current entity's new value plus all others
+        total_pct = self.commission_share_pct
+        for e in all_non_root:
+            if e["name"] != (self.name or ""):
+                total_pct += flt(e.get("commission_share_pct") or 0)
 
         if total_pct > 100:
             frappe.throw(
-                _("Total commission share of all entities under the same parent exceeds 100% ({0}%). "
+                _("Total commission share of non-root entities in this branch exceeds 100% ({0}%). "
                   "Please adjust the share percentages.").format(round(total_pct, 2))
             )
-        self._validate_share_pct_total()
 
     def _validate_root_constraints(self) -> None:
         office_branch = (self.office_branch or "").strip()

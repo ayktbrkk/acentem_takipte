@@ -168,6 +168,7 @@ export function useQuickCreateManagedDialog(props, emit) {
       errorText.value =
         error?.messages?.join(" ") ||
         error?.message ||
+        error?.exception ||
         translateText("Create failed.", props.locale);
       emit("error", error);
     } finally {
