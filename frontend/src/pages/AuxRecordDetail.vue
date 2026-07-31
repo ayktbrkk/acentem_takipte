@@ -143,18 +143,27 @@
     </div>
 
     <div v-else class="detail-body">
-      <AuxRecordDetailContent
-        v-model:active-detail-tab="activeDetailTab"
-        :detail-tabs="detailTabs"
-        :visible-groups="visibleGroups"
-        :related-record-cards="relatedRecordCards"
-        :activity-items="activityItems"
-        :visible-text-blocks="visibleTextBlocks"
-        :group-title="groupTitle"
-        :group-items="groupItems"
-        :field-label="fieldLabel"
-        :t="t"
-      />
+      <div class="flex flex-1 flex-col">
+        <AuxRecordDetailContent
+          v-model:active-detail-tab="activeDetailTab"
+          :detail-tabs="detailTabs"
+          :visible-groups="visibleGroups"
+          :related-record-cards="relatedRecordCards"
+          :activity-items="activityItems"
+          :visible-text-blocks="visibleTextBlocks"
+          :group-title="groupTitle"
+          :group-items="groupItems"
+          :field-label="fieldLabel"
+          :t="t"
+        />
+
+        <HierarchyPanel
+          v-if="screenKey === 'sales-entities'"
+          ref="hierarchyPanelRef"
+          :office-branch="doc?.office_branch"
+          class="mx-5 mb-5"
+        />
+      </div>
 
       <AuxRecordDetailSidebar
         :special-badges="specialBadges"
@@ -164,13 +173,6 @@
         :no-decision-context-text="t('noDecisionContext')"
       />
     </div>
-
-    <HierarchyPanel
-      v-if="screenKey === 'sales-entities'"
-      ref="hierarchyPanelRef"
-      :office-branch="doc?.office_branch"
-      class="mt-6"
-    />
 
     <AuxRecordDetailQuickEditDialog
       v-model="showQuickEditDialog"

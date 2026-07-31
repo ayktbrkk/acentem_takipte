@@ -879,7 +879,7 @@ export const quickCreateRegistry = {
       ] },
       { name: "full_name", type: "text", label: i18nLabel("full_name"), required: true, fullWidth: true },
       { name: "is_root", type: "select", label: i18nLabel("isRoot"), options: [option("0", "No"), option("1", "Yes")] },
-      { name: "commission_share_pct", type: "number", label: i18nLabel("commissionSharePct"), min: 0, max: 100, step: "0.01" },
+      { name: "commission_share_pct", type: "number", label: i18nLabel("commissionSharePct"), min: 0, max: 100, step: "0.01", disabled: ({ model }) => String(model?.is_root || "") === "1" },
       { name: "office_branch", type: "select", label: i18nLabel("office_branch"), required: true, optionsSource: "officeBranches" },
       { name: "parent_entity", type: "select", label: i18nLabel("parent_entity"), optionsSource: "salesEntities" },
     ],
