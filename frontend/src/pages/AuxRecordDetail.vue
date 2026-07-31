@@ -156,19 +156,18 @@
         :t="t"
       />
 
-      <HierarchyPanel
-        v-if="screenKey === 'sales-entities'"
-        :office-branch="doc?.office_branch"
-        class="mt-6"
-      />
-
       <AuxRecordDetailSidebar
         :special-badges="specialBadges"
         :record-title="recordTitle"
         :summary-items="summaryItems"
         :state-summary-label="t('stateSummary')"
         :no-decision-context-text="t('noDecisionContext')"
-      />
+      >
+        <HierarchyPanel
+          v-if="screenKey === 'sales-entities'"
+          :office-branch="doc?.office_branch"
+        />
+      </AuxRecordDetailSidebar>
     </div>
 
     <AuxRecordDetailQuickEditDialog
