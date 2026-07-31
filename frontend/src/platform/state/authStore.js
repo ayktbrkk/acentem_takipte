@@ -7,7 +7,7 @@ import {
   hydrateSessionState,
   sessionState,
   setPreferredLocale,
-} from "../state/session";
+} from "./session";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = computed(() => sessionState.user);

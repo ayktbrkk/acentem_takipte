@@ -2,7 +2,7 @@ import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 
 import { OFFICE_BRANCH_QUERY_KEY } from "../router";
-import { sessionState } from "../state/session";
+import { sessionState } from "./session";
 import { buildOfficeBranchOptions } from "./officeBranchTree";
 
 export const useBranchStore = defineStore("branch", () => {
@@ -13,6 +13,7 @@ export const useBranchStore = defineStore("branch", () => {
   const canAccessAll = ref(false);
 
   const options = computed(() => buildOfficeBranchOptions(items.value, { locale: sessionState.locale }));
+
   const defaultBranch = computed(() => {
     const defaultName = sessionState.defaultOfficeBranch || null;
     if (defaultName) {
@@ -39,7 +40,8 @@ export const useBranchStore = defineStore("branch", () => {
   });
 
   function hydrateFromSession() {
-    items.value = Array.isArray(sessionState.officeBranches) ? sessionState.officeBranches : [];
+    const branches = Array.isArray(sessionState.officeBranches) ? sessionState.officeBranches : [];
+    items.value = branches;
     canAccessAll.value = Boolean(sessionState.canAccessAllOfficeBranches);
 
     if (sessionState.defaultOfficeBranch) {
@@ -47,9 +49,9 @@ export const useBranchStore = defineStore("branch", () => {
       return;
     }
 
-    if (items.value.length > 0) {
-      const defaultItem = items.value.find((item) => Boolean(item.is_default));
-      selected.value = (defaultItem && defaultItem.name) || items.value[0].name;
+    if (branches.length > 0) {
+      const defaultItem = branches.find((item) => Boolean(item.is_default));
+      selected.value = (defaultItem && defaultItem.name) || branches[0].name;
       return;
     }
 
