@@ -3,7 +3,7 @@
     <div v-if="loading" class="py-4">
       <SkeletonLoader variant="list" :rows="3" />
     </div>
-    <div v-else-if="error" class="py-4 text-sm text-red-600">
+    <div v-else-if="error" class="py-4 text-sm text-at-red">
       {{ error }}
     </div>
     <div v-else-if="!hierarchy.branches.length" class="py-4 text-sm text-slate-400">
@@ -86,7 +86,7 @@ async function loadHierarchy() {
     await hierarchyResource.reload(params);
     await violationsResource.reload(params);
   } catch (e) {
-    error.value = e?.message || "Failed to load hierarchy";
+    error.value = e?.message || t("load_error");
   }
 }
 

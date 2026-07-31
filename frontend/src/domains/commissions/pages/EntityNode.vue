@@ -1,12 +1,16 @@
 <template>
   <div class="ml-4" :style="{ marginLeft: depth * 16 + 'px' }">
     <div
-      class="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-colors"
+      role="button"
+      tabindex="0"
+      class="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
       :class="[
         selectedName === node.name ? 'bg-brand-50 border border-brand-200' : 'hover:bg-slate-50',
         !node.children_valid ? 'border border-at-amber/30' : '',
       ]"
       @click="$emit('select', node)"
+      @keydown.enter="$emit('select', node)"
+      @keydown.space.prevent="$emit('select', node)"
     >
       <FeatherIcon
         v-if="node.children.length"

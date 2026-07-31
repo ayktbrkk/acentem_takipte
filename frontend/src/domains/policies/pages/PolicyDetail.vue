@@ -269,7 +269,7 @@
                     <p class="text-[10px] text-slate-500">{{ t('active_reminders_hint') }}</p>
                   </div>
                 </div>
-                 <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold px-1.5">{{ remindersCount }}</span>
+                  <span class="inline-flex items-center justify-center min-w-[20px] h-[18px] rounded-full bg-at-amber/10 text-at-amber text-[11px] font-semibold px-1.5">{{ remindersCount }}</span>
              </div>
           </div>
         </SectionPanel>
@@ -319,9 +319,9 @@
                 <template v-else>{{ productProfile.readiness_score }}%</template>
               </span>
             </div>
-            <div v-if="productProfile.missing_field_count" class="mt-2 rounded-lg border border-amber-100 bg-amber-50 p-2 text-xs">
-              <p class="font-medium text-amber-800 mb-1">{{ t('missingProductFields') }} ({{ productProfile.missing_field_count }})</p>
-              <ul class="list-disc list-inside text-amber-700 space-y-0.5">
+            <div v-if="productProfile.missing_field_count" class="mt-2 rounded-lg border border-at-amber/20 bg-at-amber/5 p-2 text-xs">
+              <p class="font-medium text-at-amber mb-1">{{ t('missingProductFields') }} ({{ productProfile.missing_field_count }})</p>
+              <ul class="list-disc list-inside text-at-amber space-y-0.5">
                  <li v-for="f in productProfile.missing_fields" :key="f.key">{{ translateProductLabel(t, f.label) }}</li>
               </ul>
             </div>
@@ -350,9 +350,13 @@
             <div
               v-for="(v, idx) in versionChain"
               :key="v.name"
-              class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-slate-100 transition-colors"
+              role="button"
+              tabindex="0"
+              class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-slate-100 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
               :class="v.is_current ? 'bg-brand-50 border border-brand-100' : 'bg-white border border-slate-100'"
               @click="navigateToVersion(v.name)"
+              @keydown.enter="navigateToVersion(v.name)"
+              @keydown.space.prevent="navigateToVersion(v.name)"
             >
               <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
                 :class="v.is_current ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-600'">
@@ -574,7 +578,7 @@ function handleExportPdf() {
 
 function handleShareWhatsApp() {
   const policyRef = policy.value?.policy_no || policy.value?.name || props.name;
-  const customerRef = customer.value?.full_name || customer.value?.name || "-";
+  const customerRef = customer.value?.full_name || customer.value?.name || t("unspecified");
   
   const message = t("whatsapp_share_message")
     .replace("{policy}", policyRef)
