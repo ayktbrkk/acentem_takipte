@@ -7,6 +7,11 @@ from acentem_takipte.acentem_takipte.platform.api.session import (
     _resolve_session_interface,
     resolve_current_user,
 )
+from acentem_takipte.acentem_takipte.platform.permissions.branches import (
+    get_user_office_branches,
+    get_default_office_branch,
+    user_can_access_all_office_branches,
+)
 from acentem_takipte.acentem_takipte.setup_utils import ensure_core_setup_once, ensure_user_default_role
 from acentem_takipte.acentem_takipte.utils.assets import ensure_site_asset_symlink, get_asset_includes
 
@@ -47,6 +52,9 @@ def get_context(context):
         "roles": interface["roles"],
         "preferred_home": interface["preferred_home"],
         "interface_mode": interface["interface_mode"],
+        "office_branches": get_user_office_branches(current_user),
+        "default_office_branch": get_default_office_branch(current_user),
+        "can_access_all_office_branches": user_can_access_all_office_branches(current_user),
     }
 
 
