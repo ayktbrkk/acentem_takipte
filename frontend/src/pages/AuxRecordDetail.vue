@@ -143,7 +143,7 @@
     </div>
 
     <div v-else class="detail-body">
-      <div class="flex flex-1 flex-col">
+      <div class="flex flex-1 flex-col min-w-0">
         <AuxRecordDetailContent
           v-model:active-detail-tab="activeDetailTab"
           :detail-tabs="detailTabs"
@@ -161,7 +161,7 @@
           v-if="screenKey === 'sales-entities'"
           ref="hierarchyPanelRef"
           :office-branch="doc?.office_branch"
-          class="mx-5 mb-5"
+          class="px-5 pb-5"
         />
       </div>
 
