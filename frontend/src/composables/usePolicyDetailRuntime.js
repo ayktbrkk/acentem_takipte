@@ -581,9 +581,9 @@ export function usePolicyDetailRuntime({ name, activeLocale = ref("tr") }) {
       return entries.map((entry) => ({
         ...entry,
         entity_label: getLinkLabel(entry.entity) || entry.entity_name || entry.entity,
-        entity: getLinkLabel(entry.entity) || entry.entity_name || entry.entity,
-        share_pct_formatted: `%${entry.share_pct}`,
+        share_pct_display: entry.is_root ? t("remainder") : `%${entry.share_pct}`,
         amount_formatted: formatCurrency(entry.amount, policy.value?.currency || "TRY"),
+        status_translated: entry.status === "Accrued" ? t("status_accrued") : (entry.status || "Accrued"),
       }));
     } catch {
       return [];

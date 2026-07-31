@@ -80,16 +80,35 @@
             @save="updatePolicy"
           />
 
-          <SectionPanel v-if="commissionDistribution.length" :title="t('commissionDistributionTitle')">
-            <ListTable
-              :columns="commissionColumns"
-              :rows="commissionDistribution"
-              :loading="false"
-              :locale="activeLocale"
-            />
+          <SectionPanel v-if="commissionDistribution.length" :title="t('commissionDistributionTitle')" class="md:col-span-2">
+            <div class="overflow-x-auto">
+              <ListTable
+                :columns="commissionColumns"
+                :rows="commissionDistribution"
+                :loading="false"
+                :locale="activeLocale"
+              />
+            </div>
             <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
               <span class="font-semibold text-slate-500">{{ t('commission_amount') }}</span>
-              <span class="font-bold text-brand-600 tabular-nums">{{ formatCurrency(policy.commission_amount, policy.currency) }}</span>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-brand-600 tabular-nums">{{ formatCurrency(commissionDistributionTotal, policy.currency) }}</span>
+                <span
+                  v-if="Math.abs(commissionDistributionTotal - (policy.commission_amount || 0)) > 0.01"
+                  class="text-[10px] px-1.5 py-0.5 rounded bg-at-amber/10 text-at-amber font-medium flex items-center gap-1"
+                  :title="t('commission_mismatch')"
+                >
+                  <FeatherIcon name="alert-triangle" class="h-3 w-3" />
+                  {{ t('commission_mismatch') }}
+                </span>
+              </div>
+            </div>
+          </SectionPanel>
+
+          <SectionPanel v-if="!commissionDistribution.length && !loading" :title="t('commissionDistributionTitle')" class="md:col-span-2">
+            <div class="py-6 text-center">
+              <FeatherIcon name="info" class="h-8 w-8 mx-auto text-slate-300 mb-2" />
+              <p class="text-sm text-slate-400">{{ t('commission_distribution_empty') }}</p>
             </div>
           </SectionPanel>
 
@@ -423,10 +442,15 @@ const { getLinkLabel } = useLinkLabelCache();
 
 const commissionColumns = computed(() => [
   { key: "level", label: t("level"), type: "text" },
-  { key: "entity", label: t("sales_entity") || t("salesEntity") || "Satış Birimi", type: "text" },
-  { key: "share_pct_formatted", label: t("sharePct"), type: "text" },
-  { key: "amount_formatted", label: t("amount"), type: "currency" },
+  { key: "entity_label", label: t("sales_entity"), type: "text" },
+  { key: "share_pct_display", label: t("sharePct"), type: "text" },
+  { key: "amount_formatted", label: t("commission_amount"), type: "currency" },
+  { key: "status_translated", label: t("status"), type: "text" },
 ]);
+
+const commissionDistributionTotal = computed(() =>
+  commissionDistribution.value.reduce((s, r) => s + (r.amount || 0), 0),
+);
 
 const branchIcon = computed(() => {
   const branch = String(policy.value.branch_name || getLinkLabel(policy.value.branch) || "").toLowerCase();
