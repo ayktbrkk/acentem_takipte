@@ -156,13 +156,12 @@
           :field-label="fieldLabel"
           :t="t"
         />
-
-        <HierarchyPanel
-          v-if="screenKey === 'sales-entities'"
-          ref="hierarchyPanelRef"
-          :office-branch="doc?.office_branch"
-          class="px-5 pb-5"
-        />
+        <div class="px-5 pb-5" :class="{ hidden: screenKey !== 'sales-entities' }">
+          <HierarchyPanel
+            ref="hierarchyPanelRef"
+            :office-branch="doc?.office_branch"
+          />
+        </div>
       </div>
 
       <AuxRecordDetailSidebar
@@ -173,7 +172,6 @@
         :no-decision-context-text="t('noDecisionContext')"
       />
     </div>
-
     <AuxRecordDetailQuickEditDialog
       v-model="showQuickEditDialog"
       :quick-edit-config="quickEditConfig"
