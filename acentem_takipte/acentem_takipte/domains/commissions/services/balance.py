@@ -20,15 +20,24 @@ def compute_commission_balances(
     limit: int = 100,
     from_date: str | None = None,
     to_date: str | None = None,
+    insurance_company: str | None = None,
 ) -> dict:
     """Compute accrued/paid/remaining commission per sales entity.
 
     Reads commission_distribution JSON from AT Policy records with
     status Active or Record, and matches against Commission Payout
     payments that have not been cancelled.
+
+    insurance_company filter matches either the doc name or display name
+    of the insurance company linked to each policy.
     """
     today = getdate(nowdate())
     safe_limit = max(cint(limit), 1)
+
+    # -- Resolve insurance_company filter ---------------------------------
+    ic_filter_doc_name: str | None = None
+    if insurance_company:
+        ic_filter_doc_name = str(insurance_company).strip()
 
     # --- Accrued from policies --------------------------------------
     accrued_by_entity: dict[str, float] = {}
@@ -40,6 +49,19 @@ def compute_commission_balances(
     entity_ic_policy_count: dict[tuple, int] = {}
     entity_insurance_companies: dict[str, set[str]] = {}
     ic_display_names: dict[str, str] = {}
+
+    # Track which policy names pass the active filters so payment
+    # aggregation can be scoped to the same filtered set.
+    has_active_filter = bool(ic_filter_doc_name or from_date or to_date or aging_bucket != "all")
+    filtered_policy_names: set[str] = set()
+    aging_bucket_policy_names: set[str] = set()
+
+    # Per-bucket accrued so entity values can be scoped to the
+    # selected aging bucket without affecting the full-dataset totals.
+    bucket_accrued_by_entity: dict[str, float] = {}
+    bucket_policy_counts: dict[str, int] = {}
+    bucket_ic_accrued: dict[tuple, float] = {}
+    bucket_ic_policy_count: dict[tuple, int] = {}
 
     policy_filters = {
         "status": ["in", ["Active", "Record"]],
@@ -78,8 +100,16 @@ def compute_commission_balances(
         bucket = _aging_bucket(days_aging)
 
         insurance_company = str(policy.get("insurance_company") or "").strip()
+        if ic_filter_doc_name:
+            policy_ic_display = _ic_display_name(insurance_company)
+            if insurance_company != ic_filter_doc_name and policy_ic_display != ic_filter_doc_name:
+                continue
         if insurance_company and insurance_company not in ic_display_names:
             ic_display_names[insurance_company] = _ic_display_name(insurance_company)
+
+        filtered_policy_names.add(policy["name"])
+        if aging_bucket == "all" or bucket == aging_bucket:
+            aging_bucket_policy_names.add(policy["name"])
 
         seen_entities: set[str] = set()
         for entry in entries:
@@ -95,34 +125,61 @@ def compute_commission_balances(
             aging_by_entity[entity][bucket] = (
                 aging_by_entity[entity].get(bucket, 0) + amount_try
             )
+            if aging_bucket == "all" or bucket == aging_bucket:
+                bucket_accrued_by_entity[entity] = bucket_accrued_by_entity.get(entity, 0) + amount_try
 
             if entity not in seen_entities:
                 seen_entities.add(entity)
                 policy_counts[entity] = policy_counts.get(entity, 0) + 1
+                if aging_bucket == "all" or bucket == aging_bucket:
+                    bucket_policy_counts[entity] = bucket_policy_counts.get(entity, 0) + 1
 
             if insurance_company:
                 key = (entity, insurance_company)
                 entity_ic_accrued[key] = entity_ic_accrued.get(key, 0) + amount_try
                 entity_ic_policy_count[key] = entity_ic_policy_count.get(key, 0) + 1
                 entity_insurance_companies.setdefault(entity, set()).add(insurance_company)
+                if aging_bucket == "all" or bucket == aging_bucket:
+                    bucket_ic_accrued[key] = bucket_ic_accrued.get(key, 0) + amount_try
+                    bucket_ic_policy_count[key] = bucket_ic_policy_count.get(key, 0) + 1
 
     # --- Paid from Commission Payout payments ----------------------
     paid_by_entity: dict[str, float] = {}
+    paid_by_entity_ic: dict[tuple, float] = {}
+    bucket_paid_by_entity_ic: dict[tuple, float] = {}
+    policy_ic_cache: dict[str, str] = {}
     payments = frappe.get_all(
         "AT Payment",
         filters={
             "payment_purpose": "Commission Payout",
             "status": ["!=", "Cancelled"],
         },
-        fields=["sales_entity", "amount_try"],
+        fields=["sales_entity", "amount_try", "policy"],
         limit_page_length=0,
     )
     for row in payments:
+        if has_active_filter:
+            policy_name = str(row.get("policy") or "").strip()
+            if policy_name not in filtered_policy_names:
+                continue
+            if aging_bucket != "all" and policy_name not in aging_bucket_policy_names:
+                continue
         entity = str(row.get("sales_entity") or "").strip()
-        if entity:
-            paid_by_entity[entity] = (
-                paid_by_entity.get(entity, 0) + flt(row.get("amount_try") or 0)
-            )
+        amount = flt(row.get("amount_try") or 0)
+        if entity and amount > 0:
+            paid_by_entity[entity] = paid_by_entity.get(entity, 0) + amount
+            policy_name = str(row.get("policy") or "").strip()
+            if policy_name:
+                if policy_name not in policy_ic_cache:
+                    policy_ic_cache[policy_name] = str(
+                        frappe.db.get_value("AT Policy", policy_name, "insurance_company") or ""
+                    ).strip()
+                ic = policy_ic_cache[policy_name]
+                if ic:
+                    ic_key = (entity, ic)
+                    paid_by_entity_ic[ic_key] = paid_by_entity_ic.get(ic_key, 0) + amount
+                    if aging_bucket != "all":
+                        bucket_paid_by_entity_ic[ic_key] = bucket_paid_by_entity_ic.get(ic_key, 0) + amount
 
     # --- Build entity list -----------------------------------------
     all_names = set(accrued_by_entity.keys()) | set(paid_by_entity.keys())
@@ -136,7 +193,10 @@ def compute_commission_balances(
 
     entity_list: list[dict] = []
     for name in sorted(all_names):
-        accrued = accrued_by_entity.get(name, 0)
+        if aging_bucket != "all":
+            accrued = bucket_accrued_by_entity.get(name, 0)
+        else:
+            accrued = accrued_by_entity.get(name, 0)
         paid = paid_by_entity.get(name, 0)
         remaining = accrued - paid
 
@@ -146,6 +206,8 @@ def compute_commission_balances(
         aging = aging_by_entity.get(name, {})
         if aging_bucket != "all" and aging.get(aging_bucket, 0) <= 0:
             continue
+
+        pcount = bucket_policy_counts.get(name, 0) if aging_bucket != "all" else policy_counts.get(name, 0)
 
         entity_list.append(
             {
@@ -162,46 +224,103 @@ def compute_commission_balances(
                     "61_90": round(aging.get("61_90", 0), 2),
                     "90_plus": round(aging.get("90_plus", 0), 2),
                 },
-                "policy_count": policy_counts.get(name, 0),
+                "policy_count": pcount,
             }
         )
 
     entity_list.sort(key=lambda e: e["remaining_try"], reverse=True)
-    entity_list = entity_list[:safe_limit]
+    total_count = len(entity_list)
+    entity_list_limited = entity_list[:safe_limit]
+
+    # --- Compute summary from FULL filtered set, not just the limited slice
+    total_accrued = round(sum(e["accrued_try"] for e in entity_list), 2)
+    total_paid = round(sum(e["paid_try"] for e in entity_list), 2)
+    total_remaining = round(sum(e["remaining_try"] for e in entity_list), 2)
 
     # --- Add insurance_companies breakdown per entity ----------------
-    for entry in entity_list:
+    for entry in entity_list_limited:
         entry_doc_name = _resolve_entity_doc_name(entry["entity_name"])
         ics = entity_insurance_companies.get(entry_doc_name, set())
         ic_breakdown: list[dict] = []
-        total_entity_accrued = accrued_by_entity.get(entry_doc_name, 0)
-        total_entity_paid = paid_by_entity.get(entry_doc_name, 0)
         for ic_name in sorted(ics):
             display_ic = ic_display_names.get(ic_name, ic_name)
             key = (entry_doc_name, ic_name)
-            ic_accrued = round(entity_ic_accrued.get(key, 0), 2)
-            if total_entity_accrued > 0 and total_entity_paid > 0:
-                ic_paid = round(ic_accrued / total_entity_accrued * total_entity_paid, 2)
+            if aging_bucket != "all":
+                ic_accrued = round(bucket_ic_accrued.get(key, 0), 2)
+                ic_pcount = bucket_ic_policy_count.get(key, 0)
+                ic_paid = round(bucket_paid_by_entity_ic.get(key, 0), 2)
             else:
-                ic_paid = 0.0
+                ic_accrued = round(entity_ic_accrued.get(key, 0), 2)
+                ic_pcount = entity_ic_policy_count.get(key, 0)
+                ic_paid = round(paid_by_entity_ic.get(key, 0), 2)
+            if ic_accrued <= 0 and ic_pcount <= 0 and ic_paid <= 0:
+                continue
             ic_breakdown.append({
                 "name": display_ic,
                 "accrued_try": ic_accrued,
                 "paid_try": ic_paid,
                 "remaining_try": round(ic_accrued - ic_paid, 2),
-                "policy_count": entity_ic_policy_count.get(key, 0),
+                "policy_count": ic_pcount,
             })
         ic_breakdown.sort(key=lambda x: x["accrued_try"], reverse=True)
         entry["insurance_companies"] = ic_breakdown
 
+    # --- Add reconciliation summary ---------------------------------
+    reconciliation = _commission_reconciliation_summary(
+        insurance_company=ic_filter_doc_name,
+        from_date=from_date,
+        to_date=to_date,
+    )
+
     return {
         "summary": {
-            "total_accrued_try": round(sum(e["accrued_try"] for e in entity_list), 2),
-            "total_paid_try": round(sum(e["paid_try"] for e in entity_list), 2),
-            "total_remaining_try": round(sum(e["remaining_try"] for e in entity_list), 2),
+            "total_accrued_try": total_accrued,
+            "total_paid_try": total_paid,
+            "total_remaining_try": total_remaining,
         },
-        "entities": entity_list,
+        "total_count": total_count,
+        "returned_count": len(entity_list_limited),
+        "entities": entity_list_limited,
+        "reconciliation": reconciliation,
     }
+
+
+def _commission_reconciliation_summary(
+    insurance_company: str | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
+) -> dict[str, int]:
+    """Count open AT Reconciliation Items linked to commission statement
+    AT Accounting Entries, optionally filtered by insurance_company and date."""
+    entry_filters: dict = {"source_doctype": "AT Policy", "entry_type": "Policy"}
+    if insurance_company:
+        entry_filters["insurance_company"] = insurance_company
+    if from_date and to_date:
+        entry_filters["creation"] = ["between", [from_date, to_date]]
+    elif from_date:
+        entry_filters["creation"] = [">=", from_date]
+    elif to_date:
+        entry_filters["creation"] = ["<=", to_date]
+
+    entries = frappe.get_all(
+        "AT Accounting Entry",
+        filters=entry_filters,
+        fields=["name"],
+        limit_page_length=0,
+    )
+    if not entries:
+        return {"open_items": 0, "total_items": 0}
+
+    entry_names = [e["name"] for e in entries]
+    open_items = frappe.db.count(
+        "AT Reconciliation Item",
+        {"accounting_entry": ["in", entry_names], "status": "Open"},
+    )
+    total_items = frappe.db.count(
+        "AT Reconciliation Item",
+        {"accounting_entry": ["in", entry_names]},
+    )
+    return {"open_items": open_items or 0, "total_items": total_items or 0}
 
 
 def compute_entity_detail(entity_name: str, limit: int = 50) -> dict:
@@ -538,3 +657,102 @@ def _entity_branch_raw(entity_name: str) -> str:
 
 def _entity_type(entity_name: str) -> str:
     return str(_entity_info(entity_name).get("entity_type") or "")
+
+
+def compute_entity_hierarchy(office_branch: str | None = None) -> dict:
+    """Compute the sales entity hierarchy tree for an office branch.
+
+    Returns a tree structure with parent-child relationships and
+    commission share percentages. Used for hierarchy visualization
+    and share percentage management.
+    """
+    filters = {"is_active": 1}
+    if office_branch:
+        filters["office_branch"] = office_branch
+
+    entities = frappe.get_all(
+        "AT Sales Entity",
+        filters=filters,
+        fields=["name", "full_name", "entity_type", "office_branch",
+                "parent_entity", "is_root", "commission_share_pct", "is_pool"],
+        order_by="full_name asc",
+        limit_page_length=0,
+    )
+
+    # Build lookup maps
+    entity_map = {e["name"]: e for e in entities}
+    children_map: dict[str, list[dict]] = {}
+    roots: list[dict] = []
+
+    for e in entities:
+        node = {
+            "name": e["name"],
+            "full_name": e["full_name"],
+            "entity_type": e["entity_type"],
+            "office_branch": e["office_branch"],
+            "share_pct": flt(e.get("commission_share_pct") or 0),
+            "is_root": bool(e.get("is_root")),
+            "is_pool": bool(e.get("is_pool")),
+            "children": [],
+        }
+        parent = e.get("parent_entity")
+        if parent and parent in entity_map:
+            children_map.setdefault(parent, []).append(node)
+        elif e.get("is_root"):
+            roots.append(node)
+
+    # Attach children recursively
+    def attach_children(node):
+        children = children_map.get(node["name"], [])
+        node["children"] = sorted(children, key=lambda c: c["full_name"])
+        for child in node["children"]:
+            attach_children(child)
+
+    for root in roots:
+        attach_children(root)
+
+    # Compute sibling totals for validation
+    def compute_sibling_totals(node):
+        children = node.get("children", [])
+        if children:
+            total_pct = sum(c["share_pct"] for c in children)
+            node["children_total_pct"] = round(total_pct, 2)
+            node["children_valid"] = total_pct <= 100
+        for child in children:
+            compute_sibling_totals(child)
+
+    for root in roots:
+        compute_sibling_totals(root)
+
+    return {
+        "branches": sorted(roots, key=lambda r: r["full_name"]),
+        "total_entities": len(entities),
+    }
+
+
+def validate_share_pct_totals(office_branch: str | None = None) -> list[dict]:
+    """Validate all share_pct totals in a hierarchy.
+
+    Returns list of violations where siblings' total exceeds 100%.
+    """
+    hierarchy = compute_entity_hierarchy(office_branch)
+    violations = []
+
+    def check_node(node):
+        children = node.get("children", [])
+        if children:
+            total_pct = sum(c["share_pct"] for c in children)
+            if total_pct > 100:
+                violations.append({
+                    "parent": node["full_name"],
+                    "parent_name": node["name"],
+                    "total_pct": round(total_pct, 2),
+                    "children": [{"name": c["name"], "full_name": c["full_name"], "share_pct": c["share_pct"]} for c in children],
+                })
+        for child in children:
+            check_node(child)
+
+    for branch in hierarchy.get("branches", []):
+        check_node(branch)
+
+    return violations

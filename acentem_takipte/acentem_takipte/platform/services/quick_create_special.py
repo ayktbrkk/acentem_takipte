@@ -222,6 +222,7 @@ def create_quick_reconciliation_item(
 
 
 @frappe.whitelist()
+@frappe.whitelist()
 def update_quick_aux_record(
     doctype: str,
     name: str,

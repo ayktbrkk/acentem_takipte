@@ -156,6 +156,12 @@
         :t="t"
       />
 
+      <HierarchyPanel
+        v-if="screenKey === 'sales-entities'"
+        :office-branch="doc?.office_branch"
+        class="mt-6"
+      />
+
       <AuxRecordDetailSidebar
         :special-badges="specialBadges"
         :record-title="recordTitle"
@@ -210,6 +216,7 @@ import { useAuxRecordDetailSummary } from "../composables/useAuxRecordDetailSumm
 import AuxRecordDetailContent from "../components/aux-record-detail/AuxRecordDetailContent.vue";
 import AuxRecordDetailSidebar from "../components/aux-record-detail/AuxRecordDetailSidebar.vue";
 import AuxRecordDetailQuickEditDialog from "../components/aux-record-detail/AuxRecordDetailQuickEditDialog.vue";
+import HierarchyPanel from "../domains/commissions/pages/HierarchyPanel.vue";
 import { useAuxRecordDetailActions } from "../composables/useAuxRecordDetailActions";
 import { useAuxRecordDetailReconciliationDialog } from "../composables/useAuxRecordDetailReconciliationDialog";
 import { useAuxRecordDetailQuickDialogs } from "../composables/useAuxRecordDetailQuickDialogs";
