@@ -310,7 +310,7 @@ ALLOWED_AUX_EDIT_FIELDS: dict[str, set[str]] = {
     },
     "AT Insurance Company": {"company_name", "company_code", "is_active"},
     "AT Branch": {"branch_name", "branch_code", "insurance_company", "is_active"},
-    "AT Sales Entity": {"entity_type", "full_name", "office_branch", "parent_entity"},
+    "AT Sales Entity": {"entity_type", "full_name", "office_branch", "parent_entity", "commission_share_pct", "is_root"},
     "AT Notification Template": {
         "template_key",
         "event_key",
@@ -419,6 +419,7 @@ def _apply_aux_edit_payload(doc, payload: dict) -> None:
         handler_spec = resolve_handler(doc.doctype, field)
         if handler_spec:
             apply_field_value(doc, field, value, handler_spec)
+        elif isinstance(value, str):
+            setattr(doc, field, value.strip() or None)
         else:
-            # Fallback: treat unknown fields as strip-string
-            setattr(doc, field, (value or "").strip() or None)
+            setattr(doc, field, value)

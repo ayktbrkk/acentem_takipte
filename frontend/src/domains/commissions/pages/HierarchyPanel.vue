@@ -35,10 +35,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, unref, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { FeatherIcon } from "frappe-ui";
-import { useAtFormatting } from "../../../composables/useAtFormatting";
 import { useAuthStore } from "../../../stores/auth";
 import { COMMISSION_TRANSLATIONS } from "../i18n/translations";
 import SectionPanel from "../../../components/app-shell/SectionPanel.vue";
@@ -74,10 +73,10 @@ const violationsResource = createResource({
   auto: false,
 });
 
-const loading = computed(() => hierarchyResource.loading.value);
+const loading = computed(() => Boolean(unref(hierarchyResource.loading)));
 const error = ref("");
-const hierarchy = computed(() => hierarchyResource.data.value || { branches: [], total_entities: 0 });
-const violations = computed(() => violationsResource.data.value?.violations || []);
+const hierarchy = computed(() => unref(hierarchyResource.data) || { branches: [], total_entities: 0 });
+const violations = computed(() => (unref(violationsResource.data) || {}).violations || []);
 const selectedName = ref("");
 
 async function loadHierarchy() {
