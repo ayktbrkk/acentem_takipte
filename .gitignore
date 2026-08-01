@@ -63,3 +63,10 @@ test-results/
 
 .DS_Store
 Thumbs.db
+
+.superpowers/
+screenshots/
+scripts/check_*.py
+scripts/debug_*.py
+scripts/qa_*.py
+scripts/qa_*_interactive.py

@@ -1,0 +1,95 @@
+{
+ "actions": [],
+ "autoname": "AT-CP-.YYYY.-.#####.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "insurance_company",
+  "period_start",
+  "period_end",
+  "period_label",
+  "status",
+  "locked_by",
+  "locked_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "insurance_company",
+   "fieldtype": "Link",
+   "label": "Insurance Company",
+   "options": "AT Insurance Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "label": "Period Start",
+   "reqd": 1
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "label": "Period End",
+   "reqd": 1
+  },
+  {
+   "fieldname": "period_label",
+   "fieldtype": "Data",
+   "label": "Period Label",
+   "read_only": 1
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nReconciled\nLocked",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.status==\"Locked\"",
+   "fieldname": "locked_by",
+   "fieldtype": "Link",
+   "label": "Locked By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status==\"Locked\"",
+   "fieldname": "locked_on",
+   "fieldtype": "Datetime",
+   "label": "Locked On",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Acentem Takipte",
+ "name": "AT Commission Period",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "AT Manager"
+  },
+  {
+   "read": 1,
+   "role": "AT Accountant"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
