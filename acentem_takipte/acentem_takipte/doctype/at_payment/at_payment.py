@@ -95,6 +95,7 @@ class ATPayment(Document):
             self.payment_direction = "Outbound"
         if not self.policy:
             frappe.throw(_("A policy must be linked for commission payouts."))
+        self._validate_commission_period_lock()
         policy_commission = flt(
             frappe.db.get_value("AT Policy", self.policy, "commission_amount") or 0
         )
@@ -121,6 +122,24 @@ class ATPayment(Document):
                 ).format(
                     already_paid, self.amount, total_with_new, policy_commission
                 )
+            )
+
+    def _validate_commission_period_lock(self) -> None:
+        if self.payment_purpose != "Commission Payout" or not self.policy:
+            return
+        policy_data = frappe.db.get_value(
+            "AT Policy", self.policy, ["insurance_company", "issue_date"], as_dict=True,
+        )
+        policy_ic = policy_data.insurance_company if policy_data else None
+        policy_issue = policy_data.issue_date if policy_data else None
+        if not policy_ic or not policy_issue:
+            return
+        from acentem_takipte.acentem_takipte.doctype.at_commission_period.at_commission_period import (
+            is_commission_period_locked,
+        )
+        if is_commission_period_locked(policy_ic, policy_issue):
+            frappe.throw(
+                _("Cannot create or modify a commission payout for a locked commission period.")
             )
 
     def _validate_amounts(self):

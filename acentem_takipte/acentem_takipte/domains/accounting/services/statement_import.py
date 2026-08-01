@@ -30,6 +30,10 @@ def build_statement_import_preview(
     )
     payment_map = _build_payment_map(payment_refs, office_branch=office_branch)
 
+    if statement_type == "commission":
+        enriched = _enrich_commission_preview_rows(preview_rows, policy_map)
+        return {"rows": preview_rows, "summary": enriched["summary"]}
+
     matched = 0
     unmatched = 0
     total_amount_try = 0.0
@@ -176,6 +180,305 @@ def import_statement_preview_rows(
     }
 
 
+def _build_commission_statement_payload(
+    row: dict[str, Any],
+    matched_policy: dict[str, Any],
+) -> dict[str, Any]:
+    """Build an accounting entry payload for a commission statement row.
+
+    local_amount / local_amount_try is set to the policy's commission_amount,
+    NOT gross_premium. This is the key difference from the premium import path.
+    """
+    commission_amount = flt(matched_policy.get("commission_amount") or 0)
+    return {
+        "entry_type": "Policy",
+        "source_doctype": "AT Policy",
+        "source_name": matched_policy["name"],
+        "policy": matched_policy["name"],
+        "customer": matched_policy.get("customer") or "",
+        "office_branch": matched_policy.get("office_branch") or "",
+        "sales_entity": "",
+        "insurance_company": matched_policy.get("insurance_company") or "",
+        "currency": "TRY",
+        "local_amount": commission_amount,
+        "local_amount_try": commission_amount,
+    }
+
+
+def _get_or_create_commission_statement_entry(
+    policy_name: str,
+    external_ref: str,
+) -> "frappe.model.document.Document":
+    """Find or create an AT Accounting Entry for a commission statement row.
+
+    Uses source_doctype + source_name + external_ref as the idempotency key
+    so that the same policy imported with different statement periods does not
+    overwrite earlier imports.
+    """
+    existing = frappe.db.get_value(
+        "AT Accounting Entry",
+        {
+            "source_doctype": "AT Policy",
+            "source_name": policy_name,
+            "external_ref": str(external_ref or "").strip(),
+        },
+        "name",
+    )
+    if existing:
+        return frappe.get_doc("AT Accounting Entry", existing)
+    return frappe.new_doc("AT Accounting Entry")
+
+
+def import_commission_statement_rows(
+    *,
+    csv_text: str,
+    office_branch: str | None = None,
+    insurance_company: str | None = None,
+    delimiter: str = ",",
+    limit: int = 200,
+    generate_missing: bool = True,
+) -> dict[str, Any]:
+    """Import commission statement CSV rows as AT Accounting Entry records.
+
+    Uses commission_amount as local_amount (not gross_premium).
+    Duplicate rows and unmatched rows are skipped.
+    Amount mismatches create AT Reconciliation Items.
+    Idempotent: same policy_no + external_ref + amount_try does not duplicate.
+    """
+    from acentem_takipte.acentem_takipte.accounting import (
+        _close_open_items,
+        _evaluate_mismatch,
+        _set_entry_reconciliation_flag,
+        _upsert_open_item,
+    )
+    from acentem_takipte.acentem_takipte.utils.statuses import ATAccountingEntryStatus
+
+    preview = build_statement_import_preview(
+        csv_text=csv_text,
+        office_branch=office_branch,
+        insurance_company=insurance_company,
+        delimiter=delimiter,
+        limit=limit,
+        statement_type="commission",
+    )
+
+    # Filter out duplicate policy_no rows and unmatched rows
+    duplicates = _detect_duplicate_policy_refs(preview["rows"])
+    importable: list[dict[str, Any]] = []
+    skipped_duplicate = 0
+    skipped_unmatched = 0
+
+    for row in preview["rows"]:
+        pn = str(row.get("policy_no") or "").strip()
+        if pn in duplicates:
+            skipped_duplicate += 1
+            continue
+        if row.get("match_status") == "Unmatched":
+            skipped_unmatched += 1
+            continue
+        importable.append(row)
+
+    imported = 0
+    open_items = 0
+
+    for row in importable:
+        matched_policy = row.get("matched_policy") or {}
+        if not matched_policy.get("name"):
+            continue
+
+        payload = _build_commission_statement_payload(row, matched_policy)
+        external_ref = str(row.get("external_ref") or "").strip()
+        entry = _get_or_create_commission_statement_entry(
+            matched_policy["name"], external_ref
+        )
+
+        external_amount = flt(row.get("amount_try") or 0)
+
+        details_payload = {
+            "import_source": "commission_statement",
+            "statement_type": "commission",
+            "external_ref": external_ref,
+            "policy_no": row.get("policy_no"),
+            "customer": row.get("customer"),
+        }
+
+        entry.entry_type = payload.get("entry_type")
+        entry.policy = payload.get("policy")
+        entry.customer = payload.get("customer")
+        entry.office_branch = payload.get("office_branch")
+        entry.sales_entity = payload.get("sales_entity")
+        entry.insurance_company = payload.get("insurance_company")
+        entry.currency = payload.get("currency") or "TRY"
+        entry.local_amount = payload.get("local_amount") or 0
+        entry.local_amount_try = payload.get("local_amount_try") or 0
+        entry.external_amount = external_amount
+        entry.external_amount_try = external_amount
+        entry.external_ref = external_ref or entry.external_ref
+        entry.payload_json = frappe.as_json(details_payload)
+        entry.integration_hash = _build_statement_row_hash(details_payload)
+        entry.status = ATAccountingEntryStatus.SYNCED
+        entry.error_message = None
+
+        if entry.name:
+            entry.save(ignore_permissions=True)
+        else:
+            entry.insert(ignore_permissions=True)
+
+        entry_row = frappe._dict(
+            name=entry.name,
+            source_doctype=entry.source_doctype,
+            source_name=entry.source_name,
+            status=entry.status,
+            local_amount_try=entry.local_amount_try,
+            external_amount_try=entry.external_amount_try,
+            external_ref=entry.external_ref,
+            difference_try=(
+                flt(entry.external_amount_try) - flt(entry.local_amount_try)
+            ),
+        )
+        mismatch_type, details = _evaluate_mismatch(entry_row)
+        if mismatch_type:
+            _close_open_items(entry.name, keep_mismatch_type=mismatch_type)
+            _upsert_open_item(entry_row, mismatch_type, details)
+            _set_entry_reconciliation_flag(entry.name, True)
+            open_items += 1
+        else:
+            _close_open_items(entry.name, keep_mismatch_type=None)
+            _set_entry_reconciliation_flag(entry.name, False)
+        imported += 1
+
+    if imported and not frappe.flags.in_test:
+        frappe.db.commit()
+
+    missing_external = {"generated": 0}
+    if generate_missing and insurance_company:
+        policy_refs = [str(r.get("policy_no") or "").strip() for r in preview["rows"]]
+        missing_external = generate_missing_external_for_commission_statement(
+            policy_refs_from_statement=policy_refs,
+            insurance_company=insurance_company,
+            office_branch=office_branch,
+        )
+
+    return {
+        "imported": imported,
+        "skipped": skipped_unmatched + skipped_duplicate,
+        "skipped_duplicate": skipped_duplicate,
+        "skipped_unmatched": skipped_unmatched,
+        "open_items": open_items,
+        "missing_external": missing_external,
+        "preview_summary": preview["summary"],
+    }
+
+
+def generate_missing_external_for_commission_statement(
+    *,
+    policy_refs_from_statement: list[str],
+    insurance_company: str | None = None,
+    office_branch: str | None = None,
+) -> dict[str, int]:
+    """Create AT Accounting Entries and Reconciliation Items for policies
+    that exist in the system but were not found in the uploaded statement.
+
+    These show up as 'Missing External' — the insurance company has not
+    included the policy's commission in their statement, but the system
+    has a record of the accrued commission.
+    """
+    from acentem_takipte.acentem_takipte.accounting import (
+        _close_open_items,
+        _evaluate_mismatch,
+        _get_or_create_entry,
+        _set_entry_reconciliation_flag,
+        _upsert_open_item,
+    )
+    from acentem_takipte.acentem_takipte.utils.statuses import ATAccountingEntryStatus
+
+    statement_policy_set = {
+        str(p or "").strip() for p in policy_refs_from_statement if str(p or "").strip()
+    }
+
+    policy_filters: dict[str, Any] = {
+        "status": ["in", ["Active", "Record"]],
+        "commission_amount": [">", 0],
+    }
+    if insurance_company:
+        policy_filters["insurance_company"] = insurance_company
+    if office_branch:
+        policy_filters["office_branch"] = office_branch
+
+    system_policies = frappe.get_all(
+        "AT Policy",
+        filters=policy_filters,
+        fields=["name", "policy_no", "commission_amount", "customer", "insurance_company", "office_branch"],
+        limit_page_length=0,
+    )
+
+    generated = 0
+    for policy in system_policies:
+        policy_name = policy["name"]
+        policy_no = str(policy.get("policy_no") or "").strip()
+        if policy_no and policy_no in statement_policy_set:
+            continue
+        if policy_name in statement_policy_set:
+            continue
+
+        commission_amount = flt(policy.get("commission_amount") or 0)
+        if commission_amount <= 0:
+            continue
+
+        entry = _get_or_create_entry("AT Policy", policy_name)
+        entry.entry_type = "Policy"
+        entry.policy = policy_name
+        entry.customer = policy.get("customer") or ""
+        entry.office_branch = policy.get("office_branch") or ""
+        entry.insurance_company = policy.get("insurance_company") or ""
+        entry.currency = "TRY"
+        entry.local_amount = commission_amount
+        entry.local_amount_try = commission_amount
+        entry.external_amount = 0
+        entry.external_amount_try = 0
+        entry.external_ref = ""
+        entry.payload_json = frappe.as_json({
+            "import_source": "missing_external",
+            "statement_type": "commission",
+            "policy_no": policy_no,
+        })
+        entry.integration_hash = _build_statement_row_hash({
+            "import_source": "missing_external",
+            "policy_name": policy_name,
+        })
+        entry.status = ATAccountingEntryStatus.SYNCED
+        entry.error_message = None
+
+        if entry.name:
+            entry.save(ignore_permissions=True)
+        else:
+            entry.insert(ignore_permissions=True)
+
+        entry_row = frappe._dict(
+            name=entry.name,
+            source_doctype=entry.source_doctype,
+            source_name=entry.source_name,
+            status=entry.status,
+            local_amount_try=entry.local_amount_try,
+            external_amount_try=0,
+            external_ref="",
+            difference_try=-commission_amount,
+        )
+        _close_open_items(entry.name, keep_mismatch_type="Missing External")
+        _upsert_open_item(entry_row, "Missing External", {
+            "policy_name": policy_name,
+            "policy_no": policy_no,
+            "commission_amount_try": commission_amount,
+        })
+        _set_entry_reconciliation_flag(entry.name, True)
+        generated += 1
+
+    if generated and not frappe.flags.in_test:
+        frappe.db.commit()
+
+    return {"generated": generated}
+
+
 def _parse_csv_rows(
     *, csv_text: str, delimiter: str, limit: int
 ) -> list[dict[str, str]]:
@@ -266,18 +569,23 @@ def _build_policy_map(
     fallback_filters: dict[str, Any] = {"name": ["in", missing_refs]}
     if office_branch:
         fallback_filters["office_branch"] = office_branch
+    if insurance_company:
+        fallback_filters["insurance_company"] = insurance_company
+    fallback_fields = [
+        "name",
+        "policy_no",
+        "customer",
+        "insurance_company",
+        "office_branch",
+        "status",
+    ]
+    if include_commission:
+        fallback_fields.append("commission_amount")
     # unbounded: fallback policy lookup by name, filtered by missing refs - expected max ~1k rows
     fallback_rows = frappe.get_all(
         "AT Policy",
         filters=fallback_filters,
-        fields=[
-            "name",
-            "policy_no",
-            "customer",
-            "insurance_company",
-            "office_branch",
-            "status",
-        ],
+        fields=fallback_fields,
         limit_page_length=0,
     )
     for row in fallback_rows:
@@ -312,6 +620,85 @@ def _build_payment_map(
         limit_page_length=0,
     )
     return {str(row.get("payment_no") or "").strip(): row for row in rows}
+
+
+def _detect_duplicate_policy_refs(
+    preview_rows: list[dict[str, Any]],
+) -> set[str]:
+    """Return the set of policy_no values that appear more than once."""
+    seen: dict[str, int] = {}
+    for row in preview_rows:
+        pn = str(row.get("policy_no") or "").strip()
+        if pn:
+            seen[pn] = seen.get(pn, 0) + 1
+    return {pn for pn, count in seen.items() if count > 1}
+
+
+def _enrich_commission_preview_rows(
+    preview_rows: list[dict[str, Any]],
+    policy_map: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Add commission-specific fields to each preview row and build an
+    enriched summary when statement_type is 'commission'."""
+    duplicates = _detect_duplicate_policy_refs(preview_rows)
+
+    matched = 0
+    unmatched = 0
+    mismatched = 0
+    duplicate_count = 0
+    total_external = 0.0
+    total_local = 0.0
+    total_difference = 0.0
+
+    for row in preview_rows:
+        policy_no_val = str(row.get("policy_no") or "").strip()
+        external_amount = flt(row.get("amount_try") or 0)
+        policy = policy_map.get(policy_no_val) if policy_no_val else None
+
+        row["matched_policy"] = policy
+        row["external_commission_try"] = external_amount
+
+        if policy:
+            local_commission = flt(policy.get("commission_amount") or 0)
+            row["local_commission_try"] = local_commission
+            difference = round(external_amount - local_commission, 2)
+            row["difference_try"] = difference
+
+            if policy_no_val in duplicates:
+                row["match_status"] = "Mismatched"
+                row["mismatch_type"] = "Duplicate"
+                duplicate_count += 1
+            elif abs(difference) <= 0.01:
+                row["match_status"] = "Matched"
+                row["mismatch_type"] = ""
+                matched += 1
+            else:
+                row["match_status"] = "Mismatched"
+                row["mismatch_type"] = "Amount"
+                mismatched += 1
+        else:
+            row["local_commission_try"] = 0.0
+            row["difference_try"] = external_amount
+            row["match_status"] = "Unmatched"
+            row["mismatch_type"] = "Missing Local"
+            unmatched += 1
+
+        total_external += external_amount
+        total_local += flt(row.get("local_commission_try") or 0)
+        total_difference += flt(row.get("difference_try") or 0)
+
+    return {
+        "summary": {
+            "total_rows": len(preview_rows),
+            "matched_rows": matched,
+            "unmatched_rows": unmatched,
+            "mismatched_rows": mismatched,
+            "duplicate_rows": duplicate_count,
+            "total_external_commission_try": round(total_external, 2),
+            "total_local_commission_try": round(total_local, 2),
+            "total_difference_try": round(total_difference, 2),
+        },
+    }
 
 
 def _build_statement_row_hash(payload: dict[str, Any]) -> str:

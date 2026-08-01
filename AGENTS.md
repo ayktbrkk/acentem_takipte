@@ -188,6 +188,21 @@ CI also runs backend tests by creating a fresh Frappe v15 bench and site; see [b
 - [docs/PRODUCTION_DEPLOY_CHECKLIST.md](docs/PRODUCTION_DEPLOY_CHECKLIST.md): production-safe deploy sequence and post-deploy checks
 - `scripts/deploy_prod_coolify_ghcr.ps1`: Windows-host helper that waits for the GHCR workflow, redeploys the live Coolify app image, reruns migrate and permission convergence, and smoke tests the critical `/at` routes
 
+## Domain Landmarks
+
+### Commissions (`/at/commissions`)
+
+- `frontend/src/domains/commissions/pages/CommissionBalances.vue`: main commissions page with table/card views, SidePanel detail, statement upload dialog, period lock
+- `frontend/src/domains/commissions/i18n/translations.js`: bilingual TR/EN commission translation keys
+- `frontend/src/composables/useCommissionBalances.js`: composable for balances API state and filters
+- `frontend/src/composables/useCommissionEntityDetail.js`: composable for entity detail drilldown
+- `acentem_takipte/acentem_takipte/domains/commissions/api/endpoints.py`: 8 whitelisted API endpoints
+- `acentem_takipte/acentem_takipte/domains/commissions/services/balance.py`: accrual/paid/aging computation, IC breakdown, reconciliation summary
+- `acentem_takipte/acentem_takipte/domains/accounting/services/statement_import.py`: commission statement CSV preview, import, missing external generation
+- `acentem_takipte/acentem_takipte/doctype/at_commission_period/`: AT Commission Period DocType for period lock
+- `acentem_takipte/acentem_takipte/tests/test_commission_balances.py`: 23 backend tests (balance, aging, IC, branch, entity detail)
+- `acentem_takipte/acentem_takipte/tests/test_commission_statement_import.py`: 8 backend tests (preview, import, missing external)
+
 ## Preference Order For Changes
 
 - Make the smallest change that fits the existing module structure.

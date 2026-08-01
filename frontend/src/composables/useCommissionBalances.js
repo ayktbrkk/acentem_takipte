@@ -19,6 +19,7 @@ export function useCommissionBalances({ t }) {
   const error = ref("");
   const summary = computed(() => unref(resource.data)?.summary || {});
   const entities = computed(() => unref(resource.data)?.entities || []);
+  const reconciliation = computed(() => unref(resource.data)?.reconciliation || {});
 
   async function reload() {
     error.value = "";
@@ -36,5 +37,5 @@ export function useCommissionBalances({ t }) {
     }
   }
 
-  return { filters, loading, error, summary, entities, reload };
+  return { filters, loading, error, summary, entities, reconciliation, reload };
 }
