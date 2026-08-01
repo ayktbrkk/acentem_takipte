@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import patch
 
+import frappe
 from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
 import acentem_takipte.acentem_takipte.domains.admin.services.alerts as ops_alerts
@@ -191,3 +192,61 @@ class TestOpsAlerts(IntegrationTestCase):
         self.assertEqual(summary["rows"][0]["count"], 2)
         self.assertEqual(summary["rows"][0]["name"], "ERR-0102")
         self.assertIn("Duplicates: 2", summary["message"])
+
+
+class TestDispatchAlertsSSRF(IntegrationTestCase):
+    """_dispatch_alerts must reject insecure webhook URLs (fail-secure)."""
+
+    def _call_dispatch(self, site_config):
+        return ops_alerts._dispatch_alerts(site_config=site_config, message="test alert")
+
+    def test_dispatch_alerts_allows_public_https_slack_webhook(self):
+        sent = []
+        with patch.object(
+            ops_alerts,
+            "make_post_request",
+            side_effect=lambda url, data=None, json=None, **kwargs: sent.append(url),
+        ):
+            channels = self._call_dispatch(
+                {"at_ops_alert_slack_webhook_url": "https://8.8.8.8/services/demo"}
+            )
+        self.assertEqual(channels, ["slack"])
+        self.assertEqual(len(sent), 1)
+        self.assertEqual(sent[0], "https://8.8.8.8/services/demo")
+
+    def test_dispatch_alerts_rejects_http_slack_webhook(self):
+        with self.assertRaises(frappe.ValidationError):
+            self._call_dispatch(
+                {"at_ops_alert_slack_webhook_url": "http://hooks.example.com/services/demo"}
+            )
+
+    def test_dispatch_alerts_rejects_loopback_slack_webhook(self):
+        with self.assertRaises(frappe.ValidationError):
+            self._call_dispatch(
+                {"at_ops_alert_slack_webhook_url": "https://127.0.0.1/services/demo"}
+            )
+
+    def test_dispatch_alerts_rejects_private_network_slack_webhook(self):
+        with self.assertRaises(frappe.ValidationError):
+                self._call_dispatch(
+                    {"at_ops_alert_slack_webhook_url": "https://10.0.0.5/services/demo"}
+                )
+
+    def test_dispatch_alerts_normalizes_telegram_url(self):
+        sent = []
+        with patch.object(
+            ops_alerts,
+            "make_post_request",
+            side_effect=lambda url, data=None, json=None, **kwargs: sent.append(url),
+        ):
+            channels = self._call_dispatch(
+                {
+                    "at_ops_alert_telegram_bot_token": "123456:ABC-DEF",
+                    "at_ops_alert_telegram_chat_id": "987654",
+                }
+            )
+        self.assertEqual(channels, ["telegram"])
+        self.assertEqual(
+            sent[0],
+            "https://api.telegram.org/bot123456:ABC-DEF/sendMessage",
+        )

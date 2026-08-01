@@ -4,8 +4,11 @@ from hashlib import sha1
 from typing import Any
 
 import frappe
+from frappe import _
 from frappe.integrations.utils import make_post_request
 from frappe.utils import add_to_date, get_url, now_datetime
+
+from acentem_takipte.acentem_takipte.utils.network_security import normalize_outbound_url
 
 
 ALERT_CACHE_KEY = "at:ops-alerts:last-error-log-fingerprint"
@@ -220,12 +223,35 @@ def _dispatch_alerts(*, site_config: dict[str, Any], message: str) -> list[str]:
     telegram_chat_id = str(site_config.get("at_ops_alert_telegram_chat_id") or "").strip()
 
     if slack_webhook:
-        make_post_request(slack_webhook, json={"text": message})
+        # SSRF hardening: the webhook URL is admin-configured but free-form;
+        # enforce https + a public host before dispatching. Invalid URLs fail
+        # secure so alerts are never sent to a private/loopback endpoint.
+        try:
+            safe_webhook = normalize_outbound_url(
+                slack_webhook,
+                allowed_schemes=("https",),
+                allow_private_hosts=False,
+            )
+        except ValueError as exc:
+            frappe.throw(
+                _("Invalid Slack webhook URL: {0}").format(str(exc))
+            )
+        make_post_request(safe_webhook, json={"text": message})
         channels.append("slack")
 
     if telegram_bot_token and telegram_chat_id:
         telegram_url = f"https://api.telegram.org/bot{telegram_bot_token}/sendMessage"
-        make_post_request(telegram_url, data={"chat_id": telegram_chat_id, "text": message})
+        try:
+            safe_telegram_url = normalize_outbound_url(
+                telegram_url,
+                allowed_schemes=("https",),
+                allow_private_hosts=False,
+            )
+        except ValueError as exc:
+            frappe.throw(
+                _("Invalid Telegram webhook URL: {0}").format(str(exc))
+            )
+        make_post_request(safe_telegram_url, data={"chat_id": telegram_chat_id, "text": message})
         channels.append("telegram")
 
     return channels
