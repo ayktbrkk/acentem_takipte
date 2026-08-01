@@ -204,7 +204,7 @@ CI also runs backend tests by creating a fresh Frappe v15 bench and site; see [b
 - `acentem_takipte/acentem_takipte/domains/commissions/services/balance.py`: accrual/paid/aging computation, IC breakdown, reconciliation summary
 - `acentem_takipte/acentem_takipte/domains/accounting/services/statement_import.py`: commission statement CSV preview, import, missing external generation
 - `acentem_takipte/acentem_takipte/doctype/at_commission_period/`: AT Commission Period DocType for period lock
-- `acentem_takipte/acentem_takipte/tests/test_commission_balances.py`: 25 backend tests (balance, aging, IC, branch, entity detail, head-office distribution)
+- `acentem_takipte/acentem_takipte/tests/test_commission_balances.py`: 26 backend tests (balance, aging, IC, branch, entity detail, head-office distribution, root-less chain remainder)
 - `acentem_takipte/acentem_takipte/tests/test_commission_statement_import.py`: 8 backend tests (preview, import, missing external)
 
 ### Commission Distribution Model
@@ -219,8 +219,10 @@ The system uses a **head-office-centric** model:
 
 - `commission_share_pct` must be in `ALLOWED_AUX_EDIT_FIELDS["AT Sales Entity"]` for quick edit to work
 - Root entity's `commission_share_pct` is locked in quick edit UI (`disabled: ({ model }) => String(model?.is_root) === "1"`)
-- `_validate_share_pct_total()`: sum of all non-root active entities in same branch must not exceed 100%
+- `_validate_share_pct_total()`: sum of all non-root ACTIVE entities in same branch must not exceed 100%; pool entities are excluded (pools are fallback records, not commission earners)
 - `_validate_no_parent_cycle()`: prevents circular parent_entity chains (max 50 levels)
+- `_validate_pool_constraints()`: exactly one pool per active branch; root entities (`is_root=1`) are exempt so a fresh branch can bootstrap root-first (otherwise root creation requires a pool, and pool creation requires a root — chicken-and-egg)
+- Doctype test builders must create a DEDICATED branch via `tests/test_utils.py::ensure_test_office_branch(suffix)` — reusing whatever active branch `get_value` returns makes tests depend on ambient seed data and stale entities (share_pct totals drift) and on which branch is selected.
 - Server cache: after editing `at.py` or service files, run `bench --site at.localhost clear-cache` AND delete `__pycache__` dirs from both WSL and Windows paths
 
 ### Session State Architecture (⚠️ critical)
